@@ -1,7 +1,5 @@
 package fabric.common.exceptions;
 
-
-
 /**
  * Used to indicate the worker is not following protocol.
  */

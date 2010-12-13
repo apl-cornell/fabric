@@ -4,14 +4,12 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.common.exceptions.FabricException;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.TransactionCommitFailedException;
 
 public class CommitTransactionMessage
-     extends Message<CommitTransactionMessage.Response, TransactionCommitFailedException>
-  implements MessageToStore<FabricException>, MessageToWorker
-{
+    extends
+    Message<CommitTransactionMessage.Response, TransactionCommitFailedException> {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
   //////////////////////////////////////////////////////////////////////////////
@@ -35,11 +33,9 @@ public class CommitTransactionMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
-    return h.handle(p, this);
-  }
-
-  public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler h)
+      throws TransactionCommitFailedException {
     return h.handle(p, this);
   }
 

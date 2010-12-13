@@ -9,9 +9,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
+import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.SubSocket;
 import fabric.lang.Object._Proxy;
+import fabric.lang.security.NodePrincipal;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -48,7 +51,7 @@ import fabric.worker.Worker;
  *          The exception type that may occur at the remote node while handling
  *          the message.
  */
-public abstract class Message<R extends Message.Response, E extends Exception> {
+public abstract class Message<R extends Message.Response, E extends FabricException> {
 
   //////////////////////////////////////////////////////////////////////////////
   // public API                                                               //
@@ -104,6 +107,17 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
   }
 
   /**
+   * Visitor method.
+   * 
+   * @param p
+   *          the principal of the node that is issuing the request.
+   * @param handler
+   *          the handler to which this message is to be dispatched.
+   * @throws  
+   */
+  public abstract R dispatch(NodePrincipal p, MessageHandler handler) throws ProtocolError, E;
+
+  /**
    * Read a Message from the given <code>DataInput</code>
    * 
    * @throws IOException
@@ -137,12 +151,13 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
    * @throws IOException
    *            if the provided <code>DataOutput</code> fails.
    */
-  public void respond(DataOutput out, R r) throws IOException {
+  @SuppressWarnings("unchecked")
+  public void respond(DataOutput out, Message.Response r) throws IOException {
     // Signal that no error occurred.
     out.writeBoolean(false);
 
     // Write out the response.
-    writeResponse(out, r);
+    writeResponse(out, (R) r);
 
     Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE,
         "Sent successful response to {0}", messageType);
@@ -158,7 +173,7 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
    * @throws IOException
    *            if the provided <code>DataOutput</code> fails.
    */
-  public void respond(DataOutput out, E e) throws IOException {
+  public void respond(DataOutput out, FabricException e) throws IOException {
     // Clear out the stack trace before sending an exception out.
     e.setStackTrace(new StackTraceElement[0]);
 
@@ -297,6 +312,15 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
       throw new IOException("Unable to deserialize java object -- wrong type");
     } catch (ClassNotFoundException e) {
       throw new IOException("Unable to deserialize java object -- no such class");
+    }
+  }
+
+  /**
+   * Concrete message implementations may use this class to indicate that no
+   * exceptions should be thrown during message processing.
+   */
+  public static class NoException extends FabricException {
+    private NoException() {
     }
   }
   

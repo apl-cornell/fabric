@@ -5,8 +5,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.ObjectGroup;
-import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.NodePrincipal;
 
 /**
@@ -14,8 +14,7 @@ import fabric.lang.security.NodePrincipal;
  * object at a store.
  */
 public class ReadMessage
-     extends Message<ReadMessage.Response, FetchException>
-  implements MessageToStore<FabricException>
+     extends Message<ReadMessage.Response, AccessException>
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
@@ -25,7 +24,7 @@ public class ReadMessage
   public final long onum;
 
   public ReadMessage(long onum) {
-    super(MessageType.READ_ONUM, FetchException.class);
+    super(MessageType.READ_ONUM, AccessException.class);
     this.onum = onum;
   }
 
@@ -47,7 +46,9 @@ public class ReadMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler h)
+      throws ProtocolError, AccessException {
     return h.handle(p, this);
   }
 

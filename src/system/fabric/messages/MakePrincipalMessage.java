@@ -3,15 +3,15 @@ package fabric.messages;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 
+import fabric.common.exceptions.FabricGeneralSecurityException;
+import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.NodePrincipal;
 
 public final class MakePrincipalMessage
-           extends Message<MakePrincipalMessage.Response, GeneralSecurityException>
-        implements MessageToStore<GeneralSecurityException>
+           extends Message<MakePrincipalMessage.Response, FabricGeneralSecurityException>
 {
   
   //////////////////////////////////////////////////////////////////////////////
@@ -21,7 +21,7 @@ public final class MakePrincipalMessage
   public final PublicKey requesterKey;
   
   public MakePrincipalMessage(PublicKey requesterKey) {
-    super(MessageType.MAKE_PRINCIPAL, GeneralSecurityException.class);
+    super(MessageType.MAKE_PRINCIPAL, FabricGeneralSecurityException.class);
     this.requesterKey = requesterKey;
   }
   
@@ -50,8 +50,9 @@ public final class MakePrincipalMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(NodePrincipal p, MessageToStoreHandler handler)
-  throws GeneralSecurityException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler handler)
+      throws ProtocolError, FabricGeneralSecurityException {
     return handler.handle(p, this);
   }
 
@@ -66,7 +67,7 @@ public final class MakePrincipalMessage
   
   /* readMessage */
   protected MakePrincipalMessage(DataInput in) throws IOException {
-    super(MessageType.MAKE_PRINCIPAL, GeneralSecurityException.class);
+    super(MessageType.MAKE_PRINCIPAL, FabricGeneralSecurityException.class);
     this.requesterKey = readObject(in, PublicKey.class);
   }
 

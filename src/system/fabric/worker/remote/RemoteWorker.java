@@ -2,22 +2,15 @@ package fabric.worker.remote;
 
 import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
-import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.dissemination.Glob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.NodePrincipal;
-import fabric.messages.AbortTransactionMessage;
-import fabric.messages.CommitTransactionMessage;
-import fabric.messages.DirtyReadMessage;
-import fabric.messages.GetPrincipalMessage;
-import fabric.messages.ObjectUpdateMessage;
-import fabric.messages.PrepareTransactionMessage;
-import fabric.messages.RemoteCallMessage;
-import fabric.messages.TakeOwnershipMessage;
-import fabric.messages.InterWorkerStalenessMessage;
+import fabric.messages.*;
+import fabric.messages.Message.NoException;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
@@ -82,8 +75,7 @@ public final class RemoteWorker extends RemoteNode {
 
   public void commitTransaction(long tid) throws UnreachableNodeException,
       TransactionCommitFailedException {
-    CommitTransactionMessage.Response response =
-        send(new CommitTransactionMessage(tid));
+    send(new CommitTransactionMessage(tid));
   }
 
   /**
@@ -93,7 +85,7 @@ public final class RemoteWorker extends RemoteNode {
    *          the tid for the transaction that is aborting.
    */
   public void abortTransaction(TransactionID tid)
-      throws UnreachableNodeException {
+      throws AccessException, UnreachableNodeException {
     send(new AbortTransactionMessage(tid));
   }
 
@@ -115,7 +107,7 @@ public final class RemoteWorker extends RemoteNode {
     try {
       DirtyReadMessage.Response response = send(new DirtyReadMessage(tid, store, onum));
       return response.obj;
-    } catch(FetchException e) {
+    } catch (AccessException e) {
       throw new NotImplementedException();
     }
   }
@@ -128,7 +120,7 @@ public final class RemoteWorker extends RemoteNode {
    */
   public void takeOwnership(TransactionID tid, Store store, long onum) {
     try {
-      TakeOwnershipMessage.Response response = send(new TakeOwnershipMessage(tid, store, onum));
+      send(new TakeOwnershipMessage(tid, store, onum));
     } catch(TakeOwnershipFailedException e) {
       throw new InternalError(e);
     }
@@ -138,8 +130,13 @@ public final class RemoteWorker extends RemoteNode {
    * @return the principal associated with the remote worker.
    */
   public NodePrincipal getPrincipal() {
-    GetPrincipalMessage.Response response =
-        send(new GetPrincipalMessage());
+    GetPrincipalMessage.Response response;
+    try {
+      response = send(new GetPrincipalMessage());
+    } catch (NoException e) {
+      // This is not possible.
+      throw new InternalError(e);
+    }
     final NodePrincipal principal = response.principal;
     final String expectedPrincipalName;
     try {
@@ -173,8 +170,13 @@ public final class RemoteWorker extends RemoteNode {
    * @return whether the node is resubscribing to the object.
    */
   public boolean notifyObjectUpdate(String store, long onum, Glob glob) {
-    ObjectUpdateMessage.Response response =
-        send(new ObjectUpdateMessage(store, onum, glob));
+    ObjectUpdateMessage.Response response;
+    try {
+      response = send(new ObjectUpdateMessage(store, onum, glob));
+    } catch (NoException e) {
+      // This is not possible.
+      throw new InternalError(e);
+    }
     return response.resubscribe;
   }
 
@@ -184,8 +186,13 @@ public final class RemoteWorker extends RemoteNode {
    * @return whether the node is resubscribing to the object.
    */
   public boolean notifyObjectUpdate(long onum, ObjectGroup group) {
-    ObjectUpdateMessage.Response response =
-      send(new ObjectUpdateMessage(onum, group));
+    ObjectUpdateMessage.Response response;
+    try {
+      response = send(new ObjectUpdateMessage(onum, group));
+    } catch (NoException e) {
+      // This is not possible.
+      throw new InternalError(e);
+    }
     return response.resubscribe;
   }
 
@@ -194,8 +201,13 @@ public final class RemoteWorker extends RemoteNode {
    * up-to-date.
    */
   public boolean checkForStaleObjects(TransactionID tid) {
-    InterWorkerStalenessMessage.Response response =
-        send(new InterWorkerStalenessMessage(tid));
+    InterWorkerStalenessMessage.Response response;
+    try {
+      response = send(new InterWorkerStalenessMessage(tid));
+    } catch (NoException e) {
+      // This is not possible.
+      throw new InternalError(e);
+    }
     return response.result;
   }
 }

@@ -3,10 +3,11 @@ package fabric.messages;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import fabric.common.SerializedObject;
-import fabric.common.exceptions.FabricException;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object._Impl;
@@ -19,7 +20,6 @@ import fabric.worker.TransactionPrepareFailedException;
  */
 public class PrepareTransactionMessage
      extends Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException>
-  implements MessageToWorker, MessageToStore<FabricException>
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
@@ -110,11 +110,9 @@ public class PrepareTransactionMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
-    return h.handle(p, this);
-  }
-
-  public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler h)
+      throws TransactionPrepareFailedException {
     return h.handle(p, this);
   }
 

@@ -1,9 +1,11 @@
 package fabric.messages;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.security.cert.Certificate;
 
-import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.NodePrincipal;
 
 /**
@@ -11,15 +13,14 @@ import fabric.lang.security.NodePrincipal;
  * key.
  */
 public class GetCertChainMessage
-     extends Message<GetCertChainMessage.Response, RuntimeException>
-  implements MessageToStore<FabricException>
+     extends Message<GetCertChainMessage.Response, fabric.messages.Message.NoException>
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
   public GetCertChainMessage() {
-    super(MessageType.GET_CERT_CHAIN, RuntimeException.class);
+    super(MessageType.GET_CERT_CHAIN, NoException.class);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -38,7 +39,8 @@ public class GetCertChainMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler h) throws ProtocolError {
     return h.handle(p, this);
   }
 

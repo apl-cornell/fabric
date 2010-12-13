@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabric.common.SerializedObject;
+import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.SerializedObject;
-import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.AccessException;
 import fabric.lang.security.NodePrincipal;
 
 /**
@@ -19,7 +19,6 @@ import fabric.lang.security.NodePrincipal;
  */
 public final class StalenessCheckMessage
            extends Message<StalenessCheckMessage.Response, AccessException>
-        implements MessageToStore<FabricException>
 {
 
   //////////////////////////////////////////////////////////////////////////////
@@ -49,7 +48,9 @@ public final class StalenessCheckMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler h)
+      throws ProtocolError, AccessException {
     return h.handle(p, this);
   }
 

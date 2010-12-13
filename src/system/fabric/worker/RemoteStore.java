@@ -1,6 +1,5 @@
 package fabric.worker;
 
-import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
@@ -12,19 +11,15 @@ import java.util.List;
 import java.util.Queue;
 
 import fabric.common.*;
-import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.FetchException;
-import fabric.common.exceptions.AccessException;
-import fabric.common.exceptions.RuntimeFetchException;
+import fabric.common.exceptions.*;
 import fabric.common.exceptions.InternalError;
-import fabric.common.exceptions.NotImplementedException;
-import fabric.common.net.naming.SocketAddress;
 import fabric.common.util.*;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.messages.*;
+import fabric.messages.Message.NoException;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
@@ -99,7 +94,7 @@ public class RemoteStore extends RemoteNode implements Store {
 
   private class FetchLock {
     private _Impl object;
-    private FetchException error;
+    private AccessException error;
   }
 
   /**
@@ -127,7 +122,11 @@ public class RemoteStore extends RemoteNode implements Store {
   }
 
   public synchronized long createOnum() throws UnreachableNodeException {
-    reserve(1);
+    try {
+      reserve(1);
+    } catch (AccessException e) {
+      throw new FabricRuntimeException(e);
+    }
     return fresh_ids.poll();
   }
 
@@ -156,7 +155,7 @@ public class RemoteStore extends RemoteNode implements Store {
    * @return The requested object
    * @throws FabricException
    */
-  public final Object._Impl readObject(long onum) throws FetchException {
+  public final Object._Impl readObject(long onum) throws AccessException {
     return readObject(true, onum);
   }
 
@@ -164,12 +163,13 @@ public class RemoteStore extends RemoteNode implements Store {
    * (non-Javadoc)
    * @see fabric.worker.Store#readObjectNoDissem(long)
    */
-  public final Object._Impl readObjectNoDissem(long onum) throws FetchException {
+  public final Object._Impl readObjectNoDissem(long onum)
+      throws AccessException {
     return readObject(false, onum);
   }
 
   private final Object._Impl readObject(boolean useDissem, long onum)
-      throws FetchException {
+      throws AccessException {
     // Intercept reads of global constants and redirect them to the local store.
     if (ONumConstants.isGlobalConstant(onum))
       return Worker.instance.localStore.readObject(onum);
@@ -197,7 +197,7 @@ public class RemoteStore extends RemoteNode implements Store {
         // We are responsible for fetching the object.
         try {
           fetchLock.object = fetchObject(useDissem, onum);
-        } catch (FetchException e) {
+        } catch (AccessException e) {
           fetchLock.error = e;
         }
 
@@ -245,7 +245,7 @@ public class RemoteStore extends RemoteNode implements Store {
    * @throws FabricException
    */
   private Object._Impl fetchObject(boolean useDissem, long onum)
-      throws FetchException {
+      throws AccessException {
     Object._Impl result = null;
     SoftReference<SerializedObject> serialRef;
     // Lock the table to keep the serialized-reference collector from altering
@@ -310,7 +310,7 @@ public class RemoteStore extends RemoteNode implements Store {
    * @throws FetchException
    *           if there was an error while fetching the object from the store.
    */
-  public ObjectGroup readObjectFromStore(long onum) throws FetchException {
+  public ObjectGroup readObjectFromStore(long onum) throws AccessException {
     ReadMessage.Response response = send(new ReadMessage(onum));
     return response.group;
   }
@@ -322,7 +322,7 @@ public class RemoteStore extends RemoteNode implements Store {
    *          The object number to fetch.
    */
   public final Glob readEncryptedObjectFromStore(long onum)
-      throws FetchException {
+      throws AccessException {
     DissemReadMessage.Response response = send(new DissemReadMessage(onum));
     // TODO
     // PublicKey key = Worker.getWorker().getStore(name).getPublicKey();
@@ -350,7 +350,7 @@ public class RemoteStore extends RemoteNode implements Store {
    * @param num
    *          The number of objects to allocate
    */
-  protected void reserve(int num) throws UnreachableNodeException {
+  protected void reserve(int num) throws AccessException, UnreachableNodeException {
     while (fresh_ids.size() < num) {
       // log.info("Requesting new onums, storeid=" + storeID);
       if (num < 512) num = 512;
@@ -365,7 +365,7 @@ public class RemoteStore extends RemoteNode implements Store {
    * (non-Javadoc)
    * @see fabric.worker.Store#abortTransaction(long)
    */
-  public void abortTransaction(TransactionID tid) {
+  public void abortTransaction(TransactionID tid) throws AccessException {
     send(new AbortTransactionMessage(tid));
   }
 
@@ -375,8 +375,7 @@ public class RemoteStore extends RemoteNode implements Store {
    */
   public void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
-    CommitTransactionMessage.Response response =
-      send(new CommitTransactionMessage(transactionID));
+    send(new CommitTransactionMessage(transactionID));
   }
 
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
@@ -488,8 +487,13 @@ public class RemoteStore extends RemoteNode implements Store {
   public PublicKey getPublicKey() {
     if (publicKey == null) {
       // No key cached. Fetch the certificate chain from the store.
-      GetCertChainMessage.Response response =
-          send(new GetCertChainMessage());
+      GetCertChainMessage.Response response;
+      try {
+        response = send(new GetCertChainMessage());
+      } catch (NoException e) {
+        // This is not possible.
+        throw new InternalError(e);
+      }
       Certificate[] certificateChain = response.certificateChain;
 
       // Validate the certificate chain.

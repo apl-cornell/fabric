@@ -4,12 +4,12 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.Worker;
-import fabric.worker.Store;
-import fabric.worker.transaction.TakeOwnershipFailedException;
 import fabric.common.TransactionID;
-import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.NodePrincipal;
+import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.worker.transaction.TakeOwnershipFailedException;
 
 /**
  * Represents a request from a worker to take ownership of an object from
@@ -17,7 +17,6 @@ import fabric.lang.security.NodePrincipal;
  */
 public class TakeOwnershipMessage
      extends Message<TakeOwnershipMessage.Response, TakeOwnershipFailedException>
-  implements MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
@@ -46,7 +45,9 @@ public class TakeOwnershipMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler h)
+      throws ProtocolError, TakeOwnershipFailedException {
     return h.handle(p, this);
   }
 

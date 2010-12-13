@@ -3,10 +3,10 @@ package fabric.worker;
 import java.util.Collection;
 
 import fabric.common.TransactionID;
-import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
-import fabric.lang.security.NodePrincipal;
 import fabric.lang.Object._Impl;
+import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
 
 public interface Store {
@@ -44,7 +44,7 @@ public interface Store {
    *          The identifier of the requested object
    * @return The requested object
    */
-  _Impl readObject(long onum) throws FetchException;
+  _Impl readObject(long onum) throws AccessException;
 
   /**
    * Returns the requested _Impl object, fetching it directly from the Store if
@@ -54,7 +54,7 @@ public interface Store {
    *          The identifier of the requested object
    * @return The requested object
    */
-  _Impl readObjectNoDissem(long onum) throws FetchException;
+  _Impl readObjectNoDissem(long onum) throws AccessException;
 
   /**
    * Returns the requested _Impl object if it exists in the object cache.
@@ -72,8 +72,9 @@ public interface Store {
    * @param tid
    *          the ID of the aborting transaction. This is assumed to specify a
    *          top-level transaction.
+   * @throws AccessException 
    */
-  void abortTransaction(TransactionID tid);
+  void abortTransaction(TransactionID tid) throws AccessException;
 
   /**
    * Notifies the Store that the transaction should be committed.

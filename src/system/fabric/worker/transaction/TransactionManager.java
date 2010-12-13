@@ -6,11 +6,8 @@ import static fabric.worker.transaction.Log.CommitState.Values.*;
 import java.util.*;
 import java.util.logging.Level;
 
-import fabric.common.FabricThread;
-import fabric.common.Logging;
-import fabric.common.SerializedObject;
-import fabric.common.Timing;
-import fabric.common.TransactionID;
+import fabric.common.*;
+import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
@@ -350,9 +347,9 @@ public final class TransactionManager {
     Set<Store> stores = current.storesToContact();
     List<RemoteWorker> workers = current.workersCalled;
 
-    // Send prepare messages to our cohorts.
-    Map<RemoteNode, TransactionPrepareFailedException> failures =
-        sendPrepareMessages(commitTime, stores, workers);
+    // Send prepare messages to our cohorts. This will also abort our portion of
+    // the transaction if the prepare fails.
+    sendPrepareMessages(commitTime, stores, workers);
 
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(stores, workers);
@@ -690,11 +687,24 @@ public final class TransactionManager {
   private void sendAbortMessages(Set<Store> stores,
       List<RemoteWorker> workers, Set<RemoteNode> fails) {
     for (Store store : stores)
-      if (!fails.contains(store))
-        store.abortTransaction(current.tid);
+      if (!fails.contains(store)) {
+        try {
+          store.abortTransaction(current.tid);
+        } catch (AccessException e) {
+          Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
+              "Access error while aborting transaction: {0}", e);
+        }
+      }
 
     for (RemoteWorker worker : workers)
-      if (!fails.contains(worker)) worker.abortTransaction(current.tid);
+      if (!fails.contains(worker)) {
+        try {
+          worker.abortTransaction(current.tid);
+        } catch (AccessException e) {
+          Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
+              "Access error while aborting transaction: {0}", e);
+        }
+      }
   }
 
   public void registerCreate(_Impl obj) {

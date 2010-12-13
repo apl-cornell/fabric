@@ -4,8 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.ProtocolError;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
 
@@ -15,8 +15,7 @@ import fabric.lang.security.NodePrincipal;
  * receive the next update to the object.
  */
 public final class DissemReadMessage
-           extends Message<DissemReadMessage.Response, FetchException>
-        implements MessageToStore<FabricException>
+           extends Message<DissemReadMessage.Response, AccessException>
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
@@ -26,7 +25,7 @@ public final class DissemReadMessage
   public final long onum;
 
   public DissemReadMessage(long onum) {
-    super(MessageType.DISSEM_READ_ONUM, FetchException.class);
+    super(MessageType.DISSEM_READ_ONUM, AccessException.class);
     this.onum = onum;
   }
 
@@ -48,7 +47,8 @@ public final class DissemReadMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler h) throws ProtocolError, AccessException {
     return h.handle(p, this);
   }
 

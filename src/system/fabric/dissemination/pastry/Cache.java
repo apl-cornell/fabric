@@ -2,11 +2,11 @@ package fabric.dissemination.pastry;
 
 import java.util.*;
 
-import fabric.worker.Store;
-import fabric.worker.RemoteStore;
-import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.AccessException;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
+import fabric.worker.RemoteStore;
+import fabric.worker.Store;
 
 /**
  * The cache object used by the disseminator to store globs. Essentially a
@@ -64,7 +64,7 @@ public class Cache {
 
     try {
       g = c.readEncryptedObjectFromStore(onum);
-    } catch (FetchException e) {
+    } catch (AccessException e) {
     }
 
     if (g != null) {

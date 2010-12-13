@@ -5,15 +5,14 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.TransactionID;
-import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.NodePrincipal;
 
 /**
  * Represents a request to check staleness of data in a transaction.
  */
 public final class InterWorkerStalenessMessage
-           extends Message<InterWorkerStalenessMessage.Response, RuntimeException>
-        implements MessageToWorker
+           extends Message<InterWorkerStalenessMessage.Response, fabric.messages.Message.NoException>
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
@@ -22,7 +21,7 @@ public final class InterWorkerStalenessMessage
   public final TransactionID tid;
   
   public InterWorkerStalenessMessage(TransactionID tid) {
-    super(MessageType.INTERWORKER_STALENESS, RuntimeException.class);
+    super(MessageType.INTERWORKER_STALENESS, NoException.class);
     this.tid = tid;
   }
   
@@ -44,7 +43,8 @@ public final class InterWorkerStalenessMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler h) throws ProtocolError {
     return h.handle(p, this);
   }
 

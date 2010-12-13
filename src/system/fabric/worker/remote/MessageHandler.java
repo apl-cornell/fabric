@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 
 import fabric.common.AuthorizationUtil;
-import fabric.common.Threading.NamedRunnable;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.lang.Object._Impl;
@@ -22,19 +21,15 @@ import fabric.worker.transaction.TakeOwnershipFailedException;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
 
-public class MessageHandlerThread
-     extends NamedRunnable
-  implements MessageToWorkerHandler 
-{
+public class MessageHandler extends MessageToWorkerHandler {
 
-  public MessageHandlerThread(String name) {
-    super(name);
-    // TODO Auto-generated constructor stub
-    throw new NotImplementedException();
+  public MessageHandler(Worker worker) {
+    this.worker = worker;
   }
   
   private final Worker worker;
 
+  @Override
   public RemoteCallMessage.Response handle(final NodePrincipal p,
       final RemoteCallMessage remoteCallMessage) throws RemoteCallException {
     // We assume that this thread's transaction manager is free (i.e., it's not
@@ -113,6 +108,7 @@ public class MessageHandlerThread
    * In each message handler, we maintain the invariant that upon exit, the
    * worker's TransactionManager is associated with a null log.
    */
+  @Override
   public AbortTransactionMessage.Response handle(NodePrincipal p, AbortTransactionMessage abortTransactionMessage) {
     // XXX TODO Security checks.
     Log log =
@@ -127,6 +123,7 @@ public class MessageHandlerThread
     return new AbortTransactionMessage.Response();
   }
 
+  @Override
   public PrepareTransactionMessage.Response handle(NodePrincipal p,
                                                    PrepareTransactionMessage prepareTransactionMessage)
   throws TransactionPrepareFailedException
@@ -163,6 +160,7 @@ public class MessageHandlerThread
    * In each message handler, we maintain the invariant that upon exit, the
    * worker's TransactionManager is associated with a null log.
    */
+  @Override
   public CommitTransactionMessage.Response handle(NodePrincipal p,
                                                   CommitTransactionMessage commitTransactionMessage)
   throws TransactionCommitFailedException {
@@ -188,6 +186,7 @@ public class MessageHandlerThread
     return new CommitTransactionMessage.Response();
   }
 
+  @Override
   public DirtyReadMessage.Response handle(NodePrincipal p, DirtyReadMessage readMessage) {
     Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
     if (log == null) return new DirtyReadMessage.Response(null);
@@ -217,6 +216,7 @@ public class MessageHandlerThread
     return new DirtyReadMessage.Response(obj);
   }
 
+  @Override
   public TakeOwnershipMessage.Response handle(NodePrincipal p, TakeOwnershipMessage msg)
   throws TakeOwnershipFailedException {
     Log log =
@@ -261,10 +261,12 @@ public class MessageHandlerThread
     }
   }
 
+  @Override
   public Response handle(NodePrincipal p, GetPrincipalMessage getPrincipalMessage) {
     return new GetPrincipalMessage.Response(worker.getPrincipal());
   }
 
+  @Override
   public ObjectUpdateMessage.Response handle(NodePrincipal p, ObjectUpdateMessage objectUpdateMessage) {
     if (objectUpdateMessage.group == null) {
       // TODO
@@ -289,11 +291,6 @@ public class MessageHandlerThread
   }
 
   @Override
-  protected void runImpl() {
-    // TODO Auto-generated method stub
-    throw new NotImplementedException();
-  }
-
   public InterWorkerStalenessMessage.Response handle(NodePrincipal p, InterWorkerStalenessMessage stalenessCheckMessage) {
 
     TransactionID tid = stalenessCheckMessage.tid;

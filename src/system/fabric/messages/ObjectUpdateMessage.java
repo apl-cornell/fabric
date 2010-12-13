@@ -5,8 +5,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.ObjectGroup;
-import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.ProtocolError;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
 
@@ -14,8 +14,7 @@ import fabric.lang.security.NodePrincipal;
  * Represents push notification that an object has been updated.
  */
 public class ObjectUpdateMessage
-     extends Message<ObjectUpdateMessage.Response, RuntimeException>
-  implements MessageToWorker
+     extends Message<ObjectUpdateMessage.Response, fabric.messages.Message.NoException>
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
@@ -28,7 +27,7 @@ public class ObjectUpdateMessage
 
   private ObjectUpdateMessage(String store, long onum, Glob glob,
       ObjectGroup group) {
-    super(MessageType.OBJECT_UPDATE, RuntimeException.class);
+    super(MessageType.OBJECT_UPDATE, NoException.class);
     this.store = store;
     this.onum = onum;
     this.glob = glob;
@@ -65,7 +64,8 @@ public class ObjectUpdateMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler h) throws ProtocolError {
     return h.handle(p, this);
   }
 
@@ -89,7 +89,7 @@ public class ObjectUpdateMessage
 
   /* readMessage */
   protected ObjectUpdateMessage(DataInput in) throws IOException {
-    super(MessageType.OBJECT_UPDATE, RuntimeException.class);
+    super(MessageType.OBJECT_UPDATE, NoException.class);
 
     this.onum = in.readLong();
 

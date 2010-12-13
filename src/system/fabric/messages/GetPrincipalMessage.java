@@ -4,21 +4,20 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.Worker;
-import fabric.worker.Store;
-import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.NodePrincipal;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 public class GetPrincipalMessage
-     extends Message<GetPrincipalMessage.Response, RuntimeException>
-  implements MessageToWorker
+     extends Message<GetPrincipalMessage.Response, fabric.messages.Message.NoException>
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
   public GetPrincipalMessage() {
-    super(MessageType.GET_PRINCIPAL, RuntimeException.class);
+    super(MessageType.GET_PRINCIPAL, NoException.class);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -38,7 +37,8 @@ public class GetPrincipalMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler h) throws ProtocolError {
     return h.handle(p, this);
   }
 

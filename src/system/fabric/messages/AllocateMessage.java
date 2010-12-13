@@ -1,18 +1,19 @@
 package fabric.messages;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
-import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.NodePrincipal;
 
 /**
  * An <code>AllocateMessage</code> represents a request to allocate a number
  * of object IDs at a store.
  */
-public final class AllocateMessage
-           extends Message<AllocateMessage.Response, RuntimeException>
-        implements MessageToStore<FabricException>
-{
+public final class AllocateMessage extends
+    Message<AllocateMessage.Response, AccessException> {
 
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
@@ -22,7 +23,7 @@ public final class AllocateMessage
   public final int num;
 
   public AllocateMessage(int num) {
-    super(MessageType.ALLOCATE_ONUMS, RuntimeException.class);
+    super(MessageType.ALLOCATE_ONUMS, AccessException.class);
     this.num = num;
   }
 
@@ -42,7 +43,9 @@ public final class AllocateMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler h)
+      throws ProtocolError, AccessException {
     return h.handle(p, this);
   }
   

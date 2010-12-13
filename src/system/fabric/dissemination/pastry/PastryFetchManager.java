@@ -3,14 +3,14 @@ package fabric.dissemination.pastry;
 import java.io.IOException;
 import java.util.Properties;
 
-import fabric.worker.Worker;
-import fabric.worker.RemoteStore;
 import fabric.common.ObjectGroup;
-import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
+import fabric.worker.RemoteStore;
+import fabric.worker.Worker;
 
 /**
  * A PastryFetchManager performs object fetching by consulting a pastry
@@ -32,7 +32,7 @@ public class PastryFetchManager implements FetchManager {
     }
   }
 
-  public ObjectGroup fetch(RemoteStore c, long onum) throws FetchException {
+  public ObjectGroup fetch(RemoteStore c, long onum) throws AccessException {
     Glob glob;
     try {
       glob = node.disseminator().fetch(c, onum);

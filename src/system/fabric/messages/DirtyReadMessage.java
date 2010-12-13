@@ -4,22 +4,20 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.Worker;
-import fabric.worker.Store;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
-import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * Represents a request from a worker to read an object owned by another worker.
  */
-public class DirtyReadMessage
-     extends Message<DirtyReadMessage.Response, FetchException>
-  implements MessageToWorker
-{
+public class DirtyReadMessage extends
+    Message<DirtyReadMessage.Response, AccessException> {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
   //////////////////////////////////////////////////////////////////////////////
@@ -29,7 +27,7 @@ public class DirtyReadMessage
   public final long onum;
 
   public DirtyReadMessage(TransactionID tid, Store store, long onum) {
-    super(MessageType.DIRTY_READ, FetchException.class);
+    super(MessageType.DIRTY_READ, AccessException.class);
 
     this.tid = tid;
     this.store = store;
@@ -53,7 +51,9 @@ public class DirtyReadMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
+  @Override
+  public Response dispatch(NodePrincipal p, MessageHandler h)
+      throws ProtocolError, AccessException {
     return h.handle(p, this);
   }
 
