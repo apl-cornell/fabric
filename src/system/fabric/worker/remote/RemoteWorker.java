@@ -1,9 +1,18 @@
 package fabric.worker.remote;
 
+import java.io.IOException;
+
 import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.net.SubSocketFactory;
+import fabric.common.net.handshake.BogusAuthenticatedHandshake;
+import fabric.common.net.handshake.HandshakeProtocol;
+import fabric.common.net.naming.DefaultNameService;
+import fabric.common.net.naming.DefaultNameService.PortType;
+import fabric.common.net.naming.NameService;
 import fabric.dissemination.Glob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
@@ -29,6 +38,8 @@ import fabric.worker.transaction.TransactionRegistry;
  * object representing that worker.
  */
 public final class RemoteWorker extends RemoteNode {
+  
+  private transient final SubSocketFactory subSocketFactory;
 
   /**
    * This should only be called by fabric.worker.Worker. If you want a
@@ -36,6 +47,14 @@ public final class RemoteWorker extends RemoteNode {
    */
   public RemoteWorker(String name) {
     super(name);
+    
+    try {
+      HandshakeProtocol protocol = new BogusAuthenticatedHandshake();
+      NameService nameService = new DefaultNameService(PortType.WORKER);
+      this.subSocketFactory = new SubSocketFactory(protocol, nameService);
+    } catch (IOException e) {
+      throw new InternalError(e);
+    }
   }
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
@@ -210,5 +229,10 @@ public final class RemoteWorker extends RemoteNode {
       throw new InternalError(e);
     }
     return response.result;
+  }
+  
+  private <R extends Message.Response, E extends FabricException> R send(
+      Message<R, E> message) throws E {
+    return send(subSocketFactory, message);
   }
 }

@@ -1,9 +1,12 @@
 package fabric.net;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.NotImplementedException;
+import fabric.common.net.SubSocket;
+import fabric.common.net.SubSocketFactory;
 import fabric.messages.Message;
 
 /**
@@ -27,7 +30,12 @@ public abstract class RemoteNode implements Serializable {
   }
 
   protected <R extends Message.Response, E extends FabricException> R send(
-      Message<R, E> message) throws E {
-    throw new NotImplementedException();
+      SubSocketFactory subSocketFactory, Message<R, E> message) throws E {
+    try {
+      SubSocket socket = subSocketFactory.createSocket(name);
+      return message.send(socket);
+    } catch (IOException e) {
+      throw new NotImplementedException(e);
+    }
   }
 }

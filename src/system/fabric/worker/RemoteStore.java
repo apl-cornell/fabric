@@ -1,5 +1,6 @@
 package fabric.worker;
 
+import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
@@ -13,6 +14,13 @@ import java.util.Queue;
 import fabric.common.*;
 import fabric.common.exceptions.*;
 import fabric.common.exceptions.InternalError;
+import fabric.common.net.SubSocketFactory;
+import fabric.common.net.handshake.BogusAuthenticatedHandshake;
+import fabric.common.net.handshake.HandshakeProtocol;
+import fabric.common.net.handshake.HandshakeUnauthenticated;
+import fabric.common.net.naming.DefaultNameService;
+import fabric.common.net.naming.NameService;
+import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.common.util.*;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
@@ -65,6 +73,16 @@ public class RemoteStore extends RemoteNode implements Store {
    * SerializedObjects are collected from memory.
    */
   private transient final SerializedCollector collector;
+  
+  /**
+   * A subsocket factory for unauthenticated connections.
+   */
+  private transient final SubSocketFactory unauthenticatedSubSocketFactory;
+  
+  /**
+   * A subsocket factory for authenticated connections.
+   */
+  private transient final SubSocketFactory authenticatedSubSocketFactory;
 
   private class SerializedCollector extends Thread {
     private final ReferenceQueue<SerializedObject> queue;
@@ -102,6 +120,19 @@ public class RemoteStore extends RemoteNode implements Store {
    */
   protected RemoteStore(String name) {
     super(name);
+    
+    try {
+      HandshakeProtocol authenticateProtocol = new BogusAuthenticatedHandshake();
+      NameService nameService = new DefaultNameService(PortType.STORE);
+      this.authenticatedSubSocketFactory =
+          new SubSocketFactory(authenticateProtocol, nameService);
+      
+      HandshakeProtocol nonAuthenticateProtocol = new HandshakeUnauthenticated();
+      this.unauthenticatedSubSocketFactory =
+          new SubSocketFactory(nonAuthenticateProtocol, nameService);
+    } catch (IOException e) {
+      throw new InternalError(e);
+    }
 
     this.objects = new LongKeyHashMap<FabricSoftRef>();
     this.fetchLocks = new LongKeyHashMap<FetchLock>();
@@ -141,7 +172,8 @@ public class RemoteStore extends RemoteNode implements Store {
           throws TransactionPrepareFailedException,
                  UnreachableNodeException {
     PrepareTransactionMessage.Response response =
-      send(new PrepareTransactionMessage(tid, commitTime, toCreate, reads, writes));
+        send(authenticatedSubSocketFactory, new PrepareTransactionMessage(tid,
+            commitTime, toCreate, reads, writes));
 
     return response.subTransactionCreated;
   }
@@ -311,7 +343,8 @@ public class RemoteStore extends RemoteNode implements Store {
    *           if there was an error while fetching the object from the store.
    */
   public ObjectGroup readObjectFromStore(long onum) throws AccessException {
-    ReadMessage.Response response = send(new ReadMessage(onum));
+    ReadMessage.Response response =
+        send(authenticatedSubSocketFactory, new ReadMessage(onum));
     return response.group;
   }
 
@@ -323,7 +356,8 @@ public class RemoteStore extends RemoteNode implements Store {
    */
   public final Glob readEncryptedObjectFromStore(long onum)
       throws AccessException {
-    DissemReadMessage.Response response = send(new DissemReadMessage(onum));
+    DissemReadMessage.Response response =
+        send(unauthenticatedSubSocketFactory, new DissemReadMessage(onum));
     // TODO
     // PublicKey key = Worker.getWorker().getStore(name).getPublicKey();
     // response.glob.verifySignature(key);
@@ -354,7 +388,8 @@ public class RemoteStore extends RemoteNode implements Store {
     while (fresh_ids.size() < num) {
       // log.info("Requesting new onums, storeid=" + storeID);
       if (num < 512) num = 512;
-      AllocateMessage.Response response = send(new AllocateMessage(num));
+      AllocateMessage.Response response =
+          send(authenticatedSubSocketFactory, new AllocateMessage(num));
 
       for (long oid : response.oids)
         fresh_ids.add(oid);
@@ -366,7 +401,7 @@ public class RemoteStore extends RemoteNode implements Store {
    * @see fabric.worker.Store#abortTransaction(long)
    */
   public void abortTransaction(TransactionID tid) throws AccessException {
-    send(new AbortTransactionMessage(tid));
+    send(authenticatedSubSocketFactory, new AbortTransactionMessage(tid));
   }
 
   /*
@@ -375,7 +410,8 @@ public class RemoteStore extends RemoteNode implements Store {
    */
   public void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
-    send(new CommitTransactionMessage(transactionID));
+    send(authenticatedSubSocketFactory, new CommitTransactionMessage(
+        transactionID));
   }
 
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
@@ -392,7 +428,8 @@ public class RemoteStore extends RemoteNode implements Store {
    */
   protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
     try {
-      return send(new StalenessCheckMessage(reads)).staleObjects;
+      return send(authenticatedSubSocketFactory, new StalenessCheckMessage(
+          reads)).staleObjects;
     } catch (final AccessException e) {
       throw new RuntimeFetchException(e);
     }
@@ -489,7 +526,8 @@ public class RemoteStore extends RemoteNode implements Store {
       // No key cached. Fetch the certificate chain from the store.
       GetCertChainMessage.Response response;
       try {
-        response = send(new GetCertChainMessage());
+        response =
+            send(authenticatedSubSocketFactory, new GetCertChainMessage());
       } catch (NoException e) {
         // This is not possible.
         throw new InternalError(e);

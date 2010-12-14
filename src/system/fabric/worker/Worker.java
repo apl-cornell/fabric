@@ -20,15 +20,15 @@ import fabric.common.*;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
+import fabric.common.net.naming.DefaultNameService;
+import fabric.common.net.naming.DefaultNameService.PortType;
+import fabric.common.net.naming.NameService;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.Cache;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
-import fabric.common.net.naming.NameService;
-import fabric.common.net.naming.DefaultNameService;
-import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.lang.security.*;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
@@ -620,5 +620,6 @@ public final class Worker {
   public static interface Code<T> {
     T run() throws Throwable;
   }
+
 
 }
