@@ -358,15 +358,7 @@ public final class Worker {
    * Called to shut down and clean up worker.
    */
   public void shutdown() {
-    shutdown_();
     fetchManager.destroy();
-  }
-
-  /**
-   * Called to shut down and clean up static worker state.
-   */
-  private static void shutdown_() {
-    FabricSoftRef.destroy();
   }
 
   public static void initialize(String name) throws UnrecoverableKeyException,
@@ -514,7 +506,6 @@ public final class Worker {
     } finally {
       if (worker != null)
         worker.shutdown();
-      else shutdown_();
     }
   }
 

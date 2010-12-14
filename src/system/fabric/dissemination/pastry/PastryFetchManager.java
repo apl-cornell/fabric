@@ -6,7 +6,6 @@ import java.util.Properties;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.Cache;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 import fabric.worker.RemoteStore;
@@ -47,7 +46,6 @@ public class PastryFetchManager implements FetchManager {
   
   public void destroy() {
     node.destroy();
-    Cache.Collector.shutdown();
   }
 
 }
