@@ -10,7 +10,7 @@ import java.util.logging.Level;
 
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.ShakenSocket;
-import fabric.lang.security.Principal;
+import fabric.lang.security.NodePrincipal;
 
 
 /**
@@ -25,7 +25,7 @@ abstract class Channel extends Thread {
   protected final Socket           sock;
   
   private final Map<Integer, Connection> connections;
-  private final Principal                remotePrincipal;
+  private final NodePrincipal            remotePrincipal;
 
   // channel protocol:
   //
@@ -166,7 +166,7 @@ abstract class Channel extends Thread {
       return "stream " + streamID + " on " + Channel.this.toString();
     }
     
-    public Principal getPrincipal() {
+    public NodePrincipal getPrincipal() {
       return Channel.this.remotePrincipal;
     }
 
