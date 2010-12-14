@@ -12,9 +12,9 @@ import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
 import fabric.common.net.handshake.HandshakeImpl;
 import fabric.common.net.handshake.HandshakeProtocol;
+import fabric.common.net.naming.DefaultNameService;
+import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.common.net.naming.NameService;
-import fabric.common.net.naming.PropertyNameService;
-import fabric.common.net.naming.PropertyNameService.PortType;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -47,7 +47,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     
     try {
       HandshakeProtocol handshake = new HandshakeImpl();
-      NameService nameService = new PropertyNameService(PortType.WORKER);
+      NameService nameService = new DefaultNameService(PortType.WORKER);
       this.factory = new SubServerSocketFactory(handshake, nameService);
     } catch (IOException e) {
       throw new InternalError("Failed to initialize RemoteCallManager", e);

@@ -8,8 +8,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
 
-import fabric.worker.Worker;
-import fabric.worker.RemoteStore;
 import fabric.common.ONumConstants;
 import fabric.common.Version;
 import fabric.common.exceptions.InternalError;
@@ -18,9 +16,11 @@ import fabric.common.exceptions.UsageError;
 import fabric.common.net.SubServerSocketFactory;
 import fabric.common.net.handshake.HandshakeImpl;
 import fabric.common.net.handshake.HandshakeProtocol;
+import fabric.common.net.naming.DefaultNameService;
+import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.common.net.naming.NameService;
-import fabric.common.net.naming.PropertyNameService;
-import fabric.common.net.naming.PropertyNameService.PortType;
+import fabric.worker.RemoteStore;
+import fabric.worker.Worker;
 
 /**
  * The Node class encapsulates the shared resources for multiple stores and
@@ -112,7 +112,7 @@ public class Node {
       this.store = new Store(this, opts.storeName);
 
       HandshakeProtocol handshake = new HandshakeImpl();
-      NameService nameService = new PropertyNameService(PortType.STORE);
+      NameService nameService = new DefaultNameService(PortType.STORE);
 
       this.factory = new SubServerSocketFactory(handshake, nameService);
 
