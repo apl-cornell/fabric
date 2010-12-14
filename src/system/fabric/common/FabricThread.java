@@ -22,18 +22,22 @@ public interface FabricThread {
     private TransactionManager tm;
 
     public Impl() {
+      setDaemon(true);
     }
 
     public Impl(String name) {
       super(name);
+      setDaemon(true);
     }
     
     public Impl(Runnable target) {
       super(target);
+      setDaemon(true);
     }
     
     public Impl(Runnable target, String name) {
       super(target, name);
+      setDaemon(true);
     }
     
     public TransactionManager getTransactionManager() {
