@@ -20,7 +20,6 @@ import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.NodePrincipal;
 import fabric.messages.*;
-import fabric.messages.GetPrincipalMessage.Response;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -36,14 +35,12 @@ import fabric.worker.transaction.TransactionRegistry;
 public class RemoteCallManager extends MessageToWorkerHandler {
   
   private final SubServerSocketFactory factory;
-  private final Worker worker;
   
   /**
    * @param name the worker's DNS hostname.
    */
   public RemoteCallManager(Worker worker) {
     super(worker.name);
-    this.worker = worker;
     
     try {
       HandshakeProtocol handshake = new HandshakeImpl();
@@ -288,11 +285,6 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       obj.$isOwned = false;
       return new TakeOwnershipMessage.Response();
     }
-  }
-
-  @Override
-  public Response handle(NodePrincipal p, GetPrincipalMessage getPrincipalMessage) {
-    return new GetPrincipalMessage.Response(worker.getPrincipal());
   }
 
   @Override

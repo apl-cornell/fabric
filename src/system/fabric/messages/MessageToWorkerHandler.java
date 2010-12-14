@@ -33,7 +33,6 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
   public abstract         ObjectUpdateMessage.Response handle(NodePrincipal p, ObjectUpdateMessage         msg);
   public abstract   PrepareTransactionMessage.Response handle(NodePrincipal p, PrepareTransactionMessage   msg) throws TransactionPrepareFailedException;
   public abstract            DirtyReadMessage.Response handle(NodePrincipal p, DirtyReadMessage            msg) throws AccessException;
-  public abstract         GetPrincipalMessage.Response handle(NodePrincipal p, GetPrincipalMessage         msg);
   public abstract           RemoteCallMessage.Response handle(NodePrincipal p, RemoteCallMessage           msg) throws RemoteCallException;
   public abstract        TakeOwnershipMessage.Response handle(NodePrincipal p, TakeOwnershipMessage        msg) throws TakeOwnershipFailedException;
   public abstract InterWorkerStalenessMessage.Response handle(NodePrincipal p, InterWorkerStalenessMessage msg);

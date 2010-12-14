@@ -32,7 +32,6 @@ public interface MessageHandler {
   public       StalenessCheckMessage.Response handle(NodePrincipal p, StalenessCheckMessage       msg) throws ProtocolError, AccessException;
   public         ObjectUpdateMessage.Response handle(NodePrincipal p, ObjectUpdateMessage         msg) throws ProtocolError;
   public            DirtyReadMessage.Response handle(NodePrincipal p, DirtyReadMessage            msg) throws ProtocolError, AccessException;
-  public         GetPrincipalMessage.Response handle(NodePrincipal p, GetPrincipalMessage         msg) throws ProtocolError;
   public           RemoteCallMessage.Response handle(NodePrincipal p, RemoteCallMessage           msg) throws ProtocolError, RemoteCallException;
   public        TakeOwnershipMessage.Response handle(NodePrincipal p, TakeOwnershipMessage        msg) throws ProtocolError, TakeOwnershipFailedException;
   public InterWorkerStalenessMessage.Response handle(NodePrincipal p, InterWorkerStalenessMessage msg) throws ProtocolError;

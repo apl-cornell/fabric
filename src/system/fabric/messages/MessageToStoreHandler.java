@@ -47,11 +47,6 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
     throw error(msg);
   }
   
-  public final fabric.messages.GetPrincipalMessage.Response handle(NodePrincipal p,
-      GetPrincipalMessage msg) throws ProtocolError {
-    throw error(msg);
-  }
-  
   public final fabric.messages.RemoteCallMessage.Response handle(NodePrincipal p,
       RemoteCallMessage msg) throws ProtocolError {
     throw error(msg);

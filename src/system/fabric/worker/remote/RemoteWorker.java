@@ -7,6 +7,8 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.NotImplementedException;
+import fabric.common.net.SubSocket;
 import fabric.common.net.SubSocketFactory;
 import fabric.common.net.handshake.BogusAuthenticatedHandshake;
 import fabric.common.net.handshake.HandshakeProtocol;
@@ -24,7 +26,6 @@ import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
-import fabric.worker.Worker;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TakeOwnershipFailedException;
 import fabric.worker.transaction.TransactionManager;
@@ -150,32 +151,14 @@ public final class RemoteWorker extends RemoteNode {
    * @return the principal associated with the remote worker.
    */
   public NodePrincipal getPrincipal() {
-    GetPrincipalMessage.Response response;
     try {
-      response = send(new GetPrincipalMessage());
-    } catch (NoException e) {
-      // This is not possible.
-      throw new InternalError(e);
-    }
-    final NodePrincipal principal = response.principal;
-    final String expectedPrincipalName;
-    try {
-      // Note: this check may not make sense anymore. -mdg
-      expectedPrincipalName = "cn=" + name;
-    } catch (IllegalStateException e) {
-      throw new InternalError(e);
-    }
-
-    boolean authenticated =
-        Worker.runInTransaction(null, new Worker.Code<Boolean>() {
-          public Boolean run() {
-            return principal.name().equals(expectedPrincipalName);
-          }
-        });
-
-    if (authenticated)
+      SubSocket socket = subSocketFactory.createSocket(name);
+      NodePrincipal principal = socket.getPrincipal();
+      socket.close();
       return principal;
-    else return null;
+    } catch (IOException e) {
+      throw new NotImplementedException(e);
+    }
   }
 
   @Override
