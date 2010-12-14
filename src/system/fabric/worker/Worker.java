@@ -135,7 +135,7 @@ public final class Worker {
         new Worker(name, port, principalURL, keyStore, passwd, maxConnections,
             timeout, retries, useSSL, fetcher, dissemConfig, initStoreSet);
 
-    instance.remoteCallManager.start();
+    Threading.getPool().execute(instance.remoteCallManager);
     instance.localStore.initialize();
     
     System.out.println("Worker started");
@@ -214,7 +214,7 @@ public final class Worker {
       this.principal = null;
     }
 
-    this.remoteCallManager = new RemoteCallManager();
+    this.remoteCallManager = new RemoteCallManager(this);
     this.disseminationCaches = new ArrayList<Cache>(1);
 
     // Initialize the fetch manager. This MUST be the last thing done in the
@@ -359,7 +359,6 @@ public final class Worker {
    */
   public void shutdown() {
     shutdown_();
-    remoteCallManager.shutdown();
     fetchManager.destroy();
   }
 

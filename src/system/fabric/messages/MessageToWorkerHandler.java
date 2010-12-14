@@ -1,5 +1,6 @@
 package fabric.messages;
 
+import fabric.common.Logging;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.NodePrincipal;
@@ -21,7 +22,12 @@ import fabric.worker.transaction.TakeOwnershipFailedException;
  * 
  * and there is one such method for each message type that the worker handles.
  */
-public abstract class MessageToWorkerHandler implements MessageHandler {
+public abstract class MessageToWorkerHandler extends AbstractMessageServer {
+
+  public MessageToWorkerHandler(String name) {
+    super(name, Logging.WORKER_LOGGER);
+  }
+  
   public abstract     AbortTransactionMessage.Response handle(NodePrincipal p, AbortTransactionMessage     msg) throws AccessException;
   public abstract    CommitTransactionMessage.Response handle(NodePrincipal p, CommitTransactionMessage    msg) throws TransactionCommitFailedException;
   public abstract         ObjectUpdateMessage.Response handle(NodePrincipal p, ObjectUpdateMessage         msg);
