@@ -4,7 +4,6 @@ import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.exceptions.NotImplementedException;
 import fabric.dissemination.Glob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
@@ -96,20 +95,22 @@ public final class RemoteWorker extends RemoteNode {
    *          the tid for the current transaction.
    */
   public void readObject(TransactionID tid, _Impl obj) {
-    _Impl remoteObj = readObject(tid, obj.$getStore(), obj.$getOnum());
+    _Impl remoteObj;
+    try {
+      remoteObj = readObject(tid, obj.$getStore(), obj.$getOnum());
+    } catch (AccessException e) {
+      throw new InternalError("Inter-worker object read failed.", e);
+    }
 
     if (remoteObj == null)
       throw new InternalError("Inter-worker object read failed.");
     obj.$copyAppStateFrom(remoteObj);
   }
 
-  public _Impl readObject(TransactionID tid, Store store, long onum) {
-    try {
-      DirtyReadMessage.Response response = send(new DirtyReadMessage(tid, store, onum));
-      return response.obj;
-    } catch (AccessException e) {
-      throw new NotImplementedException();
-    }
+  public _Impl readObject(TransactionID tid, Store store, long onum)
+      throws AccessException {
+    DirtyReadMessage.Response response = send(new DirtyReadMessage(tid, store, onum));
+    return response.obj;
   }
 
   /**
