@@ -13,5 +13,5 @@ Configuring Tomcat:
 Running CMS:
   9. restart tomcat                 (sudo service tomcat5.5 restart
  10. start the core                 (bin/fab-core --core fabric-cms.systems.cs.cornell.edu etc/keys/fabric-cms.systems.cs.cornell.edu.keystore etc/keys/trust.keystore password
- 11. create the cmsserver principal (bin/fab --worker cmsserver --make-principal fabric-cms.systems.cs.cornell.edu
+ 11. create the cmsserver principal (bin/fab --name cmsserver --make-principal fabric-cms.systems.cs.cornell.edu
  12. navigate to http://localhost:8180/web

@@ -20,7 +20,7 @@ public class Shell {
         try {
             storeName = args[0];
         } catch (Throwable e) {
-            System.out.println("Usage: fab --worker <worker-name> shell.Shell <store-name>");
+            System.out.println("Usage: fab --name <worker-name> shell.Shell <store-name>");
             return;
         }
         Store store = Worker.getWorker().getStore(storeName);

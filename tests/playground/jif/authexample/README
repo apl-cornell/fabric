@@ -14,11 +14,11 @@ Step 3. Start a fresh Broker Store
 
 $cd $FABRIC
 $rm -rf var
-$fab-store --store broker
+$fab-store --name broker
 
 Step 4. Create the customer principal
 
-$fab --worker customer --make-principal broker
+$fab --name customer --make-principal broker
 
 Step 5. Clean the cache of the broker store's colocated worker
 
@@ -28,4 +28,4 @@ the same command as above.
 Step 6. Run the AuthExample program in a Fabric worker
 
 $cd authexample
-$fab --worker customer AuthExample
+$fab --name customer AuthExample

@@ -42,7 +42,7 @@ if [ -n "$debug" ]
     then
     CMD="fab-store -j -Xdebug -j -Xrunjdwp:transport=dt_socket,address=$port,server=y,suspend=n --name $1"
     else
-    CMD="fab-store --store $1"
+    CMD="fab-store --name $1"
 fi
 
 if [ -n "$verbose" ]

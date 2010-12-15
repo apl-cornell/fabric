@@ -133,7 +133,7 @@ as a peer in the dissemination network.
 
 To start a store, run:
 
-  $ fab-store --store [store host name]
+  $ fab-store --name [store host name]
 
 Unless you are using the experimental mobile code support, the store
 must have the classes of objects that it will store on its classpath.
@@ -144,11 +144,11 @@ environment variable.
 Before workers are started, they must create a principal object on a
 store.  This is accomplished by running
 
-  $ fab --worker [worker host name] --make-principal [store host name]
+  $ fab --name [worker host name] --make-principal [store host name]
 
 Once this is done, you can start the worker by running:
 
-  $ fab --worker [worker host name] [main class]
+  $ fab --name [worker host name] [main class]
 
 where [main class] is the fully-qualified name of the class you wish to
 invoke.  If the main class is omitted, the worker will simply start and
