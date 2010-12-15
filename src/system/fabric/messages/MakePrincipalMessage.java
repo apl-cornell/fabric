@@ -8,7 +8,7 @@ import java.security.cert.X509Certificate;
 
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 
 public final class MakePrincipalMessage
            extends Message<MakePrincipalMessage.Response, FabricGeneralSecurityException>
@@ -51,7 +51,7 @@ public final class MakePrincipalMessage
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(NodePrincipal p, MessageHandler handler)
+  public Response dispatch(Principal p, MessageHandler handler)
       throws ProtocolError, FabricGeneralSecurityException {
     return handler.handle(p, this);
   }

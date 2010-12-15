@@ -14,7 +14,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.SubSocket;
 import fabric.lang.Object._Proxy;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -115,7 +115,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    *          the handler to which this message is to be dispatched.
    * @throws  
    */
-  public abstract R dispatch(NodePrincipal p, MessageHandler handler) throws ProtocolError, E;
+  public abstract R dispatch(Principal p, MessageHandler handler) throws ProtocolError, E;
 
   /**
    * Read a Message from the given <code>DataInput</code>

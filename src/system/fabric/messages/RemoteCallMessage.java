@@ -6,7 +6,6 @@ import java.lang.reflect.Method;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Object._Proxy;
-import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.worker.remote.RemoteCallException;
 import fabric.worker.remote.UpdateMap;
@@ -74,7 +73,7 @@ public class RemoteCallMessage
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(NodePrincipal p, MessageHandler h)
+  public Response dispatch(Principal p, MessageHandler h)
       throws ProtocolError, RemoteCallException {
     return h.handle(p, this);
   }

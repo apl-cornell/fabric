@@ -11,7 +11,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 
 /**
  * A <code>StalenessCheckMessage</code> represents a request to a store to check
@@ -49,7 +49,7 @@ public final class StalenessCheckMessage
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(NodePrincipal p, MessageHandler h)
+  public Response dispatch(Principal p, MessageHandler h)
       throws ProtocolError, AccessException {
     return h.handle(p, this);
   }

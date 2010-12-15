@@ -9,7 +9,7 @@ import fabric.common.SerializedObject;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongSet;
 import fabric.dissemination.Glob;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 
 /**
  * A group container contains a group or a glob, and supports converting between
@@ -50,7 +50,7 @@ public final class GroupContainer {
    *          The principal accessing the group.
    * @return null if the given principal is not allowed to read the group.
    */
-  public ObjectGroup getGroup(NodePrincipal principal) {
+  public ObjectGroup getGroup(Principal principal) {
     if (!AuthorizationUtil.isReadPermitted(principal, store, labelOnum))
       return null;
 

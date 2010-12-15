@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 
 public class AbortTransactionMessage
      extends Message<AbortTransactionMessage.Response, AccessException>
@@ -38,7 +38,7 @@ public class AbortTransactionMessage
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(NodePrincipal p, MessageHandler h) throws AccessException {
+  public Response dispatch(Principal p, MessageHandler h) throws AccessException {
     return h.handle(p, this);
   }
   

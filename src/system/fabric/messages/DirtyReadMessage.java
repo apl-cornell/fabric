@@ -9,7 +9,7 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Object._Impl;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -52,7 +52,7 @@ public class DirtyReadMessage extends
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(NodePrincipal p, MessageHandler h)
+  public Response dispatch(Principal p, MessageHandler h)
       throws ProtocolError, AccessException {
     return h.handle(p, this);
   }

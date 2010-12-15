@@ -26,6 +26,7 @@ import fabric.common.net.SubServerSocket;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.messages.*;
 import fabric.store.db.ObjectDB;
 import fabric.worker.TransactionCommitFailedException;
@@ -149,7 +150,7 @@ class Store extends MessageToStoreHandler {
   //////////////////////////////////////////////////////////////////////////////
   
   @Override
-  public AbortTransactionMessage.Response handle(NodePrincipal p, AbortTransactionMessage message)
+  public AbortTransactionMessage.Response handle(Principal p, AbortTransactionMessage message)
   throws AccessException {
     
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
@@ -164,7 +165,7 @@ class Store extends MessageToStoreHandler {
    * Processes the given request for new OIDs.
    */
   @Override
-  public AllocateMessage.Response handle(NodePrincipal p, AllocateMessage msg)
+  public AllocateMessage.Response handle(Principal p, AllocateMessage msg)
   throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Allocate Message from {0}",
@@ -178,7 +179,7 @@ class Store extends MessageToStoreHandler {
    * Processes the given commit request
    */
   @Override
-  public CommitTransactionMessage.Response handle(NodePrincipal p,
+  public CommitTransactionMessage.Response handle(Principal p,
                                                   CommitTransactionMessage message)
   throws TransactionCommitFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
@@ -192,7 +193,7 @@ class Store extends MessageToStoreHandler {
    * Processes the given PREPARE request.
    */
   @Override
-  public PrepareTransactionMessage.Response handle(NodePrincipal p,
+  public PrepareTransactionMessage.Response handle(Principal p,
                                                    PrepareTransactionMessage msg)
   throws TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
@@ -211,7 +212,7 @@ class Store extends MessageToStoreHandler {
    * Processes the given read request.
    */
   @Override
-  public ReadMessage.Response handle(NodePrincipal p, ReadMessage msg)
+  public ReadMessage.Response handle(Principal p, ReadMessage msg)
   throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Read Message from {0}, onum={1}",
@@ -225,7 +226,7 @@ class Store extends MessageToStoreHandler {
    * Processes the given dissemination-read request.
    */
   @Override
-  public DissemReadMessage.Response handle(NodePrincipal p, DissemReadMessage msg)
+  public DissemReadMessage.Response handle(Principal p, DissemReadMessage msg)
   throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling DissemRead message from {0}, onum={1}",
@@ -240,7 +241,7 @@ class Store extends MessageToStoreHandler {
    * Processes the given request for the store's SSL certificate chain.
    */
   @Override
-  public GetCertChainMessage.Response handle(NodePrincipal p,
+  public GetCertChainMessage.Response handle(Principal p,
                                              GetCertChainMessage msg) {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling request for SSL cert chain, worker={0}",
@@ -252,7 +253,7 @@ class Store extends MessageToStoreHandler {
    * Processes the given request for a new node principal
    */
   @Override
-  public MakePrincipalMessage.Response handle(NodePrincipal p,
+  public MakePrincipalMessage.Response handle(Principal p,
       MakePrincipalMessage msg) throws FabricGeneralSecurityException {
     // Note: p should always be null.
     
@@ -288,7 +289,7 @@ class Store extends MessageToStoreHandler {
    * Processes the given staleness check request.
    */
   @Override
-  public StalenessCheckMessage.Response handle(NodePrincipal p,
+  public StalenessCheckMessage.Response handle(Principal p,
       StalenessCheckMessage message) throws AccessException {
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling Staleness Check Message from {0}", p.name());
@@ -300,7 +301,7 @@ class Store extends MessageToStoreHandler {
    *         objects.
    */
   private boolean prepareTransaction(
-      NodePrincipal p,
+      Principal p,
       long tid, long commitTime,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites, LongKeyMap<Integer> reads)

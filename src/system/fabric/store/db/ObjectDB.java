@@ -10,6 +10,7 @@ import java.util.Iterator;
 import javax.security.auth.x500.X500Principal;
 
 import fabric.lang.security.Label;
+import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.PairLabel;
 import fabric.lang.security.ReaderPolicy;
 import fabric.lang.security.WriterPolicy;
@@ -21,7 +22,7 @@ import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.*;
 import fabric.store.SubscriptionManager;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 
 /**
  * <p>
@@ -49,7 +50,7 @@ import fabric.lang.security.NodePrincipal;
 public abstract class ObjectDB {
 
   protected final String name;
-  private NodePrincipal storePrincipal;
+  private Principal storePrincipal;
   private Label publicReadonlyLabel;
   private long nextGlobID;
 
@@ -73,7 +74,7 @@ public abstract class ObjectDB {
   protected static final class PendingTransaction implements FastSerializable,
       Iterable<Long> {
     public final long tid;
-    public final NodePrincipal owner;
+    public final Principal owner;
     public final Collection<Long> reads;
 
     /**
@@ -81,7 +82,7 @@ public abstract class ObjectDB {
      */
     public final Collection<SerializedObject> modData;
 
-    PendingTransaction(long tid, NodePrincipal owner) {
+    PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
       this.owner = owner;
       this.reads = new ArrayList<Long>();
@@ -96,7 +97,7 @@ public abstract class ObjectDB {
 
       if (in.readBoolean()) {
         Store store = Worker.getWorker().getStore(in.readUTF());
-        this.owner = new NodePrincipal._Proxy(store, in.readLong());
+        this.owner = new Principal._Proxy(store, in.readLong());
       } else {
         this.owner = null;
       }
@@ -200,7 +201,7 @@ public abstract class ObjectDB {
    * @throws AccessException
    *           if the worker has insufficient privileges.
    */
-  public final void beginTransaction(long tid, NodePrincipal worker)
+  public final void beginTransaction(long tid, Principal worker)
       throws AccessException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
@@ -214,7 +215,7 @@ public abstract class ObjectDB {
   /**
    * Registers that a transaction has read an object.
    */
-  public final void registerRead(long tid, NodePrincipal worker, long onum) {
+  public final void registerRead(long tid, Principal worker, long onum) {
     addReadLock(onum, tid);
     pendingByTid.get(tid).get(worker).reads.add(onum);
   }
@@ -229,7 +230,7 @@ public abstract class ObjectDB {
    * @param obj
    *          the updated object.
    */
-  public final void registerUpdate(long tid, NodePrincipal worker,
+  public final void registerUpdate(long tid, Principal worker,
       SerializedObject obj) {
     addWriteLock(obj.getOnum(), tid);
     pendingByTid.get(tid).get(worker).modData.add(obj);
@@ -275,7 +276,7 @@ public abstract class ObjectDB {
    * Rolls back a partially prepared transaction. (i.e., one for which
    * finishPrepare() has yet to be called.)
    */
-  public final void abortPrepare(long tid, NodePrincipal worker) {
+  public final void abortPrepare(long tid, Principal worker) {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     unpin(submap.remove(worker));
     if (submap.isEmpty()) pendingByTid.remove(tid);
@@ -295,7 +296,7 @@ public abstract class ObjectDB {
    * failure.
    * </p>
    */
-  public abstract void finishPrepare(long tid, NodePrincipal worker);
+  public abstract void finishPrepare(long tid, Principal worker);
 
   /**
    * Cause the objects prepared in transaction [tid] to be committed. The
@@ -310,7 +311,7 @@ public abstract class ObjectDB {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid, NodePrincipal workerPrincipal, SubscriptionManager sm)
+  public abstract void commit(long tid, Principal workerPrincipal, SubscriptionManager sm)
       throws AccessException;
 
   /**
@@ -323,7 +324,7 @@ public abstract class ObjectDB {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void rollback(long tid, NodePrincipal worker)
+  public abstract void rollback(long tid, Principal worker)
       throws AccessException;
 
   /**
@@ -564,11 +565,11 @@ public abstract class ObjectDB {
     setInitialized();
   }
 
-  private final NodePrincipal storePrincipal() {
+  private final Principal storePrincipal() {
     if (storePrincipal == null) {
       Store store = Worker.getWorker().getStore(name);
       storePrincipal =
-          new NodePrincipal._Proxy(store, ONumConstants.STORE_PRINCIPAL);
+          new Principal._Proxy(store, ONumConstants.STORE_PRINCIPAL);
     }
 
     return storePrincipal;

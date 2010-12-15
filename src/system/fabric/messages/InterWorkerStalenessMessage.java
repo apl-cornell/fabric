@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 
 /**
  * Represents a request to check staleness of data in a transaction.
@@ -44,7 +44,7 @@ public final class InterWorkerStalenessMessage
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(NodePrincipal p, MessageHandler h) throws ProtocolError {
+  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError {
     return h.handle(p, this);
   }
 

@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 
 /**
  * An <code>AllocateMessage</code> represents a request to allocate a number
@@ -44,7 +44,7 @@ public final class AllocateMessage extends
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(NodePrincipal p, MessageHandler h)
+  public Response dispatch(Principal p, MessageHandler h)
       throws ProtocolError, AccessException {
     return h.handle(p, this);
   }

@@ -4,7 +4,7 @@ import fabric.common.Logging;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.messages.ObjectUpdateMessage.Response;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -15,7 +15,7 @@ import fabric.worker.TransactionPrepareFailedException;
  * all have the form:<br>
  * 
  * <pre>
- * public Response handle(NodePrincipal, Message)
+ * public Response handle(Principal, Message)
  *   throws FabricException
  * </pre>
  * 
@@ -27,38 +27,38 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
     super(name, Logging.STORE_LOGGER);
   }
   
-  public abstract  AbortTransactionMessage.Response handle(NodePrincipal p, AbortTransactionMessage   msg) throws AccessException;
-  public abstract          AllocateMessage.Response handle(NodePrincipal p, AllocateMessage           msg) throws AccessException;
-  public abstract CommitTransactionMessage.Response handle(NodePrincipal p, CommitTransactionMessage  msg) throws TransactionCommitFailedException;
-  public abstract        DissemReadMessage.Response handle(NodePrincipal p, DissemReadMessage         msg) throws AccessException;
-  public abstract      GetCertChainMessage.Response handle(NodePrincipal p, GetCertChainMessage       msg);
-  public abstract PrepareTransactionMessage.Response handle(NodePrincipal p, PrepareTransactionMessage msg) throws TransactionPrepareFailedException;
-  public abstract              ReadMessage.Response handle(NodePrincipal p, ReadMessage               msg) throws AccessException;
-  public abstract     MakePrincipalMessage.Response handle(NodePrincipal p, MakePrincipalMessage      msg) throws FabricGeneralSecurityException;
-  public abstract    StalenessCheckMessage.Response handle(NodePrincipal p, StalenessCheckMessage     msg) throws AccessException;
+  public abstract   AbortTransactionMessage.Response handle(Principal p, AbortTransactionMessage   msg) throws AccessException;
+  public abstract           AllocateMessage.Response handle(Principal p, AllocateMessage           msg) throws AccessException;
+  public abstract  CommitTransactionMessage.Response handle(Principal p, CommitTransactionMessage  msg) throws TransactionCommitFailedException;
+  public abstract         DissemReadMessage.Response handle(Principal p, DissemReadMessage         msg) throws AccessException;
+  public abstract       GetCertChainMessage.Response handle(Principal p, GetCertChainMessage       msg);
+  public abstract PrepareTransactionMessage.Response handle(Principal p, PrepareTransactionMessage msg) throws TransactionPrepareFailedException;
+  public abstract               ReadMessage.Response handle(Principal p, ReadMessage               msg) throws AccessException;
+  public abstract      MakePrincipalMessage.Response handle(Principal p, MakePrincipalMessage      msg) throws FabricGeneralSecurityException;
+  public abstract     StalenessCheckMessage.Response handle(Principal p, StalenessCheckMessage     msg) throws AccessException;
   
-  public final Response handle(NodePrincipal p, ObjectUpdateMessage msg)
+  public final Response handle(Principal p, ObjectUpdateMessage msg)
       throws ProtocolError {
     throw error(msg);
   }
   
-  public final fabric.messages.DirtyReadMessage.Response handle(NodePrincipal p,
+  public final fabric.messages.DirtyReadMessage.Response handle(Principal p,
       DirtyReadMessage msg) throws ProtocolError {
     throw error(msg);
   }
   
-  public final fabric.messages.RemoteCallMessage.Response handle(NodePrincipal p,
+  public final fabric.messages.RemoteCallMessage.Response handle(Principal p,
       RemoteCallMessage msg) throws ProtocolError {
     throw error(msg);
   }
   
-  public final fabric.messages.TakeOwnershipMessage.Response handle(NodePrincipal p,
+  public final fabric.messages.TakeOwnershipMessage.Response handle(Principal p,
       TakeOwnershipMessage msg) throws ProtocolError {
     throw error(msg);
   }
   
   public final fabric.messages.InterWorkerStalenessMessage.Response handle(
-      NodePrincipal p, InterWorkerStalenessMessage msg) throws ProtocolError {
+      Principal p, InterWorkerStalenessMessage msg) throws ProtocolError {
     throw error(msg);
   }
   

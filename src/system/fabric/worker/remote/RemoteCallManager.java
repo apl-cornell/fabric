@@ -17,7 +17,7 @@ import fabric.common.net.naming.NameService;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.messages.*;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
@@ -57,7 +57,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     return factory.createServerSocket();
   }
   @Override
-  public RemoteCallMessage.Response handle(final NodePrincipal p,
+  public RemoteCallMessage.Response handle(final Principal p,
       final RemoteCallMessage remoteCallMessage) throws RemoteCallException {
     // We assume that this thread's transaction manager is free (i.e., it's not
     // managing any tranaction's log) at the start of the method and ensure that
@@ -136,7 +136,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
    * worker's TransactionManager is associated with a null log.
    */
   @Override
-  public AbortTransactionMessage.Response handle(NodePrincipal p, AbortTransactionMessage abortTransactionMessage) {
+  public AbortTransactionMessage.Response handle(Principal p, AbortTransactionMessage abortTransactionMessage) {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(abortTransactionMessage.tid.topTid);
@@ -151,7 +151,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public PrepareTransactionMessage.Response handle(NodePrincipal p,
+  public PrepareTransactionMessage.Response handle(Principal p,
                                                    PrepareTransactionMessage prepareTransactionMessage)
   throws TransactionPrepareFailedException
   {
@@ -188,7 +188,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
    * worker's TransactionManager is associated with a null log.
    */
   @Override
-  public CommitTransactionMessage.Response handle(NodePrincipal p,
+  public CommitTransactionMessage.Response handle(Principal p,
                                                   CommitTransactionMessage commitTransactionMessage)
   throws TransactionCommitFailedException {
     // XXX TODO Security checks.
@@ -214,7 +214,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public DirtyReadMessage.Response handle(NodePrincipal p, DirtyReadMessage readMessage) {
+  public DirtyReadMessage.Response handle(Principal p, DirtyReadMessage readMessage) {
     Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
     if (log == null) return new DirtyReadMessage.Response(null);
 
@@ -244,7 +244,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public TakeOwnershipMessage.Response handle(NodePrincipal p, TakeOwnershipMessage msg)
+  public TakeOwnershipMessage.Response handle(Principal p, TakeOwnershipMessage msg)
   throws TakeOwnershipFailedException {
     Log log =
         TransactionRegistry.getInnermostLog(msg.tid.topTid);
@@ -289,7 +289,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public ObjectUpdateMessage.Response handle(NodePrincipal p, ObjectUpdateMessage objectUpdateMessage) {
+  public ObjectUpdateMessage.Response handle(Principal p, ObjectUpdateMessage objectUpdateMessage) {
     if (objectUpdateMessage.group == null) {
       // TODO
       //RemoteStore store = worker.getStore(objectUpdateMessage.store);
@@ -313,7 +313,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public InterWorkerStalenessMessage.Response handle(NodePrincipal p, InterWorkerStalenessMessage stalenessCheckMessage) {
+  public InterWorkerStalenessMessage.Response handle(Principal p, InterWorkerStalenessMessage stalenessCheckMessage) {
 
     TransactionID tid = stalenessCheckMessage.tid;
     if (tid == null) return new InterWorkerStalenessMessage.Response(false);

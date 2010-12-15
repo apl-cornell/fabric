@@ -7,7 +7,7 @@ import java.io.IOException;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.dissemination.Glob;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 
 /**
  * A <code>DissemReadMessage</code> represents a request from a dissemination
@@ -48,7 +48,7 @@ public final class DissemReadMessage
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(NodePrincipal p, MessageHandler h) throws ProtocolError, AccessException {
+  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError, AccessException {
     return h.handle(p, this);
   }
 

@@ -14,7 +14,7 @@ import fabric.common.util.*;
 import fabric.dissemination.Glob;
 import fabric.lang.Statistics;
 import fabric.lang.security.Label;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.worker.Store;
@@ -62,7 +62,7 @@ public class TransactionManager {
   /**
    * Instruct the transaction manager that the given transaction is aborting
    */
-  public void abortTransaction(NodePrincipal worker, long transactionID)
+  public void abortTransaction(Principal worker, long transactionID)
       throws AccessException {
     synchronized (database) {
       database.rollback(transactionID, worker);
@@ -74,7 +74,7 @@ public class TransactionManager {
   /**
    * Execute the commit phase of two phase commit.
    */
-  public void commitTransaction(NodePrincipal workerPrincipal, long transactionID)
+  public void commitTransaction(Principal workerPrincipal, long transactionID)
       throws TransactionCommitFailedException {
     synchronized (database) {
       try {
@@ -121,7 +121,7 @@ public class TransactionManager {
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public boolean prepare(NodePrincipal worker, PrepareRequest req)
+  public boolean prepare(Principal worker, PrepareRequest req)
       throws TransactionPrepareFailedException {
     final long tid = req.tid;
     boolean result = false;
@@ -287,7 +287,7 @@ public class TransactionManager {
    * Checks that the worker principal has permissions to read/write the given
    * objects. If it doesn't, a AccessException is thrown.
    */
-  private void checkPerms(final NodePrincipal worker, final LongSet reads,
+  private void checkPerms(final Principal worker, final LongSet reads,
       final Collection<SerializedObject> writes) throws AccessException {
     // The code that does the actual checking.
     Code<AccessException> checker = new Code<AccessException>() {
@@ -403,7 +403,7 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  public ObjectGroup getGroup(NodePrincipal principal, long onum) throws AccessException {
+  public ObjectGroup getGroup(Principal principal, long onum) throws AccessException {
     ObjectGroup group = getGroupContainerAndSubscribe(onum).getGroup(principal);
     if (group == null) throw new AccessException(database.getName(), onum);
     return group;
@@ -482,7 +482,7 @@ public class TransactionManager {
       if (history != null) {
         int promise = history.generatePromise();
         if (promise > 0) {
-          NodePrincipal worker = Worker.getWorker().getPrincipal();
+          Principal worker = Worker.getWorker().getPrincipal();
           synchronized (database) {
             // create a promise
 
@@ -562,7 +562,7 @@ public class TransactionManager {
    * @throws AccessException
    *           if the principal is not allowed to create objects on this store.
    */
-  public long[] newOnums(NodePrincipal worker, int num) throws AccessException {
+  public long[] newOnums(Principal worker, int num) throws AccessException {
     synchronized (database) {
       return database.newOnums(num);
     }
@@ -583,7 +583,7 @@ public class TransactionManager {
    * for any stale objects found.
    */
   @SuppressWarnings("unchecked")
-  List<SerializedObject> checkForStaleObjects(NodePrincipal worker,
+  List<SerializedObject> checkForStaleObjects(Principal worker,
       LongKeyMap<Integer> versions) throws AccessException {
     // First, check read and write permissions.
     Store store = Worker.getWorker().getStore(database.getName());

@@ -18,7 +18,7 @@ import fabric.common.net.naming.NameService;
 import fabric.dissemination.Glob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.messages.*;
 import fabric.messages.Message.NoException;
 import fabric.net.RemoteNode;
@@ -150,10 +150,10 @@ public final class RemoteWorker extends RemoteNode {
   /**
    * @return the principal associated with the remote worker.
    */
-  public NodePrincipal getPrincipal() {
+  public Principal getPrincipal() {
     try {
       SubSocket socket = subSocketFactory.createSocket(name);
-      NodePrincipal principal = socket.getPrincipal();
+      Principal principal = socket.getPrincipal();
       socket.close();
       return principal;
     } catch (IOException e) {
