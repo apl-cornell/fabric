@@ -52,7 +52,7 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                   DataInputStream in =
                       new DataInputStream(new BufferedInputStream(connection
                           .getInputStream()));
-                  DataOutput out =
+                  DataOutputStream out =
                       new DataOutputStream(new BufferedOutputStream(connection
                           .getOutputStream()));
 
@@ -65,6 +65,8 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                   } catch (FabricException e) {
                     message.respond(out, e);
                   }
+                  
+                  out.flush();
                 } catch (IOException e) {
                   logger.log(Level.WARNING,
                       "Network error while handling request", e);
