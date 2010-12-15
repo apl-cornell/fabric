@@ -12,7 +12,6 @@ import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.ShakenSocket;
 import fabric.lang.security.Principal;
 
-
 /**
  * A channel manages a single socket, allowing it to be multiplexed across
  * multiple SubSockets.
@@ -39,6 +38,8 @@ abstract class Channel extends Thread {
 
   protected Channel(ShakenSocket s) throws IOException {
     super();
+    setDaemon(true);
+    
     this.sock            = s.sock;
     this.remotePrincipal = s.principal;  
     this.out  = new DataOutputStream(this.sock.getOutputStream());

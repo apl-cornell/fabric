@@ -19,8 +19,8 @@ import fabric.common.net.handshake.BogusAuthenticatedHandshake;
 import fabric.common.net.handshake.HandshakeProtocol;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 import fabric.common.net.naming.DefaultNameService;
-import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.DefaultNameService.PortType;
+import fabric.common.net.naming.NameService;
 import fabric.common.util.*;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
@@ -86,17 +86,16 @@ public class RemoteStore extends RemoteNode implements Store {
 
   private class SerializedCollector extends Thread {
     private final ReferenceQueue<SerializedObject> queue;
-    private boolean destroyed;
 
     SerializedCollector() {
       super("Serialized object collector for store " + name);
+      setDaemon(true);
       queue = new ReferenceQueue<SerializedObject>();
-      destroyed = false;
     }
 
     @Override
     public void run() {
-      while (!destroyed) {
+      while (true) {
         try {
           SerializedObjectSoftRef ref =
               (SerializedObjectSoftRef) queue.remove();
