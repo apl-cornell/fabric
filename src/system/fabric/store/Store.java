@@ -155,7 +155,7 @@ class Store extends MessageToStoreHandler {
     
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Abort Message from {0} for tid={1}",
-                p.name(), message.tid.topTid);
+                nameOf(p), message.tid.topTid);
     
     tm.abortTransaction(p, message.tid.topTid);
     return new AbortTransactionMessage.Response();
@@ -169,7 +169,7 @@ class Store extends MessageToStoreHandler {
   throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Allocate Message from {0}",
-                p.name());
+                nameOf(p));
     
     long[] onums = tm.newOnums(p, msg.num);
     return new AllocateMessage.Response(onums);
@@ -184,7 +184,7 @@ class Store extends MessageToStoreHandler {
   throws TransactionCommitFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Commit Message from {0} for tid={1}",
-                p.name(), message.transactionID);
+                nameOf(p), message.transactionID);
     tm.commitTransaction(p, message.transactionID);
     return new CommitTransactionMessage.Response();
   }
@@ -198,7 +198,7 @@ class Store extends MessageToStoreHandler {
   throws TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Prepare Message, worker={0}, tid={1}",
-                p.name(), msg.tid);
+                nameOf(p), msg.tid);
     boolean subTransactionCreated = prepareTransaction(p,
                                                        msg.tid,
                                                        msg.commitTime,
@@ -216,7 +216,7 @@ class Store extends MessageToStoreHandler {
   throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Read Message from {0}, onum={1}",
-                p.name(), msg.onum);
+                nameOf(p), msg.onum);
 
     ObjectGroup group = tm.getGroup(p, msg.onum);
     return new ReadMessage.Response(group);
@@ -230,7 +230,7 @@ class Store extends MessageToStoreHandler {
   throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling DissemRead message from {0}, onum={1}",
-                p.name(), msg.onum);
+                nameOf(p), msg.onum);
 
     Glob glob = tm.getGlob(msg.onum);
 
@@ -245,7 +245,7 @@ class Store extends MessageToStoreHandler {
                                              GetCertChainMessage msg) {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling request for SSL cert chain, worker={0}",
-                p.name());
+                nameOf(p));
     return new GetCertChainMessage.Response(certificateChain);
   }
 
@@ -258,7 +258,7 @@ class Store extends MessageToStoreHandler {
     // Note: p should always be null.
     
     // Get the store's node object and its signing key. 
-    final String storeName = p.name();
+    final String storeName = name;
     final fabric.worker.Store store = Worker.getWorker().getStore(storeName);
     final PrivateKey storeKey = privateKey;
     
@@ -292,7 +292,7 @@ class Store extends MessageToStoreHandler {
   public StalenessCheckMessage.Response handle(Principal p,
       StalenessCheckMessage message) throws AccessException {
     STORE_REQUEST_LOGGER.log(Level.FINER,
-        "Handling Staleness Check Message from {0}", p.name());
+        "Handling Staleness Check Message from {0}", nameOf(p));
     return new StalenessCheckMessage.Response(tm.checkForStaleObjects(p, message.versions));
   }
   
@@ -317,5 +317,9 @@ class Store extends MessageToStoreHandler {
         tm.prepare(p, req);
 
     return subTransactionCreated;
+  }
+  
+  private String nameOf(Principal p) {
+    return p == null ? "BOTTOM" : p.name();
   }
 }
