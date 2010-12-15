@@ -442,7 +442,6 @@
       <include name="fabric/worker/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
-      <exclude name="fabric/worker/debug/**" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
         <path refid="lib.classpath"/>
