@@ -10,8 +10,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
-import fabric.common.net.handshake.HandshakeImpl;
-import fabric.common.net.handshake.HandshakeProtocol;
+import fabric.common.net.handshake.HandshakeProtocol.ProtocolType;
 import fabric.common.net.naming.DefaultNameService;
 import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.common.net.naming.NameService;
@@ -43,9 +42,11 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     super(worker.name);
     
     try {
-      HandshakeProtocol handshake = new HandshakeImpl();
+      // List of allowable handshake protocols.
+      ProtocolType[] protocolTypes =
+          { ProtocolType.BOGUS, ProtocolType.UNAUTHENTICATED };
       NameService nameService = new DefaultNameService(PortType.WORKER);
-      this.factory = new SubServerSocketFactory(handshake, nameService);
+      this.factory = new SubServerSocketFactory(protocolTypes, nameService);
     } catch (IOException e) {
       throw new InternalError("Failed to initialize RemoteCallManager", e);
     }

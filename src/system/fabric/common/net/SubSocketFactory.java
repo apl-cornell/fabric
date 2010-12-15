@@ -1,16 +1,10 @@
 package fabric.common.net;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.net.SocketFactory;
-
-import fabric.common.exceptions.NotImplementedException;
-import fabric.common.net.Channel.Connection;
 import fabric.common.net.handshake.HandshakeProtocol;
-import fabric.common.net.handshake.ShakenSocket;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.SocketAddress;
 

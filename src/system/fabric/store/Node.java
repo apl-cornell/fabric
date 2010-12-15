@@ -14,8 +14,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
 import fabric.common.net.SubServerSocketFactory;
-import fabric.common.net.handshake.HandshakeImpl;
-import fabric.common.net.handshake.HandshakeProtocol;
+import fabric.common.net.handshake.HandshakeProtocol.ProtocolType;
 import fabric.common.net.naming.DefaultNameService;
 import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.common.net.naming.NameService;
@@ -111,10 +110,11 @@ public class Node {
     try {
       this.store = new Store(this, opts.storeName);
 
-      HandshakeProtocol handshake = new HandshakeImpl();
+      // List of allowable handshake protocols.
+      ProtocolType[] protocolTypes = { ProtocolType.BOGUS };
       NameService nameService = new DefaultNameService(PortType.STORE);
 
-      this.factory = new SubServerSocketFactory(handshake, nameService);
+      this.factory = new SubServerSocketFactory(protocolTypes, nameService);
 
     } catch (final IOException e) {
       throw new InternalError("Failed to intialize Node", e);
