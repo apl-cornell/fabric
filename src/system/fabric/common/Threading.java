@@ -15,6 +15,11 @@ import fabric.common.exceptions.InternalError;
 public class Threading {
   private static ExecutorService pool = null;
   
+  static {
+    // For now, always use a cached thread pool.
+    init(-1);
+  }
+  
   /**
    * Initialize the thread pool.
    * 
@@ -22,7 +27,7 @@ public class Threading {
    *                 thread pool will be allowed to grow as needed.
    * @throws InternalError if the pool is already initialized.                   
    */
-  public static void init(int poolSize) throws InternalError {
+  private static void init(int poolSize) throws InternalError {
     if (Threading.pool != null) 
       throw new InternalError("Threading initialized twice");
     
