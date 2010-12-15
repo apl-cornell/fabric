@@ -5,5 +5,5 @@ PATH="${PATH}:${APP_HOME}/../../bin"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab --worker worker --make-principal database
+fab --name worker --make-principal database
 

@@ -8,6 +8,6 @@ CP="${APP_HOME}/classes"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab -classpath "${CP}" --worker customer \
+fab -classpath "${CP}" --name customer \
   travel.Create broker bank airline bankweb airlineweb
 

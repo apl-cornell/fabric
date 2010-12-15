@@ -11,5 +11,5 @@ CP="${CP}:${FABRIC}/lib/fabric-sif.jar"
 export FABRIC_HOME="${APP_HOME}"
 
 fab-http -classpath "${CP}" "$@" \
-  --worker webserver ${APP_HOME}/web --port 8080
+  --name webserver ${APP_HOME}/web --port 8080
 

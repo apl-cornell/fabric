@@ -8,5 +8,5 @@ CP="${APP_HOME}/classes"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab -classpath "${APP_HOME}/classes" --worker worker Hello "$@"
+fab -classpath "${APP_HOME}/classes" --name worker Hello "$@"
 

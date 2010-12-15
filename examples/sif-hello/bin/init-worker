@@ -5,5 +5,5 @@ PATH="${PATH}:${APP_HOME}/../../bin"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab --worker webserver --make-principal backend
+fab --name webserver --make-principal backend
 

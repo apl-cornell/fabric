@@ -6,6 +6,6 @@ PATH="${PATH}:${APP_HOME}/../../bin"
 export FABRIC_HOME="${APP_HOME}"
 
 for i in customer bankweb airlineweb ; do
-  fab --worker $i --make-principal broker
+  fab --name $i --make-principal broker
 done
 

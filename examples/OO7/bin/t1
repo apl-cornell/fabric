@@ -5,5 +5,5 @@ PATH="${PATH}:${APP_HOME}/../../bin"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab -classpath "${APP_HOME}/classes" --worker worker OO7.traversals.T1 "$@"
+fab -classpath "${APP_HOME}/classes" --name worker OO7.traversals.T1 "$@"
 
