@@ -318,7 +318,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    * Concrete message implementations may use this class to indicate that no
    * exceptions should be thrown during message processing.
    */
-  public static class NoException extends FabricException {
+  public static final class NoException extends FabricException {
     private NoException() {
     }
   }
