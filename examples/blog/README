@@ -11,7 +11,7 @@ This directory contains the following sub-directories:
 
   - src/fabil: source code for the FabIL implementation of the blog example
   - src/java: source code for the Java implementation of the blog example and
-    the stress-testing client
+	the stress-testing client
   - bin: a collection of scripts for running the example
   - etc: configuration files for the blog's store and worker
 
@@ -30,26 +30,26 @@ worker named "blog-worker" for running the web frontend.
 
   0. Begin in the blog example directory:
 
-    $ cd $FABRIC/examples/blog
+	$ cd $FABRIC/examples/blog
 
   1. Start the "blog-store" store that will be storing the blog's data:
 
-    $ bin/start-store
+	$ bin/start-store
 
   2. If you are starting with a fresh store, you will need to initialize the
      worker by creating its principal object on the store:
 
-    $ bin/init-worker
+	$ bin/init-worker
 
   3. Start a blog server. It will listen on port 8080.
 
-    $ bin/start-blog
+	$ bin/start-blog
 
   4. Access the blog by browsing to http://localhost:8080/web
 
   5. You can start a client by using the 'start-client' script:
 
-    $ bin/start-client
+	$ bin/start-client
 
      Once the client is started, you can access it by browsing to
      http://localhost:9000/web

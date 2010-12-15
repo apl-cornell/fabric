@@ -18,6 +18,7 @@ To build the example, run 'ant' in the OO7 example directory:
 
   $ ant
 
+
 Using
 -----
 This example comes with a store named "database" for storing the OO7 databases,
