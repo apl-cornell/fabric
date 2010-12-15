@@ -21,8 +21,12 @@ public class BogusAuthenticatedHandshake extends HandshakeProtocol {
   // S->C: server's principal oid
   // /////////////////////////////
 
-  private final String principalStoreName;
-  private final long principalOnum;
+  // Field initialization is delayed because it depends on the worker's
+  // initialization, and the constructor is called before the worker is fully
+  // initialized.
+  private boolean fieldsInitialized;
+  private String principalStoreName;
+  private long principalOnum;
 
   /**
    * @param principal
@@ -30,14 +34,21 @@ public class BogusAuthenticatedHandshake extends HandshakeProtocol {
    */
   public BogusAuthenticatedHandshake() {
     super(ProtocolType.BOGUS);
+    this.fieldsInitialized = false;
+  }
+  
+  private void initFields() {
     Principal localPrincipal = Worker.getWorker().getPrincipal();
     this.principalStoreName = localPrincipal.$getStore().name();
     this.principalOnum = localPrincipal.$getOnum();
+    this.fieldsInitialized = true;
   }
 
   @Override
   public ShakenSocket initiateImpl(String name, Socket s)
       throws IOException {
+    if (!fieldsInitialized) initFields();
+    
     DataInputStream in = new DataInputStream(s.getInputStream());
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
@@ -56,6 +67,8 @@ public class BogusAuthenticatedHandshake extends HandshakeProtocol {
 
   @Override
   public ShakenSocket receive(Socket s) throws IOException {
+    if (!fieldsInitialized) initFields();
+    
     DataInputStream in = new DataInputStream(s.getInputStream());
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
     
