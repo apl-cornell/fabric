@@ -354,13 +354,6 @@ public final class Worker {
     }
   }
 
-  /**
-   * Called to shut down and clean up worker.
-   */
-  public void shutdown() {
-    fetchManager.destroy();
-  }
-
   public static void initialize(String name) throws UnrecoverableKeyException,
       KeyStoreException, NoSuchAlgorithmException, CertificateException,
       IllegalStateException, IOException, InternalError, UsageError {
@@ -409,104 +402,98 @@ public final class Worker {
     Worker worker = null;
     final Options opts;
     try {
-      try {
-        opts = new Options(args);
-        initialize(opts.name);
+      opts = new Options(args);
+      initialize(opts.name);
 
-        worker = getWorker();
-        if (worker.getPrincipal() == null && opts.store == null
-            && opts.app != null) {
-          throw new UsageError(
-              "No fabric.worker.principal specified in the worker "
-                  + "configuration.  Either\nspecify one or create a principal "
-                  + "with --make-principal.");
-        }
-      } catch (UsageError ue) {
-        PrintStream out = ue.exitCode == 0 ? System.out : System.err;
-        if (ue.getMessage() != null && ue.getMessage().length() > 0) {
-          out.println(ue.getMessage());
-          out.println();
-        }
-
-        Options.usage(out);
-        throw new TerminationException(ue.exitCode);
+      worker = getWorker();
+      if (worker.getPrincipal() == null && opts.store == null
+          && opts.app != null) {
+        throw new UsageError(
+            "No fabric.worker.principal specified in the worker "
+                + "configuration.  Either\nspecify one or create a principal "
+                + "with --make-principal.");
+      }
+    } catch (UsageError ue) {
+      PrintStream out = ue.exitCode == 0 ? System.out : System.err;
+      if (ue.getMessage() != null && ue.getMessage().length() > 0) {
+        out.println(ue.getMessage());
+        out.println();
       }
 
-      // log the command line
-      StringBuilder cmd = new StringBuilder("Command Line: Worker");
-      for (String s : args) {
-        cmd.append(" ");
-        cmd.append(s);
-      }
-      WORKER_LOGGER.config(cmd.toString());
+      Options.usage(out);
+      throw new TerminationException(ue.exitCode);
+    }
 
-      if (opts.store != null) {
-        // Create a principal object on the given store.
-        final String name = worker.getJavaPrincipal().getName();
-        final Store store = worker.getStore(opts.store);
+    // log the command line
+    StringBuilder cmd = new StringBuilder("Command Line: Worker");
+    for (String s : args) {
+      cmd.append(" ");
+      cmd.append(s);
+    }
+    WORKER_LOGGER.config(cmd.toString());
 
-        runInSubTransaction(new Code<Void>() {
-          public Void run() {
-            NodePrincipal principal =
-                new NodePrincipal._Impl(store, null, name);
-            principal.addDelegatesTo(store.getPrincipal());
+    if (opts.store != null) {
+      // Create a principal object on the given store.
+      final String name = worker.getJavaPrincipal().getName();
+      final Store store = worker.getStore(opts.store);
 
-            System.out.println("Worker principal created:");
-            System.out.println("fab://" + opts.store + "/"
-                + principal.$getOnum());
-            return null;
-          }
-        });
-
-        return;
-      }
-
-      if (opts.app == null) {
-        // Act as a dissemination node.
-        while (true) {
-          try {
-            Thread.sleep(Long.MAX_VALUE);
-          } catch (InterruptedException e) {
-          }
-        }
-      }
-
-      // Attempt to read the principal object to ensure that it exists.
-      final NodePrincipal workerPrincipal = worker.getPrincipal();
       runInSubTransaction(new Code<Void>() {
         public Void run() {
-          WORKER_LOGGER.config("Worker principal is " + workerPrincipal);
+          NodePrincipal principal = new NodePrincipal._Impl(store, null, name);
+          principal.addDelegatesTo(store.getPrincipal());
+
+          System.out.println("Worker principal created:");
+          System.out
+              .println("fab://" + opts.store + "/" + principal.$getOnum());
           return null;
         }
       });
 
-      // Run the requested application.
-      Class<?> mainClass = Class.forName(opts.app[0] + "$_Impl");
-      Method main =
-          mainClass.getMethod("main", new Class[] { ObjectArray.class });
-      final String[] newArgs = new String[opts.app.length - 1];
-      for (int i = 0; i < newArgs.length; i++)
-        newArgs[i] = opts.app[i + 1];
-
-      final Store local = worker.getLocalStore();
-      Object argsProxy = runInSubTransaction(new Code<Object>() {
-        public Object run() {
-          ConfPolicy conf =
-              LabelUtil._Impl.readerPolicy(local, workerPrincipal,
-                  workerPrincipal);
-          IntegPolicy integ =
-              LabelUtil._Impl.writerPolicy(local, workerPrincipal,
-                  workerPrincipal);
-          Label label = LabelUtil._Impl.toLabel(local, conf, integ);
-          return WrappedJavaInlineable.$wrap(local, label, newArgs);
-        }
-      });
-
-      MainThread.invoke(opts, main, argsProxy);
-    } finally {
-      if (worker != null)
-        worker.shutdown();
+      return;
     }
+
+    if (opts.app == null) {
+      // Act as a dissemination node.
+      while (true) {
+        try {
+          Thread.sleep(Long.MAX_VALUE);
+        } catch (InterruptedException e) {
+        }
+      }
+    }
+
+    // Attempt to read the principal object to ensure that it exists.
+    final NodePrincipal workerPrincipal = worker.getPrincipal();
+    runInSubTransaction(new Code<Void>() {
+      public Void run() {
+        WORKER_LOGGER.config("Worker principal is " + workerPrincipal);
+        return null;
+      }
+    });
+
+    // Run the requested application.
+    Class<?> mainClass = Class.forName(opts.app[0] + "$_Impl");
+    Method main =
+        mainClass.getMethod("main", new Class[] { ObjectArray.class });
+    final String[] newArgs = new String[opts.app.length - 1];
+    for (int i = 0; i < newArgs.length; i++)
+      newArgs[i] = opts.app[i + 1];
+
+    final Store local = worker.getLocalStore();
+    Object argsProxy = runInSubTransaction(new Code<Object>() {
+      public Object run() {
+        ConfPolicy conf =
+            LabelUtil._Impl.readerPolicy(local, workerPrincipal,
+                workerPrincipal);
+        IntegPolicy integ =
+            LabelUtil._Impl.writerPolicy(local, workerPrincipal,
+                workerPrincipal);
+        Label label = LabelUtil._Impl.toLabel(local, conf, integ);
+        return WrappedJavaInlineable.$wrap(local, label, newArgs);
+      }
+    });
+
+    MainThread.invoke(opts, main, argsProxy);
   }
 
   public void setStore(String name, RemoteStore store) {

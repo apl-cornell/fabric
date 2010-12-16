@@ -24,10 +24,5 @@ public interface FetchManager {
    * @throws UnreachableNodeException
    */
   public ObjectGroup fetch(RemoteStore store, long onum) throws AccessException;
-
-  /**
-   * Called to destroy and clean up the fetch manager.
-   */
-  public void destroy();
   
 }
