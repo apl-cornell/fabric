@@ -292,6 +292,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
     baos.flush();
 
     byte[] buf = baos.toByteArray();
+    out.writeInt(buf.length);
     out.write(buf);
   }
 
