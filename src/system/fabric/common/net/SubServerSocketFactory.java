@@ -1,7 +1,6 @@
 package fabric.common.net;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -12,11 +11,13 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import fabric.common.exceptions.NotImplementedException;
-import fabric.common.net.handshake.HandshakeAcceptor;
-import fabric.common.net.handshake.HandshakeProtocol.ProtocolType;
+import fabric.common.net.Channel.Connection;
+import fabric.common.net.SubServerSocketFactory.Acceptor.ConnectionQueue.ServerChannel;
+import fabric.common.net.handshake.Protocol;
 import fabric.common.net.handshake.ShakenSocket;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.SocketAddress;
+
 
 /**
  * factory for creating SubServerSockets. This class decorates a
@@ -30,16 +31,17 @@ public class SubServerSocketFactory {
   // public API                                                               //
   //////////////////////////////////////////////////////////////////////////////
   
-  public SubServerSocketFactory(ProtocolType[] handshakes,
-      NameService nameService) {
-    this.handshakeAcceptor = new HandshakeAcceptor(handshakes, nameService);
+  /** Creates a new SubServerSocketFactory decorating the given
+   * ServerSocketFactory.
+   * 
+   * @param factory the ServerSocketFactory that will be used to create the
+   *        ServerSockets used to implement SubServerSockets returned by this
+   */
+  public SubServerSocketFactory(Protocol handshake, NameService nameService) {
+    this.handshake   = handshake;
     this.nameService = nameService;
     
     this.acceptors   = new HashMap<SocketAddress, Acceptor> ();
-  }
-  
-  public SubServerSocketFactory(ProtocolType handshake, NameService nameService) {
-    this(new ProtocolType[] {handshake}, nameService);
   }
 
   /** create an unbound server socket. */
@@ -69,7 +71,7 @@ public class SubServerSocketFactory {
   // implementation                                                           //
   //////////////////////////////////////////////////////////////////////////////
   
-  private final HandshakeAcceptor            handshakeAcceptor;
+  private final Protocol            handshake;
   private final NameService                  nameService;
   private final Map<SocketAddress, Acceptor> acceptors;
   
@@ -151,7 +153,7 @@ public class SubServerSocketFactory {
     /** handle an incoming connection */
     private void recvConnection(Socket s) {
       try {
-        ShakenSocket    conn  = handshakeAcceptor.receive(s);
+        ShakenSocket    conn  = handshake.receive(s);
         ConnectionQueue queue = queues.get(conn.name);
         if (null == queue) {
           // TODO: close the connection.

@@ -5,25 +5,19 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class HandshakeUnauthenticated extends HandshakeProtocol {
-  
-  public HandshakeUnauthenticated() {
-    super(ProtocolType.UNAUTHENTICATED);
-  }
+public class HandshakeUnauthenticated implements Protocol {
   //
   // an incredibly simple handshake:
   // client -> server : name
   //
   
-  @Override
-  public ShakenSocket initiateImpl(String name, Socket s) throws IOException {
+  public ShakenSocket initiate(String name, Socket s) throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
     out.writeUTF(name);
     out.flush();
     return new ShakenSocket(name, null, s);
   }
 
-  @Override
   public ShakenSocket receive(Socket s) throws IOException {
     DataInputStream in = new DataInputStream(s.getInputStream());
     String name = in.readUTF();

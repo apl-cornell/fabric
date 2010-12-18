@@ -2,6 +2,7 @@ package fabric.store;
 
 import static fabric.common.Logging.STORE_LOGGER;
 
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collections;
@@ -14,7 +15,9 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
 import fabric.common.net.SubServerSocketFactory;
-import fabric.common.net.handshake.HandshakeProtocol.ProtocolType;
+import fabric.common.net.handshake.HandshakeBogus;
+import fabric.common.net.handshake.HandshakeComposite;
+import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.DefaultNameService;
 import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.common.net.naming.NameService;
@@ -110,11 +113,10 @@ public class Node {
     try {
       this.store = new Store(this, opts.storeName);
 
-      // List of allowable handshake protocols.
-      ProtocolType[] protocolTypes = { ProtocolType.BOGUS };
+      Protocol handshake = new HandshakeComposite(new HandshakeBogus(this.store.name, ONumConstants.STORE_PRINCIPAL));
       NameService nameService = new DefaultNameService(PortType.STORE);
 
-      this.factory = new SubServerSocketFactory(protocolTypes, nameService);
+      this.factory = new SubServerSocketFactory(handshake, nameService);
 
     } catch (final IOException e) {
       throw new InternalError("Failed to intialize Node", e);

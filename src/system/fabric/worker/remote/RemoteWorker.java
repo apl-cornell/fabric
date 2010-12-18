@@ -10,8 +10,9 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubSocket;
 import fabric.common.net.SubSocketFactory;
-import fabric.common.net.handshake.BogusAuthenticatedHandshake;
-import fabric.common.net.handshake.HandshakeProtocol;
+import fabric.common.net.handshake.HandshakeBogus;
+import fabric.common.net.handshake.HandshakeComposite;
+import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.DefaultNameService;
 import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.common.net.naming.NameService;
@@ -26,6 +27,7 @@ import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.Worker;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TakeOwnershipFailedException;
 import fabric.worker.transaction.TransactionManager;
@@ -50,7 +52,7 @@ public final class RemoteWorker extends RemoteNode {
     super(name);
     
     try {
-      HandshakeProtocol protocol = new BogusAuthenticatedHandshake();
+      Protocol protocol = new HandshakeComposite(new HandshakeBogus(Worker.getWorker().getPrincipal()));
       NameService nameService = new DefaultNameService(PortType.WORKER);
       this.subSocketFactory = new SubSocketFactory(protocol, nameService);
     } catch (IOException e) {

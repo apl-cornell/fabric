@@ -15,8 +15,9 @@ import fabric.common.*;
 import fabric.common.exceptions.*;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.SubSocketFactory;
-import fabric.common.net.handshake.BogusAuthenticatedHandshake;
-import fabric.common.net.handshake.HandshakeProtocol;
+import fabric.common.net.handshake.HandshakeBogus;
+import fabric.common.net.handshake.HandshakeComposite;
+import fabric.common.net.handshake.Protocol;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 import fabric.common.net.naming.DefaultNameService;
 import fabric.common.net.naming.DefaultNameService.PortType;
@@ -121,12 +122,13 @@ public class RemoteStore extends RemoteNode implements Store {
     super(name);
     
     try {
-      HandshakeProtocol authenticateProtocol = new BogusAuthenticatedHandshake();
+      NodePrincipal p = Worker.getWorker().getPrincipal();
+      Protocol authenticateProtocol = new HandshakeComposite(new HandshakeBogus(p));
       NameService nameService = new DefaultNameService(PortType.STORE);
       this.authenticatedSubSocketFactory =
           new SubSocketFactory(authenticateProtocol, nameService);
       
-      HandshakeProtocol nonAuthenticateProtocol = new HandshakeUnauthenticated();
+      Protocol nonAuthenticateProtocol = new HandshakeUnauthenticated();
       this.unauthenticatedSubSocketFactory =
           new SubSocketFactory(nonAuthenticateProtocol, nameService);
     } catch (IOException e) {

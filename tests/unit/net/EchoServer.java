@@ -7,7 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import fabric.common.net.*;
-import fabric.common.net.handshake.HandshakeProtocol.ProtocolType;
+import fabric.common.net.handshake.HandshakeUnauthenticated;
 
 public class EchoServer extends Thread {
   private static Logger                 logger = Logger.getLogger("server");
@@ -62,6 +62,7 @@ public class EchoServer extends Thread {
     
     @Override
     public void run () {
+
       process(sock);
     }
   }
@@ -70,7 +71,7 @@ public class EchoServer extends Thread {
     if (0 == args.length)
       args = new String[] {"localhost"};
     
-    factory = new SubServerSocketFactory(ProtocolType.BOGUS, new BogusNameService(3372));
+    factory = new SubServerSocketFactory(new HandshakeUnauthenticated(), new BogusNameService(3372));
 
     for (String name : args)
       new EchoServer(name).start();
