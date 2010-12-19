@@ -4,6 +4,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.logging.Level;
 
 import fabric.common.exceptions.InternalError;
 
@@ -32,6 +33,7 @@ public class Threading {
       throw new InternalError("Threading initialized twice");
     
     ThreadFactory factory = new FabricThreadFactory();
+    Thread.setDefaultUncaughtExceptionHandler(new LogOnError());
     
     if (poolSize < 1)
       Threading.pool = Executors.newCachedThreadPool(factory);
@@ -62,6 +64,14 @@ public class Threading {
     }
   }
 
+  /**
+   * An UncaughtExceptionHandler that simply logs the exception
+   */
+  private static class LogOnError implements Thread.UncaughtExceptionHandler {
+    public void uncaughtException(Thread t, Throwable e) {
+      Logging.MISC_LOGGER.log(Level.SEVERE, "Thread exited due to uncaught exception", e);
+    }
+  }
   
   /** Convenience class for creating runnables that set the name of the thread.
    * Subclasses should override runImpl instead of run.  For example:
