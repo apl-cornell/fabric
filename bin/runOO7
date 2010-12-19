@@ -32,10 +32,6 @@ def main():
 	overhead   = float(result)
 	print overhead, " ms"
 
-	print "===== Creating principal ====="
-	result = sh( "bin/fab --name %s --make-principal %s" % (worker, store) )
-	print result
-
 	for size,hot in (("small", True), ("medium", False)):
 		print "===== Creating database  ====="
 		result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=fabric.worker.DirectFetchManager --name %s --time all OO7.Benchmark     fab://%s/OO7 %s 3" % (worker, store, size) )

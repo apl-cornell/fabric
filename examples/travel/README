@@ -55,11 +55,7 @@ application data and the workers each host a web application.
        workers and the application state by following the next four steps.
        Otherwise, skip to II below.
 
-    2. Initialize the workers by creating their principal objects:
-       
-	  $ bin/init-workers
-
-    3. Start the dummy bankweb and airlineweb workers, to be used in the
+    2. Start the dummy bankweb and airlineweb workers, to be used in the
        initialization of the application state. The 'start-web-workers' script
        will start each in a separate xterm window:
 
@@ -75,12 +71,12 @@ application data and the workers each host a web application.
 	  $ bin/start-airlineweb
 	  $ bin/start-bankweb
 
-    4. Use the Create.fil program to initialize state on all stores. You can do
+    3. Use the Create.fil program to initialize state on all stores. You can do
        this by running the 'init-state' script:
 
 	  $ bin/init-state
 
-    5. Exit out of the airlineweb and bankweb workers by pressing CTRL-C in
+    4. Exit out of the airlineweb and bankweb workers by pressing CTRL-C in
        their respective terminals.
 
   II. Start the three workers with their corresponding web applications. The

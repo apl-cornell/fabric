@@ -30,16 +30,11 @@ and a worker named "worker" to run the computation.
 
         $ bin/start-store
 
-  2. If you are starting with a fresh store, you will need to initialize the
-     worker by creating its principal object on the store:
-
-        $ bin/init-worker
-
-  3. Run the program:
+  2. Run the program:
 
         $ bin/say-hello
 
-  4. You can clean up the store's persistent state by removing the 'var'
+  3. You can clean up the store's persistent state by removing the 'var'
      directory:
 
         $ rm -rf var

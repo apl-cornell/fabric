@@ -36,18 +36,13 @@ worker named "blog-worker" for running the web frontend.
 
 	$ bin/start-store
 
-  2. If you are starting with a fresh store, you will need to initialize the
-     worker by creating its principal object on the store:
-
-	$ bin/init-worker
-
-  3. Start a blog server. It will listen on port 8080.
+  2. Start a blog server. It will listen on port 8080.
 
 	$ bin/start-blog
 
-  4. Access the blog by browsing to http://localhost:8080/web
+  3. Access the blog by browsing to http://localhost:8080/web
 
-  5. You can start a client by using the 'start-client' script:
+  4. You can start a client by using the 'start-client' script:
 
 	$ bin/start-client
 

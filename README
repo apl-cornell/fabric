@@ -141,11 +141,6 @@ This can be specified with the -classpath option or in the CLASSPATH
 environment variable.
 
 
-Before workers are started, they must create a principal object on a
-store.  This is accomplished by running
-
-  $ fab --name [worker host name] --make-principal [store host name]
-
 Once this is done, you can start the worker by running:
 
   $ fab --name [worker host name] [main class]

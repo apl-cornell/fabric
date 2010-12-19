@@ -12,12 +12,9 @@ without environment variables, which don't seem to be set in the browser's VM.
 0.1. Run 'ant jar' to build the applet jar and create signed jars of the Fabric
 libraries.
 
-0.2. Start and initialize some stores: 
+0.2. Start some stores: 
 	fab-store --name store0
-	fab --name worker0 --make-principal store0 
-
 	fab-store --name database
-	fab --name worker --make-principal database
 
 1. Compile Scribble.fil
 	filc -dumpdeps Scribble.fil

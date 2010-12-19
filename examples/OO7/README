@@ -33,12 +33,7 @@ traversals.
 
 	$ bin/start-store
 
-  2. If you are starting with a fresh store, you will need to initialize the
-     worker by creating its principal object on the store:
-
-	$ bin/init-worker
-
-  3. Create a OO7 database:
+  2. Create a OO7 database:
 
 	$ bin/create-db fab://[store_name]/[db_name] [db_size] [fanout]
 
@@ -47,7 +42,7 @@ traversals.
 
 	$ bin/create-db fab://database/OO7 tiny 3
 
-  4. Execute a traversal (e.g. T1 on the database named "OO7"):
+  3. Execute a traversal (e.g. T1 on the database named "OO7"):
 
 	$ bin/t1 fab://database/OO7
 
@@ -59,7 +54,7 @@ traversals.
      Similar scripts for running T2a, T2b, T2c, and T6 traversals are also
      available in the 'bin' directory.
 
-  5. You can clean up the store's persistent state by removing the 'var'
+  4. You can clean up the store's persistent state by removing the 'var'
      directory:
 
 	$ rm -rf var

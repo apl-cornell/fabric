@@ -28,19 +28,13 @@ Step 1. Start a fresh instance of the store0
 Running the following command will start a new store for this application:
 $ fab-store --name store0
 
-Step 2. Create principals for worker0
-
-Run the following command to do this:
-
-$ fab --name worker0 --make-principal store0
-
-Step 3. 
+Step 2. 
 Make sure $FABRIC/examples/tree/classes is on your classpath, and
 Run the following command in any terminal to create a tree at store0:
 
 $ fab --name worker0 tree.Main create
 
-Step 4.
+Step 3.
 Make sure $FABRIC/examples/tree/classes is on your classpath, and
 Run the following command in any terminal to read from the tree just created:
 
