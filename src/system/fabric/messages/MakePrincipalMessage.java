@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.security.PublicKey;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
 import fabric.common.exceptions.FabricGeneralSecurityException;
@@ -34,15 +35,23 @@ public final class MakePrincipalMessage
      * The onum for the Principal that was created.
      */
     public final long onum;
-    
+
     /**
-     * A certificate binding the requester Key to the OID of the generated principal.
+     * A certificate binding the requester Key to the OID of the generated
+     * principal. This is the first element in a certificate chain. The rest of
+     * the chain is in <code>certChain</code>.
      */
     public final X509Certificate cert;
     
-    public Response(long onum, X509Certificate cert) {
+    /**
+     * The rest of the certificate chain.
+     */
+    public final Certificate[] certChain;
+    
+    public Response(long onum, X509Certificate cert, Certificate[] certChain) {
       this.onum = onum;
       this.cert = cert;
+      this.certChain = certChain;
     }
   }
   
@@ -76,13 +85,20 @@ public final class MakePrincipalMessage
       throws IOException {
     out.writeLong(response.onum);
     writeObject(out, response.cert);
+    out.writeInt(response.certChain.length);
+    for (Certificate cert : response.certChain)
+      writeObject(out, cert);
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     long onum = in.readLong();
     X509Certificate cert = readObject(in, X509Certificate.class);
-    return new Response(onum, cert);
+    Certificate[] certChain = new Certificate[in.readInt()];
+    for (int i = 0; i < certChain.length; i++)
+      certChain[i] = readObject(in, Certificate.class);
+    
+    return new Response(onum, cert, certChain);
   }
 
 }

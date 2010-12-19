@@ -24,4 +24,10 @@ public class HandshakeUnauthenticated implements Protocol {
     System.out.println(name + " [" + name.length() + "]");
     return new ShakenSocket(name, null, s);
   }
+  
+  public static class Factory implements Protocol.Factory {
+    public Protocol create() {
+      return new HandshakeUnauthenticated();
+    }
+  }
 }

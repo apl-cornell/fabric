@@ -18,4 +18,7 @@ public class DirectFetchManager implements FetchManager {
     return store.readObjectFromStore(onum);
   }
 
+  public void destroy() {
+  }
+
 }

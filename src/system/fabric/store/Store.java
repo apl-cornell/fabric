@@ -282,7 +282,8 @@ class Store extends MessageToStoreHandler {
       throw new FabricGeneralSecurityException(e);
     }
     
-    return new MakePrincipalMessage.Response(principalOnum, cert);
+    return new MakePrincipalMessage.Response(principalOnum, cert,
+        certificateChain);
   }
 
   /**

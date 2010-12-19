@@ -27,7 +27,6 @@ import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
-import fabric.worker.Worker;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TakeOwnershipFailedException;
 import fabric.worker.transaction.TransactionManager;
@@ -52,7 +51,7 @@ public final class RemoteWorker extends RemoteNode {
     super(name);
     
     try {
-      Protocol protocol = new HandshakeComposite(new HandshakeBogus(Worker.getWorker().getPrincipal()));
+      Protocol protocol = new HandshakeComposite(new HandshakeBogus.Factory());
       NameService nameService = new DefaultNameService(PortType.WORKER);
       this.subSocketFactory = new SubSocketFactory(protocol, nameService);
     } catch (IOException e) {

@@ -10,4 +10,9 @@ public class FabricGeneralSecurityException extends FabricException {
   public FabricGeneralSecurityException(GeneralSecurityException cause) {
     super(cause);
   }
+  
+  @Override
+  public GeneralSecurityException getCause() {
+    return (GeneralSecurityException) super.getCause();
+  }
 }

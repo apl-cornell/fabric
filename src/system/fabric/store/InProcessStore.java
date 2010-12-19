@@ -34,6 +34,14 @@ public class InProcessStore extends RemoteStore {
     tm = c.tm;
     sm = c.sm;
   }
+  
+  @Override
+  protected void initializeSubSocketFactories() {
+    this.authenticatedSubSocketFactory = null;
+    this.unauthenticatedSubSocketFactory = null;
+  }
+
+
 
   @Override
   public void abortTransaction(TransactionID tid) {

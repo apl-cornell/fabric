@@ -11,6 +11,8 @@ import java.util.Date;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
 
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
@@ -177,11 +179,29 @@ public final class Crypto {
     certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
     certGen.setIssuerDN(new X509Name("CN=" + issuerName));
     certGen.setSubjectDN(new X509Name("CN=" + subjectName));
-    certGen.setSignatureAlgorithm("SHA1WithRSAEncryption");
+    certGen.setSignatureAlgorithm("SHA1withRSA");
     certGen.setPublicKey(subjectKey);
     certGen.setNotBefore(new Date(System.currentTimeMillis()));
     certGen.setNotAfter(expiry.getTime());
     
     return certGen.generate(issuerKey);
+  }
+  
+  /**
+   * Extracts the CN component of a Distinguished Name.
+   */
+  public static String getCN(String dn) {
+    try {
+      LdapName ldapName = new LdapName(dn);
+      for (int i = 0; i < ldapName.size(); i++) {
+        String component = ldapName.get(i);
+        if (component.substring(0, 3).equalsIgnoreCase("cn=")) {
+          return component.substring(3);
+        }
+      }
+    } catch (InvalidNameException e) {
+    }
+    
+    return null;
   }
 }

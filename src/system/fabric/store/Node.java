@@ -17,6 +17,7 @@ import fabric.common.exceptions.UsageError;
 import fabric.common.net.SubServerSocketFactory;
 import fabric.common.net.handshake.HandshakeBogus;
 import fabric.common.net.handshake.HandshakeComposite;
+import fabric.common.net.handshake.HandshakeUnauthenticated;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.DefaultNameService;
 import fabric.common.net.naming.DefaultNameService.PortType;
@@ -113,7 +114,10 @@ public class Node {
     try {
       this.store = new Store(this, opts.storeName);
 
-      Protocol handshake = new HandshakeComposite(new HandshakeBogus(this.store.name, ONumConstants.STORE_PRINCIPAL));
+      Protocol handshake =
+          new HandshakeComposite(new HandshakeBogus.Factory(this.store.name,
+              ONumConstants.STORE_PRINCIPAL),
+              new HandshakeUnauthenticated.Factory());
       NameService nameService = new DefaultNameService(PortType.STORE);
 
       this.factory = new SubServerSocketFactory(handshake, nameService);
@@ -133,8 +137,7 @@ public class Node {
           Collections.singletonMap(store.name,
               (RemoteStore) new InProcessStore(store.name, store));
 
-      Worker.initialize(store.name, "fab://" + store.name + "/"
-          + ONumConstants.STORE_PRINCIPAL, initStoreSet);
+      Worker.initializeForStore(store.name, initStoreSet);
 
       // initialize the store
       store.initialize();

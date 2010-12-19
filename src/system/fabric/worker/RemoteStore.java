@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
+import java.security.Principal;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -78,12 +80,12 @@ public class RemoteStore extends RemoteNode implements Store {
   /**
    * A subsocket factory for unauthenticated connections.
    */
-  private transient final SubSocketFactory unauthenticatedSubSocketFactory;
+  protected transient SubSocketFactory unauthenticatedSubSocketFactory;
   
   /**
    * A subsocket factory for authenticated connections.
    */
-  private transient final SubSocketFactory authenticatedSubSocketFactory;
+  protected transient SubSocketFactory authenticatedSubSocketFactory;
 
   private class SerializedCollector extends Thread {
     private final ReferenceQueue<SerializedObject> queue;
@@ -122,15 +124,7 @@ public class RemoteStore extends RemoteNode implements Store {
     super(name);
     
     try {
-      NodePrincipal p = Worker.getWorker().getPrincipal();
-      Protocol authenticateProtocol = new HandshakeComposite(new HandshakeBogus(p));
-      NameService nameService = new DefaultNameService(PortType.STORE);
-      this.authenticatedSubSocketFactory =
-          new SubSocketFactory(authenticateProtocol, nameService);
-      
-      Protocol nonAuthenticateProtocol = new HandshakeUnauthenticated();
-      this.unauthenticatedSubSocketFactory =
-          new SubSocketFactory(nonAuthenticateProtocol, nameService);
+      initializeSubSocketFactories();
     } catch (IOException e) {
       throw new InternalError(e);
     }
@@ -143,6 +137,20 @@ public class RemoteStore extends RemoteNode implements Store {
     this.serializedRefQueue = new ReferenceQueue<SerializedObject>();
     this.collector = new SerializedCollector();
     this.collector.start();
+  }
+  
+  protected void initializeSubSocketFactories() throws IOException {
+    Protocol authenticateProtocol =
+        new HandshakeComposite(new HandshakeBogus.Factory());
+    NameService nameService = new DefaultNameService(PortType.STORE);
+    this.authenticatedSubSocketFactory =
+        new SubSocketFactory(authenticateProtocol, nameService);
+    
+    Protocol nonAuthenticateProtocol =
+        new HandshakeComposite(
+            new HandshakeUnauthenticated.Factory());
+    this.unauthenticatedSubSocketFactory =
+        new SubSocketFactory(nonAuthenticateProtocol, nameService);
   }
 
   /**
@@ -561,5 +569,44 @@ public class RemoteStore extends RemoteNode implements Store {
         serialized.clear();
       }
     }
+  }
+
+  /**
+   * Returns a certificate chain for a new principal object for the given worker
+   * key. This certificate chain is not guaranteed to end in a trusted root.
+   */
+  public Certificate[] makeWorkerPrincipal(PublicKey workerKey) {
+    MakePrincipalMessage.Response response;
+    try {
+      response = send(unauthenticatedSubSocketFactory, new MakePrincipalMessage(
+          workerKey));
+    } catch (FabricGeneralSecurityException e) {
+      throw new NotImplementedException();
+    }
+    
+    X509Certificate cert = response.cert;
+    
+    // Check that the top certificate in the chain satisfies the following:
+    // - signed by the store
+    // - contains the worker's key
+    
+    Principal issuerDN = cert.getIssuerDN();
+    // XXX This next line is really hacky.
+    if (!name.equals(Crypto.getCN(issuerDN.getName()))) {
+      throw new InternalError("Certificate signer (" + issuerDN.getName()
+          + ") does not match store (" + name + ")");
+    }
+    
+    if (!cert.getPublicKey().equals(workerKey)) {
+      throw new InternalError("Key in certificate does not match worker key");
+    }
+    
+    Certificate[] result = new Certificate[response.certChain.length + 1];
+    result[0] = cert;
+    for (int i = 0; i < response.certChain.length; i++) {
+      result[i + 1] = response.certChain[i];
+    }
+    
+    return result;
   }
 }

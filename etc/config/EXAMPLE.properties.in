@@ -12,21 +12,11 @@
 
 
 
-# The oid for the worker's principal object.
-#
-# The following command will create a new principal object on the given store
-# and print out the object's oid.
-#
-#   ${FABRIC_HOME}/fab --make-principal <store name>
-#
-# When creating a principal object, this configuration parameter is optional;
-# however, if one is given, it must either point to a valid principal object,
-# or to an unallocated oid.
-#
-# A worker principal oid must be supplied here before using the worker for
-# anything besides principal-object creation.
+# The name of the worker's home store.
+# This is required for workers.  It specifies where the worker's principal
+# object is to be created.
 
-#fabric.worker.principal = fab://store.name.example/19
+#fabric.worker.homeStore = store.name.example
 
 
 

@@ -19,6 +19,12 @@ public class ConfigProperties {
   public final String dissemClass;
 
   public final String keystore;
+
+  /**
+   * The file location of a keystore containing a certificate for the worker's
+   * principal object.
+   */
+  public final String certKeyStore;
   public final char[] password;
   public final int    maxConnections;
   public final int    retries;
@@ -29,7 +35,7 @@ public class ConfigProperties {
   public final String backendClass;
   public final int    storePort;
 
-  public final String workerPrincipal;
+  public final String homeStore;
 
   public final Properties disseminationProperties;
 
@@ -86,7 +92,9 @@ public class ConfigProperties {
     /************************** Worker Properties *****************************/
     this.workerPort      = Integer.parseInt(     removeProperty(p, "fabric.worker.port",               "3372"));
     this.dissemClass     =                       removeProperty(p, "fabric.worker.fetchmanager.class", "fabric.dissemination.pastry.PastryFetchManager");
-    this.workerPrincipal =                       removeProperty(p, "fabric.worker.principal",          null);
+    this.homeStore       =                       removeProperty(p, "fabric.worker.homeStore",          null);
+    this.certKeyStore    = Resources.relpathRewrite("var", "certs",
+                                                 removeProperty(p, "fabric.worker.certs",              name + ".keystore"));
 
     /************************** Store  Properties *****************************/
     this.storePort       = Integer.parseInt(     removeProperty(p, "fabric.store.port",                "3472"));

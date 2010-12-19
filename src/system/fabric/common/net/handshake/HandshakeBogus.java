@@ -38,6 +38,27 @@ public class HandshakeBogus implements Protocol {
     this.principalStoreName = store;
     this.principalOnum      = onum;
   }
+  
+  public static class Factory implements Protocol.Factory {
+    private final String storeName;
+    private final long onum;
+    
+    public Factory() {
+      this(null, 0);
+    }
+    
+    public Factory(String store, long onum) {
+      this.storeName = store;
+      this.onum = onum;
+    }
+    
+    public Protocol create() {
+      if (storeName == null)
+        return new HandshakeBogus(Worker.getWorker().getPrincipal());
+      
+      return new HandshakeBogus(storeName, onum);
+    }
+  }
 
   public ShakenSocket initiate(String name, Socket s)
       throws IOException {

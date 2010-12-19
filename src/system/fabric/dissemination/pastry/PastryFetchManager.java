@@ -29,14 +29,6 @@ public class PastryFetchManager implements FetchManager {
     } catch (IOException e) {
       throw new InternalError(e);
     }
-    
-    // Register a shutdown hook to destry the Pastry node gracefully.
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override
-      public void run() {
-        node.destroy();
-      }
-    });
   }
 
   public ObjectGroup fetch(RemoteStore c, long onum) throws AccessException {
@@ -50,6 +42,10 @@ public class PastryFetchManager implements FetchManager {
     if (glob == null) return c.readObjectFromStore(onum);
     
     return glob.decrypt(c);
+  }
+  
+  public void destroy() {
+    node.destroy();
   }
 
 }

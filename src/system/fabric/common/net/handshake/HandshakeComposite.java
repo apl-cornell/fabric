@@ -11,34 +11,34 @@ import fabric.common.exceptions.NotImplementedException;
 
 public class HandshakeComposite implements Protocol {
 
-  private Map<String, Protocol> handshakes;
-  private Protocol              outgoing;
+  private Map<String, Protocol.Factory> handshakes;
+  private Protocol.Factory              outgoing;
   
-  public HandshakeComposite(Protocol ... protocols) {
-    this.handshakes = new HashMap<String, Protocol>(protocols.length);
-    for (Protocol p : protocols) {
-      this.handshakes.put(p.getClass().getName(), p);
+  public HandshakeComposite(Protocol.Factory ... protocolFactories) {
+    this.handshakes = new HashMap<String, Protocol.Factory>(protocolFactories.length);
+    for (Protocol.Factory p : protocolFactories) {
+      this.handshakes.put(p.getClass().getEnclosingClass().getName(), p);
     }
     
-    this.outgoing   = protocols[0];
+    this.outgoing   = protocolFactories[0];
   }
   
   public ShakenSocket initiate(String name, Socket s) throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
-    out.writeUTF(outgoing.getClass().getName());
-    return outgoing.initiate(name, s);
+    out.writeUTF(outgoing.getClass().getEnclosingClass().getName());
+    return outgoing.create().initiate(name, s);
   }
 
   public ShakenSocket receive(Socket s) throws IOException {
     DataInputStream in = new DataInputStream(s.getInputStream());
     String protName = in.readUTF();
 
-    Protocol protocol = this.handshakes.get(protName);
+    Protocol.Factory protocol = this.handshakes.get(protName);
     if (null == protocol)
       // TODO
-      throw new NotImplementedException();
+      throw new NotImplementedException(handshakes.keySet() + "||" + protName);
     
-    return protocol.receive(s);
+    return protocol.create().receive(s);
   }
 
 }
