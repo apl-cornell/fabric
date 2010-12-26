@@ -1,9 +1,14 @@
 package fabric.common;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import fabric.common.exceptions.InternalError;
@@ -14,33 +19,37 @@ import fabric.common.exceptions.InternalError;
  * @author mdgeorge
  */
 public class Threading {
-  private static ExecutorService pool = null;
-  
-  static {
-    // For now, always use a cached thread pool.
-    init(-1);
-  }
+  private static ExecutorService pool = newCachedThreadPool();
   
   /**
-   * Initialize the thread pool.
-   * 
-   * @param poolSize the size of the thread pool.  If poolSize < 1, then the
-   *                 thread pool will be allowed to grow as needed.
-   * @throws InternalError if the pool is already initialized.                   
+   * create an ExecutorService that creates threads on demand and caches them
+   * for one minute.
    */
-  private static void init(int poolSize) throws InternalError {
-    if (Threading.pool != null) 
-      throw new InternalError("Threading initialized twice");
-    
-    ThreadFactory factory = new FabricThreadFactory();
-    Thread.setDefaultUncaughtExceptionHandler(new LogOnError());
-    
-    if (poolSize < 1)
-      Threading.pool = Executors.newCachedThreadPool(factory);
-    else
-      Threading.pool = Executors.newFixedThreadPool(poolSize, factory);
+  private static ExecutorService newCachedThreadPool() {
+    return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                  60L, TimeUnit.SECONDS,
+                                  new SynchronousQueue<Runnable>(),
+                                  new FabricThreadFactory()) {
+      @Override
+      protected void afterExecute(Runnable r, Throwable t) {
+        super.afterExecute(r, t);
+        if (t == null && r instanceof Future<?>) {
+          try {
+            ((Future<?>) r).get();
+          } catch (CancellationException ce) {
+            t = ce;
+          } catch (ExecutionException ee) {
+            t = ee.getCause();
+          } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt(); // ignore/reset
+          }
+        }
+        
+        if (t != null)
+          Logging.MISC_LOGGER.log(Level.SEVERE, "Thread exited with exception", t);
+      }
+    };
   }
-  
   
   /**
    * Get the thread pool.
@@ -64,15 +73,6 @@ public class Threading {
     }
   }
 
-  /**
-   * An UncaughtExceptionHandler that simply logs the exception
-   */
-  private static class LogOnError implements Thread.UncaughtExceptionHandler {
-    public void uncaughtException(Thread t, Throwable e) {
-      Logging.MISC_LOGGER.log(Level.SEVERE, "Thread exited due to uncaught exception", e);
-    }
-  }
-  
   /** Convenience class for creating runnables that set the name of the thread.
    * Subclasses should override runImpl instead of run.  For example:
    * 
