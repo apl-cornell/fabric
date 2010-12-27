@@ -115,7 +115,7 @@ public class SubSocket {
         Channel.Connection conn = factory.getChannel(name).connect(); 
         state = new Connected(conn);
       } catch (final Exception exc) {
-        IOException wrapped = new IOException("failed to connect to " + name, exc);
+        IOException wrapped = new IOException("failed to connect to \"" + name + "\"", exc);
         state = new ErrorState(wrapped);
         throw wrapped;
       }

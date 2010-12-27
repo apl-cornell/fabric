@@ -281,6 +281,11 @@ public class SubServerSocketFactory {
         }
         
         @Override
+        protected void cleanup() {
+          ConnectionQueue.this.channels.remove(this);
+        }
+        
+        @Override
         public String toString() {
           return "channel from " + sock.getInetAddress() + " to " + ConnectionQueue.this.toString();
         }

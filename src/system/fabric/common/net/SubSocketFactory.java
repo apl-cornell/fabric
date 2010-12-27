@@ -1,6 +1,7 @@
 package fabric.common.net;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -104,8 +105,13 @@ public final class SubSocketFactory {
     }
 
     @Override
-    public Connection accept(int sequence) throws IOException {
+    protected Connection accept(int sequence) throws IOException {
       throw new IOException("unexpected accept request on client channel");
+    }
+    
+    @Override
+    protected void cleanup () {
+      SubSocketFactory.this.channels.remove(this);
     }
     
     @Override

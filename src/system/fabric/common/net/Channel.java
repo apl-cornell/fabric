@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-import fabric.common.exceptions.NotImplementedException;
+import fabric.common.exceptions.InternalError;
 import fabric.common.net.handshake.ShakenSocket;
 import fabric.lang.security.Principal;
 
@@ -54,6 +54,9 @@ abstract class Channel extends Thread {
   /** called to create a Connection to an unknown stream id */
   protected abstract Connection accept(int streamID) throws IOException;
   
+  /** called to clean up a channel that has been closed */
+  protected abstract void cleanup();
+  
   /** send channel close message */
   public synchronized void sendClose() throws IOException {
     out.writeInt(0);
@@ -80,7 +83,12 @@ abstract class Channel extends Thread {
 
   /** called on receipt of a channel close message */ 
   public synchronized void recvClose() {
-    throw new NotImplementedException();
+    NETWORK_CHANNEL_LOGGER.log(Level.INFO, "cleaning up {0} after channel close", this);
+    
+    for (Connection c : connections.values())
+      c.receiveClose();
+    
+    cleanup();
   }
 
   /** called on receipt of subsocket close message */
@@ -137,8 +145,7 @@ abstract class Channel extends Thread {
         recvData(streamID, buf);
       }
     } catch (final IOException exc) {
-      // TODO cleanup
-      throw new NotImplementedException(exc);
+      recvClose();
     }
   }
 
@@ -178,9 +185,13 @@ abstract class Channel extends Thread {
     }
 
     /** this method called by recvClose in response to a close message */
-    public void receiveClose() throws IOException {
+    public void receiveClose() {
       connections.remove(this);
-      sink.close();
+      try {
+        sink.close();
+      } catch (final IOException e) {
+        throw new InternalError("Internal pipe failed unexpectedly", e);
+      }
     }
 
     /** forward data to the reading thread */
