@@ -287,7 +287,7 @@ public class SubServerSocketFactory {
         
         @Override
         public String toString() {
-          return "channel from " + sock.getInetAddress() + " to " + ConnectionQueue.this.toString();
+          return "channel from " + sock.getInetAddress() + " to \"" + ConnectionQueue.this.toString() + "\"";
         }
       }
     }

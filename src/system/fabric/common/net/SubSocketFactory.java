@@ -116,7 +116,7 @@ public final class SubSocketFactory {
     
     @Override
     public String toString() {
-      return "channel to " + name;
+      return "channel to \"" + name + "\"";
     }
   }
 }
