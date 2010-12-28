@@ -115,8 +115,10 @@ public class Node {
       this.store = new Store(this, opts.storeName);
 
       Protocol handshake =
-          new HandshakeComposite(new HandshakeBogus.Factory(this.store.name,
-              ONumConstants.STORE_PRINCIPAL),
+          new HandshakeComposite(
+              new HandshakeBogus.FixedFactory(
+                  this.store.name,
+                  ONumConstants.STORE_PRINCIPAL),
               new HandshakeUnauthenticated.Factory());
       NameService nameService = new DefaultNameService(PortType.STORE);
 

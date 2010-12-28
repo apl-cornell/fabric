@@ -141,7 +141,7 @@ public class RemoteStore extends RemoteNode implements Store {
   
   protected void initializeSubSocketFactories() throws IOException {
     Protocol authenticateProtocol =
-        new HandshakeComposite(new HandshakeBogus.Factory());
+        new HandshakeComposite(new HandshakeBogus.WorkerFactory());
     NameService nameService = new DefaultNameService(PortType.STORE);
     this.authenticatedSubSocketFactory =
         new SubSocketFactory(authenticateProtocol, nameService);

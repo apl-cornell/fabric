@@ -22,93 +22,82 @@ public class HandshakeBogus implements Protocol {
   // S->C: server's principal oid
   // /////////////////////////////
 
-  private String  principalStoreName;
-  private long    principalOnum;
-
-  /**
-   * @param principal
-   *          the local node's principal object.
-   */
-  public HandshakeBogus(fabric.lang.security.NodePrincipal principal) {
-    this.principalStoreName = principal.$getStore().name();
-    this.principalOnum      = principal.$getOnum();
-  }
+  private String store; // null for bottom
+  private long   onum;
   
   public HandshakeBogus(String store, long onum) {
-    this.principalStoreName = store;
-    this.principalOnum      = onum;
+    this.store = store;
+    this.onum  = onum;
   }
   
-  public static class Factory implements Protocol.Factory {
-    private final String storeName;
-    private final long onum;
-    
-    public Factory() {
-      this(null, 0);
-    }
-    
-    public Factory(String store, long onum) {
-      this.storeName = store;
-      this.onum = onum;
-    }
-    
+  public static class BottomFactory implements Protocol.Factory {
     public Protocol create() {
-      if (storeName == null)
-        return new HandshakeBogus(Worker.getWorker().getPrincipal());
-      
-      return new HandshakeBogus(storeName, onum);
+      return new HandshakeBogus(null, 0);
     }
   }
 
+  public static class FixedFactory implements Protocol.Factory {
+    private final String store;
+    private final long   onum;
+    
+    public FixedFactory(String store, long onum) {
+      this.store = store;
+      this.onum  = onum;
+    }
+    
+    public HandshakeBogus create() {
+      return new HandshakeBogus(store, onum);
+    }
+  }
+
+  public static class WorkerFactory implements Protocol.Factory {
+    public HandshakeBogus create() {
+      NodePrincipal p = Worker.getWorker().getPrincipal();
+      return new HandshakeBogus(p.$getStore().name(), p.$getOnum());
+    }
+  }
+  
   public ShakenSocket initiate(String name, Socket s)
       throws IOException {
-    DataInputStream in = new DataInputStream(s.getInputStream());
+    DataInputStream  in  = new DataInputStream(s.getInputStream());
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
     out.writeUTF(name);
-    if (principalStoreName == null) {
-      out.writeBoolean(false);
-    } else {
-      out.writeBoolean(true);
-      out.writeUTF(principalStoreName);
-      out.writeLong(principalOnum);
-    }
-    out.flush();
-
-    NodePrincipal remotePrincipal = null;
-    if (in.readBoolean()) {
-      Store remotePrincipalStore = Worker.getWorker().getStore(in.readUTF());
-      long remotePrincipalOnum = in.readLong();
-      remotePrincipal =
-          new NodePrincipal._Proxy(remotePrincipalStore, remotePrincipalOnum);
-    }
-
-    return new ShakenSocket(name, remotePrincipal, s);
+    writePrincipal(out);
+    
+    return new ShakenSocket(name, readPrincipal(in), s);
   }
 
   public ShakenSocket receive(Socket s) throws IOException {
-    DataInputStream in = new DataInputStream(s.getInputStream());
+    DataInputStream  in  = new DataInputStream(s.getInputStream());
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
-    if (principalStoreName == null) {
+    String name = in.readUTF();
+    writePrincipal(out);
+    
+    return new ShakenSocket(name, readPrincipal(in), s);
+  }
+  
+  private void writePrincipal(DataOutputStream out) throws IOException {
+    if (store == null) {
       out.writeBoolean(false);
     } else {
       out.writeBoolean(true);
-      out.writeUTF(principalStoreName);
-      out.writeLong(principalOnum);
+      out.writeUTF(store);
+      out.writeLong(onum);
     }
-    out.flush();
-
-    String name = in.readUTF();
     
-    NodePrincipal remotePrincipal = null;
+    out.flush();
+  }
+  
+  private NodePrincipal readPrincipal(DataInputStream in) throws IOException {
+    NodePrincipal result = null;
     if (in.readBoolean()) {
-      Store remotePrincipalStore = Worker.getWorker().getStore(in.readUTF());
-      long remotePrincipalOnum = in.readLong();
-      remotePrincipal =
-          new NodePrincipal._Proxy(remotePrincipalStore, remotePrincipalOnum);
+      Store store = Worker.getWorker().getStore(in.readUTF());
+      long  onum  = in.readLong();
+      result = new NodePrincipal._Proxy(store, onum);
     }
-
-    return new ShakenSocket(name, remotePrincipal, s);
+    
+    return result;
   }
 }

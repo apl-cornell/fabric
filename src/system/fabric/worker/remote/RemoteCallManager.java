@@ -44,7 +44,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     super(worker.name);
     
     try {
-      Protocol handshake = new HandshakeComposite(new HandshakeBogus.Factory());
+      Protocol handshake = new HandshakeComposite(new HandshakeBogus.WorkerFactory());
       NameService nameService = new DefaultNameService(PortType.WORKER);
       this.factory = new SubServerSocketFactory(handshake, nameService);
     } catch (IOException e) {
