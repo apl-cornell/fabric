@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
 import fabric.common.exceptions.NotImplementedException;
-import fabric.common.net.Channel.Connection;
-import fabric.common.net.SubServerSocketFactory.Acceptor.ConnectionQueue.ServerChannel;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.handshake.ShakenSocket;
 import fabric.common.net.naming.NameService;
@@ -153,6 +153,7 @@ public class SubServerSocketFactory {
     /** handle an incoming connection */
     private void recvConnection(Socket s) {
       try {
+        NETWORK_CONNECTION_LOGGER.log(Level.INFO, "receiving new connection from \"{0}\"", s.getInetAddress());
         ShakenSocket    conn  = handshake.receive(s);
         ConnectionQueue queue = queues.get(conn.name);
         if (null == queue) {

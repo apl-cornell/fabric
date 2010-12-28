@@ -1,17 +1,13 @@
 package fabric.common.net;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
-import javax.net.SocketFactory;
-
-import fabric.common.exceptions.NotImplementedException;
-import fabric.common.net.Channel.Connection;
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
 import fabric.common.net.handshake.Protocol;
-import fabric.common.net.handshake.ShakenSocket;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.SocketAddress;
 
@@ -62,6 +58,7 @@ public final class SubSocketFactory {
   synchronized ClientChannel getChannel(String name) throws IOException {
     ClientChannel result = channels.get(name);
     if (null == result) {
+      NETWORK_CONNECTION_LOGGER.log(Level.INFO, "establishing new connection to \"{0}\"", name);
       SocketAddress addr = nameService.resolve(name);
       
       Socket s = new Socket(addr.getAddress(), addr.getPort());
@@ -70,11 +67,11 @@ public final class SubSocketFactory {
       
       result = new ClientChannel(name, s);
       channels.put(name, result);
+      NETWORK_CONNECTION_LOGGER.log(Level.INFO, "connection to {0} established.", name);
     }
 
     return result;
   }
-  
   
   /**
    * Client channels are capable of making outgoing requests, but not of receiving
