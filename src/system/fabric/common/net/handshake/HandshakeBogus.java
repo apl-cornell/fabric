@@ -31,7 +31,7 @@ public class HandshakeBogus implements Protocol {
   }
   
   public static class BottomFactory implements Protocol.Factory {
-    public Protocol create() {
+    public HandshakeBogus create() {
       return new HandshakeBogus(null, 0);
     }
   }
