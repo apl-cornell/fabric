@@ -1,4 +1,4 @@
-package net;
+package net.echo;
 
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.SocketAddress;

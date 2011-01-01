@@ -1,13 +1,16 @@
-package net;
+package net.echo;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import fabric.common.net.*;
+import fabric.common.net.handshake.HandshakeAuthenticated;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 
 public class Client extends Thread {
@@ -68,9 +71,13 @@ public class Client extends Thread {
     return message;
   }
   
-  public static void main(String[] args) {
+  public static void main(String[] args) throws GeneralSecurityException {
+    KeyStore trust = null;
+    KeyStore keys  = null;
+    HandshakeAuthenticated.Factory fact = new HandshakeAuthenticated.Factory(keys, trust);
+    
     factory = new SubSocketFactory(
-        new HandshakeUnauthenticated(),
+        fact.create(),
         new BogusNameService(3372)
     );
     

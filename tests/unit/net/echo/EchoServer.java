@@ -1,12 +1,15 @@
-package net;
+package net.echo;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import fabric.common.net.*;
+import fabric.common.net.handshake.HandshakeAuthenticated;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 
 public class EchoServer extends Thread {
@@ -67,11 +70,14 @@ public class EchoServer extends Thread {
     }
   }
   
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, GeneralSecurityException {
     if (0 == args.length)
       args = new String[] {"localhost"};
     
-    factory = new SubServerSocketFactory(new HandshakeUnauthenticated(), new BogusNameService(3372));
+    KeyStore keys  = null;
+    KeyStore trust = null;
+    HandshakeAuthenticated.Factory fact = new HandshakeAuthenticated.Factory(keys, trust);
+    factory = new SubServerSocketFactory(fact.create(), new BogusNameService(3372));
 
     for (String name : args)
       new EchoServer(name).start();
