@@ -1,27 +1,26 @@
 package net.ssl;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.Semaphore;
 
 import fabric.common.Crypto;
+import fabric.common.net.handshake.HandshakeAuthenticated;
+import fabric.common.net.handshake.Protocol;
+import fabric.common.net.handshake.ShakenSocket;
 
 public final class AuthTest {
 
-  private static class Client implements Runnable {
-    public void run() {
-    }
-  }
+  private static final int       port = 11111;
+  private static final char[]    password = "password".toCharArray();
+  private static final Semaphore barrier = new Semaphore(0);
   
-  private static class Server implements Runnable {
-    public void run() {
-    }
-  }
-  
-  /**
-   * @param args
-   */
   public static void main(String[] args) throws Exception {
 
     // names
@@ -30,7 +29,6 @@ public final class AuthTest {
     String serverName = "server";
     String clientOnum = "17";
     String serverOnum = "35";
-    char[] password   = "password".toCharArray();
     
     // keys
     KeyPairGenerator keygen = Crypto.publicKeyGenInstance();
@@ -62,7 +60,7 @@ public final class AuthTest {
     // 2. CA cert for store
     // 3. store cert for principal
     // 4. principal's private key
-    KeyStore clientKeystore = KeyStore.getInstance("JKS");
+    final KeyStore clientKeystore = KeyStore.getInstance("JKS");
     clientKeystore.load(null);
     clientKeystore.setCertificateEntry(caName, caCert);
     clientKeystore.setKeyEntry(
@@ -77,7 +75,7 @@ public final class AuthTest {
     // 4. store cert for prinicpal
     // 5. name private key
     // 6. principal private key
-    KeyStore serverKeystore = KeyStore.getInstance("JKS");
+    final KeyStore serverKeystore = KeyStore.getInstance("JKS");
     serverKeystore.load(null);
     serverKeystore.setCertificateEntry(caName, caCert);
     serverKeystore.setKeyEntry(
@@ -89,6 +87,55 @@ public final class AuthTest {
         serverKeys.getPrivate(), password,
         new X509Certificate[] {serverNameCert});
 
+    new Thread("server") {
+      @Override public void run() {runServer(serverKeystore);}
+    }.start();
+    // get the party started.
+    new Thread("client") {
+      @Override public void run() {runClient(clientKeystore);}
+    }.start();
   }
 
+  private static void runServer(KeyStore keys) {
+    try {
+      HandshakeAuthenticated.Factory factory = new HandshakeAuthenticated.Factory(keys, password);
+      Protocol p = factory.create();
+      
+      ServerSocket ssock = new ServerSocket(port);
+      barrier.release();
+      Socket       sock  = ssock.accept();
+      ShakenSocket shake = p.receive(sock);
+      
+      DataInputStream  in  = new DataInputStream( shake.sock.getInputStream() );
+      DataOutputStream out = new DataOutputStream(shake.sock.getOutputStream());
+      
+      System.out.println(in.readUTF());
+      out.writeUTF("Hello Doctor Falken.  How about a nice game of global thermonuclear war?");
+
+      shake.sock.close();
+    } catch (final Exception e) {
+      e.printStackTrace();
+    }
+  }
+  
+  private static void runClient(KeyStore keys) {
+    try {
+      HandshakeAuthenticated.Factory factory = new HandshakeAuthenticated.Factory(keys, password);
+      Protocol p = factory.create();
+      
+      barrier.acquire();
+      Socket sock        = new Socket("localhost", port);
+      ShakenSocket shake = p.initiate("server", sock);
+      
+      DataInputStream  in  = new DataInputStream( shake.sock.getInputStream() );
+      DataOutputStream out = new DataOutputStream(shake.sock.getOutputStream());
+      
+      out.writeUTF("Hello Server!");
+      System.out.println(in.readUTF());
+      
+      shake.sock.close();
+    } catch (final Exception e) {
+      e.printStackTrace();
+    }
+  }
 }

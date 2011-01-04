@@ -4,14 +4,13 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.security.KeyStore;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import fabric.common.net.*;
-import fabric.common.net.handshake.HandshakeAuthenticated;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
+import fabric.common.net.handshake.HandshakeUnauthenticated.Factory;
 
 public class Client extends Thread {
   private static Logger           logger = Logger.getLogger("client");
@@ -72,9 +71,7 @@ public class Client extends Thread {
   }
   
   public static void main(String[] args) throws GeneralSecurityException {
-    KeyStore trust = null;
-    KeyStore keys  = null;
-    HandshakeAuthenticated.Factory fact = new HandshakeAuthenticated.Factory(keys, trust);
+    Factory fact = new HandshakeUnauthenticated.Factory();
     
     factory = new SubSocketFactory(
         fact.create(),
