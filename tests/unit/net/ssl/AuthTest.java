@@ -19,10 +19,10 @@ public final class AuthTest {
 
   private static final int       port = 11111;
   private static final char[]    password = "password".toCharArray();
-  private static final Semaphore barrier = new Semaphore(0);
+  private static final Semaphore barrier = new Semaphore(1);
   
   public static void main(String[] args) throws Exception {
-
+    
     // names
     String caName     = "CA";
     String storeName  = "store";
@@ -87,13 +87,20 @@ public final class AuthTest {
         serverKeys.getPrivate(), password,
         new X509Certificate[] {serverNameCert});
 
-    new Thread("server") {
-      @Override public void run() {runServer(serverKeystore);}
-    }.start();
-    // get the party started.
-    new Thread("client") {
-      @Override public void run() {runClient(clientKeystore);}
-    }.start();
+    if (args.length == 0 || args[0].equals("--server")) {
+      // start the server
+      barrier.acquire();
+      new Thread("server") {
+        @Override public void run() {runServer(serverKeystore);}
+      }.start();
+    }
+
+    if (args.length == 0 || args[0].equals("--client")) {
+      // start the client
+      new Thread("client") {
+        @Override public void run() {runClient(clientKeystore);}
+      }.start();
+    }
   }
 
   private static void runServer(KeyStore keys) {
