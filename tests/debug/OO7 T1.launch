@@ -20,7 +20,7 @@
 </listAttribute>
 <booleanAttribute key="org.eclipse.jdt.launching.DEFAULT_CLASSPATH" value="false"/>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="fabric.worker.Worker"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--name worker OO7.Benchmark fab://database/OO7 tiny 3"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--name worker OO7.traversals.T1 fab://database/OO7"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="fabric"/>
 <stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:fabric/examples/OO7}"/>
 </launchConfiguration>
