@@ -186,6 +186,13 @@ public class KeyMaterial {
   }
   
   public NodePrincipal getPrincipal() {
+    return getPrincipal(Worker.getWorker()); 
+  }
+  
+  /**
+   * This method is for use before the worker instance is completely constructed.
+   */
+  public NodePrincipal getPrincipal(Worker worker) {
     if (null == this.principalChain)
       return null;
 
@@ -197,7 +204,7 @@ public class KeyMaterial {
 
     // TODO Check that the principal is valid?
     
-    return new NodePrincipal._Proxy(Worker.getWorker().getStore(store), onum);
+    return new NodePrincipal._Proxy(worker.getStore(store), onum);
   }
   
   public X509Certificate[] getPrincipalChain() {

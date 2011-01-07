@@ -73,7 +73,7 @@ done
   error CSR input file and CERT output file must be different.
 
 openssl x509 -req -in "${CSR}" -CA "${DIR}/ca.crt" -CAkey "${DIR}/ca.key" \
-  -CAcreateserial -days "${DAYS}" > "${CERT}" || exit 1
+  -CAcreateserial -days "${DAYS}" -extfile ${DIR}/extensions.cnf > "${CERT}" || exit 1
 
 cat <<EOF
 

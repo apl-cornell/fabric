@@ -198,7 +198,7 @@ public final class Worker {
     }
 
     // Next, look in the key set for a principal certificate.
-    NodePrincipal p = keys.getPrincipal();
+    NodePrincipal p = keys.getPrincipal(this);
     if (p != null)
       return p;
     
@@ -214,7 +214,7 @@ public final class Worker {
     // Add the certificate to the key store.
     keys.setPrincipalChain(certChain);
     
-    return keys.getPrincipal();
+    return keys.getPrincipal(this);
   }
 
   /**
