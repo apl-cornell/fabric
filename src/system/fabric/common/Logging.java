@@ -113,6 +113,11 @@ public final class Logging {
   public static final Logger CONFIG_LOGGER = Logger.getLogger("fabric.config");
   
   /**
+   * For mey management related events
+   */
+  public static final Logger KEY_LOGGER = Logger.getLogger("fabric.keys");
+  
+  /**
    * For events related to the naming service.
    */
   public static final Logger NAMING_LOGGER = Logger.getLogger("fabric.naming");

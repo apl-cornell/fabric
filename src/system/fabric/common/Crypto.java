@@ -145,24 +145,16 @@ public final class Crypto {
   /**
    * Validates the given certificate chain against the given trust store.
    */
-  public static boolean validateCertificateChain(
-      Certificate[] certificateChain, Set<TrustAnchor> trustStore) {
-    try {
-      PKIXParameters params = new PKIXParameters(trustStore);
-      params.setRevocationEnabled(false);
-      CertificateFactory certFactory = CertificateFactory.getInstance("X509");
-      CertPath certPath =
-          certFactory.generateCertPath(Arrays.asList(certificateChain));
-      CertPathValidator pathValidator = CertPathValidator.getInstance("PKIX");
-      pathValidator.validate(certPath, params);
-      return true;
-    } catch (CertificateException e) {
-    } catch (NoSuchAlgorithmException e) {
-    } catch (CertPathValidatorException e) {
-    } catch (InvalidAlgorithmParameterException e) {
-    }
-    
-    return false;
+  public static void validateCertificateChain(Certificate[] certificateChain,
+                                              Set<TrustAnchor> trustStore)
+                     throws GeneralSecurityException {
+    PKIXParameters params = new PKIXParameters(trustStore);
+    params.setRevocationEnabled(false);
+    CertificateFactory certFactory = CertificateFactory.getInstance("X509");
+    CertPath certPath =
+      certFactory.generateCertPath(Arrays.asList(certificateChain));
+    CertPathValidator pathValidator = CertPathValidator.getInstance("PKIX");
+    pathValidator.validate(certPath, params);
   }
   
   /**

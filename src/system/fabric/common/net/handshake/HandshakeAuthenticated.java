@@ -113,8 +113,11 @@ public class HandshakeAuthenticated implements Protocol {
     writeCertificateChain(out, local.chain);
     X509Certificate[] peerChain = readCertificateChain(in);
     
-    if (!Crypto.validateCertificateChain(peerChain, local.trust))
-      throw new IOException("failed to validate peer principal certificate chain");
+    try {
+      Crypto.validateCertificateChain(peerChain, local.trust);
+    } catch (GeneralSecurityException e) {
+      throw new IOException("failed to validate peer principal certificate chain", e);
+    }
     
     String storeName = Crypto.getCN(peerChain[0].getIssuerX500Principal().getName());
     String onum      = Crypto.getCN(peerChain[0].getSubjectX500Principal().getName());

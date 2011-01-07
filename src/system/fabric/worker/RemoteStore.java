@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
+import java.security.GeneralSecurityException;
 import java.security.Principal;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
@@ -544,8 +545,11 @@ public class RemoteStore extends RemoteNode implements Store {
       Certificate[] certificateChain = response.certificateChain;
 
       // Validate the certificate chain.
-      if (Crypto.validateCertificateChain(certificateChain, Worker.instance.keyset.getTrustedCerts())) {
+      try {
+        Crypto.validateCertificateChain(certificateChain, Worker.instance.keyset.getTrustedCerts());
         publicKey = certificateChain[0].getPublicKey();
+      } catch (GeneralSecurityException e) {
+        // do nothing
       }
     }
     return publicKey;

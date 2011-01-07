@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.cert.Certificate;
+import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -15,7 +16,6 @@ import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
@@ -31,7 +31,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.Worker;
 
-import static fabric.common.Logging.MISC_LOGGER;
+import static fabric.common.Logging.KEY_LOGGER;
 
 /**
  * Convenience class for managing the keystores used by fabric nodes.  Setter
@@ -105,6 +105,7 @@ public class KeyMaterial {
 
     // extract trusted certs from key store
     try {
+      KEY_LOGGER.info("loading trusted certificates");
       this.trustedCerts = new HashSet<TrustAnchor> (this.keys.size());
       Enumeration<String> i = this.keys.aliases();
       while (i.hasMoreElements()) {
@@ -112,6 +113,8 @@ public class KeyMaterial {
         if (this.keys.isCertificateEntry(alias)) {
           X509Certificate cert = (X509Certificate) keys.getCertificate(alias);
           trustedCerts.add(new TrustAnchor(cert, null));
+          KEY_LOGGER.log(Level.INFO, "  - Certificate");
+          KEY_LOGGER.log(Level.INFO, "      Subject: {0}", cert.getSubjectX500Principal().getName());
         }
       }
     } catch (KeyStoreException e) {
@@ -120,18 +123,31 @@ public class KeyMaterial {
     
     // extract public key, private key, and name chain from key store
     try {
+      KEY_LOGGER.log(Level.INFO, "loading material for {0} from keystore", name);
       if (!this.keys.containsAlias(name) || !this.keys.isKeyEntry(name))
         throw new InternalError("No key for " + name + " in keystore");
       
       // java arrays are evil
       Certificate[] chain = this.keys.getCertificateChain(name);
       
-      if (!Crypto.validateCertificateChain(chain, this.trustedCerts))
-        throw new InternalError("Invalid certificate chain for " + name);
+      try {
+        Crypto.validateCertificateChain(chain, this.trustedCerts);
+      } catch (GeneralSecurityException e) {
+        throw new InternalError("Invalid certificate chain for " + name, e);
+      }
       
       this.nameChain  = Arrays.copyOf(chain, chain.length, X509Certificate[].class);
       this.privateKey = (PrivateKey) this.keys.getKey(name, password);
       this.publicKey  = this.nameChain[0].getPublicKey();
+      
+      if (KEY_LOGGER.isLoggable(Level.FINE)) {
+        KEY_LOGGER.log(Level.FINE, "certificate chain:");
+        for (X509Certificate cert : nameChain) {
+          KEY_LOGGER.log(Level.FINE, "  - Certificate");
+          KEY_LOGGER.log(Level.FINE, "      Subject: {0}", cert.getSubjectX500Principal().getName());
+          KEY_LOGGER.log(Level.FINE, "      Issuer:  {0}", cert.getIssuerX500Principal().getName());
+        }
+      }
       
       // TODO: check that public key and private key match
     } catch (Exception e) {
@@ -147,8 +163,11 @@ public class KeyMaterial {
       else {
         Certificate[] chain = this.prin.getCertificateChain(principalAlias);
         
-        if (!Crypto.validateCertificateChain(chain, this.trustedCerts))
-          throw new InternalError("Invalid certificate chain for principal");
+        try {
+          Crypto.validateCertificateChain(chain, this.trustedCerts);
+        } catch (GeneralSecurityException e) {
+          throw new InternalError("Invalid certificate chain for principal", e);
+        }
 
         this.principalChain = Arrays.copyOf(chain, chain.length, X509Certificate[].class);
 
@@ -188,11 +207,18 @@ public class KeyMaterial {
   
   public void setPrincipalChain(X509Certificate[] chain) {
     if (this.principalChain != null)
-      MISC_LOGGER.log(Level.WARNING, "overwriting existing principal chain in certstore file");
+      KEY_LOGGER.log(Level.WARNING, "overwriting existing principal chain in certstore file");
+    
+    KEY_LOGGER.info("setting principal chain");
+    for (X509Certificate cert : chain)
+    {
+      KEY_LOGGER.fine("  - Certificate");
+      KEY_LOGGER.fine("      Subject: " + cert.getSubjectX500Principal());
+      KEY_LOGGER.fine("      Issuer:  " + cert.getIssuerX500Principal());
+    }
     
     try {
-      if (!Crypto.validateCertificateChain(chain, getTrustedCerts()))
-        throw new CertificateException("Invalid Certificate Chain");
+      Crypto.validateCertificateChain(chain, getTrustedCerts());
       
       if (!chain[0].getPublicKey().equals(getPublicKey()))
         throw new KeyManagementException("Certificate does not certify correct public key");
