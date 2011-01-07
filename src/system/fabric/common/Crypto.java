@@ -1,5 +1,7 @@
 package fabric.common;
 
+import java.io.DataOutput;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.*;
@@ -7,6 +9,7 @@ import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Set;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
@@ -143,7 +146,7 @@ public final class Crypto {
    * Validates the given certificate chain against the given trust store.
    */
   public static boolean validateCertificateChain(
-      Certificate[] certificateChain, KeyStore trustStore) {
+      Certificate[] certificateChain, Set<TrustAnchor> trustStore) {
     try {
       PKIXParameters params = new PKIXParameters(trustStore);
       params.setRevocationEnabled(false);
@@ -153,7 +156,6 @@ public final class Crypto {
       CertPathValidator pathValidator = CertPathValidator.getInstance("PKIX");
       pathValidator.validate(certPath, params);
       return true;
-    } catch (KeyStoreException e) {
     } catch (CertificateException e) {
     } catch (NoSuchAlgorithmException e) {
     } catch (CertPathValidatorException e) {

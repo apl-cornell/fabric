@@ -544,8 +544,7 @@ public class RemoteStore extends RemoteNode implements Store {
       Certificate[] certificateChain = response.certificateChain;
 
       // Validate the certificate chain.
-      if (Crypto.validateCertificateChain(certificateChain,
-          Worker.instance.keyStore)) {
+      if (Crypto.validateCertificateChain(certificateChain, Worker.instance.keyset.getTrustedCerts())) {
         publicKey = certificateChain[0].getPublicKey();
       }
     }
@@ -575,7 +574,7 @@ public class RemoteStore extends RemoteNode implements Store {
    * Returns a certificate chain for a new principal object for the given worker
    * key. This certificate chain is not guaranteed to end in a trusted root.
    */
-  public Certificate[] makeWorkerPrincipal(PublicKey workerKey) {
+  public X509Certificate[] makeWorkerPrincipal(PublicKey workerKey) {
     MakePrincipalMessage.Response response;
     try {
       response = send(unauthenticatedSubSocketFactory, new MakePrincipalMessage(
@@ -601,7 +600,7 @@ public class RemoteStore extends RemoteNode implements Store {
       throw new InternalError("Key in certificate does not match worker key");
     }
     
-    Certificate[] result = new Certificate[response.certChain.length + 1];
+    X509Certificate[] result = new X509Certificate[response.certChain.length + 1];
     result[0] = cert;
     for (int i = 0; i < response.certChain.length; i++) {
       result[i + 1] = response.certChain[i];

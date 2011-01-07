@@ -18,14 +18,8 @@ public class ConfigProperties {
   public final int    workerPort;
   public final String dissemClass;
 
-  public final String keystore;
+  public final KeySet keyset;
 
-  /**
-   * The file location of a keystore containing a certificate for the worker's
-   * principal object.
-   */
-  public final String certKeyStore;
-  public final char[] password;
   public final int    maxConnections;
   public final int    retries;
   public final int    timeout;
@@ -80,21 +74,23 @@ public class ConfigProperties {
     //
 
     /************************** Node   Properties *****************************/
-    this.password        =                       removeProperty(p, "fabric.node.password",             "password").toCharArray();
     this.maxConnections  = Integer.parseInt(     removeProperty(p, "fabric.node.maxConnections",       "50"));
     this.timeout         = Integer.parseInt(     removeProperty(p, "fabric.node.timeout",              "2"));
     this.retries         = Integer.parseInt(     removeProperty(p, "fabric.node.retries",              "6"));
     this.useSSL          = Boolean.parseBoolean( removeProperty(p, "fabric.node.useSSL",               "true"));
-    this.keystore        = Resources.relpathRewrite("etc", "keys",
-                                                 removeProperty(p, "fabric.node.keystore",             name + ".keystore"));
     this.hostname        =                       removeProperty(p, "fabric.node.hostname",             name);
+    
+    char[] password      =                       removeProperty(p, "fabric.node.password",             "password").toCharArray();
+    String keyStoreName  = Resources.relpathRewrite("etc", "keys",
+                                                 removeProperty(p, "fabric.node.keystore",             name + ".keystore"));
+    String certStoreName = Resources.relpathRewrite("var", "certs",
+                                                 removeProperty(p, "fabric.worker.certs",              name + ".keystore"));
+    this.keyset = new KeySet(certStoreName, keyStoreName, password);
     
     /************************** Worker Properties *****************************/
     this.workerPort      = Integer.parseInt(     removeProperty(p, "fabric.worker.port",               "3372"));
     this.dissemClass     =                       removeProperty(p, "fabric.worker.fetchmanager.class", "fabric.dissemination.pastry.PastryFetchManager");
     this.homeStore       =                       removeProperty(p, "fabric.worker.homeStore",          null);
-    this.certKeyStore    = Resources.relpathRewrite("var", "certs",
-                                                 removeProperty(p, "fabric.worker.certs",              name + ".keystore"));
 
     /************************** Store  Properties *****************************/
     this.storePort       = Integer.parseInt(     removeProperty(p, "fabric.store.port",                "3472"));

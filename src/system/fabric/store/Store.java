@@ -39,7 +39,7 @@ class Store extends MessageToStoreHandler {
   public final TransactionManager tm;
   public final SurrogateManager   sm;
   public final ObjectDB           os;
-  public final Certificate[]      certificateChain;
+  public final X509Certificate[]  certificateChain;
   public final PublicKey          publicKey;
   public final PrivateKey         privateKey;
   public final ConfigProperties   config;
@@ -53,59 +53,10 @@ class Store extends MessageToStoreHandler {
     
     this.config = new ConfigProperties(name);
     
-    //
-    // Set up SSL
-    //
-
-    char[] password = config.password;
-    
-    KeyStore keyStore;
-    FileInputStream in = null;
-    try {
-      keyStore = KeyStore.getInstance("JKS");
-      in       = new FileInputStream(config.keystore);
-      keyStore.load(in, password);
-      in.close();
-    } catch (KeyStoreException e) {
-      throw new InternalError("Unable to open key store.", e);
-    } catch (NoSuchAlgorithmException e) {
-      throw new InternalError(e);
-    } catch (CertificateException e) {
-      throw new InternalError("Unable to open key store.", e);
-    } catch (FileNotFoundException e) {
-      throw new InternalError("File not found: " + e.getMessage());
-    } catch (IOException e) {
-      if (e.getCause() instanceof UnrecoverableKeyException)
-        throw new InternalError("Unable to open key store: invalid password.");
-      throw new InternalError("Unable to open key store.", e);
-    }
-
-    try {
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-      kmf.init(keyStore, password);
-
-      TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
-      tmf.init(keyStore);
-      TrustManager[] tm = tmf.getTrustManagers();
-      sslContext.init(kmf.getKeyManagers(), tm, null);
-
-      this.certificateChain =
-          keyStore.getCertificateChain(name);
-      Certificate publicKeyCert =
-          keyStore.getCertificate(name);
-      this.publicKey  = publicKeyCert.getPublicKey();
-      this.privateKey = (PrivateKey) keyStore.getKey(name, password);
-      
-    } catch (KeyManagementException e) {
-      throw new InternalError("Unable to initialise key manager factory.", e);
-    } catch (UnrecoverableKeyException e1) {
-      throw new InternalError("Unable to open key store.", e1);
-    } catch (NoSuchAlgorithmException e1) {
-      throw new InternalError(e1);
-    } catch (KeyStoreException e1) {
-      throw new InternalError("Unable to initialise key manager factory.", e1);
-    }
+    KeySet keyset = config.keyset;
+    this.certificateChain = keyset.getNameChain();
+    this.publicKey        = keyset.getPublicKey();
+    this.privateKey       = keyset.getPrivateKey();
     
     this.node = node;
     this.os   = loadStore();

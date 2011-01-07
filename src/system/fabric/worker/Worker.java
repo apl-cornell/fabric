@@ -52,11 +52,8 @@ public final class Worker {
 
   protected final LocalStore localStore;
 
-  // A KeyStore holding the worker's key pair and any trusted CA certificates.
-  protected final KeyStore keyStore;
-
-  // A socket factory for creating TLS connections.
-  public final SSLSocketFactory sslSocketFactory;
+  // A KeySet holding the worker's key pair and any trusted CA certificates.
+  protected final KeySet keyset;
 
   // The principal on whose behalf this worker is running.
   private NodePrincipal principal;
@@ -119,11 +116,8 @@ public final class Worker {
    * @param useSSL
    *          Whether SSL encryption is desired. Used for debugging purposes.
    */
-  private static Worker initialize(String name, int port, String homeStore,
-      Long principalOnum, String keyStoreFilename, String certStoreFilename,
-      char[] passwd, int maxConnections, int timeout, int retries,
-      boolean useSSL, String fetcher, Properties dissemConfig,
-      Map<String, RemoteStore> initStoreSet) throws InternalError,
+  private static Worker initialize(ConfigProperties config,
+      Long principalOnum, Map<String, RemoteStore> initStoreSet) throws InternalError,
       IllegalStateException, UsageError, IOException, GeneralSecurityException {
 
     if (instance != null)
@@ -131,14 +125,11 @@ public final class Worker {
           "The Fabric worker has already been initialized");
 
     WORKER_LOGGER.info("Initializing Fabric worker");
-    WORKER_LOGGER.config("maximum connections: " + maxConnections);
-    WORKER_LOGGER.config("timeout:             " + timeout);
-    WORKER_LOGGER.config("retries:             " + retries);
-    WORKER_LOGGER.config("use ssl:             " + useSSL);
-    instance =
-        new Worker(name, port, homeStore, principalOnum, keyStoreFilename,
-            certStoreFilename, passwd, maxConnections, timeout, retries,
-            useSSL, fetcher, dissemConfig, initStoreSet);
+    WORKER_LOGGER.config("maximum connections: " + config.maxConnections);
+    WORKER_LOGGER.config("timeout:             " + config.timeout);
+    WORKER_LOGGER.config("retries:             " + config.retries);
+    WORKER_LOGGER.config("use ssl:             " + config.useSSL);
+    instance = new Worker(config, principalOnum, initStoreSet);
 
     Threading.getPool().execute(instance.remoteCallManager);
     instance.localStore.initialize();
@@ -154,26 +145,18 @@ public final class Worker {
   protected static Worker instance;
 
   @SuppressWarnings("unchecked")
-  private Worker(String name, int port, String homeStore, Long principalOnum,
-      String keyStoreFilename, String certStoreFilename, char[] passwd,
-      int maxConnections, int timeout, int retries, boolean useSSL,
-      String fetcher, Properties dissemConfig,
-      Map<String, RemoteStore> initStoreSet) throws InternalError, UsageError,
+  private Worker(ConfigProperties config, Long principalOnum, Map<String, RemoteStore> initStoreSet) throws InternalError, UsageError,
       IOException, GeneralSecurityException {
     // Sanitise input.
-    if (timeout < 1) timeout = DEFAULT_TIMEOUT;
+    
+    this.name    = config.name;
+    this.port    = config.workerPort;
+    this.timeout = 1000 * (config.timeout < 1 ? DEFAULT_TIMEOUT : config.timeout);
+    this.retries = config.retries;
+    fabric.common.Options.DEBUG_NO_SSL = !config.useSSL;
+    
+    this.keyset = config.keyset;
 
-    this.name = name;
-    this.port = port;
-    this.timeout = 1000 * timeout;
-    this.retries = retries;
-    fabric.common.Options.DEBUG_NO_SSL = !useSSL;
-    
-    this.keyStore = KeyStore.getInstance("JKS");
-    InputStream in = new FileInputStream(keyStoreFilename);
-    keyStore.load(in, passwd);
-    in.close();
-    
     try {
       this.storeNameService  = new DefaultNameService(PortType.STORE);
       this.workerNameService = new DefaultNameService(PortType.WORKER);
@@ -186,102 +169,52 @@ public final class Worker {
     this.remoteWorkers = new HashMap<String, RemoteWorker>();
     this.localStore = new LocalStore();
 
-    // Set up the SSL socket factory.
-    try {
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-      kmf.init(keyStore, passwd);
-
-      TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
-      tmf.init(keyStore);
-      TrustManager[] tm = tmf.getTrustManagers();
-      sslContext.init(kmf.getKeyManagers(), tm, null);
-      this.sslSocketFactory = sslContext.getSocketFactory();
-      SSLSocketFactoryTable.register(name, sslSocketFactory);
-    } catch (KeyManagementException e) {
-      throw new InternalError("Unable to initialise key manager factory.", e);
-    } catch (NoSuchAlgorithmException e) {
-      throw new InternalError(e);
-    } catch (KeyStoreException e) {
-      throw new InternalError("Unable to initialise key manager factory.", e);
-    }
-
     this.remoteCallManager = new RemoteCallManager(this);
     this.disseminationCaches = new ArrayList<Cache>(1);
 
     // Initialize the fetch manager.
     try {
       Constructor<FetchManager> fetchManagerConstructor =
-          (Constructor<FetchManager>) Class.forName(fetcher).getConstructor(
+          (Constructor<FetchManager>) Class.forName(config.dissemClass).getConstructor(
               Worker.class, Properties.class);
       this.fetchManager =
-          fetchManagerConstructor.newInstance(this, dissemConfig);
+          fetchManagerConstructor.newInstance(this, config.disseminationProperties);
     } catch (Exception e) {
       throw new InternalError("Unable to load fetch manager", e);
     }
     
-    this.principal =
-        initializePrincipal(homeStore, principalOnum, certStoreFilename, passwd);
+    this.principal = initializePrincipal(config.homeStore, principalOnum, this.keyset);
   }
   
+  /**
+   *  Initialize the reference to the principal object.
+   */
   private NodePrincipal initializePrincipal(String homeStore,
-      Long principalOnum, String certStoreFilename, char[] passwd)
+      Long principalOnum, KeySet keys)
       throws UsageError, GeneralSecurityException, IOException {
-    // Initialize the reference to the principal object.
     if (principalOnum != null) {
       // First, handle the case where we're initializing a store's worker.
       return new NodePrincipal._Proxy(getStore(name), principalOnum);
     }
 
-    // Next, look in the cert store for a principal certificate.
-    KeyStore certStore = KeyStore.getInstance("JKS");
-    try {
-      InputStream in = new FileInputStream(certStoreFilename);
-      certStore.load(in, passwd);
-      in.close();
-    } catch (IOException e) {
-      certStore.load(null, passwd);
-    }
-    X509Certificate principalCert =
-        (X509Certificate) certStore.getCertificate(".principal");
-    if (principalCert != null) {
-      Principal issuerDN = principalCert.getIssuerX500Principal();
-      Principal subjectDN = principalCert.getSubjectX500Principal();
-
-      String store = Crypto.getCN(issuerDN.getName());
-      long onum = Long.parseLong(Crypto.getCN(subjectDN.getName()));
-      // TODO Check that the principal is valid.
-      return new NodePrincipal._Proxy(getStore(store), onum);
-    }
+    // Next, look in the key set for a principal certificate.
+    NodePrincipal p = keys.getPrincipal();
+    if (p != null)
+      return p;
     
+    // Still no principal? Create one.
     if (homeStore == null) {
       throw new UsageError(
           "No fabric.worker.homeStore specified in the worker configuration.");
     }
     
-    // Connect to the home store and have it create a new principal for us.
-    X509Certificate nameCert = (X509Certificate) keyStore.getCertificate(name);
-    PublicKey workerKey = nameCert.getPublicKey();
-    Certificate[] certChain = getStore(homeStore).makeWorkerPrincipal(workerKey);
+    PublicKey workerKey = keys.getPublicKey();
+    X509Certificate[] certChain = getStore(homeStore).makeWorkerPrincipal(workerKey);
     
     // Add the certificate to the key store.
-    Key privateKey = keyStore.getKey(name, passwd);
-    certStore.setKeyEntry(".principal", privateKey, passwd, certChain);
+    keys.setPrincipalChain(certChain);
     
-    // Save the new key store.
-    File file = new File(certStoreFilename);
-    file.getParentFile().mkdirs();
-    OutputStream out = new FileOutputStream(certStoreFilename);
-    certStore.store(out, passwd);
-    out.close();
-    
-    X509Certificate cert = (X509Certificate) certChain[0];
-    Principal issuerDN = cert.getIssuerX500Principal();
-    Principal subjectDN = cert.getSubjectX500Principal();
-    
-    String store = Crypto.getCN(issuerDN.getName());
-    long onum = Long.parseLong(Crypto.getCN(subjectDN.getName()));
-    return new NodePrincipal._Proxy(getStore(store), onum);
+    return keys.getPrincipal();
   }
 
   /**
@@ -429,23 +362,7 @@ public final class Worker {
       GeneralSecurityException {
     ConfigProperties props = new ConfigProperties(name);
     
-    String keyStoreFilename = props.keystore;
-    String certStoreFilename = props.certKeyStore;
-    char[] keyStorePasswd = props.password;
-
-    int port           = props.workerPort;
-    int maxConnections = props.maxConnections;
-    int timeout        = props.timeout;
-    int retries        = props.retries;
-
-    String fetcher = props.dissemClass;
-    String homeStore = props.homeStore;
-    Properties dissemConfig = props.disseminationProperties;
-    boolean useSSL = props.useSSL;
-
-    initialize(name, port, homeStore, principalOnum, keyStoreFilename,
-        certStoreFilename, keyStorePasswd, maxConnections, timeout, retries,
-        useSSL, fetcher, dissemConfig, initStoreSet);
+    initialize(props, principalOnum, initStoreSet);
   }
 
   // TODO: throws exception?

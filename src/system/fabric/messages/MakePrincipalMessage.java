@@ -46,9 +46,9 @@ public final class MakePrincipalMessage
     /**
      * The rest of the certificate chain.
      */
-    public final Certificate[] certChain;
+    public final X509Certificate[] certChain;
     
-    public Response(long onum, X509Certificate cert, Certificate[] certChain) {
+    public Response(long onum, X509Certificate cert, X509Certificate[] certChain) {
       this.onum = onum;
       this.cert = cert;
       this.certChain = certChain;
@@ -86,7 +86,7 @@ public final class MakePrincipalMessage
     out.writeLong(response.onum);
     writeObject(out, response.cert);
     out.writeInt(response.certChain.length);
-    for (Certificate cert : response.certChain)
+    for (X509Certificate cert : response.certChain)
       writeObject(out, cert);
   }
 
@@ -94,9 +94,9 @@ public final class MakePrincipalMessage
   protected Response readResponse(DataInput in) throws IOException {
     long onum = in.readLong();
     X509Certificate cert = readObject(in, X509Certificate.class);
-    Certificate[] certChain = new Certificate[in.readInt()];
+    X509Certificate[] certChain = new X509Certificate[in.readInt()];
     for (int i = 0; i < certChain.length; i++)
-      certChain[i] = readObject(in, Certificate.class);
+      certChain[i] = readObject(in, X509Certificate.class);
     
     return new Response(onum, cert, certChain);
   }
