@@ -53,7 +53,7 @@ class Store extends MessageToStoreHandler {
     
     this.config = new ConfigProperties(name);
     
-    KeySet keyset = config.keyset;
+    KeyMaterial keyset = config.getKeyMaterial();
     this.certificateChain = keyset.getNameChain();
     this.publicKey        = keyset.getPublicKey();
     this.privateKey       = keyset.getPrivateKey();

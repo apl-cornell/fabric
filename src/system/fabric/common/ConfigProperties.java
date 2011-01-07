@@ -18,8 +18,6 @@ public class ConfigProperties {
   public final int    workerPort;
   public final String dissemClass;
 
-  public final KeySet keyset;
-
   public final int    maxConnections;
   public final int    retries;
   public final int    timeout;
@@ -33,6 +31,11 @@ public class ConfigProperties {
 
   public final Properties disseminationProperties;
 
+  private final char[] password;
+  private final String keyStoreName;
+  private final String certStoreName;
+  private KeyMaterial  keyMaterial;
+  
   static {
     //
     // load the default properties files
@@ -80,12 +83,11 @@ public class ConfigProperties {
     this.useSSL          = Boolean.parseBoolean( removeProperty(p, "fabric.node.useSSL",               "true"));
     this.hostname        =                       removeProperty(p, "fabric.node.hostname",             name);
     
-    char[] password      =                       removeProperty(p, "fabric.node.password",             "password").toCharArray();
-    String keyStoreName  = Resources.relpathRewrite("etc", "keys",
+    this.password        =                       removeProperty(p, "fabric.node.password",             "password").toCharArray();
+    this.keyStoreName    = Resources.relpathRewrite("etc", "keys",
                                                  removeProperty(p, "fabric.node.keystore",             name + ".keystore"));
-    String certStoreName = Resources.relpathRewrite("var", "certs",
+    this.certStoreName   = Resources.relpathRewrite("var", "certs",
                                                  removeProperty(p, "fabric.worker.certs",              name + ".keystore"));
-    this.keyset = new KeySet(certStoreName, keyStoreName, password);
     
     /************************** Worker Properties *****************************/
     this.workerPort      = Integer.parseInt(     removeProperty(p, "fabric.worker.port",               "3372"));
@@ -109,6 +111,16 @@ public class ConfigProperties {
     }
   }
 
+  public synchronized KeyMaterial getKeyMaterial() {
+    if (this.keyMaterial == null)
+      this.keyMaterial = new KeyMaterial(this.name,
+                                         this.certStoreName,
+                                         this.keyStoreName,
+                                         this.password);
+
+    return this.keyMaterial;
+  }
+  
   /**
    * Like p.getProperty(name, defaultValue), but removes the property.
    */

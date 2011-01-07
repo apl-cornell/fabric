@@ -53,7 +53,7 @@ public final class Worker {
   protected final LocalStore localStore;
 
   // A KeySet holding the worker's key pair and any trusted CA certificates.
-  protected final KeySet keyset;
+  protected final KeyMaterial keyset;
 
   // The principal on whose behalf this worker is running.
   private NodePrincipal principal;
@@ -155,7 +155,7 @@ public final class Worker {
     this.retries = config.retries;
     fabric.common.Options.DEBUG_NO_SSL = !config.useSSL;
     
-    this.keyset = config.keyset;
+    this.keyset = config.getKeyMaterial();
 
     try {
       this.storeNameService  = new DefaultNameService(PortType.STORE);
@@ -190,7 +190,7 @@ public final class Worker {
    *  Initialize the reference to the principal object.
    */
   private NodePrincipal initializePrincipal(String homeStore,
-      Long principalOnum, KeySet keys)
+      Long principalOnum, KeyMaterial keys)
       throws UsageError, GeneralSecurityException, IOException {
     if (principalOnum != null) {
       // First, handle the case where we're initializing a store's worker.
