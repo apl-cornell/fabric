@@ -7,6 +7,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.KeyStore.PasswordProtection;
+import java.security.KeyStore.PrivateKeyEntry;
+import java.security.KeyStore.ProtectionParameter;
 import java.security.cert.Certificate;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
@@ -122,67 +125,28 @@ public class KeyMaterial {
     }
     
     // extract public key, private key, and name chain from key store
-    try {
-      KEY_LOGGER.log(Level.INFO, "loading material for {0} from keystore", name);
-      if (!this.keys.containsAlias(name) || !this.keys.isKeyEntry(name))
-        throw new InternalError("No key for " + name + " in keystore");
-      
-      // java arrays are evil
-      Certificate[] chain = this.keys.getCertificateChain(name);
-      
-      try {
-        Crypto.validateCertificateChain(chain, this.trustedCerts);
-      } catch (GeneralSecurityException e) {
-        throw new InternalError("Invalid certificate chain for " + name, e);
-      }
-      
-      this.nameChain  = Arrays.copyOf(chain, chain.length, X509Certificate[].class);
-      this.privateKey = (PrivateKey) this.keys.getKey(name, password);
-      this.publicKey  = this.nameChain[0].getPublicKey();
-      
-      if (KEY_LOGGER.isLoggable(Level.FINE)) {
-        KEY_LOGGER.log(Level.FINE, "certificate chain:");
-        for (X509Certificate cert : nameChain) {
-          KEY_LOGGER.log(Level.FINE, "  - Certificate");
-          KEY_LOGGER.log(Level.FINE, "      Subject: {0}", cert.getSubjectX500Principal().getName());
-          KEY_LOGGER.log(Level.FINE, "      Issuer:  {0}", cert.getIssuerX500Principal().getName());
-        }
-      }
-      
-      // TODO: check that public key and private key match
-    } catch (Exception e) {
-      throw new InternalError("failed to load key for " + name + " from keystore", e);
-    }
+    KeyEntry nameEntry = extractAndValidate(keys, name);
+    if (null == nameEntry)
+      throw new InternalError("no key entry for " + name);
+    
+    this.publicKey  = nameEntry.publicKey;
+    this.privateKey = nameEntry.privateKey;
+    this.nameChain  = nameEntry.chain;
     
     // extract principal chain from principal store
-    try {
-      if (!this.prin.containsAlias(principalAlias))
-        this.principalChain = null;
-      else if (!this.prin.isKeyEntry(principalAlias))
-        throw new InternalError("No key for principal entry in keystore");
-      else {
-        Certificate[] chain = this.prin.getCertificateChain(principalAlias);
-        
-        try {
-          Crypto.validateCertificateChain(chain, this.trustedCerts);
-        } catch (GeneralSecurityException e) {
-          throw new InternalError("Invalid certificate chain for principal", e);
-        }
+    KeyEntry prinEntry  = extractAndValidate(prin, principalAlias);
+    if (null == prinEntry)
+      this.principalChain = null;
+    else {
+      this.principalChain = prinEntry.chain;
 
-        this.principalChain = Arrays.copyOf(chain, chain.length, X509Certificate[].class);
+      // check that keys for name and principal match
+      if (!prinEntry.privateKey.equals(this.privateKey))
+        throw new InternalError("Principal's private key does not match " + name + "'s private key");
 
-        PrivateKey prinPrivateKey = (PrivateKey) this.keys.getKey(principalAlias, password);
-        if (!prinPrivateKey.equals(this.privateKey))
-          throw new InternalError("Principal's private key does not match " + name + "'s private key");
-        
-        PublicKey  prinPublicKey  = this.principalChain[0].getPublicKey();
-        if (!prinPublicKey.equals(this.publicKey))
-          throw new InternalError("Principal's public key does not match " + name + "'s public key");
-      }
-    } catch(Exception e) {
-      throw new InternalError("failed to load principal key from keystore", e);
+      if (!prinEntry.publicKey.equals(this.publicKey))
+        throw new InternalError("Principal's public key does not match " + name + "'s public key");
     }
-
   }
   
   public NodePrincipal getPrincipal() {
@@ -264,6 +228,63 @@ public class KeyMaterial {
   //////////////////////////////////////////////////////////////////////////////
   // private helper methods                                                   //
   //////////////////////////////////////////////////////////////////////////////
+  
+  private static class KeyEntry {
+    public X509Certificate[] chain;
+    public PrivateKey        privateKey;
+    public PublicKey         publicKey;
+  }
+  
+  private KeyEntry extractAndValidate(KeyStore store, String alias) {
+    try {
+      KEY_LOGGER.log(Level.INFO, "loading material for {0} from keystore", alias);
+      if (!store.containsAlias(alias))
+        return null;
+      
+      if (!store.isKeyEntry(alias))
+        throw new InternalError("No key for " + alias + " in keystore");
+      
+      // java arrays are evil
+      Certificate[] chain = store.getCertificateChain(alias);
+      
+      try {
+        Crypto.validateCertificateChain(chain, this.trustedCerts);
+      } catch (GeneralSecurityException e) {
+        throw new InternalError("Invalid certificate chain for " + alias, e);
+      }
+      
+      KeyEntry result = new KeyEntry();
+      
+      result.chain      = Arrays.copyOf(chain, chain.length, X509Certificate[].class);
+      result.privateKey = (PrivateKey) store.getKey(alias, this.password);
+      result.publicKey  = result.chain[0].getPublicKey();
+      
+      if (KEY_LOGGER.isLoggable(Level.FINE)) {
+        KEY_LOGGER.log(Level.FINE, "certificate chain for {0}:", alias);
+        for (X509Certificate cert : result.chain) {
+          KEY_LOGGER.log(Level.FINE, "  - Certificate");
+          KEY_LOGGER.log(Level.FINE, "      Subject: {0}", cert.getSubjectX500Principal().getName());
+          KEY_LOGGER.log(Level.FINE, "      Issuer:  {0}", cert.getIssuerX500Principal().getName());
+        }
+        
+        KEY_LOGGER.log(Level.FINE, "other key aliases:");
+        Enumeration<String> i = store.aliases();
+        while (i.hasMoreElements())
+        {
+          String key = i.nextElement();
+          if (store.isKeyEntry(key))
+            KEY_LOGGER.log(Level.FINE, "  - Certificate: {0}", key);
+        }
+        
+        KEY_LOGGER.log(Level.FINE, "public  key: {0}", result.publicKey);
+        KEY_LOGGER.log(Level.FINE, "private key: {0}", result.privateKey);
+      }
+      
+      return result;
+    } catch (Exception e) {
+      throw new InternalError("failed to load key for " + alias + " from keystore", e);
+    }
+  }
   
   private void saveCertStore() throws Exception {
     saveStore(prinFileName, prin, password);
