@@ -1,5 +1,6 @@
 package fabric.common.net.handshake;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLSocket;
@@ -32,6 +34,8 @@ import fabric.common.KeyMaterial;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
 
 /**
  * @see https://apl.cs.cornell.edu/wiki/Fabric:Fabric_Communication_Layer
@@ -55,8 +59,13 @@ public class HandshakeAuthenticated implements Protocol {
   //////////////////////////////////////////////////////////////////////////////
   
   private final static class Receiver {
-    public X509Certificate[] principalChain;
-    public SSLSocketFactory  factory;
+    public final X509Certificate[] principalChain;
+    public final SSLSocketFactory  factory;
+    
+    public Receiver(X509Certificate[] principalChain, SSLSocketFactory factory) {
+      this.principalChain = principalChain;
+      this.factory        = factory;
+    }
   }
 
   private final Map<String, Receiver> receivers;
@@ -67,12 +76,13 @@ public class HandshakeAuthenticated implements Protocol {
     this.receivers = new HashMap<String, Receiver>(endpoints.length);
     
     for (KeyMaterial keys : endpoints) {
-      Receiver receiver = new Receiver();
-      
-      receiver.principalChain = keys.getPrincipalChain();
-      receiver.factory        = createSSLFactory(keys);
+      X509Certificate[] principalChain = keys.getPrincipalChain();
+      SSLSocketFactory  factory        = createSSLFactory(keys);
+
+      Receiver receiver = new Receiver(principalChain, factory);
       
       receivers.put(keys.getName(), receiver);
+      NETWORK_CONNECTION_LOGGER.log(Level.INFO, "Adding receiver: {0}", keys.getName());
     }
     
     this.initiatorFactory = createSSLFactory(endpoints[0]);
@@ -82,9 +92,11 @@ public class HandshakeAuthenticated implements Protocol {
   public ShakenSocket initiate(String name, Socket s) throws IOException {
     DataOutputStream clearOut = new DataOutputStream(s.getOutputStream());
     clearOut.writeUTF(name);
+    clearOut.flush();
     
     SSLSocket sock = (SSLSocket) initiatorFactory.createSocket(s, name, s.getPort(), true);
     sock.setUseClientMode(true);
+    sock.setNeedClientAuth(true);
     sock.startHandshake();
     
     DataInputStream in = new DataInputStream(sock.getInputStream());
@@ -102,12 +114,17 @@ public class HandshakeAuthenticated implements Protocol {
     String name = in.readUTF();
     Receiver receiver = receivers.get(name);
     
+    if (null == receiver)
+      throw new IOException("Connection destined for non-listening server " + name);
+    
     SSLSocket sock = (SSLSocket) receiver.factory.createSocket(s, name, s.getPort(), true);
     sock.setUseClientMode(false);
+    sock.setNeedClientAuth(true);
     sock.startHandshake();
 
     DataOutputStream out = new DataOutputStream(sock.getOutputStream());
     writeCertificateChain(out, receiver.principalChain);
+    out.flush();
 
     NodePrincipal peer = getPrincipal(sock.getSession().getPeerCertificates());
     
@@ -275,7 +292,9 @@ public class HandshakeAuthenticated implements Protocol {
   
   private static void writeCertificate(DataOutputStream out, X509Certificate cert) throws IOException {
     try {
-      out.write(cert.getEncoded());
+      byte[] encoded = cert.getEncoded();
+      out.writeInt(encoded.length);
+      out.write(encoded);
     } catch (final CertificateEncodingException e) {
       throw new IOException("failed to write certificate", e);
     }
@@ -283,8 +302,13 @@ public class HandshakeAuthenticated implements Protocol {
   
   private static X509Certificate readCertificate(DataInputStream in) throws IOException {
     try {
+      int length = in.readInt();
+      byte[] encoded = new byte[length];
+      in.read(encoded);
+      
+      ByteArrayInputStream bytes = new ByteArrayInputStream(encoded);
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
-      return (X509Certificate)cf.generateCertificate(in);
+      return (X509Certificate)cf.generateCertificate(bytes);
     } catch (final CertificateException e) {
       throw new IOException("failed to read certificate", e);
     }
