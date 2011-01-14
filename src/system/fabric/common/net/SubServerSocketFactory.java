@@ -145,6 +145,7 @@ public class SubServerSocketFactory {
     }
     
     /** release the resources associated with a child */
+    @SuppressWarnings("unused")
     private void closeQueue(ConnectionQueue child) {
       // TODO
       throw new NotImplementedException();
@@ -226,6 +227,7 @@ public class SubServerSocketFactory {
       }
       
       /** wait for an incoming SubSocket connection */
+      @SuppressWarnings("unused")
       SubSocket accept() throws IOException {
         try {
           return connections.take();

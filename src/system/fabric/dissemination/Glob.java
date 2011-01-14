@@ -10,7 +10,6 @@ import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.Worker.Code;
 import fabric.common.*;
-import fabric.common.exceptions.BadSignatureException;
 import fabric.common.exceptions.InternalError;
 import fabric.lang.security.SecretKeyObject;
 

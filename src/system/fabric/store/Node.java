@@ -3,28 +3,15 @@ package fabric.store;
 import static fabric.common.Logging.STORE_LOGGER;
 
 
-import java.io.IOException;
 import java.io.PrintStream;
-import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
 
-import fabric.common.ONumConstants;
 import fabric.common.Version;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
-import fabric.common.net.SubServerSocketFactory;
-import fabric.common.net.SubSocketFactory;
-import fabric.common.net.handshake.HandshakeAuthenticated;
-import fabric.common.net.handshake.HandshakeBogus;
-import fabric.common.net.handshake.HandshakeComposite;
-import fabric.common.net.handshake.HandshakeUnauthenticated;
-import fabric.common.net.handshake.Protocol;
-import fabric.common.net.naming.DefaultNameService;
-import fabric.common.net.naming.DefaultNameService.PortType;
-import fabric.common.net.naming.NameService;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 

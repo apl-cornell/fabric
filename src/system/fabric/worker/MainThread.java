@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-import fabric.worker.transaction.TransactionManager;
 import fabric.common.FabricThread;
 
 /**

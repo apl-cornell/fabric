@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import fabric.common.net.*;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 
+@SuppressWarnings("unused")
 public class Client extends Thread {
   private static Logger           logger = Logger.getLogger("client");
   private static SubSocketFactory factory;

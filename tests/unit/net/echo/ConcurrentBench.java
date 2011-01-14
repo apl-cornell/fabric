@@ -3,18 +3,15 @@ package net.echo;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-
 
 public class ConcurrentBench {
   private static DataOutputStream out;
   private static DataInputStream  in;
   
   static class Producer extends Thread {
+    @Override
     public void run() {
       try {
         while(true) {
@@ -27,6 +24,7 @@ public class ConcurrentBench {
   }
   
   static class Consumer extends Thread {
+    @Override
     public void run() {
       try {
         while(true) {

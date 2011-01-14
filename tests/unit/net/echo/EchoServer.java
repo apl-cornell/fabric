@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import fabric.common.net.*;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 
+@SuppressWarnings("unused")
 public class EchoServer extends Thread {
   private static Logger                 logger = Logger.getLogger("server");
   private static SubServerSocketFactory factory;
