@@ -325,6 +325,7 @@ public class RemoteStore extends RemoteNode implements Store {
    * @param onum
    *          The object number to fetch.
    */
+  @SuppressWarnings("unused")
   public final Glob readEncryptedObjectFromStore(long onum)
       throws AccessException {
     DissemReadMessage.Response response =
@@ -539,10 +540,10 @@ public class RemoteStore extends RemoteNode implements Store {
    * Returns a certificate chain for a new principal object for the given worker
    * key. This certificate chain is not guaranteed to end in a trusted root.
    */
-  public X509Certificate[] makeWorkerPrincipal(PublicKey workerKey) {
+  public X509Certificate[] makeWorkerPrincipal(Worker worker, PublicKey workerKey) {
     MakePrincipalMessage.Response response;
     try {
-      response = send(Worker.getWorker().unauthToStore, new MakePrincipalMessage(
+      response = send(worker.unauthToStore, new MakePrincipalMessage(
           workerKey));
     } catch (FabricGeneralSecurityException e) {
       throw new NotImplementedException();

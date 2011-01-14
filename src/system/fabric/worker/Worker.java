@@ -6,12 +6,8 @@ import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.security.*;
-import java.security.Principal;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.*;
-
-import javax.net.ssl.*;
 
 import fabric.common.*;
 import fabric.common.exceptions.InternalError;
@@ -194,7 +190,7 @@ public final class Worker {
    */
   private NodePrincipal initializePrincipal(String homeStore,
       Long principalOnum, KeyMaterial keys)
-      throws UsageError, GeneralSecurityException, IOException {
+      throws UsageError {
     if (principalOnum != null) {
       // First, handle the case where we're initializing a store's worker.
       return new NodePrincipal._Proxy(getStore(config.name), principalOnum);
@@ -212,7 +208,7 @@ public final class Worker {
     }
     
     PublicKey workerKey = keys.getPublicKey();
-    X509Certificate[] certChain = getStore(homeStore).makeWorkerPrincipal(workerKey);
+    X509Certificate[] certChain = getStore(homeStore).makeWorkerPrincipal(this, workerKey);
     
     // Add the certificate to the key store.
     keys.setPrincipalChain(certChain);
