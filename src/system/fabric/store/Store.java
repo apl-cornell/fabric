@@ -23,6 +23,15 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.SubServerSocket;
+import fabric.common.net.SubServerSocketFactory;
+import fabric.common.net.handshake.HandshakeAuthenticated;
+import fabric.common.net.handshake.HandshakeBogus;
+import fabric.common.net.handshake.HandshakeComposite;
+import fabric.common.net.handshake.HandshakeUnauthenticated;
+import fabric.common.net.handshake.Protocol;
+import fabric.common.net.naming.DefaultNameService;
+import fabric.common.net.naming.NameService;
+import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
@@ -34,6 +43,8 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 
+import static fabric.common.ONumConstants.STORE_PRINCIPAL;
+
 class Store extends MessageToStoreHandler {
   public final Node               node;
   public final TransactionManager tm;
@@ -44,6 +55,8 @@ class Store extends MessageToStoreHandler {
   public final PrivateKey         privateKey;
   public final ConfigProperties   config;
 
+  private final SubServerSocketFactory socketFactory;
+  
   Store(Node node, String name) {
     super(name);
     
@@ -57,6 +70,8 @@ class Store extends MessageToStoreHandler {
     this.certificateChain = keyset.getNameChain();
     this.publicKey        = keyset.getPublicKey();
     this.privateKey       = keyset.getPrivateKey();
+    
+    this.socketFactory = createSocketFactory(keyset);
     
     this.node = node;
     this.os   = loadStore();
@@ -76,7 +91,7 @@ class Store extends MessageToStoreHandler {
   
   @Override
   protected SubServerSocket createServerSocket(){
-    return node.getServerSocketFactory().createServerSocket();
+    return socketFactory.createServerSocket();
   }
 
   public void shutdown() {
@@ -93,6 +108,25 @@ class Store extends MessageToStoreHandler {
       return os;
     } catch (Exception exc) {
       throw new InternalError("could not initialize store", exc);
+    }
+  }
+  
+  private SubServerSocketFactory createSocketFactory(KeyMaterial keys) {
+    try {
+      Protocol authProt;
+      if (config.useSSL)
+        authProt = new HandshakeAuthenticated(keys);
+      else
+        authProt = new HandshakeBogus(this.config.name, STORE_PRINCIPAL);
+
+      Protocol handshake = new HandshakeComposite(
+          authProt,
+          new HandshakeUnauthenticated());
+      NameService nameService = new DefaultNameService(PortType.STORE);
+
+      return new SubServerSocketFactory(handshake, nameService);
+    } catch (final Exception e) {
+      throw new InternalError("Failed to initialize store", e);
     }
   }
 

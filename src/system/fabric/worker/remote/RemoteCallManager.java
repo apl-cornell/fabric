@@ -41,10 +41,10 @@ public class RemoteCallManager extends MessageToWorkerHandler {
    * @param name the worker's DNS hostname.
    */
   public RemoteCallManager(Worker worker) {
-    super(worker.name);
+    super(worker.config.name);
     
     try {
-      Protocol handshake = new HandshakeComposite(new HandshakeBogus.WorkerFactory());
+      Protocol handshake = new HandshakeComposite(new HandshakeBogus());
       NameService nameService = new DefaultNameService(PortType.WORKER);
       this.factory = new SubServerSocketFactory(handshake, nameService);
     } catch (IOException e) {

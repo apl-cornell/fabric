@@ -23,7 +23,4 @@ public interface Protocol {
    */
   ShakenSocket receive(Socket s)                         throws IOException;
 
-  interface Factory {
-    Protocol create();
-  }
 }

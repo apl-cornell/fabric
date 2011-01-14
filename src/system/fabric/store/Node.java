@@ -5,6 +5,7 @@ import static fabric.common.Logging.STORE_LOGGER;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
@@ -15,6 +16,8 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
 import fabric.common.net.SubServerSocketFactory;
+import fabric.common.net.SubSocketFactory;
+import fabric.common.net.handshake.HandshakeAuthenticated;
 import fabric.common.net.handshake.HandshakeBogus;
 import fabric.common.net.handshake.HandshakeComposite;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
@@ -108,23 +111,11 @@ public class Node {
   
   private final Store store;
 
-  private final SubServerSocketFactory factory;
-
   public Node(Options opts) {
     try {
       this.store = new Store(this, opts.storeName);
 
-      Protocol handshake =
-          new HandshakeComposite(
-              new HandshakeBogus.FixedFactory(
-                  this.store.name,
-                  ONumConstants.STORE_PRINCIPAL),
-              new HandshakeUnauthenticated.Factory());
-      NameService nameService = new DefaultNameService(PortType.STORE);
-
-      this.factory = new SubServerSocketFactory(handshake, nameService);
-
-    } catch (final IOException e) {
+    } catch (final Exception e) {
       throw new InternalError("Failed to intialize Node", e);
     }
   }
@@ -159,15 +150,6 @@ public class Node {
   /** Gracefully tear down all workers and stores. */
   public void shutdown() {
     store.shutdown();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // public accessors                                                         //
-  //////////////////////////////////////////////////////////////////////////////
-
-  /** Return the server socket factory associated with this node. */
-  public SubServerSocketFactory getServerSocketFactory() {
-    return this.factory;
   }
 
 }

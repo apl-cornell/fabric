@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 
 import fabric.common.net.*;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
-import fabric.common.net.handshake.HandshakeUnauthenticated.Factory;
 
 public class Client extends Thread {
   private static Logger           logger = Logger.getLogger("client");
@@ -71,10 +70,9 @@ public class Client extends Thread {
   }
   
   public static void main(String[] args) throws GeneralSecurityException {
-    Factory fact = new HandshakeUnauthenticated.Factory();
     
     factory = new SubSocketFactory(
-        fact.create(),
+        new HandshakeUnauthenticated(),
         new BogusNameService(3372)
     );
     

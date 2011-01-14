@@ -78,7 +78,8 @@ public class ConfigProperties {
 
     /************************** Node   Properties *****************************/
     this.maxConnections  = Integer.parseInt(     removeProperty(p, "fabric.node.maxConnections",       "50"));
-    this.timeout         = Integer.parseInt(     removeProperty(p, "fabric.node.timeout",              "2"));
+    this.timeout         = 1000* Integer.parseInt(
+                                                 removeProperty(p, "fabric.node.timeout",              "2"));
     this.retries         = Integer.parseInt(     removeProperty(p, "fabric.node.retries",              "6"));
     this.useSSL          = Boolean.parseBoolean( removeProperty(p, "fabric.node.useSSL",               "true"));
     this.hostname        =                       removeProperty(p, "fabric.node.hostname",             name);

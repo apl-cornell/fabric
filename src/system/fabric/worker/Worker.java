@@ -17,6 +17,12 @@ import fabric.common.*;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
+import fabric.common.net.SubSocketFactory;
+import fabric.common.net.handshake.HandshakeAuthenticated;
+import fabric.common.net.handshake.HandshakeBogus;
+import fabric.common.net.handshake.HandshakeComposite;
+import fabric.common.net.handshake.HandshakeUnauthenticated;
+import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.DefaultNameService;
 import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.common.net.naming.NameService;
@@ -40,10 +46,9 @@ import fabric.worker.transaction.TransactionRegistry;
  * Objects.
  */
 public final class Worker {
-  public final String name;
 
-  public final int port;
-
+  public final ConfigProperties config;
+  
   // A map from store hostnames to Store objects
   protected final Map<String, RemoteStore> stores;
 
@@ -52,27 +57,19 @@ public final class Worker {
 
   protected final LocalStore localStore;
 
-  // A KeySet holding the worker's key pair and any trusted CA certificates.
-  protected final KeyMaterial keyset;
-
-  // The principal on whose behalf this worker is running.
-  private NodePrincipal principal;
-
-  // The timeout (in milliseconds) to use whilst attempting to connect to a
-  // store node.
-  public final int timeout;
-
-  // The number of times to retry connecting to each store node.
-  public final int retries;
-
-  // The name service to use for finding stores.
-  public final NameService storeNameService;
-
-  // The name service to use for finding workers.
-  public final NameService workerNameService;
+  // A subsocket factory for unauthenticated connections to stores.
+  public final SubSocketFactory unauthToStore;
+  
+  // A subsocket factory for authenticated connections to stores.
+  public final SubSocketFactory authToStore;
+  
+  // A subsocket factory for authenticated connections to workers
+  public final SubSocketFactory authToWorker;
   
   // The manager to use for fetching objects from stores.
   protected final FetchManager fetchManager;
+  
+  protected final NodePrincipal principal;
 
   // The collection of dissemination caches used by this worker's dissemination
   // node.
@@ -81,11 +78,11 @@ public final class Worker {
   private final RemoteCallManager remoteCallManager;
 
   public static final Random RAND = new Random();
-  private static final int DEFAULT_TIMEOUT = 2;
 
   // force Timing to load.
   @SuppressWarnings("unused")
   private static final Timing t = Timing.APP;
+
 
   /**
    * Initializes the Fabric <code>Worker</code>. When connecting to a store, the
@@ -149,20 +146,9 @@ public final class Worker {
       IOException, GeneralSecurityException {
     // Sanitise input.
     
-    this.name    = config.name;
-    this.port    = config.workerPort;
-    this.timeout = 1000 * (config.timeout < 1 ? DEFAULT_TIMEOUT : config.timeout);
-    this.retries = config.retries;
-    fabric.common.Options.DEBUG_NO_SSL = !config.useSSL;
+    this.config = config;
     
-    this.keyset = config.getKeyMaterial();
-
-    try {
-      this.storeNameService  = new DefaultNameService(PortType.STORE);
-      this.workerNameService = new DefaultNameService(PortType.WORKER);
-    } catch(IOException e) {
-      throw new InternalError("Unable to load the name service", e);
-    }
+    fabric.common.Options.DEBUG_NO_SSL = !config.useSSL;
     
     this.stores = new HashMap<String, RemoteStore>();
     if (initStoreSet != null) this.stores.putAll(initStoreSet);
@@ -172,6 +158,23 @@ public final class Worker {
     this.remoteCallManager = new RemoteCallManager(this);
     this.disseminationCaches = new ArrayList<Cache>(1);
 
+    NameService storeNameService  = new DefaultNameService(PortType.STORE);
+    NameService workerNameService = new DefaultNameService(PortType.WORKER);
+
+    // initialize the various socket factories
+    Protocol authProt;
+    if (config.useSSL)
+      authProt = new HandshakeAuthenticated(config.getKeyMaterial());
+    else
+      authProt = new HandshakeBogus();
+    
+    Protocol authenticateProtocol = new HandshakeComposite(authProt);
+    Protocol nonAuthenticateProtocol = new HandshakeComposite(new HandshakeUnauthenticated());
+
+    this.authToStore   = new SubSocketFactory(authenticateProtocol, storeNameService);
+    this.authToWorker  = new SubSocketFactory(authenticateProtocol, workerNameService);
+    this.unauthToStore = new SubSocketFactory(nonAuthenticateProtocol, storeNameService);
+    
     // Initialize the fetch manager.
     try {
       Constructor<FetchManager> fetchManagerConstructor =
@@ -183,7 +186,7 @@ public final class Worker {
       throw new InternalError("Unable to load fetch manager", e);
     }
     
-    this.principal = initializePrincipal(config.homeStore, principalOnum, this.keyset);
+    this.principal = initializePrincipal(config.homeStore, principalOnum, this.config.getKeyMaterial());
   }
   
   /**
@@ -194,7 +197,7 @@ public final class Worker {
       throws UsageError, GeneralSecurityException, IOException {
     if (principalOnum != null) {
       // First, handle the case where we're initializing a store's worker.
-      return new NodePrincipal._Proxy(getStore(name), principalOnum);
+      return new NodePrincipal._Proxy(getStore(config.name), principalOnum);
     }
 
     // Next, look in the key set for a principal certificate.
@@ -216,7 +219,7 @@ public final class Worker {
     
     return keys.getPrincipal(this);
   }
-
+  
   /**
    * Returns the Singleton Worker instance.
    * 
@@ -270,7 +273,7 @@ public final class Worker {
    * @return a RemoteWorker object representing the local worker.
    */
   public RemoteWorker getLocalWorker() {
-    return getWorker(name);
+    return getWorker(config.name);
   }
 
   /**

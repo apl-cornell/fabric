@@ -4,7 +4,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
+import fabric.common.Util.Thunk;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -22,39 +25,39 @@ public class HandshakeBogus implements Protocol {
   // S->C: server's principal oid
   // /////////////////////////////
 
-  private String store; // null for bottom
-  private long   onum;
+  private Thunk<String> store; // null for bottom
+  private Thunk<Long>   onum;
   
-  public HandshakeBogus(String store, long onum) {
-    this.store = store;
-    this.onum  = onum;
+  public HandshakeBogus(final String store, final long onum) {
+    printWarning();
+    this.store = new Thunk<String>() {
+      @Override protected String create() { return store; }
+    };
+    this.onum = new Thunk<Long> () {
+      @Override protected Long create() { return onum; }
+    };
+    
   }
   
-  public static class BottomFactory implements Protocol.Factory {
-    public HandshakeBogus create() {
-      return new HandshakeBogus(null, 0);
-    }
+  public HandshakeBogus() {
+    printWarning();
+    this.store = new Thunk<String>() {
+      @Override protected String create() {
+        return Worker.getWorker().getPrincipal().$getStore().name();
+      }
+    };
+    this.onum  = new Thunk<Long> () {
+      @Override protected Long create() {
+        return Worker.getWorker().getPrincipal().$getOnum();
+      }
+    };
   }
-
-  public static class FixedFactory implements Protocol.Factory {
-    private final String store;
-    private final long   onum;
-    
-    public FixedFactory(String store, long onum) {
-      this.store = store;
-      this.onum  = onum;
-    }
-    
-    public HandshakeBogus create() {
-      return new HandshakeBogus(store, onum);
-    }
-  }
-
-  public static class WorkerFactory implements Protocol.Factory {
-    public HandshakeBogus create() {
-      NodePrincipal p = Worker.getWorker().getPrincipal();
-      return new HandshakeBogus(p.$getStore().name(), p.$getOnum());
-    }
+  
+  private void printWarning() {
+    Logging.NETWORK_CONNECTION_LOGGER.log(Level.WARNING, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    Logging.NETWORK_CONNECTION_LOGGER.log(Level.WARNING, "!!! An insecure channel is being treated as a secure channel !!!");
+    Logging.NETWORK_CONNECTION_LOGGER.log(Level.WARNING, "!!! set useSSL to true unless you are testing performance    !!!");
+    Logging.NETWORK_CONNECTION_LOGGER.log(Level.WARNING, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
   }
   
   public ShakenSocket initiate(String name, Socket s)
@@ -83,8 +86,8 @@ public class HandshakeBogus implements Protocol {
       out.writeBoolean(false);
     } else {
       out.writeBoolean(true);
-      out.writeUTF(store);
-      out.writeLong(onum);
+      out.writeUTF(store.get());
+      out.writeLong(onum.get());
     }
     
     out.flush();

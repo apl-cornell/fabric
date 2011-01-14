@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 
 import fabric.common.net.*;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
-import fabric.common.net.handshake.HandshakeUnauthenticated.Factory;
 
 public class EchoServer extends Thread {
   private static Logger                 logger = Logger.getLogger("server");
@@ -73,8 +72,9 @@ public class EchoServer extends Thread {
     if (0 == args.length)
       args = new String[] {"localhost"};
     
-    Factory fact = new HandshakeUnauthenticated.Factory();
-    factory = new SubServerSocketFactory(fact.create(), new BogusNameService(3372));
+    factory = new SubServerSocketFactory(
+        new HandshakeUnauthenticated(),
+        new BogusNameService(3372));
 
     for (String name : args)
       new EchoServer(name).start();

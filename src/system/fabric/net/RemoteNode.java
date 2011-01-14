@@ -3,6 +3,7 @@ package fabric.net;
 import java.io.IOException;
 import java.io.Serializable;
 
+import fabric.common.KeyMaterial;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubSocket;
@@ -37,5 +38,9 @@ public abstract class RemoteNode implements Serializable {
     } catch (IOException e) {
       throw new NotImplementedException(e);
     }
+  }
+  
+  public static SubSocketFactory createAuthFactory(KeyMaterial ... keys) {
+    throw new NotImplementedException();
   }
 }

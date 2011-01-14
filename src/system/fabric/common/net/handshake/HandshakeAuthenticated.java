@@ -72,7 +72,7 @@ public class HandshakeAuthenticated implements Protocol {
   private final SSLSocketFactory      initiatorFactory;
   private final Set<TrustAnchor>      initiatorTrust;
   
-  private HandshakeAuthenticated(KeyMaterial ... endpoints) throws GeneralSecurityException {
+  public HandshakeAuthenticated(KeyMaterial ... endpoints) throws GeneralSecurityException {
     this.receivers = new HashMap<String, Receiver>(endpoints.length);
     
     for (KeyMaterial keys : endpoints) {
@@ -131,23 +131,6 @@ public class HandshakeAuthenticated implements Protocol {
     return new ShakenSocket(name, peer, sock);
   }
   
-  //////////////////////////////////////////////////////////////////////////////
-  // Factory                                                                  //
-  //////////////////////////////////////////////////////////////////////////////
-  
-  
-  public static class Factory implements Protocol.Factory {
-    private final HandshakeAuthenticated instance;
-
-    public Factory (KeyMaterial ... keys) throws GeneralSecurityException {
-      this.instance = new HandshakeAuthenticated(keys);
-    }
-
-    public HandshakeAuthenticated create() {
-      return this.instance;
-    }
-  }
-
   //////////////////////////////////////////////////////////////////////////////
   // fabric trust and key managers                                            //
   //////////////////////////////////////////////////////////////////////////////

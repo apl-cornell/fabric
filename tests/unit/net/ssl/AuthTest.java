@@ -4,14 +4,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.KeyStore;
-import java.security.cert.X509Certificate;
 import java.util.concurrent.Semaphore;
 
 import fabric.common.ConfigProperties;
-import fabric.common.Crypto;
 import fabric.common.KeyMaterial;
 import fabric.common.net.handshake.HandshakeAuthenticated;
 import fabric.common.net.handshake.Protocol;
@@ -74,8 +69,7 @@ public final class AuthTest {
 
   private static void runServer(KeyMaterial keys) {
     try {
-      HandshakeAuthenticated.Factory factory = new HandshakeAuthenticated.Factory(keys);
-      Protocol p = factory.create();
+      Protocol p = new HandshakeAuthenticated(keys);
       
       ServerSocket ssock = new ServerSocket(port);
       barrier.release();
@@ -96,8 +90,7 @@ public final class AuthTest {
   
   private static void runClient(String serverName, KeyMaterial keys) {
     try {
-      HandshakeAuthenticated.Factory factory = new HandshakeAuthenticated.Factory(keys);
-      Protocol p = factory.create();
+      Protocol p = new HandshakeAuthenticated(keys);
       
       barrier.acquire();
       Socket sock        = new Socket("localhost", port);
