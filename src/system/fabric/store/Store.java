@@ -58,9 +58,23 @@ class Store extends MessageToStoreHandler {
     this.config = new ConfigProperties(name);
     
     KeyMaterial keyset = config.getKeyMaterial();
+    
     this.certificateChain = keyset.getNameChain();
     this.publicKey        = keyset.getPublicKey();
     this.privateKey       = keyset.getPrivateKey();
+    
+    if (null == keyset.getPrincipalChain())
+    {
+      try {
+        X509Certificate[] principalChain = new X509Certificate[certificateChain.length + 1];
+        for (int i = 0; i < certificateChain.length; i++)
+          principalChain[i+1] = certificateChain[i];
+        principalChain[0] = Crypto.createCertificate(Long.toString(STORE_PRINCIPAL), publicKey, name, privateKey);
+        keyset.setPrincipalChain(principalChain);
+      } catch (GeneralSecurityException e) {
+        throw new InternalError("failed to create store's principal certificate", e);
+      }
+    }
     
     this.socketFactory = createSocketFactory(keyset);
     
