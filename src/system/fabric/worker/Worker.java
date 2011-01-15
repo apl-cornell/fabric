@@ -13,6 +13,7 @@ import fabric.common.*;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
+import fabric.common.net.SubServerSocketFactory;
 import fabric.common.net.SubSocketFactory;
 import fabric.common.net.handshake.HandshakeAuthenticated;
 import fabric.common.net.handshake.HandshakeBogus;
@@ -61,6 +62,9 @@ public final class Worker {
   
   // A subsocket factory for authenticated connections to workers
   public final SubSocketFactory authToWorker;
+  
+  // The subserversocket factory
+  public final SubServerSocketFactory authFromAll;
   
   // The manager to use for fetching objects from stores.
   protected final FetchManager fetchManager;
@@ -151,9 +155,6 @@ public final class Worker {
     this.remoteWorkers = new HashMap<String, RemoteWorker>();
     this.localStore = new LocalStore();
 
-    this.remoteCallManager = new RemoteCallManager(this);
-    this.disseminationCaches = new ArrayList<Cache>(1);
-
     NameService storeNameService  = new DefaultNameService(PortType.STORE);
     NameService workerNameService = new DefaultNameService(PortType.WORKER);
 
@@ -170,7 +171,12 @@ public final class Worker {
     this.authToStore   = new SubSocketFactory(authenticateProtocol, storeNameService);
     this.authToWorker  = new SubSocketFactory(authenticateProtocol, workerNameService);
     this.unauthToStore = new SubSocketFactory(nonAuthenticateProtocol, storeNameService);
+    this.authFromAll   = new SubServerSocketFactory(authenticateProtocol, workerNameService);
     
+
+    this.remoteCallManager = new RemoteCallManager(this);
+    this.disseminationCaches = new ArrayList<Cache>(1);
+
     // Initialize the fetch manager.
     try {
       Constructor<FetchManager> fetchManagerConstructor =

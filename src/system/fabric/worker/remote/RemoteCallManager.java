@@ -43,13 +43,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   public RemoteCallManager(Worker worker) {
     super(worker.config.name);
     
-    try {
-      Protocol handshake = new HandshakeComposite(new HandshakeBogus());
-      NameService nameService = new DefaultNameService(PortType.WORKER);
-      this.factory = new SubServerSocketFactory(handshake, nameService);
-    } catch (IOException e) {
-      throw new InternalError("Failed to initialize RemoteCallManager", e);
-    }
+    this.factory = worker.authFromAll;
   }
 
   @Override
