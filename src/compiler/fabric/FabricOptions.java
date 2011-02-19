@@ -10,6 +10,11 @@ import jif.JifOptions;
 
 public class FabricOptions extends JifOptions implements FabILOptions {
 
+  /* Worker for compiling source from Fabric */  
+  protected String workerName;
+  /* Run fabric worker for compiling source from Fabric */  
+  protected boolean runWorker;
+
   public FabricOptions(ExtensionInfo extension) {
     super(extension);
     this.delegate = new FabILOptions_c(extension);
@@ -19,8 +24,11 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   public void setDefaultValues() {
     super.setDefaultValues();
     this.fully_qualified_names = true;
+    this.fatalExceptions = true;
+    this.workerName = System.getenv("HOSTNAME");
+    this.runWorker = false;
   }
-
+  
   /* FabIL Options (forwarded to delegate ) ***********************************/
   
   protected FabILOptions_c delegate;
@@ -61,7 +69,18 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       delegate.addSigcp.add(args[index++]);
       return index;
     }
-    
+    else if (args[index].equals("-worker")) {
+      index++;
+      this.runWorker = true;
+      return index;
+    }
+    else if (args[index].equals("-useworker")) {
+      index++;
+      this.runWorker = true;
+      this.workerName = args[index++];
+      return index;
+    }
+
     // parse jif options
     int i = super.parseCommand(args, index, source);
     if (i != index) {

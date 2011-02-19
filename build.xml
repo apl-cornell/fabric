@@ -229,7 +229,8 @@
       description="Builds the Fabric system"/>
 
   <!-- Compiles the Fabric compiler -->
-  <target name="fabric-compiler" depends="init,fabil-compiler"
+  <target name="fabric-compiler"
+  depends="init,fabil-compiler,fabric-system"
       description="Builds the Fabric compiler">
     <antcall target="standard-ext">
       <param name="ext" value="fabric" />
@@ -1400,7 +1401,10 @@ public class Version {
     <javac source="1.6" target="1.6" srcdir="${compiler.src}"
         destdir="${classes}" debug="on" includeAntRuntime="false"
         includes="${ext.pkg}/**">
-      <classpath refid="jif.classpath" />
+      <classpath>
+        <pathelement location="${bootstrap.classes}" />
+        <path refid="jif.classpath" />
+      </classpath>
     </javac>
   </target>
 </project>

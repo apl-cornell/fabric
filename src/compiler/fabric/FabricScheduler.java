@@ -227,11 +227,14 @@ public class FabricScheduler extends JifScheduler {
     FabricTypeSystem  ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
     Goal g = internGoal(new VisitorGoal(job, new FabricToFabilRewriter(job, ts, nf, filext)));     
+    FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
 
     try {
         addPrerequisiteDependency(g, this.Serialized(job));
         addPrerequisiteDependency(g, this.PrincipalCastsAdded(job));
-        
+//        if (true) {//opts.outputInferredLabels) {
+//          addPrerequisiteDependency(g, this.OutputInferredLabels(job));
+//        }
         // make sure that if Object.fab is being compiled, it is always
         // written to FabIL before any other job.
         if (objectJob != null && job != objectJob)
@@ -242,6 +245,28 @@ public class FabricScheduler extends JifScheduler {
         throw new InternalCompilerError(e);
     }
     
+    return g;
+  }
+
+  private Goal OutputInferredLabels(Job job) {
+    Goal g = internGoal(new AbstractGoal(job){
+      @SuppressWarnings({ "unchecked", "rawtypes" })
+      @Override
+      public Collection prerequisiteGoals(Scheduler scheduler) {
+          List<Goal> l = new ArrayList<Goal>();
+          l.add(Serialized(job));
+          l.add(PrincipalCastsAdded(job));
+          l.addAll(super.prerequisiteGoals(scheduler));
+          return l;
+      }
+      @Override
+      public Pass createPass(ExtensionInfo extInfo) {
+        TypeSystem ts = extInfo.typeSystem();
+        NodeFactory nf = extInfo.nodeFactory();
+        return new OutputPass(this, new Translator(job(), ts, nf,
+            target_factory));
+      }
+    });
     return g;
   }
 
