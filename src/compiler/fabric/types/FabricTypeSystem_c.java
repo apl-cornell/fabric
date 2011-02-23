@@ -1,6 +1,5 @@
 package fabric.types;
 
-import java.io.File;
 import java.util.*;
 
 import jif.ast.JifUtil;
@@ -365,10 +364,4 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     
     return super.translateClass(c, t);
   }
-
-  @Override
-  public Principal providerForFile(File s) {
-    return super.providerForFile(s);
-  }
-  
 }
