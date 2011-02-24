@@ -1,0 +1,6 @@
+This is the auction example program.  It is intended to model a complex auction
+in which sellers submit confidential sales strategies, and a buyer submits a
+confidential purchasing strategy.  Each seller may make an offer based on the
+buyer, and the buyer may then choose among these options.  At the end of the
+auction, the identity of the winner is revealed to all participants.
+
