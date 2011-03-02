@@ -18,8 +18,6 @@ public class ConfigProperties {
   public final int    workerPort;
   public final String dissemClass;
 
-  public final String keystore;
-  public final char[] password;
   public final int    maxConnections;
   public final int    retries;
   public final int    timeout;
@@ -27,12 +25,17 @@ public class ConfigProperties {
   public final String hostname;
 
   public final String backendClass;
-  public final int storePort;
+  public final int    storePort;
 
-  public final String workerPrincipal;
+  public final String homeStore;
 
   public final Properties disseminationProperties;
 
+  private final char[] password;
+  private final String keyStoreName;
+  private final String certStoreName;
+  private KeyMaterial  keyMaterial;
+  
   static {
     //
     // load the default properties files
@@ -48,7 +51,7 @@ public class ConfigProperties {
     } finally {
       try { in.close(); } catch(Exception e) {}
     }
-    
+
     for (Entry<Object, Object> e : defaults.entrySet())
       CONFIG_LOGGER.log(Level.FINE, "default property: {0}", e);
   }
@@ -74,19 +77,23 @@ public class ConfigProperties {
     //
 
     /************************** Node   Properties *****************************/
-    this.password        =                       removeProperty(p, "fabric.node.password",             "password").toCharArray();
     this.maxConnections  = Integer.parseInt(     removeProperty(p, "fabric.node.maxConnections",       "50"));
-    this.timeout         = Integer.parseInt(     removeProperty(p, "fabric.node.timeout",              "2"));
+    this.timeout         = 1000* Integer.parseInt(
+                                                 removeProperty(p, "fabric.node.timeout",              "2"));
     this.retries         = Integer.parseInt(     removeProperty(p, "fabric.node.retries",              "6"));
     this.useSSL          = Boolean.parseBoolean( removeProperty(p, "fabric.node.useSSL",               "true"));
-    this.keystore        = Resources.relpathRewrite("etc", "keys",
-                                                 removeProperty(p, "fabric.node.keystore",             name + ".keystore"));
     this.hostname        =                       removeProperty(p, "fabric.node.hostname",             name);
+    
+    this.password        =                       removeProperty(p, "fabric.node.password",             "password").toCharArray();
+    this.keyStoreName    = Resources.relpathRewrite("etc", "keys",
+                                                 removeProperty(p, "fabric.node.keystore",             name + ".keystore"));
+    this.certStoreName   = Resources.relpathRewrite("var", "certs",
+                                                 removeProperty(p, "fabric.worker.certs",              name + ".keystore"));
     
     /************************** Worker Properties *****************************/
     this.workerPort      = Integer.parseInt(     removeProperty(p, "fabric.worker.port",               "3372"));
     this.dissemClass     =                       removeProperty(p, "fabric.worker.fetchmanager.class", "fabric.dissemination.pastry.PastryFetchManager");
-    this.workerPrincipal =                       removeProperty(p, "fabric.worker.principal",          null);
+    this.homeStore       =                       removeProperty(p, "fabric.worker.homeStore",          null);
 
     /************************** Store  Properties *****************************/
     this.storePort       = Integer.parseInt(     removeProperty(p, "fabric.store.port",                "3472"));
@@ -95,7 +102,7 @@ public class ConfigProperties {
     //
     // Collect dissemination properties while printing other unused properties.
     //
-    
+
     this.disseminationProperties = new Properties(defaults);
     for (Object prop : p.keySet()) {
       String key = (String) prop;
@@ -105,6 +112,16 @@ public class ConfigProperties {
     }
   }
 
+  public synchronized KeyMaterial getKeyMaterial() {
+    if (this.keyMaterial == null)
+      this.keyMaterial = new KeyMaterial(this.name,
+                                         this.certStoreName,
+                                         this.keyStoreName,
+                                         this.password);
+
+    return this.keyMaterial;
+  }
+  
   /**
    * Like p.getProperty(name, defaultValue), but removes the property.
    */

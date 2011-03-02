@@ -6,10 +6,8 @@ import static fabric.worker.transaction.Log.CommitState.Values.*;
 import java.util.*;
 import java.util.logging.Level;
 
-import fabric.common.FabricThread;
-import fabric.common.Logging;
-import fabric.common.SerializedObject;
-import fabric.common.TransactionID;
+import fabric.common.*;
+import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
@@ -21,7 +19,6 @@ import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
 import fabric.worker.*;
-import fabric.worker.debug.Timing;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.UpdateMap;
 
@@ -255,52 +252,22 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the transaction was aborted and needs to be retried.
    */
-  public void commitTransaction() throws AbortException,
-      TransactionRestartingException, TransactionAtomicityViolationException {
-    commitTransaction(true);
-  }
-
-  /**
-   * Commits the transaction if possible; otherwise, aborts the transaction.
-   * 
-   * @param useAuthentication
-   *          whether to use an authenticated channel to talk to the store
-   * @throws AbortException
-   *           if the transaction was aborted.
-   * @throws TransactionRestartingException
-   *           if the transaction was aborted and needs to be retried.
-   */
-  public void commitTransaction(boolean useAuthentication)
+  public void commitTransaction()
       throws AbortException, TransactionRestartingException,
       TransactionAtomicityViolationException {
     Timing.COMMIT.begin();
     try {
-      commitTransactionAt(System.currentTimeMillis(), useAuthentication, false);
+      commitTransactionAt(System.currentTimeMillis());
     } finally {
       Timing.COMMIT.end();
     }
   }
 
-  public void commitTransactionAt(long commitTime) throws AbortException,
-      TransactionRestartingException {
-    commitTransactionAt(commitTime, true, false);
+  public void commitTransactionAt(long commitTime) {
+    commitTransactionAt(commitTime, false);
   }
 
-  /**
-   * Commits the transaction if possible; otherwise, aborts the transaction.
-   * 
-   * @param useAuthentication
-   *          whether to use an authenticated channel to talk to the store
-   * @param ignoreRetrySignal
-   *          whether to ignore the retry signal
-   * @throws AbortException
-   *           if the transaction was aborted.
-   * @throws TransactionRestartingException
-   *           if the transaction was aborted and needs to be retried.
-   */
-  private void commitTransactionAt(long commitTime, boolean useAuthentication,
-      boolean ignoreRetrySignal) throws AbortException,
-      TransactionRestartingException {
+  public void commitTransactionAt(long commitTime, boolean ignoreRetrySignal) {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
     // Assume only one thread will be executing this.
@@ -382,18 +349,19 @@ public final class TransactionManager {
 
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
-    sendPrepareMessages(useAuthentication, commitTime, stores, workers);
+    sendPrepareMessages(commitTime, stores, workers);
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(useAuthentication, stores, workers);
+    sendCommitMessagesAndCleanUp(stores, workers);
   }
 
   /**
    * Sends prepare messages to the cohorts. Also sends abort messages if any
    * cohort fails to prepare.
    */
-  public void sendPrepareMessages(long commitTime) {
-    sendPrepareMessages(true, commitTime, current.storesToContact(),
+  public Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
+      long commitTime) {
+    return sendPrepareMessages(commitTime, current.storesToContact(),
         current.workersCalled);
   }
 
@@ -404,8 +372,9 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  private void sendPrepareMessages(final boolean useAuthentication,
-      final long commitTime, Set<Store> stores, List<RemoteWorker> workers) {
+  private Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
+      final long commitTime,
+      Set<Store> stores, List<RemoteWorker> workers) {
     final Map<RemoteNode, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
@@ -417,13 +386,13 @@ public final class TransactionManager {
         break;
       case PREPARING:
       case PREPARED:
-        return;
+        return failures;
       case COMMITTING:
       case COMMITTED:
         WORKER_TRANSACTION_LOGGER.log(Level.FINE,
             "Ignoring prepare request (transaction state = {0})",
             current.commitState.value);
-        return;
+        return failures;
       case PREPARE_FAILED:
       case ABORTING:
       case ABORTED:
@@ -470,7 +439,7 @@ public final class TransactionManager {
             LongKeyMap<Integer> reads = current.getReadsForStore(store, false);
             Collection<_Impl> writes = current.getWritesForStore(store);
             boolean subTransactionCreated =
-                store.prepareTransaction(useAuthentication, current.tid.topTid,
+                store.prepareTransaction(current.tid.topTid,
                     commitTime, creates, reads, writes);
 
             if (subTransactionCreated) {
@@ -537,7 +506,7 @@ public final class TransactionManager {
       }
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
 
-      sendAbortMessages(useAuthentication, stores, workers, failures.keySet());
+      sendAbortMessages(stores, workers, failures.keySet());
       
       synchronized (current.commitState) {
         current.commitState.value = PREPARE_FAILED;
@@ -551,6 +520,8 @@ public final class TransactionManager {
         current.commitState.notifyAll();
       }
     }
+
+    return failures;
   }
 
   /**
@@ -573,14 +544,13 @@ public final class TransactionManager {
    */
   public void sendCommitMessagesAndCleanUp()
       throws TransactionAtomicityViolationException {
-    sendCommitMessagesAndCleanUp(true, current.storesToContact(),
-        current.workersCalled);
+    sendCommitMessagesAndCleanUp(current.storesToContact(), current.workersCalled);
   }
 
   /**
    * Sends commit messages to the given set of stores and workers.
    */
-  private void sendCommitMessagesAndCleanUp(final boolean useAuthentication,
+  private void sendCommitMessagesAndCleanUp(
       Set<Store> stores, List<RemoteWorker> workers)
       throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
@@ -636,7 +606,7 @@ public final class TransactionManager {
       Runnable runnable = new Runnable() {
         public void run() {
           try {
-            store.commitTransaction(useAuthentication, current.tid.topTid);
+            store.commitTransaction(current.tid.topTid);
           } catch (TransactionCommitFailedException e) {
             failed.add((RemoteStore) store);
           } catch (UnreachableNodeException e) {
@@ -700,15 +670,13 @@ public final class TransactionManager {
    */
   @SuppressWarnings("unchecked")
   private void sendAbortMessages() {
-    sendAbortMessages(true, current.storesToContact(), current.workersCalled,
+    sendAbortMessages(current.storesToContact(), current.workersCalled,
         Collections.EMPTY_SET);
   }
 
   /**
    * Sends abort messages to those nodes that haven't reported failures.
    * 
-   * @param useAuthentication
-   *          whether to authenticate to the stores.
    * @param stores
    *          the set of stores involved in the transaction.
    * @param workers
@@ -716,14 +684,27 @@ public final class TransactionManager {
    * @param fails
    *          the set of nodes that have reported failure.
    */
-  private void sendAbortMessages(boolean useAuthentication, Set<Store> stores,
+  private void sendAbortMessages(Set<Store> stores,
       List<RemoteWorker> workers, Set<RemoteNode> fails) {
     for (Store store : stores)
-      if (!fails.contains(store))
-        store.abortTransaction(useAuthentication, current.tid);
+      if (!fails.contains(store)) {
+        try {
+          store.abortTransaction(current.tid);
+        } catch (AccessException e) {
+          Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
+              "Access error while aborting transaction: {0}", e);
+        }
+      }
 
     for (RemoteWorker worker : workers)
-      if (!fails.contains(worker)) worker.abortTransaction(current.tid);
+      if (!fails.contains(worker)) {
+        try {
+          worker.abortTransaction(current.tid);
+        } catch (AccessException e) {
+          Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
+              "Access error while aborting transaction: {0}", e);
+        }
+      }
   }
 
   public void registerCreate(_Impl obj) {
@@ -1184,7 +1165,7 @@ public final class TransactionManager {
     // transaction manager.
     TransactionID commonAncestor = log.getTid().getLowestCommonAncestor(tid);
     for (int i = log.getTid().depth; i > commonAncestor.depth; i--)
-      commitTransactionAt(System.currentTimeMillis(), true, true);
+      commitTransactionAt(System.currentTimeMillis());
 
     // Start new transactions if necessary.
     if (commonAncestor.depth != tid.depth) startTransaction(tid, true);

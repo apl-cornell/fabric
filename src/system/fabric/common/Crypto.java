@@ -7,12 +7,16 @@ import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Set;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
 
 import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 import fabric.common.exceptions.InternalError;
@@ -37,6 +41,7 @@ public final class Crypto {
   private static final SecureRandom random = new SecureRandom();
 
   static {
+    Security.addProvider(new BouncyCastleProvider());
     secretKeyGen = secretKeyGenInstance();
     publicKeyGen = publicKeyGenInstance();
   }
@@ -140,32 +145,24 @@ public final class Crypto {
   /**
    * Validates the given certificate chain against the given trust store.
    */
-  public static boolean validateCertificateChain(
-      Certificate[] certificateChain, KeyStore trustStore) {
-    try {
-      PKIXParameters params = new PKIXParameters(trustStore);
-      params.setRevocationEnabled(false);
-      CertificateFactory certFactory = CertificateFactory.getInstance("X509");
-      CertPath certPath =
-          certFactory.generateCertPath(Arrays.asList(certificateChain));
-      CertPathValidator pathValidator = CertPathValidator.getInstance("PKIX");
-      pathValidator.validate(certPath, params);
-      return true;
-    } catch (KeyStoreException e) {
-    } catch (CertificateException e) {
-    } catch (NoSuchAlgorithmException e) {
-    } catch (CertPathValidatorException e) {
-    } catch (InvalidAlgorithmParameterException e) {
-    }
-    
-    return false;
+  public static void validateCertificateChain(Certificate[] certificateChain,
+                                              Set<TrustAnchor> trustStore)
+                     throws GeneralSecurityException {
+    PKIXParameters params = new PKIXParameters(trustStore);
+    params.setSigProvider(BouncyCastleProvider.PROVIDER_NAME);
+    params.setRevocationEnabled(false);
+    CertificateFactory certFactory = CertificateFactory.getInstance("X509");
+    CertPath certPath =
+      certFactory.generateCertPath(Arrays.asList(certificateChain));
+    CertPathValidator pathValidator = CertPathValidator.getInstance("PKIX");
+    pathValidator.validate(certPath, params);
   }
   
   /**
-   * generates a certificate, signed by the issuer, binding the subject's name
+   * Generates a certificate, signed by the issuer, binding the subject's name
    * to their public key.
    */
-  public X509Certificate createCertificate(
+  public static X509Certificate createCertificate(
       String subjectName, PublicKey subjectKey,
       String issuerName, PrivateKey issuerKey) throws GeneralSecurityException {
     
@@ -177,11 +174,29 @@ public final class Crypto {
     certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
     certGen.setIssuerDN(new X509Name("CN=" + issuerName));
     certGen.setSubjectDN(new X509Name("CN=" + subjectName));
-    certGen.setSignatureAlgorithm("SHA1WithRSAEncryption");
+    certGen.setSignatureAlgorithm("SHA1withRSA");
     certGen.setPublicKey(subjectKey);
     certGen.setNotBefore(new Date(System.currentTimeMillis()));
     certGen.setNotAfter(expiry.getTime());
     
     return certGen.generate(issuerKey);
+  }
+  
+  /**
+   * Extracts the CN component of a Distinguished Name.
+   */
+  public static String getCN(String dn) {
+    try {
+      LdapName ldapName = new LdapName(dn);
+      for (int i = 0; i < ldapName.size(); i++) {
+        String component = ldapName.get(i);
+        if (component.substring(0, 3).equalsIgnoreCase("cn=")) {
+          return component.substring(3);
+        }
+      }
+    } catch (InvalidNameException e) {
+    }
+    
+    return null;
   }
 }

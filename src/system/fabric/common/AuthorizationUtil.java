@@ -2,10 +2,10 @@ package fabric.common;
 
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
+import fabric.lang.security.Principal;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.common.util.OidKeyHashMap;
-import fabric.lang.security.NodePrincipal;
 
 public class AuthorizationUtil {
 
@@ -29,7 +29,7 @@ public class AuthorizationUtil {
 
   private static boolean checkAuthorizationCache(
       OidKeyHashMap<OidKeyHashMap<Void>> cache,
-      NodePrincipal principal, Store store, long labelOnum) {
+      Principal principal, Store store, long labelOnum) {
     OidKeyHashMap<Void> submap;
     synchronized (cache) {
       submap = cache.get(store, labelOnum);
@@ -42,7 +42,7 @@ public class AuthorizationUtil {
   }
 
   private static void cacheAuthorization(
-      OidKeyHashMap<OidKeyHashMap<Void>> cache, NodePrincipal principal,
+      OidKeyHashMap<OidKeyHashMap<Void>> cache, Principal principal,
       Store store, long labelOnum) {
     OidKeyHashMap<Void> submap;
     synchronized (cache) {
@@ -63,7 +63,7 @@ public class AuthorizationUtil {
    * the label at the given oid. This is run as a subtransaction of the current
    * transaction.
    */
-  public static boolean isReadPermitted(final NodePrincipal principal,
+  public static boolean isReadPermitted(final Principal principal,
       Store store, long labelOnum) {
     // Allow the store's worker principal to do anything. We use pointer
     // equality here to avoid having to call into the worker.
@@ -92,7 +92,7 @@ public class AuthorizationUtil {
    * the label at the given onum. This is run as a subtransaction of the current
    * transaction.
    */
-  public static boolean isWritePermitted(final NodePrincipal principal,
+  public static boolean isWritePermitted(final Principal principal,
       Store store, long labelOnum) {
     // Allow the store's worker principal to do anything. We use pointer
     // equality here to avoid having to call into the worker.

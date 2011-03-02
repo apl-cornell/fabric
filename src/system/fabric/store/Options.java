@@ -40,7 +40,7 @@ public class Options extends fabric.common.Options {
 
     out.println("Usage: fab-store [options]");
     out.println("where [options] includes:");
-    usageForFlag(out, "--store <hostname>", "The name of the store.");
+    usageForFlag(out, "--name <hostname>", "The name of the store.");
     usageForFlag(out, "--pool <number>", "size of pool of message-handler "
         + "threads", defaults.threadPool);
     usageForFlag(out, "--timeout <seconds>", "time-out for idle worker "
@@ -68,7 +68,7 @@ public class Options extends fabric.common.Options {
       throw new TerminationException(0);
     }
 
-    if (args[i].equals("--store")) {
+    if (args[i].equals("--name")) {
       i++;
       storeName = args[i];
       return i + 1;

@@ -1,6 +1,7 @@
 package fabric.dissemination.pastry.messages;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -12,7 +13,6 @@ import rice.p2p.commonapi.rawserialization.RawMessage;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.RemoteStore;
-import fabric.common.exceptions.BadSignatureException;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -166,9 +166,10 @@ public class Replicate implements RawMessage {
         RemoteStore store = worker.getStore(in.readUTF());
         long onum = in.readLong();
         try {
-          Glob g = new Glob(store.getPublicKey(), in);
+          Glob g = new Glob(in);
+          g.verifySignature(store.getPublicKey());
           globs.put(new Pair<Store, Long>(store, onum), g);
-        } catch (BadSignatureException e) {
+        } catch (GeneralSecurityException e) {
         }
       }
     }

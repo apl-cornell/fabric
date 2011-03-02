@@ -20,7 +20,7 @@ import fabric.dissemination.Glob;
  * Keeps track of who's subscribed to what object. Handles subscriptions for a
  * single store.
  */
-public class SubscriptionManager extends FabricThread.AbstractImpl {
+public class SubscriptionManager extends FabricThread.Impl {
   /**
    * A set of onums that have been updated, paired with the worker that issued
    * the update.
@@ -94,8 +94,7 @@ public class SubscriptionManager extends FabricThread.AbstractImpl {
       GroupContainer groupContainer;
       Glob glob;
       try {
-        groupContainer =
-            tm.getGroupContainerAndSubscribe(onum, null, false, null);
+        groupContainer = tm.getGroupContainerAndSubscribe(onum);
         glob = groupContainer.getGlob();
       } catch (AccessException e) {
         throw new InternalError(e);

@@ -18,7 +18,7 @@ def main():
 	global categories, store, worker, size, overhead
 
 	store   = sys.argv[1]
-	worker = "worker0"
+	worker = "worker"
 	size   = "tiny"
 
 	print "===== Finding categories ======"
@@ -31,10 +31,6 @@ def main():
 	result     = sh( "bin/calibrate" )
 	overhead   = float(result)
 	print overhead, " ms"
-
-	print "===== Creating principal ====="
-	result = sh( "bin/fab --name %s --make-principal %s" % (worker, store) )
-	print result
 
 	for size,hot in (("small", True), ("medium", False)):
 		print "===== Creating database  ====="

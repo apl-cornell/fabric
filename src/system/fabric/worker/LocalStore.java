@@ -33,7 +33,7 @@ public final class LocalStore implements Store {
 
   private Set<Pair<Principal, Principal>> localDelegates;
 
-  public synchronized boolean prepareTransaction(boolean useAuthentication,
+  public synchronized boolean prepareTransaction(
       long tid, long commitTime, Collection<Object._Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object._Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
@@ -42,13 +42,11 @@ public final class LocalStore implements Store {
     return false;
   }
 
-  public synchronized void abortTransaction(boolean useAuthentication,
-      TransactionID tid) {
+  public synchronized void abortTransaction(TransactionID tid) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction aborting");
   }
 
-  public synchronized void commitTransaction(boolean useAuthentication,
-      long transactionID) {
+  public synchronized void commitTransaction(long transactionID) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction committing");
   }
 

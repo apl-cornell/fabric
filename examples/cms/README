@@ -127,12 +127,9 @@ fabric.worker.fetchmanager=
 
 11) Start a store:
 cd {fabric home}
-./bin/fab-store --store store0 etc/keys/store0.keystore etc/keys/trust.keystore password --store store1 etc/keys/store1.keystore etc/keys/trust.keystore password
+./bin/fab-store --name store0 etc/keys/store0.keystore etc/keys/trust.keystore password --name store1 etc/keys/store1.keystore etc/keys/trust.keystore password
 
-12) Set up a principal:
-./bin/fab --name worker0 --make-principal store0
-
-13) Start Tomcat and load: http://localhost:8180/web/guest
+12) Start Tomcat and load: http://localhost:8180/web/guest
 
 
 Problems?

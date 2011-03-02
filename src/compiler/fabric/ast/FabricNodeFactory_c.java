@@ -47,7 +47,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return result;
   }
   
-  public AmbNewFabricArray AmbNewFabricArray(Position pos, TypeNode base, Expr loc, Object expr, List dims, int addDims) {
+  public AmbNewFabricArray AmbNewFabricArray(Position pos, TypeNode base, Expr loc, Object expr, List<Expr> dims, int addDims) {
     AmbNewFabricArray result = new AmbNewFabricArray_c(pos, base, loc, expr, dims, addDims);
     result = (AmbNewFabricArray) result.ext(fabricExtFactory().extAmbNewFabricArray());
     result = (AmbNewFabricArray) result.del(fabricDelFactory().delAmbNewFabricArray());
@@ -126,6 +126,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return result;
   }
   
+  @SuppressWarnings("rawtypes")
   @Override
   public New New(Position pos, Expr outer, TypeNode objectType, List args, ClassBody body) {
     if (body != null) 
@@ -172,7 +173,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
   // overridden factory methods                                               //
   //////////////////////////////////////////////////////////////////////////////  
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public ClassDecl ClassDecl(Position pos, Flags flags, Id name, TypeNode superClass, List interfaces, ClassBody body) {
     ClassDecl n = new ClassDecl_c(pos, flags, name,
@@ -183,7 +184,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return n;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public JifClassDecl JifClassDecl(Position pos, Flags flags, Id name,
                                    List params, 
@@ -196,14 +197,13 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return n;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public Call Call(Position pos, Receiver target, Id name, List args) {
     return Call(pos, target, name, null, args);
   }
   
-  @SuppressWarnings("unchecked")
-  public Call Call(Position pos, Receiver target, Id name, Expr remoteWorker, List args) {
+  public Call Call(Position pos, Receiver target, Id name, Expr remoteWorker, List<Expr> args) {
     Call n = new FabricCall_c(pos, target, name, remoteWorker, args);
     n = (Call)n.ext(extFactory().extCall());
     n = (Call)n.del(delFactory().delCall());

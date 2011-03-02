@@ -24,7 +24,7 @@ done
 
 classpath="${FABRIC_STORE_CP}:${EXTRACP}:${classpath}"
 
-command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" fabric.store.Main ${args}"
+command="\"${JAVA}\" $vmargs -classpath \"$(fixpath $classpath)\" fabric.store.Node $args"
 
 if [ -n "${verbose}" ]
 then

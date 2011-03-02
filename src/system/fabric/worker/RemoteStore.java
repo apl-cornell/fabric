@@ -1,27 +1,26 @@
 package fabric.worker;
 
-import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
-import java.security.PublicKey;
+import java.security.*;
 import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
 import fabric.common.*;
-import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.*;
 import fabric.common.exceptions.InternalError;
-import fabric.common.net.naming.SocketAddress;
 import fabric.common.util.*;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.messages.*;
+import fabric.messages.Message.NoException;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
@@ -67,20 +66,19 @@ public class RemoteStore extends RemoteNode implements Store {
    * SerializedObjects are collected from memory.
    */
   private transient final SerializedCollector collector;
-
+  
   private class SerializedCollector extends Thread {
     private final ReferenceQueue<SerializedObject> queue;
-    private boolean destroyed;
 
     SerializedCollector() {
       super("Serialized object collector for store " + name);
+      setDaemon(true);
       queue = new ReferenceQueue<SerializedObject>();
-      destroyed = false;
     }
 
     @Override
     public void run() {
-      while (!destroyed) {
+      while (true) {
         try {
           SerializedObjectSoftRef ref =
               (SerializedObjectSoftRef) queue.remove();
@@ -96,15 +94,15 @@ public class RemoteStore extends RemoteNode implements Store {
 
   private class FetchLock {
     private _Impl object;
-    private FetchException error;
+    private AccessException error;
   }
 
   /**
    * Creates a store representing the store at the given host name.
    */
   protected RemoteStore(String name) {
-    super(name, true);
-
+    super(name);
+    
     this.objects = new LongKeyHashMap<FabricSoftRef>();
     this.fetchLocks = new LongKeyHashMap<FetchLock>();
     this.fresh_ids = new LinkedList<Long>();
@@ -114,7 +112,7 @@ public class RemoteStore extends RemoteNode implements Store {
     this.collector = new SerializedCollector();
     this.collector.start();
   }
-
+  
   /**
    * Creates a store representing the store at the given host name.
    */
@@ -123,45 +121,30 @@ public class RemoteStore extends RemoteNode implements Store {
     this.publicKey = key;
   }
 
-  /**
-   * Cleans up the SerializedObject collector thread.
-   */
-  @Override
-  public void cleanup() {
-    super.cleanup();
-    collector.destroyed = true;
-    collector.interrupt();
-  }
-
   public synchronized long createOnum() throws UnreachableNodeException {
-    reserve(1);
+    try {
+      reserve(1);
+    } catch (AccessException e) {
+      throw new FabricRuntimeException(e);
+    }
     return fresh_ids.poll();
   }
 
   /**
    * Sends a PREPARE message to the store.
    */
-  public boolean prepareTransaction(boolean useAuthentication, long tid,
-      long commitTime, Collection<Object._Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Object._Impl> writes)
-      throws TransactionPrepareFailedException, UnreachableNodeException {
-    if (useAuthentication) {
-      PrepareTransactionMessage.Response response =
-          new PrepareTransactionMessage(tid, commitTime, toCreate, reads,
-              writes).send(this);
+  public boolean prepareTransaction(long tid,
+                                    long commitTime,
+                                    Collection<Object._Impl> toCreate,
+                                    LongKeyMap<Integer> reads,
+                                    Collection<Object._Impl> writes)
+          throws TransactionPrepareFailedException,
+                 UnreachableNodeException {
+    PrepareTransactionMessage.Response response =
+        send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
+            commitTime, toCreate, reads, writes));
 
-      return response.subTransactionCreated;
-    } else {
-      UnauthenticatedPrepareTransactionMessage.Response response =
-          new UnauthenticatedPrepareTransactionMessage(tid, commitTime,
-              toCreate, reads, writes).send(this);
-
-      if (!response.success)
-        throw new TransactionPrepareFailedException(response.versionConflicts,
-            response.message);
-
-      return response.subTransactionCreated;
-    }
+    return response.subTransactionCreated;
   }
 
   /**
@@ -173,7 +156,7 @@ public class RemoteStore extends RemoteNode implements Store {
    * @return The requested object
    * @throws FabricException
    */
-  public final Object._Impl readObject(long onum) throws FetchException {
+  public final Object._Impl readObject(long onum) throws AccessException {
     return readObject(true, onum);
   }
 
@@ -181,12 +164,13 @@ public class RemoteStore extends RemoteNode implements Store {
    * (non-Javadoc)
    * @see fabric.worker.Store#readObjectNoDissem(long)
    */
-  public final Object._Impl readObjectNoDissem(long onum) throws FetchException {
+  public final Object._Impl readObjectNoDissem(long onum)
+      throws AccessException {
     return readObject(false, onum);
   }
 
   private final Object._Impl readObject(boolean useDissem, long onum)
-      throws FetchException {
+      throws AccessException {
     // Intercept reads of global constants and redirect them to the local store.
     if (ONumConstants.isGlobalConstant(onum))
       return Worker.instance.localStore.readObject(onum);
@@ -214,7 +198,7 @@ public class RemoteStore extends RemoteNode implements Store {
         // We are responsible for fetching the object.
         try {
           fetchLock.object = fetchObject(useDissem, onum);
-        } catch (FetchException e) {
+        } catch (AccessException e) {
           fetchLock.error = e;
         }
 
@@ -262,7 +246,7 @@ public class RemoteStore extends RemoteNode implements Store {
    * @throws FabricException
    */
   private Object._Impl fetchObject(boolean useDissem, long onum)
-      throws FetchException {
+      throws AccessException {
     Object._Impl result = null;
     SoftReference<SerializedObject> serialRef;
     // Lock the table to keep the serialized-reference collector from altering
@@ -327,8 +311,9 @@ public class RemoteStore extends RemoteNode implements Store {
    * @throws FetchException
    *           if there was an error while fetching the object from the store.
    */
-  public ObjectGroup readObjectFromStore(long onum) throws FetchException {
-    ReadMessage.Response response = new ReadMessage(onum).send(this);
+  public ObjectGroup readObjectFromStore(long onum) throws AccessException {
+    ReadMessage.Response response =
+        send(Worker.getWorker().authToStore, new ReadMessage(onum));
     return response.group;
   }
 
@@ -339,9 +324,16 @@ public class RemoteStore extends RemoteNode implements Store {
    *          The object number to fetch.
    */
   public final Glob readEncryptedObjectFromStore(long onum)
-      throws FetchException {
+      throws AccessException {
     DissemReadMessage.Response response =
-        new DissemReadMessage(onum).send(this);
+        send(Worker.getWorker().unauthToStore, new DissemReadMessage(onum));
+    
+    PublicKey key = getPublicKey();
+    try {
+      response.glob.verifySignature(key);
+    } catch (GeneralSecurityException e) {
+      return null;
+    }
     return response.glob;
   }
 
@@ -364,11 +356,12 @@ public class RemoteStore extends RemoteNode implements Store {
    * @param num
    *          The number of objects to allocate
    */
-  protected void reserve(int num) throws UnreachableNodeException {
+  protected void reserve(int num) throws AccessException, UnreachableNodeException {
     while (fresh_ids.size() < num) {
       // log.info("Requesting new onums, storeid=" + storeID);
       if (num < 512) num = 512;
-      AllocateMessage.Response response = new AllocateMessage(num).send(this);
+      AllocateMessage.Response response =
+          send(Worker.getWorker().authToStore, new AllocateMessage(num));
 
       for (long oid : response.oids)
         fresh_ids.add(oid);
@@ -379,29 +372,18 @@ public class RemoteStore extends RemoteNode implements Store {
    * (non-Javadoc)
    * @see fabric.worker.Store#abortTransaction(long)
    */
-  public void abortTransaction(boolean useAuthentication, TransactionID tid) {
-    if (useAuthentication)
-      new AbortTransactionMessage(tid).send(this);
-    else new UnauthenticatedAbortTransactionMessage(tid).send(this);
+  public void abortTransaction(TransactionID tid) throws AccessException {
+    send(Worker.getWorker().authToStore, new AbortTransactionMessage(tid));
   }
 
   /*
    * (non-Javadoc)
    * @see fabric.worker.Store#commitTransaction(int)
    */
-  public void commitTransaction(boolean useAuthentication, long transactionID)
+  public void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
-    if (useAuthentication) {
-      CommitTransactionMessage.Response response =
-          new CommitTransactionMessage(transactionID).send(this);
-      if (!response.success)
-        throw new TransactionCommitFailedException(response.message);
-    } else {
-      UnauthenticatedCommitTransactionMessage.Response response =
-          new UnauthenticatedCommitTransactionMessage(transactionID).send(this);
-      if (!response.success)
-        throw new TransactionCommitFailedException(response.message);
-    }
+    send(Worker.getWorker().authToStore, new CommitTransactionMessage(
+        transactionID));
   }
 
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
@@ -417,7 +399,12 @@ public class RemoteStore extends RemoteNode implements Store {
    * Helper for checkForStaleObjects.
    */
   protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
-    return new StalenessCheckMessage(reads).send(this).staleObjects;
+    try {
+      return send(Worker.getWorker().authToStore, new StalenessCheckMessage(
+          reads)).staleObjects;
+    } catch (final AccessException e) {
+      throw new RuntimeFetchException(e);
+    }
   }
 
   @Override
@@ -509,14 +496,22 @@ public class RemoteStore extends RemoteNode implements Store {
   public PublicKey getPublicKey() {
     if (publicKey == null) {
       // No key cached. Fetch the certificate chain from the store.
-      GetCertificateChainMessage.Response response =
-          new GetCertificateChainMessage().send(this);
+      GetCertChainMessage.Response response;
+      try {
+        response =
+            send(Worker.getWorker().authToStore, new GetCertChainMessage());
+      } catch (NoException e) {
+        // This is not possible.
+        throw new InternalError(e);
+      }
       Certificate[] certificateChain = response.certificateChain;
 
       // Validate the certificate chain.
-      if (Crypto.validateCertificateChain(certificateChain,
-          Worker.instance.keyStore)) {
+      try {
+        Crypto.validateCertificateChain(certificateChain, Worker.instance.config.getKeyMaterial().getTrustedCerts());
         publicKey = certificateChain[0].getPublicKey();
+      } catch (GeneralSecurityException e) {
+        // do nothing
       }
     }
     return publicKey;
@@ -541,8 +536,42 @@ public class RemoteStore extends RemoteNode implements Store {
     }
   }
 
-  @Override
-  protected SocketAddress lookup() throws IOException {
-    return Worker.getWorker().storeNameService.resolve(name);
+  /**
+   * Returns a certificate chain for a new principal object for the given worker
+   * key. This certificate chain is not guaranteed to end in a trusted root.
+   */
+  public X509Certificate[] makeWorkerPrincipal(Worker worker, PublicKey workerKey) {
+    MakePrincipalMessage.Response response;
+    try {
+      response = send(worker.unauthToStore, new MakePrincipalMessage(
+          workerKey));
+    } catch (FabricGeneralSecurityException e) {
+      throw new NotImplementedException();
+    }
+    
+    X509Certificate cert = response.cert;
+    
+    // Check that the top certificate in the chain satisfies the following:
+    // - signed by the store
+    // - contains the worker's key
+    
+    Principal issuerDN = cert.getIssuerDN();
+    // XXX This next line is really hacky.
+    if (!name.equals(Crypto.getCN(issuerDN.getName()))) {
+      throw new InternalError("Certificate signer (" + issuerDN.getName()
+          + ") does not match store (" + name + ")");
+    }
+    
+    if (!cert.getPublicKey().equals(workerKey)) {
+      throw new InternalError("Key in certificate does not match worker key");
+    }
+    
+    X509Certificate[] result = new X509Certificate[response.certChain.length + 1];
+    result[0] = cert;
+    for (int i = 0; i < response.certChain.length; i++) {
+      result[i + 1] = response.certChain[i];
+    }
+    
+    return result;
   }
 }

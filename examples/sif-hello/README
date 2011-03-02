@@ -35,19 +35,13 @@ web-based user interface.
 
         $ bin/start-store
 
-  2. If you are starting with a fresh store, you will need to
-     initialize the worker by creating its principal object on the
-     store:
-
-        $ bin/init-worker
-
-  3. Start the web-server:
+  2. Start the web-server:
 
         $ bin/start-webapp
 
-  4. Point your favorite web browser to http://localhost:8080/hello
+  3. Point your favorite web browser to http://localhost:8080/hello
 
-  5. You can clean up the store's persistent state by removing the
+  4. You can clean up the store's persistent state by removing the
      'var' directory:
 
         $ rm -rf var

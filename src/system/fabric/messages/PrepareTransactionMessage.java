@@ -3,105 +3,30 @@ package fabric.messages;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
-import fabric.worker.TransactionPrepareFailedException;
-import fabric.worker.TransactionRestartingException;
-import fabric.worker.debug.Timing;
 import fabric.common.SerializedObject;
-import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.InternalError;
-import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object._Impl;
-import fabric.net.RemoteNode;
-import fabric.net.UnreachableNodeException;
+import fabric.lang.security.Principal;
+import fabric.worker.TransactionPrepareFailedException;
 
 /**
  * A <code>PrepareTransactionMessage</code> represents a transaction request to
  * a store.
  */
-public class PrepareTransactionMessage extends
-    Message<RemoteNode, PrepareTransactionMessage.Response> {
-
-  public static class Response implements Message.Response {
-    public final String message;
-
-    /**
-     * If the remote node is a store, this will indicate whether the worker
-     * should send a commit/abort message to the store's worker to commit/abort
-     * a sub-transaction. (This happens when Statistics objects are created
-     * during transaction prepare.)
-     */
-    public final boolean subTransactionCreated;
-
-    /**
-     * A set of objects involved in the transaction that were out of date.
-     */
-    public final LongKeyMap<SerializedObject> versionConflicts;
-
-    /**
-     * Creates a Response indicating a successful prepare.
-     */
-    public Response() {
-      this(false);
-    }
-
-    public Response(boolean subTransactionCreated) {
-      this.subTransactionCreated = subTransactionCreated;
-      this.message = null;
-      this.versionConflicts = null;
-    }
-
-    /**
-     * Deserialization constructor, used by the worker.
-     * 
-     * @param node
-     *          The node from which the response is being read.
-     * @param in
-     *          the input stream from which to read the response.
-     */
-    Response(RemoteNode node, DataInput in) throws IOException {
-      this.subTransactionCreated = in.readBoolean();
-      if (in.readBoolean())
-        this.message = in.readUTF();
-      else this.message = null;
-
-      int size = in.readInt();
-      this.versionConflicts = new LongKeyHashMap<SerializedObject>(size);
-      for (int i = 0; i < size; i++) {
-        SerializedObject obj = new SerializedObject(in);
-        versionConflicts.put(obj.getOnum(), obj);
-      }
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see fabric.messages.Message.Response#write(java.io.DataOutput)
-     */
-    public void write(DataOutput out) throws IOException {
-      out.writeBoolean(subTransactionCreated);
-      if (message != null) {
-        out.writeBoolean(true);
-        out.writeUTF(message);
-      } else out.writeBoolean(false);
-
-      if (versionConflicts == null)
-        out.writeInt(0);
-      else {
-        out.writeInt(versionConflicts.size());
-        for (SerializedObject obj : versionConflicts.values()) {
-          obj.write(out);
-        }
-      }
-    }
-  }
+public class PrepareTransactionMessage
+     extends Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException>
+{
+  //////////////////////////////////////////////////////////////////////////////
+  // message  contents                                                        //
+  //////////////////////////////////////////////////////////////////////////////
 
   public final long tid;
-
   public final long commitTime;
-
   public final LongKeyMap<Integer> reads;
 
   /**
@@ -145,7 +70,7 @@ public class PrepareTransactionMessage extends
   public PrepareTransactionMessage(long tid, long commitTime,
       Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) {
-    super(MessageType.PREPARE_TRANSACTION);
+    super(MessageType.PREPARE_TRANSACTION, TransactionPrepareFailedException.class);
 
     this.tid = tid;
     this.commitTime = commitTime;
@@ -156,13 +81,86 @@ public class PrepareTransactionMessage extends
     this.serializedWrites = null;
   }
 
-  /**
-   * Deserialization constructor. Used only by the store.
-   * 
-   * @throws IOException
-   */
+  //////////////////////////////////////////////////////////////////////////////
+  // response contents                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static class Response implements Message.Response {
+    /**
+     * If the remote node is a store, this will indicate whether the worker
+     * should send a commit/abort message to the store's worker to commit/abort
+     * a sub-transaction. (This happens when Statistics objects are created
+     * during transaction prepare.)
+     */
+    public final boolean subTransactionCreated;
+
+    /**
+     * Creates a Response indicating a successful prepare.
+     */
+    public Response() {
+      this(false);
+    }
+
+    public Response(boolean subTransactionCreated) {
+      this.subTransactionCreated = subTransactionCreated;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // visitor methods                                                          //
+  //////////////////////////////////////////////////////////////////////////////
+
+  @Override
+  public Response dispatch(Principal p, MessageHandler h)
+      throws TransactionPrepareFailedException {
+    return h.handle(p, this);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // serialization cruft                                                      //
+  //////////////////////////////////////////////////////////////////////////////
+
+  @Override
+  protected void writeMessage(DataOutput out) throws IOException {
+    // Serialize tid.
+    out.writeLong(tid);
+
+    // Serialize commitTime
+    out.writeLong(commitTime);
+
+    // Serialize reads.
+    if (reads == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(reads.size());
+      for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
+        out.writeLong(entry.getKey());
+        out.writeInt(entry.getValue());
+      }
+    }
+
+    // Serialize creates.
+    if (creates == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(creates.size());
+      for (_Impl impl : creates)
+        SerializedObject.write(impl, out);
+    }
+
+    // Serialize writes.
+    if (writes == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(writes.size());
+      for (_Impl impl : writes)
+        SerializedObject.write(impl, out);
+    }
+  }
+
+  /* readMessage */
   protected PrepareTransactionMessage(DataInput in) throws IOException {
-    super(MessageType.PREPARE_TRANSACTION);
+    super(MessageType.PREPARE_TRANSACTION, TransactionPrepareFailedException.class);
     this.creates = null;
     this.writes = null;
 
@@ -202,79 +200,13 @@ public class PrepareTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.store.MessageHandlerThread w)
-      throws ProtocolError, TransactionPrepareFailedException {
-    return w.handle(this);
+  protected void writeResponse(DataOutput out, Response r) throws IOException {
+    out.writeBoolean(r.subTransactionCreated);
   }
 
   @Override
-  public Response dispatch(fabric.worker.remote.MessageHandlerThread handler)
-      throws ProtocolError, TransactionPrepareFailedException {
-    return handler.handle(this);
-  }
-
-  public Response send(RemoteNode node) throws UnreachableNodeException,
-      TransactionPrepareFailedException {
-    try {
-      Timing.STORE.begin();
-      return super.send(node, true);
-    } catch (UnreachableNodeException e) {
-      throw e;
-    } catch (TransactionPrepareFailedException e) {
-      throw e;
-    } catch (TransactionRestartingException e) {
-      throw e;
-    } catch (FabricException e) {
-      throw new InternalError("Unexpected response from node.", e);
-    } finally {
-      Timing.STORE.end();
-    }
-  }
-
-  @Override
-  public Response response(RemoteNode node, DataInput in) throws IOException {
-    return new Response(node, in);
-  }
-
-  /*
-   * (non-Javadoc)
-   * @see fabric.messages.Message#write(java.io.DataOutput)
-   */
-  @Override
-  public void write(DataOutput out) throws IOException {
-    // Serialize tid.
-    out.writeLong(tid);
-
-    // Serialize commitTime
-    out.writeLong(commitTime);
-
-    // Serialize reads.
-    if (reads == null) {
-      out.writeInt(0);
-    } else {
-      out.writeInt(reads.size());
-      for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
-        out.writeLong(entry.getKey());
-        out.writeInt(entry.getValue());
-      }
-    }
-
-    // Serialize creates.
-    if (creates == null) {
-      out.writeInt(0);
-    } else {
-      out.writeInt(creates.size());
-      for (_Impl impl : creates)
-        SerializedObject.write(impl, out);
-    }
-
-    // Serialize writes.
-    if (writes == null) {
-      out.writeInt(0);
-    } else {
-      out.writeInt(writes.size());
-      for (_Impl impl : writes)
-        SerializedObject.write(impl, out);
-    }
+  protected Response readResponse(DataInput in) throws IOException {
+    boolean subTransactionCreated = in.readBoolean();
+    return new Response(subTransactionCreated);
   }
 }

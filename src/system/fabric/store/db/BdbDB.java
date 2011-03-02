@@ -18,9 +18,8 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.OidKeyHashMap;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
-import fabric.worker.remote.RemoteWorker;
 
 /**
  * An ObjectDB backed by a Berkeley Database.
@@ -110,7 +109,7 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void finishPrepare(long tid, NodePrincipal worker) {
+  public void finishPrepare(long tid, Principal worker) {
     // Copy the transaction data into BDB.
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     PendingTransaction pending = submap.remove(worker);
@@ -132,8 +131,7 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void commit(long tid, RemoteWorker workerNode,
-      NodePrincipal workerPrincipal, SubscriptionManager sm) {
+  public void commit(long tid, Principal workerPrincipal, SubscriptionManager sm) {
     STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
 
     try {
@@ -149,7 +147,7 @@ public class BdbDB extends ObjectDB {
           db.put(txn, onumData, objData);
 
           // Remove any cached globs containing the old version of this object.
-          notifyCommittedUpdate(sm, toLong(onumData.getData()), workerNode);
+          notifyCommittedUpdate(sm, toLong(onumData.getData()));
 
           // Update the version-number cache.
           cachedVersions.put(onum, o.getVersion());
@@ -172,7 +170,7 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void rollback(long tid, NodePrincipal worker) {
+  public void rollback(long tid, Principal worker) {
     STORE_DB_LOGGER.finer("Bdb rollback begin tid " + tid);
 
     try {
@@ -343,7 +341,7 @@ public class BdbDB extends ObjectDB {
    * @throws DatabaseException
    *           if a database error occurs
    */
-  private PendingTransaction remove(NodePrincipal worker, Transaction txn,
+  private PendingTransaction remove(Principal worker, Transaction txn,
       long tid) throws DatabaseException {
     byte[] key = toBytes(tid, worker);
     DatabaseEntry bdbKey = new DatabaseEntry(key);
@@ -383,7 +381,7 @@ public class BdbDB extends ObjectDB {
     return data;
   }
 
-  private byte[] toBytes(long tid, NodePrincipal worker) {
+  private byte[] toBytes(long tid, Principal worker) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       DataOutputStream dos = new DataOutputStream(bos);

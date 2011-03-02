@@ -4,18 +4,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import fabric.worker.Worker;
-import fabric.worker.RemoteStore;
-import fabric.worker.TransactionCommitFailedException;
-import fabric.worker.TransactionPrepareFailedException;
-import fabric.common.*;
+import fabric.common.ObjectGroup;
+import fabric.common.SerializedObject;
+import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
-import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.store.Node.Store;
 import fabric.lang.Object._Impl;
+import fabric.worker.RemoteStore;
+import fabric.worker.TransactionCommitFailedException;
+import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.Worker;
 
 /**
  * In-process implementation of the Store interface for use when a worker is
@@ -34,9 +34,9 @@ public class InProcessStore extends RemoteStore {
     tm = c.tm;
     sm = c.sm;
   }
-
+  
   @Override
-  public void abortTransaction(boolean useAuthentication, TransactionID tid) {
+  public void abortTransaction(TransactionID tid) {
     try {
       tm.abortTransaction(Worker.getWorker().getPrincipal(), tid.topTid);
     } catch (AccessException e) {
@@ -45,9 +45,9 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void commitTransaction(boolean useAuthentication, long transactionID)
+  public void commitTransaction(long transactionID)
       throws TransactionCommitFailedException {
-    tm.commitTransaction(null, Worker.getWorker().getPrincipal(), transactionID);
+    tm.commitTransaction(Worker.getWorker().getPrincipal(), transactionID);
   }
 
   @Override
@@ -61,7 +61,7 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   @SuppressWarnings("deprecation")
-  public boolean prepareTransaction(boolean useAuthentication, long tid,
+  public boolean prepareTransaction(long tid,
       long commitTime, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
@@ -86,10 +86,10 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public ObjectGroup readObjectFromStore(long onum) throws FetchException {
+  public ObjectGroup readObjectFromStore(long onum) throws AccessException {
     LongKeyMap<SerializedObject> map = new LongKeyHashMap<SerializedObject>();
     SerializedObject obj = tm.read(onum);
-    if (obj == null) throw new FetchException(new AccessException(this, onum));
+    if (obj == null) throw new AccessException(this, onum);
     map.put(onum, obj);
     return new ObjectGroup(map);
   }

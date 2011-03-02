@@ -13,9 +13,8 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
-import fabric.worker.remote.RemoteWorker;
 
 /**
  * <p>
@@ -87,12 +86,11 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  public void finishPrepare(long tid, NodePrincipal worker) {
+  public void finishPrepare(long tid, Principal worker) {
   }
 
   @Override
-  public void commit(long tid, RemoteWorker workerNode,
-      NodePrincipal workerPrincipal, SubscriptionManager sm)
+  public void commit(long tid, Principal workerPrincipal, SubscriptionManager sm)
       throws AccessException {
     PendingTransaction tx = remove(workerPrincipal, tid);
 
@@ -101,12 +99,12 @@ public class MemoryDB extends ObjectDB {
       objectTable.put(o.getOnum(), o);
 
       // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum(), workerNode);
+      notifyCommittedUpdate(sm, o.getOnum());
     }
   }
 
   @Override
-  public void rollback(long tid, NodePrincipal worker) throws AccessException {
+  public void rollback(long tid, Principal worker) throws AccessException {
     remove(worker, tid);
   }
 
@@ -156,7 +154,7 @@ public class MemoryDB extends ObjectDB {
    * Helper method to check permissions and update the pending object table for
    * a commit or roll-back.
    */
-  private PendingTransaction remove(NodePrincipal worker, long tid)
+  private PendingTransaction remove(Principal worker, long tid)
       throws AccessException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     PendingTransaction tx = submap.remove(worker);

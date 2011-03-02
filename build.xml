@@ -373,13 +373,13 @@
   <!-- Compiles the bootstrap classes. -->
   <target name="bootstrap" depends="init,bootstrap-check"
       unless="bootstrap.up-to-date">
-    <touch file="${bootstrap.tstamp}"/>
     <javac target="1.6" srcdir="${bootstrap.src}"
            destdir="${bootstrap.classes}" includeAntRuntime="false" debug="on">
       <include name="**/*.java" />
       <sourcepath path="${system.src}"/>
       <classpath refid="lib.classpath"/>
     </javac>
+    <touch file="${bootstrap.tstamp}"/>
 
     <!--
       The bootstrap classes pull in stuff from the system.  Give all class
@@ -442,7 +442,6 @@
       <include name="fabric/worker/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
-      <exclude name="fabric/worker/debug/**" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
         <path refid="lib.classpath"/>

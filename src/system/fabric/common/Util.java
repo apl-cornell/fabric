@@ -222,4 +222,24 @@ public final class Util {
     return ois.readObject();
   }
 
+  /**
+   * A Thunk<T> represents a delayed execution resulting in type T.  The
+   * computation create() is executed the first time get() is called, and its
+   * value is stored and returned on subsequent calls to get(). 
+   */
+  public static abstract class Thunk<T> {
+    private boolean initialized = false;
+    private T value = null; 
+    
+    public final T get() {
+      if (! initialized) {
+        value = create();
+        initialized = true;
+      }
+      
+      return value;
+    }
+    
+    protected abstract T create();
+  }
 }

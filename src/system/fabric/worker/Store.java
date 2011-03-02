@@ -3,10 +3,10 @@ package fabric.worker;
 import java.util.Collection;
 
 import fabric.common.TransactionID;
-import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
-import fabric.lang.security.NodePrincipal;
 import fabric.lang.Object._Impl;
+import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
 
 public interface Store {
@@ -31,7 +31,7 @@ public interface Store {
    * @return whether a subtransaction was created on the store as a result of
    *         the prepare.
    */
-  boolean prepareTransaction(boolean useAuthentication, long tid,
+  boolean prepareTransaction(long tid,
       long commitTime, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws UnreachableNodeException,
       TransactionPrepareFailedException;
@@ -44,7 +44,7 @@ public interface Store {
    *          The identifier of the requested object
    * @return The requested object
    */
-  _Impl readObject(long onum) throws FetchException;
+  _Impl readObject(long onum) throws AccessException;
 
   /**
    * Returns the requested _Impl object, fetching it directly from the Store if
@@ -54,7 +54,7 @@ public interface Store {
    *          The identifier of the requested object
    * @return The requested object
    */
-  _Impl readObjectNoDissem(long onum) throws FetchException;
+  _Impl readObjectNoDissem(long onum) throws AccessException;
 
   /**
    * Returns the requested _Impl object if it exists in the object cache.
@@ -69,12 +69,12 @@ public interface Store {
   /**
    * Notifies the store that the transaction is being Aborted.
    * 
-   * @param useAuthentication
    * @param tid
    *          the ID of the aborting transaction. This is assumed to specify a
    *          top-level transaction.
+   * @throws AccessException 
    */
-  void abortTransaction(boolean useAuthentication, TransactionID tid);
+  void abortTransaction(TransactionID tid) throws AccessException;
 
   /**
    * Notifies the Store that the transaction should be committed.
@@ -84,7 +84,7 @@ public interface Store {
    * @throws UnreachableNodeException
    * @throws TransactionCommitFailedException
    */
-  void commitTransaction(boolean useAuthentication, long transactionID)
+  void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException;
 
   /**

@@ -37,11 +37,9 @@ public class Cache<K, V> {
 
   private static final ReferenceQueue<Object> queue =
       new ReferenceQueue<Object>();
-  private static final Collector collector;
 
   static {
-    collector = new Collector();
-    collector.start();
+    new Collector().start();
   }
 
   public Cache() {
@@ -89,25 +87,15 @@ public class Cache<K, V> {
     return new HashSet<K>(map.keySet());
   }
 
-  public static final class Collector extends Thread {
-    private boolean destroyed;
-
+  private static final class Collector extends Thread {
     private Collector() {
       super("Cache entry collector");
-    }
-
-    /**
-     * This destroys the background thread responsible for cleaning up
-     * garbage-collected cache entries.
-     */
-    public static void shutdown() {
-      collector.destroyed = true;
-      collector.interrupt();
+      setDaemon(true);
     }
 
     @Override
     public void run() {
-      while (!destroyed) {
+      while (true) {
         try {
           ValueSoftRef<?, ?> ref = (ValueSoftRef<?, ?>) queue.remove();
           synchronized (ref.cache) {

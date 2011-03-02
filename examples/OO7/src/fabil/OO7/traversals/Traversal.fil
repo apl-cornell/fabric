@@ -5,7 +5,7 @@ import java.net.URI;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.util.Map;
-import fabric.worker.debug.Timing;
+import fabric.common.Timing;
 
 /*
  * Visitor interface for DesignObjects
