@@ -3,9 +3,7 @@ package fabric.worker;
 import java.io.ObjectStreamException;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
-import java.security.GeneralSecurityException;
-import java.security.Principal;
-import java.security.PublicKey;
+import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
@@ -325,16 +323,18 @@ public class RemoteStore extends RemoteNode implements Store {
    * @param onum
    *          The object number to fetch.
    */
-  @SuppressWarnings("unused")
   public final Glob readEncryptedObjectFromStore(long onum)
       throws AccessException {
     DissemReadMessage.Response response =
         send(Worker.getWorker().unauthToStore, new DissemReadMessage(onum));
-    // TODO
-    // PublicKey key = Worker.getWorker().getStore(name).getPublicKey();
-    // response.glob.verifySignature(key);
-    // return response.glob
-    throw new NotImplementedException();
+    
+    PublicKey key = getPublicKey();
+    try {
+      response.glob.verifySignature(key);
+    } catch (GeneralSecurityException e) {
+      return null;
+    }
+    return response.glob;
   }
 
   /**
