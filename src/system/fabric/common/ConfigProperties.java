@@ -92,7 +92,7 @@ public class ConfigProperties {
     
     /************************** Worker Properties *****************************/
     this.workerPort      = Integer.parseInt(     removeProperty(p, "fabric.worker.port",               "3372"));
-    this.dissemClass     =                       removeProperty(p, "fabric.worker.fetchmanager.class", "fabric.worker.DirectFetchManager");
+    this.dissemClass     =                       removeProperty(p, "fabric.worker.fetchmanager.class", "fabric.dissemination.pastry.PastryFetchManager");
     this.homeStore       =                       removeProperty(p, "fabric.worker.homeStore",          null);
 
     /************************** Store  Properties *****************************/
