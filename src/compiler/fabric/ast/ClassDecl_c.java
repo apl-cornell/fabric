@@ -26,11 +26,11 @@ import polyglot.visit.TypeChecker;
 
 public class ClassDecl_c extends jif.ast.JifClassDecl_c {
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   public ClassDecl_c(Position pos, Flags flags, Id name, List params,
-                     TypeNode superClass, List interfaces, List authority,
+                     TypeNode superClass, List interfaces, List authority, List constraints,
                      ClassBody body) {
-    super(pos, flags, name, params, superClass, interfaces, authority, body);
+    super(pos, flags, name, params, superClass, interfaces, authority, constraints, body);
   }
 
   /*

@@ -1,0 +1,103 @@
+<!--
+  This is an example Apache Ant build file for a fabric example program.  To
+  adapt this to your example program, simply grep for "skel" and replace
+  appropriately.
+-->
+
+<project name="skel" default="build-all" basedir=".">
+  <description>
+    skel build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="home" file="${ant.file.skel}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build-java" description="Builds the java version of skel">
+    <mkdir dir="${home}/classes" />
+    <javac target="1.6"
+           includeAntRuntime="false"
+           destdir="${home}/classes"
+           srcdir="${home}/src/java"
+           includes="**/*.java" />
+  </target>
+
+  <!-- TODO -->
+  <target name="build-jif"/>
+
+  <target name="build-fabil" description="Builds the fabil version of skel">
+    <mkdir dir="${home}/classes" />
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${home}"
+           dest="${home}/classes/fabil"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${filc}" />
+      <arg line="${debug.flag}" />
+      <arg value="-d" />          <arg value="${home}/classes" />
+      <arg value="-sourcepath" /> <arg value="${home}/src/fabil" />
+      <arg value="-cp" />         <arg value="${home}/classes" />
+      <srcfile />
+      <fileset dir="${home}/src/fabric" includes="**/*.fab" />
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="build-fabric" description="Builds the fabric version of skel">
+    <mkdir dir="${home}/classes" />
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${home}"
+           dest="${home}/classes/fabric"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabc}"/>
+      <arg value="-g"/>
+      <arg value="-e"/>
+      <arg value="-d"          /> <arg value="${home}/classes"/>
+      <arg value="-sourcepath" /> <arg value="${home}/src/fabric" />
+      <arg value="-cp"         /> <arg value="${home}/classes" />
+      <arg value="-e"/>
+      <srcfile />
+
+      <fileset dir="${home}/src/fabric" includes="**/*.fab" />
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="build-all" depends="build-java, build-jif, build-fabric, build-fabil" />
+  <target name="all"       depends="build-all" />
+
+</project>
