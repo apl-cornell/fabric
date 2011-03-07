@@ -14,72 +14,77 @@ import fabric.lang.Codebase;
  * @author Lucas Waye <lrw48@cornell.edu>
  */
 public class FabricClassLoader extends ClassLoader {
-  Codebase              codebase;
-  Map/*FClass, Class*/  classes;
+  Codebase               codebase;
+  Map/*String, Class*/   classes;
+  Map/*String, byte native[]*/  classBytecodeMap;
   
   public Class findClass(String name) 
   	throws ClassNotFoundException {
-    Class javaCls = codebase.toJavaClass(name);
-	if (javaCls == null) {
-	  throw new ClassNotFoundException(name);
-	}
+  	if (!classBytecodeMap.containsKey(name)) {
+      codebase.compile(name, classBytecodeMap);
+    }
+    
+    Class javaCls = getJavaClass(name);
+  	if (javaCls == null) {
+  	  throw new ClassNotFoundException(name);
+  	}
 	
-	return javaCls;
+    return javaCls;
   }
   
-  public Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
+  public Class loadClass(String name, boolean resolve) 
+    throws ClassNotFoundException {
 	  return super.loadClass(name, resolve);
   }
   
-  Class getJavaClass(FClass cls) {
+  Class getJavaClass(String cls) {
     Class result = (Class)classes.get(cls);
     if (result == null) {
-      result = defineClass(cls.getName(), toByteArray(cls.getBytecode()), 0, 
-    		  cls.bytecode.length);
-      classes.put(cls, result);
+      if (classBytecodeMap.containsKey(cls)) {
+        //TODO: filc bug -- can't cast to byte native[], parse error:
+        //byte native[] bytecode = (byte native[]) classBytecodeMap.get(cls);
+        
+        byte native[] bytecode = new byte native[0];
+        result = defineClass(cls, bytecode, 0, bytecode.length);
+        classes.put(cls, result);
+      }
     }
     return result;
   }
   
+  
   private FabricClassLoader(Codebase cb, ClassLoader parent) {
-	super(parent);
+    super(parent);
     this.codebase = cb;
-    this.classes  = new HashMap/*FClass, Class*/();
+    this.classes  = new HashMap/*String, Class*/();
+    this.classBytecodeMap  = new HashMap/*String, byte native[]*/();
   }
   
-  /* this object may be part of the local store */
-  private static Map/*Codebase, FabricClassLoader*/ classloaders;
-  
   public static FabricClassLoader getClassLoader(Codebase codebase) {
-	if (classloaders == null)
-		classloaders = new HashMap/*Codebase, FabricClassLoader*/();
-   
-	FabricClassLoader result = (FabricClassLoader)classloaders.get(codebase);
-    if (result == null) {
-      result = new FabricClassLoader(codebase, FabricClassLoader.class.getClassLoader());
-      classloaders.put(codebase, result);
-    }
+    FabricClassLoader result = new FabricClassLoader(codebase, 
+      FabricClassLoader.class.getClassLoader());
+    
     return result;
   }
   
   public InputStream getResourceAsStream(String name) {
 	  /* TODO: support non-class resources also */
 	  name = name.substring(0,name.length()-".class".length());
-	  FClass fcls = codebase.resolveClassName(name);
-      if(fcls != null) 
-    	  return new ByteArrayInputStream(toByteArray(fcls.getBytecode()));
-      else 
-    	  return null;
+	  if (!classBytecodeMap.containsKey(name)) {
+      codebase.compile(name, classBytecodeMap);
+    }
+    
+    if (classBytecodeMap.containsKey(name)) {
+  	  //TODO: filc bug -- can't cast to byte native[], parse error:
+      //byte native[] bytecode = (byte native[]) classBytecodeMap.get(cls);
+	  	byte native[] bytecode = new byte native[0];
+	  	return new ByteArrayInputStream(bytecode);
+    } else { 
+    	return null;
+    }
   }
   
   public Codebase getCodebase() {
 	  return codebase;
-  }
-
-  byte native[] toByteArray(byte[] arr) {
-    byte native[] n = new byte native[arr.length];
-    for (int i = 0 ; i < n.length; i++)
-      n[i] = arr[i];
-    return n;
   }
 }
