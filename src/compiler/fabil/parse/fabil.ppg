@@ -109,7 +109,17 @@ extend array_type ::=
     |   name:a NATIVE dims:b
             {: RESULT = parser.javaArray(a.toType(), b.intValue()); :}
     ;
-
+    
+extend cast_expression ::=
+                    // Cast
+        LPAREN:p primitive_type:a NATIVE dims:b RPAREN unary_expression:c
+            {: RESULT = parser.nf.Cast(parser.pos(p, c,a),
+                parser.javaArray(a, b.intValue()), c); :}
+    |   LPAREN:p name:a NATIVE dims:b RPAREN unary_expression_not_plus_minus:c
+            {: RESULT = parser.nf.Cast(parser.pos(p, c,a),
+                parser.javaArray(a.toType(), b.intValue()), c); :}
+    ;
+    
 ////////////////////////////////////////////////////////////////////////
 // Labels and locations for constructors                              //
 ////////////////////////////////////////////////////////////////////////
