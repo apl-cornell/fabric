@@ -14,7 +14,6 @@ import fabric.Main;
  * @author Lucas Waye <lrw48@cornell.edu>
  */
 public class FabricClassLoader extends ClassLoader {
-  Codebase               codebase;
   Map/*String, Class*/   classes;
   Map/*String, byte native[]*/  classBytecodeMap;
   
@@ -43,10 +42,8 @@ public class FabricClassLoader extends ClassLoader {
     Class result = (Class)classes.get(cls);
     if (result == null) {
       if (classBytecodeMap.containsKey(cls)) {
-        //TODO: filc bug -- can't cast to byte native[], parse error:
-        //byte native[] bytecode = (byte native[]) classBytecodeMap.get(cls);
+        byte native[] bytecode = (byte native[]) classBytecodeMap.get(cls);
         
-        byte native[] bytecode = new byte native[0];
         result = defineClass(cls, bytecode, 0, bytecode.length);
         classes.put(cls, result);
       }
@@ -55,18 +52,10 @@ public class FabricClassLoader extends ClassLoader {
   }
   
   
-  private FabricClassLoader(Codebase cb, ClassLoader parent) {
+  public FabricClassLoader(ClassLoader parent) {
     super(parent);
-    this.codebase = cb;
     this.classes  = new HashMap/*String, Class*/();
     this.classBytecodeMap  = new HashMap/*String, byte native[]*/();
-  }
-  
-  public static FabricClassLoader getClassLoader(Codebase codebase) {
-    FabricClassLoader result = new FabricClassLoader(codebase, 
-      FabricClassLoader.class.getClassLoader());
-    
-    return result;
   }
   
   public InputStream getResourceAsStream(String name) {
@@ -80,16 +69,10 @@ public class FabricClassLoader extends ClassLoader {
     }
     
     if (classBytecodeMap.containsKey(name)) {
-  	  //TODO: filc bug -- can't cast to byte native[], parse error:
-      //byte native[] bytecode = (byte native[]) classBytecodeMap.get(cls);
-	  	byte native[] bytecode = new byte native[0];
+  	  byte native[] bytecode = (byte native[]) classBytecodeMap.get(name);
 	  	return new ByteArrayInputStream(bytecode);
     } else { 
     	return null;
     }
-  }
-  
-  public Codebase getCodebase() {
-	  return codebase;
   }
 }

@@ -11,8 +11,7 @@ public class FabricClassLoader extends java.lang.ClassLoader {
     
     native java.lang.Class getJavaClass(java.lang.String cls);
     
-    private FabricClassLoader(fabric.lang.Codebase cb,
-                              java.lang.ClassLoader parent) {
+    public FabricClassLoader(java.lang.ClassLoader parent) {
         super(parent);
     }
     
