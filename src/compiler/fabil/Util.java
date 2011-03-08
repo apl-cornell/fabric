@@ -1,6 +1,7 @@
 package fabil;
 
 import fabric.lang.Codebase;
+import fabric.lang.FClass;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -54,7 +55,7 @@ public class Util {
     return codebaseName.substring(0, e);
   }
 
-  public static Object toProxy(String mangled) {
+  public static FClass toProxy(String mangled) {
     String cb = codebasePart(mangled);    
     String className = mangled.substring(cb.length());
     Store store = Worker.getWorker().getStore(storePart(cb));

@@ -8,6 +8,9 @@ import java.util.Map;
 
 import fabric.lang.Codebase;
 import fabric.Main;
+
+import fabil.Util;
+
 /**
  * Loads Java classes from Fabric.
  * 
@@ -20,8 +23,8 @@ public class FabricClassLoader extends ClassLoader {
   public Class findClass(String name) 
   	throws ClassNotFoundException {
   	if (!classBytecodeMap.containsKey(name)) {
-  	  //TODO: fetch FClass
-  	  FClass fcls = null;
+  	  
+  	  FClass fcls = Util.toProxy(name);
       Main.compile(fcls, classBytecodeMap);
     }
     
@@ -63,9 +66,8 @@ public class FabricClassLoader extends ClassLoader {
 	  name = name.substring(0,name.length()-".class".length());
 
 	  if (!classBytecodeMap.containsKey(name)) {
-	  	//TODO fetch FClass
-	    FClass fcls = null;
-        fabric.Main.compile(fcls, classBytecodeMap);
+	  	FClass fcls = Util.toProxy(name);
+      fabric.Main.compile(fcls, classBytecodeMap);
     }
     
     if (classBytecodeMap.containsKey(name)) {

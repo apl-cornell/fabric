@@ -21,5 +21,4 @@ public class FabricClassLoader extends java.lang.ClassLoader {
     native public java.io.InputStream getResourceAsStream(
       java.lang.String name);
     
-    native public fabric.lang.Codebase getCodebase();
 }
