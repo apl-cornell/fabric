@@ -30,8 +30,9 @@ public class ClassSerializer extends polyglot.visit.ClassSerializer {
   public List createSerializationMembers(ClassDecl cd) {
     Ext ext = cd.ext();
     if (ext instanceof ClassDeclExt_c
-        && ((ClassDeclExt_c) ext).shouldSerializeType())
+        && ((ClassDeclExt_c) ext).shouldSerializeType()) {
       return super.createSerializationMembers(cd);
+    }
     return Collections.emptyList();
   }
 

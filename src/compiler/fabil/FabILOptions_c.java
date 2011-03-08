@@ -2,7 +2,11 @@ package fabil;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -44,6 +48,15 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    */
   public boolean createJavaSkel;
 
+  /* Worker for compiling source from Fabric */  
+  protected String workerName;
+  /* Run fabric worker for compiling source from Fabric */  
+  protected boolean runWorker;
+  /* Store for generated codebase and classes */  
+  protected String destinationStore;  
+  /* Codebase path */
+  protected List<URI> codebase_path;  
+  
   public FabILOptions_c(ExtensionInfo extension) {
     super(extension);
     this.sigcp = null;
@@ -63,6 +76,13 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     this.dumpDependencies = false;
     this.optLevel = 0;
     this.createJavaSkel = false;
+    try {
+      this.workerName = java.net.InetAddress.getLocalHost().getHostName();
+    } catch (UnknownHostException e) {
+      this.workerName = "localhost";
+    }
+    this.codebase_path = new LinkedList<URI>();
+    this.runWorker = false;
   }
 
   /*
@@ -96,9 +116,36 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
         } catch (NumberFormatException e) {}
       }
       index++;
+    }
+    else if (args[index].equals("-useworker")) {
+      index++;
+      this.runWorker = true;
+      return index;
+    }
+    else if (args[index].equals("-worker")) {
+      index++;
+      this.runWorker = true;
+      this.workerName = args[index++];
+      return index;
+    }
+    else if (args[index].equals("-deststore")) {
+      index++;
+      this.runWorker = true;
+      this.destinationStore = args[index++];
+      return index;
+    }
+    else if (args[index].equals("-addCodebase")) {
+      index++;
+      this.runWorker = true;
+      this.codebase_path.add(URI.create(args[index++]));
+      return index;
+
     } else if (args[index].equals("-bootstrap-skel")) {
       index++;
       createJavaSkel = true;
+      serialize_type_info = false;
+      
+    
     } else {
       return super.parseCommand(args, index, source);
     }
@@ -187,4 +234,19 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     return (FabILOptions) global;
   }
 
+  public String workerName() {
+    return workerName;
+  }
+
+  public Collection<URI> codebasePath() {
+    return codebase_path;
+  }
+
+  public String destinationStore() {
+    return destinationStore;
+  }
+
+  public boolean runWorker() {
+    return runWorker;
+  }
 }

@@ -120,7 +120,7 @@ public class ProxyRewriter extends NodeVisitor {
   }
   
   public static Flags toInterface(Flags flags) {
-    return flags.clearAbstract().clearFinal().clearPrivate().Interface();
+    return flags.clearAbstract().clearFinal().clearPrivate().Interface().Public();
   }
   
   /** Returns a shadow name for local variable l. */
@@ -205,7 +205,7 @@ public class ProxyRewriter extends NodeVisitor {
   private String toImplType(Type t) {
     if (t instanceof ArrayType) {
       ArrayType a = (ArrayType) t;
-      return ts.fabricRuntimeArrayImplOf(a.base()).fullName();
+      return ts.fabricRuntimeArrayImplOf(a.base()).translate(null);
     } else {
       ClassType c = (ClassType) t;
       

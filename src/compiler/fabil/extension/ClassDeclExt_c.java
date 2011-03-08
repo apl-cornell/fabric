@@ -169,7 +169,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the class declaration.
     ClassDecl result =
         qq.parseDecl("public static class _Proxy extends "
-            + superClass.fullName() + "._Proxy implements %T {%LM}", classDecl
+            + superClass.translate(null) + "._Proxy implements %T {%LM}", classDecl
             .type(), members);
     return result.type(classDecl.type());
   }
@@ -302,7 +302,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       methodDecl.append("{ " + (returnType.isVoid() ? "" : "return "));
     
       // Figure out the call target.
-      String implType = node().type().fullName();
+      String implType = node().type().translate(null);
       if (flags.isStatic()) {
         methodDecl.append(implType + "._Impl");
       } else {
@@ -342,7 +342,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     QQ qq = pr.qq();
     ClassMember makeProxyDecl =
         qq.parseMember("protected fabric.lang.Object._Proxy $makeProxy() {"
-            + "return new " + classType.fullName() + "._Proxy(this); }");
+            + "return new " + classType.translate(null) + "._Proxy(this); }");
     members.add(makeProxyDecl);
 
     // Create serializers.
@@ -354,7 +354,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Create the class declaration.
     ClassDecl result =
-        qq.parseDecl(flags + " class _Impl extends " + superClass.fullName()
+        qq.parseDecl(flags + " class _Impl extends " + superClass.translate(null)
             + "._Impl implements %T {%LM}", classType, members);
     return result.type(classDecl.type());
   }
@@ -389,7 +389,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // static proxy members.
     QQ qq = pr.qq();
     ClassMember proxyConstructorDecl =
-        qq.parseMember("public _Proxy(" + classType.fullName()
+        qq.parseMember("public _Proxy(" + classType.translate(null)
             + "._Static._Impl impl) { super(impl); }");
     proxyMembers.add(proxyConstructorDecl);
     proxyConstructorDecl =
@@ -399,7 +399,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     
     // Create the $instance declaration and add it to the list of static proxy
     // members.
-    String staticIfaceName = classType.fullName() + "._Static";
+    String staticIfaceName = classType.translate(null) + "._Static";
     FieldDecl fieldDecl =
         (FieldDecl) qq.parseMember("public static final " + staticIfaceName
             + " $instance;");
@@ -420,7 +420,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the proxy declaration and add it to the list of interface members.
     ClassDecl proxyDecl =
         qq.parseDecl("final class _Proxy extends fabric.lang.Object._Proxy "
-            + "implements " + classType.fullName() + "._Static {%LM}",
+            + "implements " + classType.translate(null) + "._Static {%LM}",
             (Object) proxyMembers);
     interfaceMembers.add(proxyDecl);
 
@@ -437,7 +437,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // impl members.
     ClassMember makeProxyDecl =
         qq.parseMember("protected fabric.lang.Object._Proxy "
-            + "$makeProxy() { return new " + classType.fullName()
+            + "$makeProxy() { return new " + classType.translate(null)
             + "._Static._Proxy(this); }");
     implMembers.add(makeProxyDecl);
     
@@ -451,7 +451,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the impl declaration and add it to the list of interface members.
     ClassDecl implDecl =
         qq.parseDecl("class _Impl extends fabric.lang.Object._Impl "
-            + "implements " + classType.fullName() + "._Static {%LM}",
+            + "implements " + classType.translate(null) + "._Static {%LM}",
             (Object) implMembers);
     interfaceMembers.add(implDecl);
 
@@ -552,7 +552,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       List<ClassMember> members) {
     QQ qq = pr.qq();
     StringBuilder body = new StringBuilder();
-    String implType = node().type().fullName() + "._Impl";
+    String implType = node().type().translate(null) + "._Impl";
 
     // Determine the list of fields to copy.
     for (ClassMember m : members) {

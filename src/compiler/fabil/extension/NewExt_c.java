@@ -32,7 +32,7 @@ public class NewExt_c extends AnnotatedExt_c {
     newargs.add(1, call.label());
 
     TypeNode implType =
-        nf.TypeNodeFromQualifiedName(typeNode.position(), type.fullName()
+        nf.TypeNodeFromQualifiedName(typeNode.position(), type.translate(null)
             + "._Impl");
     call = call.objectType(implType);
     call = (New) call.arguments(newargs);

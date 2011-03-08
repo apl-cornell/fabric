@@ -11,7 +11,11 @@ import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.SourceFileGoal;
 import polyglot.main.Options;
 import polyglot.util.InternalCompilerError;
+import fabil.FabILOptions;
 import fabil.frontend.FabILScheduler;
+import fabric.lang.Codebase;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /** A small extension of the fabil ExtensionInfo and Scheduler to perform fabil
  *  compilation of asts that have come from fabric.
@@ -36,6 +40,44 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
     this.fabext = fabext;
   }
   
+  public fabric.worker.Store destinationStore() {
+    FabILOptions opt = (FabILOptions) getOptions();
+    
+    if(!opt.runWorker())
+      return null;
+    
+    if(opt.destinationStore() == null)
+      return Worker.getWorker().getLocalStore();
+    return Worker.getWorker().getStore(opt.destinationStore());
+  }
+
+  public fabric.lang.security.Label destinationLabel() {
+    FabILOptions opt = (FabILOptions) getOptions();
+    if(!opt.runWorker())
+      return null;
+    //XXX: how to set label?
+    // destination should have integrity of worker and configurable
+    // consistency
+    return Worker.getWorker().getLocalStore().getPublicReadonlyLabel();
+  }
+  
+  public Codebase codebase() {
+    FabILOptions opt = (FabILOptions) getOptions();
+
+    if(!opt.runWorker()) 
+      return null;
+    
+    if(codebase == null) {
+      Store store = destinationStore();
+      fabric.lang.security.Label lbl = destinationLabel();
+      
+      if(store == null || lbl == null)
+        return null;
+      
+      codebase = (Codebase) new Codebase._Impl(store, lbl).$getProxy();   
+    }
+    return codebase;
+  }
   protected static class OutputScheduler extends FabILScheduler {
     protected Job objectJob;
     
@@ -97,4 +139,5 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
       return super.Parsed(job);
     }
   }
+  
 }

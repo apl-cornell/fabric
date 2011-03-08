@@ -1,9 +1,15 @@
 package fabil.types;
 
+import fabil.Codebases;
+import fabil.Util;
+import fabric.lang.Codebase;
 import polyglot.frontend.Source;
+import polyglot.main.Options;
 import polyglot.types.*;
 
-public class FabILParsedClassType_c extends ParsedClassType_c {
+public class FabILParsedClassType_c extends ParsedClassType_c implements Codebases {
+
+  protected transient Codebase codebase;
 
   public FabILParsedClassType_c() {
     super();
@@ -12,6 +18,9 @@ public class FabILParsedClassType_c extends ParsedClassType_c {
   public FabILParsedClassType_c(TypeSystem ts, LazyClassInitializer init,
       Source fromSource) {
     super(ts, init, fromSource);
+    if(fromSource != null) {
+      this.codebase = ((Codebases) fromSource).codebase();
+    }
   }
 
   /*
@@ -36,5 +45,34 @@ public class FabILParsedClassType_c extends ParsedClassType_c {
     }
 
     return super.descendsFromImpl(ancestor);
+  }
+  
+  public Codebase codebase() {
+    return codebase;
+  }
+
+  @Override
+  public String translate(Resolver c) {
+    if (isTopLevel()) {
+      if (package_() == null) {
+        return Util.packagePrefix(codebase) + name();
+      }
+
+      // Use the short name if it is unique and there is no 
+      // codebase
+      if (c != null && !Options.global.fully_qualified_names && codebase == null) {
+        try {
+          Named x = c.find(name());
+
+          if (ts.equals(this, x)) {
+            return name();
+          }
+        } catch (SemanticException e) {
+        }
+      }
+      return Util.packagePrefix(codebase) + package_().translate(c) + "." + name();
+    } else {
+      return super.translate(c);
+    }
   }
 }

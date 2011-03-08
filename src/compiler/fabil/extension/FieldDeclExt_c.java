@@ -133,7 +133,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
 
     // Figure out the call target for the delegates.
     String target =
-        "((" + parent.type().fullName() + (doStatic ? "._Static" : "")
+        "((" + parent.type().translate(null) + (doStatic ? "._Static" : "")
             + "._Impl) fetch())";
 
     QQ qq = pr.qq();

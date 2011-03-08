@@ -2,7 +2,7 @@ package fabric;
 
 import java.util.*;
 
-import fabil.FabILOptions;
+import fabil.frontend.CodebaseImportsInitialized;
 import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.ExplicitSuperclassAdder;
@@ -10,6 +10,8 @@ import fabric.visit.FabILSkeletonCreator;
 import fabric.visit.FabricExceptionChecker;
 import fabric.visit.FabricToFabilRewriter;
 import fabric.visit.FabricTypeBuilder;
+import fabric.visit.FClassGenerator;
+import fabric.visit.NamespaceChecker;
 import fabric.visit.PrincipalCastAdder;
 import fabric.visit.RemoteCallWrapperAdder;
 import fabric.visit.RemoteCallWrapperUpdater;
@@ -26,7 +28,7 @@ import polyglot.frontend.Scheduler;
 import polyglot.frontend.Source;
 import polyglot.frontend.TargetFactory;
 import polyglot.frontend.goals.AbstractGoal;
-import polyglot.frontend.goals.CodeGenerated;
+import polyglot.frontend.goals.Barrier;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.Serialized;
 import polyglot.frontend.goals.VisitorGoal;
@@ -70,6 +72,14 @@ public class FabricScheduler extends JifScheduler {
     return j;
   }
   
+  @Override
+  public Goal ImportTableInitialized(Job job) {
+    TypeSystem ts = extInfo.typeSystem();
+    NodeFactory nf = extInfo.nodeFactory();
+    Goal g = CodebaseImportsInitialized.create(this, job, ts, nf);
+    return g;
+  }
+
   public Goal ExplicitSuperclassesAdded(Job job) {
     FabricTypeSystem  ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
@@ -223,6 +233,60 @@ public class FabricScheduler extends JifScheduler {
     return g;
   }
   
+  public Goal FClassGenerated(Job job) {
+    FabricTypeSystem  ts = fabext.typeSystem();
+    FabricNodeFactory nf = fabext.nodeFactory();
+    Goal g = internGoal(new VisitorGoal(job, new FClassGenerator(job, ts, nf)));
+
+    try {
+        addPrerequisiteDependency(g, this.Serialized(job));
+        addPrerequisiteDependency(g, this.PrincipalCastsAdded(job));
+    }
+    catch (CyclicDependencyException e) {
+        // Cannot happen
+        throw new InternalCompilerError(e);
+    }
+    
+    return g;
+  }
+  
+  private Goal allFClassesGenerated =
+      new Barrier("allFClassesGenerated", this) {
+        public Goal goalForJob(Job j) {
+          return FClassGenerated(j);
+        }
+      };
+      
+  public Goal AllFClassesGenerated() {
+    return allFClassesGenerated;
+  }
+    
+  public Goal NamespaceChecked(Job job) {
+    FabricTypeSystem  ts = fabext.typeSystem();
+    FabricNodeFactory nf = fabext.nodeFactory();
+    Goal g = internGoal(new VisitorGoal(job, new NamespaceChecker(job, ts, nf)));
+    try {
+      addPrerequisiteDependency(g, this.AllFClassesGenerated());
+    }
+    catch (CyclicDependencyException e) {
+        // Cannot happen
+        throw new InternalCompilerError(e);
+    }    
+    return g;
+  }
+    
+  private Goal consistentNamespace = 
+    new Barrier("consistentNamespace", this) {
+      @Override
+      public Goal goalForJob(Job j) {
+        return NamespaceChecked(j);
+      }
+    };
+
+  public Goal ConsistentNamespace() {
+    return consistentNamespace;
+  }
+
   public Goal FabricToFabilRewritten(Job job) {
     FabricTypeSystem  ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
@@ -231,7 +295,13 @@ public class FabricScheduler extends JifScheduler {
     try {
         addPrerequisiteDependency(g, this.Serialized(job));
         addPrerequisiteDependency(g, this.PrincipalCastsAdded(job));
-        
+        FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
+
+        if(opts.runWorker()) {
+            addPrerequisiteDependency(g, this.ConsistentNamespace());
+        }
+        // addPrerequisiteDependency(g, this.OutputInferredLabels(job));
+
         // make sure that if Object.fab is being compiled, it is always
         // written to FabIL before any other job.
         if (objectJob != null && job != objectJob)
@@ -280,17 +350,16 @@ public class FabricScheduler extends JifScheduler {
     return g;
   }
   
-  private TargetFactory target_factory = new TargetFactory(
+  private TargetFactory fabil_target = new TargetFactory(
       Options.global.output_directory,
       "fil",
       Options.global.output_stdout);
 
   public Goal FabILSkeletonGenerated(final Job job) {
     Goal g = internGoal(new AbstractGoal(job){
-      @SuppressWarnings({ "unchecked", "rawtypes" })
+      @SuppressWarnings({ "unchecked" })
       @Override
       public Collection prerequisiteGoals(Scheduler scheduler) {
-        FabILOptions opts = (FabILOptions) job.extensionInfo().getOptions();
           List<Goal> l = new ArrayList<Goal>();
           l.add(CreateFabILSkeleton(job));
           l.addAll(super.prerequisiteGoals(scheduler));
@@ -302,12 +371,36 @@ public class FabricScheduler extends JifScheduler {
         NodeFactory nf = extInfo.nodeFactory();
 
         return new OutputPass(this, new Translator(job(), ts, nf,
-            target_factory));
+            fabil_target));
       }
     });
     return g;
   }
-  
+//public Goal OutputInferredLabels(Job job) {
+//Goal g = internGoal(new AbstractGoal(job){
+//  @SuppressWarnings({ "unchecked", "rawtypes" })
+//  @Override
+//  public Collection prerequisiteGoals(Scheduler scheduler) {
+//      List<Goal> l = new ArrayList<Goal>();
+//      l.add(Serialized(job));
+//      l.add(PrincipalCastsAdded(job));
+//      l.addAll(super.prerequisiteGoals(scheduler));
+//      return l;
+//  }
+//  @Override
+//  public Pass createPass(ExtensionInfo extInfo) {
+//    TypeSystem ts = extInfo.typeSystem();
+//    NodeFactory nf = extInfo.nodeFactory();
+//    return new OutputPass(this, new Translator(job(), ts, nf,
+//        new TargetFactory(
+//            Options.global.output_directory,
+//            "fab.inf",
+//            Options.global.output_stdout)));
+//  }
+//});
+//return g;
+//}
+
   @SuppressWarnings("unchecked")
   @Override
   public boolean runToCompletion() {

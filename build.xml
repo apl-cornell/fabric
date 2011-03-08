@@ -218,7 +218,7 @@
 
   <!-- Main target for compiling Fabric -->
   <target name="build-all"
-    depends="fabric-compiler,fabil-compiler,fabric-system,fabric-signatures,fabric-runtime,tools"
+    depends="fabric-compiler,fabil-compiler,fabric-system,fabric-signatures,fabric-runtime"
     description="Builds the Fabric compiler, system, runtime, and tools"/>
 
   <!-- This target is here for legacy reasons. -->
@@ -239,7 +239,7 @@
   </target>
 
   <!-- Compiles the FabIL compiler -->
-  <target name="fabil-compiler" depends="init"
+  <target name="fabil-compiler" depends="init,bootstrap"
       description="Builds the FabIL compiler">
     <antcall target="standard-ext">
       <param name="ext" value="fabil" />
@@ -295,6 +295,8 @@
       <arg value="sig-classes/fabil" />
       <arg value="-sourcepath" />
       <arg value="src/signatures/fabil:src/runtime" />
+      <arg value="-cp" />
+      <arg value="${bootstrap.classes}" />
       <srcfile />
       <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
       <globmapper from="*.fil" to="*.class" />
@@ -327,29 +329,44 @@
 
   <target name="regen-bootstrap"
       description="Create bootstrap classes of collections written in Fabric.">
+
+  <echo message="This will overwrite the contents of ${bootstrap.src} "/>
+  <echo message="with skeleton classes generated from ${runtime.src}"/>
+  <input message="Continue?" validargs="y,n" addproperty="do.regen" />
+
+  <condition property="do.abort">
+    <equals arg1="n" arg2="${do.regen}"/>
+  </condition>
+  <fail if="do.abort">Bootstrap regeneration aborted by user.</fail>
 		<apply executable="bash"
 					parallel="true"
 					failonerror="true"
-					dest="${basedir}/../fabcollections/src/bootstrap"
-					dir="${basedir}/../fabcollections/src/runtime"
+					dest="${bootstrap.src}"
+					dir="${runtime.src}"
 					relative="false"
 					skipemptyfilesets="true"
 					vmlauncher="false">
-			<arg value="${fabc}" />
+			<!--<arg value="${fabc}" />-->
+			<arg value="${filc}" />
       <arg value="-bootstrap-skel" /> 
       <arg value="-noserial" /> 
 			<arg value="-c" />
-			<arg value="-d" /> <arg value="${basedir}/../fabcollections/src/bootstrap"/>
+			<arg value="-d" /> <arg value="${bootstrap.src}"/>
 			<arg value="-debugpositions" />
 			<arg value="-cp" />
       <arg value="${runtime.classes}" />
       <arg value="-sourcepath"/>
-			<arg value="${basedir}/../fabcollections/src/runtime"/>
+			<arg value="${runtime.src}"/>
 			<srcfile />
-			<fileset dir="${basedir}/../fabcollections/src/runtime"
+      <!--
+			<fileset dir="${runtime.src}"
           includes="**/*.fab"
           excludes="**/*.fil" />
-      <globmapper from="*.fab" to="*.*" />
+      <globmapper from="*.fab" to="*.*" />-->
+			<fileset dir="${runtime.src}"
+          includes="**/*.fil"
+          excludes="**/*.fab"/>
+      <globmapper from="*.fil" to="*.*" />
 		</apply>
 	</target>
 
@@ -377,7 +394,10 @@
            destdir="${bootstrap.classes}" includeAntRuntime="false" debug="on">
       <include name="**/*.java" />
       <sourcepath path="${system.src}"/>
-      <classpath refid="lib.classpath"/>
+      <classpath>
+        <path refid="lib.classpath"/>
+        <path refid="polyglot.classpath" />
+      </classpath>
     </javac>
     <touch file="${bootstrap.tstamp}"/>
 
@@ -511,10 +531,11 @@
     <!-- XXX HACK -->
     <delete>
       <fileset dir="${signatures.fabil.classes}">
-        <include name="fabric/util/Iterable.class" />
+        <!--<include name="fabric/util/Iterable.class" />
         <include name="fabric/util/Set.class" />
         <include name="fabric/util/Iterator.class" />
-        <include name="fabric/util/Collection.class" />
+        <include name="fabric/util/Collection.class" />-->
+        <include name="fabric/util/*.class" />
       </fileset>
     </delete>
 
@@ -535,6 +556,8 @@
       <arg value="src/runtime" />
       <arg value="-j" />
       <arg value="-Xmx256M" />
+      <arg value="-cp" />
+      <arg value="${bootstrap.classes}" />
       <srcfile />
       <fileset dir="${runtime.src}"
           includes="**/*.fil"
@@ -1398,8 +1421,11 @@ public class Version {
   <target name="compile-ext">
     <javac source="1.6" target="1.6" srcdir="${compiler.src}"
         destdir="${classes}" debug="on" includeAntRuntime="false"
-        includes="${ext.pkg}/**">
-      <classpath refid="jif.classpath" />
+        includes="${ext.pkg}/**" >
+      <classpath >
+        <path refid="jif.classpath"/>
+        <pathelement location="${bootstrap.classes}" />
+      </classpath>
     </javac>
   </target>
 </project>

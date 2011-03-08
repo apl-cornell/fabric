@@ -76,6 +76,15 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return load("java.lang.InternalError");
   }
 
+//  // I don't understand why this method is deprecated.  
+//  // There doesn't seem to be any other way to create
+//  // packages.  All non-deprecated methods call this one.
+//  /** @deprecated */
+//  public Package createPackage(Package prefix, String name) {
+//      assert_(prefix);
+//      return new FabILPackage_c(this, prefix, name);
+//  }
+
   /*
    * (non-Javadoc)
    * @see
@@ -88,6 +97,12 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return new FabILParsedClassType_c(this, init, fromSource);
   }
 
+  @Override
+  public Context createContext() {
+    return new FabILContext_c(this);
+  }
+
+  
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public List defaultPackageImports() {
@@ -414,8 +429,12 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
       if (t.package_().equals(createPackage("fabric.lang.security"))) {
         return super.translateClass(null, t);
       }
-    }
-    
+    }    
     return super.translateClass(c, t);
   }
+
+  public boolean isPlatformPackage(java.lang.String name) {
+    return "java".equals(name) || "fabric".equals(name);
+  }
+
 }

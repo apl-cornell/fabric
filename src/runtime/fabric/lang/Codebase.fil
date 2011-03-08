@@ -24,20 +24,22 @@ public class Codebase {
     return (FClass)classes.get(name);
   }
   
-  public void compile(String name, java.util.Map/*String, byte[]*/ classBytecodeMap) {
-    FClass cls = resolveClassName(name);
-    //TODO: make call to fabric compiler: 
-    //Main.compile(cls, classBytecodeMap);
-  }
-    
+  public Codebase() {
+    classes = new HashMap();
+  }	
+	
   public Codebase(Map/*String, FClass*/ classes) {
     this.classes = new HashMap(classes);
   }
   
+  /* Should only be called at compile time */
+  public void insertClass(String name, FClass fcls) {
+    classes.put(name, fcls);
+  }
+
   public Map/*String, FClass*/ getClasses() {
     atomic {
       return Collections.unmodifiableMap(classes);
     }
   }
-  
 }

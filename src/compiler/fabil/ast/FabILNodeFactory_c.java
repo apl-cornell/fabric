@@ -209,4 +209,14 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     n = (StoreGetter) n.del(delFactory().delExpr());
     return n;
   }
+
+  @Override
+  public SourceFile SourceFile(Position pos,
+      PackageNode packageName, List imports, List decls) {
+    // TODO Auto-generated method stub
+    SourceFile sf = new FabILSourceFile_c(pos, packageName, imports, decls);
+    sf = (SourceFile) sf.ext(extFactory().extSourceFile());
+    sf = (SourceFile) sf.del(delFactory().delSourceFile());
+    return sf;
+  }
 }

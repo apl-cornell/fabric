@@ -11,32 +11,15 @@ import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import polyglot.ast.ConstructorCall;
 import polyglot.ast.ConstructorDecl;
-import polyglot.ast.Formal;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
-import polyglot.ast.ProcedureDecl;
-import polyglot.ast.SourceCollection;
-import polyglot.ast.SourceFile;
-import polyglot.ast.Typed;
 import polyglot.frontend.Job;
-import polyglot.types.ClassType;
-import polyglot.types.Flags;
-import polyglot.types.Type;
 import polyglot.types.TypeSystem;
-import polyglot.util.ErrorInfo;
-import polyglot.util.InternalCompilerError;
-import polyglot.util.Position;
-import polyglot.visit.ContextVisitor;
-import polyglot.visit.HaltingVisitor;
 import polyglot.visit.NodeVisitor;
-import fabil.ast.FabILNodeFactory;
-import fabil.types.FabILTypeSystem;
-import fabric.ast.FabricNodeFactory;
-import fabric.types.FabricTypeSystem;
 
 /**
- * Outputs a java skeleton for bootstrapping.
+ * Outputs a fabil skeleton for bootstrapping.
  */
 public class FabILSkeletonCreator extends NodeVisitor {
 

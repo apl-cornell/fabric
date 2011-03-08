@@ -1,30 +1,46 @@
 package fabric.visit;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import jif.translate.JifToJavaRewriter;
 import jif.types.Param;
 import jif.types.label.Label;
 import polyglot.ast.Call;
+import polyglot.ast.ClassDecl;
 import polyglot.ast.Expr;
+import polyglot.ast.Node;
+import polyglot.ast.SourceFile;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.Job;
+import polyglot.frontend.Source;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
+import fabil.Codebases;
 import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
+import fabil.frontend.CodebaseSource;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
+import fabric.frontend.LocalSource;
+import fabric.frontend.RemoteSource;
 import fabric.types.FabricTypeSystem;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
   protected boolean principalExpected = false;
-
+  //XXX: this field is in JifToJavaRewriter, but not visible.
+  private Job job;
   public FabricToFabilRewriter(Job job, FabricTypeSystem fab_ts,
       FabricNodeFactory fab_nf, fabil.ExtensionInfo fabil_ext) {
     super(job, fab_ts, fab_nf, fabil_ext);
+    this.job = job;
   }
 
   @Override
@@ -114,5 +130,41 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     }
     
     return super.paramToJava(param);
+  }
+
+  @Override
+  /*
+   * We have to override this method since the superclass creates Source objects 
+   * directly.  Ideally, it would use a factory method.
+   */
+  public Node leavingSourceFile(SourceFile n) {
+    List l = new ArrayList(n.decls().size() + additionalClassDecls.size());
+    l.addAll(n.decls());
+    for (Iterator iter = this.additionalClassDecls.iterator(); iter.hasNext(); ) {
+        ClassDecl cd = (ClassDecl)iter.next();
+        if (cd.flags().isPublic()) {
+            // cd is public, we will put it in it's own source file.
+            SourceFile sf = java_nf().SourceFile(Position.compilerGenerated(), 
+                                                 n.package_(), 
+                                                 Collections.EMPTY_LIST,
+                                                 Collections.singletonList(cd));
+            
+            String newName = cd.name() + "." + job.extensionInfo().defaultFileExtension();
+            String newPath = n.source().path().substring(0, n.source().path().length() - n.source().name().length()) + newName;
+            
+            Source s = new CodebaseSource(newName,
+                                  newPath,
+                                  new Date(System.currentTimeMillis()), ((Codebases) n).codebase());
+            sf = sf.source(s);
+            this.newSourceFiles.add(sf);
+        }
+        else {
+            // cd is not public; it's ok to put the class decl in the source file.
+            l.add(cd);
+        }
+    }    
+    
+    this.additionalClassDecls.clear();
+    return n.decls(l);
   }
 }

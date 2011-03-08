@@ -16,4 +16,8 @@ public interface FabILOptions {
 
   public boolean createJavaSkel();
 
+  public boolean runWorker();
+
+  public String destinationStore();
+
 }

@@ -1,8 +1,10 @@
 package fabric.types;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import fabil.Codebases;
+import fabric.lang.Codebase;
 
 import jif.types.JifParsedPolyType_c;
 import jif.types.label.Label;
@@ -12,7 +14,8 @@ import polyglot.types.*;
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements FabricParsedClassType {
   private transient Label defaultFieldLabel = null;
   private transient boolean fieldLabelFound = false;
-  
+  protected transient Codebase codebase;
+
   public FabricParsedClassType_c() {
     super();
   }
@@ -20,6 +23,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   public FabricParsedClassType_c(FabricTypeSystem ts, LazyClassInitializer init,
       Source fromSource) {
     super(ts, init, fromSource);
+    this.codebase = ((Codebases) fromSource).codebase();
   }
 
   /*
@@ -114,5 +118,9 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
         it.remove();
       }
     }
+  }
+
+  public Codebase codebase() {
+    return codebase;
   }
 }

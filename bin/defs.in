@@ -79,6 +79,15 @@ fi
 
 classpath="$(unixpath "${CLASSPATH}")"
 
+# Classpath for running Fabric applications.
+# Jar files should always appear *after* their corresponding class directories.
+FABRIC_WORKER_CP="${TOP}/classes"
+FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/fabric.jar"
+FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/rt-classes"
+FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/classes"
+FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/fabric-rt.jar"
+FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/FreePastry-2.1.jar"
+
 # Classpath for compiling FabIL applications.
 # Jar files should always appear *after* their corresponding class directories.
 FILC_CP="${TOP}/classes"
@@ -89,23 +98,14 @@ FILC_CP="${FILC_CP}:${POLYGLOT}/classes"
 FILC_CP="${FILC_CP}:${POLYGLOT}/lib/polyglot.jar"
 FILC_CP="${FILC_CP}:${POLYGLOT}/lib/java_cup.jar"
 FILC_CP="${FILC_CP}:${POLYGLOT}/lib/JFlex.jar"
+FILC_CP="${FILC_CP}:${FABRIC_WORKER_CP}"
 
 # Classpath for compiling Fabric applications.
 # Jar files should always appear *after* their corresponding class directories.
 FABC_CP="${FILC_CP}"
 FABC_CP="${FABC_CP}:${JIF}/classes"
 FABC_CP="${FABC_CP}:${JIF}/lib/jif.jar"
-
-# Classpath for running Fabric applications.
-# Jar files should always appear *after* their corresponding class directories.
-FABRIC_WORKER_CP="${TOP}/classes"
-FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/fabric.jar"
-FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/rt-classes"
-FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/fabric-rt.jar"
-FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/FreePastry-2.1.jar"
-for i in "${TOP}"/lib/bcprov-*.jar ; do
-  FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:$i"
-done
+FABC_CP="${FABC_CP}:${FABRIC_WORKER_CP}"
 
 # Classpath for Fabric stores.
 # Jar files should always appear *after* their corresponding class directories.

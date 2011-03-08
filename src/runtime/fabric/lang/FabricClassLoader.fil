@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import fabric.lang.Codebase;
-
+import fabric.Main;
 /**
  * Loads Java classes from Fabric.
  * 
@@ -21,7 +21,9 @@ public class FabricClassLoader extends ClassLoader {
   public Class findClass(String name) 
   	throws ClassNotFoundException {
   	if (!classBytecodeMap.containsKey(name)) {
-      codebase.compile(name, classBytecodeMap);
+  	  //TODO: fetch FClass
+  	  FClass fcls = null;
+      Main.compile(fcls, classBytecodeMap);
     }
     
     Class javaCls = getJavaClass(name);
@@ -70,8 +72,11 @@ public class FabricClassLoader extends ClassLoader {
   public InputStream getResourceAsStream(String name) {
 	  /* TODO: support non-class resources also */
 	  name = name.substring(0,name.length()-".class".length());
+
 	  if (!classBytecodeMap.containsKey(name)) {
-      codebase.compile(name, classBytecodeMap);
+	  	//TODO fetch FClass
+	    FClass fcls = null;
+        fabric.Main.compile(fcls, classBytecodeMap);
     }
     
     if (classBytecodeMap.containsKey(name)) {

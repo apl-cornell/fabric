@@ -1,5 +1,6 @@
 package fabric.visit;
 
+import jif.visit.JifExceptionChecker;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
@@ -8,10 +9,9 @@ import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.Position;
-import polyglot.visit.ExceptionChecker;
 import polyglot.visit.NodeVisitor;
 
-public class FabricExceptionChecker extends ExceptionChecker {
+public class FabricExceptionChecker extends JifExceptionChecker {
   protected boolean inRemoteWrapper = false;
   
   public FabricExceptionChecker(Job job, TypeSystem ts, NodeFactory nf) {

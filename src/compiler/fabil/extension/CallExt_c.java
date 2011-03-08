@@ -96,7 +96,7 @@ public class CallExt_c extends ExprExt_c {
         // target
         // the static instance object.
         newTarget =
-            qq.parseExpr(target.type().toClass().fullName()
+            qq.parseExpr(target.type().toClass().translate(null)
                 + "._Static._Proxy.$instance");
       } else {
         newTarget =
@@ -157,7 +157,7 @@ public class CallExt_c extends ExprExt_c {
 
     target =
         rr.qq().parseExpr(
-            "(" + ((ClassType) c.target().type()).fullName() + "._Proxy) %E",
+            "(" + ((ClassType) c.target().type()).translate(null) + "._Proxy) %E",
             target);
     return nf.Call(Position.compilerGenerated(), target,
     // <name>_remote => <name>$remote

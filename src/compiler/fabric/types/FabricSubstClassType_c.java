@@ -1,5 +1,6 @@
 package fabric.types;
 
+import fabric.lang.Codebase;
 import polyglot.types.ClassType;
 import polyglot.util.Position;
 import jif.types.JifSubst;
@@ -22,7 +23,10 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements Fabri
   }
 
   public Label defaultFabilFieldLabel() {
-    // TODO Auto-generated method stub
     return defaultFieldLabel();
+  }
+
+  public Codebase codebase() {
+    return ((FabricParsedClassType) base).codebase();
   }
 }

@@ -8,6 +8,8 @@ import java.util.Properties;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;
+import fabric.util.Set;
+import fabric.util.HashSet;
 
 /**
  * A Fabric class; it has the bytecode and source of the fabric class and the 
@@ -20,6 +22,7 @@ public class FClass {
   Codebase codebase;
   String   name;
   String   source;
+  Set/*String*/ dependencies;
   
   public FClass(String name, byte[] bytecode, String source) {
     this.name = new String(name);
@@ -53,5 +56,23 @@ public class FClass {
 			  copy[i] = bytecode[i];
 		  return copy;
 	  }
+  }
+  
+  public Set/*String*/ dependencies() {
+	  return dependencies;
+  }
+
+  public void addDependency(String dep) {
+	  if(dependencies == null) {
+		  dependencies = new HashSet();
+	  }
+	  dependencies.add(dep);
+  }
+  
+  public boolean dependsOn(String dep) {
+	  if(dependencies == null) {
+		  return false;
+	  }
+	  return dependencies.contains(dep);
   }
 }

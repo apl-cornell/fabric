@@ -174,4 +174,6 @@ public interface FabILTypeSystem extends TypeSystem {
    * classes.
    */
   void setRuntimeClassResolver(LoadedClassResolver lcr);
+
+  boolean isPlatformPackage(String name);
 }

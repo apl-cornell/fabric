@@ -1,11 +1,19 @@
 package fabric;
 
+import java.io.File;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import polyglot.main.UsageError;
 import polyglot.main.Main.TerminationException;
 import fabil.FabILOptions;
 import fabil.FabILOptions_c;
+
 import jif.JifOptions;
 
 public class FabricOptions extends JifOptions implements FabILOptions {
@@ -19,11 +27,13 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   public void setDefaultValues() {
     super.setDefaultValues();
     this.fully_qualified_names = true;
+    this.fatalExceptions = true;
   }
 
   /* FabIL Options (forwarded to delegate ) ***********************************/
   
   protected FabILOptions_c delegate;
+  
   
   public String constructFabILClasspath() {
     // XXX: copied from swift.  Not convinced it's right
@@ -61,7 +71,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       delegate.addSigcp.add(args[index++]);
       return index;
     }
-    
+
     // parse jif options
     int i = super.parseCommand(args, index, source);
     if (i != index) {
@@ -76,5 +86,24 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   public boolean createJavaSkel() {
     return delegate.createJavaSkel;
   }
-    
+  
+  public String destinationStore() {
+    return delegate.destinationStore();
+  }
+  
+  public Collection<URI> codebasePath() {
+    return delegate.codebasePath();
+  }
+
+  public boolean fixBrokenDeps() {
+    return false;
+  }
+  
+  public boolean runWorker() {
+    return delegate.runWorker();
+  }
+
+  public String workerName() {
+    return delegate.workerName();
+  }
 }

@@ -10,6 +10,8 @@ import polyglot.ast.TypeNode;
 import polyglot.frontend.CyclicDependencyException;
 import polyglot.frontend.JLScheduler;
 import polyglot.frontend.Job;
+import polyglot.frontend.OutputPass;
+import polyglot.frontend.Pass;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.goals.CodeGenerated;
 import polyglot.frontend.goals.Goal;
@@ -20,13 +22,15 @@ import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
+//XXX: should maybe make explicit
 import polyglot.visit.*;
+
 import fabil.ExtensionInfo;
 import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
+//XXX: should maybe make explicit
 import fabil.visit.*;
-import fabric.visit.FabILSkeletonCreator;
 
 public class FabILScheduler extends JLScheduler {
   protected ExtensionInfo extInfo;
@@ -34,6 +38,14 @@ public class FabILScheduler extends JLScheduler {
   public FabILScheduler(ExtensionInfo extInfo) {
     super(extInfo);
     this.extInfo = extInfo;
+  }
+
+  @Override
+  public Goal ImportTableInitialized(Job job) {
+    TypeSystem ts = extInfo.typeSystem();
+    NodeFactory nf = extInfo.nodeFactory();
+    Goal g = CodebaseImportsInitialized.create(this, job, ts, nf);
+    return g;
   }
 
   @Override
@@ -438,6 +450,7 @@ public class FabILScheduler extends JLScheduler {
       @Override
       protected polyglot.visit.ClassSerializer createSerializer(TypeSystem ts,
           NodeFactory nf, Date lastModified, ErrorQueue eq, Version version) {
+
         if (((FabILOptions) extInfo.getOptions()).signatureMode())
           return super.createSerializer(ts, nf, lastModified, eq, version);
 
@@ -452,7 +465,7 @@ public class FabILScheduler extends JLScheduler {
     TypeSystem ts = extInfo.typeSystem();
     NodeFactory nf = extInfo.nodeFactory();
     Goal g =
-        internGoal(new VisitorGoal(job, new FabILSkeletonCreator(job, ts, nf)) {
+        internGoal(new VisitorGoal(job, new JavaSkeletonCreator(job, ts, nf)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
             List<Goal> l = new ArrayList<Goal>();
@@ -477,23 +490,33 @@ public class FabILScheduler extends JLScheduler {
     });
     return g;
   }
-
+  
   @Override
   public Goal CodeGenerated(final Job job) {
     Goal g = internGoal(new CodeGenerated(job){
+      
+      @Override
+      public Pass createPass(polyglot.frontend.ExtensionInfo extInfo) {
+        TypeSystem ts = extInfo.typeSystem();
+        NodeFactory nf = extInfo.nodeFactory();
+        return new OutputPass(this, new CodebaseTranslator(job(), ts, nf,
+                                                   extInfo.targetFactory()));
+    }
+
       @SuppressWarnings({ "unchecked", "rawtypes" })
       @Override
       public Collection prerequisiteGoals(Scheduler scheduler) {
         FabILOptions opts = (FabILOptions) job.extensionInfo().getOptions();
         if (!opts.signatureMode()) return super.prerequisiteGoals(scheduler);
-        
+
         // Compiling as a signature. Insert a pass to remove all non-signature
-        // cruft.
+        // cruft
         List<Goal> l = new ArrayList<Goal>();
         l.addAll(super.prerequisiteGoals(scheduler));
         l.add(SignatureClean(job));
         return l;
       }
+      
     });
     return g;
   }

@@ -1,9 +1,10 @@
 package fabric.types;
 
+import fabil.Codebases;
 import jif.types.JifClassType;
 import jif.types.label.Label;
 
-public interface FabricClassType extends JifClassType {
+public interface FabricClassType extends JifClassType, Codebases {
   
   /**
    * Return the label associated with this class' fields, or null if this class

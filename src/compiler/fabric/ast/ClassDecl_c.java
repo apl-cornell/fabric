@@ -17,6 +17,7 @@ import polyglot.ast.Id;
 import polyglot.ast.Node;
 import polyglot.ast.TypeNode;
 import polyglot.main.Report;
+import polyglot.types.Context;
 import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;

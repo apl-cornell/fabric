@@ -1,18 +1,49 @@
 package fabric.types;
 
-import java.util.*;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import jif.ast.JifUtil;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
-import jif.types.*;
-import jif.types.label.*;
+import jif.types.JifLocalInstance;
+import jif.types.JifTypeSystem_c;
+import jif.types.LabeledType;
+import jif.types.Solver;
+import jif.types.label.AccessPath;
+import jif.types.label.AccessPathConstant;
+import jif.types.label.AccessPathLocal;
+import jif.types.label.ArgLabel;
+import jif.types.label.ConfPolicy;
+import jif.types.label.IntegPolicy;
+import jif.types.label.JoinLabel;
+import jif.types.label.Label;
+import jif.types.label.MeetLabel;
+import jif.types.label.ThisLabel;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
 import polyglot.ext.param.types.Subst;
+import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
-import polyglot.types.*;
+import polyglot.types.ClassType;
+import polyglot.types.Context;
+import polyglot.types.Flags;
+import polyglot.types.ImportTable;
+import polyglot.types.LazyClassInitializer;
+import polyglot.types.Named;
 import polyglot.types.Package;
+import polyglot.types.ParsedClassType;
+import polyglot.types.Resolver;
+import polyglot.types.SemanticException;
+import polyglot.types.SystemResolver;
+import polyglot.types.TopLevelResolver;
+import polyglot.types.Type;
+import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import fabil.types.FabILImportTable;
@@ -20,6 +51,13 @@ import fabric.translate.DynamicPrincipalToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
+
+  @Override
+  public void initialize(TopLevelResolver loadedResolver, ExtensionInfo extInfo)
+      throws SemanticException {
+    super.initialize(loadedResolver, extInfo);
+
+  }
 
   public ClassType FObject() {
     return load("fabric.lang.Object");
@@ -68,16 +106,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   
   @Override
   public ImportTable importTable(Package pkg) {
-    // the FabILImportTable works around the ambiguous import of
-    // java.lang.Object and fabric.lang.Object 
     return new FabILImportTable(this, pkg);
   }
-
+  
   @Override
-  public ImportTable importTable(String sourcename, Package pkg) {
-    // the FabILImportTable works around the ambiguous import of
-    // java.lang.Object and fabric.lang.Object 
-    return new FabILImportTable(this, pkg, sourcename);
+  public ImportTable importTable(String sourceName, Package pkg) {
+    return new FabILImportTable(this, pkg, sourceName);
   }
 
   @Override
@@ -364,4 +398,28 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     
     return super.translateClass(c, t);
   }
+  
+  public boolean isPlatformType(Named name) {
+    String typeName = name.fullName();
+    return typeName.startsWith("java")
+      || typeName.startsWith("fabric");
+  }
+
+  public static String classNamePart(String fullName) {
+    URI uri = URI.create(fullName);
+    if(uri.isAbsolute()) {
+      String[] p = uri.getPath().split("/");
+      return p[1];
+    }
+    else
+      return fullName;
+  }
+
+  /** 
+   * Flush the resolver cache.
+   */
+  public void flushSystemResolver() {
+    this.systemResolver = new SystemResolver(loadedResolver, extInfo);    
+  }
+
 }

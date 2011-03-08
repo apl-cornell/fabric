@@ -226,6 +226,15 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return n;
   }
   
+  @Override
+  public SourceFile SourceFile(Position pos,
+      PackageNode packageName, List imports, List decls) {
+    // TODO Auto-generated method stub
+    SourceFile sf = new FabricSourceFile_c(pos, packageName, imports, decls);
+    sf = (SourceFile) sf.ext(extFactory().extSourceFile());
+    sf = (SourceFile) sf.del(delFactory().delSourceFile());
+    return sf;
+  }
   //////////////////////////////////////////////////////////////////////////////
   // private helper methods                                                   //
   //////////////////////////////////////////////////////////////////////////////
