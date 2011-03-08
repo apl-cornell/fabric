@@ -15,12 +15,10 @@ import polyglot.frontend.FileSource;
 import polyglot.frontend.SourceLoader;
 import polyglot.main.Report;
 import polyglot.util.InternalCompilerError;
-
-import fabric.worker.Store;
-import fabric.worker.Worker;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
-import fabric.lang.security.IntegPolicy;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 public class FabricSourceLoader extends SourceLoader {
   protected Map<URI, Codebase> codebaseCache;
@@ -44,6 +42,7 @@ public class FabricSourceLoader extends SourceLoader {
   /* (non-Javadoc)
    * @see polyglot.frontend.SourceLoader#packageExists(java.lang.String)
    */
+  @Override
   public boolean packageExists(String name) {
     throw new UnsupportedOperationException();
   }
@@ -52,8 +51,8 @@ public class FabricSourceLoader extends SourceLoader {
   protected FileSource checkForSource(String className) {
     /* Search the source path. */
     FileSource s = null;
-    for (Iterator i = sourcePath.iterator(); i.hasNext();) {
-      URI uri = (URI) i.next();
+    for (Iterator<URI> i = sourcePath.iterator(); i.hasNext();) {
+      URI uri = i.next();
       if (uri.getScheme().equals("file")) {
         File directory = new File(uri);
         if (!directory.isDirectory()) continue;
@@ -69,8 +68,8 @@ public class FabricSourceLoader extends SourceLoader {
     return null;
   }
     
-  protected FileSource checkCodeBaseForSource(URI uri, String className) {
-
+  @SuppressWarnings("unchecked")
+  protected FileSource checkCodeBaseForSource(URI uri, String className) {     
     Codebase codebase = codebaseCache.get(uri);
     if (codebase == null) {
       Store store = Worker.getWorker().getStore(uri.getHost());
@@ -98,7 +97,7 @@ public class FabricSourceLoader extends SourceLoader {
       FileSource s = (FileSource) loadedSources.get(srcURI.toString());
       if (s != null) return s;
 
-      IntegPolicy pol = fcls.get$label().integPolicy();
+//      IntegPolicy pol = fcls.get$label().integPolicy();
 //      Principal provider = transformIntegToPrincipal(pol);
       fabric.ExtensionInfo ext = (fabric.ExtensionInfo) sourceExt;
       try {
@@ -130,6 +129,7 @@ public class FabricSourceLoader extends SourceLoader {
   }
 
   // This is mostly copied from SourceLoader_c.checkForSource
+  @SuppressWarnings("unchecked")
   protected FileSource checkDirectoryForSource(File directory, String className) {
     String[] exts = sourceExt.fileExtensions();
 
@@ -194,22 +194,42 @@ public class FabricSourceLoader extends SourceLoader {
    * 
    * @see polyglot.frontend.SourceLoader#fileSource(java.lang.String, boolean)
    */
+  @SuppressWarnings("unchecked")
   @Override
   public FileSource fileSource(String fileName, boolean userSpecified)
       throws IOException {
     URI uri = URI.create(fileName);
     if ("fab".equals(uri.getScheme())) {
       Store store = Worker.getWorker().getStore(uri.getHost());
-      Long onum = Long.parseLong(uri.getPath().substring(1)); // skip leading
-                                                              // '/'
-      Object o =
-          fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
-              store, onum));
-      if (!(o instanceof FClass))
-        throw new InternalCompilerError("The Fabric object at " + uri
-            + " is not a Fabric class.");
+      String path = uri.getPath().substring(1);
 
-      FClass fcls = (FClass) o;
+      FClass fcls;
+      if (path.contains("/")) {
+        // parse as a codebase oid + class name
+        String[] pair = path.split("/");
+        long onum = Long.parseLong(pair[0]);
+        String className = pair[1];
+        Object o =
+            fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
+                store, onum));
+        if (!(o instanceof Codebase))
+          throw new InternalCompilerError("The Fabric object at " + uri
+              + " is not a Codebase.");
+        Codebase cb = (Codebase) o;
+        fcls = cb.resolveClassName(className);
+      }
+      else {
+        // parse as an fclass oid
+        long onum = Long.parseLong(path); 
+        Object o =
+            fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
+                store, onum));
+        if (!(o instanceof FClass))
+          throw new InternalCompilerError("The Fabric object at " + uri
+              + " is not a Fabric class.");
+        fcls = (FClass)o;
+      }
+
       FileSource s = (FileSource) loadedSources.get(uri.toString());
 
       if (s != null) {
@@ -226,6 +246,7 @@ public class FabricSourceLoader extends SourceLoader {
     } else return super.fileSource(fileName, userSpecified);
   }
 
+  @SuppressWarnings("unchecked")
   public FileSource fileSource(URI fileURI, boolean userSpecified) throws IOException {
     if (fileURI.isAbsolute() && "fab".equals(fileURI.getScheme())) {
       Store store = Worker.getWorker().getStore(fileURI.getHost());
