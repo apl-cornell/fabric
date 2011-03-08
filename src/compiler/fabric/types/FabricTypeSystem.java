@@ -1,16 +1,10 @@
 package fabric.types;
 
-import fabric.lang.Codebase;
-import fabric.lang.FClass;
-import fabric.worker.Store;
-import polyglot.frontend.Source;
 import polyglot.types.ClassType;
 import polyglot.types.LocalInstance;
 import polyglot.types.Named;
-import polyglot.types.Package;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import jif.types.JifContext;
 import jif.types.JifTypeSystem;
 import jif.types.label.AccessPath;
 import jif.types.label.ConfPolicy;

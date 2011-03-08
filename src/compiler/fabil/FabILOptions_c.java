@@ -47,7 +47,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    * Whether to create a Java skeleton for each class.
    */
   public boolean createJavaSkel;
-
+ 
   /* Worker for compiling source from Fabric */  
   protected String workerName;
   /* Run fabric worker for compiling source from Fabric */  
@@ -55,7 +55,8 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   /* Store for generated codebase and classes */  
   protected String destinationStore;  
   /* Codebase path */
-  protected List<URI> codebase_path;  
+  protected List<URI> codebasePath;  
+ 
   
   public FabILOptions_c(ExtensionInfo extension) {
     super(extension);
@@ -81,7 +82,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     } catch (UnknownHostException e) {
       this.workerName = "localhost";
     }
-    this.codebase_path = new LinkedList<URI>();
+    this.codebasePath = new LinkedList<URI>();
     this.runWorker = false;
   }
 
@@ -91,9 +92,9 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    * @see polyglot.main.Options#parseCommand(java.lang.String[], int,
    *      java.util.Set)
    */
+  @SuppressWarnings("unchecked")
   @Override
-  public int parseCommand(String[] args, int index,
-      @SuppressWarnings("rawtypes") Set source) throws UsageError,
+  public int parseCommand(String[] args, int index, Set source) throws UsageError,
       TerminationException {
     if (args[index].equals("-sig")) {
       index++;
@@ -137,15 +138,14 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     else if (args[index].equals("-addCodebase")) {
       index++;
       this.runWorker = true;
-      this.codebase_path.add(URI.create(args[index++]));
+      this.codebasePath.add(URI.create(args[index++]));
       return index;
 
     } else if (args[index].equals("-bootstrap-skel")) {
       index++;
       createJavaSkel = true;
-      serialize_type_info = false;
-      
-    
+      serialize_type_info = false;      
+
     } else {
       return super.parseCommand(args, index, source);
     }
@@ -239,7 +239,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   }
 
   public Collection<URI> codebasePath() {
-    return codebase_path;
+    return codebasePath;
   }
 
   public String destinationStore() {

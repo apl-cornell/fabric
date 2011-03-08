@@ -6,8 +6,21 @@ import java.util.HashSet;
 import java.util.Set;
 
 import jif.ast.JifClassDecl;
-import fabil.Codebases;
-import fabil.types.FabILContext;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
+import polyglot.ast.Typed;
+import polyglot.frontend.FileSource;
+import polyglot.frontend.Job;
+import polyglot.frontend.Source;
+import polyglot.main.Report;
+import polyglot.types.Named;
+import polyglot.types.ParsedClassType;
+import polyglot.types.SemanticException;
+import polyglot.types.Type;
+import polyglot.types.TypeSystem;
+import polyglot.util.InternalCompilerError;
+import polyglot.visit.ErrorHandlingVisitor;
+import polyglot.visit.NodeVisitor;
 import fabric.ExtensionInfo;
 import fabric.frontend.LocalSource;
 import fabric.frontend.RemoteSource;
@@ -19,31 +32,10 @@ import fabric.types.FabricSubstType;
 import fabric.types.FabricTypeSystem;
 import fabric.types.FabricTypeSystem_c;
 import fabric.worker.Store;
-import polyglot.ast.ClassDecl;
-import polyglot.ast.Node;
-import polyglot.ast.NodeFactory;
-import polyglot.ast.SourceFile;
-import polyglot.ast.Typed;
-import polyglot.frontend.FileSource;
-import polyglot.frontend.Job;
-import polyglot.frontend.Source;
-import polyglot.types.Context;
-import polyglot.types.Named;
-import polyglot.types.ParsedClassType;
-import polyglot.types.SemanticException;
-import polyglot.types.Type;
-import polyglot.types.TypeSystem;
-import polyglot.util.InternalCompilerError;
-import polyglot.visit.ContextVisitor;
-import polyglot.visit.ErrorHandlingVisitor;
-import polyglot.visit.NodeVisitor;
 
 /**
  * This class generates a FClass object for each new class in a source file and
- * creates codebase entries for the class and its dependencies.
- * 
- * @author owen
- * 
+ * creates codebase entries for the class and its dependencies. 
  */
 public class FClassGenerator extends ErrorHandlingVisitor {
 //  protected Source src = null;
@@ -54,6 +46,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
     super(job, ts, nf);    
   }
   
+  @SuppressWarnings("unused")
   @Override
   protected NodeVisitor enterCall(Node n) throws SemanticException {
     if(n instanceof JifClassDecl) {
@@ -96,7 +89,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         FabricTypeSystem fabts = (FabricTypeSystem) ts;
         Store store = fabext.destinationStore();
         Label lbl = fabext.destinationLabel();          
-        String className = FabricTypeSystem_c.classNamePart(pct.fullName());
+        String className = pct.fullName();
         
         FClass fcls;
         try {
@@ -119,7 +112,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
           if(dep instanceof FabricSubstType)
             dep = (Named) ((FabricSubstType) dep).base();
           
-          fcls.addDependency(FabricTypeSystem_c.classNamePart(dep.fullName()));
+          fcls.addDependency(dep.fullName());
           if(dep instanceof FabricParsedClassType) {
             FabricParsedClassType ct = (FabricParsedClassType) dep;
             Source depsrc = ct.fromSource();
@@ -138,7 +131,6 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         }
       }
       else if(src instanceof RemoteSource) {
-        //XXX: check dependencies here?
         FClass fcls = ((RemoteSource) src).fclass();
         fabric.util.Set fclsNames = fcls.dependencies();
         Set<String> realNames = toClassNames(fcg.dependencies);
@@ -152,6 +144,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
             throw new SemanticException("Actual dependencies of " + src
                 + " do not match declared names.");
         }
+        Report.report(1, "Class " + pct + " matches the declared dependencies.");
       }
     }
     return n;

@@ -405,16 +405,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
       || typeName.startsWith("fabric");
   }
 
-  public static String classNamePart(String fullName) {
-    URI uri = URI.create(fullName);
-    if(uri.isAbsolute()) {
-      String[] p = uri.getPath().split("/");
-      return p[1];
-    }
-    else
-      return fullName;
-  }
-
   /** 
    * Flush the resolver cache.
    */
