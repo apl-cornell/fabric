@@ -2,21 +2,19 @@ package fabric;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Reader;
 import java.net.URI;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import jif.parse.Lexer_c;
 import jif.visit.LabelChecker;
-
-import polyglot.frontend.*;
 import polyglot.frontend.Compiler;
+import polyglot.frontend.FileSource;
+import polyglot.frontend.Job;
+import polyglot.frontend.Scheduler;
+import polyglot.frontend.SourceLoader;
 import polyglot.frontend.goals.Goal;
-import polyglot.lex.Lexer;
 import polyglot.types.LoadedClassResolver;
 import polyglot.types.SemanticException;
-import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import fabil.Codebases;
 import fabil.FabILOptions;
@@ -73,10 +71,12 @@ public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
 
   @Override
   public Goal getCompileGoal(Job job) {
-    FabILOptions opts = (FabILOptions) job.extensionInfo().getOptions();
+    FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
     if(opts.createJavaSkel())
       return scheduler().FabILSkeletonGenerated(job);
-    else
+    else if(opts.publishOnly()) {
+      return scheduler().ConsistentNamespace();
+    } else
       return scheduler().FabricToFabilRewritten(job);
   }
   

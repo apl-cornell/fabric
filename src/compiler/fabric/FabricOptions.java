@@ -1,20 +1,14 @@
 package fabric;
 
-import java.io.File;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
-import java.util.StringTokenizer;
 
+import jif.JifOptions;
 import polyglot.main.UsageError;
 import polyglot.main.Main.TerminationException;
 import fabil.FabILOptions;
 import fabil.FabILOptions_c;
-
-import jif.JifOptions;
 
 public class FabricOptions extends JifOptions implements FabILOptions {
 
@@ -22,12 +16,17 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     super(extension);
     this.delegate = new FabILOptions_c(extension);
   }
-  
+  /**
+   * Whether to fully compile classes or just verify and publish.
+   */
+  public boolean publishOnly;
+
   @Override
   public void setDefaultValues() {
     super.setDefaultValues();
     this.fully_qualified_names = true;
     this.fatalExceptions = true;
+    this.publishOnly = false;
   }
 
   /* FabIL Options (forwarded to delegate ) ***********************************/
@@ -56,6 +55,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
 
   /* Parsing ******************************************************************/
   
+  @SuppressWarnings("unchecked")
   @Override
   protected int parseCommand(String[] args, int index, Set source)
     throws UsageError, TerminationException {
@@ -70,8 +70,11 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       index++;
       delegate.addSigcp.add(args[index++]);
       return index;
+    } else if (args[index].equals("-publish-only")) {
+      index++;
+      post_compiler = null;
+      publishOnly = true;
     }
-
     // parse jif options
     int i = super.parseCommand(args, index, source);
     if (i != index) {
@@ -105,5 +108,9 @@ public class FabricOptions extends JifOptions implements FabILOptions {
 
   public String workerName() {
     return delegate.workerName();
+  }
+  
+  public boolean publishOnly() {
+    return publishOnly;
   }
 }

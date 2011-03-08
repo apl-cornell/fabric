@@ -252,6 +252,7 @@ public class FabricScheduler extends JifScheduler {
   
   private Goal allFClassesGenerated =
       new Barrier("allFClassesGenerated", this) {
+        @Override
         public Goal goalForJob(Job j) {
           return FClassGenerated(j);
         }
@@ -300,7 +301,6 @@ public class FabricScheduler extends JifScheduler {
         if(opts.runWorker()) {
             addPrerequisiteDependency(g, this.ConsistentNamespace());
         }
-        // addPrerequisiteDependency(g, this.OutputInferredLabels(job));
 
         // make sure that if Object.fab is being compiled, it is always
         // written to FabIL before any other job.
@@ -376,30 +376,6 @@ public class FabricScheduler extends JifScheduler {
     });
     return g;
   }
-//public Goal OutputInferredLabels(Job job) {
-//Goal g = internGoal(new AbstractGoal(job){
-//  @SuppressWarnings({ "unchecked", "rawtypes" })
-//  @Override
-//  public Collection prerequisiteGoals(Scheduler scheduler) {
-//      List<Goal> l = new ArrayList<Goal>();
-//      l.add(Serialized(job));
-//      l.add(PrincipalCastsAdded(job));
-//      l.addAll(super.prerequisiteGoals(scheduler));
-//      return l;
-//  }
-//  @Override
-//  public Pass createPass(ExtensionInfo extInfo) {
-//    TypeSystem ts = extInfo.typeSystem();
-//    NodeFactory nf = extInfo.nodeFactory();
-//    return new OutputPass(this, new Translator(job(), ts, nf,
-//        new TargetFactory(
-//            Options.global.output_directory,
-//            "fab.inf",
-//            Options.global.output_stdout)));
-//  }
-//});
-//return g;
-//}
 
   @SuppressWarnings("unchecked")
   @Override
