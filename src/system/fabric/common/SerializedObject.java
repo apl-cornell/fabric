@@ -886,11 +886,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
       Constructor<?> constructor = constructorTable.get(ctorkey);
 
       if (constructor == null) {
-        Class<?> c;
-        if (cb == null)
-          c = Class.forName(getClassName());
-        else c = FabricClassLoader.getClassLoader(cb).findClass(getClassName());
-
+        Class<?> c = Class.forName(Worker.mangle(ctorkey));
+        
         constructor =
             c.getConstructor(Store.class, long.class, int.class, long.class,
                 long.class, ObjectInput.class, Iterator.class, Iterator.class);
