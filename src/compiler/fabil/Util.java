@@ -1,6 +1,8 @@
 package fabil;
 
 import fabric.lang.Codebase;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 public class Util {
   public static String packagePrefix(Codebase cb) {
@@ -52,9 +54,16 @@ public class Util {
     return codebaseName.substring(0, e);
   }
 
-  public static String toFabricRef(String mangled) {
-    String cb = codebasePart(mangled);
-    return "fab://" + storePart(cb) + "/" + onumPart(cb);
-  }
+  public static Object toProxy(String mangled) {
+    String cb = codebasePart(mangled);    
+    String className = mangled.substring(cb.length());
+    Store store = Worker.getWorker().getStore(storePart(cb));
+    long onum = onumPart(cb); 
 
+    Codebase codebase =
+        (Codebase) fabric.lang.Object._Proxy
+            .$getProxy(new fabric.lang.Object._Proxy(store, onum));
+    
+    return codebase.resolveClassName(className);
+  }
 }
