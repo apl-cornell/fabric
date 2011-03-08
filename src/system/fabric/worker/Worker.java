@@ -5,6 +5,7 @@ import static fabric.common.Logging.WORKER_LOGGER;
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.util.*;
@@ -421,9 +422,9 @@ public final class Worker {
           return null;
         }
       });
-
+      
       // Run the requested application.
-      Class<?> mainClass = Class.forName(opts.app[0] + "$_Impl");
+      Class<?> mainClass = Class.forName(mangle(opts.app[0]));
       Method main =
           mainClass.getMethod("main", new Class[] { ObjectArray.class });
       final String[] newArgs = new String[opts.app.length - 1];
@@ -448,6 +449,35 @@ public final class Worker {
     } finally {
       if (worker != null) worker.shutdown();
     }
+  }
+
+  public static String mangle(String app) {
+    URI app_uri = URI.create(app);
+    
+    if(!app_uri.isAbsolute())
+      return app_uri.toString();
+    else {
+      // fab://codebase_store/codebase_onum/classname
+      String store = app_uri.getHost();
+      String path = app_uri.getPath();
+      int s = path.indexOf('/');
+      int e = path.lastIndexOf('/');
+      String className = path.substring(e+1);
+      long onum = Long.parseLong(path.substring(s+1, e));
+      
+      String[] host = store.split("[.]");
+      StringBuilder sb = new StringBuilder("$$");
+      for(int i = host.length - 1; i>0; i--) {
+        sb.append(host[i]);
+        sb.append('.');
+      }
+      sb.append("onum_");
+      sb.append(onum);
+      sb.append("$$");
+      sb.append('.');
+      sb.append(className);
+      return sb.toString();
+    }    
   }
 
   public void setStore(String name, RemoteStore store) {
