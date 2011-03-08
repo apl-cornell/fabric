@@ -1,0 +1,13 @@
+package fabtest;
+
+class A {
+  public A() {
+    System.out.println("A()");
+    new B();
+  }
+
+  public static void main(String[] args) {
+    new A();
+  }
+}
+

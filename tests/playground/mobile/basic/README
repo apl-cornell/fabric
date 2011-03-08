@@ -1,0 +1,47 @@
++----------+
+| Overview |
++----------+
+
+This tests the basic functionality of compiling and running mobile code.
+
+It tests:
+- Compiling a fabric class and placing it on Fabric
+- Compiling a fabric class using a codebase on Fabric
+- Running mobile code (i.e. loading a class from Fabric)
+
+It does not test authority-bounded compilation very much. The test mobile code is very simple.
+
++----------------------------+
+| Example Code Functionality |
++----------------------------+
+
+Class A references Class B. Every time an object of class A is instantiated, it prints out "A()"; likewise for B. The main() method for B instantiates B. The main() method for A instantiates A and then B.
+
++--------------+
+| Script Usage |
++--------------+
+
+compileB.sh will compile B and store the codebase in the given store. 
+
+Usage: ./compileB.sh storeName
+
+compileA.sh will compile A using B from a supplied fabric codebase and store it in the given store. 
+
+Usage: ./compileA.sh fab://storeName/oidOfCodebase storeName
+
+runB.sh will run B from fabric. 
+
+Usage: ./runB.sh storeName oidOfCodebaseForB
+
+runA.sh will run A from fabric. 
+
+Usage: ./runA.sh storeName oidOfCodebaseForA
+
++-------+
+| NOTES |
++-------+
+
+fabric/bin must be in your PATH.
+
+All the scripts have default values. If you find yourself typing the same things in over and over, you may want to adjust the default values for repeated testing.
+

@@ -1,0 +1,11 @@
+package fabtest;
+
+class B {
+  public B() {
+    System.out.println("B()");
+  }
+  public static void main(String[] args) {
+    new B();
+  }
+}
+
