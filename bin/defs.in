@@ -87,6 +87,10 @@ FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/rt-classes"
 FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/classes"
 FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/fabric-rt.jar"
 FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/FreePastry-2.1.jar"
+for i in "${TOP}"/lib/bcprov-*.jar ; do
+  FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:$i"
+done
+
 
 # Classpath for compiling FabIL applications.
 # Jar files should always appear *after* their corresponding class directories.
