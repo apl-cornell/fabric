@@ -4,13 +4,16 @@ import static fabric.common.Logging.CLASS_HASHING_LOGGER;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.net.URI;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.logging.Level;
 
-import fabric.lang.FabricClassLoader;
 import fabric.lang.Codebase;
+import fabric.lang.FClass;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 public final class Util {
 
@@ -20,31 +23,16 @@ public final class Util {
   private static final int BUF_LEN = 4096;
 
   /**
-   * Returns the key to use for looking stuff up in classHashCache.
-   */
-  private static String getCacheKey(Codebase codebase, String className) {
-    if (codebase == null) return className;
-    return "fab://" + codebase.$getStore().name() + "/" + codebase.$getOnum()
-        + "/" + className;
-  }
-
-  /**
    * Generates a cryptographically secure hash of the given class.
    */
   public static byte[] hash(Class<?> c) throws IOException {
-    Codebase codebase = null;
-    if (c.getClassLoader() instanceof FabricClassLoader) {
-      FabricClassLoader cl = (FabricClassLoader) c.getClassLoader();
-      codebase = cl.getCodebase();
-    }
-
+    
     String className = c.getName();
-    String cacheKey = getCacheKey(codebase, className);
 
     CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing class by class object: {0}",
-        cacheKey);
+        className);
 
-    byte[] result = classHashCache.get(cacheKey);
+    byte[] result = classHashCache.get(className);
     if (result != null) {
       CLASS_HASHING_LOGGER.finer("  Hash found in cache");
       return result;
@@ -87,7 +75,7 @@ public final class Util {
     if (superClass != null) digest.update(hash(superClass));
 
     result = digest.digest();
-    classHashCache.put(cacheKey, result);
+    classHashCache.put(className, result);
 
     if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
       String hash = new BigInteger(1, result).toString(16);
@@ -98,30 +86,25 @@ public final class Util {
     return result;
   }
 
-  public static byte[] hashClass(Codebase codebase, String className)
+  public static byte[] hashClass(String className)
       throws IOException, ClassNotFoundException {
     CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing class by name: {0}",
         className);
-    String cacheKey = getCacheKey(codebase, className);
-    byte[] result = classHashCache.get(cacheKey);
+    byte[] result = classHashCache.get(className);
 
     if (result != null) {
       CLASS_HASHING_LOGGER.finer("  Hash found in cache");
       return result;
     }
 
-    if (codebase == null) return hash(Class.forName(className));
+    return hash(Class.forName(className));
 
-    return hash(FabricClassLoader.getClassLoader(codebase).findClass(className));
   }
 
-  public static URL locateClass(Codebase codebase, String className)
+  public static URL locateClass(String className)
       throws ClassNotFoundException {
     // TODO: copied from hash(className)
-    Class<?> c;
-    if (codebase == null)
-      c = Class.forName(className);
-    else c = FabricClassLoader.getClassLoader(codebase).findClass(className);
+    Class<?> c = Class.forName(className);
 
     ClassLoader classLoader = c.getClassLoader();
     if (classLoader == null) {
@@ -242,5 +225,160 @@ public final class Util {
     
     protected abstract T create();
   }
+  
+  /**
+   * XXX: This 
+   * @throws ClassNotFoundException 
+   */
+  public static String mangle(String app) throws ClassNotFoundException {
+    URI app_uri = URI.create(app);
+    
+    if(!app_uri.isAbsolute())
+      return app_uri.toString();
+    else {
+      FClass fcls = toFClass(app_uri);
+      if(fcls == null)
+        throw new ClassNotFoundException(app_uri.toString());
+      return pseudoname(fcls);
+    }    
+  }
+  
+  public static String packagePrefix(Codebase cb) {
+    if (cb != null) {
+      return pseudoname(cb) + ".";
+    }
+    else return "";
+  }
+  
+  public static String packageName(Codebase cb) {
+    if (cb != null) {
+      return pseudoname(cb);
+    }
+    else return "";
+  }
+
+  public static String unEscapeHost(String cbpart) {
+    cbpart = cbpart.replaceFirst("$([0-9])", "\1");
+    cbpart = cbpart.replace("$_", "-");
+    return cbpart;
+  }
+
+  public static String oid(fabric.lang.Object o) {
+    return "fab://" + o.$getStore().name() + "/" + o.$getOnum();
+  }
+
+  public static FClass toProxy(String mangled) {
+    String cb = codebasePart(mangled);    
+    if(cb == null)
+      return null;
+    
+    String className = mangled.substring(cb.length());
+    String host = unEscapeHost(storePart(cb));
+    Store store = Worker.getWorker().getStore(host);
+    long onum = onumPart(cb); 
+
+    Codebase codebase =
+        (Codebase) fabric.lang.Object._Proxy
+            .$getProxy(new fabric.lang.Object._Proxy(store, onum));
+    
+    return codebase.resolveClassName(className);
+  }
+  
+  public static String codebasePrefix(Codebase cb) {
+    if (cb != null)
+      return oid(cb) + "/";
+    else return "";
+  }
+    
+  public static String codebasePart(String mangled) {
+    int b = mangled.indexOf("$$");
+    int e = mangled.indexOf("$$", b+2);
+    if(b<0) return "";
+
+    return mangled.substring(b+2, e);
+  }
+
+  public static long onumPart(String codebaseName) {
+    int e = codebaseName.lastIndexOf('.');
+    int b = codebaseName.lastIndexOf('.', e-1); 
+    String onum = codebaseName.substring(b+".onum_".length(), e);
+    return Long.parseLong(onum);
+  }
+  
+  public static String storePart(String codebaseName) {
+    int e = codebaseName.lastIndexOf(".onum_");
+    return codebaseName.substring(0, e);
+  }
+
+  public static String pseudoname(String store, long onum) {
+    String[] host = store.split("[.]");
+    StringBuilder sb = new StringBuilder("$$");
+    for(int i = host.length - 1; i>=0; i--) {
+      sb.append(escapeHost(host[i]));
+      sb.append('.');
+    }
+    sb.append("onum_");
+    sb.append(onum);
+    sb.append("$$");
+    return sb.toString();
+  }
+  
+  public static String pseudoname(URI fabref) {
+    String store = fabref.getHost();
+    String path = fabref.getPath();
+    if (path.contains("/")) {
+      // parse as a codebase oid + class name
+      String[] pair = path.split("/");
+      long onum = Long.parseLong(pair[0]);
+      String className = pair[1];
+      return pseudoname(store, onum) + "." + className;
+    }
+    return null;
+  }
+  
+  public static String escapeHost(String name) {
+    name = name.replaceFirst("(^[0-9])", "$\1");
+    name = name.replace("-", "$_");
+    return name;
+  }
+  
+  public static FClass toFClass(URI fabref) {
+    Store store = Worker.getWorker().getStore(fabref.getHost());
+    String path = fabref.getPath().substring(1);
+
+    if (path.contains("/")) {
+      // parse as a codebase oid + class name
+      String[] pair = path.split("/");
+      long onum = Long.parseLong(pair[0]);
+      String className = pair[1];
+      Object o =
+          fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
+              store, onum));
+      if (!(o instanceof Codebase))
+        throw new ClassCastException("The Fabric object at " + fabref
+            + " is not a Codebase.");
+      Codebase cb = (Codebase) o;
+      return cb.resolveClassName(className);
+    }
+    else {
+      // parse as an fclass oid
+      long onum = Long.parseLong(path); 
+      Object o =
+          fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
+              store, onum));
+      if (!(o instanceof FClass))
+        throw new ClassCastException("The Fabric object at " + fabref
+            + " is not a Fabric class.");
+      return (FClass)o;
+    }
+  }
+  public static String pseudoname(FClass fcls) {
+    return packagePrefix(fcls.getCodebase()) + "." + fcls.getName();
+  }
+  
+  public static String pseudoname(Codebase cb) {
+    return pseudoname(cb.$getStore().name(), cb.$getOnum());
+  }
+
 
 }
