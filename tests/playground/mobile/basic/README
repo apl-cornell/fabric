@@ -49,5 +49,5 @@ Usage: ./runA.sh oidOfCodebaseForA
 fabric/bin must be in your PATH.
 
 All the scripts have default values. You will have to edit them depending on
-your setup.
+your setup (see the defs file).
 

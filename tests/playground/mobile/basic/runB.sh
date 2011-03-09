@@ -1,11 +1,12 @@
-#!/bin/sh
+#!/bin/bash
+
+source "$(dirname $0)/defs"
 
 if [ -z "$1" ]; then
   echo "usage: runB.sh oidOfCodebaseB"
   exit
 fi
 
-store="ubuntu"
 oid="${1}"
 
 command="fab --name $store fab://${store}/${oid}/fabtest/B"

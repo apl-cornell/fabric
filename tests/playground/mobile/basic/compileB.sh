@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
-store="ubuntu"
+source "$(dirname $0)/defs"
+
 if [ -n "$1" ]; then
   store="$1"
 fi
