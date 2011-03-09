@@ -1,7 +1,7 @@
 package fabil.types;
 
 import fabil.Codebases;
-import fabil.Util;
+import fabric.common.Util;
 import fabric.lang.Codebase;
 import polyglot.frontend.Source;
 import polyglot.main.Options;

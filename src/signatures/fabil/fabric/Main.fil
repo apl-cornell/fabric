@@ -1,6 +1,0 @@
-package fabric;
-import fabric.lang.FClass;
-import java.util.Map;
-public class Main extends java.lang.Object {
-  public native static void compile(FClass fcls, Map/*String, bytes*/ bytecodeMap); 
-}

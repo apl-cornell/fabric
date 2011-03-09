@@ -9,8 +9,7 @@ import java.util.Map;
 import fabric.lang.Codebase;
 import fabric.Main;
 
-import fabil.Util;
-
+import fabric.common.Util;
 /**
  * Loads Java classes from Fabric.
  * 

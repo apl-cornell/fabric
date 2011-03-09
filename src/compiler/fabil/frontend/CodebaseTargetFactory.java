@@ -3,7 +3,7 @@ package fabil.frontend;
 import java.io.File;
 
 import fabil.Codebases;
-import fabil.Util;
+import fabric.common.Util;
 import fabric.lang.Codebase;
 
 import polyglot.frontend.Source;

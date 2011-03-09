@@ -27,6 +27,8 @@ public class FabricSourceFile_c extends JifSourceFile_c implements FabricSourceF
   public Context enterScope(Context c) {
     
     FabricContext A =  (FabricContext) c;
+    //System.out.println("ENTERING REMOTE SOURCE:" + source + " : codebase " + codebase);
+
     //push the codebase onto the context stack
     if(codebase != null) {
       A = (FabricContext) A.pushCodebase(codebase);

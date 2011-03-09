@@ -19,6 +19,7 @@ import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.common.Util;
 
 public class FabricSourceLoader extends SourceLoader {
   protected Map<URI, Codebase> codebaseCache;
@@ -198,38 +199,13 @@ public class FabricSourceLoader extends SourceLoader {
   @Override
   public FileSource fileSource(String fileName, boolean userSpecified)
       throws IOException {
-    URI uri = URI.create(fileName);
+      return fileSource(URI.create(fileName), userSpecified);
+  }
+
+  @SuppressWarnings("unchecked")
+  public FileSource fileSource(URI uri, boolean userSpecified) throws IOException {
     if ("fab".equals(uri.getScheme())) {
-      Store store = Worker.getWorker().getStore(uri.getHost());
-      String path = uri.getPath().substring(1);
-
-      FClass fcls;
-      if (path.contains("/")) {
-        // parse as a codebase oid + class name
-        String[] pair = path.split("/");
-        long onum = Long.parseLong(pair[0]);
-        String className = pair[1];
-        Object o =
-            fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
-                store, onum));
-        if (!(o instanceof Codebase))
-          throw new InternalCompilerError("The Fabric object at " + uri
-              + " is not a Codebase.");
-        Codebase cb = (Codebase) o;
-        fcls = cb.resolveClassName(className);
-      }
-      else {
-        // parse as an fclass oid
-        long onum = Long.parseLong(path); 
-        Object o =
-            fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
-                store, onum));
-        if (!(o instanceof FClass))
-          throw new InternalCompilerError("The Fabric object at " + uri
-              + " is not a Fabric class.");
-        fcls = (FClass)o;
-      }
-
+      System.out.println("URI: " + uri);
       FileSource s = (FileSource) loadedSources.get(uri.toString());
 
       if (s != null) {
@@ -238,41 +214,15 @@ public class FabricSourceLoader extends SourceLoader {
         }
         return s;
       }
+
+      FClass fcls = Util.toFClass(uri);
+      if(fcls == null) 
+        return null;
       
       s = ((fabric.ExtensionInfo) sourceExt).createRemoteSource(fcls, false);
       loadedSources.put(uri.toString(), s);
       return s;
 
-    } else return super.fileSource(fileName, userSpecified);
-  }
-
-  @SuppressWarnings("unchecked")
-  public FileSource fileSource(URI fileURI, boolean userSpecified) throws IOException {
-    if (fileURI.isAbsolute() && "fab".equals(fileURI.getScheme())) {
-      Store store = Worker.getWorker().getStore(fileURI.getHost());
-      Long onum = Long.parseLong(fileURI.getPath().substring(1)); // skip leading
-                                                              // '/'
-      Object o =
-          fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
-              store, onum));
-      if (!(o instanceof FClass))
-        throw new InternalCompilerError("The Fabric object at " + fileURI
-            + " is not a Fabric class.");
-
-      FClass fcls = (FClass) o;
-      FileSource s = (FileSource) loadedSources.get(fileURI.toString());
-
-      if (s != null) {
-        if (!s.userSpecified() && userSpecified) {
-          s.setUserSpecified(true);
-        }
-        return s;
-      }
-      
-      s = ((fabric.ExtensionInfo) sourceExt).createRemoteSource(fcls, false);
-      loadedSources.put(fileURI.toString(), s);
-      return s;
-    }
-      return super.fileSource(fileURI.getPath(), userSpecified);
+    } else return super.fileSource(uri.getPath(), userSpecified);
   }
 }

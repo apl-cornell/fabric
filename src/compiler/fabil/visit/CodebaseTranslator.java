@@ -3,7 +3,7 @@ package fabil.visit;
 import java.util.Iterator;
 
 import fabil.Codebases;
-import fabil.Util;
+import fabric.common.Util;
 import fabric.lang.Codebase;
 
 import polyglot.ast.Import;

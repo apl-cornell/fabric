@@ -199,9 +199,9 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
    */
   @Override
   public ImportTable importTable(Package pkg) {
-    return new FabILImportTable(this, pkg);
+    throw new UnsupportedOperationException("Import table must be associated with a source");
   }
-
+  
   /*
    * (non-Javadoc)
    * @see polyglot.types.TypeSystem_c#importTable(java.lang.String,
@@ -209,7 +209,11 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
    */
   @Override
   public ImportTable importTable(String sourceName, Package pkg) {
-    return new FabILImportTable(this, pkg, sourceName);
+    throw new UnsupportedOperationException("Import table must be associated with a source");
+  }
+
+  public ImportTable importTable(Source source, Package pkg) {
+    return new FabILImportTable(this, pkg, source);
   }
 
   @Override

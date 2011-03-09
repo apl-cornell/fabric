@@ -106,12 +106,16 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   
   @Override
   public ImportTable importTable(Package pkg) {
-    return new FabILImportTable(this, pkg);
+    throw new UnsupportedOperationException("Import table must be associated with a source");
   }
   
   @Override
   public ImportTable importTable(String sourceName, Package pkg) {
-    return new FabILImportTable(this, pkg, sourceName);
+    throw new UnsupportedOperationException("Import table must be associated with a source");
+  }
+
+  public ImportTable importTable(Source source, Package pkg) {
+    return new FabILImportTable(this, pkg, source);
   }
 
   @Override

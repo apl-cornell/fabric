@@ -171,6 +171,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
   }
   
   public FileSource createRemoteSource(FClass fcls, boolean user) throws IOException {
+ //     System.out.println("CREATING REMOTE SOURCE:" + fcls);
       return new RemoteSource(fcls, user);
   }
   

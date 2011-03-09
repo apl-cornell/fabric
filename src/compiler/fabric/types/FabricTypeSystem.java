@@ -1,5 +1,6 @@
 package fabric.types;
 
+import fabil.types.CodebaseTypeSystem;
 import polyglot.types.ClassType;
 import polyglot.types.LocalInstance;
 import polyglot.types.Named;
@@ -12,7 +13,7 @@ import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
 import jif.types.principal.*;
 
-public interface FabricTypeSystem extends JifTypeSystem {
+public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   ClassType FObject();
   
   ClassType RemoteWorker();

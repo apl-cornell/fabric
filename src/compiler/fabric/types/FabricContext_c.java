@@ -49,6 +49,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
    */
   @Override
   public Named find(String name) throws SemanticException {
+    //System.out.println("LOOKING FOR " + name + " kind: " + kind);
     if(isOuter()) 
       return ts.systemResolver().find(codebasePrefix + name);
     else

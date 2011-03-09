@@ -1,12 +1,17 @@
 package fabil.types;
 
+import fabil.Codebases;
+import fabric.common.Util;
+import polyglot.frontend.Source;
 import polyglot.types.*;
 import polyglot.types.Package;
 
 public class FabILImportTable extends ImportTable {
-
-  public FabILImportTable(TypeSystem ts, Package pkg, String src) {
-    super(ts, pkg, src);
+  protected String codebasePrefix;
+  
+  public FabILImportTable(TypeSystem ts, Package pkg, Source src) {
+    super(ts, pkg, src.name());
+    this.codebasePrefix = Util.codebasePrefix(((Codebases) src).codebase());
   }
 
   public FabILImportTable(TypeSystem ts, Package pkg) {
@@ -25,7 +30,12 @@ public class FabILImportTable extends ImportTable {
     // HACK Ignore java.lang.Object so that fabric.lang.Object takes priority.
     if ("Object".equals(name) && "java.lang".equals(pkgName)) return null;
     
-    return super.findInPkg(name, pkgName);
+    //If we are looking in the package of this import table, 
+    // qualify the name by codebase
+    if(pkg.fullName().equals(pkgName))
+      return super.findInPkg(name, codebasePrefix + pkgName);
+    else
+      return super.findInPkg(name, pkgName);
   }
 
 }

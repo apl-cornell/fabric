@@ -33,7 +33,7 @@ import fabric.lang.FClass;
 /**
  * Extension information for FabIL extension.
  */
-public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements Codebases {
+public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   //Map<Codebase, TargetFactory> codebaseTargets = new HashMap<Codebase, TargetFactory>();
   protected Codebase codebase = null;
 

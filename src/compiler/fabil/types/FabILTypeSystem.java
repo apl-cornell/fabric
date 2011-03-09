@@ -4,7 +4,7 @@ import polyglot.ast.TypeNode;
 import polyglot.types.*;
 import polyglot.util.Position;
 
-public interface FabILTypeSystem extends TypeSystem {
+public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
 
   // TODO: fabric.worker or fabric.lang?
   /**
