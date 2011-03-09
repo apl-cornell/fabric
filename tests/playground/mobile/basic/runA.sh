@@ -1,13 +1,12 @@
 #!/bin/sh
 
-store="store0"
-oid="123"
-if [ -n "$1" ]; then
-  store="$1"
+if [ -z "1" ]; then
+  echo "usage: runA.sh oidOfCodebaseA"
+  exit
 fi
-if [ -n "$2" ]; then
-  oid="$2"
-fi
+
+store="ubuntu"
+oid="$1"
 
 command="fab codebase_${store}.${oid}.A"
 echo $command

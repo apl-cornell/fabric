@@ -1,11 +1,21 @@
 package fabtest;
 
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+
+
 class B {
-  public B() {
-    System.out.println("B()");
+
+  public static void main{p<-;p->} (principal{p<-;p->} p, String[] args):{p<-;p->} 
+  throws Exception {  
+    B.sayHello(p);  
   }
-  public static void main(String[] args) {
-    new B();
+  
+  public static void sayHello{p<-;p->} (Principal{p<-;p->} p):{p<-;p->}
+  throws SecurityException, NullPointerException {
+    Runtime[p] runtime = Runtime[p].getRuntime();
+    runtime.out().println("Hello from class B");
   }
+  
 }
 

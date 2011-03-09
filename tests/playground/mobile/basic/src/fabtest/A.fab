@@ -1,13 +1,17 @@
 package fabtest;
 
 class A {
-  public A() {
-    System.out.println("A()");
-    new B();
+  public static void sayHello{p<-;p->} (Principal{p<-;p->} p):{p<-;p->}
+  throws SecurityException, NullPointerException {
+    Runtime[p] runtime = Runtime[p].getRuntime();
+    runtime.out().println("Hello from class A");
   }
+  
 
-  public static void main(String[] args) {
-    new A();
+  public static void main{p<-;p->} (principal{p<-;p->} p, String[] args):{p<-;p->} 
+  throws Exception { 
+    A.sayHello(p); 
+    B.sayHello(p);  
   }
 }
 
