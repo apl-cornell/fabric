@@ -8,6 +8,6 @@ fi
 store="ubuntu"
 oid="${1}"
 
-command="fab codebase_${store}.${oid}.B"
+command="fab --name $store fab://${store}/${oid}/fabtest/B"
 echo $command
 eval $command
