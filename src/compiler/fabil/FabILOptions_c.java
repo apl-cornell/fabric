@@ -48,13 +48,25 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    */
   public boolean createJavaSkel;
  
-  /* Worker for compiling source from Fabric */  
+  /**
+   * Name of worker for compiling source from Fabric.
+   */  
   protected String workerName;
-  /* Run fabric worker for compiling source from Fabric */  
+
+  /**
+   * Whether to run a Fabric worker so that Fabric-hosted source code can be
+   * compiled.
+   */  
   protected boolean runWorker;
-  /* Store for generated codebase and classes */  
-  protected String destinationStore;  
-  /* Codebase path */
+  
+  /**
+   * The name of the store for writing generated codebase and classes.
+   */  
+  protected String destinationStore;
+  
+  /**
+   * Codebase path.
+   */
   protected List<URI> codebasePath;  
  
   
@@ -92,7 +104,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    * @see polyglot.main.Options#parseCommand(java.lang.String[], int,
    *      java.util.Set)
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public int parseCommand(String[] args, int index, Set source) throws UsageError,
       TerminationException {
