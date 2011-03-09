@@ -2,6 +2,7 @@ package fabil.ast;
 
 import java.util.List;
 
+import fabil.frontend.RemoteSource;
 import fabil.types.FabILContext;
 import fabric.lang.Codebase;
 
@@ -44,6 +45,10 @@ public class FabILSourceFile_c extends SourceFile_c implements FabILSourceFile {
   /** Set the codebase of the source file. */
   public Codebase codebase() {
     return codebase;
+  }
+
+  public boolean isRemote() {
+    return source instanceof RemoteSource;
   }  
 
 }

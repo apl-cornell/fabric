@@ -26,7 +26,7 @@ import polyglot.util.Position;
 import fabil.Codebases;
 import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
-import fabil.frontend.CodebaseSource;
+import fabil.frontend.CodebaseSource_c;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.frontend.LocalSource;
@@ -152,7 +152,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
             String newName = cd.name() + "." + job.extensionInfo().defaultFileExtension();
             String newPath = n.source().path().substring(0, n.source().path().length() - n.source().name().length()) + newName;
             
-            Source s = new CodebaseSource(newName,
+            Source s = new CodebaseSource_c(newName,
                                   newPath,
                                   new Date(System.currentTimeMillis()), ((Codebases) n).codebase());
             sf = sf.source(s);

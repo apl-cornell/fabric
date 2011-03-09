@@ -14,7 +14,7 @@ import fabil.Codebases;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
-public class RemoteSource extends FileSource implements Codebases {
+public class RemoteSource extends FileSource implements CodebaseSource {
 
   protected final FClass fcls;
   protected Codebase codebase;

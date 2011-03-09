@@ -6,6 +6,7 @@ import polyglot.ast.NodeFactory;
 import polyglot.ast.PackageNode;
 import polyglot.ast.SourceFile;
 import polyglot.frontend.Job;
+import polyglot.frontend.Source;
 import polyglot.types.ImportTable;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
@@ -13,6 +14,7 @@ import polyglot.visit.InitImportsVisitor;
 import polyglot.visit.NodeVisitor;
 import fabil.Codebases;
 import fabil.ast.CodebaseSourceFile;
+import fabil.frontend.CodebaseSource;
 import fabil.types.CodebaseTypeSystem;
 import fabric.common.Util;
 import fabric.lang.Codebase;
@@ -20,7 +22,8 @@ import fabric.lang.Codebase;
 public class InitCodebaseImports extends InitImportsVisitor {
 
   protected Codebase codebase = null;
-
+  protected boolean remote = true;
+  
   public InitCodebaseImports(Job job, TypeSystem ts, NodeFactory nf) {
     super(job, ts, nf);
   }
@@ -42,9 +45,10 @@ public class InitCodebaseImports extends InitImportsVisitor {
       }
 
       InitCodebaseImports v = (InitCodebaseImports) copy();
-      Codebases src = (Codebases) sf.source();
+      CodebaseSource src = (CodebaseSource) sf.source();
       v.codebase = src.codebase();
       v.importTable = it;
+      v.remote = ((CodebaseSourceFile)n).isRemote();
       return v;
     }
     return this;
@@ -66,7 +70,8 @@ public class InitCodebaseImports extends InitImportsVisitor {
 
       if (im.kind() == Import.CLASS) {
         String name = im.name();
-        if(codebase != null && codebase.resolveClassName(name) != null)
+        //if(codebase != null && codebase.resolveClassName(name) != null)
+        if(remote)
           name = Util.codebasePrefix(codebase) + name;
         this.importTable.addClassImport(name, im.position());
       } else if (im.kind() == Import.PACKAGE) {

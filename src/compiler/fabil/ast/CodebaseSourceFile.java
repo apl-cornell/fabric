@@ -7,4 +7,6 @@ import fabric.lang.Codebase;
 public interface CodebaseSourceFile extends SourceFile, Codebases {
   /** Set the source's codebase. */
   SourceFile codebase(Codebase codebase);
+  
+  boolean isRemote();
 }

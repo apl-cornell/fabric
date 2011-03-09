@@ -2,14 +2,13 @@ package fabric.ast;
 
 import java.util.List;
 
-import fabric.lang.Codebase;
-import fabric.types.FabricContext;
-
 import jif.ast.JifSourceFile_c;
-
 import polyglot.ast.PackageNode;
 import polyglot.types.Context;
 import polyglot.util.Position;
+import fabric.frontend.RemoteSource;
+import fabric.lang.Codebase;
+import fabric.types.FabricContext;
 
 /**
  * An extension of JifSourceFiles that supports codebases.
@@ -46,5 +45,9 @@ public class FabricSourceFile_c extends JifSourceFile_c implements FabricSourceF
   /** Set the codebase of the source file. */
   public Codebase codebase() {
       return codebase;
+  }
+
+  public boolean isRemote() {
+    return source instanceof RemoteSource;
   }  
 }

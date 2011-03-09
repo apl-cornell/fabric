@@ -4,11 +4,12 @@ import java.io.File;
 import java.io.IOException;
 
 import fabil.Codebases;
+import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
 
 import jif.parse.UTF8FileSource;
 
-public class LocalSource extends UTF8FileSource implements Codebases {
+public class LocalSource extends UTF8FileSource implements CodebaseSource {
 
   protected Codebase codebase;
   

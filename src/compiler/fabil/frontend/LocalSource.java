@@ -8,7 +8,7 @@ import polyglot.frontend.FileSource;
 import fabil.Codebases;
 import fabric.lang.Codebase;
 
-public class LocalSource extends FileSource implements Codebases {
+public class LocalSource extends FileSource implements CodebaseSource {
   protected Codebase codebase;
   
   public LocalSource(File f, boolean userSpecified, Codebase codebase)

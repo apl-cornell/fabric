@@ -13,13 +13,14 @@ import java.util.Date;
 import jif.parse.UTF8FileSource;
 
 import fabil.Codebases;
+import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
 import polyglot.frontend.FileSource;
 import polyglot.util.StringUtil;
 
-public class RemoteSource extends FileSource implements Codebases {
+public class RemoteSource extends FileSource implements CodebaseSource {
   protected final FClass fcls;
   protected Codebase codebase;
   protected Reader reader = null;

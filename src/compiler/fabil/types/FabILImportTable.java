@@ -8,10 +8,11 @@ import polyglot.types.Package;
 
 public class FabILImportTable extends ImportTable {
   protected String codebasePrefix;
-  
-  public FabILImportTable(TypeSystem ts, Package pkg, Source src) {
-    super(ts, pkg, src.name());
-    this.codebasePrefix = Util.codebasePrefix(((Codebases) src).codebase());
+  protected Source source;
+  public FabILImportTable(TypeSystem ts, Package pkg, Source source) {
+    super(ts, pkg, source.name());
+    this.source = source;
+    this.codebasePrefix = Util.codebasePrefix(((Codebases) source).codebase());
   }
 
   public FabILImportTable(TypeSystem ts, Package pkg) {
@@ -30,10 +31,9 @@ public class FabILImportTable extends ImportTable {
     // HACK Ignore java.lang.Object so that fabric.lang.Object takes priority.
     if ("Object".equals(name) && "java.lang".equals(pkgName)) return null;
     
-    //If we are looking in the package of this import table, 
-    // qualify the name by codebase
-    if(pkg.fullName().equals(pkgName))
-      return super.findInPkg(name, codebasePrefix + pkgName);
+    Named n = super.findInPkg(name, codebasePrefix + pkgName);
+    if(n != null)
+      return n;
     else
       return super.findInPkg(name, pkgName);
   }
