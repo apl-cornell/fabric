@@ -424,7 +424,7 @@ public final class Worker {
       });
       
       // Run the requested application.
-      Class<?> mainClass = Class.forName(Util.mangle(opts.app[0]));
+      Class<?> mainClass = Class.forName(SysUtil.mangle(opts.app[0]));
       Method main =
           mainClass.getMethod("main", new Class[] { ObjectArray.class });
       final String[] newArgs = new String[opts.app.length - 1];

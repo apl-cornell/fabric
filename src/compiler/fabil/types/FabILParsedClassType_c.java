@@ -1,7 +1,7 @@
 package fabil.types;
 
 import fabil.Codebases;
-import fabric.common.Util;
+import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import polyglot.frontend.Source;
 import polyglot.main.Options;
@@ -55,7 +55,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
   public String translate(Resolver c) {
     if (isTopLevel()) {
       if (package_() == null) {
-        return Util.packagePrefix(codebase) + name();
+        return SysUtil.packagePrefix(codebase) + name();
       }
 
       // Use the short name if it is unique and there is no 
@@ -70,7 +70,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
         } catch (SemanticException e) {
         }
       }
-      return Util.packagePrefix(codebase) + package_().translate(c) + "." + name();
+      return SysUtil.packagePrefix(codebase) + package_().translate(c) + "." + name();
     } else {
       return super.translate(c);
     }

@@ -3,7 +3,7 @@ package fabil.frontend;
 import java.io.File;
 
 import fabil.Codebases;
-import fabric.common.Util;
+import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 
 import polyglot.frontend.Source;
@@ -28,7 +28,7 @@ public class CodebaseTargetFactory extends TargetFactory {
   public File outputFile(String packageName, String className, Source source) {
     if(source instanceof Codebases) {
       Codebase cb = ((Codebases) source).codebase();
-      return super.outputFile(Util.packagePrefix(cb) + packageName, className, source);
+      return super.outputFile(SysUtil.packagePrefix(cb) + packageName, className, source);
     }
     return super.outputFile(packageName, className, source);
   }

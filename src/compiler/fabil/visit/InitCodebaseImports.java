@@ -16,7 +16,7 @@ import fabil.Codebases;
 import fabil.ast.CodebaseSourceFile;
 import fabil.frontend.CodebaseSource;
 import fabil.types.CodebaseTypeSystem;
-import fabric.common.Util;
+import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 
 public class InitCodebaseImports extends InitImportsVisitor {
@@ -72,7 +72,7 @@ public class InitCodebaseImports extends InitImportsVisitor {
         String name = im.name();
         //if(codebase != null && codebase.resolveClassName(name) != null)
         if(remote)
-          name = Util.codebasePrefix(codebase) + name;
+          name = SysUtil.codebasePrefix(codebase) + name;
         this.importTable.addClassImport(name, im.position());
       } else if (im.kind() == Import.PACKAGE) {
         //XXX: package imports are not currently 

@@ -3,7 +3,7 @@ package fabil.visit;
 import java.util.Iterator;
 
 import fabil.Codebases;
-import fabric.common.Util;
+import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 
 import polyglot.ast.Import;
@@ -28,13 +28,13 @@ public class CodebaseTranslator extends Translator {
     Codebase cb = ((Codebases) sfn.source()).codebase();
     if (sfn.package_() != null) {
       w.write("package ");
-      w.write(Util.packagePrefix(cb));
+      w.write(SysUtil.packagePrefix(cb));
       sfn.package_().del().translate(w, this);
       w.write(";");
       w.newline(0);
       w.newline(0);
     } else {
-      String cbName = Util.packageName(cb);
+      String cbName = SysUtil.packageName(cb);
       if(cbName.equals("")) {
         w.write("package ");
         w.write(cbName);

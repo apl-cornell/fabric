@@ -15,7 +15,7 @@ import fabric.lang.FClass;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
-public final class Util {
+public final class SysUtil {
 
   private static final Map<String, byte[]> classHashCache = Collections
       .synchronizedMap(new HashMap<String, byte[]>());

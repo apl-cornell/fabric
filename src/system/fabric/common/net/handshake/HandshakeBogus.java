@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
-import fabric.common.Util.Thunk;
+import fabric.common.SysUtil.Thunk;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.Store;
 import fabric.worker.Worker;

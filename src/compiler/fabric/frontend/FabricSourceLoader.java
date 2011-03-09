@@ -19,7 +19,7 @@ import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.worker.Store;
 import fabric.worker.Worker;
-import fabric.common.Util;
+import fabric.common.SysUtil;
 
 public class FabricSourceLoader extends SourceLoader {
   protected Map<URI, Codebase> codebaseCache;
@@ -215,7 +215,7 @@ public class FabricSourceLoader extends SourceLoader {
         return s;
       }
 
-      FClass fcls = Util.toFClass(uri);
+      FClass fcls = SysUtil.toFClass(uri);
       if(fcls == null) 
         return null;
       

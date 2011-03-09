@@ -1,7 +1,7 @@
 package fabil.types;
 
 import fabil.Codebases;
-import fabric.common.Util;
+import fabric.common.SysUtil;
 import polyglot.frontend.Source;
 import polyglot.types.*;
 import polyglot.types.Package;
@@ -12,7 +12,7 @@ public class FabILImportTable extends ImportTable {
   public FabILImportTable(TypeSystem ts, Package pkg, Source source) {
     super(ts, pkg, source.name());
     this.source = source;
-    this.codebasePrefix = Util.codebasePrefix(((Codebases) source).codebase());
+    this.codebasePrefix = SysUtil.codebasePrefix(((Codebases) source).codebase());
   }
 
   public FabILImportTable(TypeSystem ts, Package pkg) {
