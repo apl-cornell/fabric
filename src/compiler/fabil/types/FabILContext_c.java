@@ -38,7 +38,7 @@ public class FabILContext_c extends Context_c implements FabILContext {
   /**
    * Push a source file scope.
    */
-  public Context pushCodebase(Codebase codebase) {
+  public CodebaseContext pushCodebase(Codebase codebase) {
       FabILContext_c v = (FabILContext_c) push();
       v.kind = OUTER;
       v.codebase = codebase;

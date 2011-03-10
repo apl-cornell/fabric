@@ -26,8 +26,8 @@ public class CodebaseTargetFactory extends TargetFactory {
 
   @Override
   public File outputFile(String packageName, String className, Source source) {
-    if(source instanceof Codebases) {
-      Codebase cb = ((Codebases) source).codebase();
+    if(source instanceof CodebaseSource) {
+      Codebase cb = ((CodebaseSource) source).codebase();
       return super.outputFile(SysUtil.packagePrefix(cb) + packageName, className, source);
     }
     return super.outputFile(packageName, className, source);

@@ -5,7 +5,7 @@ import polyglot.types.Package;
 import polyglot.types.Package_c;
 
 public class CodebasePackage_c extends Package_c implements CodebasePackage {
-  protected Codebase codebase;
+  protected Codebase codebase = null;
   public CodebasePackage_c(CodebaseTypeSystem ts, Package prefix, String name) {
     super(ts, prefix, name);
   }
@@ -20,4 +20,9 @@ public class CodebasePackage_c extends Package_c implements CodebasePackage {
     return cbp;
   }
 
+  @Override
+  public boolean isCanonical() {    
+    return super.isCanonical() 
+      && (codebase != null || ((CodebaseTypeSystem) ts).isPlatformType(this));
+  }
 }

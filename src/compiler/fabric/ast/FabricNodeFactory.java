@@ -2,6 +2,8 @@ package fabric.ast;
 
 import java.util.List;
 
+import fabil.ast.CodebaseNodeFactory;
+
 import jif.ast.JifNodeFactory;
 import jif.ast.LabelNode;
 import jif.ast.NewLabel;
@@ -11,7 +13,7 @@ import polyglot.util.Position;
 /**
  * NodeFactory for fabric extension.
  */
-public interface FabricNodeFactory extends JifNodeFactory {
+public interface FabricNodeFactory extends JifNodeFactory, CodebaseNodeFactory {
   Atomic Atomic(Position pos, List<Stmt> statements);
   
   AmbNewFabricArray AmbNewFabricArray(Position pos, TypeNode base, Expr location, Object expr, List<Expr> dims, int addDims);

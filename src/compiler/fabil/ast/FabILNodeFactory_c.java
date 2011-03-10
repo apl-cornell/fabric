@@ -6,6 +6,7 @@ import java.util.List;
 import polyglot.ast.*;
 import polyglot.ast.Assign.Operator;
 import polyglot.types.Flags;
+import polyglot.types.Package;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 import fabil.extension.FabILDelFactory;
@@ -31,6 +32,20 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   @Override
   protected FabILDelFactory delFactory() {
     return (FabILDelFactory) super.delFactory();
+  }
+
+  @Override
+  public CodebaseDisamb disamb() {
+    return new CodebaseDisamb_c();
+    
+  }
+  
+  @Override
+  public CodebasePackageNode PackageNode(Position pos, Package p) {
+    CodebasePackageNode n = new CodebasePackageNode_c(pos, p);
+    n = (CodebasePackageNode)n.ext(extFactory().extPackageNode());
+    n = (CodebasePackageNode)n.del(delFactory().delPackageNode());
+    return n;
   }
 
   /*

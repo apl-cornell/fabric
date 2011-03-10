@@ -175,5 +175,4 @@ public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
    */
   void setRuntimeClassResolver(LoadedClassResolver lcr);
 
-  boolean isPlatformPackage(String name);
 }

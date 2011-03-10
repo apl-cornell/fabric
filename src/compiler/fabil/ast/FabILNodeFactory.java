@@ -8,7 +8,7 @@ import polyglot.util.Position;
 /**
  * NodeFactory for FabIL extension.
  */
-public interface FabILNodeFactory extends NodeFactory {
+public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
   ArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type);
 
   Atomic Atomic(Position pos, List<Stmt> statements);

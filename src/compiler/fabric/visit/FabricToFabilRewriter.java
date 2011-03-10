@@ -25,6 +25,7 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import fabil.Codebases;
 import fabil.FabILOptions;
+import fabil.ast.CodebaseSourceFile;
 import fabil.ast.FabILNodeFactory;
 import fabil.frontend.CodebaseSource_c;
 import fabil.types.FabILTypeSystem;
@@ -154,7 +155,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
             
             Source s = new CodebaseSource_c(newName,
                                   newPath,
-                                  new Date(System.currentTimeMillis()), ((Codebases) n).codebase());
+                                  new Date(System.currentTimeMillis()), ((CodebaseSourceFile) n).codebase());
             sf = sf.source(s);
             this.newSourceFiles.add(sf);
         }

@@ -3,12 +3,17 @@ package fabric.ast;
 import java.util.Collections;
 import java.util.List;
 
+import fabil.ast.CodebaseDisamb;
+import fabil.ast.CodebaseDisamb_c;
+import fabil.ast.CodebasePackageNode;
+import fabil.ast.CodebasePackageNode_c;
 import fabric.extension.FabricExt;
 import fabric.extension.LocatedExt_c;
 
 import jif.ast.*;
 import polyglot.ast.*;
 import polyglot.types.Flags;
+import polyglot.types.Package;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 
@@ -31,6 +36,20 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
 
   public FabricNodeFactory_c(FabricExtFactory extFactory, FabricDelFactory delFactory) {
     super(extFactory, delFactory);
+  }
+  
+  @Override
+  public CodebaseDisamb disamb() {
+    return new CodebaseDisamb_c();
+    
+  }
+
+  @Override
+  public CodebasePackageNode PackageNode(Position pos, Package p) {
+    CodebasePackageNode n = new CodebasePackageNode_c(pos, p);
+    n = (CodebasePackageNode)n.ext(extFactory().extPackageNode());
+    n = (CodebasePackageNode)n.del(delFactory().delPackageNode());
+    return n;
   }
 
   //////////////////////////////////////////////////////////////////////////////

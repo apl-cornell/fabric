@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jif.ast.JifClassDecl;
+import fabil.types.CodebaseClassType;
 import fabric.ExtensionInfo;
 import fabric.FabricScheduler;
 import fabric.Topics;
@@ -52,7 +53,7 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
       String className = pct.fullName();
 
       FabricTypeSystem fabts = (FabricTypeSystem) ts;
-      Codebase cb = ((FabricClassType) pct).codebase();
+      Codebase cb = ((CodebaseClassType) pct).codebase();
       FClass fcls = cb.resolveClassName(className);
       fabric.util.Set fclsNames = fcls.dependencies();
       

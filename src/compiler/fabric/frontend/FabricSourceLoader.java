@@ -216,7 +216,6 @@ public class FabricSourceLoader extends SourceLoader {
       }
 
       FClass fcls = SysUtil.toFClass(uri);
-      System.out.println("FCLASS " + fcls + " for " + uri);
       if(fcls == null) 
         return null;
       

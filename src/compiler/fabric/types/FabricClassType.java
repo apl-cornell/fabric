@@ -4,7 +4,7 @@ import fabil.Codebases;
 import jif.types.JifClassType;
 import jif.types.label.Label;
 
-public interface FabricClassType extends JifClassType, Codebases {
+public interface FabricClassType extends JifClassType {
   
   /**
    * Return the label associated with this class' fields, or null if this class

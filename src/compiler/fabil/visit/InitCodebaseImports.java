@@ -39,9 +39,9 @@ public class InitCodebaseImports extends InitImportsVisitor {
       ImportTable it;
       CodebaseTypeSystem cts = (CodebaseTypeSystem) ts;
       if (pn != null) {
-        it = cts.importTable(sf.source(), pn.package_());
+        it = (ImportTable) cts.importTable(sf.source(), pn.package_());
       } else {
-        it = cts.importTable(sf.source(), null);
+        it = (ImportTable) cts.importTable(sf.source(), null);
       }
 
       InitCodebaseImports v = (InitCodebaseImports) copy();

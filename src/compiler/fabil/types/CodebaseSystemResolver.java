@@ -2,7 +2,6 @@ package fabil.types;
 
 import java.net.URI;
 
-import fabil.Codebases;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import polyglot.frontend.ExtensionInfo;
@@ -29,13 +28,13 @@ public class CodebaseSystemResolver extends SystemResolver {
       URI uri = URI.create(name);
       ClassType ct = (ClassType) q;
 
-      if(!q.fullName().equals(name)) {
-        throw new InternalCompilerError("All system-level class types must be fully qualified : " + q.fullName() + " vs " + name);
+      if(!ct.fullName().equals(name) && !ts.getTransformedClassName(ct).equals(name)) {
+        throw new InternalCompilerError("All system-level class types must be fully qualified : " + ct.fullName() + " vs " + name);
       }
 
       String containerName;
       if(!ts.isPlatformType(ct)) {
-        Codebase cb = ((Codebases) ct).codebase();
+        Codebase cb = ((CodebaseClassType) ct).codebase();
 
         String fqname;
         if(uri.isAbsolute()) {
@@ -46,12 +45,10 @@ public class CodebaseSystemResolver extends SystemResolver {
           fqname = SysUtil.codebasePrefix(cb)+name;
           containerName = StringUtil.getPackageComponent(name);
         }
-        System.out.println("Adding " + fqname + " for type " + q);
         super.addNamed(fqname, q);
       }
       else {
         containerName = StringUtil.getPackageComponent(name);
-        System.out.println("Adding " + name + " for platform type " + q);
         super.addNamed(name, q);
       }
       
@@ -60,12 +57,16 @@ public class CodebaseSystemResolver extends SystemResolver {
           Package p = ((ClassType) q).package_();
           cachePackage(p);
           if (p != null && containerName.equals(p.fullName())) {
-            System.out.println("Adding container " + containerName + " for " + q);
-              addNamed(containerName, p);
+            super.addNamed(containerName, p);
           }
       }
       else if (ct.isMember()) {
-        throw new InternalCompilerError("Unexpected member class.");
+        if (name.equals(ct.fullName())) {
+          // Check that the names match; we could be installing
+          // a member class under its class file name, not its Java
+          // source full name.
+          addNamed(containerName, ct.outer());
+        }
       }
       return;
     }
@@ -76,7 +77,6 @@ public class CodebaseSystemResolver extends SystemResolver {
       }      
       super.addNamed(name, q);    
     }
-    System.out.println("Adding " + name + " for non-class type " + q);
   }
   /**
    * Check if a package exists.

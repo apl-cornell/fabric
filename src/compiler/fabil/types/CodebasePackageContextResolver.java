@@ -1,12 +1,10 @@
 package fabil.types;
 
-import fabil.Codebases;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import polyglot.types.ClassType;
 import polyglot.types.Named;
 import polyglot.types.NoClassException;
-import polyglot.types.Package;
 import polyglot.types.PackageContextResolver;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
@@ -15,7 +13,7 @@ import polyglot.util.StringUtil;
 
 public class CodebasePackageContextResolver extends PackageContextResolver {
 
-  public CodebasePackageContextResolver(TypeSystem ts, Package p) {
+  public CodebasePackageContextResolver(TypeSystem ts, CodebasePackage p) {
     super(ts, p);
   }
 
@@ -30,16 +28,15 @@ public class CodebasePackageContextResolver extends PackageContextResolver {
       }
       
       Named n = null;
+      CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
+      Codebase cb = ((CodebasePackage) p).codebase();   
       String fqName;
-      if(accessor instanceof Codebases) {
-        Codebase cb = ((Codebases) accessor).codebase();
+      if(!cbts.isPlatformType(p))
         fqName = SysUtil.codebasePrefix(cb) + p.fullName() + "." + name;
-      }
       else
         fqName = p.fullName() + "." + name;
-      
+
       try {
-          System.out.println("PKG CONTEXT: " + fqName + ": classtype: " + accessor.getClass());
             n = ts.systemResolver().find(fqName);
       }
       catch (NoClassException e) {
@@ -50,7 +47,6 @@ public class CodebasePackageContextResolver extends PackageContextResolver {
       }
 
       if (n == null) {
-        System.out.println("creating package: " + p);
           n = ts.createPackage(p, name);
       }
       

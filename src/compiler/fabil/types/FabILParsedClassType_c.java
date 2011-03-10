@@ -1,13 +1,13 @@
 package fabil.types;
 
-import fabil.Codebases;
+import fabil.frontend.CodebaseSource;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import polyglot.frontend.Source;
 import polyglot.main.Options;
 import polyglot.types.*;
 
-public class FabILParsedClassType_c extends ParsedClassType_c implements Codebases {
+public class FabILParsedClassType_c extends ParsedClassType_c implements CodebaseClassType {
 
   protected transient Codebase codebase;
 
@@ -19,7 +19,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
       Source fromSource) {
     super(ts, init, fromSource);
     if(fromSource != null) {
-      this.codebase = ((Codebases) fromSource).codebase();
+      this.codebase = ((CodebaseSource) fromSource).codebase();
     }
   }
 

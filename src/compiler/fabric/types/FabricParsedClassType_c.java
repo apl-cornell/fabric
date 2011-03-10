@@ -3,7 +3,7 @@ package fabric.types;
 import java.util.Iterator;
 import java.util.List;
 
-import fabil.Codebases;
+import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
 
 import jif.types.JifParsedPolyType_c;
@@ -23,7 +23,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   public FabricParsedClassType_c(FabricTypeSystem ts, LazyClassInitializer init,
       Source fromSource) {
     super(ts, init, fromSource);
-    this.codebase = ((Codebases) fromSource).codebase();
+    this.codebase = ((CodebaseSource) fromSource).codebase();
   }
 
   /*

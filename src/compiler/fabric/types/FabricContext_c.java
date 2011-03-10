@@ -1,5 +1,6 @@
 package fabric.types;
 
+import fabil.types.CodebaseContext;
 import fabric.lang.Codebase;
 import polyglot.types.Context;
 import polyglot.types.Context_c;
@@ -35,7 +36,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   /**
    * Push a source file scope.
    */
-  public Context pushCodebase(Codebase codebase) {
+  public CodebaseContext pushCodebase(Codebase codebase) {
       FabricContext_c v = (FabricContext_c) push();
       v.kind = OUTER;
       v.codebase = codebase;

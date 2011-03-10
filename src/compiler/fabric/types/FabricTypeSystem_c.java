@@ -36,19 +36,22 @@ import polyglot.types.ImportTable;
 import polyglot.types.LazyClassInitializer;
 import polyglot.types.Named;
 import polyglot.types.Package;
-import polyglot.types.ParsedClassType;
 import polyglot.types.Resolver;
 import polyglot.types.SemanticException;
-import polyglot.types.SystemResolver;
 import polyglot.types.TopLevelResolver;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import fabil.types.CodebaseClassContextResolver;
+import fabil.types.CodebaseClassType;
+import fabil.types.CodebaseImportTable;
+import fabil.types.CodebasePackage;
 import fabil.types.CodebasePackageContextResolver;
+import fabil.types.CodebasePackage_c;
 import fabil.types.CodebaseSystemResolver;
 import fabil.types.FabILImportTable;
+import fabric.FabricOptions;
 import fabric.translate.DynamicPrincipalToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
 
@@ -77,7 +80,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   @Override
   public CodebasePackageContextResolver createPackageContextResolver(Package p) {
     assert_(p);
-    return new CodebasePackageContextResolver(this, p);
+    return new CodebasePackageContextResolver(this, (CodebasePackage) p);
+  }
+
+  @Override
+  public CodebasePackage createPackage(Package prefix, String name) {
+    return new CodebasePackage_c(this, prefix, name);
   }
 
   public ClassType FObject() {
@@ -135,12 +143,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     throw new UnsupportedOperationException("Import table must be associated with a source");
   }
 
-  public ImportTable importTable(Source source, Package pkg) {
+  public CodebaseImportTable importTable(Source source, Package pkg) {
     return new FabILImportTable(this, pkg, source);
   }
 
   @Override
-  public ParsedClassType createClassType(LazyClassInitializer init,
+  public CodebaseClassType createClassType(LazyClassInitializer init,
       Source fromSource) {
     return new FabricParsedClassType_c(this, init, fromSource);
   }
@@ -425,9 +433,18 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   }
   
   public boolean isPlatformType(Named name) {
-    String typeName = name.fullName();
+    return isPlatformType(name.fullName());
+  }
+  
+  public boolean isPlatformType(String fullName) {
+    FabricOptions opt = (FabricOptions) extInfo.getOptions();
+    if(!opt.runWorker()) {
+      return true;
+    }
+    String typeName = fullName;
     return typeName.startsWith("java")
-      || typeName.startsWith("fabric");
+    || typeName.startsWith("fabric")
+    || typeName.startsWith("jif");
   }
 
 }

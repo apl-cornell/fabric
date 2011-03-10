@@ -257,12 +257,6 @@ public final class SysUtil {
     else return "";
   }
 
-  public static String unEscapeHost(String cbpart) {
-    cbpart = cbpart.replaceFirst("$([0-9])", "\1");
-    cbpart = cbpart.replace("$_", "-");
-    return cbpart;
-  }
-
   public static String oid(fabric.lang.Object o) {
     return "fab://" + o.$getStore().name() + "/" + o.$getOnum();
   }
@@ -337,11 +331,17 @@ public final class SysUtil {
   }
   
   public static String escapeHost(String name) {
-    name = name.replaceFirst("(^[0-9])", "$\1");
+    name = name.replaceFirst("^([0-9])", "\\$$1");
     name = name.replace("-", "$_");
     return name;
   }
   
+  public static String unEscapeHost(String cbpart) {
+    cbpart = cbpart.replaceAll("\\$([0-9])", "$1");
+    cbpart = cbpart.replaceAll("\\$_", "-");
+    return cbpart;
+  }
+
   public static FClass toFClass(URI fabref) {
     Store store = Worker.getWorker().getStore(fabref.getHost());
     String path = fabref.getPath().substring(1);

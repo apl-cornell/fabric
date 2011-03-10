@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import fabil.FabILOptions;
+
 import polyglot.ast.TypeNode;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
@@ -40,9 +42,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public CodebasePackageContextResolver createPackageContextResolver(Package p) {
     assert_(p);
-    return new CodebasePackageContextResolver(this, p);
+    return new CodebasePackageContextResolver(this, (CodebasePackage)p);
   }
 
+  @Override
   public CodebasePackage createPackage(Package prefix, String name) {
     return new CodebasePackage_c(this, prefix, name);
   }
@@ -123,7 +126,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
    * , polyglot.frontend.Source)
    */
   @Override
-  public ParsedClassType createClassType(LazyClassInitializer init,
+  public CodebaseClassType createClassType(LazyClassInitializer init,
       Source fromSource) {
     return new FabILParsedClassType_c(this, init, fromSource);
   }
@@ -243,7 +246,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     throw new UnsupportedOperationException("Import table must be associated with a source");
   }
 
-  public ImportTable importTable(Source source, Package pkg) {
+  public CodebaseImportTable importTable(Source source, Package pkg) {
     return new FabILImportTable(this, pkg, source);
   }
 
@@ -468,14 +471,18 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return super.translateClass(c, t);
   }
 
-  public boolean isPlatformPackage(java.lang.String name) {
-    return "java".equals(name) || "fabric".equals(name);
-  }
-
   public boolean isPlatformType(Named name) {
-    String typeName = name.fullName();
-    return typeName.startsWith("java")
-      || typeName.startsWith("fabric");
+    return isPlatformType(name.fullName());
   }
-
+    
+  public boolean isPlatformType(String fullName) {
+    FabILOptions opt = (FabILOptions) extInfo.getOptions();
+    if(!opt.runWorker()) {
+      return true;
+    }
+    String typeName = fullName;
+    return typeName.startsWith("java")
+      || typeName.startsWith("fabric")
+      || typeName.startsWith("jif");
+  }
 }
