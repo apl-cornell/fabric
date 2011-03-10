@@ -1,0 +1,8 @@
+public class Offer [covariant label L] {
+    public Offer (int {L} price, int{L } quality) {
+	this.price = price;
+	this.quality = quality; 
+    }
+    public final int {L} price; // just price
+    public final int {L} quality; // 0 = economy, 1 = business, 2 = first
+}

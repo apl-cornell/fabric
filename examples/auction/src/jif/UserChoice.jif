@@ -1,0 +1,12 @@
+public class UserChoice[label L] {
+    public int {L} choice (Offer [L]{L} offer1, Offer[L]{L} offer2)  {  // return -1 if offer1 is as good or better than offer2
+
+	if (offer1 == null  && offer2 == null) return 0;
+	if (offer1 == null) return 1;
+	if (offer2 == null) return -1; 
+
+	if (offer1.price < offer2.price) return -1;
+	if (offer2.price > offer2.price) return 1;
+	return 0;
+    }
+}

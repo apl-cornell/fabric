@@ -1,0 +1,20 @@
+public class User [principal P, label L] {
+    // User provides UserChoice 
+    UserChoice [ L ] {L} choice; 
+
+    public User () {
+	this.choice =  new UserChoice ();	
+    }
+
+    public User (UserChoice [L] {L} choice) 
+	where {P -> ; P <-} <= L 
+	{
+	this.choice = choice;
+    }
+
+    public UserChoice[L] {L} getChoice() 
+ 	where {P -> ; P <-} <= L 
+    {
+	return this.choice;
+    }
+}

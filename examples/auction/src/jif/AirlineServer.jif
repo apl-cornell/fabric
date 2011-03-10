@@ -1,0 +1,25 @@
+public class AirlineServer [principal TheAirline, principal Airlines, label L]  where Airlines actsfor TheAirline
+{
+    int {TheAirline -> ; TheAirline <- } cost;
+    int {TheAirline -> ; TheAirline <-} seats; 
+    int {TheAirline -> ; TheAirline <-} lowestprice;
+
+    public AirlineServer (int {TheAirline ->; TheAirline <- } cost, int {TheAirline -> ; TheAirline <-  } seats) {
+	this.cost = cost;
+	this.seats = seats; 
+	this.lowestprice = 0;
+	try { 
+	    this.lowestprice = cost / seats;
+	} catch (ArithmeticException ignored) {
+	}
+    }
+    
+    public int {TheAirline -> ; TheAirline <- } getLowestPrice() {
+	return this.lowestprice;
+    }
+
+    public AirlineAgent [TheAirline, Airlines,  L ]  getAgent {TheAirline -> ; TheAirline <- } ()  // not sure we need this begin-label here 
+    {
+	return new AirlineAgent [TheAirline, Airlines, L] (this);
+    }
+}

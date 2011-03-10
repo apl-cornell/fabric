@@ -1,0 +1,22 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+class Main  {
+    public static final void main{⊤ <- }  (principal{} p, String args[])  throws SecurityException, IllegalArgumentException  
+    where  caller(p)
+    {
+	PrintStream[{}] out = null;
+          try {
+              Runtime[p] runtime = Runtime[p].getRuntime();
+              out = runtime==null?null:runtime.stdout(new label {});
+          }
+          catch (SecurityException e) {
+              // just let out be null.
+          }
+
+          PrintStream[{}] out1 = endorse(out, {p->*} to {p->*; p<-*});
+          PrintStream[{}] out2 = declassify(out1,  {} );
+	  
+	  new AirlineExample  ().go(out2); // Jif automatically infers principals? 
+    }
+}
