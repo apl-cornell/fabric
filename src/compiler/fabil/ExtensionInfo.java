@@ -21,6 +21,7 @@ import fabil.ast.FabILNodeFactory;
 import fabil.ast.FabILNodeFactory_c;
 import fabil.frontend.CodebaseTargetFactory;
 import fabil.frontend.FabILScheduler;
+import fabil.frontend.FabILSourceClassResolver;
 import fabil.frontend.LocalSource;
 import fabil.frontend.RemoteSource;
 import fabil.parse.Grm;
@@ -138,7 +139,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
    */
   @Override
   protected LoadedClassResolver makeLoadedClassResolver() {
-    return new SourceClassResolver(compiler,
+    return new FabILSourceClassResolver(compiler,
                                    this,
                                    getFabILOptions().constructFabILClasspath(),
                                    compiler.loader(),

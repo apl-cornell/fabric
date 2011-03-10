@@ -2,6 +2,7 @@ package fabil.types;
 
 import fabil.Codebases;
 import fabric.common.SysUtil;
+import fabric.lang.Codebase;
 import polyglot.frontend.Source;
 import polyglot.types.*;
 import polyglot.types.Package;
@@ -31,11 +32,18 @@ public class FabILImportTable extends ImportTable {
     // HACK Ignore java.lang.Object so that fabric.lang.Object takes priority.
     if ("Object".equals(name) && "java.lang".equals(pkgName)) return null;
     
-    Named n = super.findInPkg(name, codebasePrefix + pkgName);
-    if(n != null)
-      return n;
-    else
-      return super.findInPkg(name, pkgName);
+    return super.findInPkg(name, codebasePrefix + pkgName);
   }
 
+  @Override
+  protected boolean isVisibleFrom(Named n, String pkgName) {
+    //Codebases do not affect package visibility.
+    if (n instanceof Codebases) {
+      Codebase cb = ((Codebases) n).codebase();
+      String cbPart = SysUtil.codebasePrefix(cb);
+      return super.isVisibleFrom(n, pkgName.substring(cbPart.length()));
+    } else {
+      return super.isVisibleFrom(n, pkgName);
+    }
+  }
 }

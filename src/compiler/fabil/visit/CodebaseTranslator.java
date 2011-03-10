@@ -3,6 +3,7 @@ package fabil.visit;
 import java.util.Iterator;
 
 import fabil.Codebases;
+import fabil.frontend.CodebaseSource;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 
@@ -25,7 +26,7 @@ public class CodebaseTranslator extends Translator {
   @Override
   protected void writeHeader(SourceFile sfn, CodeWriter w) {
     //The translator hasn't entered the scope of the file yet.
-    Codebase cb = ((Codebases) sfn.source()).codebase();
+    Codebase cb = ((CodebaseSource) sfn.source()).codebase();
     if (sfn.package_() != null) {
       w.write("package ");
       w.write(SysUtil.packagePrefix(cb));

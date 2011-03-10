@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import polyglot.ast.TypeNode;
+import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
 import polyglot.types.*;
 import polyglot.types.Package;
@@ -16,6 +17,36 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   private CachingResolver runtimeClassResolver;
 
+  @Override
+  public void initialize(TopLevelResolver loadedResolver, ExtensionInfo extInfo)
+      throws SemanticException {
+    super.initialize(loadedResolver, extInfo);
+    // replace the system resolver with one that handles codebases.
+    // XXX: it would be better if polyglot used a factory method to create the
+    // system resolver
+    this.systemResolver = createSystemResolver(loadedResolver, extInfo);
+  }
+
+  public CodebaseSystemResolver createSystemResolver(TopLevelResolver loadedResolver, ExtensionInfo extInfo) {
+    return new CodebaseSystemResolver(loadedResolver, extInfo);
+  }
+  
+  @Override
+  public CodebaseClassContextResolver createClassContextResolver(ClassType type) {
+    assert_(type);
+    return new CodebaseClassContextResolver(this, type);
+  }
+
+  @Override
+  public CodebasePackageContextResolver createPackageContextResolver(Package p) {
+    assert_(p);
+    return new CodebasePackageContextResolver(this, p);
+  }
+
+  public CodebasePackage createPackage(Package prefix, String name) {
+    return new CodebasePackage_c(this, prefix, name);
+  }
+  
   public ClassType TransactionManager() {
     return load("fabric.worker.transaction.TransactionManager");
   }
@@ -439,6 +470,12 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   public boolean isPlatformPackage(java.lang.String name) {
     return "java".equals(name) || "fabric".equals(name);
+  }
+
+  public boolean isPlatformType(Named name) {
+    String typeName = name.fullName();
+    return typeName.startsWith("java")
+      || typeName.startsWith("fabric");
   }
 
 }

@@ -58,5 +58,4 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
 
   boolean isPlatformType(Named dep);
 
-  void flushSystemResolver();
 }

@@ -1,6 +1,5 @@
 package fabric.types;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -46,6 +45,9 @@ import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
+import fabil.types.CodebaseClassContextResolver;
+import fabil.types.CodebasePackageContextResolver;
+import fabil.types.CodebaseSystemResolver;
 import fabil.types.FabILImportTable;
 import fabric.translate.DynamicPrincipalToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
@@ -56,7 +58,26 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   public void initialize(TopLevelResolver loadedResolver, ExtensionInfo extInfo)
       throws SemanticException {
     super.initialize(loadedResolver, extInfo);
+    // replace the system resolver with one that handles codebases.
+    // XXX: it would be better if polyglot used a factory method to create the
+    // system resolver
+    this.systemResolver = createSystemResolver(loadedResolver, extInfo);
+  }
 
+  public CodebaseSystemResolver createSystemResolver(TopLevelResolver loadedResolver, ExtensionInfo extInfo) {
+    return new CodebaseSystemResolver(loadedResolver, extInfo);
+  }
+  
+  @Override
+  public CodebaseClassContextResolver createClassContextResolver(ClassType type) {
+    assert_(type);
+    return new CodebaseClassContextResolver(this, type);
+  }
+
+  @Override
+  public CodebasePackageContextResolver createPackageContextResolver(Package p) {
+    assert_(p);
+    return new CodebasePackageContextResolver(this, p);
   }
 
   public ClassType FObject() {
@@ -407,13 +428,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     String typeName = name.fullName();
     return typeName.startsWith("java")
       || typeName.startsWith("fabric");
-  }
-
-  /** 
-   * Flush the resolver cache.
-   */
-  public void flushSystemResolver() {
-    this.systemResolver = new SystemResolver(loadedResolver, extInfo);    
   }
 
 }

@@ -15,6 +15,7 @@ import polyglot.frontend.FileSource;
 import polyglot.frontend.SourceLoader;
 import polyglot.main.Report;
 import polyglot.util.InternalCompilerError;
+import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.worker.Store;
@@ -205,7 +206,6 @@ public class FabricSourceLoader extends SourceLoader {
   @SuppressWarnings("unchecked")
   public FileSource fileSource(URI uri, boolean userSpecified) throws IOException {
     if ("fab".equals(uri.getScheme())) {
-      System.out.println("URI: " + uri);
       FileSource s = (FileSource) loadedSources.get(uri.toString());
 
       if (s != null) {
@@ -216,6 +216,7 @@ public class FabricSourceLoader extends SourceLoader {
       }
 
       FClass fcls = SysUtil.toFClass(uri);
+      System.out.println("FCLASS " + fcls + " for " + uri);
       if(fcls == null) 
         return null;
       

@@ -3,6 +3,10 @@ package fabric.frontend;
 import java.io.IOException;
 import java.net.URI;
 
+import fabil.frontend.CodebaseSource;
+import fabric.common.SysUtil;
+import fabric.lang.Codebase;
+
 import polyglot.frontend.Compiler;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.FileSource;
@@ -150,14 +154,14 @@ public class FabricSourceClassResolver extends SourceClassResolver {
   @Override
   protected Named getTypeFromSource(FileSource source, String name)
       throws SemanticException {
-    // TODO Auto-generated method stub
-    return super.getTypeFromSource(source, name);
+    Codebase cb = ((CodebaseSource) source).codebase();
+    return super.getTypeFromSource(source, SysUtil.codebasePrefix(cb)+name);
   }
 
   @Override
   protected ClassType getEncodedType(ClassFile clazz, String name)
       throws SemanticException {
-    // TODO Auto-generated method stub
+    // TODO Support loading from classfiles
     return super.getEncodedType(clazz, name);
   }
   
