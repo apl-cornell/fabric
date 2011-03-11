@@ -15,7 +15,6 @@ import polyglot.frontend.FileSource;
 import polyglot.frontend.SourceLoader;
 import polyglot.main.Report;
 import polyglot.util.InternalCompilerError;
-import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.worker.Store;
@@ -99,8 +98,6 @@ public class FabricSourceLoader extends SourceLoader {
       FileSource s = (FileSource) loadedSources.get(srcURI.toString());
       if (s != null) return s;
 
-//      IntegPolicy pol = fcls.get$label().integPolicy();
-//      Principal provider = transformIntegToPrincipal(pol);
       fabric.ExtensionInfo ext = (fabric.ExtensionInfo) sourceExt;
       try {
         s = ext.createRemoteSource(fcls, false);
@@ -179,7 +176,6 @@ public class FabricSourceLoader extends SourceLoader {
 
         try {
           if (Report.should_report(Report.loader, 2))
-            Report.report(2, "Loading " + className + " from " + sourceFile);
           s = sourceExt.createFileSource(sourceFile, false);
           loadedSources.put(fileKey(sourceFile), s);
           return s;

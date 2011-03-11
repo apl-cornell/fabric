@@ -23,5 +23,4 @@ public class CodebaseSource_c extends Source implements CodebaseSource {
   public Codebase codebase() {
     return codebase;
   }
-
 }

@@ -29,13 +29,19 @@ public class CodebasePackageContextResolver extends PackageContextResolver {
       
       Named n = null;
       CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
-      Codebase cb = ((CodebasePackage) p).codebase();   
       String fqName;
-      if(!cbts.isPlatformType(p))
-        fqName = SysUtil.codebasePrefix(cb) + p.fullName() + "." + name;
+      if(accessor instanceof CodebaseClassType) {
+        Codebase cb = ((CodebaseClassType) accessor).codebase();   
+        fqName = SysUtil.codebasePrefix(cb) + accessor.fullName() + "." + name;        
+      } else if(accessor == null) {
+          if(!cbts.isPlatformType(p)) {
+            Codebase cb = ((CodebasePackage) p).codebase();   
+            fqName = SysUtil.codebasePrefix(cb) + p.fullName() + "." + name;
+          } else
+            fqName = p.fullName() + "." + name;
+      }
       else
-        fqName = p.fullName() + "." + name;
-
+        throw new InternalCompilerError("Expected CodebaseClassType, but got " + accessor);
       try {
             n = ts.systemResolver().find(fqName);
       }

@@ -1,13 +1,9 @@
 package fabil.visit;
 
-import java.util.Iterator;
-
-import fabil.Codebases;
 import fabil.frontend.CodebaseSource;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 
-import polyglot.ast.Import;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.SourceFile;
 import polyglot.frontend.Job;
