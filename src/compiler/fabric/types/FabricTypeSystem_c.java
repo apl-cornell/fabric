@@ -43,6 +43,7 @@ import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
+import fabil.frontend.CodebaseSource;
 import fabil.types.CodebaseClassContextResolver;
 import fabil.types.CodebaseClassType;
 import fabil.types.CodebaseImportTable;
@@ -143,7 +144,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     throw new UnsupportedOperationException("Import table must be associated with a source");
   }
 
-  public CodebaseImportTable importTable(Source source, Package pkg) {
+  public CodebaseImportTable importTable(CodebaseSource source, Package pkg) {
     return new FabILImportTable(this, pkg, source);
   }
 

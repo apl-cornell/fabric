@@ -1,5 +1,6 @@
 package fabil.types;
 
+import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
 import polyglot.types.Context;
 import polyglot.types.Context_c;
@@ -46,6 +47,15 @@ public class FabILContext_c extends Context_c implements FabILContext {
       v.inCode = false;
       v.staticContext = false;
       return v;
+  }
+  
+  /**
+   * Return the current source
+   */
+  public CodebaseSource currentSource() {
+    if(it != null) 
+      return ((FabILImportTable) it).source();
+    return null;
   }
   /**
    * Finds the definition of a particular type.

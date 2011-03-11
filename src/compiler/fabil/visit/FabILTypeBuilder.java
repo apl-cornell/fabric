@@ -2,6 +2,7 @@ package fabil.visit;
 
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.Job;
+import polyglot.main.Report;
 import polyglot.types.Flags;
 import polyglot.types.Named;
 import polyglot.types.ParsedClassType;
@@ -9,8 +10,12 @@ import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 import polyglot.visit.TypeBuilder;
+import fabil.frontend.CodebaseSource;
+import fabric.visit.CodebaseTypeBuilder;
 
-public class FabILTypeBuilder extends TypeBuilder {
+public class FabILTypeBuilder extends TypeBuilder implements CodebaseTypeBuilder {
+  protected CodebaseSource source;
+
   public FabILTypeBuilder(Job job, TypeSystem ts, NodeFactory nf) {
     super(job, ts, nf);
   }
@@ -44,5 +49,18 @@ public class FabILTypeBuilder extends TypeBuilder {
     }
     
     return super.newClass(pos, flags, name);
+  }
+
+  public TypeBuilder pushSource(CodebaseSource source) {
+    if (Report.should_report(Report.visit, 4))
+      Report.report(4, "TB pushing source " + source + ": " + context());
+    FabILTypeBuilder tb = (FabILTypeBuilder) push();
+    tb.inCode = false;
+    tb.source = source;
+    return tb;
+  }
+
+  public CodebaseSource currentSource() {
+    return source;
   }
 }

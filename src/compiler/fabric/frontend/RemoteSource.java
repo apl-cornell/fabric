@@ -8,18 +8,13 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
-//TODO: this class should actually extend UTF8FileSource
-// so that the provider label is support
-import jif.parse.UTF8FileSource;
-
-import fabil.Codebases;
+import polyglot.frontend.FileSource;
+import polyglot.util.StringUtil;
 import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
-import polyglot.frontend.FileSource;
-import polyglot.util.StringUtil;
-
+//XXX: this class should actually extend jif.parse.UTF8FileSource
 public class RemoteSource extends FileSource implements CodebaseSource {
   protected final FClass fcls;
   protected Codebase codebase;

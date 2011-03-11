@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import fabil.FabILOptions;
+import fabil.frontend.CodebaseSource;
 
 import polyglot.ast.TypeNode;
 import polyglot.frontend.ExtensionInfo;
@@ -246,7 +247,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     throw new UnsupportedOperationException("Import table must be associated with a source");
   }
 
-  public CodebaseImportTable importTable(Source source, Package pkg) {
+  public CodebaseImportTable importTable(CodebaseSource source, Package pkg) {
     return new FabILImportTable(this, pkg, source);
   }
 

@@ -2,14 +2,19 @@ package fabil.ast;
 
 import java.util.List;
 
+import fabil.frontend.CodebaseSource;
 import fabil.frontend.RemoteSource;
+import fabil.types.CodebaseContext;
 import fabil.types.FabILContext;
 import fabric.lang.Codebase;
+import fabric.visit.CodebaseTypeBuilder;
 
 import polyglot.ast.PackageNode;
 import polyglot.ast.SourceFile_c;
 import polyglot.types.Context;
+import polyglot.types.SemanticException;
 import polyglot.util.Position;
+import polyglot.visit.TypeBuilder;
 
 
 /**
@@ -51,4 +56,9 @@ public class FabILSourceFile_c extends SourceFile_c implements FabILSourceFile {
     return source instanceof RemoteSource;
   }  
 
+  @Override
+  public TypeBuilder buildTypesEnter(TypeBuilder tb) throws SemanticException {
+     tb = ((CodebaseTypeBuilder) tb).pushSource((CodebaseSource) source);
+     return (TypeBuilder) super.buildTypesEnter(tb);
+  }
 }

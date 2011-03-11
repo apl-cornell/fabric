@@ -5,17 +5,16 @@ import java.net.URI;
 import fabil.frontend.CodebaseSource;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
-import polyglot.frontend.Source;
 import polyglot.types.*;
 import polyglot.types.Package;
 
 public class FabILImportTable extends ImportTable implements CodebaseImportTable {
   protected String codebasePrefix;
-  protected Source source;
-  public FabILImportTable(TypeSystem ts, Package pkg, Source source) {
+  protected CodebaseSource source;
+  public FabILImportTable(TypeSystem ts, Package pkg, CodebaseSource source) {
     super(ts, pkg, source.name());
     this.source = source;
-    this.codebasePrefix = SysUtil.codebasePrefix(((CodebaseSource) source).codebase());
+    this.codebasePrefix = SysUtil.codebasePrefix(source.codebase());
   }
 
   public FabILImportTable(TypeSystem ts, Package pkg) {
@@ -36,10 +35,11 @@ public class FabILImportTable extends ImportTable implements CodebaseImportTable
 
     CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
     //Platform types and local source may use unqualified names for resolution
-    if(cbts.isPlatformType(pkgName) || !((CodebaseSource) source).isRemote())
+    if(cbts.isPlatformType(pkgName) || !source.isRemote())
       return super.findInPkg(name, pkgName);
-    else
+    else {
       return super.findInPkg(name, codebasePrefix + pkgName);
+    }
   }
 
   @Override
@@ -55,5 +55,9 @@ public class FabILImportTable extends ImportTable implements CodebaseImportTable
       boolean b = super.isVisibleFrom(n, pkgName);
       return b;
     }
+  }
+  
+  public CodebaseSource source() {
+    return source;
   }
 }

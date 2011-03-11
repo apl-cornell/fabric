@@ -8,22 +8,22 @@ import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
 
-public class CodebasePackageNode_c extends PackageNode_c implements CodebasePackageNode {
+public class CodebasePackageNode_c extends PackageNode_c implements
+    CodebasePackageNode {
 
   public CodebasePackageNode_c(Position pos, Package p) {
     super(pos, p);
   }
-  
+
+  @SuppressWarnings("unused")
   @Override
-  public CodebasePackageNode disambiguate(AmbiguityRemover ar) throws SemanticException {
+  public CodebasePackageNode disambiguate(AmbiguityRemover ar)
+      throws SemanticException {
     CodebasePackage cbp = (CodebasePackage) package_;
-    //set the codebase of this package
-    if(cbp == null || !cbp.isCanonical()) {
-      CodebaseContext ctx = (CodebaseContext) ar.context();
-      System.out.println("Setting codebase of " + this + " to " + ctx.currentCodebase() + " in " + ctx.currentClassScope() + ":");
+    CodebaseContext ctx = (CodebaseContext) ar.context();
+    // Only qualify packages in remote source by the codebase
+    if (ctx.currentSource().isRemote() && (cbp == null || !cbp.isCanonical())) {
       return (CodebasePackageNode) package_(cbp.codebase(ctx.currentCodebase()));
-    }
-    else
-      return this;
+    } else return this;
   }
 }

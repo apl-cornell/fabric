@@ -31,17 +31,17 @@ public class InitCodebaseImports extends InitImportsVisitor {
   @SuppressWarnings("unused")
   @Override
   public NodeVisitor enterCall(Node n) throws SemanticException {
-    if (n instanceof SourceFile) {
-      SourceFile sf = (SourceFile) n;
+    if (n instanceof CodebaseSourceFile) {
+      CodebaseSourceFile sf = (CodebaseSourceFile) n;
 
       PackageNode pn = sf.package_();
      
       ImportTable it;
       CodebaseTypeSystem cts = (CodebaseTypeSystem) ts;
       if (pn != null) {
-        it = (ImportTable) cts.importTable(sf.source(), pn.package_());
+        it = (ImportTable) cts.importTable((CodebaseSource) sf.source(), pn.package_());
       } else {
-        it = (ImportTable) cts.importTable(sf.source(), null);
+        it = (ImportTable) cts.importTable((CodebaseSource) sf.source(), null);
       }
 
       InitCodebaseImports v = (InitCodebaseImports) copy();

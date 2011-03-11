@@ -1,5 +1,6 @@
 package fabil.types;
 
+import fabil.frontend.CodebaseSource;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
 import polyglot.types.ClassType;
@@ -11,7 +12,7 @@ import polyglot.types.TypeSystem;
 
 public interface CodebaseTypeSystem extends TypeSystem {
 
-  CodebaseImportTable importTable(Source source, Package pkg);
+  CodebaseImportTable importTable(CodebaseSource source, Package pkg);
 
   boolean isPlatformType(Named name);
 
