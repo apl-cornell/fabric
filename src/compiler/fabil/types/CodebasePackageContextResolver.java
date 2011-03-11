@@ -43,7 +43,6 @@ public class CodebasePackageContextResolver extends PackageContextResolver {
     fqName = prefix + p.fullName() + "." + name;
 
     try {
-      System.out.println("FQNAME " +fqName);
       n = ts.systemResolver().find(fqName);
     } catch (NoClassException e) {
       // Rethrow if some _other_ class or package was not found.

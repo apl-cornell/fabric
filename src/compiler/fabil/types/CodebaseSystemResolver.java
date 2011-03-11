@@ -42,6 +42,9 @@ public class CodebaseSystemResolver extends SystemResolver {
       if (ts.isPlatformType(ct) || !cs.isRemote()) {
         containerName = StringUtil.getPackageComponent(className);
         super.addNamed(name, q);
+        if(!ts.isPlatformType(ct)) {
+          super.addNamed(SysUtil.codebasePrefix(ct.codebase()) + name,ct);
+        }
       } else {
         Codebase cb = ct.codebase();
         String fqname;
