@@ -76,8 +76,8 @@ public class CallJifExt_c extends JifCallExt {
         targetLabel = Xs.NV();
       }
       
-      List<Type> formalTypes = (List<Type>)mi.formalTypes();
-      List<Label> formalLabels = new ArrayList<Label>(formalTypes.size());
+      List<Type> formalTypes = mi.formalTypes();
+      List<ArgLabel> formalLabels = new ArrayList<ArgLabel>(formalTypes.size());
       for (Type ft : formalTypes) {
         ArgLabel fl = (ArgLabel)ts.labelOfType(ft);
         formalLabels.add(fl);

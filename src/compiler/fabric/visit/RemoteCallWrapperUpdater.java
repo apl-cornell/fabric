@@ -31,6 +31,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
     this.nf = nf;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     if (n instanceof ClassDecl) {
@@ -149,10 +150,10 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         //            args.add(l);
         //          }
         
-        for (Assertion as : (List<Assertion>)mi.constraints()) {
+        for (Assertion as : mi.constraints()) {
           if (as instanceof CallerConstraint) {
             CallerConstraint cc = (CallerConstraint)as;
-            for (Principal p : (List<Principal>)cc.principals()) {
+            for (Principal p : cc.principals()) {
               Expr check = 
                 nf.Binary(as.position(), 
                           nf.CanonicalPrincipalNode(workerPrincipal.position(), workerPrincipal), 
@@ -162,12 +163,27 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
             }
           }
           else if (as instanceof ActsForConstraint) {
-            ActsForConstraint afc = (ActsForConstraint)as;
-            Expr check = nf.Binary(afc.position(), 
-                                   nf.CanonicalPrincipalNode(afc.actor().position(), afc.actor()), 
-                                   afc.isEquiv() ? JifBinaryDel.EQUIV : JifBinaryDel.ACTSFOR, 
-                                   nf.CanonicalPrincipalNode(afc.granter().position(), afc.granter()));
-            labelComp = nf.Binary(Position.compilerGenerated(), labelComp, Binary.COND_AND, check);
+            ActsForConstraint<ActsForParam, ActsForParam> afc =
+                (ActsForConstraint<ActsForParam, ActsForParam>) as;
+            ActsForParam actor = afc.actor();
+            ActsForParam granter = afc.granter();
+            if (actor instanceof Principal && granter instanceof Principal) {
+              Expr check = nf.Binary(afc.position(), 
+                  nf.CanonicalPrincipalNode(actor.position(), (Principal) actor), 
+                  afc.isEquiv() ? JifBinaryDel.EQUIV : JifBinaryDel.ACTSFOR, 
+                  nf.CanonicalPrincipalNode(granter.position(), (Principal) granter));
+              labelComp = nf.Binary(Position.compilerGenerated(), labelComp, Binary.COND_AND, check);
+            } else if (actor instanceof Label && granter instanceof Principal) {
+              Expr check = nf.Binary(afc.position(), 
+                  nf.LabelExpr(actor.position(), (Label) actor), 
+                  afc.isEquiv() ? JifBinaryDel.EQUIV : JifBinaryDel.ACTSFOR, 
+                  nf.CanonicalPrincipalNode(granter.position(), (Principal) granter));
+              labelComp = nf.Binary(Position.compilerGenerated(), labelComp, Binary.COND_AND, check);
+            } else {
+              throw new InternalCompilerError(afc.position(),
+                  "Unexpected ActsForConstraint (" + actor.getClass()
+                      + " actsfor " + granter.getClass() + ").");
+            }
           }
           else if (as instanceof LabelLeAssertion) {
             LabelLeAssertion lla = (LabelLeAssertion)as;

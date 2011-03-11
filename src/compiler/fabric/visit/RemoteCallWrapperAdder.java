@@ -84,7 +84,7 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 //              pcfType,
 //              nf.Id(Position.compilerGenerated(), "pcLabel"));
 
-          List<PolicyNode> components = new ArrayList<PolicyNode>(2);
+          List<LabelComponentNode> components = new ArrayList<LabelComponentNode>(2);
 //          PolicyNode reader = 
 //            nf.ReaderPolicyNode(Position.compilerGenerated(), 
 //                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
