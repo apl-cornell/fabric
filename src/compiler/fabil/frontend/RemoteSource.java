@@ -19,6 +19,7 @@ public class RemoteSource extends FileSource implements CodebaseSource {
   protected final FClass fcls;
   protected Codebase codebase;
   protected Reader reader = null;
+
   public RemoteSource(FClass fcls, boolean userSpecified) throws IOException {
     this(fcls.getCodebase(), StringUtil.getShortNameComponent(fcls.getName()) + ".fab",
         "fab://" + fcls.$getStore().name() + "/" + fcls.$getOnum(), fcls, new Date(System.currentTimeMillis()), userSpecified);
@@ -74,5 +75,9 @@ public class RemoteSource extends FileSource implements CodebaseSource {
 
   public FClass fclass() {
     return fcls;
+  }
+
+  public boolean isRemote() {
+    return true;
   }
 }

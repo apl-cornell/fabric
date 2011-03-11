@@ -22,5 +22,8 @@ public class LocalSource extends UTF8FileSource implements CodebaseSource {
   public Codebase codebase() {
     return codebase;
   }
+  public boolean isRemote() {
+    return false;
+  }
 
 }

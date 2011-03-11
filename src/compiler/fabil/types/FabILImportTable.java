@@ -1,5 +1,7 @@
 package fabil.types;
 
+import java.net.URI;
+
 import fabil.frontend.CodebaseSource;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
@@ -33,7 +35,8 @@ public class FabILImportTable extends ImportTable implements CodebaseImportTable
     if ("Object".equals(name) && "java.lang".equals(pkgName)) return null;
 
     CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
-    if(cbts.isPlatformType(pkgName))
+    //Platform types and local source may use unqualified names for resolution
+    if(cbts.isPlatformType(pkgName) || !((CodebaseSource) source).isRemote())
       return super.findInPkg(name, pkgName);
     else
       return super.findInPkg(name, codebasePrefix + pkgName);
@@ -42,7 +45,8 @@ public class FabILImportTable extends ImportTable implements CodebaseImportTable
   @Override
   protected boolean isVisibleFrom(Named n, String pkgName) {
     //Codebases do not affect package visibility.
-    if (n instanceof CodebaseClassType) {
+    URI uri = URI.create(pkgName);
+    if (n instanceof CodebaseClassType && uri.isAbsolute()) {
       Codebase cb = ((CodebaseClassType) n).codebase();
       String cbPart = SysUtil.codebasePrefix(cb);
       boolean b = super.isVisibleFrom(n, pkgName.substring(cbPart.length()));

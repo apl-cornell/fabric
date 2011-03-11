@@ -84,5 +84,8 @@ public class RemoteSource extends FileSource implements CodebaseSource {
   public FClass fclass() {
     return fcls;
   }
+  public boolean isRemote() {
+    return true;
+  }
 
 }

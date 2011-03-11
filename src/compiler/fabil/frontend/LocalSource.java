@@ -5,12 +5,11 @@ import java.io.IOException;
 import java.util.Date;
 
 import polyglot.frontend.FileSource;
-import fabil.Codebases;
 import fabric.lang.Codebase;
 
 public class LocalSource extends FileSource implements CodebaseSource {
   protected Codebase codebase;
-  
+
   public LocalSource(File f, boolean userSpecified, Codebase codebase)
       throws IOException {
     super(f, userSpecified);
@@ -23,6 +22,10 @@ public class LocalSource extends FileSource implements CodebaseSource {
 
   public Codebase codebase() {
     return codebase;
+  }
+
+  public boolean isRemote() {
+    return false;
   }
 
 }

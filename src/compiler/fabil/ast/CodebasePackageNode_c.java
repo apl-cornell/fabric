@@ -20,6 +20,7 @@ public class CodebasePackageNode_c extends PackageNode_c implements CodebasePack
     //set the codebase of this package
     if(cbp == null || !cbp.isCanonical()) {
       CodebaseContext ctx = (CodebaseContext) ar.context();
+      System.out.println("Setting codebase of " + this + " to " + ctx.currentCodebase() + " in " + ctx.currentClassScope() + ":");
       return (CodebasePackageNode) package_(cbp.codebase(ctx.currentCodebase()));
     }
     else
