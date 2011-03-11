@@ -237,9 +237,4 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return sf;
   }
 
-  public TypeNode AmbCodebaseTypeNode(Position pos, Source src, TypeNode tn) {
-    // TODO Auto-generated method stub
-    return new AmbCodebaseTypeNode(pos, src, tn, Id(pos, ""));
-  }
-
 }

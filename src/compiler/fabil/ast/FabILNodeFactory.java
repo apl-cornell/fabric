@@ -67,6 +67,4 @@ public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
 
   StoreGetter StoreGetter(Position pos);
 
-  TypeNode AmbCodebaseTypeNode(Position pos, Source src, TypeNode tn);
-
 }
