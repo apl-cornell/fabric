@@ -8,14 +8,15 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
-import polyglot.frontend.FileSource;
 import polyglot.util.StringUtil;
 import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
+import jif.parse.UTF8FileSource;
+
 //XXX: this class should actually extend jif.parse.UTF8FileSource
-public class RemoteSource extends FileSource implements CodebaseSource {
+public class RemoteSource extends UTF8FileSource implements CodebaseSource {
   protected final FClass fcls;
   protected Codebase codebase;
   protected Reader reader = null;
