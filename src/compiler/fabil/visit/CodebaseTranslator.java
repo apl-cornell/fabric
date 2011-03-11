@@ -32,7 +32,7 @@ public class CodebaseTranslator extends Translator {
       w.newline(0);
     } else {
       String cbName = SysUtil.packageName(cb);
-      if(cbName.equals("")) {
+      if(!cbName.equals("")) {
         w.write("package ");
         w.write(cbName);
         w.write(";");
