@@ -2,22 +2,26 @@ package fabric;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Reader;
 import java.net.URI;
 import java.util.Collection;
 import java.util.LinkedList;
 
 import jif.visit.LabelChecker;
 import polyglot.frontend.Compiler;
+import polyglot.frontend.CupParser;
 import polyglot.frontend.FileSource;
 import polyglot.frontend.Job;
+import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.SourceLoader;
 import polyglot.frontend.goals.Goal;
+import polyglot.lex.Lexer;
 import polyglot.types.LoadedClassResolver;
 import polyglot.types.SemanticException;
+import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import fabil.Codebases;
-import fabil.FabILOptions;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
@@ -28,6 +32,8 @@ import fabric.frontend.RemoteSource;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.security.Label;
+import fabric.parse.Grm;
+import fabric.parse.Lexer_c;
 import fabric.types.FabricTypeSystem;
 import fabric.types.FabricTypeSystem_c;
 import fabric.visit.FabricLabelChecker;
@@ -79,7 +85,13 @@ public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
     } else
       return scheduler().FabricToFabilRewritten(job);
   }
-  
+  @Override
+   public Parser parser(Reader reader, FileSource source, ErrorQueue eq) {
+      Lexer lexer = new Lexer_c(reader, source, eq);
+      Grm grm     = new Grm(lexer, typeSystem(), nodeFactory(), eq);
+      return new CupParser(grm, source, eq);
+    }
+
   @Override
   public FabILTypeSystem jlTypeSystem() {
     return filext.typeSystem();
