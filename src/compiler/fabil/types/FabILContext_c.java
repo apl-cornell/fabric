@@ -2,8 +2,10 @@ package fabil.types;
 
 import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
+import polyglot.frontend.Source;
 import polyglot.types.Context;
 import polyglot.types.Context_c;
+import polyglot.types.ImportTable;
 import polyglot.types.Named;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
@@ -15,7 +17,8 @@ import polyglot.types.TypeSystem;
  *
  */
 public class FabILContext_c extends Context_c implements FabILContext {
-
+  
+  protected Source source;
   protected Codebase codebase;
   protected String codebasePrefix;
 
@@ -29,6 +32,7 @@ public class FabILContext_c extends Context_c implements FabILContext {
   protected Context_c push() {
     FabILContext_c v = (FabILContext_c) super.push();
     v.codebase = codebase;
+    v.source = source;
     return v;
   }
 
@@ -37,7 +41,7 @@ public class FabILContext_c extends Context_c implements FabILContext {
   }
   
   /**
-   * Push a source file scope.
+   * Push a codebase scope.
    */
   public CodebaseContext pushCodebase(Codebase codebase) {
       FabILContext_c v = (FabILContext_c) push();
@@ -53,10 +57,24 @@ public class FabILContext_c extends Context_c implements FabILContext {
    * Return the current source
    */
   public CodebaseSource currentSource() {
-    if(it != null) 
-      return ((FabILImportTable) it).source();
-    return null;
+    return (CodebaseSource) source;
   }
+  
+  
+  public CodebaseContext pushSource(CodebaseSource source) {
+    FabILContext_c v = (FabILContext_c) push();
+    v.kind = OUTER;
+    v.source = (Source) source;
+    return v;
+  }
+
+  @Override
+  public Context pushSource(ImportTable it) {
+    FabILContext_c v = (FabILContext_c) super.pushSource(it);
+    v.source = (Source) ((FabILImportTable) it).source();
+    return v;
+  }
+
   /**
    * Finds the definition of a particular type.
    */

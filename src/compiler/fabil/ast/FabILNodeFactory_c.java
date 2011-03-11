@@ -5,6 +5,7 @@ import java.util.List;
 
 import polyglot.ast.*;
 import polyglot.ast.Assign.Operator;
+import polyglot.frontend.Source;
 import polyglot.types.Flags;
 import polyglot.types.Package;
 import polyglot.util.CollectionUtil;
@@ -13,6 +14,8 @@ import fabil.extension.FabILDelFactory;
 import fabil.extension.FabILDelFactory_c;
 import fabil.extension.FabILExtFactory;
 import fabil.extension.FabILExtFactory_c;
+import fabil.frontend.CodebaseSource;
+import fabric.lang.Codebase;
 
 /**
  * NodeFactory for FabIL extension.
@@ -37,14 +40,14 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   @Override
   public CodebaseDisamb disamb() {
     return new CodebaseDisamb_c();
-    
+
   }
-  
+
   @Override
   public CodebasePackageNode PackageNode(Position pos, Package p) {
     CodebasePackageNode n = new CodebasePackageNode_c(pos, p);
-    n = (CodebasePackageNode)n.ext(extFactory().extPackageNode());
-    n = (CodebasePackageNode)n.del(delFactory().delPackageNode());
+    n = (CodebasePackageNode) n.ext(extFactory().extPackageNode());
+    n = (CodebasePackageNode) n.del(delFactory().delPackageNode());
     return n;
   }
 
@@ -119,8 +122,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
       ClassBody body) {
     @SuppressWarnings("unchecked")
     ClassDecl n =
-        new ClassDecl_c(pos, flags, name, superClass, CollectionUtil
-            .nonNullList(interfaces), body);
+        new ClassDecl_c(pos, flags, name, superClass,
+            CollectionUtil.nonNullList(interfaces), body);
     n = (ClassDecl) n.ext(extFactory().extClassDecl());
     n = (ClassDecl) n.del(delFactory().delClassDecl());
     return n;
@@ -217,7 +220,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     n = (Call) n.del(delFactory().delCall());
     return n;
   }
-  
+
   public StoreGetter StoreGetter(Position pos) {
     StoreGetter n = new StoreGetter_c(pos);
     n = (StoreGetter) n.ext(extFactory().extExpr());
@@ -226,12 +229,17 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   }
 
   @Override
-  public SourceFile SourceFile(Position pos,
-      PackageNode packageName, List imports, List decls) {
-    // TODO Auto-generated method stub
+  public SourceFile SourceFile(Position pos, PackageNode packageName,
+      List imports, List decls) {
     SourceFile sf = new FabILSourceFile_c(pos, packageName, imports, decls);
     sf = (SourceFile) sf.ext(extFactory().extSourceFile());
     sf = (SourceFile) sf.del(delFactory().delSourceFile());
     return sf;
   }
+
+  public TypeNode AmbCodebaseTypeNode(Position pos, Source src, TypeNode tn) {
+    // TODO Auto-generated method stub
+    return new AmbCodebaseTypeNode(pos, src, tn, Id(pos, ""));
+  }
+
 }

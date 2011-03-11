@@ -1,10 +1,13 @@
 package fabil.types;
 
-import fabil.Codebases;
-import fabric.lang.Codebase;
 import polyglot.types.Package;
+import fabil.frontend.CodebaseSource;
+import fabric.lang.Codebase;
 
-public interface CodebasePackage extends Package, Codebases {
+public interface CodebasePackage extends Package {
   Codebase codebase();
   CodebasePackage codebase(Codebase cb);
+  CodebaseSource source();
+  CodebasePackage source(CodebaseSource source);
+
 }

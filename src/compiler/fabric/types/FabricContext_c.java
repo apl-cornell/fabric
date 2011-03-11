@@ -2,10 +2,13 @@ package fabric.types;
 
 import fabil.frontend.CodebaseSource;
 import fabil.types.CodebaseContext;
+import fabil.types.FabILContext_c;
 import fabil.types.FabILImportTable;
 import fabric.lang.Codebase;
+import polyglot.frontend.Source;
 import polyglot.types.Context;
 import polyglot.types.Context_c;
+import polyglot.types.ImportTable;
 import polyglot.types.LocalInstance;
 import polyglot.types.Named;
 import polyglot.types.SemanticException;
@@ -16,6 +19,7 @@ import jif.types.JifTypeSystem;
 public class FabricContext_c extends JifContext_c implements FabricContext {
   
   protected Codebase codebase;
+  protected Source source;
   protected String codebasePrefix;
 
   protected FabricContext_c(JifTypeSystem ts, TypeSystem jlts) {
@@ -28,6 +32,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   protected Context_c push() {
     FabricContext_c v = (FabricContext_c) super.push();
     v.codebase = codebase;
+    v.source = source;
     return v;
   }
 
@@ -36,7 +41,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   }
   
   /**
-   * Push a source file scope.
+   * Push a codebase scope.
    */
   public CodebaseContext pushCodebase(Codebase codebase) {
       FabricContext_c v = (FabricContext_c) push();
@@ -47,13 +52,23 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
       v.staticContext = false;
       return v;
   }
-  /**
-   * Return the current source
-   */
+  
   public CodebaseSource currentSource() {
-    if(it != null) 
-      return ((FabILImportTable) it).source();
-    return null;
+    return (CodebaseSource) source;
+  }
+  
+  public CodebaseContext pushSource(CodebaseSource source) {
+    FabricContext_c v = (FabricContext_c) push();
+    v.kind = OUTER;
+    v.source = (Source) source;
+    return v;
+  }
+
+  @Override
+  public Context pushSource(ImportTable it) {
+    FabricContext_c v = (FabricContext_c) super.pushSource(it);
+    v.source = (Source) ((FabricImportTable) it).source();
+    return v;
   }
 
   /**

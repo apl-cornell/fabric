@@ -2,7 +2,11 @@ package fabil.ast;
 
 import java.util.List;
 
+import fabil.frontend.CodebaseSource;
+import fabric.lang.Codebase;
+
 import polyglot.ast.*;
+import polyglot.frontend.Source;
 import polyglot.util.Position;
 
 /**
@@ -62,4 +66,7 @@ public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
       List<Expr> args);
 
   StoreGetter StoreGetter(Position pos);
+
+  TypeNode AmbCodebaseTypeNode(Position pos, Source src, TypeNode tn);
+
 }

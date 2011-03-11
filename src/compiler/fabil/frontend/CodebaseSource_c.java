@@ -16,10 +16,10 @@ public class CodebaseSource_c extends Source implements CodebaseSource {
   protected Codebase codebase;
   protected boolean is_remote;
   
-  public CodebaseSource_c(String name, String path, Date lastModified, Codebase codebase) {
+  public CodebaseSource_c(String name, String path, Date lastModified, Codebase codebase, boolean remote) {
     super(name, path, lastModified);
     this.codebase = codebase;
-    this.is_remote = false;
+    this.is_remote = remote;
   }
 
   public Codebase codebase() {

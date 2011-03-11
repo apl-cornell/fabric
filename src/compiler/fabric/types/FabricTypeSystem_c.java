@@ -145,7 +145,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   }
 
   public CodebaseImportTable importTable(CodebaseSource source, Package pkg) {
-    return new FabILImportTable(this, pkg, source);
+    return new FabricImportTable(this, pkg, source);
   }
 
   @Override

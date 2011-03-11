@@ -11,6 +11,8 @@ import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 import polyglot.visit.TypeBuilder;
 import fabil.frontend.CodebaseSource;
+import fabric.common.SysUtil;
+import fabric.lang.Codebase;
 import fabric.visit.CodebaseTypeBuilder;
 
 public class FabILTypeBuilder extends TypeBuilder implements CodebaseTypeBuilder {
@@ -32,8 +34,10 @@ public class FabILTypeBuilder extends TypeBuilder implements CodebaseTypeBuilder
         fullName = currentPackage().fullName() + "." + name;
     }
 
+    Codebase cb = currentSource().codebase();
+    Named n = ts.systemResolver().check(SysUtil.codebasePrefix(cb) + fullName);
+    
     ParsedClassType pct = null;
-    Named n = ts.systemResolver().check(fullName);
     if (n instanceof ParsedClassType) {
       pct = (ParsedClassType)n;
     }

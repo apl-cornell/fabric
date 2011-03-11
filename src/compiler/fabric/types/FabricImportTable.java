@@ -1,24 +1,27 @@
-package fabil.types;
+package fabric.types;
 
 import java.net.URI;
 
 import fabil.frontend.CodebaseSource;
+import fabil.types.CodebaseClassType;
+import fabil.types.CodebaseImportTable;
+import fabil.types.CodebaseTypeSystem;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import polyglot.types.*;
 import polyglot.types.Package;
 
-public class FabILImportTable extends ImportTable implements CodebaseImportTable {
+public class FabricImportTable extends ImportTable implements CodebaseImportTable {
   protected Codebase codebase;
   protected CodebaseSource source;
-  public FabILImportTable(TypeSystem ts, Package pkg, CodebaseSource source) {
+  public FabricImportTable(TypeSystem ts, Package pkg, CodebaseSource source) {
     super(ts, pkg, source.name());
     this.source = source;
     this.codebase = source.codebase();
   }
 
-  public FabILImportTable(TypeSystem ts, Package pkg) {
+  public FabricImportTable(TypeSystem ts, Package pkg) {
     super(ts, pkg);
   }
 
@@ -34,7 +37,9 @@ public class FabILImportTable extends ImportTable implements CodebaseImportTable
     // HACK Ignore java.lang.Object so that fabric.lang.Object takes priority.
     if ("Object".equals(name) && "java.lang".equals(pkgName)) return null;
 
-    CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;    
+    CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
+    //Platform types and local source may use unqualified names for resolution
+    // at the fabric layer
     if(cbts.isPlatformType(pkgName) || !source.isRemote()) {
       Named n = super.findInPkg(name, pkgName);
       return n;
