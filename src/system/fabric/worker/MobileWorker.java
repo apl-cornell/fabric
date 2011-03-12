@@ -1,9 +1,6 @@
 package fabric.worker;
 
-import java.lang.reflect.InvocationTargetException;
-
 import fabric.lang.FabricClassLoader;
-import fabric.lang.arrays.ObjectArray;
 
 /**
  * This is a wrapper for <code>fabric.worker.Worker</code> that will use

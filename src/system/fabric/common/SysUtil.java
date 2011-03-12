@@ -234,7 +234,7 @@ public final class SysUtil {
     URI app_uri = URI.create(app);
     
     if(!app_uri.isAbsolute())
-      return app_uri.toString();
+      return app_uri.toString() + "$_Impl";
     else {
       FClass fcls = toFClass(app_uri);
       if(fcls == null)

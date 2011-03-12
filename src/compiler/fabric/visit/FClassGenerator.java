@@ -97,7 +97,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
               store, lbl, className, null, toSourceString(loc_src)).$getProxy();
         } catch (IOException e) {
           throw new SemanticException(
-              "Error creating Fabric class for source file:" + loc_src);
+              "Error creating Fabric class for class " + className +  " in file:" + loc_src + "Cause:" + e);
         }
         
         //TODO: check that the integrity of the codebase is leq the integrity of c

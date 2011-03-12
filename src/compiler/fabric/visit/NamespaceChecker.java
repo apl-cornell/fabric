@@ -202,8 +202,10 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
     String dirty_name;
     while ((dirty_name = worklist.poll()) != null) {
       Set<FClass> hasdep = invdeps.get(dirty_name);
-      for (FClass d : hasdep) {
-        if (dirty.add(d)) worklist.add(d.getName());
+      if(hasdep != null) {
+        for (FClass d : hasdep) {
+          if (dirty.add(d)) worklist.add(d.getName());
+        }
       }
     }
     Report.report(3, "Dirty set: " + dirty);
