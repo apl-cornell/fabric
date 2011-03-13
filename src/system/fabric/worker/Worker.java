@@ -42,6 +42,7 @@ import fabric.common.net.naming.NameService;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.Cache;
+import fabric.lang.FabricClassLoader;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
@@ -161,6 +162,10 @@ public final class Worker {
    */
   protected static Worker instance;
 
+  public static boolean isInitialized() {
+    return instance != null;
+  }
+  
   @SuppressWarnings("unchecked")
   private Worker(ConfigProperties config, Long principalOnum, Map<String, RemoteStore> initStoreSet) throws InternalError, UsageError,
       IOException, GeneralSecurityException {
@@ -443,7 +448,8 @@ public final class Worker {
       });
       
       // Run the requested application.
-      Class<?> mainClass = Class.forName(SysUtil.mangle(opts.app[0]));
+      FabricClassLoader loader = new FabricClassLoader(Worker.class.getClassLoader()); 
+      Class<?> mainClass = loader.loadClass(SysUtil.mangle(opts.app[0]));
       Method main =
           mainClass.getMethod("main", new Class[] { ObjectArray.class });
       final String[] newArgs = new String[opts.app.length - 1];

@@ -6,26 +6,43 @@ import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.security.GeneralSecurityException;
 
 import fabric.lang.Codebase;
 import fabric.Main;
 
 import fabric.common.SysUtil;
+
 /**
  * Loads Java classes from Fabric.
  * 
  * @author Lucas Waye <lrw48@cornell.edu>
  */
 public class FabricClassLoader extends ClassLoader {
-  Map/*String, Class*/   classes;
-  Map/*String, byte native[]*/  classBytecodeMap;
-  
-  public Class findClass(String name) 
+	Map/* String, Class */classes;
+	Map/* String, byte native[] */classBytecodeMap;
+	ClassLoader parent;
+	
+	public Class findClass(String name) 
   	throws ClassNotFoundException {
+		System.out.println("findClass: " + name);
+		try{
+			Class cls = parent.loadClass(name);
+			return cls;
+		} catch (ClassNotFoundException e) {}
+		
   	if (!classBytecodeMap.containsKey(name)) {
-  	  
-  	  FClass fcls = SysUtil.toProxy(name);
-      Main.compile(fcls, classBytecodeMap);
+  	    //XXX: hack -- figure out what really needs to be done here
+  	    int impl = name.lastIndexOf("$_Impl");
+  	    String fabname = name.substring(0, impl);
+  		System.out.println("toProxy: " + fabname);
+
+  	  FClass fcls = SysUtil.toProxy(fabname);
+  	  try {
+  	    Main.compile(fcls, classBytecodeMap);
+  	  } catch (GeneralSecurityException e) {
+  		  throw new ClassNotFoundException(name, e);
+  	  }
     }
     
     Class javaCls = getJavaClass(name);
@@ -35,16 +52,16 @@ public class FabricClassLoader extends ClassLoader {
 	
     return javaCls;
   }
-  
-  public Class loadClass(String name, boolean resolve) 
-    throws ClassNotFoundException {
-    if (name.equals("fabric.worker.Worker")) {
-      return hijackClassloader(name);
-    } 
-	  return super.loadClass(name, resolve);
-  }
-  
-  Class getJavaClass(String cls) {
+
+	// public Class loadClass(String name, boolean resolve)
+	// throws ClassNotFoundException {
+	// if (name.equals("fabric.worker.Worker")) {
+	// return hijackClassloader(name);
+	// }
+	// return super.loadClass(name, resolve);
+	// }
+
+	Class getJavaClass(String cls) {
     Class result = (Class)classes.get(cls);
     if (result == null) {
       if (classBytecodeMap.containsKey(cls)) {
@@ -56,43 +73,49 @@ public class FabricClassLoader extends ClassLoader {
     }
     return result;
   }
-  
-  
-  //XXX: hacky method
-  // Forces a class to have this classloader, even though it was
-  // found by a parent classloader.
-  public Class hijackClassloader(String name) throws ClassNotFoundException {
-    try {
-      String mangled = name.replaceAll("\\.", "/") + ".class";
-      InputStream str = getParent().getResourceAsStream(mangled);
-      byte native[] buf = new byte native[1024];
-      ByteArrayOutputStream os = new ByteArrayOutputStream();
-      int n = 0;
-      while (n >= 0) {
-        os.write(buf, 0, n);
-        n = str.read(buf);
-      } 
-      byte native[] bytes = os.toByteArray();
-      return defineClass(name, bytes, 0, bytes.length);
-    } catch (IOException ex) {
-      throw new ClassNotFoundException(name, ex);
-    }
-  }
-  
-  public FabricClassLoader(ClassLoader parent) {
-    super(parent);
-    this.classes  = new HashMap/*String, Class*/();
-    this.classBytecodeMap  = new HashMap/*String, byte native[]*/();
-  }
-  
-  public InputStream getResourceAsStream(String name) {
+
+	// XXX: hacky method
+	// Forces a class to have this classloader, even though it was
+	// found by a parent classloader.
+	// public Class hijackClassloader(String name) throws ClassNotFoundException
+	// {
+	// try {
+	// String mangled = name.replaceAll("\\.", "/") + ".class";
+	// InputStream str = getParent().getResourceAsStream(mangled);
+	// byte native[] buf = new byte native[1024];
+	// ByteArrayOutputStream os = new ByteArrayOutputStream();
+	// int n = 0;
+	// while (n >= 0) {
+	// os.write(buf, 0, n);
+	// n = str.read(buf);
+	// }
+	// byte native[] bytes = os.toByteArray();
+	// return defineClass(name, bytes, 0, bytes.length);
+	// } catch (IOException ex) {
+	// throw new ClassNotFoundException(name, ex);
+	// }
+	// }
+
+	public FabricClassLoader(ClassLoader parent) {
+		super(parent);
+		this.parent = parent;
+		this.classes = new HashMap/* String, Class */();
+		this.classBytecodeMap = new HashMap/* String, byte native[] */();
+	}
+
+	public InputStream getResourceAsStream(String name) {
 	  /* TODO: support non-class resources also */
 	  name = name.substring(0,name.length()-".class".length());
 
 	  if (!classBytecodeMap.containsKey(name)) {
 	  	FClass fcls = SysUtil.toProxy(name);
-      fabric.Main.compile(fcls, classBytecodeMap);
-    }
+	  	  try 
+	  	  {
+	    	  Main.compile(fcls, classBytecodeMap);
+	  	  } catch (GeneralSecurityException e) {
+	  		  return null;
+	  	  }
+      }
     
     if (classBytecodeMap.containsKey(name)) {
   	  byte native[] bytecode = (byte native[]) classBytecodeMap.get(name);

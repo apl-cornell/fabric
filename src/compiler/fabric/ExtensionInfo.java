@@ -6,6 +6,7 @@ import java.io.Reader;
 import java.net.URI;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Map;
 
 import jif.visit.LabelChecker;
 import polyglot.frontend.Compiler;
@@ -19,6 +20,7 @@ import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
 import polyglot.types.LoadedClassResolver;
 import polyglot.types.SemanticException;
+import polyglot.types.reflect.ClassFile;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import fabil.Codebases;
@@ -49,7 +51,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
    * should never leak out. */
   
   protected OutputExtensionInfo filext = new OutputExtensionInfo(this);
-
+  protected Map<String, byte[]> bytecode;
   static {
     // force Topics to load
     new Topics();
@@ -59,6 +61,10 @@ public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
     super();
   }
   
+  public ExtensionInfo(Map<String,byte[]> bytecode) {
+    this.bytecode = bytecode;
+  }
+
   @Override
   public void initCompiler(Compiler compiler) {
      super.initCompiler(compiler);
@@ -190,6 +196,18 @@ public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
   @Override
   public FileSource createFileSource(File f, boolean user) throws IOException {
     return new LocalSource(f, user, filext.codebase());
+  }
+
+  @Override
+  public ClassFile createClassFile(File classfile, byte[] code) {
+    File od = getOptions().output_directory;
+    if(classfile.getPath().startsWith(od.getPath())) {
+      String fileName = classfile.getPath().substring(od.getPath().length());
+      String className = fileName.substring(0,  fileName.length() - ".class".length());
+      className = className.replace(File.separator,".");
+      bytecode.put(className, code);
+    }
+    return super.createClassFile(classfile, code);
   }
 
   public Codebase codebase() {

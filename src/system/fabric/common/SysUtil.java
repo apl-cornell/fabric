@@ -239,7 +239,7 @@ public final class SysUtil {
       FClass fcls = toFClass(app_uri);
       if(fcls == null)
         throw new ClassNotFoundException(app_uri.toString());
-      return pseudoname(fcls);
+      return pseudoname(fcls) + "$_Impl";
     }    
   }
   
@@ -262,14 +262,14 @@ public final class SysUtil {
   }
 
   public static FClass toProxy(String mangled) {
-    String cb = codebasePart(mangled);    
-    if(cb == null)
-      return null;
-    
-    String className = mangled.substring(cb.length());
-    String host = unEscapeHost(storePart(cb));
-    Store store = Worker.getWorker().getStore(host);
-    long onum = onumPart(cb); 
+    String fabricname = fabricname(mangled);
+
+    URI uri = URI.create(fabricname);
+    Store store = Worker.getWorker().getStore(uri.getHost());
+    String path = uri.getPath();
+    int oe = path.indexOf("/", 1);
+    long onum = Long.parseLong(path.substring(1,oe)); 
+    String className = path.substring(oe+1);
 
     Codebase codebase =
         (Codebase) fabric.lang.Object._Proxy
@@ -294,8 +294,7 @@ public final class SysUtil {
 
   public static long onumPart(String codebaseName) {
     int e = codebaseName.lastIndexOf('.');
-    int b = codebaseName.lastIndexOf('.', e-1); 
-    String onum = codebaseName.substring(b+".onum_".length(), e);
+    String onum = codebaseName.substring(e+".onum_".length());
     return Long.parseLong(onum);
   }
   
@@ -315,6 +314,24 @@ public final class SysUtil {
     sb.append(onum);
     sb.append("$$");
     return sb.toString();
+  }
+  
+  public static String fabricname(String pseudoname) {    
+    String cb = codebasePart(pseudoname);    
+    if(cb == null)
+      return null;
+
+    String[] host = unEscapeHost(storePart(cb)).split("[.]");
+    int i = host.length-1;
+    StringBuilder sb = new StringBuilder(host[i--]);
+    for(; i>=0; i--) {
+      sb.append('.');
+      sb.append(host[i]);
+    }
+    String store = sb.toString();
+    long onum = onumPart(cb);
+    String className = pseudoname.substring("$$".length()+cb.length()+"$$.".length());
+    return "fab://"+store+"/"+onum+"/"+className;
   }
   
   public static String pseudoname(URI fabref) {
@@ -373,12 +390,10 @@ public final class SysUtil {
     }
   }
   public static String pseudoname(FClass fcls) {
-    return packagePrefix(fcls.getCodebase()) + "." + fcls.getName();
+    return packagePrefix(fcls.getCodebase()) + fcls.getName();
   }
   
   public static String pseudoname(Codebase cb) {
     return pseudoname(cb.$getStore().name(), cb.$getOnum());
   }
-
-
 }
