@@ -7,7 +7,6 @@ source "$(dirname $0)/defs"
 while true; do
   case "$1" in
     "") break;;
-    -local-code-only) localcode="1"; shift;;
     -v) verbose="1"; shift;;
     -cp) EXTRACP=$2; shift; shift;;
     -classpath) EXTRACP=$2; shift; shift;;    
@@ -26,9 +25,7 @@ done
 
 classpath="${FABRIC_WORKER_CP}:${EXTRACP}:${classpath}"
 
-commandlocal="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" fabric.worker.Worker ${args}"
-
-command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" fabric.worker.MobileWorker ${args}"
+command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" fabric.worker.Worker ${args}"
 
 if [ -n "${localcode}" ]
 then
