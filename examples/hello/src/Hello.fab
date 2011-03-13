@@ -41,7 +41,7 @@ class Hello {
     atomic {
 
       // get a reference to the store called "store"
-      final Store store = worker$.getStore("store");
+      final Store store = worker$.getStore("owen-ardens-macbook.local");
 
       // get a reference to the runtime.  This is how fabric programs access the console.
       Runtime[p] runtime = Runtime[p].getRuntime();
@@ -63,17 +63,6 @@ class Hello {
         runtime.out().println("store is not sufficiently trusted.");
       }
     }
-  }
-}
-
-// We use a separate class to store the message.  The class is parameterized by
-// a principal.
-class Message[principal p] {
-
-  public final String{p->;p<-} message;
-
-  public Message(String{p->;p<-} message):{p<-;p->} {
-    this.message = message;
   }
 }
 

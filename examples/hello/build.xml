@@ -51,6 +51,7 @@
       <arg value="${fabric.home}/bin/fabc"/>
       <arg value="-g"/>
       <arg value="-e"/>
+      <arg value="-trusted-providers"/>
       <arg value="-d"          /> <arg value="${hello.home}/classes"/>
       <arg value="-sourcepath" /> <arg value="${hello.home}/src" />
       <arg value="-cp"         /> <arg value="${hello.home}/classes" />
