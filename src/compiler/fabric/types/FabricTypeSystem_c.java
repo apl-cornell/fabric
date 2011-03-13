@@ -1,11 +1,6 @@
 package fabric.types;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import jif.ast.JifUtil;
 import jif.translate.LabelToJavaExpr;
@@ -14,47 +9,22 @@ import jif.types.JifLocalInstance;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabeledType;
 import jif.types.Solver;
-import jif.types.label.AccessPath;
-import jif.types.label.AccessPathConstant;
-import jif.types.label.AccessPathLocal;
-import jif.types.label.ArgLabel;
-import jif.types.label.ConfPolicy;
-import jif.types.label.IntegPolicy;
-import jif.types.label.JoinLabel;
-import jif.types.label.Label;
-import jif.types.label.MeetLabel;
-import jif.types.label.ThisLabel;
+import jif.types.label.*;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
 import polyglot.ext.param.types.Subst;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
-import polyglot.types.ClassType;
-import polyglot.types.Context;
-import polyglot.types.Flags;
-import polyglot.types.ImportTable;
-import polyglot.types.LazyClassInitializer;
-import polyglot.types.Named;
+import polyglot.types.*;
 import polyglot.types.Package;
-import polyglot.types.Resolver;
-import polyglot.types.SemanticException;
-import polyglot.types.TopLevelResolver;
-import polyglot.types.Type;
-import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import fabil.frontend.CodebaseSource;
-import fabil.types.CodebaseClassContextResolver;
-import fabil.types.CodebaseClassType;
-import fabil.types.CodebaseImportTable;
-import fabil.types.CodebasePackage;
-import fabil.types.CodebasePackageContextResolver;
-import fabil.types.CodebasePackage_c;
-import fabil.types.CodebaseSystemResolver;
-import fabil.types.FabILImportTable;
+import fabil.types.*;
 import fabric.FabricOptions;
 import fabric.translate.DynamicPrincipalToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
+import fabric.translate.ProviderLabelToFabilExpr_c;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
 
@@ -122,9 +92,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return "fabric.lang.security.LabelUtil";
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public List defaultPackageImports() {
+  public List<String> defaultPackageImports() {
     // Include fabric.lang and fabric.worker as default imports.
     List<String> result = new ArrayList<String>(5);
     result.add("fabric.lang");
@@ -245,7 +214,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return super.strip(type);
   }
   
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public Subst subst(Map substMap, Map cache) {
     return new FabricSubst_c(this, substMap, cache);
@@ -282,21 +251,25 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return new FabricPairLabelToFabilExpr_c();
   }
   
-  @SuppressWarnings("unchecked")
+  @Override
+  protected LabelToJavaExpr providerLabelTranslator() {
+    return new ProviderLabelToFabilExpr_c();
+  }
+
   public ConfPolicy representableConfProjection(Label L) {
     if (L instanceof ArgLabel) {
       return super.confProjection(((ArgLabel) L).upperBound());
     }
     else if (L instanceof MeetLabel) {
       Set<ConfPolicy> confPols = new HashSet<ConfPolicy>();
-      for (Label l : (Collection<Label>)((MeetLabel)L).meetComponents()) {
+      for (Label l : ((MeetLabel)L).meetComponents()) {
         confPols.add(representableConfProjection(l));
       }
       return meetConfPolicy(L.position(), confPols);
     }
     else if (L instanceof JoinLabel) {
       Set<ConfPolicy> confPols = new HashSet<ConfPolicy>();
-      for (Label l : (Collection<Label>)((JoinLabel)L).joinComponents()) {
+      for (Label l : ((JoinLabel)L).joinComponents()) {
         confPols.add(representableConfProjection(l));
       }
       return joinConfPolicy(L.position(), confPols);
@@ -304,21 +277,20 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return super.confProjection(L);
   }
   
-  @SuppressWarnings("unchecked")
   public IntegPolicy representableIntegProjection(Label L) {
     if (L instanceof ArgLabel) {
       return super.integProjection(((ArgLabel) L).upperBound());
     }
     else if (L instanceof MeetLabel) {
       Set<IntegPolicy> integPols = new HashSet<IntegPolicy>();
-      for (Label l : (Collection<Label>)((MeetLabel)L).meetComponents()) {
+      for (Label l : ((MeetLabel)L).meetComponents()) {
         integPols.add(representableIntegProjection(l));
       }
       return meetIntegPolicy(L.position(), integPols);
     }
     else if (L instanceof JoinLabel) {
       Set<IntegPolicy> integPols = new HashSet<IntegPolicy>();
-      for (Label l : (Collection<Label>)((JoinLabel)L).joinComponents()) {
+      for (Label l : ((JoinLabel)L).joinComponents()) {
         integPols.add(representableIntegProjection(l));
       }
       return joinIntegPolicy(L.position(), integPols);
@@ -381,13 +353,13 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     }
     else if (label instanceof MeetLabel) {
       MeetLabel ml = (MeetLabel)label;
-      for (Label l : (Collection<Label>)ml.meetComponents()) {
+      for (Label l : ml.meetComponents()) {
         if (containsThisLabel(l)) return true;
       }
     }
     else if (label instanceof JoinLabel) {
       JoinLabel jl = (JoinLabel)label;
-      for (Label l : (Collection<Label>)jl.joinComponents()) {
+      for (Label l : jl.joinComponents()) {
         if (containsThisLabel(l)) return true;
       }
     }
@@ -421,6 +393,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
                                  /*isNative*/ true);
   }
 
+  @SuppressWarnings("deprecation")
   @Override
   public String translateClass(Resolver c, ClassType t) {
     // Fully qualify classes in fabric.lang.security.

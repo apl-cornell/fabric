@@ -10,4 +10,5 @@ public interface FabILExtFactory extends ExtFactory {
   Ext extFabricArrayTypeNode();
   Ext extNewFabricArray();
   Ext extFabricArrayInit();
+  Ext extProviderLabel();
 }

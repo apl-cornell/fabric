@@ -5,7 +5,6 @@ import java.util.List;
 
 import polyglot.ast.*;
 import polyglot.ast.Assign.Operator;
-import polyglot.frontend.Source;
 import polyglot.types.Flags;
 import polyglot.types.Package;
 import polyglot.util.CollectionUtil;
@@ -14,8 +13,6 @@ import fabil.extension.FabILDelFactory;
 import fabil.extension.FabILDelFactory_c;
 import fabil.extension.FabILExtFactory;
 import fabil.extension.FabILExtFactory_c;
-import fabil.frontend.CodebaseSource;
-import fabric.lang.Codebase;
 
 /**
  * NodeFactory for FabIL extension.
@@ -228,6 +225,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return n;
   }
 
+  @SuppressWarnings("rawtypes")
   @Override
   public SourceFile SourceFile(Position pos, PackageNode packageName,
       List imports, List decls) {
@@ -235,6 +233,13 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     sf = (SourceFile) sf.ext(extFactory().extSourceFile());
     sf = (SourceFile) sf.del(delFactory().delSourceFile());
     return sf;
+  }
+
+  public ProviderLabel providerLabel(Position pos, TypeNode tn) {
+    ProviderLabel pl = new ProviderLabel_c(pos, tn);
+    pl = (ProviderLabel) pl.ext(extFactory().extProviderLabel());
+    pl = (ProviderLabel) pl.del(delFactory().delProviderLabel());
+    return pl;
   }
 
 }

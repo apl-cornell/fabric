@@ -236,4 +236,23 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   protected Ext extUnaryImpl() {
     return new UnaryExt_c();
   }
+  
+  public final Ext extProviderLabel() {
+    Ext e = extProviderLabelImpl();
+    
+    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
+    if (nextExtFactory != null) {
+      Ext e2 = nextExtFactory.extProviderLabel();
+      e = composeExts(e, e2);
+    }
+    return postExtProviderLabel(e);
+  }
+  
+  protected Ext extProviderLabelImpl() {
+    return extExprImpl();
+  }
+  
+  protected Ext postExtProviderLabel(Ext ext) {
+    return postExtExpr(ext);
+  }
 }

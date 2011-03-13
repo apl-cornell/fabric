@@ -6,7 +6,7 @@ import polyglot.ast.JL;
 public class FabILDelFactory_c extends AbstractDelFactory_c implements
     FabILDelFactory {
 
-  public JL delFabricArrayTypeNode() {
+  public final JL delFabricArrayTypeNode() {
     JL e = delFabricArrayTypeNodeImpl();
     
     FabILDelFactory nextDelFactory = (FabILDelFactory) nextDelFactory();
@@ -27,7 +27,7 @@ public class FabILDelFactory_c extends AbstractDelFactory_c implements
     return postDelArrayTypeNode(del);
   }
 
-  public JL delFabricArrayInit() {
+  public final JL delFabricArrayInit() {
     JL e = delFabricArrayInitImpl();
     
     FabILDelFactory nextDelFactory = (FabILDelFactory) nextDelFactory();
@@ -46,5 +46,26 @@ public class FabILDelFactory_c extends AbstractDelFactory_c implements
   
   protected JL postDelFabricArrayInit(JL del) {
     return postDelArrayInit(del);
+  }
+
+  public final JL delProviderLabel() {
+    JL e = delProviderLabelImpl();
+    
+    FabILDelFactory nextDelFactory = (FabILDelFactory) nextDelFactory();
+    
+    if (nextDelFactory != null) {
+      JL e2 = nextDelFactory.delProviderLabel();
+      e = composeDels(e, e2);
+    }
+    
+    return postDelProviderLabel(e);
+  }
+  
+  protected JL delProviderLabelImpl() {
+    return delExprImpl();
+  }
+  
+  protected JL postDelProviderLabel(JL del) {
+    return postDelExpr(del);
   }
 }

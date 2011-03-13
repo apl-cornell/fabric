@@ -7,5 +7,6 @@ public interface FabILDelFactory extends DelFactory {
 
   JL delFabricArrayTypeNode();
   JL delFabricArrayInit();
+  JL delProviderLabel();
 
 }
