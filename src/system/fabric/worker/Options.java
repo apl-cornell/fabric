@@ -17,6 +17,10 @@ public class Options extends fabric.common.Options {
    */
   public String name;
 
+  public String sigcp;
+
+  public String filsigcp;
+
   public Options(String[] args) throws UsageError {
     super(args);
   }
@@ -92,6 +96,18 @@ public class Options extends fabric.common.Options {
       
       System.out.println(timeUsage());
       throw new UsageError("Invalid timing category");
+    }
+    
+    if (args[i].equals("--sigcp")) {
+      this.sigcp = args[i+1];
+      System.out.println(sigcp);
+      return i+2;
+    }    
+    
+    if (args[i].equals("--filsigcp")) {
+      this.filsigcp = args[i+1];
+      System.out.println(filsigcp);
+      return i+2;
     }
 
     this.app = new String[args.length - i];

@@ -25,7 +25,10 @@ done
 
 classpath="${FABRIC_WORKER_CP}:${EXTRACP}:${classpath}"
 
-command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" fabric.worker.Worker ${args}"
+#command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" fabric.worker.Worker ${args}"
+command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" \
+                   fabric.worker.Worker --sigcp \"$(fixpath ${sigcp})\" \
+                               --filsigcp \"$(fixpath ${filsigcp})\" ${args}"
 
 if [ -n "${localcode}" ]
 then

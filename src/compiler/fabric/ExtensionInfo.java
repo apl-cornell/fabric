@@ -201,7 +201,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
   @Override
   public ClassFile createClassFile(File classfile, byte[] code) {
     File od = getOptions().output_directory;
-    if(classfile.getPath().startsWith(od.getPath())) {
+    if(bytecode != null && classfile.getPath().startsWith(od.getPath())) {
       String fileName = classfile.getPath().substring(od.getPath().length());
       String className = fileName.substring(0,  fileName.length() - ".class".length());
       className = className.replace(File.separator,".");

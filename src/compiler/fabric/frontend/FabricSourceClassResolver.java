@@ -1,26 +1,17 @@
 package fabric.frontend;
 
-import java.io.IOException;
-import java.net.URI;
-
-import fabil.frontend.CodebaseSource;
-import fabric.common.SysUtil;
-import fabric.lang.Codebase;
-
 import polyglot.frontend.Compiler;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.FileSource;
-import polyglot.frontend.Source;
-import polyglot.main.Report;
-import polyglot.types.BadSerializationException;
 import polyglot.types.ClassType;
 import polyglot.types.Named;
-import polyglot.types.NoClassException;
 import polyglot.types.SemanticException;
 import polyglot.types.SourceClassResolver;
 import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassFileLoader;
-import polyglot.types.reflect.ClassPathLoader;
+import fabil.frontend.CodebaseSource;
+import fabric.common.SysUtil;
+import fabric.lang.Codebase;
 
 public class FabricSourceClassResolver extends SourceClassResolver {
 
@@ -158,6 +149,7 @@ public class FabricSourceClassResolver extends SourceClassResolver {
   @Override
   protected Named getTypeFromSource(FileSource source, String name)
       throws SemanticException {
+    //System.out.println("LOADING FROM SOURCE: " + name);
     Codebase cb = ((CodebaseSource) source).codebase();
     return super.getTypeFromSource(source, SysUtil.codebasePrefix(cb)+name);
   }
@@ -166,6 +158,7 @@ public class FabricSourceClassResolver extends SourceClassResolver {
   protected ClassType getEncodedType(ClassFile clazz, String name)
       throws SemanticException {
     // TODO Support loading from classfiles
+    //System.out.println("LOADING FROM ENCODED CLASS: " + name);
     return super.getEncodedType(clazz, name);
   }
   
