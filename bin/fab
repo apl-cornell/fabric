@@ -26,6 +26,8 @@ done
 classpath="${FABRIC_WORKER_CP}:${EXTRACP}:${classpath}"
 
 #command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" fabric.worker.Worker ${args}"
+sigcp="${TOP}/sig-classes/fabric:${TOP}/lib/fabric-sig.jar:${sigcp}"
+filsigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar:${filsigcp}"
 command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" \
                    fabric.worker.Worker --sigcp \"$(fixpath ${sigcp})\" \
                                --filsigcp \"$(fixpath ${filsigcp})\" ${args}"
