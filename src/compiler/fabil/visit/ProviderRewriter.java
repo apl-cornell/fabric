@@ -50,8 +50,8 @@ public class ProviderRewriter extends NodeVisitor {
     
     // Emit a call to get$label() on an appropriate proxy object.
     Expr store =
-        qq.parseExpr("fabric.worker.Worker.getWorker().getStore(" + storeName
-            + ")");
+        qq.parseExpr("fabric.worker.Worker.getWorker().getStore(\"" + storeName
+            + "\")");
     Expr fclassProxy =
         qq.parseExpr("new fabric.lang.FClass._Proxy(%E, " + onum + ")", store);
     return qq.parseExpr("%E.get$label()", fclassProxy);
