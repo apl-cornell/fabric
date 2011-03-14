@@ -27,5 +27,9 @@ public interface LabelUtil extends Object {
     public static native Label join(Store store, Label l1, Label l2);
     
     public static native boolean relabelsTo(Label from, Label to);
+
+    public static native boolean acts_for(Label actor, Principal granter);
+
+    public static native boolean actsFor(Label actor, Principal granter);
   }
 }

@@ -765,6 +765,25 @@ public final class LabelUtil {
 //      exitTiming();
 //    }
   }
+  
+  public boolean acts_for(Label actor, Principal granter) {
+//      try {
+//          enterTiming();
+          return actsFor(actor, granter);
+//      } finally {
+//          exitTiming();
+//      }
+  }
+
+  public boolean actsFor(Label actor, Principal granter) {
+//    try {
+//      enterTiming();
+      Label L = toLabel(topConf(), writerPolicy(granter, granter));
+      return relabelsTo(actor, L);
+//    } finally {
+//      exitTiming();
+//    }
+  }
 
   public static boolean relabelsTo(Policy from, Policy to) {
 //    try {

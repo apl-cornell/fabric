@@ -31,6 +31,7 @@ public class LabelUtil {
 
     public static native boolean equivalentTo(label l1, label l2);
     public static native boolean relabelsTo(label fromLbl, label toLbl); 
+    public static native boolean acts_for(label actor, principal granter);
 
     public static native boolean isReadableBy(label lbl, principal p); 
     
