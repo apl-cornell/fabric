@@ -30,7 +30,6 @@ import fabric.lang.security.Label;
 import fabric.types.FabricParsedClassType;
 import fabric.types.FabricSubstType;
 import fabric.types.FabricTypeSystem;
-import fabric.types.FabricTypeSystem_c;
 import fabric.worker.Store;
 
 /**
@@ -84,6 +83,10 @@ public class FClassGenerator extends ErrorHandlingVisitor {
       FileSource src = (FileSource) pct.fromSource();
 
       if(src instanceof LocalSource) {
+        if(Report.should_report(TOPIC, 3)) {
+          Report.report(3, "Local source " + src + " has dependencies " + toClassNames(fcg.dependencies));
+        }
+
         LocalSource loc_src = (LocalSource) src;
         //create and insert new FClass
         FabricTypeSystem fabts = (FabricTypeSystem) ts;
@@ -107,7 +110,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         
         // add dependencies to codebase;
         for(Named dep : fcg.dependencies) {
-          if(fabts.isPlatformType(dep))
+          if(fabts.isPlatformType(dep)) 
             continue;
           if(dep instanceof FabricSubstType)
             dep = (Named) ((FabricSubstType) dep).base();
@@ -134,6 +137,9 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         FClass fcls = ((RemoteSource) src).fclass();
         fabric.util.Set fclsNames = fcls.dependencies();
         Set<String> realNames = toClassNames(fcg.dependencies);
+        if(Report.should_report(TOPIC, 3)) {
+          Report.report(3, "Remote source " + src + " has dependencies " + realNames);
+        }
         if(fclsNames.size() != realNames.size()) 
           throw new SemanticException("Actual dependencies of " + src
               + " do not match declared names. ");
@@ -177,4 +183,5 @@ public class FClassGenerator extends ErrorHandlingVisitor {
     }
     return result.toString();
   }
+  public static String TOPIC = "publish";
 }
