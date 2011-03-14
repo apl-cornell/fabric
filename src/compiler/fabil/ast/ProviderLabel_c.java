@@ -28,6 +28,10 @@ public class ProviderLabel_c extends Expr_c implements ProviderLabel {
     this.tn = tn;
   }
 
+  public TypeNode typeNode() {
+    return tn;
+  }
+
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
     if (!tn.type().isClass()) {

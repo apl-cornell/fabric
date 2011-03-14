@@ -363,6 +363,23 @@ public class FabILScheduler extends JLScheduler {
 
     return g;
   }
+  
+  /**
+   * Rewrites C.provider expressions.
+   */
+  public Goal RewriteProviders(final Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new ProviderRewriter(extInfo)) {
+      @SuppressWarnings("unchecked")
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(RewriteProxies(job));
+        l.addAll(super.prerequisiteGoals(scheduler));
+        return l;
+      }
+    });
+    return g;
+  }
 
   public Goal InstrumentThreads(final Job job) {
     Goal g =
@@ -435,6 +452,7 @@ public class FabILScheduler extends JLScheduler {
         l.addAll(super.prerequisiteGoals(scheduler));
         if (!((FabILOptions) extInfo.getOptions()).signatureMode()) {
           l.add(RewriteProxies(job));
+          l.add(RewriteProviders(job));
           l.add(RewriteAtomic(job));
           l.add(RewriteRemoteCalls(job));
           l.add(Memoized(job));
