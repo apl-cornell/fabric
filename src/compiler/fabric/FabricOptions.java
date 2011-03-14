@@ -24,6 +24,10 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   @Override
   public void setDefaultValues() {
     super.setDefaultValues();
+    
+    // Override default in Jif: do not trust providers.
+    this.trustedProviders = false;
+    
     this.fully_qualified_names = true;
     this.fatalExceptions = true;
     this.publishOnly = false;
@@ -55,7 +59,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
 
   /* Parsing ******************************************************************/
   
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   protected int parseCommand(String[] args, int index, Set source)
     throws UsageError, TerminationException {
