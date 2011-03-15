@@ -396,4 +396,10 @@ public final class SysUtil {
   public static String pseudoname(Codebase cb) {
     return pseudoname(cb.$getStore().name(), cb.$getOnum());
   }
+
+  public static String absoluteName(FClass f) {
+    Codebase cb = f.getCodebase();
+    return "fab://" + cb.$getStore().name() + "/" + cb.$getOnum() + "/"
+        + f.getName();
+  }
 }
