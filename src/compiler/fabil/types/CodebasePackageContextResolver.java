@@ -27,20 +27,17 @@ public class CodebasePackageContextResolver extends PackageContextResolver {
     if (!StringUtil.isNameShort(name)) {
       throw new InternalCompilerError("Cannot lookup qualified name " + name);
     }
-    String fqName;
     Named n = null;
     CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
-    if(cbts.isPlatformType(p))
-      return super.find(name, accessor);
-    
+    if (cbts.isPlatformType(p)) return super.find(name, accessor);
+
     CodebaseSource cs = ((CodebasePackage) p).source();
     Codebase cb = cs.codebase();
-    FClass fcls = cb.resolveClassName(p.fullName() + "." + name);
-    if(fcls == null)
-      return null;
-    
-    String prefix = SysUtil.codebasePrefix(fcls.getCodebase());
-    fqName = prefix + p.fullName() + "." + name;
+//    FClass fcls = cb.resolveClassName(p.fullName() + "." + name);
+//    if (fcls == null) return null;
+
+    String fqName =
+        cbts.absoluteName(cb, p.fullName() + "." + name, true);
 
     try {
       n = ts.systemResolver().find(fqName);
@@ -50,7 +47,7 @@ public class CodebasePackageContextResolver extends PackageContextResolver {
         throw e;
       }
     }
-    System.out.println("N: " +n);
+    System.out.println("N: " + n);
 
     if (n == null) {
       n = ts.createPackage(p, name);

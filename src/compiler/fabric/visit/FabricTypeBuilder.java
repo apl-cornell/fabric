@@ -11,7 +11,7 @@ import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 import polyglot.visit.TypeBuilder;
 import fabil.frontend.CodebaseSource;
-import fabric.common.SysUtil;
+import fabil.types.CodebaseTypeSystem;
 import fabric.lang.Codebase;
 
 public class FabricTypeBuilder extends TypeBuilder implements
@@ -37,7 +37,8 @@ public class FabricTypeBuilder extends TypeBuilder implements
     Named n;
     if (currentSource().isRemote()) {
       Codebase cb = currentSource().codebase();
-      n = ts.systemResolver().check(SysUtil.codebasePrefix(cb) + fullName);
+      String absName = ((CodebaseTypeSystem) ts).absoluteName(cb, fullName, false);
+      n = ts.systemResolver().check(absName);
     } else n = ts.systemResolver().check(fullName);
 
     if (n instanceof ParsedClassType) {
@@ -69,4 +70,5 @@ public class FabricTypeBuilder extends TypeBuilder implements
   public CodebaseSource currentSource() {
     return source;
   }
+  
 }

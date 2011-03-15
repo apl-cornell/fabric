@@ -22,6 +22,9 @@ import polyglot.util.Position;
 import fabil.frontend.CodebaseSource;
 import fabil.types.*;
 import fabric.FabricOptions;
+import fabric.common.SysUtil;
+import fabric.lang.Codebase;
+import fabric.lang.FClass;
 import fabric.translate.DynamicPrincipalToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
 import fabric.translate.ProviderLabelToFabilExpr_c;
@@ -114,7 +117,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   }
 
   public CodebaseImportTable importTable(CodebaseSource source, Package pkg) {
-    return new FabricImportTable(this, pkg, source);
+    return new CodebaseImportTable_c(this, pkg, source);
   }
 
   @Override
@@ -415,10 +418,26 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     if(!opt.runWorker()) {
       return true;
     }
-    String typeName = fullName;
-    return typeName.startsWith("java")
-    || typeName.startsWith("fabric")
-    || typeName.startsWith("jif");
+    return fullName.startsWith("java")
+    || fullName.startsWith("fabric")
+    || fullName.startsWith("jif");
   }
 
+  public String absoluteName(Codebase context, String fullName, boolean resolve) throws SemanticException {
+    if(!isPlatformType(fullName)) {
+      if(resolve) {
+         FClass fcls = context.resolveClassName(fullName);
+        if(fcls == null) {
+          new java.lang.Exception().printStackTrace();
+          throw new SemanticException("Codebase " + SysUtil.oid(context) + " has no entry for " + fullName);
+        }
+        Codebase cb = fcls.getCodebase();
+        return SysUtil.codebasePrefix(cb) + fullName;
+      }
+      else {
+        return SysUtil.codebasePrefix(context) + fullName;
+      }
+    } else
+      return fullName;
+  }
 }

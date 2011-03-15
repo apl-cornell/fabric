@@ -11,11 +11,13 @@ import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 import polyglot.visit.TypeBuilder;
 import fabil.frontend.CodebaseSource;
+import fabil.types.CodebaseTypeSystem;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.visit.CodebaseTypeBuilder;
 
-public class FabILTypeBuilder extends TypeBuilder implements CodebaseTypeBuilder {
+public class FabILTypeBuilder extends TypeBuilder implements
+    CodebaseTypeBuilder {
   protected CodebaseSource source;
 
   public FabILTypeBuilder(Job job, TypeSystem ts, NodeFactory nf) {
@@ -23,35 +25,35 @@ public class FabILTypeBuilder extends TypeBuilder implements CodebaseTypeBuilder
   }
 
   @Override
-  protected ParsedClassType newClass(Position pos, Flags flags, String name) 
-  throws SemanticException {
+  protected ParsedClassType newClass(Position pos, Flags flags, String name)
+      throws SemanticException {
     // see if an appropriately named class already exists in the resolver
     String fullName = name;
     if (currentClass() != null) {
-        fullName = currentClass().fullName() + "." + name;
-    }
-    else if (currentPackage() != null) {
-        fullName = currentPackage().fullName() + "." + name;
+      fullName = currentClass().fullName() + "." + name;
+    } else if (currentPackage() != null) {
+      fullName = currentPackage().fullName() + "." + name;
     }
 
     Codebase cb = currentSource().codebase();
-    Named n = ts.systemResolver().check(SysUtil.codebasePrefix(cb) + fullName);
-    
+    String absoluteName = ((CodebaseTypeSystem) ts).absoluteName(cb, fullName, false);
+    Named n = ts.systemResolver().check(absoluteName);
+
     ParsedClassType pct = null;
     if (n instanceof ParsedClassType) {
-      pct = (ParsedClassType)n;
+      pct = (ParsedClassType) n;
     }
-    
+
     if (pct != null && job().source().equals(pct.fromSource())) {
-      // If a type of the same name and from the same source has been loaded, 
+      // If a type of the same name and from the same source has been loaded,
       // there is no need to generate it again.
-      // It won't miss real duplicate class declarations, because we only 
+      // It won't miss real duplicate class declarations, because we only
       // take this shortcut when the cached class type was from the same source.
-      // Moreover, type-checking of SourceFile will take care of duplicate 
+      // Moreover, type-checking of SourceFile will take care of duplicate
       // definitions in the same source.
       return pct;
     }
-    
+
     return super.newClass(pos, flags, name);
   }
 

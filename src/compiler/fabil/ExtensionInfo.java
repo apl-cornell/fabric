@@ -14,14 +14,13 @@ import polyglot.frontend.TargetFactory;
 import polyglot.lex.Lexer;
 import polyglot.main.Options;
 import polyglot.types.LoadedClassResolver;
-import polyglot.types.SourceClassResolver;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
 import fabil.ast.FabILNodeFactory;
 import fabil.ast.FabILNodeFactory_c;
+import fabil.frontend.CodebaseSourceClassResolver;
 import fabil.frontend.CodebaseTargetFactory;
 import fabil.frontend.FabILScheduler;
-import fabil.frontend.FabILSourceClassResolver;
 import fabil.frontend.LocalSource;
 import fabil.frontend.RemoteSource;
 import fabil.parse.Grm;
@@ -139,7 +138,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
    */
   @Override
   protected LoadedClassResolver makeLoadedClassResolver() {
-    return new FabILSourceClassResolver(compiler,
+    return new CodebaseSourceClassResolver(compiler,
                                    this,
                                    getFabILOptions().constructFabILClasspath(),
                                    compiler.loader(),

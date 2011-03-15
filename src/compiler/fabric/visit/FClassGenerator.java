@@ -106,11 +106,14 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         //TODO: check that the integrity of the codebase is leq the integrity of c
         Codebase cb = loc_src.codebase();
         fcls.setCodebase(cb);
+        if(Report.should_report(TOPIC, 3)) {
+          Report.report(3, "Inserting " + className + " into codebase " + cb);
+        }
         cb.insertClass(className, fcls);
         
         // add dependencies to codebase;
         for(Named dep : fcg.dependencies) {
-          if(fabts.isPlatformType(dep)) 
+          if(fabts.isPlatformType(dep))
             continue;
           if(dep instanceof FabricSubstType)
             dep = (Named) ((FabricSubstType) dep).base();

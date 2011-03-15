@@ -42,20 +42,17 @@ public class CodebaseSystemResolver extends SystemResolver {
       if (ts.isPlatformType(ct) || !cs.isRemote()) {
         containerName = StringUtil.getPackageComponent(className);
         super.addNamed(name, q);
-        if(!ts.isPlatformType(ct)) {
-          super.addNamed(SysUtil.codebasePrefix(ct.codebase()) + name,ct);
-        }
+        boolean remote = (cs == null) ? false : cs.isRemote();
+        super.addNamed(ts.absoluteName(ct.codebase(), name, remote), ct);     
       } else {
-        Codebase cb = ct.codebase();
         String fqname;
         if (uri.isAbsolute()) {
           fqname = name;
-          //remove the leading fabref for packages
-          containerName = StringUtil.getPackageComponent(className);
         } else {
-          fqname = SysUtil.codebasePrefix(cb) + name;
-          containerName = StringUtil.getPackageComponent(className);
+          fqname = ts.absoluteName(ct.codebase(), name, true);
         }
+        //remove the leading fabref for packages
+        containerName = StringUtil.getPackageComponent(className);
         super.addNamed(fqname, q);
       }
 

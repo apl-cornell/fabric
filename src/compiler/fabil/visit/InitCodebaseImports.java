@@ -23,7 +23,7 @@ public class InitCodebaseImports extends InitImportsVisitor {
 
   protected Codebase codebase = null;
   protected boolean remote = true;
-  
+
   public InitCodebaseImports(Job job, TypeSystem ts, NodeFactory nf) {
     super(job, ts, nf);
   }
@@ -35,11 +35,13 @@ public class InitCodebaseImports extends InitImportsVisitor {
       CodebaseSourceFile sf = (CodebaseSourceFile) n;
 
       PackageNode pn = sf.package_();
-     
+
       ImportTable it;
       CodebaseTypeSystem cts = (CodebaseTypeSystem) ts;
       if (pn != null) {
-        it = (ImportTable) cts.importTable((CodebaseSource) sf.source(), pn.package_());
+        it =
+            (ImportTable) cts.importTable((CodebaseSource) sf.source(), pn
+                .package_());
       } else {
         it = (ImportTable) cts.importTable((CodebaseSource) sf.source(), null);
       }
@@ -48,7 +50,7 @@ public class InitCodebaseImports extends InitImportsVisitor {
       CodebaseSource src = (CodebaseSource) sf.source();
       v.codebase = src.codebase();
       v.importTable = it;
-      v.remote = ((CodebaseSourceFile)n).isRemote();
+      v.remote = ((CodebaseSourceFile) n).isRemote();
       return v;
     }
     return this;
@@ -58,7 +60,7 @@ public class InitCodebaseImports extends InitImportsVisitor {
   @Override
   public Node leaveCall(Node old, Node n, NodeVisitor v)
       throws SemanticException {
-    
+
     if (n instanceof CodebaseSourceFile) {
       CodebaseSourceFile sf = (CodebaseSourceFile) n;
       InitCodebaseImports v_ = (InitCodebaseImports) v;
@@ -70,12 +72,13 @@ public class InitCodebaseImports extends InitImportsVisitor {
 
       if (im.kind() == Import.CLASS) {
         String name = im.name();
-        //if(codebase != null && codebase.resolveClassName(name) != null)
-        if(remote)
-          name = SysUtil.codebasePrefix(codebase) + name;
+
+        if (remote)
+          name = ((CodebaseTypeSystem) ts).absoluteName(codebase, name, true);
         this.importTable.addClassImport(name, im.position());
+        
       } else if (im.kind() == Import.PACKAGE) {
-        //XXX: package imports are not currently 
+        // XXX: package imports are not currently
         // supported in codebases
         this.importTable.addPackageImport(im.name(), im.position());
       }
@@ -83,6 +86,5 @@ public class InitCodebaseImports extends InitImportsVisitor {
 
     return n;
   }
-
 
 }

@@ -24,10 +24,10 @@ import polyglot.types.reflect.ClassFile;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import fabil.Codebases;
+import fabil.frontend.CodebaseSourceClassResolver;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
-import fabric.frontend.FabricSourceClassResolver;
 import fabric.frontend.FabricSourceLoader;
 import fabric.frontend.LocalSource;
 import fabric.frontend.RemoteSource;
@@ -157,7 +157,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
     try {
       LoadedClassResolver lr;
       
-      lr = new FabricSourceClassResolver(compiler, this, getJifOptions().constructJifClasspath(), 
+      lr = new CodebaseSourceClassResolver(compiler, this, getJifOptions().constructJifClasspath(), 
               compiler.loader(), false,
               getOptions().compile_command_line_only,
               getOptions().ignore_mod_times);
@@ -189,7 +189,6 @@ public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
   }
   
   public FileSource createRemoteSource(FClass fcls, boolean user) throws IOException {
- //     System.out.println("CREATING REMOTE SOURCE:" + fcls);
       return new RemoteSource(fcls, user);
   }
   
@@ -202,8 +201,8 @@ public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
   public ClassFile createClassFile(File classfile, byte[] code) {
     File od = getOptions().output_directory;
     if(bytecode != null && classfile.getPath().startsWith(od.getPath())) {
-      String fileName = classfile.getPath().substring(od.getPath().length());
-      String className = fileName.substring(0,  fileName.length() - ".class".length());
+      String fileName = classfile.getPath().substring(od.getPath().length()+1);
+      String className = fileName.substring(0, fileName.length() - ".class".length());
       className = className.replace(File.separator,".");
       bytecode.put(className, code);
     }

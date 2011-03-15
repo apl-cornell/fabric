@@ -5,7 +5,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,20 +36,19 @@ public class Main extends polyglot.main.Main {
       throws GeneralSecurityException {
     if (fcls == null || bytecodeMap == null)
       throw new GeneralSecurityException("Invalid arguments to compile");
+    
     Worker worker = Worker.getWorker();
     String name = worker.config.name;
     List<String> args = new LinkedList<String>();
     args.add("-worker");
     args.add(name);
     args.add("-trusted-providers");
-    
+  
     if(worker.sigcp != null) {
-      System.out.println(worker.sigcp);
       args.add("-sigcp");
       args.add(worker.sigcp);
     }
     if(worker.filsigcp != null) {
-      System.out.println(worker.filsigcp);
       args.add("-filsigcp");
       args.add(worker.filsigcp);
     }
@@ -62,16 +60,14 @@ public class Main extends polyglot.main.Main {
       main.start(args.toArray(new String[0]), extInfo);
       ClassFileLoader loader = main.compiler.loader();
       loader.loadClass(extInfo.getOptions().output_directory,
-          SysUtil.pseudoname(fcls));
-      System.out.println("bytecodemap:" + bytecodeMap.keySet());
-
+          SysUtil.pseudoname(fcls) + "$_Impl");
     } catch (TerminationException e) {
       throw new GeneralSecurityException(e);
     }
   }
 
   public static void main(String[] args) {
-    polyglot.main.Main main = new Main();
+    polyglot.main.Main main = new Main(); 
     try {
       main.start(args, new fabric.ExtensionInfo());
     } catch (TerminationException e) {

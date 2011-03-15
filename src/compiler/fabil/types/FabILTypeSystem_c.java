@@ -7,6 +7,9 @@ import java.util.Map;
 
 import fabil.FabILOptions;
 import fabil.frontend.CodebaseSource;
+import fabric.common.SysUtil;
+import fabric.lang.Codebase;
+import fabric.lang.FClass;
 
 import polyglot.ast.TypeNode;
 import polyglot.frontend.ExtensionInfo;
@@ -248,7 +251,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   public CodebaseImportTable importTable(CodebaseSource source, Package pkg) {
-    return new FabILImportTable(this, pkg, source);
+    return new CodebaseImportTable_c(this, pkg, source);
   }
 
   @Override
@@ -486,4 +489,23 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
       || typeName.startsWith("fabric")
       || typeName.startsWith("jif");
   }
+  
+  public String absoluteName(Codebase context, String fullName, boolean resolve) throws SemanticException {
+    if(!isPlatformType(fullName)) {
+      if(resolve) {
+         FClass fcls = context.resolveClassName(fullName);
+        if(fcls == null) {
+          new java.lang.Exception().printStackTrace();
+          throw new SemanticException("Codebase " + SysUtil.oid(context) + " has no entry for " + fullName);
+        }
+        Codebase cb = fcls.getCodebase();
+        return SysUtil.codebasePrefix(cb) + fullName;
+      }
+      else {
+        return SysUtil.codebasePrefix(context) + fullName;
+      }
+    } else
+      return fullName;
+  }
+
 }
