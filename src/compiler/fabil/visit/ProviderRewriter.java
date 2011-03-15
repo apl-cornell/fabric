@@ -23,8 +23,9 @@ public class ProviderRewriter extends NodeVisitor {
   protected QQ qq;
   protected FabILNodeFactory nf;
   protected FabILTypeSystem ts;
-  
+  protected ExtensionInfo extInfo;
   public ProviderRewriter(ExtensionInfo extInfo) {
+    this.extInfo = extInfo;
     this.qq = new QQ(extInfo);
     this.nf = extInfo.nodeFactory();
     this.ts = extInfo.typeSystem();
@@ -35,26 +36,30 @@ public class ProviderRewriter extends NodeVisitor {
     if (!(n instanceof ProviderLabel)) {
       return n;
     }
-    
-    ProviderLabel pl = (ProviderLabel) n;
-    CodebaseClassType ct = (CodebaseClassType) pl.typeNode().type();
-    
-    // Get a handle to the FClass object.
-    Codebase cb = ct.codebase();
-    Map classes = cb.getClasses();
-    FClass fclass = (FClass) classes.get(WrappedJavaInlineable.$wrap(ct.fullName()));
-    
-    // Convert to an OID.
-    String storeName = fclass.$getStore().name();
-    long onum = fclass.$getOnum();
-    
-    // Emit a call to get$label() on an appropriate proxy object.
-    Expr store =
-        qq.parseExpr("fabric.worker.Worker.getWorker().getStore(\"" + storeName
-            + "\")");
-    Expr fclassProxy =
-        qq.parseExpr("new fabric.lang.FClass._Proxy(%E, " + onum + ")", store);
-    return qq.parseExpr("%E.get$label()", fclassProxy);
+    if(extInfo.getFabILOptions().runWorker()) {     
+      ProviderLabel pl = (ProviderLabel) n;
+      CodebaseClassType ct = (CodebaseClassType) pl.typeNode().type();
+      
+      // Get a handle to the FClass object.
+      Codebase cb = ct.codebase();
+      Map classes = cb.getClasses();
+      FClass fclass = (FClass) classes.get(WrappedJavaInlineable.$wrap(ct.fullName()));
+      
+      // Convert to an OID.
+      String storeName = fclass.$getStore().name();
+      long onum = fclass.$getOnum();
+      
+      // Emit a call to get$label() on an appropriate proxy object.
+      Expr store =
+          qq.parseExpr("fabric.worker.Worker.getWorker().getStore(\"" + storeName
+              + "\")");
+      Expr fclassProxy =
+          qq.parseExpr("new fabric.lang.FClass._Proxy(%E, " + onum + ")", store);
+      return qq.parseExpr("%E.get$label()", fclassProxy);
+    }
+    else {
+      return qq.parseExpr("fabric.lang.security.LabelUtil._Impl.toLabel(fabric.lang.security.LabelUtil._Impl.topInteg())");
+    }
   }
   
 }
