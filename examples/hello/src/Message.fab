@@ -1,6 +1,6 @@
 // We use a separate class to store the message.  The class is parameterized by
 // a principal.
-public class Message[principal p] {
+public class Message[principal p] where provider actsfor p {
 
   public final String{p->;p<-} message;
 
