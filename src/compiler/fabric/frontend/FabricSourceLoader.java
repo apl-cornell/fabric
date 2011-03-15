@@ -24,6 +24,7 @@ import fabric.common.SysUtil;
 public class FabricSourceLoader extends SourceLoader {
   protected Map<URI, Codebase> codebaseCache;
   protected Collection<URI> sourcePath;
+
   public FabricSourceLoader(ExtensionInfo sourceExt, Collection<URI> sourcePath) {
     super(sourceExt, null);
     this.sourcePath = sourcePath;
@@ -32,15 +33,15 @@ public class FabricSourceLoader extends SourceLoader {
 
   /*
    * (non-Javadoc)
-   * 
    * @see polyglot.frontend.SourceLoader#classSource(java.lang.String)
    */
   @Override
   public FileSource classSource(String className) {
-      return checkForSource(className);
+    return checkForSource(className);
   }
-  
-  /* (non-Javadoc)
+
+  /*
+   * (non-Javadoc)
    * @see polyglot.frontend.SourceLoader#packageExists(java.lang.String)
    */
   @Override
@@ -50,6 +51,18 @@ public class FabricSourceLoader extends SourceLoader {
 
   /** Load the source file for the given class name using the source path. */
   protected FileSource checkForSource(String className) {
+    URI classURI = URI.create(className);
+    /* If className is absolute, lookup directly */
+    if (classURI.isAbsolute()) {
+      String cbPath = new File(classURI.getPath()).getParent();
+      URI cburi =
+          URI.create(classURI.getScheme() + "://" + classURI.getHost()
+                  + cbPath);
+      String name =
+          classURI.toString().substring(cburi.toString().length() + 1);
+      return checkCodeBaseForSource(cburi, name);
+    }
+    
     /* Search the source path. */
     FileSource s = null;
     for (Iterator<URI> i = sourcePath.iterator(); i.hasNext();) {
@@ -59,23 +72,24 @@ public class FabricSourceLoader extends SourceLoader {
         if (!directory.isDirectory()) continue;
         s = checkDirectoryForSource(directory, className);
       } else if (uri.getScheme().equals("fab")) {
-        // In Fabric, source is associated with CodeBase objects by class name 
+        // In Fabric, source is associated with CodeBase objects by class name
         s = checkCodeBaseForSource(uri, className);
       } else throw new InternalCompilerError(
           "Don't know how to load source from " + uri);
-      
+
       if (s != null) return s;
     }
     return null;
   }
-    
+
   @SuppressWarnings("unchecked")
-  protected FileSource checkCodeBaseForSource(URI uri, String className) {     
+  protected FileSource checkCodeBaseForSource(URI uri, String className) {
     Codebase codebase = codebaseCache.get(uri);
+
     if (codebase == null) {
       Store store = Worker.getWorker().getStore(uri.getHost());
       Long onum = Long.parseLong(uri.getPath().substring(1)); // skip leading
-                                                              // '/'
+      // '/'
       Object o =
           fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
               store, onum));
@@ -86,6 +100,8 @@ public class FabricSourceLoader extends SourceLoader {
       codebase = (Codebase) o;
       codebaseCache.put(uri, codebase);
     }
+    if(Report.should_report(TOPIC, 3))
+      Report.report(3, "Checking " + SysUtil.oid(codebase) + " for " + className);
 
     FClass fcls = codebase.resolveClassName(className);
 
@@ -131,6 +147,8 @@ public class FabricSourceLoader extends SourceLoader {
   @SuppressWarnings("unchecked")
   protected FileSource checkDirectoryForSource(File directory, String className) {
     String[] exts = sourceExt.fileExtensions();
+    if(Report.should_report(TOPIC, 3))
+      Report.report(3, "Checking " + directory + " for " + className);
 
     for (int k = 0; k < exts.length; k++) {
 
@@ -176,7 +194,7 @@ public class FabricSourceLoader extends SourceLoader {
 
         try {
           if (Report.should_report(Report.loader, 2))
-          s = sourceExt.createFileSource(sourceFile, false);
+            s = sourceExt.createFileSource(sourceFile, false);
           loadedSources.put(fileKey(sourceFile), s);
           return s;
         } catch (IOException e) {
@@ -189,18 +207,18 @@ public class FabricSourceLoader extends SourceLoader {
 
   /*
    * (non-Javadoc)
-   * 
    * @see polyglot.frontend.SourceLoader#fileSource(java.lang.String, boolean)
    */
   @SuppressWarnings("unchecked")
   @Override
   public FileSource fileSource(String fileName, boolean userSpecified)
       throws IOException {
-      return fileSource(URI.create(fileName), userSpecified);
+    return fileSource(URI.create(fileName), userSpecified);
   }
 
   @SuppressWarnings("unchecked")
-  public FileSource fileSource(URI uri, boolean userSpecified) throws IOException {
+  public FileSource fileSource(URI uri, boolean userSpecified)
+      throws IOException {
     if ("fab".equals(uri.getScheme())) {
       FileSource s = (FileSource) loadedSources.get(uri.toString());
 
@@ -212,13 +230,14 @@ public class FabricSourceLoader extends SourceLoader {
       }
 
       FClass fcls = SysUtil.toFClass(uri);
-      if(fcls == null) 
-        return null;
-      
+      if (fcls == null) return null;
+
       s = ((fabric.ExtensionInfo) sourceExt).createRemoteSource(fcls, false);
       loadedSources.put(uri.toString(), s);
       return s;
 
     } else return super.fileSource(uri.getPath(), userSpecified);
   }
+  
+  protected static String TOPIC = "mobile";
 }
