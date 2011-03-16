@@ -36,7 +36,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @Override
   public CodebaseDisamb disamb() {
-    return new CodebaseDisamb_c();
+    return new FabILDisamb_c();
 
   }
 

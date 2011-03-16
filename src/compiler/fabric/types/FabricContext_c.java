@@ -10,6 +10,7 @@ import polyglot.types.LocalInstance;
 import polyglot.types.Named;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
+import polyglot.types.VarInstance;
 import fabil.frontend.CodebaseSource;
 import fabil.types.CodebaseContext;
 import fabil.types.CodebaseImportTable_c;
@@ -73,7 +74,6 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
    */
   @Override
   public Named find(String name) throws SemanticException {
-    // System.out.println("LOOKING FOR " + name + " kind: " + kind);
     if (isOuter())
       return ts.systemResolver().find(
           ((CodebaseTypeSystem) ts).absoluteName(codebase, name,
@@ -91,4 +91,10 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
     }
     return super.findLocal(name);
   }
+
+  @Override
+  public VarInstance findVariableSilent(String name) {
+    return super.findVariableSilent(name);
+  }
+  
 }

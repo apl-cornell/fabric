@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import fabil.ast.CodebaseDisamb;
-import fabil.ast.CodebaseDisamb_c;
+import fabil.ast.FabILDisamb_c;
 import fabil.ast.CodebasePackageNode;
 import fabil.ast.CodebasePackageNode_c;
 import fabric.common.SysUtil;
@@ -47,7 +47,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
 
   @Override
   public CodebaseDisamb disamb() {
-    return new CodebaseDisamb_c();
+    return new FabricDisamb_c();
 
   }
 

@@ -17,7 +17,7 @@ import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.ContextVisitor;
 
-public class CodebaseDisamb_c extends JifDisamb_c implements CodebaseDisamb {
+public class FabILDisamb_c extends Disamb_c implements CodebaseDisamb {
 
   @Override
   public Node disambiguate(Ambiguous amb, ContextVisitor v, Position pos,
