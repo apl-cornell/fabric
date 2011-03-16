@@ -1,10 +1,9 @@
 import java.io.PrintStream;
 import jif.runtime.Runtime;
 
-class Main authority (Alice, Bob, Chuck) {
+class Main authority (Alice, Bob, Chuck, broker) {
     public static final void main{⊤ <- }  (principal{*provider} p, String args[])  throws SecurityException, IllegalArgumentException  
-        authority (Alice, Bob, Chuck),
-	where caller(p), provider actsfor p,
+	where authority (Alice, Bob, Chuck, broker), caller(p), provider actsfor p,
 					  /*
 	{*provider} <= {},
 	{*provider} equiv {*AirlineExample.provider},
@@ -22,7 +21,15 @@ class Main authority (Alice, Bob, Chuck) {
 	 {*provider} <= {},
 	 {*IAirlineServer.provider} equiv {*provider}, {*IAirlineServer.provider} <= {*AirlineServer.provider},
          {*IAirlineServer.provider} <= {*AirlineAgent.provider},  {*AirlineServer.provider} equiv {*AirlineAgent.provider},
-	 {*provider} equiv {*AirlineExample.provider}
+	 {*provider} equiv {*AirlineExample.provider},
+
+	 {*provider} equiv {broker <- }, 
+	 {*AirlineServer.provider}  <= {Alice <- },
+	 {*AirlineServer.provider } <= {Bob <-},
+	 {*provider} actsfor broker, 
+	 {*provider} actsfor Alice,
+	 {*provider} actsfor Bob,
+	 {*provider} actsfor Chuck
 
     {
 	PrintStream[{}] out = null;
@@ -37,14 +44,10 @@ class Main authority (Alice, Bob, Chuck) {
           PrintStream[{}] out1 = endorse(out, {*provider; p->; _<-_} to {{p→p; p<-*} ⊔ {⊤→⊤;⊤←⊤} ⊓ {*provider}});
           PrintStream[{}] out2 = declassify(out1,  {} );
 
-	  final principal a = new principal ( Alice ) ; 
-	  final principal b = new principal ( Bob );	
-	  final principal u = new principal ( Chuck) ;
-	  final principal aa = new principal ( a & b & u) ;  
 
-	  if (aa actsfor a && aa actsfor b && aa actsfor u)   {
-		  new AirlineExample [a, b, u, aa]  ().go(out2); 
-	  } 
+	  if (broker actsfor Alice && broker actsfor Bob && broker actsfor Chuck ) {
+		  new AirlineExample [Alice, Bob, Chuck, broker]  ().go(out2); 
+	  }
     }
 
 }
