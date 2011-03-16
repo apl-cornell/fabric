@@ -2,16 +2,19 @@ import java.io.PrintStream;
 import jif.runtime.Runtime;
 
 class Main  {
-    public static final void main{⊤ <- }  (principal{} p, String args[])  // throws SecurityException, IllegalArgumentException  
-	where caller(p) //, provider actsfor p
+    public static final void main {⊤ ← } (principal {} p, String {} args[]) 
+    {
+	
+    }
+    /*    public static final void main{⊤ <- }  (principal{p<-} p, String{p<-} args[])  // throws SecurityException, IllegalArgumentException  
     {
 	if (new label {*Main.provider}  actsfor p) {
 	    run (p, args); 
 	}
     }
 
-    public static final void run{⊤ <- }  (principal{} p, String args[])  throws SecurityException, IllegalArgumentException  
-										where  caller(p), {*provider} actsfor p
+    public static final void run{⊤ <- }  (principal{p<-} p, String {p<-}  args[])  throws SecurityException, IllegalArgumentException  
+											  where provider <= {p <-; p -> } 
     {
 	PrintStream[{}] out = null;
           try {
@@ -27,5 +30,6 @@ class Main  {
 	  
 	  new AirlineExample  ().go(out2); // Jif automatically infers principals? 
     }
+    */
 
 }

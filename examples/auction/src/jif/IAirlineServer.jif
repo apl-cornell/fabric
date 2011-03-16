@@ -1,0 +1,5 @@
+public interface IAirlineServer [principal TheAirline, principal Airlines, label L]  {
+    int {TheAirline -> ; TheAirline <- } getLowestPrice() where provider <= {TheAirline <- };
+    AirlineAgent [TheAirline, Airlines,  L ]  getAgent {TheAirline -> ; TheAirline <- ; *provider} () where {*provider} <= {TheAirline <- }, {*provider} <= {*AirlineAgent.provider};
+}
+
