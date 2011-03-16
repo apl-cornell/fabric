@@ -766,7 +766,7 @@ public final class LabelUtil {
 //    }
   }
   
-  public boolean acts_for(Label actor, Principal granter) {
+  public static boolean acts_for(Label actor, Principal granter) {
 //      try {
 //          enterTiming();
           return actsFor(actor, granter);
@@ -775,7 +775,7 @@ public final class LabelUtil {
 //      }
   }
 
-  public boolean actsFor(Label actor, Principal granter) {
+  public static boolean actsFor(Label actor, Principal granter) {
 //    try {
 //      enterTiming();
       Label L = toLabel(topConf(), writerPolicy(granter, granter));
