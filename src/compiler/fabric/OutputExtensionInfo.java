@@ -14,6 +14,8 @@ import polyglot.util.InternalCompilerError;
 import fabil.FabILOptions;
 import fabil.frontend.FabILScheduler;
 import fabric.lang.Codebase;
+import fabric.lang.security.LabelUtil;
+import fabric.lang.security.NodePrincipal;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -23,7 +25,8 @@ import fabric.worker.Worker;
 public class OutputExtensionInfo extends fabil.ExtensionInfo {
 
   protected ExtensionInfo fabext;
-  
+  private fabric.lang.security.Label destLabel;
+
   @Override
   public Scheduler createScheduler() {
     return new OutputScheduler(this);
@@ -58,9 +61,15 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
     //XXX: how to set label?
     // destination should have integrity of worker and configurable
     // consistency
-    return Worker.getWorker().getLocalStore().getPublicReadonlyLabel();
+    if(destLabel == null) {        
+      Store s = destinationStore();
+      NodePrincipal np = Worker.getWorker().getPrincipal();
+      destLabel = LabelUtil._Impl.toLabel(s, LabelUtil._Impl.writerPolicy(s, np, np));
+    }
+    return destLabel;
   }
   
+  @Override
   public Codebase codebase() {
     FabILOptions opt = (FabILOptions) getOptions();
 

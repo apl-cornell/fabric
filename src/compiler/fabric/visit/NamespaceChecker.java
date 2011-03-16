@@ -1,5 +1,6 @@
 package fabric.visit;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -18,6 +19,7 @@ import fabric.frontend.RemoteSource;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.WrappedJavaInlineable;
+import fabric.lang.security.LabelUtil;
 import fabric.types.FabricClassType;
 import fabric.types.FabricTypeSystem;
 import fabric.types.FabricTypeSystem_c;
@@ -84,6 +86,12 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
         continue;
       
       Codebase depcb = depclass.getCodebase();
+      if (!LabelUtil._Impl.relabelsTo(depclass.get$label(), depcb.get$label())) {
+        Report.report(1, "WARNING: The label of class "
+            + SysUtil.absoluteName(depclass)
+            + " is more restrictive than the label of its codebase.");
+        relink.add(depclass);
+      }
       Set<String> depdeps = convert(depclass.dependencies());
       Report.report(1, depclass + " has dependencies: " + depdeps);
       

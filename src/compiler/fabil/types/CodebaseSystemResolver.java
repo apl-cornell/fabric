@@ -31,13 +31,7 @@ public class CodebaseSystemResolver extends SystemResolver {
       CodebaseClassType ct = (CodebaseClassType) q;
       CodebaseSource cs = (CodebaseSource) ct.fromSource();
       String className = ct.fullName();
-      
-      if (!className.equals(name)
-          && !ts.getTransformedClassName(ct).equals(name)) {
-        throw new InternalCompilerError(
-            "All system-level class types must be fully qualified : "
-                + ct.fullName() + " vs " + name);
-      }
+
       String containerName;
       if (ts.isPlatformType(ct) || !cs.isRemote()) {
         containerName = StringUtil.getPackageComponent(className);

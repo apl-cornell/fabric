@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
+import java.security.GeneralSecurityException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Map;
@@ -28,12 +29,14 @@ import fabil.frontend.CodebaseSourceClassResolver;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
+import fabric.common.SysUtil;
 import fabric.frontend.FabricSourceLoader;
 import fabric.frontend.LocalSource;
 import fabric.frontend.RemoteSource;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
 import fabric.parse.Grm;
 import fabric.parse.Lexer_c;
 import fabric.types.FabricTypeSystem;
@@ -189,6 +192,11 @@ public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
   }
   
   public FileSource createRemoteSource(FClass fcls, boolean user) throws IOException {
+    if (!LabelUtil._Impl.relabelsTo(fcls.get$label(),fcls.getCodebase().get$label()))
+      //XXX: should we throw a more security-related exception here?
+      throw new IOException("The label of class "
+          + SysUtil.absoluteName(fcls)
+          + " is higher than the label of its codebase ");
       return new RemoteSource(fcls, user);
   }
   
