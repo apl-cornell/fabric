@@ -13,10 +13,11 @@ public class AirlineExample [principal AirlineA, principal AirlineB, principal T
 
     public void go { ⊤ <-  } (PrintStream[{}] {} output ) where authority (AirlineA, AirlineB, TheUser, Broker), provider <= {Broker <- }, 
 	 {*AirlineServer.provider} <= {AirlineA <- },  {*AirlineServer.provider } <= {AirlineB <- },
-         {*AirlineAgent.provider } <= {AirlineA <- },  {*AirlineAgent.provider } <= {AirlineB <- },
-	{*IAirlineServer.provider} equiv {*provider}, {*IAirlineServer.provider} <= {*AirlineServer.provider},
-	{*IAirlineServer.provider} equiv {*provider}, {*IAirlineServer.provider} <= {*AirlineAgent.provider},
-						 {*AirlineServer.provider} equiv {*AirlineAgent.provider}
+         {*AirlineAgent.provider } <= {AirlineA <- },  {*AirlineAgent.provider  } <= {AirlineB <- },
+
+	 {*IAirlineServer.provider} equiv {*provider}, {*IAirlineServer.provider} <= {*AirlineServer.provider},
+         {*IAirlineServer.provider} <= {*AirlineAgent.provider},  {*AirlineServer.provider} equiv {*AirlineAgent.provider}
+
     {
 	this.output = output; 
 	println ("Starting Airline example");

@@ -1,14 +1,29 @@
 import java.io.PrintStream;
 import jif.runtime.Runtime;
 
-class Main  {
+class Main authority (Alice, Bob, Chuck) {
     public static final void main{⊤ <- }  (principal{*provider} p, String args[])  throws SecurityException, IllegalArgumentException  
+        authority (Alice, Bob, Chuck),
 	where caller(p), provider actsfor p,
+					  /*
 	{*provider} <= {},
 	{*provider} equiv {*AirlineExample.provider},
 	{*provider} equiv {*IAirlineServer.provider},
 	{*provider} <= {*AirlineServer.provider},
 	{*provider} <= {*AirlineAgent.provider}
+					  */
+/*
+	{*IAirlineServer.provider} equiv {*provider}, {*IAirlineServer.provider} <= {*AirlineServer.provider},
+	{*IAirlineServer.provider} equiv {*AirlineAgent.provider},	
+					 {*AirlineServer.provider} equiv {*AirlineAgent.provider}
+
+*/
+
+	 {*provider} <= {},
+	 {*IAirlineServer.provider} equiv {*provider}, {*IAirlineServer.provider} <= {*AirlineServer.provider},
+         {*IAirlineServer.provider} <= {*AirlineAgent.provider},  {*AirlineServer.provider} equiv {*AirlineAgent.provider},
+	 {*provider} equiv {*AirlineExample.provider}
+
     {
 	PrintStream[{}] out = null;
           try {
@@ -21,8 +36,15 @@ class Main  {
 
           PrintStream[{}] out1 = endorse(out, {*provider; p->; _<-_} to {{p→p; p<-*} ⊔ {⊤→⊤;⊤←⊤} ⊓ {*provider}});
           PrintStream[{}] out2 = declassify(out1,  {} );
-	  
-	  new AirlineExample  ().go(out2); // Jif automatically infers principals? 
+
+	  final principal a = new principal ( Alice ) ; 
+	  final principal b = new principal ( Bob );	
+	  final principal u = new principal ( Chuck) ;
+	  final principal aa = new principal ( a & b & u) ;  
+
+	  if (aa actsfor a && aa actsfor b && aa actsfor u)   {
+		  new AirlineExample [a, b, u, aa]  ().go(out2); 
+	  } 
     }
 
 }
