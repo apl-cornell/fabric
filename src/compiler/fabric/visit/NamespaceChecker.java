@@ -1,6 +1,5 @@
 package fabric.visit;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -8,34 +7,22 @@ import java.util.Map;
 import java.util.Set;
 
 import jif.ast.JifClassDecl;
+import polyglot.ast.Node;
+import polyglot.frontend.Job;
+import polyglot.main.Report;
+import polyglot.types.ParsedClassType;
+import polyglot.types.SemanticException;
+import polyglot.visit.ErrorHandlingVisitor;
+import polyglot.visit.NodeVisitor;
 import fabil.types.CodebaseClassType;
-import fabric.ExtensionInfo;
-import fabric.FabricScheduler;
 import fabric.Topics;
 import fabric.ast.FabricNodeFactory;
 import fabric.common.SysUtil;
-import fabric.frontend.LocalSource;
-import fabric.frontend.RemoteSource;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.security.LabelUtil;
-import fabric.types.FabricClassType;
 import fabric.types.FabricTypeSystem;
-import fabric.types.FabricTypeSystem_c;
-import polyglot.ast.Node;
-import polyglot.frontend.FileSource;
-import polyglot.frontend.Job;
-import polyglot.frontend.Scheduler;
-import polyglot.frontend.Source;
-import polyglot.frontend.goals.Goal;
-import polyglot.main.Report;
-import polyglot.types.Named;
-import polyglot.types.ParsedClassType;
-import polyglot.types.SemanticException;
-import polyglot.util.InternalCompilerError;
-import polyglot.visit.ErrorHandlingVisitor;
-import polyglot.visit.NodeVisitor;
 
 public class NamespaceChecker extends ErrorHandlingVisitor {
 
