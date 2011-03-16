@@ -4,6 +4,7 @@ import jif.runtime.Runtime;
 class Main  {
     public static final void main{⊤ <- }  (principal{*provider} p, String args[])  throws SecurityException, IllegalArgumentException  
 	where caller(p), provider actsfor p,
+	{*provider} <= {},
 	{*provider} equiv {*AirlineExample.provider},
 	{*provider} equiv {*IAirlineServer.provider},
 	{*provider} equiv {*AirlineServer.provider},
