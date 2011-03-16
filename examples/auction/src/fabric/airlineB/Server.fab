@@ -1,0 +1,34 @@
+package airlineB;
+
+public class Server[label Airline, label Auction] implements Server[Airline, Auction] 
+	where {*provider} <= Auction, {*provider} equiv {Airline}
+{
+    int {Airline} cost;
+    int {Airline} seats; 
+    int {Airline} lowestprice; 
+
+	public Server (int {Airline} cost, int {Airline} seats) {
+		this.cost = cost;
+		this.seats = seats; 
+		this.lowestprice = cost;
+		try { 
+		    this.lowestprice = cost / seats;
+		} catch (ArithmeticException ignored) { }
+    }
+    
+    public int {Airline} getLowestPrice()
+    {
+		return this.lowestprice;
+    }
+
+    public Agent[Airline, Auction]  getAgent {Airline} () 
+    {
+	////	if (provider  <= new label {TheAirline <- }   && AirlineAgent.provider equiv provider ) { // this is really weird? - we should not need this dynamic check here 
+	//	if (new label  {*AirlineAgent.provider} equiv new label {*AirlineAServer.provider} 
+	//		&& provider  <= new label {TheAirline <- }) 
+	//	{
+		return new Agent[Airline, Auction] (this);
+	//	}
+    //    return null;
+    }
+}

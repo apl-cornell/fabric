@@ -1,0 +1,38 @@
+package airlineA;
+
+public class Server [principal TheAirline, principal Airlines, label L]  
+    //implements AirlineServer[TheAirline, Airlines,  L]  
+    where Airlines actsfor TheAirline, provider actsfor TheAirline
+
+{
+    int {TheAirline -> ; TheAirline <- } cost;
+    int {TheAirline -> ; TheAirline <-} seats; 
+    int {TheAirline -> ; TheAirline <-} lowestprice; 
+
+	public Server (int {TheAirline ->; TheAirline <- } cost, int {TheAirline -> ; TheAirline <-  } seats) where {*provider} <= {TheAirline <- }  {
+		this.cost = cost;
+		this.seats = seats; 
+		this.lowestprice = 0;
+		try { 
+		    this.lowestprice = cost / seats;
+		} catch (ArithmeticException ignored) {
+		}
+    }
+    
+    public int {TheAirline -> ; TheAirline <- } getLowestPrice() // where provider <= {TheAirline <- } 
+    {
+		return this.lowestprice;
+    }
+
+    public Agent [TheAirline, Airlines,  L ]  getAgent {TheAirline -> ; TheAirline <- } () 
+    // not sure we need this begin-label here 
+    {
+	//	if (provider  <= new label {TheAirline <- }   && AirlineAgent.provider equiv provider ) { // this is really weird? - we should not need this dynamic check here 
+		if (new label  {*AirlineAgent.provider} equiv new label {*AirlineAServer.provider} 
+			&& provider  <= new label {TheAirline <- }) 
+		{
+		    return new AirlineAgent [TheAirline, Airlines, L] (this);
+		}
+        return null;
+    }
+}

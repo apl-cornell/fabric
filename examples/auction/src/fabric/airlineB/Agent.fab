@@ -1,0 +1,43 @@
+package airlineB;
+import broker.Offer;
+import broker.UserChoice;
+// Airline agent provides competing offers 
+
+
+public class Agent[label Airline, label Auction] implements broker.Agent[Airline, Auction] 
+	where {*provider} <= {Auction}, {*provider} equiv {Airline}
+{
+    private final Server[Airline, Auction]{Airline} server;
+    private int {Airline} lowestprice; 
+
+    public Agent(Server[Airline, Auction]{Airline} server)  {
+		this.server = server;
+    }
+
+    public void prepareForAuction {Airline} () {
+	    this.lowestprice = server.getLowestPrice(); // asking the "remote" server for the current lowest price
+    }
+
+    public Offer[Auction] {Auction} makeFirstOffer {Airline} () {
+		prepareForAuction(); 
+		int price = 2*lowestprice;
+		return new Offer[Auction] (price, 0);
+    }
+
+    public Offer[Auction] {Auction} makeOffer{Auction}(UserChoice[Auction] {Auction} userChoice,  
+														Offer[Auction] {Auction} bestOffer) {
+		if (userChoice == null) return null;
+
+		int price = 2*lowestprice;  // possible read-channel??? 
+
+		Offer[Auction] newOffer = new Offer[Auction] (price, 0);
+
+		while (userChoice.choice (newOffer, bestOffer)  >= 0 && price >= lowestprice ) {
+		    newOffer = new Offer [Auction] ( price -- , 0) ;
+		}
+		if (price < lowestprice) 
+		    return null; // give up 
+
+		return newOffer; // return the best competing offer otherwise
+    }
+}

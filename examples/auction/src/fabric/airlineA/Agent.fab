@@ -1,0 +1,47 @@
+package airlineA;
+// Airline agent provides competing offers 
+
+public class Agent[principal TheAirline, principal Airlines, label L ] where Airlines actsfor TheAirline, provider actsfor TheAirline 
+{
+    private final Server [TheAirline, Airlines, L]  { TheAirline -> ; TheAirline <- } server;
+
+    public Agent(Server [TheAirline, Airlines, L ] { TheAirline ->; TheAirline <-  } server)  {
+	this.server = server;
+    }
+
+    int { TheAirline <-; TheAirline -> } lowestprice; 
+
+    public void prepareForAuction { TheAirline <-; TheAirline -> } ()
+								       where {TheAirline <-; TheAirline -> } <= {L}, provider <= {TheAirline <- } , 
+														    {*Server.provider} equiv {*provider}
+    {
+	    this.lowestprice = server.getLowestPrice () ; // asking the "remote" server for the current lowest price
+	
+    }
+
+    public Offer[L] {L } makeFirstOffer  { TheAirline <-; TheAirline -> }   () 
+	where {TheAirline <-; TheAirline -> } <= L, provider <= {TheAirline <- }, {*Server.provider} equiv {*provider}
+    {
+
+	prepareForAuction(); 
+	int price = 2* lowestprice;
+	return new Offer[L] (price, 0);
+    }
+
+    public Offer[L ] {L } makeOffer {L} (UserChoice[L] {L} userChoice,  Offer[L] {L} bestOffer)  // begin-label here prevents any side-effects below L
+					    where {TheAirline <-; TheAirline -> } <= {L}, provider <= {TheAirline <-}   {
+	if (userChoice == null) return null;
+
+	int price = 2* lowestprice;  // possible read-channel??? 
+
+	Offer[L] newOffer = new Offer[L] (price, 0);
+
+	while (userChoice.choice (newOffer, bestOffer)  >= 0 && price >= lowestprice ) {
+	    newOffer = new Offer [L] ( price -- , 0) ;
+	}
+	if (price < lowestprice) 
+	    return null; // give up 
+
+	return newOffer; // return the best competing offer otherwise
+    }
+}

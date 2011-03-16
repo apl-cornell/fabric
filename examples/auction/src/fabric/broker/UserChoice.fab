@@ -1,0 +1,6 @@
+package broker;
+public interface UserChoice[label L] 
+	//where {*provider} <= {User}, {User} <= {L} 
+{
+    int {L} choice (Offer [L]{L} offer1, Offer[L]{L} offer2); 
+}
