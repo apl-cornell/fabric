@@ -1,6 +1,6 @@
 // Airline agent provides competing offers 
 
-public class AirlineAgent [principal TheAirline, principal Airlines, label L ] where Airlines actsfor TheAirline
+public class AirlineAgent [principal TheAirline, principal Airlines, label L ] where Airlines actsfor TheAirline, provider actsfor TheAirline 
 {
     private final AirlineServer [TheAirline, Airlines, L]  { TheAirline -> ; TheAirline <- } server;
 
@@ -10,13 +10,17 @@ public class AirlineAgent [principal TheAirline, principal Airlines, label L ] w
 
     int { TheAirline <-; TheAirline -> } lowestprice; 
 
-    public void prepareForAuction { TheAirline <-; TheAirline -> } () 
-	      where {TheAirline <-; TheAirline -> } <= L  {
-	this.lowestprice = server.getLowestPrice () ; // asking the "remote" server for the current lowest price
+    public void prepareForAuction { TheAirline <-; TheAirline -> } ()
+								       where {TheAirline <-; TheAirline -> } <= L, provider <= {TheAirline <- } , 
+														    {*AirlineServer.provider} equiv {*provider}
+    {
+	    this.lowestprice = server.getLowestPrice () ; // asking the "remote" server for the current lowest price
+	
     }
 
-    public Offer[L] {L } makeFirstOffer  { TheAirline <-; TheAirline -> } () 
-	      where {TheAirline <-; TheAirline -> } <= L  {
+    public Offer[L] {L } makeFirstOffer  { TheAirline <-; TheAirline -> }   () 
+	where {TheAirline <-; TheAirline -> } <= L, provider <= {TheAirline <- }, 		 {*AirlineServer.provider} equiv {*provider}
+    {
 
 	prepareForAuction(); 
 	int price = 2* lowestprice;
@@ -24,7 +28,7 @@ public class AirlineAgent [principal TheAirline, principal Airlines, label L ] w
     }
 
     public Offer[L ] {L } makeOffer {L} (UserChoice[L] {L} userChoice,  Offer[L] {L} bestOffer)  // begin-label here prevents any side-effects below L
-                  where {TheAirline <-; TheAirline -> } <= L  {
+					    where {TheAirline <-; TheAirline -> } <= L, provider <= {TheAirline <-}   {
 	if (userChoice == null) return null;
 
 	int price = 2* lowestprice;  // possible read-channel??? 

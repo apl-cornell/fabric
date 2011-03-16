@@ -3,7 +3,7 @@ import jif.runtime.Runtime;
 
 public class AirlineExample [principal AirlineA, principal AirlineB, principal TheUser, principal Broker] 
     authority (AirlineA, AirlineB, TheUser, Broker)
-    where Broker actsfor AirlineA,  Broker actsfor AirlineB, Broker actsfor TheUser    
+    where Broker actsfor AirlineA,  Broker actsfor AirlineB, Broker actsfor TheUser, provider actsfor Broker
 {
     public AirlineExample () {
 	// constructor
@@ -11,22 +11,27 @@ public class AirlineExample [principal AirlineA, principal AirlineB, principal T
 
     protected PrintStream[{}]{} output  ;
 
-    public void go { ⊤ <-  } (PrintStream[{}] {} output ) where authority (AirlineA, AirlineB, TheUser, Broker)
-				 {
+    public void go { ⊤ <-  } (PrintStream[{}] {} output ) where authority (AirlineA, AirlineB, TheUser, Broker), provider <= {Broker <- }, 
+	 {*AirlineServer.provider} <= {AirlineA <- },  {*AirlineServer.provider } <= {AirlineB <- },
+         {*AirlineAgent.provider } <= {AirlineA <- },  {*AirlineAgent.provider } <= {AirlineB <- },
+	{*IAirlineServer.provider} equiv {*provider}, {*IAirlineServer.provider} <= {*AirlineServer.provider},
+	{*IAirlineServer.provider} equiv {*provider}, {*IAirlineServer.provider} <= {*AirlineAgent.provider},
+						 {*AirlineServer.provider} equiv {*AirlineAgent.provider}
+    {
 	this.output = output; 
 	println ("Starting Airline example");
 
 	final principal airlines = new principal (AirlineA & AirlineB) ;
 	final label  lbl = new label {TheUser -> ; TheUser <-; airlines -> ; airlines <-};
 
-	AirlineServer [AirlineA, airlines,  lbl] a = new AirlineServer (30, 10);
-	AirlineServer [AirlineB, airlines,  lbl ] b = new AirlineServer(20, 10);
-	User [TheUser, lbl ] user = new User();
-
-	    
 	// holds by construction, dancing around type system... 
 	if (airlines actsfor AirlineA && airlines actsfor AirlineB && 
 	    ( new label {AirlineA ->; AirlineA <-} <= lbl) &&  (new label {AirlineB ->; AirlineB <-} <= lbl)  ) {
+
+	    IAirlineServer [AirlineA, airlines,  lbl] a = new AirlineServer [AirlineA, airlines, lbl] (30, 10);
+	    IAirlineServer [AirlineB, airlines,  lbl] b = new AirlineServer [AirlineB, airlines, lbl] (20, 10);
+
+	    User [TheUser, lbl ] user = new User();
 
 	    AirlineAgent [ AirlineA, airlines, lbl ]  agentA = a.getAgent();
 	    AirlineAgent [ AirlineB, airlines, lbl ]  agentB = b.getAgent();
@@ -39,8 +44,11 @@ public class AirlineExample [principal AirlineA, principal AirlineB, principal T
 	    // this variable stores the winning agent. When winner == 0 we have no winner yet
 	    int winner = 0;
 
+
+
 	    Offer [lbl] offerA;
 	    Offer [lbl] offerB = agentB.makeFirstOffer();
+
 
 	    // main auction loop 
 	    while (winner == 0) { 
@@ -58,7 +66,8 @@ public class AirlineExample [principal AirlineA, principal AirlineB, principal T
 
 	    // with enough authority we can declassify anything... ;-) 
 	    // 
-	    int {TheUser ->; airlines ->; Broker <- } w0 = endorse (winner, {*lbl} to {  TheUser ->; airlines ->; Broker <-} ); 
+
+	    int {TheUser ->; airlines ->; Broker <-} w0 = endorse (winner, {*lbl} to {*provider; TheUser ->; airlines ->; Broker <-} );
 
 	    if (Broker actsfor airlines) {
 		int {} w = declassify ( w0, {} ); 
@@ -67,7 +76,7 @@ public class AirlineExample [principal AirlineA, principal AirlineB, principal T
 	}
     }
 
-    public void println {} (String {} x) { // encapsualte output so fatal error analysis kicks in... 
+    public void println {} (String {} x) where provider <= {Broker <- }  { // encapsulate output so fatal error analysis kicks in... 
 	    output.println (x) ; 
     }
 }

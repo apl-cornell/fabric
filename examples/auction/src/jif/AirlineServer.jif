@@ -1,10 +1,13 @@
-public class AirlineServer [principal TheAirline, principal Airlines, label L]  where Airlines actsfor TheAirline
+public class AirlineServer [principal TheAirline, principal Airlines, label L]  
+    implements IAirlineServer[TheAirline, Airlines,  L]  
+    where Airlines actsfor TheAirline, provider actsfor TheAirline
+
 {
     int {TheAirline -> ; TheAirline <- } cost;
     int {TheAirline -> ; TheAirline <-} seats; 
-    int {TheAirline -> ; TheAirline <-} lowestprice;
+    int {TheAirline -> ; TheAirline <-} lowestprice; 
 
-    public AirlineServer (int {TheAirline ->; TheAirline <- } cost, int {TheAirline -> ; TheAirline <-  } seats) {
+public AirlineServer (int {TheAirline ->; TheAirline <- } cost, int {TheAirline -> ; TheAirline <-  } seats) where {*provider} <= {TheAirline <- }  {
 	this.cost = cost;
 	this.seats = seats; 
 	this.lowestprice = 0;
@@ -14,12 +17,18 @@ public class AirlineServer [principal TheAirline, principal Airlines, label L]  
 	}
     }
     
-    public int {TheAirline -> ; TheAirline <- } getLowestPrice() {
+    public int {TheAirline -> ; TheAirline <- } getLowestPrice() // where provider <= {TheAirline <- } 
+    {
 	return this.lowestprice;
     }
 
-    public AirlineAgent [TheAirline, Airlines,  L ]  getAgent {TheAirline -> ; TheAirline <- } ()  // not sure we need this begin-label here 
+    public AirlineAgent [TheAirline, Airlines,  L ]  getAgent {TheAirline -> ; TheAirline <- } () 
+    // not sure we need this begin-label here 
     {
-	return new AirlineAgent [TheAirline, Airlines, L] (this);
+	//	if (provider  <= new label {TheAirline <- }   && AirlineAgent.provider equiv provider ) { // this is really weird? - we should not need this dynamic check here 
+	if (new label  {*AirlineAgent.provider} equiv new label {*AirlineServer.provider} && provider  <= new label {TheAirline <- }) {
+	    return new AirlineAgent [TheAirline, Airlines, L] (this);
+	    }
+        return null;
     }
 }
