@@ -18,9 +18,7 @@ class Main  {
               // just let out be null.
           }
 
-	  final label confProject = new label {⊤→⊤; ⊤←⊤};
-	  final label provConf = new label {*provider ⊓ *confProject}; // {C(provider), trusted}
-          PrintStream[{}] out1 = endorse(out, {*provider} to {*provConf ; p<-*});
+          PrintStream[{}] out1 = endorse(out, {*provider; p->; _<-_} to {{p→p; p<-*} ⊔ {⊤→⊤;⊤←⊤} ⊓ {*provider}});
           PrintStream[{}] out2 = declassify(out1,  {} );
 	  
 	  new AirlineExample  ().go(out2); // Jif automatically infers principals? 
