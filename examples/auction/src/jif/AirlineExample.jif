@@ -28,7 +28,7 @@ public class AirlineExample [principal AirlineA, principal AirlineB, principal T
 	if (airlines actsfor AirlineA && airlines actsfor AirlineB && 
 	    ( new label {AirlineA ->; AirlineA <-} <= lbl) &&  (new label {AirlineB ->; AirlineB <-} <= lbl)  ) {
 
-	    IAirlineServer [AirlineA, airlines,  lbl] a = new AirlineServer [AirlineA, airlines, lbl] (30, 10);
+	    IAirlineServer [AirlineA, airlines,  lbl] a = new AirlineServer [AirlineA, airlines, lbl] (10, 10);
 	    IAirlineServer [AirlineB, airlines,  lbl] b = new AirlineServer [AirlineB, airlines, lbl] (20, 10);
 
 	    User [TheUser, lbl ] user = new User();

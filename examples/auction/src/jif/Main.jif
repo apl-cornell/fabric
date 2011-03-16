@@ -7,8 +7,8 @@ class Main  {
 	{*provider} <= {},
 	{*provider} equiv {*AirlineExample.provider},
 	{*provider} equiv {*IAirlineServer.provider},
-	{*provider} equiv {*AirlineServer.provider},
-	{*provider} equiv {*AirlineAgent.provider}
+	{*provider} <= {*AirlineServer.provider},
+	{*provider} <= {*AirlineAgent.provider}
     {
 	PrintStream[{}] out = null;
           try {

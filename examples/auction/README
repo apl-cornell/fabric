@@ -6,7 +6,7 @@ auction, the identity of the winner is revealed to all participants.
 
 To compile with Jif, run 
 
-$ jifc -fail-on-exception Main.jif
+$ jifc -fail-on-exception -untrusted-providers Main.jif
 
 To run
 
