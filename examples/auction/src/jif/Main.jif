@@ -2,19 +2,27 @@ import java.io.PrintStream;
 import jif.runtime.Runtime;
 
 class Main  {
-    public static final void main {⊤ ← } (principal {} p, String {} args[]) 
-    {
-	
-    }
-    /*    public static final void main{⊤ <- }  (principal{p<-} p, String{p<-} args[])  // throws SecurityException, IllegalArgumentException  
+    public static final void main{⊤ <- }  (principal{*provider} p, String args[])  // throws SecurityException, IllegalArgumentException  
+	where caller(p), provider actsfor p,
+	{*provider} equiv {*AirlineExample.provider},
+	{*provider} equiv {*IAirlineServer.provider},
+	{*provider} equiv {*AirlineServer.provider},
+	{*provider} equiv {*AirlineAgent.provider}
     {
 	if (new label {*Main.provider}  actsfor p) {
 	    run (p, args); 
 	}
     }
 
-    public static final void run{⊤ <- }  (principal{p<-} p, String {p<-}  args[])  throws SecurityException, IllegalArgumentException  
-											  where provider <= {p <-; p -> } 
+    public static final void run{⊤ <- }  (principal{*provider} p, String args[])  throws SecurityException, IllegalArgumentException  
+    where  caller(p), {*provider} actsfor p,
+	{*provider} equiv {*AirlineExample.provider},
+	{*provider} equiv {*IAirlineServer.provider},
+	{*provider} equiv {*AirlineServer.provider},
+	{*provider} equiv {*AirlineAgent.provider}
+
+
+
     {
 	PrintStream[{}] out = null;
           try {
@@ -25,11 +33,10 @@ class Main  {
               // just let out be null.
           }
 
-          PrintStream[{}] out1 = endorse(out, {p->*} to {p->*; p<-*});
+          PrintStream[{}] out1 = endorse(out, {*provider} to {{*provider ⊓ ⊤←⊤} ⊔ {p<-*}});
           PrintStream[{}] out2 = declassify(out1,  {} );
 	  
 	  new AirlineExample  ().go(out2); // Jif automatically infers principals? 
     }
-    */
 
 }
