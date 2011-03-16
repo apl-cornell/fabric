@@ -1,29 +1,30 @@
 package fabric.lang.security;
 
-public interface SecretKeyObject extends fabric.lang.Object {
+public interface PrincipalSet extends fabric.lang.Object {
     
-    public javax.crypto.SecretKey get$key();
+    public fabric.util.Set get$set();
     
-    public javax.crypto.SecretKey set$key(javax.crypto.SecretKey val);
+    public fabric.util.Set set$set(fabric.util.Set val);
     
-    public javax.crypto.SecretKey getKey();
+    public fabric.lang.security.PrincipalSet add(
+      fabric.lang.security.Principal p);
     
-    public javax.crypto.SecretKey rekey();
+    public fabric.util.Set getSet();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.SecretKeyObject
+      implements fabric.lang.security.PrincipalSet
     {
         
-        native public javax.crypto.SecretKey get$key();
+        native public fabric.util.Set get$set();
         
-        native public javax.crypto.SecretKey set$key(
-          javax.crypto.SecretKey val);
+        native public fabric.util.Set set$set(fabric.util.Set val);
         
-        native public javax.crypto.SecretKey getKey();
+        native public fabric.lang.security.PrincipalSet add(
+          fabric.lang.security.Principal arg1);
         
-        native public javax.crypto.SecretKey rekey();
+        native public fabric.util.Set getSet();
         
-        public _Proxy(SecretKeyObject._Impl impl) { super(impl); }
+        public _Proxy(PrincipalSet._Impl impl) { super(impl); }
         
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
@@ -31,22 +32,22 @@ public interface SecretKeyObject extends fabric.lang.Object {
     }
     
     public static class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.security.SecretKeyObject
+      implements fabric.lang.security.PrincipalSet
     {
         
-        native public javax.crypto.SecretKey get$key();
+        native public fabric.util.Set get$set();
         
-        native public javax.crypto.SecretKey set$key(
-          javax.crypto.SecretKey val);
-        
-        native public javax.crypto.SecretKey getKey();
-        
-        native public javax.crypto.SecretKey rekey();
+        native public fabric.util.Set set$set(fabric.util.Set val);
         
         public _Impl(fabric.worker.Store $location,
                      fabric.lang.security.Label $label) {
             super($location, $label);
         }
+        
+        native public fabric.lang.security.PrincipalSet add(
+          fabric.lang.security.Principal p);
+        
+        native public fabric.util.Set getSet();
         
         native protected fabric.lang.Object._Proxy $makeProxy();
         
@@ -71,10 +72,10 @@ public interface SecretKeyObject extends fabric.lang.Object {
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.SecretKeyObject._Static
+          implements fabric.lang.security.PrincipalSet._Static
         {
             
-            public _Proxy(fabric.lang.security.SecretKeyObject._Static.
+            public _Proxy(fabric.lang.security.PrincipalSet._Static.
                             _Impl impl) {
                 super(impl);
             }
@@ -85,7 +86,7 @@ public interface SecretKeyObject extends fabric.lang.Object {
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.SecretKeyObject._Static
+          implements fabric.lang.security.PrincipalSet._Static
         {
             
             public _Impl(fabric.worker.Store store,

@@ -1,52 +1,32 @@
 package fabric.lang.security;
 
-public interface SecretKeyObject extends fabric.lang.Object {
+public interface ReflexiveProof extends fabric.lang.security.ActsForProof {
     
-    public javax.crypto.SecretKey get$key();
+    public void gatherDelegationDependencies(java.util.Set s);
     
-    public javax.crypto.SecretKey set$key(javax.crypto.SecretKey val);
-    
-    public javax.crypto.SecretKey getKey();
-    
-    public javax.crypto.SecretKey rekey();
-    
-    public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.SecretKeyObject
+    public static class _Proxy extends fabric.lang.security.ActsForProof._Proxy
+      implements fabric.lang.security.ReflexiveProof
     {
         
-        native public javax.crypto.SecretKey get$key();
-        
-        native public javax.crypto.SecretKey set$key(
-          javax.crypto.SecretKey val);
-        
-        native public javax.crypto.SecretKey getKey();
-        
-        native public javax.crypto.SecretKey rekey();
-        
-        public _Proxy(SecretKeyObject._Impl impl) { super(impl); }
+        public _Proxy(ReflexiveProof._Impl impl) { super(impl); }
         
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }
     }
     
-    public static class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.security.SecretKeyObject
+    final public static class _Impl
+    extends fabric.lang.security.ActsForProof._Impl
+      implements fabric.lang.security.ReflexiveProof
     {
         
-        native public javax.crypto.SecretKey get$key();
-        
-        native public javax.crypto.SecretKey set$key(
-          javax.crypto.SecretKey val);
-        
-        native public javax.crypto.SecretKey getKey();
-        
-        native public javax.crypto.SecretKey rekey();
-        
-        public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label) {
-            super($location, $label);
+        _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label,
+              fabric.lang.security.Principal p,
+              fabric.lang.security.Principal q) {
+            super($location, $label, p, q);
         }
+        
+        native public void gatherDelegationDependencies(java.util.Set s);
         
         native protected fabric.lang.Object._Proxy $makeProxy();
         
@@ -65,16 +45,14 @@ public interface SecretKeyObject extends fabric.lang.Object {
             super(store, onum, version, expiry, label, in, refTypes,
                   intraStoreRefs);
         }
-        
-        native public void $copyAppStateFrom(fabric.lang.Object._Impl other);
     }
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.SecretKeyObject._Static
+          implements fabric.lang.security.ReflexiveProof._Static
         {
             
-            public _Proxy(fabric.lang.security.SecretKeyObject._Static.
+            public _Proxy(fabric.lang.security.ReflexiveProof._Static.
                             _Impl impl) {
                 super(impl);
             }
@@ -85,7 +63,7 @@ public interface SecretKeyObject extends fabric.lang.Object {
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.SecretKeyObject._Static
+          implements fabric.lang.security.ReflexiveProof._Static
         {
             
             public _Impl(fabric.worker.Store store,

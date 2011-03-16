@@ -1,52 +1,45 @@
 package fabric.lang.security;
 
-public interface SecretKeyObject extends fabric.lang.Object {
+public interface ToConjunctProof extends fabric.lang.security.ActsForProof {
     
-    public javax.crypto.SecretKey get$key();
+    public fabric.util.Map get$conjunctProofs();
     
-    public javax.crypto.SecretKey set$key(javax.crypto.SecretKey val);
+    public fabric.util.Map getConjunctProofs();
     
-    public javax.crypto.SecretKey getKey();
+    public void gatherDelegationDependencies(java.util.Set s);
     
-    public javax.crypto.SecretKey rekey();
-    
-    public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.SecretKeyObject
+    public static class _Proxy extends fabric.lang.security.ActsForProof._Proxy
+      implements fabric.lang.security.ToConjunctProof
     {
         
-        native public javax.crypto.SecretKey get$key();
+        native public fabric.util.Map get$conjunctProofs();
         
-        native public javax.crypto.SecretKey set$key(
-          javax.crypto.SecretKey val);
+        native public fabric.util.Map getConjunctProofs();
         
-        native public javax.crypto.SecretKey getKey();
-        
-        native public javax.crypto.SecretKey rekey();
-        
-        public _Proxy(SecretKeyObject._Impl impl) { super(impl); }
+        public _Proxy(ToConjunctProof._Impl impl) { super(impl); }
         
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }
     }
     
-    public static class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.security.SecretKeyObject
+    final public static class _Impl
+    extends fabric.lang.security.ActsForProof._Impl
+      implements fabric.lang.security.ToConjunctProof
     {
         
-        native public javax.crypto.SecretKey get$key();
+        native public fabric.util.Map get$conjunctProofs();
         
-        native public javax.crypto.SecretKey set$key(
-          javax.crypto.SecretKey val);
-        
-        native public javax.crypto.SecretKey getKey();
-        
-        native public javax.crypto.SecretKey rekey();
-        
-        public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label) {
-            super($location, $label);
+        _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label,
+              fabric.lang.security.Principal actor,
+              fabric.lang.security.ConjunctivePrincipal granter,
+              fabric.util.Map conjunctProofs) {
+            super($location, $label, actor, granter);
         }
+        
+        native public fabric.util.Map getConjunctProofs();
+        
+        native public void gatherDelegationDependencies(java.util.Set s);
         
         native protected fabric.lang.Object._Proxy $makeProxy();
         
@@ -71,10 +64,10 @@ public interface SecretKeyObject extends fabric.lang.Object {
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.SecretKeyObject._Static
+          implements fabric.lang.security.ToConjunctProof._Static
         {
             
-            public _Proxy(fabric.lang.security.SecretKeyObject._Static.
+            public _Proxy(fabric.lang.security.ToConjunctProof._Static.
                             _Impl impl) {
                 super(impl);
             }
@@ -85,7 +78,7 @@ public interface SecretKeyObject extends fabric.lang.Object {
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.SecretKeyObject._Static
+          implements fabric.lang.security.ToConjunctProof._Static
         {
             
             public _Impl(fabric.worker.Store store,
