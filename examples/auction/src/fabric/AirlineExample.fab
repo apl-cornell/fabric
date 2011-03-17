@@ -22,7 +22,7 @@ public class AirlineExample [principal AirlineA, label Albl,
 				{*provider} equiv {Broker<-},
 				{Albl;Blbl;Userlbl} equiv {*provider} 
 {
-	final label{} auction = new label{Albl;Blbl;Userlbl};
+	final label{Albl;Blbl;Userlbl} auction = new label{Albl;Blbl;Userlbl};
 	final Server[Albl]{Albl} a;
 	final Server[Blbl]{Blbl} b;
 	final User[Userlbl]{Userlbl} user;

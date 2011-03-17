@@ -4,5 +4,6 @@ public interface Server [label Airline]
 	where {Airline} <= {*provider}
 {
     int {Airline} getLowestPrice{Airline}(); 
-    Agent[Airline, auction]{Airline} getAgent{*auction}(label auction) where {*auction} <= {*provider}; 
+    Agent[Airline, auction]{Airline} getAgent{*auction}(label{*auction} auction) 
+		where {*auction} <= {*provider}, {*Airline} <= {*auction}; 
 }

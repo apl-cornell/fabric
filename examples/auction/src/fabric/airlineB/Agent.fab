@@ -7,17 +7,17 @@ public class Agent[label Airline, label Auction] implements broker.Agent[Airline
 	where {Airline} <= {Auction}, {*provider} equiv {Airline}, 
 		{*provider} equiv {*Server.provider}, {*broker.Agent.provider} <= {*provider}, 
 		{*broker.Agent.provider} equiv {*broker.Server.provider}
-	
 {
-    private final Server[Airline, Auction]{Airline} server;
-    private int {Airline} lowestprice; 
+    private final Server[Airline]{Auction} server;
+    private int {Auction} lowestprice; 
 
-    public Agent(Server[Airline, Auction]{Airline} server)  {
+    public Agent{Auction}(Server[Airline]{Auction} server)  {
 		this.server = server;
     }
 
+	// asking the "remote" server for the current lowest price
     public void prepareForAuction {Airline} () {
-	    this.lowestprice = server.getLowestPrice(); // asking the "remote" server for the current lowest price
+	    this.lowestprice = server.getLowestPrice(); 
     }
 
     public Offer[Auction] {Auction} makeFirstOffer {Airline} () {
@@ -34,7 +34,7 @@ public class Agent[label Airline, label Auction] implements broker.Agent[Airline
 
 		Offer[Auction] newOffer = new Offer[Auction] (price, 0);
 
-		while (userChoice.choice (newOffer, bestOffer)  >= 0 && price >= lowestprice ) {
+		while (userChoice.choice (newOffer, bestOffer)  >= 0 && price >= lowestprice) {
 		    newOffer = new Offer [Auction] ( price -- , 0) ;
 		}
 		if (price < lowestprice) 

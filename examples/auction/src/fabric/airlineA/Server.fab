@@ -1,38 +1,31 @@
 package airlineA;
 
-public class Server [principal TheAirline, principal Airlines, label L]  
-    //implements AirlineServer[TheAirline, Airlines,  L]  
-    where Airlines actsfor TheAirline, provider actsfor TheAirline
-
+public class Server[label Airline] implements broker.Server[Airline] 
+	where  {*provider} equiv {Airline}, {*provider} equiv {*Agent.provider}, 
+		{*broker.Agent.provider} <= {*provider}, 
+		{*broker.Agent.provider} equiv {*broker.Server.provider}
 {
-    int {TheAirline -> ; TheAirline <- } cost;
-    int {TheAirline -> ; TheAirline <-} seats; 
-    int {TheAirline -> ; TheAirline <-} lowestprice; 
+    int {Airline} cost;
+    int {Airline} seats; 
+    int {Airline} lowestprice; 
 
-	public Server (int {TheAirline ->; TheAirline <- } cost, int {TheAirline -> ; TheAirline <-  } seats) where {*provider} <= {TheAirline <- }  {
+	public Server (int {Airline} cost, int {Airline} seats) {
 		this.cost = cost;
 		this.seats = seats; 
-		this.lowestprice = 0;
+		this.lowestprice = cost;
 		try { 
 		    this.lowestprice = cost / seats;
-		} catch (ArithmeticException ignored) {
-		}
+		} catch (ArithmeticException ignored) { }
     }
     
-    public int {TheAirline -> ; TheAirline <- } getLowestPrice() // where provider <= {TheAirline <- } 
+    public int {Airline} getLowestPrice()
     {
 		return this.lowestprice;
     }
 
-    public Agent [TheAirline, Airlines,  L ]  getAgent {TheAirline -> ; TheAirline <- } () 
-    // not sure we need this begin-label here 
+    public broker.Agent[Airline, auction]{*auction} getAgent {*auction} (label{*auction} auction) 
+		where {*provider} <= {*auction}
     {
-	//	if (provider  <= new label {TheAirline <- }   && AirlineAgent.provider equiv provider ) { // this is really weird? - we should not need this dynamic check here 
-		if (new label  {*AirlineAgent.provider} equiv new label {*AirlineAServer.provider} 
-			&& provider  <= new label {TheAirline <- }) 
-		{
-		    return new AirlineAgent [TheAirline, Airlines, L] (this);
-		}
-        return null;
+		return new Agent[Airline, auction] (this);
     }
 }

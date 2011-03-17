@@ -23,8 +23,9 @@ public class Server[label Airline] implements broker.Server[Airline]
 		return this.lowestprice;
     }
 
-    public broker.Agent[Airline, Auction]{Airline} getAgent {Airline} (label Auction) where {Airline} <= {Auction}
+    public broker.Agent[Airline, auction]{*auction} getAgent {*auction} (label{*auction} auction) 
+		where {*provider} <= {*auction}
     {
-		return new Agent[Airline, Auction] (this);
+		return new Agent[Airline, auction] (this);
     }
 }

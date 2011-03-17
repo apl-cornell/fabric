@@ -1,47 +1,45 @@
 package airlineA;
+import broker.Offer;
+import broker.UserAgent;
 // Airline agent provides competing offers 
 
-public class Agent[principal TheAirline, principal Airlines, label L ] where Airlines actsfor TheAirline, provider actsfor TheAirline 
+public class Agent[label Airline, label Auction] implements broker.Agent[Airline, Auction] 
+	where {Airline} <= {Auction}, {*provider} equiv {Airline}, 
+		{*provider} equiv {*Server.provider}, {*broker.Agent.provider} <= {*provider}, 
+		{*broker.Agent.provider} equiv {*broker.Server.provider}
 {
-    private final Server [TheAirline, Airlines, L]  { TheAirline -> ; TheAirline <- } server;
+    private final Server[Airline]{Auction} server;
+    private int {Auction} lowestprice; 
 
-    public Agent(Server [TheAirline, Airlines, L ] { TheAirline ->; TheAirline <-  } server)  {
-	this.server = server;
+    public Agent{Auction}(Server[Airline]{Auction} server)  {
+		this.server = server;
     }
 
-    int { TheAirline <-; TheAirline -> } lowestprice; 
-
-    public void prepareForAuction { TheAirline <-; TheAirline -> } ()
-								       where {TheAirline <-; TheAirline -> } <= {L}, provider <= {TheAirline <- } , 
-														    {*Server.provider} equiv {*provider}
-    {
-	    this.lowestprice = server.getLowestPrice () ; // asking the "remote" server for the current lowest price
-	
+	// asking the "remote" server for the current lowest price
+    public void prepareForAuction {Airline} () {
+	    this.lowestprice = server.getLowestPrice(); 
     }
 
-    public Offer[L] {L } makeFirstOffer  { TheAirline <-; TheAirline -> }   () 
-	where {TheAirline <-; TheAirline -> } <= L, provider <= {TheAirline <- }, {*Server.provider} equiv {*provider}
-    {
-
-	prepareForAuction(); 
-	int price = 2* lowestprice;
-	return new Offer[L] (price, 0);
+    public Offer[Auction] {Auction} makeFirstOffer {Airline} () {
+		prepareForAuction(); 
+		int price = 2*lowestprice;
+		return new Offer[Auction] (price, 0);
     }
 
-    public Offer[L ] {L } makeOffer {L} (UserChoice[L] {L} userChoice,  Offer[L] {L} bestOffer)  // begin-label here prevents any side-effects below L
-					    where {TheAirline <-; TheAirline -> } <= {L}, provider <= {TheAirline <-}   {
-	if (userChoice == null) return null;
+    public Offer[Auction] {Auction} makeOffer{Auction}(UserAgent[Auction] {Auction} userChoice,  
+														Offer[Auction] {Auction} bestOffer) {
+		if (userChoice == null) return null;
 
-	int price = 2* lowestprice;  // possible read-channel??? 
+		int price = 2*lowestprice;  // possible read-channel??? 
 
-	Offer[L] newOffer = new Offer[L] (price, 0);
+		Offer[Auction] newOffer = new Offer[Auction] (price, 0);
 
-	while (userChoice.choice (newOffer, bestOffer)  >= 0 && price >= lowestprice ) {
-	    newOffer = new Offer [L] ( price -- , 0) ;
-	}
-	if (price < lowestprice) 
-	    return null; // give up 
+		while (userChoice.choice (newOffer, bestOffer)  >= 0 && price >= lowestprice) {
+		    newOffer = new Offer [Auction] ( price -- , 0) ;
+		}
+		if (price < lowestprice) 
+		    return null; // give up 
 
-	return newOffer; // return the best competing offer otherwise
+		return newOffer; // return the best competing offer otherwise
     }
 }
