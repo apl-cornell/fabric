@@ -1,7 +1,6 @@
 package user;
-public class User [label theUser] implements broker.User[theUser] {
-    public broker.UserAgent[auction] {*auction} getAgent{*auction}(label{*auction} auction)
-		where {theUser} <= {*auction}, {*provider} <= {*auction}
+public class User [principal TheUser] implements broker.User[TheUser] where {*broker.User.provider} <= {*provider} {
+    public broker.UserAgent[auction] {TheUser->;TheUser<-} getAgent{TheUser->;TheUser<-}(label{TheUser<-} auction)
 	{
 		return new UserAgent[auction]();		
 	}

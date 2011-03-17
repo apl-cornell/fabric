@@ -7,27 +7,22 @@ import broker.Server;
 import broker.Offer;
 import broker.Agent;
 
-public class AirlineExample [principal AirlineA, label Albl,
-								principal AirlineB, label Blbl,
-								principal TheUser, label Userlbl,
-								principal Broker] 
-    authority (AirlineA, AirlineB, TheUser, Broker)
-    	where Broker actsfor AirlineA, Broker actsfor AirlineB, 
+public class AirlineExample [principal AirlineA, principal AirlineB,
+								principal TheUser, principal Broker] 
+    authority(Broker) where Broker actsfor AirlineA, Broker actsfor AirlineB, 
 				Broker actsfor TheUser, provider actsfor Broker, 
-				Albl <= {*provider}, Blbl <= {*provider}, Userlbl <= {*provider}, 
 				{*provider} <= {},
 				{*provider} equiv {*Server.provider},
 				{*provider} equiv {*Agent.provider}, 
 				{*provider} equiv {*User.provider},
-				{*provider} equiv {Broker<-},
-				{Albl;Blbl;Userlbl} equiv {*provider} 
+				{*provider} <= {Broker<-}
 {
-	final label{Albl;Blbl;Userlbl} auction = new label{Albl;Blbl;Userlbl};
-	final Server[Albl]{Albl} a;
-	final Server[Blbl]{Blbl} b;
-	final User[Userlbl]{Userlbl} user;
+	final label{Broker<-} auction = new label{AirlineA->;AirlineA<-;AirlineB->;AirlineB<-;TheUser->;TheUser<-};
+	final Server[AirlineA]{Broker<-} a;
+	final Server[AirlineB]{Broker<-} b;
+	final User[TheUser]{Broker<-} user;
 
-    public AirlineExample (Server[Albl]{Albl} a, Server[Blbl]{Blbl} b, User[Userlbl]{Userlbl} user) {
+    public AirlineExample (Server[AirlineA]{Broker<-} a, Server[AirlineB]{Broker<-} b, User[TheUser]{Broker<-} user) {
 		this.a = a;
 		this.b = b;
 		this.user = user;
@@ -35,21 +30,20 @@ public class AirlineExample [principal AirlineA, label Albl,
 
     protected PrintStream[{}]{} output;
 
-    public void go {⊤ <-} (PrintStream[{}] {} output) 
-		where authority (AirlineA, AirlineB, TheUser, Broker)
+
+    public void go {⊤ <-} (PrintStream[{}] {} output) where authority (Broker)
     {
 		this.output = output; 
 		println ("Starting Airline example");
 
-		final principal airlines = new principal (AirlineA & AirlineB);
+		//final principal airlines = new principal (AirlineA & AirlineB);
 
-		Agent[Albl, auction]{*auction} agentA = a.getAgent(auction);
-		Agent[Blbl, auction]{*auction} agentB = b.getAgent(auction);
+		Agent[AirlineA, auction]{AirlineA->;AirlineA<-} agentA = a.getAgent(auction);
+		Agent[AirlineB, auction]{AirlineB->;AirlineB<-} agentB = b.getAgent(auction);
+		UserAgent[auction]{TheUser->;TheUser<-} userAgent = user.getAgent(auction);
 
-		UserAgent[auction]{*auction} userAgent = user.getAgent(auction);
-
-		agentA.prepareForAuction();
-		agentB.prepareForAuction(); 
+		try { agentA.prepareForAuction(); } catch (NullPointerException e) {} // ugly hack
+		try { agentB.prepareForAuction(); } catch (NullPointerException e) {} 
 
 		// this variable stores the winning agent. When winner == 0 we have no winner yet
 		int winner = 0;
@@ -58,14 +52,14 @@ public class AirlineExample [principal AirlineA, label Albl,
 		Offer [auction] offerB = agentB.makeFirstOffer();
 
 		// main auction loop 
-		while (winner == 0) { 
+		while (winner == 0) {
 			offerA = agentA.makeOffer (userAgent, offerB); // makeOffer returns null if it can't compete anymore.
-			if (offerA == null) { 
+			if (offerA == null || userAgent.choice(offerA, offerB) != -1) {
 			    winner = 2; // declare that B is the winning agent 
 			    break;
-			}
+			}	
 			offerB = agentB.makeOffer (userAgent, offerA);
-			if (offerB == null)  {
+			if (offerB == null || userAgent.choice(offerB, offerA) != -1) { 
 			    winner = 1; // declare that A is the winning agent
 			}
 		}
@@ -73,12 +67,12 @@ public class AirlineExample [principal AirlineA, label Albl,
 		// with enough authority we can declassify anything... ;-) 
 		// 
 
-		int {TheUser ->; airlines ->; Broker <-} w0 = endorse (winner, {*auction} to {*provider; TheUser ->; airlines ->; Broker <-} );
-
-		if (Broker actsfor airlines) {
-		int {} w = declassify ( w0, {} ); 
-			println ("Ending Airline example with winner " + w);
-		}
+		//int {TheUser ->; airlines ->; Broker <-} w0 = endorse (winner, {*auction} to {*provider; TheUser ->; airlines ->; Broker <-} );
+	//
+	//		if (Broker actsfor airlines) {
+	//		int {} w = declassify ( w0, {} ); 
+	//			println ("Ending Airline example with winner " + w);
+	//		}
 		//}
     }
 

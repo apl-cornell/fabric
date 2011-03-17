@@ -1,15 +1,16 @@
 package airlineB;
 
-public class Server[label Airline] implements broker.Server[Airline] 
-	where  {*provider} equiv {Airline}, {*provider} equiv {*Agent.provider}, 
+public class Server[principal Airline] implements broker.Server[Airline] 
+	where  {*provider} <= {Airline<-},  
+		{*provider} equiv {*Agent.provider}, 
 		{*broker.Agent.provider} <= {*provider}, 
 		{*broker.Agent.provider} equiv {*broker.Server.provider}
 {
-    int {Airline} cost;
-    int {Airline} seats; 
-    int {Airline} lowestprice; 
+    int {Airline->;Airline<-} cost;
+    int {Airline->;Airline<-} seats; 
+    int {Airline->;Airline<-} lowestprice; 
 
-	public Server (int {Airline} cost, int {Airline} seats) {
+	public Server (int {Airline->;Airline<-} cost, int {Airline->;Airline<-} seats) {
 		this.cost = cost;
 		this.seats = seats; 
 		this.lowestprice = cost;
@@ -18,14 +19,13 @@ public class Server[label Airline] implements broker.Server[Airline]
 		} catch (ArithmeticException ignored) { }
     }
     
-    public int {Airline} getLowestPrice()
-    {
+    public int {Airline->;Airline<-} getLowestPrice() {
 		return this.lowestprice;
     }
 
-    public broker.Agent[Airline, auction]{*auction} getAgent {*auction} (label{*auction} auction) 
-		where {*provider} <= {*auction}
-    {
-		return new Agent[Airline, auction] (this);
+    public broker.Agent[Airline, auction]{Airline->;Airline<-} getAgent {Airline->;Airline<-} (label{Airline<-} auction) 
+		where {Airline->;Airline<-} <= {*auction}
+	{
+		return new Agent[Airline, auction](this);
     }
 }

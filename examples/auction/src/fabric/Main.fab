@@ -46,10 +46,9 @@ class Main  {
 	//		&& user.User.provider equiv user_lbl
 	//		&& user.User.provider equiv user.UserAgent.provider) { 
 
-	  	//final Server[a_lbl] a_serv = new airlineA.Server[a_lbl](13500, 100);
-	  	final Server[a_lbl] a_serv =(Server[a_lbl]) a_store.getRoot().get("auctionServer");
-	  	final Server[b_lbl] b_serv = (Server[b_lbl])b_store.getRoot().get("auctionServer");
-	  	final User[user_lbl] user_serv = (User[user_lbl])user_store.getRoot().get("auctionUser");
+	  	final Server[airlineA] a_serv =(Server[airlineA]) a_store.getRoot().get("auctionServer");
+	  	final Server[airlineB] b_serv = (Server[airlineB])b_store.getRoot().get("auctionServer");
+	  	final User[user] user_serv = (User[user])user_store.getRoot().get("auctionUser");
 
 	  	final Store broker_store = worker$.getStore("broker"); 
 	  	final principal broker = broker_store.getPrincipal();
@@ -58,9 +57,7 @@ class Main  {
 	  	final label auction = new label{*a_lbl; *b_lbl; *user_lbl};
 
       	if(broker actsfor airlineA && broker actsfor airlineB && broker actsfor user
-	  	  	&& p equiv broker && provider actsfor broker 
-	  	  	&& provider equiv broker_lbl && auction <= provider) 
-	  		new AirlineExample[airlineA, a_lbl, airlineB, b_lbl, 
-								user, user_lbl, broker](a_serv,b_serv,user_serv).go(out2);
+	  	  	&& p equiv broker && provider actsfor broker) 
+	  		new AirlineExample[airlineA, airlineB, user, broker](a_serv,b_serv,user_serv).go(out2);
     }
 }

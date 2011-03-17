@@ -3,24 +3,25 @@ import broker.Offer;
 import broker.UserAgent;
 // Airline agent provides competing offers 
 
-public class Agent[label Airline, label Auction] implements broker.Agent[Airline, Auction] 
-	where {Airline} <= {Auction}, {*provider} equiv {Airline}, 
-		{*provider} equiv {*Server.provider}, {*broker.Agent.provider} <= {*provider}, 
-		{*broker.Agent.provider} equiv {*broker.Server.provider}
+public class Agent[principal Airline, label Auction] implements broker.Agent[Airline, Auction] 
+	where {*provider} <= {Airline<-}, {Airline->;Airline<-} <= Auction,
+			{*provider} equiv {*Server.provider}, 
+			{*broker.Agent.provider} <= {*provider}, 
+			{*broker.Agent.provider} equiv {*broker.Server.provider}
 {
-    private final Server[Airline]{Auction} server;
-    private int {Auction} lowestprice; 
+    private final Server[Airline]{Airline->;Airline<-} server;
+    private int {Airline->;Airline<-} lowestprice; 
 
-    public Agent{Auction}(Server[Airline]{Auction} server)  {
+    public Agent{Airline->;Airline<-}(Server[Airline]{Airline->;Airline<-} server)  {
 		this.server = server;
     }
 
 	// asking the "remote" server for the current lowest price
-    public void prepareForAuction {Airline} () {
+    public void prepareForAuction {Airline->;Airline<-} () {
 	    this.lowestprice = server.getLowestPrice(); 
     }
 
-    public Offer[Auction] {Auction} makeFirstOffer {Airline} () {
+    public Offer[Auction] {Auction} makeFirstOffer {Airline->;Airline<-} () {
 		prepareForAuction(); 
 		int price = 2*lowestprice;
 		return new Offer[Auction] (price, 0);

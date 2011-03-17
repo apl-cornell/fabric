@@ -1,20 +1,19 @@
-public class InitA {
-  public static void main{*provider}(principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+import fabric.util.Map;
+public class InitA where {*provider} equiv {*airlineA.Server.provider},
+						{*airlineA.Server.provider} equiv {*airlineA.Agent.provider}, 
+						{*broker.Server.provider} equiv {*broker.Agent.provider},
+						{*broker.Server.provider} <= {*airlineA.Server.provider}
+{
+  public static final void main{⊤ <- } (principal{*provider} p, String[] args)  throws SecurityException, IllegalArgumentException  
+		where caller(p), provider actsfor p, {*provider} <= {p<-}
+  {
     atomic {
-      if(provider <= new label {p<-;p->} 
-			&& airlineA.Server.provider <= provider )
-        run(p, args);
-      else
-        throw new Error("Provider has insufficient integrity.");
-    }
-  }
-  public static void run{p<-;p->}(principal{p<-;p->} p, String[] args):{p<-;p->} 
-		throws Exception where provider <= {p<-;p->},  
-							{*airlineA.Server.provider} equiv {*provider} { 
       final Store store = worker$.getStore("airlineA");
-      if (store actsfor p) {
+	  final principal airlineA = store.getPrincipal();
+      if (store actsfor p && airlineA.Server.provider <= new label {airlineA<-}) {
         Map root = store.getRoot();
-        root.put("auctionServer", new airlineA.Server[a_lbl](13500, 100));
+        root.put("auctionServer", new airlineA.Server[airlineA](13500, 100));
 	  }
+    }
   }
 }
