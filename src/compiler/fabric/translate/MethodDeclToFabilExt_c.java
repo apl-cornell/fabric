@@ -1,13 +1,23 @@
 package fabric.translate;
 
+import java.util.Collections;
+import java.util.List;
+
 import fabil.ast.FabILNodeFactory;
+import polyglot.ast.Block;
+import polyglot.ast.Expr;
+import polyglot.ast.Formal;
 import polyglot.ast.If;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
+import polyglot.ast.Stmt;
+import polyglot.ast.TypeNode;
+import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.MethodDeclToJavaExt_c;
+import jif.types.JifTypeSystem;
 
 public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
   @Override
@@ -51,5 +61,52 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
 //    stmts.addAll(md.body().statements());
     
 //    return md.body(nf.Block(md.body().position(), stmts));
+  }
+  
+  /** Rewrite static main(principal p, String[] args) {...} to
+   * static main(String[] args) {Principal p = Runtime.getUser(); {...} };
+   */
+  @SuppressWarnings("unchecked")
+  @Override
+  public Node staticMainToJava(JifToJavaRewriter rw, MethodDecl n) throws SemanticException {
+      Formal formal0 = (Formal)n.formals().get(0); // the principal
+      Formal formal1 = (Formal)n.formals().get(1); // the string array
+      List<Formal> formalList = Collections.singletonList(formal1);
+
+      Block origBody = n.body();
+
+      JifTypeSystem jifTs = rw.jif_ts();
+      TypeNode type = rw.qq().parseType(jifTs.PrincipalClassName());
+      Expr init = rw.qq().parseExpr(jifTs.RuntimePackageName()
+          + ".Runtime.user(null)");
+
+      Stmt declPrincipal =
+          rw.java_nf().LocalDecl(origBody.position(),
+                             Flags.FINAL,
+                             type,
+                             rw.java_nf().Id(Position.compilerGenerated(), formal0.name()),
+                             init);
+    
+    // Translate the constraints and use them to guard the body.
+    Block newBody = guardWithConstraints(rw, origBody);
+    // Wrap with a transaction if there are constraints
+    if(!mi.constraints().isEmpty())
+      newBody =
+          ((FabILNodeFactory) rw.java_nf()).Atomic(origBody.position(), newBody
+              .statements());
+      
+      newBody = rw.java_nf().Block(origBody.position(),
+                                         declPrincipal,
+                                         newBody);
+
+      n = rw.java_nf().MethodDecl(n.position(),
+                                  n.flags(),
+                                  n.returnType(),
+                                  rw.java_nf().Id(Position.compilerGenerated(), n.name()),
+                                  formalList,
+                                  n.throwTypes(),
+                                  newBody);
+      n = n.methodInstance(null);
+      return n;
   }
 }
