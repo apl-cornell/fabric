@@ -1,0 +1,5 @@
+package broker;
+public interface UserAgent[label Auction] 
+{
+    int {Auction} choice{Auction}(Offer[Auction]{Auction} offer1, Offer[Auction]{Auction} offer2); 
+}

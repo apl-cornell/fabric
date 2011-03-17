@@ -1,7 +1,9 @@
 package airlineB;
 
-public class Server[label Airline, label Auction] implements Server[Airline, Auction] 
-	where {*provider} <= Auction, {*provider} equiv {Airline}
+public class Server[label Airline] implements broker.Server[Airline] 
+	where  {*provider} equiv {Airline}, {*provider} equiv {*Agent.provider}, 
+		{*broker.Agent.provider} <= {*provider}, 
+		{*broker.Agent.provider} equiv {*broker.Server.provider}
 {
     int {Airline} cost;
     int {Airline} seats; 
@@ -21,14 +23,8 @@ public class Server[label Airline, label Auction] implements Server[Airline, Auc
 		return this.lowestprice;
     }
 
-    public Agent[Airline, Auction]  getAgent {Airline} () 
+    public broker.Agent[Airline, Auction]{Airline} getAgent {Airline} (label Auction) where {Airline} <= {Auction}
     {
-	////	if (provider  <= new label {TheAirline <- }   && AirlineAgent.provider equiv provider ) { // this is really weird? - we should not need this dynamic check here 
-	//	if (new label  {*AirlineAgent.provider} equiv new label {*AirlineAServer.provider} 
-	//		&& provider  <= new label {TheAirline <- }) 
-	//	{
 		return new Agent[Airline, Auction] (this);
-	//	}
-    //    return null;
     }
 }

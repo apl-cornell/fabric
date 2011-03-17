@@ -1,15 +1,12 @@
 import java.io.PrintStream;
 import fabric.runtime.Runtime;
-
+import broker.Server;
+import broker.Agent;
+import broker.User;
 class Main  {
     public static final void main{⊤ <- }  (principal{*provider} p, String args[])  throws SecurityException, IllegalArgumentException  
-	where caller(p), provider actsfor p,
-	//{*provider} <= {},
-	{*provider} equiv {*AirlineExample.provider}
-	//{*provider} equiv {*IAirlineServer.provider},
-	//{*provider} <= {*AirlineServer.provider},
-	//{*provider} <= {*AirlineAgent.provider},
-	//{*AirlineServer.provider} equiv {*AirlineAgent.provider}
+	where caller(p), provider actsfor p, {*provider} <= {p<-}, {*provider} equiv {*AirlineExample.provider},
+		{*provider} equiv {*Server.provider}, {*provider} equiv {*Agent.provider}, {*provider} equiv {*User.provider}
     {
 		PrintStream[{}] out = null;
           try {
@@ -20,25 +17,34 @@ class Main  {
               // just let out be null.
           }
 
-          PrintStream[{}] out1 = endorse(out, {*provider; p->; _<-_} to {{p→p; p<-*} ⊔ {⊤→⊤;⊤←⊤} ⊓ {*provider}});
-          PrintStream[{}] out2 = declassify(out1,  {} );
+      PrintStream[{}] out1 = endorse(out, {*provider; p->; _<-_} to {{p→p; p<-*} ⊔ {⊤→⊤;⊤←⊤} ⊓ {*provider}});
+      PrintStream[{}] out2 = declassify(out1,  {});
+
 	  final Store a_store = worker$.getStore("airlineA");   
 	  final principal airlineA = a_store.getPrincipal();
+	  final label a_lbl = new label{airlineA->;airlineA<-};
 
 	  final Store b_store = worker$.getStore("airlineA");   
 	  final principal airlineB = b_store.getPrincipal();
+	  final label b_lbl = new label{airlineB->;airlineB<-};
 
 	  final Store user_store = worker$.getStore("user");   
 	  final principal user = user_store.getPrincipal();
+	  final label user_lbl = new label{user->;user<-};
 		
 	  final Store broker_store = worker$.getStore("broker");   
 	  final principal broker = broker_store.getPrincipal();
-	  final label broker_lbl = new label{broker<-};
-      if(broker actsfor airlineA && broker actsfor airlineB && broker actsfor user
-			&& p equiv broker 
-			&& AirlineExample.provider actsfor broker 
-			&& AirlineExample.provider <= broker_lbl)
-	  	new AirlineExample[airlineA,airlineB,user,broker]().go(out2); // Jif automatically infers principals? 
-    }
+	  final label broker_lbl = new label{broker->;broker<-};
 
+	  final Server[a_lbl] a_serv = (Server[a_lbl]) a_store.getRoot().get("auctionServer");
+	  final Server[b_lbl] b_serv = (Server[b_lbl]) b_store.getRoot().get("auctionServer");
+	  final User[user_lbl] user_serv = (User[user_lbl]) user_store.getRoot().get("auctionUser");
+
+	  final label auction = new label{*a_lbl; *b_lbl; *user_lbl};
+
+      if(broker actsfor airlineA && broker actsfor airlineB && broker actsfor user
+			&& p equiv broker && provider actsfor broker 
+			&& provider equiv broker_lbl && auction <= provider) 
+	  	new AirlineExample[airlineA, a_lbl, airlineB, b_lbl, user, user_lbl, broker](a_serv,b_serv,user_serv).go(out2);
+    }
 }

@@ -1,11 +1,13 @@
 package airlineB;
 import broker.Offer;
-import broker.UserChoice;
+import broker.UserAgent;
 // Airline agent provides competing offers 
 
-
 public class Agent[label Airline, label Auction] implements broker.Agent[Airline, Auction] 
-	where {*provider} <= {Auction}, {*provider} equiv {Airline}
+	where {Airline} <= {Auction}, {*provider} equiv {Airline}, 
+		{*provider} equiv {*Server.provider}, {*broker.Agent.provider} <= {*provider}, 
+		{*broker.Agent.provider} equiv {*broker.Server.provider}
+	
 {
     private final Server[Airline, Auction]{Airline} server;
     private int {Airline} lowestprice; 
@@ -24,7 +26,7 @@ public class Agent[label Airline, label Auction] implements broker.Agent[Airline
 		return new Offer[Auction] (price, 0);
     }
 
-    public Offer[Auction] {Auction} makeOffer{Auction}(UserChoice[Auction] {Auction} userChoice,  
+    public Offer[Auction] {Auction} makeOffer{Auction}(UserAgent[Auction] {Auction} userChoice,  
 														Offer[Auction] {Auction} bestOffer) {
 		if (userChoice == null) return null;
 

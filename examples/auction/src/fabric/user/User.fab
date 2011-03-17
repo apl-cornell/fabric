@@ -1,21 +1,18 @@
 package user;
-public class User [principal P, label L] {
+public class User [label theUser, label Auction] where {theUser} <= {Auction} {
     // User provides UserChoice 
-    UserChoice [ L ] {L} choice; 
+    final UserAgent[Auction] {Auction} choice; 
 
     public User () {
-	this.choice =  new UserChoice ();	
+		this.choice =  new UserAgent();	
     }
 
-    public User (UserChoice [L] {L} choice) 
-	where {P -> ; P <-} <= {L} 
-	{
-	this.choice = choice;
+    public User (UserAgent [Auction] {Auction} choice) {
+		this.choice = choice;
     }
 
-    public UserChoice[L] {L} getChoice() 
- 	where {P -> ; P <-} <= {L} 
+    public UserAgent[Auction] {Auction} getAgent() 
     {
-	return this.choice;
+		return this.choice;
     }
 }

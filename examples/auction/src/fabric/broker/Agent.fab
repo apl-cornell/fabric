@@ -1,12 +1,12 @@
 package broker;
 
 public interface Agent[label Airline, label Auction]
-	where {Airline} <= {Auction}, {Auction} <= {*provider}
+	where {Airline} <= {*provider}, {Auction} <= {*provider}, {Airline} <= {Auction}
 {
     void prepareForAuction{Airline}();
 	
-    Offer[Auction] {Auction} makeFirstOffer{Airline}(); 
+    Offer[Auction] {Auction} makeFirstOffer {Airline} (); 
 	
-    Offer[Auction] {Auction} makeOffer{Auction}(UserChoice[Auction] {Auction} userChoice,  
-		Offer[Auction] {Auction} bestOffer); 
+    Offer[Auction] {Auction} makeOffer {Auction} (UserAgent[Auction]{Auction} userChoice, 
+		Offer[Auction]{Auction} bestOffer); 
 }

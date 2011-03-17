@@ -1,8 +1,8 @@
 package broker;
 
-public interface Server [label Airline, label Auction]  
-	where {Airline} <= {Auction}, {Auction} <= {*provider}
+public interface Server [label Airline]  
+	where {Airline} <= {*provider}
 {
     int {Airline} getLowestPrice{Airline}(); 
-    Agent[Airline, Auction] getAgent{Airline}(); 
+    Agent[Airline, auction]{Airline} getAgent{Airline}(label auction) where {*auction} <= {*provider}; 
 }
