@@ -26,7 +26,8 @@ public class NewArrayJifExt_c extends JifNewArrayExt {
     }
     if (baseType instanceof FabricClassType) {
       FabricClassType ct = (FabricClassType)baseType;
-      ext.labelCheck(lc, ct.defaultFieldLabel());
+      // TODO: Implement access label checks for arrays
+      ext.labelCheck(lc, ct.singleFieldLabel(), null);
     }
     
     return super.labelCheck(lc);

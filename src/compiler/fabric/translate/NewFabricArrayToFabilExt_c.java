@@ -44,7 +44,7 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
 
     Label baseLabel = null;
     if (base instanceof FabricClassType && ts.isFabricClass(base)) {
-      baseLabel = ((FabricClassType)base).defaultFieldLabel();
+      baseLabel = ((FabricClassType)base).singleFieldLabel();
     }
     Expr labelExpr = null;
     if (baseLabel != null) {

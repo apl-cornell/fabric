@@ -12,8 +12,10 @@ import polyglot.frontend.Source;
 import polyglot.types.*;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements FabricParsedClassType {
-  private transient Label defaultFieldLabel = null;
+  private transient Label singleFieldLabel = null;
+  private transient Label singleAccessLabel = null;
   private transient boolean fieldLabelFound = false;
+  private transient boolean accessLabelFound = false;
   protected transient Codebase codebase;
 
   public FabricParsedClassType_c() {
@@ -56,21 +58,24 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   }
   
   @SuppressWarnings("unchecked")
-  public Label defaultFieldLabel() {
+  public Label singleFieldLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
+    // TODO: check that the labels of fields in this class
+    // are the same as in the superType, if the superType
+    // defaultFieldLabel is not null.
     if (!fieldLabelFound) {
       if (ts.isFabricClass(this)) {
         FabricClassType superType = (FabricClassType)superType();
-        if (superType != null && superType.defaultFieldLabel() != null) {
-          defaultFieldLabel = superType.defaultFieldLabel();
+        if (superType != null && superType.singleFieldLabel() != null) {
+          singleFieldLabel = superType.singleFieldLabel();
         }
         else {
           for (FieldInstance fi : (List<FieldInstance>)fields()) {
             if (fi.flags().isStatic()) continue;
             Type t = fi.type();
             if (ts.isLabeled(t)) {
-              defaultFieldLabel = ts.labelOfType(t);
+              singleFieldLabel = ts.labelOfType(t);
               break;
             }
           }
@@ -78,8 +83,35 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
       }
       fieldLabelFound = true;
     }
-    return defaultFieldLabel;
+    return singleFieldLabel;
   }
+  
+  public Label singleAccessLabel() {
+    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
+
+    if (!accessLabelFound) {
+      if (ts.isFabricClass(this)) {
+        FabricClassType superType = (FabricClassType)superType();
+        if (superType != null && superType.singleAccessLabel() != null) {
+          singleAccessLabel = superType.singleAccessLabel();
+        }
+        else {
+          for (FieldInstance fi_ : (List<FieldInstance>)fields()) {
+            if (fi_.flags().isStatic()) continue;
+            FabricFieldInstance fi = (FabricFieldInstance) fi_;
+            Label al = fi.accessLabel();
+            if (al != null) {
+              singleAccessLabel = al;
+              break;
+            }
+          }
+        }
+      }
+      accessLabelFound = true;
+    }
+    return singleAccessLabel;
+  }
+  
   
   public Label defaultFabilFieldLabel() {
     // Type checking has been done, so all field labels are guaranteed to
@@ -94,21 +126,21 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     if (!fieldLabelFound || isSubtype(ts.DelegatingPrincipal())) {
       FabricClassType superType = (FabricClassType)superType();
       if (superType != null && superType.defaultFabilFieldLabel() != null) {
-        defaultFieldLabel = superType.defaultFabilFieldLabel();
+        singleFieldLabel = superType.defaultFabilFieldLabel();
       }
       else {
         for (FieldInstance fi : (List<FieldInstance>)fields()) {
           if (fi.flags().isStatic()) continue;
           Type t = fi.type();
           if (ts.isLabeled(t)) {
-            defaultFieldLabel = ts.labelOfType(t);
+            singleFieldLabel = ts.labelOfType(t);
             break;
           }
         }
       }
       fieldLabelFound = true;
     }
-    return defaultFieldLabel;
+    return singleFieldLabel;
   }
   
   

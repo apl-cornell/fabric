@@ -1,9 +1,11 @@
 package fabric.ast;
 
 import fabric.extension.FabricCallDel;
+import fabric.extension.FabricFieldDeclDel;
 import fabric.extension.FabricNewDel;
 import fabric.extension.FabricNewLabelDel;
 import jif.ast.JifDelFactory_c;
+import jif.extension.JifFieldDeclDel;
 import polyglot.ast.JL;
 
 /** Factory class for creating delegates for fabric types. */
@@ -23,6 +25,11 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
     }
     
     return postDelAbortStmt(e);
+  }
+  
+  @Override
+  protected JL delFieldDeclImpl() {
+    return new FabricFieldDeclDel();
   }
   
   protected JL delAbortStmtImpl() {

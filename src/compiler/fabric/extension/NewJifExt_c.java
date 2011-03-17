@@ -28,7 +28,7 @@ public class NewJifExt_c extends JifNewExt {
         && !newType.isSubtype(((FabricTypeSystem) lc.typeSystem())
             .DelegatingPrincipal())) {
       FabricClassType ct = (FabricClassType) newType;
-      ext.labelCheck(lc, ct.defaultFieldLabel());
+      ext.labelCheck(lc, ct.singleFieldLabel(), ct.singleAccessLabel());
     }
 
     return super.labelCheck(lc);

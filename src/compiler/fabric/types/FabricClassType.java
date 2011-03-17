@@ -10,7 +10,7 @@ public interface FabricClassType extends JifClassType {
    * Return the label associated with this class' fields, or null if this class
    * has no fields.
    */
-  Label defaultFieldLabel();
+  Label singleFieldLabel();
   
   
   /**
@@ -18,5 +18,8 @@ public interface FabricClassType extends JifClassType {
    * of Principal classes, so that they don't mention 'this'
    */
   Label defaultFabilFieldLabel();
+
+
+  Label singleAccessLabel();
   
 }

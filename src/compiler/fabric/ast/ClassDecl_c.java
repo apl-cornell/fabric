@@ -67,7 +67,8 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
   public Node typeCheck(TypeChecker tc) throws SemanticException {
     ClassDecl cd = (ClassDecl)super.typeCheck(tc);
     FabricParsedClassType pct = (FabricParsedClassType)cd.type();
-    Label defaultFieldLabel = pct.defaultFieldLabel();
+    Label singleFieldLabel = pct.singleFieldLabel();
+    Label singleAccessLabel = pct.singleAccessLabel();
     
     FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
     
@@ -91,11 +92,19 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
         Label fl = ts.labelOfType(ft);
         // TODO: Enable this for fabric signatures for fabil classes
         // Disable for non fabric classes
-        if (ts.isFabricClass(ft) && !ts.equals(defaultFieldLabel, fl) && !sigMode) {
+        // XXX The isFabricClass check should be on this class rather than ft!
+        if (ts.isFabricClass(ft) && !ts.equals(singleFieldLabel, fl) && !sigMode) {
           throw new SemanticException("The field " + fd.fieldInstance() + " has a different label than " +
-          		              "the default field label " + defaultFieldLabel + 
+          		              "the default field label " + singleFieldLabel + 
           		              "of the class " + pct + ".",
                                       fd.position());
+        }
+        
+        if (ts.isFabricClass(ft) && !ts.equals(singleAccessLabel, fl) && !sigMode) {
+          throw new SemanticException("The field " + fd.fieldInstance() + " has a different access label than " +
+              "the singular access label " + singleAccessLabel + 
+              "of the class " + pct + ".",
+              fd.position());          
         }
       }
     }

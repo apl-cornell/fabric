@@ -8,6 +8,7 @@ import jif.ast.JifNodeFactory;
 import jif.ast.LabelNode;
 import jif.ast.NewLabel;
 import polyglot.ast.*;
+import polyglot.types.Flags;
 import polyglot.util.Position;
 
 /**
@@ -42,4 +43,7 @@ public interface FabricNodeFactory extends JifNodeFactory, CodebaseNodeFactory {
   RemoteWorkerGetter RemoteWorkerGetter(Position pos, Expr remoteName);
   
   NewLabel NewLabel(Position pos, LabelNode label, Expr location);
+  
+  FabricFieldDecl FabricFieldDecl(Position pos, Flags flags, TypeNode type, LabelNode accessLabel, Id name, Expr init);
+
 }

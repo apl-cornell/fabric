@@ -13,20 +13,30 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements Fabri
     super(ts, pos, base, subst);
   }
   
-  public Label defaultFieldLabel() {
+  public Label singleFieldLabel() {
     FabricParsedClassType base = (FabricParsedClassType)base();
-    Label l = base.defaultFieldLabel();
+    Label l = base.singleFieldLabel();
     if (l == null) return null;
     
     JifSubst subst = (JifSubst)subst();
-    return subst.substLabel(base.defaultFieldLabel());
+    return subst.substLabel(base.singleFieldLabel());
   }
 
   public Label defaultFabilFieldLabel() {
-    return defaultFieldLabel();
+    return singleFieldLabel();
   }
 
   public Codebase codebase() {
     return ((FabricParsedClassType) base).codebase();
   }
+
+  public Label singleAccessLabel() {
+    FabricParsedClassType base = (FabricParsedClassType)base();
+    Label l = base.singleAccessLabel();
+    if (l == null) return null;
+    
+    JifSubst subst = (JifSubst)subst();
+    return subst.substLabel(base.singleAccessLabel());
+  }
+
 }

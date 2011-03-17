@@ -2,10 +2,14 @@ package fabric.types;
 
 import fabil.types.CodebaseTypeSystem;
 import polyglot.types.ClassType;
+import polyglot.types.Flags;
 import polyglot.types.LocalInstance;
 import polyglot.types.Named;
+import polyglot.types.ReferenceType;
 import polyglot.types.Type;
 import polyglot.util.Position;
+import jif.ast.LabelNode;
+import jif.types.DefaultSignature;
 import jif.types.JifTypeSystem;
 import jif.types.label.AccessPath;
 import jif.types.label.ConfPolicy;
@@ -34,6 +38,12 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   Principal workerPrincipal(Position pos);
   
   LocalInstance workerLocalInstance();
+  
+  FabricDefaultSignature fabricDefaultSignature();
+  
+  FabricFieldInstance fabricFieldInstance(Position pos,
+      ReferenceType container, Flags flags, Type type,
+      Label accessLabel, String name);
   
   Type strip(Type type);
   
