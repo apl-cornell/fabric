@@ -1,18 +1,8 @@
 package user;
-public class User [label theUser, label Auction] where {theUser} <= {Auction} {
-    // User provides UserChoice 
-    final UserAgent[Auction] {Auction} choice; 
-
-    public User () {
-		this.choice =  new UserAgent();	
-    }
-
-    public User (UserAgent [Auction] {Auction} choice) {
-		this.choice = choice;
-    }
-
-    public UserAgent[Auction] {Auction} getAgent() 
-    {
-		return this.choice;
-    }
+public class User [label theUser] implements broker.User[theUser] {
+    public broker.UserAgent[auction] {*auction} getAgent{*auction}(label{*auction} auction)
+		where {theUser} <= {*auction}, {*provider} <= {*auction}
+	{
+		return new UserAgent[auction]();		
+	}
 }

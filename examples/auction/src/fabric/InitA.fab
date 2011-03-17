@@ -1,0 +1,20 @@
+public class InitA {
+  public static void main{*provider}(principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+    atomic {
+      if(provider <= new label {p<-;p->} 
+			&& airlineA.Server.provider <= provider )
+        run(p, args);
+      else
+        throw new Error("Provider has insufficient integrity.");
+    }
+  }
+  public static void run{p<-;p->}(principal{p<-;p->} p, String[] args):{p<-;p->} 
+		throws Exception where provider <= {p<-;p->},  
+							{*airlineA.Server.provider} equiv {*provider} { 
+      final Store store = worker$.getStore("airlineA");
+      if (store actsfor p) {
+        Map root = store.getRoot();
+        root.put("auctionServer", new airlineA.Server[a_lbl](13500, 100));
+	  }
+  }
+}
