@@ -492,7 +492,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   
   public String absoluteName(Codebase context, String fullName, boolean resolve) throws SemanticException {
     if(!isPlatformType(fullName)) {
-      if(resolve) {
+      if(resolve && context != null) {
          FClass fcls = context.resolveClassName(fullName);
         if(fcls == null) {
           new java.lang.Exception().printStackTrace();

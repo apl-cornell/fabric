@@ -204,9 +204,10 @@ class Store extends MessageToStoreHandler {
   @Override
   public ReadMessage.Response handle(Principal p, ReadMessage msg)
   throws AccessException {
-    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-                "Handling Read Message from {0}, onum={1}",
-                nameOf(p), msg.onum);
+    if (Logging.STORE_REQUEST_LOGGER.isLoggable(Level.FINER)) {
+      Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+          "Handling Read Message from {0}, onum={1}", nameOf(p), msg.onum);
+    }
 
     ObjectGroup group = tm.getGroup(p, msg.onum);
     return new ReadMessage.Response(group);

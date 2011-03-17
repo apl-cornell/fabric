@@ -1,9 +1,5 @@
 package fabil.types;
 
-import fabil.frontend.CodebaseSource;
-import fabric.common.SysUtil;
-import fabric.lang.Codebase;
-import fabric.lang.FClass;
 import polyglot.types.ClassType;
 import polyglot.types.Named;
 import polyglot.types.NoClassException;
@@ -12,6 +8,8 @@ import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
+import fabil.frontend.CodebaseSource;
+import fabric.lang.Codebase;
 
 public class CodebasePackageContextResolver extends PackageContextResolver {
 
@@ -32,9 +30,7 @@ public class CodebasePackageContextResolver extends PackageContextResolver {
     if (cbts.isPlatformType(p)) return super.find(name, accessor);
 
     CodebaseSource cs = ((CodebasePackage) p).source();
-    Codebase cb = cs.codebase();
-//    FClass fcls = cb.resolveClassName(p.fullName() + "." + name);
-//    if (fcls == null) return null;
+    Codebase cb = (cs != null) ? cs.codebase() : null;
 
     String fqName =
         cbts.absoluteName(cb, p.fullName() + "." + name, true);
@@ -47,7 +43,6 @@ public class CodebasePackageContextResolver extends PackageContextResolver {
         throw e;
       }
     }
-    System.out.println("N: " + n);
 
     if (n == null) {
       n = ts.createPackage(p, name);
