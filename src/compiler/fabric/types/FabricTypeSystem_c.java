@@ -5,10 +5,7 @@ import java.util.*;
 import jif.ast.JifUtil;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
-import jif.types.JifLocalInstance;
-import jif.types.JifTypeSystem_c;
-import jif.types.LabeledType;
-import jif.types.Solver;
+import jif.types.*;
 import jif.types.label.*;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
@@ -254,6 +251,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return new FabricPairLabelToFabilExpr_c();
   }
   
+  @Override
+  public ProviderLabel providerLabel(JifClassType ct) {
+    return new FabricProviderLabel_c(ct, providerLabelTranslator());
+  }
+
   @Override
   protected LabelToJavaExpr providerLabelTranslator() {
     return new ProviderLabelToFabilExpr_c();
