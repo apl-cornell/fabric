@@ -31,14 +31,14 @@ class Main  {
 	  final Store user_store = worker$.getStore("user");   
 	  final principal user = user_store.getPrincipal();
 	  final label user_lbl = new label{user->;user<-};
-		
-	  final Store broker_store = worker$.getStore("broker");   
-	  final principal broker = broker_store.getPrincipal();
-	  final label broker_lbl = new label{broker->;broker<-};
 
 	  final Server[a_lbl] a_serv = (Server[a_lbl]) a_store.getRoot().get("auctionServer");
 	  final Server[b_lbl] b_serv = (Server[b_lbl]) b_store.getRoot().get("auctionServer");
 	  final User[user_lbl] user_serv = (User[user_lbl]) user_store.getRoot().get("auctionUser");
+
+	  final Store broker_store = worker$.getStore("broker");   
+	  final principal broker = broker_store.getPrincipal();
+	  final label broker_lbl = new label{broker->;broker<-};
 
 	  final label auction = new label{*a_lbl; *b_lbl; *user_lbl};
 

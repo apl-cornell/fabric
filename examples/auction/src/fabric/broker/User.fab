@@ -1,6 +1,6 @@
 package broker;
 public interface User[label theUser] 
 {
-    UserAgent[auction] {auction} getAgent{theUser}(label auction)
+    UserAgent[auction] {*auction} getAgent{*auction}(label auction)
 		where {theUser} <= {*auction}, {*auction} <= {*provider};
 }

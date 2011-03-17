@@ -20,14 +20,14 @@ public class AirlineExample [principal AirlineA, label Albl,
 				{*provider} equiv {*Agent.provider}, 
 				{*provider} equiv {*User.provider},
 				{*provider} equiv {Broker<-},
-				{Albl;Blbl;Userlbl} <= {*provider} 
+				{Albl;Blbl;Userlbl} equiv {*provider} 
 {
-	final label auction = new label{Albl;Blbl;Userlbl};
-	final Server[Albl] a;
-	final Server[Blbl] b;
-	final User[Userlbl] user;
+	final label{} auction = new label{Albl;Blbl;Userlbl};
+	final Server[Albl]{Albl} a;
+	final Server[Blbl]{Blbl} b;
+	final User[Userlbl]{Userlbl} user;
 
-    public AirlineExample (Server[Albl] a, Server[Blbl] b, User[Userlbl] user) {
+    public AirlineExample (Server[Albl]{Albl} a, Server[Blbl]{Blbl} b, User[Userlbl]{Userlbl} user) {
 		this.a = a;
 		this.b = b;
 		this.user = user;
@@ -43,10 +43,10 @@ public class AirlineExample [principal AirlineA, label Albl,
 
 		final principal airlines = new principal (AirlineA & AirlineB);
 
-		Agent[Albl, auction] agentA = a.getAgent(auction);
-		Agent[Blbl, auction] agentB = b.getAgent(auction);
+		Agent[Albl, auction]{*auction} agentA = a.getAgent(auction);
+		Agent[Blbl, auction]{*auction} agentB = b.getAgent(auction);
 
-		UserAgent[auction] choice = user.getAgent(auction);
+		UserAgent[auction]{*auction} userAgent = user.getAgent(auction);
 
 		agentA.prepareForAuction();
 		agentB.prepareForAuction(); 
@@ -59,12 +59,12 @@ public class AirlineExample [principal AirlineA, label Albl,
 
 		// main auction loop 
 		while (winner == 0) { 
-			offerA = agentA.makeOffer (choice, offerB); // makeOffer returns null if it can't compete anymore.
+			offerA = agentA.makeOffer (userAgent, offerB); // makeOffer returns null if it can't compete anymore.
 			if (offerA == null) { 
 			    winner = 2; // declare that B is the winning agent 
 			    break;
 			}
-			offerB = agentB.makeOffer (choice, offerA);
+			offerB = agentB.makeOffer (userAgent, offerA);
 			if (offerB == null)  {
 			    winner = 1; // declare that A is the winning agent
 			}
