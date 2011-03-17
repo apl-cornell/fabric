@@ -23,41 +23,34 @@ class Main  {
       PrintStream[{}] out1 = endorse(out, {*provider; p->; _<-_} to {{p→p; p<-*} ⊔ {⊤→⊤;⊤←⊤} ⊓ {*provider}});
       PrintStream[{}] out2 = declassify(out1,  {});
 
-	  final Store a_store = worker$.getStore("airlineA");   
-	  final principal airlineA = a_store.getPrincipal();
+	  final Store a_store = worker$.getStore("airlineAStore");   
+	  final Worker a_worker = worker$.getWorker("airlineAWorker");   
+	  final principal airlineA = a_worker.getPrincipal();
 	  final label a_lbl = new label{airlineA->;airlineA<-};
 
-	  final Store b_store = worker$.getStore("airlineA");   
-	  final principal airlineB = b_store.getPrincipal();
+	  final Store b_store = worker$.getStore("airlineBStore");
+	  final Worker b_worker = worker$.getWorker("airlineBWorker");   
+	  final principal airlineB = b_worker.getPrincipal();
 	  final label b_lbl = new label{airlineB->;airlineB<-};
 
-	  final Store user_store = worker$.getStore("user");   
-	  final principal user = user_store.getPrincipal();
+	  final Store user_store = worker$.getStore("userStore");   
+	  final Store user_worker = worker$.getWorker("userWorker");   
+	  final principal user = user_worker.getPrincipal();
 	  final label user_lbl = new label{user->;user<-};
 
-	  //normally, the server object would be stored by 
-	  //	the airlines and fetched here. In that case
-	  //	these checks would be unnecessary here.
-	//  if(airlineA.Server.provider equiv a_lbl 
-	//  		&& airlineA.Server.provider equiv airlineA.Agent.provider
-	//  		&& equiv airlineA.Agent.provider
-	//		&& airlineB.Server.provider equiv b_lbl 
-	//  		&& airlineB.Server.provider equiv airlineB.Agent.provider
-	//		&& user.User.provider equiv user_lbl
-	//		&& user.User.provider equiv user.UserAgent.provider) { 
+	  final Server[airlineA] a_serv =(Server[airlineA]) a_store.getRoot().get("auctionServer");
+	  final Server[airlineB] b_serv = (Server[airlineB])b_store.getRoot().get("auctionServer");
+	  final User[user] user_serv = (User[user])user_store.getRoot().get("auctionUser");
 
-	  	final Server[airlineA] a_serv =(Server[airlineA]) a_store.getRoot().get("auctionServer");
-	  	final Server[airlineB] b_serv = (Server[airlineB])b_store.getRoot().get("auctionServer");
-	  	final User[user] user_serv = (User[user])user_store.getRoot().get("auctionUser");
+	  final Store broker_store = worker$.getStore("brokerStore"); 
+	  final Worker broker_worker = worker$.getWorker("brokerWorker"); 
+	  final principal broker = broker_worker.getPrincipal();
+	  final label broker_lbl = new label{broker->;broker<-};
 
-	  	final Store broker_store = worker$.getStore("broker"); 
-	  	final principal broker = broker_store.getPrincipal();
-	  	final label broker_lbl = new label{broker->;broker<-};
+	  final label auction = new label{*a_lbl; *b_lbl; *user_lbl};
 
-	  	final label auction = new label{*a_lbl; *b_lbl; *user_lbl};
-
-      	if(broker actsfor airlineA && broker actsfor airlineB && broker actsfor user
-	  	  	&& p equiv broker && provider actsfor broker) 
-	  		new AirlineExample[airlineA, airlineB, user, broker](a_serv,b_serv,user_serv).go(out2);
+      if(broker actsfor airlineA && broker actsfor airlineB && broker actsfor user
+	    	&& p equiv broker && provider actsfor broker) 
+	  	new AirlineExample[airlineA, airlineB, user, broker](a_serv,b_serv,user_serv).go(out2);
     }
 }
