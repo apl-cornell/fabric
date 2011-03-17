@@ -3,16 +3,16 @@ public class Field02[principal p] extends X[p] {
     public X[p]{p→;p←}@{p→} t;
 
     // error: this field does not have the same access label as others
-    public float{p→;p←} r;
+//    public float{p→;p←} r;
     
     // the this label should not be allowed
-    public final float{this} s;
+//    public final float{this} s;
 
     public Field02(X[p]{p→;p←} targ, int{p→;p←} xarg) {
         this.x = xarg;
         this.t = targ;
-        this.r = (float)3.14;
-        this.s = (float)2.71;
+//        this.r = (float)3.14;
+//        this.s = (float)2.71;
         super();
     }
 
@@ -32,7 +32,9 @@ public class Field02[principal p] extends X[p] {
 }
 
 class X[principal p] {
-    int{p←} y;
+//    int{p←}@{p→} y;
+    int{p→;p←}@{p→} y;
+
     public X() {
         y = 10;
     }

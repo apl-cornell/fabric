@@ -10,12 +10,14 @@ import jif.types.JifParsedPolyType_c;
 import jif.types.label.Label;
 import polyglot.frontend.Source;
 import polyglot.types.*;
+import polyglot.util.Position;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements FabricParsedClassType {
   private transient Label singleFieldLabel = null;
   private transient Label singleAccessLabel = null;
   private transient boolean fieldLabelFound = false;
   private transient boolean accessLabelFound = false;
+  private transient boolean providerLabelFolded = false;
   protected transient Codebase codebase;
 
   public FabricParsedClassType_c() {
@@ -109,9 +111,22 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
       }
       accessLabelFound = true;
     }
+
     return singleAccessLabel;
   }
   
+  public Label getFoldedAccessLabel() {
+    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
+    if (!providerLabelFolded && singleAccessLabel != null) {
+      // Fold in the provider confidentiality label into the access label
+      singleAccessLabel = ts.join(singleAccessLabel, 
+          ts.pairLabel(Position.compilerGenerated(), 
+              provider().confProjection(),
+              ts.bottomIntegPolicy(Position.compilerGenerated())));
+      providerLabelFolded = true;
+    }
+    return singleAccessLabel;
+  }
   
   public Label defaultFabilFieldLabel() {
     // Type checking has been done, so all field labels are guaranteed to

@@ -39,4 +39,13 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements Fabri
     return subst.substLabel(base.singleAccessLabel());
   }
 
+  public Label getFoldedAccessLabel() {
+    FabricParsedClassType base = (FabricParsedClassType)base();
+    Label l = base.getFoldedAccessLabel();
+    if (l == null) return null;
+    
+    JifSubst subst = (JifSubst)subst();
+    return subst.substLabel(base.getFoldedAccessLabel());
+  }
+
 }

@@ -11,6 +11,7 @@ import jif.ast.LabelNode;
 import jif.types.DefaultSignature;
 import jif.types.FixedSignature;
 import jif.types.JifTypeSystem;
+import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 
 public class FabricFixedSignature extends FixedSignature implements FabricDefaultSignature {
@@ -28,7 +29,12 @@ public class FabricFixedSignature extends FixedSignature implements FabricDefaul
     if (ln == null) {
       FabricFieldInstance fi = (FabricFieldInstance) ffd.fieldInstance();
       Type t = fi.type();
-      return fts.labelOfType(t);
+      Label updateLabel = fts.labelOfType(t);
+      ConfPolicy cp = updateLabel.confProjection();
+      Label defaultAccessLabel = fts.pairLabel(Position.compilerGenerated(), 
+          cp, 
+          fts.topIntegPolicy(Position.compilerGenerated()));
+      return defaultAccessLabel;
     } else {
       return ln.label();
     }

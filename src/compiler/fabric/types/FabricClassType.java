@@ -22,4 +22,7 @@ public interface FabricClassType extends JifClassType {
 
   Label singleAccessLabel();
   
+  // Use this method if you want the provider label folded in
+  Label getFoldedAccessLabel();
+  
 }

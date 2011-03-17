@@ -6,6 +6,7 @@ import jif.types.label.Label;
 
 import fabric.ExtensionInfo;
 import fabric.FabricOptions;
+import fabric.types.FabricFieldInstance;
 import fabric.types.FabricParsedClassType;
 import fabric.types.FabricTypeSystem;
 
@@ -79,7 +80,8 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
     
     for (ClassMember cm : (List<ClassMember>)cd.body().members()) {
       if (cm instanceof FieldDecl) {
-        FieldDecl fd = (FieldDecl)cm;
+        FabricFieldDecl fd = (FabricFieldDecl)cm;
+        FabricFieldInstance ffi = (FabricFieldInstance) fd.fieldInstance();
 
         // Skip static fields.
         if (fd.flags().isStatic()) continue;
@@ -90,17 +92,22 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
         
         Type ft = fd.type().type();
         Label fl = ts.labelOfType(ft);
+        Label al = ffi.accessLabel();
         // TODO: Enable this for fabric signatures for fabil classes
         // Disable for non fabric classes
         // XXX The isFabricClass check should be on this class rather than ft!
-        if (ts.isFabricClass(ft) && !ts.equals(singleFieldLabel, fl) && !sigMode) {
+        if (
+//            ts.isFabricClass(ft) &&
+            !ts.equals(singleFieldLabel, fl) && !sigMode) {
           throw new SemanticException("The field " + fd.fieldInstance() + " has a different label than " +
           		              "the default field label " + singleFieldLabel + 
           		              "of the class " + pct + ".",
                                       fd.position());
         }
         
-        if (ts.isFabricClass(ft) && !ts.equals(singleAccessLabel, fl) && !sigMode) {
+        if (
+//            ts.isFabricClass(ft) &&
+            !ts.equals(singleAccessLabel, al) && !sigMode) {
           throw new SemanticException("The field " + fd.fieldInstance() + " has a different access label than " +
               "the singular access label " + singleAccessLabel + 
               "of the class " + pct + ".",

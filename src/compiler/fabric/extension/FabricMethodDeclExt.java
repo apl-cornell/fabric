@@ -4,6 +4,7 @@ import fabric.types.FabricParsedClassType;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
+import polyglot.util.Position;
 import jif.ast.JifMethodDecl;
 import jif.extension.JifMethodDeclExt;
 import jif.translate.ToJavaExt;
@@ -30,7 +31,15 @@ public class FabricMethodDeclExt extends JifMethodDeclExt {
     FabricParsedClassType pct = (FabricParsedClassType) jmi.container();
     
     Label startLabel = jmi.pcBound();
-    Label accessLabel = pct.singleAccessLabel();
+    Label accessLabel = pct.getFoldedAccessLabel();
+    
+    // take the meet of the start label with bottom integrity
+    // so that the integrity component is ignored
+    FabricTypeSystem fts = (FabricTypeSystem) lc.typeSystem();
+    startLabel = fts.meet(startLabel, 
+        fts.pairLabel(Position.compilerGenerated(),
+            fts.topConfPolicy(Position.compilerGenerated()), 
+            fts.bottomIntegPolicy(Position.compilerGenerated())));
     
     // This constraint is not necessary for static methods
     // since they cannot directly access the fields
@@ -43,7 +52,7 @@ public class FabricMethodDeclExt extends JifMethodDeclExt {
 
         @Override
         public String msg() {
-          return "The begin label of all methods in a class must be bounded" +
+          return "The confidentiality component of the begin label of all methods in a class must be bounded" +
           " above by the access label of the class";
         }
 
