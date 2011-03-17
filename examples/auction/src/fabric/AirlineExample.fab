@@ -17,7 +17,7 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 				{*provider} equiv {*User.provider},
 				{*provider} <= {Broker<-}
 {
-	final label{Broker<-} auction = new label{AirlineA->;AirlineA<-;AirlineB->;AirlineB<-;TheUser->;TheUser<-};
+	final label{Broker<-} auction = new label{AirlineA<-;AirlineB<-;TheUser<-; Broker ->};
 	final Server[AirlineA]{Broker<-} a;
 	final Server[AirlineB]{Broker<-} b;
 	final User[TheUser]{Broker<-} user;
@@ -38,9 +38,9 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 
 		//final principal airlines = new principal (AirlineA & AirlineB);
 
-		Agent[AirlineA, auction]{AirlineA->;AirlineA<-} agentA = a.getAgent(auction);
-		Agent[AirlineB, auction]{AirlineB->;AirlineB<-} agentB = b.getAgent(auction);
-		UserAgent[auction]{TheUser->;TheUser<-} userAgent = user.getAgent(auction);
+		Agent[AirlineA, auction] agentA = a.getAgent(auction);
+		Agent[AirlineB, auction] agentB = b.getAgent(auction);
+		UserAgent[auction] userAgent = user.getAgent(auction);
 
 		try { agentA.prepareForAuction(); } catch (NullPointerException e) {} // ugly hack
 		try { agentB.prepareForAuction(); } catch (NullPointerException e) {} 
@@ -48,18 +48,30 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 		// this variable stores the winning agent. When winner == 0 we have no winner yet
 		int winner = 0;
 
-		Offer [auction] offerA;
-		Offer [auction] offerB = agentB.makeFirstOffer();
+		Offer offerA = null;
+		Offer offerB = null;
+		try { offerB = agentB.makeFirstOffer(); } catch (NullPointerException e) {}
 
 		// main auction loop 
 		while (winner == 0) {
-			offerA = agentA.makeOffer (userAgent, offerB); // makeOffer returns null if it can't compete anymore.
-			if (offerA == null || userAgent.choice(offerA, offerB) != -1) {
+			try { offerA = agentA.makeOffer (userAgent, offerB); // makeOffer returns null if it can't compete anymore.
+                        } catch (NullPointerException e) {}
+ 
+                        boolean noChoice = false;
+                        try { noChoice =  userAgent.choice(offerA, offerB) != -1; 
+			} catch (NullPointerException e) {} 
+			if (offerA == null || noChoice ) {
 			    winner = 2; // declare that B is the winning agent 
 			    break;
-			}	
-			offerB = agentB.makeOffer (userAgent, offerA);
-			if (offerB == null || userAgent.choice(offerB, offerA) != -1) { 
+			}
+			noChoice = false;
+			
+			try { offerB = agentB.makeOffer (userAgent, offerA); 
+                        } catch (NullPointerException e) {}
+
+			try { noChoice = userAgent.choice(offerB, offerA) != -1;
+			} catch (NullPointerException e) {} 
+			if (offerB == null || noChoice) { 
 			    winner = 1; // declare that A is the winning agent
 			}
 		}
@@ -67,12 +79,12 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 		// with enough authority we can declassify anything... ;-) 
 		// 
 
-		//int {TheUser ->; airlines ->; Broker <-} w0 = endorse (winner, {*auction} to {*provider; TheUser ->; airlines ->; Broker <-} );
-	//
-	//		if (Broker actsfor airlines) {
-	//		int {} w = declassify ( w0, {} ); 
-	//			println ("Ending Airline example with winner " + w);
-	//		}
+		int {Broker ->; Broker <-} w0 = endorse (winner, {*auction} to {Broker ->; Broker <-} );
+	
+	//	if (Broker actsfor airlines) {
+		int {} w = declassify ( w0, {} ); 
+				println ("Ending Airline example with winner " + w);
+	//	}
 		//}
     }
 
