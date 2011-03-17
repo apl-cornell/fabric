@@ -147,13 +147,14 @@ public class FabricSourceLoader extends SourceLoader {
   @SuppressWarnings("unchecked")
   protected FileSource checkDirectoryForSource(File directory, String className) {
     String[] exts = sourceExt.fileExtensions();
-    if(Report.should_report(TOPIC, 3))
-      Report.report(3, "Checking " + directory + " for " + className);
 
     for (int k = 0; k < exts.length; k++) {
 
       String fileName =
           className.replace('.', File.separatorChar) + "." + exts[k];
+
+      if(Report.should_report(TOPIC, 3))
+        Report.report(3, "Checking " + directory + " for " + fileName);
 
       Set<String> dirContents =
           (Set<String>) directoryContentsCache.get(directory);
@@ -193,8 +194,7 @@ public class FabricSourceLoader extends SourceLoader {
         }
 
         try {
-          if (Report.should_report(Report.loader, 2))
-            s = sourceExt.createFileSource(sourceFile, false);
+          s = sourceExt.createFileSource(sourceFile, false);
           loadedSources.put(fileKey(sourceFile), s);
           return s;
         } catch (IOException e) {
