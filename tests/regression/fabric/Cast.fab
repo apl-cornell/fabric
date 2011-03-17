@@ -1,0 +1,8 @@
+package test;
+public class Cast[label lbl] {
+	public void cast() {
+		int test = 0;	
+		Store s = worker$.getStore("test");
+		Cast[lbl] foo = (Cast[lbl]) s.getRoot().get("test");
+	}
+}
