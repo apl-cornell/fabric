@@ -42,6 +42,8 @@ public class Main extends polyglot.main.Main {
     List<String> args = new LinkedList<String>();
     args.add("-worker");
     args.add(name);
+    args.add("-report");
+    args.add("frontend=2");
   
     if(worker.sigcp != null) {
       args.add("-sigcp");
