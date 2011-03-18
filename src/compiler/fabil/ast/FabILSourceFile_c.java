@@ -9,8 +9,6 @@ import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.TypeBuilder;
 import fabil.frontend.CodebaseSource;
-import fabil.frontend.RemoteSource;
-import fabil.frontend.RemoteSource_c;
 import fabil.types.FabILContext;
 import fabric.lang.Codebase;
 import fabric.visit.CodebaseTypeBuilder;
@@ -52,7 +50,7 @@ public class FabILSourceFile_c extends SourceFile_c implements FabILSourceFile {
   }
 
   public boolean isRemote() {
-    return source instanceof RemoteSource;
+    return ((CodebaseSource) codebase).isRemote();
   }  
 
   @Override

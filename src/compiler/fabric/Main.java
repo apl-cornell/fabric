@@ -61,7 +61,17 @@ public class Main extends polyglot.main.Main {
       main.start(args.toArray(new String[0]), extInfo);
       ClassFileLoader loader = main.compiler.loader();
       loader.loadClass(extInfo.getOptions().output_directory,
+          SysUtil.pseudoname(fcls));
+      loader.loadClass(extInfo.getOptions().output_directory,
           SysUtil.pseudoname(fcls) + "$_Impl");
+      loader.loadClass(extInfo.getOptions().output_directory,
+          SysUtil.pseudoname(fcls) + "$_Proxy");
+      loader.loadClass(extInfo.getOptions().output_directory,
+          SysUtil.pseudoname(fcls) + "$_Static");
+      loader.loadClass(extInfo.getOptions().output_directory,
+          SysUtil.pseudoname(fcls) + "$_Static$_Impl");
+      loader.loadClass(extInfo.getOptions().output_directory,
+          SysUtil.pseudoname(fcls) + "$_Static$_Proxy");
     } catch (TerminationException e) {
       throw new GeneralSecurityException(e);
     }

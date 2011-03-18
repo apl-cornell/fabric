@@ -9,6 +9,7 @@ import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
 import fabil.frontend.CodebaseSource;
+import fabil.frontend.RemoteSource;
 import fabric.lang.Codebase;
 
 public class CodebasePackageContextResolver extends PackageContextResolver {
@@ -30,11 +31,15 @@ public class CodebasePackageContextResolver extends PackageContextResolver {
     if (cbts.isPlatformType(p)) return super.find(name, accessor);
 
     CodebaseSource cs = ((CodebasePackage) p).source();
-    Codebase cb = (cs != null) ? cs.codebase() : null;
+    Codebase cb = cs.codebase();
 
-    String fqName =
-        cbts.absoluteName(cb, p.fullName() + "." + name, true);
-
+    String fqName;
+    if (cs.isRemote()) {
+      fqName = cbts.absoluteName(cb, p.fullName() + "." + name, true);
+    } else {
+      fqName = p.fullName() + "." + name;
+    }
+    
     try {
       n = ts.systemResolver().find(fqName);
     } catch (NoClassException e) {

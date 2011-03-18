@@ -50,7 +50,7 @@ public class InitCodebaseImports extends InitImportsVisitor {
       CodebaseSource src = (CodebaseSource) sf.source();
       v.codebase = src.codebase();
       v.importTable = it;
-      v.remote = ((CodebaseSourceFile) n).isRemote();
+      v.remote = src.isRemote();
       return v;
     }
     return this;
