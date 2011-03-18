@@ -83,7 +83,7 @@ public class FabricClassLoader extends ClassLoader {
         throw new ClassNotFoundException(name, e);
       } finally {
         endLoadingTime = System.currentTimeMillis();
-        if (endCompileTime > 0) {
+        if (endCompileTime < 0) {
           // Error during compilation; just attribute time to compiler.
           compileTime += endLoadingTime - endFSLoadTime;
         } else {
