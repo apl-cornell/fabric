@@ -32,7 +32,7 @@ import fabric.ast.FabricNodeFactory_c;
 import fabric.common.SysUtil;
 import fabric.frontend.FabricSourceLoader;
 import fabric.frontend.LocalSource;
-import fabric.frontend.RemoteSource;
+import fabric.frontend.RemoteSource_c;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.security.Label;
@@ -197,7 +197,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
       throw new IOException("The label of class "
           + SysUtil.absoluteName(fcls)
           + " is higher than the label of its codebase ");
-      return new RemoteSource(fcls, user);
+      return new RemoteSource_c(fcls, user);
   }
   
   @Override

@@ -157,16 +157,16 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
 
         String newName =
             cd.name() + "." + job.extensionInfo().defaultFileExtension();
-        String newPath =
-            n.source()
-                .path()
-                .substring(0,
-                    n.source().path().length() - n.source().name().length())
-                + newName;
+        
+        String sourcePath = n.source().path();
+        int lastSlashIdx = sourcePath.lastIndexOf('/');
+        String newPath = sourcePath.substring(0, lastSlashIdx + 1) + newName;
+        
         CodebaseSourceFile cbn = (CodebaseSourceFile) n;
+        CodebaseSource source = (CodebaseSource) cbn.source();
         Source s =
             new CodebaseSource_c(newName, newPath, new Date(
-                System.currentTimeMillis()), cbn.codebase(),
+                System.currentTimeMillis()), source.codebase(),
                 ((CodebaseSource) cbn.source()).isRemote());
         sf = sf.source(s);
         this.newSourceFiles.add(sf);

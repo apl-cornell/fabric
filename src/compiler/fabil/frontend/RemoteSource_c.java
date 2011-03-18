@@ -1,41 +1,31 @@
-package fabric.frontend;
+package fabil.frontend;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.Date;
 
+import polyglot.frontend.FileSource;
 import polyglot.util.StringUtil;
-import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
-import jif.parse.UTF8FileSource;
+public class RemoteSource_c extends FileSource implements RemoteSource {
 
-//XXX: this class should actually extend jif.parse.UTF8FileSource
-public class RemoteSource extends UTF8FileSource implements CodebaseSource {
   protected final FClass fcls;
   protected Codebase codebase;
   protected Reader reader = null;
-  
-  protected static String toFabURL(FClass fcls) {
-    return "fab://" + fcls.$getStore().name() + "/" + fcls.$getOnum();
-  }
-  
-  public RemoteSource(FClass fcls, boolean userSpecified) throws IOException {
+
+  public RemoteSource_c(FClass fcls, boolean userSpecified) throws IOException {
     this(fcls.getCodebase(), StringUtil.getShortNameComponent(fcls.getName()) + ".fab",
-        toFabURL(fcls), fcls, new Date(System.currentTimeMillis()), userSpecified);
+        "fab://" + fcls.$getStore().name() + "/" + fcls.$getOnum(), fcls, new Date(System.currentTimeMillis()), userSpecified);
     fcls.get$label();
   }
   
-  public RemoteSource(FClass fcls, String name, boolean userSpecified) throws IOException {
-    this(fcls.getCodebase(), name, toFabURL(fcls), fcls, new Date(System.currentTimeMillis()), userSpecified);
+  public RemoteSource_c(FClass fcls, String name, boolean userSpecified) throws IOException {
+    this(fcls.getCodebase(), name,
+        "fab://" + fcls.$getStore().name() + "/" + fcls.$getOnum(), fcls, new Date(System.currentTimeMillis()), userSpecified);
   }
 
-  public RemoteSource(Codebase cb, String name, String path, FClass fcls, Date lastModified, boolean userSpecified) throws IOException {
+  public RemoteSource_c(Codebase cb, String name, String path, FClass fcls, Date lastModified, boolean userSpecified) throws IOException {
     super(path, name, lastModified, userSpecified);
     this.codebase = cb;
     this.fcls = fcls;
@@ -80,8 +70,8 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
   public FClass fclass() {
     return fcls;
   }
+
   public boolean isRemote() {
     return true;
   }
-
 }

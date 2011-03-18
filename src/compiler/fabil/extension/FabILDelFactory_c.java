@@ -68,4 +68,9 @@ public class FabILDelFactory_c extends AbstractDelFactory_c implements
   protected JL postDelProviderLabel(JL del) {
     return postDelExpr(del);
   }
+
+  @Override
+  protected JL delImportImpl() {
+    return new FabILImportDel_c();
+  }
 }

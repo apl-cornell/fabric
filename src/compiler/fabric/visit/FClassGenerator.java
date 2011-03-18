@@ -23,7 +23,7 @@ import polyglot.visit.ErrorHandlingVisitor;
 import polyglot.visit.NodeVisitor;
 import fabric.ExtensionInfo;
 import fabric.frontend.LocalSource;
-import fabric.frontend.RemoteSource;
+import fabric.frontend.RemoteSource_c;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.security.Label;
@@ -125,8 +125,8 @@ public class FClassGenerator extends ErrorHandlingVisitor {
             if(depsrc == null)
               throw new InternalCompilerError("No source for " + ct);         
             
-            if(depsrc instanceof RemoteSource) {
-              FClass depcls = ((RemoteSource)depsrc).fclass();
+            if(depsrc instanceof RemoteSource_c) {
+              FClass depcls = ((RemoteSource_c)depsrc).fclass();
               cb.insertClass(depcls.getName(), depcls);
             }
             else if(!(depsrc instanceof LocalSource))
@@ -136,8 +136,8 @@ public class FClassGenerator extends ErrorHandlingVisitor {
             throw new InternalCompilerError("Expected FabricParsedClassType but got " + dep.getClass());
         }
       }
-      else if(src instanceof RemoteSource) {
-        FClass fcls = ((RemoteSource) src).fclass();
+      else if(src instanceof RemoteSource_c) {
+        FClass fcls = ((RemoteSource_c) src).fclass();
         fabric.util.Set fclsNames = fcls.dependencies();
         Set<String> realNames = toClassNames(fcg.dependencies);
         if(Report.should_report(TOPIC, 3)) {

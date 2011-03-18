@@ -22,7 +22,7 @@ import fabil.frontend.CodebaseSourceClassResolver;
 import fabil.frontend.CodebaseTargetFactory;
 import fabil.frontend.FabILScheduler;
 import fabil.frontend.LocalSource;
-import fabil.frontend.RemoteSource;
+import fabil.frontend.RemoteSource_c;
 import fabil.parse.Grm;
 import fabil.parse.Lexer_c;
 import fabil.types.FabILTypeSystem;
@@ -175,7 +175,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   }
   
   public FileSource createRemoteSource(FClass fcls, boolean user) throws IOException {
-    return new RemoteSource(fcls, user);
+    return new RemoteSource_c(fcls, user);
   }
 
 }

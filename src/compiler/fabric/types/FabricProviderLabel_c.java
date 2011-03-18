@@ -4,7 +4,7 @@ import jif.translate.LabelToJavaExpr;
 import jif.types.JifClassType;
 import jif.types.label.ProviderLabel_c;
 import fabil.types.CodebaseClassType;
-import fabric.frontend.RemoteSource;
+import fabric.frontend.RemoteSource_c;
 
 public class FabricProviderLabel_c extends ProviderLabel_c {
 
@@ -14,7 +14,7 @@ public class FabricProviderLabel_c extends ProviderLabel_c {
     // Classes published to Fabric never have trusted providers.
     if (classType instanceof CodebaseClassType) {
       CodebaseClassType cbct = (CodebaseClassType) classType;
-      if (cbct.fromSource() instanceof RemoteSource) {
+      if (cbct.fromSource() instanceof RemoteSource_c) {
         this.isTrusted = false;
       }
     }

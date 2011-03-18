@@ -1,5 +1,6 @@
 package fabric.ast;
 
+import fabil.extension.FabILImportDel_c;
 import fabric.extension.FabricCallDel;
 import fabric.extension.FabricNewDel;
 import fabric.extension.FabricNewLabelDel;
@@ -197,5 +198,10 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
   @Override
   protected JL delCallImpl() {
     return new FabricCallDel();
+  }
+
+  @Override
+  protected JL delImportImpl() {
+    return new FabILImportDel_c();
   }
 }

@@ -2,19 +2,18 @@ package fabil.ast;
 
 import java.util.List;
 
-import fabil.frontend.CodebaseSource;
-import fabil.frontend.RemoteSource;
-import fabil.types.CodebaseContext;
-import fabil.types.FabILContext;
-import fabric.lang.Codebase;
-import fabric.visit.CodebaseTypeBuilder;
-
 import polyglot.ast.PackageNode;
 import polyglot.ast.SourceFile_c;
 import polyglot.types.Context;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.TypeBuilder;
+import fabil.frontend.CodebaseSource;
+import fabil.frontend.RemoteSource;
+import fabil.frontend.RemoteSource_c;
+import fabil.types.FabILContext;
+import fabric.lang.Codebase;
+import fabric.visit.CodebaseTypeBuilder;
 
 
 /**

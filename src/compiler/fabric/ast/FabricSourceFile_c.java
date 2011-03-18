@@ -11,7 +11,7 @@ import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.TypeBuilder;
 import fabil.frontend.CodebaseSource;
-import fabric.frontend.RemoteSource;
+import fabric.frontend.RemoteSource_c;
 import fabric.lang.Codebase;
 import fabric.types.FabricContext;
 import fabric.visit.CodebaseTypeBuilder;
@@ -57,7 +57,7 @@ public class FabricSourceFile_c extends SourceFile_c implements FabricSourceFile
   }
 
   public boolean isRemote() {
-    return source instanceof RemoteSource;
+    return source instanceof RemoteSource_c;
   }
 
   @Override

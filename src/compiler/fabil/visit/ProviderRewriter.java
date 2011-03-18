@@ -43,7 +43,9 @@ public class ProviderRewriter extends NodeVisitor {
       // Get a handle to the FClass object.
       Codebase cb = ct.codebase();
       Map classes = cb.getClasses();
-      FClass fclass = (FClass) classes.get(WrappedJavaInlineable.$wrap(ct.fullName()));
+      FClass fclass =
+          (FClass) fabric.lang.Object._Proxy.$getProxy(classes
+              .get(WrappedJavaInlineable.$wrap(ct.fullName())));
       
       // Convert to an OID.
       String storeName = fclass.$getStore().name();
