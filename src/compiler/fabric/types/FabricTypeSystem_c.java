@@ -425,6 +425,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     || fullName.startsWith("jif");
   }
 
+  /**
+   * Turns a codebase and a Java name into an absolute name. If the class is a
+   * platform class, this is the same as the Java name; otherwise, it is an
+   * encoded name that includes the codebase.
+   */
   public String absoluteName(Codebase context, String fullName, boolean resolve) throws SemanticException {
     if(!isPlatformType(fullName)) {
       if(resolve && context != null) {

@@ -1,13 +1,15 @@
 package fabil.ast;
 
-import fabil.frontend.CodebaseSource;
-import fabil.types.CodebaseContext;
-import fabil.types.CodebasePackage;
+import polyglot.ast.Node;
 import polyglot.ast.PackageNode_c;
 import polyglot.types.Package;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
+import polyglot.visit.TypeBuilder;
+import fabil.frontend.CodebaseSource;
+import fabil.types.CodebasePackage;
+import fabric.visit.CodebaseTypeBuilder;
 
 public class CodebasePackageNode_c extends PackageNode_c implements
     CodebasePackageNode {
@@ -18,20 +20,26 @@ public class CodebasePackageNode_c extends PackageNode_c implements
     super(pos, p);
   }
 
+  @Override
+  public Node buildTypes(TypeBuilder tb) throws SemanticException {
+    CodebaseTypeBuilder ftb = (CodebaseTypeBuilder) tb;
+    CodebasePackageNode result = (CodebasePackageNode) super.buildTypes(tb);
+    return result.source(ftb.currentSource());
+  }
+
   @SuppressWarnings("unused")
   @Override
   public CodebasePackageNode disambiguate(AmbiguityRemover ar)
       throws SemanticException {
     CodebasePackage cbp = (CodebasePackage) package_;
-    CodebaseContext ctx = (CodebaseContext) ar.context();
-    cbp = cbp.source(ctx.currentSource());
+    cbp = cbp.source(source);
     
     // Only qualify packages in remote source by the codebase
 
-    if (ctx.currentSource().isRemote() 
+    if (source.isRemote() 
         && (cbp == null || !cbp.isCanonical())) {
 
-      cbp = cbp.codebase(ctx.currentCodebase());
+      cbp = cbp.codebase(source.codebase());
       return (CodebasePackageNode) package_(cbp);
     } else return this;
   }

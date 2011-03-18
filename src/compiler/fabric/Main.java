@@ -42,7 +42,6 @@ public class Main extends polyglot.main.Main {
     List<String> args = new LinkedList<String>();
     args.add("-worker");
     args.add(name);
-    args.add("-trusted-providers");
   
     if(worker.sigcp != null) {
       args.add("-sigcp");
