@@ -1,27 +1,49 @@
 package fabil.ast;
 
-import jif.ast.JifDisamb_c;
-import fabil.types.CodebaseContext;
-import fabil.types.CodebasePackage;
-import fabil.ast.CodebaseDisamb;
-import fabil.frontend.CodebaseSource;
-import fabric.lang.Codebase;
-import polyglot.ast.Ambiguous;
-import polyglot.ast.Disamb_c;
-import polyglot.ast.Id;
-import polyglot.ast.Node;
-import polyglot.ast.PackageNode;
-import polyglot.ast.Prefix;
-import polyglot.types.ParsedClassType;
+import polyglot.ast.*;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.ContextVisitor;
+import fabil.frontend.CodebaseSource;
+import fabil.types.CodebaseContext;
+import fabil.types.CodebasePackage;
+import fabric.lang.Codebase;
 
 public class FabILDisamb_c extends Disamb_c implements CodebaseDisamb {
 
   @Override
   public Node disambiguate(Ambiguous amb, ContextVisitor v, Position pos,
       Prefix prefix, Id name) throws SemanticException {
+    
+    //////////////////////////////////////////////////////
+    // Is this right/needed?
+    this.v = v;
+    this.pos = pos;
+    this.prefix = prefix;
+    this.name = name;
+    this.amb = amb;
+    
+    this.nf = v.nodeFactory();
+    this.ts = v.typeSystem();
+    this.c = v.context();
+    
+    if (prefix instanceof PackageNode) {
+      PackageNode pn = (PackageNode) prefix;
+      CodebasePackage cbp = (CodebasePackage) pn.package_();
+
+      if (cbp.source() == null || cbp.codebase() == null) {
+        CodebaseContext context = (CodebaseContext) c;
+        Codebase cb = context.currentCodebase();
+        CodebaseSource cbs = context.currentSource();
+        
+        // Set the codebase and source of the package.
+        cbp = cbp.source(cbs);
+        cbp = cbp.codebase(cb);
+        prefix = ((PackageNode) prefix).package_(cbp);
+      }
+    }
+    // Is this right/needed?
+    //////////////////////////////////////////////////////
 
     Node n = super.disambiguate(amb, v, pos, prefix, name);
     //Only qualify packages in remote source by the codebase

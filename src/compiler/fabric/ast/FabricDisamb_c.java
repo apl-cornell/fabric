@@ -20,8 +20,38 @@ public class FabricDisamb_c extends JifDisamb_c implements CodebaseDisamb {
   @Override
   public Node disambiguate(Ambiguous amb, ContextVisitor v, Position pos,
       Prefix prefix, Id name) throws SemanticException {
+    //////////////////////////////////////////////////////
+    // Is this right/needed?
+    this.v = v;
+    this.pos = pos;
+    this.prefix = prefix;
+    this.name = name;
+    this.amb = amb;
+    
+    this.nf = v.nodeFactory();
+    this.ts = v.typeSystem();
+    this.c = v.context();
+    
+    if (prefix instanceof PackageNode) {
+      PackageNode pn = (PackageNode) prefix;
+      CodebasePackage cbp = (CodebasePackage) pn.package_();
+
+      if (cbp.source() == null || cbp.codebase() == null) {
+        CodebaseContext context = (CodebaseContext) c;
+        Codebase cb = context.currentCodebase();
+        CodebaseSource cbs = context.currentSource();
+        
+        // Set the codebase and source of the package.
+        cbp = cbp.source(cbs);
+        cbp = cbp.codebase(cb);
+        prefix = ((PackageNode) prefix).package_(cbp);
+      }
+    }
+    // Is this right/needed?
+    //////////////////////////////////////////////////////
 
     Node n = super.disambiguate(amb, v, pos, prefix, name);
+    
     //Only qualify packages in remote source by the codebase
     if(n instanceof PackageNode) {
       CodebaseContext ctx = (CodebaseContext) c;
