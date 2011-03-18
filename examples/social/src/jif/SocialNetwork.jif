@@ -1,5 +1,10 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
 public class SocialNetwork[principal SN] authority (SN) {
-  int{SN<-} x;
+  
+  protected PrintStream[{}] out;
+  
   public void go{SN<-}() where authority(SN) {
     final principal user = new principal(Chuck, SN);
     final principal bb = new principal(Bob, SN);
@@ -32,5 +37,14 @@ public class SocialNetwork[principal SN] authority (SN) {
           agent.happyBirthday(bg, bdayGirl);
         }
     }
+  }
+  
+  public void printWall{SN<-}(principal{SN<-} U, User[U, SN]{SN<-} user)
+      where authority(SN), SN actsfor U {
+    String endorsedWall = endorse(user.wall, {U->user.friends; U<-user.friends} to {U->user.friends; SN<-});
+    String{} wall = declassify(endorsedWall, {});
+    
+    out.println("-----");
+    out.println(wall);
   }
 }
