@@ -17,26 +17,15 @@ public class SocialNetwork[principal SN] authority (SN) {
     final principal bbf = new principal(bb, Alice);
     final principal bgf = new principal(bg, Bob);
 
-
-    /*
-    if (bbf actsfor user) 
-    	println("***");
-     else 
-        println("---"); 
-    */
-
     if (SN actsfor bb && SN actsfor bg && SN actsfor user) {
 
       final User[bb, SN] bdayBoy = new User(new label {bb->bbf; bb<-}, 10, bbf);
       final User[bg, SN] bdayGirl = new User(new label {bg->bgf; bg<-}, 10, new principal (_));
 
-      
       Agent[user, SN] agent = new Agent();
-      
       final principal bbFriends = bdayBoy.friends;
       endorse(bbFriends, {bb<-} to {SN<-})
         if (SN actsfor bbFriends) {
-	    if (new label {bb->bbf; bb<- } <= new label {bb -> bbFriends; bb <- bbFriends}) println("*"); else println("-");
             agent.happyBirthday(bb, bdayBoy);
         }
       
@@ -49,18 +38,10 @@ public class SocialNetwork[principal SN] authority (SN) {
       final principal bgFriends = bdayGirl.friends;
       endorse(bgFriends, {bg<-} to {SN<-})
         if (SN actsfor bgFriends) {
-	    if (bgf equiv bgFriends) println("*"); else println ("-"); 
-	    if (new label {bg->bgf; bg<- } <= new label {bg-> user; bg <- bgFriends}) println("*"); else println ("-");
-
             agent.happyBirthday(bg, bdayGirl);
-
-        }
-      
+        }      
       printWall(bb, bdayBoy);
       printWall(bg, bdayGirl);
-
-
-      
     }
   }
   
