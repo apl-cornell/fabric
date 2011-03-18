@@ -33,10 +33,11 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     this.systemResolver = createSystemResolver(loadedResolver, extInfo);
   }
 
-  public CodebaseSystemResolver createSystemResolver(TopLevelResolver loadedResolver, ExtensionInfo extInfo) {
+  public CodebaseSystemResolver createSystemResolver(
+      TopLevelResolver loadedResolver, ExtensionInfo extInfo) {
     return new CodebaseSystemResolver(loadedResolver, extInfo);
   }
-  
+
   @Override
   public CodebaseClassContextResolver createClassContextResolver(ClassType type) {
     assert_(type);
@@ -46,14 +47,14 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public CodebasePackageContextResolver createPackageContextResolver(Package p) {
     assert_(p);
-    return new CodebasePackageContextResolver(this, (CodebasePackage)p);
+    return new CodebasePackageContextResolver(this, (CodebasePackage) p);
   }
 
   @Override
   public CodebasePackage createPackage(Package prefix, String name) {
     return new CodebasePackage_c(this, prefix, name);
   }
-  
+
   public ClassType TransactionManager() {
     return load("fabric.worker.transaction.TransactionManager");
   }
@@ -114,14 +115,14 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return load("java.lang.InternalError");
   }
 
-//  // I don't understand why this method is deprecated.  
-//  // There doesn't seem to be any other way to create
-//  // packages.  All non-deprecated methods call this one.
-//  /** @deprecated */
-//  public Package createPackage(Package prefix, String name) {
-//      assert_(prefix);
-//      return new FabILPackage_c(this, prefix, name);
-//  }
+  // // I don't understand why this method is deprecated.
+  // // There doesn't seem to be any other way to create
+  // // packages. All non-deprecated methods call this one.
+  // /** @deprecated */
+  // public Package createPackage(Package prefix, String name) {
+  // assert_(prefix);
+  // return new FabILPackage_c(this, prefix, name);
+  // }
 
   /*
    * (non-Javadoc)
@@ -140,7 +141,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return new FabILContext_c(this);
   }
 
-  
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public List defaultPackageImports() {
@@ -237,9 +237,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
    */
   @Override
   public ImportTable importTable(Package pkg) {
-    throw new UnsupportedOperationException("Import table must be associated with a source");
+    throw new UnsupportedOperationException(
+        "Import table must be associated with a source");
   }
-  
+
   /*
    * (non-Javadoc)
    * @see polyglot.types.TypeSystem_c#importTable(java.lang.String,
@@ -247,7 +248,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
    */
   @Override
   public ImportTable importTable(String sourceName, Package pkg) {
-    throw new UnsupportedOperationException("Import table must be associated with a source");
+    throw new UnsupportedOperationException(
+        "Import table must be associated with a source");
   }
 
   public CodebaseImportTable importTable(CodebaseSource source, Package pkg) {
@@ -471,41 +473,48 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
       if (t.package_().equals(createPackage("fabric.lang.security"))) {
         return super.translateClass(null, t);
       }
-    }    
+    }
     return super.translateClass(c, t);
   }
 
   public boolean isPlatformType(Named name) {
     return isPlatformType(name.fullName());
   }
-    
+
   public boolean isPlatformType(String fullName) {
     FabILOptions opt = (FabILOptions) extInfo.getOptions();
-    if(!opt.runWorker()) {
+    if (!opt.runWorker()) {
       return true;
     }
     String typeName = fullName;
-    return typeName.startsWith("java")
-      || typeName.startsWith("fabric")
-      || typeName.startsWith("jif");
+    return typeName.startsWith("java") || typeName.startsWith("fabric")
+        || typeName.startsWith("jif");
   }
-  
-  public String absoluteName(Codebase context, String fullName, boolean resolve) throws SemanticException {
-    if(!isPlatformType(fullName)) {
-      if(resolve && context != null) {
-         FClass fcls = context.resolveClassName(fullName);
-        if(fcls == null) {
+
+  public String absoluteName(Codebase context, String fullName, boolean resolve)
+      throws SemanticException {
+    // XXX Ugly hack.
+    boolean isJifImpl = fullName.endsWith("_JIF_IMPL");
+    String jifImpl = "";
+    if (isJifImpl) {
+      fullName = fullName.substring(0, fullName.indexOf("_JIF_IMPL"));
+      jifImpl = "_JIF_IMPL";
+    }
+    
+    if (!isPlatformType(fullName)) {
+      if (resolve && context != null) {
+        FClass fcls = context.resolveClassName(fullName);
+        if (fcls == null) {
           new java.lang.Exception().printStackTrace();
-          throw new SemanticException("Codebase " + SysUtil.oid(context) + " has no entry for " + fullName);
+          throw new SemanticException("Codebase " + SysUtil.oid(context)
+              + " has no entry for " + fullName);
         }
         Codebase cb = fcls.getCodebase();
-        return SysUtil.codebasePrefix(cb) + fullName;
+        return SysUtil.codebasePrefix(cb) + fullName + jifImpl;
+      } else {
+        return SysUtil.codebasePrefix(context) + fullName + jifImpl;
       }
-      else {
-        return SysUtil.codebasePrefix(context) + fullName;
-      }
-    } else
-      return fullName;
+    } else return fullName + jifImpl;
   }
 
 }
