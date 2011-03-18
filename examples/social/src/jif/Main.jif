@@ -22,6 +22,9 @@ class Main {
 	      out2.println("Main is running");
 	  } catch (NullPointerException e) {
 	  }
+	  
+	  SocialNetwork sn = new SocialNetwork(out2);
+	  sn.go();
     }
 
 }

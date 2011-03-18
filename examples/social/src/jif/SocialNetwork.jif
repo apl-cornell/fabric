@@ -3,7 +3,11 @@ import jif.runtime.Runtime;
 
 public class SocialNetwork[principal SN] authority (SN) {
   
-  protected PrintStream[{}] out;
+  protected final PrintStream[{}] out;
+  
+  public SocialNetwork{SN<-}(final PrintStream[{}]{SN<-} out) {
+    this.out = out;
+  }
   
   public void go{SN<-}() where authority(SN) {
     final principal user = new principal(Chuck, SN);
@@ -25,8 +29,8 @@ public class SocialNetwork[principal SN] authority (SN) {
           agent.happyBirthday(bb, bdayBoy);
         }
       
-   // Should be able to write this, but jifc is too brain-dead to reason accurately
-   // enough.
+// Should be able to write this, but jifc is too brain-dead to reason accurately
+// enough.
 //         if (endorse(SN actsfor bdayBoy.friends, {bb<-} to {SN<-})) {
 //           agent.happyBirthday(bb, bdayBoy);
 //         }
@@ -36,6 +40,9 @@ public class SocialNetwork[principal SN] authority (SN) {
         if (SN actsfor bgFriends) {
           agent.happyBirthday(bg, bdayGirl);
         }
+      
+      printWall(bb, bdayBoy);
+      printWall(bg, bdayGirl);
     }
   }
   
