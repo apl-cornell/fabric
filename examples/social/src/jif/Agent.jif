@@ -9,8 +9,7 @@ public class Agent[principal U, principal SN]
   public void happyBirthday{bdayPerson<-bdayUser.friends, U}
       (final principal{SN<-} bdayPerson, User[bdayPerson, SN]{SN<-} bdayUser)
       where SN actsfor bdayPerson, SN actsfor bdayUser.friends {
-    if (bdayUser.lbl <= new label {bdayPerson->bdayUser.friends;
-                                   bdayPerson<-bdayUser.friends}) {
+      if (bdayUser.lbl <= new label {bdayPerson-> ; bdayPerson<-bdayUser.friends}) {
       if (U actsfor bdayUser.friends) {
         if (bdayUser.birthday == today()) {
           bdayUser.wall = bdayUser.wall + "Happy birthday!\n";
@@ -29,4 +28,5 @@ public class Agent[principal U, principal SN]
 //      }
 //    }
 //  }
+
 }

@@ -13,7 +13,9 @@ public class User[principal U, principal SN]
   
   final principal{U<-} friends;
   
-  String{U->friends;U<-friends} wall;
+  //String{U->friends;U<-friends} wall;
+
+  String{U->U;U<-friends} wall; // wall is private, but friends can send messages
   
   public User(label{U<-} lbl, int{*lbl} birthday, principal{U<-} friends) {
     this.lbl = lbl;
@@ -21,5 +23,4 @@ public class User[principal U, principal SN]
     this.wall = "";
     this.friends = friends;
   }
-
 }
