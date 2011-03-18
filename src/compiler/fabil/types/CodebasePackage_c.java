@@ -1,6 +1,7 @@
 package fabil.types;
 import polyglot.types.Package;
 import polyglot.types.Package_c;
+import polyglot.types.Resolver;
 import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
 
@@ -36,4 +37,9 @@ public class CodebasePackage_c extends Package_c implements CodebasePackage {
     return source;
   }
 
+  @Override
+  public String translate(Resolver c) {
+    // TODO Auto-generated method stub
+    return super.translate(c);
+  }
 }

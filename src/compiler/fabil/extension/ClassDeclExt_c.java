@@ -520,8 +520,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       } else {
         out.append("$writeRef($getStore(), this." + f.name() + ", refTypes, "
             + "out, intraStoreRefs, interStoreRefs);");
-        in.append("this." + f.name() + " = (" + f.declType() + ") $readRef("
-            + f.declType() + "._Proxy.class, " + "(fabric.common.RefTypeEnum) "
+        in.append("this." + f.name() + " = (" + f.declType().translate(null)
+            + ") $readRef(" + f.declType().translate(null) + "._Proxy.class, "
+            + "(fabric.common.RefTypeEnum) "
             + "refTypes.next(), in, store, intraStoreRefs);");
       }
     }
