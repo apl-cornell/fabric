@@ -4,7 +4,8 @@ import jif.runtime.Runtime;
 class Main authority (Dolores) {
     public static final void main{⊤ <- }  (principal{*provider} p, String args[])  
 	throws SecurityException, IllegalArgumentException  
-	       where caller(p), provider actsfor p, authority (Dolores)
+	       where caller(p), provider actsfor p, authority (Dolores),
+    {*provider} <= {}
     {
 	PrintStream[{}] out = null;
           try {

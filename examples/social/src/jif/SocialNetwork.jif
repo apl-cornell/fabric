@@ -1,7 +1,9 @@
 import java.io.PrintStream;
 import jif.runtime.Runtime;
 
-public class SocialNetwork[principal SN] authority (SN) {
+public class SocialNetwork[principal SN] authority (SN) 
+    where {*provider} actsfor SN, {*provider} <= {SN <- }
+{
   
   protected final PrintStream[{}] out;
   
@@ -22,24 +24,24 @@ public class SocialNetwork[principal SN] authority (SN) {
       final User[bb, SN] bdayBoy = new User(new label {bb->bbf; bb<-}, 10, bbf);
       final User[bg, SN] bdayGirl = new User(new label {bg->bgf; bg<-}, 10, new principal (_));
 
+
       Agent[user, SN] agent = new Agent();
       final principal bbFriends = bdayBoy.friends;
       endorse(bbFriends, {bb<-} to {SN<-})
-        if (SN actsfor bbFriends) {
-            agent.happyBirthday(bb, bdayBoy);
-        }
+      if (SN actsfor bbFriends) {
+	  if (new label {*Agent.provider} actsfor user && new label{*Agent.provider} <= new label {SN <- bb}) {
+		  agent.happyBirthday(bb, bdayBoy);
+          }
+       }
       
-// Should be able to write this, but jifc is too brain-dead to reason accurately
-// enough.
-//         if (endorse(SN actsfor bdayBoy.friends, {bb<-} to {SN<-})) {
-//           agent.happyBirthday(bb, bdayBoy);
-//         }
+       final principal bgFriends = bdayGirl.friends;
+       endorse(bgFriends, {bg<-} to {SN<-})
+       if (SN actsfor bgFriends) {
+	  if (new label {*Agent.provider} actsfor user && new label{*Agent.provider} <= new label {SN <- bg}) {
+		  agent.happyBirthday(bg, bdayGirl);
+	  }
+       }      
       
-      final principal bgFriends = bdayGirl.friends;
-      endorse(bgFriends, {bg<-} to {SN<-})
-        if (SN actsfor bgFriends) {
-            agent.happyBirthday(bg, bdayGirl);
-        }      
       printWall(bb, bdayBoy);
       printWall(bg, bdayGirl);
     }
@@ -58,3 +60,12 @@ public class SocialNetwork[principal SN] authority (SN) {
       out.println(s);
   }
 }
+
+
+
+	  // Should be able to write this, but jifc is too brain-dead to reason accurately
+	  // enough.
+	  //         if (endorse(SN actsfor bdayBoy.friends, {bb<-} to {SN<-})) {
+	  //           agent.happyBirthday(bb, bdayBoy);
+	  //         }
+      
