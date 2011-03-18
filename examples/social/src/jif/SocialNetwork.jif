@@ -14,12 +14,12 @@ public class SocialNetwork[principal SN] authority (SN) {
     final principal bb = new principal(Bob, SN);
     final principal bg = new principal(Alice, SN);
     
-    final principal bbf = new principal((bb,Alice),Chuck);
+    final principal bbf = new principal(bb, Alice);
     final principal bgf = new principal(bg, Bob);
     
     if (SN actsfor bb && SN actsfor bg && SN actsfor user) {
       final User[bb, SN] bdayBoy = new User(new label {bb->bbf; bb<-}, 10, bbf);
-      final User[bg, SN] bdayGirl = new User(new label {bg->_; bg<-}, 11, bgf);
+      final User[bg, SN] bdayGirl = new User(new label {bg->bgf; bg<-}, 10, new principal (_));
       
       Agent[user, SN] agent = new Agent();
       

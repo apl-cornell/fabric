@@ -23,7 +23,7 @@ class Main {
 	  } catch (NullPointerException e) {
 	  }
 	  
-	  SocialNetwork sn = new SocialNetwork(out2);
+	  SocialNetwork[Dolores] sn = new SocialNetwork(out2);
 	  sn.go();
     }
 
