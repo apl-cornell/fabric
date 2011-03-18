@@ -19,38 +19,97 @@ import fabric.common.SysUtil;
  * @author Lucas Waye <lrw48@cornell.edu>
  */
 public class FabricClassLoader extends ClassLoader {
-	Map/* String, Class */classes;
-	Map/* String, byte native[] */classBytecodeMap;
-	ClassLoader parent;
+  Map/* String, Class */classes;
+  Map/* String, byte native[] */classBytecodeMap;
+  ClassLoader parent;
+
+  /**
+   * Total time spent compiling.
+   */
+  static long compileTime = 0;
+
+  /**
+   * Total time spent loading.
+   */
+  static long loadingTime = 0;
+
+  /**
+   * Total time spent definig.
+   */
+  static long defineTime = 0;
+
+  /**
+   * Total time spent loading from FS.
+   */
+  static long fsLoadingTime = 0;
+  
+  // Add a shutdown hook for reporting numbers to stdout.
+  static {
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      public void run() {
+        System.out.println("   Compile time: " + compileTime + " ms");
+        System.out.println("   Loading time: " + loadingTime + " ms");
+        System.out.println("    Define time: " + defineTime + " ms");
+        System.out.println("FS loading time: " + fsLoadingTime + " ms");
+      }
+    });
+  }
 	
-	public Class findClass(String name) 
-  	throws ClassNotFoundException {
-		try{
-			Class cls = parent.loadClass(name);
-			return cls;
-		} catch (ClassNotFoundException e) {}
-		
-  	if (!classBytecodeMap.containsKey(name)) {
-  	    int impl = name.lastIndexOf("$_Impl");
-  	    String fabname = name;
-  	    if (impl >= 0) fabname = name.substring(0, impl);
-  	  FClass fcls = SysUtil.toProxy(fabname);
-  	  try {
-  	    Main.compile(fcls, classBytecodeMap);
-  	  } catch (GeneralSecurityException e) {
-  		  throw new ClassNotFoundException(name, e);
-  	  }
+  public Class findClass(String name) throws ClassNotFoundException {
+    final long startTime = System.currentTimeMillis();
+    final long endFSLoadTime;
+    try {
+      Class cls = parent.loadClass(name);
+      return cls;
+    } catch (ClassNotFoundException e) {
+    } finally {
+      endFSLoadTime = System.currentTimeMillis();
+      fsLoadingTime += endFSLoadTime - startTime;
     }
-    
-    Class javaCls = getJavaClass(name);
-  	if (javaCls == null) {
-  	  throw new ClassNotFoundException(name);
-  	}
-	
-    return javaCls;
+
+    // Time marker: endFSLoadTime.
+
+    final long endLoadingTime;
+    if (!classBytecodeMap.containsKey(name)) {
+      int impl = name.lastIndexOf("$_Impl");
+      String fabname = name;
+      if (impl >= 0) fabname = name.substring(0, impl);
+      FClass fcls = SysUtil.toProxy(fabname);
+
+      long endCompileTime = -1;
+      try {
+        endCompileTime = Main.compile(fcls, classBytecodeMap);
+      } catch (GeneralSecurityException e) {
+        throw new ClassNotFoundException(name, e);
+      } finally {
+        endLoadingTime = System.currentTimeMillis();
+        if (endCompileTime > 0) {
+          // Error during compilation; just attribute time to compiler.
+          compileTime += endLoadingTime - endFSLoadTime;
+        } else {
+          compileTime += endCompileTime - endFSLoadTime;
+          loadingTime += endLoadingTime - endCompileTime;
+        }
+      }
+    } else {
+      endLoadingTime = System.currentTimeMillis();
+    }
+
+    // Time marker: endLoadingTime.
+
+    try {
+      Class javaCls = getJavaClass(name);
+      if (javaCls == null) {
+        throw new ClassNotFoundException(name);
+      }
+
+      return javaCls;
+    } finally {
+      defineTime += System.currentTimeMillis() - endLoadingTime;
+    }
   }
 
-	Class getJavaClass(String cls) {
+  Class getJavaClass(String cls) {
     Class result = (Class)classes.get(cls);
     if (result == null) {
       if (classBytecodeMap.containsKey(cls)) {
@@ -63,32 +122,32 @@ public class FabricClassLoader extends ClassLoader {
     return result;
   }
 
-	public FabricClassLoader(ClassLoader parent) {
-		super(parent);
-		this.parent = parent;
-		this.classes = new HashMap/* String, Class */();
-		this.classBytecodeMap = new HashMap/* String, byte native[] */();
-	}
+  public FabricClassLoader(ClassLoader parent) {
+    super(parent);
+    this.parent = parent;
+    this.classes = new HashMap/* String, Class */();
+    this.classBytecodeMap = new HashMap/* String, byte native[] */();
+  }
 
-	public InputStream getResourceAsStream(String name) {
-	  /* TODO: support non-class resources also */
-	  name = name.substring(0,name.length()-".class".length());
+  public InputStream getResourceAsStream(String name) {
+    /* TODO: support non-class resources also */
+    name = name.substring(0,name.length()-".class".length());
 
-	  if (!classBytecodeMap.containsKey(name)) {
-	  	FClass fcls = SysUtil.toProxy(name);
-	  	  try 
-	  	  {
-	    	  Main.compile(fcls, classBytecodeMap);
-	  	  } catch (GeneralSecurityException e) {
-	  		  return null;
-	  	  }
+    if (!classBytecodeMap.containsKey(name)) {
+      FClass fcls = SysUtil.toProxy(name);
+      try 
+      {
+        Main.compile(fcls, classBytecodeMap);
+      } catch (GeneralSecurityException e) {
+        return null;
       }
+    }
     
     if (classBytecodeMap.containsKey(name)) {
-  	  byte native[] bytecode = (byte native[]) classBytecodeMap.get(name);
-	  	return new ByteArrayInputStream(bytecode);
+      byte native[] bytecode = (byte native[]) classBytecodeMap.get(name);
+      return new ByteArrayInputStream(bytecode);
     } else { 
-    	return null;
+      return null;
     }
   }
 }

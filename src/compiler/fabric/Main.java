@@ -31,8 +31,12 @@ import fabric.worker.Worker;
  * Polyglot's main, passing in the extension's ExtensionInfo.
  */
 public class Main extends polyglot.main.Main {
-  
-  public static void compile(FClass fcls, Map<String, byte[]> bytecodeMap)
+
+  /**
+   * @return System clock time between compilation and loading for timing
+   *         purposes.
+   */
+  public static long compile(FClass fcls, Map<String, byte[]> bytecodeMap)
       throws GeneralSecurityException {
     if (fcls == null || bytecodeMap == null)
       throw new GeneralSecurityException("Invalid arguments to compile");
@@ -59,6 +63,9 @@ public class Main extends polyglot.main.Main {
     try {
       ExtensionInfo extInfo = new fabric.ExtensionInfo(bytecodeMap);
       main.start(args.toArray(new String[0]), extInfo);
+      
+      long endCompileTime = System.currentTimeMillis();
+      
       ClassFileLoader loader = main.compiler.loader();
       loader.loadClass(extInfo.getOptions().output_directory,
           SysUtil.pseudoname(fcls));
@@ -72,6 +79,8 @@ public class Main extends polyglot.main.Main {
           SysUtil.pseudoname(fcls) + "$_Static$_Impl");
       loader.loadClass(extInfo.getOptions().output_directory,
           SysUtil.pseudoname(fcls) + "$_Static$_Proxy");
+      
+      return endCompileTime;
     } catch (TerminationException e) {
       throw new GeneralSecurityException(e);
     }
