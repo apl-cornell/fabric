@@ -13,14 +13,24 @@ public class SocialNetwork[principal SN] authority (SN) {
       final User[bg, SN] bdayGirl = new User(new label {bg->_; bg<-}, 11, bgf);
       
       Agent[user, SN] agent = new Agent();
-      if (endorse(SN actsfor bdayBoy.friends, {bb<-} to {SN<-})) {
-        agent.happyBirthday(bb, bdayBoy);
-      }
-// 
-//      if (endorse(SN actsfor bdayBoy.friends, {bb<-} to {SN<-})) {
-//        agent.happyBirthday(bb, bdayBoy);
-//      }
-//      agent.happyBirthday(bg, bdayGirl);
+      
+      final principal bbFriends = bdayBoy.friends;
+      endorse(bbFriends, {bb<-} to {SN<-})
+        if (SN actsfor bbFriends) {
+          agent.happyBirthday(bb, bdayBoy);
+        }
+      
+   // Should be able to write this, but jifc is too brain-dead to reason accurately
+   // enough.
+//         if (endorse(SN actsfor bdayBoy.friends, {bb<-} to {SN<-})) {
+//           agent.happyBirthday(bb, bdayBoy);
+//         }
+      
+      final principal bgFriends = bdayGirl.friends;
+      endorse(bgFriends, {bg<-} to {SN<-})
+        if (SN actsfor bgFriends) {
+          agent.happyBirthday(bg, bdayGirl);
+        }
     }
   }
 }
