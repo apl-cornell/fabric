@@ -1,7 +1,7 @@
 import java.io.PrintStream;
-import jif.runtime.Runtime;
+import fabric.runtime.Runtime;
 
-public class SocialNetwork[principal SN] authority (SN) 
+public class SocialNetwork[principal SN, principal A, principal B, principal C] authority (SN) 
     where {*provider} actsfor SN, {*provider} <= {SN <- }
 {
   
@@ -12,12 +12,12 @@ public class SocialNetwork[principal SN] authority (SN)
   }
   
   public void go{SN<-}() where authority(SN) {
-    final principal user = new principal(Chuck, SN);
-    final principal bb = new principal(Bob, SN);
-    final principal bg = new principal(Alice, SN);
+    final principal user = new principal(C, SN);
+    final principal bb = new principal(B, SN);
+    final principal bg = new principal(A, SN);
     
-    final principal bbf = new principal(bb, Alice);
-    final principal bgf = new principal(bg, Bob);
+    final principal bbf = new principal(bb, A);
+    final principal bgf = new principal(bg, B);
 
     if (SN actsfor bb && SN actsfor bg && SN actsfor user) {
 
@@ -25,25 +25,23 @@ public class SocialNetwork[principal SN] authority (SN)
       final User[bg, SN] bdayGirl = new User(new label {bg->bgf; bg<-}, 10, new principal (_));
 
 
-      Agent[user, SN] agent = new Agent();
-      final principal bbFriends = bdayBoy.friends;
-      endorse(bbFriends, {bb<-} to {SN<-})
-      if (SN actsfor bbFriends) {
-	  if (new label {*Agent.provider} actsfor user && new label{*Agent.provider} <= new label {SN <- bb}) {
+      if (new label {*Agent.provider} actsfor user && new label{*Agent.provider} <= new label {SN <- user}) {
+        Agent[user, SN] agent = new Agent();
+        final principal bbFriends = bdayBoy.friends;
+        endorse(bbFriends, {bb<-} to {SN<-})
+        if (SN actsfor bbFriends) {
 		  agent.happyBirthday(bb, bdayBoy);
-          }
-       }
+        }
       
-       final principal bgFriends = bdayGirl.friends;
-       endorse(bgFriends, {bg<-} to {SN<-})
-       if (SN actsfor bgFriends) {
-	  if (new label {*Agent.provider} actsfor user && new label{*Agent.provider} <= new label {SN <- bg}) {
+        final principal bgFriends = bdayGirl.friends;
+        endorse(bgFriends, {bg<-} to {SN<-})
+        if (SN actsfor bgFriends) {
 		  agent.happyBirthday(bg, bdayGirl);
-	  }
-       }      
+        }      
       
-      printWall(bb, bdayBoy);
-      printWall(bg, bdayGirl);
+        printWall(bb, bdayBoy);
+        printWall(bg, bdayGirl);
+      }
     }
   }
   
