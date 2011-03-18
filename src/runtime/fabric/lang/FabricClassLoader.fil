@@ -31,9 +31,9 @@ public class FabricClassLoader extends ClassLoader {
 		} catch (ClassNotFoundException e) {}
 		
   	if (!classBytecodeMap.containsKey(name)) {
-  	    //XXX: hack -- figure out what really needs to be done here
   	    int impl = name.lastIndexOf("$_Impl");
-  	    String fabname = name.substring(0, impl);
+  	    String fabname = name;
+  	    if (impl >= 0) fabname = name.substring(0, impl);
   	  FClass fcls = SysUtil.toProxy(fabname);
   	  try {
   	    Main.compile(fcls, classBytecodeMap);
