@@ -1,0 +1,26 @@
+/**
+ * Parameterized on user, social network, and user's friends principals.
+ */
+public class User[principal U, principal SN]
+    where SN actsfor U {
+  
+  /**
+   * Label on birthday.
+   */
+  final label{U<-} lbl;
+  
+  int{*lbl} birthday;
+  
+  final principal{U<-} friends;
+  
+  //String{U->friends;U<-friends} wall;
+
+  String{U->U;U<-friends} wall; // wall is private, but friends can send messages
+  
+  public User(label{U<-} lbl, int{*lbl} birthday, principal{U<-} friends) {
+    this.lbl = lbl;
+    this.birthday = birthday;
+    this.wall = "";
+    this.friends = friends;
+  }
+}

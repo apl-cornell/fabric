@@ -1,0 +1,30 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+class Main authority (Dolores) {
+    public static final void main{⊤ <- }  (principal{*provider} p, String args[])  
+	throws SecurityException, IllegalArgumentException  
+	       where caller(p), provider actsfor p, authority (Dolores),
+    {*provider} <= {}
+    {
+	PrintStream[{}] out = null;
+          try {
+              Runtime[p] runtime = Runtime[p].getRuntime();
+              out = runtime==null?null:runtime.stdout(new label {});
+          }
+          catch (SecurityException e) {
+              // just let out be null.
+          }
+
+          PrintStream[{}] out1 = endorse(out, {*provider; p->; _<-_} to {{p→p; p<-*} ⊔ {⊤→⊤;⊤←⊤} ⊓ {*provider}});
+          PrintStream[{}] out2 = declassify(out1, {});
+	  
+	  try {
+	      out2.println("Main is running");
+	  } catch (NullPointerException e) {
+	  }
+	  
+	  SocialNetwork[Dolores] sn = new SocialNetwork[Dolores](out2);
+	  sn.go();
+    }
+}
