@@ -1,19 +1,30 @@
 import fabric.util.Map;
+import fabric.runtime.Runtime;
 public class InitA where {*provider} equiv {*airlineA.Server.provider},
 						{*airlineA.Server.provider} equiv {*airlineA.Agent.provider}, 
 						{*broker.Server.provider} equiv {*broker.Agent.provider},
 						{*broker.Server.provider} <= {*airlineA.Server.provider}
 {
-  public static final void main{⊤ <- } (principal{*provider} p, String[] args)  throws SecurityException, IllegalArgumentException  
+  public static final void main{* <- }  (principal{*provider} p, String[] args):{p<-;p->}   throws SecurityException, IllegalArgumentException  
 		where caller(p), provider actsfor p, {*provider} <= {p<-}
   {
-    atomic {
-      final Store store = worker$.getStore("airlineA");
+	  //already in transaction due to method constraints
+      final Store store = worker$.getStore("airlineAStore");
+      final principal brokerS = worker$.getStore("brokerStore").getPrincipal();
+      final principal brokerW = worker$.getWorker("brokerWorker").getPrincipal();
 	  final principal airlineA = store.getPrincipal();
-      if (store actsfor p && airlineA.Server.provider <= new label {airlineA<-}) {
+
+      Runtime[p] runtime = Runtime[p].getRuntime();
+      if (p actsfor airlineA && store actsfor p && new label {p->;p<-} <= new label {airlineA->;airlineA<-} 
+			&& provider <= new label {airlineA->;airlineA<-}
+			&& airlineA.Server.provider <= new label {airlineA<-}) {
         Map root = store.getRoot();
         root.put("auctionServer", new airlineA.Server[airlineA](13500, 100));
+        runtime.out().println("Inserted airline server.");
+	  	((DelegatingPrincipal)airlineA).addDelegatesTo(brokerS); 
+	  	((DelegatingPrincipal)airlineA).addDelegatesTo(brokerW); 
 	  }
-    }
+	  else
+        runtime.out().println("Failed.");
   }
 }
