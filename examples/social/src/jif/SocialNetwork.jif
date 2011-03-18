@@ -1,0 +1,26 @@
+public class SocialNetwork[principal SN] authority (SN) {
+  int{SN<-} x;
+  public void go{SN<-}() where authority(SN) {
+    final principal user = new principal(Chuck, SN);
+    final principal bb = new principal(Bob, SN);
+    final principal bg = new principal(Alice, SN);
+    
+    final principal bbf = new principal((bb,Alice),Chuck);
+    final principal bgf = new principal(bg, Bob);
+    
+    if (SN actsfor bb && SN actsfor bg && SN actsfor user) {
+      final User[bb, SN] bdayBoy = new User(new label {bb->bbf; bb<-}, 10, bbf);
+      final User[bg, SN] bdayGirl = new User(new label {bg->_; bg<-}, 11, bgf);
+      
+      Agent[user, SN] agent = new Agent();
+      if (endorse(SN actsfor bdayBoy.friends, {bb<-} to {SN<-})) {
+        agent.happyBirthday(bb, bdayBoy);
+      }
+// 
+//      if (endorse(SN actsfor bdayBoy.friends, {bb<-} to {SN<-})) {
+//        agent.happyBirthday(bb, bdayBoy);
+//      }
+//      agent.happyBirthday(bg, bdayGirl);
+    }
+  }
+}
