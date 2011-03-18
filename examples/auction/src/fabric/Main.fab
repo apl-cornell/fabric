@@ -4,12 +4,12 @@ import broker.Server;
 import broker.Agent;
 import broker.User;
 class Main  {
-    public static final void main{* <- }  (principal{*provider} p, String args[])  throws SecurityException, IllegalArgumentException  
-	where caller(p), provider actsfor p, {*provider} <= {p<-}, 
-		{*provider} equiv {*AirlineExample.provider},
-		{*provider} equiv {*Server.provider}, 
-		{*provider} equiv {*Agent.provider}, 
-		{*provider} equiv {*User.provider}
+    public static final void main{* <- }  (principal{*provider} p, String[] args)  throws SecurityException, IllegalArgumentException  
+		where caller(p), provider actsfor p, {*provider} <= {p<-}, 
+			{*provider} equiv {*AirlineExample.provider},
+			{*provider} equiv {*Server.provider}, 
+			{*provider} equiv {*Agent.provider}, 
+			{*provider} equiv {*User.provider}
     {
 		PrintStream[{}] out = null;
           try {
@@ -20,7 +20,7 @@ class Main  {
               // just let out be null.
           }
 
-      PrintStream[{}] out1 = endorse(out, {*provider; p->; _<-_} to {{p→p; p<-*} ⊔ {⊤→⊤;⊤←⊤} ⊓ {*provider}});
+      PrintStream[{}] out1 = endorse(out, {*provider; p->; _<-_} to {{p->p; p<-* ; *->*;*<-*} meet {p->p; p<-*; *provider}});
       PrintStream[{}] out2 = declassify(out1,  {});
 
 	  final Store a_store = worker$.getStore("airlineAStore");   

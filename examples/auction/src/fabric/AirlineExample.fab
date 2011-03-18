@@ -31,7 +31,7 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
     protected PrintStream[{}]{} output;
 
 
-    public void go {⊤ <-} (PrintStream[{}] {} output) where authority (Broker)
+    public void go {* <-} (PrintStream[{}] {} output) where authority (Broker)
     {
 		this.output = output; 
 		println ("Starting Airline example");

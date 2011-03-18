@@ -10,21 +10,10 @@ public class InitA where {*provider} equiv {*airlineA.Server.provider},
   {
 	  //already in transaction due to method constraints
       final Store store = worker$.getStore("airlineAStore");
-      final principal brokerS = worker$.getStore("brokerStore").getPrincipal();
-      final principal brokerW = worker$.getWorker("brokerWorker").getPrincipal();
-	  final principal airlineA = store.getPrincipal();
-
-      Runtime[p] runtime = Runtime[p].getRuntime();
-      if (p actsfor airlineA && store actsfor p && new label {p->;p<-} <= new label {airlineA->;airlineA<-} 
-			&& provider <= new label {airlineA->;airlineA<-}
-			&& airlineA.Server.provider <= new label {airlineA<-}) {
+      if (p actsfor store && store actsfor p) { 
         Map root = store.getRoot();
-        root.put("auctionServer", new airlineA.Server[airlineA](13500, 100));
-        runtime.out().println("Inserted airline server.");
-	  	((DelegatingPrincipal)airlineA).addDelegatesTo(brokerS); 
-	  	((DelegatingPrincipal)airlineA).addDelegatesTo(brokerW); 
-	  }
-	  else
-        runtime.out().println("Failed.");
+        root.put("auctionServer", new airlineA.Server[store]@store(13500, 100));
+      }
+	  else throw new Error("ASDF");
   }
 }
