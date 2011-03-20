@@ -75,12 +75,14 @@ public class FabricClassLoader extends ClassLoader {
       String fabname = name;
       if (impl >= 0) fabname = name.substring(0, impl);
       FClass fcls = SysUtil.toProxy(fabname);
-
+      if(fcls == null) throw new ClassNotFoundException(fabname);
       long endCompileTime = -1;
       try {
         endCompileTime = Main.compile(fcls, classBytecodeMap);
       } catch (GeneralSecurityException e) {
         throw new ClassNotFoundException(name, e);
+      } catch (IOException e) {
+          throw new ClassNotFoundException(name, e);
       } finally {
         endLoadingTime = System.currentTimeMillis();
         if (endCompileTime < 0) {
@@ -138,6 +140,8 @@ public class FabricClassLoader extends ClassLoader {
       try 
       {
         Main.compile(fcls, classBytecodeMap);
+      } catch (IOException e) {
+        return null;
       } catch (GeneralSecurityException e) {
         return null;
       }

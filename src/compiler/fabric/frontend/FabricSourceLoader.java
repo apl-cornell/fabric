@@ -15,6 +15,7 @@ import polyglot.frontend.FileSource;
 import polyglot.frontend.SourceLoader;
 import polyglot.main.Report;
 import polyglot.util.InternalCompilerError;
+import fabric.Topics;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.worker.Store;
@@ -100,7 +101,7 @@ public class FabricSourceLoader extends SourceLoader {
       codebase = (Codebase) o;
       codebaseCache.put(uri, codebase);
     }
-    if(Report.should_report(TOPIC, 3))
+    if(Report.should_report(Report.loader, 3))
       Report.report(3, "Checking " + SysUtil.oid(codebase) + " for " + className);
 
     FClass fcls = codebase.resolveClassName(className);
@@ -153,7 +154,7 @@ public class FabricSourceLoader extends SourceLoader {
       String fileName =
           className.replace('.', File.separatorChar) + "." + exts[k];
 
-      if(Report.should_report(TOPIC, 3))
+      if(Report.should_report(Report.loader, 3))
         Report.report(3, "Checking " + directory + " for " + fileName);
 
       Set<String> dirContents =
@@ -239,5 +240,4 @@ public class FabricSourceLoader extends SourceLoader {
     } else return super.fileSource(uri.getPath(), userSpecified);
   }
   
-  protected static String TOPIC = "mobile";
 }

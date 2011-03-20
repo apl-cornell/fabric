@@ -263,7 +263,8 @@ public final class SysUtil {
 
   public static FClass toProxy(String mangled) {
     String fabricname = fabricname(mangled);
-
+    if(fabricname == null) return null;
+    
     URI uri = URI.create(fabricname);
     Store store = Worker.getWorker().getStore(uri.getHost());
     String path = uri.getPath();
@@ -318,7 +319,7 @@ public final class SysUtil {
   
   public static String fabricname(String pseudoname) {    
     String cb = codebasePart(pseudoname);    
-    if(cb == null)
+    if("".equals(cb))
       return null;
 
     String[] host = unEscapeHost(storePart(cb)).split("[.]");

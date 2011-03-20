@@ -1,10 +1,16 @@
 package fabric;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.security.GeneralSecurityException;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,6 +23,7 @@ import polyglot.frontend.ExtensionInfo;
 import polyglot.main.Options;
 import polyglot.main.Report;
 import polyglot.main.UsageError;
+import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassFileLoader;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
@@ -35,25 +42,25 @@ public class Main extends polyglot.main.Main {
   /**
    * @return System clock time between compilation and loading for timing
    *         purposes.
+   * @throws IOException
    */
   public static long compile(FClass fcls, Map<String, byte[]> bytecodeMap)
-      throws GeneralSecurityException {
+      throws GeneralSecurityException, IOException {
     if (fcls == null || bytecodeMap == null)
       throw new GeneralSecurityException("Invalid arguments to compile");
-    
+
     Worker worker = Worker.getWorker();
-    String name = worker.config.name;
     List<String> args = new LinkedList<String>();
     args.add("-worker");
-    args.add(name);
-    args.add("-report");
-    args.add("frontend=2");
-  
-    if(worker.sigcp != null) {
+    args.add(worker.config.name);
+    // args.add("-report");
+    // args.add("frontend=2");
+
+    if (worker.sigcp != null) {
       args.add("-sigcp");
       args.add(worker.sigcp);
     }
-    if(worker.filsigcp != null) {
+    if (worker.filsigcp != null) {
       args.add("-filsigcp");
       args.add(worker.filsigcp);
     }
@@ -63,23 +70,42 @@ public class Main extends polyglot.main.Main {
     try {
       ExtensionInfo extInfo = new fabric.ExtensionInfo(bytecodeMap);
       main.start(args.toArray(new String[0]), extInfo);
-      
+
       long endCompileTime = System.currentTimeMillis();
-      
+
       ClassFileLoader loader = main.compiler.loader();
-      loader.loadClass(extInfo.getOptions().output_directory,
-          SysUtil.pseudoname(fcls));
-      loader.loadClass(extInfo.getOptions().output_directory,
-          SysUtil.pseudoname(fcls) + "$_Impl");
-      loader.loadClass(extInfo.getOptions().output_directory,
-          SysUtil.pseudoname(fcls) + "$_Proxy");
-      loader.loadClass(extInfo.getOptions().output_directory,
-          SysUtil.pseudoname(fcls) + "$_Static");
-      loader.loadClass(extInfo.getOptions().output_directory,
-          SysUtil.pseudoname(fcls) + "$_Static$_Impl");
-      loader.loadClass(extInfo.getOptions().output_directory,
-          SysUtil.pseudoname(fcls) + "$_Static$_Proxy");
-      
+      Collection<String> outputFiles = main.compiler.outputFiles();
+      File output_directory = extInfo.getOptions().output_directory;
+      String[] suffixes =
+          new String[] { "$_Impl", "$_Proxy", "$_Static", "$_Static$_Impl",
+              "$_Static$_Proxy" };
+      for (String fname : outputFiles) {
+        int e = fname.lastIndexOf(".java");
+        String baseFileName = fname.substring(0, e);
+        String baseClassName =
+            baseFileName.substring(output_directory.getPath().length() + 1);
+        baseClassName = baseClassName.replace(File.separator,".");
+        // load base class file
+        File classFile =
+            new File(baseFileName + ".class");
+        if (classFile.exists()) {
+          if (Report.should_report(Topics.mobile, 2))
+            Report.report(1, "Inserting bytecode for " + classFile);
+          bytecodeMap.put(baseClassName,getBytecode(classFile));
+        }
+
+        // load member classes
+        for (int i = 0; i < suffixes.length; i++) {
+          String fileName = baseFileName + suffixes[i];
+          classFile = new File(fileName+".class");
+          if (classFile.exists()) {
+            if (Report.should_report(Topics.mobile, 2))
+              Report.report(1, "Inserting bytecode for " + classFile);
+            bytecodeMap.put(baseClassName + suffixes[i],
+                getBytecode(classFile));
+          }
+        }
+      }
       return endCompileTime;
     } catch (TerminationException e) {
       throw new GeneralSecurityException(e);
@@ -87,7 +113,7 @@ public class Main extends polyglot.main.Main {
   }
 
   public static void main(String[] args) {
-    polyglot.main.Main main = new Main(); 
+    polyglot.main.Main main = new Main();
     try {
       main.start(args, new fabric.ExtensionInfo());
     } catch (TerminationException e) {
@@ -233,5 +259,23 @@ public class Main extends polyglot.main.Main {
     }
 
     return ll;
+  }
+
+  protected static void insertByteCode(String className) {
+
+  }
+
+  protected static byte[] getBytecode(File classfile) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    FileInputStream in = new FileInputStream(classfile);
+    byte[] buf = new byte[4096];
+    int n = 0;
+
+    do {
+      n = in.read(buf);
+      if (n >= 0) out.write(buf, 0, n);
+    } while (n >= 0);
+
+    return out.toByteArray();
   }
 }
