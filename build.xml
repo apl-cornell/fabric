@@ -141,7 +141,8 @@
   <target name="configure-buildstring" depends="configure-version"
       unless="fabric.version.build">
     <tstamp>
-      <format property="now" pattern="yyyy-MM-dd HH:mm:ss" />
+      <format property="now" timezone="America/New_York"
+          pattern="yyyy-MM-dd HH:mm:ss z" />
     </tstamp>
     <property name="fabric.version.build" value="${fabric.version} (${now})" />
   </target>
