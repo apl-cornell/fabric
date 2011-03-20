@@ -557,7 +557,7 @@
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
       <arg value="-j" />
-      <arg value="-Xmx256M" />
+      <arg value="-Xms256M" />
       <arg value="-cp" />
       <arg value="${bootstrap.classes}" />
       <srcfile />
@@ -603,7 +603,7 @@
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
       <arg value="-j" />
-      <arg value="-Xmx256M" />
+      <arg value="-Xms256M" />
       <srcfile />
       <fileset dir="${runtime.src}"
           includes="**/*.fab" />
