@@ -120,3 +120,6 @@ done
 
 # Add the compiler classpaths to the worker 
 FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${FILC_CP}:${FABC_CP}"
+
+# Give the JVM more memory.
+vmargs="-Xmx1024M -Xms512M"
