@@ -557,6 +557,7 @@
       <arg value="src/runtime" />
       <arg value="-j" />
       <arg value="-Xmx256M" />
+      <!--arg value="-rdebug" /-->
       <arg value="-cp" />
       <arg value="${bootstrap.classes}" />
       <srcfile />

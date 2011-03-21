@@ -19,6 +19,7 @@ public class LabelUtil {
        writerPolicy(label lbl, principal owner, principal{*lbl}[] writers);
        
     public static native label toLabel(ConfPolicy cPolicy, IntegPolicy iPolicy) throws (NullPointerException{cPolicy;iPolicy});
+    public static native label toLabel(ConfPolicy cPolicy) throws (NullPointerException{cPolicy});
        
     public static native label join(label l1, label l2);
     public static native label meetLbl(label l1, label l2); // "meet" is a keyword, and can't be used

@@ -60,8 +60,8 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
     return accessLabel;
   }
 
-  public New_c accessLabel(Expr accessLabel) {
-    New_c n = (New_c) copy();
+  public FabricArrayInit_c accessLabel(Expr accessLabel) {
+    FabricArrayInit_c n = (FabricArrayInit_c) copy();
     n.accessLabel = accessLabel;
     return n;
   }

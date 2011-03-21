@@ -34,7 +34,8 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     // Need a label. Use null by default for principal objects. The Principal
     // constructor will fill in the appropriate label.
     if (ts.isPrincipalClass(expr.type())) {
-      return (Annotated) expr.label(qq.parseExpr("null")).type(ts.Null());
+      Annotated toRet = (Annotated) expr.label(qq.parseExpr("null")).type(ts.Null());
+      return (Annotated) toRet.accessLabel(qq.parseExpr("null").type(ts.Null()));
     }
 
     // Need a label. By default, we use the same label as the context.

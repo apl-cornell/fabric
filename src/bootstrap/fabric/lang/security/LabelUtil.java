@@ -24,6 +24,9 @@ public interface LabelUtil extends Object {
     public static native Label toLabel(Store store, ConfPolicy confidPolicy,
         IntegPolicy integPolicy);
     
+    public static native Label toLabel(Store store, ConfPolicy cPolicy);
+
+    
     public static native Label join(Store store, Label l1, Label l2);
     
     public static native boolean relabelsTo(Label from, Label to);

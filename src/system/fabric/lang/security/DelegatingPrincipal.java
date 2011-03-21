@@ -50,6 +50,18 @@ public interface DelegatingPrincipal extends Principal {
         ClassNotFoundException {
       super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
     }
+    
+    public _Impl(Store store, Label label, Label accessLabel) {
+      super(store, label, accessLabel);
+    }
+
+    public _Impl(Store store, long onum, int version, long expiry, long label, long accessLabel,
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs) throws IOException,
+        ClassNotFoundException {
+      super(store, onum, version, expiry, label, accessLabel, in, refTypes, intraStoreRefs);
+    }
+    
 
     public static DelegatingPrincipal $addDefaultDelegates(DelegatingPrincipal p) {
       NodePrincipal store = p.$getStore().getPrincipal();
