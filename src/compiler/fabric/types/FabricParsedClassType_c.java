@@ -7,6 +7,7 @@ import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
 
 import jif.types.JifParsedPolyType_c;
+import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import polyglot.frontend.Source;
 import polyglot.types.*;
@@ -15,9 +16,11 @@ import polyglot.util.Position;
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements FabricParsedClassType {
   private transient Label singleFieldLabel = null;
   private transient Label singleAccessLabel = null;
+  private transient ConfPolicy accessPolicy = null;
   private transient boolean fieldLabelFound = false;
   private transient boolean accessLabelFound = false;
   private transient boolean providerLabelFolded = false;
+  private transient boolean confPolicyExtracted = false;
   protected transient Codebase codebase;
 
   public FabricParsedClassType_c() {
@@ -116,19 +119,49 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   }
   
   public Label getFoldedAccessLabel() {
+    
+    if (!accessLabelFound) singleAccessLabel();
+    
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
+    
     if (!providerLabelFolded && singleAccessLabel != null) {
       // Fold in the provider confidentiality label into the access label
       singleAccessLabel = ts.join(singleAccessLabel, 
           ts.pairLabel(Position.compilerGenerated(), 
               provider().confProjection(),
               ts.bottomIntegPolicy(Position.compilerGenerated())));
-      providerLabelFolded = true;
+    }
+    providerLabelFolded = true;
+    return singleAccessLabel;
+  }
+
+  public Label singleFabilAccessLabel() {
+    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
+
+    // or if this is a DelegatingPrincipal (XXX Principal instead?)
+    // then compute access label
+    if (!accessLabelFound || isSubtype(ts.DelegatingPrincipal())) {
+      FabricClassType superType = (FabricClassType)superType();
+      if (superType != null && superType.singleFabilAccessLabel() != null) {
+        singleAccessLabel = superType.singleFabilAccessLabel();
+      }
+      else {
+        for (FieldInstance fi : (List<FieldInstance>)fields()) {
+          if (fi.flags().isStatic()) continue;
+          Type t = fi.type();
+          if (ts.isLabeled(t)) {
+            singleAccessLabel = ts.labelOfType(t);
+            break;
+          }
+        }
+      }
+      accessLabelFound = true;
     }
     return singleAccessLabel;
   }
   
-  public Label defaultFabilFieldLabel() {
+  
+  public Label singleFabilFieldLabel() {
     // Type checking has been done, so all field labels are guaranteed to
     // be the same
     // ThisLabelChecker has already run and checked that 'this' is
@@ -140,8 +173,8 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     // then compute defaultFieldLabel
     if (!fieldLabelFound || isSubtype(ts.DelegatingPrincipal())) {
       FabricClassType superType = (FabricClassType)superType();
-      if (superType != null && superType.defaultFabilFieldLabel() != null) {
-        singleFieldLabel = superType.defaultFabilFieldLabel();
+      if (superType != null && superType.singleFabilFieldLabel() != null) {
+        singleFieldLabel = superType.singleFabilFieldLabel();
       }
       else {
         for (FieldInstance fi : (List<FieldInstance>)fields()) {
@@ -157,7 +190,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     }
     return singleFieldLabel;
   }
-  
   
   public void removeMethod(MethodInstance mi) {
     for (Iterator<MethodInstance> it = methods.iterator(); it.hasNext(); ) {

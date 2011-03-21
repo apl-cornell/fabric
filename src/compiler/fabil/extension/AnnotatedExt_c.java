@@ -23,7 +23,7 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
   @Override
   public Annotated assignLabels(LabelAssigner la) throws SemanticException {
     Annotated expr = node();
-    if (expr.label() != null) return expr;
+    if (expr.label() != null && expr.accessLabel() != null) return expr;
 
     FabILNodeFactory nf = la.nodeFactory();
     FabILTypeSystem ts = la.typeSystem();
@@ -51,18 +51,31 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     } else {
       receiver = qq.parseExpr("this").type(currentClass);
     }
-
+    
     Position pos = Position.compilerGenerated();
-    Call defaultLabel = nf.Call(pos, receiver, nf.Id(pos, "get$label"));
+    Call accessLabel = nf.Call(pos, receiver, nf.Id(pos, "get$accesslabel"));
 
     Flags flags = Flags.NONE;
     if (context.inStaticContext()) flags = Flags.STATIC;
     
-    MethodInstance mi =
+    MethodInstance ami =
+        ts.methodInstance(pos, currentClass, flags, ts.Label(), "get$accesslabel",
+            Collections.emptyList(), Collections.emptyList());
+    accessLabel = (Call) accessLabel.type(ts.Label());
+    accessLabel = accessLabel.methodInstance(ami);
+    expr = expr.accessLabel(accessLabel);
+
+    pos = Position.compilerGenerated();
+    Call defaultLabel = nf.Call(pos, receiver, nf.Id(pos, "get$label"));
+
+    flags = Flags.NONE;
+    if (context.inStaticContext()) flags = Flags.STATIC;
+    
+    MethodInstance lmi =
         ts.methodInstance(pos, currentClass, flags, ts.Label(), "get$label",
             Collections.emptyList(), Collections.emptyList());
     defaultLabel = (Call) defaultLabel.type(ts.Label());
-    defaultLabel = defaultLabel.methodInstance(mi);
+    defaultLabel = defaultLabel.methodInstance(lmi);
     return expr.label(defaultLabel);
   }
 

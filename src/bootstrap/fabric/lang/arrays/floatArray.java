@@ -14,6 +14,10 @@ public interface floatArray extends Object {
       super(store, label);
     }
 
+    public _Impl(Store store, Label label, Label accessLabel, int length) {
+      super(store, label, accessLabel);
+    }
+
     public native float get(int i);
 
     public native float set(int i, float value);

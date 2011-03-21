@@ -16,6 +16,10 @@ public interface byteArray extends Object {
       super(store, label);
     }
 
+    public _Impl(Store store, Label label, Label accessLabel, int length) {
+      super(store, label, accessLabel);
+    }
+
     public native byte get(int i);
 
     public native byte set(int i, byte value);

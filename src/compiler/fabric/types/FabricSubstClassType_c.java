@@ -22,8 +22,12 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements Fabri
     return subst.substLabel(base.singleFieldLabel());
   }
 
-  public Label defaultFabilFieldLabel() {
+  public Label singleFabilFieldLabel() {
     return singleFieldLabel();
+  }
+  
+  public Label singleFabilAccessLabel() {
+    return singleAccessLabel();
   }
 
   public Codebase codebase() {

@@ -1,6 +1,5 @@
 package fabric.types;
 
-import fabil.Codebases;
 import jif.types.JifClassType;
 import jif.types.label.Label;
 
@@ -17,10 +16,12 @@ public interface FabricClassType extends JifClassType {
    * Same behavior as above, except change the field labels
    * of Principal classes, so that they don't mention 'this'
    */
-  Label defaultFabilFieldLabel();
+  Label singleFabilFieldLabel();
 
 
   Label singleAccessLabel();
+  
+  Label singleFabilAccessLabel();
   
   // Use this method if you want the provider label folded in
   Label getFoldedAccessLabel();

@@ -32,6 +32,9 @@ public class ConstructorCallExt_c extends FabILExt_c {
         .compilerGenerated(), "$location")));
     args.add(1, nf.AmbExpr(Position.compilerGenerated(), nf.Id(Position
         .compilerGenerated(), "$label")));
+    args.add(2, nf.AmbExpr(Position.compilerGenerated(), nf.Id(Position
+        .compilerGenerated(), "$accesslabel")));
+    
     return call.arguments(args);
   }
 

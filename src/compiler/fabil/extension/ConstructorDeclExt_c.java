@@ -56,6 +56,8 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
         "fabric.worker.Store"), nf.Id(pos, "$location")));
     formals.add(1, nf.Formal(pos, Flags.NONE, nf.TypeNodeFromQualifiedName(pos,
         "fabric.lang.security.Label"), nf.Id(pos, "$label")));
+    formals.add(2, nf.Formal(pos, Flags.NONE, nf.TypeNodeFromQualifiedName(pos,
+        "fabric.lang.security.Label"), nf.Id(pos, "$accesslabel")));
     return decl.formals(formals);
   }
 

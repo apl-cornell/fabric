@@ -46,6 +46,9 @@ public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
 
   /** The ClassType of fabric.lang.security.Label. */
   Type Label();
+  
+  /** The ClassType of fabric.lang.security.ConfPolicy. */
+  Type ConfPolicy();
 
   ClassType InternalError();
 

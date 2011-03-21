@@ -44,6 +44,9 @@ public interface Object {
 
   /** Label for this object */
   Label get$label();
+  
+  /** Access Label for this object */
+  Label get$accesslabel();
 
   /** Whether this object is "equal" to another object. */
   boolean equals(Object o);
@@ -175,6 +178,11 @@ public interface Object {
     public final Label get$label() {
       return fetch().get$label();
     }
+    
+    public final Label get$accesslabel() {
+      return fetch().get$accesslabel();
+    }
+
 
     public final _Proxy $getProxy() {
       return fetch().$getProxy();
@@ -276,6 +284,8 @@ public interface Object {
     protected _Proxy $class;
 
     protected Label $label;
+    
+    protected Label $accessLabel;
 
     public int $version;
 
@@ -334,7 +344,7 @@ public interface Object {
     /**
      * A private constructor for initializing transaction-management state.
      */
-    private _Impl(Store store, long onum, int version, long expiry, Label label) {
+    private _Impl(Store store, long onum, int version, long expiry, Label label, Label accessLabel) {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
@@ -359,6 +369,11 @@ public interface Object {
         throw new InternalError("Remote object has local label");
 
       this.$label = label;
+      this.$accessLabel = accessLabel;
+    }
+
+    private _Impl(Store store, long onum, int version, long expiry, Label label) {
+      this(store, onum, version, expiry, label, label);
     }
 
     /**
@@ -369,6 +384,14 @@ public interface Object {
      * @param label
      *          the security label for the object
      */
+    public _Impl(Store store, Label label, Label accessLabel) throws UnreachableNodeException {
+      this(store, store.createOnum(), 0, 0, label, accessLabel);
+      store.cache(this);
+
+      // Register the new object with the transaction manager.
+      TransactionManager.getInstance().registerCreate(this);
+    }
+    
     public _Impl(Store store, Label label) throws UnreachableNodeException {
       this(store, store.createOnum(), 0, 0, label);
       store.cache(this);
@@ -376,6 +399,7 @@ public interface Object {
       // Register the new object with the transaction manager.
       TransactionManager.getInstance().registerCreate(this);
     }
+    
 
     @Override
     public final _Impl clone() {
@@ -460,6 +484,10 @@ public interface Object {
     public final Label get$label() {
       return $label;
     }
+    
+    public final Label get$accesslabel() {
+      return $accessLabel;
+    }
 
     public final int $getVersion() {
       return $version;
@@ -540,10 +568,20 @@ public interface Object {
      */
     @SuppressWarnings("unused")
     public _Impl(Store store, long onum, int version, long expiry, long label, 
+        long accessLabel,
         ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs) throws IOException,
         ClassNotFoundException {
-      this(store, onum, version, expiry, new Label._Proxy(store, label));
+      this(store, onum, version, expiry, new Label._Proxy(store, label),
+          new Label._Proxy(store, accessLabel));
+    }
+
+    public _Impl(Store store, long onum, int version, long expiry, long label, 
+        ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs) throws IOException,
+        ClassNotFoundException {
+      this(store, onum, version, expiry, new Label._Proxy(store, label),
+          new Label._Proxy(store, label));
     }
     
     /**

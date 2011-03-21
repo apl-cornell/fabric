@@ -36,6 +36,10 @@ public interface _charArray extends Object {
       this(store, label, new char[length]);
     }
 
+    public _Impl(Store store, Label label, Label accessLabel, int length) {
+      this(store, label, accessLabel, new char[length]);
+    }
+
     /**
      * Creates a new char array at the given Store using the given backing
      * array.
@@ -50,6 +54,11 @@ public interface _charArray extends Object {
       this.value = value;
     }
 
+    public _Impl(Store store, Label label, Label accessLabel, char[] value) {
+      super(store, label, accessLabel);
+      this.value = value;
+    }
+
     /**
      * Used for deserializing.
      */
@@ -58,6 +67,16 @@ public interface _charArray extends Object {
         Iterator<Long> intraStoreRefs) throws IOException,
         ClassNotFoundException {
       super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
+      value = new char[in.readInt()];
+      for (int i = 0; i < value.length; i++)
+        value[i] = in.readChar();
+    }
+
+    public _Impl(Store store, long onum, int version, long expiry, long label, long accessLabel,
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs) throws IOException,
+        ClassNotFoundException {
+      super(store, onum, version, expiry, label, accessLabel, in, refTypes, intraStoreRefs);
       value = new char[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readChar();

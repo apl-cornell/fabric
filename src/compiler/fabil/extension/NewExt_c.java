@@ -30,6 +30,7 @@ public class NewExt_c extends AnnotatedExt_c {
     List<Expr> newargs = new LinkedList<Expr>(call.arguments());
     newargs.add(0, call.location());
     newargs.add(1, call.label());
+    newargs.add(2, call.accessLabel());
 
     TypeNode implType =
         nf.TypeNodeFromQualifiedName(typeNode.position(), type.translate(null)

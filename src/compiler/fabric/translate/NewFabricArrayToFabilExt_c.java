@@ -57,8 +57,24 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
         labelExpr = ffrw.updateLabelLocation(labelExpr, loc);
       }
     }
+    
+    Label accessLabel = null;
+    if (base instanceof FabricClassType && ts.isFabricClass(base)) {
+      accessLabel = ((FabricClassType)base).singleAccessLabel();
+    }
+    Expr accessLabelExpr = null;
+    if (accessLabel != null) {
+      accessLabelExpr = rw.labelToJava(accessLabel);
+      
+      Expr loc = ext.location();
+      if (loc == null) loc = nf.StoreGetter(n.position());
+      if (loc != null) {
+        FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
+        accessLabelExpr = ffrw.updateLabelLocation(accessLabelExpr, loc);
+      }
+    }
 
-    return nf.NewFabricArray(n.position(), n.baseType(), labelExpr, ext.location(), n
+    return nf.NewFabricArray(n.position(), n.baseType(), labelExpr, accessLabelExpr, ext.location(), n
         .dims(), n.additionalDims(), (FabricArrayInit) n.init());
   }
 }

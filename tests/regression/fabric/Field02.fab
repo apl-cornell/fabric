@@ -17,15 +17,15 @@ public class Field02[principal p] extends X[p] {
     }
 
     // this begin label is not allowed
-    public void bar{q→}(principal q) {
-    }
+//    public void bar{q→}(principal q) {
+//    }
 
     // this begin label is allowed
     public void foo{p→;⊤←}(principal q) {
         // this read is allowed
         int{p→;p←} y = this.x;
         
-        Y yy = new Y();
+        X[p] xx = new X[p]();
         
 
     }
