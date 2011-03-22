@@ -13,6 +13,9 @@ public class ConfigProperties {
 
   public final static Properties defaults;
 
+  /**
+   * The name of this node.
+   */
   public final String name;
 
   public final int    workerPort;
