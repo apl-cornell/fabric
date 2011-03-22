@@ -1,9 +1,11 @@
 package fabric.worker;
 
 import java.io.PrintStream;
+import java.util.Set;
 
+import fabric.common.Options.Flag.Handler;
+import fabric.common.Options.Flag.Kind;
 import fabric.common.Timing;
-import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
 
 public class Options extends fabric.common.Options {
@@ -20,9 +22,68 @@ public class Options extends fabric.common.Options {
   public String sigcp;
 
   public String filsigcp;
+  
+  private Options() {
+  }
 
   public Options(String[] args) throws UsageError {
     super(args);
+  }
+  
+  static void printUsage(PrintStream out, boolean showSecretMenu) {
+    new Options().usage(out, showSecretMenu);
+  }
+
+  @Override
+  protected void populateFlags(Set<Flag> flags) {
+    flags.add(new Flag("--name", null, "this worker's name", "$HOSTNAME",
+        new Handler() {
+          public int handle(String[] args, int index) {
+            Options.this.name = args[index];
+            return index + 1;
+          }
+        }));
+
+    flags.add(new Flag(Kind.DEBUG, "--time", "<category>",
+        "enable timing of category", new Handler() {
+          public int handle(String[] args, int index) throws UsageError {
+            if (index >= args.length) {
+              System.err.println(timeUsage());
+              throw new UsageError("Invalid timing category");
+            }
+
+            for (Timing t : Timing.values()) {
+              if (t.name().equalsIgnoreCase(args[index])) {
+                t.enabled = true;
+                return index + 1;
+              }
+            }
+            if (args[index].equalsIgnoreCase("all")) {
+              for (Timing t : Timing.values())
+                t.enabled = true;
+              return index + 1;
+            }
+
+            System.err.println(timeUsage());
+            throw new UsageError("Invalid timing category");
+          }
+        }));
+
+    flags.add(new Flag(Kind.SECRET, new String[] { "--sigcp", "-sigcp" },
+        "<path>", "path for Fabric signatures", new Handler() {
+          public int handle(String[] args, int index) {
+            Options.this.sigcp = args[index];
+            return index + 1;
+          }
+        }));
+
+    flags.add(new Flag(Kind.SECRET, new String[] { "--filsigcp", "-filsigcp" },
+        "<path>", "path for FabIL signatures", new Handler() {
+          public int handle(String[] args, int index) {
+            Options.this.filsigcp = args[index];
+            return index + 1;
+          }
+        }));
   }
 
   @Override
@@ -33,24 +94,21 @@ public class Options extends fabric.common.Options {
 
   @Override
   public void validateOptions() throws UsageError {
-    if (null == this.name)
-      throw new UsageError("No worker name specified");
+    if (null == this.name) throw new UsageError("No worker name specified");
   }
-  
-  public static void usage(PrintStream out) {
+
+  @Override
+  public void usageHeader(PrintStream out) {
     out.println("Usage: fab [options] [app] [param...]");
     out.println("where");
     out.println("  [app] is the name of Fabric application's main class");
     out.println("  [param...] are the parameters to the Fabric application");
     out.println("and [options] includes:");
-    usageForFlag(out, "--name <name>", "this worker's name", "$HOSTNAME");
-    usageForFlag(out, "--time <category>", "enable timing of category");
-    usageForFlag(out, "--version", "print version info and exit");
-    usageForFlag(out, "--help", "print this message");
   }
-  
+
   private String timeUsage() {
-    StringBuffer message = new StringBuffer("possible categories for --time:\n");
+    StringBuffer message =
+        new StringBuffer("possible categories for --time:\n");
     message.append("all");
     for (Timing t : Timing.values()) {
       message.append(", ");
@@ -60,59 +118,10 @@ public class Options extends fabric.common.Options {
   }
 
   @Override
-  protected int parseCommand(String[] args, int index) throws UsageError {
-    int i = index;
-    if (args[i].equals("-h") || args[i].equals("-help")
-        || args[i].equals("--help")) {
-      throw new UsageError("", 0);
-    }
-
-    if (args[i].equals("--version")) {
-      throw new TerminationException(0);
-    }
-
-    if (args[i].equals("--name")) {
-      this.name = args[i + 1];
-      return i + 2;
-    }
-
-    if (args[i].equals("--time")) {
-      if (i + 1 >= args.length) {
-        System.out.println(timeUsage());
-        throw new UsageError("Invalid timing category");
-      }
-      
-      for (Timing t : Timing.values()) {
-        if (t.name().equalsIgnoreCase(args[i + 1])) {
-          t.enabled = true;
-          return i + 2;
-        }
-      }
-      if (args[i + 1].equalsIgnoreCase("all")) {
-        for (Timing t : Timing.values())
-          t.enabled = true;
-        return i + 2;
-      }
-      
-      System.out.println(timeUsage());
-      throw new UsageError("Invalid timing category");
-    }
-    
-    if (args[i].equals("--sigcp")) {
-      this.sigcp = args[i+1];
-      System.out.println(sigcp);
-      return i+2;
-    }    
-    
-    if (args[i].equals("--filsigcp")) {
-      this.filsigcp = args[i+1];
-      System.out.println(filsigcp);
-      return i+2;
-    }
-
-    this.app = new String[args.length - i];
-    for (int idx = i; idx < args.length; idx++)
-      this.app[idx - i] = args[idx];
+  protected int defaultHandler(String[] args, int index) {
+    this.app = new String[args.length - index];
+    for (int idx = index; idx < args.length; idx++)
+      this.app[idx - index] = args[idx];
 
     return args.length;
   }

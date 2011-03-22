@@ -1,8 +1,10 @@
 package fabric.store;
 
 import java.io.PrintStream;
+import java.util.Set;
 
-import fabric.common.exceptions.TerminationException;
+import fabric.common.Options.Flag.Handler;
+import fabric.common.Options.Flag.Kind;
 import fabric.common.exceptions.UsageError;
 
 public class Options extends fabric.common.Options {
@@ -12,7 +14,10 @@ public class Options extends fabric.common.Options {
    */
   public String storeName;
 
+  private static final int DEFAULT_THREAD_POOL_SIZE = 10;
   public int threadPool;
+
+  private static final int DEFAULT_TIMEOUT = 15;
   public int timeout;
 
   private Options() {
@@ -22,85 +27,68 @@ public class Options extends fabric.common.Options {
     super(args);
   }
 
+  public static void printUsage(PrintStream out, boolean showSecretMenu) {
+    new Options().usage(out, showSecretMenu);
+  }
+
+  @Override
+  protected void populateFlags(Set<Flag> flags) {
+    flags.add(new Flag("--name", "<hostname>", "the name of the store",
+        new Handler() {
+          public int handle(String[] args, int index) {
+            Options.this.storeName = args[index];
+            return index + 1;
+          }
+        }));
+
+    flags.add(new Flag("--pool", "<number>", "size of pool of message-handler "
+        + "threads", DEFAULT_THREAD_POOL_SIZE, new Handler() {
+      public int handle(String[] args, int index) throws UsageError {
+        try {
+          Options.this.threadPool = Integer.parseInt(args[index]);
+        } catch (NumberFormatException e) {
+          throw new UsageError("Invalid argument: " + args[index]);
+        }
+        return index + 1;
+      }
+    }));
+
+    flags.add(new Flag("--timeout", "<seconds>", "timeout for idle worker "
+        + "connections", DEFAULT_TIMEOUT, new Handler() {
+      public int handle(String[] args, int index) throws UsageError {
+        try {
+          Options.this.timeout = new Integer(args[index]).intValue();
+        } catch (NumberFormatException e) {
+          throw new UsageError("Invalid argument: " + args[index]);
+        }
+        return index + 1;
+      }
+    }));
+
+    flags.add(new Flag(Kind.DEBUG, "--nossl", null,
+        "disables SSL for debugging purposes", new Handler() {
+          public int handle(String[] args, int index) {
+            fabric.common.Options.DEBUG_NO_SSL = true;
+            return index;
+          }
+        }));
+  }
+
   @Override
   public void setDefaultValues() {
-    this.storeName  = null;
-    this.threadPool = 10;
-    this.timeout    = 15;
+    this.storeName = null;
+    this.threadPool = DEFAULT_THREAD_POOL_SIZE;
+    this.timeout = DEFAULT_TIMEOUT;
   }
 
   @Override
   public void validateOptions() throws UsageError {
-    if (null == storeName)
-      throw new UsageError("No store specified");
+    if (null == storeName) throw new UsageError("No store specified");
   }
 
-  public static void usage(PrintStream out) {
-    Options defaults = new Options();
-
+  @Override
+  public void usageHeader(PrintStream out) {
     out.println("Usage: fab-store [options]");
     out.println("where [options] includes:");
-    usageForFlag(out, "--name <hostname>", "The name of the store.");
-    usageForFlag(out, "--pool <number>", "size of pool of message-handler "
-        + "threads", defaults.threadPool);
-    usageForFlag(out, "--timeout <seconds>", "time-out for idle worker "
-        + "connections", defaults.timeout);
-    usageForFlag(out, "--nossl", "disables SSL for debugging purposes");
-    usageForFlag(out, "--version", "print version info");
-    usageForFlag(out, "--help", "print this message");
-  }
-
-  /**
-   * Parse a command.
-   * 
-   * @return the next index to process. i.e., if calling this method processes
-   *         two commands, then the return value should be index+2.
-   */
-  @Override
-  protected int parseCommand(String args[], int index) throws UsageError {
-    int i = index;
-    if (args[i].equals("-h") || args[i].equals("-help")
-        || args[i].equals("--help")) {
-      throw new UsageError("", 0);
-    }
-
-    if (args[i].equals("--version")) {
-      throw new TerminationException(0);
-    }
-
-    if (args[i].equals("--name")) {
-      i++;
-      storeName = args[i];
-      return i + 1;
-    }
-
-    if (args[i].equals("--pool")) {
-      i++;
-      try {
-        this.threadPool = Integer.parseInt(args[i]);
-      } catch (NumberFormatException e) {
-        throw new UsageError("Invalid argument: " + args[i]);
-      }
-      return i + 1;
-    }
-
-    if (args[i].equals("--timeout")) {
-      i++;
-      try {
-        this.timeout = new Integer(args[i]).intValue();
-      } catch (NumberFormatException e) {
-        throw new UsageError("Invalid argument: " + args[i]);
-      }
-      return i + 1;
-    }
-
-    if (args[i].equals("--nossl")) {
-      i++;
-      DEBUG_NO_SSL = true;
-
-      return i;
-    }
-
-    return i;
   }
 }
