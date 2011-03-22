@@ -12,8 +12,26 @@
 
   <import file="../../common.xml" />
 
-  <dirname property="home" file="${ant.file.auction}" />
+  <dirname property="home" file="${ant.file}"/>
 
+  <path id="standard.classpath">
+    <path refid="lib.classpath" />
+  </path>
+
+  <property name="broker.home" value="${home}/src/broker_codebase/"/>
+  <property name="airlineA.home" value="${home}/src/airlineA_codebase/"/>
+  <property name="airlineB.home" value="${home}/src/airlineB_codebase/"/>
+  <property name="user.home" value="${home}/src/user_codebase/"/>
+
+  <property name="broker.worker" value="brokerWorker"/>
+  <property name="airlineA.worker" value="airlineAWorker"/>
+  <property name="airlineB.worker" value="airlineBWorker"/>
+  <property name="user.worker" value="userWorker"/>
+
+  <property name="broker.store" value="brokerStore"/>
+  <property name="airlineA.store" value="airlineAStore"/>
+  <property name="airlineB.store" value="airlineBStore"/>
+  <property name="user.store" value="userStore"/>
   <!--
   ****************************************************************************
     Targets for cleaning up the directory tree.
@@ -35,46 +53,86 @@
   ****************************************************************************
   -->
 
-  <target name="build-java" description="Builds the java version of auction">
-    <mkdir dir="${home}/classes" />
-    <javac target="1.6"
-           includeAntRuntime="false"
-           destdir="${home}/classes"
-           srcdir="${home}/src/java"
-           includes="**/*.java" />
+  <target name="publish-broker" description="Publish broker source">
+  	<antcall target="publish">
+  		<param name="provider" value="${broker.worker}"/>
+  		<param name="dest.store" value="${broker.store}"/>
+  		<param name="codebase.dir" value="${broker.home}"/>
+    </antcall>
   </target>
-
-  <!-- TODO -->
-  <target name="build-jif"/>
-
-  <target name="build-fabil" description="Builds the fabil version of auction">
-    <mkdir dir="${home}/classes" />
+  <target name="publish-airlineA" description="Publish Airline A source">
+  	<antcall target="publish">
+  		<param name="provider" value="${airlineA.worker}"/>
+  		<param name="dest.store" value="${airlineA.store}"/>
+  		<param name="codebase.dir" value="${airlineA.home}"/>
+  		<param name="publish.args" 
+  			value="-addCodebase ${home}/codebases/${broker.worker}.codebase"/>
+    </antcall>
+  </target>
+  <target name="publish-airlineB" description="Publish Airline A source">
+  	<antcall target="publish">
+  		<param name="provider" value="${airlineB.worker}"/>
+  		<param name="dest.store" value="${airlineB.store}"/>
+  		<param name="codebase.dir" value="${airlineB.home}"/>
+  		<param name="publish.args" 
+  			value="-addCodebase ${home}/codebases/${broker.worker}.codebase"/>
+    </antcall>
+  </target>
+  <target name="publish-user" description="Publish Airline A source">
+  	<antcall target="publish">
+  		<param name="provider" value="${user.worker}"/>
+  		<param name="dest.store" value="${user.store}"/>
+  		<param name="codebase.dir" value="${user.home}"/>
+  		<param name="publish.args" 
+  			value="-addCodebase ${home}/codebases/${broker.worker}.codebase"/>
+    </antcall>
+  </target>
+  <target name="publish" description="Publish Fabric source">
     <apply executable="bash"
            parallel="true"
            failonerror="true"
            dir="${home}"
-           dest="${home}/classes/fabil"
+           dest="${home}/classes"
            relative="false"
            skipemptyfilesets="true"
            vmlauncher="false">
-      <arg value="${filc}" />
-      <arg line="${debug.flag}" />
-      <arg value="-d" />          <arg value="${home}/classes" />
-      <arg value="-sourcepath" /> <arg value="${home}/src/fabil" />
-      <arg value="-cp" />         <arg value="${home}/classes" />
+      <arg value="${fabc}"/>
+      <arg value="-g"/>
+      <arg value="-e"/>
+      <arg value="-d"          /> <arg value="${home}/codebases"/>
+      <arg value="-publish-only" />
+      <arg value="-codebase-output-file" /> <arg value="${provider}.codebase"/>
+      <arg value="-sourcepath" /> <arg value="${codebase.dir}" />
+      <arg value="-worker" /> <arg value="${provider}" />
+      <arg value="-deststore" /> <arg value="${dest.store}" />
+      <arg line="${publish.args}"/> 
       <srcfile />
-      <fileset dir="${home}/src/fabric" includes="**/*.fab" />
-      <globmapper from="*.fil" to="*.class" />
+      <fileset dir="${codebase.dir}" includes="**/*.fab" />
     </apply>
   </target>
 
-  <target name="build-fabric" description="Builds the fabric version of auction">
-    <mkdir dir="${home}/classes" />
+  <target name="run-init" description="Run init classes" depends="build-init">
     <apply executable="bash"
            parallel="true"
            failonerror="true"
            dir="${home}"
-           dest="${home}/classes/fabric"
+           dest="${home}/classes"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabric.home}/bin/fab"/>
+      <arg value="--name" /> <arg value="${broker.worker}" />
+      <arg value="-cp"         /> <arg value="${home}/classes" />
+      <arg value="auction.Init"/>
+    </apply>
+  </target>
+
+  <target name="build-init" description="Build init classes">
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${broker.home}"
+           dest="${home}/classes"
            relative="false"
            skipemptyfilesets="true"
            vmlauncher="false">
@@ -82,17 +140,29 @@
       <arg value="-g"/>
       <arg value="-e"/>
       <arg value="-d"          /> <arg value="${home}/classes"/>
-      <arg value="-sourcepath" /> <arg value="${home}/src/fabric" />
-      <arg value="-cp"         /> <arg value="${home}/classes" />
-      <arg value="-e"/>
       <srcfile />
-
-      <fileset dir="${home}/src/fabric" includes="**/*.fab" />
+      <fileset file="${broker.home}/auction/Config.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
-  </target>
 
-  <target name="build-all" depends="build-java, build-jif, build-fabric, build-fabil" />
-  <target name="all"       depends="build-all" />
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${home}"
+           dest="${home}/classes"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabric.home}/bin/filc"/>
+      <arg value="-g"/>
+      <arg value="-d"          /> <arg value="${home}/classes"/>
+      <arg value="-sourcepath" /> <arg value="${broker.home}" />
+      <arg value="-cp"         /> <arg pathref="standard.classpath" />
+      <arg value="-cp"         /> <arg value="${home}/classes" />
+      <srcfile />
+      <fileset dir="${broker.home}" includes="**/*.fil" />
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+  </target>
 
 </project>
