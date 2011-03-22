@@ -283,6 +283,7 @@ public class BdbDB extends ObjectDB {
       if (meta != null) meta.close();
       if (env != null) env.close();
     } catch (DatabaseException e) {
+      e.printStackTrace();
     }
   }
 
