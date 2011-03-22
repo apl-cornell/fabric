@@ -66,6 +66,7 @@ final class GroupContainerTable {
   private final class Collector extends Thread {
     public Collector() {
       super("Group container soft-ref collector");
+      setDaemon(true);
     }
     
     @Override
