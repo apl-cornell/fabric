@@ -120,7 +120,8 @@ public class Main extends polyglot.main.Main {
       main.start(args, extInfo);
       if(extInfo.codebase() != null 
           && extInfo.getFabricOptions().codebaseFilename() != null) {
-        File f = new File(extInfo.getFabricOptions().codebaseFilename());
+        FabricOptions opt = extInfo.getFabricOptions();
+        File f = new File(opt.output_directory, opt.codebaseFilename());
         FileWriter fw = new FileWriter(f);
         fw.write(SysUtil.oid(extInfo.codebase())+"\n");
         fw.close();
