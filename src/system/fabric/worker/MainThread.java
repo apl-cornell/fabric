@@ -13,14 +13,12 @@ import fabric.common.FabricThread;
  * the program executes in a FabricThread.
  */
 public final class MainThread extends FabricThread.Impl {
-  private final Options opts;
   private final Method main;
   private final Object args;
   private Throwable uncaughtException;
 
-  private MainThread(Options opts, Method main, Object args) {
+  private MainThread(Method main, Object args) {
     super("Main worker application");
-    this.opts = opts;
     this.main = main;
     this.args = args;
     this.uncaughtException = null;
@@ -43,11 +41,13 @@ public final class MainThread extends FabricThread.Impl {
       List<StackTraceElement> trace = new ArrayList<StackTraceElement>();
       for (StackTraceElement elt : cause.getStackTrace())
         trace.add(elt);
+      
+      String mainClassName = main.getDeclaringClass().getName();
 
       for (ListIterator<StackTraceElement> it =
           trace.listIterator(trace.size()); it.hasPrevious();) {
         StackTraceElement elt = it.previous();
-        if (elt.getClassName().equals(opts.app[0] + "$_Impl")) break;
+        if (elt.getClassName().equals(mainClassName)) break;
         it.remove();
       }
 
@@ -59,9 +59,9 @@ public final class MainThread extends FabricThread.Impl {
     }
   }
 
-  public static void invoke(Options opts, Method main, Object args)
+  public static void invoke(Method main, Object args)
       throws Throwable {
-    MainThread thread = new MainThread(opts, main, args);
+    MainThread thread = new MainThread(main, args);
     thread.start();
     while (true) {
       try {
