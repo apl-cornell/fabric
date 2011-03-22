@@ -1,8 +1,11 @@
+package auction;
+
 import java.io.PrintStream;
 import fabric.runtime.Runtime;
 import broker.Server;
 import broker.Agent;
 import broker.User;
+
 class Main  {
     public static final void main{* <- }  (principal{*provider} p, String[] args)  throws SecurityException, IllegalArgumentException  
 		where caller(p), provider actsfor p, {*provider} <= {p<-}, 
@@ -23,27 +26,27 @@ class Main  {
       PrintStream[{}] out1 = endorse(out, {*provider; p->; _<-_} to {{p->p; p<-* ; *->*;*<-*} meet {p->p; p<-*; *provider}});
       PrintStream[{}] out2 = declassify(out1,  {});
 
-	  final Store a_store = worker$.getStore("airlineAStore");   
-	  final RemoteWorker a_worker = worker$.getWorker("airlineAWorker");   
+	  final Store a_store = worker$.getStore(Config.airlineAStoreName);   
+	  final RemoteWorker a_worker = worker$.getWorker(Config.airlineAWorkerName);   
 	  final principal airlineA = a_worker.getPrincipal();
 	  final label a_lbl = new label{airlineA->;airlineA<-};
 
-	  final Store b_store = worker$.getStore("airlineBStore");
-	  final RemoteWorker b_worker = worker$.getWorker("airlineBWorker");   
-	  final principal airlineB = b_worker.getPrincipal();
+	  final Store b_store = worker$.getStore(Config.airlineBStoreName);   
+	  final RemoteWorker b_worker = worker$.getWorker(Config.airlineBWorkerName);   
+	  final principal airlineB = a_worker.getPrincipal();
 	  final label b_lbl = new label{airlineB->;airlineB<-};
 
-	  final Store user_store = worker$.getStore("userStore");   
-	  final RemoteWorker user_worker = worker$.getWorker("userWorker");   
+	  final Store user_store = worker$.getStore(Config.userStoreName);   
+	  final RemoteWorker user_worker = worker$.getWorker(Config.userWorkerName);   
 	  final principal user = user_worker.getPrincipal();
 	  final label user_lbl = new label{user->;user<-};
 
-	  final Server[airlineA] a_serv =(Server[airlineA]) a_store.getRoot().get("auctionServer");
-	  final Server[airlineB] b_serv = (Server[airlineB])b_store.getRoot().get("auctionServer");
-	  final User[user] user_serv = (User[user])user_store.getRoot().get("auctionUser");
+	  final Server[airlineA] a_serv =(Server[airlineA])a_store.getRoot().get(Config.airlineAServerName);
+	  final Server[airlineB] b_serv = (Server[airlineB])b_store.getRoot().get(Config.airlineBServerName);
+	  final User[user] user_serv = (User[user])user_store.getRoot().get(Config.userServerName);
 
-	  final Store broker_store = worker$.getStore("brokerStore"); 
-	  final RemoteWorker broker_worker = worker$.getWorker("brokerWorker"); 
+	  final Store broker_store = worker$.getStore(Config.brokerStoreName); 
+	  final RemoteWorker broker_worker = worker$.getWorker(Config.brokerWorkerName); 
 	  final principal broker = broker_worker.getPrincipal();
 	  final label broker_lbl = new label{broker->;broker<-};
 

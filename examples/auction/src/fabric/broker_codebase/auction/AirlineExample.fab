@@ -1,3 +1,5 @@
+package auction;
+
 import java.io.PrintStream;
 import fabric.runtime.Runtime;
 
