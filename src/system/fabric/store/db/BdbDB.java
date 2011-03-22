@@ -280,6 +280,7 @@ public class BdbDB extends ObjectDB {
     try {
       if (db != null) db.close();
       if (prepared != null) prepared.close();
+      if (meta != null) meta.close();
       if (env != null) env.close();
     } catch (DatabaseException e) {
     }
