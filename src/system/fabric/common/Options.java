@@ -3,7 +3,6 @@ package fabric.common;
 import java.io.PrintStream;
 import java.util.*;
 
-import fabric.common.Options.Flag.Handler;
 import fabric.common.Options.Flag.Kind;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
@@ -17,12 +16,11 @@ public abstract class Options {
    */
   public static boolean DEBUG_NO_SSL = false;
 
-  public static class Flag implements Comparable<Flag> {
+  public static abstract class Flag implements Comparable<Flag> {
     protected final Kind kind;
     protected final Set<String> ids;
     protected final String params;
     protected final String usage;
-    protected final Handler handler;
 
     /**
      * @param id
@@ -33,11 +31,9 @@ public abstract class Options {
      * @param usage
      *          Usage information, to be printed out with help info. e.g.,
      *          "The name of the node."
-     * @param handler
-     *          Code for handling the flag.
      */
-    public Flag(String id, String params, String usage, Handler handler) {
-      this(id, params, usage, null, handler);
+    public Flag(String id, String params, String usage) {
+      this(id, params, usage, null);
     }
 
     /**
@@ -52,12 +48,9 @@ public abstract class Options {
      * @param defaultValue
      *          The default value for the flag parameter, to be printed out with
      *          help info.
-     * @param handler
-     *          Code for handling the flag.
      */
-    public Flag(String id, String params, String usage, int defaultValue,
-        Handler handler) {
-      this(id, params, usage, new Integer(defaultValue).toString(), handler);
+    public Flag(String id, String params, String usage, int defaultValue) {
+      this(id, params, usage, new Integer(defaultValue).toString());
     }
 
     /**
@@ -72,12 +65,9 @@ public abstract class Options {
      * @param defaultValue
      *          The default value(s) for the flag parameter(s), to be printed
      *          out with help info.
-     * @param handler
-     *          Code for handling the flag.
      */
-    public Flag(String id, String params, String usage, String defaultValue,
-        Handler handler) {
-      this(new String[] { id }, params, usage, defaultValue, handler);
+    public Flag(String id, String params, String usage, String defaultValue) {
+      this(new String[] { id }, params, usage, defaultValue);
     }
 
     /**
@@ -90,11 +80,9 @@ public abstract class Options {
      * @param usage
      *          Usage information, to be printed out with help info. e.g.,
      *          "The name of the node."
-     * @param handler
-     *          Code for handling the flag.
      */
-    public Flag(String[] ids, String params, String usage, Handler handler) {
-      this(ids, params, usage, null, handler);
+    public Flag(String[] ids, String params, String usage) {
+      this(ids, params, usage, null);
     }
 
     /**
@@ -110,12 +98,9 @@ public abstract class Options {
      * @param defaultValue
      *          The default value for the flag parameter, to be printed out with
      *          help info.
-     * @param handler
-     *          Code for handling the flag.
      */
-    public Flag(String[] ids, String params, String usage, int defaultValue,
-        Handler handler) {
-      this(ids, params, usage, new Integer(defaultValue).toString(), handler);
+    public Flag(String[] ids, String params, String usage, int defaultValue) {
+      this(ids, params, usage, new Integer(defaultValue).toString());
     }
 
     /**
@@ -131,12 +116,9 @@ public abstract class Options {
      * @param defaultValue
      *          The default value(s) for the flag parameter(s), to be printed
      *          out with help info.
-     * @param handler
-     *          Code for handling the flag.
      */
-    public Flag(String[] ids, String params, String usage, String defaultValue,
-        Handler handler) {
-      this(Kind.MAIN, ids, params, usage, defaultValue, handler);
+    public Flag(String[] ids, String params, String usage, String defaultValue) {
+      this(Kind.MAIN, ids, params, usage, defaultValue);
     }
 
     /**
@@ -148,33 +130,27 @@ public abstract class Options {
      * @param usage
      *          Usage information, to be printed out with help info. e.g.,
      *          "The name of the node."
-     * @param handler
-     *          Code for handling the flag.
+     */
+    public Flag(Kind kind, String id, String params, String usage) {
+      this(kind, id, params, usage, null);
+    }
+
+    /**
+     * @param id
+     *          The flag ID. e.g., "--name", "-n", or "-name".
+     * @param params
+     *          A string representing parameters for the flag, to be printed out
+     *          with help info. e.g., "&lt;hostname&gt;"
+     * @param usage
+     *          Usage information, to be printed out with help info. e.g.,
+     *          "The name of the node."
+     * @param defaultValue
+     *          The default value for the flag parameter, to be printed out with
+     *          help info.
      */
     public Flag(Kind kind, String id, String params, String usage,
-        Handler handler) {
-      this(kind, id, params, usage, null, handler);
-    }
-
-    /**
-     * @param id
-     *          The flag ID. e.g., "--name", "-n", or "-name".
-     * @param params
-     *          A string representing parameters for the flag, to be printed out
-     *          with help info. e.g., "&lt;hostname&gt;"
-     * @param usage
-     *          Usage information, to be printed out with help info. e.g.,
-     *          "The name of the node."
-     * @param defaultValue
-     *          The default value for the flag parameter, to be printed out with
-     *          help info.
-     * @param handler
-     *          Code for handling the flag.
-     */
-    public Flag(Kind kind, String id, String params, String usage,
-        int defaultValue, Handler handler) {
-      this(kind, id, params, usage, new Integer(defaultValue).toString(),
-          handler);
+        int defaultValue) {
+      this(kind, id, params, usage, new Integer(defaultValue).toString());
     }
 
     /**
@@ -189,12 +165,10 @@ public abstract class Options {
      * @param defaultValue
      *          The default value(s) for the flag parameter(s), to be printed
      *          out with help info.
-     * @param handler
-     *          Code for handling the flag.
      */
     public Flag(Kind kind, String id, String params, String usage,
-        String defaultValue, Handler handler) {
-      this(kind, new String[] { id }, params, usage, defaultValue, handler);
+        String defaultValue) {
+      this(kind, new String[] { id }, params, usage, defaultValue);
     }
 
     /**
@@ -207,12 +181,9 @@ public abstract class Options {
      * @param usage
      *          Usage information, to be printed out with help info. e.g.,
      *          "The name of the node."
-     * @param handler
-     *          Code for handling the flag.
      */
-    public Flag(Kind kind, String[] ids, String params, String usage,
-        Handler handler) {
-      this(kind, ids, params, usage, null, handler);
+    public Flag(Kind kind, String[] ids, String params, String usage) {
+      this(kind, ids, params, usage, null);
     }
 
     /**
@@ -228,13 +199,10 @@ public abstract class Options {
      * @param defaultValue
      *          The default value for the flag parameter, to be printed out with
      *          help info.
-     * @param handler
-     *          Code for handling the flag.
      */
     public Flag(Kind kind, String[] ids, String params, String usage,
-        int defaultValue, Handler handler) {
-      this(kind, ids, params, usage, new Integer(defaultValue).toString(),
-          handler);
+        int defaultValue) {
+      this(kind, ids, params, usage, new Integer(defaultValue).toString());
     }
 
     /**
@@ -250,11 +218,9 @@ public abstract class Options {
      * @param defaultValue
      *          The default value(s) for the flag parameter(s), to be printed
      *          out with help info.
-     * @param handler
-     *          Code for handling the flag.
      */
     public Flag(Kind kind, String[] ids, String params, String usage,
-        String defaultValue, Handler handler) {
+        String defaultValue) {
       this.kind = kind;
 
       this.ids = new LinkedHashSet<String>(ids.length);
@@ -265,29 +231,25 @@ public abstract class Options {
 
       if (defaultValue != null) usage += " (default: " + defaultValue + ")";
       this.usage = usage;
-      this.handler = handler;
     }
 
     public static enum Kind {
       MAIN, DEBUG, VERSION, HELP, SECRET, SECRET_HELP
     }
 
-    public static interface Handler {
-      /**
-       * Handles a usage flag.
-       * 
-       * @param args
-       *          Arguments from the command line.
-       * @param index
-       *          The index of the argument following the usage flag.
-       * @return The next index to be processed. e.g., if calling this method
-       *         processes two arguments, then the return value should be
-       *         index+2.
-       * @throws UsageError
-       *           If an error occurs while handling the usage flag.
-       */
-      int handle(String[] args, int index) throws UsageError;
-    }
+    /**
+     * Handles a usage flag.
+     * 
+     * @param args
+     *          Arguments from the command line.
+     * @param index
+     *          The index of the argument following the usage flag.
+     * @return The next index to be processed. e.g., if calling this method
+     *         processes two arguments, then the return value should be index+2.
+     * @throws UsageError
+     *           If an error occurs while handling the usage flag.
+     */
+    public abstract int handle(String[] args, int index) throws UsageError;
 
     public int compareTo(Flag other) {
       if (other == null) return 1;
@@ -374,25 +336,28 @@ public abstract class Options {
     // By default, add help and version flags.
     flags.add(new Flag(Kind.HELP,
         new String[] { "--help", "-h", "-help", "-?" }, null,
-        "print this message", new Handler() {
-          public int handle(String[] args, int index) throws UsageError {
-            throw new UsageError("", 0);
-          }
-        }));
+        "print this message") {
+      @Override
+      public int handle(String[] args, int index) throws UsageError {
+        throw new UsageError("", 0);
+      }
+    });
 
     flags.add(new Flag(Kind.VERSION, new String[] { "--version", "-v",
-        "-version" }, null, "print version info", new Handler() {
+        "-version" }, null, "print version info") {
+      @Override
       public int handle(String[] args, int index) {
         throw new TerminationException(0);
       }
-    }));
+    });
 
     flags.add(new Flag(Kind.SECRET_HELP, "--secret-menu", null,
-        "show the secret menu", new Handler() {
-          public int handle(String[] args, int index) throws UsageError {
-            throw new UsageError("", 0, true);
-          }
-        }));
+        "show the secret menu") {
+      @Override
+      public int handle(String[] args, int index) throws UsageError {
+        throw new UsageError("", 0, true);
+      }
+    });
 
     populateFlags(flags);
     checkFlagConsistency();
@@ -447,7 +412,7 @@ public abstract class Options {
         // arguments.
         for (Flag flag : flags) {
           if (flag.ids.contains(args[i])) {
-            i = flag.handler.handle(args, i + 1);
+            i = flag.handle(args, i + 1);
             continue L;
           }
         }
@@ -471,7 +436,7 @@ public abstract class Options {
         out.println("Secret menu:");
         firstSecretItem = false;
       }
-      
+
       if (showSecretMenu || !isSecret) flag.printUsage(out);
     }
   }
