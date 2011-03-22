@@ -5,6 +5,7 @@ import static fabric.common.Logging.CONFIG_LOGGER;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map.Entry;
+import java.util.Enumeration;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -135,12 +136,20 @@ public class ConfigProperties {
     return result;
   }
 
+  @SuppressWarnings("unchecked")
   private static Properties readProperties(String name) {
     Properties  p    = new Properties(defaults);
     InputStream file = null;
     try {
       file = Resources.readFile("etc", "config", name + ".properties"); 
       p.load(file);
+      //load does not trim whitespace from property values.
+      for(Enumeration<String> names = (Enumeration<String>) p.propertyNames(); 
+            names.hasMoreElements();) {
+        String key  = names.nextElement();
+        String rawvalue = p.getProperty(key);
+        p.put(key, rawvalue.trim());
+      }
     } catch (IOException e) {
       // continue with defaults
     } finally {
