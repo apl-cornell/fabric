@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.security.GeneralSecurityException;
@@ -114,11 +115,22 @@ public class Main extends polyglot.main.Main {
 
   public static void main(String[] args) {
     polyglot.main.Main main = new Main();
+    fabric.ExtensionInfo extInfo = new fabric.ExtensionInfo();
     try {
-      main.start(args, new fabric.ExtensionInfo());
+      main.start(args, extInfo);
+      if(extInfo.codebase() != null 
+          && extInfo.getFabricOptions().codebaseFilename() != null) {
+        File f = new File(extInfo.getFabricOptions().codebaseFilename());
+        FileWriter fw = new FileWriter(f);
+        fw.write(SysUtil.oid(extInfo.codebase())+"\n");
+        fw.close();
+      }
     } catch (TerminationException e) {
       System.err.println(e.getMessage());
       System.exit(1);
+    } catch (IOException e) {
+      System.err.println("Error writing codebase reference to "
+          + extInfo.getFabricOptions().codebaseFilename());
     } finally {
       if (Worker.isInitialized()) {
         Worker.getWorker().shutdown();
@@ -212,8 +224,6 @@ public class Main extends polyglot.main.Main {
         public Void run() {
           try {
             start(o, s, e, q);
-            // insert code into map
-
           } catch (Throwable e) {
             // Always abort the transaction on an exception
             throw new AbortException(e);

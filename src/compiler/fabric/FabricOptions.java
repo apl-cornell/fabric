@@ -1,5 +1,6 @@
 package fabric;
 
+import java.io.PrintStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Set;
@@ -21,6 +22,11 @@ public class FabricOptions extends JifOptions implements FabILOptions {
    */
   public boolean publishOnly;
 
+  /**
+   * Name of file to write URL of new codebase to.
+   */
+  protected String codebaseFilename;  
+ 
   @Override
   public void setDefaultValues() {
     super.setDefaultValues();
@@ -58,7 +64,19 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   }
 
   /* Parsing ******************************************************************/
-  
+  @Override
+  public void usage(PrintStream out) {
+    super.usage(out);
+    usageForFlag(out, "-filsigcp <path>",
+        "path for FabIL signatures (e.g. for fabric.lang.Object)");
+    usageForFlag(out, "-addfilsigcp <path>",
+        "additional path for FabIL signatures; prefixed to sigcp");
+    usageForFlag(out, "-bootstrap-skel", "generate FabIL and Java bootstrap skeletons for each class");
+    usageForFlag(out, "-publish-only", "Verify and publish source, do not compile to bytecode.");
+    usageForFlag(out, "-codebase-output-file <filename>", "Write Fabric reference of published codebase to file.");
+    usageForFlag(out, "-O", "turn optimizations on");
+  }
+
   @SuppressWarnings("rawtypes")
   @Override
   protected int parseCommand(String[] args, int index, Set source)
@@ -74,11 +92,18 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       index++;
       delegate.addSigcp.add(args[index++]);
       return index;
-    } else if (args[index].equals("-publish-only")) {
+    } 
+    else if (args[index].equals("-publish-only")) {
       index++;
       post_compiler = null;
       publishOnly = true;
     }
+    else if (args[index].equals("-codebase-output-file")) {
+      index++;
+      this.codebaseFilename = args[index++];
+      return index;
+    }
+
     // parse jif options
     int i = super.parseCommand(args, index, source);
     if (i != index) {
@@ -117,4 +142,8 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   public boolean publishOnly() {
     return publishOnly;
   }
+  public String codebaseFilename() {
+    return codebaseFilename;
+  }
+
 }

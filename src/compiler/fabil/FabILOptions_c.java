@@ -1,6 +1,10 @@
 package fabil;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.UnknownHostException;
@@ -13,6 +17,7 @@ import java.util.Set;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.main.UsageError;
 import polyglot.main.Main.TerminationException;
+import polyglot.util.InternalCompilerError;
 
 /**
  * This is the same as the JL options, except by default, we always generate
@@ -67,9 +72,8 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   /**
    * Codebase path.
    */
-  protected List<URI> codebasePath;  
- 
-  
+  protected List<URI> codebasePath;
+
   public FabILOptions_c(ExtensionInfo extension) {
     super(extension);
     this.sigcp = null;
@@ -150,7 +154,20 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     else if (args[index].equals("-addCodebase")) {
       index++;
       this.runWorker = true;
-      this.codebasePath.add(URI.create(args[index++]));
+      String cb = args[index++];
+      URI uri = URI.create(cb);
+      if(uri.isAbsolute())
+        this.codebasePath.add(uri);
+      else {
+        try {
+          BufferedReader lr = new BufferedReader(new FileReader(cb));
+          this.codebasePath.add(URI.create(lr.readLine()));
+        } catch (FileNotFoundException e) {
+          throw new InternalCompilerError(e);
+        } catch (IOException e) {
+          throw new InternalCompilerError(e);
+        }
+      }
       return index;
 
     } else if (args[index].equals("-bootstrap-skel")) {
