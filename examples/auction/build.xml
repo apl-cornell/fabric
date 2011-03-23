@@ -58,6 +58,7 @@
   		<param name="provider" value="${broker.worker}"/>
   		<param name="dest.store" value="${broker.store}"/>
   		<param name="codebase.dir" value="${broker.home}"/>
+  		<param name="publish.args" value=""/>
     </antcall>
   </target>
   <target name="publish-airlineA" description="Publish Airline A source">
@@ -92,7 +93,6 @@
            parallel="true"
            failonerror="true"
            dir="${home}"
-           dest="${home}/classes"
            relative="false"
            skipemptyfilesets="true"
            vmlauncher="false">
@@ -112,19 +112,12 @@
   </target>
 
   <target name="run-init" description="Run init classes" depends="build-init">
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${home}"
-           dest="${home}/classes"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
+    <exec executable="bash" failonerror="true">
       <arg value="${fabric.home}/bin/fab"/>
       <arg value="--name" /> <arg value="${broker.worker}" />
-      <arg value="-cp"         /> <arg value="${home}/classes" />
+      <arg value="-cp" /> <arg value="${home}/classes" />
       <arg value="auction.Init"/>
-    </apply>
+    </exec>
   </target>
 
   <target name="build-init" description="Build init classes">
