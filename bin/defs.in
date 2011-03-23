@@ -111,7 +111,7 @@ done
 # store.
 ##########
 # JLine
-COMMON_SYS_LIB_CP="${TOP}/lib/jline-0_9_5.jar"
+COMMON_SYS_LIB_CP="${TOP}/lib/jline-0.9.94.jar"
 
 # Classpath for compiling FabIL applications.
 # Jar files should always appear *after* their corresponding class directories.

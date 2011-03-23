@@ -47,9 +47,18 @@ public class WorkerShell {
     }
   }
 
+  /**
+   * Creates an interactive shell for the given worker that reads from System.in
+   * and outputs to System.out.
+   */
   public WorkerShell(Worker worker) throws IOException {
-    this(worker, new ConsoleReaderInputStream(new ConsoleReader(System.in,
-        new OutputStreamWriter(System.out))), System.out, true);
+    this(worker, new ConsoleReader(System.in,
+        new OutputStreamWriter(System.out)), System.out);
+  }
+
+  protected WorkerShell(Worker worker, ConsoleReader cr, PrintStream out) {
+    this(worker, new ConsoleReaderInputStream(cr), out, true);
+    cr.setDefaultPrompt("\n" + worker.config.name + "> ");
   }
 
   public WorkerShell(Worker worker, File in, PrintStream out)
@@ -323,13 +332,9 @@ public class WorkerShell {
    * 
    * @param command
    *          a list into which the command will be parsed.
-   * @return the parsed command, or null if there are no more comands.
+   * @return the parsed command, or null if there are no more commands.
    */
   private List<String> prompt(List<String> command) throws IOException {
-    out.println();
-    out.print(worker.config.name + "> ");
-    out.flush();
-
     command.clear();
 
     while (true) {
@@ -337,11 +342,12 @@ public class WorkerShell {
       switch (token) {
       case StreamTokenizer.TT_EOF:
         if (command.isEmpty()) {
-          out.println("exit");
+          if (interactive) out.println("exit");
           return null;
         }
         //$FALL-THROUGH$
       case StreamTokenizer.TT_EOL:
+      case ';':
         return command;
 
       case StreamTokenizer.TT_NUMBER:
