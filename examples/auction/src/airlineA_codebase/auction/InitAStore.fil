@@ -1,0 +1,20 @@
+package auction;
+import fabric.util.Map;
+
+public class InitAStore {
+    public static void main(String[] args) {
+        atomic {
+            DelegatingPrincipal storeWorker = (DelegatingPrincipal) 
+                Worker.getWorker().getPrincipal();
+            DelegatingPrincipal airlineAWorker = (DelegatingPrincipal) 
+                Worker.getWorker().getWorker(Config.airlineAWorkerName).getPrincipal();
+
+            System.out.println("Delegating to " +Config.airlineAWorkerName);
+            storeWorker.addDelegatesTo(airlineAWorker);
+        }
+    }
+}
+
+/*
+** vim: ts=4 sw=4 et cindent cino=\:0
+*/

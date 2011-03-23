@@ -52,6 +52,9 @@
     Compilation targets.
   ****************************************************************************
   -->
+  <target name="publish-all" depends="publish-broker, publish-airlineA, 
+  	publish-airlineB, publish-user" description="Publish all source">
+  </target>
 
   <target name="publish-broker" description="Publish broker source">
   	<antcall target="publish">
@@ -149,11 +152,10 @@
       <arg value="${fabric.home}/bin/filc"/>
       <arg value="-g"/>
       <arg value="-d"          /> <arg value="${home}/classes"/>
-      <arg value="-sourcepath" /> <arg value="${broker.home}" />
       <arg value="-cp"         /> <arg pathref="standard.classpath" />
       <arg value="-cp"         /> <arg value="${home}/classes" />
       <srcfile />
-      <fileset dir="${broker.home}" includes="**/*.fil" />
+      <fileset dir="${home}" includes="**/*.fil" />
       <globmapper from="*.fil" to="*.class" />
     </apply>
   </target>
