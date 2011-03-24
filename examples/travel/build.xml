@@ -68,6 +68,7 @@
       <arg value="-cp"         /> <arg value="${travel.home}/classes" />
       <arg value="-sigcp"      /> <arg pathref="sif.sigcp"/>
       <arg value="-e"/>
+      <arg value="-trusted-providers"/>
       <!--
       <arg value="-rdebug" />
         <arg value="-report" /> <arg value="frontend=1"/>
@@ -126,6 +127,7 @@
       <arg value="-cp"         /> <arg value="${travel.home}/classes" />
       <arg value="-sigcp"      /> <arg pathref="sif.sigcp"/>
       <arg value="-e"/>
+      <arg value="-trusted-providers"/>
 
       <!--
         <arg value="-report" /> <arg value="solver=5" />
