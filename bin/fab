@@ -3,6 +3,7 @@
 # Wrapper script for fabric.worker.Worker, the Fabric worker.
 
 source "$(dirname $0)/defs"
+CODECACHE=".${HOSTNAME}_cache"
 
 while true; do
   case "$1" in
@@ -15,6 +16,12 @@ while true; do
             vmargs="${vmargs} '$1'"
             shift
             ;;
+	--code-cache) 
+		CODECACHE=$2; 
+		args="${args} --code-cache '$2'"; shift; shift;;
+	--name) 
+		CODECACHE=".${2}_cache";
+		args="${args} --name '$2'"; shift; shift;;
     --debug)
             shift
             vmargs="${vmargs} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3371"
@@ -23,7 +30,8 @@ while true; do
   esac
 done
 
-classpath="${FABRIC_WORKER_CP}:${EXTRACP}:${classpath}"
+mkdir -p ${CODECACHE}
+classpath="${FABRIC_WORKER_CP}:${EXTRACP}:${classpath}:${CODECACHE}"
 
 #command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" fabric.worker.Worker ${args}"
 sigcp="${TOP}/sig-classes/fabric:${TOP}/lib/fabric-sig.jar:${sigcp}"

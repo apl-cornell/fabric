@@ -431,6 +431,7 @@
       <classpath>
         <pathelement location="${bootstrap.classes}" />
         <path refid="lib.classpath"/>
+        <path refid="polyglot.classpath" />
       </classpath>
     </javac>
   </target>
@@ -467,6 +468,7 @@
       <classpath>
         <pathelement location="${bootstrap.classes}" />
         <path refid="lib.classpath"/>
+        <path refid="polyglot.classpath" />
       </classpath>
     </javac>
   </target>
