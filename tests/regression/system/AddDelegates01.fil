@@ -1,10 +1,11 @@
-package auction;
+package system;
 import fabric.util.Map;
 
 /**
- * Testcase for addDelegates. Two principals stored on the 
+ * Test case for addDelegates. Two principals stored on the 
  * same store should not be able to addDelegates to each other.
- * Expects a worker principal named userWorker.
+ * 
+ * Expects a worker named userWorker.
  */
 public class AddDelegates01 {
     public static void main(String[] args) {
@@ -25,6 +26,9 @@ public class AddDelegates01 {
         DelegatingPrincipal userWorker = (DelegatingPrincipal) 
              Worker.getWorker().getWorker("userWorker").getPrincipal();
         System.out.println("POST COMMIT: User delegates to worker? " + userWorker.delegatesTo(brokerWorker));
+        if (userWorker.delegatesTo(brokerWorker)) {
+          System.out.println("TEST FAILED.");
+        }
     }
 }
 
