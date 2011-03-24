@@ -42,8 +42,16 @@ class Main  {
 	  final label user_lbl = new label{user->;user<-};
 
 	  final Server[airlineA] a_serv =(Server[airlineA])a_store.getRoot().get(Config.airlineAServerName);
+	  if(a_serv == null)
+		throw new Error("Could not find fab://" + a_store.name() + "/" + Config.airlineAServerName);
+
 	  final Server[airlineB] b_serv = (Server[airlineB])b_store.getRoot().get(Config.airlineBServerName);
+	  if(b_serv == null)
+		throw new Error("Could not find fab://" + b_store.name() + "/" + Config.airlineBServerName);
+
 	  final User[user] user_serv = (User[user])user_store.getRoot().get(Config.userServerName);
+	  if(user_serv == null)
+		throw new Error("Could not find fab://" + user_store.name() + "/" + Config.userServerName);
 
 	  final Store broker_store = worker$.getStore(Config.brokerStoreName); 
 	  final RemoteWorker broker_worker = worker$.getWorker(Config.brokerWorkerName); 

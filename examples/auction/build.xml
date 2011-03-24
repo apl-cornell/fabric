@@ -29,15 +29,16 @@
   <property name="airlineB.worker" value="airlineBWorker"/>
   <property name="user.worker" value="userWorker"/>
 
-  <property name="broker.codebase" value="${home.codebases}/${broker.worker}.codebase"/>
-  <property name="airlineA.codebase" value="${home.codebases}/${airlineA.worker}.codebase"/>
-  <property name="airlineB.codebase" value="${home.codebases}/${airlineB.worker}.codebase"/>
-  <property name="user.codebase" value="${home.codebases}/${user.worker}.codebase"/>
+  <property name="broker.codebase.file" value="${home.codebases}/${broker.worker}.codebase"/>
+  <property name="airlineA.codebase.file" value="${home.codebases}/${airlineA.worker}.codebase"/>
+  <property name="airlineB.codebase.file" value="${home.codebases}/${airlineB.worker}.codebase"/>
+  <property name="user.codebase.file" value="${home.codebases}/${user.worker}.codebase"/>
 
   <property name="broker.store" value="brokerStore"/>
   <property name="airlineA.store" value="airlineAStore"/>
   <property name="airlineB.store" value="airlineBStore"/>
   <property name="user.store" value="userStore"/>
+
   <!--
   ****************************************************************************
     Targets for cleaning up the directory tree.
@@ -45,6 +46,11 @@
   -->
   <target name="clean" description="Removes generated files">
     <delete dir="${home}/classes"/>
+    <delete dir="${home}/codebases"/>
+    <delete dir="${home}/.${broker.worker}_cache"/>
+    <delete dir="${home}/.${user.worker}_cache"/>
+    <delete dir="${home}/.${airlineA.worker}_cache"/>
+    <delete dir="${home}/.${airlineB.worker}_cache"/>
   </target>
 
   <target name="clobber" depends="clean"
@@ -58,18 +64,29 @@
   ****************************************************************************
   -->
   <target name="codebase-check">
-    <uptodate property="broker.up-to-date" targetfile="${broker.codebase}">
+    <uptodate property="broker.up-to-date" targetfile="${broker.codebase.file}">
       <srcfiles dir="${broker.src}" includes="**/*.fab" />
     </uptodate>
-    <uptodate property="airlineA.up-to-date" targetfile="${airlineA.codebase}">
+    <uptodate property="airlineA.up-to-date" targetfile="${airlineA.codebase.file}">
       <srcfiles dir="${airlineA.src}" includes="**/*.fab" />
+      <srcfiles file="${broker.codebase.file}"/>
     </uptodate>
-    <uptodate property="airlineB.up-to-date" targetfile="${airlineB.codebase}">
+    <uptodate property="airlineB.up-to-date" targetfile="${airlineB.codebase.file}">
       <srcfiles dir="${airlineB.src}" includes="**/*.fab" />
+      <srcfiles file="${broker.codebase.file}"/>
     </uptodate>
-    <uptodate property="user.up-to-date" targetfile="${user.codebase}">
+    <uptodate property="user.up-to-date" targetfile="${user.codebase.file}">
       <srcfiles dir="${user.src}" includes="**/*.fab" />
+      <srcfiles file="${broker.codebase.file}"/>
     </uptodate>
+
+  </target>
+
+  <target name="load-codebases" depends="codebase-check,publish-all">
+    <loadfile property="broker.codebase" srcFile="${broker.codebase.file}" failonerror="false"/>
+    <loadfile property="airlineA.codebase" srcFile="${airlineA.codebase.file}"  failonerror="false"/>
+    <loadfile property="airlineB.codebase" srcFile="${airlineB.codebase.file}"  failonerror="false"/>
+    <loadfile property="user.codebase" srcFile="${user.codebase.file}" failonerror="false"/>
   </target>
 
   <target name="publish-all" depends="publish-broker, publish-airlineA, 
@@ -82,7 +99,7 @@
   		<param name="provider" value="${broker.worker}"/>
   		<param name="dest.store" value="${broker.store}"/>
   		<param name="codebase.dir" value="${broker.src}"/>
-  		<param name="target.codebasefile" value="${broker.codebase}"/>
+  		<param name="target.codebasefile" value="${broker.codebase.file}"/>
   		<param name="publish.args" value=""/>
     </antcall>
   </target>
@@ -93,8 +110,8 @@
   		<param name="provider" value="${airlineA.worker}"/>
   		<param name="dest.store" value="${airlineA.store}"/>
   		<param name="codebase.dir" value="${airlineA.src}"/>
-  		<param name="target.codebasefile" value="${airlineA.codebase}"/>
-  		<param name="publish.args" value="-addCodebase ${broker.codebase}"/>
+  		<param name="target.codebasefile" value="${airlineA.codebase.file}"/>
+  		<param name="publish.args" value="-addCodebase ${broker.codebase.file}"/>
     </antcall>
   </target>
 
@@ -104,8 +121,8 @@
   		<param name="provider" value="${airlineB.worker}"/>
   		<param name="dest.store" value="${airlineB.store}"/>
   		<param name="codebase.dir" value="${airlineB.src}"/>
-  		<param name="target.codebasefile" value="${airlineB.codebase}"/>
-  		<param name="publish.args" value="-addCodebase ${broker.codebase}"/>
+  		<param name="target.codebasefile" value="${airlineB.codebase.file}"/>
+  		<param name="publish.args" value="-addCodebase ${broker.codebase.file}"/>
     </antcall>
   </target>
 
@@ -115,8 +132,8 @@
   		<param name="provider" value="${user.worker}"/>
   		<param name="dest.store" value="${user.store}"/>
   		<param name="codebase.dir" value="${user.src}"/>
-  		<param name="target.codebasefile" value="${user.codebase}"/>
-  		<param name="publish.args" value="-addCodebase ${broker.codebase}"/>
+  		<param name="target.codebasefile" value="${user.codebase.file}"/>
+  		<param name="publish.args" value="-addCodebase ${broker.codebase.file}"/>
     </antcall>
   </target>
 
@@ -129,6 +146,7 @@
            relative="false"
            skipemptyfilesets="true"
            vmlauncher="false">
+      <env key="FABRIC_HOME" value="${home}"/>
       <arg value="${fabc}"/>
       <arg value="-g"/>
       <arg value="-e"/>
@@ -145,22 +163,7 @@
   </target>
 
   <target name="build-init" description="Build init classes">
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${broker.src}"
-           dest="${home}/classes"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabc}"/>
-      <arg value="-g"/>
-      <arg value="-e"/>
-      <arg value="-d"          /> <arg value="${home}/classes"/>
-      <srcfile />
-      <fileset file="${broker.src}/auction/Config.fab" />
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
+
 
     <apply executable="bash"
            parallel="true"
@@ -172,13 +175,29 @@
            vmlauncher="false">
       <arg value="${fabric.home}/bin/filc"/>
       <arg value="-g"/>
-      <arg value="-d"          /> <arg value="${home}/classes"/>
-      <arg value="-cp"         /> <arg pathref="standard.classpath" />
-      <arg value="-cp"         /> <arg value="${home}/classes" />
+      <arg value="-d" /> <arg value="${home}/classes"/>
+      <arg value="-cp"/> <arg pathref="standard.classpath" />
+      <arg value="-cp"/> <arg value="${home}/classes" />
       <srcfile />
       <fileset dir="${home}" includes="**/*.fil" />
       <globmapper from="*.fil" to="*.class" />
     </apply>
   </target>
 
+  <target name="run-init" depends="load-codebases">
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${airlineA.worker} ${airlineA.codebase}/auction.InitA"/>
+    </exec>
+    
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${airlineB.worker} ${airlineB.codebase}/auction.InitB"/>
+    </exec>
+    
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${user.worker} ${user.codebase}/auction.InitUser"/>
+    </exec>	
+  </target>
 </project>
