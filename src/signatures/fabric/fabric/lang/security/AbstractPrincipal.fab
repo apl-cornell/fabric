@@ -3,8 +3,6 @@ package fabric.lang.security;
 /**
  * This is an abstract implementation of the principal interface.
  * It provides convenience methods for delgating authority to superiors.
- * This class assumes that principals are equal if they are the same class
- * with the same name.
  */
 public abstract class AbstractPrincipal extends DelegatingPrincipal {
         
