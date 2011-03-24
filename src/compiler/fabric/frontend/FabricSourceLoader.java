@@ -25,7 +25,7 @@ import fabric.common.SysUtil;
 public class FabricSourceLoader extends SourceLoader {
   protected Map<URI, Codebase> codebaseCache;
   protected Collection<URI> sourcePath;
-
+  protected String[] TOPICS = new String[] {Report.loader,Topics.mobile};
   public FabricSourceLoader(ExtensionInfo sourceExt, Collection<URI> sourcePath) {
     super(sourceExt, null);
     this.sourcePath = sourcePath;
@@ -101,7 +101,7 @@ public class FabricSourceLoader extends SourceLoader {
       codebase = (Codebase) o;
       codebaseCache.put(uri, codebase);
     }
-    if(Report.should_report(Report.loader, 3))
+    if(Report.should_report(TOPICS, 3))
       Report.report(3, "Checking " + SysUtil.oid(codebase) + " for " + className);
 
     FClass fcls = codebase.resolveClassName(className);
@@ -154,7 +154,7 @@ public class FabricSourceLoader extends SourceLoader {
       String fileName =
           className.replace('.', File.separatorChar) + "." + exts[k];
 
-      if(Report.should_report(Report.loader, 3))
+      if(Report.should_report(TOPICS, 3))
         Report.report(3, "Checking " + directory + " for " + fileName);
 
       Set<String> dirContents =

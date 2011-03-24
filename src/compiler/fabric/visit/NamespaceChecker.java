@@ -49,13 +49,14 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
                 + " The following classes must be relinked with the current codebase: "
                 + relink);
       }
-      Report.report(1, "Class " + pct + " is consistent with codebase " + cb);
+      if (Report.should_report(Topics.fabric, 3))
+        Report.report(3, "Class " + pct + " is consistent with codebase " + cb);
     }
     return n;
   }
 
   protected static Set<FClass> buildRelink(FClass fcls) {
-    if (Report.should_report(Topics.fabric, 1))
+    if (Report.should_report(Topics.mobile, 3))
       Report.report(1, "Building inverse dependency graph for " + fcls.getName());
 
     // Invert dependency graph
@@ -80,7 +81,8 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
         relink.add(depclass);
       }
       Set<String> depdeps = convert(depclass.dependencies());
-      Report.report(1, depclass + " has dependencies: " + depdeps);
+      if (Report.should_report(Topics.mobile, 3))
+        Report.report(3, depclass + " has dependencies: " + depdeps);
       
       for (String s : depdeps) {
         Set<FClass> hasdep = invdeps.get(s);

@@ -22,6 +22,7 @@ import polyglot.util.InternalCompilerError;
 import polyglot.visit.ErrorHandlingVisitor;
 import polyglot.visit.NodeVisitor;
 import fabric.ExtensionInfo;
+import fabric.Topics;
 import fabric.frontend.LocalSource;
 import fabric.frontend.RemoteSource_c;
 import fabric.lang.Codebase;
@@ -83,7 +84,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
       FileSource src = (FileSource) pct.fromSource();
 
       if(src instanceof LocalSource) {
-        if(Report.should_report(TOPIC, 3)) {
+        if(Report.should_report(Topics.mobile, 3)) {
           Report.report(3, "Local source " + src + " has dependencies " + toClassNames(fcg.dependencies));
         }
 
@@ -106,7 +107,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         //TODO: check that the integrity of the codebase is leq the integrity of c
         Codebase cb = loc_src.codebase();
         fcls.setCodebase(cb);
-        if(Report.should_report(TOPIC, 3)) {
+        if(Report.should_report(Topics.mobile, 3)) {
           Report.report(3, "Inserting " + className + " into codebase " + cb);
         }
         cb.insertClass(className, fcls);
@@ -140,7 +141,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         FClass fcls = ((RemoteSource_c) src).fclass();
         fabric.util.Set fclsNames = fcls.dependencies();
         Set<String> realNames = toClassNames(fcg.dependencies);
-        if(Report.should_report(TOPIC, 3)) {
+        if(Report.should_report(Topics.mobile, 3)) {
           Report.report(3, "Remote source " + src + " has dependencies " + realNames);
         }
         if(fclsNames.size() != realNames.size()) 
@@ -186,5 +187,4 @@ public class FClassGenerator extends ErrorHandlingVisitor {
     }
     return result.toString();
   }
-  public static String TOPIC = "publish";
 }
