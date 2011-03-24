@@ -13,20 +13,26 @@
   <import file="../../common.xml" />
 
   <dirname property="home" file="${ant.file}"/>
+  <property name="home.codebases" value="${home}/codebases"/>
 
   <path id="standard.classpath">
     <path refid="lib.classpath" />
   </path>
 
-  <property name="broker.home" value="${home}/src/broker_codebase/"/>
-  <property name="airlineA.home" value="${home}/src/airlineA_codebase/"/>
-  <property name="airlineB.home" value="${home}/src/airlineB_codebase/"/>
-  <property name="user.home" value="${home}/src/user_codebase/"/>
+  <property name="broker.src" value="${home}/src/broker_codebase/"/>
+  <property name="airlineA.src" value="${home}/src/airlineA_codebase/"/>
+  <property name="airlineB.src" value="${home}/src/airlineB_codebase/"/>
+  <property name="user.src" value="${home}/src/user_codebase/"/>
 
   <property name="broker.worker" value="brokerWorker"/>
   <property name="airlineA.worker" value="airlineAWorker"/>
   <property name="airlineB.worker" value="airlineBWorker"/>
   <property name="user.worker" value="userWorker"/>
+
+  <property name="broker.codebase" value="${home.codebases}/${broker.worker}.codebase"/>
+  <property name="airlineA.codebase" value="${home.codebases}/${airlineA.worker}.codebase"/>
+  <property name="airlineB.codebase" value="${home.codebases}/${airlineB.worker}.codebase"/>
+  <property name="user.codebase" value="${home.codebases}/${user.worker}.codebase"/>
 
   <property name="broker.store" value="brokerStore"/>
   <property name="airlineA.store" value="airlineAStore"/>
@@ -37,7 +43,6 @@
     Targets for cleaning up the directory tree.
   ****************************************************************************
   -->
-
   <target name="clean" description="Removes generated files">
     <delete dir="${home}/classes"/>
   </target>
@@ -52,46 +57,71 @@
     Compilation targets.
   ****************************************************************************
   -->
+  <target name="codebase-check">
+    <uptodate property="broker.up-to-date" targetfile="${broker.codebase}">
+      <srcfiles dir="${broker.src}" includes="**/*.fab" />
+    </uptodate>
+    <uptodate property="airlineA.up-to-date" targetfile="${airlineA.codebase}">
+      <srcfiles dir="${airlineA.src}" includes="**/*.fab" />
+    </uptodate>
+    <uptodate property="airlineB.up-to-date" targetfile="${airlineB.codebase}">
+      <srcfiles dir="${airlineB.src}" includes="**/*.fab" />
+    </uptodate>
+    <uptodate property="user.up-to-date" targetfile="${user.codebase}">
+      <srcfiles dir="${user.src}" includes="**/*.fab" />
+    </uptodate>
+  </target>
+
   <target name="publish-all" depends="publish-broker, publish-airlineA, 
   	publish-airlineB, publish-user" description="Publish all source">
   </target>
 
-  <target name="publish-broker" description="Publish broker source">
+  <target name="publish-broker" description="Publish broker source" depends="codebase-check"
+  	unless="broker.up-to-date">
   	<antcall target="publish">
   		<param name="provider" value="${broker.worker}"/>
   		<param name="dest.store" value="${broker.store}"/>
-  		<param name="codebase.dir" value="${broker.home}"/>
+  		<param name="codebase.dir" value="${broker.src}"/>
+  		<param name="target.codebasefile" value="${broker.codebase}"/>
   		<param name="publish.args" value=""/>
     </antcall>
   </target>
-  <target name="publish-airlineA" description="Publish Airline A source">
+
+  <target name="publish-airlineA" description="Publish Airline A source" depends="codebase-check" 
+  	unless="airlineA.up-to-date">
   	<antcall target="publish">
   		<param name="provider" value="${airlineA.worker}"/>
   		<param name="dest.store" value="${airlineA.store}"/>
-  		<param name="codebase.dir" value="${airlineA.home}"/>
-  		<param name="publish.args" 
-  			value="-addCodebase ${home}/codebases/${broker.worker}.codebase"/>
+  		<param name="codebase.dir" value="${airlineA.src}"/>
+  		<param name="target.codebasefile" value="${airlineA.codebase}"/>
+  		<param name="publish.args" value="-addCodebase ${broker.codebase}"/>
     </antcall>
   </target>
-  <target name="publish-airlineB" description="Publish Airline A source">
+
+  <target name="publish-airlineB" description="Publish Airline B source" depends="codebase-check"  
+  	unless="airlineB.up-to-date">
   	<antcall target="publish">
   		<param name="provider" value="${airlineB.worker}"/>
   		<param name="dest.store" value="${airlineB.store}"/>
-  		<param name="codebase.dir" value="${airlineB.home}"/>
-  		<param name="publish.args" 
-  			value="-addCodebase ${home}/codebases/${broker.worker}.codebase"/>
+  		<param name="codebase.dir" value="${airlineB.src}"/>
+  		<param name="target.codebasefile" value="${airlineB.codebase}"/>
+  		<param name="publish.args" value="-addCodebase ${broker.codebase}"/>
     </antcall>
   </target>
-  <target name="publish-user" description="Publish Airline A source">
+
+  <target name="publish-user" description="Publish user source"  depends="codebase-check" 
+  	unless="user.up-to-date">
   	<antcall target="publish">
   		<param name="provider" value="${user.worker}"/>
   		<param name="dest.store" value="${user.store}"/>
-  		<param name="codebase.dir" value="${user.home}"/>
-  		<param name="publish.args" 
-  			value="-addCodebase ${home}/codebases/${broker.worker}.codebase"/>
+  		<param name="codebase.dir" value="${user.src}"/>
+  		<param name="target.codebasefile" value="${user.codebase}"/>
+  		<param name="publish.args" value="-addCodebase ${broker.codebase}"/>
     </antcall>
   </target>
+
   <target name="publish" description="Publish Fabric source">
+    <mkdir dir="${home.codebases}"/>
     <apply executable="bash"
            parallel="true"
            failonerror="true"
@@ -102,9 +132,9 @@
       <arg value="${fabc}"/>
       <arg value="-g"/>
       <arg value="-e"/>
-      <arg value="-d"          /> <arg value="${home}/codebases"/>
+      <arg value="-d"          /> <arg value="${home.codebases}"/>
       <arg value="-publish-only" />
-      <arg value="-codebase-output-file" /> <arg value="${provider}.codebase"/>
+      <arg value="-codebase-output-file" /> <arg value="${target.codebasefile}"/>
       <arg value="-sourcepath" /> <arg value="${codebase.dir}" />
       <arg value="-worker" /> <arg value="${provider}" />
       <arg value="-deststore" /> <arg value="${dest.store}" />
@@ -114,20 +144,11 @@
     </apply>
   </target>
 
-  <target name="run-init" description="Run init classes" depends="build-init">
-    <exec executable="bash" failonerror="true">
-      <arg value="${fabric.home}/bin/fab"/>
-      <arg value="--name" /> <arg value="${broker.worker}" />
-      <arg value="-cp" /> <arg value="${home}/classes" />
-      <arg value="auction.Init"/>
-    </exec>
-  </target>
-
   <target name="build-init" description="Build init classes">
     <apply executable="bash"
            parallel="true"
            failonerror="true"
-           dir="${broker.home}"
+           dir="${broker.src}"
            dest="${home}/classes"
            relative="false"
            skipemptyfilesets="true"
@@ -137,7 +158,7 @@
       <arg value="-e"/>
       <arg value="-d"          /> <arg value="${home}/classes"/>
       <srcfile />
-      <fileset file="${broker.home}/auction/Config.fab" />
+      <fileset file="${broker.src}/auction/Config.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
 

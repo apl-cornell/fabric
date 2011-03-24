@@ -12,7 +12,8 @@ public class InitB where {*provider} equiv {*airlineB.Server.provider},
   {
 	  //already in transaction due to method constraints
       final Store store = worker$.getStore(Config.airlineBStoreName);
-      if (store actsfor p) { 
+      if (store actsfor p 
+			&& airlineB.Server.provider <= new label {store<-}) {
         Map root = store.getRoot();
         root.put(Config.airlineBServerName, new airlineB.Server[store]@store(13500, 100));
       }

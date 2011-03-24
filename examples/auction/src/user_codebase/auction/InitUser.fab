@@ -13,7 +13,8 @@ public class InitUser where {*provider} equiv {*user.User.provider},
   {
 	  //already in transaction due to method constraints
       final Store store = worker$.getStore(Config.userStoreName);
-      if (p actsfor store && store actsfor p) { 
+      if (store actsfor p 
+			&& user.User.provider <= new label {store<-}) {
         Map root = store.getRoot();
       	root.put(Config.userServerName, new user.User[store]@store());
       }
