@@ -119,7 +119,8 @@ public class WorkerShell {
     this.handlers.put("fabc", new CommandHandler("Compiles a Fabric program.") {
       @Override
       public void handle(List<String> args) throws HandlerException {
-        throw new HandlerException("Not implemented yet!");
+        //TODO: should we pass in the correct i/o streams?
+        fabric.Main.compile_from_shell(args, System.in, System.out);
       }
     });
 

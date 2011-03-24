@@ -67,9 +67,14 @@ public final class Worker {
 
   public final ConfigProperties config;
 
+  // The path for Fabric signatures
   public String sigcp;
 
+  // The path for FabIL signatures
   public String filsigcp;
+
+  // The directory for dynamically compiled mobile code
+  public String code_cache;
 
   // A map from store hostnames to Store objects
   protected final Map<String, RemoteStore> stores;
@@ -415,6 +420,7 @@ public final class Worker {
         worker = getWorker();
         worker.sigcp = opts.sigcp;
         worker.filsigcp = opts.filsigcp;
+        worker.code_cache = opts.code_cache;
       } catch (UsageError ue) {
         PrintStream out = ue.exitCode == 0 ? System.out : System.err;
         if (ue.getMessage() != null && ue.getMessage().length() > 0) {

@@ -1,5 +1,6 @@
 package fabric.worker;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.util.Set;
 
@@ -21,6 +22,8 @@ public class Options extends fabric.common.Options {
   public String sigcp;
 
   public String filsigcp;
+
+  public String code_cache;
   
   private Options() {
   }
@@ -86,12 +89,23 @@ public class Options extends fabric.common.Options {
         return index + 1;
       }
     });
+    
+    flags.add(new Flag(Kind.SECRET, "--code-cache", "<dir>",
+        "directory for code compiled by the worker") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.code_cache = args[index];
+        return index + 1;
+      }
+    });
+
   }
 
   @Override
   public void setDefaultValues() {
     this.name = System.getenv("HOSTNAME");
     this.app = null;
+    this.code_cache = System.getProperty("user.dir") + File.separator + "." + name + "_cache";
   }
 
   @Override

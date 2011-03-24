@@ -4,14 +4,15 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,7 +25,6 @@ import polyglot.frontend.ExtensionInfo;
 import polyglot.main.Options;
 import polyglot.main.Report;
 import polyglot.main.UsageError;
-import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassFileLoader;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
@@ -39,6 +39,7 @@ import fabric.worker.Worker;
  * Polyglot's main, passing in the extension's ExtensionInfo.
  */
 public class Main extends polyglot.main.Main {
+  protected Compiler compiler;
 
   /**
    * @return System clock time between compilation and loading for timing
@@ -65,6 +66,11 @@ public class Main extends polyglot.main.Main {
       args.add("-filsigcp");
       args.add(worker.filsigcp);
     }
+    if (worker.code_cache != null) {
+      args.add("-d");
+      args.add(worker.code_cache);
+    }
+
     args.add(SysUtil.oid(fcls));
 
     Main main = new Main();
@@ -113,27 +119,45 @@ public class Main extends polyglot.main.Main {
     }
   }
 
+  @SuppressWarnings("unchecked")
+  public static void compile_from_shell(List<String> args, InputStream in, PrintStream out) {
+    InputStream save_in = System.in;
+    PrintStream save_out = System.out;
+    PrintStream save_err = System.err;
+
+    System.setIn(in);
+    System.setOut(out);
+    System.setErr(out);
+
+    List<String> new_args = new ArrayList(args.size()+2);
+    Worker worker = Worker.getWorker();
+    //Set code cache first to allow it to be overridden
+    if (worker.code_cache != null) {
+      new_args.add("-d");
+      new_args.add(worker.code_cache);
+    }
+    new_args.addAll(args);
+
+    polyglot.main.Main main = new Main();
+    fabric.ExtensionInfo extInfo = new fabric.ExtensionInfo();
+
+    try {
+      main.start(new_args.toArray(new String[]{}), extInfo);
+
+    } catch (TerminationException e) {
+      System.err.println(e.getMessage());
+    } finally {
+      System.setIn(save_in);
+      System.setOut(save_out);
+      System.setErr(save_err);
+    }
+  }
+  
   public static void main(String[] args) {
     polyglot.main.Main main = new Main();
     fabric.ExtensionInfo extInfo = new fabric.ExtensionInfo();
     try {
       main.start(args, extInfo);
-      if(extInfo.codebase() != null 
-          && extInfo.getFabricOptions().codebaseFilename() != null) {
-        FabricOptions opt = extInfo.getFabricOptions();
-        File f = new File(opt.codebaseFilename());
-        if(!f.isAbsolute())
-          f = new File(opt.output_directory, f.getPath());      
-        FileWriter fw;
-        try {
-          fw = new FileWriter(f);
-          fw.write(SysUtil.oid(extInfo.codebase())+"\n");
-          fw.close();
-        } catch (IOException e) {
-          throw new TerminationException("Error writing codebase reference to "
-              + extInfo.getFabricOptions().codebaseFilename() + ": " + e.getMessage(), 1);
-        }
-      }
     } catch (TerminationException e) {
       System.err.println(e.getMessage());
       System.exit(1);
@@ -143,9 +167,30 @@ public class Main extends polyglot.main.Main {
       }
     }
   }
-
-  protected Compiler compiler;
-
+  
+  @Override
+  public void start(String[] args, ExtensionInfo _extInfo) {
+    fabric.ExtensionInfo extInfo = (fabric.ExtensionInfo) _extInfo;
+    super.start(args,extInfo);
+    
+    if(extInfo.codebase() != null 
+        && extInfo.getFabricOptions().codebaseFilename() != null) {
+      FabricOptions opt = extInfo.getFabricOptions();
+      File f = new File(opt.codebaseFilename());
+      if(!f.isAbsolute())
+        f = new File(opt.output_directory, f.getPath());      
+      FileWriter fw;
+      try {
+        fw = new FileWriter(f);
+        fw.write(SysUtil.oid(extInfo.codebase()));
+        fw.close();
+      } catch (IOException e) {
+        throw new TerminationException("Error writing codebase reference to "
+            + extInfo.getFabricOptions().codebaseFilename() + ": " + e.getMessage(), 1);
+      }
+    }
+  }
+  
   @Override
   public void start(String[] argv, ExtensionInfo ext, ErrorQueue eq)
       throws TerminationException {
@@ -214,7 +259,11 @@ public class Main extends polyglot.main.Main {
       final ErrorQueue q = eq;
 
       try {
-        if (!Worker.isInitialized()) Worker.initialize(o.workerName());
+        if (!Worker.isInitialized()) 
+          Worker.initialize(o.workerName());
+        else if(!Worker.getWorker().config.name.equals(o.workerName()))
+          throw new InternalCompilerError("Can not compile as "
+              + o.workerName() + " from " + Worker.getWorker().config.name);
       } catch (fabric.common.exceptions.UsageError x) {
         throw new InternalCompilerError("Could not initialize Fabric worker.",
             x);
