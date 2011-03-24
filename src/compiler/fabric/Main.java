@@ -121,17 +121,22 @@ public class Main extends polyglot.main.Main {
       if(extInfo.codebase() != null 
           && extInfo.getFabricOptions().codebaseFilename() != null) {
         FabricOptions opt = extInfo.getFabricOptions();
-        File f = new File(opt.output_directory, opt.codebaseFilename());
-        FileWriter fw = new FileWriter(f);
-        fw.write(SysUtil.oid(extInfo.codebase())+"\n");
-        fw.close();
+        File f = new File(opt.codebaseFilename());
+        if(!f.isAbsolute())
+          f = new File(opt.output_directory, f.getPath());      
+        FileWriter fw;
+        try {
+          fw = new FileWriter(f);
+          fw.write(SysUtil.oid(extInfo.codebase())+"\n");
+          fw.close();
+        } catch (IOException e) {
+          throw new TerminationException("Error writing codebase reference to "
+              + extInfo.getFabricOptions().codebaseFilename() + ": " + e.getMessage(), 1);
+        }
       }
     } catch (TerminationException e) {
       System.err.println(e.getMessage());
       System.exit(1);
-    } catch (IOException e) {
-      System.err.println("Error writing codebase reference to "
-          + extInfo.getFabricOptions().codebaseFilename());
     } finally {
       if (Worker.isInitialized()) {
         Worker.getWorker().shutdown();
