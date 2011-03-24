@@ -59,12 +59,12 @@ public class HandshakeAuthenticated implements Protocol {
   //////////////////////////////////////////////////////////////////////////////
   
   private final static class Receiver {
-    public final X509Certificate[] principalChain;
+    public final KeyMaterial keys;
     public final SSLSocketFactory  factory;
     
-    public Receiver(X509Certificate[] principalChain, SSLSocketFactory factory) {
-      this.principalChain = principalChain;
-      this.factory        = factory;
+    public Receiver(KeyMaterial keys, SSLSocketFactory factory) {
+      this.keys = keys;
+      this.factory = factory;
     }
   }
 
@@ -76,10 +76,9 @@ public class HandshakeAuthenticated implements Protocol {
     this.receivers = new HashMap<String, Receiver>(endpoints.length);
     
     for (KeyMaterial keys : endpoints) {
-      X509Certificate[] principalChain = keys.getPrincipalChain();
       SSLSocketFactory  factory        = createSSLFactory(keys);
 
-      Receiver receiver = new Receiver(principalChain, factory);
+      Receiver receiver = new Receiver(keys, factory);
       
       receivers.put(keys.getName(), receiver);
       NETWORK_CONNECTION_LOGGER.log(Level.INFO, "Adding receiver: {0}", keys.getName());
@@ -123,7 +122,7 @@ public class HandshakeAuthenticated implements Protocol {
     sock.startHandshake();
 
     DataOutputStream out = new DataOutputStream(sock.getOutputStream());
-    writeCertificateChain(out, receiver.principalChain);
+    writeCertificateChain(out, receiver.keys.getPrincipalChain());
     out.flush();
 
     NodePrincipal peer = getPrincipal(sock.getSession().getPeerCertificates());
