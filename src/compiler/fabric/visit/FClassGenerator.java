@@ -154,7 +154,9 @@ public class FClassGenerator extends ErrorHandlingVisitor {
             throw new SemanticException("Actual dependencies of " + src
                 + " do not match declared names.");
         }
-        Report.report(1, "Class " + pct + " matches the declared dependencies.");
+        if(Report.should_report(Topics.mobile, 3)) {
+          Report.report(1, "Class " + pct + " matches the declared dependencies.");
+        }
       }
     }
     return n;
