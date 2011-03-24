@@ -141,6 +141,7 @@
       <arg value="-cp"         /> <arg pathref="standard.classpath" />
       <arg value="-e" />
       <arg value="-debugpositions"/>
+      <arg value="-trusted-providers"/>
       <!--
         <arg value="-report"/> <arg value="solver=5"/>
         <arg value="-print"/> <arg value="RemoteCallWrapperAdder"/>
@@ -168,11 +169,12 @@
       <arg value="-g"   />
       <arg value="-cp"  /> <arg pathref="standard.classpath" />
       <arg value="-sig" />
+      <arg value="-trusted-providers" />
       <!--
         <arg value="-report"/> <arg value="frontend=1"/>
       -->
       <arg value="-d"          /> <arg value="${sif.sig-classes}" />
-      <arg value="-sourcepath" /> <arg value="${sif.sig-source}" />
+      <arg value="-sourcepath" /> <arg value="${sig-src}" />
       <srcfile />
       <fileset dir="${sig-src}" includes="**/*.fab" />
       <globmapper from="*.fab" to="*.class" />

@@ -51,6 +51,7 @@
       <arg value="-d"           /> <arg value="${transient.home}/classes" />
       <arg value="-sourcepath"  /> <arg value="${transient.home}/src" />
       <arg value="-cp"          /> <arg value="${transient.home}/classes" />
+      <arg value="-trusted-providers"/>
 
       <srcfile />
       <fileset dir="${transient.home}/src">
