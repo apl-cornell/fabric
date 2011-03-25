@@ -15,7 +15,7 @@ import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
-import fabric.worker.WorkerShell;
+import fabric.worker.shell.WorkerShell;
 
 /**
  * The Node class encapsulates the shared resources for multiple stores and

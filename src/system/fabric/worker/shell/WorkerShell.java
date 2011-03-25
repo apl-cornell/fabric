@@ -1,4 +1,4 @@
-package fabric.worker;
+package fabric.worker.shell;
 
 import java.io.*;
 import java.util.*;
@@ -7,6 +7,7 @@ import jline.ConsoleReader;
 import jline.ConsoleReaderInputStream;
 import jline.Terminal;
 import fabric.common.exceptions.InternalError;
+import fabric.worker.Worker;
 
 public class WorkerShell {
   protected final Worker worker;
