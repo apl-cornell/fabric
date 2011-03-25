@@ -53,6 +53,7 @@ import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
+import fabric.worker.shell.*;
 import fabric.worker.shell.WorkerShell;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
@@ -450,19 +451,20 @@ public final class Worker {
         }
       });
 
-      if (opts.app != null) {
-        // Run the requested application.
-        String app = opts.app[0];
-        String[] appArgs = new String[opts.app.length - 1];
-        for (int i = 0; i < appArgs.length; i++) {
-          appArgs[i] = opts.app[i + 1];
+      CommandSource commandSource;
+      if (opts.cmd != null) {
+        commandSource = new TokenizedCommandSource(opts.cmd);
+        if (opts.keepOpen) {
+          commandSource =
+              new ChainedCommandSource(commandSource,
+                  new InteractiveCommandSource(worker));
         }
-        
-        worker.runFabricApp(app, appArgs);
       } else {
-        // Drop into the worker shell.
-        new WorkerShell(worker).run();
+        commandSource = new InteractiveCommandSource(worker);
       }
+      
+      // Drop into the worker shell.
+      new WorkerShell(worker, commandSource).run();
     } finally {
       if (worker != null) worker.shutdown();
     }

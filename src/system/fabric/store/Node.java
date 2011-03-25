@@ -15,7 +15,7 @@ import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
-import fabric.worker.shell.WorkerShell;
+import fabric.worker.shell.*;
 
 /**
  * The Node class encapsulates the shared resources for multiple stores and
@@ -99,9 +99,11 @@ public class Node {
   //
   
   private final Store store;
+  private final Options opts;
 
   public Node(Options opts) {
     try {
+      this.opts = opts;
       this.store = new Store(this, opts.storeName);
 
     } catch (final Exception e) {
@@ -143,7 +145,13 @@ public class Node {
       Worker worker = Worker.getWorker();
       try {
         try {
-          new WorkerShell(worker).run();
+          CommandSource commandSource = new InteractiveCommandSource(worker);
+          if (opts.cmd != null) {
+            commandSource =
+                new ChainedCommandSource(new TokenizedCommandSource(opts.cmd),
+                    commandSource);
+          }
+          new WorkerShell(worker, commandSource).run();
         } catch (IOException e) {
           e.printStackTrace();
           t.join();
