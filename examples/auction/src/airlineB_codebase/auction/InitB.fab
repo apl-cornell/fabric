@@ -12,10 +12,12 @@ public class InitB where {*provider} equiv {*airlineB.Server.provider},
   {
 	  //already in transaction due to method constraints
       final Store store = worker$.getStore(Config.airlineBStoreName);
+	  final principal w = worker$.getPrincipal();
       if (store actsfor p 
+			&& store actsfor w
 			&& airlineB.Server.provider <= new label {store<-}) {
         Map root = store.getRoot();
-        root.put(Config.airlineBServerName, new airlineB.Server[store]@store(13500, 100));
+        root.put(Config.airlineBServerName, new airlineB.Server[w]@store(13500, 100));
       }
 	  else throw new Error(Config.airlineBStoreName + " must act for worker principal.");
   }

@@ -11,6 +11,11 @@ public class InitUserStore {
 
             System.out.println("Delegating to " +Config.userWorkerName);
             storeWorker.addDelegatesTo(userWorker);
+
+            DelegatingPrincipal brokerWorker = (DelegatingPrincipal) 
+                Worker.getWorker().getWorker(Config.brokerWorkerName).getPrincipal();
+            System.out.println("Delegating to " +Config.brokerWorkerName);
+            userWorker.addDelegatesTo(brokerWorker);
         }
     }
 }

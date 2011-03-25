@@ -16,6 +16,11 @@ public class InitBStore {
 
             System.out.println("Delegating to " +Config.airlineBWorkerName);
             storeWorker.addDelegatesTo(airlineBWorker);
+
+            DelegatingPrincipal brokerWorker = (DelegatingPrincipal) 
+                Worker.getWorker().getWorker(Config.brokerWorkerName).getPrincipal();
+            System.out.println("Delegating to " +Config.brokerWorkerName);
+            airlineBWorker.addDelegatesTo(brokerWorker);
         }
     }
 }
