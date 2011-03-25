@@ -19,12 +19,6 @@ public class Options extends fabric.common.Options {
    */
   public String name;
 
-  public String sigcp;
-
-  public String filsigcp;
-
-  public String code_cache;
-
   /**
    * Whether the worker should stay running after executing the commands
    * specified on the command line.
@@ -85,34 +79,6 @@ public class Options extends fabric.common.Options {
         throw new UsageError("Invalid timing category");
       }
     });
-
-    flags.add(new Flag(Kind.SECRET, new String[] { "--sigcp", "-sigcp" },
-        "<path>", "path for Fabric signatures") {
-      @Override
-      public int handle(String[] args, int index) {
-        Options.this.sigcp = args[index];
-        return index + 1;
-      }
-    });
-
-    flags.add(new Flag(Kind.SECRET, new String[] { "--filsigcp", "-filsigcp" },
-        "<path>", "path for FabIL signatures") {
-      @Override
-      public int handle(String[] args, int index) {
-        Options.this.filsigcp = args[index];
-        return index + 1;
-      }
-    });
-    
-    flags.add(new Flag(Kind.SECRET, "--code-cache", "<dir>",
-        "directory for code compiled by the worker") {
-      @Override
-      public int handle(String[] args, int index) {
-        Options.this.code_cache = args[index];
-        return index + 1;
-      }
-    });
-
   }
 
   @Override
@@ -120,12 +86,14 @@ public class Options extends fabric.common.Options {
     this.name = System.getenv("HOSTNAME");
     this.cmd = null;
     this.keepOpen = false;
-    this.code_cache = System.getProperty("user.dir") + File.separator + "." + name + "_cache";
   }
 
   @Override
   public void validateOptions() throws UsageError {
     if (null == this.name) throw new UsageError("No worker name specified");
+    if (null == this.code_cache)
+      this.code_cache =
+        System.getProperty("user.dir") + File.separator + "." + name + "_cache";
   }
 
   @Override

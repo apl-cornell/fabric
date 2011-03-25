@@ -10,6 +10,21 @@ import fabric.common.exceptions.UsageError;
 
 public abstract class Options {
   private final SortedSet<Flag> flags;
+  
+  /**
+   * Fabric signature path for dynamically compiled code 
+   */
+  public String sigcp;
+  
+  /**
+   * FabIL signature path for dynamically compiled code 
+   */
+  public String filsigcp;
+  
+  /**
+   * Directory for caching dynamically compiled code 
+   */
+  public String code_cache;
 
   /**
    * Whether to turn off SSL encryption for debugging purposes.
@@ -21,6 +36,7 @@ public abstract class Options {
     protected final Set<String> ids;
     protected final String params;
     protected final String usage;
+
 
     /**
      * @param id
@@ -356,6 +372,33 @@ public abstract class Options {
       @Override
       public int handle(String[] args, int index) throws UsageError {
         throw new UsageError("", 0, true);
+      }
+    });
+
+    flags.add(new Flag(Kind.SECRET, new String[] { "--sigcp", "-sigcp" },
+        "<path>", "path for Fabric signatures") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.sigcp = args[index];
+        return index + 1;
+      }
+    });
+
+    flags.add(new Flag(Kind.SECRET, new String[] { "--filsigcp", "-filsigcp" },
+        "<path>", "path for FabIL signatures") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.filsigcp = args[index];
+        return index + 1;
+      }
+    });
+    
+    flags.add(new Flag(Kind.SECRET, "--code-cache", "<dir>",
+        "directory for code compiled by the worker") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.code_cache = args[index];
+        return index + 1;
       }
     });
 

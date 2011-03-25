@@ -77,6 +77,9 @@ public final class Worker {
 
   // The directory for dynamically compiled mobile code
   public String code_cache;
+  
+  // The loader used by this worker for loading classes from fabric
+  public FabricClassLoader loader;
 
   // A map from store hostnames to Store objects
   protected final Map<String, RemoteStore> stores;
@@ -406,6 +409,15 @@ public final class Worker {
     initialize(props, principalOnum, initStoreSet);
   }
 
+  /**
+   * 
+   */
+  public FabricClassLoader getClassLoader() {
+    if(loader == null)
+      loader = new FabricClassLoader(Worker.class.getClassLoader()); 
+    return loader;
+  }
+  
   // TODO: throws exception?
   public static void main(String[] args) throws Throwable {
     WORKER_LOGGER.info("Worker node");
@@ -483,8 +495,7 @@ public final class Worker {
    */
   public void runFabricApp(String mainClassName, final String[] args)
       throws Throwable {
-    FabricClassLoader loader = new FabricClassLoader(Worker.class.getClassLoader()); 
-    Class<?> mainClass = loader.loadClass(SysUtil.mangle(mainClassName));
+    Class<?> mainClass = getClassLoader().loadClass(SysUtil.mangle(mainClassName));
     Method main =
         mainClass.getMethod("main", new Class[] { ObjectArray.class });
 

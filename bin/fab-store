@@ -24,7 +24,12 @@ done
 
 classpath="${FABRIC_STORE_CP}:${EXTRACP}:${classpath}"
 
-command="\"${JAVA}\" $vmargs -classpath \"$(fixpath $classpath)\" fabric.store.Node $args"
+#command="\"${JAVA}\" $vmargs -classpath \"$(fixpath $classpath)\" fabric.store.Node $args"
+sigcp="${TOP}/sig-classes/fabric:${TOP}/lib/fabric-sig.jar:${sigcp}"
+filsigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar:${filsigcp}"
+command="\"${JAVA}\" $vmargs -classpath \"$(fixpath $classpath)\" \
+					fabric.store.Node --sigcp \"$(fixpath ${sigcp})\" \
+                               --filsigcp \"$(fixpath ${filsigcp})\" ${args}"
 
 if [ -n "${verbose}" ]
 then

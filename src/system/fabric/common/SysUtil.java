@@ -40,7 +40,12 @@ public final class SysUtil {
 
     MessageDigest digest = Crypto.digestInstance();
 
-    ClassLoader classLoader = c.getClassLoader();
+    ClassLoader classLoader;
+    if(Worker.isInitialized())
+      classLoader = Worker.getWorker().getClassLoader();
+    else
+      classLoader = c.getClassLoader();
+    
     if (classLoader == null) {
       classLoader = ClassLoader.getSystemClassLoader();
     }
@@ -96,9 +101,18 @@ public final class SysUtil {
       CLASS_HASHING_LOGGER.finer("  Hash found in cache");
       return result;
     }
-
-    return hash(Class.forName(className));
-
+    Class<?> c;
+    try {
+      c = Class.forName(className);
+    }
+    catch(ClassNotFoundException e) {
+      //Class is not loaded yet.
+      if(Worker.isInitialized())
+        c = Worker.getWorker().getClassLoader().findClass(className);
+      else
+        throw e;
+    }
+    return hash(c);
   }
 
   public static URL locateClass(String className)

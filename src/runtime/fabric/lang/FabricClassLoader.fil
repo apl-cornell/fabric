@@ -132,26 +132,21 @@ public class FabricClassLoader extends ClassLoader {
   }
 
   public InputStream getResourceAsStream(String name) {
+    InputStream in = parent.getResourceAsStream(name);
+    if(in != null)
+      return in;
+    
     /* TODO: support non-class resources also */
     name = name.substring(0,name.length()-".class".length());
-
+    name = name.replace("/",".");
     if (!classBytecodeMap.containsKey(name)) {
-      FClass fcls = SysUtil.toProxy(name);
-      try 
-      {
-        Main.compile(fcls, classBytecodeMap);
-      } catch (IOException e) {
-        return null;
-      } catch (GeneralSecurityException e) {
+      try {
+        findClass(name);
+      } catch (ClassNotFoundException e) {
         return null;
       }
     }
-    
-    if (classBytecodeMap.containsKey(name)) {
-      byte native[] bytecode = (byte native[]) classBytecodeMap.get(name);
-      return new ByteArrayInputStream(bytecode);
-    } else { 
-      return null;
-    }
+    byte native[] bytecode = (byte native[]) classBytecodeMap.get(name);
+    return new ByteArrayInputStream(bytecode);
   }
 }

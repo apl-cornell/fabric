@@ -122,6 +122,10 @@ public class Node {
               (RemoteStore) new InProcessStore(store.name, store));
 
       Worker.initializeForStore(store.name, initStoreSet);
+      Worker worker = Worker.getWorker();
+      worker.sigcp = opts.sigcp;
+      worker.filsigcp = opts.filsigcp;
+      worker.code_cache = opts.code_cache;
 
       // initialize the store
       store.initialize();

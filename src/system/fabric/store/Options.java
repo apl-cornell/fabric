@@ -1,8 +1,10 @@
 package fabric.store;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.util.Set;
 
+import fabric.common.Options.Flag;
 import fabric.common.Options.Flag.Kind;
 import fabric.common.exceptions.UsageError;
 
@@ -91,6 +93,9 @@ public class Options extends fabric.common.Options {
   @Override
   public void validateOptions() throws UsageError {
     if (null == storeName) throw new UsageError("No store specified");
+    if (null == this.code_cache)
+      this.code_cache =
+        System.getProperty("user.dir") + File.separator + "." + storeName + "_cache";
   }
 
   @Override

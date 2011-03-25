@@ -72,7 +72,6 @@ public class Main extends polyglot.main.Main {
     }
 
     args.add(SysUtil.oid(fcls));
-
     Main main = new Main();
     try {
       ExtensionInfo extInfo = new fabric.ExtensionInfo(bytecodeMap);
@@ -173,8 +172,7 @@ public class Main extends polyglot.main.Main {
     fabric.ExtensionInfo extInfo = (fabric.ExtensionInfo) _extInfo;
     super.start(args,extInfo);
     
-    if(extInfo.codebase() != null 
-        && extInfo.getFabricOptions().codebaseFilename() != null) {
+    if(extInfo.getFabricOptions().codebaseFilename() != null) {
       FabricOptions opt = extInfo.getFabricOptions();
       File f = new File(opt.codebaseFilename());
       if(!f.isAbsolute())
@@ -184,6 +182,9 @@ public class Main extends polyglot.main.Main {
         fw = new FileWriter(f);
         fw.write(SysUtil.oid(extInfo.codebase()));
         fw.close();
+      } catch (fabric.common.exceptions.InternalError e) {
+        throw new TerminationException("Error writing codebase reference to "
+            + extInfo.getFabricOptions().codebaseFilename() + ": " + e.getMessage(), 1);
       } catch (IOException e) {
         throw new TerminationException("Error writing codebase reference to "
             + extInfo.getFabricOptions().codebaseFilename() + ": " + e.getMessage(), 1);
