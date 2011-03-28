@@ -33,7 +33,7 @@ class Main  {
 
 	  final Store b_store = worker$.getStore(Config.airlineBStoreName);   
 	  final RemoteWorker b_worker = worker$.getWorker(Config.airlineBWorkerName);   
-	  final principal airlineB = a_worker.getPrincipal();
+	  final principal airlineB = b_worker.getPrincipal();
 	  final label b_lbl = new label{airlineB->;airlineB<-};
 
 	  final Store user_store = worker$.getStore(Config.userStoreName);   
@@ -58,10 +58,8 @@ class Main  {
 	  final principal broker = broker_worker.getPrincipal();
 	  final label broker_lbl = new label{broker->;broker<-};
 
-	  final label auction = new label{*a_lbl; *b_lbl; *user_lbl};
-
       if(broker actsfor airlineA && broker actsfor airlineB && broker actsfor user
-	    	&& p equiv broker && provider actsfor broker) 
+	    	&& p equiv broker && provider actsfor broker && broker equiv broker_store) 
 	  	new AirlineExample[airlineA, airlineB, user, broker](a_serv,b_serv,user_serv).go(out2);
     }
 }

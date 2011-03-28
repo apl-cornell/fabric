@@ -39,55 +39,53 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 		println ("Starting Airline example");
 
 		//final principal airlines = new principal (AirlineA & AirlineB);
-
-		Agent[AirlineA, auction] agentA = a.getAgent(auction);
-		Agent[AirlineB, auction] agentB = b.getAgent(auction);
-		UserAgent[auction] userAgent = user.getAgent(auction);
-
-		try { agentA.prepareForAuction(); } catch (NullPointerException e) {} // ugly hack
-		try { agentB.prepareForAuction(); } catch (NullPointerException e) {} 
-
-		// this variable stores the winning agent. When winner == 0 we have no winner yet
-		int winner = 0;
-
-		Offer offerA = null;
-		Offer offerB = null;
-		try { offerB = agentB.makeFirstOffer(); } catch (NullPointerException e) {}
-
-		// main auction loop 
-		while (winner == 0) {
-			try { offerA = agentA.makeOffer (userAgent, offerB); // makeOffer returns null if it can't compete anymore.
-                        } catch (NullPointerException e) {}
- 
-                        boolean noChoice = false;
-                        try { noChoice =  userAgent.choice(offerA, offerB) != -1; 
-			} catch (NullPointerException e) {} 
-			if (offerA == null || noChoice ) {
-			    winner = 2; // declare that B is the winning agent 
-			    break;
-			}
-			noChoice = false;
-			
-			try { offerB = agentB.makeOffer (userAgent, offerA); 
-                        } catch (NullPointerException e) {}
-
-			try { noChoice = userAgent.choice(offerB, offerA) != -1;
-			} catch (NullPointerException e) {} 
-			if (offerB == null || noChoice) { 
-			    winner = 1; // declare that A is the winning agent
-			}
-		}
-
-		// with enough authority we can declassify anything... ;-) 
-		// 
-
-		int {Broker ->; Broker <-} w0 = endorse (winner, {*auction} to {Broker ->; Broker <-} );
+		final Store store = worker$.getStore(Config.brokerStoreName);
+		if(store actsfor Broker) {
 	
-	//	if (Broker actsfor airlines) {
-		int {} w = declassify ( w0, {} ); 
-				println ("Ending Airline example with winner " + w);
-	//	}
-		//}
+			Agent[AirlineA, auction] agentA = a.getAgent(store, auction);
+			Agent[AirlineB, auction] agentB = b.getAgent(store, auction);
+			UserAgent[auction] userAgent = user.getAgent(store, auction);
+	
+			agentA.prepareForAuction();
+			agentB.prepareForAuction();
+	
+			// this variable stores the winning agent. When winner == 0 we have no winner yet
+			int winner = 0;
+	
+			Offer offerA = null;
+			Offer offerB = null;
+			try { offerB = agentB.makeFirstOffer(); } catch (NullPointerException e) {}
+	
+			// main auction loop 
+			while (winner == 0) {
+				try { offerA = agentA.makeOffer (userAgent, offerB); // makeOffer returns null if it can't compete anymore.
+	                        } catch (NullPointerException e) {}
+	 
+	                        boolean noChoice = false;
+	                        try { noChoice =  userAgent.choice(offerA, offerB) != -1; 
+				} catch (NullPointerException e) {} 
+				if (offerA == null || noChoice ) {
+				    winner = 2; // declare that B is the winning agent 
+				    break;
+				}
+				noChoice = false;
+				
+				try { offerB = agentB.makeOffer (userAgent, offerA); 
+	                        } catch (NullPointerException e) {}
+	
+				try { noChoice = userAgent.choice(offerB, offerA) != -1;
+				} catch (NullPointerException e) {} 
+				if (offerB == null || noChoice) { 
+				    winner = 1; // declare that A is the winning agent
+				}
+			}
+	
+			// with enough authority we can declassify anything... ;-) 
+			int {Broker ->; Broker <-} w0 = endorse (winner, {*auction} to {Broker ->; Broker <-} );
+		
+			int {} w = declassify ( w0, {} ); 
+					println ("Ending Airline example with winner " + w);
+		}
     }
 
     public void println {} (String {} x) where provider <= {Broker <- }  { // encapsulate output so fatal error analysis kicks in... 

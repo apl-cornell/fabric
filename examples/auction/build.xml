@@ -217,4 +217,27 @@
       <arg line="--name ${user.worker} ${user.codebase}/auction.InitUser"/>
     </exec>	
   </target>
+
+  <target name="test-compile" description="">
+
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${home}"
+           dest="${home}/test-classes"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabric.home}/bin/fabc"/>
+      <arg value="-g"/>
+      <arg value="-debugpositions"/>
+      <arg value="-d"/> <arg value="${home}/test-classes"/>
+      <arg value="-cp"/> <arg pathref="standard.classpath" />
+      <arg value="-cp"/> <arg value="${home}/test-classes" />
+      <srcfile />
+      <fileset dir="${broker.src}/broker" includes="**/*.fab" />
+      <fileset dir="${airlineB.src}/airlineB" includes="**/*.fab" />
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+  </target>
 </project>
