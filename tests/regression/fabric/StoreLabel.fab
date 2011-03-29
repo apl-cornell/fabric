@@ -1,5 +1,5 @@
 public class StoreLabel[principal P, label L] 
-	where {P->;P<-} <= L , {*C.provider} equiv {P->;P<-} {
+	where {P->;P<-} <= L , {*StoreLabel.provider} equiv {P->;P<-} {
 
 	final Store{P->;P<-;L} store;
 
