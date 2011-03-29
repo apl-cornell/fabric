@@ -14,9 +14,15 @@ public class LabelUtil {
        
     public static native ConfPolicy{owner; readers; *lbl; lbl} 
        readerPolicy(label lbl, principal owner, principal{*lbl}[] readers);
+
+    public static native ConfPolicy{owner; reader} 
+       readerPolicy(principal owner, principal reader);
        
     public static native IntegPolicy{owner; writers; *lbl; lbl} 
        writerPolicy(label lbl, principal owner, principal{*lbl}[] writers);
+
+    public static native IntegPolicy{owner; writer} 
+       writerPolicy(principal owner, principal writer);
        
     public static native label toLabel(ConfPolicy cPolicy, IntegPolicy iPolicy) throws (NullPointerException{cPolicy;iPolicy});
        
