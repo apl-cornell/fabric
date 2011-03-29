@@ -1,7 +1,8 @@
 package user;
 public class User [principal TheUser] implements broker.User[TheUser] where {*broker.User.provider} <= {*provider} {
-    public broker.UserAgent[auction] {TheUser->;TheUser<-} getAgent{TheUser->;TheUser<-}(Store{TheUser<-} brokerStore, label{TheUser<-} auction)
+    public broker.UserAgent[auction] {TheUser->;TheUser<-} getAgent{TheUser->;TheUser<-}(label{TheUser<-} auction)
 	{
-		return new UserAgent[auction]@brokerStore();		
+		final Store store = worker$.getLocalStore();
+		return new UserAgent[auction]@store();		
 	}
 }

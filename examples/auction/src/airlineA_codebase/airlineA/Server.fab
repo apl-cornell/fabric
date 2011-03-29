@@ -23,9 +23,15 @@ public class Server[principal Airline] implements broker.Server[Airline]
 		return this.lowestprice;
     }
 
-    public broker.Agent[Airline, auction]{Airline->;Airline<-} getAgent {Airline->;Airline<-} (Store{Airline<-} brokerStore, label{Airline<-} auction) 
-		where {Airline->;Airline<-} <= {*auction}, brokerStore actsFor Airline
+    public broker.Agent[Airline, auction]{Airline->;Airline<-} getAgent {Airline->;Airline<-} (label{Airline<-} auction) 
+		where {Airline->;Airline<-} <= {*auction}
 	{
-		return new Agent[Airline, auction]@brokerStore(this, brokerStore);
+		final Store store = worker$.getLocalStore();
+		//if(store actsfor Airline) --- XXX: why is this insufficient?
+		if(new label{Airline->;Airline<-} <= new label{*->store} 
+			&& new label {*<-store} <= new label{Airline->;Airline<-})
+			return new Agent[Airline, auction]@store(this);
+		else 
+			throw new Error("Worker is not trusted to create agent.");
     }
 }

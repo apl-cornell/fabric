@@ -19,7 +19,7 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 				{*provider} equiv {*User.provider},
 				{*provider} <= {Broker<-}
 {
-	final label{Broker<-} auction = new label{AirlineA<-;AirlineB<-;TheUser<-; Broker ->};
+	final label{Broker<-} auction_lbl = new label{AirlineA<-;AirlineB<-;TheUser<-; Broker ->};
 	final Server[AirlineA]{Broker<-} a;
 	final Server[AirlineB]{Broker<-} b;
 	final User[TheUser]{Broker<-} user;
@@ -42,9 +42,9 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 		final Store store = worker$.getStore(Config.brokerStoreName);
 		if(store actsfor Broker) {
 	
-			Agent[AirlineA, auction] agentA = a.getAgent(store, auction);
-			Agent[AirlineB, auction] agentB = b.getAgent(store, auction);
-			UserAgent[auction] userAgent = user.getAgent(store, auction);
+			Agent[AirlineA, auction_lbl] agentA = a.getAgent(auction_lbl);
+			Agent[AirlineB, auction_lbl] agentB = b.getAgent(auction_lbl);
+			UserAgent[auction_lbl] userAgent = user.getAgent(auction_lbl);
 	
 			agentA.prepareForAuction();
 			agentB.prepareForAuction();
@@ -70,22 +70,22 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 				}
 				noChoice = false;
 				
-				try { offerB = agentB.makeOffer (userAgent, offerA); 
-	                        } catch (NullPointerException e) {}
-	
-				try { noChoice = userAgent.choice(offerB, offerA) != -1;
-				} catch (NullPointerException e) {} 
+				offerB = agentB.makeOffer (userAgent, offerA); 
+				noChoice = userAgent.choice(offerB, offerA) != -1;
+
 				if (offerB == null || noChoice) { 
 				    winner = 1; // declare that A is the winning agent
 				}
 			}
 	
 			// with enough authority we can declassify anything... ;-) 
-			int {Broker ->; Broker <-} w0 = endorse (winner, {*auction} to {Broker ->; Broker <-} );
+			int {Broker ->; Broker <-} w0 = endorse (winner, {*auction_lbl} to {Broker ->; Broker <-} );
 		
 			int {} w = declassify ( w0, {} ); 
-					println ("Ending Airline example with winner " + w);
+			println ("Ending Airline example with winner " + w);
 		}
+		else
+			throw new Error("Store does not act for broker");
     }
 
     public void println {} (String {} x) where provider <= {Broker <- }  { // encapsulate output so fatal error analysis kicks in... 

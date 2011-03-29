@@ -201,7 +201,7 @@
     </apply>
   </target>
 
-  <target name="init-example" depends="load-codebases">
+  <target name="init-remote" depends="load-codebases">
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
       <arg line="--name ${airlineA.worker} ${airlineA.codebase}/auction.InitA"/>
@@ -218,26 +218,47 @@
     </exec>	
   </target>
 
-  <target name="test-compile" description="">
+  <target name="build-local" description="">
 
     <apply executable="bash"
            parallel="true"
            failonerror="true"
            dir="${home}"
-           dest="${home}/test-classes"
+           dest="${home}/classes"
            relative="false"
            skipemptyfilesets="true"
            vmlauncher="false">
       <arg value="${fabric.home}/bin/fabc"/>
       <arg value="-g"/>
       <arg value="-debugpositions"/>
-      <arg value="-d"/> <arg value="${home}/test-classes"/>
+      <arg value="-trusted-providers"/>
+      <arg value="-e"/>
+      <arg value="-d"/> <arg value="${home}/classes"/>
       <arg value="-cp"/> <arg pathref="standard.classpath" />
-      <arg value="-cp"/> <arg value="${home}/test-classes" />
+      <arg value="-cp"/> <arg value="${home}/classes" />
       <srcfile />
-      <fileset dir="${broker.src}/broker" includes="**/*.fab" />
-      <fileset dir="${airlineB.src}/airlineB" includes="**/*.fab" />
+      <fileset dir="${broker.src}" includes="**/*.fab" />
+      <fileset dir="${airlineA.src}" includes="**/*.fab" />
+      <fileset dir="${airlineB.src}" includes="**/*.fab" />
+      <fileset dir="${user.src}" includes="**/*.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
+  </target>
+
+  <target name="init-local" description="" depends="build-local">
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${airlineA.worker} auction.InitA"/>
+    </exec>
+    
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${airlineB.worker} auction.InitB"/>
+    </exec>
+    
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${user.worker} auction.InitUser"/>
+    </exec>	
   </target>
 </project>

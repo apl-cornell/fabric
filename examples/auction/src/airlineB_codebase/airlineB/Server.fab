@@ -23,9 +23,10 @@ public class Server[principal Airline] implements broker.Server[Airline]
 		return this.lowestprice;
     }
 
-    public broker.Agent[Airline, auction]{Airline->;Airline<-} getAgent {Airline->;Airline<-} (Store{Airline<-} brokerStore, label{Airline<-} auction) 
-		where {Airline->;Airline<-} <= {*auction}, brokerStore actsFor Airline
+    public broker.Agent[Airline, auction]{Airline->;Airline<-} getAgent {Airline->;Airline<-} (label{Airline<-} auction) 
+		where {Airline->;Airline<-} <= {*auction}
 	{
-		return new Agent[Airline, auction]@brokerStore(this, brokerStore);
+		final Store store = worker$.getLocalStore();
+		return new Agent[Airline, auction]@store(this);
     }
 }
