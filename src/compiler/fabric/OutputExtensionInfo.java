@@ -58,13 +58,14 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
     FabILOptions opt = (FabILOptions) getOptions();
     if(!opt.runWorker())
       return null;
-    //XXX: how to set label?
-    // destination should have integrity of worker and configurable
-    // consistency
+    //by default, code is public with the highest integrity 
+    // the worker can claim, which is {s<-w} where s is the
+    // destination store principal and w is the worker principal
     if(destLabel == null) {        
       Store s = destinationStore();
+      NodePrincipal sp = s.getPrincipal();
       NodePrincipal np = Worker.getWorker().getPrincipal();
-      destLabel = LabelUtil._Impl.toLabel(s, LabelUtil._Impl.writerPolicy(s, np, np));
+      destLabel = LabelUtil._Impl.toLabel(s, LabelUtil._Impl.writerPolicy(s, sp, np));
     }
     return destLabel;
   }
