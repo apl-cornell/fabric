@@ -16,11 +16,21 @@ public class InitUser where {*provider} equiv {*user.User.provider},
 	  final principal w = worker$.getPrincipal();
 	  if(store actsfor p
 			&& store actsfor w
-			&& user.User.provider <= new label {store<-}) {
+			&& user.User.provider <= new label {store<-w}) {
         Map root = store.getRoot();
       	root.put(Config.userServerName, new user.User[w]@store());
       }
-	  else
-        throw new Error(Config.userStoreName + " must act for worker principal.");
+	  else {
+		if(store actsfor p)
+			if(store actsfor w)
+				if(store actsfor w)
+					;
+				else 
+        			throw new Error("User.provider must be <= {store<-worker}.");
+			else
+        		throw new Error(Config.userStoreName + " must act for worker .");
+		else		
+        	throw new Error(Config.userStoreName + " must act for principal p");
+	  }
   }
 }
