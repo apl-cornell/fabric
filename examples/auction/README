@@ -4,14 +4,44 @@ confidential purchasing strategy.  Each seller may make an offer based on the
 buyer, and the buyer may then choose among these options.  At the end of the
 auction, the identity of the winner is revealed to all participants.
 
-To compile with Jif, run 
+First, compile the initialization code that will set up the principal hierarchy.
 
-$ jifc -fail-on-exception -untrusted-providers Main.jif
+	$ ant fabil-init
 
-To run
+Next, start the stores and workers, each in a separate terminal window.
 
-$ jif Main 
+	term1$ bin/start-store --name brokerStore
+	term2$ bin/start-store --name airlineAStore
+	term3$ bin/start-store --name airlineBStore
+	term4$ bin/start-store --name brokerStore
+	
+	term5$ bin/start-worker --name brokerWorker
+	term6$ bin/start-worker --name airlineAWorker
+	term7$ bin/start-worker --name airlineBWorker
+	term8$ bin/start-worker --name brokerWorker
 
-Starting Airline example
-Ending Airline example with winner 2
+Now run the initialization program for each store.
+	
+	brokerStore> run auction.InitBrokerStore
+	airlineAStore> run auction.InitAStore
+	airlineBStore> run auction.InitBStore
+	userStore> run auction.InitUserStore
 
+Next, publish each entity's mobile code...
+
+	$ ant publish-all
+
+And create a Server object on each airline store, and a User object on the
+user's store. 
+
+	$ ant init-remote
+
+Now we are ready to run the example.  Examine the broker worker's generated 
+codebase file.
+	$ cat codebases/brokerWorker.codebase
+	fab://brokerStore/34
+
+Run the mobile code example by specifying auction.Main in the generated
+codebase.
+
+	brokerWorker> run fab://brokerStore/34/auction.Main 
