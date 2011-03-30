@@ -29,13 +29,13 @@ public class SocialNetwork[principal SN, principal A, principal B, principal C] 
         Agent[user, SN] agent = new Agent();
         final principal bbFriends = bdayBoy.friends;
         endorse(bbFriends, {bb<-} to {SN<-})
-        if (SN actsfor bbFriends) {
+        if (user actsfor bbFriends) {
 		  agent.happyBirthday(bb, bdayBoy);
         }
       
         final principal bgFriends = bdayGirl.friends;
         endorse(bgFriends, {bg<-} to {SN<-})
-        if (SN actsfor bgFriends) {
+        if (user actsfor bgFriends) {
 		  agent.happyBirthday(bg, bdayGirl);
         }      
       
