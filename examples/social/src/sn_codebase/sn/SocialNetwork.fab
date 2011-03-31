@@ -26,8 +26,8 @@ public class SocialNetwork[principal SN, principal A, principal B, principal C] 
       final User[bb, SN] bdayBoy = new User(new label {bb->bbf; bb<-}, 10, bbf);
       final User[bg, SN] bdayGirl = new User(new label {bg->bgf; bg<-}, 10, new principal (_));
 
-	  final Store agentStore = worker$.getStore("agentStore");
-	  	Map root = agentStore.getRoot();
+	  final Store socialStore = worker$.getStore("socialStore");
+	  	Map root = socialStore.getRoot();
         Agent[user, SN] userAgent = (Agent[user,SN])root.get("bdayAgent");
         final principal bbFriends = bdayBoy.friends;
         endorse(bbFriends, {bb<-} to {SN<-})
