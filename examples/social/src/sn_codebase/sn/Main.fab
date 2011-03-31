@@ -1,7 +1,9 @@
+package sn;
+
 import java.io.PrintStream;
 import fabric.runtime.Runtime;
 
-class Main {
+class Main where {*sn.Agent.provider} equiv {*provider}, {*sn.SocialNetwork.provider} equiv {*sn.Agent.provider} {
     public static final void main{⊤ <- }  (principal{*provider} p, String args[])  
 	throws SecurityException, IllegalArgumentException  
 	       where caller(p), provider actsfor p, {*provider} equiv {*SocialNetwork.provider},
@@ -43,8 +45,8 @@ class Main {
 
 
 	  if (x actsfor a && x actsfor b && x actsfor c && p equiv x && provider actsfor x) {
-		  SocialNetwork[x, a, b, c] sn = new SocialNetwork[x, a , b, c](out2);
-		  sn.go();
+		  SocialNetwork[x, a, b, c] snet = new SocialNetwork[x, a , b, c](out2);
+		  snet.go();
 	  }
     }
 }

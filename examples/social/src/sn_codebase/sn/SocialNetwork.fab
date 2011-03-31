@@ -1,8 +1,10 @@
+package sn;
 import java.io.PrintStream;
 import fabric.runtime.Runtime;
+import fabric.util.Map;
 
 public class SocialNetwork[principal SN, principal A, principal B, principal C] authority (SN) 
-    where {*provider} actsfor SN, {*provider} <= {SN <- }
+    where {*Agent.provider} equiv {*provider}, {*provider} actsfor SN, {*provider} <= {SN <- }
 {
   
   protected final PrintStream[{}] out;
@@ -24,24 +26,23 @@ public class SocialNetwork[principal SN, principal A, principal B, principal C] 
       final User[bb, SN] bdayBoy = new User(new label {bb->bbf; bb<-}, 10, bbf);
       final User[bg, SN] bdayGirl = new User(new label {bg->bgf; bg<-}, 10, new principal (_));
 
-
-      if (new label {*Agent.provider} actsfor user && new label{*Agent.provider} <= new label {SN <- user}) {
-        Agent[user, SN] agent = new Agent();
+	  final Store agentStore = worker$.getStore("agentStore");
+	  	Map root = agentStore.getRoot();
+        Agent[user, SN] userAgent = (Agent[user,SN])root.get("bdayAgent");
         final principal bbFriends = bdayBoy.friends;
         endorse(bbFriends, {bb<-} to {SN<-})
         if (user actsfor bbFriends) {
-		  agent.happyBirthday(bb, bdayBoy);
+		  userAgent.happyBirthday(bb, bdayBoy);
         }
       
         final principal bgFriends = bdayGirl.friends;
         endorse(bgFriends, {bg<-} to {SN<-})
         if (user actsfor bgFriends) {
-		  agent.happyBirthday(bg, bdayGirl);
+		  userAgent.happyBirthday(bg, bdayGirl);
         }      
       
         printWall(bb, bdayBoy);
         printWall(bg, bdayGirl);
-      }
     }
   }
   
@@ -64,6 +65,6 @@ public class SocialNetwork[principal SN, principal A, principal B, principal C] 
 	  // Should be able to write this, but jifc is too brain-dead to reason accurately
 	  // enough.
 	  //         if (endorse(SN actsfor bdayBoy.friends, {bb<-} to {SN<-})) {
-	  //           agent.happyBirthday(bb, bdayBoy);
+	  //           userAgent.happyBirthday(bb, bdayBoy);
 	  //         }
       
