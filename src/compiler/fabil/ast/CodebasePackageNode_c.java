@@ -35,13 +35,11 @@ public class CodebasePackageNode_c extends PackageNode_c implements
     cbp = cbp.source(source);
     
     // Only qualify packages in remote source by the codebase
-
-    if (source.isRemote() 
-        && (cbp == null || !cbp.isCanonical())) {
-
+    if (source.isRemote()) {
       cbp = cbp.codebase(source.codebase());
       return (CodebasePackageNode) package_(cbp);
-    } else return this;
+    } else 
+      return this;
   }
 
   public CodebasePackageNode source(CodebaseSource source) {

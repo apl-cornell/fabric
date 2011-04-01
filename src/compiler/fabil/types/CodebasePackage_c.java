@@ -27,9 +27,13 @@ public class CodebasePackage_c extends Package_c implements CodebasePackage {
     return cbp;
   }
   
-  public CodebasePackage source(CodebaseSource source) {
+  public CodebasePackage source(CodebaseSource src) {
+    if (src == null && source == null) return this;
+
+    if (source != null && src != null && source.equals(src)) return this;
+
     CodebasePackage_c cbp = (CodebasePackage_c) copy();
-    cbp.source = source;
+    cbp.source = src;
     return cbp;
   }
   
