@@ -1,13 +1,12 @@
-package tests;
 /**
  * {SN<-A} = provider
  */
 //XXX: BUG: During serialization of today_remote() we get a stack overflow.
 // Strangely, only when sourcepath is specified.
 
-public class Agent[principal A, principal SN] 
+public class RemoteWrapperBug[principal A, principal SN] 
     where SN actsfor A, {*provider} actsfor A, {*provider} <= {SN<-A} {
-  public int{SN<-} today() { return 10; }
+  private int{SN<-} today() { return 10; }
 
   public void happyBirthday{bdayPerson<-bdayUser.friends, A}
       (final principal{SN<-} bdayPerson, RemoteWrapperBugHelper[bdayPerson, SN]{SN<-} bdayUser)
