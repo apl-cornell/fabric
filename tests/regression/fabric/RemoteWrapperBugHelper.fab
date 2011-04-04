@@ -1,25 +1,3 @@
-/**
- * Parameterized on user and social network
- * Labels on birthday and wall posts are configurable
- */
-public class RemoteWrapperBugHelper[principal U, principal SN]
-    where SN actsfor U {
-  /**
-   * Label on birthday.
-   */
-  public final label{U<-} lbl;
-  public int{*lbl} birthday;
-
-  public final principal{U<-} friends;
-  
-  // wall is private, but friends can send messages
-  public String{U->U;U<-friends} wall; 
-  
-  public RemoteWrapperBugHelper(label{U<-} lbl, int{*lbl} birthday, 
-		principal{U<-} friends) {
-    this.lbl = lbl;
-    this.birthday = birthday;
-    this.friends = friends;
-    this.wall = "";
-  }
+public class RemoteWrapperBugHelper[principal U] {
+  public final principal p = null;
 }
