@@ -99,7 +99,7 @@ public class FabricScheduler extends JifScheduler {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler s) {
         List<Goal> l = new ArrayList<Goal>();
-        l.add(Parsed(job));
+        l.add(ExplicitSuperclassesAdded(job));
         return l;
       }
     });
