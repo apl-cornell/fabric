@@ -141,28 +141,13 @@ public class FabricScheduler extends JifScheduler {
     return g;
   }
   
-  public Goal DisambiguationAfterWrappers(final Job job) {
-    TypeSystem ts = job.extensionInfo().typeSystem();
-    NodeFactory nf = job.extensionInfo().nodeFactory();
-    Goal g = internGoal(new polyglot.frontend.goals.Disambiguated(job, ts, nf) {
-      @Override
-      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
-        l.add(RemoteCallWrappersUpdated(job));
-        return l;
-      }
-    });
-    return g;
-    
-  }
-
   @Override
   public Goal TypeChecked(Job job) {
     FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();    
     Goal g = super.TypeChecked(job);
     try {
       if(!opts.signatureMode()) {
-        addPrerequisiteDependency(g, DisambiguationAfterWrappers(job));
+        addPrerequisiteDependency(g, RemoteCallWrappersUpdated(job));
       } else {
         addPrerequisiteDependency(g, Disambiguated(job));
       }
