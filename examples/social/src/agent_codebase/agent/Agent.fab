@@ -2,16 +2,19 @@ package agent;
 /**
  * {SN<-A} = provider
  */
-import sn.User;
+//XXX: BUG: Codebase lookup fails to disambiguate
+// use of bdayUser.friends 
+import social.User;
 
-public class Agent[principal A, principal SN] implements sn.Agent[A,SN]
+public class Agent[principal A, principal SN] implements social.Agent[A,SN]
     where SN actsfor A, {*provider} actsfor A, {*provider} <= {SN<-A}, 
-		{*sn.Agent.provider} <= {*provider} {
-  public int{SN<-} today() { return 10; }
-
+		{*social.Agent.provider} <= {*provider} {
+  private int{SN<-} today() { return 10; }
   public void happyBirthday{bdayPerson<-bdayUser.friends, A}
       (final principal{SN<-} bdayPerson, User[bdayPerson, SN]{SN<-} bdayUser)
       where SN actsfor bdayPerson, SN actsfor bdayUser.friends {
+  		final principal bp = bdayPerson;
+  		social.User[bp,SN] foo = bdayUser; 
 	  //TODO: comment this check : (I don't understand it)
       if (bdayUser.lbl <= new label {bdayPerson-> ; bdayPerson<-bdayUser.friends}) {
 	  //Does the agent actfor a friend of the user?

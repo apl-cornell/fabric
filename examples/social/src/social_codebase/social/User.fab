@@ -1,4 +1,4 @@
-package sn;
+package social;
 
 /**
  * Parameterized on user and social network

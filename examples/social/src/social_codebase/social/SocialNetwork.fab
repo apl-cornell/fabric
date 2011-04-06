@@ -1,4 +1,4 @@
-package sn;
+package social;
 import java.io.PrintStream;
 import fabric.runtime.Runtime;
 import fabric.util.Map;

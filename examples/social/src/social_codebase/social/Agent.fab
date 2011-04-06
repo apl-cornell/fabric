@@ -1,4 +1,4 @@
-package sn;
+package social;
 /**
  * {SN<-A} = provider
  */
