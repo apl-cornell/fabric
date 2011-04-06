@@ -1,5 +1,6 @@
 package fabric.extension;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,6 +11,7 @@ import polyglot.ast.ClassMember;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
+import jif.ast.JifUtil;
 import jif.extension.JifClassBodyExt;
 import jif.translate.ToJavaExt;
 import jif.types.JifContext;
@@ -17,10 +19,14 @@ import jif.types.JifTypeSystem;
 import jif.visit.LabelChecker;
 
 public class ClassBodyJifExt_c extends JifClassBodyExt {
+  protected List<ClassMember> remote_wrappers;
+
   public ClassBodyJifExt_c(ToJavaExt toJava) {
     super(toJava);
+    this.remote_wrappers = new ArrayList<ClassMember>();
   }
   
+  @SuppressWarnings("unchecked")
   @Override
   public Node labelCheck(LabelChecker lc) {
     ClassBody n = (ClassBody) node();
@@ -32,24 +38,13 @@ public class ClassBodyJifExt_c extends JifClassBodyExt {
     A.setCurrentCodePCBound(jts.notTaken());
     lc = lc.context(A);
 
-//    SilenceableSolverGLB solver = (SilenceableSolverGLB)lc.solver();
-
-    // find all the final fields that have an initializer
-    List<ClassMember> members = new LinkedList<ClassMember>();
-
+    List<ClassMember> members = new ArrayList<ClassMember>();
+    // label check each member, but mute reporting of errors on
+    //  remote wrappers.
     for (ClassMember cm : (List<ClassMember>)n.members()) {
-      boolean isRemoteWrapper = false;
-      if (cm instanceof MethodDecl) {
-        MethodDecl md = (MethodDecl)cm;
-        isRemoteWrapper = md.name().endsWith("_remote");
-        SilenceableSolverGLB.mute(isRemoteWrapper);
-      }
       try {
         ClassMember toAdd = (ClassMember)lc.context(A).labelCheck(cm);
         if (toAdd != null) {
-//          if (isRemoteWrapper) {
-//            System.err.println("one!");
-//          }
           members.add(toAdd);
         }
       } 
@@ -57,9 +52,33 @@ public class ClassBodyJifExt_c extends JifClassBodyExt {
         // report it and keep going.
         lc.reportSemanticException(e);
       }
-      SilenceableSolverGLB.mute(false);
     }
+    
+    List<ClassMember> new_wrappers = new ArrayList<ClassMember>();
+    SilenceableSolverGLB.mute(true);
+    for (ClassMember cm : remoteWrappers()) {
+      try {
+        ClassMember toAdd = (ClassMember)lc.context(A).labelCheck(cm);
+        if (toAdd != null) {
+          new_wrappers.add(toAdd);
+        }
+      } 
+      catch (SemanticException e) {
+        // report it and keep going.
+        lc.reportSemanticException(e);
+      }
+    }
+    SilenceableSolverGLB.mute(false);
 
+    setRemoteWrappers(new_wrappers);
     return n.members(members);
+  }
+  
+  public List<ClassMember> remoteWrappers() {
+    return remote_wrappers;
+  }
+
+  public void setRemoteWrappers(List<ClassMember> remote_wrappers) {
+    this.remote_wrappers = remote_wrappers;
   }
 }

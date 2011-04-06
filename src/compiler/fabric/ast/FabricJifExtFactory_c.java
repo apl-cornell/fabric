@@ -47,7 +47,7 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   
   @Override
   public Ext extClassBodyImpl() {
-    return new ClassBodyJifExt_c(new ClassBodyToJavaExt_c());
+    return new ClassBodyJifExt_c(new ClassBodyToFabilExt_c());
   }
   
   @Override
@@ -62,7 +62,7 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   
   @Override
   public Ext extMethodDeclImpl() {
-    return new JifMethodDeclExt(new MethodDeclToFabilExt_c());
+    return new MethodDeclJifExt(new MethodDeclToFabilExt_c());
   }
   
   @Override

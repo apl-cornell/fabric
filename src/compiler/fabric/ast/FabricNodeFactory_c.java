@@ -1,26 +1,35 @@
 package fabric.ast;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
-import fabil.ast.CodebaseDisamb;
-import fabil.ast.FabILDisamb_c;
-import fabil.ast.CodebasePackageNode;
-import fabil.ast.CodebasePackageNode_c;
-import fabric.common.SysUtil;
-import fabric.extension.FabricExt;
-import fabric.extension.LocatedExt_c;
-import fabric.lang.Codebase;
-import fabric.lang.FClass;
-
-import jif.ast.*;
-import polyglot.ast.*;
+import jif.ast.AmbPrincipalNode;
+import jif.ast.JifClassDecl;
+import jif.ast.JifNodeFactory_c;
+import jif.ast.LabelNode;
+import jif.ast.NewLabel;
+import polyglot.ast.Call;
+import polyglot.ast.ClassBody;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.Expr;
+import polyglot.ast.Id;
+import polyglot.ast.New;
+import polyglot.ast.Node;
+import polyglot.ast.PackageNode;
+import polyglot.ast.Receiver;
+import polyglot.ast.SourceFile;
+import polyglot.ast.Stmt;
+import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
 import polyglot.types.Package;
+import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import polyglot.util.StringUtil;
+import fabil.ast.CodebaseDisamb;
+import fabil.ast.CodebasePackageNode;
+import fabil.ast.CodebasePackageNode_c;
+import fabric.extension.FabricExt;
+import fabric.extension.LocatedExt_c;
 
 /**
  * NodeFactory for fabric extension.
@@ -247,6 +256,13 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     n = (JifClassDecl) n.del(delFactory().delClassDecl());
     return n;
   }
+
+  @Override
+  public ClassBody ClassBody(Position pos, List members) {
+    ClassBody n = new ClassBody_c(pos, CollectionUtil.nonNullList(members));
+    n = (ClassBody)n.ext(extFactory().extClassBody());
+    n = (ClassBody)n.del(delFactory().delClassBody());
+    return n;  }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override

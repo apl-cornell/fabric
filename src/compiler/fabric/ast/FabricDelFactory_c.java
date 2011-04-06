@@ -4,6 +4,7 @@ import fabil.extension.FabILImportDel_c;
 import fabric.extension.FabricCallDel;
 import fabric.extension.FabricNewDel;
 import fabric.extension.FabricNewLabelDel;
+import fabric.extension.MethodDeclJifDel;
 import jif.ast.JifDelFactory_c;
 import polyglot.ast.JL;
 
@@ -204,4 +205,10 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
   protected JL delImportImpl() {
     return new FabILImportDel_c();
   }
+
+  @Override
+  protected JL delMethodDeclImpl() {
+    return new MethodDeclJifDel();
+  }
+  
 }
