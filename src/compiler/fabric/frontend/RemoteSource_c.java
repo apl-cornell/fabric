@@ -42,7 +42,13 @@ public class RemoteSource_c extends UTF8FileSource implements RemoteSource {
   public Reader open() {
     if(reader == null) {
       String src = fcls.getSource();
-      ByteArrayInputStream bais = new ByteArrayInputStream(src.getBytes());
+      ByteArrayInputStream bais;
+      try {
+        bais = new ByteArrayInputStream(src.getBytes("UTF-8"));
+      } catch (UnsupportedEncodingException e) {
+        System.err.println("Bad Java implementation: UTF-8 encoding must be supported");
+        return null;
+      }
       reader = createReader(bais);
     }
     return reader;
