@@ -15,12 +15,13 @@ import polyglot.frontend.FileSource;
 import polyglot.frontend.SourceLoader;
 import polyglot.main.Report;
 import polyglot.util.InternalCompilerError;
+import fabil.types.CodebaseTypeSystem;
 import fabric.Topics;
+import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.worker.Store;
 import fabric.worker.Worker;
-import fabric.common.SysUtil;
 
 public class FabricSourceLoader extends SourceLoader {
   protected Map<URI, Codebase> codebaseCache;
@@ -85,6 +86,12 @@ public class FabricSourceLoader extends SourceLoader {
 
   @SuppressWarnings("unchecked")
   protected FileSource checkCodeBaseForSource(URI uri, String className) {
+    CodebaseTypeSystem ts = (CodebaseTypeSystem) sourceExt.typeSystem();
+    
+    //Never lookup platform types in remote codebases
+    if(ts.localTypesOnly() || ts.isPlatformType(className))
+      return null;
+
     Codebase codebase = codebaseCache.get(uri);
 
     if (codebase == null) {
@@ -126,22 +133,6 @@ public class FabricSourceLoader extends SourceLoader {
     }
 
     return null;
-  }
-
-  /**
-   * The current user directory. We make it static so we don't need to keep on
-   * making copies of it.
-   */
-  protected static File current_dir = null;
-
-  /**
-   * The current user directory.
-   */
-  protected static File current_dir() {
-    if (current_dir == null) {
-      current_dir = new File(System.getProperty("user.dir"));
-    }
-    return current_dir;
   }
 
   // This is mostly copied from SourceLoader_c.checkForSource
