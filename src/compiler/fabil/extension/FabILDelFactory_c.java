@@ -71,6 +71,6 @@ public class FabILDelFactory_c extends AbstractDelFactory_c implements
 
   @Override
   protected JL delImportImpl() {
-    return new FabILImportDel_c();
+    return new CodebaseImportDel_c();
   }
 }

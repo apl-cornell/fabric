@@ -1,26 +1,28 @@
 package fabil.types;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 
-import fabil.frontend.CodebaseSource;
-import fabric.common.SysUtil;
-import fabric.lang.Codebase;
-import fabric.lang.FClass;
 import polyglot.main.Report;
-import polyglot.types.*;
+import polyglot.types.ImportTable;
+import polyglot.types.Importable;
+import polyglot.types.Named;
+import polyglot.types.NoClassException;
 import polyglot.types.Package;
+import polyglot.types.ParsedClassType;
+import polyglot.types.SemanticException;
+import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
+import fabil.frontend.CodebaseSource;
+import fabric.Topics;
+import fabric.common.SysUtil;
+import fabric.lang.Codebase;
+import fabric.lang.FClass;
 
 public class CodebaseImportTable_c extends ImportTable implements
     CodebaseImportTable {
-  private static final Object NOT_FOUND = "NOT FOUND";
-
   protected Codebase codebase;
   protected CodebaseSource source;
 
@@ -36,107 +38,94 @@ public class CodebaseImportTable_c extends ImportTable implements
 
   /**
    * Find a type by name, searching the import table.
+   * 
+   * Search order:
+   *    absolute name:                                  --> SR
+   *    
+   *    long name: 
+   *       platform type OR offline                     --> SR
+   *       otherwise                                    --> CB
+   *            if local source                         --> SR, add to CB
+   *            
+   *    short name:
+   *       current package                              (re-enters w/ long name)
+   *       imported packages                            (re-enters w/ long name)
+   *       null package                                 --> CB
+   *            if local source                         --> SR, add to CB  
+   *    
    */
   @Override
   public Named find(String name) throws SemanticException {
     if (Report.should_report(TOPICS, 2))
       Report.report(2, this + ".find(" + name + ")");
 
-    /* First add any lazy imports. */
-    lazyImport();
     CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
+   
+    // Is the name absolute? (i.e. fab://store/onum/pkg.ClassName)
+    URI uri = URI.create(name);
+    if(uri.isAbsolute()) {
+      return super.find(name);
+    }
+      
+    // Is the name long? (i.e. pkg.ClassName)
     if (!StringUtil.isNameShort(name)) {
-      // The name was long.
-      return ts.systemResolver().find(
-          cbts.absoluteName(codebase, name, source.isRemote()));
-    }
-    // The class name is short.
-    // First see if we have a mapping already.
-    Object res = map.get(name);
-
-    if (res != null) {
-      if (res == NOT_FOUND) {
-        throw new NoClassException(name, sourcePos);
+      if (cbts.localTypesOnly() || cbts.isPlatformType(name))
+        return super.find(name);
+      else {
+        FClass fclass = codebase.resolveClassName(name);
+        if (fclass == null) {
+          // For local source, build codebase lazily
+          if (!source.isRemote()) {
+            Named n = super.find(name);
+            cbts.addRemoteFClass(codebase, n);
+            return n;
+          }
+        }
+        String prefix = SysUtil.codebasePrefix(fclass.getCodebase());
+        return super.find(prefix + name);
       }
-      return (Named) res;
     }
-
-    try {
-      if (pkg != null) {
-        // check if the current package defines it.
-        // If so, this takes priority over the package imports (or
-        // "type-import-on-demand" declarations as they are called in
-        // the JLS), so even if another package defines the same name,
-        // there is no conflict. See Section 6.5.2 of JLS, 2nd Ed.
-        Named n = findInPkg(name, pkg.fullName());
-        if (n != null) {
-          if (Report.should_report(TOPICS, 3))
-            Report.report(3, this + ".find(" + name
-                + "): found in current package");
-
-          // Memoize the result.
-          map.put(name, n);
+    
+    // The class name is short. (i.e. ClassName)
+    if(cbts.localTypesOnly())
+      return super.find(name);
+    else {
+      Named n = null;
+      try {
+        n = super.find(name);
+      } catch(NoClassException e) {
+        //If this is remote source, it could still
+        // be a null-package name in the codebase.
+        // Otherwise, the name is not found.
+        if(!source.isRemote())
+          throw e;
+      }
+      //XXX: HACK: special-case for the null package since
+      // parent calls systemResolver directly.
+      if ((n instanceof Importable && ((Importable) n).package_() == null)
+          || n == null) {
+        if(source.isRemote()) {
+          // ignore null package result, use codebase to resolve
+          // FIXME: it would be better if to skip directly to
+          //            this case for null-package names in remote files.
+          //            Currently, we are searching the local classpath,
+          //            sourcepath, and codebase path, but will never 
+          //            use the result, even if we find something.
+          FClass fclass = codebase.resolveClassName(name);          
+          if(fclass == null) {
+            // Now it is really not found.
+            throw new NoClassException(name);
+          }
+          String prefix = SysUtil.codebasePrefix(fclass.getCodebase());
+          return super.find(prefix + name);
+        }
+        //insert class w/ null package into codebase
+        else {
+          cbts.addRemoteFClass(codebase, n);
           return n;
         }
       }
-
-      List imports = new ArrayList(packageImports.size() + 5);
-
-      imports.addAll(ts.defaultPackageImports());
-      imports.addAll(packageImports);
-
-      // It wasn't a ClassImport. Maybe it was a PackageImport?
-      Named resolved = null;
-      for (Iterator iter = imports.iterator(); iter.hasNext();) {
-        String pkgName = (String) iter.next();
-        Named n = findInPkg(name, pkgName);
-        if (n != null) {
-          if (resolved == null) {
-            // This is the first occurrence of name we've found
-            // in a package import.
-            // Record it, and keep going, to see if there
-            // are any conflicts.
-            resolved = n;
-          } else {
-            // This is the 2nd occurrence of name we've found
-            // in an imported package.
-            // That's bad.
-            throw new SemanticException("Reference to \"" + name
-                + "\" is ambiguous; both " + resolved.fullName() + " and "
-                + n.fullName() + " match.");
-          }
-        }
-      }
-
-      if (resolved == null) {
-        // The name was short, but not in any imported class or package.
-        // Check the null package.
-        if (source.isRemote()) {
-          FClass fclass = codebase.resolveClassName(name);
-          if (fclass != null)
-            resolved =
-                ts.systemResolver().find(
-                    cbts.absoluteName(codebase, name, true));
-        } else resolved = ts.systemResolver().find(name);
-
-        if (!isVisibleFrom(resolved, "")) {
-          // Not visible.
-          throw new NoClassException(name, sourcePos);
-        }
-      }
-
-      // Memoize the result.
-      if (Report.should_report(TOPICS, 3))
-        Report.report(3,
-            this + ".find(" + name + "): found as " + resolved.fullName());
-      map.put(name, resolved);
-      return resolved;
-    } catch (NoClassException e) {
-      // memoize the no class exception
-      if (Report.should_report(TOPICS, 3))
-        Report.report(3, this + ".find(" + name + "): didn't find it");
-      map.put(name, NOT_FOUND);
-      throw e;
+      return n;
     }
   }
 
@@ -145,12 +134,18 @@ public class CodebaseImportTable_c extends ImportTable implements
     CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
       
     URI uri = URI.create(name);
-    if (uri.isAbsolute() || cbts.isPlatformType(name) || !source.isRemote()) {
+    if (cbts.localTypesOnly() || uri.isAbsolute() || cbts.isPlatformType(name)) {
       return super.cachedFind(name);
     }
     
     FClass fclass = codebase.resolveClassName(name);
     if (fclass == null) {
+      // For local source, build codebase lazily
+      if(!source.isRemote()) {
+        Named n = super.cachedFind(name);
+        cbts.addRemoteFClass(codebase, n);
+        return n;
+      }
       return null;
     }
     
@@ -167,28 +162,36 @@ public class CodebaseImportTable_c extends ImportTable implements
     CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
     // Platform types and local source may use unqualified names for resolution
     // at the fabric layer
-    if (cbts.isPlatformType(pkgName) || !source.isRemote()) {
+    
+    if (cbts.localTypesOnly() || cbts.isPlatformType(pkgName)) {
       return super.findInPkg(name, pkgName);
-    } else {
-      FClass fcls = codebase.resolveClassName(pkgName + "." + name);
-      if (fcls == null) return null;
-      String prefix = SysUtil.codebasePrefix(fcls.getCodebase());
-      return super.findInPkg(name, prefix + pkgName);
     }
+    FClass fclass = codebase.resolveClassName(pkgName + "." + name);
+    if (fclass == null) {
+      // For local source, build codebase lazily
+      if(!source.isRemote()) {
+        Named n = super.findInPkg(name, pkgName);
+        cbts.addRemoteFClass(codebase, n);
+        return n;
+      } 
+      return null;
+    }
+    
+    String prefix = SysUtil.codebasePrefix(fclass.getCodebase());
+    return super.findInPkg(name, prefix + pkgName);
   }
 
   @Override
   protected boolean isVisibleFrom(Named n, String pkgName) {
-    // Codebases do not affect package visibility.
+    // Codebases do not affect package visibility, so remove
+    // prefix from pkgName if necessary
     URI uri = URI.create(pkgName);
     if (n instanceof CodebaseClassType && uri.isAbsolute()) {
       Codebase cb = ((CodebaseClassType) n).codebase();
       String cbPart = SysUtil.codebasePrefix(cb);
-      boolean b = super.isVisibleFrom(n, pkgName.substring(cbPart.length()));
-      return b;
+      return super.isVisibleFrom(n, pkgName.substring(cbPart.length()));
     } else {
-      boolean b = super.isVisibleFrom(n, pkgName);
-      return b;
+      return super.isVisibleFrom(n, pkgName);
     }
   }
 
@@ -200,32 +203,33 @@ public class CodebaseImportTable_c extends ImportTable implements
     }
 
     CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
-
     for (int i = 0; i < lazyImports.size(); i++) {
       String longName = (String) lazyImports.get(i);
-
+      Named n = null;
       try {
         if (Report.should_report(TOPICS, 2))
           Report.report(2, this + ": import " + longName);
-
-        URI uri = URI.create(longName);
-        Named t;
-        if (uri.isAbsolute() || cbts.isPlatformType(longName)
-            || !source.isRemote()) {
-          t = ts.systemResolver().find(longName);
-        } else {
-          FClass fcls = codebase.resolveClassName(longName);
-          if (fcls == null) {
-            throw new SemanticException("Codebase " + codebase
-                + " has no entry for " + longName);
+        
+        if (cbts.localTypesOnly() || cbts.isPlatformType(longName))
+          n = ts.systemResolver().find(longName);
+        else {
+          FClass fclass = codebase.resolveClassName(longName);
+          if (fclass == null) {
+            // For local source, build codebase lazily
+            if (!source.isRemote()) {
+              n = ts.systemResolver().find(longName);
+              if(n != null)
+                cbts.addRemoteFClass(codebase, n);
+            }
+          } 
+          else {
+            String prefix = SysUtil.codebasePrefix(fclass.getCodebase());
+            n = ts.systemResolver().find(prefix + longName);
           }
-          String prefix = SysUtil.codebasePrefix(fcls.getCodebase());
-          t = ts.systemResolver().find(prefix + longName);
         }
-
+        
         String shortName = StringUtil.getShortNameComponent(longName);
-
-        map.put(shortName, t);
+        map.put(shortName, n);
 
       } catch (SemanticException e) {
         Position pos = e.position();
@@ -235,15 +239,14 @@ public class CodebaseImportTable_c extends ImportTable implements
       }
     }
 
-    lazyImports = new ArrayList();
-    lazyImportPositions = new ArrayList();
   }
 
   public CodebaseSource source() {
     return source;
   }
 
-  protected static final Collection TOPICS = CollectionUtil.list(Report.types,
-      Report.resolver, Report.imports);
+  protected static final Collection TOPICS =
+      CollectionUtil.list(Topics.mobile, Report.types, Report.resolver,
+          Report.imports);
 
 }

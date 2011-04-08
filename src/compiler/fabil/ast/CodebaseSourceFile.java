@@ -1,12 +1,9 @@
 package fabil.ast;
 
 import polyglot.ast.SourceFile;
-import fabil.Codebases;
 import fabric.lang.Codebase;
 
-public interface CodebaseSourceFile extends SourceFile, Codebases {
+public interface CodebaseSourceFile extends SourceFile {
   /** Set the source's codebase. */
-  SourceFile codebase(Codebase codebase);
-  
   boolean isRemote();
 }

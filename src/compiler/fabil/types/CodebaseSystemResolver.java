@@ -2,9 +2,6 @@ package fabil.types;
 
 import java.net.URI;
 
-import fabil.frontend.CodebaseSource;
-import fabric.common.SysUtil;
-import fabric.lang.Codebase;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.types.ClassType;
 import polyglot.types.Named;
@@ -12,8 +9,9 @@ import polyglot.types.Package;
 import polyglot.types.SemanticException;
 import polyglot.types.SystemResolver;
 import polyglot.types.TopLevelResolver;
-import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
+import fabil.frontend.CodebaseSource;
+import fabric.common.SysUtil;
 
 public class CodebaseSystemResolver extends SystemResolver {
 
@@ -27,52 +25,41 @@ public class CodebaseSystemResolver extends SystemResolver {
   @Override
   public void addNamed(String name, Named q) throws SemanticException {
     if (q instanceof ClassType) {
-      URI uri = URI.create(name);
       CodebaseClassType ct = (CodebaseClassType) q;
       CodebaseSource cs = (CodebaseSource) ct.fromSource();
-      String className = ct.fullName();
-
-      String containerName;
-      if (ts.isPlatformType(ct) || !cs.isRemote()) {
-        containerName = StringUtil.getPackageComponent(className);
+      URI uri = URI.create(name);
+      if(uri.isAbsolute())
+        throw new SemanticException("Did not expect absolute name: " + name);
+      
+      // in offline mode and for platform type, add long name (pkg.ClassName)
+      if (ts.localTypesOnly() || ts.isPlatformType(ct)) {
         super.addNamed(name, q);
-        boolean remote = (cs == null) ? false : cs.isRemote();
-        super.addNamed(ts.absoluteName(ct.codebase(), name, remote), ct);     
-      } else {
-        String fqname;
-        if (uri.isAbsolute()) {
-          fqname = name;
-        } else {
-          fqname = ts.absoluteName(ct.codebase(), name, true);
-        }
-        //remove the leading fabref for packages
-        containerName = StringUtil.getPackageComponent(className);
-        super.addNamed(fqname, q);
+        
+      // otherwise, add absolute name and long name
+      } 
+      else {
+        super.addNamed(name, q);
+        String prefix = SysUtil.codebasePrefix(cs.codebase());
+        super.addNamed(prefix + name, q);
       }
-
+      
       // Package names are *not* qualified by codebase
+      String containerName = StringUtil.getPackageComponent(name);
       if (ct.isTopLevel()) {
         Package p = ((ClassType) q).package_();
         cachePackage(p);
         if (p != null && containerName.equals(p.fullName())) {
           super.addNamed(containerName, p);
         }
-      } else if (ct.isMember()) {
+      } 
+      else if (ct.isMember()) {
         if (name.equals(ct.fullName())) {
-          // Check that the names match; we could be installing
-          // a member class under its class file name, not its Java
-          // source full name.
           addNamed(containerName, ct.outer());
         }
       }
-      return;
-    } else {
-      URI uri = URI.create(name);
-      if (uri.isAbsolute()) {
-        name = name.substring(name.lastIndexOf('/') + 1);
-      }
+    } 
+    else 
       super.addNamed(name, q);
-    }
   }
 
   /**

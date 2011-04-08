@@ -229,7 +229,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   @Override
   public SourceFile SourceFile(Position pos, PackageNode packageName,
       List imports, List decls) {
-    SourceFile sf = new FabILSourceFile_c(pos, packageName, imports, decls);
+    SourceFile sf = new CodebaseSourceFile_c(pos, packageName, imports, decls);
     sf = (SourceFile) sf.ext(extFactory().extSourceFile());
     sf = (SourceFile) sf.del(delFactory().delSourceFile());
     return sf;

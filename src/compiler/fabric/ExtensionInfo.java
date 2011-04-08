@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
-import java.security.GeneralSecurityException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Map;
@@ -21,10 +20,8 @@ import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
 import polyglot.types.LoadedClassResolver;
 import polyglot.types.SemanticException;
-import polyglot.types.reflect.ClassFile;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
-import fabil.Codebases;
 import fabil.frontend.CodebaseSourceClassResolver;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
@@ -48,7 +45,7 @@ import fabric.worker.Store;
 /**
  * Extension information for fabric extension.
  */
-public class ExtensionInfo extends jif.ExtensionInfo implements Codebases {
+public class ExtensionInfo extends jif.ExtensionInfo {
   /* Note: jif.ExtensionInfo has a jif.OutputExtensionInfo field jlext.  The
    * only unoverridden place this is used is in a call to initCompiler, so it
    * should never leak out. */

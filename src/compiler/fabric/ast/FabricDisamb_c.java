@@ -38,12 +38,10 @@ public class FabricDisamb_c extends JifDisamb_c implements CodebaseDisamb {
 
       if (cbp.source() == null || cbp.codebase() == null) {
         CodebaseContext context = (CodebaseContext) c;
-        Codebase cb = context.currentCodebase();
         CodebaseSource cbs = context.currentSource();
         
         // Set the codebase and source of the package.
         cbp = cbp.source(cbs);
-        cbp = cbp.codebase(cb);
         prefix = ((PackageNode) prefix).package_(cbp);
       }
     }
@@ -55,14 +53,12 @@ public class FabricDisamb_c extends JifDisamb_c implements CodebaseDisamb {
     //Only qualify packages in remote source by the codebase
     if(n instanceof PackageNode) {
       CodebaseContext ctx = (CodebaseContext) c;
-      Codebase cb = ctx.currentCodebase();
       CodebaseSource cbs = ctx.currentSource();
       
       //Set the codebase and source of the package
       PackageNode pn = (PackageNode) n;
       CodebasePackage cbp = (CodebasePackage) pn.package_();
       cbp = cbp.source(cbs);
-      cbp = cbp.codebase(cb);
       
       return pn.package_(cbp);
     }

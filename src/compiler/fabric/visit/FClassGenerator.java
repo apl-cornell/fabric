@@ -111,30 +111,36 @@ public class FClassGenerator extends ErrorHandlingVisitor {
           Report.report(3, "Inserting " + className + " into codebase " + cb);
         }
         cb.insertClass(className, fcls);
+        if(pct.flags().isInterface() 
+            && fabts.isSubtype(pct, fabts.FObject()))
+          cb.insertClass(className + "_JIF_IMPL", fcls);
         
-        // add dependencies to codebase;
+//        // add dependencies to codebase;
         for(Named dep : fcg.dependencies) {
           if(fabts.isPlatformType(dep))
             continue;
           if(dep instanceof FabricSubstType)
             dep = (Named) ((FabricSubstType) dep).base();
           
-          fcls.addDependency(dep.fullName());
-          if(dep instanceof FabricParsedClassType) {
-            FabricParsedClassType ct = (FabricParsedClassType) dep;
-            Source depsrc = ct.fromSource();
-            if(depsrc == null)
-              throw new InternalCompilerError("No source for " + ct);         
-            
-            if(depsrc instanceof RemoteSource_c) {
-              FClass depcls = ((RemoteSource_c)depsrc).fclass();
-              cb.insertClass(depcls.getName(), depcls);
-            }
-            else if(!(depsrc instanceof LocalSource))
-              throw new InternalCompilerError("Unexpected source type: " + depsrc.getClass());
-          }
-          else 
-            throw new InternalCompilerError("Expected FabricParsedClassType but got " + dep.getClass());
+          if(dep instanceof FabricParsedClassType
+              && fabts.isSubtype((Type) dep, fabts.FObject()))
+            fcls.addDependency(dep.fullName());
+//XXX: Dependencies are now added to the codebase lazily during resolution?
+//          if(dep instanceof FabricParsedClassType) {
+//            FabricParsedClassType ct = (FabricParsedClassType) dep;
+//            Source depsrc = ct.fromSource();
+//            if(depsrc == null)
+//              throw new InternalCompilerError("No source for " + ct);         
+//            
+//            if(depsrc instanceof RemoteSource_c) {
+//              FClass depcls = ((RemoteSource_c)depsrc).fclass();
+//              cb.insertClass(depcls.getName(), depcls);
+//            }
+//            else if(!(depsrc instanceof LocalSource))
+//              throw new InternalCompilerError("Unexpected source type: " + depsrc.getClass());
+//          }
+//          else 
+//            throw new InternalCompilerError("Expected FabricParsedClassType but got " + dep.getClass());
         }
       }
       else if(src instanceof RemoteSource_c) {

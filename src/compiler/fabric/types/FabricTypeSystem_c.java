@@ -41,12 +41,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   public CodebaseSystemResolver createSystemResolver(TopLevelResolver loadedResolver, ExtensionInfo extInfo) {
     return new CodebaseSystemResolver(loadedResolver, extInfo);
   }
-  
-  @Override
-  public CodebaseClassContextResolver createClassContextResolver(ClassType type) {
-    assert_(type);
-    return new CodebaseClassContextResolver(this, type);
-  }
 
   @Override
   public CodebasePackageContextResolver createPackageContextResolver(Package p) {
@@ -56,7 +50,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
 
   @Override
   public CodebasePackage createPackage(Package prefix, String name) {
-    return new CodebasePackage_c(this, prefix, name);
+    return new CodebasePackage_c(this, (CodebasePackage) prefix, name);
   }
 
   public ClassType FObject() {
@@ -416,8 +410,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   }
   
   public boolean isPlatformType(String fullName) {
-    FabricOptions opt = (FabricOptions) extInfo.getOptions();
-    if(!opt.runWorker()) {
+    if(localTypesOnly()) {
       return true;
     }
     return fullName.startsWith("java")
@@ -446,5 +439,39 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
       }
     } else
       return fullName;
+  }
+
+  public boolean localTypesOnly() {
+    FabricOptions opt = (FabricOptions) extInfo.getOptions();
+    return !opt.runWorker();
+  }
+  
+  public void addRemoteFClass(Codebase codebase, Named n) {
+    if (n instanceof ParsedClassType) {
+      ParsedClassType pct = (ParsedClassType) n;
+      if (pct.fromSource() instanceof CodebaseSource) {
+        CodebaseSource cbs = (CodebaseSource) pct.fromSource();
+        String name = pct.fullName();
+        //Adding remote FClass to codebase
+        if(!codebase.equals(cbs.codebase())) {
+          //TODO: check codebase integrity
+          FClass fclass = cbs.codebase().resolveClassName(name);
+          if(fclass == null) throw new InternalCompilerError("Expected entry for " + name + " in codebase " + cbs.codebase());
+          
+          //check for existing mapping
+          FClass orig = codebase.resolveClassName(name);        
+          if(orig != null) {
+            throw new InternalCompilerError("Multiple codebase entries for "
+                + name + ": " + orig + "," + fclass);
+          }
+          //otherwise, add FClass to current codebase
+          codebase.insertClass(name, fclass);
+          if(pct.flags().isInterface() 
+              && isSubtype(pct, FObject())) {
+            codebase.insertClass(name + "_JIF_IMPL", fclass);
+          }
+        }
+      }
+    }
   }
 }

@@ -28,6 +28,7 @@ import polyglot.util.Position;
 import fabil.ast.CodebaseDisamb;
 import fabil.ast.CodebasePackageNode;
 import fabil.ast.CodebasePackageNode_c;
+import fabil.ast.CodebaseSourceFile_c;
 import fabric.extension.FabricExt;
 import fabric.extension.LocatedExt_c;
 
@@ -181,7 +182,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     return result;
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings("unchecked")
   @Override
   public New New(Position pos, Expr outer, TypeNode objectType, List args,
       ClassBody body) {
@@ -232,7 +233,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   // overridden factory methods //
   // ////////////////////////////////////////////////////////////////////////////
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings("unchecked")
   @Override
   public ClassDecl ClassDecl(Position pos, Flags flags, Id name,
       TypeNode superClass, List interfaces, ClassBody body) {
@@ -244,7 +245,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     return n;
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings("unchecked")
   @Override
   public JifClassDecl JifClassDecl(Position pos, Flags flags, Id name,
       List params, TypeNode superClass, List interfaces, List authority,
@@ -257,6 +258,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     return n;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public ClassBody ClassBody(Position pos, List members) {
     ClassBody n = new ClassBody_c(pos, CollectionUtil.nonNullList(members));
@@ -264,7 +266,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     n = (ClassBody)n.del(delFactory().delClassBody());
     return n;  }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @SuppressWarnings("unchecked")
   @Override
   public Call Call(Position pos, Receiver target, Id name, List args) {
     return Call(pos, target, name, null, args);
@@ -294,11 +296,11 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     return n;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public SourceFile SourceFile(Position pos, PackageNode packageName,
       List imports, List decls) {
-    // TODO Auto-generated method stub
-    SourceFile sf = new FabricSourceFile_c(pos, packageName, imports, decls);
+    SourceFile sf = new CodebaseSourceFile_c(pos, packageName, imports, decls);
     sf = (SourceFile) sf.ext(extFactory().extSourceFile());
     sf = (SourceFile) sf.del(delFactory().delSourceFile());
     return sf;

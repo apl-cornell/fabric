@@ -12,6 +12,7 @@ import polyglot.types.SourceClassResolver;
 import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassFileLoader;
 import fabil.types.CodebaseTypeSystem;
+import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 
 public class CodebaseSourceClassResolver extends SourceClassResolver {
@@ -30,10 +31,14 @@ public class CodebaseSourceClassResolver extends SourceClassResolver {
     URI uri = URI.create(name);
     if(uri.isAbsolute())
       return super.getTypeFromSource(source, name);
+    
+    CodebaseSource cs = (CodebaseSource) source;
+    Codebase cb = cs.codebase();
 
-    Codebase cb = ((CodebaseSource) source).codebase();
-    String absName = ((CodebaseTypeSystem)ts).absoluteName(cb, name, true);
-    return super.getTypeFromSource(source, absName);
+    //String absName = ((CodebaseTypeSystem)ts).absoluteName(cb, name, true);
+    if(cs.isRemote())
+      name = SysUtil.codebasePrefix(cb) + name;
+    return super.getTypeFromSource(source, name);
   }
 
   @Override

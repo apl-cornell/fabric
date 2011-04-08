@@ -33,13 +33,7 @@ public class CodebasePackageNode_c extends PackageNode_c implements
       throws SemanticException {
     CodebasePackage cbp = (CodebasePackage) package_;
     cbp = cbp.source(source);
-    
-    // Only qualify packages in remote source by the codebase
-    if (source.isRemote()) {
-      cbp = cbp.codebase(source.codebase());
-      return (CodebasePackageNode) package_(cbp);
-    } else 
-      return this;
+    return (CodebasePackageNode) package_(cbp);
   }
 
   public CodebasePackageNode source(CodebaseSource source) {

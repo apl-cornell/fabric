@@ -1,6 +1,5 @@
 package fabric.types;
 
-import fabil.Codebases;
 import jif.types.JifClassType;
 import jif.types.label.Label;
 

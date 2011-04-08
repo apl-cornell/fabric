@@ -1,27 +1,26 @@
 package fabil.visit;
 
-import polyglot.ast.Import;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.PackageNode;
-import polyglot.ast.SourceFile;
 import polyglot.frontend.Job;
-import polyglot.frontend.Source;
 import polyglot.types.ImportTable;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
 import polyglot.visit.InitImportsVisitor;
 import polyglot.visit.NodeVisitor;
+import fabil.ast.CodebasePackageNode;
 import fabil.ast.CodebaseSourceFile;
 import fabil.frontend.CodebaseSource;
-import fabil.types.CodebasePackage;
 import fabil.types.CodebaseTypeSystem;
-import fabric.common.SysUtil;
-import fabric.lang.Codebase;
 
+/**
+ * This class creates an import table for each source file and sets the source
+ * reference for each package node.
+ */
 public class InitCodebaseImports extends InitImportsVisitor {
 
-  protected Codebase codebase = null;
+  protected CodebaseSource source = null;
   protected boolean remote = true;
 
   public InitCodebaseImports(Job job, TypeSystem ts, NodeFactory nf) {
@@ -47,10 +46,8 @@ public class InitCodebaseImports extends InitImportsVisitor {
       }
 
       InitCodebaseImports v = (InitCodebaseImports) copy();
-      CodebaseSource src = (CodebaseSource) sf.source();
-      v.codebase = src.codebase();
       v.importTable = it;
-      v.remote = src.isRemote();
+      v.source = (CodebaseSource) sf.source();
       return v;
     }
     return this;
@@ -60,30 +57,13 @@ public class InitCodebaseImports extends InitImportsVisitor {
   @Override
   public Node leaveCall(Node old, Node n, NodeVisitor v)
       throws SemanticException {
-
-    if (n instanceof CodebaseSourceFile) {
-      CodebaseSourceFile sf = (CodebaseSourceFile) n;
+    n = super.leaveCall(old, n, v);  
+    //Set the source of CodebasePackageNodes
+    if (n instanceof CodebasePackageNode) {
+      CodebasePackageNode pn = (CodebasePackageNode) n;
       InitCodebaseImports v_ = (InitCodebaseImports) v;
-      ImportTable it = v_.importTable;
-      return sf.codebase(v_.codebase).importTable(it);
+      return pn.source(v_.source);
     }
-    if (n instanceof Import) {
-      Import im = (Import) n;
-
-      if (im.kind() == Import.CLASS) {
-        String name = im.name();
-
-        if (remote)
-          name = ((CodebaseTypeSystem) ts).absoluteName(codebase, name, true);
-        this.importTable.addClassImport(name, im.position());
-        
-      } else if (im.kind() == Import.PACKAGE) {
-        // XXX: package imports are not currently
-        // supported in codebases
-        this.importTable.addPackageImport(im.name(), im.position());
-      }
-    }
-
     return n;
   }
 

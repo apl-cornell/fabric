@@ -2,6 +2,7 @@ package fabil.types;
 
 import fabil.frontend.CodebaseSource;
 import fabric.lang.Codebase;
+import fabric.lang.FClass;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
 import polyglot.types.ClassType;
@@ -19,8 +20,8 @@ public interface CodebaseTypeSystem extends TypeSystem {
   boolean isPlatformType(Named name);
 
   boolean isPlatformType(String fullName);
-
-  CodebaseClassContextResolver createClassContextResolver(ClassType type);
+  
+  boolean localTypesOnly();
 
   CodebasePackageContextResolver createPackageContextResolver(Package p);
 
@@ -32,4 +33,6 @@ public interface CodebaseTypeSystem extends TypeSystem {
   CodebaseClassType createClassType(LazyClassInitializer init, Source fromSource);
   
   String absoluteName(Codebase cb, String fullName, boolean resolve) throws SemanticException;
+  
+  void addRemoteFClass(Codebase cb, Named n);
 }

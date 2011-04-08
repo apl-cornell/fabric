@@ -7,7 +7,5 @@ import polyglot.types.Context;
 
 public interface CodebaseContext extends Context {
   Codebase currentCodebase();
-  CodebaseContext pushCodebase(Codebase codebase);
   CodebaseSource currentSource();
-  CodebaseContext pushSource(CodebaseSource source);
 }

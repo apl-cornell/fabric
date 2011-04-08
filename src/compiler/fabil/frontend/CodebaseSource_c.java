@@ -2,9 +2,8 @@ package fabil.frontend;
 
 import java.util.Date;
 
-import fabil.Codebases;
-import fabric.lang.Codebase;
 import polyglot.frontend.Source;
+import fabric.lang.Codebase;
 
 /**
  * This class is primarily for sources that are generated during translation,
