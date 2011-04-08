@@ -15,9 +15,6 @@ public class MethodDeclJifDel extends JifMethodDeclDel {
     Node n = super.buildTypes(tb);
     MethodDeclJifExt ext = (MethodDeclJifExt) JifUtil.jifExt(n);
     //Don't add remote wrappers to the class type 
-    //  XXX: this is the Right Thing, but happens to avoid a 
-    //         known bug (see https://forge.cornell.edu/sf/go/task5278). 
-    //         Commenting out the block below will cause the bug to reappear.
     if(ext.isRemote()) {
       MethodDecl md = (MethodDecl) n;
       FabricParsedClassType ct = (FabricParsedClassType) tb.currentClass();
