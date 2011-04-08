@@ -159,6 +159,26 @@
     Initialization targets.
   ****************************************************************************
   -->
+  <target name="fabil-init" description="Build init classes">
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${home}"
+           dest="${home}/classes"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabric.home}/bin/filc"/>
+      <arg value="-g"/>
+      <arg value="-d" /> <arg value="${home}/classes"/>
+      <arg value="-cp"/> <arg pathref="standard.classpath" />
+      <arg value="-cp" /> <arg value="${home}/classes"/>
+      <srcfile />
+      <fileset dir="${home}/src/social_codebase" includes="**/*.fil" />
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+  </target>
+
   <target name="init-local" description="" depends="build-local">
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
