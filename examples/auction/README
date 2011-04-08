@@ -13,12 +13,12 @@ Next, start the stores and workers, each in a separate terminal window.
 	term1$ bin/start-store --name brokerStore
 	term2$ bin/start-store --name airlineAStore
 	term3$ bin/start-store --name airlineBStore
-	term4$ bin/start-store --name brokerStore
+	term4$ bin/start-store --name userStore
 	
 	term5$ bin/start-worker --name brokerWorker
 	term6$ bin/start-worker --name airlineAWorker
 	term7$ bin/start-worker --name airlineBWorker
-	term8$ bin/start-worker --name brokerWorker
+	term8$ bin/start-worker --name userWorker
 
 Now run the initialization program for each store.
 	
