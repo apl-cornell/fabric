@@ -54,7 +54,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   public Named find(String name) throws SemanticException {
     if (isOuter()) {
       CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
-      if (cbts.localTypesOnly() || cbts.isPlatformType(name)) {
+      if (cbts.localTypesOnly() || SysUtil.isPlatformType(name)) {
         return super.find(name);
       } 
       else {

@@ -404,19 +404,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     
     return super.translateClass(c, t);
   }
-  
-  public boolean isPlatformType(Named name) {
-    return isPlatformType(name.fullName());
-  }
-  
-  public boolean isPlatformType(String fullName) {
-    if(localTypesOnly()) {
-      return true;
-    }
-    return fullName.startsWith("java")
-    || fullName.startsWith("fabric")
-    || fullName.startsWith("jif");
-  }
 
   /**
    * Turns a codebase and a Java name into an absolute name. If the class is a
@@ -424,7 +411,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
    * encoded name that includes the codebase.
    */
   public String absoluteName(Codebase context, String fullName, boolean resolve) throws SemanticException {
-    if(!isPlatformType(fullName)) {
+    if(!SysUtil.isPlatformType(fullName)) {
       if(resolve && context != null) {
          FClass fcls = context.resolveClassName(fullName);
         if(fcls == null) {

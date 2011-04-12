@@ -32,7 +32,7 @@ public class CodebaseSystemResolver extends SystemResolver {
         throw new SemanticException("Did not expect absolute name: " + name);
       
       // in offline mode and for platform type, add long name (pkg.ClassName)
-      if (ts.localTypesOnly() || ts.isPlatformType(ct)) {
+      if (ts.localTypesOnly() || SysUtil.isPlatformType(ct)) {
         super.addNamed(name, q);
         
       // otherwise, add absolute name and long name

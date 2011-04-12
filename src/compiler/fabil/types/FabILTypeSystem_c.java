@@ -476,11 +476,9 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   public boolean isPlatformType(String fullName) {
-    if (localTypesOnly()) {
-      return true;
-    }
     String typeName = fullName;
-    return typeName.startsWith("java") || typeName.startsWith("fabric")
+    return typeName.startsWith("java") 
+        || typeName.startsWith("fabric")
         || typeName.startsWith("jif");
   }
 

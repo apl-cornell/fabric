@@ -37,7 +37,7 @@ public class CodebasePackageContextResolver extends PackageContextResolver {
     }
     Named n = null;
     CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
-    if (cbts.localTypesOnly() || cbts.isPlatformType(p)) 
+    if (cbts.localTypesOnly() || SysUtil.isPlatformType(p)) 
       return super.find(name, accessor);
 
     CodebaseSource cs = ((CodebasePackage) p).source();

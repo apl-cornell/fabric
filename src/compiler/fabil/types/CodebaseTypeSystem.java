@@ -16,10 +16,6 @@ import polyglot.types.TypeSystem;
 public interface CodebaseTypeSystem extends TypeSystem {
 
   CodebaseImportTable importTable(CodebaseSource source, Package pkg);
-
-  boolean isPlatformType(Named name);
-
-  boolean isPlatformType(String fullName);
   
   boolean localTypesOnly();
 

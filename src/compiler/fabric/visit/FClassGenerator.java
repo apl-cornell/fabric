@@ -23,6 +23,7 @@ import polyglot.visit.ErrorHandlingVisitor;
 import polyglot.visit.NodeVisitor;
 import fabric.ExtensionInfo;
 import fabric.Topics;
+import fabric.common.SysUtil;
 import fabric.frontend.LocalSource;
 import fabric.frontend.RemoteSource_c;
 import fabric.lang.Codebase;
@@ -117,7 +118,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         
 //        // add dependencies to codebase;
         for(Named dep : fcg.dependencies) {
-          if(fabts.isPlatformType(dep))
+          if(SysUtil.isPlatformType(dep))
             continue;
           if(dep instanceof FabricSubstType)
             dep = (Named) ((FabricSubstType) dep).base();
@@ -172,7 +173,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
     Set<String> names  = new HashSet<String>();
     FabricTypeSystem fabts = (FabricTypeSystem) ts;
     for(Named n: deps)
-      if(!fabts.isPlatformType(n))
+      if(!SysUtil.isPlatformType(n))
         names.add(n.fullName());
     return names;
   }

@@ -69,7 +69,7 @@ public class CodebaseImportTable_c extends ImportTable implements
       
     // Is the name long? (i.e. pkg.ClassName)
     if (!StringUtil.isNameShort(name)) {
-      if (cbts.localTypesOnly() || cbts.isPlatformType(name))
+      if (cbts.localTypesOnly() || SysUtil.isPlatformType(name))
         return super.find(name);
       else {
         FClass fclass = codebase.resolveClassName(name);
@@ -134,7 +134,7 @@ public class CodebaseImportTable_c extends ImportTable implements
     CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
       
     URI uri = URI.create(name);
-    if (cbts.localTypesOnly() || uri.isAbsolute() || cbts.isPlatformType(name)) {
+    if (cbts.localTypesOnly() || uri.isAbsolute() || SysUtil.isPlatformType(name)) {
       return super.cachedFind(name);
     }
     
@@ -163,7 +163,7 @@ public class CodebaseImportTable_c extends ImportTable implements
     // Platform types and local source may use unqualified names for resolution
     // at the fabric layer
     
-    if (cbts.localTypesOnly() || cbts.isPlatformType(pkgName)) {
+    if (cbts.localTypesOnly() || SysUtil.isPlatformType(pkgName)) {
       return super.findInPkg(name, pkgName);
     }
     FClass fclass = codebase.resolveClassName(pkgName + "." + name);
@@ -210,7 +210,7 @@ public class CodebaseImportTable_c extends ImportTable implements
         if (Report.should_report(TOPICS, 2))
           Report.report(2, this + ": import " + longName);
         
-        if (cbts.localTypesOnly() || cbts.isPlatformType(longName))
+        if (cbts.localTypesOnly() || SysUtil.isPlatformType(longName))
           n = ts.systemResolver().find(longName);
         else {
           FClass fclass = codebase.resolveClassName(longName);

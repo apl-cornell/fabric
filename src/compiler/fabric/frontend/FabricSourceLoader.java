@@ -89,7 +89,7 @@ public class FabricSourceLoader extends SourceLoader {
     CodebaseTypeSystem ts = (CodebaseTypeSystem) sourceExt.typeSystem();
     
     //Never lookup platform types in remote codebases
-    if(ts.localTypesOnly() || ts.isPlatformType(className))
+    if(ts.localTypesOnly() || SysUtil.isPlatformType(className))
       return null;
 
     Codebase codebase = codebaseCache.get(uri);

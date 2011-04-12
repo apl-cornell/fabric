@@ -47,7 +47,7 @@ public class CodebaseImportDel_c extends JL_c {
     URI uri = URI.create(name);
     Named nt = null;
     if (ts.localTypesOnly() || uri.isAbsolute() 
-        || ts.isPlatformType(name)) {
+        || SysUtil.isPlatformType(name)) {
       nt = ts.forName(name);
     } else {
       Codebase codebase = context.currentCodebase();

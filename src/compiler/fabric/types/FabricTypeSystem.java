@@ -55,7 +55,4 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
 
   FabricArrayType fabricArrayOf(Position pos, Type t);
   FabricArrayType fabricArrayOf(Position pos, Type t, int dims);
-
-  boolean isPlatformType(Named dep);
-
 }

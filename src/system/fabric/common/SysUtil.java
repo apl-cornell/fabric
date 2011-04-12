@@ -10,6 +10,8 @@ import java.security.MessageDigest;
 import java.util.*;
 import java.util.logging.Level;
 
+import polyglot.types.Named;
+
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.worker.Store;
@@ -67,7 +69,6 @@ public final class SysUtil {
           classLoader);
       throw new InternalError("Class not found: " + className);
     }
-
     byte[] buf = new byte[BUF_LEN];
     int count = classIn.read(buf);
     while (count != -1) {
@@ -417,4 +418,15 @@ public final class SysUtil {
     return "fab://" + cb.$getStore().name() + "/" + cb.$getOnum() + "/"
         + f.getName();
   }
+  
+  public static boolean isPlatformType(Named name) {
+    return isPlatformType(name.fullName());
+  }
+
+  public static boolean isPlatformType(String fullName) {
+    return fullName.startsWith("java")
+    || fullName.startsWith("fabric")
+    || fullName.startsWith("jif");
+  }
+
 }
