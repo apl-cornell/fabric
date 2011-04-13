@@ -8,11 +8,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,8 +28,10 @@ import polyglot.main.Options;
 import polyglot.main.Report;
 import polyglot.main.UsageError;
 import polyglot.types.reflect.ClassFileLoader;
+import polyglot.util.ErrorInfo;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
+import polyglot.util.QuotedStringTokenizer;
 import polyglot.util.StdErrorQueue;
 import fabric.common.SysUtil;
 import fabric.lang.FClass;
@@ -55,9 +59,13 @@ public class Main extends polyglot.main.Main {
     List<String> args = new LinkedList<String>();
     args.add("-worker");
     args.add(worker.config.name);
-    // args.add("-report");
-    // args.add("frontend=2");
 
+    /* options for performance */
+    args.add("-w");
+    args.add("1000");
+    args.add("-mergestrings");
+    args.add("-simpleoutput");
+    
     if (worker.sigcp != null) {
       args.add("-sigcp");
       args.add(worker.sigcp);
@@ -344,4 +352,5 @@ public class Main extends polyglot.main.Main {
 
     return out.toByteArray();
   }
+
 }
