@@ -257,6 +257,16 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     n = (JifClassDecl) n.del(delFactory().delClassDecl());
     return n;
   }
+  
+  public FabricFieldDecl FabricFieldDecl(Position pos, Flags flags, 
+      TypeNode type, LabelNode accessLabel, Id name, Expr init) {
+    FabricFieldDecl n = new FabricFieldDecl_c(pos, flags, type, accessLabel,
+        name, init);
+    n = (FabricFieldDecl)n.ext(extFactory().extFieldDecl());
+    n = (FabricFieldDecl)n.del(delFactory().delFieldDecl());    
+    return n;
+  }
+  
 
   @SuppressWarnings("unchecked")
   @Override

@@ -56,17 +56,39 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
   
 
   /**
-   * Checks that the location is compatible with the <code>objectLabel</code>.
+   * Checks that the location is compatible with the <code>objectLabel</code>
+   * and <code>accessLabel</code>
    * @param lc
    * @param objectLabel
+   * @param accessLabel
    */
-  public void labelCheck(LabelChecker lc, final Label objectLabel) throws SemanticException {
+  public void labelCheck(LabelChecker lc, 
+      final Label objectLabel,
+      final Label accessLabel) throws SemanticException {
     Node n = node();
 
     if (location() != null && objectLabel != null) {
       FabricTypeSystem ts = (FabricTypeSystem)lc.typeSystem();
       JifContext A = lc.jifContext();
       A = (JifContext)n.del().enterScope(A);
+      
+      lc.constrain(new NamedLabel("access label", accessLabel),
+          LabelConstraint.LEQ,
+          new NamedLabel("{*->store}",
+              ts.pairLabel(Position.compilerGenerated(),
+              ts.readerPolicy(Position.compilerGenerated(),
+                  storePrincipal(),
+                  ts.topPrincipal(Position.compilerGenerated())),
+              ts.topIntegPolicy(Position.compilerGenerated()))),
+          A.labelEnv(), n.position(), 
+          new ConstraintMessage() {
+            @Override
+            public String msg() {
+              return "The store should be trusted enough to enforce the confidentiality" +
+              		" of the access label";
+            }
+          }
+      );
 
       lc.constrain(new NamedLabel("L", objectLabel),
           LabelConstraint.LEQ,

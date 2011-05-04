@@ -1,5 +1,6 @@
 package fabil.ast;
 
+import java.util.Collections;
 import java.util.List;
 
 import polyglot.ast.*;
@@ -13,7 +14,19 @@ public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
 
   Atomic Atomic(Position pos, List<Stmt> statements);
 
-  New New(Position pos, TypeNode type, Expr label, Expr location,
+  New New(Position pos, TypeNode type, Expr label, Expr accessLabel, Expr location,
+      List<Expr> args);
+
+  New New(Position pos, TypeNode type, Expr label, Expr accessLabel, Expr location,
+      List<Expr> args, ClassBody body);
+
+  New New(Position pos, Expr outer, TypeNode objectType, Expr accessLabel, Expr label,
+      Expr location, List<Expr> args);
+
+  New New(Position pos, Expr outer, TypeNode objectType, Expr accessLabel, Expr label,
+      Expr location, List<Expr> args, ClassBody body);
+
+  New New(Position pos, TypeNode type, Expr label,  Expr location,
       List<Expr> args);
 
   New New(Position pos, TypeNode type, Expr label, Expr location,
@@ -43,11 +56,25 @@ public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
   NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label,
       Expr location, int addDims, FabricArrayInit init);
 
+  NewFabricArray NewFabricArray(Position pos, TypeNode base,
+      Expr label, Expr accessLabel, Expr location, List<Expr> dims);
+
+  NewFabricArray NewFabricArray(Position pos, TypeNode base,
+      Expr label, Expr accessLabel, Expr location, List<Expr> dims, int addDims);
+
+  NewFabricArray NewFabricArray(Position pos, TypeNode base,
+      Expr label, Expr accessLabel, Expr location, int addDims, FabricArrayInit init);
+
+  
   /**
    * Creates an AST node representing the creation of a Fabric array.
    */
   NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label,
       Expr location, List<Expr> dims, int addDims, FabricArrayInit init);
+  
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label, Expr accessLabel,
+      Expr location, List<Expr> dims, int addDims, FabricArrayInit init);
+  
 
   FabricArrayInit FabricArrayInit(Position position, List<Expr> elements);
 

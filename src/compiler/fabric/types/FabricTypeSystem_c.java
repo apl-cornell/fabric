@@ -3,9 +3,16 @@ package fabric.types;
 import java.util.*;
 
 import jif.ast.JifUtil;
+import jif.ast.LabelNode;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
-import jif.types.*;
+import jif.types.DefaultSignature;
+import jif.types.JifClassType;
+import jif.types.JifFieldInstance_c;
+import jif.types.JifLocalInstance;
+import jif.types.JifTypeSystem_c;
+import jif.types.LabeledType;
+import jif.types.Solver;
 import jif.types.label.*;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
@@ -27,7 +34,21 @@ import fabric.translate.FabricPairLabelToFabilExpr_c;
 import fabric.translate.ProviderLabelToFabilExpr_c;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
-
+    
+    private final FabricDefaultSignature ds;
+    
+    public FabricTypeSystem_c(TypeSystem jlts) {
+      super(jlts);
+      this.ds = new FabricFixedSignature(this);
+    }
+    
+    public DefaultSignature defaultSignature() {
+        return ds;
+    }
+    
+    public FabricDefaultSignature fabricDefaultSignature() {
+        return ds;
+    }
   @Override
   public void initialize(TopLevelResolver loadedResolver, ExtensionInfo extInfo)
       throws SemanticException {
@@ -41,7 +62,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   public CodebaseSystemResolver createSystemResolver(TopLevelResolver loadedResolver, ExtensionInfo extInfo) {
     return new CodebaseSystemResolver(loadedResolver, extInfo);
   }
-
+  
   @Override
   public CodebasePackageContextResolver createPackageContextResolver(Package p) {
     assert_(p);
@@ -57,10 +78,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return load("fabric.lang.Object");
   }
   
-  public FabricTypeSystem_c(TypeSystem jlts) {
-    super(jlts);
-  }
-
   @Override
   public String PrincipalClassName() {
     return "fabric.lang.security.Principal";
@@ -161,6 +178,23 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
       throw new InternalCompilerError(e);
     }
   }
+  
+  @Override
+  public FieldInstance fieldInstance(Position pos,
+      ReferenceType container,
+      Flags flags,
+      Type type,
+      String name) {
+      return fabricFieldInstance(pos, container, flags, type, null, name);
+  }
+  
+  public FabricFieldInstance fabricFieldInstance(Position pos,
+          ReferenceType container, Flags flags, Type type,
+          Label accessLabel, String name) {
+      return new FabricFieldInstance_c(this, pos, container, flags,
+              type, accessLabel, name);
+  }
+  
 
   @Override
   public boolean isCastValid(Type fromType, Type toType) {
@@ -244,7 +278,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   protected LabelToJavaExpr pairLabelTranslator() {
     return new FabricPairLabelToFabilExpr_c();
   }
-  
+
   @Override
   public ProviderLabel providerLabel(JifClassType ct) {
     return new FabricProviderLabel_c(ct, providerLabelTranslator());
@@ -404,6 +438,21 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     
     return super.translateClass(c, t);
   }
+  
+  public boolean isPlatformType(Named name) {
+    return isPlatformType(name.fullName());
+  }
+  
+  public boolean isPlatformType(String fullName) {
+    FabricOptions opt = (FabricOptions) extInfo.getOptions();
+    if(!opt.runWorker()) {
+      return true;
+    }
+    return fullName.startsWith("java")
+    || fullName.startsWith("fabric")
+    || fullName.startsWith("jif");
+  }
+  
 
   /**
    * Turns a codebase and a Java name into an absolute name. If the class is a
@@ -427,6 +476,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     } else
       return fullName;
   }
+
 
   public boolean localTypesOnly() {
     FabricOptions opt = (FabricOptions) extInfo.getOptions();
@@ -461,4 +511,5 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
       }
     }
   }
+
 }

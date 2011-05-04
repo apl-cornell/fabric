@@ -12,6 +12,7 @@ import jif.extension.JifLabelExprExt;
 import jif.extension.JifMethodDeclExt;
 import jif.extension.JifNewArrayExt;
 import jif.translate.ClassBodyToJavaExt_c;
+import jif.translate.FieldToJavaExt_c;
 
 /**
  * This class extends the Jif Extension factory to provide Jif extension objects
@@ -52,17 +53,22 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   
   @Override
   public Ext extClassDeclImpl() {
-    return new JifClassDeclExt(new ClassDeclToFabilExt_c());
+    return new FabricClassDeclExt(new ClassDeclToFabilExt_c());
   }
   
   @Override
-  public Ext extConstructorDeclImpl() {
-    return new JifConstructorDeclExt(new ConstructorDeclToFabilExt_c());
+  protected Ext extFieldImpl() {
+    return new FabricFieldExt(new FieldToJavaExt_c());
   }
-  
+
   @Override
   public Ext extMethodDeclImpl() {
     return new MethodDeclJifExt(new MethodDeclToFabilExt_c());
+  }
+
+  @Override
+  public Ext extConstructorDeclImpl() {
+    return new JifConstructorDeclExt(new ConstructorDeclToFabilExt_c());
   }
   
   @Override

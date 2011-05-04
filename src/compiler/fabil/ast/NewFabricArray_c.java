@@ -20,13 +20,15 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
 
   protected Expr label;
   protected Expr location;
+  protected Expr accessLabel;
 
   public NewFabricArray_c(Position pos, TypeNode baseType, List<Expr> dims,
-      int addDims, FabricArrayInit init, Expr label, Expr location) {
+      int addDims, FabricArrayInit init, Expr label, Expr accessLabel, Expr location) {
     super(pos, baseType, dims, addDims, init);
 
     this.location = location;
     this.label = label;
+    this.accessLabel = accessLabel;
   }
 
   @Override
@@ -43,9 +45,19 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     return label;
   }
 
+  public Expr accessLabel() {
+    return accessLabel;
+  }
+
   public NewFabricArray_c label(Expr label) {
     NewFabricArray_c n = (NewFabricArray_c) copy();
     n.label = label;
+    return n;
+  }
+
+  public NewFabricArray_c accessLabel(Expr accessLabel) {
+    NewFabricArray_c n = (NewFabricArray_c) copy();
+    n.accessLabel = accessLabel;
     return n;
   }
 
@@ -63,7 +75,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
    * Reconstructs the expression.
    */
   protected NewFabricArray_c reconstruct(TypeNode baseType, List<Expr> dims,
-      FabricArrayInit init, Expr location, Expr label) {
+      FabricArrayInit init, Expr location, Expr label, Expr accessLabel) {
     if (baseType != this.baseType || !CollectionUtil.equals(dims, this.dims)
         || init != this.init || location != this.location
         || label != this.label) {
@@ -73,6 +85,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
       n.init = init;
       n.location = location;
       n.label = label;
+      n.accessLabel = accessLabel;
       return n;
     }
 
@@ -87,7 +100,8 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     FabricArrayInit init = (FabricArrayInit) visitChild(this.init, v);
     Expr location = (Expr) visitChild(this.location, v);
     Expr label = (Expr) visitChild(this.label, v);
-    return reconstruct(baseType, dims, init, location, label);
+    Expr accessLabel = (Expr) visitChild(this.accessLabel, v);    
+    return reconstruct(baseType, dims, init, location, label, accessLabel);
   }
 
   @Override
@@ -119,6 +133,12 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
       }
     }
 
+    if (accessLabel != null) {
+      if (!ts.isImplicitCastValid(accessLabel.type(), ts.Label())) {
+        throw new SemanticException("Invalid access policy.", accessLabel.position());
+      }
+    }
+
     return result;
   }
 
@@ -140,6 +160,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
         last = location;
       }
 
+      // TODO: Add access labels
       v.visitCFG(last, this, EXIT);
     } else {
       v.visitCFG(baseType, listChild(dims, null), ENTRY);

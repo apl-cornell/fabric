@@ -35,6 +35,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
     
     Expr loc = null;
     Expr labelExpr = null;
+    Expr accessLabelExpr = null;
     Expr labelloc = null;
     
     if (ts.isFabricClass(ct)) {
@@ -43,19 +44,26 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       loc = ext.location();
       labelloc = loc;
       
-      Label fieldLabel = ct.defaultFabilFieldLabel();
+      Label fieldLabel = ct.singleFabilFieldLabel();
+      Label accessLabel = ct.singleFabilAccessLabel();
       if (fieldLabel != null && !sigMode) {
         labelExpr = rw.labelToJava(fieldLabel);
         if (labelloc == null) labelloc = nf.StoreGetter(n.position());
 //        if (loc != null)
         labelExpr = ffrw.updateLabelLocation(labelExpr, labelloc);
       }
+      
+      if (accessLabel != null && !sigMode) {
+        accessLabelExpr = rw.labelToJava(accessLabel);
+        if (labelloc == null) labelloc = nf.StoreGetter(n.position());
+        accessLabelExpr = ffrw.updateLabelLocation(accessLabelExpr, labelloc);
+      }
     }
     
     if (! rw.jif_ts().isParamsRuntimeRep(ct) || (ct instanceof JifSubstType && !rw.jif_ts().isParamsRuntimeRep(((JifSubstType)ct).base()))) {
         // only rewrite creation of classes where params are runtime represented.
         n = nf.New(n.position(), n.qualifier(), n.objectType(),
-                   labelExpr, loc,
+                   labelExpr, accessLabelExpr, loc,
                    n.arguments(), n.body());
         return n;
     }

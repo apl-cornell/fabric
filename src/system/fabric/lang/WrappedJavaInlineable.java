@@ -83,6 +83,10 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
     throw new InternalError("WrappedJavaInlineables don't have labels.");
   }
 
+  public Label get$accesslabel() {
+    throw new InternalError("WrappedJavaInlineables don't have access labels.");
+  }
+  
   public Label set$label(Label label) {
     throw new InternalError("WrappedJavaInlineables don't have labels.");
   }

@@ -6,6 +6,7 @@ import jif.types.JifParsedPolyType;
 import jif.types.label.Label;
 
 public interface FabricParsedClassType extends JifParsedPolyType, FabricClassType, CodebaseClassType {
-  Label defaultFieldLabel();
   void removeMethod(MethodInstance mi);
-}
+  public Label getFoldedAccessLabel();
+  public Label singleAccessLabel();
+  }

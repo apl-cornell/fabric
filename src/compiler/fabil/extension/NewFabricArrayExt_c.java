@@ -42,8 +42,8 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
       else typeArg = "fabric.lang.Object";
       typeArg += "._Proxy.class, ";
     }
-    return qq.parseExpr("(%T) new %T(%E, %E, " + typeArg + "%E).$getProxy()",
-        arrayType, arrayImplType, newArray.location(), newArray.label(), size);
+    return qq.parseExpr("(%T) new %T(%E, %E, %E, " + typeArg + "%E).$getProxy()",
+        arrayType, arrayImplType, newArray.location(), newArray.label(), newArray.accessLabel(), size);
   }
 
   /*

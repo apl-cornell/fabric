@@ -14,6 +14,10 @@ public interface charArray extends Object {
       super(store, label);
     }
 
+    public _Impl(Store store, Label label, Label accessLabel, int length) {
+      super(store, label, accessLabel);
+    }
+
     public native char get(int i);
 
     public native char set(int i, char value);

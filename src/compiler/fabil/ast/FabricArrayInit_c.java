@@ -20,6 +20,8 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
 
   protected Expr location;
   protected Expr label;
+  protected Expr accessLabel;
+  
 
   public FabricArrayInit_c(Position pos, List<Expr> elements, Expr label,
       Expr location) {
@@ -51,6 +53,16 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   public FabricArrayInit_c label(Expr label) {
     FabricArrayInit_c n = (FabricArrayInit_c) copy();
     n.label = label;
+    return n;
+  }
+  
+  public Expr accessLabel() {
+    return accessLabel;
+  }
+
+  public FabricArrayInit_c accessLabel(Expr accessLabel) {
+    FabricArrayInit_c n = (FabricArrayInit_c) copy();
+    n.accessLabel = accessLabel;
     return n;
   }
 

@@ -33,9 +33,13 @@ public interface _booleanArray extends Object {
      *                The length of the array.
      */
     public _Impl(Store store, Label label, int length) {
-      this(store, label, new boolean[length]);
+      this(store, label, label, new boolean[length]);
     }
 
+    public _Impl(Store store, Label label, Label accessLabel, int length) {
+      this(store, label, accessLabel, new boolean[length]);
+    }
+    
     /**
      * Creates a new boolean array at the given Store using the given backing
      * array.
@@ -46,7 +50,12 @@ public interface _booleanArray extends Object {
      *                The backing array to use.
      */
     public _Impl(Store store, Label label, boolean[] value) {
-      super(store, label);
+      super(store, label, label);
+      this.value = value;
+    }
+
+    public _Impl(Store store, Label label, Label accessLabe, boolean[] value) {
+      super(store, label, accessLabe);
       this.value = value;
     }
 
@@ -57,7 +66,17 @@ public interface _booleanArray extends Object {
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs) throws IOException,
         ClassNotFoundException {
-      super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
+      super(store, onum, version, expiry, label, label, in, refTypes, intraStoreRefs);
+      value = new boolean[in.readInt()];
+      for (int i = 0; i < value.length; i++)
+        value[i] = in.readBoolean();
+    }
+
+    public _Impl(Store store, long onum, int version, long expiry, long label, long accessLabel,
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs) throws IOException,
+        ClassNotFoundException {
+      super(store, onum, version, expiry, label, accessLabel, in, refTypes, intraStoreRefs);
       value = new boolean[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readBoolean();

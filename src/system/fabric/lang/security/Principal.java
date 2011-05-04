@@ -96,7 +96,7 @@ public interface Principal extends fabric.lang.Object {
     private PublicKey publicKey;
     private PrivateKeyObject privateKeyObject;
 
-    public _Impl(Store store, Label label) {
+    public _Impl(Store store, Label label, Label accessLabel) {
       // If the given label is null, temporarily create the object with an
       // overly restrictive label.
       super(store, label == null ? Worker.getWorker().getLocalStore()
@@ -118,12 +118,16 @@ public interface Principal extends fabric.lang.Object {
         if (label == null) {
           // Replace the temporary label with {this <- this}.
           this.$label = thisIntegLabel;
+          this.$accessLabel = LabelUtil._Impl.toLabel(store, bottomConf);
+          
         } else {
           // Join the given label with {this <- this}.
           this.$label =
               LabelUtil._Impl.join(this.$label.$getStore(), this.$label,
                   thisIntegLabel);
         }
+        
+        
       }
 
       // Generate a new key pair for this principal.
@@ -137,6 +141,11 @@ public interface Principal extends fabric.lang.Object {
       this.privateKeyObject =
           new PrivateKeyObject._Impl(store, privateLabel, keyPair.getPrivate());
     }
+    
+    public _Impl(Store store, Label label) {
+      this(store, label, label);
+    }
+    
 
     abstract public String name();
 
@@ -172,6 +181,13 @@ public interface Principal extends fabric.lang.Object {
       super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
     }
 
+    public _Impl(Store store, long onum, int version, long expiry, long label, long accessLabel,
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs) throws java.io.IOException,
+        ClassNotFoundException {
+      super(store, onum, version, expiry, label, accessLabel, in, refTypes, intraStoreRefs);
+    }
+    
     public final PublicKey getPublicKey() {
       TransactionManager.getInstance().registerRead(this);
       return publicKey;

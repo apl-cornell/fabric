@@ -14,6 +14,10 @@ public interface longArray extends Object {
       super(store, label);
     }
 
+    public _Impl(Store store, Label label, Label accessLabel, int length) {
+      super(store, label, accessLabel);
+    }
+
     public native long get(int i);
 
     public native long set(int i, long value);

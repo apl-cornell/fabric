@@ -308,7 +308,7 @@ public interface LabelUtil extends fabric.lang.Object {
         native public static void notifyRevokeDelegation(
           fabric.lang.security.Principal arg1,
           fabric.lang.security.Principal arg2);
-        
+
         public _Proxy(LabelUtil._Impl impl) { super(impl); }
         
         public _Proxy(fabric.worker.Store store, long onum) {

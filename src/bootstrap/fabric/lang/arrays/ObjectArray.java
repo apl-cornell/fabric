@@ -14,6 +14,11 @@ public interface ObjectArray extends Object {
       super(store, label);
     }
 
+    public _Impl(Store store, Label label, Label accessLabel,
+        Class<?> componentType, int length) {
+      super(store, label, accessLabel);
+    }
+
     public native Object get(int i);
 
     public native Object set(int i, Object value);

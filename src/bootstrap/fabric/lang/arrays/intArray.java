@@ -14,6 +14,10 @@ public interface intArray extends Object {
       super(store, label);
     }
 
+    public _Impl(Store store, Label label, Label accessLabel, int length) {
+      super(store, label, accessLabel);
+    }
+
     public native int get(int i);
 
     public native int set(int i, int value);

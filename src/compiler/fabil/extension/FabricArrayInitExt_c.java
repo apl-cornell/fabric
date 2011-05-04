@@ -44,6 +44,7 @@ public class FabricArrayInitExt_c extends AnnotatedExt_c {
     
     location = arrayInit.location();
     label = arrayInit.label();
+    Expr accessLabel = arrayInit.accessLabel();
 
     Type oldBase = arrayInit.type().toArray().base();
     Type newBase = oldBase.isPrimitive() ? oldBase : ts.FObject();
@@ -52,8 +53,8 @@ public class FabricArrayInitExt_c extends AnnotatedExt_c {
             .compilerGenerated(), newBase), 1, arrayInit);
     
     return qq.parseExpr(
-        "fabric.lang.arrays.internal.Compat.convert(%E, %E, %E)", location,
-        label, init);
+        "fabric.lang.arrays.internal.Compat.convert(%E, %E, %E, %E)", location,
+        label, accessLabel, init);
   }
 
   /*

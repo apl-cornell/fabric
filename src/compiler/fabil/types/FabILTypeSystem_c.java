@@ -104,6 +104,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   public Type Label() {
     return load("fabric.lang.security.Label");
   }
+  
+  public Type ConfPolicy() {
+    return load("fabric.lang.security.ConfPolicy");
+  }
 
   public ClassType InternalError() {
     return load("java.lang.InternalError");

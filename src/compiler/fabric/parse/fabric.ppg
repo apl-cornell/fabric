@@ -95,6 +95,7 @@ non terminal Stmt   abort_stmt, retry_stmt;
 non terminal Worker local_worker;
 non terminal RemoteWorkerGetter remote_worker;
 non terminal FabricArrayInit fabric_array_initializer;
+non terminal LabelNode access_label_opt;
 
 start with goal;
 
@@ -160,6 +161,33 @@ extend primary_no_new_array ::=
 extend principal_base ::=
         local_worker:a
             {: RESULT = parser.nf.AmbPrincipalNode(parser.pos(a), a); :}
+    ;
+
+////////////////////////////////////////////////////////////////////////
+// Field Declarations now use an optional "access label"              //
+////////////////////////////////////////////////////////////////////////
+
+override field_declaration ::=
+                    // List of ClassMember
+        modifiers_opt:a type:b AT label:al variable_declarators:c SEMICOLON:e
+            {: List l = new TypedList(new LinkedList(), ClassMember.class, false);
+               for (Iterator i = c.iterator(); i.hasNext(); ) {
+                   VarDeclarator d = (VarDeclarator) i.next();
+                   l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
+                                             a, parser.array(b, d.dims), al,
+                                             d.name, d.init));
+               }
+               RESULT = l; :}
+		|  modifiers_opt:a type:b variable_declarators:c SEMICOLON:e
+            {: List l = new TypedList(new LinkedList(), ClassMember.class, false);
+               for (Iterator i = c.iterator(); i.hasNext(); ) {
+                   VarDeclarator d = (VarDeclarator) i.next();
+                   l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
+                                             a, parser.array(b, d.dims), null,
+                                             d.name, d.init));
+               }
+               RESULT = l; :}
+               
     ;
 
 ////////////////////////////////////////////////////////////////////////

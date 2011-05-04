@@ -14,6 +14,10 @@ public interface shortArray extends Object {
       super(store, label);
     }
 
+    public _Impl(Store store, Label label, Label accessLabel, int length) {
+      super(store, label, accessLabel);
+    }
+
     public native short get(int i);
 
     public native short set(int i, short value);

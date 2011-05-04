@@ -14,6 +14,10 @@ public interface doubleArray extends Object {
       super(store, label);
     }
 
+    public _Impl(Store store, Label label, Label accessLabel, int length) {
+      super(store, label, accessLabel);
+    }
+
     public native double get(int i);
 
     public native double set(int i, double value);
