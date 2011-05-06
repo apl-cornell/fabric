@@ -47,9 +47,46 @@ public class FabricClassDeclExt extends JifClassDeclExt {
     // let the label checker know that we are about to enter a class body
     lc.enteringClassDecl(ct);
     
-    Label singleAccessLabel = pct.getFoldedAccessLabel();
+    // construct a principal that represents the authority of ct
+    final Principal authPrincipal = lc.jifTypeSystem().conjunctivePrincipal(ct.position(), ct.authority());
+
+    // Check the authority of the class against the superclass.
+    if (ct.superType() instanceof JifClassType) {
+        final JifClassType superType = (JifClassType) ct.superType();         
+        
+        for (final Principal pl : superType.authority()) {
+            // authPrincipal must actfor pl i.e., at least one
+            // of the principals that have authorized ct must act for pl.
+            lc.constrain(authPrincipal, 
+                         PrincipalConstraint.ACTSFOR, 
+                        pl, 
+                       A.labelEnv(),
+                       n.position(),
+                       new ConstraintMessage() {
+                @Override
+                public String msg() {
+                    return "Superclass " + superType + " requires " + ct + " to " +
+                    "have the authority of principal " + pl;
+                }
+                @Override
+                public String detailMsg() {
+                    return "The class " + superType + " has the authority of the " +
+                    "principal " + pl + ". To extend this class, " + ct + 
+                    " must also have the authority of " + pl + ".";
+                }
+            });             
+            
+        }
+    }
     
 
+    // Enter scope
+    A = (JifContext) n.del().enterScope(A);
+    lc = lc.context(A);
+    
+    // Access label checks
+    Label singleAccessLabel = pct.getFoldedAccessLabel();
+    
     if (singleAccessLabel != null) {
       // check that the access label has the top integrity label, i.e. it only
       // has a meaningful confidentiality component
@@ -85,42 +122,8 @@ public class FabricClassDeclExt extends JifClassDeclExt {
         );
       }
     }
-    
-    // construct a principal that represents the authority of ct
-    final Principal authPrincipal = lc.jifTypeSystem().conjunctivePrincipal(ct.position(), ct.authority());
 
-    // Check the authority of the class against the superclass.
-    if (ct.superType() instanceof JifClassType) {
-        final JifClassType superType = (JifClassType) ct.superType();         
-        
-        for (final Principal pl : superType.authority()) {
-            // authPrincipal must actfor pl i.e., at least one
-            // of the principals that have authorized ct must act for pl.
-            lc.constrain(authPrincipal, 
-                         PrincipalConstraint.ACTSFOR, 
-                        pl, 
-                       A.labelEnv(),
-                       n.position(),
-                       new ConstraintMessage() {
-                @Override
-                public String msg() {
-                    return "Superclass " + superType + " requires " + ct + " to " +
-                    "have the authority of principal " + pl;
-                }
-                @Override
-                public String detailMsg() {
-                    return "The class " + superType + " has the authority of the " +
-                    "principal " + pl + ". To extend this class, " + ct + 
-                    " must also have the authority of " + pl + ".";
-                }
-            });             
-            
-        }
-    }
-    
-    A = (JifContext) n.del().enterScope(A);
-    lc = lc.context(A);
-
+    // Provider label checks
     final ProviderLabel provider = ct.provider();
     NamedLabel namedProvider =
             new NamedLabel(provider.toString(), "provider of "
