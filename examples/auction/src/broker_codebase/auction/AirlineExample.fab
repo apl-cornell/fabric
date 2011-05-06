@@ -30,13 +30,9 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 		this.user = user;
     }
 
-    protected PrintStream[{}]{} output;
-
-
     public void go {* <-} (PrintStream[{}] {} output) where authority (Broker)
     {
-		this.output = output; 
-		println ("Starting Airline example");
+		output.println ("Starting Airline example");
 
 		//final principal airlines = new principal (AirlineA & AirlineB);
 		final Store store = worker$.getStore(Config.brokerStoreName);
@@ -82,14 +78,11 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 			int {Broker ->; Broker <-} w0 = endorse (winner, {*auction_lbl} to {Broker ->; Broker <-} );
 		
 			int {} w = declassify ( w0, {} ); 
-			println ("Ending Airline example with winner " + w);
+			output.println ("Ending Airline example with winner " + w);
 		}
 		else
 			throw new Error("Store does not act for broker");
     }
 
-    public void println {} (String {} x) where provider <= {Broker <- }  { // encapsulate output so fatal error analysis kicks in... 
-	    output.println (x) ; 
-    }
 }
 

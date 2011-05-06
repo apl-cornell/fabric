@@ -45,7 +45,9 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     
     // This constraint is not necessary for static methods
     // since they cannot directly access the fields
-    if (!n.flags().isStatic()) {
+    // Also, if accessLabel is null, it means there are no fields
+    // and again the constraint is not necessary
+    if (!n.flags().isStatic() && accessLabel != null) {
       lc.constrain(new NamedLabel("begin label", "begin label", startLabel),
           LabelConstraint.LEQ,
           new NamedLabel("access label", "access label", accessLabel),
