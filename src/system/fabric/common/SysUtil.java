@@ -69,8 +69,8 @@ public final class SysUtil {
           classLoader);
       throw new InternalError("Class not found: " + className);
     }
-    //For platform classes, hash the bytecode
-    if(isPlatformType(className)) {
+    // For platform classes, hash the bytecode
+    if (isPlatformType(className)) {
       byte[] buf = new byte[BUF_LEN];
       int count = classIn.read(buf);
       while (count != -1) {
@@ -78,13 +78,13 @@ public final class SysUtil {
         count = classIn.read(buf);
       }
       classIn.close();
-  
+
       Class<?> superClass = c.getSuperclass();
       if (superClass != null) digest.update(hash(superClass));
-  
+
       result = digest.digest();
     }
-    //For classes stored in Fabric, ignore the hash
+    // For classes stored in Fabric, ignore the hash
     else {
       result = new byte[] { 0 };
     }
