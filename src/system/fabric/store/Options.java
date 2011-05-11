@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.PrintStream;
 import java.util.Set;
 
-import fabric.common.Options.Flag;
 import fabric.common.Options.Flag.Kind;
 import fabric.common.exceptions.UsageError;
 
