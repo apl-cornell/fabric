@@ -510,7 +510,7 @@ public final class Worker {
             LabelUtil._Impl.writerPolicy(local, workerPrincipal,
                 workerPrincipal);
         Label label = LabelUtil._Impl.toLabel(local, conf, integ);
-        return WrappedJavaInlineable.$wrap(local, label, args);
+        return WrappedJavaInlineable.$wrap(local, label, label, args);
       }
     });
 

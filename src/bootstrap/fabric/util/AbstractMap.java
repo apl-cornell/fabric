@@ -6,8 +6,8 @@ import fabric.lang.Object;
 
 public interface AbstractMap extends Map, Object {
   public abstract static class _Impl extends Object._Impl {
-    public _Impl(Store store, Label label) {
-      super(store, label);
+    public _Impl(Store store, Label label, Label accessLabel) {
+      super(store, label, accessLabel);
     }
   }
 }

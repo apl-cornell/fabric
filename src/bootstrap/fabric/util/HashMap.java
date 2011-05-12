@@ -6,8 +6,8 @@ import fabric.lang.Object;
 
 public interface HashMap extends Map, AbstractMap {
   public static class _Impl extends AbstractMap._Impl implements HashMap {
-    public _Impl(Store store, Label label) {
-      super(store, label);
+    public _Impl(Store store, Label label, Label accessLabel) {
+      super(store, label, accessLabel);
     }
     
     public native Object get(Object key);

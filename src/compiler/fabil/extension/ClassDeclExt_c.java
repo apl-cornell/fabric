@@ -428,9 +428,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // static impl members.
     ClassMember implConstructorDecl =
         qq.parseMember("public _Impl(fabric.worker.Store store, "
-            + "fabric.lang.security.Label label) "
+            + "fabric.lang.security.Label label, "
+            + "fabric.lang.security.Label accessLabel) "
             + "throws fabric.net.UnreachableNodeException {"
-            + "super(store, label); }");
+            + "super(store, label, accessLabel); }");
     implMembers.add(implConstructorDecl);
 
     // Create the $makeProxy method declaration and add it to the list of static
@@ -539,10 +540,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         qq
             .parseMember(
                 "public _Impl(fabric.worker.Store store, long onum, int version, "
-                    + "long expiry, long label, java.io.ObjectInput in, "
+                    + "long expiry, long label, long accessLabel, java.io.ObjectInput in, "
                     + "java.util.Iterator refTypes, java.util.Iterator intraStoreRefs) "
                     + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-                    + "super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);"
+                    + "super(store, onum, version, expiry, label, accessLabel, in, refTypes, intraStoreRefs);"
                     + in + " }", inSubst);
     result.add(deserialize);
 

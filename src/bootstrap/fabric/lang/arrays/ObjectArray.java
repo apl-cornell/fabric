@@ -10,12 +10,8 @@ public interface ObjectArray extends Object {
   Object set(int i, Object value);
 
   public static class _Impl extends Object._Impl implements ObjectArray {
-    public _Impl(Store store, Label label, Class<?> proxyClass, int length) {
-      super(store, label);
-    }
-
     public _Impl(Store store, Label label, Label accessLabel,
-        Class<?> componentType, int length) {
+        Class<?> proxyClass, int length) {
       super(store, label, accessLabel);
     }
 

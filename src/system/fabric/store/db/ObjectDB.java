@@ -541,21 +541,22 @@ public abstract class ObjectDB {
         // supplied by the workers' local store.
         String principalName = new X500Principal("CN=" + name).getName();
         NodePrincipal._Impl principal =
-            new NodePrincipal._Impl(store, null, principalName);
+            new NodePrincipal._Impl(store, null, null, principalName);
         principal.$forceRenumber(ONumConstants.STORE_PRINCIPAL);
 
         // Create the label {store->_; store<-_} for the root map.
         ReaderPolicy confid =
             (ReaderPolicy) new ReaderPolicy._Impl(store, publicReadonlyLabel(),
-                storePrincipal(), null).$getProxy();
+                publicReadonlyLabel(), storePrincipal(), null).$getProxy();
         WriterPolicy integ =
             (WriterPolicy) new WriterPolicy._Impl(store, publicReadonlyLabel(),
-                storePrincipal(), null).$getProxy();
+                publicReadonlyLabel(), storePrincipal(), null).$getProxy();
         Label label =
-            (Label) new PairLabel._Impl(store, null, confid, integ).$getProxy();
+            (Label) new PairLabel._Impl(store, null, null, confid, integ)
+                .$getProxy();
 
         fabric.util.HashMap._Impl map =
-            new fabric.util.HashMap._Impl(store, label);
+            new fabric.util.HashMap._Impl(store, label, label);
         map.$forceRenumber(ONumConstants.ROOT_MAP);
 
         return null;

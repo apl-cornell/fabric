@@ -11,14 +11,8 @@ import polyglot.ast.NodeFactory;
 import polyglot.ast.Typed;
 import polyglot.frontend.FileSource;
 import polyglot.frontend.Job;
-import polyglot.frontend.Source;
 import polyglot.main.Report;
-import polyglot.types.Named;
-import polyglot.types.ParsedClassType;
-import polyglot.types.SemanticException;
-import polyglot.types.Type;
-import polyglot.types.TypeSystem;
-import polyglot.util.InternalCompilerError;
+import polyglot.types.*;
 import polyglot.visit.ErrorHandlingVisitor;
 import polyglot.visit.NodeVisitor;
 import fabric.ExtensionInfo;
@@ -99,7 +93,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         FClass fcls;
         try {
           fcls = (FClass)new FClass._Impl(
-              store, lbl, className, null, toSourceString(loc_src)).$getProxy();
+              store, lbl, lbl, className, null, toSourceString(loc_src)).$getProxy();
         } catch (IOException e) {
           throw new SemanticException(
               "Error creating Fabric class for class " + className +  " in file:" + loc_src + "Cause:" + e);
@@ -171,7 +165,6 @@ public class FClassGenerator extends ErrorHandlingVisitor {
 
   private Set<String> toClassNames(Set<Named> deps) {
     Set<String> names  = new HashSet<String>();
-    FabricTypeSystem fabts = (FabricTypeSystem) ts;
     for(Named n: deps)
       if(!SysUtil.isPlatformType(n))
         names.add(n.fullName());

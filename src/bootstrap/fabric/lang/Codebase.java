@@ -1,5 +1,7 @@
 package fabric.lang;
 
+import fabric.lang.security.Label;
+
 public interface Codebase extends fabric.lang.Object {
     
     public fabric.util.Map get$classes();
@@ -47,14 +49,14 @@ public interface Codebase extends fabric.lang.Object {
           java.lang.String name);
         
         public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label) {
-            super($location, $label);
+                     fabric.lang.security.Label $label, Label accessLabel) {
+            super($location, $label, accessLabel);
         }
         
         public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label,
+                     fabric.lang.security.Label $label, Label accessLabel,
                      fabric.util.Map classes) {
-            super($location, $label);
+            super($location, $label, accessLabel);
         }
         
         native public void insertClass(java.lang.String name,
@@ -71,12 +73,13 @@ public interface Codebase extends fabric.lang.Object {
               throws java.io.IOException;
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, long label, java.io.ObjectInput in,
+                     long expiry, long label, long accessLabel,
+                     java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, in, refTypes,
+            super(store, onum, version, expiry, label, accessLabel, in, refTypes,
                   intraStoreRefs);
         }
         
@@ -102,9 +105,9 @@ public interface Codebase extends fabric.lang.Object {
         {
             
             public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label)
+                         fabric.lang.security.Label label, Label accessLabel)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label);
+                super(store, label, accessLabel);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

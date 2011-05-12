@@ -85,7 +85,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
     if (rw.jif_ts().isJifClass(ct)) {            
         String name = ClassDeclToFabilExt_c.jifConstructorTranslatedName(ct);
         New newExpr = nf.New(n.position(), n.qualifier(), n.objectType(), 
-                             labelExpr, loc,
+                             labelExpr, accessLabelExpr, loc,
                              paramargs);
         return rw.qq().parseExpr("%E.%s(%LE)",
                                  newExpr, name, n.arguments());

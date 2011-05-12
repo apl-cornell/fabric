@@ -98,9 +98,10 @@ public interface Principal extends fabric.lang.Object {
 
     public _Impl(Store store, Label label, Label accessLabel) {
       // If the given label is null, temporarily create the object with an
-      // overly restrictive label.
+      // overly restrictive label.  If access label is null, default to public.
       super(store, label == null ? Worker.getWorker().getLocalStore()
-          .getPublicReadonlyLabel() : label);
+          .getPublicReadonlyLabel() : label, accessLabel == null ? Worker
+          .getWorker().getLocalStore().getPublicReadonlyLabel() : accessLabel);
 
       Principal._Proxy thisProxy = (Principal._Proxy) this.$getProxy();
       IntegPolicy integ =
@@ -118,16 +119,12 @@ public interface Principal extends fabric.lang.Object {
         if (label == null) {
           // Replace the temporary label with {this <- this}.
           this.$label = thisIntegLabel;
-          this.$accessLabel = LabelUtil._Impl.toLabel(store, bottomConf);
-          
         } else {
           // Join the given label with {this <- this}.
           this.$label =
               LabelUtil._Impl.join(this.$label.$getStore(), this.$label,
                   thisIntegLabel);
         }
-        
-        
       }
 
       // Generate a new key pair for this principal.
@@ -139,13 +136,9 @@ public interface Principal extends fabric.lang.Object {
           LabelUtil._Impl.readerPolicy(store, thisProxy, thisProxy);
       Label privateLabel = LabelUtil._Impl.toLabel(store, conf, integ);
       this.privateKeyObject =
-          new PrivateKeyObject._Impl(store, privateLabel, keyPair.getPrivate());
+          new PrivateKeyObject._Impl(store, privateLabel, privateLabel,
+              keyPair.getPrivate());
     }
-    
-    public _Impl(Store store, Label label) {
-      this(store, label, label);
-    }
-    
 
     abstract public String name();
 
@@ -175,19 +168,13 @@ public interface Principal extends fabric.lang.Object {
     }
 
     public _Impl(Store store, long onum, int version, long expiry, long label,
-        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs) throws java.io.IOException,
         ClassNotFoundException {
-      super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
+      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+          intraStoreRefs);
     }
 
-    public _Impl(Store store, long onum, int version, long expiry, long label, long accessLabel,
-        ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs) throws java.io.IOException,
-        ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes, intraStoreRefs);
-    }
-    
     public final PublicKey getPublicKey() {
       TransactionManager.getInstance().registerRead(this);
       return publicKey;
@@ -225,8 +212,9 @@ public interface Principal extends fabric.lang.Object {
     class _Impl extends fabric.lang.Object._Impl implements
         fabric.lang.security.Principal._Static {
 
-      public _Impl(Store store, Label label) throws UnreachableNodeException {
-        super(store, label);
+      public _Impl(Store store, Label label, Label accessLabel)
+          throws UnreachableNodeException {
+        super(store, label, accessLabel);
       }
 
       @Override

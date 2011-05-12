@@ -255,7 +255,8 @@ class Store extends MessageToStoreHandler {
     // onum.
     long principalOnum = Worker.runInTransaction(null, new Code<Long>() {
       public Long run() {
-        NodePrincipal principal = new NodePrincipal._Impl(store, null, null);
+        NodePrincipal principal =
+            new NodePrincipal._Impl(store, null, null, null);
         principal.addDelegatesTo(store.getPrincipal());
         return principal.$getOnum();
       }

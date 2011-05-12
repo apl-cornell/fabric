@@ -10,10 +10,6 @@ public interface longArray extends Object {
   long set(int i, long value);
 
   public static class _Impl extends Object._Impl implements longArray {
-    public _Impl(Store store, Label label, int length) {
-      super(store, label);
-    }
-
     public _Impl(Store store, Label label, Label accessLabel, int length) {
       super(store, label, accessLabel);
     }

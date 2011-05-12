@@ -23,7 +23,14 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
   @Override
   public Annotated assignLabels(LabelAssigner la) throws SemanticException {
     Annotated expr = node();
-    if (expr.label() != null && expr.accessLabel() != null) return expr;
+    expr = assignLabel(la, expr);
+    expr = assignAccessLabel(la, expr);
+    return expr;
+  }
+
+  private Annotated assignLabel(LabelAssigner la, Annotated expr)
+      throws SemanticException {
+    if (expr.label() != null) return expr;
 
     FabILNodeFactory nf = la.nodeFactory();
     FabILTypeSystem ts = la.typeSystem();
@@ -34,8 +41,7 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     // Need a label. Use null by default for principal objects. The Principal
     // constructor will fill in the appropriate label.
     if (ts.isPrincipalClass(expr.type())) {
-      Annotated toRet = (Annotated) expr.label(qq.parseExpr("null")).type(ts.Null());
-      return (Annotated) toRet.accessLabel(qq.parseExpr("null").type(ts.Null()));
+      return expr.label(qq.parseExpr("null").type(ts.Null()));
     }
 
     // Need a label. By default, we use the same label as the context.
@@ -52,32 +58,38 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     } else {
       receiver = qq.parseExpr("this").type(currentClass);
     }
-    
+
     Position pos = Position.compilerGenerated();
-    Call accessLabel = nf.Call(pos, receiver, nf.Id(pos, "get$accesslabel"));
+    Call defaultLabel = nf.Call(pos, receiver, nf.Id(pos, "get$label"));
 
     Flags flags = Flags.NONE;
     if (context.inStaticContext()) flags = Flags.STATIC;
-    
-    MethodInstance ami =
-        ts.methodInstance(pos, currentClass, flags, ts.Label(), "get$accesslabel",
-            Collections.emptyList(), Collections.emptyList());
-    accessLabel = (Call) accessLabel.type(ts.Label());
-    accessLabel = accessLabel.methodInstance(ami);
-    expr = expr.accessLabel(accessLabel);
 
-    pos = Position.compilerGenerated();
-    Call defaultLabel = nf.Call(pos, receiver, nf.Id(pos, "get$label"));
-
-    flags = Flags.NONE;
-    if (context.inStaticContext()) flags = Flags.STATIC;
-    
     MethodInstance lmi =
         ts.methodInstance(pos, currentClass, flags, ts.Label(), "get$label",
             Collections.emptyList(), Collections.emptyList());
     defaultLabel = (Call) defaultLabel.type(ts.Label());
     defaultLabel = defaultLabel.methodInstance(lmi);
     return expr.label(defaultLabel);
+  }
+
+  private Annotated assignAccessLabel(LabelAssigner la, Annotated expr) {
+    if (expr.accessLabel() != null) return expr;
+
+    FabILTypeSystem ts = la.typeSystem();
+    QQ qq = la.qq();
+
+    if (!ts.isFabricReference(expr.type())) return expr;
+
+    // Need an access label. Use null by default for principal objects. The
+    // Principal constructor will fill in the appropriate access label.
+    if (ts.isPrincipalClass(expr.type())) {
+      return expr.accessLabel(qq.parseExpr("null").type(ts.Null()));
+    }
+
+    // Need a label. Use the object label by default.
+    Expr label = expr.label();
+    return expr.accessLabel(label);
   }
 
   @Override
@@ -125,7 +137,7 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
   public Annotated node() {
     return (Annotated) super.node();
   }
-  
+
   @Override
   public void dump(CodeWriter w) {
     super.dump(w);
@@ -144,5 +156,5 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     w.write(")");
     w.end();
   }
-  
+
 }

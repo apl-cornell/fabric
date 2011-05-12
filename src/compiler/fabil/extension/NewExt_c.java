@@ -26,6 +26,11 @@ public class NewExt_c extends AnnotatedExt_c {
     FabILTypeSystem ts = pr.typeSystem();
     if (!ts.isPureFabricType(typeNode))
       return super.rewriteProxiesImpl(pr);
+    
+    if (call.accessLabel() == null) {
+      System.out.println(call.getClass());
+      System.out.println(call.ext().getClass());
+    }
 
     List<Expr> newargs = new LinkedList<Expr>(call.arguments());
     newargs.add(0, call.location());

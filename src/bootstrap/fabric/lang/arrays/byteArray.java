@@ -12,10 +12,6 @@ public interface byteArray extends Object {
   int  get$length();
 
   public static class _Impl extends Object._Impl implements byteArray {
-    public _Impl(Store store, Label label, int length) {
-      super(store, label);
-    }
-
     public _Impl(Store store, Label label, Label accessLabel, int length) {
       super(store, label, accessLabel);
     }

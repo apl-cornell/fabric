@@ -40,28 +40,17 @@ public interface DelegatingPrincipal extends Principal {
   public abstract static class _Impl extends Principal._Impl implements
       DelegatingPrincipal {
 
-    public _Impl(Store store, Label label) {
-      super(store, label);
-    }
-
-    public _Impl(Store store, long onum, int version, long expiry, long label,
-        ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs) throws IOException,
-        ClassNotFoundException {
-      super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
-    }
-    
     public _Impl(Store store, Label label, Label accessLabel) {
       super(store, label, accessLabel);
     }
 
-    public _Impl(Store store, long onum, int version, long expiry, long label, long accessLabel,
-        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+    public _Impl(Store store, long onum, int version, long expiry, long label,
+        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs) throws IOException,
         ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes, intraStoreRefs);
+      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+          intraStoreRefs);
     }
-    
 
     public static DelegatingPrincipal $addDefaultDelegates(DelegatingPrincipal p) {
       NodePrincipal store = p.$getStore().getPrincipal();

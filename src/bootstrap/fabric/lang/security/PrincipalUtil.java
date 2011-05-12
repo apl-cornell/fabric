@@ -77,11 +77,11 @@ public interface PrincipalUtil
                          fabric.
                            lang.
                            security.
-                           Label $label,
+                           Label $label, fabric.lang.security.Label accessLabel,
                          fabric.lang.security.Principal p,
                          fabric.lang.security.Principal q) {
                 super($location,
-                      $label);
+                      $label, accessLabel);
             }
             
             private _Impl(fabric.
@@ -90,12 +90,12 @@ public interface PrincipalUtil
                           fabric.
                             lang.
                             security.
-                            Label $label,
+                            Label $label, Label accessLabel,
                           fabric.lang.security.PrincipalUtil.ProofSearchState ss,
                           fabric.lang.security.Principal p,
                           fabric.lang.security.Principal q) {
                 super($location,
-                      $label);
+                      $label, accessLabel);
             }
             
             native public boolean
@@ -134,7 +134,7 @@ public interface PrincipalUtil
                          long onum,
                          int version,
                          long expiry,
-                         long label,
+                         long label, long accessLabel,
                          java.
                            io.
                            ObjectInput in,
@@ -154,7 +154,7 @@ public interface PrincipalUtil
                       onum,
                       version,
                       expiry,
-                      label,
+                      label, accessLabel,
                       in,
                       refTypes,
                       intraStoreRefs);
@@ -225,12 +225,12 @@ public interface PrincipalUtil
                              fabric.
                                lang.
                                security.
-                               Label label)
+                               Label label, fabric.lang.security.Label accessLabel)
                       throws fabric.
                   net.
                   UnreachableNodeException {
                     super(store,
-                          label);
+                          label, accessLabel);
                 }
                 
                 native protected fabric.
@@ -322,9 +322,9 @@ public interface PrincipalUtil
                          fabric.
                            lang.
                            security.
-                           Label $label) {
+                           Label $label, fabric.lang.security.Label accessLabel) {
                 super($location,
-                      $label);
+                      $label, accessLabel);
             }
             
             native public java.lang.String
@@ -389,7 +389,7 @@ public interface PrincipalUtil
                          long onum,
                          int version,
                          long expiry,
-                         long label,
+                         long label, long accessLabel,
                          java.
                            io.
                            ObjectInput in,
@@ -409,7 +409,7 @@ public interface PrincipalUtil
                       onum,
                       version,
                       expiry,
-                      label,
+                      label, accessLabel,
                       in,
                       refTypes,
                       intraStoreRefs);
@@ -473,12 +473,12 @@ public interface PrincipalUtil
                              fabric.
                                lang.
                                security.
-                               Label label)
+                               Label label, fabric.lang.security.Label accessLabel)
                       throws fabric.
                   net.
                   UnreachableNodeException {
                     super(store,
-                          label);
+                          label, accessLabel);
                 }
                 
                 native protected fabric.
@@ -879,9 +879,9 @@ public interface PrincipalUtil
                      fabric.
                        lang.
                        security.
-                       Label $label) {
+                       Label $label, fabric.lang.security.Label accessLabel) {
             super($location,
-                  $label);
+                  $label, accessLabel);
         }
         
         native protected fabric.
@@ -915,7 +915,7 @@ public interface PrincipalUtil
                      long onum,
                      int version,
                      long expiry,
-                     long label,
+                     long label, long accessLabel,
                      java.
                        io.
                        ObjectInput in,
@@ -935,7 +935,7 @@ public interface PrincipalUtil
                   onum,
                   version,
                   expiry,
-                  label,
+                  label, accessLabel,
                   in,
                   refTypes,
                   intraStoreRefs);
@@ -996,12 +996,12 @@ public interface PrincipalUtil
                          fabric.
                            lang.
                            security.
-                           Label label)
+                           Label label, fabric.lang.security.Label accessLabel)
                   throws fabric.
               net.
               UnreachableNodeException {
                 super(store,
-                      label);
+                      label, accessLabel);
             }
             
             native protected fabric.

@@ -21,10 +21,10 @@ public interface DelegatesProof extends fabric.lang.security.ActsForProof {
     {
         
         public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label,
+                     fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
                      fabric.lang.security.Principal actor,
                      fabric.lang.security.Principal granter) {
-            super($location, $label, actor, granter);
+            super($location, $label, accessLabel, actor, granter);
         }
         
         native public void gatherDelegationDependencies(java.util.Set s);
@@ -38,12 +38,12 @@ public interface DelegatesProof extends fabric.lang.security.ActsForProof {
               throws java.io.IOException;
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, long label, java.io.ObjectInput in,
+                     long expiry, long label, long accessLabel, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, in, refTypes,
+            super(store, onum, version, expiry, label, accessLabel, in, refTypes,
                   intraStoreRefs);
         }
     }
@@ -68,9 +68,9 @@ public interface DelegatesProof extends fabric.lang.security.ActsForProof {
         {
             
             public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label)
+                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label);
+                super(store, label, accessLabel);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

@@ -206,7 +206,8 @@ public final class LocalStore implements Store {
         // Create the object representing the top principal.
         topPrincipal =
             (Principal) new TopPrincipal._Impl(LocalStore.this,
-                publicReadonlyLabel).$getProxy();
+                publicReadonlyLabel, LocalStore.this.publicReadonlyLabel)
+                .$getProxy();
         topPrincipal.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 
         // Create the object representing the bottom confidentiality policy.
@@ -257,7 +258,8 @@ public final class LocalStore implements Store {
                 (Principal) null);
         Label label = LabelUtil._Impl.toLabel(LocalStore.this, conf, integ);
 
-        rootMap = (Map) new HashMap._Impl(LocalStore.this, label).$getProxy();
+        rootMap =
+            (Map) new HashMap._Impl(LocalStore.this, label, label).$getProxy();
         localDelegates = new HashSet<Pair<Principal, Principal>>();
 
         return null;

@@ -560,7 +560,6 @@
       <arg value="src/runtime" />
       <arg value="-j" />
       <arg value="-Xms256M" />
-      <!--arg value="-rdebug" /-->
       <arg value="-cp" />
       <arg value="${bootstrap.classes}" />
       <srcfile />

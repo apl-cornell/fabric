@@ -30,11 +30,11 @@ public interface ToConjunctProof extends fabric.lang.security.ActsForProof {
         
         native public fabric.util.Map get$conjunctProofs();
         
-        _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label,
+        _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
               fabric.lang.security.Principal actor,
               fabric.lang.security.ConjunctivePrincipal granter,
               fabric.util.Map conjunctProofs) {
-            super($location, $label, actor, granter);
+            super($location, $label, accessLabel, actor, granter);
         }
         
         native public fabric.util.Map getConjunctProofs();
@@ -50,12 +50,12 @@ public interface ToConjunctProof extends fabric.lang.security.ActsForProof {
               throws java.io.IOException;
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, long label, java.io.ObjectInput in,
+                     long expiry, long label, long accessLabel, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, in, refTypes,
+            super(store, onum, version, expiry, label, accessLabel, in, refTypes,
                   intraStoreRefs);
         }
         
@@ -82,9 +82,9 @@ public interface ToConjunctProof extends fabric.lang.security.ActsForProof {
         {
             
             public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label)
+                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label);
+                super(store, label, accessLabel);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

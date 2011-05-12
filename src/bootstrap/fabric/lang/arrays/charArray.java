@@ -10,10 +10,6 @@ public interface charArray extends Object {
   char set(int i, char value);
 
   public static class _Impl extends Object._Impl implements charArray {
-    public _Impl(Store store, Label label, int length) {
-      super(store, label);
-    }
-
     public _Impl(Store store, Label label, Label accessLabel, int length) {
       super(store, label, accessLabel);
     }

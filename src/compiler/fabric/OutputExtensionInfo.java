@@ -84,7 +84,7 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
       if(store == null || lbl == null)
         return null;
       
-      codebase = (Codebase) new Codebase._Impl(store, lbl).$getProxy();   
+      codebase = (Codebase) new Codebase._Impl(store, lbl, lbl).$getProxy();   
     }
     return codebase;
   }

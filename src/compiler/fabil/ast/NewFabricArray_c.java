@@ -78,7 +78,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
       FabricArrayInit init, Expr location, Expr label, Expr accessLabel) {
     if (baseType != this.baseType || !CollectionUtil.equals(dims, this.dims)
         || init != this.init || location != this.location
-        || label != this.label) {
+        || label != this.label || accessLabel != this.accessLabel) {
       NewFabricArray_c n = (NewFabricArray_c) copy();
       n.baseType = baseType;
       n.dims = TypedList.copyAndCheck(dims, Expr.class, true);
@@ -150,6 +150,11 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
       v.visitCFGList(dims, init, ENTRY);
 
       Term last = init;
+      if (accessLabel != null) {
+        v.visitCFG(last, accessLabel, ENTRY);
+        last = accessLabel;
+      }
+      
       if (label != null) {
         v.visitCFG(last, label, ENTRY);
         last = label;
@@ -160,14 +165,22 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
         last = location;
       }
 
-      // TODO: Add access labels
       v.visitCFG(last, this, EXIT);
     } else {
       v.visitCFG(baseType, listChild(dims, null), ENTRY);
       Term last = null;
+      
+      if (accessLabel != null) {
+        v.visitCFGList(dims, accessLabel, ENTRY);
+        last = accessLabel;
+      }
 
       if (label != null) {
-        v.visitCFGList(dims, label, ENTRY);
+        if (last == null) {
+          v.visitCFGList(dims, label, ENTRY);
+        } else {
+          v.visitCFG(last, label, ENTRY);
+        }
         last = label;
       }
 
@@ -193,7 +206,8 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
   public Node copy(NodeFactory nf) {
     FabILNodeFactory filNf = (FabILNodeFactory) nf;
     return filNf.NewFabricArray(this.position, this.baseType, this.label,
-        this.location, this.dims, this.addDims, (FabricArrayInit) this.init);
+        this.accessLabel, this.location, this.dims, this.addDims,
+        (FabricArrayInit) this.init);
   }
 
 }

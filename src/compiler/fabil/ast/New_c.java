@@ -167,12 +167,6 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     return succs;
   }
 
-  @Override
-  protected Object clone() throws CloneNotSupportedException {
-    // TODO Auto-generated method stub
-    return super.clone();
-  }
-
   /*
    * (non-Javadoc)
    * @see polyglot.ast.New_c#disambiguateOverride(polyglot.ast.Node,

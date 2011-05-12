@@ -115,8 +115,9 @@ public interface AbstractPrincipal
         native public fabric.util.Map set$superiors(fabric.util.Map val);
         
         public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label) {
-            super($location, $label);
+                     fabric.lang.security.Label $label,
+		     fabric.lang.security.Label $accessLabel) {
+            super($location, $label, $accessLabel);
         }
         
         native private void jif$init();
@@ -130,8 +131,9 @@ public interface AbstractPrincipal
         
         protected _Impl(fabric.worker.Store $location,
                         fabric.lang.security.Label $label,
+			fabric.lang.security.Label $accessLabel,
                         java.lang.String name) {
-            this($location, $label);
+            this($location, $label, $accessLabel);
         }
         
         native public java.lang.String name();
@@ -173,12 +175,12 @@ public interface AbstractPrincipal
               throws java.io.IOException;
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, long label, java.io.ObjectInput in,
+                     long expiry, long label, long accessLabel, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, in, refTypes,
+            super(store, onum, version, expiry, label, accessLabel, in, refTypes,
                   intraStoreRefs);
         }
         
@@ -205,9 +207,10 @@ public interface AbstractPrincipal
         {
             
             public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label)
+                         fabric.lang.security.Label label,
+			 fabric.lang.security.Label accessLabel)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label);
+                super(store, label, accessLabel);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

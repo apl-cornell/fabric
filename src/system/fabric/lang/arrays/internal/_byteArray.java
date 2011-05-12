@@ -32,10 +32,6 @@ public interface _byteArray extends Object {
      * @param length
      *                The length of the array.
      */
-    public _Impl(Store store, Label label, int length) {
-      this(store, label, new byte[length]);
-    }
-
     public _Impl(Store store, Label label, Label accessLabel, int length) {
       this(store, label, accessLabel, new byte[length]);
     }
@@ -49,11 +45,6 @@ public interface _byteArray extends Object {
      * @param value
      *                The backing array to use.
      */
-    public _Impl(Store store, Label label, byte[] value) {
-      super(store, label);
-      this.value = value;
-    }
-
     public _Impl(Store store, Label label, Label accessLabel, byte[] value) {
       super(store, label, accessLabel);
       this.value = value;
@@ -63,20 +54,11 @@ public interface _byteArray extends Object {
      * Used for deserializing.
      */
     public _Impl(Store store, long onum, int version, long expiry, long label,
-        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs) throws IOException,
         ClassNotFoundException {
-      super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
-      value = new byte[in.readInt()];
-      for (int i = 0; i < value.length; i++)
-        value[i] = in.readByte();
-    }
-
-    public _Impl(Store store, long onum, int version, long expiry, long label, long accessLabel,
-        ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs) throws IOException,
-        ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes, intraStoreRefs);
+      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+          intraStoreRefs);
       value = new byte[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readByte();

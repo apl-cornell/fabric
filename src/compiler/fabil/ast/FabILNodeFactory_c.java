@@ -63,12 +63,13 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   }
 
   public FabricArrayInit FabricArrayInit(Position pos, List<Expr> elements) {
-    return FabricArrayInit(pos, null, null, elements);
+    return FabricArrayInit(pos, null, null, null, elements);
   }
 
   public FabricArrayInit FabricArrayInit(Position pos, Expr label,
-      Expr location, List<Expr> elements) {
-    FabricArrayInit ai = new FabricArrayInit_c(pos, elements, label, location);
+      Expr accessLabel, Expr location, List<Expr> elements) {
+    FabricArrayInit ai =
+        new FabricArrayInit_c(pos, elements, label, accessLabel, location);
     ai = (FabricArrayInit) ai.ext(extFactory().extFabricArrayInit());
     ai = (FabricArrayInit) ai.del(delFactory().delFabricArrayInit());
     return ai;
@@ -136,11 +137,6 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     result = (NewFabricArray) result.del(delFactory().delNewArray());
     return result;
   }
-  
-  public NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label, 
-      Expr location, List<Expr> dims, int addDims, FabricArrayInit init) {
-    return NewFabricArray(pos, base, label, label, location, dims, addDims, init);
-  }
 
   @SuppressWarnings("unchecked")
   public New New(Position pos, Expr outer, TypeNode objectType, Expr label, Expr accessLabel,
@@ -154,11 +150,6 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return n;
   }
   
-  public New New(Position pos, Expr outer, TypeNode objectType, Expr label,
-      Expr location, List<Expr> args, ClassBody body) {
-    return New(pos, outer, objectType, label, label, location, args, body);
-  }
-  
   // Constructors with fewer arguments ////////////////////////////////////////
 
   @SuppressWarnings("unchecked")
@@ -168,7 +159,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return New(pos, outer, objectType, null, null, null, args, body);
   }
 
-  public New New(Position pos, TypeNode objectType, Expr label, Expr location, Expr accessLabel,
+  public New New(Position pos, TypeNode objectType, Expr label, Expr accessLabel, Expr location,
       List<Expr> args) {
     return New(pos, null, objectType, label, accessLabel, location, args);
   }
@@ -181,37 +172,6 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   public New New(Position pos, TypeNode type, Expr label, Expr accessLabel, Expr location,
       List<Expr> args, polyglot.ast.ClassBody body) {
     return New(pos, null, type, label, accessLabel, location, args, body);
-  }
-
-  public New New(Position pos, TypeNode objectType, Expr label, Expr location,
-      List<Expr> args) {
-    return New(pos, null, objectType, label, null, location, args);
-  }
-
-  public New New(Position pos, Expr outer, TypeNode objectType, Expr label,
-      Expr location, List<Expr> args) {
-    return New(pos, outer, objectType, label, null, location, args, null);
-  }
-
-  public New New(Position pos, TypeNode type, Expr label, Expr location,
-      List<Expr> args, polyglot.ast.ClassBody body) {
-    return New(pos, null, type, label, null, location, args, body);
-  }
-
-  public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr location, List<Expr> dims) {
-    return NewFabricArray(pos, base, label, location, dims, 0, null);
-  }
-
-  public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr location, List<Expr> dims, int addDims) {
-    return NewFabricArray(pos, base, label, location, dims, addDims, null);
-  }
-
-  public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr location, int addDims, FabricArrayInit init) {
-    List<Expr> emptyList = Collections.emptyList();
-    return NewFabricArray(pos, base, label, location, emptyList, addDims, init);
   }
 
   public final NewFabricArray NewFabricArray(Position pos, TypeNode base,

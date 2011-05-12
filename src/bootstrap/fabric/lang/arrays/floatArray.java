@@ -10,10 +10,6 @@ public interface floatArray extends Object {
   float set(int i, float value);
 
   public static class _Impl extends Object._Impl implements floatArray {
-    public _Impl(Store store, Label label, int length) {
-      super(store, label);
-    }
-
     public _Impl(Store store, Label label, Label accessLabel, int length) {
       super(store, label, accessLabel);
     }

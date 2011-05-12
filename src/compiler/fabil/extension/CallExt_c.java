@@ -89,14 +89,11 @@ public class CallExt_c extends ExprExt_c {
     if (isStaticPureFabric) {
       Receiver newTarget;
 
-      // XXX Adding get$accesslabel without knowing why ...
       if (call.name().equals("$getStore") || call.name().equals("get$label")
           || call.name().equals("get$accesslabel")) {
         // HACK: A static $getStore() or get$label(). Assume this was generated
-        // by
-        // the compiler as a default location/label and rewrite the call to
-        // target
-        // the static instance object.
+        // by the compiler as a default location/label and rewrite the call to
+        // target the static instance object.
         newTarget =
             qq.parseExpr(target.type().toClass().translate(null)
                 + "._Static._Proxy.$instance");

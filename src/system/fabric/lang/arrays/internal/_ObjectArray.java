@@ -43,14 +43,6 @@ public interface _ObjectArray<T extends Object> extends Object {
       this.proxyType = getProxy(proxyType);
       value = new Object[length];
     }
-    
-    public _Impl(Store store, Label label,
-        Class<? extends Object._Proxy> proxyType, int length) {
-      super(store, label, label);
-      this.proxyType = getProxy(proxyType);
-      value = new Object[length];
-    }
-    
 
     /**
      * Creates a new object array at the given Store using the given backing
@@ -61,29 +53,23 @@ public interface _ObjectArray<T extends Object> extends Object {
      * @param value
      *                The backing array to use.
      */
-    public _Impl(Store store, Label label, Label accessLabe,
+    public _Impl(Store store, Label label, Label accessLabel,
         Class<? extends Object._Proxy> proxyType, T[] value) {
-      super(store, label, accessLabe);
+      super(store, label, accessLabel);
       this.proxyType = getProxy(proxyType);
       this.value = value;
     }
-    
-    public _Impl(Store store, Label label,
-        Class<? extends Object._Proxy> proxyType, T[] value) {
-      super(store, label, label);
-      this.proxyType = getProxy(proxyType);
-      this.value = value;
-    }
-    
 
     /**
      * Used for deserializing.
      */
     @SuppressWarnings("unchecked")
-    public _Impl(Store store, long onum, int version, long expiry, long label, ObjectInput in,
-        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs)
-        throws IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, label, label, in, refTypes, intraStoreRefs);
+    public _Impl(Store store, long onum, int version, long expiry, long label,
+        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs) throws IOException,
+        ClassNotFoundException {
+      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+          intraStoreRefs);
       proxyType = (Class<? extends Object._Proxy>) Class.forName(in.readUTF());
       value = new Object[in.readInt()];
       for (int i = 0; i < value.length; i++) {
@@ -91,19 +77,6 @@ public interface _ObjectArray<T extends Object> extends Object {
             $readRef(proxyType, refTypes.next(), in, store, intraStoreRefs);
       }
     }
-
-    public _Impl(Store store, long onum, int version, long expiry, long label, long accessLabel, ObjectInput in,
-        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs)
-        throws IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes, intraStoreRefs);
-      proxyType = (Class<? extends Object._Proxy>) Class.forName(in.readUTF());
-      value = new Object[in.readInt()];
-      for (int i = 0; i < value.length; i++) {
-        value[i] =
-            $readRef(proxyType, refTypes.next(), in, store, intraStoreRefs);
-      }
-    }
-    
     
     private static final Map<Class<?>, Class<? extends fabric.lang.Object._Proxy>> proxyCache =
         Collections

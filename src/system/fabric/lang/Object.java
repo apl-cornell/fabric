@@ -183,7 +183,6 @@ public interface Object {
       return fetch().get$accesslabel();
     }
 
-
     public final _Proxy $getProxy() {
       return fetch().$getProxy();
     }
@@ -344,7 +343,8 @@ public interface Object {
     /**
      * A private constructor for initializing transaction-management state.
      */
-    private _Impl(Store store, long onum, int version, long expiry, Label label, Label accessLabel) {
+    private _Impl(Store store, long onum, int version, long expiry,
+        Label label, Label accessLabel) {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
@@ -372,10 +372,6 @@ public interface Object {
       this.$accessLabel = accessLabel;
     }
 
-    private _Impl(Store store, long onum, int version, long expiry, Label label) {
-      this(store, onum, version, expiry, label, label);
-    }
-
     /**
      * Creates a new Fabric object that will reside on the given Store.
      * 
@@ -383,23 +379,17 @@ public interface Object {
      *          the location for the object
      * @param label
      *          the security label for the object
+     * @param accessLabel
+     *          the access label for the object
      */
-    public _Impl(Store store, Label label, Label accessLabel) throws UnreachableNodeException {
+    public _Impl(Store store, Label label, Label accessLabel)
+        throws UnreachableNodeException {
       this(store, store.createOnum(), 0, 0, label, accessLabel);
       store.cache(this);
 
       // Register the new object with the transaction manager.
       TransactionManager.getInstance().registerCreate(this);
     }
-    
-    public _Impl(Store store, Label label) throws UnreachableNodeException {
-      this(store, store.createOnum(), 0, 0, label);
-      store.cache(this);
-
-      // Register the new object with the transaction manager.
-      TransactionManager.getInstance().registerCreate(this);
-    }
-    
 
     @Override
     public final _Impl clone() {
@@ -567,21 +557,12 @@ public interface Object {
      *          onum.
      */
     @SuppressWarnings("unused")
-    public _Impl(Store store, long onum, int version, long expiry, long label, 
-        long accessLabel,
-        ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs) throws IOException,
-        ClassNotFoundException {
+    public _Impl(Store store, long onum, int version, long expiry, long label,
+        long accessLabel, ObjectInput serializedInput,
+        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs)
+        throws IOException, ClassNotFoundException {
       this(store, onum, version, expiry, new Label._Proxy(store, label),
           new Label._Proxy(store, accessLabel));
-    }
-
-    public _Impl(Store store, long onum, int version, long expiry, long label, 
-        ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs) throws IOException,
-        ClassNotFoundException {
-      this(store, onum, version, expiry, new Label._Proxy(store, label),
-          new Label._Proxy(store, label));
     }
     
     /**
@@ -788,8 +769,9 @@ public interface Object {
     }
 
     public static class _Impl extends Object._Impl implements _Static {
-      public _Impl(Store store, Label label) throws UnreachableNodeException {
-        super(store, label);
+      public _Impl(Store store, Label label, Label accessLabel)
+          throws UnreachableNodeException {
+        super(store, label, accessLabel);
       }
 
       @Override

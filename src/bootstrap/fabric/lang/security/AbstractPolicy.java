@@ -31,8 +31,8 @@ public interface AbstractPolicy
     {
         
         protected _Impl(fabric.worker.Store $location,
-                        fabric.lang.security.Label $label) {
-            super($location, $label);
+                        fabric.lang.security.Label $label, Label accessLabel) {
+            super($location, $label, accessLabel);
         }
         
         abstract public boolean equals(fabric.lang.Object that);
@@ -48,12 +48,12 @@ public interface AbstractPolicy
               throws java.io.IOException;
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, long label, java.io.ObjectInput in,
+                     long expiry, long label, long accessLabel, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, in, refTypes,
+            super(store, onum, version, expiry, label, accessLabel, in, refTypes,
                   intraStoreRefs);
         }
     }
@@ -78,9 +78,9 @@ public interface AbstractPolicy
         {
             
             public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label)
+                         fabric.lang.security.Label label, Label accessLabel)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label);
+                super(store, label, accessLabel);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

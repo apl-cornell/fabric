@@ -14,10 +14,6 @@ public interface booleanArray extends Object {
       super(store, label, accessLabel);
     }
 
-    public _Impl(Store store, Label label, int length) {
-      super(store, label);
-    }
-    
     public native boolean get(int i);
 
     public native boolean set(int i, boolean value);
