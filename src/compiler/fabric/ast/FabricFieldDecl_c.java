@@ -1,5 +1,6 @@
 package fabric.ast;
 
+import fabric.visit.FabricToFabilRewriter;
 import jif.ast.LabelNode;
 import polyglot.ast.Expr;
 import polyglot.ast.FieldDecl_c;
@@ -26,7 +27,11 @@ public class FabricFieldDecl_c extends FieldDecl_c implements FabricFieldDecl {
   @Override
   public Node visitChildren(NodeVisitor v) {
     TypeNode type = (TypeNode) visitChild(this.type, v);
-    LabelNode accessLabel = (LabelNode) visitChild(this.accessLabel, v);
+    LabelNode accessLabel = null;
+    // TODO Temporary hack to ward off the class cast exception
+    if (!(v instanceof FabricToFabilRewriter)) {
+      accessLabel = (LabelNode) visitChild(this.accessLabel, v);
+    }
     Id name = (Id) visitChild(this.name, v);
     Expr init = (Expr) visitChild(this.init, v);
     return reconstruct(type, accessLabel, name, init);
