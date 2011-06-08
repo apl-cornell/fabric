@@ -4,13 +4,13 @@ import broker.UserAgent;
 // Airline agent provides competing offers 
 
 public class Agent[principal Airline, label Auction] implements broker.Agent[Airline, Auction] 
-	where {*provider} <= {Airline<-}, {Airline->;Airline<-} <= Auction,
-			{*provider} equiv {*Server.provider}, 
+where {*provider} <= {Airline<-}, {Airline->;Airline<-} <= Auction,
+{*provider} equiv {*Server.provider}, 
 			{*broker.Agent.provider} <= {*provider}, 
 			{*broker.Agent.provider} equiv {*broker.Server.provider}
 {
-    private final Server[Airline]{Airline->;Airline<-} server;
-    private int {Airline->;Airline<-} lowestprice; 
+    private final Server[Airline]{Airline->;Airline<-}@{Auction;⊥←} server;
+    private int {Airline->;Airline<-}@{Auction;⊥←} lowestprice; 
 
     public Agent{Airline->;Airline<-}(Server[Airline]{Airline->;Airline<-} server) {
 		this.server = server;
@@ -25,7 +25,6 @@ public class Agent[principal Airline, label Auction] implements broker.Agent[Air
 		prepareForAuction(); 
 		int price = 2*lowestprice;
 		final Store store = worker$.getLocalStore();
-
 		if(Auction <= new label {store->} &&  new label {store<-} <= Auction) {
 			return new Offer[Auction]@store(price, 0);
 		} else
