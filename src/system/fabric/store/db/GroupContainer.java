@@ -37,7 +37,7 @@ public final class GroupContainer {
     this.onums = group.objects().keySet();
 
     for (SerializedObject obj : group.objects().values()) {
-      this.labelOnum = obj.getLabelOnum();
+      this.labelOnum = obj.getUpdateLabelOnum();
       return;
     }
 

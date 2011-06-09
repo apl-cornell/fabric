@@ -430,8 +430,11 @@ public final class LabelUtil {
   public static Label liftToLabel(ConfPolicy policy) {
       return liftToLabel(localStore, policy);
   }
-  private static Label liftToLabel(Store store, ConfPolicy policy) {
+  public static Label liftToLabel(Store store, ConfPolicy policy) {
       return new PairLabel@store(policy, bottomInteg());
+  }
+  public static Label liftToLabel(Store store, IntegPolicy policy) {
+      return new PairLabel@store(topConf(), policy);
   }
   public static Label liftToLabel(IntegPolicy policy) {
       return toLabel(localStore, policy);

@@ -37,18 +37,32 @@ public class SimpleSurrogateManager implements SurrogateManager {
           new ArrayList<Long>(obj.getNumIntraStoreRefs()
               + obj.getNumInterStoreRefs() + 1);
 
-      long labelOnum;
-      if (obj.labelRefIsInterStore()) {
+      long updateLabelOnum;
+      if (obj.updateLabelRefIsInterStore()) {
         // Add a surrogate reference to the label.
-        ComparablePair<String, Long> ref = obj.getInterStoreLabelRef();
+        ComparablePair<String, Long> ref = obj.getInterStoreUpdateLabelRef();
 
-        labelOnum = tm.newOnums(1)[0];
-        surrogates.add(new SerializedObject(labelOnum, labelOnum, ref));
-        cache.put(ref, labelOnum);
+        updateLabelOnum = tm.newOnums(1)[0];
+        surrogates.add(new SerializedObject(updateLabelOnum, updateLabelOnum, updateLabelOnum, ref));
+        cache.put(ref, updateLabelOnum);
         hadRemotes = true;
-        newrefs.add(labelOnum);
+        newrefs.add(updateLabelOnum);
       } else {
-        labelOnum = obj.getLabelOnum();
+        updateLabelOnum = obj.getUpdateLabelOnum();
+      }
+      
+      long accessLabelOnum;
+      if (obj.updateLabelRefIsInterStore()) {
+        // Add a surrogate reference to the label.
+        ComparablePair<String, Long> ref = obj.getInterStoreUpdateLabelRef();
+
+        accessLabelOnum = tm.newOnums(1)[0];
+        surrogates.add(new SerializedObject(accessLabelOnum, accessLabelOnum, accessLabelOnum, ref));
+        cache.put(ref, accessLabelOnum);
+        hadRemotes = true;
+        newrefs.add(accessLabelOnum);
+      } else {
+        accessLabelOnum = obj.getAccessLabelOnum();
       }
 
       for (Iterator<RefTypeEnum> it = obj.getRefTypeIterator(); it.hasNext();) {
@@ -71,7 +85,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
           if (onum == null) {
             // create surrogate
             onum = tm.newOnums(1)[0];
-            surrogates.add(new SerializedObject(onum, labelOnum, ref));
+            surrogates.add(new SerializedObject(onum, updateLabelOnum, accessLabelOnum, ref));
             cache.put(ref, onum);
           }
           hadRemotes = true;

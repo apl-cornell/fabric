@@ -357,12 +357,18 @@ public interface Object {
       this.$isOwned = false;
       this.$updateMapVersion = -1;
 
-      // By default, labels are public read-only.
+      // By default, update labels are public read-only.
       if (label == null && this instanceof Label)
         label = Worker.getWorker().getLocalStore().getPublicReadonlyLabel();
 
-      if (label == null) throw new InternalError("Null label!");
-      
+      if (label == null) throw new InternalError("Null update label!");
+
+      // By default, access labels are public read-only.
+      if (accessLabel == null && this instanceof Label)
+        accessLabel = Worker.getWorker().getLocalStore().getPublicReadonlyLabel();
+
+      if (accessLabel == null) throw new InternalError("Null access label!");
+
       if (!(store instanceof LocalStore)
           && label.$getStore() instanceof LocalStore
           && !ONumConstants.isGlobalConstant(label.$getOnum()))
@@ -760,9 +766,9 @@ public interface Object {
         return Worker.runInSubTransaction(new Worker.Code<Object>() {
           public Object run() throws Throwable {
             Constructor<? extends Object._Impl> constr =
-              c.getConstructor(Store.class, Label.class);
+              c.getConstructor(Store.class, Label.class, Label.class);
             Label emptyLabel = store.getEmptyLabel();
-            return constr.newInstance(store, emptyLabel);
+            return constr.newInstance(store, emptyLabel, emptyLabel);
           }
         });
       }
