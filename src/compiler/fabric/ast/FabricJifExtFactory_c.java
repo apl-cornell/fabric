@@ -8,6 +8,7 @@ import jif.extension.JifBinaryExt;
 import jif.extension.JifCastExt;
 import jif.extension.JifClassDeclExt;
 import jif.extension.JifConstructorDeclExt;
+import jif.extension.JifFieldDeclExt_c;
 import jif.extension.JifLabelExprExt;
 import jif.extension.JifMethodDeclExt;
 import jif.extension.JifNewArrayExt;
@@ -56,6 +57,11 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
     return new FabricClassDeclExt(new ClassDeclToFabilExt_c());
   }
   
+  @Override
+  protected Ext extFieldDeclImpl() {
+    return new JifFieldDeclExt_c(new FieldDeclToFabilExt_c());
+  }
+
   @Override
   protected Ext extFieldImpl() {
     return new FabricFieldExt(new FieldToJavaExt_c());
