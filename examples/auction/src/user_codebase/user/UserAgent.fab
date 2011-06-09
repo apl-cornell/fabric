@@ -1,7 +1,9 @@
 package user;
 import broker.Offer;
 
-public class UserAgent[label L] implements broker.UserAgent[L] {
+public class UserAgent[label L] implements broker.UserAgent[L] 
+	where {*broker.UserAgent.provider} <= {*provider}
+{
 
     public int {L} choice{L}(Offer [L]{L} offer1, Offer[L]{L} offer2)  {  // return -1 if offer1 is as good or better than offer2
 		if (offer1 == null  && offer2 == null) return 0;

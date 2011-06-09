@@ -25,8 +25,9 @@ public class Agent[principal Airline, label Auction] implements broker.Agent[Air
 		prepareForAuction(); 
 		int price = 2*lowestprice;
 		final Store store = worker$.getLocalStore();
-		if(Auction <= new label {store->} &&  new label {store<-} <= Auction) {
-			return new Offer[Auction]@store(price, 0);
+		if(new label{Auction;*broker.Offer.provider} <= new label {store->} 
+			&&  new label {store<-} <= Auction) {
+				return new Offer[Auction]@store(price, 0);
 		} else
 			throw new Error("Invalid store");
     }
@@ -38,11 +39,12 @@ public class Agent[principal Airline, label Auction] implements broker.Agent[Air
 		int price = 2*lowestprice;  // possible read-channel??? 
 		final Store store = worker$.getLocalStore();
 
-		if(Auction <= new label {store->} &&  new label {store<-} <= Auction) {
+		if(new label {Auction;*broker.Offer.provider} <= new label {store->} 
+			&&  new label {store<-} <= Auction) {
 			Offer[Auction] newOffer = new Offer[Auction]@store(price, 0);
 
 			while (userChoice.choice (newOffer, bestOffer)  >= 0 && price >= lowestprice) {
-			    newOffer = new Offer [Auction]@store( price -- , 0) ;
+			    newOffer = new Offer [Auction]@store(price--, 0) ;
 			}
 			if (price < lowestprice) 
 			    return null; // give up 
