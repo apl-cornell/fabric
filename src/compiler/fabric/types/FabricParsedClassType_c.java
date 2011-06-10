@@ -19,7 +19,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   private transient ConfPolicy accessPolicy = null;
   private transient boolean fieldLabelFound = false;
   private transient boolean accessLabelFound = false;
-  private transient boolean providerLabelFolded = false;
+//  private transient boolean providerLabelFolded = false;
   private transient boolean confPolicyExtracted = false;
   protected transient Codebase codebase;
 
@@ -119,20 +119,25 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   }
   
   public Label getFoldedAccessLabel() {
-    
-    if (!accessLabelFound) singleAccessLabel();
-    
-    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
-    
-    if (!providerLabelFolded && singleAccessLabel != null) {
-      // Fold in the provider confidentiality label into the access label
-      singleAccessLabel = ts.join(singleAccessLabel, 
-          ts.pairLabel(Position.compilerGenerated(), 
-              provider().confProjection(),
-              ts.bottomIntegPolicy(Position.compilerGenerated())));
-    }
-    providerLabelFolded = true;
-    return singleAccessLabel;
+    return singleAccessLabel();
+    // XXX: this code folded in the provider label to the access label. This is
+    // probably the wrong thing, but it is true that accessing the class object
+    // represents a read channel. We'll just use the regular access label for
+    // now, but we need to figure out how to prevent read channels to the stores 
+    //   of Fabric class objects.
+    //    if (!accessLabelFound) singleAccessLabel();
+    //    
+    //    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
+    //    
+    //    if (!providerLabelFolded && singleAccessLabel != null) {
+    //      // Fold in the provider confidentiality label into the access label
+    //      singleAccessLabel = ts.join(singleAccessLabel, 
+    //          ts.pairLabel(Position.compilerGenerated(), 
+    //              provider().confProjection(),
+    //              ts.bottomIntegPolicy(Position.compilerGenerated())));
+    //    }
+    //    providerLabelFolded = true;
+    //    return singleAccessLabel;
   }
 
   public Label singleFabilAccessLabel() {

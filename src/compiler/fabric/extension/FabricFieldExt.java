@@ -1,14 +1,5 @@
 package fabric.extension;
 
-import fabric.types.FabricClassType;
-import fabric.types.FabricFieldInstance;
-import fabric.types.FabricTypeSystem;
-import polyglot.ast.Expr;
-import polyglot.ast.Field;
-import polyglot.ast.Node;
-import polyglot.ast.Receiver;
-import polyglot.types.SemanticException;
-import polyglot.util.Position;
 import jif.extension.JifFieldExt;
 import jif.translate.ToJavaExt;
 import jif.types.ConstraintMessage;
@@ -17,6 +8,14 @@ import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
+import polyglot.ast.Expr;
+import polyglot.ast.Field;
+import polyglot.ast.Node;
+import polyglot.ast.Receiver;
+import polyglot.types.SemanticException;
+import fabric.types.FabricClassType;
+import fabric.types.FabricFieldInstance;
+import fabric.types.FabricTypeSystem;
 
 
 public class FabricFieldExt extends JifFieldExt {
@@ -25,6 +24,7 @@ public class FabricFieldExt extends JifFieldExt {
     super(toJava);
   }
   
+  @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
     FabricTypeSystem fts = (FabricTypeSystem) lc.typeSystem();
     Field n = (Field) node();
@@ -37,7 +37,9 @@ public class FabricFieldExt extends JifFieldExt {
     // TODO: Ignoring non-Expr targets. Is that OK?
     if (target instanceof Expr) {
       Label objLabel = getPathMap(target).NV();
-      Label lhs = fts.join(pc, objLabel);
+      Label pcConf = fts.join(pc, fts.noComponentsLabel());
+      Label objConf = fts.join(objLabel, fts.noComponentsLabel());
+      Label lhs = fts.join(pcConf,objConf);
       
 //    Label rhs = ffi.accessLabel();
       // Use the access label from the class rather than the field instance
