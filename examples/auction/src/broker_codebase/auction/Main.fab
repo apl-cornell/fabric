@@ -5,6 +5,7 @@ import fabric.runtime.Runtime;
 import broker.Server;
 import broker.Agent;
 import broker.User;
+import broker.UserAgent;
 
 class Main  {
     public static final void main{* <- }  (principal{*provider} p, String[] args)  throws SecurityException, IllegalArgumentException  
@@ -12,7 +13,8 @@ class Main  {
 			{*provider} equiv {*AirlineExample.provider},
 			{*provider} equiv {*Server.provider}, 
 			{*provider} equiv {*Agent.provider}, 
-			{*provider} equiv {*User.provider}
+			{*provider} equiv {*User.provider},
+			{*provider} equiv {*UserAgent.provider}
     {
 		PrintStream[{}] out = null;
           try {

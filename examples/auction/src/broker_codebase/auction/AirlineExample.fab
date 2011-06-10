@@ -17,6 +17,7 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 				{*provider} equiv {*Server.provider},
 				{*provider} equiv {*Agent.provider}, 
 				{*provider} equiv {*User.provider},
+				{*provider} equiv {*UserAgent.provider},
 				{*provider} <= {Broker<-}
 {
 	final label{Broker<-} auction_lbl = new label{AirlineA<-;AirlineB<-;TheUser<-; Broker ->};
