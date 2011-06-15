@@ -1,0 +1,4 @@
+public class SolverComp0[principal B] {
+        final Store{B<-} store = worker$.getStore("store");
+        final label{B<-} auction_lbl = new label{B->}@store;
+}
