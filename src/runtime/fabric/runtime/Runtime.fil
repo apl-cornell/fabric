@@ -45,11 +45,11 @@ public class Runtime {
 
     private Label defaultOutputLabel() {
         ConfPolicy cp = LabelUtil.readerPolicy(local, dynp, new LinkedList());
-        return LabelUtil.toLabel(cp);
+        return LabelUtil.toLabel(local, cp);
     }
     private Label defaultInputLabel() {
         IntegPolicy ip = LabelUtil.writerPolicy(local, dynp, new LinkedList());
-        return LabelUtil.toLabel(ip);
+        return LabelUtil.toLabel(local, ip);
     }
 
 // XXX The following is commented out until we port the FileSystem class from the Jif runtime. -MJL 

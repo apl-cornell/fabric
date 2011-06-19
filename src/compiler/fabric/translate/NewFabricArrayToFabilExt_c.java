@@ -42,35 +42,26 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
       base = base.toArray().base();
     }
 
+    Expr labelloc = ext.location();
+    if (labelloc == null) labelloc = nf.StoreGetter(n.position());
+    //push the new location
+    rw = ((FabricToFabilRewriter)rw).pushLocation(labelloc);
+
     Label baseLabel = null;
+    Expr labelExpr = null;
     if (base instanceof FabricClassType && ts.isFabricClass(base)) {
       baseLabel = ((FabricClassType)base).singleFieldLabel();
-    }
-    Expr labelExpr = null;
-    if (baseLabel != null) {
-      labelExpr = rw.labelToJava(baseLabel);
-      
-      Expr loc = ext.location();
-      if (loc == null) loc = nf.StoreGetter(n.position());
-      if (loc != null) {
-        FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
-        labelExpr = ffrw.updateLabelLocation(labelExpr, loc);
+      if (baseLabel != null) {
+        labelExpr = rw.labelToJava(baseLabel);      
       }
     }
     
     Label accessLabel = null;
+    Expr accessLabelExpr = null;
     if (base instanceof FabricClassType && ts.isFabricClass(base)) {
       accessLabel = ((FabricClassType)base).singleAccessLabel();
-    }
-    Expr accessLabelExpr = null;
-    if (accessLabel != null) {
-      accessLabelExpr = rw.labelToJava(accessLabel);
-      
-      Expr loc = ext.location();
-      if (loc == null) loc = nf.StoreGetter(n.position());
-      if (loc != null) {
-        FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
-        accessLabelExpr = ffrw.updateLabelLocation(accessLabelExpr, loc);
+      if (accessLabel != null) { 
+        accessLabelExpr = rw.labelToJava(accessLabel);
       }
     }
 

@@ -38,8 +38,6 @@ public class Codebase {
   }
 
   public Map/*String, FClass*/ getClasses() {
-    atomic {
-      return Collections.unmodifiableMap(classes);
-    }
+    return classes;
   }
 }

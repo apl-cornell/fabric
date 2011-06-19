@@ -2,6 +2,7 @@ package fabric.types;
 
 import jif.types.JifContext_c;
 import jif.types.JifTypeSystem;
+import polyglot.ast.Expr;
 import polyglot.types.Context;
 import polyglot.types.Context_c;
 import polyglot.types.ImportTable;
@@ -18,7 +19,7 @@ import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
 public class FabricContext_c extends JifContext_c implements FabricContext {
-
+  protected Expr location;
   protected CodebaseSource source;
 
   protected FabricContext_c(JifTypeSystem ts, TypeSystem jlts) {
@@ -28,6 +29,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   @Override
   protected Context_c push() {
     FabricContext_c v = (FabricContext_c) super.push();
+    v.location = location;
     v.source = source;
     return v;
   }
@@ -90,6 +92,16 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   @Override
   public VarInstance findVariableSilent(String name) {
     return super.findVariableSilent(name);
+  }
+
+  public Expr location() {
+    return location;
+  }
+
+  public Context pushLocation(Expr location) {
+    FabricContext_c v = (FabricContext_c) push();
+    v.location = location;
+    return v;
   }
   
 }

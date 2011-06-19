@@ -1,10 +1,16 @@
 package fabric.translate;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
 
+import fabil.ast.FabILNodeFactory;
+import fabil.ast.StoreGetter;
 import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricToFabilRewriter;
 import polyglot.ast.Expr;
 import polyglot.types.SemanticException;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.PairLabelToJavaExpr_c;
@@ -14,26 +20,27 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
   @Override
   public Expr toJava(Label label, JifToJavaRewriter rw) throws SemanticException {
     PairLabel pl = (PairLabel)label;
-        
+    FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
+
     if (pl.confPolicy().isBottomConfidentiality() && pl.integPolicy().isTopIntegrity()) {
         return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".noComponents()");
     }
     
     Expr cexp = policyToJava(pl.confPolicy(), rw);
     Expr iexp = policyToJava(pl.integPolicy(), rw);
-    
-    if (containsProjection(pl.confPolicy()) || containsProjection(pl.integPolicy())) {
-      if (!containsProjection(pl.confPolicy())) {
-        cexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".liftToLabel(%E)", cexp);
+
+    Expr store = ffrw.currentLocation(); 
+      if (containsProjection(pl.confPolicy()) || containsProjection(pl.integPolicy())) {
+        if (!containsProjection(pl.confPolicy())) {
+          cexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".liftToLabel(%E, %E)", store, cexp);
+        }
+        if (!containsProjection(pl.integPolicy())) {
+          iexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".liftToLabel(%E, %E)", store, iexp);
+        }
+        return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".join(%E, %E, %E)", store, cexp, iexp);
       }
-      if (!containsProjection(pl.integPolicy())) {
-        iexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".liftToLabel(%E)", iexp);
-      }
-      // XXX should it be join or meet?
-      return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".join(%E, %E)", cexp, iexp);
-    }
         
-    return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)", cexp, iexp); 
+      return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E, %E)",store, cexp, iexp); 
   }
   
   protected boolean containsProjection(Policy p) {
@@ -57,6 +64,8 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
   @Override
   public Expr policyToJava(Policy p, JifToJavaRewriter rw) throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem)rw.jif_ts();
+    FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
+    Expr store = ffrw.currentLocation();
     
     if (p instanceof IntegProjectionPolicy_c) {
       IntegProjectionPolicy_c ipp = (IntegProjectionPolicy_c)p;
@@ -83,13 +92,13 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
         for (Policy tp : (Collection<Policy>)jp.joinComponents()) {
           Expr ep = policyToJava(tp, rw);
           if (!containsProjection(tp)) {
-            ep = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E)", ep);
+              ep = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)", store, ep);
           }
           if (result == null) {
             result = ep;
           }
           else {
-            result = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".join(%E, %E)", result, ep);
+              result = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".join(%E, %E, %E)", store, result, ep);
           }
         }
         return result;
@@ -102,19 +111,74 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
         for (Policy tp : (Collection<Policy>)mp.meetComponents()) {
           Expr ep = policyToJava(tp, rw);
           if (!containsProjection(tp)) {
-            ep = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E)", ep);
+              ep = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)", store, ep);
           }
           if (result == null) {
             result = ep;
           }
           else {
-            result = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".meet(%E, %E)", result, ep);
+              result = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".meet(%E, %E, %E)", store, result, ep);
           }
         }
         return result;
       }      
     }
+    
+    //mostly copied from superclass, but added store arguments
+    if (p instanceof ConfPolicy && ((ConfPolicy) p).isBottomConfidentiality()) {
+      return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".bottomConf()");
+    }
+    if (p instanceof IntegPolicy && ((IntegPolicy) p).isTopIntegrity()) {
+      return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".topInteg()");
+    }
+    
+    if (p instanceof WriterPolicy) {
+      WriterPolicy policy = (WriterPolicy) p;
+      Expr owner = rw.principalToJava(policy.owner());
+      Expr writer = rw.principalToJava(policy.writer());
+      return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".writerPolicy(%E, %E, %E)",
+          store, owner, writer);
+    }
 
-    return super.policyToJava(p, rw);
+    if (p instanceof ReaderPolicy) {
+      ReaderPolicy policy = (ReaderPolicy) p;
+      Expr owner = rw.principalToJava(policy.owner());
+      Expr reader = rw.principalToJava(policy.reader());
+      return (Expr) rw.qq().parseExpr(
+          rw.runtimeLabelUtil() + ".readerPolicy(%E, %E, %E)", store, owner, reader)
+          .position(
+              Position.compilerGenerated(p.toString() + ":"
+                  + p.position().toString()));
+    }
+
+    if (p instanceof JoinPolicy_c) {
+      JoinPolicy_c jp = (JoinPolicy_c) p;
+      LinkedList l = new LinkedList(jp.joinComponents());
+      Iterator iter = l.iterator();
+      Policy head = (Policy) iter.next();
+      Expr e = policyToJava(head, rw);
+      while (iter.hasNext()) {
+        head = (Policy) iter.next();
+        Expr f = policyToJava(head, rw);
+        e = rw.qq().parseExpr("%E.join(%E, %E)", e, store, f);
+      }
+      return e;
+    }
+
+    if (p instanceof MeetPolicy_c) {
+      MeetPolicy_c mp = (MeetPolicy_c) p;
+      LinkedList l = new LinkedList(mp.meetComponents());
+      Iterator iter = l.iterator();
+      Policy head = (Policy) iter.next();
+      Expr e = policyToJava(head, rw);
+      while (iter.hasNext()) {
+        head = (Policy) iter.next();
+        Expr f = policyToJava(head, rw);
+        e = rw.qq().parseExpr("%E.meet(%E, %E)", e, store, f);
+      }
+      return e;
+    }
+
+    throw new InternalCompilerError("Cannot translate policy " + p);
   }
 }

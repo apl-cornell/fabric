@@ -14,16 +14,39 @@ import jif.types.label.Label;
 import polyglot.ast.Expr;
 import polyglot.ast.New;
 import polyglot.types.SemanticException;
+import polyglot.visit.NodeVisitor;
 import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricUtil;
+import fabric.extension.LocatedExt_c;
 import fabric.extension.NewExt_c;
+import fabric.extension.NewLabelExt_c;
 import fabric.types.FabricClassType;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
 
 public class NewToFabilExt_c extends NewToJavaExt_c {
+  
+  @Override
+  public NodeVisitor toJavaEnter(JifToJavaRewriter rw) throws SemanticException {
+    FabricToFabilRewriter ffrw = (FabricToFabilRewriter) super.toJavaEnter(rw);
+    FabricClassType ct = (FabricClassType)objectType.toClass();
+    FabricTypeSystem ts = (FabricTypeSystem)rw.jif_ts();
+
+    if (ts.isFabricClass(ct)) {
+      // For non-fabric classes, there cannot be location or field label.
+      LocatedExt_c ext = (LocatedExt_c)FabricUtil.fabricExt(node());
+      Expr loc = ext.location();
+      return ffrw.pushLocation(loc);
+    }
+    else return ffrw;
+      
+  }
+
   @SuppressWarnings("unchecked")
   @Override
+  /**
+   * This method needs more comments, particularly explaining how the location arguments are handled.
+   */
   public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {
     boolean sigMode = ((FabricToFabilRewriter) rw).inSignatureMode();
     New n = (New) node();
@@ -31,32 +54,30 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
 
     FabricTypeSystem ts = (FabricTypeSystem)rw.jif_ts();
     FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
-    FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
     
     Expr loc = null;
     Expr labelExpr = null;
     Expr accessLabelExpr = null;
-    Expr labelloc = null;
     
     if (ts.isFabricClass(ct)) {
-      // For non-fabric classes, there cannot be location or field label.
+      // For non-fabric classes, there cannot be location or labels.
       NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
+      //set location
       loc = ext.location();
-      labelloc = loc;
+      //if location is implicit, use StoreGetter to inherit location from
+      // the context
+      Expr labelloc = (loc != null) ? loc : nf.StoreGetter(n.position());
+      //push the new location
+      rw = ((FabricToFabilRewriter)rw).pushLocation(labelloc);
       
+      //translate the labels to FabIL
       Label fieldLabel = ct.singleFabilFieldLabel();
       Label accessLabel = ct.singleFabilAccessLabel();
       if (fieldLabel != null && !sigMode) {
         labelExpr = rw.labelToJava(fieldLabel);
-        if (labelloc == null) labelloc = nf.StoreGetter(n.position());
-//        if (loc != null)
-        labelExpr = ffrw.updateLabelLocation(labelExpr, labelloc);
-      }
-      
+      }      
       if (accessLabel != null && !sigMode) {
         accessLabelExpr = rw.labelToJava(accessLabel);
-        if (labelloc == null) labelloc = nf.StoreGetter(n.position());
-        accessLabelExpr = ffrw.updateLabelLocation(accessLabelExpr, labelloc);
       }
     }
     
@@ -77,7 +98,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
         JifPolyType base = (JifPolyType)t.base();
         for (Iterator<ParamInstance> iter = base.params().iterator(); iter.hasNext();) {
             ParamInstance pi = iter.next();
-            paramargs.add(ffrw.paramToJava(subst.get(pi), labelloc));
+            paramargs.add(rw.paramToJava(subst.get(pi)));
         }
     }
 
