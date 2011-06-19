@@ -20,7 +20,6 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 				{*provider} equiv {*UserAgent.provider},
 				{*provider} <= {Broker<-}
 {
-	final label{Broker<-} auction_lbl = new label{AirlineA<-;AirlineB<-;TheUser<-; Broker ->};
 	final Server[AirlineA]{Broker<-} a;
 	final Server[AirlineB]{Broker<-} b;
 	final User[TheUser]{Broker<-} user;
@@ -36,7 +35,8 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 		output.println ("Starting Airline example");
 
 		//final principal airlines = new principal (AirlineA & AirlineB);
-		final Store store = worker$.getStore(Config.brokerStoreName);
+		final Store{Broker<-} store = worker$.getStore(Config.brokerStoreName);
+		final label{Broker<-} auction_lbl = new label{AirlineA<-;AirlineB<-;TheUser<-;Broker->}@store;
 		if(store actsfor Broker) {
 	
 			Agent[AirlineA, auction_lbl] agentA = a.getAgent(auction_lbl);
