@@ -17,6 +17,7 @@ import polyglot.frontend.goals.CodeGenerated;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.Serialized;
 import polyglot.frontend.goals.VisitorGoal;
+import polyglot.main.Report;
 import polyglot.main.Version;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
@@ -31,6 +32,7 @@ import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
 //XXX: should maybe make explicit
 import fabil.visit.*;
+import fabric.Topics;
 
 public class FabILScheduler extends JLScheduler {
   protected ExtensionInfo extInfo;
@@ -537,6 +539,17 @@ public class FabILScheduler extends JLScheduler {
       
     });
     return g;
+  }
+
+  @Override
+  public boolean runToCompletion() {
+    long startTime = System.currentTimeMillis();
+    boolean fil_complete = super.runToCompletion();
+    long endTime = System.currentTimeMillis();
+    if(Report.should_report(Topics.profile, 1)) {
+      Report.report(1, "FabIL passes complete: "+ (endTime - startTime) + "ms");
+    }
+    return fil_complete;
   }
   
 }

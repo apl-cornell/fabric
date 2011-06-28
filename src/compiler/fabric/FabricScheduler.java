@@ -33,6 +33,7 @@ import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.Serialized;
 import polyglot.frontend.goals.VisitorGoal;
 import polyglot.main.Options;
+import polyglot.main.Report;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.visit.Translator;
@@ -365,11 +366,17 @@ public class FabricScheduler extends JifScheduler {
   @SuppressWarnings("unchecked")
   @Override
   public boolean runToCompletion() {
+    long startTime = System.currentTimeMillis();
     /* Note: this call to super.runToCompletion also adds a goal to the jlext
      * scheduler for each job.  I think what's going on is that there shouldn't
      * be any jobs added to that scheduler, so that's a noop. --mdg
      */
-    if (super.runToCompletion()) {
+    boolean fab_complete = super.runToCompletion();
+    long endTime = System.currentTimeMillis();
+    if(Report.should_report(Topics.profile, 1)) {
+      Report.report(1, "Fabric passes complete: "+ (endTime - startTime) + "ms");
+    }
+    if (fab_complete) {
       // Create a goal to compile every source file.
       for (Iterator<Job> i = filext.scheduler().jobs().iterator(); i.hasNext(); ) {
           Job job = i.next();

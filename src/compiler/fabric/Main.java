@@ -65,7 +65,9 @@ public class Main extends polyglot.main.Main {
     args.add("1000");
     args.add("-mergestrings");
     args.add("-simpleoutput");
-    
+    /* print time to complete Fabric and FabIL passes */
+    args.add("-report");    args.add("-profile=1");
+
     if (worker.sigcp != null) {
       args.add("-sigcp");
       args.add(worker.sigcp);
@@ -87,7 +89,6 @@ public class Main extends polyglot.main.Main {
 
       long endCompileTime = System.currentTimeMillis();
 
-      ClassFileLoader loader = main.compiler.loader();
       Collection<String> outputFiles = main.compiler.outputFiles();
       File output_directory = extInfo.getOptions().output_directory;
       String[] suffixes =

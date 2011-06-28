@@ -175,6 +175,7 @@
       <arg value="-g"/>
       <arg value="-e"/>
       <arg value="-d"          /> <arg value="${home.codebases}"/>
+      <arg value="-report" /> <arg value="profile=1" />
       <arg value="-publish-only" />
       <arg value="-codebase-output-file" /> <arg value="${target.codebasefile}"/>
       <arg value="-sourcepath" /> <arg value="${codebase.dir}" />
@@ -236,6 +237,7 @@
            skipemptyfilesets="true"
            vmlauncher="false">
       <arg value="${fabric.home}/bin/fabc"/>
+      <arg value="-report" /> <arg value="profile=1" />
       <arg value="-g"/>
       <arg value="-debugpositions"/>
       <arg value="-trusted-providers"/>
