@@ -88,7 +88,7 @@
 
     <echo message="java version is ${java.version}"/>
     <echo message="current directory is ${user.dir}"/>
-    <echo message="Java home directory is ${java.home}"/>
+    <echo message="Jdk home directory is ${jdk.home}"/>
     <echo message="Polyglot home directory is ${polyglot.home}"/>
     <echo message="Jif home directory is ${jif.home}" />
     <echo message="Fabric version is ${fabric.version.build}" />
@@ -125,7 +125,7 @@
 
     <copy file="${bin}/defs.in" tofile="${bin}/defs">
       <filterset>
-        <filter token="JAVA_HOME" value="${java.home}"    />
+        <filter token="JAVA_HOME" value="${jdk.home}"    />
         <filter token="TOP"       value="${fabric.home}"      />
         <filter token="POLYGLOT"  value="${polyglot.home}" />
         <filter token="JIF"       value="${jif.home}" />
@@ -930,7 +930,7 @@ public class Version {
 
   <!-- Creates the distribution tarball from CVS and SVN. -->
   <target name="dist-tarball"
-      depends="configure-buildstring,jdk-home">
+      depends="configure-buildstring">
     <antcall target="mkdir-tmp" />
 
     <!-- Check out Polyglot from CVS. -->
@@ -954,7 +954,7 @@ public class Version {
     <!-- Configure Jif to build against the above copy of Polyglot. -->
     <concat destfile="${tmp}/jif/config.properties" append="no">
       polyglot.home=${tmp}/polyglot
-      jdk.home=${jif.jdk.home}
+      jdk.home=${jdk.home}
     </concat>
 
     <!-- Build Jif jars. -->
@@ -1225,23 +1225,6 @@ public class Version {
 	<include name="transient/src/**/*.fab" />
       </tarfileset>
     </tar>
-  </target>
-
-  <!--
-    Gets the JDK home from Jif's config.properties file.  If the JDK home is
-    not configured in Jif, then this falls back on the JAVA_HOME environment
-    variable.
-  -->
-  <target name="jdk-home">
-    <property file="${jif.home}/config.properties" prefix="jif" />
-    <condition property="jif.jdk.home" value="${env.JAVA_HOME}">
-      <and>
-        <isset property="env.JAVA_HOME" />
-        <not>
-          <isset property="jif.jdk.home" />
-        </not>
-      </and>
-    </condition>
   </target>
 
   <!--
