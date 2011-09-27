@@ -38,7 +38,7 @@
   <target name="build"
       description="Builds the Fabric NFS server implementation">
     <mkdir dir="${fabnfs.home}/classes" />
-    <javac target="1.6" srcdir="${fabnfs.home}/src"
+    <javac source="1.6" target="1.6" srcdir="${fabnfs.home}/src"
 	destdir="${fabnfs.home}/classes" includeAntRuntime="false" debug="on">
       <include name="fabnfs/**" />
       <classpath refid="fabric.classpath" />

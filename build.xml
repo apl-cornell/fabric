@@ -392,8 +392,9 @@
   <!-- Compiles the bootstrap classes. -->
   <target name="bootstrap" depends="init,bootstrap-check"
       unless="bootstrap.up-to-date">
-    <javac target="1.6" srcdir="${bootstrap.src}"
-           destdir="${bootstrap.classes}" includeAntRuntime="false" debug="on">
+    <javac source="1.6" target="1.6"
+        srcdir="${bootstrap.src}" destdir="${bootstrap.classes}"
+        includeAntRuntime="false" debug="on">
       <include name="**/*.java" />
       <sourcepath path="${system.src}"/>
       <classpath>
@@ -424,8 +425,9 @@
   <!-- Compiles the Fabric runtime classes that are implemented in Java -->
   <target name="native" depends="bootstrap,native-check"
       unless="native.up-to-date">
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
-           includeAntRuntime="false" debug="on">
+    <javac source="1.6" target="1.6"
+        srcdir="${system.src}" destdir="${classes}"
+        includeAntRuntime="false" debug="on">
       <include name="fabric/lang/**" />
       <include name="fabric/common/util/**" />
       <classpath>
@@ -446,7 +448,8 @@
 
   <!-- Compiles the Fabric store -->
   <target name="store" depends="init,native,fabil-runtime">
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
+    <javac source="1.6" target="1.6"
+        srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
@@ -460,7 +463,8 @@
 
   <!-- Compiles the Fabric worker -->
   <target name="worker" depends="init,native,fabil-runtime">
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
+    <javac source="1.6" target="1.6"
+        srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/worker/**" />
       <include name="fabric/common/**" />
@@ -475,7 +479,8 @@
 
   <!-- Compiles the Fabric dissemination node -->
   <target name="dissemination" depends="worker">
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
+    <javac source="1.6" target="1.6"
+        srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/dissemination/**" />
       <classpath>
@@ -498,7 +503,8 @@
       depends="bin,fabil-compiler,fabil-signatures">
     <mkdir dir="${runtime.classes}" />
 
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
+    <javac source="1.6" target="1.6"
+        srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/worker/RetryException.java" />
       <include name="fabric/worker/UserAbortException.java" />
