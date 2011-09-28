@@ -1,0 +1,18 @@
+#!/bin/bash
+
+echo $(dirname `pwd`/$0)
+gnome-terminal \
+	--working-directory $(dirname `pwd`/$0) \
+	--tab --title "broker store" --command "./start-store --name brokerStore"   \
+	--tab --title "A store"      --command "./start-store --name airlineAStore" \
+	--tab --title "B store"      --command "./start-store --name airlineBStore" \
+	--tab --title "U store"      --command "./start-store --name userStore"     \
+
+sleep 10s
+
+gnome-terminal \
+	--working-directory $(dirname `pwd`/$0) \
+	--tab --title "broker worker" --command "./start-worker --name brokerWorker"   \
+	--tab --title "A worker"      --command "./start-worker --name airlineAWorker" \
+	--tab --title "B worker"      --command "./start-worker --name airlineBWorker" \
+	--tab --title "U worker"      --command "./start-worker --name userWorker"
