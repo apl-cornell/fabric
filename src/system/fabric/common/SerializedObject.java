@@ -29,7 +29,6 @@ import fabric.common.util.ComparablePair;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.Label;
-import fabric.lang.security.NodePrincipal;
 import fabric.worker.LocalStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -48,10 +47,11 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * <li>byte whether the update label pointer is an inter-store ref</li>
    * <li>short update label's store's name length (only present if inter-store)</li>
    * <li>byte[] update label's store's name data (only present if inter-store)</li>
+   * <li>long update label's onum</li>
    * <li>byte whether the access label pointer is an inter-store ref</li>
    * <li>short access label's store's name length (only present if inter-store)</li>
    * <li>byte[] access label's store's name data (only present if inter-store)</li>
-   * <li>long label's onum</li>
+   * <li>long access label's onum</li>
    * <li>byte whether the class is a system class</li>
    * <li>short class name length</li>
    * <li>byte[] class name data</li>
@@ -78,12 +78,12 @@ public final class SerializedObject implements FastSerializable, Serializable {
   private static final RefTypeEnum[] refTypeEnums = RefTypeEnum.values();
 
   /**
-   * Creates a serialized representation of the given object. This should only
-   * be used by fabric.store.InProcessStore and for debugging (worker.debug.*).
+   * Creates a serialized representation of the given object.
    * 
    * @param obj
    *          The object to serialize.
-   * @deprecated
+   * @deprecated This should only be used by fabric.store.InProcessStore and for
+   *             debugging (worker.debug.*).
    */
   public SerializedObject(_Impl obj) {
     try {
