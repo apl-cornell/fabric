@@ -8,7 +8,8 @@ First, compile the initialization code that will set up the principal hierarchy.
 
 	$ ant fabil-init
 
-Next, start the stores and workers, each in a separate terminal window (bin/run-all will do this for you).
+Next, start the stores and workers, each in a separate terminal window
+(if you have gnome-terminal, bin/run-all will do this for you).
 
 	term1$ bin/start-store --name brokerStore
 	term2$ bin/start-store --name airlineAStore
