@@ -16,12 +16,12 @@ while true; do
             vmargs="${vmargs} '$1'"
             shift
             ;;
-	--code-cache) 
-		CODECACHE=$2; 
-		args="${args} --code-cache '$2'"; shift; shift;;
-	--name) 
-		CODECACHE=".${2}_cache";
-		args="${args} --name '$2'"; shift; shift;;
+    --code-cache) 
+        CODECACHE=$2; 
+        args="${args} --code-cache '$2'"; shift; shift;;
+    --name) 
+        CODECACHE=".${2}_cache";
+        args="${args} --name '$2'"; shift; shift;;
     --debug)
             shift
             vmargs="${vmargs} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3371"
