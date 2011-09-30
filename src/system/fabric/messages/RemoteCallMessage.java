@@ -3,6 +3,7 @@ package fabric.messages;
 import java.io.*;
 import java.lang.reflect.Method;
 
+import fabric.common.ClassRef.FabricClassRef;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Object._Proxy;
@@ -19,7 +20,7 @@ public class RemoteCallMessage
 
   public final TransactionID tid;
   public final UpdateMap updateMap;
-  public final Class<?> receiverType;
+  public final FabricClassRef receiverType;
   public final _Proxy receiver;
   public final String methodName;
   public final Class<?>[] parameterTypes;
@@ -37,7 +38,7 @@ public class RemoteCallMessage
    *          The arguments to the method.
    */
   public RemoteCallMessage(TransactionID tid, UpdateMap updateMap,
-      Class<?> receiverType, _Proxy receiver, String methodName,
+      FabricClassRef receiverType, _Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args) {
     super(MessageType.REMOTE_CALL, RemoteCallException.class);
 
@@ -92,7 +93,7 @@ public class RemoteCallMessage
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
-    oos.writeObject(receiverType);
+    receiverType.write(oos);
     writeRef(receiver, oos);
 
     oos.writeUTF(methodName);
@@ -120,7 +121,6 @@ public class RemoteCallMessage
   }
 
   /* readMessage */
-  @SuppressWarnings("unchecked")
   protected RemoteCallMessage(DataInput in) throws IOException {
     super(MessageType.REMOTE_CALL, RemoteCallException.class);
 
@@ -139,8 +139,8 @@ public class RemoteCallMessage
         new ObjectInputStream(new ByteArrayInputStream(buf));
 
     try {
-      this.receiverType = (Class<? extends _Proxy>) ois.readObject();
-      this.receiver = Message.readRef(receiverType, ois);
+      this.receiverType = new FabricClassRef(ois);
+      this.receiver = Message.readRef(receiverType.toClass(), ois);
   
       this.methodName = ois.readUTF();
       this.parameterTypes = new Class<?>[ois.readInt()];
@@ -165,7 +165,7 @@ public class RemoteCallMessage
 
     // Get the receiver's _Proxy class.
     Class<?> proxyType = null;
-    for (Class<?> c : receiverType.getClasses()) {
+    for (Class<?> c : receiverType.toClass().getClasses()) {
       if (c.getSimpleName().equals("_Proxy")) {
         proxyType = c;
         break;
@@ -173,8 +173,8 @@ public class RemoteCallMessage
     }
     
     if (proxyType == null) {
-      throw new NoSuchMethodException(
-          "Remote method call on non-Fabric object: " + receiverType);
+      throw new InternalError(
+          "Unable to find _Proxy class for " + receiverType);
     }
 
     return proxyType.getMethod(methodName + "_remote", mangledParamTypes);
