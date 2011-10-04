@@ -109,6 +109,11 @@ public abstract class ClassRef implements FastSerializable {
 
   /**
    * Factory method.
+   * 
+   * @param clazz
+   *          the class being referenced. If it's a Fabric class, this must be
+   *          the interface corresponding to the Fabric type, and not the _Proxy
+   *          or _Impl classes.
    */
   @SuppressWarnings("unchecked")
   public static ClassRef makeRef(Class<?> clazz) {
@@ -127,6 +132,9 @@ public abstract class ClassRef implements FastSerializable {
     return this.hash = getHashImpl();
   }
 
+  /**
+   * @return the mangled Java class name for this class.
+   */
   public abstract String javaClassName();
 
   /**
