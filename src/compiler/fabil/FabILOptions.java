@@ -1,11 +1,12 @@
 package fabil;
 
-import java.io.File;
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
-
 public interface FabILOptions {
+
+  public String constructSignatureClasspath();
+
+  public String constructFabILClasspath();
+
+  public String constructPostCompilerClasspath();
 
   public int optLevel();
 
@@ -19,15 +20,4 @@ public interface FabILOptions {
 
   public String destinationStore();
 
-  List<URI> classpath();
-
-  List<URI> sourcepath();
-
-  Map<String, URI> codebaseAliases();
-
-  List<URI> signaturepath();
-
-  File outputDirectory();
-  
-  
 }

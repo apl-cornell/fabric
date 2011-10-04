@@ -2,8 +2,6 @@ package fabil.ast;
 
 import java.util.List;
 
-import codebases.ast.CodebaseNodeFactory;
-
 import polyglot.ast.*;
 import polyglot.util.Position;
 

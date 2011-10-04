@@ -1,178 +1,84 @@
 package fabric.types;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import jif.ast.JifUtil;
+import jif.ast.LabelNode;
 import jif.translate.ConjunctivePrincipalToJavaExpr_c;
 import jif.translate.DisjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
+import jif.translate.MeetLabelToJavaExpr_c;
 import jif.translate.PrincipalToJavaExpr;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
+import jif.types.JifFieldInstance_c;
 import jif.types.JifLocalInstance;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabeledType;
 import jif.types.Solver;
-import jif.types.label.AccessPath;
-import jif.types.label.AccessPathConstant;
-import jif.types.label.AccessPathLocal;
-import jif.types.label.ArgLabel;
-import jif.types.label.ConfPolicy;
-import jif.types.label.IntegPolicy;
-import jif.types.label.JoinLabel;
-import jif.types.label.Label;
-import jif.types.label.MeetLabel;
-import jif.types.label.ProviderLabel;
-import jif.types.label.ThisLabel;
+import jif.types.label.*;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
 import polyglot.ext.param.types.Subst;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
-import polyglot.types.CachingResolver;
-import polyglot.types.ClassType;
-import polyglot.types.Context;
-import polyglot.types.FieldInstance;
-import polyglot.types.Flags;
-import polyglot.types.ImportTable;
-import polyglot.types.LazyClassInitializer;
-import polyglot.types.Named;
+import polyglot.types.*;
 import polyglot.types.Package;
-import polyglot.types.ParsedClassType;
-import polyglot.types.ReferenceType;
-import polyglot.types.Resolver;
-import polyglot.types.SemanticException;
-import polyglot.types.SystemResolver;
-import polyglot.types.TopLevelResolver;
-import polyglot.types.Type;
-import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import codebases.frontend.CodebaseSource;
-import codebases.types.CBImportTable;
-import codebases.types.CBPackageContextResolver;
-import codebases.types.CodebaseClassType;
-import codebases.types.CodebaseResolver;
-import codebases.types.PathResolver;
-import codebases.types.NamespaceResolver;
+import fabil.frontend.CodebaseSource;
+import fabil.types.*;
 import fabric.FabricOptions;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
-import fabric.lang.security.LabelUtil;
-import fabric.lang.security.NodePrincipal;
 import fabric.translate.DynamicPrincipalToFabilExpr_c;
 import fabric.translate.FabricJoinLabelToFabilExpr_c;
 import fabric.translate.FabricMeetLabelToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
 import fabric.translate.ProviderLabelToFabilExpr_c;
-import fabric.worker.Worker;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
-    protected Map<URI, NamespaceResolver> namespaceResolvers; 
-    protected List<NamespaceResolver> classpathResolvers;
-    protected List<NamespaceResolver> sourcepathResolvers;
-    protected List<NamespaceResolver> signatureResolvers;
-    protected NamespaceResolver platformResolver;
-
-    private fabric.ExtensionInfo extInfo;
+    
     private final FabricDefaultSignature ds;
     
     public FabricTypeSystem_c(TypeSystem jlts) {
       super(jlts);
       this.ds = new FabricFixedSignature(this);
-      this.extInfo = (fabric.ExtensionInfo) super.extInfo;
     }
     
-    @Override
     public DefaultSignature defaultSignature() {
         return ds;
     }
     
-    @Override
     public FabricDefaultSignature fabricDefaultSignature() {
         return ds;
     }
-    
   @Override
-  public void initialize(ExtensionInfo extInfo) throws SemanticException {
-    //There is no toplevel resolver -- names are resolved via the source's codebase
-    initialize(null, extInfo);
-    this.loadedResolver = null;
-    this.systemResolver = null;
-    this.extInfo = (fabric.ExtensionInfo) super.extInfo;
-    initResolvers();
+  public void initialize(TopLevelResolver loadedResolver, ExtensionInfo extInfo)
+      throws SemanticException {
+    super.initialize(loadedResolver, extInfo);
+    // replace the system resolver with one that handles codebases.
+    // XXX: it would be better if polyglot used a factory method to create the
+    // system resolver
+    this.systemResolver = createSystemResolver(loadedResolver, extInfo);
   }
 
-  protected void initResolvers() {
-    List<URI> cp = extInfo.getFabricOptions().classpath();
-    List<URI> sp = extInfo.getFabricOptions().sourcepath();
-    List<URI> sigcp = extInfo.getFabricOptions().signaturepath();
-    namespaceResolvers = new HashMap<URI, NamespaceResolver>();
-
-    signatureResolvers = new ArrayList<NamespaceResolver>();
-    for(URI uri : sigcp) {
-      NamespaceResolver nsr = namespaceResolver(uri);
-      nsr.loadEncodedClasses(true);
-      nsr.loadSource(true);
-      signatureResolvers.add(nsr);
-    }
-    platformResolver = namespaceResolver(extInfo.platformNamespace());
-    
-    classpathResolvers = new ArrayList<NamespaceResolver>();
-    boolean src_in_cp = sp.isEmpty();
-    
-    for(URI uri : cp) {
-      NamespaceResolver nsr = namespaceResolver(uri);
-      nsr.loadEncodedClasses(true);
-      nsr.loadSource(src_in_cp);
-      classpathResolvers.add(nsr);
-    }
-    sourcepathResolvers = new ArrayList<NamespaceResolver>();
-    for(URI uri : extInfo.getFabricOptions().sourcepath()) {
-      NamespaceResolver nsr = namespaceResolver(uri);
-      if(!classpathResolvers.contains(nsr))
-        nsr.loadEncodedClasses(false);
-      sourcepathResolvers.add(nsr);
-    }
+  public CodebaseSystemResolver createSystemResolver(TopLevelResolver loadedResolver, ExtensionInfo extInfo) {
+    return new CodebaseSystemResolver(loadedResolver, extInfo);
   }
   
   @Override
-  public List<NamespaceResolver> signatureResolvers() {
-    if (signatureResolvers == null)
-      throw new InternalCompilerError("Must call initResolvers() first!");
-    return signatureResolvers;
-  }
-
-  @Override
-  public List<NamespaceResolver> classpathResolvers() {
-    if (classpathResolvers == null)
-      throw new InternalCompilerError("Must call initResolvers() first!");
-
-    return classpathResolvers;
-  }
-  
-  @Override
-  public List<NamespaceResolver> sourcepathResolvers() {
-    if (sourcepathResolvers == null)
-      throw new InternalCompilerError("Must call initResolvers() first!");
-
-    return sourcepathResolvers;
-  }
-
-  @Override
-  public CBPackageContextResolver createPackageContextResolver(URI namespace, Package p) {
+  public CodebasePackageContextResolver createPackageContextResolver(Package p) {
     assert_(p);
-    return new CBPackageContextResolver(this, namespace, p);
+    return new CodebasePackageContextResolver(this, (CodebasePackage) p);
   }
 
   @Override
+  public CodebasePackage createPackage(Package prefix, String name) {
+    return new CodebasePackage_c(this, (CodebasePackage) prefix, name);
+  }
+
   public ClassType FObject() {
     return load("fabric.lang.Object");
   }
@@ -214,8 +120,17 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   }
   
   @Override
-  public CBImportTable importTable(Source source, URI ns, Package pkg) {
-    return new CBImportTable(this, ns, pkg, source);
+  public ImportTable importTable(Package pkg) {
+    throw new UnsupportedOperationException("Import table must be associated with a source");
+  }
+  
+  @Override
+  public ImportTable importTable(String sourceName, Package pkg) {
+    throw new UnsupportedOperationException("Import table must be associated with a source");
+  }
+
+  public CodebaseImportTable importTable(CodebaseSource source, Package pkg) {
+    return new CodebaseImportTable_c(this, pkg, source);
   }
 
   @Override
@@ -224,29 +139,24 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return new FabricParsedClassType_c(this, init, fromSource);
   }
 
-  @Override
   public ClassType RemoteWorker() {
     return load("fabric.worker.RemoteWorker");
   }
   
-  @Override
   public ClassType Worker() {
     return load("fabric.worker.FabricWorker");
   }
   
-  @Override
   public ClassType Store() {
     return load("fabric.worker.Store");
   }
   
-  @Override
   public ClassType DelegatingPrincipal() {
     return load("fabric.lang.security.DelegatingPrincipal");
   }  
 
   private JifLocalInstance workerLocalInstance = null;
   
-  @Override
   public JifLocalInstance workerLocalInstance() {
     if (workerLocalInstance == null) {
       // Always use the same local instance, because jif now use pointer identity to compare local instances
@@ -258,7 +168,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return workerLocalInstance;
   }
   
-  @Override
   public Principal workerPrincipal(Position pos) {
 //    return dynamicPrincipal(pos, new AccessPathWorker(pos, this));
     try {
@@ -284,7 +193,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
       return fabricFieldInstance(pos, container, flags, type, null, name);
   }
   
-  @Override
   public FabricFieldInstance fabricFieldInstance(Position pos,
           ReferenceType container, Flags flags, Type type,
           Label accessLabel, String name) {
@@ -367,7 +275,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return t;
   }
   
-  @Override
   public boolean isLocalWorkerAccessPath(AccessPath ap) {
     return ap instanceof AccessPathLocal && ((AccessPathLocal)ap).localInstance() == workerLocalInstance();
   }
@@ -410,7 +317,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return new DisjunctivePrincipalToJavaExpr_c();
   }
   
-  @Override
   public ConfPolicy representableConfProjection(Label L) {
     if (L instanceof ArgLabel) {
       return super.confProjection(((ArgLabel) L).upperBound());
@@ -432,7 +338,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return super.confProjection(L);
   }
   
-  @Override
   public IntegPolicy representableIntegProjection(Label L) {
     if (L instanceof ArgLabel) {
       return super.integProjection(((ArgLabel) L).upperBound());
@@ -454,7 +359,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return super.integProjection(L);
   }
   
-  @Override
   public boolean isFabricClass(Type type) {
     if (type instanceof ClassType) {
       ClassType ct = (ClassType)type;
@@ -472,7 +376,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return false;
   }
   
-  @Override
   public boolean isFabricArray(Type t) {
     // unwrap label
     if (t instanceof LabeledType)
@@ -484,7 +387,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return false;
   }
   
-  @Override
   public FabricArrayType toFabricArray(Type t) {
     if (t instanceof LabeledType)
       t = ((LabeledType) t).typePart();
@@ -506,7 +408,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return f;
   }
   
-  @Override
   public boolean containsThisLabel(Label label) {
     if (label instanceof ThisLabel) {
       return true;
@@ -529,14 +430,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
 
   // array type constructors ///////////////////////////////////////////////////
   
-  @Override
   public FabricArrayType fabricArrayOf(Position pos, Type t) {
     return new FabricArrayType_c(this, pos, t,
                                  /* isConst */ false, /* isNonConst */ true,
                                  /* isNative */ false);
   }
 
-  @Override
   public FabricArrayType fabricArrayOf(Position pos, Type t, int dims) {
     if (dims == 1)
       return fabricArrayOf(pos, t);
@@ -583,182 +482,62 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   }
   
 
-//  /**
-//   * Turns a codebase and a Java name into an absolute name. If the class is a
-//   * platform class, this is the same as the Java name; otherwise, it is an
-//   * encoded name that includes the codebase.
-//   */
-//  @Override
-//  public String absoluteName(Codebase context, String fullName, boolean resolve) throws SemanticException {
-//    if(!SysUtil.isPlatformType(fullName)) {
-//      if(resolve && context != null) {
-//         FClass fcls = context.resolveClassName(fullName);
-//        if(fcls == null) {
-//          new java.lang.Exception().printStackTrace();
-//          throw new SemanticException("Codebase " + SysUtil.oid(context) + " has no entry for " + fullName);
-//        }
-//        Codebase cb = fcls.getCodebase();
-//        return SysUtil.codebasePrefix(cb) + fullName;
-//      }
-//      else {
-//        return SysUtil.codebasePrefix(context) + fullName;
-//      }
-//    } else
-//      return fullName;
-//  }
-//
-//  @Override
-//  public boolean localTypesOnly() {
-//    FabricOptions opt = (FabricOptions) extInfo.getOptions();
-//    return !opt.runWorker();
-//  }
-//  
-//  @Override
-//  public void addRemoteFClass(Codebase codebase, Named n) {
-//    if (n instanceof ParsedClassType) {
-//      ParsedClassType pct = (ParsedClassType) n;
-//      if (pct.fromSource() instanceof CodebaseSource) {
-//        CodebaseSource cbs = (CodebaseSource) pct.fromSource();
-//        String name = pct.fullName();
-//        //Adding remote FClass to codebase
-//        if(!codebase.equals(cbs.codebase())) {
-//          //TODO: check codebase integrity
-//          FClass fclass = cbs.codebase().resolveClassName(name);
-//          if(fclass == null) throw new InternalCompilerError("Expected entry for " + name + " in codebase " + cbs.codebase());
-//          
-//          //check for existing mapping
-//          FClass orig = codebase.resolveClassName(name);        
-//          if(orig != null) {
-//            throw new InternalCompilerError("Multiple codebase entries for "
-//                + name + ": " + orig + "," + fclass);
-//          }
-//          //otherwise, add FClass to current codebase
-//          codebase.insertClass(name, fclass);
-//          if(pct.flags().isInterface() 
-//              && isSubtype(pct, FObject())) {
-//            codebase.insertClass(name + "_JIF_IMPL", fclass);
-//          }
-//        }
-//      }
-//    }
-//  }
-  
-  @Override
-  public NamespaceResolver namespaceResolver(URI ns) {
-    NamespaceResolver sr = namespaceResolvers.get(ns);
-    if (sr == null) {
-      sr = extInfo.createNamespaceResolver(ns);
-      namespaceResolvers.put(ns, sr);
-    }
-    return sr;
-  }
-
-  @Override
-  public NamespaceResolver platformResolver() {
-    if (platformResolver == null)
-      throw new InternalCompilerError("Must call initResolvers() first!");
-    return platformResolver;
-  }
-  
-  @Override
-  public boolean packageExists(URI ns, String name) {
-    return namespaceResolver(ns).packageExists(name);
-  }
-
-  @Override
-  public Named forName(URI ns, String name) throws SemanticException {
-    return forName(namespaceResolver(ns), name);
-  }
-  
-  @Override
-  public Named forName(String name) throws SemanticException {
-    return forName(platformResolver(), name);
-  }   
-  
-  @Override
-  public Type typeForClass(Class clazz) throws SemanticException {
-    return typeForClass(platformResolver(), clazz);
+  /**
+   * Turns a codebase and a Java name into an absolute name. If the class is a
+   * platform class, this is the same as the Java name; otherwise, it is an
+   * encoded name that includes the codebase.
+   */
+  public String absoluteName(Codebase context, String fullName, boolean resolve) throws SemanticException {
+    if(!SysUtil.isPlatformType(fullName)) {
+      if(resolve && context != null) {
+         FClass fcls = context.resolveClassName(fullName);
+        if(fcls == null) {
+          new java.lang.Exception().printStackTrace();
+          throw new SemanticException("Codebase " + SysUtil.oid(context) + " has no entry for " + fullName);
+        }
+        Codebase cb = fcls.getCodebase();
+        return SysUtil.codebasePrefix(cb) + fullName;
+      }
+      else {
+        return SysUtil.codebasePrefix(context) + fullName;
+      }
+    } else
+      return fullName;
   }
 
 
-  @Override
-  public Codebase codebaseFromNS(URI namespace) {
-    if(extInfo.localNamespace().equals(namespace)) {
-      PathResolver nr = (PathResolver) namespaceResolver(namespace);
-      NodePrincipal w = Worker.getWorker().getPrincipal();
-      NodePrincipal st = extInfo.destinationStore().getPrincipal();
-      fabric.lang.security.Label acc = LabelUtil._Impl.readerPolicyLabel(w, st);
-      fabric.util.HashMap classes = new fabric.util.HashMap._Impl(extInfo.destinationStore(), nr.integrity(), acc);
-      return new Codebase._Impl(extInfo.destinationStore(), nr.integrity(), acc, classes);
-    }
-    else if(extInfo.platformNamespace().equals(namespace)
-          || !namespace.getScheme().equals("fab")) {
-      throw new InternalCompilerError("Cannot get codebase for " + namespace);
-    }
-    else {
-      CodebaseResolver cr = (CodebaseResolver) namespaceResolver(namespace);
-      return cr.codebase();
+  public boolean localTypesOnly() {
+    FabricOptions opt = (FabricOptions) extInfo.getOptions();
+    return !opt.runWorker();
+  }
+  
+  public void addRemoteFClass(Codebase codebase, Named n) {
+    if (n instanceof ParsedClassType) {
+      ParsedClassType pct = (ParsedClassType) n;
+      if (pct.fromSource() instanceof CodebaseSource) {
+        CodebaseSource cbs = (CodebaseSource) pct.fromSource();
+        String name = pct.fullName();
+        //Adding remote FClass to codebase
+        if(!codebase.equals(cbs.codebase())) {
+          //TODO: check codebase integrity
+          FClass fclass = cbs.codebase().resolveClassName(name);
+          if(fclass == null) throw new InternalCompilerError("Expected entry for " + name + " in codebase " + cbs.codebase());
+          
+          //check for existing mapping
+          FClass orig = codebase.resolveClassName(name);        
+          if(orig != null) {
+            throw new InternalCompilerError("Multiple codebase entries for "
+                + name + ": " + orig + "," + fclass);
+          }
+          //otherwise, add FClass to current codebase
+          codebase.insertClass(name, fclass);
+          if(pct.flags().isInterface() 
+              && isSubtype(pct, FObject())) {
+            codebase.insertClass(name + "_JIF_IMPL", fclass);
+          }
+        }
+      }
     }
   }
 
-
-  /// Deprecated/Unsupported methods
-  
-  private UnsupportedOperationException toplevel_resolution_error() {
-    return new UnsupportedOperationException("Top level resolution is unsupported with codebases.");
-  }
-  @Override
-  @Deprecated
-  public SystemResolver systemResolver() {
-    throw toplevel_resolution_error();
-  }
-  @Override
-  @Deprecated
-  public SystemResolver saveSystemResolver() {
-    throw toplevel_resolution_error();
-  }
-  @Override
-  @Deprecated 
-  public void restoreSystemResolver(SystemResolver r) {
-    throw toplevel_resolution_error();
-  }
-  @Override
-  @Deprecated 
-  public CachingResolver parsedResolver() {
-    throw toplevel_resolution_error();
-  }  
-  @Override
-  @Deprecated 
-  public TopLevelResolver loadedResolver() {
-    throw toplevel_resolution_error();
-  }
-  
-  @Override
-  @Deprecated 
-  public boolean packageExists(String name) {
-    throw toplevel_resolution_error();
-  }
-
-  @Override
-  @Deprecated 
-  public CBPackageContextResolver createPackageContextResolver(Package p) {
-    throw toplevel_resolution_error();
-  }
-  
-  @Override
-  @Deprecated 
-  public ImportTable importTable(Package pkg) {
-    throw new UnsupportedOperationException(
-        "Import table must be associated with a namespace,"
-            + " use importTable(Source,URI,Package) instead");
-  }
-  
-  @Override
-  @Deprecated 
-  public ImportTable importTable(String sourceName, Package pkg) {
-    throw new UnsupportedOperationException(
-        "Import table must be associated with a namespace,"
-            + " use importTable(Source,URI,Package) instead");
-  }
 }
-

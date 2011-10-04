@@ -1,6 +1,6 @@
 package fabric.ast;
 
-import codebases.ast.CodebaseImportDel_c;
+import fabil.extension.CodebaseImportDel_c;
 import fabric.extension.FabricCallDel;
 import fabric.extension.FabricFieldDeclDel;
 import fabric.extension.FabricNewDel;
@@ -216,16 +216,6 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
   @Override
   protected JL delMethodDeclImpl() {
     return new MethodDeclJifDel();
-  }
-
-  @Override
-  public JL delCodebaseNode() {
-    return delNode();
-  }
-
-  @Override
-  public JL delCodebaseDecl() {
-    return delNode();
   }
   
 }

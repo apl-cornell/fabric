@@ -3,23 +3,14 @@ package fabric.ast;
 import java.util.Collections;
 import java.util.List;
 
-import codebases.ast.CodebaseDecl;
-import codebases.ast.CodebaseDecl_c;
-import codebases.ast.CodebaseDisamb;
-import codebases.ast.CodebaseNode;
-import codebases.ast.CodebaseNode_c;
-import codebases.ast.CBSourceFile_c;
-
 import jif.ast.AmbPrincipalNode;
 import jif.ast.JifClassDecl;
-import jif.ast.JifDisamb_c;
 import jif.ast.JifNodeFactory_c;
 import jif.ast.LabelNode;
 import jif.ast.NewLabel;
 import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
-import polyglot.ast.Disamb;
 import polyglot.ast.Expr;
 import polyglot.ast.Id;
 import polyglot.ast.New;
@@ -34,9 +25,13 @@ import polyglot.types.Package;
 import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
+import fabil.ast.CodebaseDisamb;
+import fabil.ast.CodebasePackageNode;
+import fabil.ast.CodebasePackageNode_c;
+import fabil.ast.CodebaseSourceFile_c;
 import fabric.extension.FabricExt;
 import fabric.extension.LocatedExt_c;
-import fabric.lang.Codebase;
+
 /**
  * NodeFactory for fabric extension.
  */
@@ -61,23 +56,17 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   }
 
   @Override
-  public Disamb disamb() {
-    return new JifDisamb_c();
+  public CodebaseDisamb disamb() {
+    return new FabricDisamb_c();
+
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, Codebase c) {  
-    CodebaseNode n = new CodebaseNode_c(pos, c);
-    n = (CodebaseNode) n.ext(fabricExtFactory().extCodebaseNode());
-    n = (CodebaseNode) n.del(fabricDelFactory().delCodebaseNode());
-    return n;  
-  }
-  @Override
-  public CodebaseDecl CodebaseDecl(Position pos, Id name) {  
-    CodebaseDecl n = new CodebaseDecl_c(pos, name);
-    n = (CodebaseDecl) n.ext(fabricExtFactory().extCodebaseDecl());
-    n = (CodebaseDecl) n.del(fabricDelFactory().delCodebaseDecl());
-    return n;  
+  public CodebasePackageNode PackageNode(Position pos, Package p) {
+    CodebasePackageNode n = new CodebasePackageNode_c(pos, p);
+    n = (CodebasePackageNode) n.ext(extFactory().extPackageNode());
+    n = (CodebasePackageNode) n.del(delFactory().delPackageNode());
+    return n;
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -316,19 +305,12 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     n = (AmbPrincipalNode) n.del(delFactory().delExpr());
     return n;
   }
-  
-  @SuppressWarnings("unchecked")  
-  @Override
-  public SourceFile SourceFile(Position pos, PackageNode packageName, 
-      List imports, List decls) {
-    return SourceFile(pos, packageName, Collections.EMPTY_LIST, imports, decls);
-  }
 
-  @SuppressWarnings("unchecked")  
-//  @Override
-  public SourceFile SourceFile(Position pos, PackageNode packageName, List codebases,
+  @SuppressWarnings("unchecked")
+  @Override
+  public SourceFile SourceFile(Position pos, PackageNode packageName,
       List imports, List decls) {
-    SourceFile sf = new CBSourceFile_c(pos, packageName, imports, codebases, decls);
+    SourceFile sf = new CodebaseSourceFile_c(pos, packageName, imports, decls);
     sf = (SourceFile) sf.ext(extFactory().extSourceFile());
     sf = (SourceFile) sf.del(delFactory().delSourceFile());
     return sf;

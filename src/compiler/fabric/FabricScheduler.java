@@ -1,11 +1,22 @@
 package fabric;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
-import jif.JifScheduler;
+import fabil.frontend.CodebaseImportsInitialized;
+import fabric.ast.FabricNodeFactory;
+import fabric.types.FabricTypeSystem;
+import fabric.visit.ExplicitSuperclassAdder;
+import fabric.visit.FabILSkeletonCreator;
+import fabric.visit.FabricExceptionChecker;
+import fabric.visit.FabricToFabilRewriter;
+import fabric.visit.FabricTypeBuilder;
+import fabric.visit.FClassGenerator;
+import fabric.visit.NamespaceChecker;
+import fabric.visit.PrincipalCastAdder;
+import fabric.visit.RemoteCallWrapperAdder;
+import fabric.visit.RemoteCallWrapperUpdater;
+import fabric.visit.ThisLabelChecker;
+
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.CyclicDependencyException;
@@ -26,20 +37,7 @@ import polyglot.main.Report;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.visit.Translator;
-import codebases.frontend.CodebaseImportsInitialized;
-import codebases.visit.CBTypeBuilder;
-import fabric.ast.FabricNodeFactory;
-import fabric.types.FabricTypeSystem;
-import fabric.visit.ExplicitSuperclassAdder;
-import fabric.visit.FClassGenerator;
-import fabric.visit.FabILSkeletonCreator;
-import fabric.visit.FabricExceptionChecker;
-import fabric.visit.FabricToFabilRewriter;
-import fabric.visit.NamespaceChecker;
-import fabric.visit.PrincipalCastAdder;
-import fabric.visit.RemoteCallWrapperAdder;
-import fabric.visit.RemoteCallWrapperUpdater;
-import fabric.visit.ThisLabelChecker;
+import jif.JifScheduler;
 
 public class FabricScheduler extends JifScheduler {
   protected  fabil.ExtensionInfo filext;
@@ -114,7 +112,7 @@ public class FabricScheduler extends JifScheduler {
     FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
     FabricTypeSystem ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
-    Goal g = internGoal(new VisitorGoal(job, new CBTypeBuilder(job, ts, nf)));
+    Goal g = internGoal(new VisitorGoal(job, new FabricTypeBuilder(job, ts, nf)));
     try {
       addPrerequisiteDependency(g, Parsed(job));
       addPrerequisiteDependency(g, ExplicitSuperclassesAdded(job));

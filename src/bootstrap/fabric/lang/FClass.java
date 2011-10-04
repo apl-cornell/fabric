@@ -2,49 +2,84 @@ package fabric.lang;
 
 public interface FClass extends fabric.lang.Object {
     
+    public fabric.lang.arrays.byteArray get$bytecode();
+    
+    public fabric.lang.arrays.byteArray set$bytecode(
+      fabric.lang.arrays.byteArray val);
+    
     public fabric.lang.Codebase get$codebase();
+    
+    public fabric.lang.Codebase set$codebase(fabric.lang.Codebase val);
     
     public java.lang.String get$name();
     
+    public java.lang.String set$name(java.lang.String val);
+    
     public java.lang.String get$source();
     
-    public fabric.lang.arrays.byteArray get$bytecode();
+    public java.lang.String set$source(java.lang.String val);
     
-    public fabric.lang.arrays.ObjectArray get$dependencies();
+    public fabric.util.Set get$dependencies();
     
-    public fabric.lang.Codebase getCodebase();
+    public fabric.util.Set set$dependencies(fabric.util.Set val);
     
     public java.lang.String getName();
     
     public java.lang.String getSource();
     
+    public void setCodebase(fabric.lang.Codebase c);
+    
+    public fabric.lang.Codebase getCodebase();
+    
     public fabric.lang.arrays.byteArray getBytecode();
     
-    public fabric.lang.arrays.ObjectArray dependencies();
+    public fabric.util.Set dependencies();
+    
+    public void addDependency(java.lang.String dep);
+    
+    public boolean dependsOn(java.lang.String dep);
     
     public static class _Proxy extends fabric.lang.Object._Proxy
       implements fabric.lang.FClass
     {
         
+        native public fabric.lang.arrays.byteArray get$bytecode();
+        
+        native public fabric.lang.arrays.byteArray set$bytecode(
+          fabric.lang.arrays.byteArray val);
+        
         native public fabric.lang.Codebase get$codebase();
+        
+        native public fabric.lang.Codebase set$codebase(
+          fabric.lang.Codebase val);
         
         native public java.lang.String get$name();
         
+        native public java.lang.String set$name(java.lang.String val);
+        
         native public java.lang.String get$source();
         
-        native public fabric.lang.arrays.byteArray get$bytecode();
+        native public java.lang.String set$source(java.lang.String val);
         
-        native public fabric.lang.arrays.ObjectArray get$dependencies();
+        native public fabric.util.Set get$dependencies();
         
-        native public fabric.lang.Codebase getCodebase();
+        native public fabric.util.Set set$dependencies(fabric.util.Set val);
         
         native public java.lang.String getName();
         
         native public java.lang.String getSource();
         
+        native public void setCodebase(fabric.lang.Codebase arg1);
+        
+        native public fabric.lang.Codebase getCodebase();
+        
         native public fabric.lang.arrays.byteArray getBytecode();
         
-        native public fabric.lang.arrays.ObjectArray dependencies();
+        native public fabric.util.Set dependencies();
+        
+        native public void addDependency(java.lang.String arg1);
+        
+        native public boolean dependsOn(java.lang.String arg1);
         
         public _Proxy(FClass._Impl impl) { super(impl); }
         
@@ -57,35 +92,52 @@ public interface FClass extends fabric.lang.Object {
       implements fabric.lang.FClass
     {
         
+        native public fabric.lang.arrays.byteArray get$bytecode();
+        
+        native public fabric.lang.arrays.byteArray set$bytecode(
+          fabric.lang.arrays.byteArray val);
+        
         native public fabric.lang.Codebase get$codebase();
+        
+        native public fabric.lang.Codebase set$codebase(
+          fabric.lang.Codebase val);
         
         native public java.lang.String get$name();
         
+        native public java.lang.String set$name(java.lang.String val);
+        
         native public java.lang.String get$source();
         
-        native public fabric.lang.arrays.byteArray get$bytecode();
+        native public java.lang.String set$source(java.lang.String val);
         
-        native public fabric.lang.arrays.ObjectArray get$dependencies();
+        native public fabric.util.Set get$dependencies();
+        
+        native public fabric.util.Set set$dependencies(fabric.util.Set val);
         
         public _Impl(fabric.worker.Store $location,
                      fabric.lang.security.Label $label,
-                     fabric.lang.security.Label $accesslabel,
-                     fabric.lang.Codebase codebase, java.lang.String name,
-                     java.lang.String source,
+                     fabric.lang.security.Label $accessLabel,
+                     java.lang.String name,
                      fabric.lang.arrays.byteArray bytecode,
-                     fabric.lang.arrays.ObjectArray deps) {
-            super($location, $label, $accesslabel);
+                     java.lang.String source) {
+            super($location, $label, $accessLabel);
         }
-        
-        native public fabric.lang.Codebase getCodebase();
         
         native public java.lang.String getName();
         
         native public java.lang.String getSource();
         
+        native public void setCodebase(fabric.lang.Codebase c);
+        
+        native public fabric.lang.Codebase getCodebase();
+        
         native public fabric.lang.arrays.byteArray getBytecode();
         
-        native public fabric.lang.arrays.ObjectArray dependencies();
+        native public fabric.util.Set dependencies();
+        
+        native public void addDependency(java.lang.String dep);
+        
+        native public boolean dependsOn(java.lang.String dep);
         
         native protected fabric.lang.Object._Proxy $makeProxy();
         
@@ -97,12 +149,13 @@ public interface FClass extends fabric.lang.Object {
         
         public _Impl(fabric.worker.Store store, long onum, int version,
                      long expiry, long label, long accessLabel,
-                     java.io.ObjectInput in, java.util.Iterator refTypes,
+                     java.io.ObjectInput in,
+                     java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, accessLabel, in,
-                  refTypes, intraStoreRefs);
+            super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+                  intraStoreRefs);
         }
         
         native public void $copyAppStateFrom(fabric.lang.Object._Impl other);

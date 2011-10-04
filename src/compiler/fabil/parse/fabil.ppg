@@ -11,19 +11,15 @@ import polyglot.parse.*;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILFlags;
 import fabil.types.FabricArrayType;
-import fabil.parse.Name;
-import java.net.URI;
 
 parser Grm extends polyglot.parse.Grm {:
     public final FabILTypeSystem ts;
     public final FabILNodeFactory nf;
-	public final URI ns;
-	
-    public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q, URI ns) {
+
+    public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q) {
         super(l, t, n, q);
         ts = (FabILTypeSystem) t;
         nf = (FabILNodeFactory) n;
-		this.ns = ns; 
     }
     
     public TypeNode fabricArray(TypeNode n, int dims) throws Exception {
@@ -51,8 +47,6 @@ parser Grm extends polyglot.parse.Grm {:
       
       return super.array(n, dims);
     } 
-    
-
 :};
 
 terminal Token AT;
@@ -68,30 +62,7 @@ non terminal Stmt abort_stmt, retry_stmt;
 non terminal FabricArrayInit fabric_array_initializer;
 
 start with goal;
-//////////////
-// Names 	//
-//////////////
-// The parser sometimes creates unambiguous package objects, 
-//	providing the namespace preserves this ability
-override simple_name ::=
-                    // Name
-        IDENTIFIER:a
-            {: RESULT = new Name(parser.nf, parser.ts, parser.ns, parser.pos(a), parser.nf.Id(parser.pos(a), a.getIdentifier())); :}
-    ;
-    
-override qualified_name ::=
-                    // Name
-        name:a DOT IDENTIFIER:b
-            {: RESULT = new Name(parser.nf, parser.ts, parser.ns, parser.pos(a, b), a, parser.nf.Id(parser.pos(b), b.getIdentifier())); :}
-    ;
-    
-override identifier_opt ::=
-                    // Name
-            {: RESULT = null; :}
-    |   IDENTIFIER:a
-            {: RESULT = new Name(parser.nf, parser.ts, parser.ns, parser.pos(a),
-                parser.nf.Id(parser.pos(a), a.getIdentifier())); :}
-    ;
+
 
 ////////////////////////////////////////////////////////////////////////
 // Atomic Sections                                                    //

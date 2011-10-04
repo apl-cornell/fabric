@@ -1,6 +1,5 @@
 package fabil.types;
 
-import codebases.types.CodebaseTypeSystem;
 import polyglot.ast.TypeNode;
 import polyglot.types.*;
 import polyglot.util.Position;
@@ -173,10 +172,10 @@ public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
    */
   boolean isCompiledByFabc(ClassType ct);
 
-//  /**
-//   * Sets the LoadedClassResolver to use when looking for Fabric runtime
-//   * classes.
-//   */
-//  void setRuntimeClassResolver(LoadedClassResolver lcr);
+  /**
+   * Sets the LoadedClassResolver to use when looking for Fabric runtime
+   * classes.
+   */
+  void setRuntimeClassResolver(LoadedClassResolver lcr);
 
 }

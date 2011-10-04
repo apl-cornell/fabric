@@ -223,11 +223,6 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
-  protected Ext extPackageNodeImpl() {
-    return new PackageNodeExt_c();
-  }
-
-  @Override
   protected Ext extSpecialImpl() {
     return new SpecialExt_c();
   }
@@ -259,15 +254,5 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   
   protected Ext postExtProviderLabel(Ext ext) {
     return postExtExpr(ext);
-  }
-
-  @Override
-  public Ext extCodebaseNode() {
-    return extNode();
-  }
-
-  @Override
-  public Ext extCodebaseDecl() {
-    return extNode();
   }
 }

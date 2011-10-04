@@ -81,7 +81,7 @@ public class Main extends polyglot.main.Main {
       args.add(worker.code_cache);
     }
 
-    args.add(SysUtil.oid(fcls).toString());
+    args.add(SysUtil.oid(fcls));
     Main main = new Main();
     try {
       ExtensionInfo extInfo = new fabric.ExtensionInfo(bytecodeMap);
@@ -189,7 +189,7 @@ public class Main extends polyglot.main.Main {
       FileWriter fw;
       try {
         fw = new FileWriter(f);
-        //XXX: fw.write(SysUtil.oid(extInfo.codebase()));
+        fw.write(SysUtil.oid(extInfo.codebase()));
         fw.close();
       } catch (fabric.common.exceptions.InternalError e) {
         throw new TerminationException("Error writing codebase reference to "

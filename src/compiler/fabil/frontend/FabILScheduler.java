@@ -5,10 +5,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import codebases.frontend.CodebaseImportsInitialized;
-import codebases.types.CodebaseTypeSystem;
-import codebases.visit.CBTypeBuilder;
-
 import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.CyclicDependencyException;
@@ -56,10 +52,10 @@ public class FabILScheduler extends JLScheduler {
 
   @Override
   public Goal TypesInitialized(Job job) {
-    CodebaseTypeSystem ts = extInfo.typeSystem();
+    TypeSystem ts = extInfo.typeSystem();
     NodeFactory nf = extInfo.nodeFactory();
     Goal g =
-        internGoal(new VisitorGoal(job, new CBTypeBuilder(job, ts, nf)));
+        internGoal(new VisitorGoal(job, new FabILTypeBuilder(job, ts, nf)));
     try {
       addPrerequisiteDependency(g, Parsed(job));
     } catch (CyclicDependencyException e) {

@@ -1,28 +1,27 @@
 package fabric.types;
 
-import java.net.URI;
 import java.util.Iterator;
+import java.util.List;
+
+import fabil.frontend.CodebaseSource;
+import fabric.lang.Codebase;
 
 import jif.types.JifParsedPolyType_c;
+import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import polyglot.frontend.Source;
-import polyglot.types.DeserializedClassInitializer;
-import polyglot.types.FieldInstance;
-import polyglot.types.LazyClassInitializer;
-import polyglot.types.MethodInstance;
-import polyglot.types.Type;
-import codebases.frontend.CodebaseSource;
+import polyglot.types.*;
+import polyglot.util.Position;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements FabricParsedClassType {
   private transient Label singleFieldLabel = null;
   private transient Label singleAccessLabel = null;
-//  private transient ConfPolicy accessPolicy = null;
+  private transient ConfPolicy accessPolicy = null;
   private transient boolean fieldLabelFound = false;
   private transient boolean accessLabelFound = false;
 //  private transient boolean providerLabelFolded = false;
-//  private transient boolean confPolicyExtracted = false;
-  
-  protected transient URI canonical_ns;
+  private transient boolean confPolicyExtracted = false;
+  protected transient Codebase codebase;
 
   public FabricParsedClassType_c() {
     super();
@@ -31,9 +30,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   public FabricParsedClassType_c(FabricTypeSystem ts, LazyClassInitializer init,
       Source fromSource) {
     super(ts, init, fromSource);
-    if (fromSource == null)
-      throw new NullPointerException("fromSource cannot be null!");
-    this.canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
+    this.codebase = ((CodebaseSource) fromSource).codebase();
   }
 
   /*
@@ -65,7 +62,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     return super.descendsFromImpl(ancestor);
   }
   
-  @Override
+  @SuppressWarnings("unchecked")
   public Label singleFieldLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
@@ -79,7 +76,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
           singleFieldLabel = superType.singleFieldLabel();
         }
         else {
-          for (FieldInstance fi : fields()) {
+          for (FieldInstance fi : (List<FieldInstance>)fields()) {
             if (fi.flags().isStatic()) continue;
             Type t = fi.type();
             if (ts.isLabeled(t)) {
@@ -94,7 +91,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     return singleFieldLabel;
   }
   
-  @Override
   public Label singleAccessLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
@@ -105,7 +101,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
           singleAccessLabel = superType.singleAccessLabel();
         }
         else {
-          for (FieldInstance fi_ : fields()) {
+          for (FieldInstance fi_ : (List<FieldInstance>)fields()) {
             if (fi_.flags().isStatic()) continue;
             FabricFieldInstance fi = (FabricFieldInstance) fi_;
             Label al = fi.accessLabel();
@@ -122,7 +118,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     return singleAccessLabel;
   }
   
-  @Override
   public Label getFoldedAccessLabel() {
     return singleAccessLabel();
     // XXX: this code folded in the provider label to the access label. This is
@@ -145,7 +140,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     //    return singleAccessLabel;
   }
 
-  @Override
   public Label singleFabilAccessLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
@@ -157,7 +151,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
         singleAccessLabel = superType.singleFabilAccessLabel();
       }
       else {
-        for (FieldInstance fi : fields()) {
+        for (FieldInstance fi : (List<FieldInstance>)fields()) {
           if (fi.flags().isStatic()) continue;
           Type t = fi.type();
           if (ts.isLabeled(t)) {
@@ -172,7 +166,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   }
   
   
-  @Override
   public Label singleFabilFieldLabel() {
     // Type checking has been done, so all field labels are guaranteed to
     // be the same
@@ -189,7 +182,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
         singleFieldLabel = superType.singleFabilFieldLabel();
       }
       else {
-        for (FieldInstance fi : fields()) {
+        for (FieldInstance fi : (List<FieldInstance>)fields()) {
           if (fi.flags().isStatic()) continue;
           Type t = fi.type();
           if (ts.isLabeled(t)) {
@@ -203,8 +196,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     return singleFieldLabel;
   }
   
-  @SuppressWarnings("unchecked")
-  @Override
   public void removeMethod(MethodInstance mi) {
     for (Iterator<MethodInstance> it = methods.iterator(); it.hasNext(); ) {
       if (it.next() == mi) {
@@ -213,9 +204,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     }
   }
 
-  @Override
-  public URI canonicalNamespace() {
-    return canonical_ns;
+  public Codebase codebase() {
+    return codebase;
   }
-
 }
