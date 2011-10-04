@@ -18,19 +18,24 @@ import fabric.util.HashSet;
  * @author Lucas Waye <lrw48@cornell.edu>
  */
 public class FClass {
-  byte[]   bytecode;
-  Codebase codebase;
-  String   name;
-  String   source;
-  Set/*String*/ dependencies;
+  protected final Codebase codebase;
+  protected final String   name;
+  protected final String   source;
+  protected final byte[]   bytecode;
+  protected final String[] dependencies;
   
-  public FClass(String name, byte[] bytecode, String source) {
-    this.name = new String(name);
-    this.bytecode = bytecode;
+  public FClass(Codebase codebase, String name, String source, byte[] bytecode, String[] deps) {
+    this.codebase = codebase;
+    this.name = name;
     this.source = source;
-    this.dependencies = new HashSet();
+    this.bytecode = bytecode;
+    this.dependencies = deps;
   }
-  
+
+  public Codebase getCodebase() {
+    return codebase;
+  }
+
   public String getName() {
     return name;
   }
@@ -38,18 +43,7 @@ public class FClass {
   public String getSource() {
     return source;
   }  
-  
-  /**
-   * Sets the codebase the class should be loaded in. Should only be set once.
-   */
-  public void setCodebase(Codebase c) {
-    codebase = c;
-  }
-
-  public Codebase getCodebase() {
-    return codebase;
-  }
-  
+    
   public byte[] getBytecode() {
     atomic {
       byte[] copy = new byte[bytecode.length];
@@ -59,15 +53,7 @@ public class FClass {
     }
   }
   
-  public Set/*String*/ dependencies() {
+  public String[] dependencies() {
     return dependencies;
-  }
-
-  public void addDependency(String dep) {
-    dependencies.add(dep);
-  }
-  
-  public boolean dependsOn(String dep) {
-    return dependencies.contains(dep);
   }
 }

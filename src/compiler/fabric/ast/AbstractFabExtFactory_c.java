@@ -195,4 +195,14 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
   protected Ext postExtFabricArrayTypeNode(Ext e) {
     return postExtArrayTypeNode(e);
   }
+
+  @Override
+  public final Ext extCodebaseNode() {
+    return extNode();
+  }
+
+  @Override
+  public final Ext extCodebaseDecl() {
+    return extNode();
+  }
 }

@@ -1,15 +1,19 @@
 package fabil.types;
 
+import java.net.URI;
+import java.util.Collection;
+
+import polyglot.main.Report;
 import polyglot.types.Context;
 import polyglot.types.Context_c;
 import polyglot.types.ImportTable;
 import polyglot.types.Named;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
-import fabil.frontend.CodebaseSource;
-import fabric.common.SysUtil;
-import fabric.lang.Codebase;
-import fabric.lang.FClass;
+import polyglot.util.CollectionUtil;
+import polyglot.util.InternalCompilerError;
+import codebases.types.CBImportTable;
+import codebases.types.CodebaseTypeSystem;
 
 /**
  * Codebase support for the FabIL typesystem. This class duplicates some of the
@@ -17,36 +21,12 @@ import fabric.lang.FClass;
  * names.
  */
 public class FabILContext_c extends Context_c implements FabILContext {
-
-  protected CodebaseSource source;
+  @SuppressWarnings("unchecked")
+  private static final Collection<String> TOPICS = 
+      CollectionUtil.list(Report.types, Report.context);
 
   protected FabILContext_c(TypeSystem ts) {
     super(ts);
-  }
-
-  @Override
-  protected Context_c push() {
-    FabILContext_c v = (FabILContext_c) super.push();
-    v.source = source;
-    return v;
-  }
-
-  public Codebase currentCodebase() {
-    return source.codebase();
-  }
-
-  /**
-   * Return the current source
-   */
-  public CodebaseSource currentSource() {
-    return source;
-  }
-
-  @Override
-  public Context pushSource(ImportTable it) {
-    FabILContext_c v = (FabILContext_c) super.pushSource(it);
-    v.source = ((CodebaseImportTable) it).source();
-    return v;
   }
 
   /**
@@ -54,27 +34,38 @@ public class FabILContext_c extends Context_c implements FabILContext {
    */
   @Override
   public Named find(String name) throws SemanticException {
-    if (isOuter()) {
-      CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
-      if (cbts.localTypesOnly() || SysUtil.isPlatformType(name)) {
-        return super.find(name);
-      } 
-      else {
-        FClass fclass = currentCodebase().resolveClassName(name);
-        if (fclass == null) {
-          // For local source, build codebase lazily
-          if (!source.isRemote()) {
-            Named n = super.find(name);
-            cbts.addRemoteFClass(currentCodebase(), n);
-            return n;
-          }
-          return null;
-        }
-        
-        String prefix = SysUtil.codebasePrefix(fclass.getCodebase());
-        return super.find(prefix + name);
-      }
+    if (Report.should_report(TOPICS, 3))
+      Report.report(3, "find-type " + name + " in " + this);
+
+    if (isOuter()) return ((CodebaseTypeSystem) ts).namespaceResolver(namespace()).find(name);
+    if (isSource()) return it.find(name);
+
+    Named type = findInThisScope(name);
+
+    if (type != null) {
+      if (Report.should_report(TOPICS, 3))
+        Report.report(3, "find " + name + " -> " + type);
+      return type;
     }
-    else return super.find(name);
+
+    if (outer != null) {
+      return outer.find(name);
+    }
+
+    throw new SemanticException("Type " + name + " not found.");
+  }
+
+  @Override
+  public URI namespace() {
+    if(isOuter())
+      throw new InternalCompilerError("No namespace!");
+    return ((CBImportTable)it).namespace();
+  }
+  
+  @Override
+  public Context pushSource(ImportTable it) {
+    if(it instanceof CBImportTable)
+      return super.pushSource(it);
+    throw new InternalCompilerError("CBImportTable expected"); 
   }
 }

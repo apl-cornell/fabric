@@ -9,6 +9,9 @@ import polyglot.parse.*;
 import fabric.types.FabricTypeSystem;
 import fabric.types.FabricFlags;
 import jif.parse.Name;
+import codebases.ast.CodebaseDecl;
+import fabric.lang.Codebase;
+
 
 parser Grm extends jif.parse.Grm {:
     public final FabricTypeSystem ts;
@@ -41,7 +44,7 @@ parser Grm extends jif.parse.Grm {:
     public TypeNode javaArray(TypeNode n, int dims) throws Exception {
       return super.array(n, dims);
     }
-
+	
     /**
      * Converts an Amb a into an AST representing new a[][]...[]
      * @return either a NewFabricArray or an AmbNewFabricArray
@@ -88,6 +91,7 @@ terminal Token ABORT;
 terminal Token RETRY;
 terminal Token WORKER;
 terminal Token NONFABRIC;
+terminal Token CODEBASE;
 
 non terminal Atomic atomic_statement;
 non terminal Expr   location_expr_opt, location_expr;
@@ -96,8 +100,52 @@ non terminal Worker local_worker;
 non terminal RemoteWorkerGetter remote_worker;
 non terminal FabricArrayInit fabric_array_initializer;
 non terminal LabelNode access_label_opt;
+non terminal List codebase_declarations_opt, codebase_declarations;
+non terminal CodebaseDecl codebase_declaration;
 
 start with goal;
+
+////////////////////////////////////////////////////////////////////////
+// Codebases                                                          //
+////////////////////////////////////////////////////////////////////////
+
+override compilation_unit ::=
+                    // SourceFile
+        package_declaration_opt:a
+        codebase_declarations_opt:b
+        import_declarations_opt:c
+        type_declarations_opt:d
+            {: RESULT = parser.nf.SourceFile(new Position(parser.lexer.path(), parser.lexer.file()),
+					     a, b, c, d);
+	    :}
+    |   error
+        type_declarations_opt:c
+            {: RESULT = parser.nf.SourceFile(new Position(parser.lexer.path(), parser.lexer.file()),
+					     null, Collections.EMPTY_LIST, Collections.EMPTY_LIST, c);
+	    :}
+        ;
+codebase_declarations_opt ::=
+                    // List of CodebaseDecl
+        codebase_declarations:a
+            {: RESULT = a; :}
+    |
+            {: RESULT = new TypedList(new LinkedList(), CodebaseDecl.class, false); :}
+    ;
+codebase_declarations ::=
+                    // List of CodebaseDecl
+        codebase_declaration:a
+            {: List l = new TypedList(new LinkedList(), CodebaseDecl.class, false);
+               l.add(a);
+               RESULT = l; :}
+    |   codebase_declarations:a codebase_declaration:b
+            {: RESULT = a;
+               a.add(b); :}
+    ;
+codebase_declaration ::=
+                    // CodebaseDecl
+        CODEBASE simple_name:a SEMICOLON
+            {: RESULT = parser.nf.CodebaseDecl(parser.pos(a), a.toIdentifier()); :}
+    ;
 
 
 ////////////////////////////////////////////////////////////////////////

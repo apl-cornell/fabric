@@ -17,15 +17,22 @@ public class Codebase {
 	
   /** All of the classes in the codebase **/
   private Map/*String, FClass*/ classes;
-  
+  /** All of the explicit codebases referred to in this codebase **/
+  private Map/*String, Codebase*/ codebases;
+
   FClass resolveClassName(String name) {
     //XXX sloppy name mangling
     name = name.replaceAll("$_Impl", "").replaceAll("$_Proxy", "");
     return (FClass)classes.get(name);
   }
   
+  Codebase resolveCodebaseName(String name) {
+    return (Codebase)codebases.get(name);
+  }
+  
   public Codebase() {
     classes = new HashMap();
+    codebases = new HashMap();
   }	
 	
   public Codebase(Map/*String, FClass*/ classes) {

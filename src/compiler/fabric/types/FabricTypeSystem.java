@@ -1,21 +1,21 @@
 package fabric.types;
 
-import fabil.types.CodebaseTypeSystem;
-import polyglot.types.ClassType;
-import polyglot.types.Flags;
-import polyglot.types.LocalInstance;
-import polyglot.types.Named;
-import polyglot.types.ReferenceType;
-import polyglot.types.Type;
-import polyglot.util.Position;
-import jif.ast.LabelNode;
-import jif.types.DefaultSignature;
+import java.net.URI;
+
 import jif.types.JifTypeSystem;
 import jif.types.label.AccessPath;
 import jif.types.label.ConfPolicy;
 import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
-import jif.types.principal.*;
+import jif.types.principal.Principal;
+import polyglot.types.ClassType;
+import polyglot.types.Flags;
+import polyglot.types.LocalInstance;
+import polyglot.types.ReferenceType;
+import polyglot.types.Type;
+import polyglot.util.Position;
+import codebases.types.CodebaseTypeSystem;
+import fabric.lang.Codebase;
 
 public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   ClassType FObject();
@@ -65,4 +65,7 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
 
   FabricArrayType fabricArrayOf(Position pos, Type t);
   FabricArrayType fabricArrayOf(Position pos, Type t, int dims);
+
+  Codebase codebaseFromNS(URI namespace);
+
 }

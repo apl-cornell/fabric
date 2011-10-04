@@ -2,40 +2,30 @@ package fabric.visit;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Stack;
 
 import jif.translate.JifToJavaRewriter;
-import jif.types.Param;
-import jif.types.label.Label;
-import polyglot.ast.Call;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
+import polyglot.ast.SourceCollection;
 import polyglot.ast.SourceFile;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.Job;
 import polyglot.frontend.Source;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
-import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import polyglot.visit.ContextVisitor;
-import polyglot.visit.NodeVisitor;
+import codebases.ast.CBSourceFile;
+import codebases.frontend.CodebaseSource;
 import fabil.FabILOptions;
-import fabil.ast.CodebaseSourceFile;
 import fabil.ast.FabILNodeFactory;
-import fabil.frontend.CodebaseSource;
-import fabil.frontend.CodebaseSource_c;
-import fabil.types.CodebaseClassType;
 import fabil.types.FabILTypeSystem;
+import fabric.ExtensionInfo;
 import fabric.ast.FabricNodeFactory;
-import fabric.lang.Codebase;
 import fabric.types.FabricContext;
 import fabric.types.FabricTypeSystem;
-import fabric.worker.Worker;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
   protected boolean principalExpected = false;
@@ -46,22 +36,46 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     this.job = job;
   }
 
+  @Override
+  public void finish(Node ast) {
+    if (ast instanceof SourceCollection) {
+      SourceCollection c = (SourceCollection) ast;
+      fabric.ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
+      for (Iterator iter = c.sources().iterator(); iter.hasNext();) {
+        SourceFile sf = (SourceFile) iter.next();
+        CodebaseSource src = (CodebaseSource) sf.source();
+        
+        java_ext.scheduler().addJob(sf.source(), sf);
+
+      }
+    } else {
+      java_ext.scheduler().addJob(job.source(), ast);
+    }
+
+    // now add any additional source files, which should all be public.
+    for (Iterator iter = newSourceFiles.iterator(); iter.hasNext();) {
+      SourceFile sf = (SourceFile) iter.next();
+      java_ext.scheduler().addJob(sf.source(), sf);
+    }
+    newSourceFiles.clear();
+  }
+
   public FabricToFabilRewriter pushLocation(Expr location) {
     FabricContext context = (FabricContext) context();
     return (FabricToFabilRewriter) context(context.pushLocation(location));
   }
-  
+
   public Expr currentLocation() {
     Expr loc = ((FabricContext) context()).location();
-    if(loc == null) {
-        //XXX: this should only happen for runtime checks that need 
-        // to create labels.  They should *never* flow into persistent
-        // objects. How to check this?
-        loc = qq().parseExpr("Worker.getWorker().getLocalStore()");
+    if (loc == null) {
+      // XXX: this should only happen for runtime checks that need
+      // to create labels. They should *never* flow into persistent
+      // objects. How to check this?
+      loc = qq().parseExpr("Worker.getWorker().getLocalStore()");
     }
     return loc;
   }
-  
+
   @Override
   public String runtimeLabelUtil() {
     return jif_ts().LabelUtilClassName();
@@ -95,11 +109,8 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     return opts.signatureMode();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  /*
-   * We have to override this method since the superclass creates Source objects
-   * directly. Ideally, it would use a factory method.
-   */
   public Node leavingSourceFile(SourceFile n) {
     List l = new ArrayList(n.decls().size() + additionalClassDecls.size());
     l.addAll(n.decls());
@@ -113,19 +124,12 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
 
         String newName =
             cd.name() + "." + job.extensionInfo().defaultFileExtension();
-        
-        String sourcePath = n.source().path();
-        int lastSlashIdx = sourcePath.lastIndexOf('/');
-        String newPath = sourcePath.substring(0, lastSlashIdx + 1) + newName;
-        
-        CodebaseSourceFile cbn = (CodebaseSourceFile) n;
+
+        CBSourceFile cbn = (CBSourceFile) n;
         CodebaseSource source = (CodebaseSource) cbn.source();
-        Source s =
-            new CodebaseSource_c(newName, newPath, new Date(
-                System.currentTimeMillis()), source.codebase(),
-                ((CodebaseSource) cbn.source()).isRemote());
-        sf = sf.source(s);
-        this.newSourceFiles.add(sf);
+        Source derived = source.derivedSource(newName);
+        this.newSourceFiles.add(sf.source(derived));
+
       } else {
         // cd is not public; it's ok to put the class decl in the source file.
         l.add(cd);

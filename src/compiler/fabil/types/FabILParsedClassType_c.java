@@ -1,15 +1,32 @@
 package fabil.types;
 
-import fabil.frontend.CodebaseSource;
+import java.net.URI;
+
+import codebases.frontend.CodebaseSource;
+import codebases.types.CodebaseClassType;
+import codebases.types.CodebaseTypeSystem;
+import fabil.ExtensionInfo;
+import fabil.visit.ProviderRewriter;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
+import fabric.lang.FClass;
+import fabric.lang.WrappedJavaInlineable;
+import fabric.util.Map;
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
 import polyglot.frontend.Source;
 import polyglot.main.Options;
+import polyglot.qq.QQ;
 import polyglot.types.*;
+import polyglot.util.InternalCompilerError;
 
-public class FabILParsedClassType_c extends ParsedClassType_c implements CodebaseClassType {
+public class FabILParsedClassType_c extends ParsedClassType_c implements
+    CodebaseClassType {
 
-  protected transient Codebase codebase;
+  /**
+   * 
+   */
+  protected URI canonical_ns;
 
   public FabILParsedClassType_c() {
     super();
@@ -18,14 +35,16 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
   public FabILParsedClassType_c(TypeSystem ts, LazyClassInitializer init,
       Source fromSource) {
     super(ts, init, fromSource);
-    if(fromSource != null) {
-      this.codebase = ((CodebaseSource) fromSource).codebase();
-    }
+    if (fromSource == null) {
+      //XXX:Java classes may be loaded w/o encoded types
+      ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();
+      this.canonical_ns = extInfo.platformNamespace();
+    } else
+      this.canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
   }
 
   /*
    * (non-Javadoc)
-   * 
    * @see polyglot.types.ClassType_c#descendsFromImpl(polyglot.types.Type)
    */
   @Override
@@ -46,33 +65,60 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
 
     return super.descendsFromImpl(ancestor);
   }
-  
-  public Codebase codebase() {
-    return codebase;
-  }
 
   @Override
   public String translate(Resolver c) {
     if (isTopLevel()) {
       if (package_() == null) {
-        return SysUtil.packagePrefix(codebase) + name();
+        return SysUtil.namespaceToPackageName(canonical_ns) + "." + name();
       }
 
-      // Use the short name if it is unique and there is no 
-      // codebase
-      if (c != null && !Options.global.fully_qualified_names && codebase == null) {
-        try {
-          Named x = c.find(name());
+      // XXX: Never use short name
+      // if (c != null && !Options.global.fully_qualified_names
+      // && codebase == null) {
+      // try {
+      // Named x = c.find(name());
+      //
+      // if (ts.equals(this, x)) {
+      // return name();
+      // }
+      // } catch (SemanticException e) {
+      // }
+      // }
 
-          if (ts.equals(this, x)) {
-            return name();
-          }
-        } catch (SemanticException e) {
-        }
-      }
-      return SysUtil.packagePrefix(codebase) + package_().translate(c) + "." + name();
+      return SysUtil.namespaceToPackageName(canonical_ns)
+          + package_().translate(c) + "." + name();
     } else {
       return super.translate(c);
     }
+  }
+
+  public Node rewriteProvider(ProviderRewriter pr) {
+    ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();
+    QQ qq = pr.qq();
+    if (!canonical_ns.equals(extInfo.localNamespace())
+        && !canonical_ns.equals(extInfo.platformNamespace())) {
+      Codebase codebase = SysUtil.fetch_codebase(canonical_ns);
+      FClass fclass = codebase.resolveClassName(fullName());
+      // Convert to an OID.
+      String storeName = fclass.$getStore().name();
+      long onum = fclass.$getOnum();
+
+      // Emit a call to get$label() on an appropriate proxy object.
+      Expr store =
+          qq.parseExpr("fabric.worker.Worker.getWorker().getStore(\""
+              + storeName + "\")");
+      Expr fclassProxy =
+          qq.parseExpr("new fabric.lang.FClass._Proxy(%E, " + onum + ")", store);
+      return qq.parseExpr("%E.get$label()", fclassProxy);
+    } else {
+      return qq
+          .parseExpr("fabric.lang.security.LabelUtil._Impl.toLabel(fabric.worker.Worker.getWorker().getLocalStore(),fabric.lang.security.LabelUtil._Impl.topInteg())");
+    }
+  }
+
+  @Override
+  public URI canonicalNamespace() {
+    return canonical_ns;
   }
 }
