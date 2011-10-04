@@ -70,24 +70,24 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
     return destLabel;
   }
   
-  @Override
-  public Codebase codebase() {
-    FabILOptions opt = (FabILOptions) getOptions();
-
-    if(!opt.runWorker()) 
-      return null;
-    
-    if(codebase == null) {
-      Store store = destinationStore();
-      fabric.lang.security.Label lbl = destinationLabel();
-      
-      if(store == null || lbl == null)
-        return null;
-      
-      codebase = (Codebase) new Codebase._Impl(store, lbl, lbl).$getProxy();   
-    }
-    return codebase;
-  }
+//  @Override
+//  public Codebase codebase() {
+//    FabILOptions opt = (FabILOptions) getOptions();
+//
+//    if(!opt.runWorker()) 
+//      return null;
+//    
+//    if(codebase == null) {
+//      Store store = destinationStore();
+//      fabric.lang.security.Label lbl = destinationLabel();
+//      
+//      if(store == null || lbl == null)
+//        return null;
+//      
+//      codebase = (Codebase) new Codebase._Impl(store, lbl, lbl).$getProxy();   
+//    }
+//    return codebase;
+//  }
   protected static class OutputScheduler extends FabILScheduler {
     protected Job objectJob;
     

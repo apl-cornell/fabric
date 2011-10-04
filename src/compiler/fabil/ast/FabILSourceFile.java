@@ -1,5 +1,7 @@
 package fabil.ast;
 
-public interface FabILSourceFile extends CodebaseSourceFile {
+import codebases.ast.CBSourceFile;
+
+public interface FabILSourceFile extends CBSourceFile {
   
 }

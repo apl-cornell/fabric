@@ -1,81 +1,62 @@
 package fabric.types;
 
+import java.net.URI;
+import java.util.Collection;
+
 import jif.types.JifContext_c;
 import jif.types.JifTypeSystem;
 import polyglot.ast.Expr;
+import polyglot.main.Report;
 import polyglot.types.Context;
-import polyglot.types.Context_c;
-import polyglot.types.ImportTable;
 import polyglot.types.LocalInstance;
 import polyglot.types.Named;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
-import polyglot.types.VarInstance;
-import fabil.frontend.CodebaseSource;
-import fabil.types.CodebaseImportTable_c;
-import fabil.types.CodebaseTypeSystem;
-import fabric.common.SysUtil;
-import fabric.lang.Codebase;
-import fabric.lang.FClass;
+import polyglot.util.CollectionUtil;
+import codebases.types.CodebaseTypeSystem;
 
 public class FabricContext_c extends JifContext_c implements FabricContext {
-  protected Expr location;
-  protected CodebaseSource source;
+  @SuppressWarnings("unchecked")
+  private static final Collection<String> TOPICS = 
+      CollectionUtil.list(Report.types, Report.context);
 
+  protected Expr location;
+  protected URI namespace;
+  
   protected FabricContext_c(JifTypeSystem ts, TypeSystem jlts) {
     super(ts, jlts);
   }
 
-  @Override
-  protected Context_c push() {
-    FabricContext_c v = (FabricContext_c) super.push();
-    v.location = location;
-    v.source = source;
-    return v;
-  }
+  //XXX: Commented out (pending test) : redundant copies, super.push calls copy()
+//  @Override
+//  protected Context_c push() {
+//    FabricContext_c v = (FabricContext_c) super.push();
+//    v.location = location;
+//    v.namespace = namespace;
+//    return v;
+//  }
 
-  public Codebase currentCodebase() {
-    return source.codebase();
-  }
-
-  public CodebaseSource currentSource() {
-    return source;
-  }
-
-  @Override
-  public Context pushSource(ImportTable it) {
-    FabricContext_c v = (FabricContext_c) super.pushSource(it);
-    v.source = ((CodebaseImportTable_c) it).source();
-    return v;
-  }
-
-  /**
-   * Finds the definition of a particular type.
-   */
   @Override
   public Named find(String name) throws SemanticException {
-    if (isOuter()) {
-      CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
-      if (cbts.localTypesOnly() || SysUtil.isPlatformType(name)) {
-        return super.find(name);
-      } 
-      else {
-        FClass fclass = currentCodebase().resolveClassName(name);
-        if (fclass == null) {
-          // For local source, build codebase lazily
-          if (!source.isRemote()) {
-            Named n = super.find(name);
-            cbts.addRemoteFClass(currentCodebase(), n);
-            return n;
-          }
-          return null;
-        }
-        
-        String prefix = SysUtil.codebasePrefix(fclass.getCodebase());
-        return super.find(prefix + name);
-      }
+    if (Report.should_report(TOPICS, 3))
+      Report.report(3, "find-type " + name + " in " + this);
+
+    if (isOuter()) return ((CodebaseTypeSystem) ts).namespaceResolver(namespace()).find(name);
+    if (isSource()) return it.find(name);
+
+    Named type = findInThisScope(name);
+
+    if (type != null) {
+      if (Report.should_report(TOPICS, 3))
+        Report.report(3, "find " + name + " -> " + type);
+      return type;
     }
-    else return super.find(name);
+
+    if (outer != null) {
+      return outer.find(name);
+    }
+
+    throw new SemanticException("Type " + name + " not found.");
   }
 
   @Override
@@ -83,25 +64,34 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
     if (name.equals("worker$") || name.equals("worker$'")) {
       return ((FabricTypeSystem) typeSystem()).workerLocalInstance();
     } else if (name.endsWith("'")) {
-      // XXX HACK!
+      // XXX HACK! 
       return super.findLocal(name.substring(0, name.length() - 1));
     }
     return super.findLocal(name);
   }
 
   @Override
-  public VarInstance findVariableSilent(String name) {
-    return super.findVariableSilent(name);
-  }
-
   public Expr location() {
     return location;
   }
 
+  @Override
   public Context pushLocation(Expr location) {
     FabricContext_c v = (FabricContext_c) push();
     v.location = location;
     return v;
   }
   
+  @Override
+  public URI namespace() {
+    return namespace;
+  }
+  
+  @Override
+  public Context pushNamespace(URI namespace) {
+    FabricContext_c v = (FabricContext_c) push();
+    v.namespace = namespace;
+    return v;
+  }
+
 }

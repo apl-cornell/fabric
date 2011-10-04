@@ -9,14 +9,15 @@ import java.io.PrintStream;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import polyglot.frontend.ExtensionInfo;
-import polyglot.main.UsageError;
 import polyglot.main.Main.TerminationException;
+import polyglot.main.UsageError;
 import polyglot.util.InternalCompilerError;
 
 /**
@@ -38,12 +39,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   /**
    * The classpath for the FabIL signatures of Java objects.
    */
-  public String sigcp;
-
-  /**
-   * Additional classpath entries for FabIL signatures.
-   */
-  public List<String> addSigcp;
+  public List<URI> sigcp;
   
   /** Whether to perform optimizations. */
   public int optLevel;
@@ -70,16 +66,36 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   protected String destinationStore;
   
   /**
-   * Codebase path.
+   * Class path.  May include Fabric references to codebases.  
+   * NB: This field hides the corresponding field in polyglot.main.Options 
    */
-  protected List<URI> codebasePath;
-
+  protected List<URI> classpath;
+  
+  /**
+   * Source path.  May include Fabric references to codebases. 
+   * NB: This field hides the corresponding field in polyglot.main.Options 
+   */
+  protected List<URI> source_path;
+    
+  /**
+   * Codebase names.
+   */
+  protected Map<String, URI> codebase_aliases;
+  
   public FabILOptions_c(ExtensionInfo extension) {
     super(extension);
-    this.sigcp = null;
-    this.addSigcp = new ArrayList<String>();
   }
 
+  private static URI file = URI.create("file:///");
+  private static URI toURI(String s) {
+    URI uri = URI.create(s);
+    if (uri.isAbsolute())
+      return uri;
+    else { 
+      File f = new File(s);
+      return file.resolve(f.getAbsolutePath());
+    }
+  }
   /*
    * (non-Javadoc)
    * 
@@ -98,7 +114,11 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     } catch (UnknownHostException e) {
       this.workerName = "localhost";
     }
-    this.codebasePath = new LinkedList<URI>();
+    this.sigcp = new ArrayList<URI>();
+    this.classpath = new ArrayList<URI>();
+    this.source_path = new ArrayList<URI>();
+    this.codebase_aliases = new LinkedHashMap<String, URI>();
+
     this.runWorker = false;
   }
 
@@ -115,16 +135,21 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     if (args[index].equals("-sig")) {
       index++;
       signatureMode = true;
-    } else if (args[index].equals("-dumpdeps")) {
+    } 
+    else if (args[index].equals("-dumpdeps")) {
       index++;
       dumpDependencies = true;
-    } else if (args[index].equals("-sigcp")) {
+    } 
+    else if (args[index].equals("-sigcp")) {
       index++;
-      this.sigcp = args[index++];
-    } else if (args[index].equals("-addsigcp")) {
+      sigcp.clear();
+      addSigcp(args[index++]);
+    } 
+    else if (args[index].equals("-addsigcp")) {
       index++;
-      this.addSigcp.add(args[index++]);
-    } else if (args[index].startsWith("-O")) {
+      addSigcp(args[index++]);
+    } 
+    else if (args[index].startsWith("-O")) {
       if (args[index].length() == 2) {
         this.optLevel = Integer.MAX_VALUE;
       } else {
@@ -133,6 +158,53 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
         } catch (NumberFormatException e) {}
       }
       index++;
+    } 
+    else if (args[index].equals("-classpath") || args[index].equals("-cp")) {
+      index++;
+      classpath = new ArrayList<URI>();
+      String path = args[index++];
+      if(path.startsWith("@")) {
+        try {
+          BufferedReader lr = new BufferedReader(new FileReader(path.substring(1)));
+          path = lr.readLine();
+        } catch (FileNotFoundException e) {
+          throw new InternalCompilerError(e);
+        } catch (IOException e) {
+          throw new InternalCompilerError(e);
+        }        
+      }
+      StringTokenizer st = new StringTokenizer(path, File.pathSeparator);
+      while (st.hasMoreTokens()) {
+        classpath.add(toURI(st.nextToken()));
+      }
+    } 
+    else if (args[index].equals("-sourcepath")) {
+      index++;
+      source_path = new ArrayList<URI>();
+      String path = args[index++];
+      if(path.startsWith("@")) {
+        try {
+          BufferedReader lr = new BufferedReader(new FileReader(path.substring(1)));
+          path = lr.readLine();
+        } catch (FileNotFoundException e) {
+          throw new InternalCompilerError(e);
+        } catch (IOException e) {
+          throw new InternalCompilerError(e);
+        }        
+      }
+      StringTokenizer st = new StringTokenizer(path, File.pathSeparator);
+      while (st.hasMoreTokens()) {
+        String s = st.nextToken();
+        URI uri = URI.create(s);
+        if (uri.isAbsolute()) {
+          throw new UsageError("Found codebase reference in source path. " +
+          		"Any source loaded from this codebase would be relinked " +
+          		"and republished.  You probably didn't mean this.  " +
+          		"Plus, we don't support it yet.");
+          //source_path.add(ns);
+        }
+        else source_path.add(toURI(s));
+      }
     }
     else if (args[index].equals("-useworker")) {
       index++;
@@ -151,25 +223,24 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
       this.destinationStore = args[index++];
       return index;
     }
-    else if (args[index].equals("-addCodebase")) {
+    else if (args[index].equals("-codebase-alias") || args[index].equals("-cb-alias")) {
       index++;
       this.runWorker = true;
-      String cb = args[index++];
-      URI uri = URI.create(cb);
-      if(uri.isAbsolute())
-        this.codebasePath.add(uri);
-      else {
+      String arg = args[index++];
+      if(arg.startsWith("@")) {
         try {
-          BufferedReader lr = new BufferedReader(new FileReader(cb));
-          this.codebasePath.add(URI.create(lr.readLine()));
+          BufferedReader lr = new BufferedReader(new FileReader(arg.substring(1)));
+          addCodebaseAlias(lr.readLine());
         } catch (FileNotFoundException e) {
           throw new InternalCompilerError(e);
         } catch (IOException e) {
           throw new InternalCompilerError(e);
         }
       }
+      else {
+        addCodebaseAlias(arg);
+      }
       return index;
-
     } else if (args[index].equals("-bootstrap-skel")) {
       index++;
       createJavaSkel = true;
@@ -180,6 +251,23 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     }
 
     return index;
+  }
+
+  public void addSigcp(String arg) {
+    StringTokenizer st = new StringTokenizer(arg, File.pathSeparator);
+    while (st.hasMoreTokens()) {
+        sigcp.add(toURI(st.nextToken()));
+    }    
+  }
+
+  protected void addCodebaseAlias(String arg) throws UsageError {
+    String[] alias = arg.split("=");
+    if(alias.length != 2)
+      throw new UsageError("Invalid codebase alias:" + arg);
+    URI uri = URI.create(alias[1]);
+    if(!uri.isAbsolute())
+      throw new UsageError("Invalid codebase reference in alias:" + arg);
+    codebase_aliases.put(alias[0], uri);
   }
 
   /*
@@ -199,41 +287,31 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     usageForFlag(out, "-bootstrap-skel", "generate java bootstrap skeletons for each class");
     usageForFlag(out, "-O", "turn optimizations on");
   }
-
-  /* (non-Javadoc)
-   * @see fabil.FabILOptions#constructSignatureClasspath()
-   */
-  public String constructSignatureClasspath() {
-    // Use the signature classpath if it exists for compiling Fabric classes.
-    String scp = "";
-    for (String item : addSigcp)
-      scp += File.pathSeparator + item;
-
-    if (sigcp != null) scp += File.pathSeparator + sigcp;
-
-    return scp;
-  }
-
-  /* (non-Javadoc)
-   * @see fabil.FabILOptions#constructFabILClasspath()
-   */
-  public String constructFabILClasspath() {
-    return constructSignatureClasspath() + File.pathSeparator
-        + constructFullClasspath();
-  }
-
-  /* (non-Javadoc)
-   * @see fabil.FabILOptions#constructPostCompilerClasspath()
-   */
+  
   @Override
-  public String constructPostCompilerClasspath() {
-    return super.constructPostCompilerClasspath() + File.pathSeparator
-        + constructFullClasspath();
+  public List<URI> signaturepath() {
+    return sigcp;
   }
 
+  @Override
+  public List<URI> classpath() { 
+    return classpath;
+  }
+  
+  @Override
+  public List<URI> sourcepath() {
+    return source_path;
+  }
+  
+  @Override
+  public Map<String,URI> codebaseAliases() {
+    return codebase_aliases;
+  }
+  
   /* (non-Javadoc)
    * @see fabil.FabILOptions#optLevel()
    */
+  @Override
   public int optLevel() {
     return optLevel;
   }
@@ -241,6 +319,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    * (non-Javadoc)
    * @see fabil.FabILOptions#dumpDependencies()
    */
+  @Override
   public boolean dumpDependencies() {
     return dumpDependencies;
   }
@@ -248,6 +327,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    * (non-Javadoc)
    * @see fabil.FabILOptions#createJavaSkel()
    */
+  @Override
   public boolean createJavaSkel() {
     return createJavaSkel;
   }
@@ -255,6 +335,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   /* (non-Javadoc)
    * @see fabil.FabILOptions#signatureMode()
    */
+  @Override
   public boolean signatureMode() {
     return signatureMode;
   }
@@ -267,15 +348,19 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     return workerName;
   }
 
-  public Collection<URI> codebasePath() {
-    return codebasePath;
-  }
-
+  @Override
   public String destinationStore() {
     return destinationStore;
   }
 
+  @Override
   public boolean runWorker() {
     return runWorker;
   }
+
+  @Override
+  public File outputDirectory() {
+    return output_directory;
+  }
+
 }

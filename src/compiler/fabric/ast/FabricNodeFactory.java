@@ -2,7 +2,9 @@ package fabric.ast;
 
 import java.util.List;
 
-import fabil.ast.CodebaseNodeFactory;
+import codebases.ast.CodebaseNodeFactory;
+
+import fabric.lang.Codebase;
 
 import jif.ast.JifNodeFactory;
 import jif.ast.LabelNode;
@@ -45,5 +47,4 @@ public interface FabricNodeFactory extends JifNodeFactory, CodebaseNodeFactory {
   NewLabel NewLabel(Position pos, LabelNode label, Expr location);
   
   FabricFieldDecl FabricFieldDecl(Position pos, Flags flags, TypeNode type, LabelNode accessLabel, Id name, Expr init);
-
 }

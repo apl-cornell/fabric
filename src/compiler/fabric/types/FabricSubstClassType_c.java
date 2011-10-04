@@ -1,12 +1,11 @@
 package fabric.types;
 
-import fabric.lang.Codebase;
-import polyglot.types.ClassType;
-import polyglot.util.Position;
 import jif.types.JifSubst;
 import jif.types.JifSubstClassType_c;
 import jif.types.JifTypeSystem;
 import jif.types.label.Label;
+import polyglot.types.ClassType;
+import polyglot.util.Position;
 
 public class FabricSubstClassType_c extends JifSubstClassType_c implements FabricSubstType {
   public FabricSubstClassType_c(JifTypeSystem ts, Position pos, ClassType base, JifSubst subst) {
@@ -28,10 +27,6 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements Fabri
   
   public Label singleFabilAccessLabel() {
     return singleAccessLabel();
-  }
-
-  public Codebase codebase() {
-    return ((FabricParsedClassType) base).codebase();
   }
 
   public Label singleAccessLabel() {

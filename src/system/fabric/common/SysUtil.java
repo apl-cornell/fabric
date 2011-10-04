@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.logging.Level;
 
 import polyglot.types.Named;
+import polyglot.util.InternalCompilerError;
 
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
@@ -279,8 +280,8 @@ public final class SysUtil {
     else return "";
   }
 
-  public static String oid(fabric.lang.Object o) {
-    return "fab://" + o.$getStore().name() + "/" + o.$getOnum();
+  public static URI oid(fabric.lang.Object o) {
+    return URI.create("fab://" + o.$getStore().name() + "/" + o.$getOnum());
   }
 
   public static FClass toProxy(String mangled) {
@@ -288,7 +289,7 @@ public final class SysUtil {
     if(fabricname == null) return null;
     
     URI uri = URI.create(fabricname);
-    Store store = Worker.getWorker().getStore(uri.getHost());
+    Store store = Worker.getWorker().getStore(uri.getAuthority());
     String path = uri.getPath();
     int oe = path.indexOf("/", 1);
     long onum = Long.parseLong(path.substring(1,oe)); 
@@ -358,7 +359,7 @@ public final class SysUtil {
   }
   
   public static String pseudoname(URI fabref) {
-    String store = fabref.getHost();
+    String store = fabref.getAuthority();
     String path = fabref.getPath();
     if (path.contains("/")) {
       // parse as a codebase oid + class name
@@ -383,7 +384,7 @@ public final class SysUtil {
   }
 
   public static FClass toFClass(URI fabref) {
-    Store store = Worker.getWorker().getStore(fabref.getHost());
+    Store store = Worker.getWorker().getStore(fabref.getAuthority());
     String path = fabref.getPath().substring(1);
 
     if (path.contains("/")) {
@@ -422,8 +423,7 @@ public final class SysUtil {
 
   public static String absoluteName(FClass f) {
     Codebase cb = f.getCodebase();
-    return "fab://" + cb.$getStore().name() + "/" + cb.$getOnum() + "/"
-        + f.getName();
+    return oid(cb) + "/" + f.getName();
   }
   
   public static boolean isPlatformType(Named name) {
@@ -435,5 +435,31 @@ public final class SysUtil {
     || fullName.startsWith("fabric")
     || fullName.startsWith("jif");
   }
-
+  
+  public static URI dirname(URI uri) {
+    String path = uri.getPath();
+    //XXX: should I use the separator char or '/' 
+    return URI.create(path.substring(0, path.lastIndexOf('/')));
+  }
+  public static String basename(URI uri) {
+    String path = uri.getPath();
+    //XXX: should I use the separator char or '/' 
+    return path.substring(path.lastIndexOf('/'));
+  }
+  public static Codebase fetch_codebase(URI uri) {
+    Store store = Worker.getWorker().getStore(uri.getAuthority());
+    Long onum = Long.parseLong(uri.getPath().substring(1)); // skip leading
+    // '/'
+    Object o =
+        fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
+            store, onum));
+    if (!(o instanceof Codebase))
+      throw new InternalCompilerError("The Fabric object at " + uri
+          + " is not a codebase.");
+    return (Codebase) o;
+  }
+  
+  public static String namespaceToPackageName(URI ns) {
+    return null;
+  }
 }

@@ -1,14 +1,18 @@
 package fabric.lang;
 
-import fabric.lang.security.Label;
-
 public interface Codebase extends fabric.lang.Object {
     
     public fabric.util.Map get$classes();
     
     public fabric.util.Map set$classes(fabric.util.Map val);
     
+    public fabric.util.Map get$codebases();
+    
+    public fabric.util.Map set$codebases(fabric.util.Map val);
+    
     public fabric.lang.FClass resolveClassName(java.lang.String name);
+    
+    public fabric.lang.Codebase resolveCodebaseName(java.lang.String name);
     
     public void insertClass(java.lang.String name, fabric.lang.FClass fcls);
     
@@ -22,7 +26,14 @@ public interface Codebase extends fabric.lang.Object {
         
         native public fabric.util.Map set$classes(fabric.util.Map val);
         
+        native public fabric.util.Map get$codebases();
+        
+        native public fabric.util.Map set$codebases(fabric.util.Map val);
+        
         native public fabric.lang.FClass resolveClassName(
+          java.lang.String arg1);
+        
+        native public fabric.lang.Codebase resolveCodebaseName(
           java.lang.String arg1);
         
         native public void insertClass(java.lang.String arg1,
@@ -45,18 +56,27 @@ public interface Codebase extends fabric.lang.Object {
         
         native public fabric.util.Map set$classes(fabric.util.Map val);
         
+        native public fabric.util.Map get$codebases();
+        
+        native public fabric.util.Map set$codebases(fabric.util.Map val);
+        
         native public fabric.lang.FClass resolveClassName(
           java.lang.String name);
         
+        native public fabric.lang.Codebase resolveCodebaseName(
+          java.lang.String name);
+        
         public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label, Label accessLabel) {
-            super($location, $label, accessLabel);
+                     fabric.lang.security.Label $label,
+                     fabric.lang.security.Label $accesslabel) {
+            super($location, $label, $accesslabel);
         }
         
         public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label, Label accessLabel,
+                     fabric.lang.security.Label $label,
+                     fabric.lang.security.Label $accesslabel,
                      fabric.util.Map classes) {
-            super($location, $label, accessLabel);
+            super($location, $label, $accesslabel);
         }
         
         native public void insertClass(java.lang.String name,
@@ -74,13 +94,12 @@ public interface Codebase extends fabric.lang.Object {
         
         public _Impl(fabric.worker.Store store, long onum, int version,
                      long expiry, long label, long accessLabel,
-                     java.io.ObjectInput in,
-                     java.util.Iterator refTypes,
+                     java.io.ObjectInput in, java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-                  intraStoreRefs);
+            super(store, onum, version, expiry, label, accessLabel, in,
+                  refTypes, intraStoreRefs);
         }
         
         native public void $copyAppStateFrom(fabric.lang.Object._Impl other);
@@ -105,7 +124,8 @@ public interface Codebase extends fabric.lang.Object {
         {
             
             public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, Label accessLabel)
+                         fabric.lang.security.Label label,
+                         fabric.lang.security.Label accessLabel)
                   throws fabric.net.UnreachableNodeException {
                 super(store, label, accessLabel);
             }
