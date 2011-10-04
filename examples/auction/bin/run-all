@@ -1,18 +1,25 @@
 #!/bin/bash
 
-echo $(dirname `pwd`/$0)
-gnome-terminal \
-	--working-directory $(dirname `pwd`/$0) \
-	--tab --title "broker store" --command "./start-store --name brokerStore"   \
-	--tab --title "A store"      --command "./start-store --name airlineAStore" \
-	--tab --title "B store"      --command "./start-store --name airlineBStore" \
-	--tab --title "U store"      --command "./start-store --name userStore"     \
+BINDIR="$(dirname $(which "$0"))"
+MYNAME="$(basename "$0")"
 
-sleep 10s
+if [[ $# != 3 ]] ; then
+  gnome-terminal \
+    --working-directory "${BINDIR}" \
+    --tab --title "broker store" --command "./${MYNAME} 0s store brokerStore"   \
+    --tab --title "A store"      --command "./${MYNAME} 1s store airlineAStore" \
+    --tab --title "B store"      --command "./${MYNAME} 2s store airlineBStore" \
+    --tab --title "U store"      --command "./${MYNAME} 3s store userStore"     \
 
-gnome-terminal \
-	--working-directory $(dirname `pwd`/$0) \
-	--tab --title "broker worker" --command "./start-worker --name brokerWorker"   \
-	--tab --title "A worker"      --command "./start-worker --name airlineAWorker" \
-	--tab --title "B worker"      --command "./start-worker --name airlineBWorker" \
-	--tab --title "U worker"      --command "./start-worker --name userWorker"
+  sleep 10s
+
+  gnome-terminal \
+    --working-directory "${BINDIR}" \
+    --tab --title "broker worker" --command "./${MYNAME} 0s worker brokerWorker"   \
+    --tab --title "A worker"      --command "./${MYNAME} 1s worker airlineAWorker" \
+    --tab --title "B worker"      --command "./${MYNAME} 2s worker airlineBWorker" \
+    --tab --title "U worker"      --command "./${MYNAME} 3s worker userWorker"
+else
+  sleep $1
+  ./start-$2 --name $3
+fi
