@@ -50,7 +50,7 @@ public class CBPackageContextResolver extends PackageContextResolver {
       }
 
       if (n == null) {
-          n = ts.createPackage(p, name);
+          n = ((CodebaseTypeSystem)ts).createPackage(ns, p, name);
       }
       
       if (! canAccess(n, accessor)) {

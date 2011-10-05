@@ -10,9 +10,11 @@ import java.util.Map;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
+import polyglot.types.AccessControlResolver;
 import polyglot.types.AccessControlWrapperResolver;
 import polyglot.types.ArrayType;
 import polyglot.types.CachingResolver;
+import polyglot.types.ClassContextResolver;
 import polyglot.types.ClassType;
 import polyglot.types.Context;
 import polyglot.types.DeserializedClassInitializer;
@@ -37,6 +39,7 @@ import polyglot.types.reflect.ClassFileLazyClassInitializer;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
+import codebases.types.CBClassContextResolver;
 import codebases.types.CBImportTable;
 import codebases.types.CBPackageContextResolver;
 import codebases.types.CBPackage_c;
@@ -103,6 +106,12 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     throw new UnsupportedOperationException("Must specify namespace");
   }
 
+  @Override
+  public AccessControlResolver createClassContextResolver(ClassType type) {
+      assert_(type);
+      return new CBClassContextResolver(this, type);
+  }
+  
   @Override
   public ClassType TransactionManager() {
     return load("fabric.worker.transaction.TransactionManager");
