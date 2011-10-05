@@ -19,8 +19,10 @@ public class Codebase {
   private Map/*String, FClass*/ classes;
   
   /**
-   * @param name a fabric name
+   * @param  name
+   *    a fabric name
    * @return
+   *    the associated FClass, or null if there is none
    */
   FClass resolveClassName(String name) {
     return (FClass)classes.get(name);
