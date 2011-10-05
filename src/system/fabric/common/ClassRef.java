@@ -382,7 +382,7 @@ public abstract class ClassRef implements FastSerializable {
     private Codebase._Proxy codebase;
 
     /**
-     * The Java name of the class, relative to <code>codebase</code>.
+     * The Fabric name of the class, relative to <code>codebase</code>.
      * <p>
      * Either <code>clazz</code> or (<code>codebase</code> and
      * <code>className</code>) must be non-null. If both are non-null, they are
@@ -399,8 +399,11 @@ public abstract class ClassRef implements FastSerializable {
      */
     public FabricClassRef(Class<? extends fabric.lang.Object> clazz) {
       super(ClassRefType.FABRIC);
-
-      this.fClass = (FClass._Proxy) SysUtil.toProxy(clazz.getCanonicalName());
+      try {
+        this.fClass = (FClass._Proxy) SysUtil.toProxy(clazz.getName());
+      } catch (final ClassNotFoundException e) {
+        throw new InternalError("failed to resolve existing class", e);
+      }
       this.codebase = null;
       this.className = null;
     }

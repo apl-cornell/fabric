@@ -9,6 +9,8 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import polyglot.types.Named;
 
@@ -16,6 +18,14 @@ import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+
+/**
+ * Convenience class containing generally useful methods such as functional
+ * programming idioms and hashing methods.
+ * 
+ * This class has also adopted a bunch of mucky name mangling code that should
+ * be removed.
+ */
 
 public final class SysUtil {
 
@@ -248,9 +258,36 @@ public final class SysUtil {
     protected abstract T create();
   }
   
+  /*
+  ** crufty name mangling stuff below this line. *******************************
+  */
+
   /**
-   * XXX: This 
-   * @throws ClassNotFoundException 
+   * The following words are used in this documentation
+   * 
+   *  - fabric name
+   *      fully qualified names from the source language
+   *      example: fabric.lang.Object
+   *
+   *  - java name
+   *      fully qualified Java names that the compiler outputs
+   *      example: fabric.lang.Object$_Impl
+   *      example: [mangled codebase].my.app.Foo$_Proxy
+   *      example: [mangled codebase].my.app.Foo
+   *      platform classes do not have codebase parts
+   *
+   *  - mangled codebase
+   *      $$[codebase store].onum_[codebase onum]$$
+   */
+
+  
+  /**
+   * @param app
+   *
+   * @return
+   *    
+   * @throws
+   *    ClassNotFoundException 
    */
   public static String mangle(String app) throws ClassNotFoundException {
     URI app_uri = URI.create(app);
@@ -262,9 +299,16 @@ public final class SysUtil {
       if(fcls == null)
         throw new ClassNotFoundException(app_uri.toString());
       return pseudoname(fcls) + "$_Impl";
-    }    
+    }
   }
   
+  /**
+   * @param cb
+   *    either a codebase or null
+   * @return
+   *    "" if cb is null
+   *    "[mangled codebase reference]." if cb is not null
+   */
   public static String packagePrefix(Codebase cb) {
     if (cb != null) {
       return pseudoname(cb) + ".";
@@ -272,6 +316,13 @@ public final class SysUtil {
     else return "";
   }
   
+  /**
+   * @param cb
+   *    either a codebase or null
+   * @return
+   *    "" if cb is null
+   *    "[mangled codebase reference]" if cb is not null
+   */
   public static String packageName(Codebase cb) {
     if (cb != null) {
       return pseudoname(cb);
@@ -279,34 +330,70 @@ public final class SysUtil {
     else return "";
   }
 
+  /**
+   * @param o
+   *    a fabric reference
+   * @return
+   *    fab://[object store]/[object onum]
+   */
   public static String oid(fabric.lang.Object o) {
     return "fab://" + o.$getStore().name() + "/" + o.$getOnum();
   }
 
-  public static FClass toProxy(String mangled) {
-    String fabricname = fabricname(mangled);
-    if(fabricname == null) return null;
+  /**
+   * @param mangled
+   *    the java name of a class stored in Fabric (see above)
+   * @return
+   *    the FClass associated with the java name
+   * @throws ClassNotFoundException
+   *    if the name is malformed, refers to a platform class, or fails to resolve
+   */
+  public static FClass toProxy(String javaName) throws ClassNotFoundException {
+    Matcher m = javaNameRegex.matcher(javaName);
+    if (!m.matches())
+      throw new ClassNotFoundException("failed to parse java class name " + javaName);
     
-    URI uri = URI.create(fabricname);
-    Store store = Worker.getWorker().getStore(uri.getHost());
-    String path = uri.getPath();
-    int oe = path.indexOf("/", 1);
-    long onum = Long.parseLong(path.substring(1,oe)); 
-    String className = path.substring(oe+1);
+    Store  codebaseStore = Worker.getWorker().getStore(m.group(1));
+    long   codebaseOnum  = Long.parseLong(m.group(2)); 
+    String className     = m.group(3);
 
     Codebase codebase =
         (Codebase) fabric.lang.Object._Proxy
-            .$getProxy(new fabric.lang.Object._Proxy(store, onum));
+            .$getProxy(new fabric.lang.Object._Proxy(codebaseStore, codebaseOnum));
     
-    return codebase.resolveClassName(className);
+    FClass result = codebase.resolveClassName(className);
+    if (result == null)
+      throw new ClassNotFoundException("Failed to load " + className + " in codebase " + codebase);
+    
+    return result;
   }
   
+  // matches a java class name.
+  // group 1: codebase store or null for platform class
+  // group 2: codebase onum  or null for platform class
+  // group 3: fabric class name
+  // group 4: $_Impl or $_Proxy or ""
+  private static final Pattern javaNameRegex = Pattern.compile("\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.(.*?)((?:\\$_Impl)|(?:\\$_Proxy)|)");
+  
+  /**
+   * @param cb
+   *    a codebase or null
+   * @return
+   *    "" if cb is null
+   *    "fab://[codebase store]/[codebase onum]" otherwise
+   */
   public static String codebasePrefix(Codebase cb) {
     if (cb != null)
       return oid(cb) + "/";
     else return "";
   }
-    
+  
+  /**
+   * @param mangled
+   *    
+   * @return
+   *    TODO
+   */
   public static String codebasePart(String mangled) {
     int b = mangled.indexOf("$$");
     int e = mangled.indexOf("$$", b+2);
@@ -315,6 +402,7 @@ public final class SysUtil {
     return mangled.substring(b+2, e);
   }
 
+  
   public static long onumPart(String codebaseName) {
     int e = codebaseName.lastIndexOf('.');
     String onum = codebaseName.substring(e+".onum_".length());
@@ -326,19 +414,12 @@ public final class SysUtil {
     return codebaseName.substring(0, e);
   }
 
-  public static String pseudoname(String store, long onum) {
-    String[] host = store.split("[.]");
-    StringBuilder sb = new StringBuilder("$$");
-    for(int i = host.length - 1; i>=0; i--) {
-      sb.append(escapeHost(host[i]));
-      sb.append('.');
-    }
-    sb.append("onum_");
-    sb.append(onum);
-    sb.append("$$");
-    return sb.toString();
-  }
-  
+  /**
+   * @param pseudoname
+   *    [mangled codebase]
+   * @return
+   *    null if pseudoname does not contain "$$"
+   */
   public static String fabricname(String pseudoname) {    
     String cb = codebasePart(pseudoname);    
     if("".equals(cb))
@@ -357,31 +438,27 @@ public final class SysUtil {
     return "fab://"+store+"/"+onum+"/"+className;
   }
   
-  public static String pseudoname(URI fabref) {
-    String store = fabref.getHost();
-    String path = fabref.getPath();
-    if (path.contains("/")) {
-      // parse as a codebase oid + class name
-      String[] pair = path.split("/");
-      long onum = Long.parseLong(pair[0]);
-      String className = pair[1];
-      return pseudoname(store, onum) + "." + className;
-    }
-    return null;
-  }
-  
-  public static String escapeHost(String name) {
+  private static String escapeHost(String name) {
     name = name.replaceFirst("^([0-9])", "\\$$1");
     name = name.replace("-", "$_");
     return name;
   }
   
-  public static String unEscapeHost(String cbpart) {
+  private static String unEscapeHost(String cbpart) {
     cbpart = cbpart.replaceAll("\\$([0-9])", "$1");
     cbpart = cbpart.replaceAll("\\$_", "-");
     return cbpart;
   }
 
+  /**
+   * @param fabref a URI either of the form
+   *        fab://codebase_store/codebase_onum/class_name
+   *        where class_name is a fabric name
+   *        or
+   *        fab://class_store/class_onum
+   * @return the corresponding FClass object
+   * @throws ClassCastException if the oid's do not resolve to the correct types
+   */
   public static FClass toFClass(URI fabref) {
     Store store = Worker.getWorker().getStore(fabref.getHost());
     String path = fabref.getPath().substring(1);
@@ -412,8 +489,22 @@ public final class SysUtil {
       return (FClass)o;
     }
   }
+
   public static String pseudoname(FClass fcls) {
     return packagePrefix(fcls.getCodebase()) + fcls.getName();
+  }
+  
+  public static String pseudoname(String store, long onum) {
+    String[] host = store.split("[.]");
+    StringBuilder sb = new StringBuilder("$$");
+    for(int i = host.length - 1; i>=0; i--) {
+      sb.append(escapeHost(host[i]));
+      sb.append('.');
+    }
+    sb.append("onum_");
+    sb.append(onum);
+    sb.append("$$");
+    return sb.toString();
   }
   
   public static String pseudoname(Codebase cb) {
