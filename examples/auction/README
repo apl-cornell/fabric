@@ -8,6 +8,9 @@ First, compile the initialization code that will set up the principal hierarchy.
 
 	$ ant fabil-init
 
+You can expect messages warning that certain exceptions will be treated as
+fatal errors during this and subsequent steps.
+
 Next, start the stores and workers, each in a separate terminal window
 (if you have gnome-terminal, bin/run-all will do this for you).
 
@@ -21,6 +24,8 @@ Next, start the stores and workers, each in a separate terminal window
 	term7$ bin/start-worker --name airlineBWorker
 	term8$ bin/start-worker --name userWorker
 
+It is reasonable to expect Pastry-related exception messages during these steps.
+
 Now run the initialization program for each store.
 	
 	brokerStore> run auction.InitBrokerStore
@@ -31,6 +36,8 @@ Now run the initialization program for each store.
 Next, publish each entity's mobile code...
 
 	$ ant publish-all
+
+It is reasonable to get BindException messages during this process.
 
 And create a Server object on each airline store, and a User object on the
 user's store. 
