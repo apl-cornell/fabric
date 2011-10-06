@@ -1,6 +1,7 @@
 package fabric.types;
 
 import java.net.URI;
+import java.util.Collection;
 
 import jif.types.JifTypeSystem;
 import jif.types.label.AccessPath;
@@ -15,6 +16,7 @@ import polyglot.types.ReferenceType;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import codebases.types.CodebaseTypeSystem;
+import codebases.types.NamespaceResolver;
 import fabric.lang.Codebase;
 
 public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
@@ -67,5 +69,6 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   FabricArrayType fabricArrayOf(Position pos, Type t, int dims);
 
   Codebase codebaseFromNS(URI namespace);
+
 
 }

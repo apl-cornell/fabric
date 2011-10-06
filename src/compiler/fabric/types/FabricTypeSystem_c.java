@@ -79,6 +79,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     protected List<NamespaceResolver> classpathResolvers;
     protected List<NamespaceResolver> sourcepathResolvers;
     protected List<NamespaceResolver> signatureResolvers;
+    protected List<NamespaceResolver> runtimeResolvers;
+
     protected NamespaceResolver platformResolver;
 
     private fabric.ExtensionInfo extInfo;
@@ -114,8 +116,18 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     List<URI> cp = extInfo.getFabricOptions().classpath();
     List<URI> sp = extInfo.getFabricOptions().sourcepath();
     List<URI> sigcp = extInfo.getFabricOptions().signaturepath();
+    List<URI> rtcp = extInfo.getFabricOptions().bootclasspath();
+
     namespaceResolvers = new HashMap<URI, NamespaceResolver>();
 
+    runtimeResolvers = new ArrayList<NamespaceResolver>();
+    for(URI uri : rtcp) {
+      NamespaceResolver nsr = namespaceResolver(uri);
+      nsr.loadEncodedClasses(true);
+      nsr.loadSource(true);
+      runtimeResolvers.add(nsr);
+    }
+    
     signatureResolvers = new ArrayList<NamespaceResolver>();
     for(URI uri : sigcp) {
       NamespaceResolver nsr = namespaceResolver(uri);
@@ -123,6 +135,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
       nsr.loadSource(true);
       signatureResolvers.add(nsr);
     }
+
     platformResolver = namespaceResolver(extInfo.platformNamespace());
     
     classpathResolvers = new ArrayList<NamespaceResolver>();

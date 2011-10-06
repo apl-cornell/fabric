@@ -23,6 +23,8 @@ public class PathResolver extends NamespaceResolver_c implements
   public PathResolver(ExtensionInfo extInfo, URI ns,
       List<NamespaceResolver> path, Map<String, URI> aliases) {
     super(extInfo, ns, null);
+    if(path.contains(null))
+      throw new NullPointerException("Null resolver in path!");
     this.path = path;
     this.aliases = aliases;
   }

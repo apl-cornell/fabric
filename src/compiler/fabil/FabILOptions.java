@@ -13,7 +13,7 @@ public interface FabILOptions {
   
   public boolean dumpDependencies();
 
-  public boolean createJavaSkel();
+  public boolean createSkeleton();
 
   public String destinationStore();
 
@@ -21,11 +21,12 @@ public interface FabILOptions {
 
   List<URI> sourcepath();
 
-  Map<String, URI> codebaseAliases();
-
   List<URI> signaturepath();
 
-  File outputDirectory();
-  
+  List<URI> bootclasspath();
+
+  Map<String, URI> codebaseAliases();
+
+  File outputDirectory();  
   
 }

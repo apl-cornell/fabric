@@ -18,6 +18,7 @@ import polyglot.frontend.Scheduler;
 import polyglot.frontend.SourceLoader;
 import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
+import polyglot.main.Report;
 import polyglot.types.SemanticException;
 import polyglot.types.reflect.ClassFileLoader;
 import polyglot.types.reflect.ClassPathLoader;
@@ -102,7 +103,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
   @Override
   public Goal getCompileGoal(Job job) {
     FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
-    if(opts.createJavaSkel())
+    if(opts.createSkeleton())
       return scheduler().FabILSkeletonGenerated(job);
     else if(opts.publishOnly()) {
       return scheduler().ConsistentNamespace();
@@ -253,6 +254,9 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
 
   // Resolves types
   public NamespaceResolver createNamespaceResolver(URI ns) {
+    if (Report.should_report("resolver", 3))
+      Report.report(3, "Creating namespace resolver for " + ns);
+
     if ("fab".equals(ns.getScheme())) {
       if(ns.getSchemeSpecificPart().startsWith("local")) {
         List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
@@ -266,7 +270,10 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
         // specially.
         // Loading the appropriate platform classes and signatures
         // is handled by the classpathloader and sourceloader
-        return new PathResolver(this, ns, typeSystem().signatureResolvers());
+        List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
+        path.addAll(typeSystem().runtimeResolvers());
+        path.addAll(typeSystem().signatureResolvers());
+        return new PathResolver(this, ns, path);
       }
       else {
         List<NamespaceResolver> path = new ArrayList<NamespaceResolver>(2);

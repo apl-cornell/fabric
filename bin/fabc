@@ -44,7 +44,8 @@ sigcp="${TOP}/sig-classes/fabric:${TOP}/lib/fabric-sig.jar:${sigcp}"
 filsigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar:${filsigcp}"
 
 command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" \
-                   fabric.Main -sigcp \"$(fixpath ${sigcp})\" \
+                   fabric.Main -bootclasspath \"$(fixpath ${FABRIC_BOOTCP})\" \
+                               -sigcp \"$(fixpath ${sigcp})\" \
                                -filsigcp \"$(fixpath ${filsigcp})\" ${args}"
 
 if [ -n "${verbose}" ]

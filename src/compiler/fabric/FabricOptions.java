@@ -53,6 +53,13 @@ public class FabricOptions extends JifOptions implements FabILOptions {
    * hides the corresponding field in polyglot.main.Options
    */
   protected List<URI> source_path;
+  
+
+  /**
+   * Boot classpath. Location of the Fabric runtime classes.
+   */
+  protected List<URI> bootclasspath;
+
 
   private static URI file = URI.create("file:///");
 
@@ -74,6 +81,10 @@ public class FabricOptions extends JifOptions implements FabILOptions {
 
   protected FabILOptions_c delegate;
 
+  /**
+   * A map from names to codebase URIs. Used to resolve explicit codebases in
+   * source.
+   */
   protected Map<String, URI> codebase_aliases;
 
   protected boolean run_worker = false;
@@ -111,7 +122,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
         "Verify and publish source, do not compile to bytecode.");
     usageForFlag(out, "-codebase-output-file <filename>",
         "Write Fabric reference of published codebase to file.");
-    usageForFlag(out, "-bootstrap-skel",
+    usageForFlag(out, "-generate-native-skeletons",
         "generate FabIL and Java bootstrap skeletons for each class");
     usageForFlag(out, "-O", "turn optimizations on");
 
@@ -134,6 +145,9 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       index++;
       delegate.addSigcp(args[index++]);
       return index;
+    }    else if (args[index].equals("-filbootclasspath")) {
+      index++;
+      delegate.bootclasspath = processPathString(args[index++]);
     } else if (args[index].equals("-publish-only")) {
       index++;
       post_compiler = null;
@@ -156,6 +170,15 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       index++;
       source_path = processPathString(args[index++]);
     }
+    //TODO: We distribute the FabIL and Fabric as one jar
+    //      In general, we could specify the runtimes separately,
+    //      but for now we simply use the same bootclasspath for
+    //      both compilers.
+    else if (args[index].equals("-bootclasspath")) {
+        index++;
+        bootclasspath = processPathString(args[index++]);
+        delegate.bootclasspath = processPathString(args[index++]);
+    }
 
     // parse jif options
     int i = super.parseCommand(args, index, source);
@@ -169,8 +192,8 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   }
 
   @Override
-  public boolean createJavaSkel() {
-    return delegate.createJavaSkel;
+  public boolean createSkeleton() {
+    return delegate.createSkeleton;
   }
 
   @Override
@@ -207,6 +230,11 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   @Override
   public List<URI> sourcepath() {
     return source_path;
+  }
+  
+  @Override
+  public List<URI> bootclasspath() {
+    return bootclasspath;
   }
 
   @Override
@@ -258,6 +286,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       } else {
         int end = path.indexOf(':');
         URI u = URI.create(path.substring(idx, end));
+
         if (u.isAbsolute())
           uris.add(u);
         else uris.add(file.resolve(u));

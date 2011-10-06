@@ -49,6 +49,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   protected List<NamespaceResolver> classpathResolvers;
   protected List<NamespaceResolver> sourcepathResolvers;
   protected List<NamespaceResolver> signatureResolvers;
+  protected List<NamespaceResolver> runtimeResolvers;
 
   protected NamespaceResolver platformResolver; 
 
@@ -532,10 +533,20 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     List<URI> cp = opt.classpath();
     List<URI> sp = opt.sourcepath();
     List<URI> sigcp = opt.signaturepath();
+    List<URI> rtcp = opt.bootclasspath();
+
     namespaceResolvers = new HashMap<URI, NamespaceResolver>();
     signatureResolvers = new ArrayList<NamespaceResolver>();
     classpathResolvers = new ArrayList<NamespaceResolver>();
     sourcepathResolvers = new ArrayList<NamespaceResolver>();
+    
+    runtimeResolvers = new ArrayList<NamespaceResolver>();
+    for(URI uri : rtcp) {
+      NamespaceResolver nsr = namespaceResolver(uri);
+      nsr.loadEncodedClasses(true);
+      nsr.loadSource(true);
+      runtimeResolvers.add(nsr);
+    }
 
     for(URI uri : sigcp) {
       NamespaceResolver nsr = namespaceResolver(uri);
@@ -653,6 +664,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @Override
   public NamespaceResolver platformResolver() {
+    if (platformResolver == null)
+      throw new InternalCompilerError("Must call initResolvers() first!");
     return platformResolver;
   }
 
@@ -677,6 +690,14 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
       throw new InternalCompilerError("Must call initResolvers() first!");
 
     return sourcepathResolvers;
+  }
+
+  @Override
+  public List<NamespaceResolver> runtimeResolvers() {
+    if (runtimeResolvers == null)
+      throw new InternalCompilerError("Must call initResolvers() first!");
+
+    return runtimeResolvers;
   }
 
 }

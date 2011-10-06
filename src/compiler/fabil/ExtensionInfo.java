@@ -178,21 +178,23 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
         // is handled by the classpathloader and sourceloader
         CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
 
-        List<NamespaceResolver> resolvers =
-            new ArrayList<NamespaceResolver>(cbts.signatureResolvers());
+        List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
+        path.addAll(typeSystem().runtimeResolvers());
+        path.addAll(typeSystem().signatureResolvers());
+
         //FabIL also allows direct linking to Java classes 
         //TODO: Make this play nice with cmdline args
-        String path = System.getProperty("java.class.path");
-        path += File.pathSeparator + System.getProperty("sun.boot.class.path");
+        String java_path = System.getProperty("java.class.path");
+        java_path += File.pathSeparator + System.getProperty("sun.boot.class.path");
         URI file = URI.create("file:///");
-        for (String dir : path.split(File.pathSeparator)) {
+        for (String dir : java_path.split(File.pathSeparator)) {
           File f = new File(dir);
           NamespaceResolver nr = new SimpleResolver(this, file.resolve(f
               .getAbsolutePath()));
           nr.loadRawClasses(true);
-          resolvers.add(nr);
+          path.add(nr);
         }
-        return new PathResolver(this, ns, resolvers);
+        return new PathResolver(this, ns, path);
       }
       else {
         List<NamespaceResolver> path = new ArrayList<NamespaceResolver>(2);

@@ -464,7 +464,7 @@ public class FabILScheduler extends JLScheduler {
           l.add(Memoized(job));
           l.add(InstrumentThreads(job));
           l.add(ClassReferencesCollected(job));
-          if(((FabILOptions) extInfo.getOptions()).createJavaSkel()) {
+          if(((FabILOptions) extInfo.getOptions()).createSkeleton()) {
             l.add(CreateJavaSkeleton(job));
           }
         }

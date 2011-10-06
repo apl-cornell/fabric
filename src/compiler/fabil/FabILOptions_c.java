@@ -46,7 +46,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   /**
    * Whether to create a Java skeleton for each class.
    */
-  public boolean createJavaSkel;
+  public boolean createSkeleton;
  
   /**
    * Name of worker for compiling source from Fabric.
@@ -75,7 +75,12 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    * NB: This field hides the corresponding field in polyglot.main.Options 
    */
   protected List<URI> source_path;
-    
+  
+  /**
+   * Boot classpath. Location of the FabIL runtime classes.
+   */
+  public List<URI> bootclasspath;
+
   /**
    * Codebase names.
    */
@@ -98,7 +103,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     this.signatureMode = false;
     this.dumpDependencies = false;
     this.optLevel = 0;
-    this.createJavaSkel = false;
+    this.createSkeleton = false;
     try {
       this.workerName = java.net.InetAddress.getLocalHost().getHostName();
     } catch (UnknownHostException e) {
@@ -120,32 +125,29 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    */
   @SuppressWarnings("rawtypes")
   @Override
-  public int parseCommand(String[] args, int index, Set source) throws UsageError,
-      TerminationException {
+  public int parseCommand(String[] args, int index, Set source)
+      throws UsageError, TerminationException {
     if (args[index].equals("-sig")) {
       index++;
       signatureMode = true;
-    } 
-    else if (args[index].equals("-dumpdeps")) {
+    } else if (args[index].equals("-dumpdeps")) {
       index++;
       dumpDependencies = true;
-    } 
-    else if (args[index].equals("-sigcp")) {
+    } else if (args[index].equals("-sigcp")) {
       index++;
       sigcp.clear();
       addSigcp(args[index++]);
-    } 
-    else if (args[index].equals("-addsigcp")) {
+    } else if (args[index].equals("-addsigcp")) {
       index++;
       addSigcp(args[index++]);
-    } 
-    else if (args[index].startsWith("-O")) {
+    } else if (args[index].startsWith("-O")) {
       if (args[index].length() == 2) {
         this.optLevel = Integer.MAX_VALUE;
       } else {
         try {
           this.optLevel = Integer.parseInt(args[index].substring(2));
-        } catch (NumberFormatException e) {}
+        } catch (NumberFormatException e) {
+        }
       }
       index++;
     } else if (args[index].equals("-classpath") || args[index].equals("-cp")) {
@@ -154,41 +156,44 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     } else if (args[index].equals("-sourcepath")) {
       index++;
       source_path = processPathString(args[index++]);
+    } else if (args[index].equals("-bootclasspath")) {
+      index++;
+      bootclasspath = processPathString(args[index++]);
     }
-    if (args[index].equals("-worker")) {
+
+    else if (args[index].equals("-worker")) {
       index++;
       this.runWorker = true;
       this.workerName = args[index++];
       return index;
-    }
-    else if (args[index].equals("-deststore")) {
+    } else if (args[index].equals("-deststore")) {
       index++;
       this.runWorker = true;
       this.destinationStore = args[index++];
       return index;
-    }
-    else if (args[index].equals("-codebase-alias") || args[index].equals("-cb-alias")) {
+    } else if (args[index].equals("-codebase-alias")
+        || args[index].equals("-cb-alias")) {
       index++;
       this.runWorker = true;
       String arg = args[index++];
-      if(arg.startsWith("@")) {
+      if (arg.startsWith("@")) {
         try {
-          BufferedReader lr = new BufferedReader(new FileReader(arg.substring(1)));
+          BufferedReader lr =
+              new BufferedReader(new FileReader(arg.substring(1)));
           addCodebaseAlias(lr.readLine());
         } catch (FileNotFoundException e) {
           throw new InternalCompilerError(e);
         } catch (IOException e) {
           throw new InternalCompilerError(e);
         }
-      }
-      else {
+      } else {
         addCodebaseAlias(arg);
       }
       return index;
-    } else if (args[index].equals("-bootstrap-skel")) {
+    } else if (args[index].equals("-generate-native-skeletons")) {
       index++;
-      createJavaSkel = true;
-      serialize_type_info = false;      
+      createSkeleton = true;
+      serialize_type_info = false;
 
     } else {
       return super.parseCommand(args, index, source);
@@ -251,6 +256,11 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   }
   
   @Override
+  public List<URI> bootclasspath() {
+    return bootclasspath;
+  }
+
+  @Override
   public Map<String,URI> codebaseAliases() {
     return codebase_aliases;
   }
@@ -275,8 +285,8 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    * @see fabil.FabILOptions#createJavaSkel()
    */
   @Override
-  public boolean createJavaSkel() {
-    return createJavaSkel;
+  public boolean createSkeleton() {
+    return createSkeleton;
   }
 
   /* (non-Javadoc)
@@ -329,26 +339,39 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     }
     int idx = 0;
     while (idx < path.length()) {
+
       if (path.charAt(idx) == '<') {
-        int end = path.indexOf('>');
-        if(end < idx)
+        int end = path.indexOf(idx, '>');
+        if(end < 0)
           throw new InternalCompilerError("Invalid path");
         URI u = URI.create(path.substring(idx + 1, end));
         uris.add(u);
+
         if(u.getScheme().equals("fab"))
           this.runWorker = true;
         idx = end + 1;
-      } else if (path.charAt(idx) == File.separatorChar) {
+        
+      } else if (path.charAt(idx) == File.pathSeparatorChar) {
         idx++;
       } else {
-        int end = path.indexOf(':');
-        if(end < idx)
-          end = path.length();
-        URI u = URI.create(path.substring(idx, end));
-        if (u.isAbsolute())
-          uris.add(u);
-        else uris.add(file.resolve(u));
-        idx = end + 1;
+        int end = path.indexOf(idx, File.pathSeparatorChar);
+
+        String dir="";
+        if(end < 0) {
+          dir = path.substring(idx);
+          idx = path.length();
+        }
+        else {
+          dir = path.substring(idx, end);
+          idx = end;
+        }
+        if(!"".equals(dir)) {
+          URI u = URI.create(dir);
+  
+          if (u.isAbsolute())
+            uris.add(u);
+          else uris.add(file.resolve(u));
+        }
       }
     }
   }

@@ -1,6 +1,7 @@
 package codebases.types;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
 
 import codebases.frontend.CodebaseSource;
@@ -39,6 +40,7 @@ public interface CodebaseTypeSystem extends TypeSystem {
   List<NamespaceResolver> sourcepathResolvers();
   List<NamespaceResolver> classpathResolvers();
   List<NamespaceResolver> signatureResolvers();
+  List<NamespaceResolver> runtimeResolvers();
 
   CBPackageContextResolver createPackageContextResolver(URI ns, Package p);
   boolean packageExists(URI namespace, String name);
