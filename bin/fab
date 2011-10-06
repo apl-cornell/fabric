@@ -5,27 +5,34 @@
 source "$(dirname $0)/defs"
 CODECACHE=".${HOSTNAME}_cache"
 
+DEBUG_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=3371"
+
 while true; do
   case "$1" in
     "") break;;
-    -v) verbose="1"; shift;;
-    -cp) EXTRACP=$2; shift; shift;;
-    -classpath) EXTRACP=$2; shift; shift;;    
-    -j)
-            shift
-            vmargs="${vmargs} '$1'"
-            shift
-            ;;
-    --code-cache) 
-        CODECACHE=$2; 
-        args="${args} --code-cache '$2'"; shift; shift;;
-    --name) 
-        CODECACHE=".${2}_cache";
-        args="${args} --name '$2'"; shift; shift;;
+    -v)           verbose="1";             shift 1;;
+    -cp)          EXTRACP=$2;              shift 2;;
+    -classpath)   EXTRACP=$2;              shift 2;;
+    -j)           vmargs="${vmargs} '$2'"; shift 2;;
+    --code-cache)
+        CODECACHE=$2
+        args="${args} --code-cache '$2'"
+        shift 2
+        ;;
+    --name)
+        CODECACHE=".${2}_cache"
+        args="${args} --name '$2'"
+        shift 2
+        ;;
     --debug)
-            shift
-            vmargs="${vmargs} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3371"
-            ;;
+        vmargs="${vmargs} ${DEBUG_OPTS},suspend=n"
+        shift 1
+        ;;
+    --suspend)
+	vmargs="${vmargs} ${DEBUG_OPTS},suspend=y"
+	shift 1
+	;;
+            
     *) args="${args} '$1'"; shift;;
   esac
 done
