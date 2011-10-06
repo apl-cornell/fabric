@@ -10,9 +10,11 @@ First, compile the initialization code that will set up the principal hierarchy.
 
 You can expect messages warning that certain exceptions will be treated as
 fatal errors during this and subsequent steps.
+TODO: remove and/or fix spurious error messages.
 
 Next, start the stores and workers, each in a separate terminal window
 (if you have gnome-terminal, bin/run-all will do this for you).
+TODO: make run-all more portable
 
 	term1$ bin/start-store --name brokerStore
 	term2$ bin/start-store --name airlineAStore
@@ -25,6 +27,7 @@ Next, start the stores and workers, each in a separate terminal window
 	term8$ bin/start-worker --name userWorker
 
 It is reasonable to expect Pastry-related exception messages during these steps.
+TODO: remove and/or fix spurious error messages.
 
 Now run the initialization program for each store.
 	
@@ -53,3 +56,5 @@ Run the mobile code example by specifying auction.Main in the generated
 codebase.
 
 	brokerWorker> run fab://brokerStore/35/auction.Main 
+
+TODO: reduce the steps, if possible.
