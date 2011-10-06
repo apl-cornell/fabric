@@ -568,21 +568,21 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return super.translateClass(c, t);
   }
   
-  public boolean isPlatformType(Named name) {
-    return isPlatformType(name.fullName());
-  }
-  
-  public boolean isPlatformType(String fullName) {
-    FabricOptions opt = (FabricOptions) extInfo.getOptions();
-    if(!opt.runWorker()) {
-      return true;
-    }
-    return fullName.startsWith("java")
-    || fullName.startsWith("fabric")
-    || fullName.startsWith("jif");
-  }
-  
-
+//  public boolean isPlatformType(Named name) {
+//    return isPlatformType(name.fullName());
+//  }
+//  
+//  public boolean isPlatformType(String fullName) {
+//    FabricOptions opt = (FabricOptions) extInfo.getOptions();
+//    if(!opt.runWorker()) {
+//      return true;
+//    }
+//    return fullName.startsWith("java")
+//    || fullName.startsWith("fabric")
+//    || fullName.startsWith("jif");
+//  }
+//  
+//
 //  /**
 //   * Turns a codebase and a Java name into an absolute name. If the class is a
 //   * platform class, this is the same as the Java name; otherwise, it is an
@@ -683,6 +683,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
 
   @Override
   public Codebase codebaseFromNS(URI namespace) {
+    //Worker must be running!
+    if(!Worker.isInitialized())
+      throw new InternalCompilerError("Worker is not initialized.");
+    
     if(extInfo.localNamespace().equals(namespace)) {
       PathResolver nr = (PathResolver) namespaceResolver(namespace);
       NodePrincipal w = Worker.getWorker().getPrincipal();
@@ -760,5 +764,38 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
         "Import table must be associated with a namespace,"
             + " use importTable(Source,URI,Package) instead");
   }
+
+//  @Override
+//  public Resolver packageContextResolver(URI namespace, Package package_) {
+//    // TODO Auto-generated method stub
+//    return null;
+//  }
+//
+//  @Override
+//  public Package packageForName(URI ns, Package prefix, java.lang.String name)
+//      throws SemanticException {
+//    // TODO Auto-generated method stub
+//    return null;
+//  }
+//
+//  @Override
+//  public Package createPackage(URI ns, Package prefix, java.lang.String name) {
+//    // TODO Auto-generated method stub
+//    return null;
+//  }
+//
+//  @Override
+//  public Resolver packageContextResolver(URI namespace, Package p,
+//      ClassType accessor) {
+//    // TODO Auto-generated method stub
+//    return null;
+//  }
+//
+//  @Override
+//  public Package packageForName(URI ns, java.lang.String name)
+//      throws SemanticException {
+//    // TODO Auto-generated method stub
+//    return null;
+//  }
 }
 

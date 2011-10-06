@@ -13,6 +13,8 @@ import polyglot.types.Named;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
+import polyglot.util.InternalCompilerError;
+import codebases.types.CBImportTable;
 import codebases.types.CodebaseTypeSystem;
 
 public class FabricContext_c extends JifContext_c implements FabricContext {
@@ -27,7 +29,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
     super(ts, jlts);
   }
 
-  //XXX: Commented out (pending test) : redundant copies, super.push calls copy()
+  //XXX: Commented out pending testing : I think this is redundant, super.push calls copy()
 //  @Override
 //  protected Context_c push() {
 //    FabricContext_c v = (FabricContext_c) super.push();
@@ -84,14 +86,8 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   
   @Override
   public URI namespace() {
-    return namespace;
+    if(isOuter())
+      throw new InternalCompilerError("No namespace!");
+    return ((CBImportTable)it).namespace();
   }
-  
-  @Override
-  public Context pushNamespace(URI namespace) {
-    FabricContext_c v = (FabricContext_c) push();
-    v.namespace = namespace;
-    return v;
-  }
-
 }

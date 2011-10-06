@@ -97,8 +97,8 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         Store store = fabext.destinationStore();
         // TODO : Compute label:
         //
-        Label update_lbl = fabext.destinationLabel();
-        Label access_lbl = fabext.destinationLabel();
+        Label update_lbl = null;//fabext.destinationLabel();
+        Label access_lbl = null;//fabext.destinationLabel();
 
         String className = pct.fullName();
 

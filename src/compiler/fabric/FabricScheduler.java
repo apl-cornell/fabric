@@ -286,10 +286,9 @@ public class FabricScheduler extends JifScheduler {
         addPrerequisiteDependency(g, this.PrincipalCastsAdded(job));
         FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
 
-        if(opts.runWorker()) {
-            addPrerequisiteDependency(g, this.ConsistentNamespace());
-        }
-
+        //TODO: only run if publishing classes
+        addPrerequisiteDependency(g, this.ConsistentNamespace());
+        
         // make sure that if Object.fab is being compiled, it is always
         // written to FabIL before any other job.
         if (objectJob != null && job != objectJob)

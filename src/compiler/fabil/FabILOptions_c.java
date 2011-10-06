@@ -13,7 +13,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import polyglot.frontend.ExtensionInfo;
 import polyglot.main.Main.TerminationException;
@@ -87,15 +86,6 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   }
 
   private static URI file = URI.create("file:///");
-  private static URI toURI(String s) {
-    URI uri = URI.create(s);
-    if (uri.isAbsolute())
-      return uri;
-    else { 
-      File f = new File(s);
-      return file.resolve(f.getAbsolutePath());
-    }
-  }
   /*
    * (non-Javadoc)
    * 
@@ -158,60 +148,14 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
         } catch (NumberFormatException e) {}
       }
       index++;
-    } 
-    else if (args[index].equals("-classpath") || args[index].equals("-cp")) {
+    } else if (args[index].equals("-classpath") || args[index].equals("-cp")) {
       index++;
-      classpath = new ArrayList<URI>();
-      String path = args[index++];
-      if(path.startsWith("@")) {
-        try {
-          BufferedReader lr = new BufferedReader(new FileReader(path.substring(1)));
-          path = lr.readLine();
-        } catch (FileNotFoundException e) {
-          throw new InternalCompilerError(e);
-        } catch (IOException e) {
-          throw new InternalCompilerError(e);
-        }        
-      }
-      StringTokenizer st = new StringTokenizer(path, File.pathSeparator);
-      while (st.hasMoreTokens()) {
-        classpath.add(toURI(st.nextToken()));
-      }
-    } 
-    else if (args[index].equals("-sourcepath")) {
+      classpath = processPathString(args[index++]);
+    } else if (args[index].equals("-sourcepath")) {
       index++;
-      source_path = new ArrayList<URI>();
-      String path = args[index++];
-      if(path.startsWith("@")) {
-        try {
-          BufferedReader lr = new BufferedReader(new FileReader(path.substring(1)));
-          path = lr.readLine();
-        } catch (FileNotFoundException e) {
-          throw new InternalCompilerError(e);
-        } catch (IOException e) {
-          throw new InternalCompilerError(e);
-        }        
-      }
-      StringTokenizer st = new StringTokenizer(path, File.pathSeparator);
-      while (st.hasMoreTokens()) {
-        String s = st.nextToken();
-        URI uri = URI.create(s);
-        if (uri.isAbsolute()) {
-          throw new UsageError("Found codebase reference in source path. " +
-          		"Any source loaded from this codebase would be relinked " +
-          		"and republished.  You probably didn't mean this.  " +
-          		"Plus, we don't support it yet.");
-          //source_path.add(ns);
-        }
-        else source_path.add(toURI(s));
-      }
+      source_path = processPathString(args[index++]);
     }
-    else if (args[index].equals("-useworker")) {
-      index++;
-      this.runWorker = true;
-      return index;
-    }
-    else if (args[index].equals("-worker")) {
+    if (args[index].equals("-worker")) {
       index++;
       this.runWorker = true;
       this.workerName = args[index++];
@@ -254,10 +198,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   }
 
   public void addSigcp(String arg) {
-    StringTokenizer st = new StringTokenizer(arg, File.pathSeparator);
-    while (st.hasMoreTokens()) {
-        sigcp.add(toURI(st.nextToken()));
-    }    
+    processPathString(sigcp, arg);
   }
 
   protected void addCodebaseAlias(String arg) throws UsageError {
@@ -284,8 +225,14 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     usageForFlag(out, "-addsigcp <path>",
         "additional path for FabIL signatures; prefixed to sigcp");
     usageForFlag(out, "-dumpdeps", "output dependencies for each class");
+    usageForFlag(out, "-deststore <store>", "the destination store for published classes");
+    usageForFlag(out, "-codebase-alias <name>=<URI>", "associate a codebase with an alias in source files");
     usageForFlag(out, "-bootstrap-skel", "generate java bootstrap skeletons for each class");
-    usageForFlag(out, "-O", "turn optimizations on");
+    usageForFlag(out, "-O", "turn optimizations on");    
+    
+    out.println("Most <path> arguments accept local directory paths as well as");
+    out.println("Fabric references to codebases objects in the following form:");
+    usageForFlag(out, "<path>", "\"<fab://store/codebase_onum>:/path/to/local/dir/:...\"");
   }
   
   @Override
@@ -354,13 +301,56 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   }
 
   @Override
-  public boolean runWorker() {
-    return runWorker;
-  }
-
-  @Override
   public File outputDirectory() {
     return output_directory;
+  }
+  
+  private List<URI> processPathString(String path) {
+    List<URI> uris = new ArrayList<URI>();
+    processPathString(uris, path);
+    return uris;
+  }
+  /**
+   * Process a path string of the form <URI>:/localdir/:... into URIs and add to a list
+   * @param uris the list to add the URIs to
+   * @param path the path-style string of URIs and directories, with URIs delimited by '<' and '>'
+   */
+  private void processPathString(List<URI> uris, String path) {
+    if (path.startsWith("@")) {
+      try {
+        BufferedReader lr =
+            new BufferedReader(new FileReader(path.substring(1)));
+        path = lr.readLine();
+      } catch (FileNotFoundException e) {
+        throw new InternalCompilerError(e);
+      } catch (IOException e) {
+        throw new InternalCompilerError(e);
+      }
+    }
+    int idx = 0;
+    while (idx < path.length()) {
+      if (path.charAt(idx) == '<') {
+        int end = path.indexOf('>');
+        if(end < idx)
+          throw new InternalCompilerError("Invalid path");
+        URI u = URI.create(path.substring(idx + 1, end));
+        uris.add(u);
+        if(u.getScheme().equals("fab"))
+          this.runWorker = true;
+        idx = end + 1;
+      } else if (path.charAt(idx) == File.separatorChar) {
+        idx++;
+      } else {
+        int end = path.indexOf(':');
+        if(end < idx)
+          end = path.length();
+        URI u = URI.create(path.substring(idx, end));
+        if (u.isAbsolute())
+          uris.add(u);
+        else uris.add(file.resolve(u));
+        idx = end + 1;
+      }
+    }
   }
 
 }

@@ -27,6 +27,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     super(extension);
     this.delegate = new FabILOptions_c(extension);
   }
+
   /**
    * Whether to fully compile classes or just verify and publish.
    */
@@ -35,59 +36,64 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   /**
    * Name of file to write URL of new codebase to.
    */
-  protected String codebaseFilename;  
+  protected String codebaseFilename;
   /**
    * The classpath for the FabIL signatures of Java objects.
    */
   public List<URI> sigcp;
 
   /**
-   * Class path.  May include Fabric references to codebases.  
-   * NB: This field hides the corresponding field in polyglot.main.Options 
+   * Class path. May include Fabric references to codebases. NB: This field
+   * hides the corresponding field in polyglot.main.Options
    */
   protected List<URI> classpath;
-  
+
   /**
-   * Source path.  May include Fabric references to codebases. 
-   * NB: This field hides the corresponding field in polyglot.main.Options 
+   * Source path. May include Fabric references to codebases. NB: This field
+   * hides the corresponding field in polyglot.main.Options
    */
   protected List<URI> source_path;
-    
+
   private static URI file = URI.create("file:///");
 
   @Override
   public void setDefaultValues() {
     super.setDefaultValues();
-    
+
     // Override default in Jif: do not trust providers.
     this.trustedProviders = false;
-    
+
     this.fully_qualified_names = true;
     this.fatalExceptions = true;
     this.publishOnly = false;
-    
+
     this.sigcp = new ArrayList<URI>();
   }
 
-  /* FabIL Options (forwarded to delegate ) ***********************************/
-  
+  /* FabIL Options (forwarded to delegate ) ********************************** */
+
   protected FabILOptions_c delegate;
 
   protected Map<String, URI> codebase_aliases;
+
+  protected boolean run_worker = false;
   
+  @Override
   public boolean dumpDependencies() {
     return delegate.dumpDependencies;
   }
 
+  @Override
   public int optLevel() {
     return delegate.optLevel();
   }
 
+  @Override
   public boolean signatureMode() {
     return delegate.signatureMode();
   }
 
-  /* Parsing ******************************************************************/
+  /* Parsing ***************************************************************** */
   @Override
   public void usage(PrintStream out) {
     super.usage(out);
@@ -95,90 +101,60 @@ public class FabricOptions extends JifOptions implements FabILOptions {
         "path for FabIL signatures (e.g. for fabric.lang.Object)");
     usageForFlag(out, "-addfilsigcp <path>",
         "additional path for FabIL signatures; prefixed to sigcp");
-    usageForFlag(out, "-bootstrap-skel", "generate FabIL and Java bootstrap skeletons for each class");
-    usageForFlag(out, "-publish-only", "Verify and publish source, do not compile to bytecode.");
-    usageForFlag(out, "-codebase-output-file <filename>", "Write Fabric reference of published codebase to file.");
+    usageForFlag(out, "-worker <worker>",
+        "compile as a specific worker");
+    usageForFlag(out, "-deststore <store>",
+        "publish source to a Fabric store (all source on the commandline and" +
+        " loaded through the sourcepath will be published)");
+    usageForFlag(out, "-codebase-alias <name>=<URI>", "associate a codebase with an alias in source files");
+    usageForFlag(out, "-publish-only",
+        "Verify and publish source, do not compile to bytecode.");
+    usageForFlag(out, "-codebase-output-file <filename>",
+        "Write Fabric reference of published codebase to file.");
+    usageForFlag(out, "-bootstrap-skel",
+        "generate FabIL and Java bootstrap skeletons for each class");
     usageForFlag(out, "-O", "turn optimizations on");
+
+    out.println("Most <path> arguments accept local directory paths as well as");
+    out.println("Fabric references to codebases objects in the following form:");
+    usageForFlag(out, "<path>", "\"<fab://store/codebase_onum>:/path/to/local/dir/:...\"");
   }
 
   @SuppressWarnings("rawtypes")
   @Override
   protected int parseCommand(String[] args, int index, Set source)
-    throws UsageError, TerminationException {
+      throws UsageError, TerminationException {
     // parse new options from fabric
     if (args[index].equals("-filsigcp")) {
       index++;
       delegate.sigcp.clear();
       delegate.addSigcp(args[index++]);
       return index;
-    }
-    else if (args[index].equals("-addfilsigcp")) {
+    } else if (args[index].equals("-addfilsigcp")) {
       index++;
       delegate.addSigcp(args[index++]);
       return index;
-    } 
-    else if (args[index].equals("-publish-only")) {
+    } else if (args[index].equals("-publish-only")) {
       index++;
       post_compiler = null;
       publishOnly = true;
-    }
-    else if (args[index].equals("-codebase-output-file")) {
+    } else if (args[index].equals("-codebase-output-file")) {
       index++;
       this.codebaseFilename = args[index++];
       return index;
-    }
-    else if (args[index].equals("-sigcp")) {
+    } else if (args[index].equals("-sigcp")) {
       index++;
       sigcp.clear();
       addSigcp(args[index++]);
-    } 
-    else if (args[index].equals("-addsigcp")) {
+    } else if (args[index].equals("-addsigcp")) {
       index++;
       addSigcp(args[index++]);
-    } 
-    else if (args[index].equals("-classpath") || args[index].equals("-cp")) {
+    } else if (args[index].equals("-classpath") || args[index].equals("-cp")) {
       index++;
-      classpath.clear();
-      String path = args[index++];
-      if(path.startsWith("@")) {
-        try {
-          BufferedReader lr = new BufferedReader(new FileReader(path.substring(1)));
-          path = lr.readLine();
-        } catch (FileNotFoundException e) {
-          throw new InternalCompilerError(e);
-        } catch (IOException e) {
-          throw new InternalCompilerError(e);
-        }        
-      }
-      StringTokenizer st = new StringTokenizer(path, File.pathSeparator);
-      while (st.hasMoreTokens()) {
-        URI uri = URI.create(st.nextToken());
-        if (uri.isAbsolute())
-          classpath.add(uri);
-        else classpath.add(file.resolve(uri));
-      }
-    } 
-    else if (args[index].equals("-sourcepath")) {
+      classpath = processPathString(args[index++]);
+    } else if (args[index].equals("-sourcepath")) {
       index++;
-      source_path = new ArrayList<URI>();
-      String path = args[index++];
-      if(path.startsWith("@")) {
-        try {
-          BufferedReader lr = new BufferedReader(new FileReader(path.substring(1)));
-          path = lr.readLine();
-        } catch (FileNotFoundException e) {
-          throw new InternalCompilerError(e);
-        } catch (IOException e) {
-          throw new InternalCompilerError(e);
-        }        
-      }
-      StringTokenizer st = new StringTokenizer(path, File.pathSeparator);
-      while (st.hasMoreTokens()) {
-        URI uri = URI.create(st.nextToken());
-        if (uri.isAbsolute())
-          source_path.add(uri);
-        else source_path.add(file.resolve(uri));
-      }
+      source_path = processPathString(args[index++]);
     }
 
     // parse jif options
@@ -187,42 +163,35 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       index = i;
       return index;
     }
-    
+
     // parse fabil options
     return delegate.parseCommand(args, index, source);
   }
 
+  @Override
   public boolean createJavaSkel() {
     return delegate.createJavaSkel;
   }
-  
+
+  @Override
   public String destinationStore() {
     return delegate.destinationStore();
-  }
-  
-  public boolean runWorker() {
-    return delegate.runWorker();
   }
 
   public String workerName() {
     return delegate.workerName();
   }
-  
+
   public boolean publishOnly() {
     return publishOnly;
   }
+
   public String codebaseFilename() {
     return codebaseFilename;
   }
-  
+
   public void addSigcp(String arg) {
-    StringTokenizer st = new StringTokenizer(arg, File.pathSeparator);
-    while (st.hasMoreTokens()) {
-      URI uri = URI.create(st.nextToken());
-      if (uri.isAbsolute())
-        sigcp.add(uri);
-      else sigcp.add(file.resolve(uri));
-    }    
+    processPathString(sigcp, arg);
   }
 
   @Override
@@ -250,4 +219,50 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     return output_directory;
   }
 
+  private List<URI> processPathString(String path) {
+    List<URI> uris = new ArrayList<URI>();
+    processPathString(uris, path);
+    return uris;
+  }
+
+  /**
+   * Process a path string of the form <URI>:/localdir/:... into URIs and add to a list
+   * @param uris the list to add the URIs to
+   * @param path the path-style string of URIs and directories, with URIs delimited by '<' and '>'
+   */
+  private void processPathString(List<URI> uris, String path) {
+    if (path.startsWith("@")) {
+      try {
+        BufferedReader lr =
+            new BufferedReader(new FileReader(path.substring(1)));
+        path = lr.readLine();
+      } catch (FileNotFoundException e) {
+        throw new InternalCompilerError(e);
+      } catch (IOException e) {
+        throw new InternalCompilerError(e);
+      }
+    }
+    int idx = 0;
+    while (idx < path.length()) {
+      if (path.charAt(idx) == '<') {
+        int end = path.indexOf('>');
+        URI u = URI.create(path.substring(idx + 1, end));
+        uris.add(u);
+        //Need to start a worker if we are linking any fabric source 
+        if(u.getScheme().equals("fab"))
+          this.run_worker = true;
+        
+        idx = end + 1;
+      } else if (path.charAt(idx) == File.separatorChar) {
+        idx++;
+      } else {
+        int end = path.indexOf(':');
+        URI u = URI.create(path.substring(idx, end));
+        if (u.isAbsolute())
+          uris.add(u);
+        else uris.add(file.resolve(u));
+        idx = end + 1;
+      }
+    }
+  }
 }

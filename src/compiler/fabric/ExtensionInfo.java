@@ -213,10 +213,6 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
     return filext.destinationStore();
   }
 
-  public Label destinationLabel() {
-    return filext.destinationLabel();
-  }
-
   @Override
   public TypeEncoder typeEncoder() {
     return new TypeEncoder(ts);

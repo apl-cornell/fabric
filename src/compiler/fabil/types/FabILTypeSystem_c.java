@@ -1,6 +1,5 @@
 package fabil.types;
 
-import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +13,6 @@ import polyglot.types.AccessControlResolver;
 import polyglot.types.AccessControlWrapperResolver;
 import polyglot.types.ArrayType;
 import polyglot.types.CachingResolver;
-import polyglot.types.ClassContextResolver;
 import polyglot.types.ClassType;
 import polyglot.types.Context;
 import polyglot.types.DeserializedClassInitializer;
@@ -25,7 +23,6 @@ import polyglot.types.LazyInitializer;
 import polyglot.types.MethodInstance;
 import polyglot.types.Named;
 import polyglot.types.Package;
-import polyglot.types.Package_c;
 import polyglot.types.ParsedClassType;
 import polyglot.types.ReferenceType;
 import polyglot.types.Resolver;
@@ -46,7 +43,6 @@ import codebases.types.CBPackage_c;
 import codebases.types.CodebaseClassType;
 import codebases.types.NamespaceResolver;
 import fabil.FabILOptions;
-import fabil.SimpleResolver;
 
 public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   protected Map<URI, NamespaceResolver> namespaceResolvers; 

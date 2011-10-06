@@ -44,50 +44,17 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
   }
   
   public fabric.worker.Store destinationStore() {
-    FabILOptions opt = (FabILOptions) getOptions();
-    
-    if(!opt.runWorker())
-      return null;
+    //Worker must be running!
+    if(!Worker.isInitialized())
+      throw new InternalCompilerError("Worker is not initialized.");
+      
+     FabILOptions opt = (FabILOptions) getOptions();
     
     if(opt.destinationStore() == null)
       return Worker.getWorker().getLocalStore();
     return Worker.getWorker().getStore(opt.destinationStore());
   }
-
-  public fabric.lang.security.Label destinationLabel() {
-    FabILOptions opt = (FabILOptions) getOptions();
-    if(!opt.runWorker())
-      return null;
-    //by default, code is public with the highest integrity 
-    // the worker can claim, which is {s<-w} where s is the
-    // destination store principal and w is the worker principal
-    if(destLabel == null) {        
-      Store s = destinationStore();
-      NodePrincipal sp = s.getPrincipal();
-      NodePrincipal np = Worker.getWorker().getPrincipal();
-      destLabel = LabelUtil._Impl.toLabel(s, LabelUtil._Impl.writerPolicy(s, sp, np));
-    }
-    return destLabel;
-  }
   
-//  @Override
-//  public Codebase codebase() {
-//    FabILOptions opt = (FabILOptions) getOptions();
-//
-//    if(!opt.runWorker()) 
-//      return null;
-//    
-//    if(codebase == null) {
-//      Store store = destinationStore();
-//      fabric.lang.security.Label lbl = destinationLabel();
-//      
-//      if(store == null || lbl == null)
-//        return null;
-//      
-//      codebase = (Codebase) new Codebase._Impl(store, lbl, lbl).$getProxy();   
-//    }
-//    return codebase;
-//  }
   protected static class OutputScheduler extends FabILScheduler {
     protected Job objectJob;
     
