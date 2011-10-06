@@ -129,6 +129,13 @@ public final class Logging {
       Logger.getLogger("fabric.class_hashing");
 
   /**
+   * For detailed timing analysis.
+   */
+  
+  public static final Logger TIMING_LOGGER =
+      Logger.getLogger("fabric.timing");
+  
+  /**
    * For other events that don't fit into any other category. Use sparingly.
    */
   public static final Logger MISC_LOGGER = Logger.getLogger("fabric");
@@ -240,7 +247,7 @@ public final class Logging {
         if (logFile != null && !new File(logFile).isAbsolute()) {
           p.setProperty(key, Resources.relpathRewrite(logFile));
         }
-  
+        
         // Load the properties into the LogManager. ugh.
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintStream pout = new PrintStream(out);
