@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BINDIR="$(dirname $(realpath $0))"
+BINDIR="$(dirname $(which $(readlink -f $0)))"
 MYNAME="$(basename "$0")"
 
 if [[ $# != 3 ]] ; then
