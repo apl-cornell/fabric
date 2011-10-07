@@ -628,7 +628,7 @@ public abstract class ClassRef implements FastSerializable {
      *         array.
      */
     private static int classHashLengthPos(byte[] data, int pos) {
-      return onumPos(data, pos) + 4;
+      return onumPos(data, pos) + 8;
     }
 
     /**
