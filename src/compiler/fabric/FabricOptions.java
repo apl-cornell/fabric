@@ -87,7 +87,11 @@ public class FabricOptions extends JifOptions implements FabILOptions {
    */
   protected Map<String, URI> codebase_aliases;
 
-  protected boolean run_worker = false;
+  /**
+   * Whether to run a Fabric worker so that Fabric-hosted source code can be
+   * compiled.
+   */  
+  protected boolean runWorker;
   
   @Override
   public boolean dumpDependencies() {
@@ -273,24 +277,40 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     int idx = 0;
     while (idx < path.length()) {
       if (path.charAt(idx) == '<') {
-        int end = path.indexOf('>');
+        int end = path.indexOf('>',idx);
+        if(end < 0)
+          throw new InternalCompilerError("Invalid path");
         URI u = URI.create(path.substring(idx + 1, end));
         uris.add(u);
-        //Need to start a worker if we are linking any fabric source 
+
         if(u.getScheme().equals("fab"))
-          this.run_worker = true;
-        
+          this.runWorker = true;
         idx = end + 1;
-      } else if (path.charAt(idx) == File.separatorChar) {
+        
+      } else if (path.charAt(idx) == File.pathSeparatorChar) {
         idx++;
       } else {
-        int end = path.indexOf(':');
-        URI u = URI.create(path.substring(idx, end));
+        int end = path.indexOf(File.pathSeparatorChar,idx);
 
-        if (u.isAbsolute())
-          uris.add(u);
-        else uris.add(file.resolve(u));
-        idx = end + 1;
+        String dir="";
+        if(end < 0) {
+          dir = path.substring(idx);
+          idx = path.length();
+        }
+        else {
+          dir = path.substring(idx, end);
+          idx = end;
+        }
+        if(!"".equals(dir)) {
+          URI u = URI.create(dir);
+          
+          if (u.isAbsolute())
+            uris.add(u);
+          else {
+            File f = new File(dir);
+            uris.add(file.resolve(f.getAbsolutePath()));
+          }
+        }
       }
     }
   }

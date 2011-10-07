@@ -14,10 +14,11 @@ import codebases.frontend.ExtensionInfo;
 import fabric.common.SysUtil;
 
 public class CodebaseTranslator extends Translator {
-
+  protected final ExtensionInfo extInfo;
   public CodebaseTranslator(Job job, TypeSystem ts, NodeFactory nf,
       TargetFactory tf) {
     super(job, ts, nf, tf);
+    this.extInfo = (ExtensionInfo) job.extensionInfo();
   }
 
   @Override
@@ -27,8 +28,7 @@ public class CodebaseTranslator extends Translator {
     URI ns = ((CodebaseSource) sfn.source()).canonicalNamespace();
     if (sfn.package_() != null) {
       w.write("package ");
-      w.write(SysUtil.namespaceToPackageName(ns));
-      w.write(".");
+      w.write(extInfo.namespaceToJavaPackagePrefix(ns));
       sfn.package_().del().translate(w, this);
       w.write(";");
       w.newline(0);
@@ -36,7 +36,7 @@ public class CodebaseTranslator extends Translator {
     } else {
       ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
       if (!ns.equals(extInfo.localNamespace())) {
-        String pkgName = SysUtil.namespaceToPackageName(ns);
+        String pkgName = extInfo.namespaceToJavaPackagePrefix(ns);
         w.write("package ");
         w.write(pkgName);
         w.write(";");

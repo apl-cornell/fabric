@@ -240,7 +240,7 @@
   </target>
 
   <!-- Compiles the FabIL compiler -->
-  <target name="fabil-compiler" depends="init,bootstrap"
+  <target name="fabil-compiler" depends="init,bootstrap,native"
       description="Builds the FabIL compiler">
     <antcall target="standard-ext">
       <param name="ext" value="fabil" />
@@ -297,7 +297,7 @@
       <arg value="sig-classes/fabil" />
       <arg value="-sourcepath" />
       <arg value="src/signatures/fabil:src/runtime" />
-      <arg value="-cp" />
+      <arg value="-bootclasspath" />
       <arg value="${bootstrap.classes}" />
       <srcfile />
       <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
@@ -429,6 +429,7 @@
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/lang/**" />
+      <include name="fabric/common/**" />
       <include name="fabric/common/util/**" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />

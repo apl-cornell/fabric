@@ -15,8 +15,8 @@ public class CodebaseResolver extends SimpleResolver implements
 
   public CodebaseResolver(ExtensionInfo extInfo, URI namespace) {
     super(extInfo, namespace, null);
-    this.loadRawClasses = false;
-    this.load_classes = true;
+    this.load_raw = false;
+    this.load_enc = true;
     this.load_src = true;
   }
 

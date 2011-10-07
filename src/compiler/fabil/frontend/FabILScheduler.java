@@ -36,7 +36,7 @@ import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
 //XXX: should maybe make explicit
 import fabil.visit.*;
-import fabric.Topics;
+import fabil.Topics;
 
 public class FabILScheduler extends JLScheduler {
   protected ExtensionInfo extInfo;

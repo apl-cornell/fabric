@@ -18,8 +18,8 @@ import codebases.types.NamespaceResolver_c;
 public class SimpleResolver extends NamespaceResolver_c {
   protected final ClassPathLoader classpathLoader;
   protected final URISourceLoader sourceLoader;
-  protected boolean loadRawClasses = false;
-  protected boolean load_classes = true;
+  protected boolean load_raw = false;
+  protected boolean load_enc = true;
   protected boolean load_src = true;
 
   public SimpleResolver(ExtensionInfo extInfo, URI namespace) {
@@ -41,7 +41,7 @@ public class SimpleResolver extends NamespaceResolver_c {
     // Find class file.
     ClassFile clazz = null;
     ClassFile encodedClazz = null;
-    if (load_classes) clazz = loadFile(name);
+    if (load_enc) clazz = loadFile(name);
     if (clazz != null) {
       // Check for encoded type information.
       if (clazz.encodedClassType(version) != null) {
@@ -108,7 +108,7 @@ public class SimpleResolver extends NamespaceResolver_c {
       }
     }
     // At this point, at most one of clazz and source should be set.
-    if (result == null && clazz != null && true) {
+    if (result == null && clazz != null && load_raw) {
       if (Report.should_report(report_topics, 4))
         Report.report(4, "Using raw class file for " + name);
       result = extInfo.typeSystem().classFileLazyClassInitializer(clazz).type();
@@ -163,15 +163,15 @@ public class SimpleResolver extends NamespaceResolver_c {
   
   @Override
   public boolean loadRawClasses(boolean use) {
-    boolean old = load_classes;
-    load_classes = use;
+    boolean old = load_raw;
+    load_raw = use;
     return old;
   }
   
   @Override
   public boolean loadEncodedClasses(boolean use) {
-    boolean old = load_classes;
-    load_classes = use;
+    boolean old = load_enc;
+    load_enc = use;
     return old;
   }
   

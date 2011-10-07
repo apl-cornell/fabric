@@ -226,7 +226,7 @@ public class Main extends polyglot.main.Main {
       throw new TerminationException(ue.exitCode());
     }
 
-    if (Worker.isInitialized())
+    if (options.runWorker)
       compileInWorker(options, source, ext, eq);
     else start(options, source, ext, eq);
 

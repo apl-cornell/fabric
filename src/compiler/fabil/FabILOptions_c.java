@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import fabric.worker.Worker;
+
 import polyglot.frontend.ExtensionInfo;
 import polyglot.main.Main.TerminationException;
 import polyglot.main.UsageError;
@@ -117,12 +119,6 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     this.runWorker = false;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.main.Options#parseCommand(java.lang.String[], int,
-   *      java.util.Set)
-   */
   @SuppressWarnings("rawtypes")
   @Override
   public int parseCommand(String[] args, int index, Set source)
@@ -339,9 +335,8 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     }
     int idx = 0;
     while (idx < path.length()) {
-
       if (path.charAt(idx) == '<') {
-        int end = path.indexOf(idx, '>');
+        int end = path.indexOf('>',idx);
         if(end < 0)
           throw new InternalCompilerError("Invalid path");
         URI u = URI.create(path.substring(idx + 1, end));
@@ -354,7 +349,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
       } else if (path.charAt(idx) == File.pathSeparatorChar) {
         idx++;
       } else {
-        int end = path.indexOf(idx, File.pathSeparatorChar);
+        int end = path.indexOf(File.pathSeparatorChar,idx);
 
         String dir="";
         if(end < 0) {
@@ -367,10 +362,13 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
         }
         if(!"".equals(dir)) {
           URI u = URI.create(dir);
-  
+          
           if (u.isAbsolute())
             uris.add(u);
-          else uris.add(file.resolve(u));
+          else {
+            File f = new File(dir);
+            uris.add(file.resolve(f.getAbsolutePath()));
+          }
         }
       }
     }

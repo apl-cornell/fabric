@@ -5,23 +5,21 @@ import java.net.URI;
 
 import polyglot.frontend.Source;
 import polyglot.frontend.TargetFactory;
-import fabric.common.SysUtil;
 
 public class CBTargetFactory extends TargetFactory {
+  protected final ExtensionInfo extInfo;
 
-  public CBTargetFactory(File outDir, String outExt, boolean so) {
+  public CBTargetFactory(ExtensionInfo extInfo, File outDir, String outExt, boolean so) {
     super(outDir, outExt, so);
+    this.extInfo = extInfo;
   }
 
   @Override
   public File outputFile(String packageName, String className, Source source) {
+    // Prefix java package name to create a unique class for this namespace.
     URI ns = ((CodebaseSource) source).namespace();
-    String prefix = SysUtil.namespaceToPackageName(ns);
-    if (packageName != null && !packageName.equals(""))
-      packageName = prefix + "." + packageName;
-    else packageName = prefix;
-
-    return super.outputFile(packageName, className, source);
+    return super.outputFile(extInfo.namespaceToJavaPackagePrefix(ns)
+        + packageName, className, source);
   }
 
 }

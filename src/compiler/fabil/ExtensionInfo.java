@@ -41,6 +41,7 @@ import fabil.parse.Grm;
 import fabil.parse.Lexer_c;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILTypeSystem_c;
+import fabric.common.NSUtil;
 import fabric.common.SysUtil;
 import fabric.lang.FClass;
 import fabric.lang.security.LabelUtil;
@@ -86,7 +87,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   public TargetFactory targetFactory() {
     if (target_factory == null) {
       target_factory =
-          new CBTargetFactory(getOptions().output_directory,
+          new CBTargetFactory(this, getOptions().output_directory,
               getOptions().output_ext, getOptions().output_stdout);
     }
 
@@ -258,5 +259,18 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
     } else if ("file".equals(ns.getScheme())) {
       return new ClassPathLoader(ns.getPath(), new ClassFileLoader(this));
     } else throw new InternalCompilerError("Unexpected scheme in URI: " + ns.getScheme());
+  }
+
+  @Override
+  public String namespaceToJavaPackagePrefix(URI ns) {
+    if(ns.equals(localNamespace()) || ns.equals(platformNamespace()))
+      return "";
+    else if(ns.getScheme().equals("fab")) {
+      return NSUtil.javaPackageName(ns) + ".";
+    }
+    else {
+      throw new InternalCompilerError("Cannot create Java package prefix for " + ns);
+    }
+      
   }
 }

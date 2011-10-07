@@ -2,29 +2,29 @@ package fabil.types;
 
 import java.net.URI;
 
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
+import polyglot.frontend.Source;
+import polyglot.qq.QQ;
+import polyglot.types.DeserializedClassInitializer;
+import polyglot.types.LazyClassInitializer;
+import polyglot.types.ParsedClassType_c;
+import polyglot.types.Resolver;
+import polyglot.types.Type;
+import polyglot.types.TypeSystem;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseClassType;
-import codebases.types.CodebaseTypeSystem;
 import fabil.ExtensionInfo;
 import fabil.visit.ProviderRewriter;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
-import fabric.lang.WrappedJavaInlineable;
-import fabric.util.Map;
-import polyglot.ast.Expr;
-import polyglot.ast.Node;
-import polyglot.frontend.Source;
-import polyglot.main.Options;
-import polyglot.qq.QQ;
-import polyglot.types.*;
-import polyglot.util.InternalCompilerError;
 
 public class FabILParsedClassType_c extends ParsedClassType_c implements
     CodebaseClassType {
 
   /**
-   * 
+   * The namespace used to resolve the dependencies of this class
    */
   protected URI canonical_ns;
 
@@ -43,10 +43,6 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
       this.canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
   }
 
-  /*
-   * (non-Javadoc)
-   * @see polyglot.types.ClassType_c#descendsFromImpl(polyglot.types.Type)
-   */
   @Override
   public boolean descendsFromImpl(Type ancestor) {
     FabILTypeSystem ts = (FabILTypeSystem) typeSystem();
@@ -69,8 +65,10 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
   @Override
   public String translate(Resolver c) {
     if (isTopLevel()) {
+      ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();
+
       if (package_() == null) {
-        return SysUtil.namespaceToPackageName(canonical_ns) + "." + name();
+        return extInfo.namespaceToJavaPackagePrefix(canonical_ns) + name();
       }
 
       // XXX: Never use short name
@@ -86,7 +84,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
       // }
       // }
 
-      return SysUtil.namespaceToPackageName(canonical_ns)
+      return extInfo.namespaceToJavaPackagePrefix(canonical_ns)
           + package_().translate(c) + "." + name();
     } else {
       return super.translate(c);

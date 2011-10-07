@@ -39,7 +39,7 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
    * @param name The name to search for.
    */
   Importable find(String name) throws SemanticException;
-
+  
   /**
    * Find a type object in this namespace by name.
    * @param name The name to search for.
@@ -52,8 +52,25 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
    */
   boolean packageExistsImpl(String name);
 
+  /**
+   * Specify whether to use encoded class files to resolve names in this
+   * namespace. 
+   * @return previous value
+   */
   boolean loadEncodedClasses(boolean use);
+  
+  /**
+   * Specify whether to use raw class files to resolve names in this
+   * namespace. 
+   * @return previous value
+   */
+  boolean loadRawClasses(boolean use);
 
+  /**
+   * Specify whether to use raw class files to resolve names in this
+   * namespace. 
+   * @return previous value
+   */
   boolean loadSource(boolean use);
 
   /**
@@ -62,5 +79,4 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
    */
   Label integrity();
 
-  boolean loadRawClasses(boolean use);
 }

@@ -149,6 +149,8 @@ public class CBImportTable extends ImportTable {
   protected Named findInPkg(String name, String pkgName)
       throws SemanticException {
     String fullName = pkgName + "." + name;
+    if (Report.should_report(TOPICS, 2))
+      Report.report(2, this + ": findInPkg import " + fullName);
 
     try {
       Named n = ts.namespaceResolver(ns).find(fullName);
