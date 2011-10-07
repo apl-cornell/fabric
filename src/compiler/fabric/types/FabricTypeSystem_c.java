@@ -540,4 +540,24 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     }
   }
 
+  public Label tjoin(Label L1, Label L2) {
+    ConfPolicy cp1 = L1 == null ? null : L1.confProjection();
+    ConfPolicy cp2 = L2 == null ? null : L2.confProjection();
+    
+    IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
+    IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
+    
+    return pairLabel(L1.position(), join(cp1, cp2), meet(ip1, ip2));
+  }
+
+  public Label tmeet(Label L1, Label L2) {
+    ConfPolicy cp1 = L1 == null ? null : L1.confProjection();
+    ConfPolicy cp2 = L2 == null ? null : L2.confProjection();
+    
+    IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
+    IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
+    
+    return pairLabel(L1.position(), meet(cp1, cp2), join(ip1, ip2));
+  }
+
 }

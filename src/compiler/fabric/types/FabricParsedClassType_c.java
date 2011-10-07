@@ -63,61 +63,74 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   }
   
   @SuppressWarnings("unchecked")
+  /**
+   * This method returns the upper bound of the labels of 
+   * all the fields of this class and its superclasses.
+   * It computes this by taking a join of all labels concerned.
+   */
   public Label singleFieldLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
-    // TODO: check that the labels of fields in this class
-    // are the same as in the superType, if the superType
-    // defaultFieldLabel is not null.
     if (!fieldLabelFound) {
       if (ts.isFabricClass(this)) {
         FabricClassType superType = (FabricClassType)superType();
-        if (superType != null && superType.singleFieldLabel() != null) {
-          singleFieldLabel = superType.singleFieldLabel();
-        }
-        else {
-          for (FieldInstance fi : (List<FieldInstance>)fields()) {
-            if (fi.flags().isStatic()) continue;
-            Type t = fi.type();
-            if (ts.isLabeled(t)) {
-              singleFieldLabel = ts.labelOfType(t);
-              break;
-            }
+
+        Label classLabel = ts.bottomLabel();
+        
+        Label superLabel = superType == null ? classLabel : superType.singleFieldLabel();
+        
+        for (FieldInstance fi : (List<FieldInstance>)fields()) {
+          if (fi.flags().isStatic()) continue;
+          Type t = fi.type();
+          if (ts.isLabeled(t)) {
+            Label tslabel = ts.labelOfType(t);
+            classLabel = ts.tjoin(classLabel, tslabel);
           }
         }
+        singleFieldLabel = superLabel == null ? classLabel : ts.tjoin(classLabel, superLabel);
       }
       fieldLabelFound = true;
     }
     return singleFieldLabel;
   }
   
+  /**
+   * This method returns the upper bound of the labels of 
+   * all the fields of this class and its superclasses.
+   * It computes this by taking a join of all labels concerned.
+   */
   public Label singleAccessLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
     if (!accessLabelFound) {
       if (ts.isFabricClass(this)) {
         FabricClassType superType = (FabricClassType)superType();
-        if (superType != null && superType.singleAccessLabel() != null) {
-          singleAccessLabel = superType.singleAccessLabel();
-        }
-        else {
-          for (FieldInstance fi_ : (List<FieldInstance>)fields()) {
-            if (fi_.flags().isStatic()) continue;
-            FabricFieldInstance fi = (FabricFieldInstance) fi_;
-            Label al = fi.accessLabel();
-            if (al != null) {
-              singleAccessLabel = al;
-              break;
-            }
+        
+        Label classAccessLabel = ts.pairLabel(Position.compilerGenerated(), 
+            ts.bottomConfPolicy(Position.compilerGenerated()),
+            ts.topIntegPolicy(Position.compilerGenerated()));
+
+        Label superAccessLabel = superType == null ? classAccessLabel : superType.singleAccessLabel();
+
+        for (FieldInstance fi_ : (List<FieldInstance>)fields()) {
+          if (fi_.flags().isStatic()) continue;
+          FabricFieldInstance fi = (FabricFieldInstance) fi_;
+          Label al = fi.accessLabel();
+          if (al != null) {
+            // a tjoin is not necessary since access labels only have a conf component
+            classAccessLabel = ts.join(classAccessLabel, al);
           }
         }
+        // a tjoin is not necessary since access labels only have a conf component
+        singleAccessLabel = superAccessLabel == null ? classAccessLabel : ts.join(classAccessLabel, superAccessLabel);
       }
       accessLabelFound = true;
     }
-
     return singleAccessLabel;
   }
   
+  // TODO The provider label should actually be folded into the access labels
+  // since each field of a class will be accessed from some method of the class, no?
   public Label getFoldedAccessLabel() {
     return singleAccessLabel();
     // XXX: this code folded in the provider label to the access label. This is
