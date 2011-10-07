@@ -9,7 +9,7 @@ import fabric.worker.Worker;
  * A log formatter for outputting timing information as comma separated values. 
  * The output is of the format
  * 
- * <pre>[worker name and thread ID], [clock time in ms], [message]</pre>
+ * <pre>[clock time in ms], [worker name], thread [thread ID], [message]</pre>
  * 
  * @author mdgeorge
  *
@@ -23,7 +23,7 @@ public final class TimingFormatter extends Formatter {
     result.append(record.getMillis());
     result.append(", ");
     result.append(Worker.getWorker().config.name);
-    result.append(" thread ");
+    result.append(", thread ");
     result.append(record.getThreadID());
     result.append(", ");
     result.append(String.format(record.getMessage(), record.getParameters()));
