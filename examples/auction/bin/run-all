@@ -3,7 +3,7 @@
 BINDIR="$(dirname $(which $(readlink -f $0)))"
 MYNAME="$(basename "$0")"
 
-if [[ $# != 3 ]] ; then
+if [[ $# -lt 3 ]] ; then
   gnome-terminal \
     --working-directory "${BINDIR}" \
     --tab --title "broker store" --command "./${MYNAME} 0s store brokerStore"   \
@@ -21,5 +21,8 @@ if [[ $# != 3 ]] ; then
     --tab --title "U worker"      --command "./${MYNAME} 3s worker userWorker"
 else
   sleep $1
-  ./start-$2 --name $3
+  shift
+  CMD="./start-$1"
+  shift
+  "${CMD}" --name $@
 fi
