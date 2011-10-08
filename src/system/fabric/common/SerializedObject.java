@@ -11,7 +11,6 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.Label;
 import fabric.worker.LocalStore;
 import fabric.worker.Store;
-import fabric.worker.Worker;
 
 /**
  * <code>_Impl</code> objects are stored on stores in serialized form as
@@ -788,8 +787,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
   /**
    * Maps class names to their deserialization constructors.
    */
-  private static final Map<String, Constructor<?>> constructorTable =
-      Collections.synchronizedMap(new HashMap<String, Constructor<?>>());
+  private static final Map<Class<? extends _Impl>, Constructor<?>> constructorTable =
+      Collections
+          .synchronizedMap(new HashMap<Class<? extends _Impl>, Constructor<?>>());
 
   /**
    * Used by the worker to deserialize this object.
@@ -802,25 +802,16 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public _Impl deserialize(Store store) {
     try {
-      String className = getClassRef().javaClassName();
+      Class<? extends _Impl> implClass = getClassRef().toImplClass();
 
-      Constructor<?> constructor = constructorTable.get(className);
+      Constructor<?> constructor = constructorTable.get(implClass);
 
       if (constructor == null) {
-        Class<?> c;
-        try {
-          c = Class.forName(className);
-        } catch (ClassNotFoundException e) {
-          // Class is not loaded yet.
-          if (Worker.isInitialized())
-            c = Worker.getWorker().getClassLoader().findClass(className);
-          else throw e;
-        }
         constructor =
-            c.getConstructor(Store.class, long.class, int.class, long.class,
-                long.class, long.class, ObjectInput.class, Iterator.class,
-                Iterator.class);
-        constructorTable.put(className, constructor);
+            implClass.getConstructor(Store.class, long.class, int.class,
+                long.class, long.class, long.class, ObjectInput.class,
+                Iterator.class, Iterator.class);
+        constructorTable.put(implClass, constructor);
       }
 
       return (_Impl) constructor.newInstance(store, getOnum(), getVersion(),

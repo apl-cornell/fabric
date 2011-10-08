@@ -8,6 +8,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.FClass._Proxy;
+import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -97,7 +98,7 @@ public abstract class ClassRef implements FastSerializable {
   private ClassRefType type;
 
   /**
-   * Memoizes the class's hash. This is null if the hash has not yet been
+   * Memoization of the class's hash. This is null if the hash has not yet been
    * computed.
    */
   private byte[] hash;
@@ -133,9 +134,10 @@ public abstract class ClassRef implements FastSerializable {
   }
 
   /**
-   * @return the mangled Java class name for this class.
+   * @return the mangled Java class name for this class. This should not be
+   *         called outside of this class.
    */
-  public abstract String javaClassName();
+  abstract String javaClassName();
 
   /**
    * @return the Java Class object for this class.
@@ -155,8 +157,42 @@ public abstract class ClassRef implements FastSerializable {
       throw new InternalError(e);
     }
   }
+  
+  /**
+   * @return the _Impl class object for this (assumed to be) Fabric class.
+   * @throws InternalError
+   *           if no _Impl class is found (usually because this is not a Fabric
+   *           class)
+   */
+  @SuppressWarnings("unchecked")
+  public Class<? extends fabric.lang.Object._Impl> toImplClass() {
+    for (Class<?> c : toClass().getClasses()) {
+      if (c.getSimpleName().equals("_Impl")) {
+        return (Class<? extends _Impl>) c;
+      }
+    }
+    
+    throw new InternalError("No _Impl class found in " + javaClassName());
+  }
+  
+  /**
+   * @return the _Proxy class object for this (assumed to be) Fabric class.
+   * @throws InternalError
+   *           if no _Proxy class is found (usually because this is not a
+   *           Fabric class)
+   */
+  @SuppressWarnings("unchecked")
+  public Class<? extends fabric.lang.Object._Proxy> toProxyClass() {
+    for (Class<?> c : toClass().getClasses()) {
+      if (c.getSimpleName().equals("_Proxy")) {
+        return (Class<? extends _Proxy>) c;
+      }
+    }
+    
+    throw new InternalError("No _Proxy class found in " + javaClassName());
+  }
 
-  protected void checkHash(byte[] hash) {
+  protected final void checkHash(byte[] hash) {
     byte[] myHash = getHash();
 
     boolean badHash = hash.length != myHash.length;

@@ -164,13 +164,8 @@ public class RemoteCallMessage
       mangledParamTypes[i + 1] = parameterTypes[i];
 
     // Get the receiver's _Proxy class.
-    Class<?> proxyType = null;
-    for (Class<?> c : receiverType.toClass().getClasses()) {
-      if (c.getSimpleName().equals("_Proxy")) {
-        proxyType = c;
-        break;
-      }
-    }
+    Class<? extends fabric.lang.Object._Proxy> proxyType =
+        receiverType.toProxyClass();
     
     if (proxyType == null) {
       throw new InternalError(
