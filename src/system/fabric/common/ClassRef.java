@@ -166,7 +166,13 @@ public abstract class ClassRef implements FastSerializable {
    */
   @SuppressWarnings("unchecked")
   public Class<? extends fabric.lang.Object._Impl> toImplClass() {
-    for (Class<?> c : toClass().getClasses()) {
+    Class<?> outer = toClass();
+    if (outer.equals(Surrogate.class)) {
+      // Special case for Surrogate: it itself is an _Impl class.
+      return (Class<? extends _Impl>) outer;
+    }
+    
+    for (Class<?> c : outer.getClasses()) {
       if (c.getSimpleName().equals("_Impl")) {
         return (Class<? extends _Impl>) c;
       }
@@ -709,6 +715,9 @@ public abstract class ClassRef implements FastSerializable {
     writeImpl(out);
   }
 
+  /**
+   * Writes internal representation of this class ref to the given output.
+   */
   protected abstract void writeImpl(DataOutput out) throws IOException;
 
   /**
