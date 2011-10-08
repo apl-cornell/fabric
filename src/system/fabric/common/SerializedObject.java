@@ -665,7 +665,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
     // Write the object's type information
     Class<?> implClass = impl.getClass();
-    ClassRef classRef = ClassRef.makeRef(implClass);
+    ClassRef classRef = ClassRef.makeRef(implClass.getEnclosingClass());
     classRef.write(out);
 
     // Get the object to serialize itself into a bunch of buffers.
