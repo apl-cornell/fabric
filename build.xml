@@ -281,7 +281,6 @@
   <target name="fabil-signatures" depends="init,fabil-compiler,bin,native"
       description="Compiles the FabIL signature clasess">
     <mkdir dir="${signatures.fabil.classes}" />
-
     <apply executable="bash"
            parallel="true"
            failonerror="true"
@@ -292,13 +291,22 @@
            vmlauncher="false">
       <arg value="${filc}" />
       <arg value="-nooutput" />
+      <arg value="-bootclasspath" />
+      <arg value="rt-classes/:src/runtime" />
+      <arg value="-sigcp" />
+      <arg value="sig-classes/fabil:src/signatures/fabil:src/runtime" />
       <arg value="-sig" />
+<!--      <arg value="-report" />
+      <arg value="resolver=4" />
+      <arg value="-report" />
+      <arg value="loader=4" />
+      <arg value="-report" />
+      <arg value="loader=4" />
+-->
       <arg value="-d" />
       <arg value="sig-classes/fabil" />
       <arg value="-sourcepath" />
       <arg value="src/signatures/fabil:src/runtime" />
-      <arg value="-bootclasspath" />
-      <arg value="${bootstrap.classes}" />
       <srcfile />
       <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
       <globmapper from="*.fil" to="*.class" />

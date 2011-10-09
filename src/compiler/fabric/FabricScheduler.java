@@ -1,5 +1,6 @@
 package fabric;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -26,7 +27,10 @@ import polyglot.main.Report;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.visit.Translator;
+import codebases.frontend.CBScheduler;
+import codebases.frontend.CBTypeExists;
 import codebases.frontend.CodebaseImportsInitialized;
+import codebases.types.CBPlaceHolder;
 import codebases.visit.CBTypeBuilder;
 import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
@@ -41,7 +45,7 @@ import fabric.visit.RemoteCallWrapperAdder;
 import fabric.visit.RemoteCallWrapperUpdater;
 import fabric.visit.ThisLabelChecker;
 
-public class FabricScheduler extends JifScheduler {
+public class FabricScheduler extends JifScheduler implements CBScheduler {
   protected  fabil.ExtensionInfo filext;
   protected fabric.ExtensionInfo fabext;
   
@@ -344,7 +348,7 @@ public class FabricScheduler extends JifScheduler {
 
   public Goal FabILSkeletonGenerated(final Job job) {
     Goal g = internGoal(new AbstractGoal(job){
-      @SuppressWarnings({ "unchecked" })
+      @SuppressWarnings({ "unchecked", "rawtypes" })
       @Override
       public Collection prerequisiteGoals(Scheduler scheduler) {
           List<Goal> l = new ArrayList<Goal>();
@@ -387,4 +391,10 @@ public class FabricScheduler extends JifScheduler {
     }
     return false;
   }
+  
+  @Override
+  public Goal TypeExists(URI ns, String name) {
+    return CBTypeExists.create(this, ns, name);
+  }
+
 }

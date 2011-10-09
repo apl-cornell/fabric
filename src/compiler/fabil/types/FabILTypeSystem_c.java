@@ -2,13 +2,16 @@ package fabil.types;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import polyglot.ast.TypeNode;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
+import polyglot.main.Report;
 import polyglot.types.AccessControlResolver;
 import polyglot.types.AccessControlWrapperResolver;
 import polyglot.types.ArrayType;
@@ -30,21 +33,28 @@ import polyglot.types.SemanticException;
 import polyglot.types.SystemResolver;
 import polyglot.types.TopLevelResolver;
 import polyglot.types.Type;
+import polyglot.types.TypeObject;
 import polyglot.types.TypeSystem_c;
 import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassFileLazyClassInitializer;
+import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
 import codebases.types.CBClassContextResolver;
 import codebases.types.CBImportTable;
+import codebases.types.CBLazyClassInitializer;
 import codebases.types.CBPackageContextResolver;
 import codebases.types.CBPackage_c;
+import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseClassType;
 import codebases.types.NamespaceResolver;
 import fabil.FabILOptions;
 
 public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
+  private static final Collection<String> TOPICS = CollectionUtil.list(Report.types,
+      Report.resolver);
+
   protected Map<URI, NamespaceResolver> namespaceResolvers; 
   protected List<NamespaceResolver> classpathResolvers;
   protected List<NamespaceResolver> sourcepathResolvers;
@@ -109,6 +119,23 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
       return new CBClassContextResolver(this, type);
   }
   
+  @Override
+  public Object placeHolder(TypeObject o, Set roots) {
+    assert_(o);
+    if (o instanceof CodebaseClassType) {
+      CodebaseClassType ct = (CodebaseClassType) o;
+
+        // This should never happen: anonymous and local types cannot
+        // appear in signatures.
+        if (ct.isLocal() || ct.isAnonymous()) {
+            throw new InternalCompilerError("Cannot serialize " + o + ".");
+        }
+        return new CBPlaceHolder_c(ct);
+    }
+
+    return o;
+  }
+
   @Override
   public ClassType TransactionManager() {
     return load("fabric.worker.transaction.TransactionManager");
@@ -542,6 +569,9 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     
     runtimeResolvers = new ArrayList<NamespaceResolver>();
     for(URI uri : rtcp) {
+      if (Report.should_report(TOPICS, 2))
+        Report.report(2, "Initializing FabIL runtime resolver: " +  uri);
+
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
       nsr.loadSource(true);
@@ -549,25 +579,39 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     }
 
     for(URI uri : sigcp) {
+      if (Report.should_report(TOPICS, 2))
+        Report.report(2, "Initializing FabIL signature resolver: " +  uri);
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
       nsr.loadSource(true);
       signatureResolvers.add(nsr);
     }
+    
     platformResolver = namespaceResolver(extInfo.platformNamespace());
-    systemResolver = new SystemResolver(platformResolver, extInfo);
+    platformResolver.loadSource(true);
     boolean src_in_cp = sp.isEmpty();
     
     for(URI uri : cp) {
+      if (Report.should_report(TOPICS, 2))
+        Report.report(2, "Initializing FabIL classpath resolver: " +  uri);
+
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
-      nsr.loadSource(src_in_cp);
+      nsr.loadSource(true);
+      //nsr.loadSource(src_in_cp);
       classpathResolvers.add(nsr);
     }
+    
     for(URI uri : opt.sourcepath()) {
+      if (Report.should_report(TOPICS, 2))
+        Report.report(2, "Initializing FabIL sourcepath resolver: " +  uri);
+
       NamespaceResolver nsr = namespaceResolver(uri);
-      if(!classpathResolvers.contains(nsr))
-        nsr.loadEncodedClasses(false);
+      nsr.loadEncodedClasses(true);
+      nsr.loadSource(true);
+
+//      if(!classpathResolvers.contains(nsr))
+//        nsr.loadEncodedClasses(false);
       sourcepathResolvers.add(nsr);
     }
   }
@@ -592,7 +636,11 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return forName(namespaceResolver(ns), name);
   }
   
-  
+  @Override
+  public Named forName(String name) throws SemanticException {
+    return forName(platformResolver(), name);
+}
+
   @Override
   public ClassFileLazyClassInitializer classFileLazyClassInitializer(ClassFile clazz) {
     return new CBLazyClassInitializer(clazz, this);

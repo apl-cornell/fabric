@@ -1,4 +1,4 @@
-package fabil.types;
+package codebases.types;
 
 import java.util.StringTokenizer;
 
@@ -11,7 +11,6 @@ import polyglot.types.reflect.ClassFileLazyClassInitializer;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
 import codebases.frontend.ExtensionInfo;
-import codebases.types.CodebaseTypeSystem;
 
 /**
  * This class is basically identical to it's superclass with calls to

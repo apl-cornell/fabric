@@ -13,11 +13,13 @@ while true; do
       vmargs="${vmargs} '$1'"
       shift
       ;;
-    -sigcp)
-      shift
-      sigcp="${sigcp}:$1"
-      shift
-      ;;
+# Should be able to actually replace the sigcp
+# Commenting out pending complaints. Otherwise this will be deleted.
+#    -sigcp)
+#      shift
+#      sigcp="${sigcp}:$1"
+#      shift
+#      ;;
     -cp)
       shift
       cp="${cp}:$1"
@@ -35,7 +37,7 @@ done
 classpath="${FILC_CP}:${cp}:${classpath}"
 
 # Jar files should always appear *after* their corresponding class directories.
-sigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar:${sigcp}"
+sigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar"
 
 command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" \
                    fabil.Main -bootclasspath \"$(fixpath ${FABIL_BOOTCP})\" \

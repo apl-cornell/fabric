@@ -16,6 +16,7 @@ import polyglot.frontend.Scheduler;
 import polyglot.frontend.TargetFactory;
 import polyglot.lex.Lexer;
 import polyglot.main.Options;
+import polyglot.main.Report;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
 import polyglot.types.reflect.ClassFileLoader;
@@ -30,6 +31,7 @@ import codebases.frontend.FileSourceLoader;
 import codebases.frontend.LocalSource;
 import codebases.frontend.RemoteSource;
 import codebases.frontend.URISourceLoader;
+import codebases.types.CBTypeEncoder;
 import codebases.types.CodebaseResolver;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.PathResolver;
@@ -54,6 +56,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
     // force Topics to load
     new Topics();
   }
+  protected CBTypeEncoder typeEncoder;
 
   public ExtensionInfo() {
   }
@@ -142,9 +145,13 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
 
   @Override
   public FileSource createFileSource(File f, boolean user) throws IOException {
+    if (Report.should_report(Report.loader, 2))
+      Report.report(2, "Creating filesource from " + f);
+
     return new LocalSource(f, user, localNamespace());
   }
 
+  @Override
   public FileSource createRemoteSource(URI ns, fabric.lang.Object obj, boolean user)
       throws IOException {
     if (!(obj instanceof FClass))
@@ -180,8 +187,8 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
         CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
 
         List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
-        path.addAll(typeSystem().runtimeResolvers());
         path.addAll(typeSystem().signatureResolvers());
+        path.addAll(typeSystem().runtimeResolvers());
 
         //FabIL also allows direct linking to Java classes 
         //TODO: Make this play nice with cmdline args
@@ -191,7 +198,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
         for (String dir : java_path.split(File.pathSeparator)) {
           File f = new File(dir);
           NamespaceResolver nr = new SimpleResolver(this, file.resolve(f
-              .getAbsolutePath()));
+              .getAbsolutePath()));          
           nr.loadRawClasses(true);
           path.add(nr);
         }
@@ -212,19 +219,24 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
 
   //TODO: support multiple platform namespaces
   private static URI platform_ns = URI.create("fab:platform");
+  @Override
   public URI platformNamespace() {
     return platform_ns;
   }
 
   //TODO: support multiple local namespaces
   private static URI local_ns = URI.create("fab:local");
+  @Override
   public URI localNamespace() {
     return local_ns;
   }
 
   @Override
-  public TypeEncoder typeEncoder() {
-    return new TypeEncoder(ts);
+  public CBTypeEncoder typeEncoder() {
+    if(typeEncoder == null) {
+      typeEncoder = new CBTypeEncoder(ts);
+    }
+    return typeEncoder;
   }
 
   // Loads source files

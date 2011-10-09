@@ -21,7 +21,7 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
    * Add a type object to the cache, returning null if not.
    * @param name The name to search for.
    */
-  void add(String name, Importable q) throws SemanticException;
+  void add(String name, Importable q);
   
   /**
    * The URI of this namespace

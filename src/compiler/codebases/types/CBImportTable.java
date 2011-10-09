@@ -18,8 +18,14 @@ import polyglot.util.Position;
 import polyglot.util.StringUtil;
 
 public class CBImportTable extends ImportTable {
+  // NB: this field 'hides' a private superclass field that is used for the same
+  // purpose. However, we override all code that uses the superclass field, so we 
+  // don't depend on these values being equal.
+  protected static final Object NOT_FOUND = "NOT FOUND";
+
   private final CodebaseTypeSystem ts;
   private URI ns;
+
   public CBImportTable(CodebaseTypeSystem ts, URI ns, Package pkg, Source source) {
     super(ts, pkg, source.name());
     this.ts = ts;
@@ -30,15 +36,18 @@ public class CBImportTable extends ImportTable {
     super(ts, pkg);
     this.ts = ts;
   }
-  ///// The following methods are basically copied from the superclass, but instead of 
-  ///// calling the toplevel system resolver directly, they use the namespace URI 
+
+  // /// The following methods are basically copied from the superclass, but
+  // instead of
+  // /// calling the toplevel system resolver directly, they use the namespace
+  // URI
   @SuppressWarnings("unchecked")
   @Override
   protected Named cachedFind(String name) throws SemanticException {
     Object res = map.get(name);
 
     if (res != null) {
-        return (Named) res;
+      return (Named) res;
     }
 
     Named t = ts.namespaceResolver(ns).find(name);
@@ -52,102 +61,104 @@ public class CBImportTable extends ImportTable {
     if (Report.should_report(TOPICS, 2))
       Report.report(2, this + ".find(" + name + ")");
 
-   /* First add any lazy imports. */
-   lazyImport();
+    /* First add any lazy imports. */
+    lazyImport();
 
-   if (!StringUtil.isNameShort(name)) {
-       // The name was long.
-       return ts.namespaceResolver(ns).find(name);
-   }
-   
-   // The class name is short.
-   // First see if we have a mapping already.
-   Object res = map.get(name);
+    if (!StringUtil.isNameShort(name)) {
+      // The name was long.
+      return ts.namespaceResolver(ns).find(name);
+    }
 
-   if (res != null) {
-       if (res == NOT_FOUND) {
-           throw new NoClassException(name, sourcePos);
-       }
-       return (Named) res;
-   }
+    // The class name is short.
+    // First see if we have a mapping already.
+    Object res = map.get(name);
 
-   try {
-       if (pkg != null) {
-           // check if the current package defines it.
-           // If so, this takes priority over the package imports (or 
-           // "type-import-on-demand" declarations as they are called in
-           // the JLS), so even if another package defines the same name,
-           // there is no conflict. See Section 6.5.2 of JLS, 2nd Ed.
-           Named n = findInPkg(name, pkg.fullName());
-           if (n != null) {
-               if (Report.should_report(TOPICS, 3))
-                  Report.report(3, this + ".find(" + name + "): found in current package");
+    if (res != null) {
+      if (res == NOT_FOUND) {
+        throw new NoClassException(name, sourcePos);
+      }
+      return (Named) res;
+    }
 
-               // Memoize the result.
-               map.put(name, n);
-               return n;
-           }
-       }
-       
-       List<String> imports = new ArrayList<String>(packageImports.size() + 5);
-       
-       imports.addAll(ts.defaultPackageImports());
-       imports.addAll(packageImports);
-       
-       // It wasn't a ClassImport.  Maybe it was a PackageImport?
-       Named resolved = null;
-       for (Iterator<String> iter = imports.iterator(); iter.hasNext(); ) {
-           String pkgName = iter.next();
-           Named n = findInPkg(name, pkgName);
-           if (n != null) {
-               if (resolved == null) {
-                   // This is the first occurrence of name we've found
-                   // in a package import.
-                   // Record it, and keep going, to see if there
-                   // are any conflicts.
-                   resolved = n;
-               }
-               else {
-                   // This is the 2nd occurrence of name we've found
-                   // in an imported package.
-                   // That's bad.
-                   throw new SemanticException("Reference to \"" + 
-                           name + "\" is ambiguous; both " + 
-                           resolved.fullName() + " and " + n.fullName() + 
-                           " match.");
-               }
-           }
-       }
-       
-       if (resolved == null) {
-           // The name was short, but not in any imported class or package.
-           // Check the null package.
-           resolved = ts.namespaceResolver(ns).find(name); // may throw exception
+    try {
+      if (pkg != null) {
+        // check if the current package defines it.
+        // If so, this takes priority over the package imports (or
+        // "type-import-on-demand" declarations as they are called in
+        // the JLS), so even if another package defines the same name,
+        // there is no conflict. See Section 6.5.2 of JLS, 2nd Ed.
+        Named n = findInPkg(name, pkg.fullName());
+        if (n != null) {
+          if (Report.should_report(TOPICS, 3))
+            Report.report(3, this + ".find(" + name
+                + "): found in current package");
 
-           if (!isVisibleFrom(resolved, "")) {
-               // Not visible.
-               throw new NoClassException(name, sourcePos);
-           }
-       }
-       
-       // Memoize the result.
-       if (Report.should_report(TOPICS, 3))
-          Report.report(3, this + ".find(" + name + "): found as " + resolved.fullName());
-       map.put(name, resolved);
-       return resolved;
-   }
-   catch (NoClassException e) {
-       // memoize the no class exception
-       if (Report.should_report(TOPICS, 3))
-          Report.report(3, this + ".find(" + name + "): didn't find it");
-       map.put(name, NOT_FOUND);
-       throw e;
-   }
+          // Memoize the result.
+          map.put(name, n);
+          return n;
+        }
+      }
+
+      List<String> imports = new ArrayList<String>(packageImports.size() + 5);
+
+      imports.addAll(ts.defaultPackageImports());
+      imports.addAll(packageImports);
+
+      // It wasn't a ClassImport. Maybe it was a PackageImport?
+      Named resolved = null;
+      for (Iterator<String> iter = imports.iterator(); iter.hasNext();) {
+        String pkgName = iter.next();
+        Named n = findInPkg(name, pkgName);
+        if (n != null) {
+          if (resolved == null) {
+            // This is the first occurrence of name we've found
+            // in a package import.
+            // Record it, and keep going, to see if there
+            // are any conflicts.
+            resolved = n;
+          } else {
+            // This is the 2nd occurrence of name we've found
+            // in an imported package.
+            // That's bad.
+            throw new SemanticException("Reference to \"" + name
+                + "\" is ambiguous; both " + resolved.fullName() + " and "
+                + n.fullName() + " match.");
+          }
+        }
+      }
+
+      if (resolved == null) {
+        // The name was short, but not in any imported class or package.
+        // Check the null package.
+        resolved = ts.namespaceResolver(ns).find(name); // may throw exception
+
+        if (!isVisibleFrom(resolved, "")) {
+          // Not visible.
+          throw new NoClassException(name, sourcePos);
+        }
+      }
+
+      // Memoize the result.
+      if (Report.should_report(TOPICS, 3))
+        Report.report(3,
+            this + ".find(" + name + "): found as " + resolved.fullName());
+      map.put(name, resolved);
+      return resolved;
+    } catch (NoClassException e) {
+      // memoize the no class exception
+      if (Report.should_report(TOPICS, 3))
+        Report.report(3, this + ".find(" + name + "): didn't find it");
+      map.put(name, NOT_FOUND);
+      throw e;
+    }
   }
 
   @Override
   protected Named findInPkg(String name, String pkgName)
       throws SemanticException {
+    // HACK Ignore java.lang.Object so that fabric.lang.Object takes priority.
+    if ("Object".equals(name) && "java.lang".equals(pkgName)) return null;
+
     String fullName = pkgName + "." + name;
     if (Report.should_report(TOPICS, 2))
       Report.report(2, this + ": findInPkg import " + fullName);
@@ -197,10 +208,9 @@ public class CBImportTable extends ImportTable {
     lazyImports = new ArrayList<Object>();
     lazyImportPositions = new ArrayList<Object>();
   }
-  
-  protected static final Collection<?> TOPICS =
-      CollectionUtil.list(Report.types, Report.resolver,
-          Report.imports);
+
+  protected static final Collection<?> TOPICS = CollectionUtil.list(
+      Report.types, Report.resolver, Report.imports);
 
   public URI namespace() {
     return ns;

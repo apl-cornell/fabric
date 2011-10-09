@@ -31,6 +31,7 @@ import codebases.frontend.LocalSource;
 import codebases.frontend.RemoteSource;
 import codebases.frontend.URISourceDispatcher;
 import codebases.frontend.URISourceLoader;
+import codebases.types.CBTypeEncoder;
 import codebases.types.CodebaseResolver;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.PathResolver;
@@ -62,6 +63,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
   
   protected OutputExtensionInfo filext = new OutputExtensionInfo(this);
   protected Map<String, byte[]> bytecode;
+  protected CBTypeEncoder typeEncoder;
   static {
     // force Topics to load
     new Topics();
@@ -122,8 +124,17 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
     return filext.typeSystem();
   }
 
-  /* Overridden Factory Methods ***********************************************/
   
+  /* Overridden Factory Methods ***********************************************/
+  @Override
+  public CBTypeEncoder typeEncoder() {
+    if(typeEncoder == null) {
+      typeEncoder = new CBTypeEncoder(ts);
+    }
+    return typeEncoder;
+  }
+
+
   @Override
   protected FabricNodeFactory createNodeFactory() {
     return new FabricNodeFactory_c();
@@ -212,11 +223,6 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
   
   public Store destinationStore() {
     return filext.destinationStore();
-  }
-
-  @Override
-  public TypeEncoder typeEncoder() {
-    return new TypeEncoder(ts);
   }
 
   // Loads source files

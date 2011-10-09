@@ -34,21 +34,21 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.ObjectDumper;
 import polyglot.util.SimpleCodeWriter;
 import polyglot.util.TypeEncoder;
+import codebases.frontend.CodebaseSource;
 import codebases.frontend.ExtensionInfo;
 import codebases.frontend.URISourceLoader;
 import fabric.lang.security.Label;
 
 /**
- * 
  * @author owen
  */
-///TODO: Disentangle the ideas of classpath and class cache/output directory
-public abstract class  NamespaceResolver_c implements NamespaceResolver {
+// /TODO: Disentangle the ideas of classpath and class cache/output directory
+public abstract class NamespaceResolver_c implements NamespaceResolver {
   @SuppressWarnings("unchecked")
-  private static final Collection<String> TOPICS = CollectionUtil.list(Report.types,
-      Report.resolver);
+  private static final Collection<String> TOPICS = CollectionUtil.list(
+      Report.types, Report.resolver);
   protected static List<String> report_topics = Arrays.asList(new String[] {
-        Report.types, Report.resolver, Report.loader});
+      Report.types, Report.resolver, Report.loader });
   protected static final int NOT_COMPATIBLE = -1;
   protected static final int MINOR_NOT_COMPATIBLE = 1;
   protected static final int COMPATIBLE = 0;
@@ -58,38 +58,39 @@ public abstract class  NamespaceResolver_c implements NamespaceResolver {
   protected final NamespaceResolver parent;
 
   /** Caches **/
-  //packageExists == true cache
-  protected  Set<String> packages;
-  //packageExists == false cache
-  protected Set<String> no_package;  
-  //type cached
+  // packageExists == true cache
+  protected Set<String> packages;
+  // packageExists == false cache
+  protected Set<String> no_package;
+  // type cached
   protected Map<String, Importable> cache;
-  //class not found cache
-  protected Map<String,SemanticException> not_found;
+  // class not found cache
+  protected Map<String, SemanticException> not_found;
 
   public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace) {
     this(extInfo, namespace, null);
   }
-  
-  public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace, NamespaceResolver parent) {
+
+  public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace,
+      NamespaceResolver parent) {
     this.cache = new HashMap<String, Importable>();
     this.packages = new HashSet<String>();
     this.no_package = new HashSet<String>();
-    this.not_found = new HashMap<String,SemanticException>();
+    this.not_found = new HashMap<String, SemanticException>();
     this.namespace = namespace;
     this.extInfo = extInfo;
     this.te = extInfo.typeEncoder();
     this.parent = parent;
   }
-  
+
   @Override
   public final boolean packageExists(String name) {
-    if(packages.contains(name))
+    if (packages.contains(name))
       return true;
-    else if(no_package.contains(name))
+    else if (no_package.contains(name))
       return false;
     else {
-      if(packageExistsImpl(name)) {
+      if (packageExistsImpl(name)) {
         packages.add(name);
         return true;
       } else {
@@ -98,11 +99,12 @@ public abstract class  NamespaceResolver_c implements NamespaceResolver {
       }
     }
   }
-  
+
   @Override
   public final Importable find(String name) throws SemanticException {
     if (Report.should_report(TOPICS, 2))
-      Report.report(2, "[" + namespace + "] " + "NamespaceResolver_c: find: " + name);
+      Report.report(2, "[" + namespace + "] " + "NamespaceResolver_c: find: "
+          + name);
 
     Importable q = cache.get(name);
 
@@ -111,23 +113,26 @@ public abstract class  NamespaceResolver_c implements NamespaceResolver {
       if (se != null) throw se;
 
       if (Report.should_report(TOPICS, 3))
-        Report.report(3,  "[" + namespace + "] " +"NamespaceResolver_c: not cached: " + name);
+        Report.report(3, "[" + namespace + "] "
+            + "NamespaceResolver_c: not cached: " + name);
 
       try {
         q = findImpl(name);
       } catch (NoClassException e) {
-        //Not found in this namespace, try parent.
-        if(parent != null) {
+        // Not found in this namespace, try parent.
+        if (parent != null) {
           try {
             q = parent.find(name);
           } catch (NoClassException pe) {
             e = pe;
           }
         }
-        if(q == null) {
+        if (q == null) {
           if (Report.should_report(TOPICS, 3)) {
-            Report.report(3,  "[" + namespace + "] " +"NamespaceResolver_c: " + e.getMessage());
-            Report.report(3,  "[" + namespace + "] " +"NamespaceResolver_c: installing " + name
+            Report.report(3, "[" + namespace + "] " + "NamespaceResolver_c: "
+                + e.getMessage());
+            Report.report(3, "[" + namespace + "] "
+                + "NamespaceResolver_c: installing " + name
                 + "-> (not found) in resolver cache");
           }
           not_found.put(name, e);
@@ -137,10 +142,12 @@ public abstract class  NamespaceResolver_c implements NamespaceResolver {
       add(name, q);
 
       if (Report.should_report(TOPICS, 3))
-        Report.report(3,  "[" + namespace + "] " +"NamespaceResolver_c: loaded: " + name);
+        Report.report(3, "[" + namespace + "] "
+            + "NamespaceResolver_c: loaded: " + name);
     } else {
       if (Report.should_report(TOPICS, 3))
-        Report.report(3,  "[" + namespace + "] " + "NamespaceResolver_c: cached: " + name);
+        Report.report(3, "[" + namespace + "] "
+            + "NamespaceResolver_c: cached: " + name);
     }
 
     return q;
@@ -150,40 +157,45 @@ public abstract class  NamespaceResolver_c implements NamespaceResolver {
   public Object copy() {
     try {
       NamespaceResolver_c r = (NamespaceResolver_c) super.clone();
-        r.packages = new HashSet<String>(this.packages);
-        r.no_package = new HashSet<String>(this.no_package);
-        r.not_found = new HashMap<String, SemanticException>();
-        r.cache = new HashMap<String, Importable>(this.cache);
-        return r;
+      r.packages = new HashSet<String>(this.packages);
+      r.no_package = new HashSet<String>(this.no_package);
+      r.not_found = new HashMap<String, SemanticException>();
+      r.cache = new HashMap<String, Importable>(this.cache);
+      return r;
+    } catch (CloneNotSupportedException e) {
+      throw new InternalCompilerError("clone failed");
     }
-    catch (CloneNotSupportedException e) {
-        throw new InternalCompilerError("clone failed");
-    }
-}
+  }
 
   /**
    * Check if a type object is in the cache, returning null if not.
-   * @param name The name to search for.
+   * 
+   * @param name
+   *          The name to search for.
    */
   @Override
   public Importable check(String name) {
-      return cache.get(name);
+    return cache.get(name);
   }
 
   /**
    * Install a qualifier in the cache.
-   * @param name The name of the qualifier to insert.
-   * @param q The qualifier to insert.
+   * 
+   * @param name
+   *          The name of the qualifier to insert.
+   * @param q
+   *          The qualifier to insert.
    */
   @Override
   public void add(String name, Importable q) {
     if (Report.should_report(TOPICS, 3))
-      Report.report(3,  "[" + namespace + "] " +"NamespaceResolver_c: installing " + name + "->" + q + " in resolver cache");
-  if (Report.should_report(TOPICS, 5))
-      new Exception().printStackTrace();
-    
+      Report.report(3, "[" + namespace + "] "
+          + "NamespaceResolver_c: installing " + name + "->" + q
+          + " in resolver cache");
+    if (Report.should_report(TOPICS, 5)) new Exception().printStackTrace();
+
     Package pkg = q.package_();
-    while(pkg !=null) {
+    while (pkg != null) {
       packages.add(pkg.fullName());
       pkg = pkg.prefix();
     }
@@ -194,94 +206,101 @@ public abstract class  NamespaceResolver_c implements NamespaceResolver {
   public URI namespace() {
     return namespace;
   }
-  
+
   /**
    * Get a type from a source file.
    */
   protected Importable getTypeFromSource(Source source, String name)
       throws SemanticException {
-        Scheduler scheduler = extInfo.scheduler();
-        Job job = scheduler.loadSource((FileSource) source, false);
-      
-        if (Report.should_report("sourceloader", 3))
-            new Exception("loaded " + source).printStackTrace();
-      
-        if (job != null) {
-            //check the cache  
-            Importable n = check(name);
-            
-            if (n != null) {
-                return n;
-            }
-            
-            Goal g = scheduler.TypesInitialized(job);
-            
-            if (! scheduler.reached(g)) {
-                throw new MissingDependencyException(g);
-            }
-        }
-        // The source has already been compiled, but the type was not created there.
-        throw new SemanticException("Could not find \"" + name + "\" in " + source + ".");
+
+    Scheduler scheduler = extInfo.scheduler();
+
+    Job job = scheduler.loadSource((FileSource) source, false);
+
+
+    if (job != null) {
+      // check the cache
+      CodebaseSource cbsrc = (CodebaseSource) source;
+      CodebaseTypeSystem ts = (CodebaseTypeSystem) extInfo.typeSystem();
+      Importable n =
+          ts.namespaceResolver(cbsrc.canonicalNamespace()).check(name);
+
+      if (n != null) {
+        return n;
       }
+
+      Goal g = scheduler.TypesInitialized(job);
+
+      if (!scheduler.reached(g)) {
+
+        throw new MissingDependencyException(g);
+      }
+      if (Report.should_report(Report.loader, 3))
+        new Exception("loaded " + source 
+            + " reached types initialized: "+ g).printStackTrace();
+
+
+    }
+    // The source has already been compiled, but the type was not created there.
+    throw new SemanticException("Could not find \"" + name + "\" in " + source
+        + ".");
+  }
 
   /**
    * Extract an encoded type from a class file.
    */
   protected ClassType getEncodedType(ClassFile clazz, String name)
       throws SemanticException {
-        // At this point we've decided to go with the Class. So if something
-        // goes wrong here, we have only one choice, to throw an exception.
-        String version = extInfo.version().name();
-      
-        TypeObject dt;
-      
+    // At this point we've decided to go with the Class. So if something
+    // goes wrong here, we have only one choice, to throw an exception.
+    String version = extInfo.version().name();
+
+    TypeObject dt;
+
+    try {
+      if (Report.should_report(Report.serialize, 1))
+        Report.report(1, "Decoding " + name + " in " + clazz);
+
+      dt = te.decode(clazz.encodedClassType(version), name);
+
+      if (dt == null) {
         if (Report.should_report(Report.serialize, 1))
-          Report.report(1, "Saving system resolver");
-      
-        try {
-          if (Report.should_report(Report.serialize, 1))
-            Report.report(1, "Decoding " + name + " in " + clazz);
-      
-          dt = te.decode(clazz.encodedClassType(version), name);
-      
-          if (dt == null) {
-            if (Report.should_report(Report.serialize, 1))
-              Report.report(1, "* Decoding " + name + " failed");
-      
-            // Deserialization failed because one or more types could not
-            // be resolved. Abort this pass. Dependencies have already
-            // been set up so that this goal will be reattempted after
-            // the types are resolved.
-            throw new SchedulerException("Could not decode " + name);
-          }
-        } catch (InternalCompilerError e) {
-          throw e;
-        } catch (InvalidClassException e) {
-          throw new BadSerializationException(clazz.name() + "@"
-              + clazz.getClassFileLocation());
-        }
-      
-        if (dt instanceof ClassType) {
-          ClassType ct = (ClassType) dt;
-          add(name, ct);
-      
-          if (Report.should_report(Report.serialize, 1))
-            Report.report(1, "* Decoding " + name + " succeeded");
-      
-          if (Report.should_report("typedump", 1)) {
-            new ObjectDumper(new SimpleCodeWriter(System.out, 72)).dump(dt);
-          }
-      
-          if (Report.should_report(report_topics, 2))
-            Report.report(2, "Returning serialized ClassType for " + clazz.name()
-                + ".");
-      
-          return ct;
-        } else {
-          throw new SemanticException("Class " + name + " not found in "
-              + clazz.name() + ".");
-        }
+          Report.report(1, "* Decoding " + name + " failed");
+
+        // Deserialization failed because one or more types could not
+        // be resolved. Abort this pass. Dependencies have already
+        // been set up so that this goal will be reattempted after
+        // the types are resolved.
+        throw new SchedulerException("Could not decode " + name);
       }
+    } catch (InternalCompilerError e) {
+      throw e;
+    } catch (InvalidClassException e) {
+      throw new BadSerializationException(clazz.name() + "@"
+          + clazz.getClassFileLocation());
+    }
+
+    if (dt instanceof ClassType) {
+      ClassType ct = (ClassType) dt;
+      add(name, ct);
+
+      if (Report.should_report(Report.serialize, 1))
+        Report.report(1, "* Decoding " + name + " succeeded");
+
+      if (Report.should_report("typedump", 1)) {
+        new ObjectDumper(new SimpleCodeWriter(System.out, 72)).dump(dt);
+      }
+
+      if (Report.should_report(report_topics, 2))
+        Report.report(2, "Returning serialized ClassType for " + clazz.name()
+            + ".");
+
+      return ct;
+    } else {
+      throw new SemanticException("Class " + name + " not found in "
+          + clazz.name() + ".");
+    }
+  }
 
   /**
    * Compare the encoded type's version against the loader's version.
@@ -290,34 +309,33 @@ public abstract class  NamespaceResolver_c implements NamespaceResolver {
     if (clazzVersion == null) {
       return NOT_COMPATIBLE;
     }
-  
+
     StringTokenizer st = new StringTokenizer(clazzVersion, ".");
-  
+
     try {
       int v;
       v = Integer.parseInt(st.nextToken());
       Version version = extInfo.version();
-  
+
       if (v != version.major()) {
         // Incompatible.
         return NOT_COMPATIBLE;
       }
-  
+
       v = Integer.parseInt(st.nextToken());
-  
+
       if (v != version.minor()) {
         // Not the best option, but will work if its the only one.
         return MINOR_NOT_COMPATIBLE;
       }
-    }
-    catch (NumberFormatException e) {
+    } catch (NumberFormatException e) {
       return NOT_COMPATIBLE;
     }
-  
+
     // Everything is way cool.
     return COMPATIBLE;
   }
-  
+
   @Override
   public URI resolveCodebaseName(String name) throws SemanticException {
     throw new SemanticException("Unknown codebase name: " + name);

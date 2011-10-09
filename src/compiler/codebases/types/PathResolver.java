@@ -2,17 +2,26 @@ package codebases.types;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import polyglot.main.Report;
+import polyglot.types.ClassType;
 import polyglot.types.Importable;
+import polyglot.types.LazyClassInitializer;
 import polyglot.types.NoClassException;
+import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
+import polyglot.util.CollectionUtil;
 import codebases.frontend.ExtensionInfo;
 
 public class PathResolver extends NamespaceResolver_c implements
     NamespaceResolver {
+  private static final Collection<String> TOPICS = CollectionUtil.list(Report.types,
+      Report.resolver);
+
   protected final List<NamespaceResolver> path;
   protected final Map<String, URI> aliases;
   protected boolean load_raw = false;
@@ -33,48 +42,53 @@ public class PathResolver extends NamespaceResolver_c implements
     this.aliases = aliases;
   }
 
+  /**
+   * Searches for a type for name in path in order. Following polyglot, there is
+   * some subtlety to how resources are loaded from disk based on whether
+   * source, encoded classes, or raw classes are permitted. * If loading source
+   * and encoded classes:
+   *
+   * - The first source file or encoded class returned by a resolver the path
+   *    will be loaded. If a source file and encoded class occur in the same
+   *    location, typically the encoded class is returned if it is newer than
+   *    the source file. See SimpleResolver for more details.
+ 
+   * - If raw classes are allowed and no source or encoded class returned by
+   *    *any* resolver, the first raw class returned by a resolver is loaded. This
+   *    emulates polyglot's SourceClassResolver logic. Here, any ParsedClassType
+   *    whose LazyClassInitializer returns true for fromClassFile() is considered
+   *    to be from a raw class file.
+   */
   @Override
   public Importable findImpl(String name) throws SemanticException {
-    if (!load_raw) {
-      for (NamespaceResolver nr : path)
-        nr.loadRawClasses(false);
-
-      for (NamespaceResolver nr : path)
-        try {
-          return nr.find(name);
-        } catch (NoClassException e) {
-        }
-    } else {
-      List<Boolean> backup = new ArrayList<Boolean>(path.size());
+    Importable from_raw = null;
+    for (NamespaceResolver nr : path) {
       try {
-        // Try loading an encoded class or source file first.
-        for (NamespaceResolver nr : path)
-          backup.add(nr.loadRawClasses(false));
+        ParsedClassType ct = (ParsedClassType) nr.find(name);
+        LazyClassInitializer init = (LazyClassInitializer) ct.initializer();
 
-        for (NamespaceResolver nr : path)
-          try {
-            return nr.find(name);
-          } catch (NoClassException e) {
-          }
+        // Is this type from a raw class?
+        if (init.fromClassFile()) {
+          if (Report.should_report(TOPICS, 4))
+            Report.report(3,  "[" + namespace + "] " +"NamespaceResolver_c: found raw class for: " + name);
 
-        // Now try raw classes.
-        for (NamespaceResolver nr : path)
-          nr.loadRawClasses(true);
-
-        for (NamespaceResolver nr : path)
-          try {
-            return nr.find(name);
-          } catch (NoClassException e) {
-          }
-      } finally {
-        // Restore original settings.
-        for (int i = 0; i < path.size(); i++) {
-          path.get(i).loadRawClasses(backup.get(i));
+          // Is this the *first* raw class we've seen?
+          if (from_raw == null) from_raw = ct;
+          continue;
         }
+        return ct;
+
+      } catch (NoClassException e) {
       }
     }
-    throw new NoClassException(name);
+    if (from_raw != null) {
+      if (Report.should_report(TOPICS, 3))
+        Report.report(3,  "[" + namespace + "] " +"NamespaceResolver_c: using raw class for: " + name);
 
+      return from_raw;
+    }
+
+    throw new NoClassException(name);
   }
 
   @Override
@@ -93,19 +107,18 @@ public class PathResolver extends NamespaceResolver_c implements
   }
 
   /**
-   * Specify whether to use raw class files to resolve names for all
-   * namespaces in this path.
+   * Specify whether to use raw class files to resolve names for all namespaces
+   * in this path.
    * 
    * @return previous value
    */
   @Override
   public boolean loadRawClasses(boolean use) {
-    // XXX: This is a little gross: polyglot's SourceClassResolver always
-    // prefers source over raw classfiles.  
-    // This means we should try to load an encodedClass or source from the path
-    // first, but fall back to a raw class if they are allowed.      
+    boolean nw = false;
+    for (NamespaceResolver nr : path)
+      nw |= nr.loadRawClasses(use);
     boolean old = load_raw;
-    load_raw = use;
+    load_raw = nw;
     return old;
   }
 
@@ -126,8 +139,8 @@ public class PathResolver extends NamespaceResolver_c implements
   }
 
   /**
-   * Specify whether to use source files to resolve names for all
-   * namespaces in this path.
+   * Specify whether to use source files to resolve names for all namespaces in
+   * this path.
    * 
    * @return previous value
    */

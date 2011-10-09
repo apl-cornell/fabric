@@ -3,6 +3,8 @@ package codebases.frontend;
 import java.io.IOException;
 import java.net.URI;
 
+import codebases.types.CBTypeEncoder;
+
 import fabric.lang.Object;
 
 import polyglot.frontend.FileSource;
@@ -21,7 +23,7 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * Return the type encoder used by this extension.
    * @return the type encoder
    */
-  TypeEncoder typeEncoder();
+  CBTypeEncoder typeEncoder();
 
   /**
    * Create a classpath loader for a given namespace.
