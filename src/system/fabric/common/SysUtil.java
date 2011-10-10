@@ -13,9 +13,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import polyglot.types.Named;
-
+import fabric.common.ClassRef.FabricClassRef;
+import fabric.common.exceptions.InternalError;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
+import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -29,19 +32,60 @@ import fabric.worker.Worker;
 
 public final class SysUtil {
 
+  /**
+   * Caches hashes of platform classes that weren't compiled with fabc. Maps
+   * class names to their hashes.
+   */
   private static final Map<String, byte[]> classHashCache = Collections
       .synchronizedMap(new HashMap<String, byte[]>());
 
+  /**
+   * Size of buffer to use for reading bytecode while hashing classes.
+   */
   private static final int BUF_LEN = 4096;
 
   /**
-   * Generates a cryptographically secure hash of the given class.
+   * Generates a cryptographically secure hash of a platform class.
+   * 
+   * @param c
+   *          the Class object for a class that is not stored in Fabric. If it's
+   *          a Fabric class, this is the interface corresponding to the Fabric
+   *          type, and not the _Proxy or _Impl classes.
    */
-  public static byte[] hash(Class<?> c) throws IOException {
+  @SuppressWarnings("unchecked")
+  public static byte[] hashPlatformClass(Class<?> c) throws IOException {
+    boolean hashing_Impl = false;
+    Class<?> ifaceClass = null;
     
+    if (fabric.lang.Object.class.isAssignableFrom(c)) {
+      // We have a Fabric class. Use the filc/fabc-generated hash, if any. If we
+      // get any exceptions from attempting to do this, we assume that the class
+      // wasn't compiled by filc/fabc and hash the bytecode instead.
+      try {
+        return classHashFieldValue((Class<? extends fabric.lang.Object>) c);
+      } catch (NoSuchFieldException e) {
+      } catch (SecurityException e) {
+      } catch (IllegalArgumentException e) {
+      } catch (IllegalAccessException e) {
+      }
+      
+      // Fabric class wasn't compiled by filc/fabc. Instead, we hash the
+      // bytecode for the _Impl class, if any, to ensure we cover the class's
+      // code.
+      for (Class<?> nested : c.getClasses()) {
+        if (nested.getSimpleName().equals("_Impl")) {
+          hashing_Impl = true;
+          ifaceClass = c;
+          c = nested;
+          break;
+        }
+      }
+    }
+    
+    // Class wasn't compiled by filc/fabc.  Hash the bytecode instead.
     String className = c.getName();
 
-    CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing class by class object: {0}",
+    CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing platform class: {0}",
         className);
 
     byte[] result = classHashCache.get(className);
@@ -53,10 +97,11 @@ public final class SysUtil {
     MessageDigest digest = Crypto.digestInstance();
 
     ClassLoader classLoader;
-    if(Worker.isInitialized())
+    if (Worker.isInitialized()) {
       classLoader = Worker.getWorker().getClassLoader();
-    else
+    } else {
       classLoader = c.getClassLoader();
+    }
     
     if (classLoader == null) {
       classLoader = ClassLoader.getSystemClassLoader();
@@ -79,25 +124,32 @@ public final class SysUtil {
           classLoader);
       throw new InternalError("Class not found: " + className);
     }
-    // For platform classes, hash the bytecode
-    if (isPlatformType(className)) {
-      byte[] buf = new byte[BUF_LEN];
-      int count = classIn.read(buf);
-      while (count != -1) {
-        digest.update(buf, 0, count);
-        count = classIn.read(buf);
-      }
-      classIn.close();
 
-      Class<?> superClass = c.getSuperclass();
-      if (superClass != null) digest.update(hash(superClass));
+    byte[] buf = new byte[BUF_LEN];
+    int count = classIn.read(buf);
+    while (count != -1) {
+      digest.update(buf, 0, count);
+      count = classIn.read(buf);
+    }
+    classIn.close();
 
-      result = digest.digest();
+    // Include the super class, if any.
+    Class<?> superClass = c.getSuperclass();
+    if (superClass != null) {
+      // Assume the superclass is also a platform class.
+      digest.update(hashPlatformClass(superClass));
     }
-    // For classes stored in Fabric, ignore the hash
-    else {
-      result = new byte[] { 0 };
+    
+    // Include declared interfaces, if any.
+    Class<?>[] interfaces =
+        hashing_Impl ? ifaceClass.getInterfaces() : c.getInterfaces();
+    for (Class<?> iface : interfaces) {
+      // Assume the interface is also a platform class.
+      digest.update(hashPlatformClass(iface));
     }
+
+    result = digest.digest();
+
     classHashCache.put(className, result);
 
     if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
@@ -108,29 +160,57 @@ public final class SysUtil {
 
     return result;
   }
-
-  public static byte[] hashClass(String className)
-      throws IOException, ClassNotFoundException {
-    CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing class by name: {0}",
-        className);
-    byte[] result = classHashCache.get(className);
-
-    if (result != null) {
-      CLASS_HASHING_LOGGER.finer("  Hash found in cache");
-      return result;
-    }
-    Class<?> c;
+  
+  /**
+   * Returns the class hash for the Fabric class referred by the given
+   * FabricClassRef.
+   */
+  public static byte[] hashFClass(FabricClassRef fcr) {
+    Class<? extends fabric.lang.Object> clazz = fcr.toClass();
     try {
-      c = Class.forName(className);
+      return classHashFieldValue(clazz);
+    } catch (NoSuchFieldException e) {
+      throw new InternalError(e);
+    } catch (SecurityException e) {
+      throw new InternalError(e);
+    } catch (IllegalArgumentException e) {
+      throw new InternalError(e);
+    } catch (IllegalAccessException e) {
+      throw new InternalError(e);
     }
-    catch(ClassNotFoundException e) {
-      //Class is not loaded yet.
-      if(Worker.isInitialized())
-        c = Worker.getWorker().getClassLoader().findClass(className);
-      else
-        throw e;
+  }
+
+  /**
+   * Returns the value of the static "$classHash" field in the given class. This
+   * contains the class hash that was computed by the compiler.
+   */
+  private static byte[] classHashFieldValue(
+      Class<? extends fabric.lang.Object> clazz) throws NoSuchFieldException,
+      SecurityException, IllegalArgumentException, IllegalAccessException {
+    return (byte[]) clazz.getField("$classHash").get(null);
+  }
+
+  /**
+   * Returns the _Impl class for the given Fabric class.
+   * 
+   * @param clazz
+   *          the Class object for a Fabric class. This is the interface
+   *          corresponding to the Fabric type, and not the _Proxy or _Impl
+   *          classes.
+   * @return the _Impl corresponding to <code>clazz</code>. If no _Impl class is
+   *         found (i.e., clazz represents a Fabric interface),
+   *         <code>null</code> is returned.
+   */
+  @SuppressWarnings("unchecked")
+  public static Class<? extends _Impl> getImplClass(
+      Class<? extends fabric.lang.Object> clazz) {
+    for (Class<?> nested : clazz.getClasses()) {
+      if (nested.getSimpleName().equals("_Impl")) {
+        return (Class<? extends _Impl>) nested;
+      }
     }
-    return hash(c);
+    
+    return null;
   }
 
   public static URL locateClass(String className)
@@ -358,8 +438,7 @@ public final class SysUtil {
     String className     = m.group(3);
 
     Codebase codebase =
-        (Codebase) fabric.lang.Object._Proxy
-            .$getProxy(new fabric.lang.Object._Proxy(codebaseStore, codebaseOnum));
+        (Codebase) _Proxy.$getProxy(new _Proxy(codebaseStore, codebaseOnum));
     
     FClass result = codebase.resolveClassName(className);
     if (result == null)
@@ -468,9 +547,7 @@ public final class SysUtil {
       String[] pair = path.split("/");
       long onum = Long.parseLong(pair[0]);
       String className = pair[1];
-      Object o =
-          fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
-              store, onum));
+      Object o = _Proxy.$getProxy(new _Proxy(store, onum));
       if (!(o instanceof Codebase))
         throw new ClassCastException("The Fabric object at " + fabref
             + " is not a Codebase.");
@@ -480,9 +557,7 @@ public final class SysUtil {
     else {
       // parse as an fclass oid
       long onum = Long.parseLong(path); 
-      Object o =
-          fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
-              store, onum));
+      Object o = _Proxy.$getProxy(new _Proxy(store, onum));
       if (!(o instanceof FClass))
         throw new ClassCastException("The Fabric object at " + fabref
             + " is not a Fabric class.");

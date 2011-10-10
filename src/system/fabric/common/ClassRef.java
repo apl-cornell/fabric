@@ -8,6 +8,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.FClass._Proxy;
+import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -90,7 +91,7 @@ public abstract class ClassRef implements FastSerializable {
    * ClassRef for fabric.common.Surrogate.
    */
   public static final ClassRef SURROGATE = new PlatformClassRef(
-      Surrogate.class.getName());
+      Surrogate.class);
 
   /**
    * The <code>ClassRefType</code> corresponding to this class.
@@ -119,7 +120,7 @@ public abstract class ClassRef implements FastSerializable {
   @SuppressWarnings("unchecked")
   public static ClassRef makeRef(Class<?> clazz) {
     boolean isPlatformClass = SysUtil.codebasePart(clazz.getName()).equals("");
-    if (isPlatformClass) return new PlatformClassRef(clazz.getName());
+    if (isPlatformClass) return new PlatformClassRef(clazz);
     return new FabricClassRef((Class<? extends fabric.lang.Object>) clazz);
   }
 
@@ -140,45 +141,34 @@ public abstract class ClassRef implements FastSerializable {
   abstract String javaClassName();
 
   /**
-   * @return the Java Class object for this class.
+   * @return the Java Class object for this class. For Fabric classes (i.e.,
+   *         ones that extend fabric.lang.Object), this is the Class object for
+   *         the interface corresponding to the Fabric type, and not the _Proxy
+   *         or _Impl classes.
    */
-  public final Class<?> toClass() {
-    try {
-      return Class.forName(javaClassName());
-    } catch (ClassNotFoundException e) {
-      // Class not loaded yet.
-      if (Worker.isInitialized()) {
-        try {
-          return Worker.getWorker().getClassLoader().findClass(javaClassName());
-        } catch (ClassNotFoundException e1) {
-          throw new InternalError(e1);
-        }
-      }
-      throw new InternalError(e);
-    }
-  }
+  public abstract Class<?> toClass();
   
   /**
    * @return the _Impl class object for this (assumed to be) Fabric class.
    * @throws InternalError
-   *           if no _Impl class is found (usually because this is not a Fabric
-   *           class)
+   *           if no _Impl class is found (usually because this is either a Java
+   *           class or a Fabric interface)
    */
   @SuppressWarnings("unchecked")
-  public Class<? extends fabric.lang.Object._Impl> toImplClass() {
-    Class<?> outer = toClass();
+  public Class<? extends _Impl> toImplClass() {
+    Class<? extends Object> outer = (Class<? extends Object>) toClass();
+    
     if (outer.equals(Surrogate.class)) {
       // Special case for Surrogate: it itself is an _Impl class.
       return (Class<? extends _Impl>) outer;
     }
     
-    for (Class<?> c : outer.getClasses()) {
-      if (c.getSimpleName().equals("_Impl")) {
-        return (Class<? extends _Impl>) c;
-      }
+    Class<? extends _Impl> result = SysUtil.getImplClass(outer);
+    if (result == null) {
+      throw new InternalError("No _Impl class found in " + outer);
     }
     
-    throw new InternalError("No _Impl class found in " + javaClassName());
+    return result;
   }
   
   /**
@@ -189,13 +179,14 @@ public abstract class ClassRef implements FastSerializable {
    */
   @SuppressWarnings("unchecked")
   public Class<? extends fabric.lang.Object._Proxy> toProxyClass() {
-    for (Class<?> c : toClass().getClasses()) {
+    Class<?> outer = toClass();
+    for (Class<?> c : outer.getClasses()) {
       if (c.getSimpleName().equals("_Proxy")) {
         return (Class<? extends _Proxy>) c;
       }
     }
     
-    throw new InternalError("No _Proxy class found in " + javaClassName());
+    throw new InternalError("No _Proxy class found in " + outer);
   }
 
   protected final void checkHash(byte[] hash) {
@@ -224,28 +215,37 @@ public abstract class ClassRef implements FastSerializable {
    * ClassRef for classes not stored in Fabric.
    */
   private static final class PlatformClassRef extends ClassRef {
-    private String className;
+    /**
+     * The class being referenced. If it's a Fabric class, this is the interface
+     * corresponding to the Fabric type, and not the _Proxy or _Impl classes.
+     */
+    private Class<?> clazz;
 
     /**
-     * @param className
-     *          the name of the class being referenced.
+     * @param clazz
+     *          the class being referenced. If it's a Fabric class, this must be
+     *          the interface corresponding to the Fabric type, and not the
+     *          _Proxy or _Impl classes.
      */
-    private PlatformClassRef(String className) {
+    private PlatformClassRef(Class<?> clazz) {
       super(ClassRefType.PLATFORM);
-      this.className = className;
+      this.clazz = clazz;
     }
 
     @Override
     public String javaClassName() {
-      return className;
+      return clazz.getName();
+    }
+    
+    @Override
+    public final Class<?> toClass() {
+      return clazz;
     }
 
     @Override
     byte[] getHashImpl() {
       try {
-        return SysUtil.hashClass(className);
-      } catch (ClassNotFoundException e) {
-        throw new InternalError(e);
+        return SysUtil.hashPlatformClass(clazz);
       } catch (IOException e) {
         throw new InternalError(e);
       }
@@ -265,7 +265,7 @@ public abstract class ClassRef implements FastSerializable {
      */
     @Override
     protected void writeImpl(DataOutput out) throws IOException {
-      byte[] className = this.className.getBytes("UTF-8");
+      byte[] className = this.clazz.getName().getBytes("UTF-8");
       byte[] hash = getHash();
 
       out.writeShort(className.length);
@@ -282,7 +282,12 @@ public abstract class ClassRef implements FastSerializable {
      *          PlatformClassRef object.
      */
     private PlatformClassRef(byte[] data, int pos) {
-      this(className(data, pos));
+      super(ClassRefType.PLATFORM);
+      try {
+        this.clazz = Class.forName(className(data, pos));
+      } catch (ClassNotFoundException e) {
+        throw new InternalError(e);
+      }
       checkHash(classHash(data, pos));
     }
 
@@ -471,16 +476,30 @@ public abstract class ClassRef implements FastSerializable {
 
     @Override
     byte[] getHashImpl() {
+      return SysUtil.hashFClass(this);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public final Class<? extends fabric.lang.Object> toClass() {
       try {
-        return SysUtil.hashClass(javaClassName());
+        return (Class<? extends fabric.lang.Object>) Class
+            .forName(javaClassName());
       } catch (ClassNotFoundException e) {
-        throw new InternalError(e);
-      } catch (IOException e) {
+        // Class not loaded yet.
+        if (Worker.isInitialized()) {
+          try {
+            return Worker.getWorker().getClassLoader()
+                .findClass(javaClassName());
+          } catch (ClassNotFoundException e1) {
+            throw new InternalError(e1);
+          }
+        }
         throw new InternalError(e);
       }
     }
 
-    FClass._Proxy getFClass() {
+    private FClass._Proxy getFClass() {
       if (fClass != null) return fClass;
       return (_Proxy) codebase.resolveClassName(className);
     }
