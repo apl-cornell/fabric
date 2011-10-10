@@ -443,6 +443,19 @@ public class FabILScheduler extends JLScheduler {
     
     return g;
   }
+  
+  public Goal ClassesHashed(final Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new ClassHashGenerator(job, extInfo)) {
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(RewriteProxies(job));
+        return l;
+      }
+    });
+    
+    return g;
+  }
 
   @Override
   public Goal Serialized(Job job) {
@@ -458,6 +471,7 @@ public class FabILScheduler extends JLScheduler {
           l.add(RewriteAtomic(job));
           l.add(RewriteRemoteCalls(job));
           l.add(Memoized(job));
+          l.add(ClassesHashed(job));
           l.add(InstrumentThreads(job));
           l.add(ClassReferencesCollected(job));
           if(((FabILOptions) extInfo.getOptions()).createJavaSkel()) {
