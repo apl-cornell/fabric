@@ -1,8 +1,6 @@
 package fabil.types;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.security.MessageDigest;
 import java.util.List;
 
@@ -100,28 +98,17 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
     
     MessageDigest digest = Crypto.digestInstance();
     
-    if (fromSource != null) {
+    if (fromSource instanceof FileSource) {
       // Hash the class's source code.
       try {
         String code =
             ClassHashGenerator.toSourceString((FileSource) fromSource);
-        digest.update(code.getBytes());
+        digest.update(code.getBytes("UTF-8"));
       } catch (IOException e) {
         throw new InternalCompilerError(e);
       }
     } else {
-      // XXX Type was probably deserialized. Hash the class's type information
-      // instead.
-      try {
-        ByteArrayOutputStream bis = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(bis);
-        oos.writeObject(this);
-        oos.flush();
-        bis.flush();
-        digest.update(bis.toByteArray());
-      } catch (IOException e) {
-        throw new InternalCompilerError(e);
-      }
+      // XXX Type was probably deserialized from a signature.  What do we do?
     }
     
     // Include the super class's hash.
