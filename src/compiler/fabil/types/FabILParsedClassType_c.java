@@ -2,6 +2,8 @@ package fabil.types;
 
 import java.net.URI;
 
+import com.sun.tools.internal.ws.wsdl.document.jaxws.Exception;
+
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.frontend.Source;
@@ -9,6 +11,7 @@ import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.DeserializedClassInitializer;
 import polyglot.types.LazyClassInitializer;
+import polyglot.types.MethodInstance;
 import polyglot.types.ParsedClassType_c;
 import polyglot.types.Resolver;
 import polyglot.types.Type;
@@ -65,31 +68,13 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
 
   @Override
   public boolean typeEqualsImpl(Type t) {
-    Type type1 = this;
-    Type type2 = t;
-
-    if(t instanceof CodebaseClassType) {
-//      if (type1.isClass()
-//          && ((ClassType) type1).package_().fullName().startsWith("java")
-//          && type1.isClass()
-//          && ((ClassType) type1).package_().fullName().startsWith("java")) {
-//        CodebaseClassType t1 = (CodebaseClassType) type1;
-//        CodebaseClassType t2 = (CodebaseClassType) type2;
-//        System.err.println("T1 NS: " + t1.canonicalNamespace() + " NAME: "
-//            + t1.fullName() + " :" + t1.getClass());
-//        System.err.println("T2 NS: " + t2.canonicalNamespace() + " NAME: "
-//            + t2.fullName() + " :" + t2.getClass());
-//      }
-
+    
+    if (t instanceof CodebaseClassType) {
       CodebaseClassType ct = (CodebaseClassType) t;
-      boolean res = fullName().equals(ct.fullName()) 
+      return fullName().equals(ct.fullName())
           && canonicalNamespace().equals(ct.canonicalNamespace());
-//      System.err.println("T1 == T2: " +res);
 
-      return res;
-    }
-    else
-      return super.typeEqualsImpl(t);
+    } else return super.typeEqualsImpl(t);
   }
 
   @Override

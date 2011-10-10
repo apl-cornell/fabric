@@ -1,13 +1,17 @@
 package codebases.types;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import polyglot.main.Report;
 import polyglot.types.ClassType;
+import polyglot.types.MethodInstance;
 import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
 import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassFileLazyClassInitializer;
+import polyglot.types.reflect.Method;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
 import codebases.frontend.ExtensionInfo;
@@ -18,6 +22,11 @@ import codebases.frontend.ExtensionInfo;
  * 
  * @author owen
  */
+//    protected List interfaces;
+//protected List methods;
+//protected List fields;
+//protected List constructors;
+
 public class CBLazyClassInitializer extends ClassFileLazyClassInitializer {
   private CodebaseTypeSystem ts;
   private ExtensionInfo extInfo;
@@ -26,6 +35,53 @@ public class CBLazyClassInitializer extends ClassFileLazyClassInitializer {
     super(file, ts);
     this.ts = ts;
     this.extInfo = (ExtensionInfo) ts.extensionInfo();
+  }
+
+  @Override
+  public void initInterfaces() {
+    if(interfacesInitialized)
+      return;
+    // Clear first in case we were interrupted 
+    ct.setInterfaces(new ArrayList());
+    super.initInterfaces();
+  }
+
+  @Override
+  public void initFields() {
+    if(fieldsInitialized)
+      return;
+    // Clear first in case we were interrupted 
+    ct.setFields(new ArrayList());
+    super.initFields();
+  }
+
+  @Override
+  public void initConstructors() {
+    if(constructorsInitialized)
+      return;
+    // Clear first in case we were interrupted 
+    ct.setConstructors(new ArrayList());
+    super.initConstructors();
+  }
+
+  @Override
+  public void initMemberClasses() {
+    if (memberClassesInitialized)
+      return;
+
+    // Clear first in case we were interrupted 
+    ct.setMemberClasses(new ArrayList());
+    super.initMemberClasses();
+  }
+  
+  @Override
+  public void initMethods() {
+    if (methodsInitialized) 
+      return;
+
+    // Clear first in case we were interrupted 
+    ct.setMethods(new ArrayList());     
+    super.initMethods();
   }
 
   @Override

@@ -13,6 +13,7 @@ import polyglot.frontend.CupParser;
 import polyglot.frontend.FileSource;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
+import polyglot.frontend.SourceLoader;
 import polyglot.frontend.TargetFactory;
 import polyglot.lex.Lexer;
 import polyglot.main.Options;
@@ -30,6 +31,7 @@ import codebases.frontend.CodebaseSourceLoader;
 import codebases.frontend.FileSourceLoader;
 import codebases.frontend.LocalSource;
 import codebases.frontend.RemoteSource;
+import codebases.frontend.URISourceDispatcher;
 import codebases.frontend.URISourceLoader;
 import codebases.types.CBTypeEncoder;
 import codebases.types.CodebaseResolver;
@@ -52,6 +54,9 @@ import fabric.lang.security.LabelUtil;
  * Extension information for FabIL extension.
  */
 public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements codebases.frontend.ExtensionInfo {
+  protected static URI platform_ns = URI.create("fab:platform");
+  protected static URI local_ns = URI.create("fab:local");
+
   static {
     // force Topics to load
     new Topics();
@@ -95,6 +100,16 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
     }
 
     return target_factory;
+  }
+
+  @Override
+  public SourceLoader sourceLoader() {
+    //Create a dispatcher that routes ns's to the appropriate 
+    // loader
+    if (source_loader == null) {
+      source_loader = new URISourceDispatcher(this);
+    }
+    return source_loader;
   }
 
   @Override
@@ -168,65 +183,71 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
     return new RemoteSource(ns, fcls, user);
   }
 
-  // Resolves types
+  /**
+   * Creates namespace resolvers for FabIL namespaces.
+   * 
+   * @param ns
+   * @return
+   */
   public NamespaceResolver createNamespaceResolver(URI ns) {
+    if (Report.should_report("resolver", 3))
+      Report.report(3, "Creating namespace resolver for " + ns);
+
     FabILOptions opt = (FabILOptions) getOptions();
-    if ("fab".equals(ns.getScheme())) {
-      if(ns.getSchemeSpecificPart().startsWith("local")) {
+    //XXX: Order is important here since the localnamespace may
+    // by the platform namespace when compiling the runtime
+    if (ns.equals(platformNamespace())) {
+      // A platform resolver is really just a path resolver that is treated
+      // specially. Loading the appropriate platform classes and signatures
+      // is handled by the classpathloader and sourceloader
+      CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
+
+      List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
+      path.addAll(typeSystem().signatureResolvers());
+      path.addAll(typeSystem().runtimeResolvers());
+
+      // FabIL also allows direct linking to Java classes, so we
+      // include the JRE classes here. Other Java classes should be
+      // specified on the classpath
+      // TODO: Make this play nice with cmdline args
+      String java_path = System.getProperty("sun.boot.class.path");
+      URI file = URI.create("file:///");
+      for (String dir : java_path.split(File.pathSeparator)) {
+        File f = new File(dir);
+        NamespaceResolver nr =
+            new SimpleResolver(this, file.resolve(f.getAbsolutePath()));
+        nr.loadRawClasses(true);
+        path.add(nr);
+      }
+      return new PathResolver(this, ns, path);  
+    } else if (ns.equals(localNamespace())) {
         List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
         path.add(typeSystem().platformResolver());
         path.addAll(typeSystem().classpathResolvers());
         path.addAll(typeSystem().sourcepathResolvers());
-        return new PathResolver(this, ns, path, getFabILOptions().codebaseAliases());
-      }
-      else if(ns.getSchemeSpecificPart().startsWith("platform")) {
-        // A platform resolver is really just a local resolver that is treated
-        // specially.
-        // Loading the appropriate platform classes and signatures
-        // is handled by the classpathloader and sourceloader
-        CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
-
-        List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
-        path.addAll(typeSystem().signatureResolvers());
-        path.addAll(typeSystem().runtimeResolvers());
-
-        //FabIL also allows direct linking to Java classes, so we 
-        // include the JRE classes here. Other Java classes should be 
-        // specified on the classpath
-        //TODO: Make this play nice with cmdline args
-        String java_path =  System.getProperty("sun.boot.class.path");
-        URI file = URI.create("file:///");
-        for (String dir : java_path.split(File.pathSeparator)) {
-          File f = new File(dir);
-          NamespaceResolver nr = new SimpleResolver(this, file.resolve(f
-              .getAbsolutePath()));          
-          nr.loadRawClasses(true);
-          path.add(nr);
-        }
-        return new PathResolver(this, ns, path);
-      }
-      else {
-        List<NamespaceResolver> path = new ArrayList<NamespaceResolver>(2);
-        //Codebases may never resolve platform types.
-        path.add(typeSystem().platformResolver());
-        path.add(new CodebaseResolver(this, ns));
-        return new PathResolver(this, ns, path);
-      }
+        return new PathResolver(this, ns, path, opt.codebaseAliases());
+      
+    } else if ("fab".equals(ns.getScheme())) {
+      List<NamespaceResolver> path = new ArrayList<NamespaceResolver>(2);
+      // Codebases may never resolve platform types.
+      path.add(typeSystem().platformResolver());
+      path.add(new CodebaseResolver(this, ns));
+      return new PathResolver(this, ns, path);
+    
     } else if ("file".equals(ns.getScheme())) {
       return new SimpleResolver(this, ns);
+    
     } else throw new InternalCompilerError("Unexpected scheme in URI: " + ns);
   }
 
-
   //TODO: support multiple platform namespaces
-  private static URI platform_ns = URI.create("fab:platform");
+
   @Override
   public URI platformNamespace() {
     return platform_ns;
   }
 
   //TODO: support multiple local namespaces
-  private static URI local_ns = URI.create("fab:local");
   @Override
   public URI localNamespace() {
     return getFabILOptions().platformMode() ? platformNamespace() : local_ns;

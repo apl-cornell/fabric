@@ -37,28 +37,29 @@ public class FabricOptions extends JifOptions implements FabILOptions {
    * Name of file to write URL of new codebase to.
    */
   protected String codebaseFilename;
+
   /**
-   * The classpath for the FabIL signatures of Java objects.
+   * The classpath for the Fabric signatures of FabIL and Java classes.
    */
   public List<URI> sigcp;
 
-  /**
-   * Class path. May include Fabric references to codebases. NB: This field
-   * hides the corresponding field in polyglot.main.Options
-   */
-  protected List<URI> classpath;
-
-  /**
-   * Source path. May include Fabric references to codebases. NB: This field
-   * hides the corresponding field in polyglot.main.Options
-   */
-  protected List<URI> source_path;
-  
-
-  /**
-   * Boot classpath. Location of the Fabric runtime classes.
-   */
-  protected List<URI> bootclasspath;
+//  /**
+//   * Class path. May include Fabric references to codebases. NB: This field
+//   * hides the corresponding field in polyglot.main.Options
+//   */
+//  protected List<URI> classpath;
+//
+//  /**
+//   * Source path. May include Fabric references to codebases. NB: This field
+//   * hides the corresponding field in polyglot.main.Options
+//   */
+//  protected List<URI> source_path;
+//  
+//
+//  /**
+//   * Boot classpath. Location of the Fabric runtime classes.
+//   */
+//  protected List<URI> bootclasspath;
 
 
   private static URI file = URI.create("file:///");
@@ -149,9 +150,6 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       index++;
       delegate.addSigcp(args[index++]);
       return index;
-    }    else if (args[index].equals("-filbootclasspath")) {
-      index++;
-      delegate.bootclasspath = processPathString(args[index++]);
     } else if (args[index].equals("-publish-only")) {
       index++;
       post_compiler = null;
@@ -163,38 +161,43 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     } else if (args[index].equals("-sigcp")) {
       index++;
       sigcp.clear();
-      addSigcp(args[index++]);
+      processPathString(sigcp,args[index++]);
     } else if (args[index].equals("-addsigcp")) {
       index++;
-      addSigcp(args[index++]);
-    } else if (args[index].equals("-classpath") || args[index].equals("-cp")) {
-      index++;
-      classpath = processPathString(args[index++]);
-    } else if (args[index].equals("-sourcepath")) {
-      index++;
-      source_path = processPathString(args[index++]);
+      processPathString(sigcp,args[index++]);
     }
-    //TODO: We distribute the FabIL and Fabric as one jar
-    //      In general, we could specify the runtimes separately,
-    //      but for now we simply use the same bootclasspath for
-    //      both compilers.
-    else if (args[index].equals("-bootclasspath")) {
-        index++;
-        bootclasspath = processPathString(args[index++]);
-        delegate.bootclasspath = processPathString(args[index++]);
-    }
-
-    // parse jif options
-    int i = super.parseCommand(args, index, source);
+ 
+    // parse fabil options before jif's, otherwise some options
+    //  will get gobbled by jif's superclass
+    int i = delegate.parseCommand(args, index, source);
     if (i != index) {
       index = i;
       return index;
     }
 
-    // parse fabil options
-    return delegate.parseCommand(args, index, source);
+    // parse jif options
+    return super.parseCommand(args, index, source);
   }
 
+  public boolean publishOnly() {
+    return publishOnly;
+  }
+
+  public String codebaseFilename() {
+    return codebaseFilename;
+  }
+
+  @Override
+  public List<URI> signaturepath() {
+    return sigcp;
+  }
+
+  @Override
+  public Map<String, URI> codebaseAliases() {
+    return codebase_aliases;
+  }
+
+  /// Options processed by FabIL delegate
   @Override
   public boolean createSkeleton() {
     return delegate.createSkeleton;
@@ -208,49 +211,32 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   public String workerName() {
     return delegate.workerName();
   }
-
-  public boolean publishOnly() {
-    return publishOnly;
-  }
-
-  public String codebaseFilename() {
-    return codebaseFilename;
-  }
-
-  public void addSigcp(String arg) {
-    processPathString(sigcp, arg);
-  }
-
+  
   @Override
-  public List<URI> signaturepath() {
-    return sigcp;
+  public File outputDirectory() {
+    return delegate.outputDirectory();
   }
 
   @Override
   public List<URI> classpath() {
-    return classpath;
+    return delegate.classpath();
   }
 
   @Override
   public List<URI> sourcepath() {
-    return source_path;
+    return delegate.sourcepath();
   }
   
   @Override
   public List<URI> bootclasspath() {
-    return bootclasspath;
+    return delegate.bootclasspath();
   }
-
+  
   @Override
-  public Map<String, URI> codebaseAliases() {
-    return codebase_aliases;
+  public boolean platformMode() {
+    return delegate.platformMode();
   }
-
-  @Override
-  public File outputDirectory() {
-    return output_directory;
-  }
-
+  
   private List<URI> processPathString(String path) {
     List<URI> uris = new ArrayList<URI>();
     processPathString(uris, path);

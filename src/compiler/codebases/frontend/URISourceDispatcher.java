@@ -7,7 +7,7 @@ import java.util.Collections;
 import polyglot.frontend.FileSource;
 import polyglot.frontend.SourceLoader;
 import polyglot.util.InternalCompilerError;
-import fabric.common.SysUtil;
+import fabric.common.NSUtil;
 
 /**
  * This class is used for loading explicit source files from the command line.
@@ -61,7 +61,7 @@ public class URISourceDispatcher extends SourceLoader implements URISourceLoader
   @Override
   public FileSource fileSource(URI uri, boolean userSpecified)
       throws IOException { 
-    URI cbURI = SysUtil.dirname(uri);
+    URI cbURI = NSUtil.dirname(uri);
     URISourceLoader loader = extInfo.sourceLoader(cbURI);
     return loader.fileSource(uri, userSpecified);
   }

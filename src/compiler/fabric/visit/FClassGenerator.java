@@ -77,15 +77,13 @@ public class FClassGenerator extends ErrorHandlingVisitor {
     if (n instanceof JifClassDecl) {
       JifClassDecl jcd = (JifClassDecl) n;
       ParsedClassType pct = jcd.type();
-      FClassGenerator fcg = (FClassGenerator) v;
-      FabricTypeSystem cbts = (FabricTypeSystem) ts;
+      FabricTypeSystem fts = (FabricTypeSystem) ts;
       CodebaseSource src = (CodebaseSource) pct.fromSource();
-      Codebase codebase = cbts.codebaseFromNS(src.namespace());
 
       if (src.shouldPublish()) {
-        // create a new FClass
-        FabricTypeSystem fabts = (FabricTypeSystem) ts;
+        Codebase codebase = fts.codebaseFromNS(src.namespace());
 
+        // create a new FClass
 //        String[] deps = new String[fcg.dependencies.size()];
 //        int i = 0;
 //        for (Named dep : fcg.dependencies) {

@@ -12,6 +12,7 @@ import polyglot.types.LazyClassInitializer;
 import polyglot.types.MethodInstance;
 import polyglot.types.Type;
 import codebases.frontend.CodebaseSource;
+import codebases.types.CodebaseClassType;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements FabricParsedClassType {
   private transient Label singleFieldLabel = null;
@@ -213,6 +214,17 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     }
   }
 
+  @Override
+  public boolean typeEqualsImpl(Type t) {
+    
+    if (t instanceof CodebaseClassType) {
+      CodebaseClassType ct = (CodebaseClassType) t;
+      return fullName().equals(ct.fullName())
+          && canonicalNamespace().equals(ct.canonicalNamespace());
+
+    } else return super.typeEqualsImpl(t);
+  }
+  
   @Override
   public URI canonicalNamespace() {
     return canonical_ns;

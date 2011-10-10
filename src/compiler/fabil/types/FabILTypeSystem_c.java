@@ -4,7 +4,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,7 +17,6 @@ import polyglot.types.AccessControlWrapperResolver;
 import polyglot.types.ArrayType;
 import polyglot.types.CachingResolver;
 import polyglot.types.ClassType;
-import polyglot.types.ConstructorInstance;
 import polyglot.types.Context;
 import polyglot.types.DeserializedClassInitializer;
 import polyglot.types.Flags;
@@ -54,6 +52,7 @@ import codebases.types.NamespaceResolver;
 import fabil.FabILOptions;
 
 public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
+  @SuppressWarnings("unchecked")
   private static final Collection<String> TOPICS = CollectionUtil.list(Report.types,
       Report.resolver);
 
@@ -187,9 +186,13 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @Override
   public ClassType Worker() {
-    return load("fabric.worker.Worker");
-  }
+    ClassType ct = load("fabric.worker.Worker");
 
+//    if(ct != null)
+//      System.err.println("METHODS:" + ct.methodsNamed("getWorker"));
+    return ct;
+  }
+  
   @Override
   public ClassType Principal() {
     return load("fabric.lang.security.Principal");
@@ -221,7 +224,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   @Override
-  public CodebaseClassType createClassType(LazyClassInitializer init,
+  public ParsedClassType createClassType(LazyClassInitializer init,
       Source fromSource) {
     return new FabILParsedClassType_c(this, init, fromSource);
   }
@@ -233,7 +236,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public List defaultPackageImports() {
+  public List<String> defaultPackageImports() {
     // Include fabric.lang as a default import.
     List<String> result = new ArrayList<String>(6);
     result.add("fabric.lang");
@@ -244,21 +247,22 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return result;
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  protected List<MethodInstance> findAcceptableMethods(ReferenceType container,
-      String name, @SuppressWarnings("rawtypes") List argTypes,
-      ClassType currClass) throws SemanticException {
-    List<MethodInstance> result =
-        super.findAcceptableMethods(container, name, argTypes, currClass);
-    if (isJavaInlineable(container)) {
-      // Remove any methods from fabric.lang.Object. They don't really exist.
-      for (MethodInstance mi : (List<MethodInstance>) FObject().methods()) {
-        result.remove(mi);
-      }
-    }
-    return result;
-  }
+//  @SuppressWarnings("unchecked")
+//  @Override
+//  protected List<MethodInstance> findAcceptableMethods(ReferenceType container,
+//      String name, @SuppressWarnings("rawtypes") List argTypes,
+//      ClassType currClass) throws SemanticException {
+//    List<MethodInstance> result =
+//        super.findAcceptableMethods(container, name, argTypes, currClass);
+//    System.err.println("methodS: " + container.methods());
+//    if (isJavaInlineable(container)) {
+//      // Remove any methods from fabric.lang.Object. They don't really exist.
+//      for (MethodInstance mi : (List<MethodInstance>) FObject().methods()) {
+//        result.remove(mi);
+//      }
+//    }
+//    return result;
+//  }
 
   @Override
   public ClassType fabricRuntimeArrayOf(Type type) {
@@ -485,23 +489,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
     return false;
   }
-
-//  @Override
-//  public void setRuntimeClassResolver(LoadedClassResolver lcr) {
-//    this.runtimeClassResolver = new CachingResolver(lcr);
-//  }
-//
-//  /**
-//   * Same as load(), but ignores source files.
-//   */
-//  private ClassType loadRuntime(String name) {
-//    try {
-//      return (ClassType) forName(runtimeClassResolver, name);
-//    } catch (SemanticException e) {
-//      throw new InternalCompilerError("Cannot find runtime class \"" + name
-//          + "\"; " + e.getMessage(), e);
-//    }
-//  }
 
   @Override
   public Flags legalTopLevelClassFlags() {

@@ -25,6 +25,7 @@ import polyglot.types.reflect.ClassPathLoader;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.TypeEncoder;
+import codebases.frontend.CodebaseSource;
 import codebases.frontend.CodebaseSourceLoader;
 import codebases.frontend.FileSourceLoader;
 import codebases.frontend.LocalSource;
@@ -37,10 +38,12 @@ import codebases.types.CodebaseTypeSystem;
 import codebases.types.PathResolver;
 import codebases.types.NamespaceResolver;
 import codebases.types.NamespaceResolver_c;
+import fabil.FabILOptions;
 import fabil.SimpleResolver;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
+import fabric.common.NSUtil;
 import fabric.common.SysUtil;
 import fabric.lang.FClass;
 import fabric.lang.security.Label;
@@ -114,8 +117,9 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
   }
   @Override
    public Parser parser(Reader reader, FileSource source, ErrorQueue eq) {
+      CodebaseSource src = (CodebaseSource) source;
       Lexer lexer = new Lexer_c(reader, source, eq);
-      Grm grm     = new Grm(lexer, typeSystem(), nodeFactory(), eq);
+      Grm grm     = new Grm(lexer, typeSystem(), nodeFactory(), eq, src.canonicalNamespace());
       return new CupParser(grm, source, eq);
     }
 
@@ -258,48 +262,62 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
     } else throw new InternalCompilerError("Unexpected scheme in URI: " + uri);
   }
 
-  // Resolves types
+  /**
+   * Creates namespace resolvers for Fabric namespaces.
+   * 
+   * @param ns
+   * @return
+   */
   public NamespaceResolver createNamespaceResolver(URI ns) {
+    if(ns == null)
+      throw new NullPointerException("Namespace is null");
     if (Report.should_report("resolver", 3))
       Report.report(3, "Creating namespace resolver for " + ns);
 
-    if ("fab".equals(ns.getScheme())) {
-      if(ns.getSchemeSpecificPart().startsWith("local")) {
-        List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
-        path.add(typeSystem().platformResolver());
-        path.addAll(typeSystem().classpathResolvers());
-        path.addAll(typeSystem().sourcepathResolvers());
-        return new PathResolver(this, ns, path, getFabricOptions().codebaseAliases());
-      }
-      else if(ns.getSchemeSpecificPart().startsWith("platform")) {
-        // A platform resolver is really just a local resolver that is treated
-        // specially.
-        // Loading the appropriate platform classes and signatures
-        // is handled by the classpathloader and sourceloader
-        List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
-        path.addAll(typeSystem().runtimeResolvers());
-        path.addAll(typeSystem().signatureResolvers());
-        return new PathResolver(this, ns, path);
-      }
-      else {
-        List<NamespaceResolver> path = new ArrayList<NamespaceResolver>(2);
-        //Codebases may never resolve platform types.
-        path.add(typeSystem().platformResolver());
-        path.add(new CodebaseResolver(this, ns));
-        return new PathResolver(this, ns, path);
-      }
+    FabricOptions opt = getFabricOptions();
+    //XXX: Order is important here since the localnamespace may
+    // by the platform namespace when compiling the runtime
+    if (ns.equals(platformNamespace())) {
+      // A platform resolver is really just a path resolver that is treated
+      // specially. Loading the appropriate platform classes and signatures
+      // is handled by the classpathloader and sourceloader
+      List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
+      path.addAll(typeSystem().signatureResolvers());
+      path.addAll(typeSystem().runtimeResolvers());
+      return new PathResolver(this, ns, path);
+
+    } else if (ns.equals(localNamespace())) {
+      List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
+      path.add(typeSystem().platformResolver());
+      path.addAll(typeSystem().classpathResolvers());
+      path.addAll(typeSystem().sourcepathResolvers());
+      return new PathResolver(this, ns, path, opt.codebaseAliases());
+
+    } else if ("fab".equals(ns.getScheme())) {
+      List<NamespaceResolver> path = new ArrayList<NamespaceResolver>(2);
+      // Codebases may never resolve platform types.
+      path.add(typeSystem().platformResolver());
+      path.add(new CodebaseResolver(this, ns));
+      return new PathResolver(this, ns, path);
+
     } else if ("file".equals(ns.getScheme())) {
       return new SimpleResolver(this, ns);
+
     } else throw new InternalCompilerError("Unexpected scheme in URI: " + ns);
   }
 
-  //TODO: support multiple platform namespaces
+  @Override
   public URI platformNamespace() {
     return filext.platformNamespace();
   }
 
+  @Override
   public URI localNamespace() {
     return filext.localNamespace();
-  }  
-  
+  }
+
+  @Override
+  public String namespaceToJavaPackagePrefix(URI ns) {
+    return filext.namespaceToJavaPackagePrefix(ns);
+  }    
 }

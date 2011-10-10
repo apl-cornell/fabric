@@ -436,16 +436,6 @@ public final class SysUtil {
     || fullName.startsWith("jif");
   }
   
-  public static URI dirname(URI uri) {
-    String path = uri.getPath();
-    //XXX: should I use the separator char or '/' 
-    return URI.create(path.substring(0, path.lastIndexOf('/')));
-  }
-  public static String basename(URI uri) {
-    String path = uri.getPath();
-    //XXX: should I use the separator char or '/' 
-    return path.substring(path.lastIndexOf('/'));
-  }
   public static Codebase fetch_codebase(URI uri) {
     Store store = Worker.getWorker().getStore(uri.getAuthority());
     Long onum = Long.parseLong(uri.getPath().substring(1)); // skip leading
@@ -457,9 +447,5 @@ public final class SysUtil {
       throw new InternalCompilerError("The Fabric object at " + uri
           + " is not a codebase.");
     return (Codebase) o;
-  }
-  
-  public static String namespaceToPackageName(URI ns) {
-    return null;
   }
 }

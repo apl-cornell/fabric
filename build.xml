@@ -253,10 +253,34 @@
 
   <!-- Compiles the Fabric signatures -->
   <target name="fabric-signatures"
-      depends="init,fabric-compiler,bin,fabil-runtime"
+      depends="init,fabric-compiler,bin,fabil-runtime,worker,store"
       description="Compiles the Fabric signature classes">
-    <mkdir dir="${signatures.fabric.classes}" />
+    <mkdir dir="${signatures.fabric.classes}"/>
 
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${fabric.home}"
+           dest="${signatures.fabric.classes}"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabc}"/>
+      <arg value="-bootclasspath" />
+      <arg value="${runtime.classes}:${classes}"/>
+      <arg value="-nooutput"/>
+      <arg value="-sigcp"/>
+      <arg value="${signatures.fabric.src}:${runtime.src}" />
+      <arg value="-sig"/>
+      <arg value="-d"/>
+      <arg value="${signatures.fabric.classes}"/>
+      <srcfile />
+      <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+<!--
+      <arg value="-report"/>
+      <arg value="resolver=3"/>
     <apply executable="bash"
            parallel="true"
            failonerror="true"
@@ -277,8 +301,8 @@
       <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
+-->
   </target>
-
   <!-- Compiles the FabIL signatures -->
   <target name="fabil-signatures" depends="init,fabil-compiler,bin,native"
       description="Compiles the FabIL signature clasess">
@@ -296,10 +320,10 @@
       <arg value="-bootclasspath" />
       <arg value="${bootstrap.classes}" />
       <arg value="-sigcp" />
-      <arg value="src/signatures/fabil:src/runtime" />
+      <arg value="${signatures.fabil.src}:${runtime.src}" />
       <arg value="-sig" />
       <arg value="-d" />
-      <arg value="sig-classes/fabil" />
+      <arg value="${signatures.fabil.classes}" />
       <srcfile />
       <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
       <globmapper from="*.fil" to="*.class" />

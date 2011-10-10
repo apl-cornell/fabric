@@ -8,19 +8,22 @@ import jif.parse.*;
 import polyglot.parse.*;
 import fabric.types.FabricTypeSystem;
 import fabric.types.FabricFlags;
-import jif.parse.Name;
+import fabric.parse.Name;
 import codebases.ast.CodebaseDecl;
 import fabric.lang.Codebase;
 
+import java.net.URI;
 
 parser Grm extends jif.parse.Grm {:
     public final FabricTypeSystem ts;
     public final FabricNodeFactory nf;
+	public final URI ns;
 
-    public Grm(Lexer l, FabricTypeSystem t, FabricNodeFactory n, ErrorQueue q) {
+    public Grm(Lexer l, FabricTypeSystem t, FabricNodeFactory n, ErrorQueue q, URI ns) {
         super(l, t, n, q);
         ts = t;
         nf = n;
+        this.ns = ns; 
     }
 
     public TypeNode fabricArray(Position pos, TypeNode n, int dims) throws Exception {
@@ -104,6 +107,31 @@ non terminal List codebase_declarations_opt, codebase_declarations;
 non terminal CodebaseDecl codebase_declaration;
 
 start with goal;
+
+//////////////
+// Names 	//
+//////////////
+// The parser sometimes creates unambiguous package objects, 
+//	providing the namespace preserves this ability
+override simple_name ::=
+                    // Name
+        IDENTIFIER:a
+            {: RESULT = new Name(parser, parser.pos(a), parser.nf.Id(parser.pos(a), a.getIdentifier())); :}
+    ;
+    
+override qualified_name ::=
+                    // Name
+        name:a DOT IDENTIFIER:b
+            {: RESULT = new Name(parser, parser.pos(a, b), a, parser.nf.Id(parser.pos(b), b.getIdentifier())); :}
+    ;
+    
+override identifier_opt ::=
+                    // Name
+            {: RESULT = null; :}
+    |   IDENTIFIER:a
+            {: RESULT = new Name(parser, parser.pos(a),
+                parser.nf.Id(parser.pos(a), a.getIdentifier())); :}
+    ;
 
 ////////////////////////////////////////////////////////////////////////
 // Codebases                                                          //

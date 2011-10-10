@@ -119,6 +119,8 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     this.sigcp = new ArrayList<URI>();
     this.classpath = new ArrayList<URI>();
     this.source_path = new ArrayList<URI>();
+    this.bootclasspath = new ArrayList<URI>();
+
     this.codebase_aliases = new LinkedHashMap<String, URI>();
 
     this.platform_mode = false;

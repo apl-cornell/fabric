@@ -11,7 +11,7 @@ import polyglot.main.Report;
 import polyglot.util.InternalCompilerError;
 import codebases.types.CodebaseTypeSystem;
 import fabric.Topics;
-import fabric.common.SysUtil;
+import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 
 public class CodebaseSourceLoader implements URISourceLoader {
@@ -24,7 +24,7 @@ public class CodebaseSourceLoader implements URISourceLoader {
   protected final Map<URI, FileSource> loadedSources;
   
   public CodebaseSourceLoader(ExtensionInfo extInfo, URI ns) {
-    this(extInfo, ns, SysUtil.fetch_codebase(ns));
+    this(extInfo, ns, NSUtil.fetch_codebase(ns));
   }
   
   public CodebaseSourceLoader(ExtensionInfo extInfo, Codebase codebase) {
@@ -62,7 +62,7 @@ public class CodebaseSourceLoader implements URISourceLoader {
     CodebaseTypeSystem ts = (CodebaseTypeSystem) extInfo.typeSystem();
         
     if(Report.should_report(TOPICS, 3))
-      Report.report(3, "Checking " + SysUtil.oid(codebase) + " for " + className);
+      Report.report(3, "Checking " + NSUtil.oid(codebase) + " for " + className);
 
     fabric.lang.Object obj = codebase.resolveClassName(className);
 
@@ -97,10 +97,10 @@ public class CodebaseSourceLoader implements URISourceLoader {
     if(s != null)
       return s;
     
-    if(SysUtil.dirname(file).equals(this.ns))
+    if(NSUtil.dirname(file).equals(this.ns))
       throw new FileNotFoundException("Cannot load " + file + " from " + ns);
     
-    String className = SysUtil.basename(file);
+    String className = NSUtil.basename(file);
     fabric.lang.Object obj = codebase.resolveClassName(className);
 
     if (obj != null) {

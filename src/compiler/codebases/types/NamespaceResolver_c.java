@@ -196,7 +196,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
       if (!((ParsedTypeObject) q).initializer().isTypeObjectInitialized()) {
         if (Report.should_report(TOPICS, 2))
           Report.report(3, "[" + namespace + "] initializing " + q);
-        ((ParsedTypeObject) q).initializer().initTypeObject();
+        ((ParsedTypeObject) q).initializer().initTypeObject();          
       }
     }
     else

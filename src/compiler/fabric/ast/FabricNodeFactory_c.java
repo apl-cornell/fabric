@@ -329,7 +329,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public SourceFile SourceFile(Position pos, PackageNode packageName, List codebases,
       List imports, List decls) {
     SourceFile sf = new CBSourceFile_c(pos, packageName, imports, codebases, decls);
-    sf = (SourceFile) sf.ext(extFactory().extSourceFile());
+    sf = (SourceFile) sf.ext(jifExtFactory().extSourceFile());
     sf = (SourceFile) sf.del(delFactory().delSourceFile());
     return sf;
   }
