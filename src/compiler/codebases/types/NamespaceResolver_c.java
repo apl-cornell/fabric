@@ -25,6 +25,7 @@ import polyglot.types.ClassType;
 import polyglot.types.Importable;
 import polyglot.types.NoClassException;
 import polyglot.types.Package;
+import polyglot.types.ParsedTypeObject;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeObject;
 import polyglot.types.reflect.ClassFile;
@@ -143,13 +144,13 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
       if (Report.should_report(TOPICS, 3))
         Report.report(3, "[" + namespace + "] "
-            + "NamespaceResolver_c: loaded: " + name);
+            + "NamespaceResolver_c: loaded: " + name + "(" + q + ")");
     } else {
       if (Report.should_report(TOPICS, 3))
         Report.report(3, "[" + namespace + "] "
-            + "NamespaceResolver_c: cached: " + name);
+            + "NamespaceResolver_c: cached: " + name  + "(" + q + ")");
     }
-
+    
     return q;
   }
 
@@ -178,16 +179,35 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     return cache.get(name);
   }
 
-  /**
-   * Install a qualifier in the cache.
-   * 
-   * @param name
-   *          The name of the qualifier to insert.
-   * @param q
-   *          The qualifier to insert.
-   */
   @Override
-  public void add(String name, Importable q) {
+  public void add(String name, Importable q) throws SemanticException {
+    // /TODO: This method may need to check more things.
+
+    if (packageExists(name))
+      throw new SemanticException("Type \"" + name
+          + "\" clashes with package of the same name.", q.position());
+   
+    if (q instanceof ParsedTypeObject) {
+      if (((ParsedTypeObject) q).initializer() == null)
+        throw new InternalCompilerError("No initializer for " + name);
+    }
+
+    if(q instanceof ParsedTypeObject) {
+      if (!((ParsedTypeObject) q).initializer().isTypeObjectInitialized()) {
+        if (Report.should_report(TOPICS, 2))
+          Report.report(3, "[" + namespace + "] initializing " + q);
+        ((ParsedTypeObject) q).initializer().initTypeObject();
+      }
+    }
+    else
+      throw new InternalCompilerError(q + " is not a ParsedTypeObject: " + q.getClass());
+
+    replace(name, q);
+  }
+
+  @Override
+  public void replace(String name, Importable q) {
+    
     if (Report.should_report(TOPICS, 3))
       Report.report(3, "[" + namespace + "] "
           + "NamespaceResolver_c: installing " + name + "->" + q
@@ -202,6 +222,19 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     cache.put(name, q);
   }
 
+  //@Override
+  protected void ensureInitialized() {
+    for (Importable q : cache.values()) {
+      if (q instanceof ParsedTypeObject) {
+        if (!((ParsedTypeObject) q).initializer().isTypeObjectInitialized()) {
+          if (Report.should_report(TOPICS, 2))
+            Report.report(3, "[" + namespace + "] Found uninitialized class: " + q);
+          throw new InternalCompilerError(q + " is uninitialized");
+        }
+      } else throw new InternalCompilerError(q + " is not a ParsedClassObject");
+    }
+  }
+  
   @Override
   public URI namespace() {
     return namespace;
@@ -215,12 +248,14 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
     Scheduler scheduler = extInfo.scheduler();
 
-    Job job = scheduler.loadSource((FileSource) source, false);
+    Job job = scheduler.loadSource((FileSource) source, true);
+    CodebaseSource cbsrc = (CodebaseSource) source;
 
+    if(name.equals("fabric.lang.Codebase"))
+      System.err.println("Codebase NS: " + cbsrc.canonicalNamespace());
 
     if (job != null) {
       // check the cache
-      CodebaseSource cbsrc = (CodebaseSource) source;
       CodebaseTypeSystem ts = (CodebaseTypeSystem) extInfo.typeSystem();
       Importable n =
           ts.namespaceResolver(cbsrc.canonicalNamespace()).check(name);
@@ -236,9 +271,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
         throw new MissingDependencyException(g);
       }
       if (Report.should_report(Report.loader, 3))
-        new Exception("loaded " + source 
-            + " reached types initialized: "+ g).printStackTrace();
-
+        new Exception("loaded " + source + " reached types initialized: " + g)
+            .printStackTrace();
 
     }
     // The source has already been compiled, but the type was not created there.
@@ -295,6 +329,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
         Report.report(2, "Returning serialized ClassType for " + clazz.name()
             + ".");
 
+      ensureInitialized();
       return ct;
     } else {
       throw new SemanticException("Class " + name + " not found in "
@@ -343,7 +378,6 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
   @Override
   public Label integrity() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new InternalCompilerError("Not implemented yet! Hurry up!");
   }
 }

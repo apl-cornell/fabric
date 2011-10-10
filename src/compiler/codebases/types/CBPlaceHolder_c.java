@@ -52,7 +52,7 @@ public class CBPlaceHolder_c extends PlaceHolder_c implements CBPlaceHolder {
   @Override
   public TypeObject resolve(TypeSystem ts)
       throws CannotResolvePlaceHolderException {
-    return resolveSafe(ts);
+    return resolveUnsafe(ts);
   }
 
   @Override
@@ -66,7 +66,7 @@ public class CBPlaceHolder_c extends PlaceHolder_c implements CBPlaceHolder {
       return cbts.namespaceResolver(namespace).find(name);
     } catch (MissingDependencyException e) {
       // The type is in a source file that hasn't been parsed yet.
-      g = e.goal();
+      g = e.goal();     
       scheduler.currentGoal().setUnreachableThisRun();
       scheduler.addDependencyAndEnqueue(scheduler.currentGoal(), g, false);
       throw new CannotResolvePlaceHolderException(e);

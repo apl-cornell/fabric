@@ -9,6 +9,6 @@ import java.util.List;
  */
 public class Main extends polyglot.main.Main
 {
-  public native static void compile(fabric.lang.FClass fcls, java.util.Map/*String, bytes*/ bytecodeMap); 
-  public native static void compile_from_shell(List<String> args, InputStream in, PrintStream out);
+  public native static long compile(fabric.lang.FClass fcls, java.util.Map/*String, bytes*/ bytecodeMap); 
+  public native static long compile_from_shell(List<String> args, InputStream in, PrintStream out);
 }

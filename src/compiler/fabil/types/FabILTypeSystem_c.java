@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,6 +18,7 @@ import polyglot.types.AccessControlWrapperResolver;
 import polyglot.types.ArrayType;
 import polyglot.types.CachingResolver;
 import polyglot.types.ClassType;
+import polyglot.types.ConstructorInstance;
 import polyglot.types.Context;
 import polyglot.types.DeserializedClassInitializer;
 import polyglot.types.Flags;
@@ -130,7 +132,9 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
         if (ct.isLocal() || ct.isAnonymous()) {
             throw new InternalCompilerError("Cannot serialize " + o + ".");
         }
-        return new CBPlaceHolder_c(ct);
+        String name = getTransformedClassName(ct);
+
+        return new CBPlaceHolder_c(ct.canonicalNamespace(), name);
     }
 
     return o;
@@ -261,9 +265,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     if (type.isReference())
       return load("fabric.lang.arrays.ObjectArray");
     return load("fabric.lang.arrays." + type.toString() + "Array");
-
-//      return loadRuntime("fabric.lang.arrays.ObjectArray");
-//    return loadRuntime("fabric.lang.arrays." + type.toString() + "Array");
   }
 
   @Override
@@ -271,9 +272,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     if (type.isReference())
       return load("fabric.lang.arrays.ObjectArray._Impl");
     return load("fabric.lang.arrays." + type.toString() + "Array._Impl");
-
-//      return loadRuntime("fabric.lang.arrays.ObjectArray._Impl");
-//    return loadRuntime("fabric.lang.arrays." + type.toString() + "Array._Impl");
   }
 
   @Override
@@ -544,7 +542,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
         || typeName.startsWith("fabric")
         || typeName.startsWith("jif");
   }
-  
+
   @Override
   public void initialize(ExtensionInfo extInfo) throws SemanticException {
     //There is no toplevel resolver -- names are resolved via the source's codebase
@@ -574,6 +572,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
+      nsr.loadRawClasses(true);
       nsr.loadSource(true);
       runtimeResolvers.add(nsr);
     }
@@ -583,6 +582,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
         Report.report(2, "Initializing FabIL signature resolver: " +  uri);
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
+      //A raw signature class is an oxymoron
+      nsr.loadRawClasses(false);
       nsr.loadSource(true);
       signatureResolvers.add(nsr);
     }
@@ -597,8 +598,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
-      nsr.loadSource(true);
-      //nsr.loadSource(src_in_cp);
+      nsr.loadRawClasses(true);
+      nsr.loadSource(src_in_cp);
       classpathResolvers.add(nsr);
     }
     
@@ -610,8 +611,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
       nsr.loadEncodedClasses(true);
       nsr.loadSource(true);
 
-//      if(!classpathResolvers.contains(nsr))
-//        nsr.loadEncodedClasses(false);
+      if(!classpathResolvers.contains(nsr))
+        nsr.loadEncodedClasses(false);
       sourcepathResolvers.add(nsr);
     }
   }

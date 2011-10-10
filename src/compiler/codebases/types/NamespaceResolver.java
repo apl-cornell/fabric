@@ -18,18 +18,34 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
   Importable check(String name);
   
   /**
-   * Add a type object to the cache, returning null if not.
-   * @param name The name to search for.
+   * Add an importable type object to the cache.
+   * 
+   * @param name
+   *          The name of the new type.
+   * @param q
+   *          The type object.
+   * @throws SemanticException
+   *           Throws when a package or type with the same name already exists
    */
-  void add(String name, Importable q);
+  void add(String name, Importable q) throws SemanticException;
   
+  /**
+   * Add a type object to the cache, regardless of whether it exists already.
+   * 
+   * @param name
+   *          The name of the new type.
+   * @param q
+   *          The type object.
+   */
+  void replace(String name, Importable q);
+
   /**
    * The URI of this namespace
    */
   URI namespace();
 
   /**
-   * Get the URI of a codebase using its local name.
+   * Get the URI of a codebase using a local alias.
    * @throws SemanticException 
    */
   URI resolveCodebaseName(String name) throws SemanticException;
@@ -38,6 +54,7 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
    * Find a type object in this namespace by name.
    * @param name The name to search for.
    */
+  @Override
   Importable find(String name) throws SemanticException;
   
   /**

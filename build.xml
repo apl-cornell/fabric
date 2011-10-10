@@ -37,6 +37,8 @@
   <property name="signatures.fabric.classes"
       location="${signatures.classes}/fabric"/>
 
+  <pathconvert property="polyglot.classes" refid="polyglot.classpath"/>
+
   <!-- Timestamp file for bootstrap classes. -->
   <property name="bootstrap.tstamp" location="${bootstrap.classes}/.tstamp"/>
 
@@ -292,21 +294,12 @@
       <arg value="${filc}" />
       <arg value="-nooutput" />
       <arg value="-bootclasspath" />
-      <arg value="rt-classes/:src/runtime" />
+      <arg value="${bootstrap.classes}" />
       <arg value="-sigcp" />
-      <arg value="sig-classes/fabil:src/signatures/fabil:src/runtime" />
+      <arg value="src/signatures/fabil:src/runtime" />
       <arg value="-sig" />
-<!--      <arg value="-report" />
-      <arg value="resolver=4" />
-      <arg value="-report" />
-      <arg value="loader=4" />
-      <arg value="-report" />
-      <arg value="loader=4" />
--->
       <arg value="-d" />
       <arg value="sig-classes/fabil" />
-      <arg value="-sourcepath" />
-      <arg value="src/signatures/fabil:src/runtime" />
       <srcfile />
       <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
       <globmapper from="*.fil" to="*.class" />
@@ -528,16 +521,17 @@
         skipemptyfilesets="true"
         vmlauncher="false">
       <arg value="${filc}" />
+      <arg value="-cp" />
+      <arg value="${bootstrap.classes}" />
       <arg line="${debug.flag}" />
+      <arg value="-bootclasspath" />
+      <arg value="${runtime.src}:${bootstrap.classes}" />
       <arg value="-O0" />
       <arg value="-d" />
       <arg value="rt-classes" />
-      <arg value="-sourcepath" />
-      <arg value="src/runtime" />
-      <arg value="-cp" />
-      <arg value="${bootstrap.classes}" />
+      <arg value="-platform-mode"/>
       <srcfile />
-      <fileset dir="${runtime.src}" includes="fabric/lang/arrays/*.fil"/>
+      <fileset dir="src/arrays" includes="fabric/lang/arrays/*.fil"/>
       <globmapper from="*.fil" to="*.class" />
     </apply>
   </target>
@@ -546,17 +540,6 @@
   <target name="fabil-runtime"
       depends="init,fabil-compiler,fabil-signatures,fabric-arrays">
     <mkdir dir="${runtime.classes}" />
-
-    <!-- XXX HACK -->
-    <delete>
-      <fileset dir="${signatures.fabil.classes}">
-        <!--<include name="fabric/util/Iterable.class" />
-        <include name="fabric/util/Set.class" />
-        <include name="fabric/util/Iterator.class" />
-        <include name="fabric/util/Collection.class" />-->
-        <include name="fabric/util/*.class" />
-      </fileset>
-    </delete>
 
     <apply executable="bash"
         parallel="true"
@@ -569,18 +552,18 @@
       <arg value="${filc}" />
       <arg line="${debug.flag}" />
       <arg value="-O0" />
-      <arg value="-d" />
-      <arg value="rt-classes" />
-      <arg value="-sourcepath" />
-      <arg value="src/runtime" />
-      <arg value="-j" />
-      <arg value="-Xms256M" />
       <arg value="-cp" />
       <arg value="${bootstrap.classes}" />
+      <arg value="-j" />
+      <arg value="-Xms256M" />
+      <arg value="-d" />
+      <arg value="rt-classes" />
+      <arg value="-bootclasspath" />
+      <arg value="${runtime.classes}:${runtime.src}:${polyglot.classes}:${bootstrap.classes}" />
+      <arg value="-platform-mode"/>
       <srcfile />
       <fileset dir="${runtime.src}"
-          includes="**/*.fil"
-          excludes="fabric/util/*.fil,fabric/lang/arrays/*.fil" />
+          includes="**/*.fil" excludes="fabric/util/*.fil" />
       <filelist dir="${runtime.src}">
         <file name="fabric/util/HashMap.fil"/>
         <file name="fabric/util/LinkedList.fil"/>

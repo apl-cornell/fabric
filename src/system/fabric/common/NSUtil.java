@@ -2,6 +2,8 @@ package fabric.common;
 
 import java.net.URI;
 
+import fabric.common.exceptions.InternalError;
+
 public final class NSUtil {
   /**
    * Creates a mangled Java package name from a Fabric codebase oid.
@@ -9,6 +11,8 @@ public final class NSUtil {
    * @return the parent package name for classes in the codebase
    */
   public static String javaPackageName(URI codebase_oid) {
+    if(codebase_oid.isOpaque()) 
+      throw new InternalError("Cannot create java package name for " + codebase_oid);
     //URI is of form : 'fab://store/123'
     String store = codebase_oid.getAuthority();
     String onum = codebase_oid.getPath().substring(1);

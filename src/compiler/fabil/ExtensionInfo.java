@@ -190,10 +190,11 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
         path.addAll(typeSystem().signatureResolvers());
         path.addAll(typeSystem().runtimeResolvers());
 
-        //FabIL also allows direct linking to Java classes 
+        //FabIL also allows direct linking to Java classes, so we 
+        // include the JRE classes here. Other Java classes should be 
+        // specified on the classpath
         //TODO: Make this play nice with cmdline args
-        String java_path = System.getProperty("java.class.path");
-        java_path += File.pathSeparator + System.getProperty("sun.boot.class.path");
+        String java_path =  System.getProperty("sun.boot.class.path");
         URI file = URI.create("file:///");
         for (String dir : java_path.split(File.pathSeparator)) {
           File f = new File(dir);
@@ -228,7 +229,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   private static URI local_ns = URI.create("fab:local");
   @Override
   public URI localNamespace() {
-    return local_ns;
+    return getFabILOptions().platformMode() ? platformNamespace() : local_ns;
   }
 
   @Override

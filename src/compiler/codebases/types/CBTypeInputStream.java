@@ -14,6 +14,7 @@ import polyglot.util.TypeInputStream;
 
 public class CBTypeInputStream extends TypeInputStream {
   private CodebaseTypeSystem ts;
+
   @SuppressWarnings("rawtypes")
   public CBTypeInputStream(InputStream in, TypeSystem ts, Map cache)
       throws IOException {
@@ -28,29 +29,23 @@ public class CBTypeInputStream extends TypeInputStream {
 
     if (t instanceof Importable && p instanceof CBPlaceHolder) {
       CBPlaceHolder pp = (CBPlaceHolder) p;
-        if (Report.should_report(Report.serialize, 2))
-            Report.report(2, "Forcing " + pp.name() + " into system resolver"); 
-        ts.namespaceResolver(pp.namespace()).add(pp.name(), (Importable) t);
+      if (Report.should_report(Report.serialize, 2))
+        Report.report(2, "Forcing " + pp.name() + " into system resolver");
+      ts.namespaceResolver(pp.namespace()).replace(pp.name(), (Importable) t);
     }
 
     String s = "";
     if (Report.should_report(Report.serialize, 2)) {
-        try {
-            s = t.toString();
-        }
-        catch (NullPointerException e) {
-            s = "<NullPointerException thrown>";
-        }
+      try {
+        s = t.toString();
+      } catch (NullPointerException e) {
+        s = "<NullPointerException thrown>";
+      }
     }
-    
+
     if (Report.should_report(Report.serialize, 2)) {
-        Report.report(2, "- Installing " + p
-                      + " -> " + s + " in place holder cache");         
+      Report.report(2, "- Installing " + p + " -> " + s
+          + " in place holder cache");
     }
-}
-  protected Object resolveObject(Object o) {
-    if(o instanceof PlaceHolder && !(o instanceof CBPlaceHolder))
-      throw new InternalCompilerError("WTF?  " + o.toString() +":::::" + o.getClass() );
-    return super.resolveObject(o);
   }
 }

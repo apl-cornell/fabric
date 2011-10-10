@@ -57,7 +57,7 @@ public class SimpleResolver extends NamespaceResolver_c {
     
     // Check if a job for the source already exists.
     if (extInfo.scheduler().sourceHasJob(source)) {
-      if (Report.should_report(Report.loader, 3))
+      if (Report.should_report(Report.loader, 4))
         new Exception("Source has job " + source).printStackTrace();
 
         // the source has already been compiled; what are we doing here?
@@ -115,6 +115,10 @@ public class SimpleResolver extends NamespaceResolver_c {
       if (Report.should_report(report_topics, 4))
         Report.report(4, "Using raw class file for " + name);
       result = extInfo.typeSystem().classFileLazyClassInitializer(clazz).type();
+    }
+    else {
+      if (Report.should_report(report_topics, 4))
+        Report.report(4, "Not using raw class file for " + name + "( load_raw = " + load_raw + ")" );
     }
 
     if (result == null && source != null) {

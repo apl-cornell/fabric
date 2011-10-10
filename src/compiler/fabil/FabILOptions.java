@@ -27,6 +27,8 @@ public interface FabILOptions {
 
   Map<String, URI> codebaseAliases();
 
-  File outputDirectory();  
+  File outputDirectory();
+
+  boolean platformMode();  
   
 }

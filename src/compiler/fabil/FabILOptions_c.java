@@ -87,6 +87,11 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    * Codebase names.
    */
   protected Map<String, URI> codebase_aliases;
+
+  /**
+   * Whether we are building platform classes.
+   */
+  protected boolean platform_mode;
   
   public FabILOptions_c(ExtensionInfo extension) {
     super(extension);
@@ -116,6 +121,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     this.source_path = new ArrayList<URI>();
     this.codebase_aliases = new LinkedHashMap<String, URI>();
 
+    this.platform_mode = false;
     this.runWorker = false;
   }
 
@@ -125,6 +131,9 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
       throws UsageError, TerminationException {
     if (args[index].equals("-sig")) {
       index++;
+      // Signature mode implies platform mode. The local namespace should be the
+      // platform ns
+      platform_mode = true;
       signatureMode = true;
     } else if (args[index].equals("-dumpdeps")) {
       index++;
@@ -190,6 +199,9 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
       index++;
       createSkeleton = true;
       serialize_type_info = false;
+    } else if (args[index].equals("-platform-mode")) {
+      index++;
+      platform_mode = true;
 
     } else {
       return super.parseCommand(args, index, source);
@@ -228,7 +240,8 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     usageForFlag(out, "-dumpdeps", "output dependencies for each class");
     usageForFlag(out, "-deststore <store>", "the destination store for published classes");
     usageForFlag(out, "-codebase-alias <name>=<URI>", "associate a codebase with an alias in source files");
-    usageForFlag(out, "-bootstrap-skel", "generate java bootstrap skeletons for each class");
+    usageForFlag(out, "-generate-native-skeletons", "generate java bootstrap skeletons for each class");
+    usageForFlag(out, "-platform-mode", "build platform classes (sets local namespace to platform namespace)");
     usageForFlag(out, "-O", "turn optimizations on");    
     
     out.println("Most <path> arguments accept local directory paths as well as");
@@ -261,33 +274,26 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     return codebase_aliases;
   }
   
-  /* (non-Javadoc)
-   * @see fabil.FabILOptions#optLevel()
-   */
   @Override
   public int optLevel() {
     return optLevel;
   }
-  /*
-   * (non-Javadoc)
-   * @see fabil.FabILOptions#dumpDependencies()
-   */
+  
   @Override
   public boolean dumpDependencies() {
     return dumpDependencies;
   }
-  /*
-   * (non-Javadoc)
-   * @see fabil.FabILOptions#createJavaSkel()
-   */
+
   @Override
   public boolean createSkeleton() {
     return createSkeleton;
   }
+  
+  @Override
+  public boolean platformMode() {
+    return platform_mode;
+  }
 
-  /* (non-Javadoc)
-   * @see fabil.FabILOptions#signatureMode()
-   */
   @Override
   public boolean signatureMode() {
     return signatureMode;
