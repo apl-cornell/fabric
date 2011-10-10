@@ -79,6 +79,10 @@ public class FabricClassLoader extends ClassLoader {
       long endCompileTime = -1;
       try {
         endCompileTime = Main.compile(fcls, classBytecodeMap);
+      } catch (GeneralSecurityException e) {
+        throw new ClassNotFoundException(name, e);
+      } catch (IOException e) {
+          throw new ClassNotFoundException(name, e);
       } finally {
         endLoadingTime = System.currentTimeMillis();
         if (endCompileTime < 0) {
