@@ -86,6 +86,47 @@ parser Grm extends jif.parse.Grm {:
         return null;
       }
     }
+
+	//Override methods in jif.ppg to use new packageForName    
+    public PackageNode exprToPackage(Expr e) throws Exception {
+        if (e instanceof Wrapper) {
+            return ((Wrapper) e).amb.toPackage();
+        }
+
+        if (e instanceof AmbExpr) {
+            AmbExpr a = (AmbExpr) e;
+            return nf.PackageNode(pos(e), ts.packageForName(this.ns, a.name()));
+        }
+
+        if (e instanceof Field) {
+            Field f = (Field) e;
+            PackageNode pn = prefixToPackage(f.target());
+            return nf.PackageNode(pos(e),
+                                ts.packageForName(this.ns, pn.package_(), f.name()));
+        }
+
+        die(pos(e));
+        return null;
+    }
+	
+    public PackageNode prefixToPackage(Prefix p) throws Exception {
+        if (p instanceof Expr) {
+            return exprToPackage((Expr) p);
+        }
+
+        if (p instanceof AmbPrefix) {
+            AmbPrefix a = (AmbPrefix) p;
+            Prefix ap = a.prefix();
+            polyglot.types.Package pkg = null;
+            if (ap != null) pkg = prefixToPackage(a.prefix()).package_();
+            return nf.PackageNode(pos(p),
+                                ts.packageForName(this.ns, pkg, a.name()));
+        }
+
+        die(pos(p));
+        return null;
+    }
+    
 :};
 
 terminal Token AT;
