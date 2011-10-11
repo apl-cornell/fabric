@@ -270,7 +270,7 @@
       <arg value="${runtime.classes}:${classes}"/>
       <arg value="-nooutput"/>
       <arg value="-sigcp"/>
-      <arg value="${signatures.fabric.src}:${runtime.src}" />
+      <arg value="${signatures.fabric.src}" />
       <arg value="-sig"/>
       <arg value="-d"/>
       <arg value="${signatures.fabric.classes}"/>

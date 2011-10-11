@@ -16,6 +16,7 @@ import polyglot.frontend.Job;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.SourceLoader;
+import polyglot.frontend.TargetFactory;
 import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
 import polyglot.main.Report;
@@ -25,6 +26,7 @@ import polyglot.types.reflect.ClassPathLoader;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.TypeEncoder;
+import codebases.frontend.CBTargetFactory;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.CodebaseSourceLoader;
 import codebases.frontend.FileSourceLoader;
@@ -253,7 +255,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
       long onum = Long.parseLong(uri.getPath().substring(1));   
       
       //At the Fabric/FabIL layer, class names do not include the codebases
-      String cachedir = getFabricOptions().output_directory + File.separator
+      String cachedir = getFabricOptions().outputDirectory() + File.separator
           + SysUtil.pseudoname(store, onum).replace('.', File.separatorChar);          
       return new ClassPathLoader(cachedir, new ClassFileLoader(this));
       
@@ -320,4 +322,16 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
   public String namespaceToJavaPackagePrefix(URI ns) {
     return filext.namespaceToJavaPackagePrefix(ns);
   }    
+  
+  @Override
+  public TargetFactory targetFactory() {
+    if (target_factory == null) {
+      target_factory =
+          new CBTargetFactory(this, getFabricOptions().outputDirectory(),
+              getOptions().output_ext, getOptions().output_stdout);
+    }
+
+    return target_factory;
+  }
+
 }

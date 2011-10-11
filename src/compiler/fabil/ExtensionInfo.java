@@ -95,7 +95,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   public TargetFactory targetFactory() {
     if (target_factory == null) {
       target_factory =
-          new CBTargetFactory(this, getOptions().output_directory,
+          new CBTargetFactory(this, getFabILOptions().outputDirectory(),
               getOptions().output_ext, getOptions().output_stdout);
     }
 

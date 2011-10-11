@@ -49,12 +49,19 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
   protected  fabil.ExtensionInfo filext;
   protected fabric.ExtensionInfo fabext;
   
+  protected TargetFactory fabil_target;
+
   public FabricScheduler(
          fabric.ExtensionInfo fabext,
           fabil.ExtensionInfo filext) {
     super(fabext, filext);
     this.fabext = fabext;
     this.filext = filext;
+    this.fabil_target = new TargetFactory(
+        filext.getFabILOptions().outputDirectory(),
+        "fil",
+        Options.global.output_stdout);
+
   }
 
   @Override
@@ -341,11 +348,6 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     return g;
   }
   
-  private TargetFactory fabil_target = new TargetFactory(
-      Options.global.output_directory,
-      "fil",
-      Options.global.output_stdout);
-
   public Goal FabILSkeletonGenerated(final Job job) {
     Goal g = internGoal(new AbstractGoal(job){
       @SuppressWarnings({ "unchecked", "rawtypes" })
