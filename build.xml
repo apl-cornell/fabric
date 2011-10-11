@@ -269,6 +269,7 @@
       <arg value="-bootclasspath" />
       <arg value="${runtime.classes}:${classes}"/>
       <arg value="-nooutput"/>
+      <arg value="-trusted-providers" />
       <arg value="-sigcp"/>
       <arg value="${signatures.fabric.src}" />
       <arg value="-sig"/>
@@ -619,15 +620,18 @@
         vmlauncher="false">
       <arg value="${fabc}" />
       <arg line="${debug.flag}" />
-      <arg value="-O0" />
-      <arg value="-e" />
-      <arg value="-trusted-providers" />
-      <arg value="-d" />
-      <arg value="rt-classes" />
-      <arg value="-sourcepath" />
-      <arg value="src/runtime" />
       <arg value="-j" />
       <arg value="-Xms256M" />
+      <arg value="-O0" />
+      <arg value="-e" />
+      <arg value="-bootclasspath" />
+      <arg value="${runtime.classes}:${classes}"/>
+      <arg value="-trusted-providers" />
+      <arg value="-d" />
+      <arg value="${runtime.classes}" />
+      <arg value="-sourcepath" />
+      <arg value="${runtime.src}" />
+
       <srcfile />
       <fileset dir="${runtime.src}"
           includes="**/*.fab" />

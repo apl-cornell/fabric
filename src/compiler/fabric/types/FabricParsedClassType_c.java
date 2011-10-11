@@ -23,7 +23,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
 //  private transient boolean providerLabelFolded = false;
 //  private transient boolean confPolicyExtracted = false;
   
-  protected transient URI canonical_ns;
+  protected URI canonical_ns = null;
 
   public FabricParsedClassType_c() {
     super();
@@ -34,7 +34,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     super(ts, init, fromSource);
     if (fromSource == null)
       throw new NullPointerException("fromSource cannot be null!");
-    this.canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
   }
 
   /*
@@ -227,6 +226,10 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   
   @Override
   public URI canonicalNamespace() {
+    // HACK superclass constructor accesses canonical namespace before it can be
+    // initialized.
+    if(canonical_ns == null)
+      canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
     return canonical_ns;
   }
 
