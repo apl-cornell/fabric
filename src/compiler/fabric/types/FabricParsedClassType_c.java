@@ -75,7 +75,9 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
       if (ts.isFabricClass(this)) {
         FabricClassType superType = (FabricClassType)superType();
 
-        Label classLabel = ts.bottomLabel();
+        Label classLabel = ts.pairLabel(Position.compilerGenerated(), 
+            ts.bottomConfPolicy(Position.compilerGenerated()),
+            ts.topIntegPolicy(Position.compilerGenerated()));
         
         Label superLabel = superType == null ? classLabel : superType.singleFieldLabel();
         
