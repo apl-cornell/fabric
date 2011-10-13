@@ -67,17 +67,6 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
   }
 
   @Override
-  public boolean typeEqualsImpl(Type t) {
-    
-    if (t instanceof CodebaseClassType) {
-      CodebaseClassType ct = (CodebaseClassType) t;
-      return fullName().equals(ct.fullName())
-          && canonicalNamespace().equals(ct.canonicalNamespace());
-
-    } else return super.typeEqualsImpl(t);
-  }
-
-  @Override
   public String translate(Resolver c) {
     if (isTopLevel()) {
       ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();

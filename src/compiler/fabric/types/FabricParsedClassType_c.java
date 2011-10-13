@@ -214,17 +214,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   }
 
   @Override
-  public boolean typeEqualsImpl(Type t) {
-    
-    if (t instanceof CodebaseClassType) {
-      CodebaseClassType ct = (CodebaseClassType) t;
-      return fullName().equals(ct.fullName())
-          && canonicalNamespace().equals(ct.canonicalNamespace());
-
-    } else return super.typeEqualsImpl(t);
-  }
-  
-  @Override
   public URI canonicalNamespace() {
     // HACK superclass constructor accesses canonical namespace before it can be
     // initialized.
