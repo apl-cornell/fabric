@@ -281,8 +281,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   @Override
   public Object placeHolder(TypeObject o, Set roots) {
     assert_(o);
-    if (o instanceof CodebaseClassType) {
-      CodebaseClassType ct = (CodebaseClassType) o;
+    if (o instanceof FabricParsedClassType) {
+      FabricParsedClassType ct = (FabricParsedClassType) o;
 
         // This should never happen: anonymous and local types cannot
         // appear in signatures.

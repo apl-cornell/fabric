@@ -123,7 +123,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public Object placeHolder(TypeObject o, Set roots) {
     assert_(o);
-    if (o instanceof CodebaseClassType) {
+    if (o instanceof ParsedClassType) {
       CodebaseClassType ct = (CodebaseClassType) o;
 
         // This should never happen: anonymous and local types cannot
