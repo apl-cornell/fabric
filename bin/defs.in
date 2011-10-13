@@ -116,11 +116,11 @@ COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${JAVA_HOME}/lib/tools.jar"
 COMMON_SYS_LIB_CP="${TOP}/lib/jline-0.9.94.jar"
 
 # Fabric bootstrap classes 
-FABRIC_BOOTCP="${FABRIC_BOOTCP}:${TOP}/rt-classes"
+FABRIC_BOOTCP="${TOP}/rt-classes:${TOP}/classes"
 FABRIC_BOOTCP="${FABRIC_BOOTCP}:${TOP}/lib/fabric-rt.jar"
 
 # FabIL bootstrap classes 
-FABIL_BOOTCP="${FABIL_BOOTCP}:${TOP}/rt-classes"
+FABIL_BOOTCP="${TOP}/rt-classes:${TOP}/classes"
 FABIL_BOOTCP="${FABIL_BOOTCP}:${TOP}/lib/fabric-rt.jar"
 
 # Classpath for compiling FabIL applications.
