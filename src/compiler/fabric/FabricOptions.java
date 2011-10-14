@@ -43,25 +43,6 @@ public class FabricOptions extends JifOptions implements FabILOptions {
    */
   public List<URI> sigcp;
 
-//  /**
-//   * Class path. May include Fabric references to codebases. NB: This field
-//   * hides the corresponding field in polyglot.main.Options
-//   */
-//  protected List<URI> classpath;
-//
-//  /**
-//   * Source path. May include Fabric references to codebases. NB: This field
-//   * hides the corresponding field in polyglot.main.Options
-//   */
-//  protected List<URI> source_path;
-//  
-//
-//  /**
-//   * Boot classpath. Location of the Fabric runtime classes.
-//   */
-//  protected List<URI> bootclasspath;
-
-
   private static URI file = URI.create("file:///");
 
   @Override
@@ -168,8 +149,9 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     }
  
     // parse fabil options before jif's, otherwise some options
-    //  will get gobbled by jif's superclass
-    int i = delegate.parseCommand(args, index, source);
+    //  will get gobbled by jif's superclass, BUT-- don't call 
+    //  FabILOption_c superclass.
+    int i = delegate.parseCommand(args, index, source,false);
     if (i != index) {
       index = i;
       return index;
@@ -191,10 +173,14 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   public List<URI> signaturepath() {
     return sigcp;
   }
+  
+  public List<URI> fabILSignaturePath() {
+    return delegate.sigcp;
+  }
 
   @Override
   public Map<String, URI> codebaseAliases() {
-    return codebase_aliases;
+    return delegate.codebaseAliases();
   }
 
   /// Options processed by FabIL delegate
@@ -214,7 +200,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   
   @Override
   public File outputDirectory() {
-    return delegate.outputDirectory();
+    return output_directory;
   }
 
   @Override
@@ -237,12 +223,6 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     return delegate.platformMode();
   }
   
-  private List<URI> processPathString(String path) {
-    List<URI> uris = new ArrayList<URI>();
-    processPathString(uris, path);
-    return uris;
-  }
-
   /**
    * Process a path string of the form <URI>:/localdir/:... into URIs and add to a list
    * @param uris the list to add the URIs to

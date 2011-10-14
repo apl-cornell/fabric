@@ -2,6 +2,7 @@ package codebases.types;
 
 import java.net.URI;
 
+import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 
 import polyglot.types.Importable;
@@ -89,11 +90,18 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
    * @return previous value
    */
   boolean loadSource(boolean use);
-
   /**
-   * A lower bound on the integrity of resolution through this namespace.
+   * Returns codebase if this namespace is backed by a codebase, otherwise null.
    * @return
    */
-  Label integrity();
+  Codebase codebase ();
+
+  /**
+   * An (flow-lattice) upper bound on the integrity and confidentiality of
+   * resolution through this namespace.
+   * 
+   * @return
+   */
+  Label label();
 
 }

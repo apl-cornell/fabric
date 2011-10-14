@@ -8,6 +8,7 @@ import codebases.frontend.ExtensionInfo;
 import fabil.SimpleResolver;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
+import fabric.lang.security.Label;
 
 public class CodebaseResolver extends SimpleResolver implements
     NamespaceResolver {
@@ -20,6 +21,7 @@ public class CodebaseResolver extends SimpleResolver implements
     this.load_src = true;
   }
 
+  @Override
   public Codebase codebase() {
     return codebase;
   }
@@ -43,5 +45,10 @@ public class CodebaseResolver extends SimpleResolver implements
   @Override
   public URI resolveCodebaseName(String name) throws SemanticException {
     return SysUtil.oid(codebase.resolveCodebaseName(name));
+  }
+  
+  @Override
+  public Label label() {
+    return codebase.get$label();
   }
 }

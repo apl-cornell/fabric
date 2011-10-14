@@ -126,10 +126,15 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     this.platform_mode = false;
     this.runWorker = false;
   }
-
   @SuppressWarnings("rawtypes")
   @Override
   public int parseCommand(String[] args, int index, Set source)
+      throws UsageError, TerminationException {
+    return parseCommand(args, index, source, true);
+  }
+
+  @SuppressWarnings("rawtypes")
+  public int parseCommand(String[] args, int index, Set source, boolean call_super)
       throws UsageError, TerminationException {
     if (args[index].equals("-sig")) {
       index++;
@@ -204,8 +209,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     } else if (args[index].equals("-platform-mode")) {
       index++;
       platform_mode = true;
-
-    } else {
+    } else if(call_super){
       return super.parseCommand(args, index, source);
     }
 

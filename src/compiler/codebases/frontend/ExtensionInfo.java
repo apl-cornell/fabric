@@ -2,10 +2,13 @@ package codebases.frontend;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 import codebases.types.CBTypeEncoder;
 
 import fabric.lang.Object;
+import fabric.worker.Store;
 
 import polyglot.frontend.FileSource;
 import polyglot.types.reflect.ClassPathLoader;
@@ -70,5 +73,42 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * @return the java package prefix string
    */
   String namespaceToJavaPackagePrefix(URI ns);
+
+  /**
+   * The classpath used to resolve dependencies during compilation. May contain
+   * local directories or Fabric codebase URLs.
+   * 
+   * @return The list of directories and codebases to search.
+   */
+  List<URI> classpath();
+  
+  /**
+   * The sourcepath used to resolve source dependencies during compilation. When
+   * publishing to Fabric, dependencies resolved through the sourcepath
+   * will be published alongside source specified on the commandline.
+   * 
+   * @return The list of directories and codebases to search.
+   */
+  List<URI> sourcepath();
+
+  /**
+   * The locations of signature files for native classes.
+   * @return The list of directories and codebases to search.
+   */
+  List<URI> signaturepath();
+
+  /**
+   * The locations of platform classes such as fabric.lang.Object.
+   * @return The list of directories and codebases to search.
+   */
+  List<URI> bootclasspath();
+
+  /**
+   * A map between codebase aliases used in source and the URI of the intended codebase.
+   * @return The list of directories and codebases to search.
+   */
+  Map<String, URI> codebaseAliases();
+
+  Store destinationStore();
 
 }

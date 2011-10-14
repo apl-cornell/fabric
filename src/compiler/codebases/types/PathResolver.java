@@ -4,8 +4,11 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.plaf.LabelUI;
 
 import polyglot.main.Report;
 import polyglot.types.ClassType;
@@ -16,6 +19,9 @@ import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
 import polyglot.util.CollectionUtil;
 import codebases.frontend.ExtensionInfo;
+import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
+import fabric.worker.Store;
 
 public class PathResolver extends NamespaceResolver_c implements
     NamespaceResolver {
@@ -154,4 +160,18 @@ public class PathResolver extends NamespaceResolver_c implements
     return old;
   }
 
+  @Override 
+  public Label label() {
+    if(extInfo.platformNamespace().equals(namespace)) {
+      return LabelUtil._Impl.toLabel(extInfo.destinationStore(),
+          LabelUtil._Impl.topInteg());
+    }
+    Store s = extInfo.destinationStore();
+    Label join = LabelUtil._Impl.noComponents();
+    for(NamespaceResolver nr : path) {
+      join = LabelUtil._Impl.join(s, join, nr.label());
+    }
+    //TODO: Should we actually return worker meet join?
+    return join;
+  }
 }

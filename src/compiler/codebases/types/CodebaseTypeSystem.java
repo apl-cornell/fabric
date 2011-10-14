@@ -24,14 +24,6 @@ import polyglot.types.TypeSystem;
 public interface CodebaseTypeSystem extends TypeSystem {
 
   CBImportTable importTable(Source source, URI ns, Package pkg);
-  
-//  boolean localTypesOnly();
-
-//  CodebaseClassType createClassType(LazyClassInitializer init, Source fromSource);
-    
-//  String absoluteName(Codebase cb, String fullName, boolean resolve) throws SemanticException;
-  
-//  void addRemoteFClass(Codebase cb, Named n);
 
   void initialize(ExtensionInfo extensionInfo) throws SemanticException;
 
@@ -56,4 +48,6 @@ public interface CodebaseTypeSystem extends TypeSystem {
   Resolver packageContextResolver(URI namespace, Package p, ClassType accessor);
 
   Package packageForName(URI ns, String name) throws SemanticException;
+
+  Codebase codebaseFromNS(URI namespace);
 }

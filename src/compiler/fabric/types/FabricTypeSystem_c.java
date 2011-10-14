@@ -128,11 +128,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   }
 
   protected void initResolvers() {
-    FabricOptions opt = extInfo.getFabricOptions();
-    List<URI> cp = opt.classpath();
-    List<URI> sp = opt.sourcepath();
-    List<URI> sigcp = opt.signaturepath();
-    List<URI> rtcp = opt.bootclasspath();
+    List<URI> cp = extInfo.classpath();
+    List<URI> sp = extInfo.sourcepath();
+    List<URI> sigcp = extInfo.signaturepath();
+    List<URI> rtcp = extInfo.bootclasspath();
 
     namespaceResolvers = new HashMap<URI, NamespaceResolver>();
     signatureResolvers = new ArrayList<NamespaceResolver>();
@@ -142,7 +141,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     runtimeResolvers = new ArrayList<NamespaceResolver>();
     for(URI uri : rtcp) {
       if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL runtime resolver: " +  uri);
+        Report.report(2, "Initializing Fabric runtime resolver: " +  uri);
 
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
@@ -153,7 +152,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
 
     for(URI uri : sigcp) {
       if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL signature resolver: " +  uri);
+        Report.report(2, "Initializing Fabric signature resolver: " +  uri);
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
       //A raw signature class is an oxymoron
@@ -177,7 +176,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
       classpathResolvers.add(nsr);
     }
     
-    for(URI uri : opt.sourcepath()) {
+    for(URI uri : sp) {
       if (Report.should_report(TOPICS, 2))
         Report.report(2, "Initializing FabIL sourcepath resolver: " +  uri);
 
@@ -730,7 +729,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return typeForClass(platformResolver(), clazz);
   }
 
-
   @Override
   public Codebase codebaseFromNS(URI namespace) {
     //Worker must be running!
@@ -742,8 +740,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
       NodePrincipal w = Worker.getWorker().getPrincipal();
       NodePrincipal st = extInfo.destinationStore().getPrincipal();
       fabric.lang.security.Label acc = LabelUtil._Impl.readerPolicyLabel(w, st);
-      fabric.util.HashMap classes = new fabric.util.HashMap._Impl(extInfo.destinationStore(), nr.integrity(), acc);
-      return new Codebase._Impl(extInfo.destinationStore(), nr.integrity(), acc, classes);
+      //XXX: what should the label of a new codebase be?  The join of the integrity of the classpath?
+      //        or the highest integrity the worker can claim?
+      fabric.util.HashMap classes = new fabric.util.HashMap._Impl(extInfo.destinationStore(), nr.label(), acc);
+      return new Codebase._Impl(extInfo.destinationStore(), nr.label(), acc, classes);
     }
     else if(extInfo.platformNamespace().equals(namespace)
           || !namespace.getScheme().equals("fab")) {

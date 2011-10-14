@@ -7,6 +7,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.CupParser;
@@ -306,5 +307,30 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
       throw new InternalCompilerError("Cannot create Java package prefix for " + ns);
     }
       
+  }
+
+  @Override
+  public List<URI> classpath() {
+    return getFabILOptions().classpath();
+  }
+
+  @Override
+  public List<URI> sourcepath() {
+    return getFabILOptions().sourcepath();
+  }
+
+  @Override
+  public List<URI> signaturepath() {
+    return getFabILOptions().signaturepath();
+  }
+
+  @Override
+  public List<URI> bootclasspath() {
+    return getFabILOptions().bootclasspath();
+  }
+
+  @Override
+  public Map<String, URI> codebaseAliases() {
+    return getFabILOptions().codebaseAliases();
   }
 }

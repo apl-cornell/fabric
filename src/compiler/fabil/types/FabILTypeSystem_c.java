@@ -49,12 +49,15 @@ import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseClassType;
 import codebases.types.NamespaceResolver;
-import fabil.FabILOptions;
+import fabric.lang.Codebase;
+import fabric.worker.Worker;
 
 public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @SuppressWarnings("unchecked")
   private static final Collection<String> TOPICS = CollectionUtil.list(Report.types,
       Report.resolver);
+
+  private fabil.ExtensionInfo extInfo;
 
   protected Map<URI, NamespaceResolver> namespaceResolvers; 
   protected List<NamespaceResolver> classpathResolvers;
@@ -186,11 +189,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @Override
   public ClassType Worker() {
-    ClassType ct = load("fabric.worker.Worker");
-
-//    if(ct != null)
-//      System.err.println("METHODS:" + ct.methodsNamed("getWorker"));
-    return ct;
+    return load("fabric.worker.Worker");
   }
   
   @Override
@@ -247,22 +246,22 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return result;
   }
 
-//  @SuppressWarnings("unchecked")
-//  @Override
-//  protected List<MethodInstance> findAcceptableMethods(ReferenceType container,
-//      String name, @SuppressWarnings("rawtypes") List argTypes,
-//      ClassType currClass) throws SemanticException {
-//    List<MethodInstance> result =
-//        super.findAcceptableMethods(container, name, argTypes, currClass);
-//    System.err.println("methodS: " + container.methods());
-//    if (isJavaInlineable(container)) {
-//      // Remove any methods from fabric.lang.Object. They don't really exist.
-//      for (MethodInstance mi : (List<MethodInstance>) FObject().methods()) {
-//        result.remove(mi);
-//      }
-//    }
-//    return result;
-//  }
+  @SuppressWarnings("unchecked")
+  @Override
+  //XXX: Why is this method here?
+  protected List<MethodInstance> findAcceptableMethods(ReferenceType container,
+      String name, @SuppressWarnings("rawtypes") List argTypes,
+      ClassType currClass) throws SemanticException {
+    List<MethodInstance> result =
+        super.findAcceptableMethods(container, name, argTypes, currClass);
+    if (isJavaInlineable(container)) {
+      // Remove any methods from fabric.lang.Object. They don't really exist.
+      for (MethodInstance mi : (List<MethodInstance>) FObject().methods()) {
+        result.remove(mi);
+      }
+    }
+    return result;
+  }
 
   @Override
   public ClassType fabricRuntimeArrayOf(Type type) {
@@ -536,16 +535,19 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     initialize(null, extInfo);
     this.loadedResolver = null;
     this.systemResolver = null;
+    this.extInfo = (fabil.ExtensionInfo) extInfo;
     initResolvers();
   }
 
   protected void initResolvers() {
-    fabil.ExtensionInfo extInfo = (fabil.ExtensionInfo) this.extInfo;
-    FabILOptions opt = (FabILOptions) extInfo.getOptions();
-    List<URI> cp = opt.classpath();
-    List<URI> sp = opt.sourcepath();
-    List<URI> sigcp = opt.signaturepath();
-    List<URI> rtcp = opt.bootclasspath();
+    //NB: getOptions() and getFabILOptions() do not return the same thing if
+    //  we are compiling from Fabric source! getOptions() returns the FabricOptions()
+    //  object (which implements FabILOptions).  In particular, to get the right signaturepath
+    //  we have to call getFabILOptions().
+    List<URI> cp = extInfo.classpath();
+    List<URI> sp = extInfo.sourcepath();
+    List<URI> sigcp = extInfo.signaturepath();
+    List<URI> rtcp = extInfo.bootclasspath();
 
     namespaceResolvers = new HashMap<URI, NamespaceResolver>();
     signatureResolvers = new ArrayList<NamespaceResolver>();
@@ -590,7 +592,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
       classpathResolvers.add(nsr);
     }
     
-    for(URI uri : opt.sourcepath()) {
+    for(URI uri : sp) {
       if (Report.should_report(TOPICS, 2))
         Report.report(2, "Initializing FabIL sourcepath resolver: " +  uri);
 
@@ -608,7 +610,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   public NamespaceResolver namespaceResolver(URI ns) {
     NamespaceResolver sr = namespaceResolvers.get(ns);
     if (sr == null) {
-      sr = ((fabil.ExtensionInfo)extInfo).createNamespaceResolver(ns);
+      sr = extInfo.createNamespaceResolver(ns);
       namespaceResolvers.put(ns, sr);
     }
     return sr;
@@ -628,6 +630,18 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   public Named forName(String name) throws SemanticException {
     return forName(platformResolver(), name);
 }
+  @Override
+  public Codebase codebaseFromNS(URI namespace) {
+    //Worker must be running!
+    if(!Worker.isInitialized())
+      throw new InternalCompilerError("Worker is not initialized.");
+    
+      NamespaceResolver nsr = namespaceResolver(namespace);
+      if(nsr.codebase() != null)
+        return nsr.codebase();
+      
+      throw new InternalCompilerError("Cannot get codebase for namespace:" + namespace);
+  }
 
   @Override
   public ClassFileLazyClassInitializer classFileLazyClassInitializer(ClassFile clazz) {

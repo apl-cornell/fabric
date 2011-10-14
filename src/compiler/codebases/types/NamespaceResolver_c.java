@@ -38,7 +38,14 @@ import polyglot.util.TypeEncoder;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.ExtensionInfo;
 import codebases.frontend.URISourceLoader;
+import fabric.lang.Codebase;
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.IntegPolicy;
 import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
+import fabric.lang.security.NodePrincipal;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * @author owen
@@ -67,6 +74,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   protected Map<String, Importable> cache;
   // class not found cache
   protected Map<String, SemanticException> not_found;
+ 
+  protected Label integrity;
 
   public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace) {
     this(extInfo, namespace, null);
@@ -377,7 +386,21 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   }
 
   @Override
-  public Label integrity() {
+  public Codebase codebase() {
+    return null;
+  }
+  
+  @Override
+  public Label label() {
+    if(Worker.isInitialized()){
+      if(integrity == null) {        
+        Store s = extInfo.destinationStore();
+        NodePrincipal sp = s.getPrincipal();
+        NodePrincipal np = Worker.getWorker().getPrincipal();
+        integrity = LabelUtil._Impl.toLabel(s, LabelUtil._Impl.writerPolicy(s, sp, np));
+      }
+      return integrity;
+    }    
     throw new InternalCompilerError("Not implemented yet! Hurry up!");
   }
 }

@@ -334,4 +334,33 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
     return target_factory;
   }
 
+  @Override
+  public List<URI> classpath() {
+    return getFabricOptions().classpath();
+  }
+
+  @Override
+  public List<URI> sourcepath() {
+    return getFabricOptions().sourcepath();
+  }
+
+  @Override
+  public List<URI> signaturepath() {
+    return getFabricOptions().signaturepath();
+  }
+  
+  public List<URI> fabILSignaturePath() {
+    return getFabricOptions().fabILSignaturePath();
+  }
+
+  @Override
+  public List<URI> bootclasspath() {
+    return getFabricOptions().bootclasspath();
+  }
+
+  @Override
+  public Map<String, URI> codebaseAliases() {
+    return getFabricOptions().codebaseAliases();
+  }
+
 }
