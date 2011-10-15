@@ -3,19 +3,11 @@ package fabric.types;
 import java.util.*;
 
 import jif.ast.JifUtil;
-import jif.ast.LabelNode;
 import jif.translate.ConjunctivePrincipalToJavaExpr_c;
 import jif.translate.DisjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
-import jif.translate.MeetLabelToJavaExpr_c;
 import jif.translate.PrincipalToJavaExpr;
-import jif.types.DefaultSignature;
-import jif.types.JifClassType;
-import jif.types.JifFieldInstance_c;
-import jif.types.JifLocalInstance;
-import jif.types.JifTypeSystem_c;
-import jif.types.LabeledType;
-import jif.types.Solver;
+import jif.types.*;
 import jif.types.label.*;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
@@ -32,28 +24,26 @@ import fabric.FabricOptions;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
-import fabric.translate.DynamicPrincipalToFabilExpr_c;
-import fabric.translate.FabricJoinLabelToFabilExpr_c;
-import fabric.translate.FabricMeetLabelToFabilExpr_c;
-import fabric.translate.FabricPairLabelToFabilExpr_c;
-import fabric.translate.ProviderLabelToFabilExpr_c;
+import fabric.translate.*;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
-    
-    private final FabricDefaultSignature ds;
-    
-    public FabricTypeSystem_c(TypeSystem jlts) {
-      super(jlts);
-      this.ds = new FabricFixedSignature(this);
-    }
-    
-    public DefaultSignature defaultSignature() {
-        return ds;
-    }
-    
-    public FabricDefaultSignature fabricDefaultSignature() {
-        return ds;
-    }
+
+  private final FabricDefaultSignature ds;
+
+  public FabricTypeSystem_c(TypeSystem jlts) {
+    super(jlts);
+    this.ds = new FabricFixedSignature(this);
+  }
+
+  @Override
+  public DefaultSignature defaultSignature() {
+    return ds;
+  }
+
+  public FabricDefaultSignature fabricDefaultSignature() {
+    return ds;
+  }
+
   @Override
   public void initialize(TopLevelResolver loadedResolver, ExtensionInfo extInfo)
       throws SemanticException {
