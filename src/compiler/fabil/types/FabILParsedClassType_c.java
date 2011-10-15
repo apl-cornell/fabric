@@ -20,9 +20,14 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
   protected transient Codebase codebase;
   
   /**
-   * Memoizes a secure hash of the class.
+   * Memoizes a secure hash of the class. If this class-type information is
+   * derived from a FabIL or Fabric signature, this field holds a hash of the
+   * signature source. If the class-type information is derived from a source
+   * file, this field holds a hash of that source file. Otherwise, the
+   * class-type information is derived from a Java class file, and this field
+   * holds a hash of that class's bytecode.
    */
-  protected transient byte[] classHash;
+  protected byte[] classHash;
 
   /**
    * Used for deserialization.
@@ -34,7 +39,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
   public FabILParsedClassType_c(TypeSystem ts, LazyClassInitializer init,
       Source fromSource) {
     super(ts, init, fromSource);
-    if(fromSource != null) {
+    if (fromSource != null) {
       this.codebase = ((CodebaseSource) fromSource).codebase();
     }
   }
@@ -92,7 +97,6 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
     }
   }
   
-  @SuppressWarnings("unchecked")
   public byte[] getClassHash() {
     if (classHash != null) return classHash;
     
@@ -107,19 +111,35 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
       } catch (IOException e) {
         throw new InternalCompilerError(e);
       }
+    } else if (fromSource instanceof CodebaseSource) {
+      // XXX Jif impl ugliness
     } else {
-      // XXX Type was probably deserialized from a signature.  What do we do?
+      // Type was probably obtained from a Java class file. Hash the bytecode.
+      LazyClassInitializer lci = this.init();
+      if (lci instanceof ClassFileLazyClassInitializer) {
+        ClassFileLazyClassInitializer cflci = (ClassFileLazyClassInitializer) lci;
+        ClassFile classFile = cflci.classFile();
+        digest.update(classFile.getHash());
+      } else {
+        // No clue where this class came from.  Complain loudly.
+        throw new InternalError("Unexpected class initializer type: "
+            + lci.getClass());
+      }
     }
     
-    // Include the super class's hash.
-    FabILParsedClassType_c superClassType = (FabILParsedClassType_c) superType();
-    if (superClassType != null) {
-      digest.update(superClassType.getClassHash());
+    if (!flags.isInterface()) {
+      // Include the super class's hash.
+      FabILParsedClassType_c superClassType = (FabILParsedClassType_c) superType();
+      if (superClassType != null) {
+        digest.update(superClassType.getClassHash());
+      }
     }
     
-    // Include declared interfaces' hashes, if any.
-    for (FabILParsedClassType_c ifaceType : (List<FabILParsedClassType_c>) interfaces()) {
-      digest.update(ifaceType.getClassHash());
+    // Include declared interfaces' hashes.
+    @SuppressWarnings("unchecked")
+    List<FabILParsedClassType_c> interfaces = interfaces();
+    for (FabILParsedClassType_c iface : interfaces) {
+      digest.update(iface.getClassHash());
     }
     
     return classHash = digest.digest();

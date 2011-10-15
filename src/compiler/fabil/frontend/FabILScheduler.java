@@ -13,10 +13,7 @@ import polyglot.frontend.Job;
 import polyglot.frontend.OutputPass;
 import polyglot.frontend.Pass;
 import polyglot.frontend.Scheduler;
-import polyglot.frontend.goals.CodeGenerated;
-import polyglot.frontend.goals.Goal;
-import polyglot.frontend.goals.Serialized;
-import polyglot.frontend.goals.VisitorGoal;
+import polyglot.frontend.goals.*;
 import polyglot.main.Report;
 import polyglot.main.Version;
 import polyglot.types.TypeSystem;
@@ -456,6 +453,21 @@ public class FabILScheduler extends JLScheduler {
     
     return g;
   }
+  
+  public Goal SignaturesHashed(final Job job) {
+    Goal g =
+        internGoal(new VisitorGoal(job,
+            new SignatureHashGenerator()) {
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+            List<Goal> l = new ArrayList<Goal>();
+            l.add(TypeChecked(job));
+            return l;
+          }
+        });
+    
+    return g;
+  }
 
   @Override
   public Goal Serialized(Job job) {
@@ -477,6 +489,8 @@ public class FabILScheduler extends JLScheduler {
           if(((FabILOptions) extInfo.getOptions()).createJavaSkel()) {
             l.add(CreateJavaSkeleton(job));
           }
+        } else {
+          l.add(SignaturesHashed(job));
         }
         return l;
       }
