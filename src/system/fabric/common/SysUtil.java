@@ -137,11 +137,13 @@ public final class SysUtil {
     }
     classIn.close();
 
-    // Include the super class, if any.
-    Class<?> superClass = c.getSuperclass();
-    if (superClass != null) {
-      // Assume the superclass is also a platform class.
-      digest.update(hashPlatformClass(superClass));
+    if (!c.isInterface()) {
+      // Include the super class.
+      Class<?> superClass = c.getSuperclass();
+      if (superClass != null) {
+        // Assume the superclass is also a platform class.
+        digest.update(hashPlatformClass(superClass));
+      }
     }
     
     // Include declared interfaces, if any.
