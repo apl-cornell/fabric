@@ -19,6 +19,7 @@ import polyglot.frontend.Source;
 import polyglot.frontend.TargetFactory;
 import polyglot.frontend.goals.AbstractGoal;
 import polyglot.frontend.goals.Barrier;
+import polyglot.frontend.goals.EmptyGoal;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.Serialized;
 import polyglot.frontend.goals.VisitorGoal;
@@ -30,6 +31,7 @@ import polyglot.visit.Translator;
 import codebases.frontend.CBScheduler;
 import codebases.frontend.CBTypeExists;
 import codebases.frontend.CodebaseImportsInitialized;
+import codebases.frontend.CodebaseSource;
 import codebases.types.CBPlaceHolder;
 import codebases.visit.CBTypeBuilder;
 import fabric.ast.FabricNodeFactory;
@@ -235,8 +237,12 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
   public Goal FClassGenerated(Job job) {
     FabricTypeSystem  ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
-    Goal g = internGoal(new VisitorGoal(job, new FClassGenerator(job, ts, nf)));
-
+    Goal g;
+    if (((CodebaseSource) job.source()).shouldPublish())
+      g = internGoal(new VisitorGoal(job, new FClassGenerator(job, ts, nf)));
+    else
+      g = internGoal(new EmptyGoal(job));
+    
     try {
         addPrerequisiteDependency(g, this.Serialized(job));
         addPrerequisiteDependency(g, this.PrincipalCastsAdded(job));
@@ -253,10 +259,10 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
       new Barrier("allFClassesGenerated", this) {
         @Override
         public Goal goalForJob(Job j) {
-          return FClassGenerated(j);
+            return FClassGenerated(j);
         }
       };
-      
+
   public Goal AllFClassesGenerated() {
     return allFClassesGenerated;
   }
@@ -277,11 +283,11 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     
   private Goal consistentNamespace = 
     new Barrier("consistentNamespace", this) {
-      @Override
-      public Goal goalForJob(Job j) {
+    @Override
+    public Goal goalForJob(Job j) {
         return NamespaceChecked(j);
-      }
-    };
+    }
+  };
 
   public Goal ConsistentNamespace() {
     return consistentNamespace;

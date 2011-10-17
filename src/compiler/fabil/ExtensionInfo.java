@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +24,6 @@ import polyglot.types.reflect.ClassFileLoader;
 import polyglot.types.reflect.ClassPathLoader;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
-import polyglot.util.TypeEncoder;
 import codebases.frontend.CBTargetFactory;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.CodebaseSourceLoader;
@@ -37,8 +35,8 @@ import codebases.frontend.URISourceLoader;
 import codebases.types.CBTypeEncoder;
 import codebases.types.CodebaseResolver;
 import codebases.types.CodebaseTypeSystem;
-import codebases.types.PathResolver;
 import codebases.types.NamespaceResolver;
+import codebases.types.PathResolver;
 import fabil.ast.FabILNodeFactory;
 import fabil.ast.FabILNodeFactory_c;
 import fabil.frontend.FabILScheduler;
@@ -50,6 +48,7 @@ import fabric.common.NSUtil;
 import fabric.common.SysUtil;
 import fabric.lang.FClass;
 import fabric.lang.security.LabelUtil;
+import fabric.worker.Worker;
 
 /**
  * Extension information for FabIL extension.
@@ -332,5 +331,18 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   @Override
   public Map<String, URI> codebaseAliases() {
     return getFabILOptions().codebaseAliases();
+  }
+
+  @Override
+  public fabric.worker.Store destinationStore() {
+    // Worker must be running!
+    if (!Worker.isInitialized())
+      throw new InternalCompilerError("Worker is not initialized.");
+
+    String storeName = getFabILOptions().destinationStore();
+
+    if (storeName == null)
+      return Worker.getWorker().getLocalStore();
+    return Worker.getWorker().getStore(storeName);
   }
 }

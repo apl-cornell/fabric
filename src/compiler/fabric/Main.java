@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +35,7 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.QuotedStringTokenizer;
 import polyglot.util.StdErrorQueue;
 import fabric.common.SysUtil;
+import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.worker.AbortException;
 import fabric.worker.Worker;
@@ -66,7 +68,8 @@ public class Main extends polyglot.main.Main {
     args.add("-mergestrings");
     args.add("-simpleoutput");
     /* print time to complete Fabric and FabIL passes */
-    args.add("-report");    args.add("-profile=1");
+    args.add("-report");
+    args.add("-profile=1");
 
     if (worker.sigcp != null) {
       args.add("-sigcp");
@@ -99,25 +102,24 @@ public class Main extends polyglot.main.Main {
         String baseFileName = fname.substring(0, e);
         String baseClassName =
             baseFileName.substring(output_directory.getPath().length() + 1);
-        baseClassName = baseClassName.replace(File.separator,".");
+        baseClassName = baseClassName.replace(File.separator, ".");
         // load base class file
-        File classFile =
-            new File(baseFileName + ".class");
+        File classFile = new File(baseFileName + ".class");
         if (classFile.exists()) {
           if (Report.should_report(Topics.mobile, 2))
             Report.report(1, "Inserting bytecode for " + classFile);
-          bytecodeMap.put(baseClassName,getBytecode(classFile));
+          bytecodeMap.put(baseClassName, getBytecode(classFile));
         }
 
         // load member classes
         for (int i = 0; i < suffixes.length; i++) {
           String fileName = baseFileName + suffixes[i];
-          classFile = new File(fileName+".class");
+          classFile = new File(fileName + ".class");
           if (classFile.exists()) {
             if (Report.should_report(Topics.mobile, 2))
               Report.report(1, "Inserting bytecode for " + classFile);
-            bytecodeMap.put(baseClassName + suffixes[i],
-                getBytecode(classFile));
+            bytecodeMap
+                .put(baseClassName + suffixes[i], getBytecode(classFile));
           }
         }
       }
@@ -128,7 +130,8 @@ public class Main extends polyglot.main.Main {
   }
 
   @SuppressWarnings("unchecked")
-  public static void compile_from_shell(List<String> args, InputStream in, PrintStream out) {
+  public static void compile_from_shell(List<String> args, InputStream in,
+      PrintStream out) {
     InputStream save_in = System.in;
     PrintStream save_out = System.out;
     PrintStream save_err = System.err;
@@ -137,9 +140,9 @@ public class Main extends polyglot.main.Main {
     System.setOut(out);
     System.setErr(out);
 
-    List<String> new_args = new ArrayList(args.size()+2);
+    List<String> new_args = new ArrayList(args.size() + 2);
     Worker worker = Worker.getWorker();
-    //Set code cache first to allow it to be overridden
+    // Set code cache first to allow it to be overridden
     if (worker.code_cache != null) {
       new_args.add("-d");
       new_args.add(worker.code_cache);
@@ -150,7 +153,7 @@ public class Main extends polyglot.main.Main {
     fabric.ExtensionInfo extInfo = new fabric.ExtensionInfo();
 
     try {
-      main.start(new_args.toArray(new String[]{}), extInfo);
+      main.start(new_args.toArray(new String[] {}), extInfo);
 
     } catch (TerminationException e) {
       System.err.println(e.getMessage());
@@ -160,7 +163,7 @@ public class Main extends polyglot.main.Main {
       System.setErr(save_err);
     }
   }
-  
+
   public static void main(String[] args) {
     polyglot.main.Main main = new Main();
     fabric.ExtensionInfo extInfo = new fabric.ExtensionInfo();
@@ -175,32 +178,36 @@ public class Main extends polyglot.main.Main {
       }
     }
   }
-  
+
   @Override
   public void start(String[] args, ExtensionInfo _extInfo) {
     fabric.ExtensionInfo extInfo = (fabric.ExtensionInfo) _extInfo;
-    super.start(args,extInfo);
-    
-    if(extInfo.getFabricOptions().codebaseFilename() != null) {
+    super.start(args, extInfo);
+
+    if (extInfo.getFabricOptions().codebaseFilename() != null) {
       FabricOptions opt = extInfo.getFabricOptions();
       File f = new File(opt.codebaseFilename());
-      if(!f.isAbsolute())
-        f = new File(opt.output_directory, f.getPath());      
+      if (!f.isAbsolute()) f = new File(opt.output_directory, f.getPath());
       FileWriter fw;
       try {
         fw = new FileWriter(f);
-        //XXX: fw.write(SysUtil.oid(extInfo.codebase()));
+        URI localNS = extInfo.localNamespace();
+        Codebase cb = extInfo.typeSystem().codebaseFromNS(localNS);
+        URI oid = SysUtil.oid(cb);
+        fw.write("<" + oid + ">");
         fw.close();
       } catch (fabric.common.exceptions.InternalError e) {
         throw new TerminationException("Error writing codebase reference to "
-            + extInfo.getFabricOptions().codebaseFilename() + ": " + e.getMessage(), 1);
+            + extInfo.getFabricOptions().codebaseFilename() + ": "
+            + e.getMessage(), 1);
       } catch (IOException e) {
         throw new TerminationException("Error writing codebase reference to "
-            + extInfo.getFabricOptions().codebaseFilename() + ": " + e.getMessage(), 1);
+            + extInfo.getFabricOptions().codebaseFilename() + ": "
+            + e.getMessage(), 1);
       }
     }
   }
-  
+
   @Override
   public void start(String[] argv, ExtensionInfo ext, ErrorQueue eq)
       throws TerminationException {
@@ -226,7 +233,7 @@ public class Main extends polyglot.main.Main {
       throw new TerminationException(ue.exitCode());
     }
 
-    if (options.runWorker)
+    if (options.needWorker())
       compileInWorker(options, source, ext, eq);
     else start(options, source, ext, eq);
 
@@ -269,9 +276,9 @@ public class Main extends polyglot.main.Main {
       final ErrorQueue q = eq;
 
       try {
-        if (!Worker.isInitialized()) 
+        if (!Worker.isInitialized())
           Worker.initialize(o.workerName());
-        else if(!Worker.getWorker().config.name.equals(o.workerName()))
+        else if (!Worker.getWorker().config.name.equals(o.workerName()))
           throw new InternalCompilerError("Can not compile as "
               + o.workerName() + " from " + Worker.getWorker().config.name);
       } catch (fabric.common.exceptions.UsageError x) {
@@ -353,7 +360,8 @@ public class Main extends polyglot.main.Main {
 
     return out.toByteArray();
   }
-  ///HACK :: copied from superclass
+
+  // /HACK :: copied from superclass
   @Override
   protected boolean invokePostCompiler(Options options, Compiler compiler,
       ErrorQueue eq) {
@@ -368,9 +376,9 @@ public class Main extends polyglot.main.Main {
       }
       if (options.generate_debugging_info) options_size++;
       String[] javacCmd =
-          new String[pc_size + options_size + compiler.outputFiles().size() -1];
+          new String[pc_size + options_size + compiler.outputFiles().size() - 1];
       int j = 0;
-      //skip "javac"
+      // skip "javac"
       st.nextToken();
       for (int i = 1; i < pc_size; i++) {
         javacCmd[j++] = st.nextToken();
@@ -403,7 +411,7 @@ public class Main extends polyglot.main.Main {
         }
 
         int exitVal = com.sun.tools.javac.Main.compile(javacCmd);
-        
+
         if (exitVal > 0) {
           eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, "Non-zero return code: "
               + exitVal);

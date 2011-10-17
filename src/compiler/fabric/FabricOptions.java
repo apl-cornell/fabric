@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -20,6 +21,8 @@ import polyglot.main.Main.TerminationException;
 import polyglot.util.InternalCompilerError;
 import fabil.FabILOptions;
 import fabil.FabILOptions_c;
+import fabric.common.exceptions.InternalError;
+import fabric.worker.Worker;
 
 public class FabricOptions extends JifOptions implements FabILOptions {
 
@@ -70,10 +73,14 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   protected Map<String, URI> codebase_aliases;
 
   /**
-   * Whether to run a Fabric worker so that Fabric-hosted source code can be
-   * compiled.
+   * Whether to publish source to Fabric.
    */  
-  protected boolean runWorker;
+  protected boolean publish;
+
+  /**
+   * Whether to run a Fabric worker.
+   */  
+  protected boolean needWorker;
   
   @Override
   public boolean dumpDependencies() {
@@ -104,6 +111,8 @@ public class FabricOptions extends JifOptions implements FabILOptions {
         "publish source to a Fabric store (all source on the commandline and" +
         " loaded through the sourcepath will be published)");
     usageForFlag(out, "-codebase-alias <name>=<URI>", "associate a codebase with an alias in source files");
+    usageForFlag(out, "-publish",
+        "Publish source to Fabric.");
     usageForFlag(out, "-publish-only",
         "Verify and publish source, do not compile to bytecode.");
     usageForFlag(out, "-codebase-output-file <filename>",
@@ -116,7 +125,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     out.println("Fabric references to codebases objects in the following form:");
     usageForFlag(out, "<path>", "\"<fab://store/codebase_onum>:/path/to/local/dir/:...\"");
   }
-
+  
   @SuppressWarnings("rawtypes")
   @Override
   protected int parseCommand(String[] args, int index, Set source)
@@ -131,8 +140,12 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       index++;
       delegate.addSigcp(args[index++]);
       return index;
+    } else if (args[index].equals("-publish")) {
+      index++;
+      publish = true;
     } else if (args[index].equals("-publish-only")) {
       index++;
+      publish = true;
       post_compiler = null;
       publishOnly = true;
     } else if (args[index].equals("-codebase-output-file")) {
@@ -222,7 +235,11 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   public boolean platformMode() {
     return delegate.platformMode();
   }
-  
+  @Override
+  public boolean needWorker() {
+    return delegate.needWorker() || needWorker;
+  }
+
   /**
    * Process a path string of the form <URI>:/localdir/:... into URIs and add to a list
    * @param uris the list to add the URIs to
@@ -250,7 +267,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
         uris.add(u);
 
         if(u.getScheme().equals("fab"))
-          this.runWorker = true;
+          this.needWorker = true;
         idx = end + 1;
         
       } else if (path.charAt(idx) == File.pathSeparatorChar) {
@@ -279,5 +296,14 @@ public class FabricOptions extends JifOptions implements FabILOptions {
         }
       }
     }
+  }
+
+  /**
+   * Should source be published to Fabric? Always false in signature or
+   * platform modes.
+   */
+  public boolean publish() {
+    //Never publish in signature or platform mode
+    return publish & !signatureMode() && !platformMode();
   }
 }

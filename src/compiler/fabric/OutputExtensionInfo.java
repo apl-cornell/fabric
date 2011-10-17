@@ -47,18 +47,6 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
     this.fabext = fabext;
   }
 
-  public fabric.worker.Store destinationStore() {
-    // Worker must be running!
-    if (!Worker.isInitialized())
-      throw new InternalCompilerError("Worker is not initialized.");
-
-    FabILOptions opt = (FabILOptions) getOptions();
-
-    if (opt.destinationStore() == null)
-      return Worker.getWorker().getLocalStore();
-    return Worker.getWorker().getStore(opt.destinationStore());
-  }
-
   protected static class OutputScheduler extends FabILScheduler {
     protected Job objectJob;
 
@@ -120,7 +108,7 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
     }
   }
 
-  //Override signature path so that we use the filsigcp 
+  // Override signature path so that we use the filsigcp
   // path during the FabIL compilation phase
   @Override
   public List<URI> signaturepath() {

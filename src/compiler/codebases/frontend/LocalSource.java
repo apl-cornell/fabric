@@ -5,6 +5,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
 
+import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
+import fabric.worker.Worker;
+
 import jif.parse.UTF8FileSource;
 import polyglot.frontend.Source;
 import polyglot.util.InternalCompilerError;
@@ -12,14 +16,14 @@ import polyglot.util.InternalCompilerError;
 public class LocalSource extends UTF8FileSource implements CodebaseSource {
   protected URI namespace;
   protected boolean publish;
-  
+
   public LocalSource(File f, boolean userSpecified, URI namespace)
       throws IOException {
     this(f, userSpecified, namespace, true);
   }
-  
-  public LocalSource(File f, boolean userSpecified, URI namespace, boolean publish)
-      throws IOException {
+
+  public LocalSource(File f, boolean userSpecified, URI namespace,
+      boolean publish) throws IOException {
     super(f, userSpecified);
     // assert f.getPath().startsWith(namespace.getPath());
     this.namespace = namespace;
@@ -47,6 +51,11 @@ public class LocalSource extends UTF8FileSource implements CodebaseSource {
   }
 
   @Override
+  public void setPublish(boolean pub) {
+    this.publish = pub;
+  }
+
+  @Override
   public Source derivedSource(String name) {
     try {
       // Create new path
@@ -66,5 +75,10 @@ public class LocalSource extends UTF8FileSource implements CodebaseSource {
     } catch (IOException e) {
       throw new InternalCompilerError(e);
     }
+  }
+
+  @Override
+  public Label label() {
+    return LabelUtil._Impl.noComponents();
   }
 }

@@ -119,7 +119,7 @@
   		<param name="dest.store" value="${airlineA.store}"/>
   		<param name="codebase.dir" value="${airlineA.src}"/>
   		<param name="target.codebasefile" value="${airlineA.codebase.file}"/>
-  		<param name="publish.args" value="-addCodebase ${broker.codebase.file}"/>
+  		<param name="publish.args" value="-classpath @${broker.codebase.file}"/>
     </antcall>
     <uptodate property="airlineA.up-to-date" targetfile="${airlineA.codebase.file}">
       <srcfiles dir="${airlineA.src}" includes="**/*.fab" />
@@ -134,7 +134,7 @@
   		<param name="dest.store" value="${airlineB.store}"/>
   		<param name="codebase.dir" value="${airlineB.src}"/>
   		<param name="target.codebasefile" value="${airlineB.codebase.file}"/>
-  		<param name="publish.args" value="-addCodebase ${broker.codebase.file}"/>
+  		<param name="publish.args" value="-classpath @${broker.codebase.file}"/>
     </antcall>
     <uptodate property="airlineB.up-to-date" targetfile="${airlineB.codebase.file}">
       <srcfiles dir="${airlineB.src}" includes="**/*.fab" />
@@ -149,7 +149,7 @@
   		<param name="dest.store" value="${user.store}"/>
   		<param name="codebase.dir" value="${user.src}"/>
   		<param name="target.codebasefile" value="${user.codebase.file}"/>
-  		<param name="publish.args" value="-addCodebase ${broker.codebase.file}"/>
+  		<param name="publish.args" value="-classpath @${broker.codebase.file}"/>
     </antcall>
     <uptodate property="user.up-to-date" targetfile="${user.codebase.file}">
       <srcfiles dir="${user.src}" includes="**/*.fab" />

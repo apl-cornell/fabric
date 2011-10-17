@@ -113,7 +113,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
     if(opts.createSkeleton())
       return scheduler().FabILSkeletonGenerated(job);
     else if(opts.publishOnly()) {
-      return scheduler().ConsistentNamespace();
+       return scheduler().ConsistentNamespace();
     } else
       return scheduler().FabricToFabilRewritten(job);
   }
@@ -224,9 +224,16 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
   @Override
   //TODO: support multiple local namespaces
   public LocalSource createFileSource(File f, boolean user) throws IOException {
-    return new LocalSource(f, user, localNamespace());
+    LocalSource src = new LocalSource(f, user, localNamespace());
+    //Publish all local source unless we're in platform mode.
+    //TODO: generalize and make this better.  We should only publish 
+    // source in the sourcepath. Plus, the user may be re-publishing remote 
+    // source with a new codebase.
+    src.setPublish(getFabricOptions().publish());
+    return src;
   }
   
+  @Override
   public Store destinationStore() {
     return filext.destinationStore();
   }

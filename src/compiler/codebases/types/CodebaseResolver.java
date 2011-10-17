@@ -6,6 +6,7 @@ import polyglot.types.SemanticException;
 
 import codebases.frontend.ExtensionInfo;
 import fabil.SimpleResolver;
+import fabric.common.NSUtil;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
@@ -19,6 +20,7 @@ public class CodebaseResolver extends SimpleResolver implements
     this.load_raw = false;
     this.load_enc = true;
     this.load_src = true;
+    this.codebase = NSUtil.fetch_codebase(namespace);
   }
 
   @Override

@@ -15,6 +15,7 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
 import fabric.common.SysUtil;
 import fabric.lang.FClass;
+import fabric.lang.security.Label;
 
 // XXX: this class should actually extend jif.parse.UTF8FileSource
 public class RemoteSource extends UTF8FileSource implements CodebaseSource {
@@ -139,6 +140,17 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
     } catch (IOException e) {
       throw new InternalCompilerError(e);
     }
+  }
+
+  @Override
+  public Label label() {
+    return fcls.get$label();
+  }
+
+  @Override
+  public void setPublish(boolean pub) {
+    //We're not supporting this yet.
+    throw new InternalCompilerError("Tried to republish remote source!");
   }
 
 }

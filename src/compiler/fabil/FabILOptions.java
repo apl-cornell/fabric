@@ -29,6 +29,8 @@ public interface FabILOptions {
 
   File outputDirectory();
 
-  boolean platformMode();  
+  boolean platformMode();
+
+  boolean needWorker();  
   
 }

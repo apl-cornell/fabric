@@ -84,6 +84,7 @@ import fabric.translate.FabricMeetLabelToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
 import fabric.translate.ProviderLabelToFabilExpr_c;
 import fabric.worker.Worker;
+import fabric.worker.Store;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
   @SuppressWarnings("unchecked")
@@ -100,7 +101,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
 
     private fabric.ExtensionInfo extInfo;
     private final FabricDefaultSignature ds;
-    
+
+    /**
+     * The codebase to be published to Fabric.
+     */
+    protected Codebase new_codebase = null; 
+
     public FabricTypeSystem_c(TypeSystem jlts) {
       super(jlts);
       this.ds = new FabricFixedSignature(this);
@@ -731,25 +737,33 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
 
   @Override
   public Codebase codebaseFromNS(URI namespace) {
-    //Worker must be running!
-    if(!Worker.isInitialized())
+    // Worker must be running!
+    if (!Worker.isInitialized())
       throw new InternalCompilerError("Worker is not initialized.");
-    
-    if(extInfo.localNamespace().equals(namespace)) {
-      PathResolver nr = (PathResolver) namespaceResolver(namespace);
-      NodePrincipal w = Worker.getWorker().getPrincipal();
-      NodePrincipal st = extInfo.destinationStore().getPrincipal();
-      fabric.lang.security.Label acc = LabelUtil._Impl.readerPolicyLabel(w, st);
-      //XXX: what should the label of a new codebase be?  The join of the integrity of the classpath?
-      //        or the highest integrity the worker can claim?
-      fabric.util.HashMap classes = new fabric.util.HashMap._Impl(extInfo.destinationStore(), nr.label(), acc);
-      return new Codebase._Impl(extInfo.destinationStore(), nr.label(), acc, classes);
-    }
-    else if(extInfo.platformNamespace().equals(namespace)
-          || !namespace.getScheme().equals("fab")) {
+
+    if (extInfo.localNamespace().equals(namespace)) {
+      if (new_codebase == null) {
+        PathResolver nr = (PathResolver) namespaceResolver(namespace);
+        Store dest = extInfo.destinationStore();
+        NodePrincipal w = Worker.getWorker().getPrincipal();
+        NodePrincipal st = dest.getPrincipal();
+        fabric.lang.security.Label acc =
+            LabelUtil._Impl.readerPolicyLabel(dest, w, st);
+        // XXX: what should the label of a new codebase be? The join of the
+        // integrity of the classpath?
+        // or the highest integrity the worker can claim?
+        fabric.util.HashMap classes =
+            new fabric.util.HashMap._Impl(extInfo.destinationStore(),
+                nr.label(), acc);
+        new_codebase =
+            (Codebase) new Codebase._Impl(extInfo.destinationStore(),
+                nr.label(), acc, classes).$getProxy();
+      }
+      return new_codebase;
+    } else if (extInfo.platformNamespace().equals(namespace)
+        || !namespace.getScheme().equals("fab")) {
       throw new InternalCompilerError("Cannot get codebase for " + namespace);
-    }
-    else {
+    } else {
       CodebaseResolver cr = (CodebaseResolver) namespaceResolver(namespace);
       return cr.codebase();
     }

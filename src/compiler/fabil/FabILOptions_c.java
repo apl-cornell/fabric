@@ -8,12 +8,14 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import fabric.common.exceptions.InternalError;
 import fabric.worker.Worker;
 
 import polyglot.frontend.ExtensionInfo;
@@ -59,7 +61,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    * Whether to run a Fabric worker so that Fabric-hosted source code can be
    * compiled.
    */  
-  protected boolean runWorker;
+  protected boolean needWorker;
   
   /**
    * The name of the store for writing generated codebase and classes.
@@ -124,8 +126,9 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     this.codebase_aliases = new LinkedHashMap<String, URI>();
 
     this.platform_mode = false;
-    this.runWorker = false;
+    this.needWorker = false;
   }
+  
   @SuppressWarnings("rawtypes")
   @Override
   public int parseCommand(String[] args, int index, Set source)
@@ -175,18 +178,18 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
 
     else if (args[index].equals("-worker")) {
       index++;
-      this.runWorker = true;
+      this.needWorker = true;
       this.workerName = args[index++];
       return index;
     } else if (args[index].equals("-deststore")) {
       index++;
-      this.runWorker = true;
+      this.needWorker = true;
       this.destinationStore = args[index++];
       return index;
     } else if (args[index].equals("-codebase-alias")
         || args[index].equals("-cb-alias")) {
       index++;
-      this.runWorker = true;
+      this.needWorker = true;
       String arg = args[index++];
       if (arg.startsWith("@")) {
         try {
@@ -323,6 +326,11 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     return output_directory;
   }
   
+  @Override
+  public boolean needWorker() {
+    return needWorker;
+  }
+
   private List<URI> processPathString(String path) {
     List<URI> uris = new ArrayList<URI>();
     processPathString(uris, path);
@@ -355,7 +363,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
         uris.add(u);
 
         if(u.getScheme().equals("fab"))
-          this.runWorker = true;
+          this.needWorker = true;
         idx = end + 1;
         
       } else if (path.charAt(idx) == File.pathSeparatorChar) {

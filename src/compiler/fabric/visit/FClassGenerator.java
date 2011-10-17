@@ -18,6 +18,7 @@ import polyglot.frontend.FileSource;
 import polyglot.frontend.Job;
 import polyglot.main.Report;
 import polyglot.types.*;
+import polyglot.util.InternalCompilerError;
 import polyglot.visit.ErrorHandlingVisitor;
 import polyglot.visit.NodeVisitor;
 import fabric.ExtensionInfo;
@@ -26,6 +27,7 @@ import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
 import fabric.types.FabricParsedClassType;
 import fabric.types.FabricSubstType;
 import fabric.types.FabricTypeSystem;
@@ -68,58 +70,60 @@ public class FClassGenerator extends ErrorHandlingVisitor {
 
     fabric.ExtensionInfo fabext = (ExtensionInfo) job.extensionInfo();
 
-//    if (n instanceof Typed) {
-//      Type t = ((Typed) n).type();
-//      if (t != null && t.isClass()) {
-//        dependencies.add(t.toClass());
-//      }
-//    } else 
+    // if (n instanceof Typed) {
+    // Type t = ((Typed) n).type();
+    // if (t != null && t.isClass()) {
+    // dependencies.add(t.toClass());
+    // }
+    // } else
     if (n instanceof JifClassDecl) {
       JifClassDecl jcd = (JifClassDecl) n;
       ParsedClassType pct = jcd.type();
       FabricTypeSystem fts = (FabricTypeSystem) ts;
       CodebaseSource src = (CodebaseSource) pct.fromSource();
 
-      if (src.shouldPublish()) {
-        Codebase codebase = fts.codebaseFromNS(src.namespace());
+      if (!src.shouldPublish())
+        throw new InternalCompilerError(
+            "Running FClassGenerator on unpublished source!");
 
-        // create a new FClass
-//        String[] deps = new String[fcg.dependencies.size()];
-//        int i = 0;
-//        for (Named dep : fcg.dependencies) {
-//          if (dep instanceof FabricSubstType)
-//            dep = (Named) ((FabricSubstType) dep).base();
-//          deps[i++] = dep.fullName();
-//        }
+      Codebase codebase = fts.codebaseFromNS(src.namespace());
 
-        Store store = fabext.destinationStore();
-        // TODO : Compute label:
-        //
-        Label update_lbl = null;//fabext.destinationLabel();
-        Label access_lbl = null;//fabext.destinationLabel();
+      // create a new FClass
+      // String[] deps = new String[fcg.dependencies.size()];
+      // int i = 0;
+      // for (Named dep : fcg.dependencies) {
+      // if (dep instanceof FabricSubstType)
+      // dep = (Named) ((FabricSubstType) dep).base();
+      // deps[i++] = dep.fullName();
+      // }
 
-        String className = pct.fullName();
+      Store store = fabext.destinationStore();
+      Label update_lbl = src.label();
+      // Re-use for access label. In general the store may allow
+      // a more restricted access label, but we can only use the provider
+      // label
+      // to statically figure out when we can fetch from the store vs.
+      // using a replica.
+      Label access_lbl = src.label();
+      String className = pct.fullName();
 
-        try {
-          FClass fcls =
-              (FClass) new FClass._Impl(store, update_lbl, access_lbl,
-                  codebase, className, toSourceString(src), null, null)
-                  .$getProxy();
-          if (Report.should_report(Topics.mobile, 3)) {
-            Report.report(3, "Inserting " + className + " into codebase "
-                + SysUtil.oid(codebase));
-          }
-
-          codebase.insertClass(className, fcls);
-//          // XXX: TODO: something better
-//          if (pct.flags().isInterface()
-//              && fabts.isSubtype(pct, fabts.FObject()))
-//            codebase.insertClass(className + "_JIF_IMPL", fcls);
-        } catch (IOException e) {
-          throw new SemanticException("Error creating Fabric class for class "
-              + className + " in file:" + src + "Cause:" + e);
+      try {
+        FClass fcls =
+            (FClass) new FClass._Impl(store, update_lbl, access_lbl, codebase,
+                className, toSourceString(src), null, null).$getProxy();
+        if (Report.should_report(Topics.mobile, 3)) {
+          Report.report(3, "Inserting " + className + " into codebase "
+              + SysUtil.oid(codebase));
         }
 
+        codebase.insertClass(className, fcls);
+        // // XXX: TODO: something better
+        // if (pct.flags().isInterface()
+        // && fabts.isSubtype(pct, fabts.FObject()))
+        // codebase.insertClass(className + "_JIF_IMPL", fcls);
+      } catch (IOException e) {
+        throw new SemanticException("Error creating Fabric class for class "
+            + className + " in file:" + src + "Cause:" + e);
       }
     }
     // if(src instanceof LocalSource) {
@@ -202,13 +206,6 @@ public class FClassGenerator extends ErrorHandlingVisitor {
     // }
     return n;
   }
-
-//  private Set<String> toClassNames(Set<Named> deps) {
-//    Set<String> names = new HashSet<String>();
-//    for (Named n : deps)
-//      if (!SysUtil.isPlatformType(n)) names.add(n.fullName());
-//    return names;
-//  }
 
   public static String toSourceString(CodebaseSource src) throws IOException {
     StringBuilder result = new StringBuilder();
