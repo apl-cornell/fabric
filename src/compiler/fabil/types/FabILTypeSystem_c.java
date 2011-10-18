@@ -5,12 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import fabil.FabILOptions;
-import fabil.frontend.CodebaseSource;
-import fabric.common.SysUtil;
-import fabric.lang.Codebase;
-import fabric.lang.FClass;
-
 import polyglot.ast.TypeNode;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
@@ -18,6 +12,11 @@ import polyglot.types.*;
 import polyglot.types.Package;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
+import fabil.FabILOptions;
+import fabil.frontend.CodebaseSource;
+import fabric.common.SysUtil;
+import fabric.lang.Codebase;
+import fabric.lang.FClass;
 
 public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
@@ -137,6 +136,13 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public Context createContext() {
     return new FabILContext_c(this);
+  }
+  
+  @Override
+  public ClassFileLazyClassInitializer classFileLazyClassInitializer(
+      polyglot.types.reflect.ClassFile clazz) {
+    return new ClassFileLazyClassInitializer((fabil.types.ClassFile) clazz,
+        this);
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })

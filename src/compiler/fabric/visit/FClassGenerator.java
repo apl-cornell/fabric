@@ -15,6 +15,7 @@ import polyglot.main.Report;
 import polyglot.types.*;
 import polyglot.visit.ErrorHandlingVisitor;
 import polyglot.visit.NodeVisitor;
+import fabil.visit.ClassHashGenerator;
 import fabric.ExtensionInfo;
 import fabric.Topics;
 import fabric.common.SysUtil;
@@ -92,8 +93,9 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         
         FClass fcls;
         try {
-          fcls = (FClass)new FClass._Impl(
-              store, lbl, lbl, className, null, toSourceString(loc_src)).$getProxy();
+          fcls =
+              (FClass) new FClass._Impl(store, lbl, lbl, className, null,
+                  ClassHashGenerator.toSourceString(loc_src)).$getProxy();
         } catch (IOException e) {
           throw new SemanticException(
               "Error creating Fabric class for class " + className +  " in file:" + loc_src + "Cause:" + e);
@@ -169,24 +171,5 @@ public class FClassGenerator extends ErrorHandlingVisitor {
       if(!SysUtil.isPlatformType(n))
         names.add(n.fullName());
     return names;
-  }
-
-  public static String toSourceString(FileSource src) throws IOException {
-    StringBuilder result = new StringBuilder();
-    BufferedReader reader = null;
-    try {
-        reader = new BufferedReader(src.open());
-        char[] buf = new char[1024];
-        int r = 0;
-        while ((r = reader.read(buf)) != -1)
-            result.append(buf, 0, r);
-    }
-    finally {
-      if(reader != null)
-        reader.close();
-      else
-        src.close();
-    }
-    return result.toString();
   }
 }

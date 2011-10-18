@@ -23,6 +23,7 @@ import polyglot.types.SemanticException;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import fabil.frontend.CodebaseSourceClassResolver;
+import fabil.types.ClassFile;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
@@ -125,6 +126,11 @@ public class ExtensionInfo extends jif.ExtensionInfo {
     return new FabricScheduler(this, this.filext);
   }
   
+  @Override
+  public ClassFile createClassFile(File classFileSource, byte[] code) {
+      return new ClassFile(classFileSource, code, this);
+  }
+  
   /* Overridden typed accessors ***********************************************/
   
   @Override
@@ -171,6 +177,7 @@ public class ExtensionInfo extends jif.ExtensionInfo {
   public SourceLoader sourceLoader() {
     if (source_loader == null) {
       URI file = URI.create("file:///");
+      @SuppressWarnings("unchecked")
       Collection<File> sp = getOptions().source_path;
       Collection<URI> cbp = getFabricOptions().codebasePath();        
       Collection<URI> loadpath = new LinkedList<URI>();

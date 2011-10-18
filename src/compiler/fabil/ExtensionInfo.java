@@ -6,11 +6,7 @@ import java.io.Reader;
 import java.util.Date;
 
 import polyglot.ast.NodeFactory;
-import polyglot.frontend.CupParser;
-import polyglot.frontend.FileSource;
-import polyglot.frontend.Parser;
-import polyglot.frontend.Scheduler;
-import polyglot.frontend.TargetFactory;
+import polyglot.frontend.*;
 import polyglot.lex.Lexer;
 import polyglot.main.Options;
 import polyglot.types.LoadedClassResolver;
@@ -18,13 +14,10 @@ import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
 import fabil.ast.FabILNodeFactory;
 import fabil.ast.FabILNodeFactory_c;
-import fabil.frontend.CodebaseSourceClassResolver;
-import fabil.frontend.CodebaseTargetFactory;
-import fabil.frontend.FabILScheduler;
-import fabil.frontend.LocalSource;
-import fabil.frontend.RemoteSource_c;
+import fabil.frontend.*;
 import fabil.parse.Grm;
 import fabil.parse.Lexer_c;
+import fabil.types.ClassFile;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILTypeSystem_c;
 import fabric.lang.Codebase;
@@ -147,11 +140,6 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
                                    getOptions().ignore_mod_times);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.frontend.ParserlessJLExtensionInfo#version()
-   */
   @Override
   public Version version() {
     return new Version();
@@ -165,6 +153,11 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
     return codebase;
   }
   
+  @Override
+  public ClassFile createClassFile(File classFileSource, byte[] code) {
+      return new ClassFile(classFileSource, code, this);
+  }
+
   @Override
   public FileSource createFileSource(File f, boolean user) throws IOException {
     return new LocalSource(f, user, codebase());
