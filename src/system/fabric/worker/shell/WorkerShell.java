@@ -258,7 +258,7 @@ public class WorkerShell {
       while (true) {
         Logging.TIMING_LOGGER.log(Level.INFO, "waiting for command");
         commandLine = commandSource.getNextCommand(commandLine);
-        Logging.TIMING_LOGGER.log(Level.INFO, "%s", commandLine);
+        Logging.TIMING_LOGGER.log(Level.INFO, "{0}", commandLine);
 
         if (commandLine == null) return;
 

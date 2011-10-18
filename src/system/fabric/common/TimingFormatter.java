@@ -1,5 +1,6 @@
 package fabric.common;
 
+import java.text.MessageFormat;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
@@ -26,7 +27,7 @@ public final class TimingFormatter extends Formatter {
     result.append(", thread ");
     result.append(record.getThreadID());
     result.append(", ");
-    result.append(String.format(record.getMessage(), record.getParameters()));
+    result.append(MessageFormat.format(record.getMessage(), record.getParameters()));
     result.append('\n');
     
     return result.toString();

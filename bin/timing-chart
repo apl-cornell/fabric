@@ -30,9 +30,11 @@ class Timespan(object):
 	def min_time(self):
 		return min([c.min_time() for c in self.children.values()])
 
-	def fix_time(self, begin, end):
+	def all_events(self):
+		result = []
 		for i in self.children.values():
-			i.fix_time(begin,end)
+			result.extend(i.all_events())
+		return result
 
 	def add_event(self, event):
 		index = self.index(event)
@@ -51,6 +53,13 @@ class Diagram(Timespan):
 	def index(self, event):
 		return event.process
 
+	def normalize(self):
+		min_time = self.min_time()
+		for e in self.all_events():
+			e.time -= min_time
+		self.total_time = self.max_time()
+
+
 class Process(Timespan):
 	def create_child(self):
 		return Thread()
@@ -60,6 +69,7 @@ class Process(Timespan):
 
 class Thread(Timespan):
 	def __init__(self):
+		Timespan.__init__(self)
 		self.children = list()
 
 	def max_time(self):
@@ -75,6 +85,9 @@ class Thread(Timespan):
 	def add_event(self, event):
 		self.children.append(event)
 
+	def all_events(self):
+		return self.children
+
 class Event:
 	def __init__(self, process, thread, time, label):
 		self.process = process
@@ -86,8 +99,10 @@ class Event:
 def to_pgf(diagram):
 	print "\\documentclass[10pt]{article}"
 	print "\\usepackage{tikz}"
-	print "\\usepackage[paperwidth=20in,paperheight=6in,width=19in,height=5in]{geometry}"
+	print "\\usepackage[paperwidth=100in,paperheight=30in,width=95in,height=29in]{geometry}"
 	print "\\usetikzlibrary{matrix}"
+	print "\\usetikzlibrary{decorations}"
+	print "\\usetikzlibrary{decorations.pathreplacing}"
 	print "\\begin{document}"
 	print "\\begin{tikzpicture}"
 	print ""
@@ -101,24 +116,27 @@ def to_pgf(diagram):
 
 			print "\t% thread", tid
 
-			print "\t\\begin{scope}[xshift=2\\value{thread}in]"
-			print "\t\\draw [y=-5in] (0,0) -- (0,1);"
-			print "\t\\draw [y=-5in] (0.5,0) -- (0.5,1);"
+			print "\t\\begin{scope}[xshift=4\\value{thread}in]"
+			print "\t\\draw [y=-20in] (0,0) -- (0,1.1);"
+			print "\t\\draw [y=-20in] (0.5,0) -- (0.5,1.1);"
 			print ""
-
-			for event in thread.children:
-				print "\t\t\\draw [y=-5in] (0,%s) -- +(0.5,0);" % event.time
 
 			print "\t\\matrix [anchor=north west, matrix of nodes, every node/.style={anchor=base west,font=\scriptsize}] at (1,0) {"
 			print "\t\t\underline{%s --- %s} \\\\" % (pname, tid)
-			for event in thread.children:
-				print "\t\t\\verb|%s| \\\\" % event.label
+			for enum,event in enumerate(thread.children):
+				print "\t\t|(%s-%s-%i)| \\verb|%s| \\\\" % (pname,tid,enum,event.label)
 			print "\t};"
+
+			for enum,event in enumerate(thread.children):
+				print "\t\t\\draw [y=-20in] (0,%s) -- +(0.5,0) -- (%s-%s-%i.west);" % (float(event.time) / diagram.total_time, pname,tid,enum)
 
 			print "\t\\end{scope}"
 			print "\t\\addtocounter{thread}{1}"
 
 		print ""
+	print "% total time"
+	print "\\draw[y=-20in, decorate, decoration={brace,amplitude=1em}] (-1,1) -- node[sloped,above=1ex] {$%s$ ms} (-1,0);" % diagram.total_time
+	print ""
 
 
 	print "\\end{tikzpicture}"
@@ -135,7 +153,7 @@ if __name__ == '__main__':
 	for line in fileinput.input():
 		diagram.add_event(parse_event(line))
 
-	diagram.fix_time(diagram.min_time(), diagram.max_time())
+	diagram.normalize()
 
 	to_pgf(diagram)
 

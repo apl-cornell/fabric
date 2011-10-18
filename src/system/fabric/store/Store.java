@@ -1,6 +1,5 @@
 package fabric.store;
 
-import static fabric.common.Logging.STORE_REQUEST_LOGGER;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -34,6 +33,7 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 
+import static fabric.common.Logging.STORE_REQUEST_LOGGER;
 import static fabric.common.ONumConstants.STORE_PRINCIPAL;
 
 class Store extends MessageToStoreHandler {
