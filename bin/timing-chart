@@ -1,0 +1,164 @@
+#!/usr/bin/python
+
+# input: directory name
+# cat all of the files, draw a timeline with each thread drawn separately
+
+import sys
+import fileinput
+import re
+
+#
+# Diagram
+#   - Process
+#       - Thread
+#            - Event
+#            - Event
+#       - Thread
+#            ...
+#   - Process
+#       ...
+#
+
+
+class Timespan(object):
+	def __init__(self):
+		self.children = dict()
+
+	def max_time(self):
+		return max([c.max_time() for c in self.children.values()])
+
+	def min_time(self):
+		return min([c.min_time() for c in self.children.values()])
+
+	def all_events(self):
+		result = []
+		for i in self.children.values():
+			result.extend(i.all_events())
+		return result
+
+	def add_event(self, event):
+		index = self.index(event)
+		if not self.children.has_key(index):
+			child = self.create_child()
+			self.children[index] = child
+
+		self.children[index].add_event(event)
+
+
+
+class Diagram(Timespan):
+	def create_child(self):
+		return Process()
+
+	def index(self, event):
+		return event.process
+
+	def normalize(self):
+		min_time = self.min_time()
+		for e in self.all_events():
+			e.time -= min_time
+		self.total_time = self.max_time()
+
+
+class Process(Timespan):
+	def create_child(self):
+		return Thread()
+
+	def index(self, event):
+		return event.thread
+
+class Thread(Timespan):
+	def __init__(self):
+		Timespan.__init__(self)
+		self.children = list()
+
+	def max_time(self):
+		return max([event.time for event in self.children])
+
+	def min_time(self):
+		return min([event.time for event in self.children])
+
+	def fix_time(self,begin,end):
+		for e in self.children:
+			e.time = float(e.time - begin)/float(end - begin)
+
+	def add_event(self, event):
+		self.children.append(event)
+
+	def all_events(self):
+		return self.children
+
+class Event:
+	def __init__(self, process, thread, time, label):
+		self.process = process
+		self.thread  = thread
+		self.time    = long(time)
+		self.label   = label
+
+
+def to_pgf(diagram):
+	print "\\documentclass[10pt]{article}"
+	print "\\usepackage{tikz}"
+	print "\\usepackage[paperwidth=100in,paperheight=30in,width=95in,height=29in]{geometry}"
+	print "\\usetikzlibrary{matrix}"
+	print "\\usetikzlibrary{decorations}"
+	print "\\usetikzlibrary{decorations.pathreplacing}"
+	print "\\begin{document}"
+	print "\\begin{tikzpicture}"
+	print ""
+	print "\\newcounter{thread}"
+
+	for pname, process in diagram.children.iteritems():
+		print "% process:", pname
+		for tid, thread in process.children.iteritems():
+
+			thread.children.sort(lambda e1, e2: e1.time < e2.time)
+
+			print "\t% thread", tid
+
+			print "\t\\begin{scope}[xshift=4\\value{thread}in]"
+			print "\t\\draw [y=-20in] (0,0) -- (0,1.1);"
+			print "\t\\draw [y=-20in] (0.5,0) -- (0.5,1.1);"
+			print ""
+
+			print "\t\\matrix [anchor=north west, matrix of nodes, every node/.style={anchor=base west,font=\scriptsize}] at (1,0) {"
+			print "\t\t\underline{%s --- %s} \\\\" % (pname, tid)
+			for enum,event in enumerate(thread.children):
+				print "\t\t|(%s-%s-%i)| \\verb|%s| \\\\" % (pname,tid,enum,event.label)
+			print "\t};"
+
+			for enum,event in enumerate(thread.children):
+				print "\t\t\\draw [y=-20in] (0,%s) -- +(0.5,0) -- (%s-%s-%i.west);" % (float(event.time) / diagram.total_time, pname,tid,enum)
+
+			print "\t\\end{scope}"
+			print "\t\\addtocounter{thread}{1}"
+
+		print ""
+	print "% total time"
+	print "\\draw[y=-20in, decorate, decoration={brace,amplitude=1em}] (-1,1) -- node[sloped,above=1ex] {$%s$ ms} (-1,0);" % diagram.total_time
+	print ""
+
+
+	print "\\end{tikzpicture}"
+	print "\\end{document}"
+
+
+def parse_event(line):
+	m = re.match("(?P<time>.*), (?P<process>.*), thread (?P<thread>\\d*), (?P<label>.*)", line)
+	return Event(**m.groupdict())
+
+if __name__ == '__main__':
+	diagram = Diagram()
+
+	for line in fileinput.input():
+		diagram.add_event(parse_event(line))
+
+	diagram.normalize()
+
+	to_pgf(diagram)
+
+
+
+#
+# vim: syntax=python
+#

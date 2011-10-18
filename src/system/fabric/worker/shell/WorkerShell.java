@@ -2,7 +2,9 @@ package fabric.worker.shell;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.exceptions.InternalError;
 import fabric.worker.Worker;
 
@@ -251,29 +253,35 @@ public class WorkerShell {
   }
 
   public void run() {
-    List<String> commandLine = new ArrayList<String>();
-    while (true) {
-      commandLine = commandSource.getNextCommand(commandLine);
+    try {
+      List<String> commandLine = new ArrayList<String>();
+      while (true) {
+        Logging.TIMING_LOGGER.log(Level.INFO, "waiting for command");
+        commandLine = commandSource.getNextCommand(commandLine);
+        Logging.TIMING_LOGGER.log(Level.INFO, "{0}", commandLine);
 
-      if (commandLine == null) return;
+        if (commandLine == null) return;
 
-      if (commandLine.size() == 0) continue;
+        if (commandLine.size() == 0) continue;
 
-      String command = commandLine.get(0);
-      List<String> args = commandLine.subList(1, commandLine.size());
-      if (command.equals("exit")) return;
+        String command = commandLine.get(0);
+        List<String> args = commandLine.subList(1, commandLine.size());
+        if (command.equals("exit")) return;
 
-      CommandHandler handler = handlers.get(command);
-      if (handler == null) {
-        handler = defaultHandler;
-        args = commandLine;
+        CommandHandler handler = handlers.get(command);
+        if (handler == null) {
+          handler = defaultHandler;
+          args = commandLine;
+        }
+
+        try {
+          handler.handle(args);
+        } catch (HandlerException e) {
+          if (commandSource.reportError(e)) return;
+        }
       }
-
-      try {
-        handler.handle(args);
-      } catch (HandlerException e) {
-        if (commandSource.reportError(e)) return;
-      }
+    } finally {
+      Logging.TIMING_LOGGER.log(Level.INFO, "command line terminating");
     }
   }
 }
