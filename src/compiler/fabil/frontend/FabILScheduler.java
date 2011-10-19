@@ -14,10 +14,7 @@ import polyglot.frontend.Job;
 import polyglot.frontend.OutputPass;
 import polyglot.frontend.Pass;
 import polyglot.frontend.Scheduler;
-import polyglot.frontend.goals.CodeGenerated;
-import polyglot.frontend.goals.Goal;
-import polyglot.frontend.goals.Serialized;
-import polyglot.frontend.goals.VisitorGoal;
+import polyglot.frontend.goals.*;
 import polyglot.main.Report;
 import polyglot.main.Version;
 import polyglot.types.TypeSystem;
@@ -43,6 +40,7 @@ import fabil.visit.AbortRetryChecker;
 import fabil.visit.ArrayInitializerTypeFixer;
 import fabil.visit.AtomicMethodRewriter;
 import fabil.visit.AtomicRewriter;
+import fabil.visit.ClassHashGenerator;
 import fabil.visit.ClassReferencesCollector;
 import fabil.visit.CodebaseTranslator;
 import fabil.visit.InlineableWrapper;
@@ -56,6 +54,7 @@ import fabil.visit.ProxyRewriter;
 import fabil.visit.ReadWriteChecker;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.SignatureCleaner;
+import fabil.visit.SignatureHashGenerator;
 import fabil.visit.StaticInitializerCollector;
 import fabil.visit.StoreGetterRewriter;
 import fabil.visit.ThreadRewriter;
@@ -470,6 +469,34 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     
     return g;
   }
+  
+  public Goal ClassesHashed(final Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new ClassHashGenerator(job, extInfo)) {
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(RewriteProxies(job));
+        return l;
+      }
+    });
+    
+    return g;
+  }
+  
+  public Goal SignaturesHashed(final Job job) {
+    Goal g =
+        internGoal(new VisitorGoal(job,
+            new SignatureHashGenerator()) {
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+            List<Goal> l = new ArrayList<Goal>();
+            l.add(TypeChecked(job));
+            return l;
+          }
+        });
+    
+    return g;
+  }
 
   @Override
   public Goal Serialized(Job job) {
@@ -486,11 +513,14 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
           l.add(RewriteAtomic(job));
           l.add(RewriteRemoteCalls(job));
           l.add(Memoized(job));
+          l.add(ClassesHashed(job));
           l.add(InstrumentThreads(job));
           l.add(ClassReferencesCollected(job));
           if(((FabILOptions) extInfo.getOptions()).createSkeleton()) {
             l.add(CreateJavaSkeleton(job));
           }
+        } else {
+          l.add(SignaturesHashed(job));
         }
         return l;
       }

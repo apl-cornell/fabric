@@ -42,6 +42,7 @@ import codebases.types.NamespaceResolver;
 import codebases.types.NamespaceResolver_c;
 import fabil.FabILOptions;
 import fabil.SimpleResolver;
+import fabil.types.ClassFile;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
@@ -159,6 +160,11 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
   @Override
   protected Scheduler createScheduler() {
     return new FabricScheduler(this, this.filext);
+  }
+  
+  @Override
+  public ClassFile createClassFile(File classFileSource, byte[] code) {
+      return new ClassFile(classFileSource, code, this);
   }
   
   /* Overridden typed accessors ***********************************************/

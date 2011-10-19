@@ -9,7 +9,7 @@ import fabric.util.Iterator;
 
 /**
  * A codebase is a Fabric object that provides a mapping from fully qualified 
- * class names to Fabric FClass objects. 
+ * fabric class names to Fabric FClass objects. 
  * 
  * @author Lucas Waye <lrw48@cornell.edu>
  */
@@ -20,9 +20,13 @@ public class Codebase {
   /** All of the explicit codebases referred to in this codebase **/
   private Map/*String, Codebase*/ codebases;
 
+  /**
+   * @param  name
+   *    a fabric name
+   * @return
+   *    the associated FClass, or null if there is none
+   */
   FClass resolveClassName(String name) {
-    //XXX sloppy name mangling
-    name = name.replaceAll("$_Impl", "").replaceAll("$_Proxy", "");
     return (FClass)classes.get(name);
   }
   

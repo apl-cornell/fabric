@@ -1,38 +1,16 @@
 package fabric.common;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InvalidClassException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.lang.reflect.Constructor;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.ComparablePair;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.Label;
-import fabric.lang.security.NodePrincipal;
 import fabric.worker.LocalStore;
 import fabric.worker.Store;
-import fabric.worker.Worker;
 
 /**
  * <code>_Impl</code> objects are stored on stores in serialized form as
@@ -48,15 +26,12 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * <li>byte whether the update label pointer is an inter-store ref</li>
    * <li>short update label's store's name length (only present if inter-store)</li>
    * <li>byte[] update label's store's name data (only present if inter-store)</li>
+   * <li>long update label's onum</li>
    * <li>byte whether the access label pointer is an inter-store ref</li>
    * <li>short access label's store's name length (only present if inter-store)</li>
    * <li>byte[] access label's store's name data (only present if inter-store)</li>
-   * <li>long label's onum</li>
-   * <li>byte whether the class is a system class</li>
-   * <li>short class name length</li>
-   * <li>byte[] class name data</li>
-   * <li>short class hash length</li>
-   * <li>byte[] class hash data</li>
+   * <li>long access label's onum</li>
+   * <li>ClassRef object's class</li>
    * <li>int # ref types</li>
    * <li>int # intra-store refs</li>
    * <li>int serialized data length</li>
@@ -70,20 +45,20 @@ public final class SerializedObject implements FastSerializable, Serializable {
   private byte[] objectData;
 
   /**
-   * The name of this object's class. This is filled in lazily from the data in
-   * objectData when getClassName() is called.
+   * The ClassRef for this object's class. This is filled in lazily from the
+   * data in objectData when getClassRef() is called.
    */
-  private String className;
+  private ClassRef classRef;
 
   private static final RefTypeEnum[] refTypeEnums = RefTypeEnum.values();
 
   /**
-   * Creates a serialized representation of the given object. This should only
-   * be used by fabric.store.InProcessStore and for debugging (worker.debug.*).
+   * Creates a serialized representation of the given object.
    * 
    * @param obj
    *          The object to serialize.
-   * @deprecated
+   * @deprecated This should only be used by fabric.store.InProcessStore and for
+   *             debugging (worker.debug.*).
    */
   public SerializedObject(_Impl obj) {
     try {
@@ -110,7 +85,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @param remoteRef
    *          The name of the remote object being referred to.
    */
-  public SerializedObject(long onum, long updateLabel, long accessLabel, Pair<String, Long> remoteRef) {
+  public SerializedObject(long onum, long updateLabel, long accessLabel,
+      Pair<String, Long> remoteRef) {
     try {
       // Create a byte array containing the surrogate object's serialized data.
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -142,18 +118,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
       out.writeBoolean(false);
       out.writeLong(accessLabel);
 
-      // system class == true
-      out.writeBoolean(true);
-
-      // Class name.
-      byte[] className = Surrogate.class.getName().getBytes("UTF-8");
-      out.writeShort(className.length);
-      out.write(className);
-
-      // Class hash.
-      byte[] classHash = SysUtil.hash(Surrogate.class);
-      out.writeShort(classHash.length);
-      out.write(classHash);
+      // Class ref.
+      ClassRef.SURROGATE.write(out);
 
       // Number of ref types and intra-store refs.
       out.writeInt(0);
@@ -182,7 +148,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
   }
 
   public long getOnum() {
-    return longAt(onumPos());
+    return SerializationUtil.longAt(objectData, onumPos());
   }
 
   /**
@@ -197,14 +163,14 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @return the serialized object's version number.
    */
   public int getVersion() {
-    return intAt(versionPos());
+    return SerializationUtil.intAt(objectData, versionPos());
   }
 
   /**
    * Modifies the serialized object's version number.
    */
   public void setVersion(final int version) {
-    setIntAt(versionPos(), version);
+    SerializationUtil.setIntAt(objectData, versionPos(), version);
   }
 
   /**
@@ -219,7 +185,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @return the serialized object's promise expiration time
    */
   public long getExpiry() {
-    return longAt(expiryPos());
+    return SerializationUtil.longAt(objectData, expiryPos());
   }
 
   /**
@@ -228,9 +194,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @param expiry
    */
   public void setExpiry(long expiry) {
-    setLongAt(expiryPos(), expiry);
+    SerializationUtil.setLongAt(objectData, expiryPos(), expiry);
   }
-  
+
   /**
    * @return an inter-store reference to the the serialized object's label.
    * @throws InternalError
@@ -238,18 +204,19 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *           label.
    */
   public ComparablePair<String, Long> getInterStoreLabelRef(int labelPos) {
-    int storeNameLength = unsignedShortAt(labelPos);
+    int storeNameLength =
+        SerializationUtil.unsignedShortAt(objectData, labelPos);
     int onumPos = labelPos + 2 + storeNameLength;
     DataInput in =
         new DataInputStream(new ByteArrayInputStream(objectData, labelPos,
             onumPos));
     try {
-      return new ComparablePair<String, Long>(in.readUTF(), longAt(onumPos));
+      return new ComparablePair<String, Long>(in.readUTF(),
+          SerializationUtil.longAt(objectData, onumPos));
     } catch (IOException e) {
       throw new InternalError("Error while reading store name.", e);
     }
   }
-
 
   /**
    * @return the offset in objectData representing the start of a boolean that
@@ -264,7 +231,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         inter-store reference.
    */
   public boolean updateLabelRefIsInterStore() {
-    return booleanAt(isInterStoreUpdateLabelPos());
+    return SerializationUtil
+        .booleanAt(objectData, isInterStoreUpdateLabelPos());
   }
 
   /**
@@ -274,7 +242,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
   private final int updateLabelPos() {
     return isInterStoreUpdateLabelPos() + 1;
   }
-  
+
   /**
    * @return an inter-store reference to the the serialized object's label.
    * @throws InternalError
@@ -300,17 +268,19 @@ public final class SerializedObject implements FastSerializable, Serializable {
           + "onum of an object whose inter-store references have not yet been "
           + "swizzled." + getInterStoreUpdateLabelRef());
 
-    return longAt(updateLabelPos());
+    return SerializationUtil.longAt(objectData, updateLabelPos());
   }
-  
+
   /**
    * @return the offset in objectData representing the start of a boolean that
    *         indicates whether the label pointer is an inter-store reference.
    */
   private final int isInterStoreAccessLabelPos() {
-    int labelPos = updateLabelPos(); //access label is after the update label
-    return labelPos + 8
-        + (updateLabelRefIsInterStore() ? (unsignedShortAt(labelPos) + 2) : 0);
+    int labelPos = updateLabelPos(); // access label is after the update label
+    return labelPos
+        + 8
+        + (updateLabelRefIsInterStore() ? (SerializationUtil.unsignedShortAt(
+            objectData, labelPos) + 2) : 0);
   }
 
   /**
@@ -318,9 +288,10 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         inter-store reference.
    */
   public boolean accessLabelRefIsInterStore() {
-    return booleanAt(isInterStoreAccessLabelPos());
+    return SerializationUtil
+        .booleanAt(objectData, isInterStoreAccessLabelPos());
   }
-  
+
   /**
    * @return the offset in objectData representing the start of the label
    *         reference.
@@ -341,7 +312,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
           + "inter-store reference to an intra-store label.");
     return getInterStoreLabelRef(accessLabelPos());
   }
-  
+
   /**
    * @return an intra-store reference to the serialized object's label.
    * @throws InternalError
@@ -354,64 +325,27 @@ public final class SerializedObject implements FastSerializable, Serializable {
           + "onum of an object whose inter-store references have not yet been "
           + "swizzled." + getInterStoreAccessLabelRef());
 
-    return longAt(accessLabelPos());
+    return SerializationUtil.longAt(objectData, accessLabelPos());
   }
 
   /**
-   * @return the offset in objectData representing the start of a boolean that
-   *         indicates whether the object's class is a system class.
+   * @return the offset in objectData representing the start of the serialized
+   *         ClassRef for the object's class.
    */
-  private final int isSystemClassPos() {
+  private final int classRefPos() {
     int labelPos = accessLabelPos();
-    return labelPos + 8
-        + (accessLabelRefIsInterStore() ? (unsignedShortAt(labelPos) + 2) : 0);
-  }
-  
-  /**
-   * @return whether the class of the serialized object is a system class.
-   */
-  public boolean isSystemClass() {
-    return booleanAt(isSystemClassPos());
+    return labelPos
+        + 8
+        + (accessLabelRefIsInterStore() ? (SerializationUtil.unsignedShortAt(
+            objectData, labelPos) + 2) : 0);
   }
 
   /**
-   * @return the offset in objectData representing the start of the class name.
+   * @return a ClassRef for the object's class.
    */
-  private final int classNamePos() {
-    return isSystemClassPos() + 1;
-  }
-
-  /**
-   * @return the serialized object's class name.
-   */
-  public String getClassName() {
-    if (className == null) {
-      int classNamePos = classNamePos();
-      int length = unsignedShortAt(classNamePos);
-      try {
-        className = new String(objectData, classNamePos + 2, length, "UTF-8");
-      } catch (UnsupportedEncodingException e) {
-        throw new InternalError(e);
-      }
-    }
-
-    return className;
-  }
-
-  private final int classHashPos() {
-    int classNamePos = classNamePos();
-    return classNamePos + 2 + unsignedShortAt(classNamePos);
-  }
-
-  private boolean checkClassHash(byte[] hash) {
-    int classHashPos = classHashPos();
-    if (hash.length != unsignedShortAt(classHashPos)) return false;
-
-    for (int i = 0; i < hash.length; i++) {
-      if (hash[i] != objectData[classHashPos + i + 2]) return false;
-    }
-
-    return true;
+  public ClassRef getClassRef() {
+    if (classRef != null) return classRef;
+    return classRef = ClassRef.deserialize(objectData, classRefPos());
   }
 
   /**
@@ -420,8 +354,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         inter-store/intra-store/serialized).
    */
   private final int numRefTypesPos() {
-    int classHashPos = classHashPos();
-    return classHashPos + 2 + unsignedShortAt(classHashPos);
+    int classRefPos = classRefPos();
+    return classRefPos + ClassRef.lengthAt(objectData, classRefPos);
   }
 
   /**
@@ -429,7 +363,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         RefTypeEnum.)
    */
   public final int getNumRefTypes() {
-    return intAt(numRefTypesPos());
+    return SerializationUtil.intAt(objectData, numRefTypesPos());
   }
 
   /**
@@ -444,7 +378,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @return the number of intra-store references in the serialized object.
    */
   public final int getNumIntraStoreRefs() {
-    return intAt(numIntraStoreRefsPos());
+    return SerializationUtil.intAt(objectData, numIntraStoreRefsPos());
   }
 
   /**
@@ -456,7 +390,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
   }
 
   private final int serializedDataLength() {
-    return intAt(serializedDataLengthPos());
+    return SerializationUtil.intAt(objectData, serializedDataLengthPos());
   }
 
   /**
@@ -471,7 +405,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @return the number of inter-store references in the serialized object.
    */
   public final int getNumInterStoreRefs() {
-    return intAt(numInterStoreRefsPos());
+    return SerializationUtil.intAt(objectData, numInterStoreRefsPos());
   }
 
   /**
@@ -531,7 +465,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       public Long next() {
         if (!hasNext()) throw new NoSuchElementException();
-        return longAt(offset + 8 * (nextIntraStoreRefNum++));
+        return SerializationUtil.longAt(objectData, offset + 8
+            * (nextIntraStoreRefNum++));
       }
 
       public void remove() {
@@ -619,16 +554,16 @@ public final class SerializedObject implements FastSerializable, Serializable {
       if (updateLabelRefIsInterStore())
         out.writeLong(intraStoreRefIt.next());
       else out.writeLong(getUpdateLabelOnum());
-      
+
       // Write the access label reference.
       out.writeBoolean(false);
       if (accessLabelRefIsInterStore())
         out.writeLong(intraStoreRefIt.next());
       else out.writeLong(getAccessLabelOnum());
 
-      // Write the codebase information, class name and number of ref types.
-      out.write(objectData, isSystemClassPos(), numIntraStoreRefsPos()
-          - isSystemClassPos());
+      // Write the ClassRef and number of ref types.
+      int classRefPos = classRefPos();
+      out.write(objectData, classRefPos, numIntraStoreRefsPos() - classRefPos);
 
       // Write number of intra-store refs.
       out.writeInt(getNumInterStoreRefs() + numIntraStoreRefs);
@@ -687,12 +622,12 @@ public final class SerializedObject implements FastSerializable, Serializable {
     boolean interStoreUpdateLabel =
         !ONumConstants.isGlobalConstant(updateLabelOnum)
             && !impl.$getStore().equals(updateLabelStore);
-    
+
     // Write out the object header.
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
     out.writeLong(0);
-    
+
     // Write the update label
     out.writeBoolean(interStoreUpdateLabel);
     if (interStoreUpdateLabel) {
@@ -730,16 +665,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
     // Write the object's type information
     Class<?> implClass = impl.getClass();
-    boolean isSystemClass = SysUtil.codebasePart(implClass.getName()).equals("");
-    out.writeBoolean(isSystemClass);
-
-    // Write the classname.
-    byte[] className = implClass.getName().getBytes("UTF-8");
-    out.writeShort(className.length);
-    out.write(className);
-    byte[] hash = SysUtil.hash(implClass);
-    out.writeShort(hash.length);
-    out.write(hash);
+    ClassRef classRef = ClassRef.makeRef(implClass.getEnclosingClass());
+    classRef.write(out);
 
     // Get the object to serialize itself into a bunch of buffers.
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -798,7 +725,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     DataOutputStream out = new DataOutputStream(bos);
 
     // The buffer for copying stuff.
-    byte[] buf = new byte[BUF_LEN];
+    byte[] buf = new byte[SerializationUtil.BUF_LEN];
 
     // Copy the onum, version number, and promise expiry.
     in.readFully(buf, 0, 20);
@@ -813,8 +740,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
       out.writeShort(storeNameLength);
       bytesToCopy += storeNameLength;
     }
-    copyBytes(in, out, bytesToCopy, buf);
-    
+    SerializationUtil.copyBytes(in, out, bytesToCopy, buf);
+
     // Copy the access label pointer.
     boolean isInterStoreAccessLabel = in.readBoolean();
     out.writeBoolean(isInterStoreAccessLabel);
@@ -824,21 +751,10 @@ public final class SerializedObject implements FastSerializable, Serializable {
       out.writeShort(storeNameLength);
       bytesToCopy += storeNameLength;
     }
-    copyBytes(in, out, bytesToCopy, buf);
+    SerializationUtil.copyBytes(in, out, bytesToCopy, buf);
 
-    // Copy codebase information.
-    boolean isSystemClass = in.readBoolean();
-    out.writeBoolean(isSystemClass);
-    
-    // Copy the class name.
-    int classNameLength = in.readUnsignedShort();
-    out.writeShort(classNameLength);
-    copyBytes(in, out, classNameLength, buf);
-
-    // Copy the class hash.
-    int classHashLength = in.readUnsignedShort();
-    out.writeShort(classHashLength);
-    copyBytes(in, out, classHashLength, buf);
+    // Copy class information.
+    ClassRef.copySerialization(in, out, buf);
 
     // Copy the body.
     int numRefTypes = in.readInt();
@@ -853,14 +769,14 @@ public final class SerializedObject implements FastSerializable, Serializable {
     int numInterStoreRefs = in.readInt();
     out.writeInt(numInterStoreRefs);
 
-    copyBytes(in, out, numRefTypes + 8 * numIntraStoreRefs
+    SerializationUtil.copyBytes(in, out, numRefTypes + 8 * numIntraStoreRefs
         + serializedDataLength, buf);
 
     for (int i = 0; i < numInterStoreRefs; i++) {
       // Copy an inter-store ref.
       int len = in.readUnsignedShort();
       out.writeShort(len);
-      copyBytes(in, out, len + 8, buf);
+      SerializationUtil.copyBytes(in, out, len + 8, buf);
     }
 
     out.flush();
@@ -868,39 +784,12 @@ public final class SerializedObject implements FastSerializable, Serializable {
     this.objectData = bos.toByteArray();
   }
 
-  private static final int BUF_LEN = 128;
-  private static final byte BUF_LEN_LOG_2 = 7;
-  private static final byte BUF_LEN_MASK = 0x7f;
-
-  /**
-   * Copies the specified number of bytes from the given DataInput to the given
-   * DataOutput.
-   * 
-   * @param in
-   *          the DataInput to read from.
-   * @param out
-   *          the DataOutput to write to.
-   * @param length
-   *          the number of bytes to copy.
-   * @param buf
-   *          the buffer to use. Must be of length BUF_LEN.
-   */
-  private static final void copyBytes(DataInput in, DataOutput out, int length,
-      byte[] buf) throws IOException {
-    int numLoops = length >> BUF_LEN_LOG_2;
-    for (int count = 0; count < numLoops; count++) {
-      in.readFully(buf);
-      out.write(buf);
-    }
-    in.readFully(buf, 0, length & BUF_LEN_MASK);
-    out.write(buf, 0, length & BUF_LEN_MASK);
-  }
-
   /**
    * Maps class names to their deserialization constructors.
    */
-  private static final Map<String, Constructor<?>> constructorTable =
-      Collections.synchronizedMap(new HashMap<String, Constructor<?>>());
+  private static final Map<Class<? extends _Impl>, Constructor<?>> constructorTable =
+      Collections
+          .synchronizedMap(new HashMap<Class<? extends _Impl>, Constructor<?>>());
 
   /**
    * Used by the worker to deserialize this object.
@@ -913,107 +802,25 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public _Impl deserialize(Store store) {
     try {
-      String className = getClassName();
+      Class<? extends _Impl> implClass = getClassRef().toImplClass();
 
-      // Check the class hash before deserializing.
-      if (!checkClassHash(SysUtil.hashClass(className))) {
-        URL path = SysUtil.locateClass(className);
-        throw new InvalidClassException(className,
-            "A class of the same name was found, but its hash did not match "
-                + "the hash in the object fab://" + store.name() + "/"
-                + getOnum() + "\n" + "hash from: " + path);
-      }
-
-      Constructor<?> constructor = constructorTable.get(className);
+      Constructor<?> constructor = constructorTable.get(implClass);
 
       if (constructor == null) {
-        Class<?> c;
-        try {
-          c = Class.forName(className);
-        }
-        catch(ClassNotFoundException e) {
-          //Class is not loaded yet.
-          if(Worker.isInitialized())
-            c = Worker.getWorker().getClassLoader().findClass(className);
-          else
-            throw e;
-        }
         constructor =
-            c.getConstructor(Store.class, long.class, int.class, long.class,
-                long.class, long.class, ObjectInput.class, Iterator.class, Iterator.class);
-        constructorTable.put(className, constructor);
+            implClass.getConstructor(Store.class, long.class, int.class,
+                long.class, long.class, long.class, ObjectInput.class,
+                Iterator.class, Iterator.class);
+        constructorTable.put(implClass, constructor);
       }
 
       return (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
           getExpiry(), getUpdateLabelOnum(), getAccessLabelOnum(),
           new ObjectInputStream(getSerializedDataStream()),
-            getRefTypeIterator(), getIntraStoreRefIterator());
+          getRefTypeIterator(), getIntraStoreRefIterator());
     } catch (Exception e) {
       throw new InternalError(e);
     }
-  }
-
-  /**
-   * Returns the boolean at the given position in objectData.
-   */
-  private final boolean booleanAt(int pos) {
-    return objectData[pos] == 1;
-  }
-
-  /**
-   * Returns the unsigned short that starts at the given position in objectData.
-   */
-  private final int unsignedShortAt(int pos) {
-    return ((objectData[pos + 0] & 0xff) << 8)
-        | ((objectData[pos + 1] & 0xff) << 0);
-  }
-
-  /**
-   * Returns the int that starts at the given position in objectData.
-   */
-  private final int intAt(int pos) {
-    return ((objectData[pos + 0] & 0xff) << 24)
-        | ((objectData[pos + 1] & 0xff) << 16)
-        | ((objectData[pos + 2] & 0xff) << 8)
-        | ((objectData[pos + 3] & 0xff) << 0);
-  }
-
-  /**
-   * Sets the int that starts at the given position in objectData.
-   */
-  private final void setIntAt(int pos, int value) {
-    objectData[pos + 0] = (byte) (0xff & (value >> 24));
-    objectData[pos + 1] = (byte) (0xff & (value >> 16));
-    objectData[pos + 2] = (byte) (0xff & (value >> 8));
-    objectData[pos + 3] = (byte) (0xff & (value >> 0));
-  }
-
-  /**
-   * Returns the long that starts at the given position in objectData.
-   */
-  private final long longAt(int pos) {
-    return ((long) (objectData[pos + 0] & 0xff) << 56)
-        | ((long) (objectData[pos + 1] & 0xff) << 48)
-        | ((long) (objectData[pos + 2] & 0xff) << 40)
-        | ((long) (objectData[pos + 3] & 0xff) << 32)
-        | ((long) (objectData[pos + 4] & 0xff) << 24)
-        | ((long) (objectData[pos + 5] & 0xff) << 16)
-        | ((long) (objectData[pos + 6] & 0xff) << 8)
-        | ((long) (objectData[pos + 7] & 0xff) << 0);
-  }
-
-  /**
-   * Sets the long that starts at the given position in objectData.
-   */
-  private final void setLongAt(int pos, long value) {
-    objectData[pos + 0] = (byte) (0xff & (value >> 56));
-    objectData[pos + 1] = (byte) (0xff & (value >> 48));
-    objectData[pos + 2] = (byte) (0xff & (value >> 40));
-    objectData[pos + 3] = (byte) (0xff & (value >> 32));
-    objectData[pos + 4] = (byte) (0xff & (value >> 24));
-    objectData[pos + 5] = (byte) (0xff & (value >> 16));
-    objectData[pos + 6] = (byte) (0xff & (value >> 8));
-    objectData[pos + 7] = (byte) (0xff & (value >> 0));
   }
 
 }

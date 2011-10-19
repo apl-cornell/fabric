@@ -42,6 +42,7 @@ import fabil.ast.FabILNodeFactory_c;
 import fabil.frontend.FabILScheduler;
 import fabil.parse.Grm;
 import fabil.parse.Lexer_c;
+import fabil.types.ClassFile;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILTypeSystem_c;
 import fabric.common.NSUtil;
@@ -309,6 +310,11 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   @Override
   public List<URI> sourcepath() {
     return getFabILOptions().sourcepath();
+  }
+
+  @Override
+  public ClassFile createClassFile(File classFileSource, byte[] code) {
+      return new ClassFile(classFileSource, code, this);
   }
 
   @Override

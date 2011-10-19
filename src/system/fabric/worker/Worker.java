@@ -1,6 +1,7 @@
 package fabric.worker;
 
 import static fabric.common.Logging.WORKER_LOGGER;
+import static fabric.common.Logging.TIMING_LOGGER;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -15,9 +16,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
 import fabric.common.KeyMaterial;
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -54,7 +57,6 @@ import fabric.lang.security.NodePrincipal;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.shell.*;
-import fabric.worker.shell.WorkerShell;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
@@ -164,13 +166,21 @@ public final class Worker {
     WORKER_LOGGER.config("timeout:             " + config.timeout);
     WORKER_LOGGER.config("retries:             " + config.retries);
     WORKER_LOGGER.config("use ssl:             " + config.useSSL);
+    
     instance = new Worker(config, principalOnum, initStoreSet);
 
     Threading.getPool().execute(instance.remoteCallManager);
     instance.localStore.initialize();
     
     System.out.println("Worker started");
+    TIMING_LOGGER.log(Level.INFO, "Worker started");
 
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override public void run() {
+        TIMING_LOGGER.log(Level.INFO, "Worker shutting down");
+      }
+    });
+    
     return instance;
   }
 

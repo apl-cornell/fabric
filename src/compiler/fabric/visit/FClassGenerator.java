@@ -21,6 +21,7 @@ import polyglot.visit.ErrorHandlingVisitor;
 import polyglot.visit.NodeVisitor;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseClassType;
+import fabil.visit.ClassHashGenerator;
 import fabric.ExtensionInfo;
 import fabric.Topics;
 import fabric.common.NSUtil;
@@ -95,7 +96,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
       try {
         FClass fcls =
             (FClass) new FClass._Impl(store, update_lbl, access_lbl, codebase,
-                className, toSourceString(src), null, null).$getProxy();
+                className, ClassHashGenerator.toSourceString(src), null, null).$getProxy();
         if (Report.should_report(Topics.mobile, 3)) {
           Report.report(3, "Inserting " + className + " with label " + update_lbl + " into codebase "
               + NSUtil.namespace(codebase));
@@ -121,20 +122,4 @@ public class FClassGenerator extends ErrorHandlingVisitor {
     return n;
   }
 
-  public static String toSourceString(CodebaseSource src) throws IOException {
-    StringBuilder result = new StringBuilder();
-    BufferedReader reader = null;
-    try {
-      reader = new BufferedReader(src.open());
-      char[] buf = new char[1024];
-      int r = 0;
-      while ((r = reader.read(buf)) != -1)
-        result.append(buf, 0, r);
-    } finally {
-      if (reader != null)
-        reader.close();
-      else src.close();
-    }
-    return result.toString();
-  }
 }

@@ -199,4 +199,8 @@ public class CBLazyClassInitializer extends ClassFileLazyClassInitializer {
     return (ClassType) ts.platformResolver().find(name);
   }
 
+  public ClassFile classFile() {
+    return clazz;
+  }
+
 }

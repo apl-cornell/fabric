@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+
 /**
  * This is the clearing house of all loggers available for use in the system.
  */
@@ -129,6 +130,13 @@ public final class Logging {
       Logger.getLogger("fabric.class_hashing");
 
   /**
+   * For detailed timing analysis.
+   */
+  
+  public static final Logger TIMING_LOGGER =
+      Logger.getLogger("fabric.timing");
+  
+  /**
    * For other events that don't fit into any other category. Use sparingly.
    */
   public static final Logger MISC_LOGGER = Logger.getLogger("fabric");
@@ -238,9 +246,14 @@ public final class Logging {
         final String key = "java.util.logging.FileHandler.pattern";
         String logFile = p.getProperty(key);
         if (logFile != null && !new File(logFile).isAbsolute()) {
-          p.setProperty(key, Resources.relpathRewrite(logFile));
+          logFile = Resources.relpathRewrite(logFile);
         }
-  
+        p.setProperty(key, logFile);
+        
+        // Ensure that the directory containing the logs exists to avoid
+        // crashing
+        new File(logFile).getParentFile().mkdirs();
+        
         // Load the properties into the LogManager. ugh.
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintStream pout = new PrintStream(out);

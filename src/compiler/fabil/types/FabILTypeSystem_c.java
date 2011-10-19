@@ -236,7 +236,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   public Context createContext() {
     return new FabILContext_c(this);
   }
-
+  
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public List<String> defaultPackageImports() {
@@ -649,7 +649,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public ClassFileLazyClassInitializer classFileLazyClassInitializer(
       ClassFile clazz) {
-    return new CBLazyClassInitializer(clazz, this);
+    return new CBLazyClassInitializer((fabil.types.ClassFile)clazz, this);
   }
 
   // / Deprecated/Unsupported methods

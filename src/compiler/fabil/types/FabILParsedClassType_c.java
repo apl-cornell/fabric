@@ -1,26 +1,29 @@
 package fabil.types;
 
+import java.io.IOException;
 import java.net.URI;
-
-import com.sun.tools.internal.ws.wsdl.document.jaxws.Exception;
+import java.security.MessageDigest;
+import java.util.List;
 
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.frontend.Source;
 import polyglot.qq.QQ;
-import polyglot.types.ClassType;
 import polyglot.types.DeserializedClassInitializer;
 import polyglot.types.LazyClassInitializer;
-import polyglot.types.MethodInstance;
 import polyglot.types.ParsedClassType_c;
 import polyglot.types.Resolver;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
+import polyglot.util.InternalCompilerError;
 import codebases.frontend.CodebaseSource;
+import codebases.types.CBLazyClassInitializer;
 import codebases.types.CodebaseClassType;
 import fabil.ExtensionInfo;
+import fabil.visit.ClassHashGenerator;
 import fabil.visit.ProviderRewriter;
-import fabric.common.SysUtil;
+import fabric.common.Crypto;
+import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
@@ -32,7 +35,20 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
    */
   protected URI canonical_ns;
 
-  public FabILParsedClassType_c() {
+  /**
+   * Memoizes a secure hash of the class. If this class-type information is
+   * derived from a FabIL or Fabric signature, this field holds a hash of the
+   * signature source. If the class-type information is derived from a source
+   * file, this field holds a hash of that source file. Otherwise, the
+   * class-type information is derived from a Java class file, and this field
+   * holds a hash of that class's bytecode.
+   */
+  protected byte[] classHash;
+
+  /**
+   * Used for deserialization.
+   */
+  protected FabILParsedClassType_c() {
     super();
   }
 
@@ -40,11 +56,11 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
       Source fromSource) {
     super(ts, init, fromSource);
     if (fromSource == null) {
-      //XXX:Java classes may be loaded w/o encoded types
+      // XXX:Java classes may be loaded w/o encoded types
       ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();
       this.canonical_ns = extInfo.platformNamespace();
-    } else
-      this.canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
+    } else this.canonical_ns =
+        ((CodebaseSource) fromSource).canonicalNamespace();
   }
 
   @Override
@@ -100,7 +116,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
     QQ qq = pr.qq();
     if (!canonical_ns.equals(extInfo.localNamespace())
         && !canonical_ns.equals(extInfo.platformNamespace())) {
-      Codebase codebase = SysUtil.fetch_codebase(canonical_ns);
+      Codebase codebase = NSUtil.fetch_codebase(canonical_ns);
       FClass fclass = codebase.resolveClassName(fullName());
       // Convert to an OID.
       String storeName = fclass.$getStore().name();
@@ -122,5 +138,55 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
   @Override
   public URI canonicalNamespace() {
     return canonical_ns;
+  }
+
+  public byte[] getClassHash() {
+    if (classHash != null) return classHash;
+
+    MessageDigest digest = Crypto.digestInstance();
+
+    if (fromSource instanceof CodebaseSource) {
+      // Hash the class's source code.
+      try {
+        String code =
+            ClassHashGenerator.toSourceString((CodebaseSource) fromSource);
+        digest.update(code.getBytes("UTF-8"));
+      } catch (IOException e) {
+        throw new InternalCompilerError(e);
+      }
+//    } else if (fromSource instanceof CodebaseSource) {
+//      // XXX Jif impl ugliness
+    } else {
+      // Type was probably obtained from a Java class file. Hash the bytecode.
+      LazyClassInitializer lci = this.init();
+      if (lci instanceof CBLazyClassInitializer) {
+        CBLazyClassInitializer cflci =
+            (CBLazyClassInitializer) lci;
+        ClassFile classFile = (ClassFile) cflci.classFile();
+        digest.update(classFile.getHash());
+      } else {
+        // No clue where this class came from. Complain loudly.
+        throw new InternalError("Unexpected class initializer type: "
+            + lci.getClass());
+      }
+    }
+
+    if (!flags.isInterface()) {
+      // Include the super class's hash.
+      FabILParsedClassType_c superClassType =
+          (FabILParsedClassType_c) superType();
+      if (superClassType != null) {
+        digest.update(superClassType.getClassHash());
+      }
+    }
+
+    // Include declared interfaces' hashes.
+    @SuppressWarnings("unchecked")
+    List<FabILParsedClassType_c> interfaces = interfaces();
+    for (FabILParsedClassType_c iface : interfaces) {
+      digest.update(iface.getClassHash());
+    }
+
+    return classHash = digest.digest();
   }
 }

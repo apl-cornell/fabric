@@ -205,9 +205,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     } else {
       // Signature mode.  Don't run some passes.
       g = internGoal(new Serialized(job) {
-        @SuppressWarnings("unchecked")
         @Override
-        public Collection prerequisiteGoals(Scheduler scheduler) {
+        public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
           List<Goal> l = new ArrayList<Goal>();
           l.add(ThisLabelChecked(job));
           return l;
@@ -222,9 +221,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     FabricNodeFactory nf = fabext.nodeFactory();
     
     Goal g = internGoal(new VisitorGoal(job, new PrincipalCastAdder(job, ts, nf)) {
-      @SuppressWarnings("unchecked")
       @Override
-      public Collection prerequisiteGoals(Scheduler scheduler) {
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
         l.add(Serialized(job));
         return l;
@@ -232,6 +230,28 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     });
     
     return g;
+  }
+  
+  private Goal preFClassGeneration = new Barrier("preFClassGeneration", this) {
+    @Override
+    public Goal goalForJob(Job job) {
+      Goal g = internGoal(new EmptyGoal(job));
+
+      try {
+        addPrerequisiteDependency(g, FabricScheduler.this.Serialized(job));
+        addPrerequisiteDependency(g,
+            FabricScheduler.this.PrincipalCastsAdded(job));
+      } catch (CyclicDependencyException e) {
+        // Cannot happen.
+        throw new InternalCompilerError(e);
+      }
+
+      return g;
+    }
+  };
+  
+  public Goal PreFClassGenerationBarrier() {
+    return preFClassGeneration;
   }
   
   public Goal FClassGenerated(Job job) {
@@ -244,8 +264,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
       g = internGoal(new EmptyGoal(job));
     
     try {
-        addPrerequisiteDependency(g, this.Serialized(job));
-        addPrerequisiteDependency(g, this.PrincipalCastsAdded(job));
+        addPrerequisiteDependency(g, this.PreFClassGenerationBarrier());
     }
     catch (CyclicDependencyException e) {
         // Cannot happen
@@ -358,7 +377,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     Goal g = internGoal(new AbstractGoal(job){
       @SuppressWarnings({ "unchecked", "rawtypes" })
       @Override
-      public Collection prerequisiteGoals(Scheduler scheduler) {
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
           List<Goal> l = new ArrayList<Goal>();
           l.add(CreateFabILSkeleton(job));
           l.addAll(super.prerequisiteGoals(scheduler));

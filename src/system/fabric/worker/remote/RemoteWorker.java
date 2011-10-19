@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
+import fabric.common.ClassRef.FabricClassRef;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
@@ -57,11 +58,14 @@ public final class RemoteWorker extends RemoteNode {
     TransactionID tid = tm.getCurrentTid();
     UpdateMap updateMap = tm.getUpdateMap();
 
-    Class<?> receiverClass =
-        receiver.fetch().$getProxy().getClass().getEnclosingClass();
+    @SuppressWarnings("unchecked")
+    Class<? extends fabric.lang.Object> receiverClass =
+        (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
+            .getClass().getEnclosingClass();
+    FabricClassRef receiverClassRef = new FabricClassRef(receiverClass);
 
     RemoteCallMessage.Response response =
-        send(new RemoteCallMessage(tid, updateMap, receiverClass, receiver,
+        send(new RemoteCallMessage(tid, updateMap, receiverClassRef, receiver,
             methodName, parameterTypes, args));
 
     // Commit any outstanding subtransactions that occurred as a result of the
