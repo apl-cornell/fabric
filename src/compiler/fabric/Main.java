@@ -88,6 +88,8 @@ public class Main extends polyglot.main.Main {
       args.add(worker.code_cache);
       args.add("-classpath");
       args.add(worker.code_cache);
+    }
+    if(worker.bootcp != null) {
       args.add("-bootclasspath");
       args.add(worker.bootcp);
     }
@@ -245,9 +247,10 @@ public class Main extends polyglot.main.Main {
     }
 
     if (options.needWorker()) {
-      compileInWorker(options, source, ext, eq);
-      Report.report(1, "Compiling in worker with args:" + argv);
+      if (Report.should_report(Topics.mobile, 2))
+        Report.report(2, "Compiling in worker with args:" + Arrays.toString(argv));
 
+      compileInWorker(options, source, ext, eq);
     }
     else start(options, source, ext, eq);
 

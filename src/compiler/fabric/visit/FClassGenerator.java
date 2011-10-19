@@ -86,15 +86,10 @@ public class FClassGenerator extends ErrorHandlingVisitor {
             "Running FClassGenerator on unpublished source!");
 
       Codebase codebase = fts.codebaseFromNS(src.namespace());
+      Label update_lbl = fts.sourceUpdateLabel(src);
+      Label access_lbl = fts.sourceAccessLabel(src);
 
       Store store = fabext.destinationStore();
-      Label update_lbl = src.label();
-      // Re-use for access label. In general the store may allow
-      // a more restricted access label, but we can only use the provider
-      // label
-      // to statically figure out when we can fetch from the store vs.
-      // using a replica.
-      Label access_lbl = src.label();
       String className = pct.fullName();
 
       try {
@@ -102,7 +97,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
             (FClass) new FClass._Impl(store, update_lbl, access_lbl, codebase,
                 className, toSourceString(src), null, null).$getProxy();
         if (Report.should_report(Topics.mobile, 3)) {
-          Report.report(3, "Inserting " + className + " into codebase "
+          Report.report(3, "Inserting " + className + " with label " + update_lbl + " into codebase "
               + NSUtil.namespace(codebase));
         }
         codebase.insertClass(className, fcls);

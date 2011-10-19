@@ -126,6 +126,7 @@ public class Node {
       worker.sigcp = opts.sigcp;
       worker.filsigcp = opts.filsigcp;
       worker.code_cache = opts.code_cache;
+      worker.bootcp = opts.bootcp;
 
       // initialize the store
       store.initialize();

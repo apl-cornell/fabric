@@ -41,6 +41,7 @@ import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
+import codebases.frontend.CodebaseSource;
 import codebases.types.CBClassContextResolver;
 import codebases.types.CBImportTable;
 import codebases.types.CBLazyClassInitializer;
@@ -50,29 +51,32 @@ import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseClassType;
 import codebases.types.NamespaceResolver;
 import fabric.lang.Codebase;
+import fabric.lang.security.LabelUtil;
+import fabric.lang.security.NodePrincipal;
+import fabric.worker.Store;
 import fabric.worker.Worker;
 
 public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @SuppressWarnings("unchecked")
-  private static final Collection<String> TOPICS = CollectionUtil.list(Report.types,
-      Report.resolver);
+  private static final Collection<String> TOPICS = CollectionUtil.list(
+      Report.types, Report.resolver);
 
   private fabil.ExtensionInfo extInfo;
 
-  protected Map<URI, NamespaceResolver> namespaceResolvers; 
+  protected Map<URI, NamespaceResolver> namespaceResolvers;
   protected List<NamespaceResolver> classpathResolvers;
   protected List<NamespaceResolver> sourcepathResolvers;
   protected List<NamespaceResolver> signatureResolvers;
   protected List<NamespaceResolver> runtimeResolvers;
 
-  protected NamespaceResolver platformResolver; 
+  protected NamespaceResolver platformResolver;
 
   @Override
   public CBPackageContextResolver createPackageContextResolver(URI namespace,
       Package p) {
     return new CBPackageContextResolver(this, namespace, p);
   }
-  
+
   @Override
   public Resolver packageContextResolver(URI namespace, Package p,
       ClassType accessor) {
@@ -93,7 +97,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   public Package createPackage(URI ns, Package prefix, String name) {
     return new CBPackage_c(this, ns, prefix, name);
   }
-  
+
   @Override
   public Package packageForName(URI ns, Package prefix, String name)
       throws SemanticException {
@@ -119,24 +123,24 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @Override
   public AccessControlResolver createClassContextResolver(ClassType type) {
-      assert_(type);
-      return new CBClassContextResolver(this, type);
+    assert_(type);
+    return new CBClassContextResolver(this, type);
   }
-  
+
   @Override
   public Object placeHolder(TypeObject o, Set roots) {
     assert_(o);
     if (o instanceof ParsedClassType) {
       CodebaseClassType ct = (CodebaseClassType) o;
 
-        // This should never happen: anonymous and local types cannot
-        // appear in signatures.
-        if (ct.isLocal() || ct.isAnonymous()) {
-            throw new InternalCompilerError("Cannot serialize " + o + ".");
-        }
-        String name = getTransformedClassName(ct);
+      // This should never happen: anonymous and local types cannot
+      // appear in signatures.
+      if (ct.isLocal() || ct.isAnonymous()) {
+        throw new InternalCompilerError("Cannot serialize " + o + ".");
+      }
+      String name = getTransformedClassName(ct);
 
-        return new CBPlaceHolder_c(ct.canonicalNamespace(), name);
+      return new CBPlaceHolder_c(ct.canonicalNamespace(), name);
     }
 
     return o;
@@ -191,7 +195,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   public ClassType Worker() {
     return load("fabric.worker.Worker");
   }
-  
+
   @Override
   public ClassType Principal() {
     return load("fabric.lang.security.Principal");
@@ -211,7 +215,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   public Type Label() {
     return load("fabric.lang.security.Label");
   }
-  
+
   @Override
   public Type ConfPolicy() {
     return load("fabric.lang.security.ConfPolicy");
@@ -248,7 +252,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @SuppressWarnings("unchecked")
   @Override
-  //XXX: Why is this method here?
+  // XXX: Why is this method here?
   protected List<MethodInstance> findAcceptableMethods(ReferenceType container,
       String name, @SuppressWarnings("rawtypes") List argTypes,
       ClassType currClass) throws SemanticException {
@@ -265,8 +269,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @Override
   public ClassType fabricRuntimeArrayOf(Type type) {
-    if (type.isReference())
-      return load("fabric.lang.arrays.ObjectArray");
+    if (type.isReference()) return load("fabric.lang.arrays.ObjectArray");
     return load("fabric.lang.arrays." + type.toString() + "Array");
   }
 
@@ -362,7 +365,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return isSubtype(type, Thread());
   }
 
-
   @Override
   public boolean isThread(TypeNode type) {
     return isThread(type.type());
@@ -438,7 +440,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return type.isArray() && isFabricArray(type.toArray());
   }
 
-
   @Override
   public boolean isFabricArray(TypeNode type) {
     return isFabricArray(type.type());
@@ -466,8 +467,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     assert_(returnType);
     assert_(argTypes);
     assert_(excTypes);
-    return new FabILMethodInstance_c(this, pos, container, flags,
-                                returnType, name, argTypes, excTypes);
+    return new FabILMethodInstance_c(this, pos, container, flags, returnType,
+        name, argTypes, excTypes);
   }
 
   /**
@@ -524,14 +525,14 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   public boolean isPlatformType(String fullName) {
     String typeName = fullName;
-    return typeName.startsWith("java") 
-        || typeName.startsWith("fabric")
+    return typeName.startsWith("java") || typeName.startsWith("fabric")
         || typeName.startsWith("jif");
   }
 
   @Override
   public void initialize(ExtensionInfo extInfo) throws SemanticException {
-    //There is no toplevel resolver -- names are resolved via the source's codebase
+    // There is no toplevel resolver -- names are resolved via the source's
+    // codebase
     initialize(null, extInfo);
     this.loadedResolver = null;
     this.systemResolver = null;
@@ -540,10 +541,12 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   protected void initResolvers() {
-    //NB: getOptions() and getFabILOptions() do not return the same thing if
-    //  we are compiling from Fabric source! getOptions() returns the FabricOptions()
-    //  object (which implements FabILOptions).  In particular, to get the right signaturepath
-    //  we have to call getFabILOptions().
+    // NB: getOptions() and getFabILOptions() do not return the same thing if
+    // we are compiling from Fabric source! getOptions() returns the
+    // FabricOptions()
+    // object (which implements FabILOptions). In particular, to get the right
+    // signaturepath
+    // we have to call getFabILOptions().
     List<URI> cp = extInfo.classpath();
     List<URI> sp = extInfo.sourcepath();
     List<URI> sigcp = extInfo.signaturepath();
@@ -553,11 +556,11 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     signatureResolvers = new ArrayList<NamespaceResolver>();
     classpathResolvers = new ArrayList<NamespaceResolver>();
     sourcepathResolvers = new ArrayList<NamespaceResolver>();
-    
+
     runtimeResolvers = new ArrayList<NamespaceResolver>();
-    for(URI uri : rtcp) {
+    for (URI uri : rtcp) {
       if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL runtime resolver: " +  uri);
+        Report.report(2, "Initializing FabIL runtime resolver: " + uri);
 
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
@@ -566,24 +569,24 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
       runtimeResolvers.add(nsr);
     }
 
-    for(URI uri : sigcp) {
+    for (URI uri : sigcp) {
       if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL signature resolver: " +  uri);
+        Report.report(2, "Initializing FabIL signature resolver: " + uri);
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
-      //A raw signature class is an oxymoron
+      // A raw signature class is an oxymoron
       nsr.loadRawClasses(false);
       nsr.loadSource(true);
       signatureResolvers.add(nsr);
     }
-    
+
     platformResolver = namespaceResolver(extInfo.platformNamespace());
     platformResolver.loadSource(true);
     boolean src_in_cp = sp.isEmpty();
-    
-    for(URI uri : cp) {
+
+    for (URI uri : cp) {
       if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL classpath resolver: " +  uri);
+        Report.report(2, "Initializing FabIL classpath resolver: " + uri);
 
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
@@ -591,17 +594,16 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
       nsr.loadSource(src_in_cp);
       classpathResolvers.add(nsr);
     }
-    
-    for(URI uri : sp) {
+
+    for (URI uri : sp) {
       if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL sourcepath resolver: " +  uri);
+        Report.report(2, "Initializing FabIL sourcepath resolver: " + uri);
 
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
       nsr.loadSource(true);
 
-      if(!classpathResolvers.contains(nsr))
-        nsr.loadEncodedClasses(false);
+      if (!classpathResolvers.contains(nsr)) nsr.loadEncodedClasses(false);
       sourcepathResolvers.add(nsr);
     }
   }
@@ -625,33 +627,36 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   public Named forName(URI ns, String name) throws SemanticException {
     return forName(namespaceResolver(ns), name);
   }
-  
+
   @Override
   public Named forName(String name) throws SemanticException {
     return forName(platformResolver(), name);
-}
-  @Override
-  public Codebase codebaseFromNS(URI namespace) {
-    //Worker must be running!
-    if(!Worker.isInitialized())
-      throw new InternalCompilerError("Worker is not initialized.");
-    
-      NamespaceResolver nsr = namespaceResolver(namespace);
-      if(nsr.codebase() != null)
-        return nsr.codebase();
-      
-      throw new InternalCompilerError("Cannot get codebase for namespace:" + namespace +":" + nsr.getClass());
   }
 
   @Override
-  public ClassFileLazyClassInitializer classFileLazyClassInitializer(ClassFile clazz) {
-    return new CBLazyClassInitializer(clazz, this);
-}
+  public Codebase codebaseFromNS(URI namespace) {
+    // Worker must be running!
+    if (!Worker.isInitialized())
+      throw new InternalCompilerError("Worker is not initialized.");
 
-  /// Deprecated/Unsupported methods
-  
+    NamespaceResolver nsr = namespaceResolver(namespace);
+    if (nsr.codebase() != null) return nsr.codebase();
+
+    throw new InternalCompilerError("Cannot get codebase for namespace:"
+        + namespace + ":" + nsr.getClass());
+  }
+
+  @Override
+  public ClassFileLazyClassInitializer classFileLazyClassInitializer(
+      ClassFile clazz) {
+    return new CBLazyClassInitializer(clazz, this);
+  }
+
+  // / Deprecated/Unsupported methods
+
   private UnsupportedOperationException toplevel_resolution_error() {
-    return new UnsupportedOperationException("Top level resolution is unsupported with codebases.");
+    return new UnsupportedOperationException(
+        "Top level resolution is unsupported with codebases.");
   }
 
   @Override
@@ -733,7 +738,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
     return classpathResolvers;
   }
-  
+
   @Override
   public List<NamespaceResolver> sourcepathResolvers() {
     if (sourcepathResolvers == null)

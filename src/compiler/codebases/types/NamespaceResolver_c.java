@@ -226,7 +226,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     if (q instanceof CodebaseClassType) {
       CodebaseClassType cct = (CodebaseClassType) q;
       if (!namespace.equals(cct.canonicalNamespace())) {
-        CodebaseTypeSystem ts = (CodebaseTypeSystem) extInfo.typeSystem();
+        CodebaseTypeSystem ts = extInfo.typeSystem();
         ts.namespaceResolver(cct.canonicalNamespace()).add(name, q);
       }
     }
@@ -278,13 +278,10 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
     Job job = scheduler.loadSource((FileSource) source, true);
     CodebaseSource cbsrc = (CodebaseSource) source;
-
-    System.err.println("NS: " + cbsrc.namespace());
-    System.err.println("Canonical NS: " + cbsrc.canonicalNamespace());
-
+    
     if (job != null) {
       // check the cache
-      CodebaseTypeSystem ts = (CodebaseTypeSystem) extInfo.typeSystem();
+      CodebaseTypeSystem ts = extInfo.typeSystem();
       Importable n =
           ts.namespaceResolver(cbsrc.canonicalNamespace()).check(name);
 

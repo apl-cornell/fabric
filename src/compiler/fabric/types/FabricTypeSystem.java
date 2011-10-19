@@ -12,6 +12,7 @@ import polyglot.types.LocalInstance;
 import polyglot.types.ReferenceType;
 import polyglot.types.Type;
 import polyglot.util.Position;
+import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseTypeSystem;
 
 public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
@@ -62,4 +63,7 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
 
   FabricArrayType fabricArrayOf(Position pos, Type t);
   FabricArrayType fabricArrayOf(Position pos, Type t, int dims);
+
+  fabric.lang.security.Label sourceUpdateLabel(CodebaseSource src);
+  fabric.lang.security.Label sourceAccessLabel(CodebaseSource src);
 }

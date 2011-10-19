@@ -7,6 +7,7 @@ import java.util.List;
 import codebases.frontend.CodebaseSource;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
+import fabric.lang.security.Label;
 import polyglot.ast.Id;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
@@ -50,4 +51,5 @@ public interface CodebaseTypeSystem extends TypeSystem {
   Package packageForName(URI ns, String name) throws SemanticException;
 
   Codebase codebaseFromNS(URI namespace);
+  
 }
