@@ -93,20 +93,20 @@ class Event:
 		self.process = process
 		self.thread  = thread
 		self.time    = long(time)
-		self.label   = label
+		self.label   = label.strip()
 
 
 def to_pgf(diagram):
-	print "\\documentclass[10pt]{article}"
+	print "\\documentclass[12pt]{article}"
 	print "\\usepackage{tikz}"
-	print "\\usepackage[paperwidth=100in,paperheight=30in,width=95in,height=29in]{geometry}"
+	print "\\usepackage[paperwidth=31in,paperheight=8in,width=30in,height=7in]{geometry}"
 	print "\\usetikzlibrary{matrix}"
 	print "\\usetikzlibrary{decorations}"
 	print "\\usetikzlibrary{decorations.pathreplacing}"
 	print "\\begin{document}"
 	print "\\begin{tikzpicture}"
 	print ""
-	print "\\newcounter{thread}"
+	print "\\newlength\\thread"
 
 	for pname, process in diagram.children.iteritems():
 		print "% process:", pname
@@ -116,9 +116,9 @@ def to_pgf(diagram):
 
 			print "\t% thread", tid
 
-			print "\t\\begin{scope}[xshift=4\\value{thread}in]"
-			print "\t\\draw [y=-20in] (0,0) -- (0,1.1);"
-			print "\t\\draw [y=-20in] (0.5,0) -- (0.5,1.1);"
+			print "\t\\begin{scope}[xshift=\\thread]"
+			print "\t\\draw [y=-6in] (0,0) -- (0,1.1);"
+			print "\t\\draw [y=-6in] (0.5,0) -- (0.5,1.1);"
 			print ""
 
 			print "\t\\matrix [anchor=north west, matrix of nodes, every node/.style={anchor=base west,font=\scriptsize}] at (1,0) {"
@@ -128,14 +128,14 @@ def to_pgf(diagram):
 			print "\t};"
 
 			for enum,event in enumerate(thread.children):
-				print "\t\t\\draw [y=-20in] (0,%s) -- +(0.5,0) -- (%s-%s-%i.west);" % (float(event.time) / diagram.total_time, pname,tid,enum)
+				print "\t\t\\draw [y=-6in] (0,%.3f) -- +(0.5,0) -- (%s-%s-%i.west);" % (float(event.time) / diagram.total_time, pname,tid,enum)
 
 			print "\t\\end{scope}"
-			print "\t\\addtocounter{thread}{1}"
+			print "\t\\addtolength\\thread{3in}"
 
 		print ""
 	print "% total time"
-	print "\\draw[y=-20in, decorate, decoration={brace,amplitude=1em}] (-1,1) -- node[sloped,above=1ex] {$%s$ ms} (-1,0);" % diagram.total_time
+	print "\\draw[y=-6in, decorate, decoration={brace,amplitude=1em}] (-1,1) -- node[sloped,above=1ex] {$%s$ ms} (-1,0);" % diagram.total_time
 	print ""
 
 
