@@ -74,7 +74,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   protected Map<String, Importable> cache;
   // class not found cache
   protected Map<String, SemanticException> not_found;
- 
+
   protected Label integrity;
 
   public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace) {
@@ -87,6 +87,11 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     this.packages = new HashSet<String>();
     this.no_package = new HashSet<String>();
     this.not_found = new HashMap<String, SemanticException>();
+    // A namespace URI must end with a '/' so we can properly
+    // compare URIs and create new ones using resolve()
+    if (!namespace.isOpaque() && !namespace.getScheme().equals("file")
+        && !namespace.getPath().endsWith("/"))
+      throw new InternalCompilerError("Malformed namespace: " + namespace);
     this.namespace = namespace;
     this.extInfo = extInfo;
     this.te = extInfo.typeEncoder();
@@ -157,9 +162,9 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     } else {
       if (Report.should_report(TOPICS, 3))
         Report.report(3, "[" + namespace + "] "
-            + "NamespaceResolver_c: cached: " + name  + "(" + q + ")");
+            + "NamespaceResolver_c: cached: " + name + "(" + q + ")");
     }
-    
+
     return q;
   }
 
@@ -190,33 +195,46 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
   @Override
   public void add(String name, Importable q) throws SemanticException {
+    if (!(q instanceof CodebaseClassType) || !(q instanceof ParsedTypeObject))
+      throw new InternalCompilerError(
+          "Expected entry to implement CodebaseClassType and ParsedTypeObject, but got "
+              + q.getClass());
+
     // /TODO: This method may need to check more things.
 
     if (packageExists(name))
       throw new SemanticException("Type \"" + name
           + "\" clashes with package of the same name.", q.position());
-   
+
     if (q instanceof ParsedTypeObject) {
       if (((ParsedTypeObject) q).initializer() == null)
         throw new InternalCompilerError("No initializer for " + name);
     }
 
-    if(q instanceof ParsedTypeObject) {
+    if (q instanceof ParsedTypeObject) {
       if (!((ParsedTypeObject) q).initializer().isTypeObjectInitialized()) {
         if (Report.should_report(TOPICS, 2))
           Report.report(3, "[" + namespace + "] initializing " + q);
-        ((ParsedTypeObject) q).initializer().initTypeObject();          
+        ((ParsedTypeObject) q).initializer().initTypeObject();
       }
-    }
-    else
-      throw new InternalCompilerError(q + " is not a ParsedTypeObject: " + q.getClass());
+    } else throw new InternalCompilerError(q + " is not a ParsedTypeObject: "
+        + q.getClass());
 
     replace(name, q);
+
+    // If we are
+    if (q instanceof CodebaseClassType) {
+      CodebaseClassType cct = (CodebaseClassType) q;
+      if (!namespace.equals(cct.canonicalNamespace())) {
+        CodebaseTypeSystem ts = (CodebaseTypeSystem) extInfo.typeSystem();
+        ts.namespaceResolver(cct.canonicalNamespace()).add(name, q);
+      }
+    }
   }
 
   @Override
   public void replace(String name, Importable q) {
-    
+
     if (Report.should_report(TOPICS, 3))
       Report.report(3, "[" + namespace + "] "
           + "NamespaceResolver_c: installing " + name + "->" + q
@@ -231,19 +249,20 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     cache.put(name, q);
   }
 
-  //@Override
+  // @Override
   protected void ensureInitialized() {
     for (Importable q : cache.values()) {
       if (q instanceof ParsedTypeObject) {
         if (!((ParsedTypeObject) q).initializer().isTypeObjectInitialized()) {
           if (Report.should_report(TOPICS, 2))
-            Report.report(3, "[" + namespace + "] Found uninitialized class: " + q);
+            Report.report(3, "[" + namespace + "] Found uninitialized class: "
+                + q);
           throw new InternalCompilerError(q + " is uninitialized");
         }
       } else throw new InternalCompilerError(q + " is not a ParsedClassObject");
     }
   }
-  
+
   @Override
   public URI namespace() {
     return namespace;
@@ -260,8 +279,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     Job job = scheduler.loadSource((FileSource) source, true);
     CodebaseSource cbsrc = (CodebaseSource) source;
 
-    if(name.equals("fabric.lang.Codebase"))
-      System.err.println("Codebase NS: " + cbsrc.canonicalNamespace());
+    System.err.println("NS: " + cbsrc.namespace());
+    System.err.println("Canonical NS: " + cbsrc.canonicalNamespace());
 
     if (job != null) {
       // check the cache
@@ -279,9 +298,9 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
         throw new MissingDependencyException(g);
       }
-      if (Report.should_report(Report.loader, 3))
-        new Exception("loaded " + source + " reached types initialized: " + g)
-            .printStackTrace();
+      // if (Report.should_report(Report.loader, 3))
+      new Exception("loaded " + source + " reached types initialized: " + g)
+          .printStackTrace();
 
     }
     // The source has already been compiled, but the type was not created there.
@@ -389,18 +408,19 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   public Codebase codebase() {
     return null;
   }
-  
+
   @Override
   public Label label() {
-    if(Worker.isInitialized()){
-      if(integrity == null) {        
+    if (Worker.isInitialized()) {
+      if (integrity == null) {
         Store s = extInfo.destinationStore();
         NodePrincipal sp = s.getPrincipal();
         NodePrincipal np = Worker.getWorker().getPrincipal();
-        integrity = LabelUtil._Impl.toLabel(s, LabelUtil._Impl.writerPolicy(s, sp, np));
+        integrity =
+            LabelUtil._Impl.toLabel(s, LabelUtil._Impl.writerPolicy(s, sp, np));
       }
       return integrity;
-    }    
+    }
     throw new InternalCompilerError("Not implemented yet! Hurry up!");
   }
 }

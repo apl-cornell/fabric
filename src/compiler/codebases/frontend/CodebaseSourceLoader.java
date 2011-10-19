@@ -28,10 +28,7 @@ public class CodebaseSourceLoader implements URISourceLoader {
   }
   
   public CodebaseSourceLoader(ExtensionInfo extInfo, Codebase codebase) {
-    this(extInfo,
-        URI.create("fab://" + codebase.$getStore().name() + "/"
-            + codebase.$getOnum()),
-            codebase);  
+    this(extInfo, NSUtil.namespace(codebase));
   }
 
   /**
@@ -62,7 +59,7 @@ public class CodebaseSourceLoader implements URISourceLoader {
     CodebaseTypeSystem ts = (CodebaseTypeSystem) extInfo.typeSystem();
         
     if(Report.should_report(TOPICS, 3))
-      Report.report(3, "Checking " + NSUtil.oid(codebase) + " for " + className);
+      Report.report(3, "Checking " + NSUtil.namespace(codebase) + " for " + className);
 
     fabric.lang.Object obj = codebase.resolveClassName(className);
 
@@ -97,7 +94,7 @@ public class CodebaseSourceLoader implements URISourceLoader {
     if(s != null)
       return s;
     
-    if(NSUtil.dirname(file).equals(this.ns))
+    if(!NSUtil.dirname(file).equals(this.ns))
       throw new FileNotFoundException("Cannot load " + file + " from " + ns);
     
     String className = NSUtil.basename(file);

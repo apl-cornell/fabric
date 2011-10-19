@@ -62,7 +62,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
 
   @Override
   public Disamb disamb() {
-    return new JifDisamb_c();
+    return new FabricDisamb_c();
   }
 
   @Override

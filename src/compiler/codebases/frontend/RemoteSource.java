@@ -13,7 +13,7 @@ import jif.parse.UTF8FileSource;
 import polyglot.frontend.Source;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
-import fabric.common.SysUtil;
+import fabric.common.NSUtil;
 import fabric.lang.FClass;
 import fabric.lang.security.Label;
 
@@ -121,7 +121,7 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
 
   @Override
   public URI canonicalNamespace() {
-    return SysUtil.oid(fcls.getCodebase());
+    return NSUtil.namespace(fcls.getCodebase());
   }
 
   @Override

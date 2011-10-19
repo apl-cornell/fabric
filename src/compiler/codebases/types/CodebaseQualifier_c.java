@@ -6,6 +6,7 @@ import polyglot.types.Package;
 import polyglot.types.Package_c;
 import polyglot.types.Resolver;
 import polyglot.types.TypeSystem;
+import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 
 
@@ -30,9 +31,7 @@ public class CodebaseQualifier_c extends Package_c implements CodebaseQualifier 
       Codebase codebase) {
     super(ts, prefix, name);
     this.codebase = codebase;
-    this.uri =
-        URI.create("fab://" + codebase.$getStore().name() + "/"
-            + codebase.$getOnum());
+    this.uri = NSUtil.namespace(codebase);
   }
 
   @Override

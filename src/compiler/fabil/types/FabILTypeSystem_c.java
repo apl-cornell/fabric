@@ -640,7 +640,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
       if(nsr.codebase() != null)
         return nsr.codebase();
       
-      throw new InternalCompilerError("Cannot get codebase for namespace:" + namespace);
+      throw new InternalCompilerError("Cannot get codebase for namespace:" + namespace +":" + nsr.getClass());
   }
 
   @Override

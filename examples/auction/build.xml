@@ -88,10 +88,14 @@
   </target>
 
   <target name="load-codebases" depends="publish-all">
-    <loadfile property="broker.codebase" srcFile="${broker.codebase.file}" failonerror="false"/>
-    <loadfile property="airlineA.codebase" srcFile="${airlineA.codebase.file}"  failonerror="false"/>
-    <loadfile property="airlineB.codebase" srcFile="${airlineB.codebase.file}"  failonerror="false"/>
-    <loadfile property="user.codebase" srcFile="${user.codebase.file}" failonerror="false"/>
+    <loadfile property="broker.codebase" srcFile="${broker.codebase.file}" failonerror="false">
+      <filterchain> <deletecharacters chars="&lt;&gt;"/><trim/></filterchain></loadfile>
+    <loadfile property="airlineA.codebase" srcFile="${airlineA.codebase.file}"  failonerror="false">
+      <filterchain> <deletecharacters chars="&lt;&gt;"/><trim/></filterchain></loadfile>
+    <loadfile property="airlineB.codebase" srcFile="${airlineB.codebase.file}"  failonerror="false">
+      <filterchain> <deletecharacters chars="&lt;&gt;"/><trim/></filterchain></loadfile>
+    <loadfile property="user.codebase" srcFile="${user.codebase.file}" failonerror="false">
+      <filterchain> <deletecharacters chars="&lt;&gt;"/><trim/></filterchain></loadfile>
   </target>
 
   <target name="publish-all" depends="publish-broker, publish-airlineA, 
@@ -272,17 +276,17 @@
   <target name="init-remote" depends="load-codebases">
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${airlineA.worker} ${airlineA.codebase}/auction.InitA"/>
+      <arg line="-v --name ${airlineA.worker} ${airlineA.codebase}auction.InitA"/>
     </exec>
     
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${airlineB.worker} ${airlineB.codebase}/auction.InitB"/>
+      <arg line="-v --name ${airlineB.worker} ${airlineB.codebase}auction.InitB"/>
     </exec>
     
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${user.worker} ${user.codebase}/auction.InitUser"/>
+      <arg line="-v --name ${user.worker} ${user.codebase}auction.InitUser"/>
     </exec>	
   </target>
 

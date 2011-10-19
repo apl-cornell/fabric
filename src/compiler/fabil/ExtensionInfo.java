@@ -200,7 +200,6 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
       // A platform resolver is really just a path resolver that is treated
       // specially. Loading the appropriate platform classes and signatures
       // is handled by the classpathloader and sourceloader
-      CodebaseTypeSystem cbts = (CodebaseTypeSystem) ts;
 
       List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
       path.addAll(typeSystem().signatureResolvers());
@@ -211,11 +210,10 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
       // specified on the classpath
       // TODO: Make this play nice with cmdline args
       String java_path = System.getProperty("sun.boot.class.path");
-      URI file = URI.create("file:///");
       for (String dir : java_path.split(File.pathSeparator)) {
         File f = new File(dir);
         NamespaceResolver nr =
-            new SimpleResolver(this, file.resolve(f.getAbsolutePath()));
+            new SimpleResolver(this, NSUtil.file.resolve(f.getAbsolutePath()));
         nr.loadRawClasses(true);
         path.add(nr);
       }
@@ -228,15 +226,11 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
         return new PathResolver(this, ns, path, opt.codebaseAliases());
       
     } else if ("fab".equals(ns.getScheme())) {
-      List<NamespaceResolver> path = new ArrayList<NamespaceResolver>(2);
-      // Codebases may never resolve platform types.
-      path.add(typeSystem().platformResolver());
-      path.add(new CodebaseResolver(this, ns));
-      return new PathResolver(this, ns, path);
-    
+      // Codebases may never resolve platform types, so always resolve against
+      //  the platformResolver first.
+      return new SafeResolver(this, new CodebaseResolver(this, ns));    
     } else if ("file".equals(ns.getScheme())) {
       return new SimpleResolver(this, ns);
-    
     } else throw new InternalCompilerError("Unexpected scheme in URI: " + ns);
   }
 
@@ -281,18 +275,17 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
       if(ns.isOpaque())
         throw new InternalCompilerError("Unexpected URI:" + ns);
  
-      String store = ns.getAuthority();
-      long onum = Long.parseLong(ns.getPath().substring(1));
-      
-      FabILOptions opt = (FabILOptions) getOptions();
-      //At the Fabric/FabIL layer, class names do not include the codebases
-      String cachedir = opt.outputDirectory() + File.separator
-          + SysUtil.pseudoname(store, onum).replace('.', File.separatorChar);          
+      String java_pkg = NSUtil.javaPackageName(ns);      
+      // At the Fabric/FabIL layer, class names do not include the codebases,
+      // so we turn the java package name into a directory name and create a
+      // classpath loader that will search for class files there.
+      String cachedir = getFabILOptions().outputDirectory() + File.separator
+          + java_pkg.replace('.', File.separatorChar);          
       return new ClassPathLoader(cachedir, new ClassFileLoader(this));
       
     } else if ("file".equals(ns.getScheme())) {
       return new ClassPathLoader(ns.getPath(), new ClassFileLoader(this));
-    } else throw new InternalCompilerError("Unexpected scheme in URI: " + ns.getScheme());
+    } else throw new InternalCompilerError("Unexpected scheme in URI: " + ns);
   }
 
   @Override

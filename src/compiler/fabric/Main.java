@@ -34,6 +34,7 @@ import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.QuotedStringTokenizer;
 import polyglot.util.StdErrorQueue;
+import fabric.common.NSUtil;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
@@ -67,9 +68,12 @@ public class Main extends polyglot.main.Main {
     args.add("1000");
     args.add("-mergestrings");
     args.add("-simpleoutput");
+
     /* print time to complete Fabric and FabIL passes */
     args.add("-report");
     args.add("-profile=1");
+    args.add("-report");
+    args.add("-resolve=3");
 
     if (worker.sigcp != null) {
       args.add("-sigcp");
@@ -82,9 +86,16 @@ public class Main extends polyglot.main.Main {
     if (worker.code_cache != null) {
       args.add("-d");
       args.add(worker.code_cache);
+      args.add("-classpath");
+      args.add(worker.code_cache);
+      args.add("-bootclasspath");
+      args.add(worker.bootcp);
     }
 
-    args.add(SysUtil.oid(fcls).toString());
+    URI cb = NSUtil.namespace(fcls.getCodebase());
+    //XXX: It might be better to use a URI method here, but 
+    // cb.resolve(name) doesn't do what you might think 
+    args.add(cb.resolve(fcls.getName()).toString());
     Main main = new Main();
     try {
       ExtensionInfo extInfo = new fabric.ExtensionInfo(bytecodeMap);
@@ -193,8 +204,8 @@ public class Main extends polyglot.main.Main {
         fw = new FileWriter(f);
         URI localNS = extInfo.localNamespace();
         Codebase cb = extInfo.typeSystem().codebaseFromNS(localNS);
-        URI oid = SysUtil.oid(cb);
-        fw.write("<" + oid + ">");
+        URI ns = NSUtil.namespace(cb);
+        fw.write("<" + ns + ">");
         fw.close();
       } catch (fabric.common.exceptions.InternalError e) {
         throw new TerminationException("Error writing codebase reference to "
@@ -233,8 +244,11 @@ public class Main extends polyglot.main.Main {
       throw new TerminationException(ue.exitCode());
     }
 
-    if (options.needWorker())
+    if (options.needWorker()) {
       compileInWorker(options, source, ext, eq);
+      Report.report(1, "Compiling in worker with args:" + argv);
+
+    }
     else start(options, source, ext, eq);
 
   }

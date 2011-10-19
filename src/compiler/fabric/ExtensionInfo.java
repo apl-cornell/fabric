@@ -240,35 +240,35 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
 
   // Loads source files
   @Override
-  public URISourceLoader sourceLoader(URI uri) {
-    if ("fab".equals(uri.getScheme())) {
-      if(uri.isOpaque())
-        throw new InternalCompilerError("Unexpected URI:" + uri);
-      return new CodebaseSourceLoader(this, uri);
-    } else if ("file".equals(uri.getScheme())) {
-      return new FileSourceLoader(this, uri);
-    } else throw new InternalCompilerError("Unexpected scheme in URI: " + uri);
+  public URISourceLoader sourceLoader(URI ns) {
+    if ("fab".equals(ns.getScheme())) {
+      if(ns.isOpaque())
+        throw new InternalCompilerError("Unexpected URI:" + ns);
+      return new CodebaseSourceLoader(this, ns);
+    } else if ("file".equals(ns.getScheme())) {
+      return new FileSourceLoader(this, ns);
+    } else throw new InternalCompilerError("Unexpected scheme in URI: " + ns);
   }
 
   //Loads class files
   @Override
-  public ClassPathLoader classpathLoader(URI uri) {
-    if ("fab".equals(uri.getScheme())) {
+  public ClassPathLoader classpathLoader(URI ns) {
+    if ("fab".equals(ns.getScheme())) {
       // Load previously compiled classes from cache
-      if(uri.isOpaque())
-        throw new InternalCompilerError("Unexpected URI:" + uri);
+      if(ns.isOpaque())
+        throw new InternalCompilerError("Unexpected URI:" + ns);
  
-      String store = uri.getAuthority();
-      long onum = Long.parseLong(uri.getPath().substring(1));   
-      
-      //At the Fabric/FabIL layer, class names do not include the codebases
+      String java_pkg = NSUtil.javaPackageName(ns);      
+      // At the Fabric/FabIL layer, class names do not include the codebases,
+      // so we turn the java package name into a directory name and create a
+      // classpath loader that will search for class files there.
       String cachedir = getFabricOptions().outputDirectory() + File.separator
-          + SysUtil.pseudoname(store, onum).replace('.', File.separatorChar);          
+          + java_pkg.replace('.', File.separatorChar);          
       return new ClassPathLoader(cachedir, new ClassFileLoader(this));
       
-    } else if ("file".equals(uri.getScheme())) {
-      return new ClassPathLoader(uri.getPath(), new ClassFileLoader(this));
-    } else throw new InternalCompilerError("Unexpected scheme in URI: " + uri);
+    } else if ("file".equals(ns.getScheme())) {
+      return new ClassPathLoader(ns.getPath(), new ClassFileLoader(this));
+    } else throw new InternalCompilerError("Unexpected scheme in URI: " + ns);
   }
 
   /**

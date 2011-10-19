@@ -3,11 +3,9 @@ package codebases.types;
 import java.net.URI;
 
 import polyglot.types.SemanticException;
-
 import codebases.frontend.ExtensionInfo;
 import fabil.SimpleResolver;
 import fabric.common.NSUtil;
-import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 
@@ -46,7 +44,7 @@ public class CodebaseResolver extends SimpleResolver implements
   @SuppressWarnings("unused")
   @Override
   public URI resolveCodebaseName(String name) throws SemanticException {
-    return SysUtil.oid(codebase.resolveCodebaseName(name));
+    return NSUtil.namespace(codebase.resolveCodebaseName(name));
   }
   
   @Override

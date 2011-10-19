@@ -1,28 +1,19 @@
 package fabric;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import jif.JifOptions;
-import polyglot.main.UsageError;
 import polyglot.main.Main.TerminationException;
-import polyglot.util.InternalCompilerError;
+import polyglot.main.UsageError;
 import fabil.FabILOptions;
 import fabil.FabILOptions_c;
-import fabric.common.exceptions.InternalError;
-import fabric.worker.Worker;
+import fabric.common.NSUtil;
 
 public class FabricOptions extends JifOptions implements FabILOptions {
 
@@ -45,8 +36,6 @@ public class FabricOptions extends JifOptions implements FabILOptions {
    * The classpath for the Fabric signatures of FabIL and Java classes.
    */
   public List<URI> sigcp;
-
-  private static URI file = URI.create("file:///");
 
   @Override
   public void setDefaultValues() {
@@ -125,6 +114,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     out.println("Fabric references to codebases objects in the following form:");
     usageForFlag(out, "<path>", "\"<fab://store/codebase_onum>:/path/to/local/dir/:...\"");
   }
+
   
   @SuppressWarnings("rawtypes")
   @Override
@@ -155,10 +145,10 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     } else if (args[index].equals("-sigcp")) {
       index++;
       sigcp.clear();
-      processPathString(sigcp,args[index++]);
+      this.needWorker = NSUtil.processPathString(sigcp,args[index++]);
     } else if (args[index].equals("-addsigcp")) {
       index++;
-      processPathString(sigcp,args[index++]);
+      this.needWorker = NSUtil.processPathString(sigcp,args[index++]);
     }
  
     // parse fabil options before jif's, otherwise some options
@@ -238,64 +228,6 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   @Override
   public boolean needWorker() {
     return delegate.needWorker() || needWorker;
-  }
-
-  /**
-   * Process a path string of the form <URI>:/localdir/:... into URIs and add to a list
-   * @param uris the list to add the URIs to
-   * @param path the path-style string of URIs and directories, with URIs delimited by '<' and '>'
-   */
-  private void processPathString(List<URI> uris, String path) {
-    if (path.startsWith("@")) {
-      try {
-        BufferedReader lr =
-            new BufferedReader(new FileReader(path.substring(1)));
-        path = lr.readLine();
-      } catch (FileNotFoundException e) {
-        throw new InternalCompilerError(e);
-      } catch (IOException e) {
-        throw new InternalCompilerError(e);
-      }
-    }
-    int idx = 0;
-    while (idx < path.length()) {
-      if (path.charAt(idx) == '<') {
-        int end = path.indexOf('>',idx);
-        if(end < 0)
-          throw new InternalCompilerError("Invalid path");
-        URI u = URI.create(path.substring(idx + 1, end));
-        uris.add(u);
-
-        if(u.getScheme().equals("fab"))
-          this.needWorker = true;
-        idx = end + 1;
-        
-      } else if (path.charAt(idx) == File.pathSeparatorChar) {
-        idx++;
-      } else {
-        int end = path.indexOf(File.pathSeparatorChar,idx);
-
-        String dir="";
-        if(end < 0) {
-          dir = path.substring(idx);
-          idx = path.length();
-        }
-        else {
-          dir = path.substring(idx, end);
-          idx = end;
-        }
-        if(!"".equals(dir)) {
-          URI u = URI.create(dir);
-          
-          if (u.isAbsolute())
-            uris.add(u);
-          else {
-            File f = new File(dir);
-            uris.add(file.resolve(f.getAbsolutePath()));
-          }
-        }
-      }
-    }
   }
 
   /**

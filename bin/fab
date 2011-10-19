@@ -37,7 +37,8 @@ classpath="${FABRIC_WORKER_CP}:${EXTRACP}:${classpath}:${CODECACHE}"
 sigcp="${TOP}/sig-classes/fabric:${TOP}/lib/fabric-sig.jar:${sigcp}"
 filsigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar:${filsigcp}"
 command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" \
-                   fabric.worker.Worker --sigcp \"$(fixpath ${sigcp})\" \
+					fabric.worker.Worker --bootclasspath \"$(fixpath ${FABRIC_BOOTCP})\" \
+                               --sigcp \"$(fixpath ${sigcp})\" \
                                --filsigcp \"$(fixpath ${filsigcp})\" ${args}"
 
 if [ -n "${localcode}" ]

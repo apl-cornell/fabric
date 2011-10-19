@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import codebases.types.CBTypeEncoder;
+import codebases.types.CodebaseTypeSystem;
 
 import fabric.lang.Object;
 import fabric.worker.Store;
@@ -110,5 +111,7 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
   Map<String, URI> codebaseAliases();
 
   Store destinationStore();
+  
+  CodebaseTypeSystem typeSystem();
 
 }
