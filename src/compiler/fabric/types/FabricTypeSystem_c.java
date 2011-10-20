@@ -66,13 +66,11 @@ import polyglot.util.StringUtil;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CBClassContextResolver;
 import codebases.types.CBImportTable;
-import codebases.types.CBLazyClassInitializer;
 import codebases.types.CBPackageContextResolver;
 import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
-import codebases.types.PathResolver;
 import fabric.lang.Codebase;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
@@ -788,7 +786,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   @Override
   public ClassFileLazyClassInitializer classFileLazyClassInitializer(
       ClassFile clazz) {
-    return new CBLazyClassInitializer(clazz, this);
+    throw new UnsupportedOperationException("Fabric doesn't support raw classes");
+//    return new FabILLazyClassInitializer(clazz, this);
   }
 
   // / Deprecated/Unsupported methods

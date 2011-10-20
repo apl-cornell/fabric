@@ -238,9 +238,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
       Goal g = internGoal(new EmptyGoal(job));
 
       try {
-        addPrerequisiteDependency(g, FabricScheduler.this.Serialized(job));
-        addPrerequisiteDependency(g,
-            FabricScheduler.this.PrincipalCastsAdded(job));
+        addPrerequisiteDependency(g, Serialized(job));
+        addPrerequisiteDependency(g, PrincipalCastsAdded(job));
       } catch (CyclicDependencyException e) {
         // Cannot happen.
         throw new InternalCompilerError(e);
@@ -255,22 +254,19 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
   }
   
   public Goal FClassGenerated(Job job) {
-    FabricTypeSystem  ts = fabext.typeSystem();
+    FabricTypeSystem ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
     Goal g;
-    if (((CodebaseSource) job.source()).shouldPublish())
+    if (((CodebaseSource) job.source()).shouldPublish()) {
       g = internGoal(new VisitorGoal(job, new FClassGenerator(job, ts, nf)));
-    else
-      g = internGoal(new EmptyGoal(job));
-    
-    try {
+      try {
         addPrerequisiteDependency(g, this.PreFClassGenerationBarrier());
-    }
-    catch (CyclicDependencyException e) {
+      } catch (CyclicDependencyException e) {
         // Cannot happen
         throw new InternalCompilerError(e);
-    }
-    
+      }
+    } else g = internGoal(new EmptyGoal(job));
+
     return g;
   }
   
@@ -323,7 +319,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
         FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
 
         //TODO: only run if publishing classes
-        addPrerequisiteDependency(g, this.ConsistentNamespace());
+        if(!((CodebaseSource) job.source()).shouldPublish())        
+          addPrerequisiteDependency(g, this.ConsistentNamespace());
         
         // make sure that if Object.fab is being compiled, it is always
         // written to FabIL before any other job.

@@ -44,7 +44,6 @@ import polyglot.util.StringUtil;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CBClassContextResolver;
 import codebases.types.CBImportTable;
-import codebases.types.CBLazyClassInitializer;
 import codebases.types.CBPackageContextResolver;
 import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
@@ -649,7 +648,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public ClassFileLazyClassInitializer classFileLazyClassInitializer(
       ClassFile clazz) {
-    return new CBLazyClassInitializer((fabil.types.ClassFile)clazz, this);
+    return new FabILLazyClassInitializer((fabil.types.ClassFile)clazz, this);
   }
 
   // / Deprecated/Unsupported methods

@@ -1,20 +1,18 @@
-package codebases.types;
+package fabil.types;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.StringTokenizer;
 
 import polyglot.main.Report;
 import polyglot.types.ClassType;
-import polyglot.types.MethodInstance;
 import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
-import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassFileLazyClassInitializer;
-import polyglot.types.reflect.Method;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
 import codebases.frontend.ExtensionInfo;
+import codebases.types.CodebaseClassType;
+import codebases.types.CodebaseTypeSystem;
 
 /**
  * This class is basically identical to it's superclass with calls to
@@ -22,68 +20,66 @@ import codebases.frontend.ExtensionInfo;
  * 
  * @author owen
  */
-//    protected List interfaces;
-//protected List methods;
-//protected List fields;
-//protected List constructors;
+// protected List interfaces;
+// protected List methods;
+// protected List fields;
+// protected List constructors;
 
-public class CBLazyClassInitializer extends ClassFileLazyClassInitializer {
+public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
   private CodebaseTypeSystem ts;
   private ExtensionInfo extInfo;
+  protected ClassFile classFile;
 
-  public CBLazyClassInitializer(ClassFile file, CodebaseTypeSystem ts) {
+  public FabILLazyClassInitializer(ClassFile file, CodebaseTypeSystem ts) {
     super(file, ts);
     this.ts = ts;
     this.extInfo = (ExtensionInfo) ts.extensionInfo();
+    this.classFile = file;
   }
 
   @Override
   public void initInterfaces() {
-    if(interfacesInitialized)
-      return;
-    // Clear first in case we were interrupted 
+    if (interfacesInitialized) return;
+    // Clear first in case we were interrupted
     ct.setInterfaces(new ArrayList());
     super.initInterfaces();
   }
 
   @Override
   public void initFields() {
-    if(fieldsInitialized)
-      return;
-    // Clear first in case we were interrupted 
+    if (fieldsInitialized) return;
+    // Clear first in case we were interrupted
     ct.setFields(new ArrayList());
     super.initFields();
   }
 
   @Override
   public void initConstructors() {
-    if(constructorsInitialized)
-      return;
-    // Clear first in case we were interrupted 
+    if (constructorsInitialized) return;
+    // Clear first in case we were interrupted
     ct.setConstructors(new ArrayList());
     super.initConstructors();
   }
 
   @Override
   public void initMemberClasses() {
-    if (memberClassesInitialized)
-      return;
+    if (memberClassesInitialized) return;
 
-    // Clear first in case we were interrupted 
+    // Clear first in case we were interrupted
     ct.setMemberClasses(new ArrayList());
     super.initMemberClasses();
   }
-  
+
   @Override
   public void initMethods() {
-    if (methodsInitialized) 
-      return;
+    if (methodsInitialized) return;
 
-    // Clear first in case we were interrupted 
-    ct.setMethods(new ArrayList());     
+    // Clear first in case we were interrupted
+    ct.setMethods(new ArrayList());
     super.initMethods();
   }
 
+  // This method is mostly copied from superclass, but uses namespaces
   @Override
   protected ParsedClassType createType() throws SemanticException {
     // The name is of the form "p.q.C$I$J".
@@ -93,7 +89,7 @@ public class CBLazyClassInitializer extends ClassFileLazyClassInitializer {
       Report.report(2, "creating ClassType for " + name);
 
     // Create the ClassType.
-    ParsedClassType ct = ts.createClassType(this);
+    FabILParsedClassType ct = (FabILParsedClassType) ts.createClassType(this);
     ct.flags(ts.flagsForBits(clazz.getModifiers()));
     ct.position(position());
 
@@ -102,7 +98,7 @@ public class CBLazyClassInitializer extends ClassFileLazyClassInitializer {
 
     // Set the ClassType's package.
     if (!packageName.equals("")) {
-      ct.package_(ts.packageForName(extInfo.platformNamespace(),packageName));
+      ct.package_(ts.packageForName(extInfo.platformNamespace(), packageName));
     }
 
     // This is the "C$I$J" part.
@@ -200,7 +196,7 @@ public class CBLazyClassInitializer extends ClassFileLazyClassInitializer {
   }
 
   public ClassFile classFile() {
-    return clazz;
+    return classFile;
   }
 
 }

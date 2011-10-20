@@ -279,31 +279,8 @@
       <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
-<!--
-      <arg value="-report"/>
-      <arg value="resolver=3"/>
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${fabric.home}"
-           dest="${signatures.fabric.classes}"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabc}" />
-      <arg value="-nooutput" />
-      <arg value="-trusted-providers" />
-      <arg value="-sig" />
-      <arg value="-d" />
-      <arg value="sig-classes/fabric" />
-      <arg value="-sourcepath" />
-      <arg value="src/signatures/fabric" />
-      <srcfile />
-      <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
--->
   </target>
+
   <!-- Compiles the FabIL signatures -->
   <target name="fabil-signatures" depends="init,fabil-compiler,bin,native"
       description="Compiles the FabIL signature clasess">

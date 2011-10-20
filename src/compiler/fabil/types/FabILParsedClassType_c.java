@@ -17,8 +17,6 @@ import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import codebases.frontend.CodebaseSource;
-import codebases.types.CBLazyClassInitializer;
-import codebases.types.CodebaseClassType;
 import fabil.ExtensionInfo;
 import fabil.visit.ClassHashGenerator;
 import fabil.visit.ProviderRewriter;
@@ -28,7 +26,7 @@ import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
 public class FabILParsedClassType_c extends ParsedClassType_c implements
-    CodebaseClassType {
+    FabILParsedClassType {
 
   /**
    * The namespace used to resolve the dependencies of this class
@@ -140,12 +138,13 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
     return canonical_ns;
   }
 
+    @Override
   public byte[] getClassHash() {
     if (classHash != null) return classHash;
 
     MessageDigest digest = Crypto.digestInstance();
 
-    if (fromSource instanceof CodebaseSource) {
+    if (!init().fromClassFile()) {
       // Hash the class's source code.
       try {
         String code =
@@ -154,23 +153,14 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
       } catch (IOException e) {
         throw new InternalCompilerError(e);
       }
-//    } else if (fromSource instanceof CodebaseSource) {
-//      // XXX Jif impl ugliness
+     
     } else {
       // Type was probably obtained from a Java class file. Hash the bytecode.
-      LazyClassInitializer lci = this.init();
-      if (lci instanceof CBLazyClassInitializer) {
-        CBLazyClassInitializer cflci =
-            (CBLazyClassInitializer) lci;
-        ClassFile classFile = (ClassFile) cflci.classFile();
-        digest.update(classFile.getHash());
-      } else {
-        // No clue where this class came from. Complain loudly.
-        throw new InternalError("Unexpected class initializer type: "
-            + lci.getClass());
-      }
+      FabILLazyClassInitializer init = (FabILLazyClassInitializer) init();
+      ClassFile classFile = init.classFile();
+      digest.update(classFile.getHash());
     }
-
+   
     if (!flags.isInterface()) {
       // Include the super class's hash.
       FabILParsedClassType_c superClassType =
