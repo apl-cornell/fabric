@@ -37,7 +37,7 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 		//final principal airlines = new principal (AirlineA & AirlineB);
 		final Store{Broker<-} store = worker$.getStore(Config.brokerStoreName);
 		final label{Broker<-} auction_lbl = new label{AirlineA<-;AirlineB<-;TheUser<-;Broker->}@store;
-		if(store actsfor Broker) {
+		if (store actsfor Broker) {
 	
 			Agent[AirlineA, auction_lbl] agentA = a.getAgent(auction_lbl);
 			Agent[AirlineB, auction_lbl] agentB = b.getAgent(auction_lbl);
@@ -84,6 +84,5 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 		else
 			throw new Error("Store does not act for broker");
     }
-
 }
-
+// vim: ts=4

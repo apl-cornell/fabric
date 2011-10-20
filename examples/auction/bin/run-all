@@ -1,5 +1,13 @@
 #!/bin/bash
 
+case `uname` in
+  Linux)
+   ;;
+  *)
+   echo 'OS not supported:' `uname`
+   exit 1;;
+esac
+
 BINDIR="$(dirname $(which $(readlink -f $0)))"
 MYNAME="$(basename "$0")"
 
