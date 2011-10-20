@@ -19,7 +19,7 @@ import fabric.util.Map;
 import fabric.worker.Worker;
 
 /**
- * Rewrites <code>ProviderLaber</code> AST nodes into <code>get$label()</code>
+ * Rewrites <code>ProviderLabel</code> AST nodes into <code>get$label()</code>
  * calls on class object proxies.
  */
 public class ProviderRewriter extends NodeVisitor {
