@@ -17,6 +17,7 @@ public class Codebase {
 	
   /** All of the classes in the codebase **/
   private Map/*String, FClass*/ classes;
+  
   /** All of the explicit codebases referred to in this codebase **/
   private Map/*String, Codebase*/ codebases;
 
