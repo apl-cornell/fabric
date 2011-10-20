@@ -8,10 +8,10 @@ import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import polyglot.ast.Node;
 import polyglot.frontend.ExtensionInfo;
-import polyglot.frontend.FileSource;
 import polyglot.frontend.Job;
 import polyglot.qq.QQ;
 import polyglot.visit.NodeVisitor;
+import codebases.frontend.CodebaseSource;
 import fabil.types.FabILParsedClassType_c;
 
 /**
@@ -20,7 +20,7 @@ import fabil.types.FabILParsedClassType_c;
  */
 public class ClassHashGenerator extends NodeVisitor {
 
-  public static String toSourceString(FileSource src) throws IOException {
+  public static String toSourceString(CodebaseSource src) throws IOException {
     StringBuilder result = new StringBuilder();
     BufferedReader reader = null;
     try {

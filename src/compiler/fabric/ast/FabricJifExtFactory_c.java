@@ -1,19 +1,43 @@
 package fabric.ast;
 
-import fabric.extension.*;
-import fabric.translate.*;
-import polyglot.ast.Ext;
 import jif.ast.JifExtFactory_c;
+import jif.ast.Jif_c;
 import jif.extension.JifBinaryExt;
 import jif.extension.JifCastExt;
-import jif.extension.JifClassDeclExt;
 import jif.extension.JifConstructorDeclExt;
 import jif.extension.JifFieldDeclExt_c;
 import jif.extension.JifLabelExprExt;
-import jif.extension.JifMethodDeclExt;
-import jif.extension.JifNewArrayExt;
-import jif.translate.ClassBodyToJavaExt_c;
 import jif.translate.FieldToJavaExt_c;
+import jif.translate.PackageNodeToJavaExt_c;
+import polyglot.ast.Ext;
+import fabric.extension.AbortJifExt_c;
+import fabric.extension.AtomicJifExt_c;
+import fabric.extension.CallJifExt_c;
+import fabric.extension.ClassBodyJifExt_c;
+import fabric.extension.FabricClassDeclExt;
+import fabric.extension.FabricFieldExt;
+import fabric.extension.MethodDeclJifExt;
+import fabric.extension.NewJifExt_c;
+import fabric.extension.RemoteWorkerGetterJifExt_c;
+import fabric.extension.RetryJifExt_c;
+import fabric.extension.WorkerJifExt_c;
+import fabric.translate.AbortToFabilExt_c;
+import fabric.translate.AtomicToFabilExt_c;
+import fabric.translate.BinaryToFabilExt_c;
+import fabric.translate.CallToFabilExt_c;
+import fabric.translate.CastToFabilExt_c;
+import fabric.translate.ClassBodyToFabilExt_c;
+import fabric.translate.ClassDeclToFabilExt_c;
+import fabric.translate.ConstructorDeclToFabilExt_c;
+import fabric.translate.FieldDeclToFabilExt_c;
+import fabric.translate.MethodDeclToFabilExt_c;
+import fabric.translate.NewFabricArrayToFabilExt_c;
+import fabric.translate.NewLabelToFabilExt_c;
+import fabric.translate.NewToFabilExt_c;
+import fabric.translate.PackageNodeToFabilExt_c;
+import fabric.translate.RemoteWorkerGetterToFabilExt_c;
+import fabric.translate.RetryToFabilExt_c;
+import fabric.translate.WorkerToFabilExt_c;
 
 /**
  * This class extends the Jif Extension factory to provide Jif extension objects
@@ -87,43 +111,67 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
     return new JifLabelExprExt(new NewLabelToFabilExt_c());
   }
 
+  @Override
+  protected Ext extPackageNodeImpl() {
+    return new Jif_c(new PackageNodeToFabilExt_c());
+  }  
+  
   //////////////////////////////////////////////////////////////////////////////
   // new Fabric AST nodes                                                     //
   //////////////////////////////////////////////////////////////////////////////
 
+  @Override
   public Ext extRemoteWorkerGetter() {
     return new RemoteWorkerGetterJifExt_c(new RemoteWorkerGetterToFabilExt_c());
   }
 
+  @Override
   public Ext extRetryStmt() {
     return new RetryJifExt_c(new RetryToFabilExt_c());
   }
   
+  @Override
   public Ext extAbortStmt() {
     return new AbortJifExt_c(new AbortToFabilExt_c());
   }
   
+  @Override
   public Ext extAtomic() {
     return new AtomicJifExt_c(new AtomicToFabilExt_c());
   }
   
+  @Override
   public Ext extWorker() {
     return new WorkerJifExt_c(new WorkerToFabilExt_c());
   }
   
+  @Override
   public Ext extFabricArrayInit() {
     return extArrayInit();
   }
   
+  @Override
   public Ext extFabricArrayTypeNode() {
     return extArrayTypeNode();
   }
   
+  @Override
   public Ext extNewFabricArray() {
     return new NewFabricArrayJifExt_c(new NewFabricArrayToFabilExt_c());
   }
   
+  @Override
   public Ext extAmbNewFabricArray() {
     return extAmbNewArray(); 
+  }
+
+  @Override
+  public Ext extCodebaseNode() {
+    throw new UnsupportedOperationException("Codebase nodes not implemented yet.");
+  }
+
+  @Override
+  public Ext extCodebaseDecl() {
+    throw new UnsupportedOperationException("Codebase nodes not implemented yet.");
   }
 }

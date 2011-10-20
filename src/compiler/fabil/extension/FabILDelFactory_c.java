@@ -1,11 +1,13 @@
 package fabil.extension;
 
+import codebases.ast.CodebaseImportDel_c;
 import polyglot.ast.AbstractDelFactory_c;
 import polyglot.ast.JL;
 
 public class FabILDelFactory_c extends AbstractDelFactory_c implements
     FabILDelFactory {
 
+  @Override
   public final JL delFabricArrayTypeNode() {
     JL e = delFabricArrayTypeNodeImpl();
     
@@ -27,6 +29,7 @@ public class FabILDelFactory_c extends AbstractDelFactory_c implements
     return postDelArrayTypeNode(del);
   }
 
+  @Override
   public final JL delFabricArrayInit() {
     JL e = delFabricArrayInitImpl();
     
@@ -48,6 +51,7 @@ public class FabILDelFactory_c extends AbstractDelFactory_c implements
     return postDelArrayInit(del);
   }
 
+  @Override
   public final JL delProviderLabel() {
     JL e = delProviderLabelImpl();
     
@@ -72,5 +76,15 @@ public class FabILDelFactory_c extends AbstractDelFactory_c implements
   @Override
   protected JL delImportImpl() {
     return new CodebaseImportDel_c();
+  }
+
+  @Override
+  public JL delCodebaseNode() {
+    return delNode();
+  }
+
+  @Override
+  public JL delCodebaseDecl() {
+    return delNode();
   }
 }

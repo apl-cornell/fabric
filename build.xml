@@ -37,6 +37,8 @@
   <property name="signatures.fabric.classes"
       location="${signatures.classes}/fabric"/>
 
+  <pathconvert property="polyglot.classes" refid="polyglot.classpath"/>
+
   <!-- Timestamp file for bootstrap classes. -->
   <property name="bootstrap.tstamp" location="${bootstrap.classes}/.tstamp"/>
 
@@ -240,7 +242,7 @@
   </target>
 
   <!-- Compiles the FabIL compiler -->
-  <target name="fabil-compiler" depends="init,bootstrap"
+  <target name="fabil-compiler" depends="init,bootstrap,native"
       description="Builds the FabIL compiler">
     <antcall target="standard-ext">
       <param name="ext" value="fabil" />
@@ -251,9 +253,9 @@
 
   <!-- Compiles the Fabric signatures -->
   <target name="fabric-signatures"
-      depends="init,fabric-compiler,bin,fabil-runtime"
+      depends="init,fabric-compiler,bin,fabil-runtime,worker,store"
       description="Compiles the Fabric signature classes">
-    <mkdir dir="${signatures.fabric.classes}" />
+    <mkdir dir="${signatures.fabric.classes}"/>
 
     <apply executable="bash"
            parallel="true"
@@ -263,14 +265,16 @@
            relative="false"
            skipemptyfilesets="true"
            vmlauncher="false">
-      <arg value="${fabc}" />
-      <arg value="-nooutput" />
+      <arg value="${fabc}"/>
+      <arg value="-bootclasspath" />
+      <arg value="${runtime.classes}:${classes}"/>
+      <arg value="-nooutput"/>
       <arg value="-trusted-providers" />
-      <arg value="-sig" />
-      <arg value="-d" />
-      <arg value="sig-classes/fabric" />
-      <arg value="-sourcepath" />
-      <arg value="src/signatures/fabric" />
+      <arg value="-sigcp"/>
+      <arg value="${signatures.fabric.src}" />
+      <arg value="-sig"/>
+      <arg value="-d"/>
+      <arg value="${signatures.fabric.classes}"/>
       <srcfile />
       <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
       <globmapper from="*.fab" to="*.class" />
@@ -281,7 +285,6 @@
   <target name="fabil-signatures" depends="init,fabil-compiler,bin,native"
       description="Compiles the FabIL signature clasess">
     <mkdir dir="${signatures.fabil.classes}" />
-
     <apply executable="bash"
            parallel="true"
            failonerror="true"
@@ -292,13 +295,13 @@
            vmlauncher="false">
       <arg value="${filc}" />
       <arg value="-nooutput" />
+      <arg value="-bootclasspath" />
+      <arg value="${bootstrap.classes}" />
+      <arg value="-sigcp" />
+      <arg value="${signatures.fabil.src}:${runtime.src}" />
       <arg value="-sig" />
       <arg value="-d" />
-      <arg value="sig-classes/fabil" />
-      <arg value="-sourcepath" />
-      <arg value="src/signatures/fabil:src/runtime" />
-      <arg value="-cp" />
-      <arg value="${bootstrap.classes}" />
+      <arg value="${signatures.fabil.classes}" />
       <srcfile />
       <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
       <globmapper from="*.fil" to="*.class" />
@@ -429,6 +432,7 @@
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/lang/**" />
+      <include name="fabric/common/**" />
       <include name="fabric/common/util/**" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
@@ -519,16 +523,17 @@
         skipemptyfilesets="true"
         vmlauncher="false">
       <arg value="${filc}" />
+      <arg value="-cp" />
+      <arg value="${bootstrap.classes}" />
       <arg line="${debug.flag}" />
+      <arg value="-bootclasspath" />
+      <arg value="${runtime.src}:${bootstrap.classes}" />
       <arg value="-O0" />
       <arg value="-d" />
       <arg value="rt-classes" />
-      <arg value="-sourcepath" />
-      <arg value="src/runtime" />
-      <arg value="-cp" />
-      <arg value="${bootstrap.classes}" />
+      <arg value="-platform-mode"/>
       <srcfile />
-      <fileset dir="${runtime.src}" includes="fabric/lang/arrays/*.fil"/>
+      <fileset dir="src/arrays" includes="fabric/lang/arrays/*.fil"/>
       <globmapper from="*.fil" to="*.class" />
     </apply>
   </target>
@@ -537,17 +542,6 @@
   <target name="fabil-runtime"
       depends="init,fabil-compiler,fabil-signatures,fabric-arrays">
     <mkdir dir="${runtime.classes}" />
-
-    <!-- XXX HACK -->
-    <delete>
-      <fileset dir="${signatures.fabil.classes}">
-        <!--<include name="fabric/util/Iterable.class" />
-        <include name="fabric/util/Set.class" />
-        <include name="fabric/util/Iterator.class" />
-        <include name="fabric/util/Collection.class" />-->
-        <include name="fabric/util/*.class" />
-      </fileset>
-    </delete>
 
     <apply executable="bash"
         parallel="true"
@@ -560,18 +554,18 @@
       <arg value="${filc}" />
       <arg line="${debug.flag}" />
       <arg value="-O0" />
-      <arg value="-d" />
-      <arg value="rt-classes" />
-      <arg value="-sourcepath" />
-      <arg value="src/runtime" />
-      <arg value="-j" />
-      <arg value="-Xms256M" />
       <arg value="-cp" />
       <arg value="${bootstrap.classes}" />
+      <arg value="-j" />
+      <arg value="-Xms256M" />
+      <arg value="-d" />
+      <arg value="rt-classes" />
+      <arg value="-bootclasspath" />
+      <arg value="${runtime.classes}:${runtime.src}:${polyglot.classes}:${bootstrap.classes}" />
+      <arg value="-platform-mode"/>
       <srcfile />
       <fileset dir="${runtime.src}"
-          includes="**/*.fil"
-          excludes="fabric/util/*.fil,fabric/lang/arrays/*.fil" />
+          includes="**/*.fil" excludes="fabric/util/*.fil" />
       <filelist dir="${runtime.src}">
         <file name="fabric/util/HashMap.fil"/>
         <file name="fabric/util/LinkedList.fil"/>
@@ -603,15 +597,18 @@
         vmlauncher="false">
       <arg value="${fabc}" />
       <arg line="${debug.flag}" />
-      <arg value="-O0" />
-      <arg value="-e" />
-      <arg value="-trusted-providers" />
-      <arg value="-d" />
-      <arg value="rt-classes" />
-      <arg value="-sourcepath" />
-      <arg value="src/runtime" />
       <arg value="-j" />
       <arg value="-Xms256M" />
+      <arg value="-O0" />
+      <arg value="-e" />
+      <arg value="-bootclasspath" />
+      <arg value="${runtime.classes}:${classes}"/>
+      <arg value="-trusted-providers" />
+      <arg value="-d" />
+      <arg value="${runtime.classes}" />
+      <arg value="-sourcepath" />
+      <arg value="${runtime.src}" />
+
       <srcfile />
       <fileset dir="${runtime.src}"
           includes="**/*.fab" />

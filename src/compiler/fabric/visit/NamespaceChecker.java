@@ -6,6 +6,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
+import codebases.types.CodebaseClassType;
+
 import jif.ast.JifClassDecl;
 import polyglot.ast.Node;
 import polyglot.frontend.Job;
@@ -14,7 +16,6 @@ import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
 import polyglot.visit.ErrorHandlingVisitor;
 import polyglot.visit.NodeVisitor;
-import fabil.types.CodebaseClassType;
 import fabric.Topics;
 import fabric.ast.FabricNodeFactory;
 import fabric.common.SysUtil;
@@ -34,24 +35,24 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
   @Override
   protected Node leaveCall(Node old, Node n, NodeVisitor v)
       throws SemanticException {
-    if(n instanceof JifClassDecl) {
-      if (Report.should_report(Topics.fabric, 3))
-        Report.report(3, "Checking namespace consistency for " + n);
-      ParsedClassType pct = ((JifClassDecl) n).type();
-      String className = pct.fullName();
-      Codebase cb = ((CodebaseClassType) pct).codebase();
-      FClass fcls = cb.resolveClassName(className);      
-      Set<FClass> relink = buildRelink(fcls);
-      
-      if(relink.size() > 0){
-        throw new SemanticException(
-            "Detected namespace inconsistencies for class " + className + "." 
-                + " The following classes must be relinked with the current codebase: "
-                + relink);
-      }
-      if (Report.should_report(Topics.fabric, 3))
-        Report.report(3, "Class " + pct + " is consistent with codebase " + cb);
-    }
+//    if(n instanceof JifClassDecl) {
+//      if (Report.should_report(Topics.fabric, 3))
+//        Report.report(3, "Checking namespace consistency for " + n);
+//      ParsedClassType pct = ((JifClassDecl) n).type();
+//      String className = pct.fullName();
+//      Codebase cb = ((CodebaseClassType) pct).codebase();
+//      FClass fcls = cb.resolveClassName(className);      
+//      Set<FClass> relink = buildRelink(fcls);
+//      
+//      if(relink.size() > 0){
+//        throw new SemanticException(
+//            "Detected namespace inconsistencies for class " + className + "." 
+//                + " The following classes must be relinked with the current codebase: "
+//                + relink);
+//      }
+//      if (Report.should_report(Topics.fabric, 3))
+//        Report.report(3, "Class " + pct + " is consistent with codebase " + cb);
+//    }
     return n;
   }
 
@@ -118,10 +119,11 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
     return relink;
   }
 
-  protected static Set<String> convert(fabric.util.Set s) {
-    Set<String> c = new HashSet<String>(s.size());
-    for (fabric.util.Iterator it = s.iterator(); it.hasNext();)
-      c.add((String) WrappedJavaInlineable.$unwrap(it.next()));
-    return c;
+  protected static Set<String> convert(fabric.lang.arrays.ObjectArray s) {
+    return null;
+//    Set<String> c = new HashSet<String>(s.size());
+//    for (fabric.util.Iterator it = s.iterator(); it.hasNext();)
+//      c.add((String) WrappedJavaInlineable.$unwrap(it.next()));
+//    return c;
   }
 }

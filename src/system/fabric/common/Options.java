@@ -12,6 +12,11 @@ public abstract class Options {
   private final SortedSet<Flag> flags;
   
   /**
+   * Fabric runtime classpath for linking dynamically compiled code
+   */
+  public String bootcp;
+
+  /**
    * Fabric signature path for dynamically compiled code 
    */
   public String sigcp;
@@ -25,6 +30,7 @@ public abstract class Options {
    * Directory for caching dynamically compiled code 
    */
   public String code_cache;
+
 
   /**
    * Whether to turn off SSL encryption for debugging purposes.
@@ -398,6 +404,15 @@ public abstract class Options {
       @Override
       public int handle(String[] args, int index) {
         Options.this.code_cache = args[index];
+        return index + 1;
+      }
+    });
+    
+    flags.add(new Flag(Kind.SECRET, "--bootclasspath", "<path>",
+        "directory for code compiled by the worker") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.bootcp = args[index];
         return index + 1;
       }
     });

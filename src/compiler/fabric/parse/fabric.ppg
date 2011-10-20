@@ -8,16 +8,22 @@ import jif.parse.*;
 import polyglot.parse.*;
 import fabric.types.FabricTypeSystem;
 import fabric.types.FabricFlags;
-import jif.parse.Name;
+import fabric.parse.Name;
+import codebases.ast.CodebaseDecl;
+import fabric.lang.Codebase;
+
+import java.net.URI;
 
 parser Grm extends jif.parse.Grm {:
     public final FabricTypeSystem ts;
     public final FabricNodeFactory nf;
+	public final URI ns;
 
-    public Grm(Lexer l, FabricTypeSystem t, FabricNodeFactory n, ErrorQueue q) {
+    public Grm(Lexer l, FabricTypeSystem t, FabricNodeFactory n, ErrorQueue q, URI ns) {
         super(l, t, n, q);
         ts = t;
         nf = n;
+        this.ns = ns; 
     }
 
     public TypeNode fabricArray(Position pos, TypeNode n, int dims) throws Exception {
@@ -41,7 +47,7 @@ parser Grm extends jif.parse.Grm {:
     public TypeNode javaArray(TypeNode n, int dims) throws Exception {
       return super.array(n, dims);
     }
-
+	
     /**
      * Converts an Amb a into an AST representing new a[][]...[]
      * @return either a NewFabricArray or an AmbNewFabricArray
@@ -80,6 +86,47 @@ parser Grm extends jif.parse.Grm {:
         return null;
       }
     }
+
+	//Override methods in jif.ppg to use new packageForName    
+    public PackageNode exprToPackage(Expr e) throws Exception {
+        if (e instanceof Wrapper) {
+            return ((Wrapper) e).amb.toPackage();
+        }
+
+        if (e instanceof AmbExpr) {
+            AmbExpr a = (AmbExpr) e;
+            return nf.PackageNode(pos(e), ts.packageForName(this.ns, a.name()));
+        }
+
+        if (e instanceof Field) {
+            Field f = (Field) e;
+            PackageNode pn = prefixToPackage(f.target());
+            return nf.PackageNode(pos(e),
+                                ts.packageForName(this.ns, pn.package_(), f.name()));
+        }
+
+        die(pos(e));
+        return null;
+    }
+	
+    public PackageNode prefixToPackage(Prefix p) throws Exception {
+        if (p instanceof Expr) {
+            return exprToPackage((Expr) p);
+        }
+
+        if (p instanceof AmbPrefix) {
+            AmbPrefix a = (AmbPrefix) p;
+            Prefix ap = a.prefix();
+            polyglot.types.Package pkg = null;
+            if (ap != null) pkg = prefixToPackage(a.prefix()).package_();
+            return nf.PackageNode(pos(p),
+                                ts.packageForName(this.ns, pkg, a.name()));
+        }
+
+        die(pos(p));
+        return null;
+    }
+    
 :};
 
 terminal Token AT;
@@ -88,6 +135,7 @@ terminal Token ABORT;
 terminal Token RETRY;
 terminal Token WORKER;
 terminal Token NONFABRIC;
+terminal Token CODEBASE;
 
 non terminal Atomic atomic_statement;
 non terminal Expr   location_expr_opt, location_expr;
@@ -96,8 +144,77 @@ non terminal Worker local_worker;
 non terminal RemoteWorkerGetter remote_worker;
 non terminal FabricArrayInit fabric_array_initializer;
 non terminal LabelNode access_label_opt;
+non terminal List codebase_declarations_opt, codebase_declarations;
+non terminal CodebaseDecl codebase_declaration;
 
 start with goal;
+
+//////////////
+// Names 	//
+//////////////
+// The parser sometimes creates unambiguous package objects, 
+//	providing the namespace preserves this ability
+override simple_name ::=
+                    // Name
+        IDENTIFIER:a
+            {: RESULT = new Name(parser, parser.pos(a), parser.nf.Id(parser.pos(a), a.getIdentifier())); :}
+    ;
+    
+override qualified_name ::=
+                    // Name
+        name:a DOT IDENTIFIER:b
+            {: RESULT = new Name(parser, parser.pos(a, b), a, parser.nf.Id(parser.pos(b), b.getIdentifier())); :}
+    ;
+    
+override identifier_opt ::=
+                    // Name
+            {: RESULT = null; :}
+    |   IDENTIFIER:a
+            {: RESULT = new Name(parser, parser.pos(a),
+                parser.nf.Id(parser.pos(a), a.getIdentifier())); :}
+    ;
+
+////////////////////////////////////////////////////////////////////////
+// Codebases                                                          //
+////////////////////////////////////////////////////////////////////////
+
+override compilation_unit ::=
+                    // SourceFile
+        package_declaration_opt:a
+        codebase_declarations_opt:b
+        import_declarations_opt:c
+        type_declarations_opt:d
+            {: RESULT = parser.nf.SourceFile(new Position(parser.lexer.path(), parser.lexer.file()),
+					     a, b, c, d);
+	    :}
+    |   error
+        type_declarations_opt:c
+            {: RESULT = parser.nf.SourceFile(new Position(parser.lexer.path(), parser.lexer.file()),
+					     null, Collections.EMPTY_LIST, Collections.EMPTY_LIST, c);
+	    :}
+        ;
+codebase_declarations_opt ::=
+                    // List of CodebaseDecl
+        codebase_declarations:a
+            {: RESULT = a; :}
+    |
+            {: RESULT = new TypedList(new LinkedList(), CodebaseDecl.class, false); :}
+    ;
+codebase_declarations ::=
+                    // List of CodebaseDecl
+        codebase_declaration:a
+            {: List l = new TypedList(new LinkedList(), CodebaseDecl.class, false);
+               l.add(a);
+               RESULT = l; :}
+    |   codebase_declarations:a codebase_declaration:b
+            {: RESULT = a;
+               a.add(b); :}
+    ;
+codebase_declaration ::=
+                    // CodebaseDecl
+        CODEBASE simple_name:a SEMICOLON
+            {: RESULT = parser.nf.CodebaseDecl(parser.pos(a), a.toIdentifier()); :}
+    ;
 
 
 ////////////////////////////////////////////////////////////////////////

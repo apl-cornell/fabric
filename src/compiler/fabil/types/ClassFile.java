@@ -23,7 +23,7 @@ public class ClassFile extends polyglot.types.reflect.ClassFile {
     this.hash = digest.digest();
   }
   
-  protected byte[] getHash() {
+  public byte[] getHash() {
     return hash;
   }
 

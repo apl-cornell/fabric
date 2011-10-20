@@ -24,15 +24,24 @@ public class PrincipalDelegator extends NodeVisitor {
   protected FabILNodeFactory nf;
   protected QQ qq;
 
-  protected final ClassType delegatingPrincipal;
+  protected ClassType delegatingPrincipal;
 
   public PrincipalDelegator(ExtensionInfo extInfo) {
     this.ts = extInfo.typeSystem();
     this.nf = extInfo.nodeFactory();
     this.qq = new QQ(extInfo);
-
-    this.delegatingPrincipal = ts.DelegatingPrincipal();
   }
+
+  
+  @Override
+  public NodeVisitor begin() {
+    //Wait until pass actually starts to access runtime type.
+    //This allows dependencies to be properly resolved and 
+    //avoids bootstrapping issues.
+    this.delegatingPrincipal = ts.DelegatingPrincipal();
+    return super.begin();
+  }
+
 
   @SuppressWarnings("unchecked")
   @Override

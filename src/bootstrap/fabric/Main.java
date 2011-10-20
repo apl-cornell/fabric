@@ -2,6 +2,8 @@ package fabric;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.List;
 /**
  * This bootstrap class would probably be unnecessary if FabricClassloader were
@@ -9,6 +11,7 @@ import java.util.List;
  */
 public class Main extends polyglot.main.Main
 {
-  public native static void compile(fabric.lang.FClass fcls, java.util.Map/*String, bytes*/ bytecodeMap); 
-  public native static void compile_from_shell(List<String> args, InputStream in, PrintStream out);
+  public native static long compile(fabric.lang.FClass fcls, java.util.Map/*String, bytes*/ bytecodeMap)
+      throws GeneralSecurityException, IOException; 
+  public native static long compile_from_shell(List<String> args, InputStream in, PrintStream out);
 }
