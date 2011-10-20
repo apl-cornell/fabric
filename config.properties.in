@@ -9,6 +9,3 @@ jif.home=${env.HOME}/src/jif
 #   Will override the value defined in environment variable $POLYGLOT
 #   Must be an absolute path.
 polyglot.home=${env.HOME}/src/polyglot
-
-# Home of the JDK installation
-jdk.home=${env.JAVA_HOME}
