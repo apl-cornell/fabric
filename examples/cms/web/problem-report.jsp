@@ -15,12 +15,12 @@ String message = root.getAttribute(XMLBuilder.A_ERR_MSG);
 NodeList errs = root.getElementsByTagName(XMLBuilder.TAG_ERROR_LINE);
 NodeList stati = (NodeList)root.getElementsByTagName(XMLBuilder.TAG_STATUS);%>
 <%
-if(stati.getLength() > 0) {%>
+if (stati.getLength() > 0) {%>
 	<div class="status">
-<%	for(int i=0; i < stati.getLength(); i++) {
+<%	for (int i=0; i < stati.getLength(); i++) {
 		Element status = (Element)stati.item(i); 
-		if(status != null) {
-			if(i > 0) {%>
+		if (status != null) {
+			if (i > 0) {%>
 		<br>
 <%			}%>
         <span class="<%= status.hasAttribute(XMLBuilder.A_ISERROR) ? "status_err" : (status.hasAttribute(XMLBuilder.A_ISWARNING) ? "status_warn" : "status_ok") %>" align="center">

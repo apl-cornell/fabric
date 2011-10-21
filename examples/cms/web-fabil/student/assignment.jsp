@@ -55,7 +55,7 @@ if (isStudent) {
             	<jsp:include page="assignment-groups.jsp" />
           	</div><%
   } 
-  if(assignmentType == Assignment.ASSIGNMENT)
+  if (assignmentType == Assignment.ASSIGNMENT)
   {
   %>
           <div class="assignment_left">

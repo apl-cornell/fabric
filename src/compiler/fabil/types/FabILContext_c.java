@@ -57,14 +57,14 @@ public class FabILContext_c extends Context_c implements FabILContext {
 
   @Override
   public URI namespace() {
-    if(isOuter())
+    if (isOuter())
       throw new InternalCompilerError("No namespace!");
     return ((CBImportTable)it).namespace();
   }
   
   @Override
   public Context pushSource(ImportTable it) {
-    if(it instanceof CBImportTable)
+    if (it instanceof CBImportTable)
       return super.pushSource(it);
     throw new InternalCompilerError("CBImportTable expected"); 
   }

@@ -2,9 +2,18 @@ package fabil.visit;
 
 import java.util.Collections;
 
-import polyglot.ast.*;
+import polyglot.ast.ArrayAccess;
+import polyglot.ast.Assign;
+import polyglot.ast.Call;
+import polyglot.ast.Cast;
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
 import polyglot.frontend.Job;
-import polyglot.types.*;
+import polyglot.types.ClassType;
+import polyglot.types.Flags;
+import polyglot.types.MethodInstance;
+import polyglot.types.SemanticException;
+import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.AscriptionVisitor;
 import polyglot.visit.NodeVisitor;
@@ -26,12 +35,6 @@ public class InlineableWrapper extends AscriptionVisitor {
     this.ts = ts;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.visit.ErrorHandlingVisitor#leaveCall(polyglot.ast.Node,
-   *      polyglot.ast.Node, polyglot.ast.Node, polyglot.visit.NodeVisitor)
-   */
   @Override
   protected Node leaveCall(Node parent, Node old, Node n, NodeVisitor v)
       throws SemanticException {
@@ -44,12 +47,6 @@ public class InlineableWrapper extends AscriptionVisitor {
     return super.leaveCall(parent, old, n, v);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.visit.AscriptionVisitor#ascribe(polyglot.ast.Expr,
-   *      polyglot.types.Type)
-   */
   @Override
   public Expr ascribe(Expr e, Type toType) {
     Position CG = Position.compilerGenerated();

@@ -9,7 +9,6 @@ import java.util.Map;
 import polyglot.frontend.FileSource;
 import polyglot.main.Report;
 import polyglot.util.InternalCompilerError;
-import codebases.types.CodebaseTypeSystem;
 import fabric.Topics;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
@@ -56,9 +55,7 @@ public class CodebaseSourceLoader implements URISourceLoader {
 
   @Override
   public FileSource classSource(String className) {
-    CodebaseTypeSystem ts = (CodebaseTypeSystem) extInfo.typeSystem();
-        
-    if(Report.should_report(TOPICS, 3))
+    if (Report.should_report(TOPICS, 3))
       Report.report(3, "Checking " + NSUtil.namespace(codebase) + " for " + className);
 
     fabric.lang.Object obj = codebase.resolveClassName(className);
@@ -91,10 +88,10 @@ public class CodebaseSourceLoader implements URISourceLoader {
       throws IOException {
     
     FileSource s = loadedSources.get(file);
-    if(s != null)
+    if (s != null)
       return s;
     
-    if(!NSUtil.dirname(file).equals(this.ns))
+    if (!NSUtil.dirname(file).equals(this.ns))
       throw new FileNotFoundException("Cannot load " + file + " from " + ns);
     
     String className = NSUtil.basename(file);

@@ -37,7 +37,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	{
 		backend = remoteStore;
 		FabricWorker local = FabricWorker.getWorker();
-		if(local != null && backend != null) {
+		if (local != null && backend != null) {
 		    storeWorker = local.getWorker(backend.name());
 		} else {
 		    storeWorker = null;
@@ -47,7 +47,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	public void initialize{CalServEP:;CalServEP!:}() {
 	    // There's a bug here, I can't put the new statements directly in the array initializer.
 	    atomic {
-	        if(backend != null && backend actsfor CalServEP) {
+	        if (backend != null && backend actsfor CalServEP) {
 	            Principal owner = backend.getPrincipal();
 	            String name = backend.name();
 	            
@@ -138,7 +138,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	public Event[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} 
 	retrieveEvent{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
 	where caller(CalServEP) {
-	    if(storeWorker actsfor worker$ && CalServEP equiv worker$) {
+	    if (storeWorker actsfor worker$ && CalServEP equiv worker$) {
 	        return retrieveEventRemote@storeWorker(eventID);
 	    } else {
 	        return null;
@@ -163,8 +163,8 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 				catch (ClassCastException impossible) { }
 				final Event event = e;
 
-				if(event != null && event.uid != null) {
-					if(event.uid.uid == eventID) return event;
+				if (event != null && event.uid != null) {
+					if (event.uid.uid == eventID) return event;
 				}
 			}
 		}
@@ -198,7 +198,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
 			User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:} displayUser)
 			where authority(CalRootEP), authority(CalServEP) {
-	    if(storeWorker actsfor worker$ && CalServEP equiv worker$) {
+	    if (storeWorker actsfor worker$ && CalServEP equiv worker$) {
 	        return eventSubsetRemote@storeWorker(start, end, displayUser);
 	    } else {
 	        return null;

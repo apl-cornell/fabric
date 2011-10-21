@@ -14,10 +14,12 @@ public class DirectFetchManager implements FetchManager {
   public DirectFetchManager(Worker worker, Properties dissemConfig) {
   }
 
+  @Override
   public ObjectGroup fetch(RemoteStore store, long onum) throws AccessException {
     return store.readObjectFromStore(onum);
   }
 
+  @Override
   public void destroy() {
   }
 

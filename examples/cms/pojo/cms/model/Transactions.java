@@ -249,20 +249,20 @@ public class Transactions {
     Collection LDAPInput = new ArrayList();
     Hashtable existingUsers = new Hashtable();
     try {
-      for(int i = 0; i < netIDs.size(); i++) {
+      for (int i = 0; i < netIDs.size(); i++) {
         String netID = (String)netIDs.get(i);
         User user = null;
         try {
           user = database.getUser(netID);
         } catch (Exception e) {}
-        if(user == null) LDAPInput.add(netID);
-        else if(user.getFirstName() == null || user.getLastName() == null || 
+        if (user == null) LDAPInput.add(netID);
+        else if (user.getFirstName() == null || user.getLastName() == null || 
             user.getFirstName().equals("") || user.getLastName().equals("")) {
           LDAPInput.add(netID);
           existingUsers.put(netID, user);
         }
       }
-      if(!LDAPInput.isEmpty()) {
+      if (!LDAPInput.isEmpty()) {
         String[][] LDAPNames = null;
         try {
           result = getLDAPNames(LDAPInput);
@@ -275,7 +275,7 @@ public class Transactions {
                         "Could not connect to LDAP");
           return result;
         }
-        for(int i=0; i < LDAPNames.length; i++) {
+        for (int i=0; i < LDAPNames.length; i++) {
           String netid = LDAPNames[i][0];
           String firstName = LDAPNames[i][1];
           String lastName = LDAPNames[i][2];
@@ -409,7 +409,7 @@ public class Transactions {
     Assignment assignment = group.getAssignment();
     GroupMember member = null;
     Student student = assignment.getCourse().getStudent(invited);
-    if(student == null) 
+    if (student == null) 
       return false; //Not a student in the class
     
     try {
@@ -419,7 +419,7 @@ public class Transactions {
       while (i.hasNext()) {
         GroupMember m = (GroupMember) i.next();
         groupMembersStr.add(m);
-        if(m.getStudent().getUser().getNetID() == invited.getNetID())
+        if (m.getStudent().getUser().getNetID() == invited.getNetID())
           member = m;
       }
       boolean noInvite = false;
@@ -669,7 +669,7 @@ public class Transactions {
 
   public boolean setFinalGrades(User p, Course course, Collection grades) {
     try {
-      for(Iterator i = grades.iterator(); i.hasNext();) {
+      for (Iterator i = grades.iterator(); i.hasNext();) {
         String[] gradePair = (String[])i.next();
         User u = database.getUser(gradePair[0]);
         String grade = gradePair[1];
@@ -972,7 +972,7 @@ public class Transactions {
     i = groups.iterator();
     while(i.hasNext()) {
       Group g = (Group)i.next();
-      for(Iterator mi = g.getMembers().iterator(); mi.hasNext();)
+      for (Iterator mi = g.getMembers().iterator(); mi.hasNext();)
         groupsMap.put(((GroupMember)mi.next()).getStudent().getUser(), g);
     }
     
@@ -1190,7 +1190,7 @@ public class Transactions {
         grades = assign.getGrades().iterator();
         while (grades.hasNext()) {
           Grade grade = (Grade) grades.next();
-          if(grade.getSubProblem() == null && assign.hasSubProblems()) continue;
+          if (grade.getSubProblem() == null && assign.hasSubProblems()) continue;
           Float score = (Float) totalScores.get(grade.getUser());
           Float w = (Float) assignWeights.get(grade.getAssignment());
           Float m = (Float) maxScores.get(grade.getAssignment());

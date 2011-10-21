@@ -245,7 +245,7 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
                             try {
                                 final AuthSessState[{session←}] state_ = 
                                     (AuthSessState[{session←}])AuthSessState[{session←}].declassifySS(state, session);
-                                if(state_.sessionPrincipal equiv session) { // NPE thrown here!!
+                                if (state_.sessionPrincipal equiv session) { // NPE thrown here!!
                                     state_.currentUser(logU);
                                 }
                             } catch(ClassCastException e) {}
@@ -280,7 +280,7 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
         declassify ({req.session←}) { 
             final principal logUser = declassify(loginUser, {req.session←});
             FabricWorker worker = FabricWorker.getWorker();
-            if(worker == null) return null;
+            if (worker == null) return null;
             
             final Store{req.session←} localStore = worker.getLocalStore();
 //            SessionPrincipal spdeclass = SessionPrincipal.declassifySP(sp, session);

@@ -76,6 +76,7 @@ public interface LongSet extends LongCollection
    *         being added
    * @throws NullPointerException if null is not permitted in this set
    */
+  @Override
   boolean add(long o);
 
   /**
@@ -95,6 +96,7 @@ public interface LongSet extends LongCollection
    *         if the argument c is null
    * @see #add(long)
    */
+  @Override
   boolean addAll(LongCollection c);
 
   /**
@@ -103,6 +105,7 @@ public interface LongSet extends LongCollection
    *
    * @throws UnsupportedOperationException if this operation is not allowed
    */
+  @Override
   void clear();
 
   /**
@@ -116,6 +119,7 @@ public interface LongSet extends LongCollection
    * @throws NullPointerException if o is null and this set doesn't
    *         support null values.
    */
+  @Override
   boolean contains(long o);
 
   /**
@@ -132,6 +136,7 @@ public interface LongSet extends LongCollection
    *         set doesn't support null values.
    * @see #contains(long)
    */
+  @Override
   boolean containsAll(LongCollection c);
 
   /**
@@ -142,6 +147,7 @@ public interface LongSet extends LongCollection
    * @param o the object to compare to
    * @return true if it is an equal set
    */
+  @Override
   boolean equals(Object o);
 
   /**
@@ -151,6 +157,7 @@ public interface LongSet extends LongCollection
    * @return the sum of the hashcodes of all set elements
    * @see #equals(Object)
    */
+  @Override
   int hashCode();
 
   /**
@@ -158,6 +165,7 @@ public interface LongSet extends LongCollection
    *
    * @return true if the set is empty
    */
+  @Override
   boolean isEmpty();
 
   /**
@@ -166,6 +174,7 @@ public interface LongSet extends LongCollection
    *
    * @return a set iterator
    */
+  @Override
   LongIterator iterator();
 
   /**
@@ -181,6 +190,7 @@ public interface LongSet extends LongCollection
    * @throws NullPointerException if o is null and this set doesn't allow
    *         the removal of a null value.
    */
+  @Override
   boolean remove(long o);
 
   /**
@@ -198,6 +208,7 @@ public interface LongSet extends LongCollection
    *         set doesn't support removing null values.
    * @see #remove(long)
    */
+  @Override
   boolean removeAll(LongCollection c);
 
   /**
@@ -215,6 +226,7 @@ public interface LongSet extends LongCollection
    *         set doesn't support retaining null values.
    * @see #remove(long)
    */
+  @Override
   boolean retainAll(LongCollection c);
 
   /**
@@ -224,6 +236,7 @@ public interface LongSet extends LongCollection
    *
    * @return the number of elements
    */
+  @Override
   int size();
 
   /**
@@ -235,6 +248,7 @@ public interface LongSet extends LongCollection
    * @return an array of this set's elements
    * @see #toArray(long[])
    */
+  @Override
   long[] toArray();
 
   /**
@@ -253,5 +267,6 @@ public interface LongSet extends LongCollection
    * @throws NullPointerException if a is null
    * @see #toArray()
    */
+  @Override
   long[] toArray(long[] a);
 }

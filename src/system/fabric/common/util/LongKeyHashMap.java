@@ -43,7 +43,15 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.*;
+import java.util.AbstractCollection;
+import java.util.AbstractSet;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 // NOTE: This implementation is very similar to that of Hashtable. If you fix
 // a bug in here, chances are you should make a similar change to the Hashtable
@@ -875,6 +883,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
      * Returns true if the Iterator has more elements.
      * @return true if there are more elements
      */
+    @Override
     public boolean hasNext()
     {
       return count > 0;
@@ -886,6 +895,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
      * @throws ConcurrentModificationException if the HashMap was modified
      * @throws NoSuchElementException if there is none
      */
+    @Override
     @SuppressWarnings("unchecked")
     public T next()
     {
@@ -912,6 +922,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
      * @throws ConcurrentModificationException if the HashMap was modified
      * @throws IllegalStateException if called when there is no last element
      */
+    @Override
     public void remove()
     {
       if (knownMod != modCount)
@@ -962,6 +973,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
      * Returns true if the Iterator has more elements.
      * @return true if there are more elements
      */
+    @Override
     public boolean hasNext()
     {
       return count > 0;
@@ -973,6 +985,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
      * @throws ConcurrentModificationException if the HashMap was modified
      * @throws NoSuchElementException if there is none
      */
+    @Override
     public long next()
     {
       if (knownMod != modCount)
@@ -996,6 +1009,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
      * @throws ConcurrentModificationException if the HashMap was modified
      * @throws IllegalStateException if called when there is no last element
      */
+    @Override
     public void remove()
     {
       if (knownMod != modCount)

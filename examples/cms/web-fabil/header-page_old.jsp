@@ -11,7 +11,7 @@ boolean cmsAdminOverview= (URL.equals(AccessController.CMSADMIN_URL)||URL.equals
 </head>
 <body>
 <%
-if(debug) {%>
+if (debug) {%>
 	<%-- for debug purposes --%>
 	<jsp:include page="print-xml-tree.jsp" /><%
 }%>
@@ -93,7 +93,7 @@ for (int i= 0; i != length; i++) {
 }%>
 
 <%
-if(p.isCMSAdmin())
+if (p.isCMSAdmin())
 { %>
     <li class="topmenuli">
     <a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_CMSADMIN %>" 

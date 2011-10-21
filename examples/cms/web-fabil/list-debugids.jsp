@@ -2,10 +2,10 @@
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
 boolean debug= ((Boolean)session.getAttribute(AccessController.A_DEBUG)).booleanValue();
-if(debug)
+if (debug)
 {
   Element debugids= (Element) root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_DEBUGIDS()).item(0);
-  if(debugids == null)
+  if (debugids == null)
   { %>
 <font color=#ff0000>WARNING: session debug flag set, but no debug ID list found in XML tree!</font>
 <%}

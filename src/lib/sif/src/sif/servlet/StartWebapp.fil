@@ -41,7 +41,7 @@ public class StartWebapp {
             Resource webinf = webapp.getWebInf();
             if (webinf != null && webinf.isDirectory()) {
                 Resource webxml = webinf.addPath("web.xml");
-                if(webxml.exists()) {
+                if (webxml.exists()) {
                     XmlParser parser = new XmlParser();
                     XmlParser.Node node = parser.parse(new File(webxml.getURI()));
                     XmlParser.Node servlet = node.get("servlet");

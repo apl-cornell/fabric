@@ -15,7 +15,7 @@ boolean pastRegrade = assignment.hasAttribute(XMLBuilder.A_PASTREGRADE);
 function allClick(){
 	var cell = getElementById('RegradeReqCheckboxes');
 	var checkBoxes = cell.getElementsByTagName('input');
-	for(var i=1; i<checkBoxes.length; i++)
+	for (var i=1; i<checkBoxes.length; i++)
 		checkBoxes[i].checked = true;
 	return false;
 }
@@ -50,11 +50,11 @@ Regrade requests are no longer being accepted online.
 <form action="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_REQUESTREGRADE %>" method="post">
 <table class="grading" cellpadding="10px" border="0" cellspacing="0" width="100%">
 	<tr ><%
-	if(problems.getLength() > 0){%>
+	if (problems.getLength() > 0){%>
 		<td id="RegradeReqCheckboxes" valign="top" style="left-padding:"1"">Submit Request for:<br>
 			<input type="checkbox" id="allParts" name="allParts" value="allParts" onClick="allClick();">
 			All Parts<br><br><%
-		for(int i= 0; i<problems.getLength(); i++){
+		for (int i= 0; i<problems.getLength(); i++){
 			Element problem = (Element) problems.item(i); 
 			String name = AccessController.P_REGRADESUB+problem.getAttribute(XMLBuilder.A_ID);%>
 			<input type="checkbox" name="<%=name%>" value="<%=name%>" onClick="otherClick();">

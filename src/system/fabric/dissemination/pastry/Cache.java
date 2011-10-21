@@ -1,6 +1,11 @@
 package fabric.dissemination.pastry;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.Pair;
@@ -154,6 +159,7 @@ public class Cache {
 
   private final Comparator<Pair<Pair<Store, Long>, Long>> TIMESTAMP_COMPARATOR =
       new Comparator<Pair<Pair<Store, Long>, Long>>() {
+        @Override
         public int compare(Pair<Pair<Store, Long>, Long> o1,
             Pair<Pair<Store, Long>, Long> o2) {
           Glob g1 = map.get(o1.first);

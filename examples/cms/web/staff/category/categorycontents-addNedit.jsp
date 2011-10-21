@@ -32,7 +32,7 @@
 							String SEP = CategoryXMLUtil.REQ_ID_SEP; /* separator character for elements of a request parameter */
 							/* size of displayed text boxes */
 							String rowSize = "5", colSize = "25";
-							if(category.hasAttribute(XMLBuilder.A_ISANNOUNCEMENTS)) {
+							if (category.hasAttribute(XMLBuilder.A_ISANNOUNCEMENTS)) {
 								/* announcements get nice big boxes */
 								rowSize = "3";
 								colSize = "30";
@@ -41,13 +41,13 @@
 							<div id="contents" class="showhide"><%
 							Element xColumnList = XMLUtil.getFirstChildByTagName(category, XMLBuilder.TAG_COLUMNS);
 							NodeList columnList = xColumnList.getChildNodes();
-							if(columnList.getLength() == 0) { %>
+							if (columnList.getLength() == 0) { %>
 								No existing columns<%
 							} else { %>
 								<table id="ctnts" class="assignment_table" cellpadding="2" cellspacing="0" border="0" width="100%">
 									<tr> <%
 										long[] colIDArr = new long[columnList.getLength()];
-										for(int column=0; column < columnList.getLength(); column ++) {
+										for (int column=0; column < columnList.getLength(); column ++) {
 											Element ctgCol = (Element)columnList.item(column);
 											colIDArr[column] = Long.parseLong(ctgCol.getAttribute(XMLBuilder.A_ID));%>
 											<th id="<%= colIDArr[column] %>"
@@ -55,7 +55,7 @@
 											    a_colId="<%= ctgCol.getAttribute(XMLBuilder.A_ID) %>"
 											    a_coltype="<%= ctgCol.getAttribute(XMLBuilder.A_TYPE) %>"
 											    nowrap> <%
-												if(ctgCol.getAttribute(XMLBuilder.A_HIDDEN).equals("true")) {%>
+												if (ctgCol.getAttribute(XMLBuilder.A_HIDDEN).equals("true")) {%>
 													<font color="#8888aa"> <%= ctgCol.getAttribute(XMLBuilder.A_NAME) + " [HIDDEN]" %> </font> <%
 												} else { %>
 													<font> <%= ctgCol.getAttribute(XMLBuilder.A_NAME) %> </font> <%
@@ -65,7 +65,7 @@
 										<th>Remove</th>
 									</tr> <%
 									NodeList rowList = CategoryXMLUtil.getVisibleRowList(category);
-									for(int row=0; row<rowList.getLength(); row++) { %>
+									for (int row=0; row<rowList.getLength(); row++) { %>
 										<tr> <%
 											Element ctgRow = (Element)rowList.item(row);
 											long ctgRowID = Long.parseLong(ctgRow.getAttribute(XMLBuilder.A_ID)); %>
@@ -74,7 +74,7 @@
 											</script> <%
 											String rowIDString = "" + ctgRowID;
 											NodeList contentList = CategoryXMLUtil.getContentList(ctgRow);
-											for(int column=0; column<contentList.getLength(); column++)/*Each Column Of A Row*/ {
+											for (int column=0; column<contentList.getLength(); column++)/*Each Column Of A Row*/ {
 												Element content = (Element)contentList.item(column);
 												long ctntID = Long.parseLong(content.getAttribute(XMLBuilder.A_ID));
 												long colID = colIDArr[column];
@@ -82,12 +82,12 @@
 												String datatype = content.getAttribute(XMLBuilder.A_TYPE);
 												String fileType = "curfiles";
 												String sectionLabel = "Existing files";
-												if(datatype.equalsIgnoreCase(CtgUtil.CTNT_FILE)) { %>
+												if (datatype.equalsIgnoreCase(CtgUtil.CTNT_FILE)) { %>
 													int length = ctntID == -1 ? 0 : fileList.getLength();
 													<td id="<%= "cell" + ctntIDString %>" align="left" numfiles="<%= length %>"> <%
-														if(ctntID != -1) /* if the content actually exists, check for existing files */ {
+														if (ctntID != -1) /* if the content actually exists, check for existing files */ {
 															NodeList fileList = XMLUtil.getFirstChildByTagName(content, XMLBuilder.TAG_VISIBLEFILES).getChildNodes();%>
-															if(fileList.getLength() > 0) /* display table of visible files (don't display hidden) */ {
+															if (fileList.getLength() > 0) /* display table of visible files (don't display hidden) */ {
 																<div class="replace">
 																	<span id="<%= fileType + SEP + ctntIDString + "head" %>">
 																		<a href="#"
@@ -104,7 +104,7 @@
 																			<th>Remove</th>
 																		</tr> <%
 																		/* display table of visible (nonhidden) files */
-																		for(int count=0; count<fileList.getLength(); count++) {
+																		for (int count=0; count<fileList.getLength(); count++) {
 																			Element file = (Element)fileList.item(count);
 																			long fileID = Long.parseLong(file.getAttribute(XMLBuilder.A_ID));
 																			String fileIDString = CategoryXMLUtil.createFileIDsString(fileID, ctntID, ctgRowID, colID, count);%>
@@ -134,7 +134,7 @@
 															<a href="#" onClick="moreFiles('<%= "cell" + ctntIDString %>', '<%= ctntIDString %>', false); return false;"> (Add New File) </a>
 														</div>
 													</td> <%
-												} else if(datatype.equalsIgnoreCase(CtgUtil.CTNT_DATE)) { %>
+												} else if (datatype.equalsIgnoreCase(CtgUtil.CTNT_DATE)) { %>
 													<td align="center" id="<%= "cell" + ctntIDString %>">
 														<div class="cal" id="<%="dateselect"+numOfCal%>"></div>
 														<div class="dateblock">
@@ -153,7 +153,7 @@
 														</div>
 													</td> <%
 													numOfCal++;	
-												} else if(datatype.equalsIgnoreCase(CtgUtil.CTNT_TEXT)) { %>
+												} else if (datatype.equalsIgnoreCase(CtgUtil.CTNT_TEXT)) { %>
 													<td align="center" id="<%= "cell" + ctntIDString %>">
 														<textarea rows="<%= rowSize %>"
 														          cols="<%= colSize %>"
@@ -162,7 +162,7 @@
 															<%=content.getAttribute(XMLBuilder.A_DATA)%>
 														</textarea>
 													</td> <%
-												} else if(datatype.equalsIgnoreCase(CtgUtil.CTNT_NUMBER)) { %>
+												} else if (datatype.equalsIgnoreCase(CtgUtil.CTNT_NUMBER)) { %>
 													<td align="center" id="<%= "cell" + ctntIDString %>">
 														<input type="text"
 														       size="6"
@@ -173,7 +173,7 @@
 															registerIntegerFormatTextbox('editnumber_<%= ctntIDString %>');
 														</script>
 													</td> <%
-												} else if(datatype.equalsIgnoreCase(CtgUtil.CTNT_URL)) { %>
+												} else if (datatype.equalsIgnoreCase(CtgUtil.CTNT_URL)) { %>
 													<td align="center" id="<%= "cell" + ctntIDString %>">
 														<table border="0">
 															<tr class="no_borders">
@@ -218,8 +218,8 @@
 							(so CategoryCtntsOption can put them all into the same hashtable)
 							*/
 							var maxExistingRowID = 0;
-							for(var i = 0; i < existingRowIDs.length; i++)
-								if(existingRowIDs[i] > maxExistingRowID)
+							for (var i = 0; i < existingRowIDs.length; i++)
+								if (existingRowIDs[i] > maxExistingRowID)
 									maxExistingRowID = existingRowIDs[i];
 							var nextNewRowID = maxExistingRowID + 1;
 						</script>
@@ -252,11 +252,11 @@
 						</div>
 
 						<% /* display hidden rows, to be restored */
-						if(columnList.getLength() > 0)
+						if (columnList.getLength() > 0)
 						{
 							long[] colIDArr = new long[columnList.getLength()];
 							NodeList rowListHidden = CategoryXMLUtil.getHiddenRowList(category);
-							if(rowListHidden.getLength() > 0)
+							if (rowListHidden.getLength() > 0)
 							{%>
 								<div class="replace">
 									<span id="removedcontentshead">
@@ -268,11 +268,11 @@
 									</span>
 									<table class="replacebody" id="removedcontents" cellpadding="0" cellspacing="0">
 										<tr> <%
-											for(int column=0; column < columnList.getLength(); column ++) {
+											for (int column=0; column < columnList.getLength(); column ++) {
 												Element ctgCol = (Element)columnList.item(column);
 												colIDArr[column] = Long.parseLong(ctgCol.getAttribute(XMLBuilder.A_ID));%>
 												<th id="<%= colIDArr[column] %>" title="<%= ctgCol.getAttribute(XMLBuilder.A_TYPE) %>"> <%
-													if(ctgCol.getAttribute(XMLBuilder.A_HIDDEN).equals("true")) { %>
+													if (ctgCol.getAttribute(XMLBuilder.A_HIDDEN).equals("true")) { %>
 														<font color="#8888aa"> <%= ctgCol.getAttribute(XMLBuilder.A_NAME) + " [HIDDEN]" %> </font> <%
 													} else { %>
 														<font> <%= ctgCol.getAttribute(XMLBuilder.A_NAME) %> </font> <%
@@ -281,27 +281,27 @@
 											} %>
 											<th>Restore</th>
 										</tr> <%
-										for(int row=0; row<rowListHidden.getLength(); row++) {
+										for (int row=0; row<rowListHidden.getLength(); row++) {
 											/* display hidden rows */
 											Element ctgRow = (Element)rowListHidden.item(row);
 											long ctgRowID = Long.parseLong(ctgRow.getAttribute(XMLBuilder.A_ID));
 											String rowIDString = "" + ctgRowID;
 											NodeList contentList = CategoryXMLUtil.getContentList(ctgRow); %>
 											<tr class="<%= (row % 2 == 0) ? "row_even" : "row_odd" %>"> <%
-												for(int column=0; column<contentList.getLength(); column++) {
+												for (int column=0; column<contentList.getLength(); column++) {
 													/*Each Column Of A Row*/
 													Element content = (Element)contentList.item(column);
 													String datatype = content.getAttribute(XMLBuilder.A_TYPE); %>
 													<td align="center"> <%
-														if(datatype.equalsIgnoreCase(CtgUtil.CTNT_URL)) { %>
+														if (datatype.equalsIgnoreCase(CtgUtil.CTNT_URL)) { %>
 															<%= CategoryXMLUtil.printURL(content) %> <%
-														} else if(datatype.equalsIgnoreCase(CtgUtil.CTNT_FILE)) { %>
+														} else if (datatype.equalsIgnoreCase(CtgUtil.CTNT_FILE)) { %>
 															<%= CategoryXMLUtil.printFile(content) %> <%
-														} else if(datatype.equalsIgnoreCase(CtgUtil.CTNT_TEXT)) { %>
+														} else if (datatype.equalsIgnoreCase(CtgUtil.CTNT_TEXT)) { %>
 															<%= CategoryXMLUtil.printText(content) %> <%
-														} else if(datatype.equalsIgnoreCase(CtgUtil.CTNT_DATE)) { %>
+														} else if (datatype.equalsIgnoreCase(CtgUtil.CTNT_DATE)) { %>
 															<%= CategoryXMLUtil.printDate(content) %> <%
-														} else if(datatype.equalsIgnoreCase(CtgUtil.CTNT_NUMBER)) { %>
+														} else if (datatype.equalsIgnoreCase(CtgUtil.CTNT_NUMBER)) { %>
 															<%= CategoryXMLUtil.printNumber(content) %> <%
 														} %>
 													</td> <%

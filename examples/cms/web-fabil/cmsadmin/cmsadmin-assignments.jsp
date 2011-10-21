@@ -18,7 +18,7 @@ Element root = (Element)displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).it
     	</tr>
 <% Element asgns = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_OPENASSIGNMENTS);
 NodeList assignmentList = asgns.getChildNodes();
-for(int i = 0; i < assignmentList.getLength(); i++)
+for (int i = 0; i < assignmentList.getLength(); i++)
 { 
 	Element item = (Element)assignmentList.item(i); %>
       <tr>

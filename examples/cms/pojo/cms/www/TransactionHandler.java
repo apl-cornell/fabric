@@ -482,7 +482,7 @@ public class TransactionHandler {
           Group      group   = database.getGroup(vals[3]);
           Assignment assign  = isAssign ? assignment : group.getAssignment();
           
-          if(!seenUsers.contains(student)) {
+          if (!seenUsers.contains(student)) {
             assignment.resetGradesForStudent(student);
             seenUsers.add(student);
           }

@@ -35,7 +35,7 @@
   	<jsp:include page="../problem-report.jsp"/>
     <span class="course_title">
     	<%= course.getAttribute(XMLBuilder.A_DISPLAYEDCODE) + ": " + course.getAttribute(XMLBuilder.A_COURSENAME) + " (" + course.getAttribute(XMLBuilder.A_SEMESTER) + ")" %>
-			<% if(Boolean.valueOf(course.getAttribute(XMLBuilder.A_COURSEFROZEN)).booleanValue()) { %>
+			<% if (Boolean.valueOf(course.getAttribute(XMLBuilder.A_COURSEFROZEN)).booleanValue()) { %>
         <span class="course_title" id="ct_frozen"> [FROZEN]</span>
 			<% } %>
     </span><br><br>

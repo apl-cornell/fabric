@@ -11,7 +11,7 @@ public class FabricClassLoader extends ClassLoader {
   @Override
   public java.lang.Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
     System.out.println("FabricClassLoader.loadClass(\"" + name + "\")");
-    if(codebase.getClassType(name).equals("system")) {
+    if (codebase.getClassType(name).equals("system")) {
       System.out.println(" -using system classloader");
       return getSystemClassLoader().loadClass(name);
     }

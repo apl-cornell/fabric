@@ -72,7 +72,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
 
         final Main servlet = (Main)uservlet;
         final CalendarSessionState[{*lbl;session!:}] state = (CalendarSessionState[{*lbl;session!:}])ustate;
-        if(state == null || state.css == null) throw new ServletException("invalid args");
+        if (state == null || state.css == null) throw new ServletException("invalid args");
         
 
         if (lbl <= new label {currentUser:;currentUser!:}) {
@@ -86,7 +86,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
                                     CalServEP,
                                     declassify(currentUser, {currentUser:;currentUser!:} to {currentUser!:}));
                             final State sArg = CalServDeclassifier.declassifyState(declassify(currentUser, {currentUser:;currentUser!:} to {currentUser!:}), s); 
-                            if(sArg != null && currentUser equiv userArg && userArg equiv sArg.currentUser) {
+                            if (sArg != null && currentUser equiv userArg && userArg equiv sArg.currentUser) {
                                 declassify ({currentUser:;currentUser!:} to {currentUser!:}) {
                                     final Main servletArg = declassify(servlet, {currentUser:;currentUser!:} to {currentUser!:});
                                     if (servletArg.localStore equiv CalServEP) {

@@ -38,9 +38,9 @@ public class Codebase {
     Properties p = Util.readProperties(name);
     for (String propName : p.stringPropertyNames()) {
       String className = propName.substring(0, propName.length() - 5);
-      if(propName.endsWith("name")) {
+      if (propName.endsWith("name")) {
         classes.put(className, p.getProperty(propName));
-      } else if(propName.endsWith("type")) {
+      } else if (propName.endsWith("type")) {
         classTypes.put(className, p.getProperty(propName));
       } else {
         throw new IOException("Malformed codebase file. Unknown property: " + 

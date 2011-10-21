@@ -171,7 +171,7 @@ for (int i= 0; i != numgroups; i++) {
   function allClick(groupid){
   var cell = getElementById('RegradeReqCheckboxes' + groupid);
   var checkBoxes = cell.getElementsByTagName('input');
-  for(var i=1; i<checkBoxes.length; i++)
+  for (var i=1; i<checkBoxes.length; i++)
     checkBoxes[i].checked = true;
   return false;
   }
@@ -516,7 +516,7 @@ for (int i= 0; i != numgroups; i++) {
               </script><%
   } %>
                  <h1>Logs
-<%	if(numlogs > 0) {%>
+<%	if (numlogs > 0) {%>
                  (<a class="hide" id="logs<%= groupid %>link" href="#" onclick="showentry('logs<%= groupid %>', '<%=numlogs%> entries', '<%=numlogs%> entries'); return false;"><%=numlogs%> entries</a>)
 <%	} else {%>
 						(0 entries)
@@ -563,11 +563,11 @@ for (int i= 0; i != numgroups; i++) {
 				<div id="regrade<%= groupid %>" class="showhide" style="display: none">
 				<table class="grading" cellpadding="10px" border="0" cellspacing="0" width="100%">
 				  <tr ><%
-				  if(allprobs.getLength() > 0){%>
+				  if (allprobs.getLength() > 0){%>
 				    <td id="RegradeReqCheckboxes<%= groupid %>" valign="top" style="left-padding:"1"">Submit Request for:<br>
 				      <input type="checkbox" id="allParts<%= groupid %>" name="allParts" value="allParts" onClick="allClick('<%= groupid %>');">
 				      All Parts<br><br><%
-				    for(int j= 0; j<allprobs.getLength(); j++){
+				    for (int j= 0; j<allprobs.getLength(); j++){
 				      Element problem = (Element) allprobs.item(j); 
 				      String elemname = AccessController.P_REGRADESUB + "_" + problem.getAttribute(XMLBuilder.A_SUBPROBID) + "_" + groupid;%>
 				      <input type="checkbox" name="<%=elemname%>" value="<%=elemname%>" onClick="otherClick('<%= groupid %>');">
@@ -638,7 +638,7 @@ for (int i= 0; i != numgroups; i++) {
            <td class="regrades" colspan="<%= probscol ? "5" : "4" %>">
                  <a name="comments"></a><h1>Comments
                 <span class="hide" id="comments<%= groupid %>head">
-<%	if(numcomments > 0)
+<%	if (numcomments > 0)
 	{%>
                  (<a class="hide" href="#" onClick="show('comments<%= groupid %>', '<%=numcomments%> comments', '<%=numcomments%> comments'); return false;"><%=numcomments%> comments</a>)
 <%	}

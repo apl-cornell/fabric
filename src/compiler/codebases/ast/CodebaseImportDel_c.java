@@ -2,25 +2,16 @@ package codebases.ast;
 
 import java.net.URI;
 
-import codebases.frontend.CodebaseSource;
-import codebases.types.CodebaseContext;
-import codebases.types.CodebaseTypeSystem;
-
 import polyglot.ast.Import;
 import polyglot.ast.JL_c;
 import polyglot.ast.Node;
 import polyglot.types.Named;
-import polyglot.types.NoClassException;
-import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
-import polyglot.util.CodeWriter;
 import polyglot.util.StringUtil;
-import polyglot.visit.Translator;
 import polyglot.visit.TypeChecker;
-import fabric.common.SysUtil;
-import fabric.lang.Codebase;
-import fabric.lang.FClass;
+import codebases.types.CodebaseContext;
+import codebases.types.CodebaseTypeSystem;
 
 public class CodebaseImportDel_c extends JL_c {
 

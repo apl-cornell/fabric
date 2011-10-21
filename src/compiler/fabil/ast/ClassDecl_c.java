@@ -2,9 +2,6 @@ package fabil.ast;
 
 import java.util.List;
 
-import fabil.types.FabILFlags;
-import fabil.types.FabILTypeSystem;
-
 import polyglot.ast.ClassBody;
 import polyglot.ast.Id;
 import polyglot.ast.TypeNode;
@@ -14,6 +11,8 @@ import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
+import fabil.types.FabILFlags;
+import fabil.types.FabILTypeSystem;
 
 public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
 
@@ -22,12 +21,6 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
     super(pos, flags, name, superClass, interfaces, body);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.ClassDecl_c#setSuperClass(polyglot.visit.AmbiguityRemover,
-   *      polyglot.ast.TypeNode)
-   */
   @Override
   protected void setSuperClass(AmbiguityRemover ar, TypeNode superClass)
       throws SemanticException {

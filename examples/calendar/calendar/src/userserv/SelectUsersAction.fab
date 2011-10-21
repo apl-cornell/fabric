@@ -365,7 +365,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
           } catch (NullPointerException imposs) {}
           final Store localStore = localStore_;
           fabricated.util.List[{servP:;servP!:}] validatedUsers = null;
-          if(localStore actsfor servP) {
+          if (localStore actsfor servP) {
               validatedUsers = new LinkedList[new label {servP:;servP!:}]@localStore();
           }
           

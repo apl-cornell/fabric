@@ -138,6 +138,7 @@ public interface LongKeyMap<V>
    * @return true if the object equals this map
    * @see LongSet#equals(Object)
    */
+  @Override
   boolean equals(Object o);
 
   /**
@@ -181,6 +182,7 @@ public interface LongKeyMap<V>
    * @return the hash code
    * @see LongKeyMap.Entry#hashCode()
    */
+  @Override
   int hashCode();
 
   /**
@@ -313,6 +315,7 @@ public interface LongKeyMap<V>
      *
      * @return the hash code
      */
+    @Override
     int hashCode();
 
     /**
@@ -330,6 +333,7 @@ public interface LongKeyMap<V>
      *
      * @return <code>true</code> if it is equal
      */
+    @Override
     boolean equals(Object o);
   }
 }

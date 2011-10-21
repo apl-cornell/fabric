@@ -48,7 +48,7 @@ function registerIDForOrdering(orderingID, elementID)
 	var menu = document.createElement('select');
 	menu.setAttribute('id', elementID);
 	menu.setAttribute('name', elementID); //in case it's being used as a form field
-	for(var i = 0; i < orderings[orderingID].length + 1; i++)
+	for (var i = 0; i < orderings[orderingID].length + 1; i++)
 	{
 		var option = document.createElement('option');
 		option.setAttribute('value', '' + (i + 1));
@@ -65,7 +65,7 @@ function registerIDForOrdering(orderingID, elementID)
 		
 	menu.selectedIndex = orderings[orderingID].length;
 	//update previously registered elements
-	for(var id2 in orderings[orderingID])
+	for (var id2 in orderings[orderingID])
 	{
 		var selector = getElementById(id2);
 		var option = document.createElement('option');
@@ -86,9 +86,9 @@ update the option lists of remaining elements
 function unregisterIDForOrdering(orderingID, elementID)
 {
 	//shuffle remaining entries and update their option lists
-	for(var id2 in orderings[orderingID])
+	for (var id2 in orderings[orderingID])
 	{
-		if(orderings[orderingID][id2] > orderings[orderingID][elementID])
+		if (orderings[orderingID][id2] > orderings[orderingID][elementID])
 			setIndex(orderingID, id2, orderings[orderingID][id2] - 2);
 		var selector = getElementById(id2);
 		delete selector.options[selector.options.length - 1];
@@ -104,19 +104,19 @@ function changeIndex(orderingID, elementID, newIndex)
 {
 	var oldIndex = orderings[orderingID][elementID];
 	orderings[orderingID][elementID] = newIndex + 1;
-	if(orderings[orderingID][elementID] > oldIndex)
+	if (orderings[orderingID][elementID] > oldIndex)
 	{
-		for(var id2 in orderings[orderingID])
+		for (var id2 in orderings[orderingID])
 		{
-			if(id2 != elementID && orderings[orderingID][id2] > oldIndex && orderings[orderingID][id2] <= orderings[orderingID][elementID])
+			if (id2 != elementID && orderings[orderingID][id2] > oldIndex && orderings[orderingID][id2] <= orderings[orderingID][elementID])
 				setIndex(orderingID, id2, orderings[orderingID][id2] - 2);
 		}
 	}
-	else if(orderings[orderingID][elementID] < oldIndex)
+	else if (orderings[orderingID][elementID] < oldIndex)
 	{
-		for(var id2 in orderings[orderingID])
+		for (var id2 in orderings[orderingID])
 		{
-			if(id2 != elementID && orderings[orderingID][id2] >= orderings[orderingID][elementID] && orderings[orderingID][id2] < oldIndex)
+			if (id2 != elementID && orderings[orderingID][id2] >= orderings[orderingID][elementID] && orderings[orderingID][id2] < oldIndex)
 				setIndex(orderingID, id2, orderings[orderingID][id2]);
 		}
 	}
@@ -195,7 +195,7 @@ function changeIndex(orderingID, elementID, newIndex)
 		fileTable.appendChild(fileTablebody);
 		
 		var count = cell.getAttribute('numfiles') - 0; /* '- 0' makes it an integer */
-		if(count == 0)
+		if (count == 0)
 		{
 			cell.appendChild(fileTable);
 			var removeLink = document.createElement('a');
@@ -228,7 +228,7 @@ function changeIndex(orderingID, elementID, newIndex)
     	var childLength = child.length;
     	var count = cell.getAttribute('numfiles') - 1;
     	cell.setAttribute('numfiles', count+'');
-    	if(count == 0)
+    	if (count == 0)
     		cell.removeChild(cell.lastChild);
     	cell.removeChild(child[childLength-2]);
     }
@@ -426,24 +426,24 @@ function changeIndex(orderingID, elementID, newIndex)
   
    /* create a table row for adding content in the formats given by the global variable coltypes */
     function makeRow() {
-     if(nextNewRowID == maxExistingRowID + 1) {
+     if (nextNewRowID == maxExistingRowID + 1) {
 		  var coltable = getElementById('ctnts');
 		  var headerRow = coltable.getElementsByTagName('tr')[0];
 	      var columns = headerRow.getElementsByTagName('th');
-    	  for(var i=0; i<columns.length - 1; i++){
+    	  for (var i=0; i<columns.length - 1; i++){
     	   	coltypes[i] = columns[i].getAttribute('a_coltype');
     	   	colID[i] = columns[i].getAttribute('a_colId');
    		  }
       }
       var row= document.createElement('tr');
       row.id= 'sub' + nextNewRowID;
-      for(var i=0; i<coltypes.length; i++){
+      for (var i=0; i<coltypes.length; i++){
       	var type = coltypes[i];
       	var idString = nextNewRowID + '_' + colID[i];
-      	if(type == 'text') row.appendChild(makeText(idString, true));
-      	else if(type == 'url') row.appendChild(makeURL(idString, true));
-	  		else if(type == 'date') row.appendChild(makeDate(idString, true));
-	  		else if(type == 'number') row.appendChild(makeNumber(idString, true));
+      	if (type == 'text') row.appendChild(makeText(idString, true));
+      	else if (type == 'url') row.appendChild(makeURL(idString, true));
+	  		else if (type == 'date') row.appendChild(makeDate(idString, true));
+	  		else if (type == 'number') row.appendChild(makeNumber(idString, true));
 	  		else row.appendChild(makeFiles(idString));
 	  }
       var cell= document.createElement('td');

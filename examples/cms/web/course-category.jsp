@@ -19,15 +19,15 @@
      isCategory = course.hasAttribute(XMLBuilder.A_ISCATEGORY);
    }
 
-   if(categoryList == null || categoryList.getLength() == 0) {
+   if (categoryList == null || categoryList.getLength() == 0) {
       %> <br> <%
    }
    else {
-      for(int i = 0; i < categoryList.getLength(); i++) {
+      for (int i = 0; i < categoryList.getLength(); i++) {
          Element cat = (Element)categoryList.item(i);
          int num2Show = Integer.parseInt(cat.getAttribute(XMLBuilder.A_NUMSHOW));
 
-         if(cat.getAttribute(XMLBuilder.A_HIDDEN).equals("false")) {
+         if (cat.getAttribute(XMLBuilder.A_HIDDEN).equals("false")) {
             String categoryID = cat.getAttribute(XMLBuilder.A_ID);
             String display = num2Show < Category.SHOWALL ? "": "style = \"display:none\" ";
             NodeList columnList = CategoryXMLUtil.getVisibleColumnList(cat);
@@ -46,7 +46,7 @@
     </span>
   </h2>
   <div id="<%="category"+i%>" class="showhide">
-<%          if(columnList.getLength() == 0)
+<%          if (columnList.getLength() == 0)
             {%>
   <span id="<%="category"+i%>" class="showhide">
     No columns<br><br>
@@ -56,51 +56,51 @@
             {%>
     <table class="category_table" id="category<%=i%>table" cellpadding="2" cellspacing="0" border="0">
       <tr>
-<%             for(int column=0; column < columnList.getLength(); column ++)
+<%             for (int column=0; column < columnList.getLength(); column ++)
                {
                   Element ctgCol = (Element)columnList.item(column);%>
        <th><%=ctgCol.getAttribute(XMLBuilder.A_NAME)%></th>
 <%             }
-               if(isAdmin || isCategory) /* header for column of row-remove buttons */
+               if (isAdmin || isCategory) /* header for column of row-remove buttons */
                {%>
       <th>&nbsp;</th>
 <%             }%>      
      </tr>
-<%             for(int row = 0; row < rowList.getLength(); row++)
+<%             for (int row = 0; row < rowList.getLength(); row++)
                {%>
      <tr>
 <%                Element ctgRow = (Element)rowList.item(row);
                   String ctgRowID = ctgRow.getAttribute(XMLBuilder.A_ID);
                   NodeList contentList = CategoryXMLUtil.getContentList(ctgRow);
-                  for(int column=0; column<contentList.getLength(); column++)
+                  for (int column=0; column<contentList.getLength(); column++)
                   {
                      Element content = (Element)contentList.item(column);
                      String data = "";
                      String datatype = content.getAttribute(XMLBuilder.A_TYPE);%>
          <td align="center">
-<%                   if(datatype.equalsIgnoreCase(CategoryColumn.FILE))
+<%                   if (datatype.equalsIgnoreCase(CategoryColumn.FILE))
                      {%>
                   <%= CategoryXMLUtil.printFile(content) %>
 <%                   }
-                     else if(datatype.equalsIgnoreCase(CategoryColumn.DATE))
+                     else if (datatype.equalsIgnoreCase(CategoryColumn.DATE))
                      {%>
                   <%= CategoryXMLUtil.printDate(content) %>
 <%                   }
-                     else if(datatype.equalsIgnoreCase(CategoryColumn.TEXT))
+                     else if (datatype.equalsIgnoreCase(CategoryColumn.TEXT))
                      {%>
                   <%= CategoryXMLUtil.printText(content) %>
 <%                   }
-                     else if(datatype.equalsIgnoreCase(CategoryColumn.LINK))
+                     else if (datatype.equalsIgnoreCase(CategoryColumn.LINK))
                      {%>
                   <%= CategoryXMLUtil.printURL(content) %>
 <%                   }
-                     else if(datatype.equalsIgnoreCase(CategoryColumn.NUMBER))
+                     else if (datatype.equalsIgnoreCase(CategoryColumn.NUMBER))
                      {%>
                   <%= CategoryXMLUtil.printNumber(content) %>
 <%                   }%>
          </td>
 <%                } /* End for each column within a row */
-                  if(isAdmin || isCategory)
+                  if (isAdmin || isCategory)
                   {%>            
       <td align="center">
          <script type="text/javascript">
@@ -112,7 +112,7 @@
 <%             } /* end for all rows within a category */ %>
     </table>
 <%          }
-            if(isAdmin || isCategory)
+            if (isAdmin || isCategory)
             {%>
     <p>
     <a href="?<%= AccessController.P_ACTION %>=<%=AccessController.ACT_EDITCTG%>&amp;<%= AccessController.P_CATID %>=<%= categoryID %>">Edit Layout</a>&nbsp;
@@ -120,7 +120,7 @@
 <%          }%>
     <br>
   </div>
-<%          if(num2Show < Category.SHOWALL)
+<%          if (num2Show < Category.SHOWALL)
             {%>
   <!-- show only top items in the above category table -->
   <script type="text/javascript">

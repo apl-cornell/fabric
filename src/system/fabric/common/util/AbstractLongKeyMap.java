@@ -96,16 +96,19 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
       this(entry.getKey(), entry.getValue());
     }
 
+    @Override
     public long getKey()
     {
       return key;
     }
 
+    @Override
     public V getValue()
     {
       return value;
     }
 
+    @Override
     public V setValue(V value)
     {
       throw new UnsupportedOperationException("setValue not supported on immutable entry");
@@ -149,6 +152,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @return the entry set
    * @see LongKeyMap.Entry
    */
+  @Override
   public abstract Set<LongKeyMap.Entry<V>> entrySet();
 
   /**
@@ -162,6 +166,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    *         does not support clearing.
    * @see LongSet#clear()
    */
+  @Override
   public void clear()
   {
     entrySet().clear();
@@ -200,6 +205,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    *         does not permit null keys
    * @see #containsValue(Object)
    */
+  @Override
   public boolean containsKey(long key)
   {
     Iterator<LongKeyMap.Entry<V>> entries = entrySet().iterator();
@@ -223,6 +229,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @return true if the map contains the value
    * @see #containsKey(long)
    */
+  @Override
   public boolean containsValue(Object value)
   {
     Iterator<LongKeyMap.Entry<V>> entries = entrySet().iterator();
@@ -264,6 +271,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @throws NullPointerException if this map does not accept null keys
    * @see #containsKey(long)
    */
+  @Override
   public V get(long key)
   {
     Iterator<LongKeyMap.Entry<V>> entries = entrySet().iterator();
@@ -299,6 +307,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @return true if the map is empty
    * @see #size()
    */
+  @Override
   public boolean isEmpty()
   {
     return size() == 0;
@@ -323,6 +332,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @see #containsKey(long)
    * @see #values()
    */
+  @Override
   public LongSet keySet()
   {
     if (keys == null)
@@ -377,6 +387,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
 	     * @return True if the iterator has not yet reached
 	     *         the last key.
 	     */
+            @Override
             public boolean hasNext()
             {
               return map_iterator.hasNext();
@@ -388,7 +399,8 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
 	     *
 	     * @return The next key.
 	     */ 
-           public long next()
+           @Override
+          public long next()
             {
               return map_iterator.next().getKey();
             }
@@ -401,6 +413,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
 	     * @throws UnsupportedOperationException if the
 	     *         map doesn't support removal.
 	     */
+            @Override
             public void remove()
             {
               map_iterator.remove();
@@ -428,6 +441,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @throws NullPointerException if the map forbids null keys or values
    * @see #containsKey(long)
    */
+  @Override
   public V put(long key, V value)
   {
     throw new UnsupportedOperationException();
@@ -450,6 +464,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @throws NullPointerException if <code>m</code> is null.
    * @see #put(long, Object)
    */
+  @Override
   public <T extends V> void putAll(LongKeyMap<T> m)
   {
     Iterator<LongKeyMap.Entry<T>> entries= m.entrySet().iterator();
@@ -478,6 +493,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @throws UnsupportedOperationException if deletion is unsupported
    * @see Iterator#remove()
    */
+  @Override
   public V remove(long key)
   {
     Iterator<LongKeyMap.Entry<V>> entries = entrySet().iterator();
@@ -504,6 +520,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @return the number of mappings
    * @see Set#size()
    */
+  @Override
   public int size()
   {
     return entrySet().size();
@@ -560,6 +577,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @see #containsValue(Object)
    * @see #keySet()
    */
+  @Override
   public Collection<V> values()
   {
     if (values == null)
@@ -615,6 +633,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
  	     * @return True if the iterator has not yet reached
  	     * the last value.
  	     */
+            @Override
             public boolean hasNext()
             {
               return map_iterator.hasNext();
@@ -626,6 +645,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
  	     *
  	     * @return The next value.
  	     */
+            @Override
             public V next()
             {
               return map_iterator.next().getValue();
@@ -639,6 +659,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
  	     * @throws UnsupportedOperationException if the
  	     *         map doesn't support removal.
  	     */
+            @Override
             public void remove()
             {
               map_iterator.remove();
@@ -763,6 +784,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
      *
      * @return the key
      */
+    @Override
     public long getKey()
     {
       return key;
@@ -774,6 +796,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
      *
      * @return the value
      */
+    @Override
     public V getValue()
     {
       return value;
@@ -809,6 +832,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
      * @throws IllegalArgumentException if something else about this
      *         value prevents it being stored in the map.
      */
+    @Override
     public V setValue(V newVal)
     {
       V r = value;

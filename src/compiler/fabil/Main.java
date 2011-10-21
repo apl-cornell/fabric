@@ -29,7 +29,6 @@ public class Main extends polyglot.main.Main {
   protected boolean invokePostCompiler(Options options, Compiler compiler,
       ErrorQueue eq) {
     if (options.post_compiler != null && !options.output_stdout) {
-      Runtime runtime = Runtime.getRuntime();
       QuotedStringTokenizer st =
           new QuotedStringTokenizer(options.post_compiler);
       int pc_size = st.countTokens();
@@ -56,9 +55,10 @@ public class Main extends polyglot.main.Main {
         javacCmd[j++] = "-g";
       }
 
-      Iterator iter = compiler.outputFiles().iterator();
+      @SuppressWarnings("unchecked")
+      Iterator<String> iter = compiler.outputFiles().iterator();
       for (; iter.hasNext(); j++) {
-        javacCmd[j] = (String) iter.next();
+        javacCmd[j] = iter.next();
       }
 
       if (Report.should_report(verbose, 1)) {

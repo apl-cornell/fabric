@@ -44,7 +44,7 @@ String assignID= assignment.getAttribute(XMLBuilder.A_ASSIGNID);
 		while(its.hasNext())
 		{
 			curTimeSlot = (Element)its.next();
-			if(isadmin || isassign || curTimeSlot.getAttribute(XMLBuilder.A_TSSTAFF).trim().equals(userNetID))
+			if (isadmin || isassign || curTimeSlot.getAttribute(XMLBuilder.A_TSSTAFF).trim().equals(userNetID))
 			{
 				numSlotsShown++;%>
 		<tr>
@@ -58,7 +58,7 @@ String assignID= assignment.getAttribute(XMLBuilder.A_ASSIGNID);
 				<%-- cycle through XML to list groups and members --%>
 <%				Collection tsGroups = XMLUtil.getChildrenByTagName(curTimeSlot, XMLBuilder.TAG_GROUP);
 				Element tsGroup = null;
-				if(tsGroups.size() > 0)
+				if (tsGroups.size() > 0)
 				{
 					Iterator ig = tsGroups.iterator();
 					while (ig.hasNext())
@@ -92,7 +92,7 @@ String assignID= assignment.getAttribute(XMLBuilder.A_ASSIGNID);
 		</tr>
 <%			}
 		}
-		if(numSlotsShown == 0)
+		if (numSlotsShown == 0)
 		{%>
 		<tr>
 			<td>
@@ -103,7 +103,7 @@ String assignID= assignment.getAttribute(XMLBuilder.A_ASSIGNID);
 	</table>
   	</div>
 <%-- only admin or assign priv can view unscheduled groups --%>
-<%	if(isadmin || isassign)
+<%	if (isadmin || isassign)
 	{%>
   	<div class="assignment_left">
   	<h2>Unscheduled Groups</h2>

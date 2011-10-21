@@ -23,12 +23,14 @@ public class HandshakeComposite implements Protocol {
     this.outgoing   = protocols[0];
   }
   
+  @Override
   public ShakenSocket initiate(String name, Socket s) throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
     out.writeUTF(outgoing.getClass().getName());
     return outgoing.initiate(name, s);
   }
 
+  @Override
   public ShakenSocket receive(Socket s) throws IOException {
     DataInputStream in = new DataInputStream(s.getInputStream());
     String protName = in.readUTF();

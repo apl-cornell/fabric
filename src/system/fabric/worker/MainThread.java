@@ -24,6 +24,7 @@ public final class MainThread extends FabricThread.Impl {
     this.uncaughtException = null;
 
     setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+      @Override
       public void uncaughtException(Thread t, Throwable e) {
         uncaughtException = e;
       }

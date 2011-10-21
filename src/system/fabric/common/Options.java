@@ -1,7 +1,12 @@
 package fabric.common;
 
 import java.io.PrintStream;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 import fabric.common.Options.Flag.Kind;
 import fabric.common.exceptions.InternalError;
@@ -273,6 +278,7 @@ public abstract class Options {
      */
     public abstract int handle(String[] args, int index) throws UsageError;
 
+    @Override
     public int compareTo(Flag other) {
       if (other == null) return 1;
       if (kind != other.kind) return kind.compareTo(other.kind);

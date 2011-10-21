@@ -8,10 +8,8 @@ import java.net.URI;
 import java.util.Date;
 
 import jif.parse.UTF8FileSource;
-import polyglot.frontend.FileSource;
 import polyglot.frontend.Source;
 import polyglot.util.InternalCompilerError;
-import fabric.lang.security.FromDisjunctProof;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
 
@@ -109,6 +107,7 @@ public class LocalSource extends UTF8FileSource implements CodebaseSource {
    * Open the source file. For compiler generated source, open the file this
    * soruce is derived from.
    */
+  @Override
   public Reader open() throws IOException {
     if (reader == null) {
       File toOpen = file;

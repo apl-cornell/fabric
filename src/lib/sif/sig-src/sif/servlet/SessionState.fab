@@ -31,9 +31,9 @@ public class SessionState[covariant label T, label A] where T <= A, {} <= A  {
     public static SessionState[{P←},{P←}]{P←} declassifySS{P←}(SessionState[{P→;P←},{P→;P←}]{P→;P←} ss_, principal{P←} P)
     where caller(P) {
 //    	final SessionState[{P→;P←}]{P←} ss = declassify(ss_, {P→;P←} to {P←});
-//    	if(ss == null) return null;
+//    	if (ss == null) return null;
 //    	final SSW[{P→;P←}]{P←} ssremote = declassify(ss.remote, {P→;P←} to {P←});
-//    	if(ssremote == null) return null;
+//    	if (ssremote == null) return null;
 //        final Principal{P←} sessionPrincipal = declassify(ssremote.sessionPrincipal, {P→;P←} to {P←});
 //        final String{P←}    sessionId = declassify(ssremote.sessionId, {P→;P←} to {P←});
 //        final SSW[{P←}] rem = new SSW[{P←}](sessionPrincipal, sessionId);

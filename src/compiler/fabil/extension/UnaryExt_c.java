@@ -2,7 +2,11 @@ package fabil.extension;
 
 import java.util.Collections;
 
-import polyglot.ast.*;
+import polyglot.ast.Call;
+import polyglot.ast.Expr;
+import polyglot.ast.Field;
+import polyglot.ast.Receiver;
+import polyglot.ast.Unary;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ReadWriteChecker.State;
 
@@ -58,11 +62,6 @@ public class UnaryExt_c extends ExprExt_c {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public Unary node() {
     return (Unary) super.node();

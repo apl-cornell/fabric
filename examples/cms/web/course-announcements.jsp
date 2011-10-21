@@ -59,7 +59,7 @@ if (length == 0) { %>
 					<% if (history.getLength() > 0) { %>
              Previous Versions:
              <ul><% 
-                for(int j= 0; j<history.getLength(); j++){
+                for (int j= 0; j<history.getLength(); j++){
                     Element old = (Element)history.item(j); %>
                 <li><%=old.getAttribute(XMLBuilder.A_TEXT)%></li><%
                 } %>

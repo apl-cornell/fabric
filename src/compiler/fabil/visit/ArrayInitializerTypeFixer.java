@@ -13,12 +13,6 @@ public class ArrayInitializerTypeFixer extends AscriptionVisitor {
     super(job, ts, nf);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.visit.AscriptionVisitor#ascribe(polyglot.ast.Expr,
-   *      polyglot.types.Type)
-   */
   @Override
   public Expr ascribe(Expr e, Type toType) {
     if (e.type().isNull()) e = e.type(toType);

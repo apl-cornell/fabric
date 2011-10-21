@@ -94,8 +94,8 @@ public class CSVFileFormatsUtil
 	 */
 	public static int getColumnNumber(String[] format, String columnName)
 	{
-		for(int i = 0; i < format.length; i++)
-			if(format[i].equalsIgnoreCase(columnName))
+		for (int i = 0; i < format.length; i++)
+			if (format[i].equalsIgnoreCase(columnName))
 				return i;
 		return -1;
 	}
@@ -109,7 +109,7 @@ public class CSVFileFormatsUtil
 	public static String getColumnListing(String[] format)
 	{
 		String str = format[0];
-		for(int i = 1; i < format.length; i++)
+		for (int i = 1; i < format.length; i++)
 			str += ", " + format[i];
 		return str;
 	}
@@ -135,11 +135,11 @@ public class CSVFileFormatsUtil
 	public static int[] parseColumnNamesFlexibly(String[] line) throws CSVParseException {
 		int[] indices = new int[line.length];
 		HashMap seenIndices = new HashMap();
-		for(int i = 0; i < line.length; i++) {
+		for (int i = 0; i < line.length; i++) {
 			indices[i] = -1;
 			String name = line[i].trim();
-			for(int j = 0; j < ALLOWED_COLUMNS.length; j++)
-				if(nameApproximatelyMatches(name, ALLOWED_COLUMNS[j].getName())) {
+			for (int j = 0; j < ALLOWED_COLUMNS.length; j++)
+				if (nameApproximatelyMatches(name, ALLOWED_COLUMNS[j].getName())) {
 					Integer key = new Integer(j);
 					if (seenIndices.containsKey(key)) {
 						throw new CSVParseException("Duplicate name detected (" + 
@@ -166,15 +166,15 @@ public class CSVFileFormatsUtil
 		if (colsFound == null) return -1;
 		int nameIndex = -2; //a value that should never be in colsFound
 		//figure out which index we're looking for
-		for(int i = 0; i < ALLOWED_COLUMNS.length; i++)
-			if(ALLOWED_COLUMNS[i].getName().equals(colName))
+		for (int i = 0; i < ALLOWED_COLUMNS.length; i++)
+			if (ALLOWED_COLUMNS[i].getName().equals(colName))
 			{
 				nameIndex = i;
 				break;
 			}
 		//look for the index
-		for(int i = 0; i < colsFound.length; i++)
-			if(colsFound[i] == nameIndex)
+		for (int i = 0; i < colsFound.length; i++)
+			if (colsFound[i] == nameIndex)
 				return i;
 		return -1;
 	}
@@ -189,12 +189,12 @@ public class CSVFileFormatsUtil
 	public static int[] parseSubProblemColumnNamesFlexibly(String[] line, Vector subProblemNames) throws CSVParseException {
 		int[] indices = new int[subProblemNames.size()];
 		HashMap seenIndices = new HashMap();
-		for(int i = 0; i < subProblemNames.size(); i++) {
+		for (int i = 0; i < subProblemNames.size(); i++) {
 			indices[i] = -1;
 			String name = line[i].trim();
 			
-			for(int j = 0; j < subProblemNames.size(); j++) {
-				if(nameApproximatelyMatches(name, (String)subProblemNames.get(i))) {
+			for (int j = 0; j < subProblemNames.size(); j++) {
+				if (nameApproximatelyMatches(name, (String)subProblemNames.get(i))) {
 					Integer key = new Integer(j);
 					if (seenIndices.containsKey(key)) {
 						throw new CSVParseException("Duplicate name detected (" + 
@@ -222,15 +222,15 @@ public class CSVFileFormatsUtil
 		if (colsFound == null) return -1;
 		int nameIndex = -2; //a value that should never be in colsFound
 		//figure out which index we're looking for
-		for(int i = 0; i < subProblemNames.size(); i++)
-			if(((String)subProblemNames.get(i)).equals(colName))
+		for (int i = 0; i < subProblemNames.size(); i++)
+			if (((String)subProblemNames.get(i)).equals(colName))
 			{
 				nameIndex = i;
 				break;
 			}
 		//look for the index
-		for(int i = 0; i < colsFound.length; i++)
-			if(colsFound[i] == nameIndex)
+		for (int i = 0; i < colsFound.length; i++)
+			if (colsFound[i] == nameIndex)
 				return i;
 		return -1;
 	}
@@ -241,9 +241,9 @@ public class CSVFileFormatsUtil
 	 */
 	public static boolean headerLineMatchesFormat(int[] colsFound, String[] format)
 	{
-		if(colsFound.length != format.length) return false;
-		for(int i = 0; i < colsFound.length; i++)
-			if(ALLOWED_COLUMNS[colsFound[i]].getName() != format[i])
+		if (colsFound.length != format.length) return false;
+		for (int i = 0; i < colsFound.length; i++)
+			if (ALLOWED_COLUMNS[colsFound[i]].getName() != format[i])
 				return false;
 		return true;
 	}
@@ -255,8 +255,8 @@ public class CSVFileFormatsUtil
 	public static List getStaffAppropriateFlexibleColumnList()
 	{
 		List names = new ArrayList();
-		for(int i = 0; i < ALLOWED_COLUMNS.length; i++)
-			if(ALLOWED_COLUMNS[i].isForStaff())
+		for (int i = 0; i < ALLOWED_COLUMNS.length; i++)
+			if (ALLOWED_COLUMNS[i].isForStaff())
 				names.add(ALLOWED_COLUMNS[i].getName());
 		return names;
 	}
@@ -267,8 +267,8 @@ public class CSVFileFormatsUtil
 	public static List getCMSAdminAppropriateFlexibleColumnList()
 	{
 		List names = new ArrayList();
-		for(int i = 0; i < ALLOWED_COLUMNS.length; i++)
-			if(ALLOWED_COLUMNS[i].isForAdmin())
+		for (int i = 0; i < ALLOWED_COLUMNS.length; i++)
+			if (ALLOWED_COLUMNS[i].isForAdmin())
 				names.add(ALLOWED_COLUMNS[i].getName());
 		return names;
 	}

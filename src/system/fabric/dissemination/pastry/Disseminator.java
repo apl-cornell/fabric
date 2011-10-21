@@ -11,7 +11,13 @@ import rice.Continuation;
 import rice.Executable;
 import rice.environment.Environment;
 import rice.environment.params.Parameters;
-import rice.p2p.commonapi.*;
+import rice.p2p.commonapi.Application;
+import rice.p2p.commonapi.Endpoint;
+import rice.p2p.commonapi.Id;
+import rice.p2p.commonapi.IdFactory;
+import rice.p2p.commonapi.Message;
+import rice.p2p.commonapi.NodeHandle;
+import rice.p2p.commonapi.RouteMessage;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.MessageDeserializer;
 import rice.pastry.PastryNode;
@@ -22,7 +28,11 @@ import rice.pastry.routing.RoutingTable;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
-import fabric.dissemination.pastry.messages.*;
+import fabric.dissemination.pastry.messages.AggregateInterval;
+import fabric.dissemination.pastry.messages.Fetch;
+import fabric.dissemination.pastry.messages.MessageType;
+import fabric.dissemination.pastry.messages.Replicate;
+import fabric.dissemination.pastry.messages.ReplicateInterval;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -108,9 +118,11 @@ public class Disseminator implements Application {
 
   private static final Continuation<Object, Exception> halt =
       new Continuation<Object, Exception>() {
+        @Override
         public void receiveException(Exception result) {
         }
 
+        @Override
         public void receiveResult(Object result) {
         }
       };
@@ -147,6 +159,7 @@ public class Disseminator implements Application {
     return endpoint.getLocalNodeHandle();
   }
 
+  @Override
   public void deliver(Id id, Message msg) {
     if (msg instanceof Fetch) {
       fetch((Fetch) msg);
@@ -212,6 +225,7 @@ public class Disseminator implements Application {
     forward(msg); // caches glob
 
     process(new Executable<Void, RuntimeException>() {
+      @Override
       public Void execute() {
         Fetch f = null;
 
@@ -237,6 +251,7 @@ public class Disseminator implements Application {
    */
   protected void fetch(final Fetch msg) {
     process(new Executable<Void, RuntimeException>() {
+      @Override
       public Void execute() {
         Worker worker = Worker.getWorker();
         RemoteStore c = worker.getStore(msg.store());
@@ -273,6 +288,7 @@ public class Disseminator implements Application {
    */
   protected void replicateInterval() {
     process(new Executable<Void, RuntimeException>() {
+      @Override
       public Void execute() {
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
         OidKeyHashMap<Long> skip;
@@ -364,6 +380,7 @@ public class Disseminator implements Application {
    */
   protected void replicate(final Replicate msg) {
     process(new Executable<Void, RuntimeException>() {
+      @Override
       public Void execute() {
         NodeHandle sender = msg.sender();
         rice.pastry.Id senderId = (rice.pastry.Id) sender.getId();
@@ -441,6 +458,7 @@ public class Disseminator implements Application {
    */
   protected void replicate(final Replicate.Reply msg) {
     process(new Executable<Void, RuntimeException>() {
+      @Override
       public Void execute() {
         for (Map.Entry<Pair<Store, Long>, Glob> e : msg.globs().entrySet()) {
           RemoteStore c = (RemoteStore) e.getKey().first;
@@ -460,6 +478,7 @@ public class Disseminator implements Application {
     // object dissemination unilaterally.
   }
 
+  @Override
   public boolean forward(RouteMessage message) {
     try {
       Message m = message.getMessage(deserializer);
@@ -517,6 +536,7 @@ public class Disseminator implements Application {
     return true;
   }
 
+  @Override
   public void update(NodeHandle handle, boolean joined) {
     // nothing to do
   }
@@ -527,6 +547,7 @@ public class Disseminator implements Application {
    */
   private class Deserializer implements MessageDeserializer {
 
+    @Override
     public Message deserialize(InputBuffer buf, short type, int priority,
         NodeHandle sender) throws IOException {
       switch (type) {

@@ -8,7 +8,7 @@ boolean isAdmin = course.hasAttribute(XMLBuilder.A_ISADMIN);
 boolean isGrades = course.hasAttribute(XMLBuilder.A_ISGRADES);
 boolean isGroups = course.hasAttribute(XMLBuilder.A_ISGROUPS);%>
 <div>
-<%	if(isAdmin || isGrades)
+<%	if (isAdmin || isGrades)
 	{%>
 	  <form id="uploadgrades" method="post" enctype="multipart/form-data" action="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_UPLOADGRADES %>&amp;<%= AccessController.P_ASSIGNID %>=<%= assignid %>">
 	  	<table border="0">

@@ -13,7 +13,12 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
-import fabric.lang.security.*;
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.IntegPolicy;
+import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
+import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.util.HashMap;
 import fabric.util.Map;
@@ -33,6 +38,7 @@ public final class LocalStore implements Store {
 
   private Set<Pair<Principal, Principal>> localDelegates;
 
+  @Override
   public synchronized boolean prepareTransaction(
       long tid, long commitTime, Collection<Object._Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object._Impl> writes) {
@@ -42,22 +48,27 @@ public final class LocalStore implements Store {
     return false;
   }
 
+  @Override
   public synchronized void abortTransaction(TransactionID tid) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction aborting");
   }
 
+  @Override
   public synchronized void commitTransaction(long transactionID) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction committing");
   }
 
+  @Override
   public synchronized long createOnum() {
     return freshOID++;
   }
 
+  @Override
   public synchronized Object._Impl readObject(long onum) {
     return readObjectNoDissem(onum);
   }
 
+  @Override
   public synchronized Object._Impl readObjectNoDissem(long onum) {
     if (!ONumConstants.isGlobalConstant(onum))
       throw new InternalError("Not supported.");
@@ -90,10 +101,12 @@ public final class LocalStore implements Store {
     throw new InternalError("Unknown global constant: onum " + onum);
   }
 
+  @Override
   public Object._Impl readObjectFromCache(long onum) {
     return readObject(onum);
   }
   
+  @Override
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
     return false;
   }
@@ -111,6 +124,7 @@ public final class LocalStore implements Store {
     return "LocalStore";
   }
 
+  @Override
   public Map getRoot() {
     return rootMap;
   }
@@ -155,14 +169,17 @@ public final class LocalStore implements Store {
     return publicReadonlyLabel;
   }
 
+  @Override
   public String name() {
     return "local";
   }
 
+  @Override
   public NodePrincipal getPrincipal() {
     return Worker.getWorker().getPrincipal();
   }
 
+  @Override
   public boolean isLocalStore() {
     return true;
   }
@@ -172,16 +189,19 @@ public final class LocalStore implements Store {
     return 0;
   }
 
+  @Override
   public boolean notifyEvict(long onum) {
     // nothing to do
     return false;
   }
 
+  @Override
   public boolean evict(long onum) {
     // nothing to do
     return false;
   }
 
+  @Override
   public void cache(_Impl impl) {
     // nothing to do
   }
@@ -196,6 +216,7 @@ public final class LocalStore implements Store {
         new Label._Proxy(LocalStore.this, ONumConstants.PUBLIC_READONLY_LABEL);
 
     Worker.runInSubTransaction(new Worker.Code<Void>() {
+      @Override
       @SuppressWarnings("deprecation")
       public Void run() {
         // Create global constant objects. We force renumbering on these because

@@ -44,7 +44,7 @@ class rpcManager extends java.lang.Object  implements RPCConsts {
   String arrayToString(byte[] array, int offset, int length) {
     StringBuffer bf = new StringBuffer();
     bf.append('[');
-    for(int i = offset; i < offset + length; i++) {
+    for (int i = offset; i < offset + length; i++) {
       bf.append(Integer.toString((int)array[i]));
       if (i<offset + length) bf.append(',');
     }

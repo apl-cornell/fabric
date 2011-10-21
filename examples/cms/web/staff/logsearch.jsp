@@ -24,7 +24,7 @@ boolean noLogs = root.hasAttribute(XMLBuilder.A_INITIALSEARCH);
 		            Assignment:
 		            <select name="<%= AccessController.P_LOGSEARCH_ASGN %>">
 		              <option value="0" selected>Any Assignment</option>
-		              <% for(int i=0; i < assigns.getLength(); i++) {
+		              <% for (int i=0; i < assigns.getLength(); i++) {
 		                    Element a = ((Element) assigns.item(i)); %>
 		                    <option value="<%= a.getAttribute(XMLBuilder.A_ASSIGNID) %>">
 		                      <%= a.getAttribute(XMLBuilder.A_ASSIGNNAME) %>
@@ -90,7 +90,7 @@ boolean noLogs = root.hasAttribute(XMLBuilder.A_INITIALSEARCH);
 		                        var tsel = getElementById('<%= AccessController.P_LOGSEARCH_TYPE %>');
 		                        var nsel = getElementById('<%= AccessController.P_LOGSEARCH_NAME %>');
 		                        nsel.options.length = 0;
-		                        for(var j=0; j < tsel.options.length; j++) {
+		                        for (var j=0; j < tsel.options.length; j++) {
 		                          if (tsel.options[j].selected) {
 		                            <% for (int i=0; i < lognames.getLength(); i++) {
 		                                  Element n = (Element) lognames.item(i); %>
@@ -109,7 +109,7 @@ boolean noLogs = root.hasAttribute(XMLBuilder.A_INITIALSEARCH);
 		            </select>
 		            </td></tr><tr>
 		            <td align="center" colspan="2"><a href="#" onclick="var tsel = getElementById('<%= AccessController.P_LOGSEARCH_TYPE %>');
-		                                     for(var j=0; j < tsel.options.length; j++) {
+		                                     for (var j=0; j < tsel.options.length; j++) {
 		                                       tsel.options[j].selected = true;
 		                                     }
 		                                     tsel.onchange();
@@ -132,7 +132,7 @@ boolean noLogs = root.hasAttribute(XMLBuilder.A_INITIALSEARCH);
 		            </select>
 		            </td></tr><tr>
 		            <td align="center" colspan="2"><a href="#" onclick="var nsel = getElementById('<%= AccessController.P_LOGSEARCH_NAME %>');
-		                                     for(var j=0; j < nsel.options.length; j++) {
+		                                     for (var j=0; j < nsel.options.length; j++) {
 		                                       nsel.options[j].selected = true;
 		                                     }
 		                                     return false;">

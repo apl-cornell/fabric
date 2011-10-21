@@ -217,7 +217,7 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
                     User[servP, {session!:}] logU = User.declassifyUser(session, servP, logU_);
                     try {
                     	final USessState[servP, {session!:}] uss = (USessState[servP, {session!:}])SessionState[{session!:}].declassifySS(state, session);
-                    	if(uss.sessionPrincipal equiv session) {
+                    	if (uss.sessionPrincipal equiv session) {
                     		uss.currentUser(logU);
                     	}
                     } catch(ClassCastException e) {}
@@ -249,7 +249,7 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
             final User[servP, {session:;session!:}] logUser_ = declassify(loginUser, {session!:});
             final User[servP, {session!:}] logUser = User.declassifyUser(session, servP, logUser_);
             FabricWorker worker = FabricWorker.getWorker();
-            if(worker == null) return null;
+            if (worker == null) return null;
             
             final Store{session!:} localStore = worker.getLocalStore();
 //            SessionPrincipal spdeclass = SessionPrincipal.declassifySP(sp, session);

@@ -6,14 +6,9 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import codebases.types.CodebaseClassType;
-
-import jif.ast.JifClassDecl;
 import polyglot.ast.Node;
 import polyglot.frontend.Job;
 import polyglot.main.Report;
-import polyglot.types.ParsedClassType;
-import polyglot.types.SemanticException;
 import polyglot.visit.ErrorHandlingVisitor;
 import polyglot.visit.NodeVisitor;
 import fabric.Topics;
@@ -21,7 +16,6 @@ import fabric.ast.FabricNodeFactory;
 import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
-import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.security.LabelUtil;
 import fabric.types.FabricTypeSystem;
 
@@ -33,9 +27,8 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
   }
 
   @Override
-  protected Node leaveCall(Node old, Node n, NodeVisitor v)
-      throws SemanticException {
-//    if(n instanceof JifClassDecl) {
+  protected Node leaveCall(Node old, Node n, NodeVisitor v) {
+//    if (n instanceof JifClassDecl) {
 //      if (Report.should_report(Topics.fabric, 3))
 //        Report.report(3, "Checking namespace consistency for " + n);
 //      ParsedClassType pct = ((JifClassDecl) n).type();
@@ -44,7 +37,7 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
 //      FClass fcls = cb.resolveClassName(className);      
 //      Set<FClass> relink = buildRelink(fcls);
 //      
-//      if(relink.size() > 0){
+//      if (relink.size() > 0){
 //        throw new SemanticException(
 //            "Detected namespace inconsistencies for class " + className + "." 
 //                + " The following classes must be relinked with the current codebase: "
@@ -71,7 +64,7 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
     Set<FClass> seen = new HashSet<FClass>();
     
     while ((depclass = worklist.poll()) != null) {
-      if(seen.contains(depclass))
+      if (seen.contains(depclass))
         continue;
       
       Codebase depcb = depclass.getCodebase();
@@ -93,14 +86,14 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
         }
         hasdep.add(depclass);
         FClass depdep = depcb.resolveClassName(s);
-        if(seen.add(depclass))
+        if (seen.add(depclass))
           worklist.add(depdep);
         
         //check if depclass has inconsistencies
-        if(ns.containsKey(s) && !ns.get(s).equals(depdep))
+        if (ns.containsKey(s) && !ns.get(s).equals(depdep))
           relink.add(depclass);
         //otherwise, add to namespace
-        else if(!ns.containsKey(s))
+        else if (!ns.containsKey(s))
           ns.put(s,depdep);
       }
     }

@@ -15,9 +15,7 @@ public final class Hidden extends InputNode {
         super(servletP, L, E, i);
         data = data_;
     }
-    /* (non-Javadoc)
-     * @see servlet.Node#write(servlet.HTMLWriter)
-     */
+
     void writeImpl(HTMLWriter p) {
         p.print("<input type=\"hidden\" name=");
         p.printq(input.getName());

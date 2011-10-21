@@ -14,11 +14,13 @@ import polyglot.ast.ClassDecl;
 import polyglot.ast.Disamb;
 import polyglot.ast.Expr;
 import polyglot.ast.Id;
+import polyglot.ast.Import;
 import polyglot.ast.NodeFactory_c;
 import polyglot.ast.PackageNode;
 import polyglot.ast.Receiver;
 import polyglot.ast.SourceFile;
 import polyglot.ast.Stmt;
+import polyglot.ast.TopLevelDecl;
 import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
 import polyglot.util.CollectionUtil;
@@ -53,7 +55,6 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return (FabILDelFactory) super.delFactory();
   }
 
-//  @Override 
   @Override
   public CodebaseNode CodebaseNode(Position pos, Codebase c) {  
     CodebaseNode n = new CodebaseNode_c(pos, c);
@@ -62,11 +63,6 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return n;  
   }
 
-  /*
-   * (non-Javadoc)
-   * @see polyglot.ast.NodeFactory_c#ArrayAccessAssign(polyglot.util.Position,
-   * polyglot.ast.ArrayAccess, polyglot.ast.Assign.Operator, polyglot.ast.Expr)
-   */
   @Override
   public ArrayAccessAssign ArrayAccessAssign(Position pos, ArrayAccess left,
       Operator op, Expr right) {
@@ -221,7 +217,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return s;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public Call Call(Position pos, Receiver target, Id name, List args) {
     return Call(pos, target, name, null, args);
@@ -244,7 +240,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return n;
   }
 
-  @SuppressWarnings("unchecked")  
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public SourceFile SourceFile(Position pos, PackageNode packageName, 
       List imports, List decls) {
@@ -252,10 +248,12 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   }
 
   @Override
-  @SuppressWarnings("unchecked")  
-  public SourceFile SourceFile(Position pos, PackageNode packageName, List codebases,
-      List imports, List decls) {
-    SourceFile sf = new CBSourceFile_c(pos, packageName, imports, codebases, decls);
+  @SuppressWarnings({ })  
+  public SourceFile SourceFile(Position pos, PackageNode packageName,
+      List<CodebaseDecl> codebases, List<Import> imports,
+      List<TopLevelDecl> decls) {
+    SourceFile sf =
+        new CBSourceFile_c(pos, packageName, imports, codebases, decls);
     sf = (SourceFile) sf.ext(extFactory().extSourceFile());
     sf = (SourceFile) sf.del(delFactory().delSourceFile());
     return sf;

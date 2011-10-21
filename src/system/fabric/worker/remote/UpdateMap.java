@@ -6,23 +6,25 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.crypto.Cipher;
 
-import fabric.lang.security.Label;
-
-import fabric.worker.TransactionAbortingException;
-import fabric.worker.Worker;
-import fabric.worker.Store;
-import fabric.worker.LocalStore;
-import fabric.common.*;
+import fabric.common.Crypto;
+import fabric.common.FastSerializable;
+import fabric.common.ONumConstants;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
-import fabric.lang.security.SecretKeyObject;
 import fabric.lang.Object._Proxy;
+import fabric.lang.security.Label;
+import fabric.lang.security.SecretKeyObject;
+import fabric.worker.LocalStore;
+import fabric.worker.Store;
+import fabric.worker.TransactionAbortingException;
+import fabric.worker.Worker;
 
 /**
  * Maps proxies to the host that holds the most up-to-date copy of that object.
@@ -334,6 +336,7 @@ public class UpdateMap implements FastSerializable {
     return keyObject.getKey().getEncoded();
   }
 
+  @Override
   public void write(DataOutput out) throws IOException {
     flushWriteCache();
 

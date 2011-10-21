@@ -37,7 +37,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		backend = remoteStore;
 		this.localStore = localStore;
 		FabricWorker local = FabricWorker.getWorker();
-		if(local != null && backend != null) {
+		if (local != null && backend != null) {
 		    storeWorker = local.getWorker(backend.name());
 		    
 		    // make calendarapp actsfor CalServEP
@@ -55,7 +55,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	public void initialize{CalServEP:;CalServEP!:}() {
 	    // There's a bug here, I can't put the new statements directly in the array initializer.
 	    atomic {
-	        if(backend actsfor CalServEP) {
+	        if (backend actsfor CalServEP) {
 	            User[CalServEP, {CalServEP→;CalServEP←}] a = new CalUser[{CalServEP→;CalServEP←}]@backend("liujed", "password", "Jed", "Liu");
 	            User[CalServEP, {CalServEP→;CalServEP←}] b = new CalUser[{CalServEP→;CalServEP←}]@backend("kvikram", "password", "Krishnaprasad", "Vikram");
 	            User[CalServEP, {CalServEP→;CalServEP←}] c = new CalUser[{CalServEP→;CalServEP←}]@backend("andru", "password", "Andrew", "Myers");
@@ -134,7 +134,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	public Event[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} 
 	retrieveEvent{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
 	where caller(CalServEP) {
-	    if(storeWorker actsfor worker$ && CalServEP equiv worker$) {
+	    if (storeWorker actsfor worker$ && CalServEP equiv worker$) {
 	        return retrieveEventRemote@storeWorker(eventID);
 	    } else {
 	        return null;
@@ -159,8 +159,8 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 				catch (ClassCastException impossible) { }
 				final Event event = e;
 
-				if(event != null && event.uid != null) {
-					if(event.uid.uid == eventID) return event;
+				if (event != null && event.uid != null) {
+					if (event.uid.uid == eventID) return event;
 				}
 			}
 		}
@@ -194,7 +194,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
 			User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:} displayUser)
 			where authority(CalRootEP), authority(CalServEP) {
-	    if(storeWorker actsfor worker$ && CalServEP equiv worker$) {
+	    if (storeWorker actsfor worker$ && CalServEP equiv worker$) {
 	        return eventSubsetRemote@storeWorker(start, end, displayUser);
 	    } else {
 	        return null;

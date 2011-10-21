@@ -72,7 +72,7 @@ if (p.isInStaffAsCornellMemMode()) {
 
 |
 <%
-if(p.isInStaffAsGuestMode()) {
+if (p.isInStaffAsGuestMode()) {
 	begintag = begin; 
 	endtag = end;
   }else {
@@ -82,7 +82,7 @@ if(p.isInStaffAsGuestMode()) {
 <%= begintag %>Guest<%= endtag %>
 
 <%
-if(p.isInStaffAsStudentMode()) {
+if (p.isInStaffAsStudentMode()) {
     begintag = begin; 
     endtag = end;
   } 
@@ -105,14 +105,14 @@ if (studentList.getLength()!=0) {
 --%><%
 String link, studNetID, selected;
 String apparentNetID= "NetID";
-if(p.isInStaffAsStudentMode()) 
+if (p.isInStaffAsStudentMode()) 
     apparentNetID=p.getNetID();
 /* name of input box for NetID, fixes bug when user presses Enter instead of clicking OK */
 %>
 <%=begintag%>Student&nbsp;<%=endtag%>
 <input id="netIdBox" type=text size="10" maxLength="10" name="<%= AccessController.P_NETID %>"  value=<%=apparentNetID%>  <%-- onClick="focus();select(); --%>" style="
 <%
-if(p.isInStaffAsStudentMode()) {
+if (p.isInStaffAsStudentMode()) {
 %>
 font-weight:bold; font-size: 10px;">
 <% 

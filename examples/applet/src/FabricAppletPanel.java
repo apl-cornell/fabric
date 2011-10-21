@@ -115,7 +115,7 @@ public class FabricAppletPanel extends Applet implements AppletStub {
   
   private Store getStore() {
     String storeName = getStoreName();
-    if(storeName == null)
+    if (storeName == null)
       throw new RuntimeException("Cannot get store without store name");
 
     Store store = Worker.getWorker().getStore(storeName);
@@ -181,7 +181,7 @@ public class FabricAppletPanel extends Applet implements AppletStub {
   @Override
   public void start() {
     /* always run init */
-    if(fabapp == null)
+    if (fabapp == null)
       runLoader();
     
     fabapp.getApplet().resize(currentAppletSize);
@@ -259,7 +259,7 @@ public class FabricAppletPanel extends Applet implements AppletStub {
 
       if (FabricApplet.class.isAssignableFrom(cls)) {
         fabapp = createAppletInstance(cls);
-        if(fabapp != null) {
+        if (fabapp != null) {
           System.out.println("Created instance of " + cls.getName() 
               + " at " + getOid(fabapp));
           applet = fabapp.getApplet();          
@@ -277,7 +277,7 @@ public class FabricAppletPanel extends Applet implements AppletStub {
       if (FabricApplet.class.isAssignableFrom(cls)) {
         fabapp = createAppletInstance(cls);
        
-        if(fabapp != null) {
+        if (fabapp != null) {
           System.out.println("Created instance of " + cls.getName() 
               + " at " + getOid(fabapp));
           applet = fabapp.getApplet();
@@ -310,12 +310,12 @@ public class FabricAppletPanel extends Applet implements AppletStub {
 
     final Label lbl = getLabel();
     final Store store = getStore();
-    if(lbl == null || store == null) 
+    if (lbl == null || store == null) 
       throw new RuntimeException("Cannot create applet instance with label and store");
 
     FabricApplet fabapp = null;
-    for(Class c : cls.getDeclaredClasses()) {
-      if(fabric.lang.Object._Impl.class.isAssignableFrom(c)) {
+    for (Class c : cls.getDeclaredClasses()) {
+      if (fabric.lang.Object._Impl.class.isAssignableFrom(c)) {
         final Constructor ctor = c.getConstructor(Store.class, Label.class);
         fabapp = Worker.runInSubTransaction(new Worker.Code<FabricApplet>() {
           public FabricApplet run () {
@@ -363,14 +363,14 @@ public class FabricAppletPanel extends Applet implements AppletStub {
   }
 
   public Applet getApplet() {
-    if(fabapp == null) return null;
+    if (fabapp == null) return null;
     return fabapp.getApplet();
   }
   
   public void paint(Graphics g) {
     // need to re-add applet object if fabapp made a 
     // new instance.
-    if(fabapp != null && applet != fabapp.getApplet()) {
+    if (fabapp != null && applet != fabapp.getApplet()) {
       applet = fabapp.getApplet();
       applet.setStub(this);
       applet.setVisible(false);

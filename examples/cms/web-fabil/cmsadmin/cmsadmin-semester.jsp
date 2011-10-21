@@ -17,10 +17,10 @@ Element curSem = (Element)semRoot.getElementsByTagName(XMLBuilder.TAG_CURSEMESTE
 		</span>
 		<table class="assignment_table" cellpadding="2" cellspacing="0" border="0" width="100%">
 <% NodeList sems = XMLUtil.getChildrenByTagNameAndAttributeValue(semRoot, XMLBuilder.TAG_SEMESTER, XMLBuilder.A_HIDDEN, "false");
-for(int i = 0; i < sems.getLength(); i++)
+for (int i = 0; i < sems.getLength(); i++)
 {
 	Element item = (Element)sems.item(i);
-	if(!item.getAttribute(XMLBuilder.A_HIDDEN).equalsIgnoreCase("true"))
+	if (!item.getAttribute(XMLBuilder.A_HIDDEN).equalsIgnoreCase("true"))
 	{ %>
 			<tr>
 				<td align="left">
@@ -41,14 +41,14 @@ for(int i = 0; i < sems.getLength(); i++)
 } %>
 		</table>
 <% NodeList hiddenSems = XMLUtil.getChildrenByTagNameAndAttributeValue(semRoot, XMLBuilder.TAG_SEMESTER, XMLBuilder.A_HIDDEN, "true");
-if(hiddenSems.getLength() > 0 )
+if (hiddenSems.getLength() > 0 )
 { %>
 		<div class="replace">
     		<span id="removedsemhead">
       		<a href="#" onClick="show('removedsem', 'Removed semesters &raquo;', '&laquo; Removed semesters'); return false;">Removed semesters &raquo;</a>
     		</span>
     		<table class="showhide" id="removedsem" style="display: none" cellpadding="0" cellspacing="0"><%
-   for(int i = 0; i < hiddenSems.getLength(); i++)
+   for (int i = 0; i < hiddenSems.getLength(); i++)
   	{
    	Element sem= (Element) hiddenSems.item(i); %>
    			<tr class="<%= i % 2 == 0 ? "row_even" : "row_odd" %>">
@@ -84,13 +84,13 @@ if(hiddenSems.getLength() > 0 )
 			var curSeason = curSemName.substring(0, curSemName.indexOf(' '));
 			var curYear = parseInt(curSemName.substring(curSemName.indexOf(' ') + 1));
 			document.write('<select name="<%= AccessController.P_NAME %>">');
-			for(i = 0; i < 9; i++)
+			for (i = 0; i < 9; i++)
 			{
-				if(curSeason == 'Fall') {curSeason = 'Spring'; curYear++;}
-				else if(curSeason == 'Spring') curSeason = 'Summer';
+				if (curSeason == 'Fall') {curSeason = 'Spring'; curYear++;}
+				else if (curSeason == 'Spring') curSeason = 'Summer';
 				else curSeason = 'Fall';
 				document.write('<option');
-				if(i == 0) document.write(' selected');
+				if (i == 0) document.write(' selected');
 				document.write('>' + curSeason + ' ' + curYear + '</option>\n');
 			}
 			document.write('</select>');

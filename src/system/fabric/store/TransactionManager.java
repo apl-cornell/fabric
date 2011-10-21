@@ -3,14 +3,26 @@ package fabric.store;
 import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
 
 import java.security.PrivateKey;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Random;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
-import fabric.common.util.*;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
+import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.lang.Statistics;
 import fabric.lang.security.Label;
@@ -291,6 +303,7 @@ public class TransactionManager {
       final Collection<SerializedObject> writes) throws AccessException {
     // The code that does the actual checking.
     Code<AccessException> checker = new Code<AccessException>() {
+      @Override
       public AccessException run() {
         Store store = Worker.getWorker().getStore(database.getName());
 

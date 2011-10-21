@@ -34,7 +34,7 @@ public abstract class AbstractCollection2[label S, label C] implements Collectio
         Iterator2[S,C]{this;S} e = c.iterator();
         while (e != null && e.hasNext()) {
             try {
-                if(add(e.next())) {
+                if (add(e.next())) {
                     modified = true;
                 }
             }

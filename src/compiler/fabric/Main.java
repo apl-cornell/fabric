@@ -8,7 +8,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.URI;
 import java.security.GeneralSecurityException;
@@ -28,14 +27,12 @@ import polyglot.frontend.ExtensionInfo;
 import polyglot.main.Options;
 import polyglot.main.Report;
 import polyglot.main.UsageError;
-import polyglot.types.reflect.ClassFileLoader;
 import polyglot.util.ErrorInfo;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.QuotedStringTokenizer;
 import polyglot.util.StdErrorQueue;
 import fabric.common.NSUtil;
-import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.worker.AbortException;
@@ -89,7 +86,7 @@ public class Main extends polyglot.main.Main {
       args.add("-classpath");
       args.add(worker.code_cache);
     }
-    if(worker.bootcp != null) {
+    if (worker.bootcp != null) {
       args.add("-bootclasspath");
       args.add(worker.bootcp);
     }
@@ -105,6 +102,7 @@ public class Main extends polyglot.main.Main {
 
       long endCompileTime = System.currentTimeMillis();
 
+      @SuppressWarnings("unchecked")
       Collection<String> outputFiles = main.compiler.outputFiles();
       File output_directory = extInfo.getOptions().output_directory;
       String[] suffixes =
@@ -142,7 +140,6 @@ public class Main extends polyglot.main.Main {
     }
   }
 
-  @SuppressWarnings("unchecked")
   public static void compile_from_shell(List<String> args, InputStream in,
       PrintStream out) {
     InputStream save_in = System.in;
@@ -153,7 +150,7 @@ public class Main extends polyglot.main.Main {
     System.setOut(out);
     System.setErr(out);
 
-    List<String> new_args = new ArrayList(args.size() + 2);
+    List<String> new_args = new ArrayList<String>(args.size() + 2);
     Worker worker = Worker.getWorker();
     // Set code cache first to allow it to be overridden
     if (worker.code_cache != null) {
@@ -224,8 +221,8 @@ public class Main extends polyglot.main.Main {
   @Override
   public void start(String[] argv, ExtensionInfo ext, ErrorQueue eq)
       throws TerminationException {
-    Set source = new LinkedHashSet();
-    List args = explodeOptions(argv);
+    Set<String> source = new LinkedHashSet<String>();
+    List<String> args = explodeOptions(argv);
     if (ext == null) {
       ext = getExtensionInfo(args);
     }
@@ -235,7 +232,7 @@ public class Main extends polyglot.main.Main {
     // be fixed somehow. XXX###@@@
     Options.global = options;
     try {
-      argv = (String[]) args.toArray(new String[0]);
+      argv = args.toArray(new String[0]);
       options.parseCommandLine(argv, source);
     } catch (UsageError ue) {
       PrintStream out = (ue.exitCode() == 0 ? System.out : System.err);
@@ -256,7 +253,7 @@ public class Main extends polyglot.main.Main {
 
   }
 
-  public void start(Options options, Set source, ExtensionInfo ext,
+  public void start(Options options, Set<String> source, ExtensionInfo ext,
       ErrorQueue eq) {
 
     if (eq == null) {
@@ -266,8 +263,6 @@ public class Main extends polyglot.main.Main {
 
     this.compiler = new Compiler(ext, eq);
 
-    long time0 = System.currentTimeMillis();
-
     if (!compiler.compileFiles(source)) {
       throw new TerminationException(1);
     }
@@ -275,20 +270,18 @@ public class Main extends polyglot.main.Main {
     if (Report.should_report(verbose, 1))
       Report.report(1, "Output files: " + compiler.outputFiles());
 
-    long start_time = System.currentTimeMillis();
-
     /* Now call javac or jikes, if necessary. */
     if (!invokePostCompiler(options, compiler, eq)) {
       throw new TerminationException(1);
     }
   }
 
-  public void compileInWorker(Options options, Set source, ExtensionInfo ext,
-      ErrorQueue eq) {
+  public void compileInWorker(Options options, Set<String> source,
+      ExtensionInfo ext, ErrorQueue eq) {
     try {
 
       final FabricOptions o = (FabricOptions) options;
-      final Set s = source;
+      final Set<String> s = source;
       final ExtensionInfo e = ext;
       final ErrorQueue q = eq;
 
@@ -310,6 +303,7 @@ public class Main extends polyglot.main.Main {
       }
 
       Worker.runInTransaction(null, new Worker.Code<Void>() {
+        @Override
         public Void run() {
           try {
             start(o, s, e, q);
@@ -325,8 +319,8 @@ public class Main extends polyglot.main.Main {
     }
   }
 
-  private List explodeOptions(String[] args) throws TerminationException {
-    LinkedList ll = new LinkedList();
+  private List<String> explodeOptions(String[] args) throws TerminationException {
+    LinkedList<String> ll = new LinkedList<String>();
 
     for (int i = 0; i < args.length; i++) {
       // special case for the @ command-line parameter
@@ -334,7 +328,7 @@ public class Main extends polyglot.main.Main {
         String fn = args[i].substring(1);
         try {
           BufferedReader lr = new BufferedReader(new FileReader(fn));
-          LinkedList newArgs = new LinkedList();
+          LinkedList<String> newArgs = new LinkedList<String>();
 
           while (true) {
             String l = lr.readLine();
@@ -383,7 +377,6 @@ public class Main extends polyglot.main.Main {
   protected boolean invokePostCompiler(Options options, Compiler compiler,
       ErrorQueue eq) {
     if (options.post_compiler != null && !options.output_stdout) {
-      Runtime runtime = Runtime.getRuntime();
       QuotedStringTokenizer st =
           new QuotedStringTokenizer(options.post_compiler);
       int pc_size = st.countTokens();
@@ -410,9 +403,10 @@ public class Main extends polyglot.main.Main {
         javacCmd[j++] = "-g";
       }
 
-      Iterator iter = compiler.outputFiles().iterator();
+      @SuppressWarnings("unchecked")
+      Iterator<String> iter = compiler.outputFiles().iterator();
       for (; iter.hasNext(); j++) {
-        javacCmd[j] = (String) iter.next();
+        javacCmd[j] = iter.next();
       }
 
       if (Report.should_report(verbose, 1)) {

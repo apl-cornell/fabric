@@ -252,6 +252,9 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return new CBPackage_c(this, ns, prefix, name);
   }
 
+  /**
+   * @throws SemanticException  
+   */
   @Override
   public Package packageForName(URI ns, Package prefix, java.lang.String name)
       throws SemanticException {
@@ -282,6 +285,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return new CBClassContextResolver(this, type);
   }
 
+  @SuppressWarnings("rawtypes")
   @Override
   public Object placeHolder(TypeObject o, Set roots) {
     assert_(o);
@@ -722,6 +726,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return forName(platformResolver(), name);
   }
 
+  @SuppressWarnings("rawtypes")
   @Override
   public Type typeForClass(Class clazz) throws SemanticException {
     return typeForClass(platformResolver(), clazz);
@@ -761,7 +766,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     Store dest = extInfo.destinationStore();
     NodePrincipal w = Worker.getWorker().getPrincipal();
     NodePrincipal st = dest.getPrincipal();
-    if(w != null && st != null)
+    if (w != null && st != null)
       return LabelUtil._Impl.writerPolicyLabel(dest, w, st);
     throw new InternalCompilerError("Whatt?!? W: " + w + " ST: " + st);
   }
@@ -855,6 +860,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
             + " use importTable(Source,URI,Package) instead");
   }
   
+  @Override
   public Label tjoin(Label L1, Label L2) {
     ConfPolicy cp1 = L1 == null ? null : L1.confProjection();
     ConfPolicy cp2 = L2 == null ? null : L2.confProjection();
@@ -865,6 +871,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return pairLabel(L1.position(), join(cp1, cp2), meet(ip1, ip2));
   }
 
+  @Override
   public Label tmeet(Label L1, Label L2) {
     ConfPolicy cp1 = L1 == null ? null : L1.confProjection();
     ConfPolicy cp2 = L2 == null ? null : L2.confProjection();

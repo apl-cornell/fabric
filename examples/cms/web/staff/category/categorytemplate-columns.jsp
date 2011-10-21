@@ -10,11 +10,11 @@
   	//set up ordering for old and new columns
   	createOrdering('colOrdering');
 </script><%
-if(!ctgID.equals("0"))
+if (!ctgID.equals("0"))
 {
  	NodeList columnList = CategoryXMLUtil.getColumnList(category);%>
 <h3>Columns:</h3>
-<%	if(columnList== null || columnList.getLength() == 0)
+<%	if (columnList== null || columnList.getLength() == 0)
 	{%>
 	No existing columns
 <%	}
@@ -30,12 +30,12 @@ if(!ctgID.equals("0"))
    		<th nowrap onMouseover="ddrivetip('Removed columns aren\'t shown and can\'t be edited')" onMouseout="hideddrivetip()">Remove</th>
    	</tr>
 <% 	numOfCol = columnList.getLength();
-		for(int i=0; i<columnList.getLength(); i++)
+		for (int i=0; i<columnList.getLength(); i++)
 		{
 			Element col = (Element)columnList.item(i);
 			String colID = col.getAttribute(XMLBuilder.A_ID);%>
 		<tr>
-<%			if(colID.equals(sortByColID))
+<%			if (colID.equals(sortByColID))
 			{%>
 			<td align="center" nowrap>
 				<input type="radio" value="<%=colID%>" name="<%= AccessController.P_COLSORTBY %>" checked>
@@ -72,7 +72,7 @@ if(!ctgID.equals("0"))
 <%	}
   NodeList removedList = CategoryXMLUtil.getRemovedColumnList(category);
   int length = 0;
-  if(removedList != null && (length=removedList.getLength())!= 0)
+  if (removedList != null && (length=removedList.getLength())!= 0)
   {%>
 <div class="replace">
     <span id="removedcolshead">

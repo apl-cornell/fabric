@@ -6,11 +6,11 @@ import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.List;
 
-import fabric.worker.Worker;
-import fabric.worker.Store;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * Encapsulates an inter-store pointer.
@@ -42,22 +42,11 @@ public final class Surrogate extends _Impl {
     this.onum = serializedInput.readLong();
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.lang.Object._Impl#$makeProxy()
-   */
   @Override
   protected _Proxy $makeProxy() {
     throw new InternalError("Attempted to make proxy for a surrogate.");
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.lang.Object._Impl#$serialize(java.io.ObjectOutput,
-   *      java.util.List, java.util.List, java.util.List)
-   */
   @Override
   public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
       List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs) {

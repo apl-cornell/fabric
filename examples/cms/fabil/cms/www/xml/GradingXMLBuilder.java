@@ -295,7 +295,7 @@ public class GradingXMLBuilder {
               /*
                * SubProblemLocal subProb =
                * database.subProblemHome().findByPrimaryKey(new
-               * SubProblemPK(answer.getSubProblemID())); if(subProb.getType() ==
+               * SubProblemPK(answer.getSubProblemID())); if (subProb.getType() ==
                * SubProblemBean.MULTIPLE_CHOICE) { //ChoiceLocal choice =
                * database.choiceHome().findByChoiceID(Long.parseLong(answer.getText()));
                * //laterAnswer.setAttribute(XMLBuilder.A_ANSWER, answer.getText());

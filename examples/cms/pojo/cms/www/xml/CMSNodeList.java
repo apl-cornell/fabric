@@ -20,7 +20,7 @@ public class CMSNodeList extends Vector implements NodeList
 	
 	public void addList(NodeList list)
 	{
-		for(int i = 0; i < list.getLength(); i++) add(list.item(i));
+		for (int i = 0; i < list.getLength(); i++) add(list.item(i));
 	}
 	
 	public Node item(int i)

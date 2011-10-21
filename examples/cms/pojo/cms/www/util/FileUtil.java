@@ -161,7 +161,7 @@ public class FileUtil
          */
         public static String[] splitFileNameType(String filename) {
                 int index = filename.lastIndexOf(".");
-                if(index == -1) return new String[] {filename, ""};
+                if (index == -1) return new String[] {filename, ""};
                 else return new String[] {filename.substring(0, index), filename.substring(index + 1)};
         }
         

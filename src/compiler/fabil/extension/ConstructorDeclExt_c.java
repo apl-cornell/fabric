@@ -18,12 +18,6 @@ import fabil.visit.ProxyRewriter;
 
 public class ConstructorDeclExt_c extends ClassMemberExt_c {
   
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ClassMemberExt#implMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
-   */
   @Override
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     // TODO add Store parameters?
@@ -32,11 +26,6 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
     return Collections.singletonList((ClassMember) node);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
-   */
   @SuppressWarnings("unchecked")
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {

@@ -68,6 +68,7 @@ public class Threading {
    * A ThreadFactory that creates FabricThread.Impls.
    */
   private static class FabricThreadFactory implements ThreadFactory {
+    @Override
     public Thread newThread(Runnable r) {
       return new FabricThread.Impl(r, "Idle thread");
     }
@@ -93,6 +94,7 @@ public class Threading {
       this.name = name;
     }
     
+    @Override
     public final void run() {
       Thread current = Thread.currentThread();
       String oldName = current.getName();
@@ -127,6 +129,7 @@ public class Threading {
       this.name = name;
     }
     
+    @Override
     public final V call() {
       Thread current = Thread.currentThread();
       String oldName = current.getName();

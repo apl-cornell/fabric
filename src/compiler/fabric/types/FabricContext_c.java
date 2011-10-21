@@ -86,7 +86,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   
   @Override
   public URI namespace() {
-    if(isOuter())
+    if (isOuter())
       throw new InternalCompilerError("No namespace!");
     return ((CBImportTable)it).namespace();
   }

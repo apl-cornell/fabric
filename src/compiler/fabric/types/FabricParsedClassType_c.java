@@ -1,27 +1,26 @@
 package fabric.types;
 
+import java.net.URI;
 import java.util.Iterator;
 import java.util.List;
 
-import fabil.frontend.CodebaseSource;
-import fabric.lang.Codebase;
-
 import jif.types.JifMethodInstance;
 import jif.types.JifParsedPolyType_c;
-import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import polyglot.frontend.Source;
-import polyglot.types.*;
+import polyglot.types.DeserializedClassInitializer;
+import polyglot.types.FieldInstance;
+import polyglot.types.LazyClassInitializer;
+import polyglot.types.MethodInstance;
+import polyglot.types.Type;
 import polyglot.util.Position;
+import codebases.frontend.CodebaseSource;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements FabricParsedClassType {
   private transient Label singleFieldLabel = null;
   private transient Label singleAccessLabel = null;
-  private transient ConfPolicy accessPolicy = null;
   private transient boolean fieldLabelFound = false;
   private transient boolean accessLabelFound = false;
-//  private transient boolean providerLabelFolded = false;
-  private transient boolean confPolicyExtracted = false;
   
   protected URI canonical_ns = null;
 
@@ -36,11 +35,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
       throw new NullPointerException("fromSource cannot be null!");
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.types.ClassType_c#descendsFromImpl(polyglot.types.Type)
-   */
   @Override
   public boolean descendsFromImpl(Type ancestor) {
     FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
@@ -65,12 +59,13 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     return super.descendsFromImpl(ancestor);
   }
   
-  @SuppressWarnings("unchecked")
+  
   /**
    * This method returns the upper bound of the labels of 
    * all the fields of this class and its superclasses.
    * It computes this by taking a join of all labels concerned.
    */
+  @Override
   public Label singleFieldLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
@@ -84,7 +79,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
         
         Label superLabel = superType == null ? classLabel : superType.singleFieldLabel();
         
-        for (FieldInstance fi : (List<FieldInstance>)fields()) {
+        for (FieldInstance fi : fields()) {
           if (fi.flags().isStatic()) continue;
           Type t = fi.type();
           if (ts.isLabeled(t)) {
@@ -105,6 +100,8 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
    * its superclasses. It computes this by taking a join of all labels
    * concerned.
    */
+  @SuppressWarnings("unchecked")
+  @Override
   public Label singleAccessLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
@@ -118,7 +115,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
 
         Label superAccessLabel = superType == null ? classAccessLabel : superType.singleAccessLabel();
 
-        for (FieldInstance fi_ : (List<FieldInstance>)fields()) {
+        for (FieldInstance fi_ : fields()) {
           if (fi_.flags().isStatic()) continue;
           FabricFieldInstance fi = (FabricFieldInstance) fi_;
           Label al = fi.accessLabel();
@@ -128,7 +125,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
           }
         }
 
-        for (MethodInstance mi_ : (List<MethodInstance>)methods()) {
+        for (MethodInstance mi_ : (List<MethodInstance>) methods()) {
           if (mi_.flags().isStatic()) continue;
           JifMethodInstance mi = (JifMethodInstance) mi_;
           Label bl = mi.pcBound();
@@ -148,6 +145,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   
   // TODO The provider label should actually be folded into the access labels
   // since each field of a class will be accessed from some method of the class, no?
+  @Override
   public Label getFoldedAccessLabel() {
     return singleAccessLabel();
     // XXX: this code folded in the provider label to the access label. This is
@@ -171,6 +169,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   }
 
   // XXX Why do we need these fabil'ed versions?
+  @Override
   public Label singleFabilAccessLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
     if (isSubtype(ts.DelegatingPrincipal())) {
@@ -203,6 +202,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   }
   
   
+  @Override
   public Label singleFabilFieldLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
     if (isSubtype(ts.DelegatingPrincipal())) {
@@ -254,7 +254,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   public URI canonicalNamespace() {
     // HACK superclass constructor accesses canonical namespace before it can be
     // initialized.
-    if(canonical_ns == null)
+    if (canonical_ns == null)
       canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
     return canonical_ns;
   }

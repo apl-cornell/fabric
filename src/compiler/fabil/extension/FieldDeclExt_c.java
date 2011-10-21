@@ -4,30 +4,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
+import polyglot.ast.Expr;
+import polyglot.ast.FieldDecl;
+import polyglot.ast.Stmt;
+import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
 import polyglot.types.Flags;
 import fabil.visit.ProxyRewriter;
 
 public class FieldDeclExt_c extends ClassMemberExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ClassMemberExt#implMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
-   */
   @Override
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     return implMember(pr, parent, false);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ClassMemberExt_c#staticImplMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
-   */
   @Override
   public List<ClassMember> staticImplMember(ProxyRewriter pr, ClassDecl parent) {
     return implMember(pr, parent, true);
@@ -57,11 +50,6 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     return result;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see fabil.extension.ClassMemberExt_c#staticImplInitMember(fabil.visit.ProxyRewriter)
-   */
   @Override
   public List<Stmt> staticImplInitMember(ProxyRewriter pr) {
     FieldDecl fieldDecl = node();
@@ -76,12 +64,6 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     return Collections.singletonList(qq.parseStmt(fieldName + " = %E ;", init));
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ClassMemberExt#interfaceMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
-   */
   @Override
   public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
     // Omit static fields. These will be put in the _Static type.
@@ -93,23 +75,11 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     return result;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ClassMemberExt#proxyMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
-   */
   @Override
   public List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent) {
     return proxyMember(pr, parent, false);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ClassMemberExt_c#staticProxyMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
-   */
   @Override
   public List<ClassMember> staticProxyMember(ProxyRewriter pr, ClassDecl parent) {
     return proxyMember(pr, parent, true);
@@ -157,12 +127,6 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     return result;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ClassMemberExt_c#staticInterfaceMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
-   */
   @Override
   public List<ClassMember> staticInterfaceMember(ProxyRewriter pr,
       ClassDecl parent) {
@@ -229,11 +193,6 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     return members;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public FieldDecl node() {
     return (FieldDecl) super.node();

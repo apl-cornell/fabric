@@ -22,6 +22,7 @@ public class StoreGetter_c extends Expr_c implements StoreGetter {
     return succs;
   }
 
+  @Override
   public Term firstChild() {
     return null;
   }

@@ -60,6 +60,7 @@ public class HandshakeBogus implements Protocol {
     Logging.NETWORK_CONNECTION_LOGGER.log(Level.WARNING, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
   }
   
+  @Override
   public ShakenSocket initiate(String name, Socket s)
       throws IOException {
     DataInputStream  in  = new DataInputStream(s.getInputStream());
@@ -71,6 +72,7 @@ public class HandshakeBogus implements Protocol {
     return new ShakenSocket(name, readPrincipal(in), s);
   }
 
+  @Override
   public ShakenSocket receive(Socket s) throws IOException {
     DataInputStream  in  = new DataInputStream(s.getInputStream());
     DataOutputStream out = new DataOutputStream(s.getOutputStream());

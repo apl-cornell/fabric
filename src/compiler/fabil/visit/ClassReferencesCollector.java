@@ -3,7 +3,13 @@ package fabil.visit;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import polyglot.ast.Node;
 import polyglot.ast.SourceCollection;
@@ -79,7 +85,7 @@ public class ClassReferencesCollector extends NodeVisitor {
   
   private void writeDependencies(SourceFile sfn) {
     String pkg = null;
-    if(sfn.package_() != null)
+    if (sfn.package_() != null)
       pkg = sfn.package_().package_().fullName();
     File of = job.extensionInfo().targetFactory().outputFile(pkg, sfn.source());
     
@@ -99,10 +105,10 @@ public class ClassReferencesCollector extends NodeVisitor {
       writeDependencies(new File(path.toString()));
     }
     /* write deps for any nested classes declared in this sourcefile */
-    if(nested != null)
-      for(String nestedClass : nested) {
+    if (nested != null)
+      for (String nestedClass : nested) {
         StringBuilder path = new StringBuilder();
-        if(of.getParent() != null)
+        if (of.getParent() != null)
           path.append(of.getParent()).append(File.separatorChar);
         path.append(nestedClass).append(".class").append(PROPERTIES_EXTENSION);
         writeDependencies(new File(path.toString())); 
@@ -128,12 +134,6 @@ public class ClassReferencesCollector extends NodeVisitor {
     }
   }
   
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.visit.NodeVisitor#leave(polyglot.ast.Node, polyglot.ast.Node,
-   *      polyglot.visit.NodeVisitor)
-   */
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     if (!(n instanceof Typed)) return n;
@@ -148,14 +148,14 @@ public class ClassReferencesCollector extends NodeVisitor {
         String typeName = type.toString();
         Set<String> nested = null;
         /* generate correct filename for nested classes */
-        if(ct.isNested()) {
+        if (ct.isNested()) {
           typeName = ct.name();
           while(ct.outer() != null) {
             ct = ct.outer();
             typeName = ct.name() + "$" + typeName;
           }
           nested = nestedClasses.get(ct.fullName());
-          if(nested == null) {
+          if (nested == null) {
             nested = new HashSet<String>();
             nestedClasses.put(ct.fullName(), nested);
           }
@@ -164,13 +164,13 @@ public class ClassReferencesCollector extends NodeVisitor {
         if (type.descendsFrom(ts.FObject()) || type.equals(ts.FObject())) {
           for (String classSuffix : GENERATED_CLASSES) {
             classes.add(typeName + classSuffix);
-            if(nested != null)
+            if (nested != null)
               nested.add(typeName + classSuffix);
           } 
            
         } else {
           classes.add(typeName);
-          if(nested != null)
+          if (nested != null)
             nested.add(typeName);
         }
       }

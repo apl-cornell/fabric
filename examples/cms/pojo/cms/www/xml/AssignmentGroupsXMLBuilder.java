@@ -282,9 +282,9 @@ public class AssignmentGroupsXMLBuilder {
     Map lastGradeMap = new HashMap();
     Object nullKey = new Integer(0);
     
-    for(Iterator i = assign.getGrades().iterator(); i.hasNext();) {
+    for (Iterator i = assign.getGrades().iterator(); i.hasNext();) {
       Grade g = (Grade)i.next();
-      if(g.getSubProblem() == null) {
+      if (g.getSubProblem() == null) {
         lastGradeMap.put(g.getUser().getNetID() + "_null", g.getGrade());
       } else {
         lastGradeMap.put(g.getUser().getNetID() + "_" + g.getSubProblem().toString(), g.getGrade());
@@ -322,7 +322,7 @@ public class AssignmentGroupsXMLBuilder {
           Object sid = sids.next();
           String lastGradeKey = member.getStudent().getUser().getNetID() + "_";
           Object key;
-          if(sid == nullKey) {
+          if (sid == nullKey) {
             key = nullKey;
             lastGradeKey += "null";
           } else {

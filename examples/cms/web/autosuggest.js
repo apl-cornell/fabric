@@ -127,7 +127,7 @@ function AutoSuggest(elem, suggestions)
 	elem.setAttribute("autocomplete","off");
 
 	//We need to be able to reference the elem by id. If it doesn't have an id, set one.
-	if(!elem.id)
+	if (!elem.id)
 	{
 		var id = "autosuggest" + idCounter;
 		idCounter++;
@@ -335,7 +335,7 @@ function AutoSuggest(elem, suggestions)
 			for (i in lis)
 			{
 				var li = lis[i];
-				if(li == target)
+				if (li == target)
 				{
 					me.highlighted = i;
 					break;
@@ -371,7 +371,7 @@ function AutoSuggest(elem, suggestions)
 		{
 			var suggestion = this.suggestions[i];
 			
-			if(suggestion.toLowerCase().indexOf(this.inputText.toLowerCase()) == "0")
+			if (suggestion.toLowerCase().indexOf(this.inputText.toLowerCase()) == "0")
 			{
 				this.eligible[this.eligible.length]=suggestion;
 			}
@@ -384,11 +384,11 @@ function AutoSuggest(elem, suggestions)
 	********************************************************/
 	this.getKeyCode = function(ev)
 	{
-		if(ev)			//Moz
+		if (ev)			//Moz
 		{
 			return ev.keyCode;
 		}
-		if(window.event)	//IE
+		if (window.event)	//IE
 		{
 			return window.event.keyCode;
 		}
@@ -400,12 +400,12 @@ function AutoSuggest(elem, suggestions)
 	********************************************************/
 	this.getEventSource = function(ev)
 	{
-		if(ev)			//Moz
+		if (ev)			//Moz
 		{
 			return ev.target;
 		}
 	
-		if(window.event)	//IE
+		if (window.event)	//IE
 		{
 			return window.event.srcElement;
 		}
@@ -418,12 +418,12 @@ function AutoSuggest(elem, suggestions)
 	********************************************************/
 	this.cancelEvent = function(ev)
 	{
-		if(ev)			//Moz
+		if (ev)			//Moz
 		{
 			ev.preventDefault();
 			ev.stopPropagation();
 		}
-		if(window.event)	//IE
+		if (window.event)	//IE
 		{
 			window.event.returnValue = false;
 		}

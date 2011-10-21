@@ -12,9 +12,6 @@ public final class CheckBox extends InputNode {
         checked = checked_;
     }
 
-    /* (non-Javadoc)
-     * @see servlet.Node#write(servlet.HTMLWriter)
-     */
     void writeImpl(HTMLWriter p) {
 	p.print("<input type=checkbox");
 	p.print(" name=");

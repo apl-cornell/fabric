@@ -22,7 +22,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
         FabricWorker cl = FabricWorker.getWorker();
         CalendarDB local = null;
         Store lStore = null;
-        if(cl != null) {
+        if (cl != null) {
             lStore = cl.getLocalStore();
             final Store remote = cl.getStore(storeName);
             final Store lStoreFinal = lStore;
@@ -44,7 +44,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
               catch (ClassCastException unlikely) {}
               
 	        atomic {
-	            if(remote != null && remote actsfor CalServEP) {
+	            if (remote != null && remote actsfor CalServEP) {
 	                // would be nice if the instance of CalendarDB were on local store
 	                local =  new CalendarDB@remote(lStoreFinal, remote);
 	            } 
@@ -105,7 +105,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
 	    String{p→;CalServEP← ⊓ p←} userID_ = endorse(userID, {p:; p!:} to {p→;CalServEP← ⊓ p←});
 	    String{CalServEP→;CalServEP←} userID__ = declassify(userID_, {p→;CalServEP← ⊓ p←} to {CalServEP→;CalServEP←});
 		User[CalServEP, {CalServEP→;CalServEP←}] u = null;
-		if(cal!=null) {
+		if (cal!=null) {
 		    declassify({CalServEP→;CalServEP←}) {
 		        u = cal.lookupUserID(userID__);
 		    }
@@ -133,7 +133,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
 //        try {
 	    
 	    if (localStore == null) return null;
-	    if(localStore actsfor currUser && localStore equiv CalServEP) {
+	    if (localStore actsfor currUser && localStore equiv CalServEP) {
 		Date[{currUser!:}] now = new Date[{currUser!:}]@localStore();
 		int uid = this.getFreshUid(currUser);
 
@@ -163,7 +163,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
 		    
 		    // TODO : Check if the following two lines are necessary
 //			final Event e = endorse(sanitizeEvent(p, declassify(ueicEvent, {p←})), {p→;p← meet CalServEP←});
-//			if(e == null) return;
+//			if (e == null) return;
 			// DOWNGRADE REASON: handover ueicEvent from p to CalServEP
 			declassify ({p← meet CalServEP←}) {
 //				final label ntimeLbl = endorse(e.timeLbl, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});

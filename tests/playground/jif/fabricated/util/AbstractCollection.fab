@@ -84,7 +84,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
         boolean containsAll = true;
         while (i < size) {
             try {
-                if(!contains(c.get(i))) {
+                if (!contains(c.get(i))) {
                     containsAll = false;
                     break;
                 }
@@ -101,7 +101,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
             Iterator[L]{this;L} e = c.iterator();
             while (e != null && e.hasNext()) {
                 try {
-                    if(add(e.next())) {
+                    if (add(e.next())) {
                         modified = true;
                     }
                 }
@@ -117,7 +117,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
             Iterator[L] e = iterator();
             while (e != null && e.hasNext()) {
                 try {
-                    if(c.contains(e.next())) {
+                    if (c.contains(e.next())) {
                         e.remove();
                         modified = true;
                     }
@@ -139,7 +139,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
         while (e != null && e.hasNext()) {
             try {
                 JifObject[L] o = e.next();
-                if(c == null || !c.contains(L, o)) {
+                if (c == null || !c.contains(L, o)) {
                     e.remove();
                     modified = true;
                 }

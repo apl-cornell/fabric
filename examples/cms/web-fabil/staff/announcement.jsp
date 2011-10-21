@@ -25,7 +25,7 @@
 					</tr><%
 	NodeList history = CategoryXMLUtil.getListByTagName(root, XMLBuilder.TAG_ANNOUNCEMENTHISTORY);
 	int length = history.getLength();
-	if(length > 0){%>
+	if (length > 0){%>
 					<tr>
 					  <td class="assignment_left">
 					 	<h2>
@@ -36,7 +36,7 @@
         			   	</h2>
         				<div id="announcements" class="showhide">
         				  <ul type="circle"><%
-		for(int i= 0; i<length; i++){
+		for (int i= 0; i<length; i++){
 			Element item = (Element)history.item(i);%>
 							<li><%=item.getAttribute(XMLBuilder.A_TEXT)%></li><%
 		}%>

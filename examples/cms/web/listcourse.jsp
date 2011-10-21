@@ -4,12 +4,12 @@ Element root= (Element) displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).it
 Element courses = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ALLCOURSES);
 NodeList courseList = courses.getChildNodes();
 int length = courseList.getLength();
-if(length > 0){ %>
+if (length > 0){ %>
 <td class="staff_navigation" rowspan="3">
   <div id="navbar_top">&nbsp;</div>
   <ul id="navbar_content">
 	<li>Course List:</li><%
- 	for(int i=0; i<length; i++){
+ 	for (int i=0; i<length; i++){
  		Element course = (Element)courseList.item(i);
  		String courseid= course.getAttribute(XMLBuilder.A_COURSEID); 
  		String coursename = course.getAttribute(XMLBuilder.A_CODE);

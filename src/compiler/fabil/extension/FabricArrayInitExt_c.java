@@ -14,11 +14,6 @@ import fabil.visit.ProxyRewriter;
 
 public class FabricArrayInitExt_c extends AnnotatedExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     NodeFactory nf = rewriter.nodeFactory();
@@ -57,11 +52,6 @@ public class FabricArrayInitExt_c extends AnnotatedExt_c {
         label, accessLabel, init);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public FabricArrayInit node() {
     return (FabricArrayInit) super.node();
