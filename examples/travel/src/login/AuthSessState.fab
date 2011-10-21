@@ -4,8 +4,8 @@ import sif.servlet.SessionState;
 import sif.servlet.SessionPrincipal;
 import jif.util.*;
 
-public class AuthSessState[covariant label T] extends SessionState[T] {
-    public final PrincipalWrapper[T]{T} wrapper;
+public class AuthSessState[covariant label T, label A] extends SessionState[T,A] {
+    public final PrincipalWrapper[T]{T}@{A} wrapper;
     
     public AuthSessState(String{T} id, SessionPrincipal{T} session) {
         wrapper = new PrincipalWrapper[T](new label {session←});

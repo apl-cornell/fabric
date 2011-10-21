@@ -77,8 +77,8 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
           new NamedLabel("{*->store}",
               ts.pairLabel(Position.compilerGenerated(),
               ts.readerPolicy(Position.compilerGenerated(),
-                  storePrincipal(),
-                  ts.topPrincipal(Position.compilerGenerated())),
+                  ts.topPrincipal(Position.compilerGenerated()),
+                  storePrincipal()),
               ts.topIntegPolicy(Position.compilerGenerated()))),
           A.labelEnv(), n.position(), 
           new ConstraintMessage() {

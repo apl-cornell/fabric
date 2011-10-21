@@ -248,6 +248,12 @@
       <arg value="-debugpositions"/>
       <arg value="-trusted-providers"/>
       <arg value="-e"/>
+      <!--
+      <arg value="-rdebug"/>
+      <arg value="-report"/> <arg value="frontend=1"/>
+      <arg value="-dump"/> <arg value="FabricToFabilRewriter"/>
+      <arg value="-dump"/> <arg value="PrincipalCastAdder"/>
+      -->
       <arg value="-d"/> <arg value="${home}/classes"/>
       <arg value="-classpath"/> <arg value="${home}/classes" />
       <srcfile />

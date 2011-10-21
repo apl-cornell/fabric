@@ -149,6 +149,26 @@ non terminal CodebaseDecl codebase_declaration;
 
 start with goal;
 
+////////////////////////////////////////////////////////////////////////
+// Disallow covariant labels                                          //
+////////////////////////////////////////////////////////////////////////
+
+drop { COVARIANT }
+
+override parameter ::=
+            // ParamDecl
+    LABEL:x IDENTIFIER:a
+        {: RESULT = parser.nf.ParamDecl(parser.pos(x, a),
+                                        ParamInstance.INVARIANT_LABEL,
+                                        parser.nf.Id(parser.pos(a), a.getIdentifier()));
+                                        :}
+    |   PRINCIPAL:x IDENTIFIER:a
+        {: RESULT = parser.nf.ParamDecl(parser.pos(x, a),
+                                        ParamInstance.PRINCIPAL,
+                                        parser.nf.Id(parser.pos(a), a.getIdentifier()));
+                                        :}
+    ;
+
 //////////////
 // Names 	//
 //////////////

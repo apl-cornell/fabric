@@ -110,7 +110,7 @@ import java.math.BigInteger;
         keywords.put("equiv",         new Integer(sym.EQUIV));
         keywords.put("authority",     new Integer(sym.AUTHORITY));
         keywords.put("caller",        new Integer(sym.CALLER));
-        keywords.put("covariant",     new Integer(sym.COVARIANT));
+//      keywords.put("covariant",     new Integer(sym.COVARIANT));
         keywords.put("invariant",     new Integer(sym.INVARIANT));
         keywords.put("declassify",    new Integer(sym.DECLASSIFY));
         keywords.put("endorse",       new Integer(sym.ENDORSE));

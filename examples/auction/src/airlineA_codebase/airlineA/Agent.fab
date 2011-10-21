@@ -11,7 +11,7 @@ public class Agent[principal Airline, label Auction] implements broker.Agent[Air
 			{*broker.Agent.provider} equiv {*broker.Server.provider}
 {
     private final Server[Airline]{Airline->;Airline<-}@{Auction;⊥←} server;
-    private int {Airline->;Airline<-}@{Auction;⊥←} lowestprice; 
+    private int {Airline->;Airline<-}@{Auction;⊥←} lowestprice;
 
     public Agent{Airline->;Airline<-}(Server[Airline]{Airline->;Airline<-} server) {
 		this.server = server;
