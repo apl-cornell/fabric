@@ -57,6 +57,10 @@ public final class SysUtil {
     boolean hashing_Impl = false;
     Class<?> ifaceClass = null;
     
+    // There are two cases here. If the class extends fabric.lang.Object and was
+    // compiled with filc/fabc, we use the compiler-generated hash. Otherwise,
+    // we hash the class's bytecode.
+    
     if (fabric.lang.Object.class.isAssignableFrom(c)) {
       // We have a Fabric class. Use the filc/fabc-generated hash, if any. If we
       // get any exceptions from attempting to do this, we assume that the class
@@ -133,11 +137,13 @@ public final class SysUtil {
     }
     classIn.close();
 
-    // Include the super class, if any.
-    Class<?> superClass = c.getSuperclass();
-    if (superClass != null) {
-      // Assume the superclass is also a platform class.
-      digest.update(hashPlatformClass(superClass));
+    if (!c.isInterface()) {
+      // Include the super class.
+      Class<?> superClass = c.getSuperclass();
+      if (superClass != null) {
+        // Assume the superclass is also a platform class.
+        digest.update(hashPlatformClass(superClass));
+      }
     }
     
     // Include declared interfaces, if any.
