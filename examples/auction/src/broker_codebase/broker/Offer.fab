@@ -1,9 +1,9 @@
 package broker;
-public class Offer [covariant label L] {
-    public final int {L} price; // just price
-    public final int {L} quality; // 0 = economy, 1 = business, 2 = first
+public class Offer [label L] {
+    public final int {L}@{L;⊥←} price; // just price
+    public final int {L}@{L;⊥←} quality; // 0 = economy, 1 = business, 2 = first
 
-    public Offer (int {L} price, int{L } quality) {
+    public Offer (int {L} price, int{L} quality) {
 		this.price = price;
 		this.quality = quality; 
     }

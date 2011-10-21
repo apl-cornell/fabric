@@ -131,22 +131,23 @@ public final class LabelUtil {
   public static IntegPolicy topInteg() {
     return localStore.getTopIntegPolicy();
   }
-  
-  public static ConfPolicy bottomConf(Store store) {
-	  return localStore.getBottomConfidPolicy();
-  }
 
-  public static ConfPolicy topConf(Store store) {
-	  return localStore.getTopConfidPolicy();
-  }
-
-  public static IntegPolicy topInteg(Store store) {
-	  return localStore.getTopIntegPolicy();
-  }
-  
-  public static IntegPolicy bottomInteg(Store store) {
-      return localStore.getBottomIntegPolicy();
-  }
+//XXX: What is the purpose of these?
+//  public static ConfPolicy bottomConf(Store store) {
+//	  return localStore.getBottomConfidPolicy();
+//  }
+//
+//  public static ConfPolicy topConf(Store store) {
+//	  return localStore.getTopConfidPolicy();
+//  }
+//
+//  public static IntegPolicy topInteg(Store store) {
+//	  return localStore.getTopIntegPolicy();
+//  }
+//  
+//  public static IntegPolicy bottomInteg(Store store) {
+//      return localStore.getBottomIntegPolicy();
+//  }
 
   public static ConfPolicy readerPolicy(Store store, Principal owner,
       Principal reader) {
@@ -159,10 +160,6 @@ public final class LabelUtil {
 //    }
   }
 
-  public static ConfPolicy readerPolicy(Principal owner, Principal reader) {
-    return readerPolicy(localStore, owner, reader);
-  }
-
   public static ConfPolicy readerPolicy(Store store, Principal owner,
       Collection/* <Principal> */readers) {
 //    try {
@@ -172,10 +169,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static ConfPolicy readerPolicy(Principal owner, Collection/* <Principal> */readers) {
-    return readerPolicy(localStore, owner, readers);
   }
 
   /**
@@ -193,10 +186,6 @@ public final class LabelUtil {
 //    }
   }
 
-  public static ConfPolicy readerPolicy(Label lbl, Principal owner, Principal[] readers) {
-    return readerPolicy(localStore, lbl, owner, readers);
-  }
-
   public static ConfPolicy readerPolicy(Store store, Principal owner,
       PrincipalSet writers) {
 //    try {
@@ -207,10 +196,6 @@ public final class LabelUtil {
 //    }
   }
 
-  public static ConfPolicy readerPolicy(Principal owner, PrincipalSet writers) {
-    return readerPolicy(localStore, owner, writers);
-  }
-
   public static Label readerPolicyLabel(Store store, Principal owner,
       Principal reader) {
 //    try {
@@ -219,10 +204,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static Label readerPolicyLabel(Principal owner, Principal reader) {
-  	return readerPolicyLabel(localStore, owner, reader);
   }
 
   public static Label readerPolicyLabel(Store store, Principal owner,
@@ -236,10 +217,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static Label readerPolicyLabel(Principal owner, Collection/* <Principal> */readers) {
-    return readerPolicyLabel(localStore, owner, readers);
   }
 
   /**
@@ -257,10 +234,6 @@ public final class LabelUtil {
 //    }
   }
 
-  public static Label readerPolicyLabel(Label lbl, Principal owner, Principal[] readers) {
-    return readerPolicyLabel(localStore, lbl, owner, readers);
-  }
-
   public static Label readerPolicyLabel(Store store, Principal owner,
       PrincipalSet readers) {
 //    try {
@@ -270,10 +243,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static Label readerPolicyLabel(Principal owner, PrincipalSet readers) {
-    return readerPolicyLabel(localStore, owner, readers);
   }
 
   public static IntegPolicy writerPolicy(Store store, Principal owner, Principal writer) {
@@ -286,10 +255,6 @@ public final class LabelUtil {
 //    }
   }
 
-  public static IntegPolicy writerPolicy(Principal owner, Principal writer) {
-    return writerPolicy(localStore, owner, writer);
-  }
-
   public static IntegPolicy writerPolicy(Store store, Principal owner,
       Collection/* <Principal> */writers) {
 //    try {
@@ -298,10 +263,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static IntegPolicy writerPolicy(Principal owner, Collection/* <Principal> */writers) {
-    return writerPolicy(localStore, owner, writers);
   }
 
   public static Label writerPolicyLabel(Store store, Principal owner, Principal writer) {
@@ -313,10 +274,6 @@ public final class LabelUtil {
 //    }
   }
 
-  public static Label writerPolicyLabel(Principal owner, Principal writer) {
-    return writerPolicyLabel(localStore, owner, writer);
-  }
-
   public static Label writerPolicyLabel(Store store, Principal owner,
       Collection/* <Principal> */writers) {
 //    try {
@@ -326,10 +283,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static Label writerPolicyLabel(Principal owner, Collection/* <Principal> */writers) {
-  	return writerPolicyLabel(localStore, owner, writers);
   }
 
   /**
@@ -347,10 +300,6 @@ public final class LabelUtil {
 //    }
   }
 
-  public static Label writerPolicyLabel(Label lbl, Principal owner, Principal[] writers) {
-    return writerPolicyLabel(localStore, lbl, owner, writers);
-  }
-
   /**
    * See the Jif signature for the explanation of lbl.
    */
@@ -366,10 +315,6 @@ public final class LabelUtil {
 //    }
   }
 
-  public static IntegPolicy writerPolicy(Label lbl, Principal owner, Principal[] writers) {
-    return writerPolicy(localStore, lbl, owner, writers);
-  }
-
   public static IntegPolicy writerPolicy(Store store, Principal owner,
       PrincipalSet writers) {
 //    try {
@@ -378,10 +323,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static IntegPolicy writerPolicy(Principal owner, PrincipalSet writers) {
-    return writerPolicy(localStore, owner, writers);
   }
 
   public static Label toLabel(Store store, ConfPolicy cPolicy, IntegPolicy iPolicy) {
@@ -395,10 +336,6 @@ public final class LabelUtil {
 //    }
   }
 
-  public static Label toLabel(ConfPolicy cPolicy, IntegPolicy iPolicy) {
-    return toLabel(localStore, cPolicy, iPolicy);
-  }
-
   public static Label toLabel(Store store, ConfPolicy policy) {
 //    try {
 //      enterTiming();
@@ -406,10 +343,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static Label toLabel(ConfPolicy policy) {
-    return toLabel(localStore, policy);
   }
 
   public static Label toLabel(Store store, IntegPolicy policy) {
@@ -420,21 +353,17 @@ public final class LabelUtil {
 //      exitTiming();
 //    }
   }
-
-  public static Label toLabel(IntegPolicy policy) {
-    return toLabel(localStore, policy);
-  }
   
   // lift takes a policy and creates a pair label with the other
   // component being bottom
-  public static Label liftToLabel(ConfPolicy policy) {
-      return liftToLabel(localStore, policy);
-  }
-  private static Label liftToLabel(Store store, ConfPolicy policy) {
+//  public static Label liftToLabel(ConfPolicy policy) {
+//      return liftToLabel(localStore, policy);
+//  }
+  public static Label liftToLabel(Store store, ConfPolicy policy) {
       return new PairLabel@store(policy, bottomInteg());
   }
-  public static Label liftToLabel(IntegPolicy policy) {
-      return toLabel(localStore, policy);
+  public static Label liftToLabel(Store store, IntegPolicy policy) {
+      return new PairLabel@store(topConf(), policy);
   }
   
   public static Label join(Store store, Label l1, Label l2) {
@@ -474,10 +403,6 @@ public final class LabelUtil {
 //    }
   }
 
-  public static Label join(Label l1, Label l2) {
-    return join(localStore, l1, l2);
-  }
-
   public static Label meetLbl(Store store, Label l1, Label l2) {
 //    try {
 //      enterTiming();
@@ -485,10 +410,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static Label meetLbl(Label l1, Label l2) {
-  	return meetLbl(localStore, l1, l2);
   }
 
   public static Label meet(Store store, Label l1, Label l2) {
@@ -528,10 +449,6 @@ public final class LabelUtil {
 //    }
   }
 
-  public static Label meet(Label l1, Label l2) {
-    return meet(localStore, l1, l2);
-  }
-
   public static ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2) {
 //    try {
 //      enterTiming();
@@ -539,10 +456,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static ConfPolicy join(ConfPolicy p1, ConfPolicy p2) {
-    return join(localStore, p1, p2);
   }
 
   protected static ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2,
@@ -572,10 +485,6 @@ public final class LabelUtil {
 
   }
 
-  protected static ConfPolicy join(ConfPolicy p1, ConfPolicy p2, java.util.Set/* <DelegationPair> */s) {
-    return join(localStore, p1, p2, s);
-  }
-
   public static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2) {
 //    try {
 //      enterTiming();
@@ -583,10 +492,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static IntegPolicy join(IntegPolicy p1, IntegPolicy p2) {
-  	return join(localStore, p1, p2);
   }
 
   static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
@@ -615,10 +520,6 @@ public final class LabelUtil {
 
   }
 
-  static IntegPolicy join(IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
-    return join(localStore, p1, p2, s);
-  }
-
   public static ConfPolicy meetPol(Store store, ConfPolicy p1, ConfPolicy p2) {
 //    try {
 //      enterTiming();
@@ -626,10 +527,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static ConfPolicy meetPol(ConfPolicy p1, ConfPolicy p2) {
-    return meetPol(localStore, p1, p2);
   }
 
   protected static ConfPolicy meet(Store store, ConfPolicy p1, ConfPolicy p2,
@@ -658,10 +555,6 @@ public final class LabelUtil {
 //    }
   }
 
-  protected static ConfPolicy meet(ConfPolicy p1, ConfPolicy p2, java.util.Set/* <DelegationPair> */s) {
-    return meet(localStore, p1, p2, s);
-  }
-
   public static IntegPolicy meetPol(Store store, IntegPolicy p1, IntegPolicy p2) {
 //    try {
 //      enterTiming();
@@ -669,10 +562,6 @@ public final class LabelUtil {
 //    } finally {
 //      exitTiming();
 //    }
-  }
-
-  public static IntegPolicy meetPol(IntegPolicy p1, IntegPolicy p2) {
-    return meetPol(localStore, p1, p2);
   }
 
   static IntegPolicy meet(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
@@ -699,10 +588,6 @@ public final class LabelUtil {
 //      exitTiming();
 //    }
 
-  }
-
-  static IntegPolicy meet(IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
-    return meet(localStore, p1, p2, s);
   }
 
   public static boolean equivalentTo(Label l1, Label l2) {
@@ -778,7 +663,7 @@ public final class LabelUtil {
   public static boolean actsFor(Label actor, Principal granter) {
 //    try {
 //      enterTiming();
-      Label L = toLabel(topConf(), writerPolicy(granter, granter));
+      Label L = toLabel(localStore, topConf(), writerPolicy(localStore, granter, granter));
       return relabelsTo(actor, L);
 //    } finally {
 //      exitTiming();

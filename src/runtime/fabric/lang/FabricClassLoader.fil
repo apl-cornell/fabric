@@ -71,11 +71,7 @@ public class FabricClassLoader extends ClassLoader {
 
     final long endLoadingTime;
     if (!classBytecodeMap.containsKey(name)) {
-      int impl = name.lastIndexOf("$_Impl");
-      String fabname = name;
-      if (impl >= 0) fabname = name.substring(0, impl);
-      FClass fcls = SysUtil.toProxy(fabname);
-      if(fcls == null) throw new ClassNotFoundException(fabname);
+      FClass fcls = SysUtil.toProxy(name);
       long endCompileTime = -1;
       try {
         endCompileTime = Main.compile(fcls, classBytecodeMap);

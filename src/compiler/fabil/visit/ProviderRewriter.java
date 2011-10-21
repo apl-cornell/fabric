@@ -60,7 +60,7 @@ public class ProviderRewriter extends NodeVisitor {
       return qq.parseExpr("%E.get$label()", fclassProxy);
     }
     else {
-      return qq.parseExpr("fabric.lang.security.LabelUtil._Impl.toLabel(fabric.lang.security.LabelUtil._Impl.topInteg())");
+      return qq.parseExpr("fabric.lang.security.LabelUtil._Impl.toLabel(fabric.worker.Worker.getWorker().getLocalStore(),fabric.lang.security.LabelUtil._Impl.topInteg())");
     }
   }
   

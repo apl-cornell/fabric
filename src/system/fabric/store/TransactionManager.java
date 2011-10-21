@@ -421,7 +421,7 @@ public class TransactionManager {
     SerializedObject obj = read(onum);
     if (obj == null) return null;
 
-    long headLabelOnum = obj.getLabelOnum();
+    long headLabelOnum = obj.getUpdateLabelOnum();
 
     LongKeyMap<SerializedObject> group =
         new LongKeyHashMap<SerializedObject>(MAX_GROUP_SIZE);
@@ -453,7 +453,7 @@ public class TransactionManager {
         // Ensure that the related object's label is the same as the head
         // object's label. We could be smarter here, but to avoid calling into
         // the worker, let's hope pointer-equality is sufficient.
-        long relatedLabelOnum = related.getLabelOnum();
+        long relatedLabelOnum = related.getUpdateLabelOnum();
         if (headLabelOnum != relatedLabelOnum) continue;
 
         toVisit.add(related);

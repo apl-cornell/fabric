@@ -5,6 +5,7 @@ import fabric.runtime.Runtime;
 import broker.Server;
 import broker.Agent;
 import broker.User;
+import broker.UserAgent;
 
 class Main  {
     public static final void main{* <- }  (principal{*provider} p, String[] args)  throws SecurityException, IllegalArgumentException  
@@ -12,7 +13,8 @@ class Main  {
 			{*provider} equiv {*AirlineExample.provider},
 			{*provider} equiv {*Server.provider}, 
 			{*provider} equiv {*Agent.provider}, 
-			{*provider} equiv {*User.provider}
+			{*provider} equiv {*User.provider},
+			{*provider} equiv {*UserAgent.provider}
     {
 		PrintStream[{}] out = null;
           try {
@@ -29,17 +31,14 @@ class Main  {
 	  final Store a_store = worker$.getStore(Config.airlineAStoreName);   
 	  final RemoteWorker a_worker = worker$.getWorker(Config.airlineAWorkerName);   
 	  final principal airlineA = a_worker.getPrincipal();
-	  final label a_lbl = new label{airlineA->;airlineA<-};
 
 	  final Store b_store = worker$.getStore(Config.airlineBStoreName);   
 	  final RemoteWorker b_worker = worker$.getWorker(Config.airlineBWorkerName);   
 	  final principal airlineB = b_worker.getPrincipal();
-	  final label b_lbl = new label{airlineB->;airlineB<-};
 
 	  final Store user_store = worker$.getStore(Config.userStoreName);   
 	  final RemoteWorker user_worker = worker$.getWorker(Config.userWorkerName);   
 	  final principal user = user_worker.getPrincipal();
-	  final label user_lbl = new label{user->;user<-};
 
 	  final Server[airlineA] a_serv =(Server[airlineA])a_store.getRoot().get(Config.airlineAServerName);
 	  if(a_serv == null)
@@ -56,7 +55,6 @@ class Main  {
 	  final Store broker_store = worker$.getStore(Config.brokerStoreName); 
 	  final RemoteWorker broker_worker = worker$.getWorker(Config.brokerWorkerName); 
 	  final principal broker = broker_worker.getPrincipal();
-	  final label broker_lbl = new label{broker->;broker<-};
 
       if(broker actsfor airlineA && broker actsfor airlineB && broker actsfor user
 	    	&& p equiv broker && provider actsfor broker && broker equiv broker_store) 

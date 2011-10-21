@@ -24,6 +24,9 @@
     <not><isset property="polyglot.home" /></not>
   </condition>
 
+  <!-- Polyglot configuration file -->
+  <property file="${polyglot.home}/config.properties" prefix="polyglot" />
+
   <!-- Jif installation -->
   <!-- If it is not defined in the properties file, use the environment
        variable $JIF. -->
@@ -39,6 +42,32 @@
   <condition property="jif.home" value="${fabric.home}">
     <not><isset property="jif.home" /></not>
   </condition>
+
+  <!-- jif configuration file -->
+  <property file="${jif.home}/config.properties" prefix="jif" />
+
+  <!-- Java installation -->
+  <!-- First  choice: jdk.home in config.properties
+       Second choice: jdk.home in ${jif.home}/config.properties
+       Third  choice: JAVA_HOME environment variable
+  -->
+  <condition property="jdk.home" value="${jif.jdk.home}">
+    <and>
+      <isset property="jif.jdk.home" />
+      <not>
+        <isset property="jdk.home" />
+      </not>
+    </and>
+  </condition>
+  <condition property="jdk.home" value="${env.JAVA_HOME}">
+    <and>
+      <isset property="env.JAVA_HOME" />
+      <not>
+        <isset property="jif.jdk.home" />
+      </not>
+    </and>
+  </condition>
+
 
   <!-- Directories for class file targets -->
   <property name="classes" location="${fabric.home}/classes"/>
@@ -66,6 +95,7 @@
     <pathelement path="${polyglot.home}/lib/ppg.jar" />
     <pathelement path="${polyglot.home}/lib/java_cup.jar" />
     <pathelement path="${polyglot.home}/lib/JFlex.jar" />
+    <pathelement path="${jdk.home}/lib/tools.jar" />
   </path>
 
   <!-- Jif classpath -->

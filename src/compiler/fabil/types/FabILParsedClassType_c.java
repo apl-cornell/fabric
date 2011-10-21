@@ -1,17 +1,33 @@
 package fabil.types;
 
-import fabil.frontend.CodebaseSource;
-import fabric.common.SysUtil;
-import fabric.lang.Codebase;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.util.List;
+
+import polyglot.frontend.FileSource;
 import polyglot.frontend.Source;
 import polyglot.main.Options;
 import polyglot.types.*;
+import polyglot.util.InternalCompilerError;
+import fabil.frontend.CodebaseSource;
+import fabil.visit.ClassHashGenerator;
+import fabric.common.Crypto;
+import fabric.common.SysUtil;
+import fabric.lang.Codebase;
 
 public class FabILParsedClassType_c extends ParsedClassType_c implements CodebaseClassType {
 
   protected transient Codebase codebase;
+  
+  /**
+   * Memoizes a secure hash of the class.
+   */
+  protected transient byte[] classHash;
 
-  public FabILParsedClassType_c() {
+  /**
+   * Used for deserialization.
+   */
+  protected FabILParsedClassType_c() {
     super();
   }
 
@@ -74,5 +90,38 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
     } else {
       return super.translate(c);
     }
+  }
+  
+  @SuppressWarnings("unchecked")
+  public byte[] getClassHash() {
+    if (classHash != null) return classHash;
+    
+    MessageDigest digest = Crypto.digestInstance();
+    
+    if (fromSource instanceof FileSource) {
+      // Hash the class's source code.
+      try {
+        String code =
+            ClassHashGenerator.toSourceString((FileSource) fromSource);
+        digest.update(code.getBytes("UTF-8"));
+      } catch (IOException e) {
+        throw new InternalCompilerError(e);
+      }
+    } else {
+      // XXX Type was probably deserialized from a signature.  What do we do?
+    }
+    
+    // Include the super class's hash.
+    FabILParsedClassType_c superClassType = (FabILParsedClassType_c) superType();
+    if (superClassType != null) {
+      digest.update(superClassType.getClassHash());
+    }
+    
+    // Include declared interfaces' hashes, if any.
+    for (FabILParsedClassType_c ifaceType : (List<FabILParsedClassType_c>) interfaces()) {
+      digest.update(ifaceType.getClassHash());
+    }
+    
+    return classHash = digest.digest();
   }
 }

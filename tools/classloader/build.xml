@@ -38,7 +38,7 @@
   <target name="build"
       description="Builds the Fabric classloader tools">
     <mkdir dir="${classloader.home}/classes" />
-    <javac target="1.6" srcdir="${classloader.home}/src"
+    <javac source="1.6" target="1.6" srcdir="${classloader.home}/src"
 	destdir="${classloader.home}/classes" includeAntRuntime="false"
 	debug="on">
       <classpath>

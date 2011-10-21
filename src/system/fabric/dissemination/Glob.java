@@ -156,7 +156,7 @@ public class Glob implements FastSerializable {
   private Label getLabel(Store store, ObjectGroup group) {
     SerializedObject obj =
         group.objects().entrySet().iterator().next().getValue();
-    return new Label._Proxy(store, obj.getLabelOnum());
+    return new Label._Proxy(store, obj.getUpdateLabelOnum());
   }
 
   /** The dissemination level of the glob. 0 is replicated to all nodes. */

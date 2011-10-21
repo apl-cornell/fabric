@@ -75,6 +75,27 @@ public class WorkerShell {
       }
     });
 
+    this.handlers.put("time", new CommandHandler("Times a worker shell command.") {
+      @Override
+      public void handle(List<String> commandLine) throws HandlerException {
+        String command = commandLine.get(0);
+        List<String> args = commandLine.subList(1, commandLine.size());
+        if (command.equals("exit")) return;
+
+        CommandHandler handler = handlers.get(command);
+        if (handler == null) {
+          handler = defaultHandler;
+          args = commandLine;
+        }
+        final long startTime = System.currentTimeMillis();
+        try {
+          handler.handle(args);
+        } finally {
+          System.out.println("   Run time: " + (System.currentTimeMillis()-startTime) + " ms");
+        }
+      }
+    });
+    
     this.handlers.put("help", new CommandHandler("[CMD]", "Displays a help "
         + "message for CMD.") {
       final int SCREEN_WIDTH = 76;

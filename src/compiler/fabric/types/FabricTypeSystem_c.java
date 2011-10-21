@@ -4,7 +4,10 @@ import java.util.*;
 
 import jif.ast.JifUtil;
 import jif.ast.LabelNode;
+import jif.translate.ConjunctivePrincipalToJavaExpr_c;
+import jif.translate.DisjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
+import jif.translate.MeetLabelToJavaExpr_c;
 import jif.translate.PrincipalToJavaExpr;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
@@ -30,6 +33,8 @@ import fabric.common.SysUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.translate.DynamicPrincipalToFabilExpr_c;
+import fabric.translate.FabricJoinLabelToFabilExpr_c;
+import fabric.translate.FabricMeetLabelToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
 import fabric.translate.ProviderLabelToFabilExpr_c;
 
@@ -289,6 +294,29 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return new ProviderLabelToFabilExpr_c();
   }
 
+  @Override
+  public LabelToJavaExpr meetLabelTranslator() {
+    return new FabricMeetLabelToFabilExpr_c();
+  }
+
+  @Override
+  public LabelToJavaExpr joinLabelTranslator() {
+    return new FabricJoinLabelToFabilExpr_c();
+  }
+  
+  //XXX: we may need to override these methods with 
+  // Fabric-specific translators so that *-junctive principals
+  // are created on the correct store.
+  @Override
+  public PrincipalToJavaExpr conjunctivePrincipalTranslator() {
+    return new ConjunctivePrincipalToJavaExpr_c();
+  }
+
+  @Override
+  public PrincipalToJavaExpr disjunctivePrincipalTranslator() {
+    return new DisjunctivePrincipalToJavaExpr_c();
+  }
+  
   public ConfPolicy representableConfProjection(Label L) {
     if (L instanceof ArgLabel) {
       return super.confProjection(((ArgLabel) L).upperBound());
@@ -510,6 +538,26 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
         }
       }
     }
+  }
+
+  public Label tjoin(Label L1, Label L2) {
+    ConfPolicy cp1 = L1 == null ? null : L1.confProjection();
+    ConfPolicy cp2 = L2 == null ? null : L2.confProjection();
+    
+    IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
+    IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
+    
+    return pairLabel(L1.position(), join(cp1, cp2), meet(ip1, ip2));
+  }
+
+  public Label tmeet(Label L1, Label L2) {
+    ConfPolicy cp1 = L1 == null ? null : L1.confProjection();
+    ConfPolicy cp2 = L2 == null ? null : L2.confProjection();
+    
+    IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
+    IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
+    
+    return pairLabel(L1.position(), meet(cp1, cp2), join(ip1, ip2));
   }
 
 }

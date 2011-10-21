@@ -9,29 +9,83 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import polyglot.types.Named;
-
+import fabric.common.ClassRef.FabricClassRef;
+import fabric.common.exceptions.InternalError;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
+import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
+/**
+ * Convenience class containing generally useful methods such as functional
+ * programming idioms and hashing methods.
+ * 
+ * This class has also adopted a bunch of mucky name mangling code that should
+ * be removed.
+ */
+
 public final class SysUtil {
 
+  /**
+   * Caches hashes of platform classes that weren't compiled with fabc. Maps
+   * class names to their hashes.
+   */
   private static final Map<String, byte[]> classHashCache = Collections
       .synchronizedMap(new HashMap<String, byte[]>());
 
+  /**
+   * Size of buffer to use for reading bytecode while hashing classes.
+   */
   private static final int BUF_LEN = 4096;
 
   /**
-   * Generates a cryptographically secure hash of the given class.
+   * Generates a cryptographically secure hash of a platform class.
+   * 
+   * @param c
+   *          the Class object for a class that is not stored in Fabric. If it's
+   *          a Fabric class, this is the interface corresponding to the Fabric
+   *          type, and not the _Proxy or _Impl classes.
    */
-  public static byte[] hash(Class<?> c) throws IOException {
+  @SuppressWarnings("unchecked")
+  public static byte[] hashPlatformClass(Class<?> c) throws IOException {
+    boolean hashing_Impl = false;
+    Class<?> ifaceClass = null;
     
+    if (fabric.lang.Object.class.isAssignableFrom(c)) {
+      // We have a Fabric class. Use the filc/fabc-generated hash, if any. If we
+      // get any exceptions from attempting to do this, we assume that the class
+      // wasn't compiled by filc/fabc and hash the bytecode instead.
+      try {
+        return classHashFieldValue((Class<? extends fabric.lang.Object>) c);
+      } catch (NoSuchFieldException e) {
+      } catch (SecurityException e) {
+      } catch (IllegalArgumentException e) {
+      } catch (IllegalAccessException e) {
+      }
+      
+      // Fabric class wasn't compiled by filc/fabc. Instead, we hash the
+      // bytecode for the _Impl class, if any, to ensure we cover the class's
+      // code.
+      for (Class<?> nested : c.getClasses()) {
+        if (nested.getSimpleName().equals("_Impl")) {
+          hashing_Impl = true;
+          ifaceClass = c;
+          c = nested;
+          break;
+        }
+      }
+    }
+    
+    // Class wasn't compiled by filc/fabc.  Hash the bytecode instead.
     String className = c.getName();
 
-    CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing class by class object: {0}",
+    CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing platform class: {0}",
         className);
 
     byte[] result = classHashCache.get(className);
@@ -43,10 +97,11 @@ public final class SysUtil {
     MessageDigest digest = Crypto.digestInstance();
 
     ClassLoader classLoader;
-    if(Worker.isInitialized())
+    if (Worker.isInitialized()) {
       classLoader = Worker.getWorker().getClassLoader();
-    else
+    } else {
       classLoader = c.getClassLoader();
+    }
     
     if (classLoader == null) {
       classLoader = ClassLoader.getSystemClassLoader();
@@ -69,25 +124,32 @@ public final class SysUtil {
           classLoader);
       throw new InternalError("Class not found: " + className);
     }
-    // For platform classes, hash the bytecode
-    if (isPlatformType(className)) {
-      byte[] buf = new byte[BUF_LEN];
-      int count = classIn.read(buf);
-      while (count != -1) {
-        digest.update(buf, 0, count);
-        count = classIn.read(buf);
-      }
-      classIn.close();
 
-      Class<?> superClass = c.getSuperclass();
-      if (superClass != null) digest.update(hash(superClass));
+    byte[] buf = new byte[BUF_LEN];
+    int count = classIn.read(buf);
+    while (count != -1) {
+      digest.update(buf, 0, count);
+      count = classIn.read(buf);
+    }
+    classIn.close();
 
-      result = digest.digest();
+    // Include the super class, if any.
+    Class<?> superClass = c.getSuperclass();
+    if (superClass != null) {
+      // Assume the superclass is also a platform class.
+      digest.update(hashPlatformClass(superClass));
     }
-    // For classes stored in Fabric, ignore the hash
-    else {
-      result = new byte[] { 0 };
+    
+    // Include declared interfaces, if any.
+    Class<?>[] interfaces =
+        hashing_Impl ? ifaceClass.getInterfaces() : c.getInterfaces();
+    for (Class<?> iface : interfaces) {
+      // Assume the interface is also a platform class.
+      digest.update(hashPlatformClass(iface));
     }
+
+    result = digest.digest();
+
     classHashCache.put(className, result);
 
     if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
@@ -98,29 +160,57 @@ public final class SysUtil {
 
     return result;
   }
-
-  public static byte[] hashClass(String className)
-      throws IOException, ClassNotFoundException {
-    CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing class by name: {0}",
-        className);
-    byte[] result = classHashCache.get(className);
-
-    if (result != null) {
-      CLASS_HASHING_LOGGER.finer("  Hash found in cache");
-      return result;
-    }
-    Class<?> c;
+  
+  /**
+   * Returns the class hash for the Fabric class referred by the given
+   * FabricClassRef.
+   */
+  public static byte[] hashFClass(FabricClassRef fcr) {
+    Class<? extends fabric.lang.Object> clazz = fcr.toClass();
     try {
-      c = Class.forName(className);
+      return classHashFieldValue(clazz);
+    } catch (NoSuchFieldException e) {
+      throw new InternalError(e);
+    } catch (SecurityException e) {
+      throw new InternalError(e);
+    } catch (IllegalArgumentException e) {
+      throw new InternalError(e);
+    } catch (IllegalAccessException e) {
+      throw new InternalError(e);
     }
-    catch(ClassNotFoundException e) {
-      //Class is not loaded yet.
-      if(Worker.isInitialized())
-        c = Worker.getWorker().getClassLoader().findClass(className);
-      else
-        throw e;
+  }
+
+  /**
+   * Returns the value of the static "$classHash" field in the given class. This
+   * contains the class hash that was computed by the compiler.
+   */
+  private static byte[] classHashFieldValue(
+      Class<? extends fabric.lang.Object> clazz) throws NoSuchFieldException,
+      SecurityException, IllegalArgumentException, IllegalAccessException {
+    return (byte[]) clazz.getField("$classHash").get(null);
+  }
+
+  /**
+   * Returns the _Impl class for the given Fabric class.
+   * 
+   * @param clazz
+   *          the Class object for a Fabric class. This is the interface
+   *          corresponding to the Fabric type, and not the _Proxy or _Impl
+   *          classes.
+   * @return the _Impl corresponding to <code>clazz</code>. If no _Impl class is
+   *         found (i.e., clazz represents a Fabric interface),
+   *         <code>null</code> is returned.
+   */
+  @SuppressWarnings("unchecked")
+  public static Class<? extends _Impl> getImplClass(
+      Class<? extends fabric.lang.Object> clazz) {
+    for (Class<?> nested : clazz.getClasses()) {
+      if (nested.getSimpleName().equals("_Impl")) {
+        return (Class<? extends _Impl>) nested;
+      }
     }
-    return hash(c);
+    
+    return null;
   }
 
   public static URL locateClass(String className)
@@ -248,9 +338,36 @@ public final class SysUtil {
     protected abstract T create();
   }
   
+  /*
+  ** crufty name mangling stuff below this line. *******************************
+  */
+
   /**
-   * XXX: This 
-   * @throws ClassNotFoundException 
+   * The following words are used in this documentation
+   * 
+   *  - fabric name
+   *      fully qualified names from the source language
+   *      example: fabric.lang.Object
+   *
+   *  - java name
+   *      fully qualified Java names that the compiler outputs
+   *      example: fabric.lang.Object$_Impl
+   *      example: [mangled codebase].my.app.Foo$_Proxy
+   *      example: [mangled codebase].my.app.Foo
+   *      platform classes do not have codebase parts
+   *
+   *  - mangled codebase
+   *      $$[codebase store].onum_[codebase onum]$$
+   */
+
+  
+  /**
+   * @param app
+   *
+   * @return
+   *    
+   * @throws
+   *    ClassNotFoundException 
    */
   public static String mangle(String app) throws ClassNotFoundException {
     URI app_uri = URI.create(app);
@@ -262,9 +379,16 @@ public final class SysUtil {
       if(fcls == null)
         throw new ClassNotFoundException(app_uri.toString());
       return pseudoname(fcls) + "$_Impl";
-    }    
+    }
   }
   
+  /**
+   * @param cb
+   *    either a codebase or null
+   * @return
+   *    "" if cb is null
+   *    "[mangled codebase reference]." if cb is not null
+   */
   public static String packagePrefix(Codebase cb) {
     if (cb != null) {
       return pseudoname(cb) + ".";
@@ -272,6 +396,13 @@ public final class SysUtil {
     else return "";
   }
   
+  /**
+   * @param cb
+   *    either a codebase or null
+   * @return
+   *    "" if cb is null
+   *    "[mangled codebase reference]" if cb is not null
+   */
   public static String packageName(Codebase cb) {
     if (cb != null) {
       return pseudoname(cb);
@@ -279,34 +410,69 @@ public final class SysUtil {
     else return "";
   }
 
+  /**
+   * @param o
+   *    a fabric reference
+   * @return
+   *    fab://[object store]/[object onum]
+   */
   public static String oid(fabric.lang.Object o) {
     return "fab://" + o.$getStore().name() + "/" + o.$getOnum();
   }
 
-  public static FClass toProxy(String mangled) {
-    String fabricname = fabricname(mangled);
-    if(fabricname == null) return null;
+  /**
+   * @param mangled
+   *    the java name of a class stored in Fabric (see above)
+   * @return
+   *    the FClass associated with the java name
+   * @throws ClassNotFoundException
+   *    if the name is malformed, refers to a platform class, or fails to resolve
+   */
+  public static FClass toProxy(String javaName) throws ClassNotFoundException {
+    Matcher m = javaNameRegex.matcher(javaName);
+    if (!m.matches())
+      throw new ClassNotFoundException("failed to parse java class name " + javaName);
     
-    URI uri = URI.create(fabricname);
-    Store store = Worker.getWorker().getStore(uri.getHost());
-    String path = uri.getPath();
-    int oe = path.indexOf("/", 1);
-    long onum = Long.parseLong(path.substring(1,oe)); 
-    String className = path.substring(oe+1);
+    Store  codebaseStore = Worker.getWorker().getStore(m.group(1));
+    long   codebaseOnum  = Long.parseLong(m.group(2)); 
+    String className     = m.group(3);
 
     Codebase codebase =
-        (Codebase) fabric.lang.Object._Proxy
-            .$getProxy(new fabric.lang.Object._Proxy(store, onum));
+        (Codebase) _Proxy.$getProxy(new _Proxy(codebaseStore, codebaseOnum));
     
-    return codebase.resolveClassName(className);
+    FClass result = codebase.resolveClassName(className);
+    if (result == null)
+      throw new ClassNotFoundException("Failed to load " + className + " in codebase " + codebase);
+    
+    return result;
   }
   
+  // matches a java class name.
+  // group 1: codebase store or null for platform class
+  // group 2: codebase onum  or null for platform class
+  // group 3: fabric class name
+  // group 4: $_Impl or $_Proxy or ""
+  private static final Pattern javaNameRegex = Pattern.compile("\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.(.*?)((?:\\$_Impl)|(?:\\$_Proxy)|)");
+  
+  /**
+   * @param cb
+   *    a codebase or null
+   * @return
+   *    "" if cb is null
+   *    "fab://[codebase store]/[codebase onum]" otherwise
+   */
   public static String codebasePrefix(Codebase cb) {
     if (cb != null)
       return oid(cb) + "/";
     else return "";
   }
-    
+  
+  /**
+   * @param mangled
+   *    
+   * @return
+   *    TODO
+   */
   public static String codebasePart(String mangled) {
     int b = mangled.indexOf("$$");
     int e = mangled.indexOf("$$", b+2);
@@ -315,6 +481,7 @@ public final class SysUtil {
     return mangled.substring(b+2, e);
   }
 
+  
   public static long onumPart(String codebaseName) {
     int e = codebaseName.lastIndexOf('.');
     String onum = codebaseName.substring(e+".onum_".length());
@@ -326,19 +493,12 @@ public final class SysUtil {
     return codebaseName.substring(0, e);
   }
 
-  public static String pseudoname(String store, long onum) {
-    String[] host = store.split("[.]");
-    StringBuilder sb = new StringBuilder("$$");
-    for(int i = host.length - 1; i>=0; i--) {
-      sb.append(escapeHost(host[i]));
-      sb.append('.');
-    }
-    sb.append("onum_");
-    sb.append(onum);
-    sb.append("$$");
-    return sb.toString();
-  }
-  
+  /**
+   * @param pseudoname
+   *    [mangled codebase]
+   * @return
+   *    null if pseudoname does not contain "$$"
+   */
   public static String fabricname(String pseudoname) {    
     String cb = codebasePart(pseudoname);    
     if("".equals(cb))
@@ -357,31 +517,27 @@ public final class SysUtil {
     return "fab://"+store+"/"+onum+"/"+className;
   }
   
-  public static String pseudoname(URI fabref) {
-    String store = fabref.getHost();
-    String path = fabref.getPath();
-    if (path.contains("/")) {
-      // parse as a codebase oid + class name
-      String[] pair = path.split("/");
-      long onum = Long.parseLong(pair[0]);
-      String className = pair[1];
-      return pseudoname(store, onum) + "." + className;
-    }
-    return null;
-  }
-  
-  public static String escapeHost(String name) {
+  private static String escapeHost(String name) {
     name = name.replaceFirst("^([0-9])", "\\$$1");
     name = name.replace("-", "$_");
     return name;
   }
   
-  public static String unEscapeHost(String cbpart) {
+  private static String unEscapeHost(String cbpart) {
     cbpart = cbpart.replaceAll("\\$([0-9])", "$1");
     cbpart = cbpart.replaceAll("\\$_", "-");
     return cbpart;
   }
 
+  /**
+   * @param fabref a URI either of the form
+   *        fab://codebase_store/codebase_onum/class_name
+   *        where class_name is a fabric name
+   *        or
+   *        fab://class_store/class_onum
+   * @return the corresponding FClass object
+   * @throws ClassCastException if the oid's do not resolve to the correct types
+   */
   public static FClass toFClass(URI fabref) {
     Store store = Worker.getWorker().getStore(fabref.getHost());
     String path = fabref.getPath().substring(1);
@@ -391,9 +547,7 @@ public final class SysUtil {
       String[] pair = path.split("/");
       long onum = Long.parseLong(pair[0]);
       String className = pair[1];
-      Object o =
-          fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
-              store, onum));
+      Object o = _Proxy.$getProxy(new _Proxy(store, onum));
       if (!(o instanceof Codebase))
         throw new ClassCastException("The Fabric object at " + fabref
             + " is not a Codebase.");
@@ -403,17 +557,29 @@ public final class SysUtil {
     else {
       // parse as an fclass oid
       long onum = Long.parseLong(path); 
-      Object o =
-          fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
-              store, onum));
+      Object o = _Proxy.$getProxy(new _Proxy(store, onum));
       if (!(o instanceof FClass))
         throw new ClassCastException("The Fabric object at " + fabref
             + " is not a Fabric class.");
       return (FClass)o;
     }
   }
+
   public static String pseudoname(FClass fcls) {
     return packagePrefix(fcls.getCodebase()) + fcls.getName();
+  }
+  
+  public static String pseudoname(String store, long onum) {
+    String[] host = store.split("[.]");
+    StringBuilder sb = new StringBuilder("$$");
+    for(int i = host.length - 1; i>=0; i--) {
+      sb.append(escapeHost(host[i]));
+      sb.append('.');
+    }
+    sb.append("onum_");
+    sb.append(onum);
+    sb.append("$$");
+    return sb.toString();
   }
   
   public static String pseudoname(Codebase cb) {

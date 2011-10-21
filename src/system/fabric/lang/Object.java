@@ -357,17 +357,27 @@ public interface Object {
       this.$isOwned = false;
       this.$updateMapVersion = -1;
 
-      // By default, labels are public read-only.
+      // By default, update labels are public read-only.
       if (label == null && this instanceof Label)
         label = Worker.getWorker().getLocalStore().getPublicReadonlyLabel();
 
-      if (label == null) throw new InternalError("Null label!");
-      
-      if (!(store instanceof LocalStore)
-          && label.$getStore() instanceof LocalStore
-          && !ONumConstants.isGlobalConstant(label.$getOnum()))
-        throw new InternalError("Remote object has local label");
+      if (label == null) throw new InternalError("Null update label!");
 
+      // By default, access labels are public read-only.
+      if (accessLabel == null && this instanceof Label)
+        accessLabel = Worker.getWorker().getLocalStore().getPublicReadonlyLabel();
+
+      if (accessLabel == null) throw new InternalError("Null access label!");
+
+      if (!(store instanceof LocalStore)) {
+        if(label.$getStore() instanceof LocalStore
+          && !ONumConstants.isGlobalConstant(label.$getOnum()))
+          throw new InternalError("Remote object has local update label");
+
+        if(accessLabel.$getStore() instanceof LocalStore
+            && !ONumConstants.isGlobalConstant(accessLabel.$getOnum()))
+          throw new InternalError("Remote object has local access label");
+      }
       this.$label = label;
       this.$accessLabel = accessLabel;
     }
@@ -684,11 +694,14 @@ public interface Object {
       // Remote reference.
       if (p.ref.store instanceof LocalStore) {
         Class<?> objClass = obj.getClass();
-        String objStr = obj.toString();
+        //XXX: calling toString is unsafe since it may create new objects.
+        //  you should avoid this call if you are getting "Cannot create
+        //  object outside transaction" errors.  You still have a remote ref
+        //  error, you just can't print out the offending object outside a txn.
+        //String objStr = obj.toString();
         throw new InternalError(
             "Creating remote ref to local store.  Object on local store has "
-                + "class " + objClass + ".  Its string representation is \""
-                + objStr + "\".");
+                + "class " + objClass + " and onum " + p.ref.onum + ".");
       }
       refType.add(RefTypeEnum.REMOTE);
       interStoreRefs.add(new Pair<String, Long>(p.ref.store.name(), p.ref.onum));
@@ -760,9 +773,9 @@ public interface Object {
         return Worker.runInSubTransaction(new Worker.Code<Object>() {
           public Object run() throws Throwable {
             Constructor<? extends Object._Impl> constr =
-              c.getConstructor(Store.class, Label.class);
+              c.getConstructor(Store.class, Label.class, Label.class);
             Label emptyLabel = store.getEmptyLabel();
-            return constr.newInstance(store, emptyLabel);
+            return constr.newInstance(store, emptyLabel, emptyLabel);
           }
         });
       }

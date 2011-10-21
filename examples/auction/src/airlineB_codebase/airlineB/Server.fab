@@ -1,5 +1,5 @@
 package airlineB;
-
+import auction.Config;
 public class Server[principal Airline] implements broker.Server[Airline] 
 	where  {*provider} <= {Airline<-},  
 		{*provider} equiv {*Agent.provider}, 
@@ -19,19 +19,20 @@ public class Server[principal Airline] implements broker.Server[Airline]
 		} catch (ArithmeticException ignored) { }
     }
     
-    public int {Airline->;Airline<-} getLowestPrice() {
+    public int {Airline->;Airline<-} getLowestPrice{Airline->}() {
 		return this.lowestprice;
     }
 
-    public broker.Agent[Airline, auction]{Airline->;Airline<-} getAgent {Airline->;Airline<-} (label{Airline<-} auction) 
-		where {Airline->;Airline<-} <= {*auction}
+    public broker.Agent[Airline, auctionLbl]{Airline->;Airline<-} getAgent {Airline->;Airline<-} (label{Airline<-} auctionLbl) 
+		where {Airline->;Airline<-} <= {*auctionLbl}
 	{
-		final Store store = worker$.getLocalStore();
+		final Store store = worker$.getStore(Config.brokerStoreName);
 		//if(store actsfor Airline) --- XXX: why is this insufficient?
-		if(new label{Airline->;Airline<-} <= new label{*->store} 
-			&& new label {*<-store} <= new label{Airline->;Airline<-})
-			return new Agent[Airline, auction]@store(this);
+		if(new label{Airline->} <= new label{store->}
+			&& new label{*<-store} <= new label{Airline<-}
+			&& auctionLbl <= new label{store->})
+			return new Agent[Airline, auctionLbl]@store(this);
 		else 
-			throw new Error("Worker is not trusted to create agent.");
+			throw new Error("Store is not trusted to store agent.");
     }
 }

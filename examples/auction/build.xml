@@ -60,6 +60,14 @@
     <delete dir="${home}/.${user.store}_cache"/>
     <delete dir="${home}/.${airlineA.store}_cache"/>
     <delete dir="${home}/.${airlineB.store}_cache"/>
+    <delete dir="${home}/bin/.${broker.worker}_cache"/>
+    <delete dir="${home}/bin/.${user.worker}_cache"/>
+    <delete dir="${home}/bin/.${airlineA.worker}_cache"/>
+    <delete dir="${home}/bin/.${airlineB.worker}_cache"/>
+    <delete dir="${home}/bin/.${broker.store}_cache"/>
+    <delete dir="${home}/bin/.${user.store}_cache"/>
+    <delete dir="${home}/bin/.${airlineA.store}_cache"/>
+    <delete dir="${home}/bin/.${airlineB.store}_cache"/>
   </target>
 
   <!--
@@ -175,6 +183,7 @@
       <arg value="-g"/>
       <arg value="-e"/>
       <arg value="-d"          /> <arg value="${home.codebases}"/>
+      <arg value="-report" /> <arg value="profile=1" />
       <arg value="-publish-only" />
       <arg value="-codebase-output-file" /> <arg value="${target.codebasefile}"/>
       <arg value="-sourcepath" /> <arg value="${codebase.dir}" />
@@ -236,10 +245,17 @@
            skipemptyfilesets="true"
            vmlauncher="false">
       <arg value="${fabric.home}/bin/fabc"/>
+      <arg value="-report" /> <arg value="profile=1" />
       <arg value="-g"/>
       <arg value="-debugpositions"/>
       <arg value="-trusted-providers"/>
       <arg value="-e"/>
+      <!--
+      <arg value="-rdebug"/>
+      <arg value="-report"/> <arg value="frontend=1"/>
+      <arg value="-dump"/> <arg value="FabricToFabilRewriter"/>
+      <arg value="-dump"/> <arg value="PrincipalCastAdder"/>
+      -->
       <arg value="-d"/> <arg value="${home}/classes"/>
       <arg value="-cp"/> <arg pathref="standard.classpath" />
       <arg value="-cp"/> <arg value="${home}/classes" />

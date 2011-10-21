@@ -40,7 +40,15 @@
   <target name="build" description="Compiles the Fabric examples">
     <!-- Recursively call "build-all" on subdirectories. -->
     <subant target="build-all">
-      <fileset dir="." includes="*/build.xml" />
+      <fileset dir="." includes="*/build.xml">
+        <exclude name="applet/build.xml"/>
+        <exclude name="blog/build.xml"/>
+        <exclude name="cms/build.xml"/>
+        <exclude name="sif-hello/build.xml"/>
+        <exclude name="social/build.xml"/>
+        <exclude name="travel/build.xml"/>
+        <exclude name="tree/build.xml"/>
+      </fileset>
     </subant>
   </target>
 

@@ -1,6 +1,7 @@
 package airlineA;
 import broker.Offer;
 import broker.UserAgent;
+import auction.Config;
 // Airline agent provides competing offers 
 
 public class Agent[principal Airline, label Auction] implements broker.Agent[Airline, Auction] 
@@ -10,7 +11,7 @@ public class Agent[principal Airline, label Auction] implements broker.Agent[Air
 			{*broker.Agent.provider} equiv {*broker.Server.provider}
 {
     private final Server[Airline]{Airline->;Airline<-}@{Auction;⊥←} server;
-    private int {Airline->;Airline<-}@{Auction;⊥←} lowestprice; 
+    private int {Airline->;Airline<-}@{Auction;⊥←} lowestprice;
 
     public Agent{Airline->;Airline<-}(Server[Airline]{Airline->;Airline<-} server) {
 		this.server = server;
@@ -24,25 +25,29 @@ public class Agent[principal Airline, label Auction] implements broker.Agent[Air
     public Offer[Auction] {Auction} makeFirstOffer {Airline->;Airline<-} () {
 		prepareForAuction(); 
 		int price = 2*lowestprice;
-		final Store store = worker$.getLocalStore();
-		if(Auction <= new label {store->} &&  new label {store<-} <= Auction) {
-			return new Offer[Auction]@store(price, 0);
+                final Store store = worker$.getStore(Config.brokerStoreName);
+		if(new label{Auction;*broker.Offer.provider} <= new label {store->} 
+			&&  new label {store<-} <= Auction) {
+				return new Offer[Auction]@store(price, 0);
 		} else
 			throw new Error("Invalid store");
     }
 
     public Offer[Auction] {Auction} makeOffer{Auction}(UserAgent[Auction] {Auction} userChoice,  
-														Offer[Auction] {Auction} bestOffer) {
+														Offer[Auction] {Auction} bestOffer) 
+		where {*broker.UserAgent.provider} <= Auction
+	{
 		if (userChoice == null) return null;
 
 		int price = 2*lowestprice;  // possible read-channel??? 
-		final Store store = worker$.getLocalStore();
+                final Store store = worker$.getStore(Config.brokerStoreName);
 
-		if(Auction <= new label {store->} &&  new label {store<-} <= Auction) {
+		if(new label {Auction;*broker.Offer.provider} <= new label {store->} 
+			&&  new label {store<-} <= Auction) {
 			Offer[Auction] newOffer = new Offer[Auction]@store(price, 0);
 
 			while (userChoice.choice (newOffer, bestOffer)  >= 0 && price >= lowestprice) {
-			    newOffer = new Offer [Auction]@store( price -- , 0) ;
+			    newOffer = new Offer [Auction]@store(price--, 0) ;
 			}
 			if (price < lowestprice) 
 			    return null; // give up 

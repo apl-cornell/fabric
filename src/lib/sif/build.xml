@@ -143,6 +143,7 @@
       <arg value="-debugpositions"/>
       <arg value="-trusted-providers"/>
       <!--
+      <arg value="-rdebug"/>
         <arg value="-report"/> <arg value="solver=5"/>
         <arg value="-print"/> <arg value="RemoteCallWrapperAdder"/>
         <arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>

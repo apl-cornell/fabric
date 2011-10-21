@@ -106,6 +106,8 @@ COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/lib/FreePastry-2.1.jar"
 for i in "${TOP}"/lib/bcprov-*.jar ; do
 COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:$i"
 done
+# Java libraries
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${JAVA_HOME}/lib/tools.jar"
 
 # Common classpath for libraries used when running either the worker or the
 # store.

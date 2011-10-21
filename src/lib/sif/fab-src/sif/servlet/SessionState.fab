@@ -5,7 +5,7 @@ import fabric.lang.security.Principal;
  * Global state for a single session.
  */
 
-public class SessionState[covariant label T] {
+public class SessionState[covariant label T, label A] where T <= A, {} <= A {
 
     // XXX Is it ok for this to be public?
     public SessionState(String{T} sessionId_, SessionPrincipal{T} session) {
@@ -20,14 +20,14 @@ public class SessionState[covariant label T] {
         this.sessionId = "<uninitialized>";
     }
     
-    public final SessionPrincipal{T} sessionPrincipal;
-    public final String{T}    sessionId;
+    public final SessionPrincipal{T}@{A} sessionPrincipal;
+    public final String{T}@{A}    sessionId;
 
-    public final String{T;this} getSessionId() {
+    public final String{T;this} getSessionId{A}() {
         return sessionId;
     }
 
-    public final SessionPrincipal{T;this} sessionPrincipal() {
+    public final SessionPrincipal{T;this} sessionPrincipal{A}() {
         return sessionPrincipal;
     }
 //    
