@@ -14,4 +14,6 @@ public interface FabricDelFactory extends JifDelFactory {
   JL delNewFabricArray();
   JL delRemoteWorkerGetter();
   JL delRetryStmt();
+  JL delCodebaseNode();
+  JL delCodebaseDecl();
 }

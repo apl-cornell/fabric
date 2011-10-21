@@ -2,6 +2,7 @@ package fabil.extension;
 
 import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
+import polyglot.ast.JL;
 
 public interface FabILExtFactory extends ExtFactory {
   Ext extAtomic();
@@ -11,4 +12,6 @@ public interface FabILExtFactory extends ExtFactory {
   Ext extNewFabricArray();
   Ext extFabricArrayInit();
   Ext extProviderLabel();
+  Ext extCodebaseNode();
+  Ext extCodebaseDecl();
 }

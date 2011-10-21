@@ -1,5 +1,6 @@
 package fabil.frontend;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -20,18 +21,46 @@ import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-//XXX: should maybe make explicit
-import polyglot.visit.*;
-
+import polyglot.visit.ContextVisitor;
+import polyglot.visit.ExpressionFlattener;
+import polyglot.visit.InnerClassRemover;
+import polyglot.visit.LocalClassRemover;
+import polyglot.visit.LoopNormalizer;
+import codebases.frontend.CBScheduler;
+import codebases.frontend.CBTypeExists;
+import codebases.frontend.CodebaseImportsInitialized;
+import codebases.types.CodebaseTypeSystem;
+import codebases.visit.CBTypeBuilder;
 import fabil.ExtensionInfo;
 import fabil.FabILOptions;
+import fabil.Topics;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
-//XXX: should maybe make explicit
-import fabil.visit.*;
-import fabric.Topics;
+import fabil.visit.AbortRetryChecker;
+import fabil.visit.ArrayInitializerTypeFixer;
+import fabil.visit.AtomicMethodRewriter;
+import fabil.visit.AtomicRewriter;
+import fabil.visit.ClassHashGenerator;
+import fabil.visit.ClassReferencesCollector;
+import fabil.visit.CodebaseTranslator;
+import fabil.visit.InlineableWrapper;
+import fabil.visit.JavaSkeletonCreator;
+import fabil.visit.LabelAssigner;
+import fabil.visit.LocationAssigner;
+import fabil.visit.Memoizer;
+import fabil.visit.PrincipalDelegator;
+import fabil.visit.ProviderRewriter;
+import fabil.visit.ProxyRewriter;
+import fabil.visit.ReadWriteChecker;
+import fabil.visit.RemoteCallRewriter;
+import fabil.visit.SignatureCleaner;
+import fabil.visit.SignatureHashGenerator;
+import fabil.visit.StaticInitializerCollector;
+import fabil.visit.StoreGetterRewriter;
+import fabil.visit.ThreadRewriter;
+import fabil.visit.UpdatedVariableFinder;
 
-public class FabILScheduler extends JLScheduler {
+public class FabILScheduler extends JLScheduler implements CBScheduler {
   protected ExtensionInfo extInfo;
 
   public FabILScheduler(ExtensionInfo extInfo) {
@@ -49,10 +78,10 @@ public class FabILScheduler extends JLScheduler {
 
   @Override
   public Goal TypesInitialized(Job job) {
-    TypeSystem ts = extInfo.typeSystem();
+    CodebaseTypeSystem ts = extInfo.typeSystem();
     NodeFactory nf = extInfo.nodeFactory();
     Goal g =
-        internGoal(new VisitorGoal(job, new FabILTypeBuilder(job, ts, nf)));
+        internGoal(new VisitorGoal(job, new CBTypeBuilder(job, ts, nf)));
     try {
       addPrerequisiteDependency(g, Parsed(job));
     } catch (CyclicDependencyException e) {
@@ -471,6 +500,7 @@ public class FabILScheduler extends JLScheduler {
 
   @Override
   public Goal Serialized(Job job) {
+
     Goal g = internGoal(new Serialized(job) {
       @SuppressWarnings("unchecked")
       @Override
@@ -486,7 +516,7 @@ public class FabILScheduler extends JLScheduler {
           l.add(ClassesHashed(job));
           l.add(InstrumentThreads(job));
           l.add(ClassReferencesCollected(job));
-          if(((FabILOptions) extInfo.getOptions()).createJavaSkel()) {
+          if(((FabILOptions) extInfo.getOptions()).createSkeleton()) {
             l.add(CreateJavaSkeleton(job));
           }
         } else {
@@ -499,11 +529,12 @@ public class FabILScheduler extends JLScheduler {
       protected polyglot.visit.ClassSerializer createSerializer(TypeSystem ts,
           NodeFactory nf, Date lastModified, ErrorQueue eq, Version version) {
 
-        if (((FabILOptions) extInfo.getOptions()).signatureMode())
-          return super.createSerializer(ts, nf, lastModified, eq, version);
+        ///XXX: commented out pending test
+//        if (((FabILOptions) extInfo.getOptions()).signatureMode())
+//          return super.createSerializer(ts, nf, lastModified, eq, version);
 
         return new fabil.visit.ClassSerializer(ts, nf, lastModified, eq,
-            version);
+            version, ((FabILOptions) extInfo.getOptions()).signatureMode());
       }
     });
     return g;
@@ -578,6 +609,11 @@ public class FabILScheduler extends JLScheduler {
       Report.report(1, "FabIL passes complete: "+ (endTime - startTime) + "ms");
     }
     return fil_complete;
+  }
+
+  @Override
+  public Goal TypeExists(URI ns, String name) {
+    return CBTypeExists.create(this, ns, name);
   }
   
 }

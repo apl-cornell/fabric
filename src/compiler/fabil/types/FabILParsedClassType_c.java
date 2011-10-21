@@ -1,24 +1,38 @@
 package fabil.types;
 
 import java.io.IOException;
+import java.net.URI;
 import java.security.MessageDigest;
 import java.util.List;
 
-import polyglot.frontend.FileSource;
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
 import polyglot.frontend.Source;
-import polyglot.main.Options;
-import polyglot.types.*;
+import polyglot.qq.QQ;
+import polyglot.types.DeserializedClassInitializer;
+import polyglot.types.LazyClassInitializer;
+import polyglot.types.ParsedClassType_c;
+import polyglot.types.Resolver;
+import polyglot.types.Type;
+import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
-import fabil.frontend.CodebaseSource;
+import codebases.frontend.CodebaseSource;
+import fabil.ExtensionInfo;
 import fabil.visit.ClassHashGenerator;
+import fabil.visit.ProviderRewriter;
 import fabric.common.Crypto;
-import fabric.common.SysUtil;
+import fabric.common.NSUtil;
 import fabric.lang.Codebase;
+import fabric.lang.FClass;
 
-public class FabILParsedClassType_c extends ParsedClassType_c implements CodebaseClassType {
+public class FabILParsedClassType_c extends ParsedClassType_c implements
+    FabILParsedClassType {
 
-  protected transient Codebase codebase;
-  
+  /**
+   * The namespace used to resolve the dependencies of this class
+   */
+  protected URI canonical_ns;
+
   /**
    * Memoizes a secure hash of the class. If this class-type information is
    * derived from a FabIL or Fabric signature, this field holds a hash of the
@@ -39,16 +53,14 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
   public FabILParsedClassType_c(TypeSystem ts, LazyClassInitializer init,
       Source fromSource) {
     super(ts, init, fromSource);
-    if (fromSource != null) {
-      this.codebase = ((CodebaseSource) fromSource).codebase();
-    }
+    if (fromSource == null) {
+      // XXX:Java classes may be loaded w/o encoded types
+      ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();
+      this.canonical_ns = extInfo.platformNamespace();
+    } else this.canonical_ns =
+        ((CodebaseSource) fromSource).canonicalNamespace();
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.types.ClassType_c#descendsFromImpl(polyglot.types.Type)
-   */
   @Override
   public boolean descendsFromImpl(Type ancestor) {
     FabILTypeSystem ts = (FabILTypeSystem) typeSystem();
@@ -67,81 +79,104 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements Codebas
 
     return super.descendsFromImpl(ancestor);
   }
-  
-  public Codebase codebase() {
-    return codebase;
-  }
 
   @Override
   public String translate(Resolver c) {
     if (isTopLevel()) {
+      ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();
+
       if (package_() == null) {
-        return SysUtil.packagePrefix(codebase) + name();
+        return extInfo.namespaceToJavaPackagePrefix(canonical_ns) + name();
       }
 
-      // Use the short name if it is unique and there is no 
-      // codebase
-      if (c != null && !Options.global.fully_qualified_names && codebase == null) {
-        try {
-          Named x = c.find(name());
+      // XXX: Never use short name
+      // if (c != null && !Options.global.fully_qualified_names
+      // && codebase == null) {
+      // try {
+      // Named x = c.find(name());
+      //
+      // if (ts.equals(this, x)) {
+      // return name();
+      // }
+      // } catch (SemanticException e) {
+      // }
+      // }
 
-          if (ts.equals(this, x)) {
-            return name();
-          }
-        } catch (SemanticException e) {
-        }
-      }
-      return SysUtil.packagePrefix(codebase) + package_().translate(c) + "." + name();
+      return extInfo.namespaceToJavaPackagePrefix(canonical_ns)
+          + package_().translate(c) + "." + name();
     } else {
       return super.translate(c);
     }
   }
-  
+
+  public Node rewriteProvider(ProviderRewriter pr) {
+    ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();
+    QQ qq = pr.qq();
+    if (!canonical_ns.equals(extInfo.localNamespace())
+        && !canonical_ns.equals(extInfo.platformNamespace())) {
+      Codebase codebase = NSUtil.fetch_codebase(canonical_ns);
+      FClass fclass = codebase.resolveClassName(fullName());
+      // Convert to an OID.
+      String storeName = fclass.$getStore().name();
+      long onum = fclass.$getOnum();
+
+      // Emit a call to get$label() on an appropriate proxy object.
+      Expr store =
+          qq.parseExpr("fabric.worker.Worker.getWorker().getStore(\""
+              + storeName + "\")");
+      Expr fclassProxy =
+          qq.parseExpr("new fabric.lang.FClass._Proxy(%E, " + onum + ")", store);
+      return qq.parseExpr("%E.get$label()", fclassProxy);
+    } else {
+      return qq
+          .parseExpr("fabric.lang.security.LabelUtil._Impl.toLabel(fabric.worker.Worker.getWorker().getLocalStore(),fabric.lang.security.LabelUtil._Impl.topInteg())");
+    }
+  }
+
+  @Override
+  public URI canonicalNamespace() {
+    return canonical_ns;
+  }
+
+    @Override
   public byte[] getClassHash() {
     if (classHash != null) return classHash;
-    
+
     MessageDigest digest = Crypto.digestInstance();
-    
-    if (fromSource instanceof FileSource) {
+
+    if (!init().fromClassFile()) {
       // Hash the class's source code.
       try {
         String code =
-            ClassHashGenerator.toSourceString((FileSource) fromSource);
+            ClassHashGenerator.toSourceString((CodebaseSource) fromSource);
         digest.update(code.getBytes("UTF-8"));
       } catch (IOException e) {
         throw new InternalCompilerError(e);
       }
-    } else if (fromSource instanceof CodebaseSource) {
-      // XXX Jif impl ugliness
+     
     } else {
       // Type was probably obtained from a Java class file. Hash the bytecode.
-      LazyClassInitializer lci = this.init();
-      if (lci instanceof ClassFileLazyClassInitializer) {
-        ClassFileLazyClassInitializer cflci = (ClassFileLazyClassInitializer) lci;
-        ClassFile classFile = cflci.classFile();
-        digest.update(classFile.getHash());
-      } else {
-        // No clue where this class came from.  Complain loudly.
-        throw new InternalError("Unexpected class initializer type: "
-            + lci.getClass());
-      }
+      FabILLazyClassInitializer init = (FabILLazyClassInitializer) init();
+      ClassFile classFile = init.classFile();
+      digest.update(classFile.getHash());
     }
-    
+   
     if (!flags.isInterface()) {
       // Include the super class's hash.
-      FabILParsedClassType_c superClassType = (FabILParsedClassType_c) superType();
+      FabILParsedClassType_c superClassType =
+          (FabILParsedClassType_c) superType();
       if (superClassType != null) {
         digest.update(superClassType.getClassHash());
       }
     }
-    
+
     // Include declared interfaces' hashes.
     @SuppressWarnings("unchecked")
     List<FabILParsedClassType_c> interfaces = interfaces();
     for (FabILParsedClassType_c iface : interfaces) {
       digest.update(iface.getClassHash());
     }
-    
+
     return classHash = digest.digest();
   }
 }

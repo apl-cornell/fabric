@@ -22,7 +22,8 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   private transient boolean accessLabelFound = false;
 //  private transient boolean providerLabelFolded = false;
   private transient boolean confPolicyExtracted = false;
-  protected transient Codebase codebase;
+  
+  protected URI canonical_ns = null;
 
   public FabricParsedClassType_c() {
     super();
@@ -31,7 +32,8 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   public FabricParsedClassType_c(FabricTypeSystem ts, LazyClassInitializer init,
       Source fromSource) {
     super(ts, init, fromSource);
-    this.codebase = ((CodebaseSource) fromSource).codebase();
+    if (fromSource == null)
+      throw new NullPointerException("fromSource cannot be null!");
   }
 
   /*
@@ -238,6 +240,8 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
 //    return singleFieldLabel;
   }
   
+  @SuppressWarnings("unchecked")
+  @Override
   public void removeMethod(MethodInstance mi) {
     for (Iterator<MethodInstance> it = methods.iterator(); it.hasNext(); ) {
       if (it.next() == mi) {
@@ -246,7 +250,13 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     }
   }
 
-  public Codebase codebase() {
-    return codebase;
+  @Override
+  public URI canonicalNamespace() {
+    // HACK superclass constructor accesses canonical namespace before it can be
+    // initialized.
+    if(canonical_ns == null)
+      canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
+    return canonical_ns;
   }
+
 }

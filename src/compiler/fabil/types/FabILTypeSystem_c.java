@@ -1,134 +1,232 @@
 package fabil.types;
 
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import polyglot.ast.TypeNode;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
-import polyglot.types.*;
+import polyglot.main.Report;
+import polyglot.types.AccessControlResolver;
+import polyglot.types.AccessControlWrapperResolver;
+import polyglot.types.ArrayType;
+import polyglot.types.CachingResolver;
+import polyglot.types.ClassType;
+import polyglot.types.Context;
+import polyglot.types.DeserializedClassInitializer;
+import polyglot.types.Flags;
+import polyglot.types.ImportTable;
+import polyglot.types.LazyClassInitializer;
+import polyglot.types.LazyInitializer;
+import polyglot.types.MethodInstance;
+import polyglot.types.Named;
 import polyglot.types.Package;
+import polyglot.types.ParsedClassType;
+import polyglot.types.ReferenceType;
+import polyglot.types.Resolver;
+import polyglot.types.SemanticException;
+import polyglot.types.SystemResolver;
+import polyglot.types.TopLevelResolver;
+import polyglot.types.Type;
+import polyglot.types.TypeObject;
+import polyglot.types.TypeSystem_c;
+import polyglot.types.reflect.ClassFile;
+import polyglot.types.reflect.ClassFileLazyClassInitializer;
+import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import fabil.FabILOptions;
-import fabil.frontend.CodebaseSource;
-import fabric.common.SysUtil;
+import polyglot.util.StringUtil;
+import codebases.frontend.CodebaseSource;
+import codebases.types.CBClassContextResolver;
+import codebases.types.CBImportTable;
+import codebases.types.CBPackageContextResolver;
+import codebases.types.CBPackage_c;
+import codebases.types.CBPlaceHolder_c;
+import codebases.types.CodebaseClassType;
+import codebases.types.NamespaceResolver;
 import fabric.lang.Codebase;
-import fabric.lang.FClass;
+import fabric.lang.security.LabelUtil;
+import fabric.lang.security.NodePrincipal;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
+  @SuppressWarnings("unchecked")
+  private static final Collection<String> TOPICS = CollectionUtil.list(
+      Report.types, Report.resolver);
 
-  private CachingResolver runtimeClassResolver;
+  private fabil.ExtensionInfo extInfo;
+
+  protected Map<URI, NamespaceResolver> namespaceResolvers;
+  protected List<NamespaceResolver> classpathResolvers;
+  protected List<NamespaceResolver> sourcepathResolvers;
+  protected List<NamespaceResolver> signatureResolvers;
+  protected List<NamespaceResolver> runtimeResolvers;
+
+  protected NamespaceResolver platformResolver;
 
   @Override
-  public void initialize(TopLevelResolver loadedResolver, ExtensionInfo extInfo)
+  public CBPackageContextResolver createPackageContextResolver(URI namespace,
+      Package p) {
+    return new CBPackageContextResolver(this, namespace, p);
+  }
+
+  @Override
+  public Resolver packageContextResolver(URI namespace, Package p,
+      ClassType accessor) {
+    if (accessor == null) {
+      return p.resolver();
+    } else {
+      return new AccessControlWrapperResolver(createPackageContextResolver(
+          namespace, p), accessor);
+    }
+  }
+
+  @Override
+  public Resolver packageContextResolver(URI namespace, Package p) {
+    return packageContextResolver(namespace, p, null);
+  }
+
+  @Override
+  public Package createPackage(URI ns, Package prefix, String name) {
+    return new CBPackage_c(this, ns, prefix, name);
+  }
+
+  @Override
+  public Package packageForName(URI ns, Package prefix, String name)
       throws SemanticException {
-    super.initialize(loadedResolver, extInfo);
-    // replace the system resolver with one that handles codebases.
-    // XXX: it would be better if polyglot used a factory method to create the
-    // system resolver
-    this.systemResolver = createSystemResolver(loadedResolver, extInfo);
-  }
-
-  public CodebaseSystemResolver createSystemResolver(
-      TopLevelResolver loadedResolver, ExtensionInfo extInfo) {
-    return new CodebaseSystemResolver(loadedResolver, extInfo);
+    return createPackage(ns, prefix, name);
   }
 
   @Override
-  public CodebasePackageContextResolver createPackageContextResolver(Package p) {
-    assert_(p);
-    return new CodebasePackageContextResolver(this, (CodebasePackage) p);
+  public Package packageForName(URI ns, String name) throws SemanticException {
+    if (name == null || name.equals("")) {
+      return null;
+    }
+
+    String s = StringUtil.getShortNameComponent(name);
+    String p = StringUtil.getPackageComponent(name);
+
+    return packageForName(ns, packageForName(ns, p), s);
   }
 
   @Override
-  public CodebasePackage createPackage(Package prefix, String name) {
-    return new CodebasePackage_c(this, (CodebasePackage) prefix, name);
+  public Package createPackage(Package prefix, String name) {
+    throw new UnsupportedOperationException("Must specify namespace");
   }
 
+  @Override
+  public AccessControlResolver createClassContextResolver(ClassType type) {
+    assert_(type);
+    return new CBClassContextResolver(this, type);
+  }
+
+  @Override
+  public Object placeHolder(TypeObject o, Set roots) {
+    assert_(o);
+    if (o instanceof ParsedClassType) {
+      CodebaseClassType ct = (CodebaseClassType) o;
+
+      // This should never happen: anonymous and local types cannot
+      // appear in signatures.
+      if (ct.isLocal() || ct.isAnonymous()) {
+        throw new InternalCompilerError("Cannot serialize " + o + ".");
+      }
+      String name = getTransformedClassName(ct);
+
+      return new CBPlaceHolder_c(ct.canonicalNamespace(), name);
+    }
+
+    return o;
+  }
+
+  @Override
   public ClassType TransactionManager() {
     return load("fabric.worker.transaction.TransactionManager");
   }
 
+  @Override
   public ClassType FObject() {
     return load("fabric.lang.Object");
   }
 
+  @Override
   public ClassType JavaInlineable() {
     return load("fabric.lang.JavaInlineable");
   }
 
+  @Override
   public ClassType WrappedJavaInlineable() {
     return load("fabric.lang.WrappedJavaInlineable");
   }
 
+  @Override
   public ClassType AbortException() {
     return load("fabric.worker.AbortException");
   }
 
+  @Override
   public ClassType FabricThread() {
     return load("fabric.common.FabricThread");
   }
 
+  @Override
   public ClassType Thread() {
     return load("java.lang.Thread");
   }
 
+  @Override
   public ClassType RemoteWorker() {
     return load("fabric.worker.remote.RemoteWorker");
   }
 
+  @Override
   public ClassType RemoteCallException() {
     return load("fabric.worker.remote.RemoteCallException");
   }
 
+  @Override
   public ClassType Worker() {
     return load("fabric.worker.Worker");
   }
 
+  @Override
   public ClassType Principal() {
     return load("fabric.lang.security.Principal");
   }
 
+  @Override
   public ClassType DelegatingPrincipal() {
     return load("fabric.lang.security.DelegatingPrincipal");
   }
 
+  @Override
   public Type Store() {
     return load("fabric.worker.Store");
   }
 
+  @Override
   public Type Label() {
     return load("fabric.lang.security.Label");
   }
-  
+
+  @Override
   public Type ConfPolicy() {
     return load("fabric.lang.security.ConfPolicy");
   }
 
+  @Override
   public ClassType InternalError() {
     return load("java.lang.InternalError");
   }
 
-  // // I don't understand why this method is deprecated.
-  // // There doesn't seem to be any other way to create
-  // // packages. All non-deprecated methods call this one.
-  // /** @deprecated */
-  // public Package createPackage(Package prefix, String name) {
-  // assert_(prefix);
-  // return new FabILPackage_c(this, prefix, name);
-  // }
-
-  /*
-   * (non-Javadoc)
-   * @see
-   * polyglot.types.TypeSystem_c#createClassType(polyglot.types.LazyClassInitializer
-   * , polyglot.frontend.Source)
-   */
   @Override
-  public CodebaseClassType createClassType(LazyClassInitializer init,
+  public ParsedClassType createClassType(LazyClassInitializer init,
       Source fromSource) {
     return new FabILParsedClassType_c(this, init, fromSource);
   }
@@ -138,16 +236,9 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return new FabILContext_c(this);
   }
   
-  @Override
-  public ClassFileLazyClassInitializer classFileLazyClassInitializer(
-      polyglot.types.reflect.ClassFile clazz) {
-    return new ClassFileLazyClassInitializer((fabil.types.ClassFile) clazz,
-        this);
-  }
-
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public List defaultPackageImports() {
+  public List<String> defaultPackageImports() {
     // Include fabric.lang as a default import.
     List<String> result = new ArrayList<String>(6);
     result.add("fabric.lang");
@@ -160,6 +251,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @SuppressWarnings("unchecked")
   @Override
+  // XXX: Why is this method here?
   protected List<MethodInstance> findAcceptableMethods(ReferenceType container,
       String name, @SuppressWarnings("rawtypes") List argTypes,
       ClassType currClass) throws SemanticException {
@@ -174,22 +266,25 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return result;
   }
 
+  @Override
   public ClassType fabricRuntimeArrayOf(Type type) {
-    if (type.isReference())
-      return loadRuntime("fabric.lang.arrays.ObjectArray");
-    return loadRuntime("fabric.lang.arrays." + type.toString() + "Array");
+    if (type.isReference()) return load("fabric.lang.arrays.ObjectArray");
+    return load("fabric.lang.arrays." + type.toString() + "Array");
   }
 
+  @Override
   public ClassType fabricRuntimeArrayImplOf(Type type) {
     if (type.isReference())
-      return loadRuntime("fabric.lang.arrays.ObjectArray._Impl");
-    return loadRuntime("fabric.lang.arrays." + type.toString() + "Array._Impl");
+      return load("fabric.lang.arrays.ObjectArray._Impl");
+    return load("fabric.lang.arrays." + type.toString() + "Array._Impl");
   }
 
+  @Override
   public ClassType toFabricRuntimeArray(ArrayType type) {
     return fabricRuntimeArrayOf(type.base());
   }
 
+  @Override
   public FabricArrayType fabricArrayOf(Type type, int dims) {
     return fabricArrayOf(type.position(), type, dims);
   }
@@ -204,10 +299,12 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
         "Must call fabricArrayOf(type, dims) with dims > 0");
   }
 
+  @Override
   public FabricArrayType fabricArrayOf(Type type) {
     return fabricArrayOf(type.position(), type);
   }
 
+  @Override
   public FabricArrayType fabricArrayOf(Position pos, Type type) {
     assert_(type);
     return fabricArrayType(pos, type);
@@ -235,29 +332,9 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return new JavaArrayType_c(this, pos, type);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see polyglot.types.TypeSystem_c#importTable(polyglot.types.Package)
-   */
   @Override
-  public ImportTable importTable(Package pkg) {
-    throw new UnsupportedOperationException(
-        "Import table must be associated with a source");
-  }
-
-  /*
-   * (non-Javadoc)
-   * @see polyglot.types.TypeSystem_c#importTable(java.lang.String,
-   * polyglot.types.Package)
-   */
-  @Override
-  public ImportTable importTable(String sourceName, Package pkg) {
-    throw new UnsupportedOperationException(
-        "Import table must be associated with a source");
-  }
-
-  public CodebaseImportTable importTable(CodebaseSource source, Package pkg) {
-    return new CodebaseImportTable_c(this, pkg, source);
+  public CBImportTable importTable(Source source, URI ns, Package pkg) {
+    return new CBImportTable(this, ns, pkg, source);
   }
 
   @Override
@@ -271,75 +348,48 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return super.legalConstructorFlags();
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isFabricType(polyglot.types.Type)
-   */
+  @Override
   public boolean isFabricType(Type type) {
     if (type.isPrimitive()) return true;
     return isFabricReference(type);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isFabricType(polyglot.ast.TypeNode)
-   */
+  @Override
   public boolean isFabricType(TypeNode type) {
     return isFabricType(type.type());
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isFabricThread(polyglot.types.Type)
-   */
+  @Override
   public boolean isThread(Type type) {
     return isSubtype(type, Thread());
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isFabricThread(polyglot.ast.TypeNode)
-   */
+  @Override
   public boolean isThread(TypeNode type) {
     return isThread(type.type());
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isPureFabricType(polyglot.types.Type)
-   */
+  @Override
   public boolean isPureFabricType(Type type) {
     return isFabricType(type) && !isJavaInlineable(type);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isPureFabricType(polyglot.ast.TypeNode)
-   */
+  @Override
   public boolean isPureFabricType(TypeNode type) {
     return isPureFabricType(type.type());
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isFabricReference(polyglot.types.Type)
-   */
+  @Override
   public boolean isFabricReference(Type type) {
     return isFabricArray(type) || isFabricClass(type);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isFabricReference(polyglot.ast.TypeNode)
-   */
+  @Override
   public boolean isFabricReference(TypeNode type) {
     return isFabricReference(type.type());
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isFabricClass(polyglot.types.ClassType)
-   */
+  @Override
   public boolean isFabricClass(ClassType type) {
     if (type.flags().contains(FabILFlags.NONFABRIC)) {
       return false;
@@ -354,54 +404,42 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return isSubtype(type, FObject());
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isFabricClass(polyglot.types.Type)
-   */
+  @Override
   public boolean isFabricClass(Type type) {
     return type.isClass() && isFabricClass(type.toClass());
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isFabricClass(polyglot.ast.TypeNode)
-   */
+  @Override
   public boolean isFabricClass(TypeNode type) {
     return isFabricClass(type.type());
   }
 
+  @Override
   public boolean isPrincipalClass(ClassType type) {
     return isSubtype(type, Principal());
   }
 
+  @Override
   public boolean isPrincipalClass(Type type) {
     return type.isClass() && isPrincipalClass(type.toClass());
   }
 
+  @Override
   public boolean isPrincipalClass(TypeNode type) {
     return isPrincipalClass(type.type());
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isFabricArray(polyglot.types.ArrayType)
-   */
+  @Override
   public boolean isFabricArray(ArrayType type) {
     return type instanceof FabricArrayType;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isFabricArray(polyglot.types.Type)
-   */
+  @Override
   public boolean isFabricArray(Type type) {
     return type.isArray() && isFabricArray(type.toArray());
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isFabricArray(polyglot.ast.TypeNode)
-   */
+  @Override
   public boolean isFabricArray(TypeNode type) {
     return isFabricArray(type.type());
   }
@@ -410,10 +448,12 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
    * (non-Javadoc)
    * @see fabil.types.FabILTypeSystem#isJavaInlineable(polyglot.types.Type)
    */
+  @Override
   public boolean isJavaInlineable(Type type) {
     return isSubtype(type, JavaInlineable());
   }
 
+  @Override
   public boolean isJavaInlineable(TypeNode type) {
     return isJavaInlineable(type.type());
   }
@@ -426,13 +466,14 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     assert_(returnType);
     assert_(argTypes);
     assert_(excTypes);
-    return new FabILMethodInstance_c(this, pos, container, flags,
-                                returnType, name, argTypes, excTypes);
+    return new FabILMethodInstance_c(this, pos, container, flags, returnType,
+        name, argTypes, excTypes);
   }
 
   /**
    * Determines whether a type was compiled by fabc.
    */
+  @Override
   public boolean isCompiledByFabc(ClassType ct) {
     if (ct instanceof ParsedClassType) {
       ParsedClassType pct = (ParsedClassType) ct;
@@ -446,22 +487,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     }
 
     return false;
-  }
-
-  public void setRuntimeClassResolver(LoadedClassResolver lcr) {
-    this.runtimeClassResolver = new CachingResolver(lcr);
-  }
-
-  /**
-   * Same as load(), but ignores source files.
-   */
-  private ClassType loadRuntime(String name) {
-    try {
-      return (ClassType) forName(runtimeClassResolver, name);
-    } catch (SemanticException e) {
-      throw new InternalCompilerError("Cannot find runtime class \"" + name
-          + "\"; " + e.getMessage(), e);
-    }
   }
 
   @Override
@@ -499,68 +524,234 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   public boolean isPlatformType(String fullName) {
     String typeName = fullName;
-    return typeName.startsWith("java") 
-        || typeName.startsWith("fabric")
+    return typeName.startsWith("java") || typeName.startsWith("fabric")
         || typeName.startsWith("jif");
   }
 
-  public String absoluteName(Codebase context, String fullName, boolean resolve)
-      throws SemanticException {
-    // XXX Ugly hack.
-    boolean isJifImpl = fullName.endsWith("_JIF_IMPL");
-    String jifImpl = "";
-    if (isJifImpl) {
-      fullName = fullName.substring(0, fullName.indexOf("_JIF_IMPL"));
-      jifImpl = "_JIF_IMPL";
-    }
-    
-    if (!isPlatformType(fullName)) {
-      if (resolve && context != null) {
-        FClass fcls = context.resolveClassName(fullName);
-        if (fcls == null) {
-          new java.lang.Exception().printStackTrace();
-          throw new SemanticException("Codebase " + SysUtil.oid(context)
-              + " has no entry for " + fullName);
-        }
-        Codebase cb = fcls.getCodebase();
-        return SysUtil.codebasePrefix(cb) + fullName + jifImpl;
-      } else {
-        return SysUtil.codebasePrefix(context) + fullName + jifImpl;
-      }
-    } else return fullName + jifImpl;
+  @Override
+  public void initialize(ExtensionInfo extInfo) throws SemanticException {
+    // There is no toplevel resolver -- names are resolved via the source's
+    // codebase
+    initialize(null, extInfo);
+    this.loadedResolver = null;
+    this.systemResolver = null;
+    this.extInfo = (fabil.ExtensionInfo) extInfo;
+    initResolvers();
   }
 
-  public boolean localTypesOnly() {
-    FabILOptions opt = (FabILOptions) extInfo.getOptions();
-    return !opt.runWorker();
-  }
-  
-  public void addRemoteFClass(Codebase codebase, Named n) {
-    if (n instanceof ParsedClassType) {
-      ParsedClassType pct = (ParsedClassType) n;
-      if (pct.fromSource() instanceof CodebaseSource) {
-        CodebaseSource cbs = (CodebaseSource) pct.fromSource();
-        String name = pct.fullName();
-        //Adding remote FClass to codebase
-        if(!codebase.equals(cbs.codebase())) {
-          //TODO: check codebase integrity
-          FClass fclass = cbs.codebase().resolveClassName(name);
-          if(fclass == null) throw new InternalCompilerError("Expected entry for " + name + " in codebase " + cbs.codebase());
-          
-          //check for existing mapping
-          FClass orig = codebase.resolveClassName(name);        
-          if(orig != null) {
-            throw new InternalCompilerError("Multiple codebase entries for "
-                + name + ": " + orig + "," + fclass);
-          }
-          //otherwise, add FClass to current codebase
-          codebase.insertClass(name, fclass);
-          if(pct.flags().isInterface() 
-              && isSubtype(pct, FObject())) {
-            codebase.insertClass(name + "_JIF_IMPL", fclass);
-          }
-        }
-      }
+  protected void initResolvers() {
+    // NB: getOptions() and getFabILOptions() do not return the same thing if
+    // we are compiling from Fabric source! getOptions() returns the
+    // FabricOptions()
+    // object (which implements FabILOptions). In particular, to get the right
+    // signaturepath
+    // we have to call getFabILOptions().
+    List<URI> cp = extInfo.classpath();
+    List<URI> sp = extInfo.sourcepath();
+    List<URI> sigcp = extInfo.signaturepath();
+    List<URI> rtcp = extInfo.bootclasspath();
+
+    namespaceResolvers = new HashMap<URI, NamespaceResolver>();
+    signatureResolvers = new ArrayList<NamespaceResolver>();
+    classpathResolvers = new ArrayList<NamespaceResolver>();
+    sourcepathResolvers = new ArrayList<NamespaceResolver>();
+
+    runtimeResolvers = new ArrayList<NamespaceResolver>();
+    for (URI uri : rtcp) {
+      if (Report.should_report(TOPICS, 2))
+        Report.report(2, "Initializing FabIL runtime resolver: " + uri);
+
+      NamespaceResolver nsr = namespaceResolver(uri);
+      nsr.loadEncodedClasses(true);
+      nsr.loadRawClasses(true);
+      nsr.loadSource(true);
+      runtimeResolvers.add(nsr);
+    }
+
+    for (URI uri : sigcp) {
+      if (Report.should_report(TOPICS, 2))
+        Report.report(2, "Initializing FabIL signature resolver: " + uri);
+      NamespaceResolver nsr = namespaceResolver(uri);
+      nsr.loadEncodedClasses(true);
+      // A raw signature class is an oxymoron
+      nsr.loadRawClasses(false);
+      nsr.loadSource(true);
+      signatureResolvers.add(nsr);
+    }
+
+    platformResolver = namespaceResolver(extInfo.platformNamespace());
+    platformResolver.loadSource(true);
+    boolean src_in_cp = sp.isEmpty();
+
+    for (URI uri : cp) {
+      if (Report.should_report(TOPICS, 2))
+        Report.report(2, "Initializing FabIL classpath resolver: " + uri);
+
+      NamespaceResolver nsr = namespaceResolver(uri);
+      nsr.loadEncodedClasses(true);
+      nsr.loadRawClasses(true);
+      nsr.loadSource(src_in_cp);
+      classpathResolvers.add(nsr);
+    }
+
+    for (URI uri : sp) {
+      if (Report.should_report(TOPICS, 2))
+        Report.report(2, "Initializing FabIL sourcepath resolver: " + uri);
+
+      NamespaceResolver nsr = namespaceResolver(uri);
+      nsr.loadEncodedClasses(true);
+      nsr.loadSource(true);
+
+      if (!classpathResolvers.contains(nsr)) nsr.loadEncodedClasses(false);
+      sourcepathResolvers.add(nsr);
     }
   }
+
+  @Override
+  public NamespaceResolver namespaceResolver(URI ns) {
+    NamespaceResolver sr = namespaceResolvers.get(ns);
+    if (sr == null) {
+      sr = extInfo.createNamespaceResolver(ns);
+      namespaceResolvers.put(ns, sr);
+    }
+    return sr;
+  }
+
+  @Override
+  public boolean packageExists(URI ns, String name) {
+    return namespaceResolver(ns).packageExists(name);
+  }
+
+  @Override
+  public Named forName(URI ns, String name) throws SemanticException {
+    return forName(namespaceResolver(ns), name);
+  }
+
+  @Override
+  public Named forName(String name) throws SemanticException {
+    return forName(platformResolver(), name);
+  }
+
+  @Override
+  public Codebase codebaseFromNS(URI namespace) {
+    // Worker must be running!
+    if (!Worker.isInitialized())
+      throw new InternalCompilerError("Worker is not initialized.");
+
+    NamespaceResolver nsr = namespaceResolver(namespace);
+    if (nsr.codebase() != null) return nsr.codebase();
+
+    throw new InternalCompilerError("Cannot get codebase for namespace:"
+        + namespace + ":" + nsr.getClass());
+  }
+
+  @Override
+  public ClassFileLazyClassInitializer classFileLazyClassInitializer(
+      ClassFile clazz) {
+    return new FabILLazyClassInitializer((fabil.types.ClassFile)clazz, this);
+  }
+
+  // / Deprecated/Unsupported methods
+
+  private UnsupportedOperationException toplevel_resolution_error() {
+    return new UnsupportedOperationException(
+        "Top level resolution is unsupported with codebases.");
+  }
+
+  @Override
+  @Deprecated
+  public SystemResolver systemResolver() {
+    throw toplevel_resolution_error();
+  }
+
+  @Override
+  @Deprecated
+  public SystemResolver saveSystemResolver() {
+    throw toplevel_resolution_error();
+  }
+
+  @Override
+  @Deprecated
+  public void restoreSystemResolver(SystemResolver r) {
+    throw toplevel_resolution_error();
+  }
+
+  @Override
+  @Deprecated
+  public CachingResolver parsedResolver() {
+    throw toplevel_resolution_error();
+  }
+
+  @Override
+  @Deprecated
+  public TopLevelResolver loadedResolver() {
+    throw toplevel_resolution_error();
+  }
+
+  @Override
+  @Deprecated
+  public boolean packageExists(String name) {
+    throw toplevel_resolution_error();
+  }
+
+  @Override
+  @Deprecated
+  public CBPackageContextResolver createPackageContextResolver(Package p) {
+    throw toplevel_resolution_error();
+  }
+
+  @Override
+  @Deprecated
+  public ImportTable importTable(Package pkg) {
+    throw new UnsupportedOperationException(
+        "Import table must be associated with a namespace,"
+            + " use importTable(Source,URI,Package) instead");
+  }
+
+  @Override
+  @Deprecated
+  public ImportTable importTable(String sourceName, Package pkg) {
+    throw new UnsupportedOperationException(
+        "Import table must be associated with a namespace,"
+            + " use importTable(Source,URI,Package) instead");
+  }
+
+  @Override
+  public NamespaceResolver platformResolver() {
+    if (platformResolver == null)
+      throw new InternalCompilerError("Must call initResolvers() first!");
+    return platformResolver;
+  }
+
+  @Override
+  public List<NamespaceResolver> signatureResolvers() {
+    if (signatureResolvers == null)
+      throw new InternalCompilerError("Must call initResolvers() first!");
+    return signatureResolvers;
+  }
+
+  @Override
+  public List<NamespaceResolver> classpathResolvers() {
+    if (classpathResolvers == null)
+      throw new InternalCompilerError("Must call initResolvers() first!");
+
+    return classpathResolvers;
+  }
+
+  @Override
+  public List<NamespaceResolver> sourcepathResolvers() {
+    if (sourcepathResolvers == null)
+      throw new InternalCompilerError("Must call initResolvers() first!");
+
+    return sourcepathResolvers;
+  }
+
+  @Override
+  public List<NamespaceResolver> runtimeResolvers() {
+    if (runtimeResolvers == null)
+      throw new InternalCompilerError("Must call initResolvers() first!");
+
+    return runtimeResolvers;
+  }
+
 }

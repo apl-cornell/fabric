@@ -120,12 +120,13 @@ import java.math.BigInteger;
         keywords.put("where",         new Integer(sym.WHERE));
         keywords.put("meet",          new Integer(sym.MEET));
         
-        keywords.put("provider",     new Integer(sym.PROVIDER));        
+        keywords.put("provider",     new Integer(sym.PROVIDER));                
 
         /* Fabric-specific keywords */
         keywords.put("atomic",        new Integer(sym.ATOMIC));
         keywords.put("worker$",       new Integer(sym.WORKER));
         keywords.put("nonfabric",     new Integer(sym.NONFABRIC));
+        keywords.put("codebase",     new Integer(sym.CODEBASE));        
     }
 
     public String file() {

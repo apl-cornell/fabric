@@ -1,23 +1,19 @@
 package fabric.types;
 
-import java.util.Set;
-
-import fabil.types.CodebaseTypeSystem;
-import polyglot.types.ClassType;
-import polyglot.types.Flags;
-import polyglot.types.LocalInstance;
-import polyglot.types.Named;
-import polyglot.types.ReferenceType;
-import polyglot.types.Type;
-import polyglot.util.Position;
-import jif.ast.LabelNode;
-import jif.types.DefaultSignature;
 import jif.types.JifTypeSystem;
 import jif.types.label.AccessPath;
 import jif.types.label.ConfPolicy;
 import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
-import jif.types.principal.*;
+import jif.types.principal.Principal;
+import polyglot.types.ClassType;
+import polyglot.types.Flags;
+import polyglot.types.LocalInstance;
+import polyglot.types.ReferenceType;
+import polyglot.types.Type;
+import polyglot.util.Position;
+import codebases.frontend.CodebaseSource;
+import codebases.types.CodebaseTypeSystem;
 
 public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   ClassType FObject();
@@ -73,4 +69,8 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
 
   /** Returns the meet of L1 and L2 as per the trust ordering */
   Label tmeet(Label L1, Label L2);
+  
+  fabric.lang.security.Label sourceUpdateLabel(CodebaseSource src);
+  fabric.lang.security.Label sourceAccessLabel(CodebaseSource src);
+
 }

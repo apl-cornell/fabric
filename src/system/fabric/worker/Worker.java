@@ -71,6 +71,9 @@ public final class Worker {
 
   public final ConfigProperties config;
 
+  // The path for Fabric runtime classes
+  public String bootcp;
+
   // The path for Fabric signatures
   public String sigcp;
 
@@ -445,6 +448,8 @@ public final class Worker {
         worker.sigcp = opts.sigcp;
         worker.filsigcp = opts.filsigcp;
         worker.code_cache = opts.code_cache;
+        worker.bootcp = opts.bootcp;
+
       } catch (UsageError ue) {
         PrintStream out = ue.exitCode == 0 ? System.out : System.err;
         if (ue.getMessage() != null && ue.getMessage().length() > 0) {

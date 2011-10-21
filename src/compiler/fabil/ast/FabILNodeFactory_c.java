@@ -3,17 +3,36 @@ package fabil.ast;
 import java.util.Collections;
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.ArrayAccess;
+import polyglot.ast.ArrayAccessAssign;
+import polyglot.ast.ArrayTypeNode;
 import polyglot.ast.Assign.Operator;
+import polyglot.ast.Call;
+import polyglot.ast.Cast;
+import polyglot.ast.ClassBody;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.Disamb;
+import polyglot.ast.Expr;
+import polyglot.ast.Id;
+import polyglot.ast.NodeFactory_c;
+import polyglot.ast.PackageNode;
+import polyglot.ast.Receiver;
+import polyglot.ast.SourceFile;
+import polyglot.ast.Stmt;
+import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
-import polyglot.types.Package;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
+import codebases.ast.CBSourceFile_c;
+import codebases.ast.CodebaseDecl;
+import codebases.ast.CodebaseDecl_c;
+import codebases.ast.CodebaseNode;
+import codebases.ast.CodebaseNode_c;
 import fabil.extension.FabILDelFactory;
 import fabil.extension.FabILDelFactory_c;
 import fabil.extension.FabILExtFactory;
 import fabil.extension.FabILExtFactory_c;
-
+import fabric.lang.Codebase;
 /**
  * NodeFactory for FabIL extension.
  */
@@ -34,18 +53,13 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return (FabILDelFactory) super.delFactory();
   }
 
+//  @Override 
   @Override
-  public CodebaseDisamb disamb() {
-    return new FabILDisamb_c();
-
-  }
-
-  @Override
-  public CodebasePackageNode PackageNode(Position pos, Package p) {
-    CodebasePackageNode n = new CodebasePackageNode_c(pos, p);
-    n = (CodebasePackageNode) n.ext(extFactory().extPackageNode());
-    n = (CodebasePackageNode) n.del(delFactory().delPackageNode());
-    return n;
+  public CodebaseNode CodebaseNode(Position pos, Codebase c) {  
+    CodebaseNode n = new CodebaseNode_c(pos, c);
+    n = (CodebaseNode) n.ext(extFactory().extCodebaseNode());
+    n = (CodebaseNode) n.del(delFactory().delCodebaseNode());
+    return n;  
   }
 
   /*
@@ -62,10 +76,12 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return aaa;
   }
 
+  @Override
   public FabricArrayInit FabricArrayInit(Position pos, List<Expr> elements) {
     return FabricArrayInit(pos, null, null, null, elements);
   }
 
+  @Override
   public FabricArrayInit FabricArrayInit(Position pos, Expr label,
       Expr accessLabel, Expr location, List<Expr> elements) {
     FabricArrayInit ai =
@@ -81,6 +97,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return super.ArrayTypeNode(pos, base);
   }
 
+  @Override
   public FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type) {
     FabricArrayTypeNode atn = new FabricArrayTypeNode_c(pos, type);
     atn = (FabricArrayTypeNode) atn.ext(extFactory().extFabricArrayTypeNode());
@@ -88,6 +105,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return atn;
   }
 
+  @Override
   public Atomic Atomic(Position pos, List<Stmt> statements) {
     Atomic atomic = new Atomic_c(pos, statements);
     atomic = (Atomic) atomic.ext(extFactory().extAtomic());
@@ -95,11 +113,6 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return atomic;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see polyglot.ast.NodeFactory_c#Cast(polyglot.util.Position,
-   * polyglot.ast.TypeNode, polyglot.ast.Expr)
-   */
   @Override
   public Cast Cast(Position pos, TypeNode type, Expr expr) {
     Cast cast = new Cast_c(pos, type, expr);
@@ -108,12 +121,6 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return cast;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see polyglot.ast.NodeFactory_c#ClassDecl(polyglot.util.Position,
-   * polyglot.types.Flags, polyglot.ast.Id, polyglot.ast.TypeNode,
-   * java.util.List, polyglot.ast.ClassBody)
-   */
   @Override
   public ClassDecl ClassDecl(Position pos, Flags flags, Id name,
       TypeNode superClass, @SuppressWarnings("rawtypes") List interfaces,
@@ -127,6 +134,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return n;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
   public NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label, Expr accessLabel,
       Expr location, List<Expr> dims, int addDims, FabricArrayInit init) {
@@ -138,6 +146,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return result;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
   public New New(Position pos, Expr outer, TypeNode objectType, Expr label, Expr accessLabel,
       Expr location, List<Expr> args, ClassBody body) {
@@ -159,37 +168,44 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return New(pos, outer, objectType, null, null, null, args, body);
   }
 
+  @Override
   public New New(Position pos, TypeNode objectType, Expr label, Expr accessLabel, Expr location,
       List<Expr> args) {
     return New(pos, null, objectType, label, accessLabel, location, args);
   }
 
+  @Override
   public New New(Position pos, Expr outer, TypeNode objectType, Expr label, Expr accessLabel,
       Expr location, List<Expr> args) {
     return New(pos, outer, objectType, label, accessLabel, location, args, null);
   }
 
+  @Override
   public New New(Position pos, TypeNode type, Expr label, Expr accessLabel, Expr location,
       List<Expr> args, polyglot.ast.ClassBody body) {
     return New(pos, null, type, label, accessLabel, location, args, body);
   }
 
+  @Override
   public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
       Expr label, Expr accessLabel, Expr location, List<Expr> dims) {
     return NewFabricArray(pos, base, label, accessLabel, location, dims, 0, null);
   }
 
+  @Override
   public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
       Expr label, Expr accessLabel, Expr location, List<Expr> dims, int addDims) {
     return NewFabricArray(pos, base, label, accessLabel, location, dims, addDims, null);
   }
 
+  @Override
   public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
       Expr label, Expr accessLabel, Expr location, int addDims, FabricArrayInit init) {
     List<Expr> emptyList = Collections.emptyList();
     return NewFabricArray(pos, base, label, accessLabel, location, emptyList, addDims, init);
   }
   
+  @Override
   public RetryStmt RetryStmt(Position pos) {
     RetryStmt s = new RetryStmt_c(pos);
     s = (RetryStmt) s.ext(extFactory().extRetry());
@@ -197,6 +213,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return s;
   }
 
+  @Override
   public AbortStmt AbortStmt(Position pos) {
     AbortStmt s = new AbortStmt_c(pos);
     s = (AbortStmt) s.ext(extFactory().extAbort());
@@ -206,11 +223,11 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @SuppressWarnings("unchecked")
   @Override
-  public Call Call(Position pos, Receiver target, Id name,
-      @SuppressWarnings("rawtypes") List args) {
+  public Call Call(Position pos, Receiver target, Id name, List args) {
     return Call(pos, target, name, null, args);
   }
 
+  @Override
   public Call Call(Position pos, Receiver target, Id name, Expr remoteWorker,
       List<Expr> args) {
     Call n = new FabILCall_c(pos, target, name, remoteWorker, args);
@@ -219,6 +236,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return n;
   }
 
+  @Override
   public StoreGetter StoreGetter(Position pos) {
     StoreGetter n = new StoreGetter_c(pos);
     n = (StoreGetter) n.ext(extFactory().extExpr());
@@ -226,21 +244,43 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return n;
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings("unchecked")  
   @Override
-  public SourceFile SourceFile(Position pos, PackageNode packageName,
+  public SourceFile SourceFile(Position pos, PackageNode packageName, 
       List imports, List decls) {
-    SourceFile sf = new CodebaseSourceFile_c(pos, packageName, imports, decls);
+    return SourceFile(pos, packageName, Collections.EMPTY_LIST, imports, decls);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")  
+  public SourceFile SourceFile(Position pos, PackageNode packageName, List codebases,
+      List imports, List decls) {
+    SourceFile sf = new CBSourceFile_c(pos, packageName, imports, codebases, decls);
     sf = (SourceFile) sf.ext(extFactory().extSourceFile());
     sf = (SourceFile) sf.del(delFactory().delSourceFile());
     return sf;
   }
 
+  @Override
   public ProviderLabel providerLabel(Position pos, TypeNode tn) {
     ProviderLabel pl = new ProviderLabel_c(pos, tn);
     pl = (ProviderLabel) pl.ext(extFactory().extProviderLabel());
     pl = (ProviderLabel) pl.del(delFactory().delProviderLabel());
     return pl;
+  }
+
+  @Override
+  public codebases.ast.CodebaseDecl CodebaseDecl(Position pos,
+      polyglot.ast.Id name) {
+    CodebaseDecl n = new CodebaseDecl_c(pos, name);
+    n = (CodebaseDecl) n.ext(extFactory().extCodebaseDecl());
+    n = (CodebaseDecl) n.del(delFactory().delCodebaseDecl());
+    return n;  
+  }
+
+  @Override
+  public Disamb disamb() {
+    return new FabILDisamb();
   }
 
 }

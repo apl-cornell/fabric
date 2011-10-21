@@ -15,4 +15,6 @@ public interface FabricExtFactory extends JifExtFactory {
   Ext extNewFabricArray();
   Ext extRemoteWorkerGetter();
   Ext extRetryStmt();
+  Ext extCodebaseNode();
+  Ext extCodebaseDecl();
 }
