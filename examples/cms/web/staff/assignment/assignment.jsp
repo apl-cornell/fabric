@@ -19,15 +19,15 @@ String assignID= assignment.getAttribute(XMLBuilder.A_ASSIGNID);
   <td id="course_page_container">
   	<%
 	String assignTypeName = "";
-	if(assignType == Assignment.ASSIGNMENT)
+	if (assignType == Assignment.ASSIGNMENT)
 	{
 		assignTypeName = "Assignment";
 	}
-	else if(assignType == Assignment.QUIZ)
+	else if (assignType == Assignment.QUIZ)
 	{
 		assignTypeName = "Quiz";
 	}
-	else if(assignType == Assignment.SURVEY)
+	else if (assignType == Assignment.SURVEY)
 	{
 		assignTypeName = "Survey";
 	}

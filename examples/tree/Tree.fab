@@ -47,7 +47,7 @@ public class Tree[label L] {
 
           TreeNode cur = root;
           while (true) {
-            if(cur == null) return;
+            if (cur == null) return;
             if (cur.value < value) {
               if (cur.right == null) {
                 cur.right = newNode;

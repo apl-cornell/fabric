@@ -89,7 +89,7 @@ boolean custom = (students != null && students.getChildNodes() != null && studen
 	        <td>
 	        
 	           <select id="<%= AccessController.P_EMAIL_RECIPIENTS %>" name="<%= AccessController.P_EMAIL_RECIPIENTS %>">
-	           <% if(!custom){ %>
+	           <% if (!custom){ %>
 	             <option value="all">All staff and students</option>
 	             <option value="staff">Staff only</option>
 	             <% }else{ %>
@@ -170,7 +170,7 @@ boolean custom = (students != null && students.getChildNodes() != null && studen
 	     </span>
 	     <% } %>
 	    </div>
-	    <% if(custom){ 
+	    <% if (custom){ 
 	    	NodeList studs = students.getChildNodes();
 	    %>
 		<span class="hide" id="studentshead">

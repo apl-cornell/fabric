@@ -21,9 +21,7 @@ public class SpecialChar extends Node {
         super(L, E);
         name = "#" + n;
     }
-    /* (non-Javadoc)
-     * @see servlet.Node#write(servlet.HTMLWriter)
-     */
+
     final void writeImpl(HTMLWriter p) {
         p.print("&");
         p.print(name);

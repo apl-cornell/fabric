@@ -23,7 +23,7 @@ public class JavaArrayTest01 {
     int ITER_REPS;
     boolean isBatchOutput;
 
-    if(args.length != 5) {
+    if (args.length != 5) {
       System.out.println("I need 5 arguments - size1, size2, maxCount, iterReps, isBatchOutput");
       return;
     }
@@ -44,7 +44,7 @@ public class JavaArrayTest01 {
     int step = 5;
 
     long startTest = System.currentTimeMillis();
-    for(int count = 0; count < MAX_COUNT; count++) {
+    for (int count = 0; count < MAX_COUNT; count++) {
 
       // create array
       startTime = System.currentTimeMillis();
@@ -53,29 +53,29 @@ public class JavaArrayTest01 {
 
       // initialize array with element 1
       startInitialize = System.currentTimeMillis();
-      for(int i = 0; i < SIZE1; i++) {
+      for (int i = 0; i < SIZE1; i++) {
         testArray[i] = element1;
       }
 
 
       // read entire array multiple times
       startReadIteration = System.currentTimeMillis();
-      for(int j = 0; j < ITER_REPS; j++)
-        for(int i = 0; i < SIZE1; i++) {
+      for (int j = 0; j < ITER_REPS; j++)
+        for (int i = 0; i < SIZE1; i++) {
           JavaArrayTest01 element = testArray[i];
         }
 
       // replace all elements of the array multiple times
       startWriteIteration = System.currentTimeMillis();
-      for(int j = 0; j < ITER_REPS; j++)
-        for(int i = 0; i < SIZE1; i++) {
+      for (int j = 0; j < ITER_REPS; j++)
+        for (int i = 0; i < SIZE1; i++) {
           testArray[i] = element2;
         }
 
       // resize array
       startResize = System.currentTimeMillis();
       JavaArrayTest01[] testArrayNew  = new JavaArrayTest01[SIZE2];
-      for(int i = 0; i < SIZE1; i++) {
+      for (int i = 0; i < SIZE1; i++) {
         testArrayNew[i] = testArray[i]; 
       }
       testArray = testArrayNew;
@@ -91,10 +91,10 @@ public class JavaArrayTest01 {
       resizing += endTime - startResize;
 
       // show progress
-      if(!isBatchOutput && count == (percentage * MAX_COUNT)/100) {
+      if (!isBatchOutput && count == (percentage * MAX_COUNT)/100) {
         System.out.print(percentage + "%");
         long timeNow = System.currentTimeMillis() - startTest;
-        if(percentage > 0) {
+        if (percentage > 0) {
           long estimatedEnd = (timeNow*100)/percentage;
           System.out.println("(" + timeNow + "ms/" + estimatedEnd + "ms)");
         } else {
@@ -104,7 +104,7 @@ public class JavaArrayTest01 {
       }
 
     }
-    if(!isBatchOutput) System.out.println("100%Completed");
+    if (!isBatchOutput) System.out.println("100%Completed");
 
     creation = creation * 1000 / MAX_COUNT;
     initialization = initialization * 1000 / MAX_COUNT;
@@ -117,7 +117,7 @@ public class JavaArrayTest01 {
     
     NumberFormat formatter = new DecimalFormat("#0.0000");
 
-    if(!isBatchOutput) {
+    if (!isBatchOutput) {
       System.out.println("\nArray Creation: " + formatter.format(creation)
           + "us\nArray Initialization: " + formatter.format(initialization)
           + "us (" + formatter.format(initializationPer) 

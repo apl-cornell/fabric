@@ -29,7 +29,7 @@ public class ResizableArrayTest01 {
         int ITER_REPS;
         boolean isBatchOutput;
 
-        if(args.length < 6) {
+        if (args.length < 6) {
             System.out.println("I need 6 arguments - " +
             "chunkSize, size1, size2, maxCount, iterReps, isBatchOutput");
             return;
@@ -58,7 +58,7 @@ public class ResizableArrayTest01 {
         int percentage = 0;
         int step = 5;
 
-        if(args.length > 6) {
+        if (args.length > 6) {
             System.out.println("Starting test in 3 seconds");
             try {
                 Thread.sleep(3000);
@@ -69,7 +69,7 @@ public class ResizableArrayTest01 {
         }
         long startTest = System.currentTimeMillis();
         atomic {
-            for(int count = 0; count < MAX_COUNT; count++) {
+            for (int count = 0; count < MAX_COUNT; count++) {
 
                 // create array
                 startTime = System.currentTimeMillis();
@@ -79,23 +79,23 @@ public class ResizableArrayTest01 {
 
                 // initialize array with element 1
                 startInitialize = System.currentTimeMillis();
-                for(int i = 0; i < SIZE1; i++) {
+                for (int i = 0; i < SIZE1; i++) {
                     testArray.set(i, element1);
                 }
 
 
                 // read entire array multiple times
                 startReadIteration = System.currentTimeMillis();
-                for(int j = 0; j < ITER_REPS; j++)
-                    for(int i = 0; i < SIZE1; i++) {
+                for (int j = 0; j < ITER_REPS; j++)
+                    for (int i = 0; i < SIZE1; i++) {
 //                      ResizableArrayTest01 element = (ResizableArrayTest01)testArray.get(i);
                         testArray.get(i);
                     }
 
                 // replace all elements of the array multiple times
                 startWriteIteration = System.currentTimeMillis();
-                for(int j = 0; j < ITER_REPS; j++)
-                    for(int i = 0; i < SIZE1; i++) {
+                for (int j = 0; j < ITER_REPS; j++)
+                    for (int i = 0; i < SIZE1; i++) {
                         testArray.set(i, element2);
                     }
 
@@ -114,10 +114,10 @@ public class ResizableArrayTest01 {
                 resizing += endTime - startResize;
 
                 // show progress
-                if(!isBatchOutput && count == (percentage * MAX_COUNT)/100) {
+                if (!isBatchOutput && count == (percentage * MAX_COUNT)/100) {
                     System.out.print(percentage + "%");
                     long timeNow = System.currentTimeMillis() - startTest;
-                    if(percentage > 0) {
+                    if (percentage > 0) {
                         long estimatedEnd = (timeNow*100)/percentage;
                         System.out.println("(" + timeNow + "ms/"
                             + estimatedEnd + "ms)");
@@ -129,7 +129,7 @@ public class ResizableArrayTest01 {
 
             }
         }
-        if(!isBatchOutput) System.out.println("100%Completed");
+        if (!isBatchOutput) System.out.println("100%Completed");
 
 
         creation = creation * 1000 / MAX_COUNT;
@@ -143,7 +143,7 @@ public class ResizableArrayTest01 {
 
         NumberFormat formatter = new DecimalFormat("#0.00");
 
-        if(!isBatchOutput) {
+        if (!isBatchOutput) {
             System.out.println("\nArray Creation: " + formatter.format(creation)
                 + "us\nArray Initialization: " + formatter.format(initialization)
                 + "us (" + formatter.format(initializationPer) 

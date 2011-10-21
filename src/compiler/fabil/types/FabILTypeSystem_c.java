@@ -41,7 +41,6 @@ import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
-import codebases.frontend.CodebaseSource;
 import codebases.types.CBClassContextResolver;
 import codebases.types.CBImportTable;
 import codebases.types.CBPackageContextResolver;
@@ -50,9 +49,6 @@ import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseClassType;
 import codebases.types.NamespaceResolver;
 import fabric.lang.Codebase;
-import fabric.lang.security.LabelUtil;
-import fabric.lang.security.NodePrincipal;
-import fabric.worker.Store;
 import fabric.worker.Worker;
 
 public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
@@ -98,8 +94,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   @Override
-  public Package packageForName(URI ns, Package prefix, String name)
-      throws SemanticException {
+  public Package packageForName(URI ns, Package prefix, String name) {
     return createPackage(ns, prefix, name);
   }
 
@@ -126,6 +121,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return new CBClassContextResolver(this, type);
   }
 
+  @SuppressWarnings("rawtypes")
   @Override
   public Object placeHolder(TypeObject o, Set roots) {
     assert_(o);
@@ -236,7 +232,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return new FabILContext_c(this);
   }
   
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @SuppressWarnings("unchecked")
   @Override
   public List<String> defaultPackageImports() {
     // Include fabric.lang as a default import.
@@ -444,10 +440,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return isFabricArray(type.type());
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.types.FabILTypeSystem#isJavaInlineable(polyglot.types.Type)
-   */
   @Override
   public boolean isJavaInlineable(Type type) {
     return isSubtype(type, JavaInlineable());

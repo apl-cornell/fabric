@@ -86,7 +86,7 @@ if (unschedGroups != null && unschedGroups.size() > 0) {
 	<span class="example">The group limit is the maximum number of groups that can sign up under a specific time and staff member.</span>
 	<dl>
 		<dt>Schedule lock time:</dt><%
-		if(schedule.getAttribute(XMLBuilder.A_SCHEDULE_LOCKDATE).equals("")) /* no deadline */
+		if (schedule.getAttribute(XMLBuilder.A_SCHEDULE_LOCKDATE).equals("")) /* no deadline */
 		{%>
 			<dd>None</dd><%
 		}
@@ -102,7 +102,7 @@ if (unschedGroups != null && unschedGroups.size() > 0) {
 	</div>
 	
 	<div class="assignment_left">
-<%	if(isadmin || isassign)
+<%	if (isadmin || isassign)
 	{%>
 	<h2>Manage Time Slots</h2>
 <%	}
@@ -123,7 +123,7 @@ if (unschedGroups != null && unschedGroups.size() > 0) {
 			boolean canEditSlot = isadmin || isassign || curTimeSlot.getAttribute(XMLBuilder.A_TSEDITRIGHTS).equals("true");
 			Collection tsGroups = XMLUtil.getChildrenByTagName(curTimeSlot, XMLBuilder.TAG_GROUP);
 			/* only if user has admin or edit privileges */
-			if(canEditSlot)
+			if (canEditSlot)
 			{
 				areSlots = true;
 				String location = curTimeSlot.getAttribute(XMLBuilder.A_TSLOCATION); %>
@@ -190,7 +190,7 @@ if (unschedGroups != null && unschedGroups.size() > 0) {
 					String maxGroupsStr = schedule.getAttribute(XMLBuilder.A_TSMAXGROUPS);
 					int maxGroups = 0;
 					try { maxGroups = Integer.parseInt(maxGroupsStr); } catch (Exception e) {}
-					if(canEditSlot)
+					if (canEditSlot)
 					{
 						// if the population is under the max and groups are unscheduled, provide link to add
 						if (tsGroups.size() < maxGroups && groupsText.size() > 0) { 
@@ -223,7 +223,7 @@ if (unschedGroups != null && unschedGroups.size() > 0) {
   	<tr>
   		<td></td>
   		<td colspan="8" align="left">
-<%		if(areSlots && (isadmin || isassign))
+<%		if (areSlots && (isadmin || isassign))
   		{%>
 	  		<input type="submit" value="Remove checked time slot(s)">
 <%		}
@@ -239,7 +239,7 @@ if (unschedGroups != null && unschedGroups.size() > 0) {
   	<% } %>
   	</form>
   	</div>
-<%	if(isadmin || isassign)
+<%	if (isadmin || isassign)
 	{%>
   	<div class="assignment_left">
   	<h2>Add Time Slots</h2>
@@ -310,7 +310,7 @@ if (unschedGroups != null && unschedGroups.size() > 0) {
   	</div>
 <%	}%>
   	
-<%	if(isadmin || isassign)
+<%	if (isadmin || isassign)
 	{
   		if (groupsText.size() > 0)
   		{%>

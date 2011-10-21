@@ -33,13 +33,13 @@ public class ExternalClassLoader extends ClassLoader {
     Class cl = null;
 
     /* First look in cache */
-    if((cl=(Class)classes.get(class_name)) == null) {
+    if ((cl=(Class)classes.get(class_name)) == null) {
 
       /* Load system classes */
       for (int i = 0; i < ignored_packages.length; i++) {
         // scl.ClassWrapper is deferred so that it forms a common interface between the classes loaded
         // by the system and the classes loaded by this classloader.
-        if(class_name.startsWith(ignored_packages[i]) || class_name.equals("scl.ClassWrapper")) {
+        if (class_name.startsWith(ignored_packages[i]) || class_name.equals("scl.ClassWrapper")) {
           cl = deferTo.loadClass(class_name);
           break;
         }

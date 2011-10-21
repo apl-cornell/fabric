@@ -91,13 +91,13 @@
 		{
 			//if (x[i].className == 'showhide')
 			{
-				if(getCookie(getQueryVariable('action') + '*' + getQueryVariable('courseid') + '*' + x[i].id + '*' + 'hidden') == '1')
+				if (getCookie(getQueryVariable('action') + '*' + getQueryVariable('courseid') + '*' + x[i].id + '*' + 'hidden') == '1')
 				{
 					var showval = getCookie(getQueryVariable('action') + '*' + getQueryVariable('courseid') + '*' + x[i].id + '*' + 'showval');
 					var hideval = getCookie(getQueryVariable('action') + '*' + getQueryVariable('courseid') + '*' + x[i].id + '*' + 'hideval');
 					hide(x[i].id, hideval, showval);
 				}
-				else if(getCookie(getQueryVariable('action') + '*' + getQueryVariable('courseid') + '*' + x[i].id + '*' + 'hidden') == '0')
+				else if (getCookie(getQueryVariable('action') + '*' + getQueryVariable('courseid') + '*' + x[i].id + '*' + 'hidden') == '0')
 				{
 					var showval = getCookie(getQueryVariable('action') + '*' + getQueryVariable('courseid') + '*' + x[i].id + '*' + 'showval');
 					var hideval = getCookie(getQueryVariable('action') + '*' + getQueryVariable('courseid') + '*' + x[i].id + '*' + 'hideval');
@@ -139,14 +139,14 @@
 	  		//see http://www.howtocreate.co.uk/tutorials/index.php?tut=0&part=24 for how to get at DOM info for tables
 	  		var ctgTable = getElementById(ctgID + 'table');
 	  		//set the display properties of all extra rows to default
-	  		for(var i = shortNumShow; i < ctgTable.tBodies[0].rows.length; i++) {
+	  		for (var i = shortNumShow; i < ctgTable.tBodies[0].rows.length; i++) {
 	  			ctgTable.tBodies[0].rows[i].style.display = '';
 	  	  }
 	  		//change the function called by the link, as well as its text
 	  		var callingItem = getElementById(ctgID + 'expand');
 	  		//callingItem.setAttribute('onclick', callingItem.getAttribute('onclick').replace('expand', 'collapse'));
 	  		callingItem.onclick = new Function('collapseCategory(\'' + ctgID + '\', ' + isAnnounce + ', ' + shortNumShow + '); return false;');
-	  		if(isAnnounce) {
+	  		if (isAnnounce) {
 	  		  callingItem.firstChild.nodeValue = '(show 1 week)';
 	  		} else {
 	  		  callingItem.firstChild.nodeValue = '(show at most '+ shortNumShow+ ')';
@@ -157,7 +157,7 @@
 	  function collapseCategory(ctgID,isAnnounce,shortNumShow) {
         var ctgTable = getElementById(ctgID + 'table');
 	  		//set the display properties of all extra rows to none
-	  		for(var i = shortNumShow + 1; i < ctgTable.tBodies[0].rows.length; i++) {
+	  		for (var i = shortNumShow + 1; i < ctgTable.tBodies[0].rows.length; i++) {
 	  			ctgTable.tBodies[0].rows[i].style.display = 'none';
 	  		}
 	  		//change the function called by the link, as well as its text
@@ -174,10 +174,10 @@
 	  	//var headerList = assignTable.rows[0].getElementsByTagName('th');
 	  	//headerList.item(2).style.display = 'none';
 	  	//headerList.item(3).style.display = 'none';
-	  	//for(var i= 1; i< assignTable.rows.length; i++){
+	  	//for (var i= 1; i< assignTable.rows.length; i++){
 	  	//	var row = assignTable.rows[i];
 	  	//	var cellList = row.getElementsByTagName('td');
-	  	//	if(cellList.length > 3){
+	  	//	if (cellList.length > 3){
 	  	//		cellList.item(2).style.display = 'none';
 	  	//		cellList.item(3).style.display = 'none';
 	  	//	}	  		
@@ -218,10 +218,10 @@
 	  	//var headerList = assignTable.rows[0].getElementsByTagName('th');
 	  	//headerList.item(2).style.display = '';
 	  	//headerList.item(3).style.display = '';
-	  	//for(var i= 1; i< assignTable.rows.length; i++){
+	  	//for (var i= 1; i< assignTable.rows.length; i++){
 	  	//	var row = assignTable.rows[i];
 	  	//	var cellList = row.getElementsByTagName('td');
-	  	//	if(cellList.length > 3){
+	  	//	if (cellList.length > 3){
 	  	//		cellList.item(2).style.display = '';
 	  	//		cellList.item(3).style.display = '';
 	  	//	}else{

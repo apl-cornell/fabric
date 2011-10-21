@@ -250,7 +250,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
 
   @Override
   public CBTypeEncoder typeEncoder() {
-    if(typeEncoder == null) {
+    if (typeEncoder == null) {
       typeEncoder = new CBTypeEncoder(ts);
     }
     return typeEncoder;
@@ -260,7 +260,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   @Override
   public URISourceLoader sourceLoader(URI uri) {
     if ("fab".equals(uri.getScheme())) {
-      if(uri.isOpaque())
+      if (uri.isOpaque())
         throw new InternalCompilerError("Unexpected URI:" + uri);
       return new CodebaseSourceLoader(this, uri);
     } else if ("file".equals(uri.getScheme())) {
@@ -273,7 +273,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   public ClassPathLoader classpathLoader(URI ns) {
     if ("fab".equals(ns.getScheme())) {
       // Load previously compiled classes from cache
-      if(ns.isOpaque())
+      if (ns.isOpaque())
         throw new InternalCompilerError("Unexpected URI:" + ns);
  
       String java_pkg = NSUtil.javaPackageName(ns);      
@@ -291,9 +291,9 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
 
   @Override
   public String namespaceToJavaPackagePrefix(URI ns) {
-    if(ns.equals(localNamespace()) || ns.equals(platformNamespace()))
+    if (ns.equals(localNamespace()) || ns.equals(platformNamespace()))
       return "";
-    else if(ns.getScheme().equals("fab")) {
+    else if (ns.getScheme().equals("fab")) {
       return NSUtil.javaPackageName(ns) + ".";
     }
     else {

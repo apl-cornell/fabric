@@ -2,12 +2,21 @@ package fabric.common;
 
 import static fabric.common.Logging.CLASS_HASHING_LOGGER;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URL;
 import java.security.MessageDigest;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -262,6 +271,7 @@ public final class SysUtil {
    */
   public static <T> Iterable<T> chain(final Iterable<T>... iters) {
     return new Iterable<T>() {
+      @Override
       public Iterator<T> iterator() {
         return new Iterator<T>() {
           private int i = 0;
@@ -279,11 +289,13 @@ public final class SysUtil {
             }
           }
 
+          @Override
           public boolean hasNext() {
             advance();
             return current != null;
           }
 
+          @Override
           public T next() {
             advance();
             if (current == null) throw new NoSuchElementException();
@@ -292,6 +304,7 @@ public final class SysUtil {
             return result;
           }
 
+          @Override
           public void remove() {
             throw new UnsupportedOperationException();
           }
@@ -378,11 +391,11 @@ public final class SysUtil {
   public static String mangle(String app) throws ClassNotFoundException {
     URI app_uri = URI.create(app);
     
-    if(!app_uri.isAbsolute())
+    if (!app_uri.isAbsolute())
       return app_uri.toString() + "$_Impl";
     else {
       FClass fcls = toFClass(app_uri);
-      if(fcls == null)
+      if (fcls == null)
         throw new ClassNotFoundException(app_uri.toString());
       return pseudoname(fcls) + "$_Impl";
     }
@@ -482,7 +495,7 @@ public final class SysUtil {
   public static String codebasePart(String mangled) {
     int b = mangled.indexOf("$$");
     int e = mangled.indexOf("$$", b+2);
-    if(b<0) return "";
+    if (b<0) return "";
 
     return mangled.substring(b+2, e);
   }
@@ -507,13 +520,13 @@ public final class SysUtil {
    */
   public static String fabricname(String pseudoname) {    
     String cb = codebasePart(pseudoname);    
-    if("".equals(cb))
+    if ("".equals(cb))
       return null;
 
     String[] host = unEscapeHost(storePart(cb)).split("[.]");
     int i = host.length-1;
     StringBuilder sb = new StringBuilder(host[i--]);
-    for(; i>=0; i--) {
+    for (; i>=0; i--) {
       sb.append('.');
       sb.append(host[i]);
     }
@@ -578,7 +591,7 @@ public final class SysUtil {
   public static String pseudoname(String store, long onum) {
     String[] host = store.split("[.]");
     StringBuilder sb = new StringBuilder("$$");
-    for(int i = host.length - 1; i>=0; i--) {
+    for (int i = host.length - 1; i>=0; i--) {
       sb.append(escapeHost(host[i]));
       sb.append('.');
     }

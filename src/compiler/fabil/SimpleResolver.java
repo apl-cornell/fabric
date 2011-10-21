@@ -77,7 +77,7 @@ public class SimpleResolver extends NamespaceResolver_c {
       clazz = null;
     }
     
-    if(encodedClazz != null && source != null) {
+    if (encodedClazz != null && source != null) {
       long classModTime = encodedClazz.sourceLastModified(version);
       long sourceModTime = source.lastModified().getTime();
       boolean ignoreModTimes = extInfo.getOptions().ignore_mod_times;
@@ -95,7 +95,7 @@ public class SimpleResolver extends NamespaceResolver_c {
       }
     }
     Importable result = null;
-    if(encodedClazz != null) {
+    if (encodedClazz != null) {
       if (Report.should_report(report_topics, 4))
         Report.report(4, "Using encoded class type for " + name);
       try {
@@ -126,7 +126,7 @@ public class SimpleResolver extends NamespaceResolver_c {
         Report.report(4, "Using source file for " + name);
       result = getTypeFromSource(source, name);
     }
-    if( result != null) {
+    if ( result != null) {
       return result;
     }
     throw new NoClassException(name);

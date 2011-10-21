@@ -189,7 +189,7 @@ if (!item.getAttribute(XMLBuilder.A_USESCHEDULE).equals("") && /*(isadmin || isa
               <% } %>
            </tr>
 	<%
-		for(int j = 0; j < numSurveys; j++) {
+		for (int j = 0; j < numSurveys; j++) {
 			Element survey = (Element) surveys.item(j); 	
 			String assignid = survey.getAttribute(XMLBuilder.A_ASSIGNID);
 			

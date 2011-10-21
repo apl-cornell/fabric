@@ -74,6 +74,7 @@ public class DefaultNameService implements NameService {
     }
   }
   
+  @Override
   public SocketAddress localResolve(String name) {
     SocketAddress result = entries.get(name);
     if (result == null)
@@ -82,6 +83,7 @@ public class DefaultNameService implements NameService {
     return result;
   }
 
+  @Override
   public SocketAddress resolve(String name) {
     SocketAddress result = entries.get(name);
     if (result == null)

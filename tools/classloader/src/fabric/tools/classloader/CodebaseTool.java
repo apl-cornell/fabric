@@ -35,15 +35,15 @@ public class CodebaseTool {
    *    CodebaseTool export [workername] [pathToCodebase] [storeName] [classToExport] [...]
    */
   public static void main(String[] args) throws IOException, UsageError, GeneralSecurityException {
-    if(args.length < 2) {
+    if (args.length < 2) {
       showUsage(); 
       return;
     }
     Worker.initialize(args[1]);
     String action = args[0];
-    if(action.equals("import")) {
+    if (action.equals("import")) {
       handleImport(args);
-    } else if(action.equals("export")) {
+    } else if (action.equals("export")) {
       handleExport(args);
     } else {
       System.err.println("Unrecognized action");
@@ -54,7 +54,7 @@ public class CodebaseTool {
   }
   
   private static void handleImport(String[] args) throws IOException {
-    if(args.length != 5) {
+    if (args.length != 5) {
       System.err.println("Incorrect number of arguments");
       showUsage();
       return;
@@ -73,7 +73,7 @@ public class CodebaseTool {
   }
   
   private static void handleExport(String[] args) throws IOException {
-    if(args.length < 5) {
+    if (args.length < 5) {
       System.err.println("Incorrect number of arguments");
       showUsage();
       return;
@@ -83,7 +83,7 @@ public class CodebaseTool {
     final Store s = Worker.getWorker().getStore(storeName);
     CodebaseTool tool = new CodebaseTool(baseName);
     List<String> rootClasses = new LinkedList<String>();
-    for(int i = 4; i < args.length; i++)
+    for (int i = 4; i < args.length; i++)
       rootClasses.add(args[i]);
     
     final Codebase c = tool.storeCode(rootClasses, s);
@@ -116,9 +116,9 @@ public class CodebaseTool {
             while(i.hasNext()) {
               String className = i.next().toString();
               FClass cls = current.getClass(className);
-              if(cls.getBytecode().getLength() != 0)
+              if (cls.getBytecode().getLength() != 0)
                 toFile(cls);
-              if(codebasesLoaded.contains(cls.getCodebase())) {
+              if (codebasesLoaded.contains(cls.getCodebase())) {
                 codebasesToLoad.add(cls.getCodebase());
                 codebasesLoaded.add(current);
               }
@@ -176,7 +176,7 @@ public class CodebaseTool {
                 continue;
               seenClasses.add(dep);
               String file = classNameToFile(dep);
-              if(!fileExists(file)) {
+              if (!fileExists(file)) {
                 // Assume system class
                 // and ignore - parent classloader will load it
               } else {
@@ -195,7 +195,7 @@ public class CodebaseTool {
             }
           }
           Codebase codebase = (Codebase)new Codebase._Impl(s, cl, classes).$getProxy();
-          for(FClass c : toSetCodebase) {
+          for (FClass c : toSetCodebase) {
             c.setCodebase(codebase);
           }
           return codebase;
@@ -211,7 +211,7 @@ public class CodebaseTool {
 
   private fabric.util.Map toFabMap(java.util.Map m, Store s, Label l) {
     fabric.util.Map mn = (fabric.util.Map)new fabric.util.HashMap._Impl(s, l).$getProxy();
-    for(Object obj : m.keySet()) {
+    for (Object obj : m.keySet()) {
       mn.put(fabric.lang.WrappedJavaInlineable.$wrap(obj), 
           fabric.lang.WrappedJavaInlineable.$wrap(m.get(obj)));
     }
@@ -223,10 +223,10 @@ public class CodebaseTool {
   }
   
   private boolean arrEquals(byte[] a, fabric.lang.arrays.byteArray b) {
-    if((a == null) != (b == null)) return false;
-    if(a.length != b.getLength()) return false;
-    for(int i = 0; i < a.length; i++)
-      if(a[i] != b.get(i)) return false;
+    if ((a == null) != (b == null)) return false;
+    if (a.length != b.getLength()) return false;
+    for (int i = 0; i < a.length; i++)
+      if (a[i] != b.get(i)) return false;
     return true;
   }
   
@@ -236,7 +236,7 @@ public class CodebaseTool {
   
   private fabric.lang.Object getObjectByOid(String oid) {
     String[] splits = oid.split("\\/");
-    if(splits.length != 4)
+    if (splits.length != 4)
       throw new IllegalArgumentException("Malformed oid: " + oid);
     
     return getObjectByOid(Worker.getWorker().getStore(splits[2]), 
@@ -249,7 +249,7 @@ public class CodebaseTool {
   
   private byte[] toByteArray(fabric.lang.arrays.byteArray arr) {
     byte[] n = new byte[arr.getLength()];
-    for(int i = 0 ; i < n.length; i++)
+    for (int i = 0 ; i < n.length; i++)
       n[i] = arr.get(i);
     return n;
   }
@@ -258,7 +258,7 @@ public class CodebaseTool {
     fabric.lang.arrays.byteArray n = 
       (fabric.lang.arrays.byteArray)new fabric.lang.arrays.byteArray._Impl(
           s, l, arr.length).$getProxy();
-    for(int i = 0; i < arr.length; i++)
+    for (int i = 0; i < arr.length; i++)
       n.set(i, arr[i]);
     return n;
   }
@@ -267,7 +267,7 @@ public class CodebaseTool {
     String name = c.getName();
     String filename = baseName + File.separator + classNameToFile(name);
     File f= new File(filename).getParentFile();
-    if(f != null) f.mkdirs();
+    if (f != null) f.mkdirs();
     FileOutputStream str = new FileOutputStream(filename);
     str.write(toByteArray(c.getBytecode()));
     str.close();
@@ -298,7 +298,7 @@ public class CodebaseTool {
     byte[] bytecode = new byte[len];
     InputStream  in = new FileInputStream(f);
     try {
-      for(int i = 0; i < len; i++) {
+      for (int i = 0; i < len; i++) {
         int r = in.read();
         if (r < 0)
           throw new IOException("bytecode shorter than advertised");

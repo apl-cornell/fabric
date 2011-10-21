@@ -8,7 +8,7 @@ public class StoreLabel[principal P, label L]
 	}
 
     public StoreLabel[P,L] {L} makeFirstOffer {P->;P<-} () {
-		if(L <= new label {store->} &&  new label {store<-} <= L) {
+		if (L <= new label {store->} &&  new label {store<-} <= L) {
 			return new StoreLabel[P,L]@store(store);
 		} else
 			throw new Error("Invalid store");

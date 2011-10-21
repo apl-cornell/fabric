@@ -1,26 +1,17 @@
 package codebases.types;
 
 import java.net.URI;
-import java.util.Collection;
 import java.util.List;
 
-import codebases.frontend.CodebaseSource;
-import fabric.lang.Codebase;
-import fabric.lang.FClass;
-import fabric.lang.security.Label;
-import polyglot.ast.Id;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
-import polyglot.types.CachingResolver;
 import polyglot.types.ClassType;
-import polyglot.types.LazyClassInitializer;
 import polyglot.types.Named;
 import polyglot.types.Package;
 import polyglot.types.Resolver;
 import polyglot.types.SemanticException;
-import polyglot.types.SystemResolver;
-import polyglot.types.TopLevelResolver;
 import polyglot.types.TypeSystem;
+import fabric.lang.Codebase;
 
 public interface CodebaseTypeSystem extends TypeSystem {
 

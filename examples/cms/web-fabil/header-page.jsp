@@ -10,7 +10,7 @@ boolean cmsAdminOverview= (URL.equals(AccessController.CMSADMIN_URL)||URL.equals
 </head>
 <body>
 <%
-if(debug && false) {%>
+if (debug && false) {%>
 	<%-- for debug purposes --%>
 	<jsp:include page="print-xml-tree.jsp" /> <%
 }%>
@@ -71,7 +71,7 @@ for (int i= 0; i != length; i++) {
     </ul>
     </li><%
 }
-if(p.isCMSAdmin())
+if (p.isCMSAdmin())
 { %>
     <li><a <%=cmsAdminOverview ? "class=\"currentpage\" " : "" %>href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_CMSADMIN %>">
       CMS Admin

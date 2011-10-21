@@ -9,6 +9,7 @@ import java.util.zip.GZIPInputStream;
 
 import polyglot.frontend.SchedulerException;
 import polyglot.main.Report;
+import polyglot.types.PlaceHolder;
 import polyglot.types.TypeObject;
 import polyglot.types.TypeSystem;
 import polyglot.util.Base64;
@@ -30,6 +31,7 @@ public class CBTypeEncoder extends TypeEncoder {
    * @return The decoded TypeObject, or null if deserialization fails.
    * @throws InvalidClassException If the string is malformed.
    */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public TypeObject decode(String s, String name) throws InvalidClassException {
       TypeInputStream ois;
@@ -46,8 +48,8 @@ public class CBTypeEncoder extends TypeEncoder {
               b[i] = (byte) source[i];
       }
       
-      Map oldCache = placeHolderCache;
-      placeHolderCache = new HashMap();
+      Map<PlaceHolder, TypeObject> oldCache = placeHolderCache;
+      placeHolderCache = new HashMap<PlaceHolder, TypeObject>();
       if (oldCache != null) {
           placeHolderCache.putAll(oldCache);
       }

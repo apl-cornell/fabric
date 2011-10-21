@@ -2,45 +2,31 @@ package fabric.ast;
 
 import java.util.List;
 
-import jif.types.label.Label;
-
-import fabric.ExtensionInfo;
-import fabric.FabricOptions;
-import fabric.types.FabricFieldInstance;
-import fabric.types.FabricParsedClassType;
-import fabric.types.FabricTypeSystem;
+import jif.ast.ConstraintNode;
+import jif.ast.ParamDecl;
+import jif.ast.PrincipalNode;
+import jif.types.Assertion;
 
 import polyglot.ast.ClassBody;
-import polyglot.ast.ClassDecl;
-import polyglot.ast.ClassMember;
-import polyglot.ast.FieldDecl;
 import polyglot.ast.Id;
-import polyglot.ast.Node;
 import polyglot.ast.TypeNode;
 import polyglot.main.Report;
-import polyglot.types.Context;
 import polyglot.types.Flags;
 import polyglot.types.SemanticException;
-import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
-import polyglot.visit.TypeChecker;
+import fabric.types.FabricTypeSystem;
 
 public class ClassDecl_c extends jif.ast.JifClassDecl_c {
 
-  @SuppressWarnings("rawtypes")
-  public ClassDecl_c(Position pos, Flags flags, Id name, List params,
-                     TypeNode superClass, List interfaces, List authority, List constraints,
-                     ClassBody body) {
-    super(pos, flags, name, params, superClass, interfaces, authority, constraints, body);
+  public ClassDecl_c(Position pos, Flags flags, Id name,
+      List<ParamDecl> params, TypeNode superClass, List<TypeNode> interfaces,
+      List<PrincipalNode> authority,
+      List<ConstraintNode<Assertion>> constraints, ClassBody body) {
+    super(pos, flags, name, params, superClass, interfaces, authority,
+        constraints, body);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.ClassDecl_c#setSuperClass(polyglot.visit.AmbiguityRemover,
-   *      polyglot.ast.TypeNode)
-   */
   @Override
   protected void setSuperClass(AmbiguityRemover ar, TypeNode superClass)
       throws SemanticException {

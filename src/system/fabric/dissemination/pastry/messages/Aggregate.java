@@ -21,6 +21,7 @@ public class Aggregate implements Message {
     return sender;
   }
 
+  @Override
   public int getPriority() {
     return LOW_PRIORITY;
   }

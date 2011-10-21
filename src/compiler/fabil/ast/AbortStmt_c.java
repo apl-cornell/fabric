@@ -1,6 +1,7 @@
 package fabil.ast;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 
 import polyglot.ast.Stmt_c;
 import polyglot.ast.Term;
@@ -20,6 +21,7 @@ public class AbortStmt_c extends Stmt_c implements AbortStmt {
     return Collections.EMPTY_LIST;
   }
 
+  @Override
   public Term firstChild() {
     return null;
   }

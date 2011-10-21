@@ -34,7 +34,7 @@ class Hello {
   //
   public static void main{*provider}(principal{p<-} p, String[] args):{p<-;p->} throws Exception {
     atomic {
-      if(provider <= new label {p<-;p->} && Message.provider <= provider )
+      if (provider <= new label {p<-;p->} && Message.provider <= provider )
         run(p, args);
       else
         throw new Error("Provider has insufficient integrity.");

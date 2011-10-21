@@ -79,7 +79,7 @@ public class Emailer {
     
     public boolean sendEmail(String toAddr)
     {
-//    	//if(AccessController.debug) return true; //TODO shouldn't this replace the "e-mail dora" bit below?
+//    	//if (AccessController.debug) return true; //TODO shouldn't this replace the "e-mail dora" bit below?
 //        try {
 //            Transport transport = mailSession.getTransport();
 //            MimeMessage message = new MimeMessage(mailSession);

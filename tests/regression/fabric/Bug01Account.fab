@@ -14,7 +14,7 @@ public class Account[principal User, principal Bank] {
 	public boolean{*L} debit{*L} (int{*L}  amt) {
 		boolean result = false;
 		atomic {
-			if(amt <= balance) {
+			if (amt <= balance) {
 				balance = balance - amt;
 				result = true;
 			}

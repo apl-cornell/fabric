@@ -179,7 +179,7 @@ public class DateTimeUtil
 		diff /= 24; //hrs -> days
 		long days = diff;
 		String countdown = "";
-		if(days > 0) countdown += days + " days, ";
+		if (days > 0) countdown += days + " days, ";
 		countdown += hours + " hours, " + minutes + " minutes";
 		return countdown + " (" + SHORTMONTH_DAY.format(due) + ")";
 	}

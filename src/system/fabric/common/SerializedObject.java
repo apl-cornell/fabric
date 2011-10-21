@@ -1,8 +1,25 @@
 package fabric.common;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.ComparablePair;
@@ -426,15 +443,18 @@ public final class SerializedObject implements FastSerializable, Serializable {
     return new Iterator<RefTypeEnum>() {
       int nextRefTypeNum = 0;
 
+      @Override
       public boolean hasNext() {
         return nextRefTypeNum < numRefTypes;
       }
 
+      @Override
       public RefTypeEnum next() {
         if (!hasNext()) throw new NoSuchElementException();
         return refTypeEnums[objectData[offset + nextRefTypeNum++]];
       }
 
+      @Override
       public void remove() {
         throw new UnsupportedOperationException();
       }
@@ -459,16 +479,19 @@ public final class SerializedObject implements FastSerializable, Serializable {
     return new Iterator<Long>() {
       int nextIntraStoreRefNum = 0;
 
+      @Override
       public boolean hasNext() {
         return nextIntraStoreRefNum < numIntraStoreRefs;
       }
 
+      @Override
       public Long next() {
         if (!hasNext()) throw new NoSuchElementException();
         return SerializationUtil.longAt(objectData, offset + 8
             * (nextIntraStoreRefNum++));
       }
 
+      @Override
       public void remove() {
         throw new UnsupportedOperationException();
       }
@@ -513,10 +536,12 @@ public final class SerializedObject implements FastSerializable, Serializable {
       DataInput in = new DataInputStream(new ByteArrayInputStream(objectData,
           offset, objectData.length - offset));
 
+      @Override
       public boolean hasNext() {
         return nextInterStoreRefNum < numInterStoreRefs;
       }
 
+      @Override
       public ComparablePair<String, Long> next() {
         if (!hasNext()) throw new NoSuchElementException();
         nextInterStoreRefNum++;
@@ -527,6 +552,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
         }
       }
 
+      @Override
       public void remove() {
         throw new UnsupportedOperationException();
       }
@@ -707,6 +733,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @see SerializedObject#readImpl(Store, DataInput)
    * @see SerializedObject#SerializedObject(DataInput)
    */
+  @Override
   public void write(DataOutput out) throws IOException {
     out.write(objectData);
   }

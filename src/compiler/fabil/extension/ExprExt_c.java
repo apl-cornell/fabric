@@ -6,11 +6,6 @@ import fabil.visit.ProxyRewriter;
 
 public class ExprExt_c extends FabILExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
-   */
   @Override
   public final Node rewriteProxies(ProxyRewriter pr) {
     Expr expr = rewriteProxiesImpl(pr);
@@ -22,11 +17,6 @@ public class ExprExt_c extends FabILExt_c {
     return (Expr) super.rewriteProxies(pr);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.FabILExt_c#rewriteProxiesOverride(fabil.visit.ProxyRewriter)
-   */
   @Override
   public final Node rewriteProxiesOverride(ProxyRewriter rewriter) {
     Expr expr = rewriteProxiesOverrideImpl(rewriter);
@@ -38,11 +28,6 @@ public class ExprExt_c extends FabILExt_c {
     return (Expr) super.rewriteProxiesOverride(pr);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public Expr node() {
     return (Expr) super.node();

@@ -66,17 +66,17 @@ function confirmSubmit() { return confirm(confirmMessage); }
         <br>
         <%
         	int probType = Integer.parseInt(subprob.getAttribute(XMLBuilder.A_TYPE));
-			if(probType == SubProblem.MULTIPLE_CHOICE){
+			if (probType == SubProblem.MULTIPLE_CHOICE){
 				NodeList choices = subprob.getElementsByTagName(XMLBuilder.TAG_CHOICE);
-				for(int j = 0; j < choices.getLength(); j++){
+				for (int j = 0; j < choices.getLength(); j++){
 					Element choice = (Element)choices.item(j);%>
 					<input name = "<%=AccessController.P_SUBPROBNAME + subprob.getAttribute(XMLBuilder.A_ID)%>" type = "radio" value = "<%=choice.getAttribute(XMLBuilder.A_ID)%>" <%=subprob.hasAttribute(XMLBuilder.A_ANSWER) && subprob.getAttribute(XMLBuilder.A_ANSWER).equals(choice.getAttribute(XMLBuilder.A_ID)) ? "checked" : ""%>>
 					<%=choice.getAttribute(XMLBuilder.A_LETTER)%>. <%=choice.getAttribute(XMLBuilder.A_TEXT)%><br>
 				<%}
 			%>
-			<%} else if(probType == SubProblem.FILL_IN){%>
+			<%} else if (probType == SubProblem.FILL_IN){%>
 				<input name = "<%=AccessController.P_SUBPROBNAME + subprob.getAttribute(XMLBuilder.A_ID)%>" type = "text" size="40" <%=subprob.hasAttribute(XMLBuilder.A_ANSWER) ? "value=\"" + subprob.getAttribute(XMLBuilder.A_ANSWER) + "\"" : ""%>>
-			<%} else if(probType == SubProblem.SHORT_ANSWER){%>
+			<%} else if (probType == SubProblem.SHORT_ANSWER){%>
 				<textarea name = "<%=AccessController.P_SUBPROBNAME + subprob.getAttribute(XMLBuilder.A_ID)%>" rows="5" cols="40"><%=subprob.hasAttribute(XMLBuilder.A_ANSWER) ? subprob.getAttribute(XMLBuilder.A_ANSWER): ""%></textarea>
 			<%}%>
       </td>

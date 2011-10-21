@@ -38,9 +38,9 @@ public class ColorLattice extends Applet implements ActionListener, KeyListener 
 	public void paint(Graphics g) {
 		this.resize(1200,800);
 		g.setColor(Color.BLACK);
-		for(int i = 0; i < numPrins; i++) {
+		for (int i = 0; i < numPrins; i++) {
 			Vector<String> prins = C(numPrins,i);
-			for(int j = 0; j < prins.size(); j++) {
+			for (int j = 0; j < prins.size(); j++) {
 				String set = prins.get(j);
 				int x = xref+(j-prins.size()/2)*150;
 				int y = i*73 + yref;
@@ -55,7 +55,7 @@ public class ColorLattice extends Applet implements ActionListener, KeyListener 
 	
 	private Color getHSVCol(String set, int pos) {
 		float x=0;
-		for(int i = 0; i < set.length(); i++) {
+		for (int i = 0; i < set.length(); i++) {
 			int index = set.charAt(i) - 'A';
 			x += (float)Math.pow(2,index)/Math.pow(2,numPrins);
 //			x += (float)1.0*index/(2*numPrins);
@@ -96,7 +96,7 @@ public class ColorLattice extends Applet implements ActionListener, KeyListener 
 	private Color getQuadConvexCol(String set, int pos) {
 		float blue=0,green=0,red=0;
 		float y = (float)1.0*pos/numPrins;
-		for(int i = 0; i < set.length(); i++) {
+		for (int i = 0; i < set.length(); i++) {
 			int index = set.charAt(i) - 'A';
 			float x = (float)1.0*index/numPrins;
 			red += x*(2-x);
@@ -123,7 +123,7 @@ public class ColorLattice extends Applet implements ActionListener, KeyListener 
 		return toReturn;
 	}
 	private void genCombs(int n, Vector<String> combs, int level, String insert) {
-		if(level == n) {
+		if (level == n) {
 			combs.add(insert);
 		} else {
 			genCombs(n, combs, level+1, insert+letters[level]);
@@ -133,9 +133,9 @@ public class ColorLattice extends Applet implements ActionListener, KeyListener 
 	
 	private Vector<String> C(int n, int r) {
 		Vector<String> toReturn = new Vector<String>();
-		for(int i = 0; i < allCombs.size(); i++) {
+		for (int i = 0; i < allCombs.size(); i++) {
 			String str = allCombs.get(i);
-			if(str.length()==r) {
+			if (str.length()==r) {
 				toReturn.add(str);
 			}
 		}
@@ -150,15 +150,15 @@ public class ColorLattice extends Applet implements ActionListener, KeyListener 
 	
 	public void keyTyped(KeyEvent key) {
 		int code = key.getKeyCode();
-		if(code == KeyEvent.VK_DOWN) {
+		if (code == KeyEvent.VK_DOWN) {
 			yref -= 10;
-		} else if(code == KeyEvent.VK_UP) {
+		} else if (code == KeyEvent.VK_UP) {
 			yref += 10;
-		} else if(code == KeyEvent.VK_LEFT) {
+		} else if (code == KeyEvent.VK_LEFT) {
 			xref += 10;
-		} else if(code == KeyEvent.VK_RIGHT) {
+		} else if (code == KeyEvent.VK_RIGHT) {
 			xref -= 10;
-		} else if(code == KeyEvent.VK_HOME) {
+		} else if (code == KeyEvent.VK_HOME) {
 			xref = 700; yref=100;
 		}
 		this.repaint();		

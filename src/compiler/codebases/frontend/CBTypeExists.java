@@ -2,7 +2,6 @@ package codebases.frontend;
 
 import java.net.URI;
 
-import polyglot.ast.NodeFactory;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Pass;
 import polyglot.frontend.Scheduler;

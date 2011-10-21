@@ -377,35 +377,35 @@ function getDateFromFormat(val,format) {
 			}
 		else if (token=="MM"||token=="M") {
 			month=_getInt(val,i_val,token.length,2);
-			if(month==null||(month<1)||(month>12)){return 0;}
+			if (month==null||(month<1)||(month>12)){return 0;}
 			i_val+=month.length;}
 		else if (token=="dd"||token=="d") {
 			date=_getInt(val,i_val,token.length,2);
-			if(date==null||(date<1)||(date>31)){return 0;}
+			if (date==null||(date<1)||(date>31)){return 0;}
 			i_val+=date.length;}
 		else if (token=="hh"||token=="h") {
 			hh=_getInt(val,i_val,token.length,2);
-			if(hh==null||(hh<1)||(hh>12)){return 0;}
+			if (hh==null||(hh<1)||(hh>12)){return 0;}
 			i_val+=hh.length;}
 		else if (token=="HH"||token=="H") {
 			hh=_getInt(val,i_val,token.length,2);
-			if(hh==null||(hh<0)||(hh>23)){return 0;}
+			if (hh==null||(hh<0)||(hh>23)){return 0;}
 			i_val+=hh.length;}
 		else if (token=="KK"||token=="K") {
 			hh=_getInt(val,i_val,token.length,2);
-			if(hh==null||(hh<0)||(hh>11)){return 0;}
+			if (hh==null||(hh<0)||(hh>11)){return 0;}
 			i_val+=hh.length;}
 		else if (token=="kk"||token=="k") {
 			hh=_getInt(val,i_val,token.length,2);
-			if(hh==null||(hh<1)||(hh>24)){return 0;}
+			if (hh==null||(hh<1)||(hh>24)){return 0;}
 			i_val+=hh.length;hh--;}
 		else if (token=="mm"||token=="m") {
 			mm=_getInt(val,i_val,token.length,2);
-			if(mm==null||(mm<0)||(mm>59)){return 0;}
+			if (mm==null||(mm<0)||(mm>59)){return 0;}
 			i_val+=mm.length;}
 		else if (token=="ss"||token=="s") {
 			ss=_getInt(val,i_val,token.length,2);
-			if(ss==null||(ss<0)||(ss>59)){return 0;}
+			if (ss==null||(ss<0)||(ss>59)){return 0;}
 			i_val+=ss.length;}
 		else if (token=="a") {
 			if (val.substring(i_val,i_val+2).toLowerCase()=="am") {ampm="AM";}
@@ -1275,7 +1275,7 @@ function CP_getCalendar() {
 		var refreshLink = 'javascript:' + refresh;
 		if (this.isShowNavigationDropdowns) {
 			result += '<TD CLASS="'+this.cssPrefix+'cpMonthNavigation" WIDTH="78" COLSPAN="3"><select CLASS="'+this.cssPrefix+'cpMonthNavigation" name="cpMonth" onChange="'+refresh+'('+this.index+',this.options[this.selectedIndex].value-0,'+(year-0)+');">';
-			for( var monthCounter=1; monthCounter<=12; monthCounter++ ) {
+			for ( var monthCounter=1; monthCounter<=12; monthCounter++ ) {
 				var selected = (monthCounter==month) ? 'SELECTED' : '';
 				result += '<option value="'+monthCounter+'" '+selected+'>'+this.monthNames[monthCounter-1]+'</option>';
 				}
@@ -1283,7 +1283,7 @@ function CP_getCalendar() {
 			result += '<TD CLASS="'+this.cssPrefix+'cpMonthNavigation" WIDTH="10">&nbsp;</TD>';
 
 			result += '<TD CLASS="'+this.cssPrefix+'cpYearNavigation" WIDTH="56" COLSPAN="3"><select CLASS="'+this.cssPrefix+'cpYearNavigation" name="cpYear" onChange="'+refresh+'('+this.index+','+month+',this.options[this.selectedIndex].value-0);">';
-			for( var yearCounter=year-this.yearSelectStartOffset; yearCounter<=year+this.yearSelectStartOffset; yearCounter++ ) {
+			for ( var yearCounter=year-this.yearSelectStartOffset; yearCounter<=year+this.yearSelectStartOffset; yearCounter++ ) {
 				var selected = (yearCounter==year) ? 'SELECTED' : '';
 				result += '<option value="'+yearCounter+'" '+selected+'>'+yearCounter+'</option>';
 				}

@@ -160,6 +160,7 @@ public interface LongCollection extends LongIterable
    * @param o the object to compare to this collection.
    * @return true if the o is equal to this collection.
    */
+  @Override
   boolean equals(Object o);
 
   /**
@@ -176,6 +177,7 @@ public interface LongCollection extends LongIterable
    *
    * @return a hash code for this collection.
    */
+  @Override
   int hashCode();
 
   /**
@@ -190,6 +192,7 @@ public interface LongCollection extends LongIterable
    *
    * @return an Iterator over the elements of this collection, in any order.
    */
+  @Override
   LongIterator iterator();
 
   /**

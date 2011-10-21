@@ -49,11 +49,11 @@ var assigngrades = new Array();
  for (int i = 0; i < allassigns.getLength(); i++) { 
     Element xAssign = (Element) allassigns.item(i);%>
     assignedits[0] <%= assignCount==0 ? "" : "+" %>= '<a href="?<%= AccessController.P_ACTION + "="
-    %><%if(xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE).equals(Integer.toString(Assignment.ASSIGNMENT))){
+    %><%if (xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE).equals(Integer.toString(Assignment.ASSIGNMENT))){
     	  %><%=AccessController.ACT_ASSIGNADMIN%><%}
-		  else if(xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE).equals(Integer.toString(Assignment.SURVEY))){
+		  else if (xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE).equals(Integer.toString(Assignment.SURVEY))){
 		  %><%=AccessController.ACT_SURVEYADMIN%><%}
-		  else if(xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE).equals(Integer.toString(Assignment.QUIZ))){
+		  else if (xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE).equals(Integer.toString(Assignment.QUIZ))){
 		  %><%=AccessController.ACT_QUIZADMIN
 		  %><%}
 		  %><%="&amp;" + AccessController.P_ASSIGNID + "=" + xAssign.getAttribute(XMLBuilder.A_ASSIGNID) %>">&#149;&nbsp;<%= xAssign.getAttribute(XMLBuilder.A_NAME).replaceAll("'", "\\\\'") %></a>';
@@ -61,7 +61,7 @@ var assigngrades = new Array();
     assignCount++;
   }%>
 
-<%if(assignCount == 0){%>
+<%if (assignCount == 0){%>
 	assignedits[0] = 'No Assignments';
 <%}%>
 <%	int arrInd = 0, schedCount = 0;

@@ -1,6 +1,10 @@
 package fabric.common;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.InvalidClassException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Arrays;
 
@@ -729,6 +733,7 @@ public abstract class ClassRef implements FastSerializable {
    * <li>byte[] ClassRef-specific data, specified by <code>writeImpl</code></li>
    * </ul>
    */
+  @Override
   public final void write(DataOutput out) throws IOException {
     out.writeByte(type.ordinal());
     writeImpl(out);

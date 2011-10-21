@@ -15,7 +15,7 @@ class Util {
     byte[] bytecode = new byte[len];
     InputStream  in = new FileInputStream(f);
     
-    for(int i = 0; i < len; i++) {
+    for (int i = 0; i < len; i++) {
       int r = in.read();
       if (r < 0)
         throw new IOException("bytecode shorter than advertised");

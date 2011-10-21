@@ -67,7 +67,7 @@ if (null == l) { %>
             <td align="center" nowrap>
               <%= assignment.getAttribute(XMLBuilder.A_DUEDATE) + " " + assignment.getAttribute(XMLBuilder.A_DUETIME) + assignment.getAttribute(XMLBuilder.A_DUEAMPM) %>
             </td><%
-      if(graded){%>
+      if (graded){%>
 			      <td id="score_hide<%= gradedCount %>" style="display: none" align="center" nowrap>
               <%= score == null ? "&nbsp;" : score %>
             </td>
@@ -81,7 +81,7 @@ if (null == l) { %>
 							<%=assignment.getAttribute(XMLBuilder.A_TOTALSCORE)%>
 			     </td>
 			     
-			<%  if(showStats){%>
+			<%  if (showStats){%>
             <!-- high -->
             <td align="center" nowrap>
               <%= assignment.hasAttribute(XMLBuilder.A_STATMAX) ? assignment.getAttribute(XMLBuilder.A_STATMAX) : "&nbsp;" %>
@@ -168,7 +168,7 @@ if (null == l) { %>
               <th align="center">Due</th>
               <th align="center">Status</th>
            </tr>
-	<% for(int j = 0; j < numSurveys; j++) {
+	<% for (int j = 0; j < numSurveys; j++) {
 		Element survey = (Element) surveys.item(j);
 		String action = "?" + AccessController.P_ACTION + "=" + AccessController.ACT_ASSIGN + "&amp;" + AccessController.P_ASSIGNID + "=" + survey.getAttribute(XMLBuilder.A_ASSIGNID);
 	%>	

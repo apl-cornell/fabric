@@ -83,6 +83,7 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
     }
   }
 
+  @Override
   public Iterator<T> iterator() {
     return new Iterator<T>() {
       private int knownMod = modCount;
@@ -94,6 +95,7 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
         if (knownMod != modCount) throw new ConcurrentModificationException();
       }
 
+      @Override
       public boolean hasNext() {
         while (nextElement == null && position < size) {
           checkMod();
@@ -103,6 +105,7 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
         return nextElement != null;
       }
 
+      @Override
       public T next() {
         if (!hasNext()) throw new NoSuchElementException();
         T result = nextElement;
@@ -110,6 +113,7 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
         return result;
       }
 
+      @Override
       public void remove() {
         throw new UnsupportedOperationException();
       }

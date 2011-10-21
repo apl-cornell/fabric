@@ -3,7 +3,9 @@ package fabric.worker;
 import java.io.ObjectStreamException;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.Principal;
+import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
@@ -11,16 +13,38 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import fabric.common.*;
-import fabric.common.exceptions.*;
+import fabric.common.Crypto;
+import fabric.common.ONumConstants;
+import fabric.common.ObjectGroup;
+import fabric.common.SerializedObject;
+import fabric.common.Surrogate;
+import fabric.common.TransactionID;
+import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.FabricGeneralSecurityException;
+import fabric.common.exceptions.FabricRuntimeException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.*;
+import fabric.common.exceptions.NotImplementedException;
+import fabric.common.exceptions.RuntimeFetchException;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
-import fabric.messages.*;
+import fabric.messages.AbortTransactionMessage;
+import fabric.messages.AllocateMessage;
+import fabric.messages.CommitTransactionMessage;
+import fabric.messages.DissemReadMessage;
+import fabric.messages.GetCertChainMessage;
+import fabric.messages.MakePrincipalMessage;
 import fabric.messages.Message.NoException;
+import fabric.messages.PrepareTransactionMessage;
+import fabric.messages.ReadMessage;
+import fabric.messages.StalenessCheckMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
@@ -121,6 +145,7 @@ public class RemoteStore extends RemoteNode implements Store {
     this.publicKey = key;
   }
 
+  @Override
   public synchronized long createOnum() throws UnreachableNodeException {
     try {
       reserve(1);
@@ -133,6 +158,7 @@ public class RemoteStore extends RemoteNode implements Store {
   /**
    * Sends a PREPARE message to the store.
    */
+  @Override
   public boolean prepareTransaction(long tid,
                                     long commitTime,
                                     Collection<Object._Impl> toCreate,
@@ -156,14 +182,12 @@ public class RemoteStore extends RemoteNode implements Store {
    * @return The requested object
    * @throws FabricException
    */
+  @Override
   public final Object._Impl readObject(long onum) throws AccessException {
     return readObject(true, onum);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabric.worker.Store#readObjectNoDissem(long)
-   */
+  @Override
   public final Object._Impl readObjectNoDissem(long onum)
       throws AccessException {
     return readObject(false, onum);
@@ -225,6 +249,7 @@ public class RemoteStore extends RemoteNode implements Store {
     }
   }
 
+  @Override
   public Object._Impl readObjectFromCache(long onum) {
     synchronized (objects) {
       FabricSoftRef ref = objects.get(onum);
@@ -368,24 +393,19 @@ public class RemoteStore extends RemoteNode implements Store {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabric.worker.Store#abortTransaction(long)
-   */
+  @Override
   public void abortTransaction(TransactionID tid) throws AccessException {
     send(Worker.getWorker().authToStore, new AbortTransactionMessage(tid));
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabric.worker.Store#commitTransaction(int)
-   */
+  @Override
   public void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
     send(Worker.getWorker().authToStore, new CommitTransactionMessage(
         transactionID));
   }
 
+  @Override
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
     List<SerializedObject> staleObjects = getStaleObjects(reads);
     
@@ -412,14 +432,17 @@ public class RemoteStore extends RemoteNode implements Store {
     return "Store@" + name;
   }
 
+  @Override
   public Map getRoot() {
     return new Map._Proxy(this, ONumConstants.ROOT_MAP);
   }
 
+  @Override
   public NodePrincipal getPrincipal() {
     return new NodePrincipal._Proxy(this, ONumConstants.STORE_PRINCIPAL);
   }
 
+  @Override
   public final boolean isLocalStore() {
     return false;
   }
@@ -432,6 +455,7 @@ public class RemoteStore extends RemoteNode implements Store {
   /**
    * Notifies that an object has been evicted from cache.
    */
+  @Override
   public boolean notifyEvict(long onum) {
     synchronized (objects) {
       FabricSoftRef r = objects.get(onum);
@@ -445,6 +469,7 @@ public class RemoteStore extends RemoteNode implements Store {
     }
   }
 
+  @Override
   public boolean evict(long onum) {
     synchronized (objects) {
       FabricSoftRef r = objects.get(onum);
@@ -477,6 +502,7 @@ public class RemoteStore extends RemoteNode implements Store {
     }
   }
 
+  @Override
   public void cache(_Impl impl) {
     FabricSoftRef ref = impl.$ref;
     if (ref.store != this)

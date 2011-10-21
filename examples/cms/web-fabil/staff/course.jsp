@@ -9,7 +9,7 @@ Element root = (Element) displayData.getElementsByTagName(XMLBuilder._Static._Pr
 Element course = XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_COURSE()); 
 String courseID = course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID());
 boolean isadmin = false, isgroups = false, isgrades = false, isassign = false, iscategory = false;
-if(!p.isInStaffAsBlankMode()) /* privileges are possible only if acting as staff */
+if (!p.isInStaffAsBlankMode()) /* privileges are possible only if acting as staff */
 {
 	isadmin = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISADMIN());
 	isgroups = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISGROUPS());
@@ -34,7 +34,7 @@ if(!p.isInStaffAsBlankMode()) /* privileges are possible only if acting as staff
        <jsp:include page="../course-title.jsp" /> 
 <%Element l= (Element) course.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_DESCRIPTION()).item(0);
 Text text= (Text)l.getFirstChild();
-if(isadmin)
+if (isadmin)
 {%>
       <div id="description_title" class="assignment_left">
         <h2>
@@ -46,7 +46,7 @@ if(isadmin)
 			<script type="text/javascript">
 			function editDescription(newEditState)
 			{
-				if(newEditState)
+				if (newEditState)
 				{
 					changeDisplay('desc_view_span', 'none');
 					changeDisplay('desc_form_span', 'inline');
@@ -85,7 +85,7 @@ if(isadmin)
 			</div>
 		</div><%
 } 
-else if(!text.getData().equals(""))
+else if (!text.getData().equals(""))
 {%>
       <div id="description_title" class="assignment_left">
         <h2>

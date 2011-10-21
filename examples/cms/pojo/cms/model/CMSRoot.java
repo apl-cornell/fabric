@@ -145,13 +145,13 @@ public class CMSRoot {
     Iterator i = logs.iterator();
     while(i.hasNext()) {
       Log l = (Log)i.next();
-      if(l.getCourse().toString() != course.toString())
+      if (l.getCourse().toString() != course.toString())
         continue;
-      for(Iterator di = l.getDetailLogs().iterator(); di.hasNext();) {
+      for (Iterator di = l.getDetailLogs().iterator(); di.hasNext();) {
         LogDetail d = (LogDetail)di.next();
         Group g = d.getAssignment().findGroup(d.getAffectedUser());
-        for(Iterator gi = groups.iterator(); gi.hasNext();)
-        if(g.equals(gi.next())) {
+        for (Iterator gi = groups.iterator(); gi.hasNext();)
+        if (g.equals(gi.next())) {
           result.add(g);
           break;
         }
@@ -374,7 +374,7 @@ public class CMSRoot {
   }
   
   public SubProblem getSubProblem(String subProblemID) {
-    if(subProblemID.equals("0")) return null;
+    if (subProblemID.equals("0")) return null;
     return (SubProblem)subProblems.get(subProblemID);
   }
   

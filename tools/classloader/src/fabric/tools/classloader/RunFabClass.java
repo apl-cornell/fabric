@@ -55,7 +55,7 @@ public class RunFabClass {
   private static ObjectArray toObjectArray(String[] args, Store s, Label l) {
     ObjectArray n = (ObjectArray)new ObjectArray._Impl(s, l, fabric.lang.Object.class, 
         args.length).$getProxy();
-    for(int i = 0; i < args.length; i++)
+    for (int i = 0; i < args.length; i++)
       n.set(i, fabric.lang.WrappedJavaInlineable.$wrap(args[i]));
     return n;
   }

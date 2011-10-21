@@ -1,10 +1,36 @@
 package fabil.extension;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
-import polyglot.ast.*;
+import polyglot.ast.Call;
+import polyglot.ast.ClassBody;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
+import polyglot.ast.Expr;
+import polyglot.ast.FieldDecl;
+import polyglot.ast.Formal;
+import polyglot.ast.Id;
+import polyglot.ast.Initializer;
+import polyglot.ast.Local;
+import polyglot.ast.MethodDecl;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
+import polyglot.ast.Stmt;
+import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
-import polyglot.types.*;
+import polyglot.types.ClassType;
+import polyglot.types.Flags;
+import polyglot.types.MethodInstance;
+import polyglot.types.PrimitiveType;
+import polyglot.types.Type;
 import polyglot.util.Position;
 import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
@@ -298,7 +324,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       methodDecl.append("throws %LT ");
       subst.add(new ArrayList<Type>(throwTypes));
     }
-    if(!mi.flags().isNative()) {
+    if (!mi.flags().isNative()) {
       methodDecl.append("{ " + (returnType.isVoid() ? "" : "return "));
     
       // Figure out the call target.
@@ -575,12 +601,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             + ") other;" + body + " }");
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ClassMemberExt#interfaceMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
-   */
   @Override
   public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
     ClassDecl decl = node();
@@ -788,11 +808,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     return cd.body(nf.ClassBody(Position.compilerGenerated(), members));
   }
   
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public ClassDecl node() {
     return (ClassDecl) super.node();

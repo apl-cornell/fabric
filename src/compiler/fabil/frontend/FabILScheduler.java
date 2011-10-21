@@ -14,7 +14,10 @@ import polyglot.frontend.Job;
 import polyglot.frontend.OutputPass;
 import polyglot.frontend.Pass;
 import polyglot.frontend.Scheduler;
-import polyglot.frontend.goals.*;
+import polyglot.frontend.goals.CodeGenerated;
+import polyglot.frontend.goals.Goal;
+import polyglot.frontend.goals.Serialized;
+import polyglot.frontend.goals.VisitorGoal;
 import polyglot.main.Report;
 import polyglot.main.Version;
 import polyglot.types.TypeSystem;
@@ -247,12 +250,6 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g =
         internGoal(new VisitorGoal(job, new ArrayInitializerTypeFixer(job,
             extInfo.typeSystem(), extInfo.nodeFactory())) {
-          /*
-           * (non-Javadoc)
-           * @see
-           * polyglot.frontend.goals.AbstractGoal#prerequisiteGoals(polyglot
-           * .frontend.Scheduler)
-           */
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
             List<Goal> l = new ArrayList<Goal>();
@@ -516,7 +513,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
           l.add(ClassesHashed(job));
           l.add(InstrumentThreads(job));
           l.add(ClassReferencesCollected(job));
-          if(((FabILOptions) extInfo.getOptions()).createSkeleton()) {
+          if (((FabILOptions) extInfo.getOptions()).createSkeleton()) {
             l.add(CreateJavaSkeleton(job));
           }
         } else {
@@ -605,7 +602,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     long startTime = System.currentTimeMillis();
     boolean fil_complete = super.runToCompletion();
     long endTime = System.currentTimeMillis();
-    if(Report.should_report(Topics.profile, 1)) {
+    if (Report.should_report(Topics.profile, 1)) {
       Report.report(1, "FabIL passes complete: "+ (endTime - startTime) + "ms");
     }
     return fil_complete;

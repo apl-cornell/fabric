@@ -16,27 +16,27 @@ public class ArrayTest01 {
     
     long objectCreation = System.currentTimeMillis();
     ArrayTest01[] cachedElements = new ArrayTest01[SIZE2];
-    for(int i = 0; i < SIZE2; i++) {
+    for (int i = 0; i < SIZE2; i++) {
         cachedElements[i] = new ArrayTest01((char)(i*i));
     }
     System.out.println("Object creation took " + (System.currentTimeMillis() - objectCreation) + "ms");
     int percentage = 0;
     int step = 5;
         
-    for(int count = 0; count < MAX_COUNT; count++) {
+    for (int count = 0; count < MAX_COUNT; count++) {
             
             startTime = System.currentTimeMillis();
             ArrayTest01[] testArray = new ArrayTest01[SIZE1];
             startIteration = System.currentTimeMillis();
-            for(int j = 0; j < ITER_REPS; j++)
-            for(int i = 0; i < SIZE1; i++) {
+            for (int j = 0; j < ITER_REPS; j++)
+            for (int i = 0; i < SIZE1; i++) {
                 testArray[i] = cachedElements[i];
             }
             endIteration = System.currentTimeMillis();
             testArray = new ArrayTest01[SIZE2];
             setLength = System.currentTimeMillis();
-            for(int j = 0; j < ITER_REPS; j++)
-            for(int i = SIZE1; i < SIZE2; i++) {
+            for (int j = 0; j < ITER_REPS; j++)
+            for (int i = SIZE1; i < SIZE2; i++) {
                 testArray[i] = cachedElements[i];
             }
             endIteration2 = System.currentTimeMillis();
@@ -46,7 +46,7 @@ public class ArrayTest01 {
             iteration1+=endIteration - startIteration;
             modify+=setLength - endIteration;
             iteration2+=endIteration2 - setLength;
-            if(count == (percentage * MAX_COUNT)/100) {
+            if (count == (percentage * MAX_COUNT)/100) {
                 System.out.print(percentage + "%");
                 percentage += step;
             }

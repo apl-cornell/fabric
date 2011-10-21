@@ -13,10 +13,6 @@ public class UnreachableNodeException extends FabricRuntimeException {
     this.node = node;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see java.lang.Throwable#getMessage()
-   */
   @Override
   public String getMessage() {
     return "Unreachable node: " + node;

@@ -5,15 +5,12 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import codebases.types.CBTypeEncoder;
-import codebases.types.CodebaseTypeSystem;
-
-import fabric.lang.Object;
-import fabric.worker.Store;
-
 import polyglot.frontend.FileSource;
 import polyglot.types.reflect.ClassPathLoader;
-import polyglot.util.TypeEncoder;
+import codebases.types.CBTypeEncoder;
+import codebases.types.CodebaseTypeSystem;
+import fabric.lang.Object;
+import fabric.worker.Store;
 
 /**
  * This interface defines methods expected by the classes supporting
@@ -112,6 +109,7 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
 
   Store destinationStore();
   
+  @Override
   CodebaseTypeSystem typeSystem();
 
 }

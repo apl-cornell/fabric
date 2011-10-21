@@ -5,8 +5,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import fabric.worker.Store;
 import fabric.lang.Object;
+import fabric.worker.Store;
 
 /**
  * A map keyed on OIDs.
@@ -111,6 +111,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     return map.keySet();
   }
 
+  @Override
   public Iterator<LongKeyMap<V>> iterator() {
     return map.values().iterator();
   }

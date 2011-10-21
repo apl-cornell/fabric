@@ -96,7 +96,7 @@ public class SubProblem {
    *         multiple choice problem, or null.
    */
   public Choice getAnswerChoice() {
-    if(assignment.getType() == Assignment.ASSIGNMENT)
+    if (assignment.getType() == Assignment.ASSIGNMENT)
       return null;
     throw new NotImplementedException("Only implemented for assignments");
   }

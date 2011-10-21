@@ -16,7 +16,7 @@ public class ByteArrayTest01 {
     public static void main(String[] args) {
         Store store = fabric.worker.Worker.getWorker().getStore("store0");
 
-        if(args.length != 2) {
+        if (args.length != 2) {
             System.out.println("I need an input filename and output filename as arguments");
             return;
         }
@@ -40,13 +40,13 @@ public class ByteArrayTest01 {
 
                 int counter = 0;
                 int b;
-                for(int j = 0; j < length; j++) {System.out.print(".");
+                for (int j = 0; j < length; j++) {System.out.print(".");
                     b = file.read();
-                    if(b == -1) break;
+                    if (b == -1) break;
                     byteArray.set(counter++, (byte)b);
                 }
 
-                for(int j = 0; j < counter; j++) {
+                for (int j = 0; j < counter; j++) {
                     outFile.write(byteArray.get(j));
                 }
 

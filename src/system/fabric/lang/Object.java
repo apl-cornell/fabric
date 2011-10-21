@@ -4,7 +4,11 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Constructor;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
@@ -113,6 +117,7 @@ public interface Object {
       else this.anchor = null;
     }
 
+    @Override
     public final _Impl fetch() {
       _Impl result = ref.get();
       
@@ -163,30 +168,37 @@ public interface Object {
       return result;
     }
 
+    @Override
     public final Store $getStore() {
       return ref.store;
     }
 
+    @Override
     public final long $getOnum() {
       return ref.onum;
     }
     
+    @Override
     public final boolean idEquals(Object other) {
       return this.$getStore() == other.$getStore() && this.$getOnum() == other.$getOnum();
     }
 
+    @Override
     public final Label get$label() {
       return fetch().get$label();
     }
     
+    @Override
     public final Label get$accesslabel() {
       return fetch().get$accesslabel();
     }
 
+    @Override
     public final _Proxy $getProxy() {
       return fetch().$getProxy();
     }
 
+    @Override
     public final java.lang.Object $unwrap() {
       return this;
     }
@@ -216,6 +228,7 @@ public interface Object {
     /**
      * A delegate for the default equals implementation.
      */
+    @Override
     public boolean equals(Object arg1) {
       return fetch().equals(arg1);
     }
@@ -249,10 +262,12 @@ public interface Object {
      * 
      * @deprecated
      */
+    @Override
     public final void $forceRenumber(long onum) {
       fetch().$forceRenumber(onum);
     }
     
+    @Override
     public Statistics createStatistics() {
       return fetch().createStatistics();
     }
@@ -370,11 +385,11 @@ public interface Object {
       if (accessLabel == null) throw new InternalError("Null access label!");
 
       if (!(store instanceof LocalStore)) {
-        if(label.$getStore() instanceof LocalStore
+        if (label.$getStore() instanceof LocalStore
           && !ONumConstants.isGlobalConstant(label.$getOnum()))
           throw new InternalError("Remote object has local update label");
 
-        if(accessLabel.$getStore() instanceof LocalStore
+        if (accessLabel.$getStore() instanceof LocalStore
             && !ONumConstants.isGlobalConstant(accessLabel.$getOnum()))
           throw new InternalError("Remote object has local access label");
       }
@@ -425,6 +440,7 @@ public interface Object {
     /**
      * Default equals implementation uses pointer equality.
      */
+    @Override
     public boolean equals(Object o) {
       return o.$getStore().equals($getStore()) && o.$getOnum() == $getOnum();
     }
@@ -469,10 +485,12 @@ public interface Object {
     public void $copyAppStateFrom(_Impl other) {
     }
 
+    @Override
     public final Store $getStore() {
       return $ref.store;
     }
 
+    @Override
     public final long $getOnum() {
       return $ref.onum;
     }
@@ -481,10 +499,12 @@ public interface Object {
       return $class;
     }
 
+    @Override
     public final Label get$label() {
       return $label;
     }
     
+    @Override
     public final Label get$accesslabel() {
       return $accessLabel;
     }
@@ -493,20 +513,24 @@ public interface Object {
       return $version;
     }
 
+    @Override
     public final _Proxy $getProxy() {
       if ($proxy == null) $proxy = $makeProxy();
       return $proxy;
     }
 
+    @Override
     public final boolean idEquals(Object other) {
       return $getStore() == other.$getStore()
           && $getOnum() == other.$getOnum();
     }
     
+    @Override
     public final _Impl fetch() {
       return this;
     }
     
+    @Override
     public Statistics createStatistics() {
       return DefaultStatistics.instance;
     }
@@ -714,6 +738,7 @@ public interface Object {
       return new _Proxy(this);
     }
 
+    @Override
     public final java.lang.Object $unwrap() {
       return this;
     }
@@ -731,6 +756,7 @@ public interface Object {
      * 
      * @deprecated
      */
+    @Override
     public final void $forceRenumber(long onum) {
       long oldOnum = $ref.onum;
       this.$ref.onum = onum;
@@ -771,6 +797,7 @@ public interface Object {
         final LocalStore store = Worker.getWorker().getLocalStore();
 
         return Worker.runInSubTransaction(new Worker.Code<Object>() {
+          @Override
           public Object run() throws Throwable {
             Constructor<? extends Object._Impl> constr =
               c.getConstructor(Store.class, Label.class, Label.class);

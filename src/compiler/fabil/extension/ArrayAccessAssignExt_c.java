@@ -8,11 +8,6 @@ import fabil.visit.ProxyRewriter;
 
 public class ArrayAccessAssignExt_c extends ExprExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     ArrayAccessAssign assign = node();
@@ -30,11 +25,6 @@ public class ArrayAccessAssignExt_c extends ExprExt_c {
     return rewriter.qq().parseExpr("%E.set(%E, %E)", array, index, right);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public ArrayAccessAssign node() {
     return (ArrayAccessAssign) super.node();

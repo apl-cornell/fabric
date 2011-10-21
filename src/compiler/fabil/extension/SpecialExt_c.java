@@ -8,11 +8,6 @@ import fabil.visit.ProxyRewriter;
 
 public class SpecialExt_c extends ExprExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   protected Expr rewriteProxiesImpl(ProxyRewriter pr) {
     Special special = node();
@@ -33,11 +28,6 @@ public class SpecialExt_c extends ExprExt_c {
     return qq.parseExpr("(%T) %E.$getProxy()", special.type(), special);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#node()
-   */
   @Override
   public Special node() {
     return (Special) super.node();

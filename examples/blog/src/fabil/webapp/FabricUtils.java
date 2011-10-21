@@ -5,9 +5,9 @@ import fabric.util.*;
 public class FabricUtils {
 
 public static Integer length(Object o) {
-  if(o instanceof fabric.util.Collections.UnmodifiableCollection._Proxy)
+  if (o instanceof fabric.util.Collections.UnmodifiableCollection._Proxy)
     return length((fabric.util.Collections.UnmodifiableCollection._Proxy)o);
-  else if(o instanceof fabric.util.Map._Proxy) {
+  else if (o instanceof fabric.util.Map._Proxy) {
     return length((fabric.util.Map._Proxy)o);
   } else {
     return -1;

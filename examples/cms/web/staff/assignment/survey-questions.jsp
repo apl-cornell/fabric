@@ -41,7 +41,7 @@ boolean isSurvey = assignType == Assignment.SURVEY;
         <input size="40" name="<%= AccessController.P_SUBPROBNAME + subID %>" value="<%= subprob.getAttribute(XMLBuilder.A_NAME) %>">
         
 		<% String choiceDisplay = "none";
-      	 if(subprobType == SubProblem.MULTIPLE_CHOICE){
+      	 if (subprobType == SubProblem.MULTIPLE_CHOICE){
       		choiceDisplay = "block";
       	 }%>
 
@@ -50,7 +50,7 @@ boolean isSurvey = assignType == Assignment.SURVEY;
 	        NodeList choices = subprob.getElementsByTagName(XMLBuilder.TAG_CHOICE);
 			String answer = subprob.getAttribute(XMLBuilder.A_CORRECTANSWER);
 	        
-	        for(int j = 0; j < choices.getLength(); j++){
+	        for (int j = 0; j < choices.getLength(); j++){
 	        	Element choice = (Element)choices.item(j);
 	        	String choiceDivID = "choice_" + subID + "_" + j;
 	        	%>

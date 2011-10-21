@@ -4,20 +4,15 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.plaf.LabelUI;
-
 import polyglot.main.Report;
-import polyglot.types.ClassType;
 import polyglot.types.Importable;
 import polyglot.types.LazyClassInitializer;
 import polyglot.types.NoClassException;
 import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
-import polyglot.util.CollectionUtil;
 import codebases.frontend.ExtensionInfo;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
@@ -25,8 +20,12 @@ import fabric.worker.Store;
 
 public class PathResolver extends NamespaceResolver_c implements
     NamespaceResolver {
-  private static final Collection<String> TOPICS = CollectionUtil.list(Report.types,
-      Report.resolver);
+  private static final Collection<String> TOPICS;
+  static {
+    TOPICS = new ArrayList<String>(2);
+    TOPICS.add(Report.types);
+    TOPICS.add(Report.resolver);
+  }
 
   protected final List<NamespaceResolver> path;
   protected final Map<String, URI> aliases;
@@ -162,13 +161,13 @@ public class PathResolver extends NamespaceResolver_c implements
 
   @Override 
   public Label label() {
-    if(extInfo.platformNamespace().equals(namespace)) {
+    if (extInfo.platformNamespace().equals(namespace)) {
       return LabelUtil._Impl.toLabel(extInfo.destinationStore(),
           LabelUtil._Impl.topInteg());
     }
     Store s = extInfo.destinationStore();
     Label join = LabelUtil._Impl.noComponents();
-    for(NamespaceResolver nr : path) {
+    for (NamespaceResolver nr : path) {
       join = LabelUtil._Impl.join(s, join, nr.label());
     }
     //TODO: Should we actually return worker meet join?

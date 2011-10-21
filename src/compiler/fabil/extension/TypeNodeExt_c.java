@@ -11,11 +11,6 @@ import fabil.visit.ProxyRewriter;
 
 public class TypeNodeExt_c extends FabILExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {
     TypeNode tn = node();
@@ -33,11 +28,6 @@ public class TypeNodeExt_c extends FabILExt_c {
     return nf.CanonicalTypeNode(Position.compilerGenerated(), ts.toFabricRuntimeArray(at));
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public TypeNode node() {
     return (TypeNode) super.node();

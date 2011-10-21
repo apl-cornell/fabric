@@ -31,6 +31,7 @@ public class PastryFetchManager implements FetchManager {
     }
   }
 
+  @Override
   public ObjectGroup fetch(RemoteStore c, long onum) throws AccessException {
     Glob glob;
     try {
@@ -44,6 +45,7 @@ public class PastryFetchManager implements FetchManager {
     return glob.decrypt(c);
   }
   
+  @Override
   public void destroy() {
     node.destroy();
   }

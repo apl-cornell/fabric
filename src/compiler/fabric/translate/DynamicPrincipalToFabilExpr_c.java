@@ -24,7 +24,7 @@ public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c 
     FabILNodeFactory nf = (FabILNodeFactory)rw.java_nf();
     FabricTypeSystem ts = (FabricTypeSystem)rw.jif_ts();
 
-    if(!dp.path().isUninterpreted()) {
+    if (!dp.path().isUninterpreted()) {
       
       if (dp.path() instanceof AccessPathLocal) {
         AccessPathLocal apl = (AccessPathLocal) dp.path();
@@ -41,7 +41,7 @@ public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c 
           return nf.Call(pathExpr.position(), pathExpr, nf.Id(Position
               .compilerGenerated(), "getPrincipal"));
         }
-      } else if(dp.path() instanceof AccessPathField) {
+      } else if (dp.path() instanceof AccessPathField) {
         AccessPathField apf = (AccessPathField) dp.path();
         FieldInstance fi = apf.fieldInstance();
         
@@ -61,14 +61,14 @@ public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c 
   private static Expr accessPathToExpr(JifToJavaRewriter rw, AccessPath ap) {
     FabILNodeFactory nf = (FabILNodeFactory)rw.java_nf();
 
-    if(ap instanceof AccessPathThis) {
+    if (ap instanceof AccessPathThis) {
       return nf.This(ap.position());
     }
-    else if(ap instanceof AccessPathLocal) {
+    else if (ap instanceof AccessPathLocal) {
       LocalInstance li = ((AccessPathLocal) ap).localInstance();
       return nf.Local(li.position(), nf.Id(li.position(), li.name()));
     }
-    else if(ap instanceof AccessPathField) {
+    else if (ap instanceof AccessPathField) {
       AccessPathField apf = (AccessPathField) ap;
       FieldInstance fi = apf.fieldInstance();
       return nf.Field(ap.position(), accessPathToExpr(rw, apf.path()),

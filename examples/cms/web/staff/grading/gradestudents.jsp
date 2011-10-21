@@ -187,7 +187,7 @@ for (Iterator j= probs.iterator(); j.hasNext();) {
   function allClick(groupid){
     var cell = getElementById('RegradeReqCheckboxes' + groupid);
     var checkBoxes = cell.getElementsByTagName('input');
-    for(var i=1; i<checkBoxes.length; i++)
+    for (var i=1; i<checkBoxes.length; i++)
      checkBoxes[i].checked = true;
     return false;
   }
@@ -224,12 +224,12 @@ for (Iterator j= probs.iterator(); j.hasNext();) {
 Cookie[] cookies = (Cookie[])session.getAttribute(AccessController.A_COOKIES);
 System.out.println("looking for cookie 'grades_table_" + courseID + "_" + asgnID + "_sort_order'");
 String groupOrder = null;
-if(cookies != null)
+if (cookies != null)
 {
-	for(int i = 0; i < cookies.length; i++)
+	for (int i = 0; i < cookies.length; i++)
 	{
 	System.out.println("found cookie w/name '" + cookies[i].getName() + "'");
-		if(cookies[i].getName().equals("grades_table_" + courseID + "_" + asgnID + "_sort_order"))
+		if (cookies[i].getName().equals("grades_table_" + courseID + "_" + asgnID + "_sort_order"))
 		{
 			groupOrder = cookies[i].getValue();
 			break;
@@ -237,23 +237,23 @@ if(cookies != null)
 	}
 }
 ArrayList sortedGroups = new ArrayList(); //group Elements in sorted order as set on the main grading page
-if(groupOrder != null)
+if (groupOrder != null)
 {
 	String[] groupIDOrder = groupOrder.replaceAll("%20", " ").split("\\s+");
-	for(int i = 0; i < groupIDOrder.length; i++)
+	for (int i = 0; i < groupIDOrder.length; i++)
 	{
 		System.out.println("group id: '" + groupIDOrder[i] + "'");
-		for(int j = 0; j < numgroups; j++)
+		for (int j = 0; j < numgroups; j++)
 		{
 			System.out.println(" group id: '" + ((Element)groups.item(j)).getAttribute(XMLBuilder.A_GROUPID) + "'");
-			if(((Element)groups.item(j)).getAttribute(XMLBuilder.A_GROUPID).equals(groupIDOrder[i]))
+			if (((Element)groups.item(j)).getAttribute(XMLBuilder.A_GROUPID).equals(groupIDOrder[i]))
 				sortedGroups.add((Element)groups.item(j));
 		}
 	}
 }
 else /* don't reorder groups */
 {
-	for(int i = 0; i < numgroups; i++)
+	for (int i = 0; i < numgroups; i++)
 		sortedGroups.add((Element)groups.item(i));
 }
 /* make a table for each group */
@@ -298,7 +298,7 @@ for (int i= 0; i < numgroups; i++) {
           <tr>
           
           <%--Files------------------------------------%>
-         <%if(!isQuiz){%>
+         <%if (!isQuiz){%>
             <td>Files <%= submissions.getLength() == 0 ? "" : "<span id='upload_" + groupid + "head'><a href=\"#\" onclick=\"show('upload_" + groupid + "', '(upload)', '(upload)'); return false;\">(upload)</a></span>" %></th>
             <%}%>
             <td>Students</td>
@@ -307,7 +307,7 @@ for (int i= 0; i < numgroups; i++) {
             <td>Comments</td>           
           </tr>
           <tr>
-          <%if(!isQuiz){%>
+          <%if (!isQuiz){%>
 	            <td valign="top" class="files"<%= nummembers == 1 ? "" : " rowspan=\"" + Integer.toString(nummembers + 1) + "\"" %>>
 	     <% if (submissions.getLength() == 0) { %>
 	                No required submissions.
@@ -384,7 +384,7 @@ for (int i= 0; i < numgroups; i++) {
 <%--Answers--%>
 
 <%
-	if(isQuiz)
+	if (isQuiz)
 	{
 		%><td style="vertical-align:top"><br><%
 		int answerCount = 0;
@@ -395,7 +395,7 @@ for (int i= 0; i < numgroups; i++) {
 			String probNumber = prob.getAttribute(XMLBuilder.A_ORDER);
 			String problemPrefix = (probNumber.equals("0")) ? "" : probNumber + ". ";
 			
-			if(answer != null)
+			if (answer != null)
 			{
 				answerCount++;
 				%>
@@ -404,7 +404,7 @@ for (int i= 0; i < numgroups; i++) {
 				<%
 			}	
 		}
-		if(answerCount == 0)
+		if (answerCount == 0)
 		{
 			%>No answers submitted<%
 		}
@@ -455,7 +455,7 @@ for (int i= 0; i < numgroups; i++) {
 				<% } %>
               		
               		<input id="score_<%= netID + "_" + probid + "_" + groupid %>" type="text" onkeyup="onKeyupHandlerNoProbs('<%= netID %>','<%= groupid %>','<%= probid %>');" size="3" name="<%= AccessController.P_GRADE + "_" + netID + "_" + probid + "_" + groupid %>" 
-			<%if(score != null && !score.getAttribute(XMLBuilder.A_SCORE).equals("")){%>
+			<%if (score != null && !score.getAttribute(XMLBuilder.A_SCORE).equals("")){%>
 			  <%="value=\"" + score.getAttribute(XMLBuilder.A_SCORE) + "\""%>
 			  <%}%>
 			<%= canGrade ? "" : " disabled" %>> /<%= prob.getAttribute(XMLBuilder.A_SCORE) %></li></ul>
@@ -489,7 +489,7 @@ for (int i= 0; i < numgroups; i++) {
 				<% } %>
                 	
                 	<input <%= hasTotal ? "onkeyup=\"onkeyupHandler('" + netID + "', '" + probid + "', '" + groupid + "');\"" : "" %> id="score_<%= netID + "_" + probid + "_" + groupid %>" type="text" size="3" name="<%= AccessController.P_GRADE + "_" + netID + "_" + probid + "_" + groupid %>"
-				<%if(score != null && !score.getAttribute(XMLBuilder.A_SCORE).equals("")){%>
+				<%if (score != null && !score.getAttribute(XMLBuilder.A_SCORE).equals("")){%>
 				 	<%="value=\"" + score.getAttribute(XMLBuilder.A_SCORE) + "\""%>
 				  <%}%>
 				<%= canGrade ? "" : " disabled" %>> /<%= prob.getAttribute(XMLBuilder.A_SCORE) %></li>
@@ -661,7 +661,7 @@ for (int i= 0; i < numgroups; i++) {
               </script><%
   } %>
                  <h1>Logs
-<%	if(numlogs > 0) {%>
+<%	if (numlogs > 0) {%>
                  (<a class="hide" id="logs<%= groupid %>link" href="javascript:showentry('logs<%= groupid %>', '<%=numlogs%> entries', '<%=numlogs%> entries');"><%=numlogs%> entries</a>)
 <%	} else {%>
 						(0 entries)
@@ -706,11 +706,11 @@ for (int i= 0; i < numgroups; i++) {
 		        <div id="regrade<%= groupid %>" class="showhide" style="display: none">
 		        <table class="grading" cellpadding="10px" border="0" cellspacing="0" width="100%">
 		          <tr ><%
-		          if(allprobs.getLength() > 0){%>
+		          if (allprobs.getLength() > 0){%>
 		            <td id="RegradeReqCheckboxes<%= groupid %>" valign="top" style="left-padding:"1"">Submit Request for:<br>
 		              <input type="checkbox" id="allParts<%= groupid %>" name="allParts" value="allParts" onClick="allClick('<%= groupid %>');">
 		              All Parts<br><br><%
-		            for(int j= 0; j<allprobs.getLength(); j++){
+		            for (int j= 0; j<allprobs.getLength(); j++){
 		              Element problem = (Element) allprobs.item(j); 
 		              String elemname = AccessController.P_REGRADESUB + "_" + problem.getAttribute(XMLBuilder.A_SUBPROBID) + "_" + groupid;%>
 		              <input type="checkbox" name="<%=elemname%>" value="<%=elemname%>" onClick="otherClick('<%= groupid %>');">
@@ -786,7 +786,7 @@ for (int i= 0; i < numgroups; i++) {
            <td class="regrades" colspan="<%= probscol ? "5" : "4" %>">
                  <a name="comments"></a><h1>Comments
                 <span class="hide" id="comments<%= groupid %>head">
-<%	if(numcomments > 0)
+<%	if (numcomments > 0)
 	{%>
                  (<a class="hide" href="#" onClick="show('comments<%= groupid %>', '<%=numcomments%> comments', '<%=numcomments%> comments'); return false;"><%=numcomments%> comments</a>)
 <%	}

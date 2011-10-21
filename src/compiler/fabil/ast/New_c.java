@@ -2,7 +2,12 @@ package fabil.ast;
 
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.ClassBody;
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
+import polyglot.ast.Term;
+import polyglot.ast.TypeNode;
 import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
 import polyglot.util.CollectionUtil;
@@ -34,30 +39,36 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     return (New) super.objectType(tn);
   }
 
+  @Override
   public Expr label() {
     return label;
   }
   
+  @Override
   public Expr accessLabel() {
     return accessLabel;
   }
 
+  @Override
   public New_c label(Expr label) {
     New_c n = (New_c) copy();
     n.label = label;
     return n;
   }
   
+  @Override
   public New_c accessLabel(Expr accessLabel) {
     New_c n = (New_c) copy();
     n.accessLabel = accessLabel;
     return n;
   }
 
+  @Override
   public Expr location() {
     return location;
   }
 
+  @Override
   public New_c location(Expr location) {
     New_c n = (New_c) copy();
     n.location = location;
@@ -167,11 +178,6 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     return succs;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see polyglot.ast.New_c#disambiguateOverride(polyglot.ast.Node,
-   * polyglot.visit.AmbiguityRemover)
-   */
   @Override
   public Node disambiguateOverride(Node parent, AmbiguityRemover ar)
       throws SemanticException {

@@ -18,14 +18,14 @@ Element root = (Element)displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).it
       </tr>
 <% Element al = (Element)root.getElementsByTagName(XMLBuilder.TAG_CMSADMINLIST).item(0);
 NodeList adminList = al.getChildNodes();
-for(int i = 0; i < adminList.getLength(); i++)
+for (int i = 0; i < adminList.getLength(); i++)
 {
     Element item = (Element)adminList.item(i); %>
       <tr>
         <td align="left"><%= item.getAttribute(XMLBuilder.A_NETID) %></td>
         <td align="left"><%= item.getAttribute(XMLBuilder.A_NAME) %></td>
         <td align="center">
-   <% if(!p.getNetID().equals(item.getAttribute(XMLBuilder.A_NETID)))
+   <% if (!p.getNetID().equals(item.getAttribute(XMLBuilder.A_NETID)))
    	{ %>
           <a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_REMOVECMSADMIN %>&amp;<%= AccessController.P_NETID %>=<%= item.getAttribute(XMLBuilder.A_NETID) %>">remove</a>
    <% } %>

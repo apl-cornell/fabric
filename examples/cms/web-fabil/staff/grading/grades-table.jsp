@@ -82,7 +82,7 @@ var numprobs = <%= numprobs %>;
 	}%>
 <%--- ASSIGNEDTO HEADER CELLS END -----%>
 <%--- SUBPROBLEM GRADE HEADER CELLS BEGIN -----%>
-<% 	for(int j= 0; j < numprobs; j++) {
+<% 	for (int j= 0; j < numprobs; j++) {
 		Element prob= (Element)probs.item(j);
 		String text = (isAssignment) ? prob.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME()) : prob.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ORDER()); %>
 	<th nowrap align="center" class="subprob_score_cell"><%= text %></th>
@@ -267,12 +267,12 @@ for (int i= 0; i != numgroups; i++)
 <%--------------------------- Subproblem grade Columns BEGIN ---------------------------------%>
 
 <%	boolean overMaxProb = false;
-	for(int j = 0; j < numprobs; j++) {
+	for (int j = 0; j < numprobs; j++) {
 		Element prob= (Element)probs.item(j);
 		Element probGrade= (Element)group.getElementsByTagNameNS(XMLBuilder._Static._Proxy.$instance.get$TAG_GRADE() + prob.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_SUBPROBID()), XMLBuilder._Static._Proxy.$instance.get$TAG_GRADE()).item(0);
 		overMaxProb = (probGrade==null ? false : probGrade.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_OVERMAX()));%>
 	<td nowrap align="right" class="subprob_score_cell"<%= group.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_LATESUBMISSION()) ? " style=\"background-color: rgb(218, 186, 186)\"" : "" %>">
-<%		if(overMaxProb) {%>
+<%		if (overMaxProb) {%>
 		<img src="images/warning.gif" height="15px" alt="(Over Max Score)">
 <%		}%>
 		<%= probGrade == null ? " " : probGrade.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_SCORE()) %>
@@ -282,16 +282,16 @@ for (int i= 0; i != numgroups; i++)
 <%---------------------------- Subproblem grade Columns END ----------------------------------%>
 
     <td nowrap align="right"<%= lateTag %>>&nbsp;
-<%	if(status.equals(RegradeRequest._Static._Proxy.$instance.get$PENDING())) {%>
+<%	if (status.equals(RegradeRequest._Static._Proxy.$instance.get$PENDING())) {%>
       <img src="images/tag_red.gif" alt="(Regrade pending)"><%
-	} else if(status.equals(RegradeRequest._Static._Proxy.$instance.get$REGRADED())) {%>
+	} else if (status.equals(RegradeRequest._Static._Proxy.$instance.get$REGRADED())) {%>
       <img src="images/tag_orange.gif" alt="(Regraded)"><%
 	}
-	if(overMax) {%>
+	if (overMax) {%>
      <img src="images/warning.gif" height="15px" alt="(Over Max)">
 <%	} %>
 		<%= (grade == null) ? "&nbsp;" : grade.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_SCORE()) %><%
-  	if(isAveraged) {%>
+  	if (isAveraged) {%>
 		<b>~</b>
 <%	}%>
     </td>

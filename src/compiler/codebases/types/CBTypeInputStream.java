@@ -9,7 +9,6 @@ import polyglot.types.Importable;
 import polyglot.types.PlaceHolder;
 import polyglot.types.TypeObject;
 import polyglot.types.TypeSystem;
-import polyglot.util.InternalCompilerError;
 import polyglot.util.TypeInputStream;
 
 public class CBTypeInputStream extends TypeInputStream {

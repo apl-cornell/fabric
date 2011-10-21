@@ -176,7 +176,7 @@ public class CalServDeclassifier authority (CalServEP) {
 //    	  final Event[{P→;P←}]{P← ⊓ Q← ⊓ CalServEP←} event = declassify(endorse(event_,
 //    			  {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q← ⊓ CalServEP←}),
 //    			  {P→;Q→;P← ⊓ Q← ⊓ CalServEP←} to {P← ⊓ Q← ⊓ CalServEP←});
-//    	  if(event == null || event.uid == null) return null;
+//    	  if (event == null || event.uid == null) return null;
 //			final label ntimeLbl = endorse(event.timeLbl, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
 //			final label ninfoLbl = endorse(event.infoLbl, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
 //			Event$1[event.infoLbl] e1r = event.remote1;
@@ -197,7 +197,7 @@ public class CalServDeclassifier authority (CalServEP) {
 //
 //			final Event[{P→;Q→;P← ⊓ Q←}] e1 = 
 //				endorse(e1_, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
-//			if(e1 == null || e1.uid == null) return null;
+//			if (e1 == null || e1.uid == null) return null;
 //			int muid_ = endorse(e1.uid.uid, {P→;Q→;CalServEP→;Q←;CalServEP←} to {P→;Q→;CalServEP→;P← ⊓ Q← ⊓ CalServEP←});
 //			int muid = declassify(muid_, {P→;Q→;CalServEP→;P← ⊓ Q← ⊓ CalServEP←} to {Q→;Q←;CalServEP→;CalServEP←});
 //
@@ -230,7 +230,7 @@ public class CalServDeclassifier authority (CalServEP) {
 //      public static ShowCalendarSessAction[{Q←}]{Q←} handOverSessionAction{Q←}(ShowCalendarSessAction[{P←}]{P←} scsa_, principal{P←} P, principal{Q←} Q) 
 //      where Q actsfor P, caller(Q) {
 //    	  ShowCalendarSessAction[{P←}]{Q←} scsa = endorse(scsa_, {P←} to {Q←});
-//    	  if(scsa == null) return null;
+//    	  if (scsa == null) return null;
 //    	    final Input[CalServEP]{Q←} displayDateInput = endorse(scsa.displayDateInput, {P←} to {Q←});
 //    	    final Input[CalServEP]{Q←} displayKindInput = endorse(scsa.displayKindInput, {P←} to {Q←});
 //    	    final Input[CalServEP]{Q←} eventIDInput = endorse(scsa.eventIDInput, {P←} to {Q←});
@@ -249,7 +249,7 @@ public class CalServDeclassifier authority (CalServEP) {
       
 //      public static ShowCalendarSessAction[{P←}]{P←} declassifySCSA{P←}(ShowCalendarSessAction[{P→;P←}]{P→;P←} scsa_, principal{P→;P←} P) where caller(P) {
 //    	  ShowCalendarSessAction[{P→;P←}]{P←} scsa = declassify(scsa_, {P→;P←} to {P←});
-//    	  if(scsa == null) return null;
+//    	  if (scsa == null) return null;
 //  	    final Input[CalServEP]{P←} displayDateInput = declassify(scsa.displayDateInput, {P→;P←} to {P←});
 //	    final Input[CalServEP]{P←} displayKindInput = declassify(scsa.displayKindInput, {P→;P←} to {P←});
 //	    final Input[CalServEP]{P←} eventIDInput = declassify(scsa.eventIDInput, {P→;P←} to {P←});
@@ -274,7 +274,7 @@ public class CalServDeclassifier authority (CalServEP) {
       
 //      public static CreateEditEvent[{P←}]{P←} declassifyCEE{P←}(CreateEditEvent[{P→;P←}]{P→;P←} cee_, principal{P→;P←} P) where caller(P) {
 //    	  CreateEditEvent[{P→;P←}]{P←} cee = declassify(cee_, {P→;P←} to {P←});
-//    	  if(cee == null) return null;
+//    	  if (cee == null) return null;
 //    	  final boolean{P←} isReadOnly = declassify(cee.isReadOnly, {P→;P←} to {P←});
 //    	  final boolean{P←} isCreate = declassify(cee.isCreate, {P→;P←} to {P←});
 //    	  final Event[{P←}]{P←} event = declassifyEvent(P, cee.event);
@@ -302,7 +302,7 @@ public class CalServDeclassifier authority (CalServEP) {
       public static State[{Q←}]{Q←} declassifyState{Q←}(State[{P→;P←}]{P→;P←} state_, principal{P→;P←} P, principal{P→;P←} Q) where Q actsfor P, caller(Q) {
 //    	  final State[{P→;P←}] state__ = endorse(state_, {P→;P←} to {P→;Q←}); 
 //    	  final State[{P→;P←}]{Q←} state = declassify(state__, {P→;Q←} to {Q←});
-//    	  if(state == null) return null;
+//    	  if (state == null) return null;
 //    	    final User[CalServEP, {P→;Q←}] currentUser_ = User.endorseUser(CalServEP, P, Q, state.currentUser);
 //    	    final User[CalServEP, {Q←}] currentUser1 = User.declassifyUser(CalServEP, P, Q, currentUser_);
 //    	    final User[CalServEP, {P→;P←}] stateCurrentUser = state.currentUser;
@@ -342,7 +342,7 @@ public class CalServDeclassifier authority (CalServEP) {
     		  Event[{P→;Q→}]{P→;Q→} event_)
     		  where caller(P,Q), Q equiv CalServEP {
 //    	  final Event[{P→;Q→}]{Q→;P←⊓Q←} event = declassify(endorse(event_, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;P← ⊓ Q←});
-//    	  if(event == null || event.uid == null) return null;
+//    	  if (event == null || event.uid == null) return null;
 //			final label ntimeLbl = declassify(endorse(event.timeLbl, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
 //			final label ninfoLbl = declassify(endorse(event.infoLbl, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
 //			Event$1[event.infoLbl] e1r = event.remote1;
@@ -370,7 +370,7 @@ public class CalServDeclassifier authority (CalServEP) {
     		  authority(CalServEP),
     		  endorse({P←⊓CalServEP←}) {
 //    	  final Event[{P→;P←}] event = endorse(declassify(event_, {P→;P←} to {P←}), {P←} to {P←⊓CalServEP←});
-//    	  if(event == null || event.uid == null) return null;
+//    	  if (event == null || event.uid == null) return null;
 //			final label ntimeLbl = declassify(event.timeLbl, {P→;P←} to {P←});
 //			final label ninfoLbl = declassify(event.infoLbl, {P→;P←} to {P←});
 //			Event$1[event.infoLbl] e1r = event.remote1;

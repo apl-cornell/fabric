@@ -3,7 +3,11 @@ package fabil.extension;
 import java.util.Collections;
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Block;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
+import polyglot.ast.MethodDecl;
+import polyglot.ast.Node;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
@@ -12,11 +16,6 @@ import fabil.visit.ThreadRewriter;
 
 public class MethodDeclExt_c extends ClassMemberExt_c {
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.extension.ClassMemberExt#implMember(fabil.visit.ProxyRewriter,
-   * polyglot.ast.ClassDecl)
-   */
   @Override
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     // Leave private methods as is. Otherwise, since the Impl will implement an
@@ -26,17 +25,11 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
       Flags flags = ProxyRewriter.toPublic(result.flags());
       result = result.flags(flags);
     }
-    if(result.flags().isNative())
+    if (result.flags().isNative())
       result = (MethodDecl) result.body(null);
     return Collections.singletonList((ClassMember) result);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * fabil.extension.ClassMemberExt#interfaceMember(fabil.visit.ProxyRewriter,
-   * polyglot.ast.ClassDecl)
-   */
   @Override
   public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
     MethodDecl methodDecl = node();
@@ -53,11 +46,6 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     return Collections.singletonList(result);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabil.extension.ClassMemberExt#proxyMember(fabil.visit.ProxyRewriter,
-   * polyglot.ast.ClassDecl)
-   */
   @Override
   public List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent) {
     // Proxy methods will be added based on the method instances in the class
@@ -84,10 +72,6 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     return method.body(body);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public MethodDecl node() {
     return (MethodDecl) super.node();

@@ -11,8 +11,8 @@
 */
 function setCookie(name, value, expires)
 {
-	if(value == null) value = '';
-	if(expires == null)
+	if (value == null) value = '';
+	if (expires == null)
 	{
 		//I think this is a couple weeks before end of epoch -- Evan
 		expires = new Date();

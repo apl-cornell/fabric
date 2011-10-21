@@ -11,6 +11,7 @@ public class HandshakeUnauthenticated implements Protocol {
   // client -> server : name
   //
   
+  @Override
   public ShakenSocket initiate(String name, Socket s) throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
     out.writeUTF(name);
@@ -18,6 +19,7 @@ public class HandshakeUnauthenticated implements Protocol {
     return new ShakenSocket(name, null, s);
   }
 
+  @Override
   public ShakenSocket receive(Socket s) throws IOException {
     DataInputStream in = new DataInputStream(s.getInputStream());
     String name = in.readUTF();

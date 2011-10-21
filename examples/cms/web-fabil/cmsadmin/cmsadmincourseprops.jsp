@@ -20,7 +20,7 @@ String courseid = course.getAttribute(XMLBuilder.A_COURSEID); %>
 <% Element l= (Element) course.getElementsByTagName(XMLBuilder.TAG_DESCRIPTION).item(0); 
 Text text= (Text)l.getFirstChild();%>
         <input type="hidden" name="<%= AccessController.P_DESCRIPTION %>" value="<%= text.getData() %>">
-<% if(Boolean.valueOf(course.getAttribute(XMLBuilder.A_SHOWGRADERID)).booleanValue())
+<% if (Boolean.valueOf(course.getAttribute(XMLBuilder.A_SHOWGRADERID)).booleanValue())
 { %>
         <input type="hidden" name="<%= AccessController.P_SHOWGRADERID %>"><%
 } //else no set command is necessary %>

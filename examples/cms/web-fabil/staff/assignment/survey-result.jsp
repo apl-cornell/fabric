@@ -34,7 +34,7 @@ assignmentType = (assignType == Assignment.QUIZ) ? "Quiz" : "Survey";
   			if (toggleTxt == "show result") toggleLink.firstChild.nodeValue = "hide result";
   			else toggleLink.firstChild.nodeValue = "show result";
   			
-  			for(var i = 0; i < resultRowIDs.length; i++) {
+  			for (var i = 0; i < resultRowIDs.length; i++) {
   				var tr = document.getElementById(resultRowIDs[i]);
   				if (tr.style.display == "none") tr.style.display = "table-row";
   				else tr.style.display = "none";

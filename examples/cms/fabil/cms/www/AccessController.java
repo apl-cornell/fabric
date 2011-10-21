@@ -924,7 +924,7 @@ public class AccessController extends HttpServlet {
       root = (Map) core.getRoot();
       
       database = (CMSRoot)root.get(name);
-      if(database == null) {
+      if (database == null) {
         // create and add test data
         config.getServletContext().log("No CMSRoot found, creating");
         database = new CMSRoot~label@core();
@@ -1690,17 +1690,17 @@ public class AccessController extends HttpServlet {
           entry = database.getCommentFile(id);
           break;
         } */
-        if(type == XMLBuilder.T_SOLFILE) 
+        if (type == XMLBuilder.T_SOLFILE) 
           entry = database.getSolutionFile(id);
-        else if(type == XMLBuilder.T_ITEMFILE) 
+        else if (type == XMLBuilder.T_ITEMFILE) 
           entry = database.getAssignmentItem(id).getAssignmentFile();
-        else if(type == XMLBuilder.T_FILEFILE)
+        else if (type == XMLBuilder.T_FILEFILE)
           entry = database.getAssignmentFile(id);
-        else if(type ==  XMLBuilder.T_GROUPFILE)
+        else if (type ==  XMLBuilder.T_GROUPFILE)
           entry = database.getSubmittedFile(id);
-        else if(type == XMLBuilder.T_CATFILE)
+        else if (type == XMLBuilder.T_CATFILE)
           entry = database.getCategoryContentsFileEntry(id);
-        else if(type == XMLBuilder.T_COMMENTFILE)
+        else if (type == XMLBuilder.T_COMMENTFILE)
           entry = database.getCommentFile(id);
          
         if (entry.isFileAuthorized(user)) {
@@ -1732,7 +1732,7 @@ public class AccessController extends HttpServlet {
       if (user.isAdminPrivByCourse(course)) {
         List netids = StringUtil.parseNetIDList(netIDs);
         List nNetIds = new ArrayList~label@core();
-        for(fabric.util.Iterator ni = netids.iterator(); ni.hasNext();) {
+        for (fabric.util.Iterator ni = netids.iterator(); ni.hasNext();) {
           nNetIds.add((String)ni.next());
         }
         TransactionResult result =
@@ -2962,7 +2962,7 @@ public class AccessController extends HttpServlet {
     Iterator i = request.getParameterMap().keySet().iterator();
     while(i.hasNext()) {
       String param = ((String)i.next()).trim();
-      if(param.startsWith(P_GRADEGROUP)) {
+      if (param.startsWith(P_GRADEGROUP)) {
         Group group = (Group)getGroup(param.split(P_GRADEGROUP)[1]);
         if (group != null)
           result.add(group);

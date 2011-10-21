@@ -1,16 +1,15 @@
 package fabil.visit;
 
-import codebases.frontend.CodebaseSource;
-import codebases.types.CodebaseClassType;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.qq.QQ;
 import polyglot.types.ParsedClassType;
 import polyglot.visit.NodeVisitor;
+import codebases.frontend.CodebaseSource;
+import codebases.types.CodebaseClassType;
 import fabil.ExtensionInfo;
 import fabil.ast.FabILNodeFactory;
 import fabil.ast.ProviderLabel;
-import fabil.types.FabILParsedClassType_c;
 import fabil.types.FabILTypeSystem;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
@@ -44,7 +43,7 @@ public class ProviderRewriter extends NodeVisitor {
     }
     ProviderLabel pl = (ProviderLabel) n;
     CodebaseClassType ct = (CodebaseClassType) pl.typeNode().type();    
-    if(ct instanceof ParsedClassType && Worker.isInitialized()) {
+    if (ct instanceof ParsedClassType && Worker.isInitialized()) {
       CodebaseSource src = (CodebaseSource) ((ParsedClassType) ct).fromSource();
       
       Codebase cb = ts.codebaseFromNS(src.canonicalNamespace());

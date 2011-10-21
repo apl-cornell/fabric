@@ -3,7 +3,12 @@ package fabil.extension;
 import java.util.ArrayList;
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Expr;
+import polyglot.ast.Field;
+import polyglot.ast.FieldAssign;
+import polyglot.ast.Id;
+import polyglot.ast.Receiver;
+import polyglot.ast.Special;
 import polyglot.types.Flags;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ReadWriteChecker.State;
@@ -16,11 +21,6 @@ public class FieldAssignExt_c extends ExprExt_c {
    */
   private State accessState;
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter pr) {
     FieldAssign assign = node();
@@ -81,11 +81,6 @@ public class FieldAssignExt_c extends ExprExt_c {
     return pr.qq().parseExpr(quote + "." + setterName + "(%E)", subs);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public FieldAssign node() {
     return (FieldAssign) super.node();

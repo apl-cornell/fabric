@@ -1,14 +1,24 @@
 package fabric.store;
 
 
+import static fabric.common.Logging.STORE_REQUEST_LOGGER;
+import static fabric.common.ONumConstants.STORE_PRINCIPAL;
+
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.logging.Level;
 
-import fabric.common.*;
+import fabric.common.ConfigProperties;
+import fabric.common.Crypto;
+import fabric.common.KeyMaterial;
+import fabric.common.Logging;
+import fabric.common.ObjectGroup;
+import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.InternalError;
@@ -20,21 +30,27 @@ import fabric.common.net.handshake.HandshakeComposite;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.DefaultNameService;
-import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.DefaultNameService.PortType;
+import fabric.common.net.naming.NameService;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
-import fabric.messages.*;
+import fabric.messages.AbortTransactionMessage;
+import fabric.messages.AllocateMessage;
+import fabric.messages.CommitTransactionMessage;
+import fabric.messages.DissemReadMessage;
+import fabric.messages.GetCertChainMessage;
+import fabric.messages.MakePrincipalMessage;
+import fabric.messages.MessageToStoreHandler;
+import fabric.messages.PrepareTransactionMessage;
+import fabric.messages.ReadMessage;
+import fabric.messages.StalenessCheckMessage;
 import fabric.store.db.ObjectDB;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
-
-import static fabric.common.Logging.STORE_REQUEST_LOGGER;
-import static fabric.common.ONumConstants.STORE_PRINCIPAL;
 
 class Store extends MessageToStoreHandler {
   public final Node               node;
@@ -254,6 +270,7 @@ class Store extends MessageToStoreHandler {
     // Create a principal object on the store and get the resulting object's
     // onum.
     long principalOnum = Worker.runInTransaction(null, new Code<Long>() {
+      @Override
       public Long run() {
         NodePrincipal principal =
             new NodePrincipal._Impl(store, null, null, null);

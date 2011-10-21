@@ -3,15 +3,19 @@ package fabric.lang.arrays.internal;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
-import fabric.worker.Store;
-import fabric.worker.transaction.TransactionManager;
 import fabric.common.RefTypeEnum;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.security.Label;
+import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
 
 public interface _ObjectArray<T extends Object> extends Object {
   int get$length();
@@ -114,32 +118,20 @@ public interface _ObjectArray<T extends Object> extends Object {
       throw new InternalError("Error finding _Proxy class in " + c);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.ObjectArray#getLength()
-     */
+    @Override
     public int get$length() {
       TransactionManager.getInstance().registerRead(this);
       return value.length;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.ObjectArray#get(int)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public T get(int i) {
       TransactionManager.getInstance().registerRead(this);
       return (T) value[i];
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.ObjectArray#set(int, fabric.lang.Object)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public T set(int i, T value) {
       boolean transactionCreated =
@@ -150,11 +142,6 @@ public interface _ObjectArray<T extends Object> extends Object {
       return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.Object._Impl#$copyAppStateFrom(fabric.lang.Object._Impl)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public void $copyAppStateFrom(Object._Impl other) {
@@ -163,25 +150,16 @@ public interface _ObjectArray<T extends Object> extends Object {
       value = src.value;
     }
 
+    @Override
     public void cloneValues() {
       value = value.clone();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.Object._Impl#$makeProxy()
-     */
     @Override
     protected _ObjectArray._Proxy<T> $makeProxy() {
       return new _ObjectArray._Proxy<T>(this);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.Object._Impl#$serialize(java.io.ObjectOutput)
-     */
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
@@ -206,31 +184,19 @@ public interface _ObjectArray<T extends Object> extends Object {
       super(impl);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.ObjectArray#getLength()
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public int get$length() {
       return ((_ObjectArray<T>) fetch()).get$length();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.ObjectArray#get(int)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public T get(int i) {
       return ((_ObjectArray<T>) fetch()).get(i);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.ObjectArray#set(int, fabric.lang.Object)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public T set(int i, T value) {
       return ((_ObjectArray<T>) fetch()).set(i, value);

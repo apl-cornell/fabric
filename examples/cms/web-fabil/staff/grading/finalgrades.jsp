@@ -37,7 +37,7 @@ NodeList students = XMLUtil.getChildrenByTagName(root, XMLBuilder.TAG_STUDENT);
             <th>Grade Option</th>
             <th>Credit Hours</th>
           </tr>
-          <% for(int i=0; i < students.getLength(); i++) {
+          <% for (int i=0; i < students.getLength(); i++) {
               Element student = (Element) students.item(i); %>
               <tr>
                 <% if (isStaff) { %><td><%= student.getAttribute(XMLBuilder.A_FINALGRADE) %></td><% } %>  

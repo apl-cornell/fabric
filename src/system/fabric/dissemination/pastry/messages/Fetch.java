@@ -9,8 +9,8 @@ import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
-import fabric.worker.Worker;
 import fabric.dissemination.Glob;
+import fabric.worker.Worker;
 
 /**
  * A Fetch message represents a request to fetch a particular object.
@@ -75,6 +75,7 @@ public class Fetch implements RawMessage {
     this.reply = reply;
   }
   
+  @Override
   public int getPriority() {
     return MEDIUM_PRIORITY;
   }
@@ -84,10 +85,12 @@ public class Fetch implements RawMessage {
     return store + "/" + onum;
   }
 
+  @Override
   public short getType() {
     return MessageType.FETCH;
   }
 
+  @Override
   public void serialize(OutputBuffer buf) throws IOException {
     buf.writeShort(id.getType());
     id.serialize(buf);
@@ -146,14 +149,17 @@ public class Fetch implements RawMessage {
       return onum;
     }
 
+    @Override
     public int getPriority() {
       return MEDIUM_PRIORITY;
     }
 
+    @Override
     public short getType() {
       return MessageType.FETCH_REPLY;
     }
 
+    @Override
     public void serialize(OutputBuffer buf) throws IOException {
       DataOutputBuffer out = new DataOutputBuffer(buf);
       out.writeShort(id.getType());

@@ -2883,7 +2883,7 @@ public class AccessController extends HttpServlet {
     Iterator i = request.getParameterMap().keySet().iterator();
     while(i.hasNext()) {
       String param = ((String)i.next()).trim();
-      if(param.startsWith(P_GRADEGROUP)) {
+      if (param.startsWith(P_GRADEGROUP)) {
         Group group = getGroup(param.split(P_GRADEGROUP)[1]);
         if (group != null)
           result.add(group);

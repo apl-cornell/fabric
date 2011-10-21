@@ -17,7 +17,7 @@ NodeList actions = root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance
 </style>
 <h2>Recent Servlet Requests</h2>
 <br>
-<% for(int j=0; j < actions.getLength(); j++) {
+<% for (int j=0; j < actions.getLength(); j++) {
 	Element action = (Element) actions.item(j);
 	NodeList calls = action.getChildNodes(); %>
 	<table cellpadding="0" cellspacing="1" border="1" width="90%">
@@ -25,7 +25,7 @@ NodeList actions = root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance
 			<th>Method Name</th><th>IN/OUT</th><th>Context</th>
 			<th>Total Time</th><th>Portion of Total Response Time</th><th>Time</th>
 		</tr>
-		<% for(int i=0; i < calls.getLength(); i++) { 
+		<% for (int i=0; i < calls.getLength(); i++) { 
 			Element method = (Element) calls.item(i); 
 			String type = method.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_TYPE());
 			boolean IN = type != null && type.equals("IN"); %>

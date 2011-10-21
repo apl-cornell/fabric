@@ -104,7 +104,7 @@ used in both the staff/courseprops and cmsadmin/cmsadmincourseprops pages
    */
   function adminClick(id, isnew) {
     var groups, grades, assigns, ctgs;
-    if(isnew)
+    if (isnew)
     {
       groups = '<%= AccessController.P_NEWGROUPS %>' + id;
       grades = '<%= AccessController.P_NEWGRADES %>' + id;

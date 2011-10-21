@@ -82,6 +82,7 @@ public abstract class AbstractLongCollection
    *
    * @return an iterator
    */
+  @Override
   public abstract LongIterator iterator();
 
   /**
@@ -90,6 +91,7 @@ public abstract class AbstractLongCollection
    *
    * @return the size
    */
+  @Override
   public abstract int size();
 
   /**
@@ -108,6 +110,7 @@ public abstract class AbstractLongCollection
    * @throws IllegalArgumentException if some aspect of the object prevents
    *         it from being added
    */
+  @Override
   public boolean add(long o)
   {
     throw new UnsupportedOperationException();
@@ -136,6 +139,7 @@ public abstract class AbstractLongCollection
    *         collection doesn't allow null values.
    * @see #add(long)
    */
+  @Override
   public boolean addAll(LongCollection c)
   {
     LongIterator itr = c.iterator();
@@ -158,6 +162,7 @@ public abstract class AbstractLongCollection
    *         iterator does not provide an implementation of remove
    * @see LongIterator#remove()
    */
+  @Override
   public void clear()
   {
     LongIterator itr = iterator();
@@ -180,6 +185,7 @@ public abstract class AbstractLongCollection
    * @param o the object to remove from this collection
    * @return true if this collection contains an object equal to o
    */
+  @Override
   public boolean contains(long o)
   {
     LongIterator itr = iterator();
@@ -202,6 +208,7 @@ public abstract class AbstractLongCollection
    * @throws NullPointerException if the given collection is null
    * @see #contains(long)
    */
+  @Override
   public boolean containsAll(LongCollection c)
   {
     LongIterator itr = c.iterator();
@@ -219,6 +226,7 @@ public abstract class AbstractLongCollection
    * @return true if this collection is empty.
    * @see #size()
    */
+  @Override
   public boolean isEmpty()
   {
     return size() == 0;
@@ -243,6 +251,7 @@ public abstract class AbstractLongCollection
    *         does not support the remove method
    * @see LongIterator#remove()
    */
+  @Override
   public boolean remove(long o)
   {
     LongIterator itr = iterator();
@@ -271,6 +280,7 @@ public abstract class AbstractLongCollection
    * @throws NullPointerException if the collection, c, is null.
    * @see LongIterator#remove()
    */
+  @Override
   public boolean removeAll(LongCollection c)
   {
     return removeAllInternal(c);
@@ -322,6 +332,7 @@ public abstract class AbstractLongCollection
    * @throws NullPointerException if the collection, c, is null.
    * @see LongIterator#remove()
    */
+  @Override
   public boolean retainAll(LongCollection c)
   {
     return retainAllInternal(c);
@@ -368,6 +379,7 @@ public abstract class AbstractLongCollection
    *
    * @return an array containing the elements of this collection
    */
+  @Override
   public long[] toArray()
   {
     LongIterator itr = iterator();
@@ -400,6 +412,7 @@ public abstract class AbstractLongCollection
    * @throws ArrayStoreException if the type of the array precludes holding
    *         one of the elements of the Collection
    */
+  @Override
   public long[] toArray(long[] a)
   {
     int size = size();

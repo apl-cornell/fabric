@@ -77,7 +77,7 @@ abstract public class Servlet extends HttpServlet {
         
         String colorCoding = getInitParameter("color_coding");
         String colorCodingFile;
-        if(colorCoding!=null && colorCoding.equals("true")) {
+        if (colorCoding!=null && colorCoding.equals("true")) {
         	colorCodingFile = relURLToAbsURL("../preamble.js", req);
         } else {
         	colorCodingFile = null;
@@ -98,7 +98,7 @@ abstract public class Servlet extends HttpServlet {
         scriptFile = relURLToAbsURL(scriptFile, req);
         String colorCoding = getInitParameter("color_coding");
         String colorCodingFile;
-        if(colorCoding!=null && colorCoding.equals("true")) {
+        if (colorCoding!=null && colorCoding.equals("true")) {
         	colorCodingFile = relURLToAbsURL("../preamble.js", req);
         } else {
         	colorCodingFile = null;
@@ -142,7 +142,7 @@ abstract public class Servlet extends HttpServlet {
 //        long label_time = LabelUtil.singleton().getAndClearTime();
 //        int count = LabelUtil.singleton().getAndClearCount(), topCount = LabelUtil.singleton().getAndClearTopCount();
 
-//        if(label_time != 0 || count != 0 || topCount != 0) {
+//        if (label_time != 0 || count != 0 || topCount != 0) {
 //            System.err.println("SIF: Something is seriously wrong");
 //        }
 
@@ -231,7 +231,7 @@ abstract public class Servlet extends HttpServlet {
         else {
             Action a = this.findDefaultAction(req);
             if (a != null) {
-                if(req.isParamEmpty()) {
+                if (req.isParamEmpty()) {
                     // assuming that this is the first of a series of requests from the user, so there is no history
                     // and is trusted to have been sent by the session principal and not modified by anyone else
                     // ideally this might have to be 'met' with {servP!:} to ensure that servP believes so

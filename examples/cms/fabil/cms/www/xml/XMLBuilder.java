@@ -1150,7 +1150,7 @@ public class XMLBuilder {
    */
   public Document buildOverview(User user, Semester sem) {
     boolean hasSem = sem != null;
-    if(hasSem)
+    if (hasSem)
       Profiler.enterMethod("XMLBuilder.buildOverview", "SemesterID: " + sem.toString());
     Document xml = hasSem ? buildPageHeader(user, sem) : buildPageHeader(user);
     Element root = (Element) xml.getElementsByTagName(TAG_ROOT).item(0);
@@ -1232,7 +1232,7 @@ public class XMLBuilder {
       xSemester.setAttribute(A_NAME, semester.getName());
       root.appendChild(xSemester);
     }
-    if(hasSem)
+    if (hasSem)
       Profiler.exitMethod("XMLBuilder.buildOverview", "SemesterID: " + sem.toString());
     return xml;
   }
@@ -1944,7 +1944,7 @@ public class XMLBuilder {
     Document xml = buildPageHeader(user);
     Element root = (Element) xml.getFirstChild();
     root.setAttribute(A_CONFIRMTYPE, String.valueOf(confirm_type));
-    if(confirm_type == CONFIRM_ASSIGNINFO) //assignment-specific operations
+    if (confirm_type == CONFIRM_ASSIGNINFO) //assignment-specific operations
     {
       Assignment assign = (Assignment) data;
       Course course     = assign.getCourse();
@@ -1952,7 +1952,7 @@ public class XMLBuilder {
       root.appendChild(xCourse);
       root.setAttribute(A_ASSIGNID, assign.toString());
     }
-    else if(confirm_type == CONFIRM_COURSEINFO || confirm_type == CONFIRM_FINALGRADES) //course-specific operations
+    else if (confirm_type == CONFIRM_COURSEINFO || confirm_type == CONFIRM_FINALGRADES) //course-specific operations
     {
       Course course = (Course) data;
       Element xCourse = courseXMLBuilder.buildFullSubtree(user, xml, course);

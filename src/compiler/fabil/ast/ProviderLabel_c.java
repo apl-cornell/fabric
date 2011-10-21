@@ -2,8 +2,6 @@ package fabil.ast;
 
 import java.util.List;
 
-import fabil.types.FabILTypeSystem;
-
 import polyglot.ast.Expr_c;
 import polyglot.ast.Node;
 import polyglot.ast.Term;
@@ -12,6 +10,7 @@ import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.TypeChecker;
+import fabil.types.FabILTypeSystem;
 
 /**
  * AST node implementation for representing the provider label for a class.
@@ -28,6 +27,7 @@ public class ProviderLabel_c extends Expr_c implements ProviderLabel {
     this.tn = tn;
   }
 
+  @Override
   public TypeNode typeNode() {
     return tn;
   }
@@ -43,6 +43,7 @@ public class ProviderLabel_c extends Expr_c implements ProviderLabel {
     return type(ts.Label());
   }
 
+  @Override
   public Term firstChild() {
     return null;
   }

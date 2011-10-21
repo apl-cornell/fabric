@@ -12,7 +12,6 @@ import polyglot.types.LazyClassInitializer;
 import polyglot.types.MethodInstance;
 import polyglot.types.Type;
 import codebases.frontend.CodebaseSource;
-import codebases.types.CodebaseClassType;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements FabricParsedClassType {
   private transient Label singleFieldLabel = null;
@@ -36,11 +35,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
       throw new NullPointerException("fromSource cannot be null!");
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.types.ClassType_c#descendsFromImpl(polyglot.types.Type)
-   */
   @Override
   public boolean descendsFromImpl(Type ancestor) {
     FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
@@ -217,7 +211,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   public URI canonicalNamespace() {
     // HACK superclass constructor accesses canonical namespace before it can be
     // initialized.
-    if(canonical_ns == null)
+    if (canonical_ns == null)
       canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
     return canonical_ns;
   }

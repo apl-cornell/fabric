@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.util.Iterator;
 
-import fabric.worker.Worker;
-import fabric.worker.Store;
 import fabric.common.RefTypeEnum;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 public interface DelegatingPrincipal extends Principal {
   void addDelegatesTo(Principal p);
@@ -24,10 +24,12 @@ public interface DelegatingPrincipal extends Principal {
       super(store, onum);
     }
 
+    @Override
     public void addDelegatesTo(Principal p) {
       ((DelegatingPrincipal) fetch()).addDelegatesTo(p);
     }
 
+    @Override
     public void removeDelegatesTo(Principal p) {
       ((DelegatingPrincipal) fetch()).removeDelegatesTo(p);
     }
@@ -62,8 +64,10 @@ public interface DelegatingPrincipal extends Principal {
       return p;
     }
     
+    @Override
     public abstract void addDelegatesTo(Principal p);
     
+    @Override
     public abstract void removeDelegatesTo(Principal p);
   }
 }

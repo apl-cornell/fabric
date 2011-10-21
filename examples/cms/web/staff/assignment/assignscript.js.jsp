@@ -101,14 +101,14 @@ function checkData()
       } 
     } else if (name == '<%= AccessController.P_DUEDATE %>') {
     	duedate = parseDate(value);
-    	if(duedate == null) errors[e++] = "Due date is not in proper format.";
+    	if (duedate == null) errors[e++] = "Due date is not in proper format.";
     	//in case the date is in a format parsable by our Javascript but not our Java code
     	else getElementById('datebox').value = formatDate(duedate, 'MMM dd, yyyy');
     }
     else if (name == '<%= AccessController.P_DUETIME %>')
     {
     	duetime = value;
-      if(duetime == null || parseTime(duetime, 'Due time') == null)
+      if (duetime == null || parseTime(duetime, 'Due time') == null)
       	errors[e++]= "Due time is not in proper format.";
     }
     else if (name == '<%= AccessController.P_GRACEPERIOD %>') {
@@ -197,28 +197,28 @@ function checkData()
    * note we've already made sure the various dates and times are correctly formatted
    */
 /*  This warning is not really necessary
-	if(dateIsBeforeDateObj(duedate, duetime + ' ' + dueampm, new Date(), 'Due time'))
+	if (dateIsBeforeDateObj(duedate, duetime + ' ' + dueampm, new Date(), 'Due time'))
   	warnings[w++] = "Due date/time is in the past.";*/
-  if(lateallowed == '<%= AccessController.ONE %>')
+  if (lateallowed == '<%= AccessController.ONE %>')
   {
-  	if(latedate == null) //parseDate() couldn't parse
+  	if (latedate == null) //parseDate() couldn't parse
   		errors[e++] = "Late submission date is not in proper format.";
   	//in case the date is in a format parsable by our Javascript but not our Java code
   	else getElementById('latebox').value = formatDate(latedate, 'MMM dd, yyyy');
-  	if(latetime == null || parseTime(latetime, 'Late submission time') == null)
+  	if (latetime == null || parseTime(latetime, 'Late submission time') == null)
   		errors[e++]= "Late submission time is not in proper format.";
-  	if(dateIsBeforeFormInput(latedate, latetime + ' ' + lateampm, 'Late submission date', duedate, duetime + ' ' + dueampm, 'Due time'))
+  	if (dateIsBeforeFormInput(latedate, latetime + ' ' + lateampm, 'Late submission date', duedate, duetime + ' ' + dueampm, 'Due time'))
   		errors[e++] = "Late submission date is before due date.";
   }
-  if(regrades == '<%= AccessController.ONE %>')
+  if (regrades == '<%= AccessController.ONE %>')
   {
-  	if(regradedate == null)
+  	if (regradedate == null)
   		errors[e++] = "Regrade submission date is not in proper format.";
   	//in case the date is in a format parsable by our Javascript but not our Java code
   	else getElementById('regradebox').value = formatDate(regradedate, 'MMM dd, yyyy');
-  	if(regradetime == null || parseTime(regradetime, 'Regrade submission time') == null)
+  	if (regradetime == null || parseTime(regradetime, 'Regrade submission time') == null)
   		errors[e++]= "Regrade submission time is not in proper format.";
-  	if(dateIsBeforeFormInput(regradedate, regradetime + ' ' + regradeampm, 'Regrade submission date', duedate, duetime + ' ' + dueampm, 'Due time'))
+  	if (dateIsBeforeFormInput(regradedate, regradetime + ' ' + regradeampm, 'Regrade submission date', duedate, duetime + ' ' + dueampm, 'Due time'))
   		errors[e++] = "Regrade submission date is before due date.";
   }
   	
@@ -237,19 +237,19 @@ function checkData()
     }
   }
   var message = "";
-  if(warnings.length > 0)
+  if (warnings.length > 0)
   {
   	message += "Questionable input (won't stop form submission):\n";
-  	for(i = 0; i < warnings.length; i++)
+  	for (i = 0; i < warnings.length; i++)
   		message += (i + 1) + ". " + warnings[i] + "\n";
   }
   if (errors.length > 0)
   {
     message += "Invalid input (must be fixed now):\n";
-    for(i = 0; i < errors.length; i++)
+    for (i = 0; i < errors.length; i++)
       message += (i + 1) + ". " + errors[i] + "\n";
   }
-  if(message.length > 0) alert(message);
+  if (message.length > 0) alert(message);
   return errors.length == 0;
 }
       
@@ -535,7 +535,7 @@ function moveUp(rowID)
 {
   var row= getElementById(rowID);
   var questtable= getElementById('questtable');
-  if(row.rowIndex > 1)
+  if (row.rowIndex > 1)
   {
 	  row.parentNode.insertBefore(row, questtable.rows[row.rowIndex - 1]); 
   }
@@ -546,7 +546,7 @@ function moveDown(rowID)
 {
   var row= getElementById(rowID);
   var questtable= getElementById('questtable');
-  if(row.rowIndex < questtable.rows.length - 1)
+  if (row.rowIndex < questtable.rows.length - 1)
   {
 	  row.parentNode.insertBefore(row, questtable.rows[row.rowIndex + 2]); 
   }
@@ -556,7 +556,7 @@ function moveDown(rowID)
 function renumberQuestions()
 {
   var questtable= getElementById('questtable');
-  for(var i = 1; i < questtable.rows.length; i++)
+  for (var i = 1; i < questtable.rows.length; i++)
   {
 	  questtable.rows[i].cells[0].innerHTML = i + '.'; 
   }
@@ -652,7 +652,7 @@ function makeQuestRow(hasScore) {
   var score= document.createElement('input');
   score.id = "subprobscore" + subID;
   scoreInputs[scoreInputs.length] = score.id;
-  if(hasScore)
+  if (hasScore)
   {
 	  score.setAttribute('type','text');
 	  score.setAttribute('size', '3');
@@ -669,7 +669,7 @@ function makeQuestRow(hasScore) {
   score.onkeyup = new Function('updateTotalScore(); return false;');
   scoreInputs.push(scoreID);
   
-  if(hasScore)
+  if (hasScore)
   {
     cell= document.createElement('td');
     cell.style.textAlign= 'center';
@@ -684,7 +684,7 @@ function makeQuestRow(hasScore) {
   cell.style.whiteSpace = 'nowrap';
   txt= makeQuestRemoveLink();
   cell.appendChild(txt);
-  if(!hasScore)
+  if (!hasScore)
   {
   	cell.appendChild(score);
   }
@@ -708,7 +708,7 @@ function addChoice(cellId, questindex, isNew) {
   
   var choiceDivID = "choice_" + questindex + "_" + choiceindex[questindex];
 
-  if(isNew)
+  if (isNew)
 	  correct.setAttribute('name','<%= AccessController.P_NEWCORRECTCHOICE %>' +  + questindex);
   else
 	 correct.setAttribute('name','<%= AccessController.P_CORRECTCHOICE %>' +  + questindex);
@@ -760,7 +760,7 @@ function addChoice(cellId, questindex, isNew) {
 			var sum = 0;
 			
 			// collect all active input fields on the page
-			for(var i = 0; i < numSubProblems; i++) {
+			for (var i = 0; i < numSubProblems; i++) {
 				var inputField = document.getElementById(scoreInputs[i]);
 				if (inputField == null && inputField == undefined) {
 					sum += 0;
@@ -778,7 +778,7 @@ function addChoice(cellId, questindex, isNew) {
 			if (select == undefined || select == null) return;
 			var target = "addChoice_" + subID;
 			var choices = "choices" + subID;
-			for(var i = 0; i < select.options.length; i = i + 1) {
+			for (var i = 0; i < select.options.length; i = i + 1) {
 				var option = select.options.item(i);
 				if (option.selected) {
 					if (option.value == <%= SubProblem.MULTIPLE_CHOICE %>) {

@@ -9,7 +9,7 @@ list, but don't display, all (visible and non-removed) categories for a course
    Element visibleCtg  = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_VISIBLECTG);
    int numOfCtg = Integer.parseInt(visibleCtg.getAttribute(XMLBuilder.A_NUMOFCTGS));
 	NodeList visCtgList = visibleCtg.getChildNodes();
-	if(visCtgList != null && visCtgList.getLength() == 0){%>
+	if (visCtgList != null && visCtgList.getLength() == 0){%>
 No content available
 <%  } else{%>
 <table id="ctgswaptable" class="assignment_table" cellpadding="2" cellspacing="0" border="0" width="100%">
@@ -17,7 +17,7 @@ No content available
 		<th>Order</th>
 		<th>Name</th>
 		<th>Remove</th><%		
-		for(int i=0; i<visCtgList.getLength(); i++){ 
+		for (int i=0; i<visCtgList.getLength(); i++){ 
 			Element ctg = (Element)visCtgList.item(i);
 			String ctgID = ctg.getAttribute(XMLBuilder.A_ID);%>
 	<tr>
@@ -39,8 +39,8 @@ No content available
 </table><% 
 	}
  	NodeList hiddenCtgList = hiddenCtg.getChildNodes();
- 	if(hiddenCtgList == null) System.out.println("It is null");
-	if((hiddenCtgList != null) && (hiddenCtgList.getLength()>0) ){%>
+ 	if (hiddenCtgList == null) System.out.println("It is null");
+	if ((hiddenCtgList != null) && (hiddenCtgList.getLength()>0) ){%>
 				<div class="replace">
     				<span id="removedctghead">
       					<a href="#" onClick="show('removedctg', 'Removed categories &raquo;', '&laquo; Removed categores'); return false;">Removed categories &raquo;</a>

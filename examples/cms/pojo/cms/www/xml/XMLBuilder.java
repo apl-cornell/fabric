@@ -1941,7 +1941,7 @@ public class XMLBuilder {
     Document xml = buildPageHeader(user);
     Element root = (Element) xml.getFirstChild();
     root.setAttribute(A_CONFIRMTYPE, String.valueOf(confirm_type));
-    if(confirm_type == CONFIRM_ASSIGNINFO) //assignment-specific operations
+    if (confirm_type == CONFIRM_ASSIGNINFO) //assignment-specific operations
     {
       Assignment assign = (Assignment) data;
       Course course     = assign.getCourse();
@@ -1949,7 +1949,7 @@ public class XMLBuilder {
       root.appendChild(xCourse);
       root.setAttribute(A_ASSIGNID, assign.toString());
     }
-    else if(confirm_type == CONFIRM_COURSEINFO || confirm_type == CONFIRM_FINALGRADES) //course-specific operations
+    else if (confirm_type == CONFIRM_COURSEINFO || confirm_type == CONFIRM_FINALGRADES) //course-specific operations
     {
       Course course = (Course) data;
       Element xCourse = courseXMLBuilder.buildFullSubtree(user, xml, course);

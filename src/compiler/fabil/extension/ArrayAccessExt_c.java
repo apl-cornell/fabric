@@ -8,11 +8,6 @@ import fabil.visit.ProxyRewriter;
 
 public class ArrayAccessExt_c extends ExprExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     ArrayAccess aa = node();
@@ -36,11 +31,6 @@ public class ArrayAccessExt_c extends ExprExt_c {
     return result;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public ArrayAccess node() {
     return (ArrayAccess) super.node();

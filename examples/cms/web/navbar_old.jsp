@@ -20,7 +20,7 @@
   <td width="20px">&nbsp;</td>
  <td class="staff_navigation" colspan="2" width="170px">
   <ul id="navbar_content"><%
-if(courseid != null) {%> 
+if (courseid != null) {%> 
 <li>
 <span class="course"> <%= course.getAttribute(XMLBuilder.A_DISPLAYEDCODE)%>&nbsp;</span><br>
 <span class="semester"> (<%=course.getAttribute(XMLBuilder.A_SEMESTER)%>)</span>
@@ -42,15 +42,15 @@ for (int i = 0; i < allassigns.getLength(); i++)
 		int type = Integer.parseInt(xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE));
 		String action = "";
 		
-		if(type == Assignment.ASSIGNMENT)
+		if (type == Assignment.ASSIGNMENT)
 		{
 			action = AccessController.ACT_ASSIGN;
 		}
-		else if(type == Assignment.SURVEY)
+		else if (type == Assignment.SURVEY)
 		{
 			action = AccessController.ACT_SURVEY;
 		}
-		else if(type == Assignment.QUIZ)
+		else if (type == Assignment.QUIZ)
 		{
 			action = AccessController.ACT_QUIZ;
 		}	
@@ -62,7 +62,7 @@ for (int i = 0; i < allassigns.getLength(); i++)
 	}
 }%>
 </script><%
-if(courseid != null) {%>
+if (courseid != null) {%>
     <li<%= URL.equals(AccessController.COURSE_URL) ? " class=\"currentpage\"" : "" %>>
     	<hr width="100%" size="1px">
     	<a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_COURSE + "&amp;" + AccessController.P_COURSEID + "=" + courseid %>">Home</a>

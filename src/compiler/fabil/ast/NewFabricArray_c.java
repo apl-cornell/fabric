@@ -2,7 +2,12 @@ package fabil.ast;
 
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Expr;
+import polyglot.ast.NewArray_c;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
+import polyglot.ast.Term;
+import polyglot.ast.TypeNode;
 import polyglot.types.ArrayType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
@@ -41,30 +46,36 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     return (NewFabricArray_c) super.init(init);
   }
 
+  @Override
   public Expr label() {
     return label;
   }
 
+  @Override
   public Expr accessLabel() {
     return accessLabel;
   }
 
+  @Override
   public NewFabricArray_c label(Expr label) {
     NewFabricArray_c n = (NewFabricArray_c) copy();
     n.label = label;
     return n;
   }
 
+  @Override
   public NewFabricArray_c accessLabel(Expr accessLabel) {
     NewFabricArray_c n = (NewFabricArray_c) copy();
     n.accessLabel = accessLabel;
     return n;
   }
 
+  @Override
   public Expr location() {
     return location;
   }
 
+  @Override
   public NewFabricArray_c location(Expr location) {
     NewFabricArray_c n = (NewFabricArray_c) copy();
     n.location = location;
