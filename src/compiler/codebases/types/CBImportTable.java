@@ -3,8 +3,10 @@ package codebases.types;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import polyglot.frontend.Source;
 import polyglot.main.Report;
@@ -24,17 +26,15 @@ public class CBImportTable extends ImportTable {
   protected static final Object NOT_FOUND = "NOT FOUND";
 
   private final CodebaseTypeSystem ts;
-  private URI ns;
-
+  
+  protected URI ns;
+  protected Set<String> aliases;
+  
   public CBImportTable(CodebaseTypeSystem ts, URI ns, Package pkg, Source source) {
     super(ts, pkg, source.name());
     this.ts = ts;
     this.ns = ns;
-  }
-
-  public CBImportTable(CodebaseTypeSystem ts, Package pkg) {
-    super(ts, pkg);
-    this.ts = ts;
+    this.aliases = new HashSet<String>();
   }
 
   // /// The following methods are basically copied from the superclass, but
@@ -216,4 +216,19 @@ public class CBImportTable extends ImportTable {
     return ns;
   }
 
+  public void addCodebaseName(String name, Position position) {
+    aliases.add(name);
+  }
+
+  public URI resolveCodebaseName(String name) {
+    //Only resolve codebase names that were declared in this 
+    // sourcefile.
+    if(aliases.contains(name))
+      try {
+        return ts.namespaceResolver(ns).resolveCodebaseName(name);
+      } catch (SemanticException e) {
+        //just return null
+      }
+    return null;
+  }
 }

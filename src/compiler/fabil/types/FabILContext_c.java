@@ -68,4 +68,9 @@ public class FabILContext_c extends Context_c implements FabILContext {
       return super.pushSource(it);
     throw new InternalCompilerError("CBImportTable expected"); 
   }
+
+  @Override
+  public URI resolveCodebaseName(String name) {
+    return ((CBImportTable)it).resolveCodebaseName(name);
+  }
 }

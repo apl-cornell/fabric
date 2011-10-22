@@ -1,6 +1,7 @@
 package codebases.frontend;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -142,6 +143,16 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
     }
   }
 
+  @Override
+  public Source derivedSource(URI namespace, String name) {
+    try {
+      return new RemoteSource(namespace, fcls, name, userSpecified, false);
+    } catch (IOException e) {
+      throw new InternalCompilerError(e);
+    }
+  }
+
+  
   @Override
   public Label label() {
     return fcls.get$label();

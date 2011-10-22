@@ -172,7 +172,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
       throws IOException {
     if (!(obj instanceof FClass))
       throw new InternalCompilerError("Expected FClass.");
-    
+
     FClass fcls = (FClass) obj;    
     if (!LabelUtil._Impl.relabelsTo(fcls.get$label(), fcls.getCodebase()
         .get$label())) {

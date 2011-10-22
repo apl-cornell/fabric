@@ -1,5 +1,6 @@
 package fabric.ast;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,7 +39,6 @@ import codebases.ast.CodebaseNode;
 import codebases.ast.CodebaseNode_c;
 import fabric.extension.FabricExt;
 import fabric.extension.LocatedExt_c;
-import fabric.lang.Codebase;
 
 /**
  * NodeFactory for fabric extension.
@@ -69,12 +69,13 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, Codebase c) {  
-    CodebaseNode n = new CodebaseNode_c(pos, c);
+  public CodebaseNode CodebaseNode(Position pos, URI ns) {
+    CodebaseNode n = new CodebaseNode_c(pos, ns);
     n = (CodebaseNode) n.ext(fabricExtFactory().extCodebaseNode());
     n = (CodebaseNode) n.del(fabricDelFactory().delCodebaseNode());
     return n;  
   }
+  
   @Override
   public CodebaseDecl CodebaseDecl(Position pos, Id name) {  
     CodebaseDecl n = new CodebaseDecl_c(pos, name);

@@ -1,5 +1,6 @@
 package fabil.ast;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
@@ -56,8 +57,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, Codebase c) {  
-    CodebaseNode n = new CodebaseNode_c(pos, c);
+  public CodebaseNode CodebaseNode(Position pos, URI ns) {  
+    CodebaseNode n = new CodebaseNode_c(pos, ns);
     n = (CodebaseNode) n.ext(extFactory().extCodebaseNode());
     n = (CodebaseNode) n.del(delFactory().delCodebaseNode());
     return n;  

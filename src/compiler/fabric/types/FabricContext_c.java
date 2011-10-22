@@ -90,4 +90,9 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
       throw new InternalCompilerError("No namespace!");
     return ((CBImportTable)it).namespace();
   }
+
+  @Override
+  public URI resolveCodebaseName(String name) {
+    return ((CBImportTable)it).resolveCodebaseName(name);
+  }
 }

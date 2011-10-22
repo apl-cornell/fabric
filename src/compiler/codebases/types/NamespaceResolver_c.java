@@ -196,8 +196,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
           "Expected entry to implement CodebaseClassType and ParsedTypeObject, but got "
               + q.getClass());
 
-    // /TODO: This method may need to check more things.
-
+    // /TODO: This method may need to check more things related to clashes with package names.
     if (packageExists(name))
       throw new SemanticException("Type \"" + name
           + "\" clashes with package of the same name.", q.position());
@@ -218,7 +217,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
     replace(name, q);
 
-    // If we are
+    // If we are loading a class from another namespace, 
+    //  add the class to that namespace too.
     if (q instanceof CodebaseClassType) {
       CodebaseClassType cct = (CodebaseClassType) q;
       if (!namespace.equals(cct.canonicalNamespace())) {
@@ -269,33 +269,29 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
    */
   protected Importable getTypeFromSource(Source source, String name)
       throws SemanticException {
-
+    CodebaseTypeSystem ts = extInfo.typeSystem();
     Scheduler scheduler = extInfo.scheduler();
 
     Job job = scheduler.loadSource((FileSource) source, true);
     CodebaseSource cbsrc = (CodebaseSource) source;
-    
+
+    //The type may be remote and not added to our namespace yet.
+    Importable n = ts.namespaceResolver(cbsrc.canonicalNamespace()).check(name);
+
+    if (n != null) {
+      return n;
+    }
+
+    //The type may not have reached the proper compilation pass yet.
     if (job != null) {
-      // check the cache
-      CodebaseTypeSystem ts = extInfo.typeSystem();
-      Importable n =
-          ts.namespaceResolver(cbsrc.canonicalNamespace()).check(name);
-
-      if (n != null) {
-        return n;
-      }
-
+           
       Goal g = scheduler.TypesInitialized(job);
 
       if (!scheduler.reached(g)) {
-
         throw new MissingDependencyException(g);
       }
-      // if (Report.should_report(Report.loader, 3))
-      new Exception("loaded " + source + " reached types initialized: " + g)
-          .printStackTrace();
-
     }
+
     // The source has already been compiled, but the type was not created there.
     throw new SemanticException("Could not find \"" + name + "\" in " + source
         + ".");
@@ -350,6 +346,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
         Report.report(2, "Returning serialized ClassType for " + clazz.name()
             + ".");
 
+      //XXX: Is this really necessary? (I don't think it is)
       ensureInitialized();
       return ct;
     } else {

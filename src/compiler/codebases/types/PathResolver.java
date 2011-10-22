@@ -50,8 +50,9 @@ public class PathResolver extends NamespaceResolver_c implements
   /**
    * Searches for a type for name in path in order. Following polyglot, there is
    * some subtlety to how resources are loaded from disk based on whether
-   * source, encoded classes, or raw classes are permitted. * If loading source
-   * and encoded classes:
+   * source, encoded classes, or raw classes are permitted. 
+   * 
+   * If loading source and encoded classes:
    *
    * - The first source file or encoded class returned by a resolver the path
    *    will be loaded. If a source file and encoded class occur in the same
@@ -63,8 +64,15 @@ public class PathResolver extends NamespaceResolver_c implements
    *    emulates polyglot's SourceClassResolver logic. Here, any ParsedClassType
    *    whose LazyClassInitializer returns true for fromClassFile() is considered
    *    to be from a raw class file.
+   *    
+   * 
    */
-  @Override
+  
+  // XXX: An outstanding question: in Java, a package is not allowed to contain
+  // a subpackage and type of the same name. Although we can enforce this for
+  // individual codebases, when we combine them in a path resolver, both might
+  // exist.  It's not actually clear what happens for this case currently.
+ @Override
   public Importable findImpl(String name) throws SemanticException {
     Importable from_raw = null;
     for (NamespaceResolver nr : path) {

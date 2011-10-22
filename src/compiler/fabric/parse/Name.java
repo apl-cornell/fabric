@@ -5,8 +5,14 @@ import java.net.URI;
 import jif.parse.Amb;
 import polyglot.ast.Id;
 import polyglot.ast.PackageNode;
+import polyglot.ast.QualifierNode;
+import polyglot.ast.TypeNode;
+import polyglot.types.SemanticException;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
+import codebases.ast.CodebaseNode;
 import codebases.types.CodebaseTypeSystem;
+import fabric.ast.FabricNodeFactory;
 
 public class Name extends jif.parse.Name {
   public final CodebaseTypeSystem ts;
@@ -31,12 +37,51 @@ public class Name extends jif.parse.Name {
   }
 
   @Override
+  //This should only be used for the package declaration
   public PackageNode toPackage() throws Exception {
+    return (PackageNode) toQualifier();
+//    Thread.dumpStack();
+//    throw new UnsupportedOperationException("Use toQualifier instead:" + this);
+//
+//    if (prefix == null) {
+//      return parser.nf.PackageNode(pos, ts.createPackage(this.ns, null, name));
+//    } else {
+//      return parser.nf.PackageNode(pos,
+//          ts.createPackage(ns, prefix.toPackage().package_(), name));
+//    }
+  }
+  public TypeNode toType() throws Exception {
     if (prefix == null) {
-      return parser.nf.PackageNode(pos, ts.createPackage(ns, null, name));
+        return parser.nf.AmbTypeNode(pos, name);
+    }
+    
+    return parser.nf.AmbTypeNode(pos, ((Name)prefix).toQualifier(), name);
+}
+
+  public QualifierNode toQualifier() throws Exception {
+    if (prefix == null) {
+      try {
+        FabricNodeFactory nf = (FabricNodeFactory) parser.nf;
+        URI cb = ts.namespaceResolver(ns).resolveCodebaseName(name);
+        System.err.println("FOUND CB ALIAS: " + name  +":" + cb);
+        return nf.CodebaseNode(pos, cb);
+      }
+      catch(SemanticException e) {}
+      return parser.nf.PackageNode(pos, ts.createPackage(this.ns, null, name));
     } else {
-      return parser.nf.PackageNode(pos,
-          ts.createPackage(ns, prefix.toPackage().package_(), name));
+      Name p = (Name)prefix;
+      QualifierNode qn = p.toQualifier();
+      if(qn instanceof CodebaseNode) {
+        CodebaseNode cn = (CodebaseNode)qn;
+        return parser.nf.PackageNode(pos, ts.createPackage(cn.namespace(), null, name));
+      }
+      else if(qn instanceof PackageNode) {
+        PackageNode pn = (PackageNode) qn;
+        return parser.nf.PackageNode(pos, ts.createPackage(this.ns, pn.package_(), name));
+      }
+      else {
+        throw new InternalCompilerError("Unexpected qualifier "+ qn); 
+      }
     }
   }
 

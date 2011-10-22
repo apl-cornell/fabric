@@ -311,13 +311,12 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     FabricTypeSystem  ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
     Goal g = internGoal(new VisitorGoal(job, new FabricToFabilRewriter(job, ts, nf, filext)));     
-
     try {
         addPrerequisiteDependency(g, this.Serialized(job));
         addPrerequisiteDependency(g, this.PrincipalCastsAdded(job));
 
         //TODO: only run if publishing classes
-        if (!((CodebaseSource) job.source()).shouldPublish())        
+        if(fabext.getFabricOptions().publish())        
           addPrerequisiteDependency(g, this.ConsistentNamespace());
         
         // make sure that if Object.fab is being compiled, it is always

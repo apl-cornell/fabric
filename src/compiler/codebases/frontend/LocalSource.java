@@ -30,13 +30,7 @@ public class LocalSource extends UTF8FileSource implements CodebaseSource {
     this.namespace = namespace;
   }
 
-  public LocalSource(String path, String name, Date lastModified,
-      boolean userSpecified, URI namespace, boolean publish) throws IOException {
-    super(path, name, lastModified, userSpecified);
-    this.namespace = namespace;
-  }
-
-  public LocalSource(String path, String name, File derivedFrom,
+  protected LocalSource(String path, String name, File derivedFrom,
       Date lastModified, boolean userSpecified, URI namespace, boolean publish)
       throws IOException {
     super(path, name, lastModified, userSpecified);
@@ -66,26 +60,26 @@ public class LocalSource extends UTF8FileSource implements CodebaseSource {
 
   @Override
   public Source derivedSource(String name) {
-    try {
-      // Create new path
-      String path = file.getParent() + File.separator + name;
-      return new LocalSource(path, name, file, new Date(System.currentTimeMillis()),
-          false, namespace, false);
-    } catch (IOException e) {
-      throw new InternalCompilerError(e);
-    }
+    return derivedSource(namespace(), name);
   }
 
   @Override
   public Source derivedSource(URI namespace) {
-    throw new UnsupportedOperationException(
-        "Compiling newly published classes to bytecode not yet supported");
-    //    try {
-//      return new LocalSource(path, name, file, new Date(System.currentTimeMillis()),
-//          false, namespace, false);
-//    } catch (IOException e) {
-//      throw new InternalCompilerError(e);
-//    }
+    return derivedSource(namespace, name());
+  }
+  
+  @Override
+  public Source derivedSource(URI namespace, String name) {
+    try {
+      String path = path();
+      if(!name().equals(name))
+        path = file.getParent() + File.separator + name;
+
+      return new LocalSource(path, name, file, new Date(
+          System.currentTimeMillis()), false, namespace, false);
+    } catch (IOException e) {
+      throw new InternalCompilerError(e);
+    }
   }
 
   @Override

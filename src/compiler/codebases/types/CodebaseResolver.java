@@ -41,10 +41,12 @@ public class CodebaseResolver extends SimpleResolver implements
     return true;
   }
 
-  @SuppressWarnings("unused")
   @Override
   public URI resolveCodebaseName(String name) throws SemanticException {
-    return NSUtil.namespace(codebase.resolveCodebaseName(name));
+    Codebase cb = codebase.resolveCodebaseName(name);
+    if(cb == null)
+      throw new SemanticException("Codebase name " + name + " not defined.");
+    return NSUtil.namespace(cb);
   }
   
   @Override

@@ -1,5 +1,6 @@
 package codebases.ast;
 
+import java.net.URI;
 import java.util.List;
 
 import polyglot.ast.Id;
@@ -9,10 +10,9 @@ import polyglot.ast.PackageNode;
 import polyglot.ast.SourceFile;
 import polyglot.ast.TopLevelDecl;
 import polyglot.util.Position;
-import fabric.lang.Codebase;
 
 public interface CodebaseNodeFactory extends NodeFactory {
-  CodebaseNode CodebaseNode(Position pos, Codebase c);
+  CodebaseNode CodebaseNode(Position pos, URI ns);
 
   SourceFile SourceFile(Position pos, PackageNode packageName,
       List<CodebaseDecl> codebases, List<Import> imports,

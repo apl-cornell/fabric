@@ -14,13 +14,7 @@ import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.SourceFileGoal;
 import polyglot.main.Options;
 import polyglot.util.InternalCompilerError;
-import fabil.FabILOptions;
 import fabil.frontend.FabILScheduler;
-import fabric.lang.Codebase;
-import fabric.lang.security.LabelUtil;
-import fabric.lang.security.NodePrincipal;
-import fabric.worker.Store;
-import fabric.worker.Worker;
 
 /**
  * A small extension of the fabil ExtensionInfo and Scheduler to perform fabil
@@ -29,7 +23,6 @@ import fabric.worker.Worker;
 public class OutputExtensionInfo extends fabil.ExtensionInfo {
 
   protected ExtensionInfo fabext;
-  private fabric.lang.security.Label destLabel;
 
   @Override
   public Scheduler createScheduler() {

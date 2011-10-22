@@ -51,6 +51,14 @@ public interface CodebaseSource {
    * @return A source derived from this CodebaseSource in a new namespace
    */
   Source derivedSource(URI namespace);
+  
+  /**
+   * Create a derived source object with a new namespace and short name.
+   * @param namespace
+   * @param name
+   * @return
+   */
+  Source derivedSource(URI namespace, String name);
 
   /**
    * Whether a new class object should be published for this source file and
@@ -71,4 +79,5 @@ public interface CodebaseSource {
   public void close() throws IOException;
 
   void setPublish(boolean pub);
+
 }

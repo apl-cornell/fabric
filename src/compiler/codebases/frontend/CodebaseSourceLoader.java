@@ -12,6 +12,10 @@ import polyglot.util.InternalCompilerError;
 import fabric.Topics;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
+import fabric.lang.WrappedJavaInlineable;
+import fabric.util.Iterator;
+import fabric.util.Set;
+import fabric.worker.Worker;
 
 public class CodebaseSourceLoader implements URISourceLoader {
   protected static String[] TOPICS = new String[] {Report.loader, Topics.mobile};
@@ -50,7 +54,15 @@ public class CodebaseSourceLoader implements URISourceLoader {
   @Override
   //FIXME:
   public boolean packageExists(String name) {
-    throw new UnsupportedOperationException();
+    //XXX: Something better than this?
+    Set names = codebase.getClasses().keySet();
+    for (Iterator it = names.iterator(); it
+        .hasNext();) {
+      String classname = (String) WrappedJavaInlineable.$unwrap(it.next());
+      if(classname.startsWith(name))
+        return true;
+    }
+    return false;
   }
 
   @Override
@@ -64,6 +76,9 @@ public class CodebaseSourceLoader implements URISourceLoader {
       URI class_uri = ns.resolve(className);
 
       FileSource s = loadedSources.get(class_uri);
+      if(Report.should_report(TOPICS, 3))
+        Report.report(3, "FileSource already loaded: " + s);
+
       if (s != null) return s;
 
       //NB: ns may be different from obj.getCodebase() if we are re-publishing

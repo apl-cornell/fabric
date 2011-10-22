@@ -13,7 +13,6 @@ import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
 import polyglot.main.Report;
 import polyglot.types.AccessControlResolver;
-import polyglot.types.AccessControlWrapperResolver;
 import polyglot.types.ArrayType;
 import polyglot.types.CachingResolver;
 import polyglot.types.ClassType;
@@ -43,6 +42,7 @@ import polyglot.util.Position;
 import polyglot.util.StringUtil;
 import codebases.types.CBClassContextResolver;
 import codebases.types.CBImportTable;
+import codebases.types.CBPackage;
 import codebases.types.CBPackageContextResolver;
 import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
@@ -67,39 +67,33 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   protected NamespaceResolver platformResolver;
 
   @Override
-  public CBPackageContextResolver createPackageContextResolver(URI namespace,
-      Package p) {
-    return new CBPackageContextResolver(this, namespace, p);
+  public CBPackageContextResolver createPackageContextResolver(Package p) {
+    return new CBPackageContextResolver(this, p);
   }
 
+  //XXX: There may be a way to override the namespace-less package methods, but 
+  // createPackage is often called with prefix==null, so a full refactoring helped
+  // identify the situations it is called in.
   @Override
-  public Resolver packageContextResolver(URI namespace, Package p,
-      ClassType accessor) {
-    if (accessor == null) {
-      return p.resolver();
-    } else {
-      return new AccessControlWrapperResolver(createPackageContextResolver(
-          namespace, p), accessor);
+  public Package createPackage(URI ns, Package prefix, java.lang.String name) {
+    if(prefix!=null) {
+      ns = ((CBPackage)prefix).namespace();
     }
-  }
-
-  @Override
-  public Resolver packageContextResolver(URI namespace, Package p) {
-    return packageContextResolver(namespace, p, null);
-  }
-
-  @Override
-  public Package createPackage(URI ns, Package prefix, String name) {
     return new CBPackage_c(this, ns, prefix, name);
   }
 
+  /**
+   * @throws SemanticException  subclasses may throw SemanticExceptions 
+   */
   @Override
-  public Package packageForName(URI ns, Package prefix, String name) {
+  public Package packageForName(URI ns, Package prefix, java.lang.String name)
+      throws SemanticException {
     return createPackage(ns, prefix, name);
   }
 
   @Override
-  public Package packageForName(URI ns, String name) throws SemanticException {
+  public Package packageForName(URI ns, java.lang.String name)
+      throws SemanticException {
     if (name == null || name.equals("")) {
       return null;
     }
@@ -223,7 +217,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @Override
   public ParsedClassType createClassType(LazyClassInitializer init,
-      Source fromSource) {
+      Source fromSource) {    
     return new FabILParsedClassType_c(this, init, fromSource);
   }
 
@@ -633,6 +627,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     NamespaceResolver nsr = namespaceResolver(namespace);
     if (nsr.codebase() != null) return nsr.codebase();
 
+    Thread.dumpStack();
     throw new InternalCompilerError("Cannot get codebase for namespace:"
         + namespace + ":" + nsr.getClass());
   }
@@ -683,12 +678,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   @Deprecated
   public boolean packageExists(String name) {
-    throw toplevel_resolution_error();
-  }
-
-  @Override
-  @Deprecated
-  public CBPackageContextResolver createPackageContextResolver(Package p) {
     throw toplevel_resolution_error();
   }
 

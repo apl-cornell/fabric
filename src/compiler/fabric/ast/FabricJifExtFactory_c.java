@@ -7,8 +7,10 @@ import jif.extension.JifCastExt;
 import jif.extension.JifConstructorDeclExt;
 import jif.extension.JifFieldDeclExt_c;
 import jif.extension.JifLabelExprExt;
+import jif.extension.JifSourceFileExt;
 import jif.translate.FieldToJavaExt_c;
 import jif.translate.PackageNodeToJavaExt_c;
+import jif.translate.SourceFileToJavaExt_c;
 import polyglot.ast.Ext;
 import fabric.extension.AbortJifExt_c;
 import fabric.extension.AtomicJifExt_c;
@@ -37,6 +39,7 @@ import fabric.translate.NewToFabilExt_c;
 import fabric.translate.PackageNodeToFabilExt_c;
 import fabric.translate.RemoteWorkerGetterToFabilExt_c;
 import fabric.translate.RetryToFabilExt_c;
+import fabric.translate.SourceFileToFabilExt_c;
 import fabric.translate.WorkerToFabilExt_c;
 
 /**
@@ -116,6 +119,10 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
     return new Jif_c(new PackageNodeToFabilExt_c());
   }  
   
+  @Override
+  protected Ext extSourceFileImpl() {
+    return new JifSourceFileExt(new SourceFileToFabilExt_c());
+  }
   //////////////////////////////////////////////////////////////////////////////
   // new Fabric AST nodes                                                     //
   //////////////////////////////////////////////////////////////////////////////

@@ -21,8 +21,9 @@ public class ProviderLabelToFabilExpr_c extends ProviderLabelToJavaExpr_c {
     }
 
     Position pos = provider.position();
-    return nf.providerLabel(pos,
-        nf.CanonicalTypeNode(pos, provider.classType()));
+    if(pos==null)
+      pos = Position.compilerGenerated();
+    return nf.providerLabel(pos, rw.typeToJava(provider.classType(), pos));
   }
 
 }

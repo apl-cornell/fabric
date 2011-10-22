@@ -10,6 +10,7 @@ import polyglot.frontend.Job;
 import polyglot.types.SemanticException;
 import polyglot.visit.InitImportsVisitor;
 import polyglot.visit.NodeVisitor;
+import codebases.ast.CodebaseDecl;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CBImportTable;
 import codebases.types.CodebaseTypeSystem;
@@ -49,5 +50,17 @@ public class InitCodebaseImports extends InitImportsVisitor {
     }
 
     return this;
+  }
+  
+  
+  @Override
+  public Node leaveCall(Node old, Node n, NodeVisitor v) throws SemanticException {
+    if (n instanceof CodebaseDecl) {
+      CodebaseDecl cbd = (CodebaseDecl) n;
+      ((CBImportTable)importTable).addCodebaseName(cbd.name().id(), cbd.position());
+      return n;
+    }
+    else 
+      return super.leaveCall(old, n, v);
   }
 }
