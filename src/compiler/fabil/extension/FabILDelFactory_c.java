@@ -80,11 +80,16 @@ public class FabILDelFactory_c extends AbstractDelFactory_c implements
 
   @Override
   public JL delCodebaseNode() {
-    return delNode();
+    return delPackageNode();
   }
 
   @Override
   public JL delCodebaseDecl() {
     return delNode();
+  }
+
+  @Override
+  public JL delCodebaseTypeNode() {
+    return delCanonicalTypeNode();
   }
 }

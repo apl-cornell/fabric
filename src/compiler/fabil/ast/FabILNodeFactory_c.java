@@ -9,6 +9,8 @@ import polyglot.ast.ArrayAccessAssign;
 import polyglot.ast.ArrayTypeNode;
 import polyglot.ast.Assign.Operator;
 import polyglot.ast.Call;
+import polyglot.ast.CanonicalTypeNode;
+import polyglot.ast.CanonicalTypeNode_c;
 import polyglot.ast.Cast;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
@@ -24,13 +26,17 @@ import polyglot.ast.Stmt;
 import polyglot.ast.TopLevelDecl;
 import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
+import polyglot.types.Package;
+import polyglot.types.Type;
 import polyglot.util.CollectionUtil;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.ast.CBSourceFile_c;
 import codebases.ast.CodebaseDecl;
 import codebases.ast.CodebaseDecl_c;
 import codebases.ast.CodebaseNode;
 import codebases.ast.CodebaseNode_c;
+import codebases.ast.CodebaseTypeNode;
 import fabil.extension.FabILDelFactory;
 import fabil.extension.FabILDelFactory_c;
 import fabil.extension.FabILExtFactory;
@@ -55,10 +61,14 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   protected FabILDelFactory delFactory() {
     return (FabILDelFactory) super.delFactory();
   }
+  @Override
+  public CodebaseNode CodebaseNode(Position pos, URI ns, String name, URI externalNS) {  
+    return CodebaseNode(pos, ns, name, externalNS, null);
+  }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, URI ns) {  
-    CodebaseNode n = new CodebaseNode_c(pos, ns);
+  public CodebaseNode CodebaseNode(Position pos, URI ns, String name, URI externalNS, Package package_) {  
+    CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, null);
     n = (CodebaseNode) n.ext(extFactory().extCodebaseNode());
     n = (CodebaseNode) n.del(delFactory().delCodebaseNode());
     return n;  
@@ -281,5 +291,4 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   public Disamb disamb() {
     return new FabILDisamb();
   }
-
 }

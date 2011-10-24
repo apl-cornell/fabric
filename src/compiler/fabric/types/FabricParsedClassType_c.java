@@ -33,6 +33,8 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     super(ts, init, fromSource);
     if (fromSource == null)
       throw new NullPointerException("fromSource cannot be null!");
+    this.canonical_ns =
+        ((CodebaseSource) fromSource).canonicalNamespace();
   }
 
   @Override
@@ -251,11 +253,17 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   }
 
   @Override
+  public void setCanonicalNamespace(URI ns) {
+    this.canonical_ns = ns;
+  }
+  
+  @Override
   public URI canonicalNamespace() {
     // HACK superclass constructor accesses canonical namespace before it can be
     // initialized.
     if (canonical_ns == null)
       canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
+    
     return canonical_ns;
   }
 

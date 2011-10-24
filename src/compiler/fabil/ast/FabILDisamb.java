@@ -22,18 +22,20 @@ import polyglot.util.Position;
 import polyglot.visit.ContextVisitor;
 import codebases.ast.CodebaseNode;
 import codebases.ast.CodebaseNodeFactory;
-import codebases.types.CBPackage;
+import codebases.frontend.CBJobExt;
+import codebases.types.CBImportTable;
+import codebases.types.CodebaseClassType;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
 import fabil.types.FabILContext;
 
 public class FabILDisamb extends Disamb_c implements Disamb {
   protected URI namespace;
-  
+
   /* Convenience fields */
   private CodebaseTypeSystem ts;
   private CodebaseNodeFactory nf;
-  
+
   @Override
   public Node disambiguate(Ambiguous amb, ContextVisitor v, Position pos,
       Prefix prefix, Id name) throws SemanticException {
@@ -42,49 +44,78 @@ public class FabILDisamb extends Disamb_c implements Disamb {
     this.ts = (CodebaseTypeSystem) v.typeSystem();
     this.nf = (CodebaseNodeFactory) v.nodeFactory();
 
-    if(prefix instanceof PackageNode) {
-      PackageNode pn = (PackageNode) prefix;
-      this.namespace = ((CBPackage)pn.package_()).namespace();
-    } else if(prefix instanceof CodebaseNode) {
-      CodebaseNode cn = (CodebaseNode) prefix;
-      this.namespace = cn.namespace();
-    }
-    
-    Node result = super.disambiguate(amb, v, pos, prefix, name);
-    if(result != null) 
-      return result;
-    else if(prefix instanceof CodebaseNode) {
-      CodebaseNode cn = (CodebaseNode) prefix;
-      result = disambiguateCodebaseNodePrefix(cn);
-    }
-    return result;
+
+    Node n  = super.disambiguate(amb, v, pos, prefix, name);
+    return n;
   }
 
   protected Node disambiguateCodebaseNodePrefix(CodebaseNode cn) {
-    NamespaceResolver nr = ts.namespaceResolver(cn.namespace());
-    
-    if(nr.packageExists(name.id()) && packageOK()) {
-      try {
-        return nf.PackageNode(pos, ts.packageForName(cn.namespace(), name.id()));
-      } catch (SemanticException e) {
-        throw new InternalCompilerError("Error creating package node: " + name, e);
+    if (cn.package_() == null) {
+      // If there is no package, we use the toplevel namespace resolver
+      NamespaceResolver nr = ts.namespaceResolver(cn.externalNamespace());
+      if (nr.packageExists(name.id()) && packageOK()) {
+        try {
+          return nf.CodebaseNode(pos, cn.namespace(), cn.alias(),
+              cn.externalNamespace(),
+              ts.packageForName(cn.externalNamespace(), name.id()));
+        } catch (SemanticException e) {
+          throw new InternalCompilerError("Error creating package node: "
+              + name, e);
+        }
+      } else if (typeOK()) {
+        try {
+          Importable q = nr.find(name.id());
+          // This type was loaded w/ a codebase alias
+          CBJobExt ext = (CBJobExt) v.job().ext();
+          ext.addExternalDependency((CodebaseClassType) q, cn.alias());
+          return nf.CanonicalTypeNode(pos, (Type) q);
+        } catch (SemanticException e) {
+          // just return null.
+        }
       }
-    }
-    else if(typeOK()){
+    } else {
+
+      // Otherwise, we resolve the name using the CodebaseNode's package
+      Resolver pc = ts.packageContextResolver(cn.package_());
+
+      Named n;
+
       try {
-        Importable q = nr.find(name.id());
-        return nf.CanonicalTypeNode(pos, (Type) q);
+        n = pc.find(name.id());
       } catch (SemanticException e) {
-        //just return null.
+        return null;
+      }
+
+      Qualifier q = null;
+
+      if (n instanceof Qualifier) {
+        q = (Qualifier) n;
+      } else {
+        return null;
+      }
+
+      if (q.isPackage() && packageOK()) {
+        // This package *was* loaded w/ a codebase alias
+        return nf.CodebaseNode(pos, cn.namespace(), cn.alias(),
+            cn.externalNamespace(), q.toPackage());
+      } else if (q.isType() && typeOK()) {
+        // This type *was* loaded w/ a codebase alias
+        CBJobExt ext = (CBJobExt) v.job().ext();
+        ext.addExternalDependency((CodebaseClassType) q, cn.alias());
+        return nf.CanonicalTypeNode(pos, (Type) q);
       }
     }
     return null;
   }
 
+
   @SuppressWarnings("unused")
   @Override
   protected Node disambiguatePackagePrefix(PackageNode pn)
       throws SemanticException {
+    if (pn instanceof CodebaseNode) {
+      return disambiguateCodebaseNodePrefix((CodebaseNode) pn);
+    }
 
     Resolver pc = ts.packageContextResolver(pn.package_());
 
@@ -105,8 +136,12 @@ public class FabILDisamb extends Disamb_c implements Disamb {
     }
 
     if (q.isPackage() && packageOK()) {
+      // This package was *not* loaded w/ a codebase alias
       return nf.PackageNode(pos, q.toPackage());
     } else if (q.isType() && typeOK()) {
+      // This type was *not* loaded w/ a codebase alias
+      CBJobExt ext = (CBJobExt) v.job().ext();
+      ext.addDependency((CodebaseClassType) q);
       return nf.CanonicalTypeNode(pos, q.toType());
     }
 
@@ -135,7 +170,19 @@ public class FabILDisamb extends Disamb_c implements Disamb {
             throw new InternalCompilerError(
                 "Found an ambiguous type in the context: " + type, pos);
           }
-          return nf.CanonicalTypeNode(pos, type);
+          CBImportTable it = (CBImportTable) c.importTable();
+          if (it.isExternal(name.id())) {
+            // This type was loaded with a codebase import, 
+            // so it is an external dep
+            CBJobExt ext = (CBJobExt) v.job().ext();
+            ext.addExternalDependency((CodebaseClassType) type, it.aliasFor(name.id()));
+            return nf.CanonicalTypeNode(pos, type);
+          } else {
+            // This type was loaded was *not* loaded w/ an codebase alias
+            CBJobExt ext = (CBJobExt) v.job().ext();
+            ext.addDependency((CodebaseClassType) type);
+            return nf.CanonicalTypeNode(pos, type);
+          }
         }
       } catch (NoClassException e) {
         if (!name.id().equals(e.getClassName())) {
@@ -148,14 +195,17 @@ public class FabILDisamb extends Disamb_c implements Disamb {
         // It must be a package--ignore the exception.
       }
     }
-    
-    //Either a codebase alias or a package
-    if(packageOK()) {
-      //Is it an explicit codebase? 
+
+    // Either a codebase alias or a package
+    if (packageOK()) {
+      
+      // Is it an explicit codebase?
       FabILContext ctx = (FabILContext) v.context();
+
       URI ns = ctx.resolveCodebaseName(name.id());
-      if(ns != null)
-        return nf.CodebaseNode(pos, ns);
+
+      if (ns != null)
+        return nf.CodebaseNode(pos, namespace, name.id(), ns);
       else
         // Must be a package then...
         return nf.PackageNode(pos, ts.packageForName(namespace, name.id()));

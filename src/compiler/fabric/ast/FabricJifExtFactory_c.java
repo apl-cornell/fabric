@@ -8,6 +8,7 @@ import jif.extension.JifConstructorDeclExt;
 import jif.extension.JifFieldDeclExt_c;
 import jif.extension.JifLabelExprExt;
 import jif.extension.JifSourceFileExt;
+import jif.translate.CanonicalTypeNodeToJavaExt_c;
 import jif.translate.FieldToJavaExt_c;
 import jif.translate.PackageNodeToJavaExt_c;
 import jif.translate.SourceFileToJavaExt_c;
@@ -30,6 +31,8 @@ import fabric.translate.CallToFabilExt_c;
 import fabric.translate.CastToFabilExt_c;
 import fabric.translate.ClassBodyToFabilExt_c;
 import fabric.translate.ClassDeclToFabilExt_c;
+import fabric.translate.CodebaseDeclToFabilExt_c;
+import fabric.translate.CodebaseNodeToFabilExt_c;
 import fabric.translate.ConstructorDeclToFabilExt_c;
 import fabric.translate.FieldDeclToFabilExt_c;
 import fabric.translate.MethodDeclToFabilExt_c;
@@ -174,11 +177,12 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
 
   @Override
   public Ext extCodebaseNode() {
-    throw new UnsupportedOperationException("Codebase nodes not implemented yet.");
+    return new Jif_c(new CodebaseNodeToFabilExt_c());
   }
 
   @Override
   public Ext extCodebaseDecl() {
-    throw new UnsupportedOperationException("Codebase nodes not implemented yet.");
+    return new Jif_c(new CodebaseDeclToFabilExt_c());
   }
+  
 }

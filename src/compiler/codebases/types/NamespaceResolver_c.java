@@ -4,6 +4,7 @@ import java.io.InvalidClassException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -61,6 +62,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   protected final TypeEncoder te;
   protected final NamespaceResolver parent;
 
+  protected final Map<String,URI> codebaseAliases;
+
   /** Caches **/
   // packageExists == true cache
   protected Set<String> packages;
@@ -76,9 +79,12 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace) {
     this(extInfo, namespace, null);
   }
-
   public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace,
       NamespaceResolver parent) {
+    this(extInfo, namespace, parent, new HashMap<String, URI>());
+  }
+  public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace,
+      NamespaceResolver parent, Map<String, URI> aliases) {
     this.cache = new HashMap<String, Importable>();
     this.packages = new HashSet<String>();
     this.no_package = new HashSet<String>();
@@ -92,6 +98,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     this.extInfo = extInfo;
     this.te = extInfo.typeEncoder();
     this.parent = parent;
+    
+    this.codebaseAliases = aliases;
   }
 
   @Override
@@ -113,6 +121,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
   @Override
   public final Importable find(String name) throws SemanticException {
+
     if (Report.should_report(TOPICS, 2))
       Report.report(2, "[" + namespace + "] " + "NamespaceResolver_c: find: "
           + name);
@@ -154,7 +163,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
       if (Report.should_report(TOPICS, 3))
         Report.report(3, "[" + namespace + "] "
-            + "NamespaceResolver_c: loaded: " + name + "(" + q + ")");
+            + "NamespaceResolver_c: loaded: " + name + "(" + q + ")" + " from NS:" + ((CodebaseClassType)q).canonicalNamespace());
     } else {
       if (Report.should_report(TOPICS, 3))
         Report.report(3, "[" + namespace + "] "
@@ -288,6 +297,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
       Goal g = scheduler.TypesInitialized(job);
 
       if (!scheduler.reached(g)) {
+        
+        //System.err.println("UNREACHED:" + g + ": for "+ name + " in "  + source );
         throw new MissingDependencyException(g);
       }
     }
@@ -347,7 +358,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
             + ".");
 
       //XXX: Is this really necessary? (I don't think it is)
-      ensureInitialized();
+      //ensureInitialized();
       return ct;
     } else {
       throw new SemanticException("Class " + name + " not found in "
@@ -391,7 +402,16 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
   @Override
   public URI resolveCodebaseName(String name) throws SemanticException {
+    URI ns = codebaseAliases.get(name);
+    if(ns != null)
+      return ns;
+    
     throw new SemanticException("Unknown codebase name: " + name);
+  }
+  
+  @Override
+  public Map<String, URI> codebaseAliases() {
+    return Collections.unmodifiableMap(codebaseAliases);
   }
 
   @Override
@@ -412,5 +432,5 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
       return integrity;
     }
     throw new InternalCompilerError("Not implemented yet! Hurry up!");
-  }
+  }  
 }

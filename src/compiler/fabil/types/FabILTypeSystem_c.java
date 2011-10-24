@@ -71,19 +71,21 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return new CBPackageContextResolver(this, p);
   }
 
-  //XXX: There may be a way to override the namespace-less package methods, but 
-  // createPackage is often called with prefix==null, so a full refactoring helped
+  // XXX: There may be a way to override the namespace-less package methods, but
+  // createPackage is often called with prefix==null, so a full refactoring
+  // helped
   // identify the situations it is called in.
   @Override
   public Package createPackage(URI ns, Package prefix, java.lang.String name) {
-    if(prefix!=null) {
-      ns = ((CBPackage)prefix).namespace();
+    if (prefix != null) {
+      ns = ((CBPackage) prefix).namespace();
     }
     return new CBPackage_c(this, ns, prefix, name);
   }
 
   /**
-   * @throws SemanticException  subclasses may throw SemanticExceptions 
+   * @throws SemanticException
+   *           subclasses may throw SemanticExceptions
    */
   @Override
   public Package packageForName(URI ns, Package prefix, java.lang.String name)
@@ -217,7 +219,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @Override
   public ParsedClassType createClassType(LazyClassInitializer init,
-      Source fromSource) {    
+      Source fromSource) {
     return new FabILParsedClassType_c(this, init, fromSource);
   }
 
@@ -225,7 +227,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   public Context createContext() {
     return new FabILContext_c(this);
   }
-  
+
   @SuppressWarnings("unchecked")
   @Override
   public List<String> defaultPackageImports() {
@@ -635,7 +637,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public ClassFileLazyClassInitializer classFileLazyClassInitializer(
       ClassFile clazz) {
-    return new FabILLazyClassInitializer((fabil.types.ClassFile)clazz, this);
+    return new FabILLazyClassInitializer((fabil.types.ClassFile) clazz, this);
   }
 
   // / Deprecated/Unsupported methods

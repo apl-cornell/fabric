@@ -35,6 +35,10 @@ public class Codebase {
     return (Codebase)codebases.get(name);
   }
   
+  void addCodebaseName(String name, Codebase codebase) {
+    codebases.put(name, codebase);
+  }
+  
   public Codebase() {
     classes = new HashMap();
     codebases = new HashMap();
@@ -42,6 +46,7 @@ public class Codebase {
 	
   public Codebase(Map/*String, FClass*/ classes) {
     this.classes = new HashMap(classes);
+    codebases = new HashMap();
   }
   
   /* Should only be called at compile time */

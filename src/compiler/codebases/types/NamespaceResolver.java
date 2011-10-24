@@ -1,6 +1,8 @@
 package codebases.types;
 
 import java.net.URI;
+import java.util.Map;
+import java.util.Set;
 
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
@@ -51,6 +53,7 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
    */
   URI resolveCodebaseName(String name) throws SemanticException;
   
+  Map<String, URI> codebaseAliases();
   /**
    * Find a type object in this namespace by name.
    * @param name The name to search for.
@@ -103,5 +106,4 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
    * @return
    */
   Label label();
-
 }

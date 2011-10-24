@@ -19,6 +19,8 @@ public class CodebaseResolver extends SimpleResolver implements
     this.load_enc = true;
     this.load_src = true;
     this.codebase = NSUtil.fetch_codebase(namespace);
+    //always ignore source mod time
+    this.ignore_mod_times = true;
   }
 
   @Override

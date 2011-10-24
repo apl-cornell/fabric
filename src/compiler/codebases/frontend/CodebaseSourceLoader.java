@@ -15,7 +15,6 @@ import fabric.lang.Codebase;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.util.Iterator;
 import fabric.util.Set;
-import fabric.worker.Worker;
 
 public class CodebaseSourceLoader implements URISourceLoader {
   protected static String[] TOPICS = new String[] {Report.loader, Topics.mobile};

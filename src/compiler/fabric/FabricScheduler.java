@@ -197,6 +197,9 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     if (!opts.signatureMode()) {
       g = super.Serialized(job);
       try {
+        if(opts.publish())
+          g.addPrerequisiteGoal(FClassGenerated(job), this);
+
         g.addPrerequisiteGoal(ThisLabelChecked(job), this);
       } catch (CyclicDependencyException e) {
         throw new InternalCompilerError(e);
@@ -237,8 +240,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
       Goal g = internGoal(new EmptyGoal(job));
 
       try {
-        addPrerequisiteDependency(g, Serialized(job));
-        addPrerequisiteDependency(g, PrincipalCastsAdded(job));
+        addPrerequisiteDependency(g, ThisLabelChecked(job));
       } catch (CyclicDependencyException e) {
         // Cannot happen.
         throw new InternalCompilerError(e);

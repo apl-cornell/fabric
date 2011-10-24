@@ -28,7 +28,6 @@ public class PathResolver extends NamespaceResolver_c implements
   }
 
   protected final List<NamespaceResolver> path;
-  protected final Map<String, URI> aliases;
   protected boolean load_raw = false;
   protected boolean load_enc = false;
   protected boolean load_src = false;
@@ -40,11 +39,10 @@ public class PathResolver extends NamespaceResolver_c implements
 
   public PathResolver(ExtensionInfo extInfo, URI ns,
       List<NamespaceResolver> path, Map<String, URI> aliases) {
-    super(extInfo, ns, null);
+    super(extInfo, ns, null, aliases);
     if (path.contains(null))
       throw new NullPointerException("Null resolver in path!");
     this.path = path;
-    this.aliases = aliases;
   }
 
   /**
@@ -109,14 +107,6 @@ public class PathResolver extends NamespaceResolver_c implements
     for (NamespaceResolver nr : path)
       if (nr.packageExists(name)) return true;
     return false;
-  }
-
-  @Override
-  public URI resolveCodebaseName(String name) throws SemanticException {
-    URI ns = aliases.get(name);
-    if (ns == null)
-      throw new SemanticException("Unknown codebase name: " + name);
-    return ns;
   }
 
   /**

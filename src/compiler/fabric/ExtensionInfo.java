@@ -8,11 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import jif.ExtensionInfo.JifJobExt;
+import jif.types.JifTypeSystem;
 import jif.visit.LabelChecker;
 import polyglot.frontend.Compiler;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.FileSource;
 import polyglot.frontend.Job;
+import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.SourceLoader;
@@ -25,6 +28,7 @@ import polyglot.types.reflect.ClassFileLoader;
 import polyglot.types.reflect.ClassPathLoader;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
+import codebases.frontend.CBJobExt;
 import codebases.frontend.CBTargetFactory;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.CodebaseSourceLoader;
@@ -38,6 +42,7 @@ import codebases.types.CodebaseResolver;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
 import codebases.types.PathResolver;
+import fabil.SafeResolver;
 import fabil.SimpleResolver;
 import fabil.types.ClassFile;
 import fabil.types.FabILTypeSystem;
@@ -110,7 +115,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
     if (opts.createSkeleton())
       return scheduler().FabILSkeletonGenerated(job);
     else if (opts.publishOnly()) {
-       return scheduler().ConsistentNamespace();
+       return scheduler().Serialized(job);
     } else
       return scheduler().FabricToFabilRewritten(job);
   }
@@ -163,6 +168,11 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
       return new ClassFile(classFileSource, code, this);
   }
   
+  @Override
+  public JobExt jobExt() {
+      return new CBJobExt();
+  }
+
   /* Overridden typed accessors ***********************************************/
   
   @Override
@@ -306,11 +316,9 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
       return new PathResolver(this, ns, path, opt.codebaseAliases());
 
     } else if ("fab".equals(ns.getScheme())) {
-      List<NamespaceResolver> path = new ArrayList<NamespaceResolver>(2);
-      // Codebases may never resolve platform types.
-      path.add(typeSystem().platformResolver());
-      path.add(new CodebaseResolver(this, ns));
-      return new PathResolver(this, ns, path);
+      // Codebases may never resolve platform types, so always resolve against
+      //  the platformResolver first.
+      return new SafeResolver(this, new CodebaseResolver(this, ns));    
 
     } else if ("file".equals(ns.getScheme())) {
       return new SimpleResolver(this, ns);

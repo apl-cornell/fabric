@@ -3,19 +3,23 @@ package codebases.types;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import polyglot.frontend.Source;
 import polyglot.main.Report;
 import polyglot.types.ImportTable;
+import polyglot.types.Importable;
 import polyglot.types.Named;
 import polyglot.types.NoClassException;
 import polyglot.types.Package;
 import polyglot.types.SemanticException;
 import polyglot.util.CollectionUtil;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
 
@@ -29,12 +33,13 @@ public class CBImportTable extends ImportTable {
   
   protected URI ns;
   protected Set<String> aliases;
-  
+  protected Map<String,String> fromExternal;
   public CBImportTable(CodebaseTypeSystem ts, URI ns, Package pkg, Source source) {
     super(ts, pkg, source.name());
     this.ts = ts;
     this.ns = ns;
     this.aliases = new HashSet<String>();
+    this.fromExternal = new HashMap<String,String>();
   }
 
   // /// The following methods are basically copied from the superclass, but
@@ -152,6 +157,24 @@ public class CBImportTable extends ImportTable {
       throw e;
     }
   }
+  
+  /**
+   * Add a package import.
+   */
+  public void addPackageImport(String pkgName) {
+      // don't add the import if it is a 
+    String first = StringUtil.getFirstComponent(pkgName);                    
+    if(aliases.contains(first)) {
+      throw new InternalCompilerError("Package imports with explicit codebases not yet supported");
+    }
+    else
+      super.addPackageImport(pkgName);
+  }
+
+  public void addExplicitCodebaseImport(String pkgName) {
+          // TODO Auto-generated method stub
+          
+  }
 
   @Override
   protected Named findInPkg(String name, String pkgName)
@@ -185,15 +208,26 @@ public class CBImportTable extends ImportTable {
 
     for (int i = 0; i < lazyImports.size(); i++) {
       String longName = (String) lazyImports.get(i);
-
+      URI import_ns = ns;
+      // Check if this is an explicit codebase import
+      String first = StringUtil.getFirstComponent(longName);                    
+      if(aliases.contains(first)) {
+        import_ns = ts.namespaceResolver(ns).resolveCodebaseName(first);
+        longName = StringUtil.removeFirstComponent(longName);
+        if (Report.should_report(TOPICS, 2))
+          Report.report(2, this + ": importing from external namespace "+import_ns);
+      }
+      
       if (Report.should_report(TOPICS, 2))
         Report.report(2, this + ": import " + longName);
 
       try {
-        Named t = ts.namespaceResolver(ns).find(longName);
+        Importable t = ts.namespaceResolver(import_ns).find(longName);
 
         String shortName = StringUtil.getShortNameComponent(longName);
-
+        if(!import_ns.equals(ns))
+          fromExternal.put(shortName,first);
+        
         map.put(shortName, t);
       } catch (SemanticException e) {
         if (e.position() == null) {
@@ -220,10 +254,29 @@ public class CBImportTable extends ImportTable {
     aliases.add(name);
   }
 
+  public boolean isExternal(String name) {
+    if(StringUtil.isNameShort(name)) 
+      return fromExternal.containsKey(name); 
+    else
+      return aliases.contains(StringUtil.getFirstComponent(name));
+  }
+  
+  public String aliasFor(String name) throws SemanticException {
+    String alias;
+    if(StringUtil.isNameShort(name)) 
+      alias = fromExternal.get(name); 
+    else
+      alias = StringUtil.getFirstComponent(name);
+    if(aliases.contains(alias))
+      return alias;
+    
+    throw new SemanticException("Unknown codebase name: " + name);
+  }
+
   public URI resolveCodebaseName(String name) {
     //Only resolve codebase names that were declared in this 
     // sourcefile.
-    if(aliases.contains(name))
+//    if(aliases.contains(name)) XXX: ?
       try {
         return ts.namespaceResolver(ns).resolveCodebaseName(name);
       } catch (SemanticException e) {

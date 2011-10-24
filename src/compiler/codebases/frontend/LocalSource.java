@@ -16,7 +16,6 @@ import fabric.lang.security.LabelUtil;
 public class LocalSource extends UTF8FileSource implements CodebaseSource {
   protected URI namespace;
   protected boolean publish;
-  protected File derivedFrom;
 
   public LocalSource(File f, boolean userSpecified, URI namespace)
       throws IOException {
@@ -30,12 +29,10 @@ public class LocalSource extends UTF8FileSource implements CodebaseSource {
     this.namespace = namespace;
   }
 
-  protected LocalSource(String path, String name, File derivedFrom,
-      Date lastModified, boolean userSpecified, URI namespace, boolean publish)
-      throws IOException {
+  protected LocalSource(String path, String name, Date lastModified,
+      boolean userSpecified, URI namespace, boolean publish) throws IOException {
     super(path, name, lastModified, userSpecified);
     this.namespace = namespace;
-    this.derivedFrom = derivedFrom;
   }
 
   @Override
@@ -57,26 +54,33 @@ public class LocalSource extends UTF8FileSource implements CodebaseSource {
   public void setPublish(boolean pub) {
     this.publish = pub;
   }
+  
+  protected File file() {
+    return file;
+  }
 
   @Override
   public Source derivedSource(String name) {
-    return derivedSource(namespace(), name);
-  }
-
-  @Override
-  public Source derivedSource(URI namespace) {
-    return derivedSource(namespace, name());
-  }
-  
-  @Override
-  public Source derivedSource(URI namespace, String name) {
+    String path = path();
+    if (!name().equals(name))
+      //don't trust that file != null
+      path = new File(path).getParent() + File.separator + name;
     try {
-      String path = path();
-      if(!name().equals(name))
-        path = file.getParent() + File.separator + name;
+      return new DerivedLocalSource(path, name, file(), new Date(
+          System.currentTimeMillis()), false, namespace);
+    } catch (IOException e) {
+      throw new InternalCompilerError(e);
+    }
+  }
 
-      return new LocalSource(path, name, file, new Date(
-          System.currentTimeMillis()), false, namespace, false);
+  @Override
+  public Source publishedSource(URI namespace, String name) {
+    // XXX: this is fudging it a little so we can have LocalSources equal
+    // RemoteSources when we compile down to bytecode.
+    // we define equality on name and NS only if path is null
+    try {
+      return new PublishedLocalSource(path, name, file, new Date(
+          System.currentTimeMillis()), false, namespace);
     } catch (IOException e) {
       throw new InternalCompilerError(e);
     }
@@ -87,36 +91,19 @@ public class LocalSource extends UTF8FileSource implements CodebaseSource {
     return LabelUtil._Impl.noComponents();
   }
 
+  /**
+   * Sources are equal to each other if they refer to the same resource.
+   */
   @Override
   public boolean equals(Object o) {
     if (o instanceof LocalSource) {
-      LocalSource src = (LocalSource) o;
-      return super.equals(src) && namespace.equals(src.namespace)
-          && src.derivedFrom == src.derivedFrom;
+      LocalSource s = (LocalSource) o;
+      return path.equals(s.path);
     }
     return false;
   }
-
-  /**
-   * Open the source file. For compiler generated source, open the file this
-   * soruce is derived from.
-   */
-  @Override
-  public Reader open() throws IOException {
-    if (reader == null) {
-      File toOpen = file;
-      if (toOpen == null) toOpen = derivedFrom;
-      FileInputStream str = new FileInputStream(toOpen);
-      reader = createReader(str);
-    }
-
-    return reader;
-  }
-
   @Override
   public int hashCode() {
-    return super.hashCode() ^ namespace.hashCode()
-        ^ ((derivedFrom != null) ? derivedFrom.hashCode() : 0);
+    return path.hashCode();
   }
-
 }

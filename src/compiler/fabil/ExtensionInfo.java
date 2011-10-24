@@ -11,6 +11,7 @@ import java.util.Map;
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.FileSource;
+import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.SourceLoader;
@@ -24,6 +25,7 @@ import polyglot.types.reflect.ClassFileLoader;
 import polyglot.types.reflect.ClassPathLoader;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
+import codebases.frontend.CBJobExt;
 import codebases.frontend.CBTargetFactory;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.CodebaseSourceLoader;
@@ -344,4 +346,10 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
       return Worker.getWorker().getLocalStore();
     return Worker.getWorker().getStore(storeName);
   }
+  
+  @Override
+  public JobExt jobExt() {
+      return new CBJobExt();
+  }
+
 }

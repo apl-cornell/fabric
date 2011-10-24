@@ -11,6 +11,7 @@ import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.ast.CodebaseNode;
+import codebases.ast.CodebaseNodeFactory;
 import codebases.types.CodebaseTypeSystem;
 import fabric.ast.FabricNodeFactory;
 
@@ -63,8 +64,7 @@ public class Name extends jif.parse.Name {
       try {
         FabricNodeFactory nf = (FabricNodeFactory) parser.nf;
         URI cb = ts.namespaceResolver(ns).resolveCodebaseName(name);
-        System.err.println("FOUND CB ALIAS: " + name  +":" + cb);
-        return nf.CodebaseNode(pos, cb);
+        return nf.CodebaseNode(pos, ns, name, cb);
       }
       catch(SemanticException e) {}
       return parser.nf.PackageNode(pos, ts.createPackage(this.ns, null, name));
@@ -73,7 +73,9 @@ public class Name extends jif.parse.Name {
       QualifierNode qn = p.toQualifier();
       if(qn instanceof CodebaseNode) {
         CodebaseNode cn = (CodebaseNode)qn;
-        return parser.nf.PackageNode(pos, ts.createPackage(cn.namespace(), null, name));
+        CodebaseNodeFactory nf = (CodebaseNodeFactory) parser.nf;
+        return nf.CodebaseNode(pos, ns, cn.alias(), cn.externalNamespace(), 
+            ts.createPackage(cn.externalNamespace(), null, name));
       }
       else if(qn instanceof PackageNode) {
         PackageNode pn = (PackageNode) qn;

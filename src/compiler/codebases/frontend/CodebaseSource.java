@@ -39,18 +39,6 @@ public interface CodebaseSource {
    * @return A source derived from this CodebaseSource with a new (short) name
    */
   Source derivedSource(String name);
-
-  /**
-   * When local Fabric source is published and then compiled to bytecode, during
-   * FabIL compilation the namespace should be the published namespace. This
-   * ensures the compiled code is compatible with the published classes and
-   * prevents, and avoids forcing the user to invoke the compiler again with new
-   * arguments.
-   * 
-   * @param namespace
-   * @return A source derived from this CodebaseSource in a new namespace
-   */
-  Source derivedSource(URI namespace);
   
   /**
    * Create a derived source object with a new namespace and short name.
@@ -58,7 +46,7 @@ public interface CodebaseSource {
    * @param name
    * @return
    */
-  Source derivedSource(URI namespace, String name);
+  Source publishedSource(URI namespace, String name);
 
   /**
    * Whether a new class object should be published for this source file and
@@ -79,5 +67,6 @@ public interface CodebaseSource {
   public void close() throws IOException;
 
   void setPublish(boolean pub);
+
 
 }

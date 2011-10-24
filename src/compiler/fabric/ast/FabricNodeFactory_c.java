@@ -14,6 +14,7 @@ import jif.ast.ParamDecl;
 import jif.ast.PrincipalNode;
 import jif.types.Assertion;
 import polyglot.ast.Call;
+import polyglot.ast.CanonicalTypeNode;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.Disamb;
@@ -29,6 +30,8 @@ import polyglot.ast.Stmt;
 import polyglot.ast.TopLevelDecl;
 import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
+import polyglot.types.Package;
+import polyglot.types.Type;
 import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
@@ -67,10 +70,14 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public Disamb disamb() {
     return new FabricDisamb_c();
   }
+  @Override
+  public CodebaseNode CodebaseNode(Position pos, URI ns, String name, URI externalNS) {  
+    return CodebaseNode(pos, ns, name, externalNS, null);
+  }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, URI ns) {
-    CodebaseNode n = new CodebaseNode_c(pos, ns);
+  public CodebaseNode CodebaseNode(Position pos, URI ns, String name, URI externalNS, Package package_) {  
+    CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, package_);
     n = (CodebaseNode) n.ext(fabricExtFactory().extCodebaseNode());
     n = (CodebaseNode) n.del(fabricDelFactory().delCodebaseNode());
     return n;  
@@ -83,7 +90,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     n = (CodebaseDecl) n.del(fabricDelFactory().delCodebaseDecl());
     return n;  
   }
-
+  
   // ////////////////////////////////////////////////////////////////////////////
   // new factory methods //
   // ////////////////////////////////////////////////////////////////////////////
@@ -315,6 +322,11 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   @Override
   public Call Call(Position pos, Receiver target, Id name, List args) {
     return Call(pos, target, name, null, args);
+  }
+
+  @Override
+  public CanonicalTypeNode CanonicalTypeNode(Position pos, Type type) {
+    return super.CanonicalTypeNode(pos, type);
   }
 
   @Override

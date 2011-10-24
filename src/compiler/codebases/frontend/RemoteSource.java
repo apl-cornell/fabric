@@ -28,8 +28,7 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
 
   public RemoteSource(URI namespace, FClass fcls, boolean userSpecified)
       throws IOException {
-    this(namespace, fcls, StringUtil.getShortNameComponent(fcls.getName())
-        + ".fab", userSpecified);
+    this(namespace, fcls, fcls.getName() + ".fab", userSpecified);
   }
 
   public RemoteSource(URI namespace, FClass fcls, String name,
@@ -98,21 +97,22 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
     }
   }
 
-  @Override
+  
   /** 
-   * Sources are equal to each other if they refer to the same resource with the same name.
+   * Sources are equal to each other if they refer to the same resource.
    */
+  @Override
   public boolean equals(Object o) {
-    if (o instanceof RemoteSource) {
-      RemoteSource s = (RemoteSource) o;
-      return name.equals(s.name) && fcls.equals(s.fcls);
+    if(o instanceof CodebaseSource) {
+      CodebaseSource s = (CodebaseSource)o;
+      return name().equals(s.name()) && canonicalNamespace().equals(s.canonicalNamespace());
     }
     return false;
   }
 
   @Override
   public int hashCode() {
-    return fcls.hashCode();
+    return name().hashCode() ^ canonicalNamespace().hashCode();
   }
 
   @Override
@@ -133,9 +133,18 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
       throw new InternalCompilerError(e);
     }
   }
+//
+//  @Override
+//  public Source derivedSource(URI namespace) {
+//    try {
+//      return new RemoteSource(namespace, fcls, name, userSpecified, false);
+//    } catch (IOException e) {
+//      throw new InternalCompilerError(e);
+//    }
+//  }
 
   @Override
-  public Source derivedSource(URI namespace) {
+  public Source publishedSource(URI namespace, String name) {
     try {
       return new RemoteSource(namespace, fcls, name, userSpecified, false);
     } catch (IOException e) {
@@ -143,16 +152,6 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
     }
   }
 
-  @Override
-  public Source derivedSource(URI namespace, String name) {
-    try {
-      return new RemoteSource(namespace, fcls, name, userSpecified, false);
-    } catch (IOException e) {
-      throw new InternalCompilerError(e);
-    }
-  }
-
-  
   @Override
   public Label label() {
     return fcls.get$label();
@@ -160,7 +159,7 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
 
   @Override
   public void setPublish(boolean pub) {
-    //We're not supporting this yet.
+    // We're not supporting this yet.
     throw new InternalCompilerError("Tried to republish remote source!");
   }
 

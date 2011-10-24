@@ -14,6 +14,8 @@ public interface Codebase extends fabric.lang.Object {
     
     public fabric.lang.Codebase resolveCodebaseName(java.lang.String name);
     
+    void addCodebaseName(java.lang.String name, fabric.lang.Codebase codebase);
+
     public void insertClass(java.lang.String name, fabric.lang.FClass fcls);
     
     public fabric.util.Map getClasses();
@@ -36,6 +38,9 @@ public interface Codebase extends fabric.lang.Object {
         native public fabric.lang.Codebase resolveCodebaseName(
           java.lang.String arg1);
         
+    native public void addCodebaseName(java.lang.String name,
+        fabric.lang.Codebase codebase);
+
         native public void insertClass(java.lang.String arg1,
                                        fabric.lang.FClass arg2);
         
@@ -66,6 +71,9 @@ public interface Codebase extends fabric.lang.Object {
         native public fabric.lang.Codebase resolveCodebaseName(
           java.lang.String name);
         
+        native public void addCodebaseName(java.lang.String name,
+            fabric.lang.Codebase codebase);
+
         public _Impl(fabric.worker.Store $location,
                      fabric.lang.security.Label $label,
                      fabric.lang.security.Label $accesslabel) {

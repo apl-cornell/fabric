@@ -22,7 +22,9 @@ import polyglot.types.Type;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 import codebases.ast.CBSourceFile;
+import codebases.frontend.CBJobExt;
 import codebases.frontend.CodebaseSource;
+import codebases.types.CodebaseClassType;
 import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
@@ -45,7 +47,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     this.job = job;
   }
 
-  private Source createDerivedSource(CodebaseSource src, String newName) {
+  public Source createDerivedSource(CodebaseSource src, String newName) {
     fabric.ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
     FabricTypeSystem fab_ts = (FabricTypeSystem) jif_ts();
     Source derived;
@@ -56,7 +58,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
 
       Codebase cb = fab_ts.codebaseFromNS(src.namespace());
       URI published_ns = NSUtil.namespace(cb);
-      derived = src.derivedSource(published_ns, newName);
+      derived = src.publishedSource(published_ns, newName);
     }
     else {
       //Otherwise, we just create a derived source with a new name
@@ -69,53 +71,10 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     return derived;
   }
 
-  public Source replaceLocalNS(CodebaseSource src) {
-    fabric.ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
-    FabricTypeSystem fab_ts = (FabricTypeSystem) jif_ts();
-    if(src.shouldPublish()) {
-      if (extInfo.localNamespace().equals(src.namespace())) {
-        Codebase cb = fab_ts.codebaseFromNS(src.namespace());
-        URI new_ns = NSUtil.namespace(cb);
-
-        Source derived = src.derivedSource(new_ns);
-        if(Report.should_report(TOPICS, 2)) {
-          Report.report(2, "Replacing fab:local with " + ((CodebaseSource) derived).namespace() + " for " + derived);
-        }
-        return derived;
-      }
-    }
-    return (Source) src;
-  }
-
   public boolean fabIsPublished() {
     return ((CodebaseSource) job.source()).shouldPublish();
   }
   
-  @Override
-  public void finish(Node ast) {
-    
-    if (ast instanceof SourceCollection) {
-      SourceCollection c = (SourceCollection) ast;
-      for (Iterator iter = c.sources().iterator(); iter.hasNext();) {
-        SourceFile sf = (SourceFile) iter.next();
-        Source src = replaceLocalNS((CodebaseSource) sf.source());
-        java_ext.scheduler().addJob(src, sf.source(src));
-      }
-    } else {
-      SourceFile sf = (SourceFile) ast;
-      Source src = replaceLocalNS((CodebaseSource) sf.source());
-      java_ext.scheduler().addJob(src, sf.source(src));
-    }
-
-    // now add any additional source files, which should all be public
-    for (Iterator iter = newSourceFiles.iterator(); iter.hasNext();) {
-      SourceFile sf = (SourceFile) iter.next();
-      Source src = replaceLocalNS((CodebaseSource) sf.source());
-      java_ext.scheduler().addJob(src, sf.source(src));
-    }
-    newSourceFiles.clear();
-  }
-
   public FabricToFabilRewriter pushLocation(Expr location) {
     FabricContext context = (FabricContext) context();
     return (FabricToFabilRewriter) context(context.pushLocation(location));
@@ -154,6 +113,15 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     if (fabric_ts.isFabricArray(t)) {
       return fabil_nf.FabricArrayTypeNode(pos,
           typeToJava(t.toArray().base(), pos));
+    }
+    
+    if (t.isClass() && !fabric_ts.isLabel(t) && !fabric_ts.isPrincipal(t)) {
+      CodebaseClassType ct= (CodebaseClassType) t.toClass();
+      CBJobExt ext = (CBJobExt) job().ext();
+      if (ext.isExternal(ct)) {
+        String alias = ext.aliasFor(ct);
+        return fabil_nf.TypeNodeFromQualifiedName(pos, alias + "." + t.toClass().fullName());
+      }
     }
     return super.typeToJava(t, pos);
   }

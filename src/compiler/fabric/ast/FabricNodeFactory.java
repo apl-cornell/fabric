@@ -1,5 +1,6 @@
 package fabric.ast;
 
+import java.net.URI;
 import java.util.List;
 
 import codebases.ast.CodebaseNodeFactory;
