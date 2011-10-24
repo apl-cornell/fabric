@@ -196,6 +196,11 @@ public final class Worker {
     return instance != null;
   }
   
+  /** convenience method for getting the node's name */
+  public String getName() {
+    return config.name;
+  }
+  
   @SuppressWarnings("unchecked")
   private Worker(ConfigProperties config, Long principalOnum, Map<String, RemoteStore> initStoreSet) throws InternalError, UsageError,
       IOException, GeneralSecurityException {
