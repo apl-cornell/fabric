@@ -48,7 +48,7 @@ public class CodebaseResolver extends SimpleResolver implements
   }
 
   @Override
-  public URI resolveCodebaseName(String name) throws SemanticException {
+  public URI resolveCodebaseNameImpl(String name) throws SemanticException {
     Codebase cb = codebase.resolveCodebaseName(name);
     if(cb == null)
       throw new SemanticException("Codebase name " + name + " not defined.");

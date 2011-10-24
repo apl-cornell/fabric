@@ -97,14 +97,14 @@ public class Main extends polyglot.main.Main {
     args.add(cb.resolve(fcls.getName()).toString());
     Main main = new Main();
     try {
-      ExtensionInfo extInfo = new fabric.ExtensionInfo(bytecodeMap);
+      fabric.ExtensionInfo extInfo = new fabric.ExtensionInfo(bytecodeMap);
       main.start(args.toArray(new String[0]), extInfo);
 
-      long endCompileTime = System.currentTimeMillis();
+      long endCompileTime = System.currentTimeMillis(); 
 
       @SuppressWarnings("unchecked")
       Collection<String> outputFiles = main.compiler.outputFiles();
-      File output_directory = extInfo.getOptions().output_directory;
+      File output_directory = extInfo.getFabricOptions().outputDirectory();
       String[] suffixes =
           new String[] { "$_Impl", "$_Proxy", "$_Static", "$_Static$_Impl",
               "$_Static$_Proxy" };
@@ -197,7 +197,7 @@ public class Main extends polyglot.main.Main {
     if (extInfo.getFabricOptions().codebaseFilename() != null) {
       FabricOptions opt = extInfo.getFabricOptions();
       File f = new File(opt.codebaseFilename());
-      if (!f.isAbsolute()) f = new File(opt.output_directory, f.getPath());
+      if (!f.isAbsolute()) f = new File(opt.outputDirectory(), f.getPath());
       FileWriter fw;
       try {
         fw = new FileWriter(f);

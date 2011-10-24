@@ -11,7 +11,6 @@ import jif.translate.JifToJavaRewriter;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
-import polyglot.ast.PackageNode;
 import polyglot.ast.SourceCollection;
 import polyglot.ast.SourceFile;
 import polyglot.ast.TypeNode;
@@ -23,11 +22,9 @@ import polyglot.types.Type;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 import codebases.ast.CBSourceFile;
-import codebases.ast.CodebaseNode;
 import codebases.frontend.CBJobExt;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseClassType;
-import codebases.types.NamespaceResolver;
 import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
@@ -36,8 +33,8 @@ import fabric.ast.FabricNodeFactory;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.types.FabricContext;
+import fabric.types.FabricSubstType;
 import fabric.types.FabricTypeSystem;
-import polyglot.types.Package;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
   private static final Collection<String> TOPICS = CollectionUtil.list(
@@ -122,19 +119,14 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     if (t.isClass() && !fabric_ts.isLabel(t) && !fabric_ts.isPrincipal(t)) {
       CodebaseClassType ct= (CodebaseClassType) t.toClass();
       CBJobExt ext = (CBJobExt) job().ext();
+      if(ct instanceof FabricSubstType)
+        ct = (CodebaseClassType) ((FabricSubstType) ct).base();
       if (ext.isExternal(ct)) {
-        CodebaseSource src = (CodebaseSource) job.source();
+        System.err.println("EXTERNAL TYPE " + ct);
         String alias = ext.aliasFor(ct);
-        NamespaceResolver nr = fabric_ts.namespaceResolver(src.canonicalNamespace());
-        URI cb_ns = nr.resolveCodebaseName(alias);
-        Package fab_pkg = ct.package_();
-        Package fil_pkg = null;
-        if(fab_pkg != null)
-          fil_pkg = fabil_ts.packageForName(cb_ns, fab_pkg.fullName());
-        
-        CodebaseNode cn = fabil_nf.CodebaseNode(pos, src.canonicalNamespace(), alias, cb_ns, fil_pkg);
-        return fabil_nf.AmbTypeNode(pos, cn, fabil_nf.Id(pos, ct.name()));
+        return fabil_nf.TypeNodeFromQualifiedName(pos, alias + "." + t.toClass().fullName());
       }
+      System.err.println("INTERNAL TYPE " + ct);
     }
     return super.typeToJava(t, pos);
   }

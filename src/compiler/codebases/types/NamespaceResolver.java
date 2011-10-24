@@ -106,4 +106,6 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
    * @return
    */
   Label label();
+
+  URI resolveCodebaseNameImpl(String name) throws SemanticException;
 }

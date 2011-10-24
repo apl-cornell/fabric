@@ -2,8 +2,6 @@ package codebases.ast;
 
 import java.net.URI;
 
-import codebases.types.CBPackage;
-
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.PackageNode;
@@ -11,10 +9,10 @@ import polyglot.ast.PackageNode_c;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.types.Package;
 import polyglot.types.SemanticException;
-import polyglot.util.CodeWriter;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import polyglot.visit.Translator;
+import codebases.types.CBPackage;
+import codebases.types.CodebaseTypeSystem;
 
 /**
  * A CodebaseNode is a qualifier to a type in another namespace. CodebaseNodes
@@ -51,7 +49,7 @@ public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
     }
   }
   
-
+  @Override
   public boolean isDisambiguated() {
     //CodebaseNodes may have null packages. 
     return package_ == null || super.isDisambiguated();
@@ -80,18 +78,19 @@ public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
 
   @Override
   public Node copy(ExtensionInfo extInfo) throws SemanticException {
-    PackageNode pn = (PackageNode) this.del().copy(extInfo.nodeFactory());
-    if (pn.package_() != null) {
-      pn =
-          pn.package_(extInfo.typeSystem().packageForName(
-              pn.package_().fullName()));
+    Package pkg = null;
+    if(package_ != null) {
+      CodebaseTypeSystem ts = (CodebaseTypeSystem) extInfo.typeSystem();
+      pkg = ts.packageForName(externalNS, package_.fullName());
     }
-    return pn;
+    CodebaseNodeFactory nf = (CodebaseNodeFactory) extInfo;
+    return nf.CodebaseNode(position(), namespace, alias, externalNS, pkg);
   }
 
+  @Override
   public String toString() {
-      return namespace.toString() +  
-          ((package_ == null) ? "": "."+super.toString());
+      return externalNS.toString() +  
+          ((package_ == null) ? "": super.toString());
   }
 
 }

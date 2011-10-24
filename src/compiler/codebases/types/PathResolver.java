@@ -171,4 +171,9 @@ public class PathResolver extends NamespaceResolver_c implements
     //TODO: Should we actually return worker meet join?
     return join;
   }
+
+  @Override
+  public URI resolveCodebaseNameImpl(String name) throws SemanticException {
+    throw new SemanticException("Unknown codebase name " + name);
+  }
 }

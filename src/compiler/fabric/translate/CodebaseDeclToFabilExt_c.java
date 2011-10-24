@@ -13,6 +13,7 @@ public class CodebaseDeclToFabilExt_c extends ToJavaExt_c {
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     FabILNodeFactory nf = (FabILNodeFactory) rw.java_nf();
     CodebaseDecl cd = (CodebaseDecl) node();
+    System.err.println("TRANS: " + cd);
     return nf.CodebaseDecl(cd.position(), cd.name());
   }
 

@@ -63,7 +63,6 @@ public class CBImportTable extends ImportTable {
   @SuppressWarnings("unchecked")
   @Override
   public Named find(String name) throws SemanticException {
-    System.err.println("IMPORT:" + name + " in " + this.sourceName);
     if (Report.should_report(TOPICS, 2))
       Report.report(2, this + ".find(" + name + ")");
 

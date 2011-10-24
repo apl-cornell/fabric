@@ -9,6 +9,7 @@ import java.util.Map;
 import polyglot.frontend.FileSource;
 import polyglot.main.Report;
 import polyglot.util.InternalCompilerError;
+import polyglot.util.StringUtil;
 import fabric.Topics;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
@@ -58,7 +59,8 @@ public class CodebaseSourceLoader implements URISourceLoader {
     for (Iterator it = names.iterator(); it
         .hasNext();) {
       String classname = (String) WrappedJavaInlineable.$unwrap(it.next());
-      if(classname.startsWith(name))
+      String pkgName = StringUtil.getPackageComponent(classname);
+      if(pkgName.startsWith(name))
         return true;
     }
     return false;
