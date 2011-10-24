@@ -6,6 +6,7 @@ public class ComparablePair<T1 extends Comparable<T1>, T2 extends Comparable<T2>
     super(first, second);
   }
 
+  @Override
   public int compareTo(ComparablePair<T1, T2> other) {
     int compare = 0;
     if (first != other.first) {

@@ -7,7 +7,7 @@ import polyglot.types.Package_c;
 import polyglot.types.Resolver;
 import polyglot.types.TypeSystem;
 
-public class CBPackage_c extends Package_c implements Package {
+public class CBPackage_c extends Package_c implements CBPackage {
   protected URI namespace;
 
   /** Used for deserializing types. */
@@ -31,10 +31,14 @@ public class CBPackage_c extends Package_c implements Package {
   public Resolver resolver() {
     if (memberCache == null) {
       memberCache =
-          ((CodebaseTypeSystem) ts).createPackageContextResolver(namespace,
-              this);
+          ((CodebaseTypeSystem) ts).createPackageContextResolver(this);
     }
     return memberCache;
+  }
+
+  @Override
+  public URI namespace() {
+    return namespace;
   }
 
 }

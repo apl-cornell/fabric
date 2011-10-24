@@ -3,7 +3,14 @@ package fabil.extension;
 import java.util.ArrayList;
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Call;
+import polyglot.ast.Expr;
+import polyglot.ast.Id;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
+import polyglot.ast.Receiver;
+import polyglot.ast.Special;
+import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
@@ -13,9 +20,9 @@ import polyglot.util.Position;
 import fabil.ast.FabILCall;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
+import fabil.visit.ReadWriteChecker.State;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.ThreadRewriter;
-import fabil.visit.ReadWriteChecker.State;
 
 public class CallExt_c extends ExprExt_c {
 
@@ -25,12 +32,6 @@ public class CallExt_c extends ExprExt_c {
    */
   private State accessState;
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter
-   * )
-   */
   @SuppressWarnings("unchecked")
   @Override
   protected Expr rewriteProxiesOverrideImpl(ProxyRewriter pr) {
@@ -64,11 +65,6 @@ public class CallExt_c extends ExprExt_c {
     return ((CallExt_c) call.ext()).rewriteProxiesImpl(pr);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     Call call = node();
@@ -165,10 +161,6 @@ public class CallExt_c extends ExprExt_c {
             + "$remote"), args);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public Call node() {
     return (Call) super.node();

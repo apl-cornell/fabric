@@ -12,12 +12,12 @@ public class Dump {
     output("<database currentSemester=\"" + database.getCurrentSemester().toString() + "\" guestUser=\"" + database.getGuestUser().getNetID() + "\">");
     indent();
 
-    for(Iterator i = database.getAllUsers().iterator(); i.hasNext(); )
+    for (Iterator i = database.getAllUsers().iterator(); i.hasNext(); )
       dump((User) i.next());
 
     output("");
 
-    for(Iterator i = database.getAllSemesters().iterator(); i.hasNext(); )
+    for (Iterator i = database.getAllSemesters().iterator(); i.hasNext(); )
       dump((Semester) i.next());
 
     undent();
@@ -32,15 +32,15 @@ public class Dump {
     indent();
 
     Collection semesters = u.findSemesters();
-    for(Iterator i = semesters.iterator(); i.hasNext(); )
+    for (Iterator i = semesters.iterator(); i.hasNext(); )
       ref((Semester) i.next());
 
     output("");
 
     output("<students>");
     indent();
-    for(Iterator i = semesters.iterator(); i.hasNext(); )
-      for(Iterator j = u.findStudentCoursesBySemester((Semester) i.next()).iterator(); j.hasNext(); )
+    for (Iterator i = semesters.iterator(); i.hasNext(); )
+      for (Iterator j = u.findStudentCoursesBySemester((Semester) i.next()).iterator(); j.hasNext(); )
         output("<course id=\"" + j.next().toString() + "\"/>");
     undent();
     output("</students>");
@@ -49,8 +49,8 @@ public class Dump {
 
     output("<staffs>");
     indent();
-    for(Iterator i = semesters.iterator(); i.hasNext(); )
-      for(Iterator j = u.findStaffCoursesBySemester((Semester) i.next()).iterator(); j.hasNext(); )
+    for (Iterator i = semesters.iterator(); i.hasNext(); )
+      for (Iterator j = u.findStaffCoursesBySemester((Semester) i.next()).iterator(); j.hasNext(); )
         ref((Course) j.next());
     undent();
     output("</staffs>");
@@ -63,12 +63,12 @@ public class Dump {
     output("<semester id=\"" + s.toString() + "\" name=\"" + s.getName() + "\" hidden=\"" + bool(s.getHidden()) + "\">");
     indent();
 
-    for(Iterator i = s.getCourses().iterator(); i.hasNext(); )
+    for (Iterator i = s.getCourses().iterator(); i.hasNext(); )
       dump((Course) i.next());
 
     output("<guestCourses>");
     indent();
-    for(Iterator i = s.findGuestAccessCourses().iterator(); i.hasNext(); )
+    for (Iterator i = s.findGuestAccessCourses().iterator(); i.hasNext(); )
       ref((Course) i.next());
     undent();
     output("</guestCourses>");
@@ -77,7 +77,7 @@ public class Dump {
 
     output("<ccCourses>");
     indent();
-    for(Iterator i = s.findCCAccessCourses().iterator(); i.hasNext(); )
+    for (Iterator i = s.findCCAccessCourses().iterator(); i.hasNext(); )
       ref((Course) i.next());
     undent();
     output("</ccCourses>");
@@ -102,7 +102,7 @@ public class Dump {
 
     output("<students>");
     indent();
-    for(Iterator i = c.getStudents().iterator(); i.hasNext(); )
+    for (Iterator i = c.getStudents().iterator(); i.hasNext(); )
       dump((Student) i.next());
     undent();
     output("</students>");
@@ -111,7 +111,7 @@ public class Dump {
 
     output("<staff>");
     indent();
-    for(Iterator i = c.getStaff().iterator(); i.hasNext(); )
+    for (Iterator i = c.getStaff().iterator(); i.hasNext(); )
       dump((Staff) i.next());
     undent();
     output("</staff>");

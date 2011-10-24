@@ -3,7 +3,9 @@ package fabric.translate;
 import java.util.Collections;
 import java.util.List;
 
-import fabil.ast.FabILNodeFactory;
+import jif.translate.JifToJavaRewriter;
+import jif.translate.MethodDeclToJavaExt_c;
+import jif.types.JifTypeSystem;
 import polyglot.ast.Block;
 import polyglot.ast.Expr;
 import polyglot.ast.Formal;
@@ -15,9 +17,7 @@ import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
-import jif.translate.JifToJavaRewriter;
-import jif.translate.MethodDeclToJavaExt_c;
-import jif.types.JifTypeSystem;
+import fabil.ast.FabILNodeFactory;
 
 public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
   @Override
@@ -90,7 +90,7 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     // Translate the constraints and use them to guard the body.
     Block newBody = guardWithConstraints(rw, origBody);
     // Wrap with a transaction if there are constraints
-    if(!mi.constraints().isEmpty())
+    if (!mi.constraints().isEmpty())
       newBody =
           ((FabILNodeFactory) rw.java_nf()).Atomic(origBody.position(), newBody
               .statements());

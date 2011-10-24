@@ -10,13 +10,13 @@ import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
-import fabric.worker.Worker;
-import fabric.worker.Store;
-import fabric.worker.RemoteStore;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
+import fabric.worker.RemoteStore;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * This represents a Replicate message in the beehive system. Node A sends node
@@ -47,10 +47,12 @@ public class Replicate implements RawMessage {
     return skip;
   }
 
+  @Override
   public int getPriority() {
     return MEDIUM_PRIORITY;
   }
 
+  @Override
   public short getType() {
     return MessageType.REPLICATE;
   }
@@ -68,6 +70,7 @@ public class Replicate implements RawMessage {
     return s + "]";
   }
 
+  @Override
   public void serialize(OutputBuffer buf) throws IOException {
     buf.writeInt(level);
     
@@ -123,10 +126,12 @@ public class Replicate implements RawMessage {
       return globs;
     }
 
+    @Override
     public int getPriority() {
       return MEDIUM_PRIORITY;
     }
 
+    @Override
     public short getType() {
       return MessageType.REPLICATE_REPLY;
     }
@@ -142,6 +147,7 @@ public class Replicate implements RawMessage {
       return s + "]";
     }
 
+    @Override
     public void serialize(OutputBuffer buf) throws IOException {
       DataOutputBuffer out = new DataOutputBuffer(buf);
       out.writeInt(globs.size());

@@ -55,7 +55,7 @@ public class TransactionResult {
 	 * @param error String from which to create a new TransactionError
 	 */
 	public void addError(String error) {
-		if(error != null && error.length() > 0) errors.add(new TransactionError(error));
+		if (error != null && error.length() > 0) errors.add(new TransactionError(error));
 	}
 	
 	public void addError(String error, Exception e) {
@@ -68,7 +68,7 @@ public class TransactionResult {
 	
 	public void addWarning(String warning)
 	{
-		if(warning != null && warning.length() > 0) warnings.add(warning);
+		if (warning != null && warning.length() > 0) warnings.add(warning);
 	}
 	
 	public void setValue(Object value) {

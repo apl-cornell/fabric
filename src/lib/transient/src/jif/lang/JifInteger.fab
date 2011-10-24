@@ -50,7 +50,7 @@ public final class JifInteger[covariant label L] implements JifObject[L] {
 //    }
     
     public int{L} intValue() {
-        if(s != null) {
+        if (s != null) {
             return s.intValue();
         } else {
             return 0;
@@ -94,7 +94,7 @@ public final class JifInteger[covariant label L] implements JifObject[L] {
         return s.hashCode();
     }
     public String{L} toString() {
-        if(s != null) {
+        if (s != null) {
             return s.toString();
         } else {
             return "";

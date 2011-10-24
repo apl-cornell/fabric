@@ -36,7 +36,7 @@ String mingroup= assign.getAttribute(XMLBuilder.A_MINGROUP);
 String maxgroup= assign.getAttribute(XMLBuilder.A_MAXGROUP);
 String groupstring = null;
 if (assign.hasAttribute(XMLBuilder.A_ASSIGNEDGROUPS)) { groupstring= "Staff-created"; }
-else if(mingroup.equals(maxgroup)) {
+else if (mingroup.equals(maxgroup)) {
 	if ("1".equals(mingroup)){
 		groupstring= "1 student"; 
 	} else { groupstring= mingroup + " students"; }
@@ -62,7 +62,7 @@ else { groupstring= mingroup + " to " + maxgroup + " students"; } %>
 			<br><%= groupsnode.getAttribute(XMLBuilder.A_COMPLETE) %>
 <%	}%>
 		</td>
-<%	if(isAdmin || isGrades) { %>
+<%	if (isAdmin || isGrades) { %>
 		<td rowspan="2" style="padding: 0px">
 			<table border="0" cellspacing="0">
 				<tr>
@@ -87,7 +87,7 @@ else { groupstring= mingroup + " to " + maxgroup + " students"; } %>
 								}%>
 							</optgroup>
 						</select><%
-		if(numprobs >= 1) {/* there's at least one subproblem */ %>
+		if (numprobs >= 1) {/* there's at least one subproblem */ %>
 						<br>for
 						<select id="select_prob_select" style="width:15em" size="2" multiple>
 							<optgroup label="Select Problem(s)">
@@ -112,9 +112,9 @@ else { groupstring= mingroup + " to " + maxgroup + " students"; } %>
 			&nbsp;<input type="submit" style="width: 7em" value="<%= AccessController.GA_FILES %>" id="files" name="<%= AccessController.P_SUBMIT %>"\>
 			<input type="submit" style="width: 7em" value="<%= AccessController.GA_EMAIL %>" id="email" name="<%= AccessController.P_SUBMIT %>"\>
 			<br>
-<%		if(isAdmin) {%>
+<%		if (isAdmin) {%>
 			<div id="assign_grader_div" style="border: solid 1px #dddddd; padding: 5px; margin-top: 5px">
-<%			if(numprobs > 1) {%>
+<%			if (numprobs > 1) {%>
 				<select id="assign_prob_select" name="<%= AccessController.P_ASSIGNPROBNAME %>" style="width: 15em">
 					<optgroup label="Select Problem">
 						<option>&lt;All Parts&gt;</option>
@@ -124,7 +124,7 @@ else { groupstring= mingroup + " to " + maxgroup + " students"; } %>
 <%				}%>
 					</optgroup>
 				</select>
-<%			} else if(numprobs == 1) {
+<%			} else if (numprobs == 1) {
 				Element prob = (Element)probs.item(0);%>
 				<input type="hidden" name="<%= AccessController.P_ASSIGNPROBNAME %>" value="<%= prob.getAttribute(XMLBuilder.A_NAME) %>">
 <% 			} else {%>
@@ -151,7 +151,7 @@ else { groupstring= mingroup + " to " + maxgroup + " students"; } %>
 			<td colspan="2" align="center" style="border: solid; border-color: #aaaaaa; border-width: 0px 1px 1px 1px; padding: 5px">
 				<div id="subgrades" style="width: 100%">
 					<a class="button" id="show_assignedto" name="assignedTo" href="javascript:showHideAssignedTo();">(Show Assigned To)</a>
-<%		if(numprobs > 1) {%>
+<%		if (numprobs > 1) {%>
 					&nbsp;|&nbsp;
 					<a class="button" href="#" onClick="showProblemGrades(<%= assignid %>); return false;">(Hide Problem Scores)</a>
 <%		}%>
@@ -175,7 +175,7 @@ else { groupstring= mingroup + " to " + maxgroup + " students"; } %>
 	</tr>
 </table>
 <br>
-<% if(isAdmin || isGroups) {%>
+<% if (isAdmin || isGroups) {%>
    <% if (isAssignment) {%>
 <div class="assignment_left">
 	<h2>

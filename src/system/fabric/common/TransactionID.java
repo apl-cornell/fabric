@@ -71,6 +71,7 @@ public class TransactionID implements FastSerializable, Serializable {
     }
   }
 
+  @Override
   public void write(DataOutput out) throws IOException {
     out.writeBoolean(parent != null);
     if (parent != null) parent.write(out);

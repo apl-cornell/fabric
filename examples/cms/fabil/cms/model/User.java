@@ -71,7 +71,7 @@ public class User implements Principal {
   public String getCollege()   { return this.college;   }
   
   public static Comparator getLAST_NAME_COMPARATOR() {
-    if(LAST_NAME_COMPARATOR == null) {
+    if (LAST_NAME_COMPARATOR == null) {
       LAST_NAME_COMPARATOR = new Comparator() {
         public int compare(Object o1, Object o2) {
           if (!(o1 instanceof User && o2 instanceof User)) return 0;
@@ -91,7 +91,7 @@ public class User implements Principal {
   }
   
   public static Comparator getNETID_COMPARATOR() {
-    if(NETID_COMPARATOR == null) {
+    if (NETID_COMPARATOR == null) {
       NETID_COMPARATOR = new Comparator() {
         public int compare(Object o1, Object o2) {
           if (!(o1 instanceof User && o2 instanceof User)) return 0;

@@ -1,19 +1,23 @@
 package fabil.ast;
 
+import java.util.Iterator;
 import java.util.List;
-
-import fabil.types.FabILFlags;
-import fabil.types.FabILTypeSystem;
 
 import polyglot.ast.ClassBody;
 import polyglot.ast.Id;
 import polyglot.ast.TypeNode;
+import polyglot.frontend.MissingDependencyException;
+import polyglot.frontend.Scheduler;
+import polyglot.frontend.goals.Goal;
 import polyglot.main.Report;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
+import fabil.types.FabILFlags;
+import fabil.types.FabILTypeSystem;
+import fabil.ast.ClassDecl_c;
 
 public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
 
@@ -21,13 +25,41 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
       List<TypeNode> interfaces, ClassBody body) {
     super(pos, flags, name, superClass, interfaces, body);
   }
+  protected ClassDecl_c disambiguateSupertypes(AmbiguityRemover ar) throws SemanticException {
+    boolean supertypesResolved = true;
+    
+//    System.out.println("  " + ar + ".disamsuper: " + this);
+    
+    if (! type.supertypesResolved()) {
+        if (superClass != null && ! superClass.isDisambiguated()) {
+          System.err.println("SUPERCLASS is ambiguous:" + superClass);
+            supertypesResolved = false;
+        }
+        
+        for (Iterator i = interfaces.iterator(); supertypesResolved && i.hasNext(); ) {
+            TypeNode tn = (TypeNode) i.next();
+            if (! tn.isDisambiguated()) {
+              System.err.println("INTERFACE is ambiguous:" + tn + " in " + name);
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.ClassDecl_c#setSuperClass(polyglot.visit.AmbiguityRemover,
-   *      polyglot.ast.TypeNode)
-   */
+                supertypesResolved = false;
+            }
+        }
+        
+        if (! supertypesResolved) {
+            Scheduler scheduler = ar.job().extensionInfo().scheduler();
+            Goal g = scheduler.SupertypesResolved(type);
+            throw new MissingDependencyException(g);
+        }
+        else {            
+            setSuperClass(ar, superClass);
+            setInterfaces(ar, interfaces);
+            type.setSupertypesResolved(true);
+        }
+    }
+    
+    return this;
+}
+
   @Override
   protected void setSuperClass(AmbiguityRemover ar, TypeNode superClass)
       throws SemanticException {

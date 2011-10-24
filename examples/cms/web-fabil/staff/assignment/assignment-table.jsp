@@ -189,7 +189,7 @@ if (!item.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_USESCHEDULE()).
               <% } %>
            </tr>
 	<%
-		for(int j = 0; j < numSurveys; j++) {
+		for (int j = 0; j < numSurveys; j++) {
 			Element survey = (Element) surveys.item(j); 	
 			String assignid = survey.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNID());
 			

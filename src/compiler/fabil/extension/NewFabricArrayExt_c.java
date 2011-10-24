@@ -1,6 +1,6 @@
 package fabil.extension;
 
-import polyglot.ast.*;
+import polyglot.ast.Expr;
 import polyglot.qq.QQ;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
@@ -11,11 +11,6 @@ import fabil.visit.ProxyRewriter;
 
 public class NewFabricArrayExt_c extends AnnotatedExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     QQ qq = pr.qq();
@@ -46,11 +41,6 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
         arrayType, arrayImplType, newArray.location(), newArray.label(), newArray.accessLabel(), size);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     NewFabricArray newArray = node();
@@ -70,11 +60,6 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
     return null;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public NewFabricArray node() {
     return (NewFabricArray) super.node();

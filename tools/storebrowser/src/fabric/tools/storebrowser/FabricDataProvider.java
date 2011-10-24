@@ -22,7 +22,7 @@ public class FabricDataProvider implements DataProvider {
 	 */
 	abstract class Getter {
 		protected List<Object> getChildrenForObject(Object obj) {
-			if(obj == null)
+			if (obj == null)
 				return Collections.emptyList();
 			try {
 				Class c = obj.getClass();
@@ -40,7 +40,7 @@ public class FabricDataProvider implements DataProvider {
                     toReturn.add(new RootObject(keyStr, m.get(key)));
                   }
                 } else {
-                  for(Field f : c.getDeclaredFields()) {
+                  for (Field f : c.getDeclaredFields()) {
       				f.setAccessible(true);
       					
       				toReturn.add(new DataObject(f.getName(), f.get(obj), 
@@ -68,7 +68,7 @@ public class FabricDataProvider implements DataProvider {
 		
 		DataObject(String fieldName, Object val, Class t) {
 			//Fetch if it is a fabric object
-			if(val != null && val instanceof fabric.lang.Object) {
+			if (val != null && val instanceof fabric.lang.Object) {
 				fabric.lang.Object fabObj = (fabric.lang.Object)val;
 				obj = fabObj.fetch();
 				this.t = obj.getClass();
@@ -80,7 +80,7 @@ public class FabricDataProvider implements DataProvider {
 		}
 		
 		public String toString() {
-			if(t.isPrimitive()) {
+			if (t.isPrimitive()) {
 				return fieldName + " = " + obj.toString();
 			} else if (obj != null && obj instanceof String) {
 				return fieldName + " = \"" + obj.toString() + "\"";
@@ -94,7 +94,7 @@ public class FabricDataProvider implements DataProvider {
 		}
 		
 		public List<Object> getChildren() {
-			if(t.isPrimitive() || 
+			if (t.isPrimitive() || 
 					(obj != null && obj instanceof String)) 
 				return Collections.emptyList();
 			else

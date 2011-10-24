@@ -87,7 +87,7 @@ public class FabricServlet extends HttpServlet {
   
   private Object getObjectByOid(String oid) {
     String[] splits = oid.split("\\/");
-    if(splits.length != 4)
+    if (splits.length != 4)
       throw new IllegalArgumentException("Malformed oid: " + oid);
     
     return getObjectByOid(Worker.getWorker().getStore(splits[2]), 

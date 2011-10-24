@@ -3,10 +3,6 @@ package fabil.visit;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabil.ExtensionInfo;
-import fabil.ast.Atomic;
-import fabil.extension.FabILExt;
-import fabil.types.FabILTypeSystem;
 import polyglot.ast.Expr;
 import polyglot.ast.IntLit;
 import polyglot.ast.MethodDecl;
@@ -19,6 +15,10 @@ import polyglot.types.MethodInstance;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
+import fabil.ExtensionInfo;
+import fabil.ast.Atomic;
+import fabil.extension.FabILExt;
+import fabil.types.FabILTypeSystem;
 
 /**
  * Rewrites the <code>atomic</code> construct.
@@ -44,12 +44,6 @@ public class AtomicRewriter extends NodeVisitor {
     return (FabILExt) n.ext();
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.visit.NodeVisitor#leave(polyglot.ast.Node, polyglot.ast.Node,
-   *      polyglot.visit.NodeVisitor)
-   */
   @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {

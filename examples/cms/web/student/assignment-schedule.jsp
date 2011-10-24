@@ -11,7 +11,7 @@ String status = assignment.getAttribute(XMLBuilder.A_STATUS);
 boolean enableGroups = status.equals(Assignment.OPEN) && !assignment.hasAttribute(XMLBuilder.A_PASTDUE); 
 boolean isScheduled = group.hasAttribute(XMLBuilder.A_ISSCHEDULED);
 String tsid = "";
-if(isScheduled)
+if (isScheduled)
 {
 	Element timeslot= XMLUtil.getFirstChildByTagName(group, XMLBuilder.TAG_TIMESLOT);
 	tsid = timeslot.getAttribute(XMLBuilder.A_TSID);
@@ -32,7 +32,7 @@ Collection timeslots = XMLUtil.getChildrenByTagName(schedule, XMLBuilder.TAG_TIM
 </style>
 <%
 boolean scheduleLocked = schedule.hasAttribute(XMLBuilder.A_SCHEDULE_LOCKED);
-if(scheduleLocked)
+if (scheduleLocked)
 {%>
 <h2>
   <a name="schedule"></a>
@@ -56,11 +56,11 @@ if(scheduleLocked)
 			} catch (Exception e) {}
 			/* if timeslot is selected or if it is not full, display as an option */
 			String location = curTimeSlot.getAttribute(XMLBuilder.A_TSLOCATION);
-			if(location == null) location = "";
+			if (location == null) location = "";
 			if (tsPop < maxGroups || (isScheduled && tsid.equals(curTimeSlot.getAttribute(XMLBuilder.A_TSID)))) { %>
 			<tr>
 				<td width="2%" align="right" class="tslist_extleft">
-				<% if(tsid.equals(curTimeSlot.getAttribute(XMLBuilder.A_TSID)))
+				<% if (tsid.equals(curTimeSlot.getAttribute(XMLBuilder.A_TSID)))
 					{%>
 						&rArr;<% /* right arrow */
 					}%>
@@ -118,7 +118,7 @@ else
   </span>
 </h2>
 <div id="schedules" class="showhide"><%
-	if(!schedule.getAttribute(XMLBuilder.A_SCHEDULE_LOCKDATE).equals("")) /* there is a deadline */
+	if (!schedule.getAttribute(XMLBuilder.A_SCHEDULE_LOCKDATE).equals("")) /* there is a deadline */
 	{%>
 	<span><b>This schedule will be locked at <%= schedule.getAttribute(XMLBuilder.A_SCHEDULE_LOCKDATE) %> <%= schedule.getAttribute(XMLBuilder.A_SCHEDULE_LOCKTIME) %> <%= schedule.getAttribute(XMLBuilder.A_SCHEDULE_LOCKAMPM) %>: you will not be able to change your timeslot after that time.</b></span><%
 	}%>

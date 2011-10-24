@@ -33,6 +33,7 @@ import jif.types.label.ProviderLabel;
 import jif.types.label.ThisLabel;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
+import polyglot.ast.TypeNode;
 import polyglot.ext.param.types.Subst;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
@@ -66,6 +67,7 @@ import polyglot.util.StringUtil;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CBClassContextResolver;
 import codebases.types.CBImportTable;
+import codebases.types.CBPackage;
 import codebases.types.CBPackageContextResolver;
 import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
@@ -225,33 +227,25 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public CBPackageContextResolver createPackageContextResolver(URI namespace,
-      Package p) {
+  public CBPackageContextResolver createPackageContextResolver(Package p) {
     assert_(p);
-    return new CBPackageContextResolver(this, namespace, p);
+    return new CBPackageContextResolver(this, p);
   }
 
-  @Override
-  public Resolver packageContextResolver(URI namespace, Package p,
-      ClassType accessor) {
-    if (accessor == null) {
-      return p.resolver();
-    } else {
-      return new AccessControlWrapperResolver(createPackageContextResolver(
-          namespace, p), accessor);
-    }
-  }
-
-  @Override
-  public Resolver packageContextResolver(URI namespace, Package package_) {
-    return packageContextResolver(namespace, package_, null);
-  }
-
+  //XXX: There may be a way to override the namespace-less package methods, but 
+  // createPackage is often called with prefix==null, so a full refactoring helped
+  // identify the situations it is called in.
   @Override
   public Package createPackage(URI ns, Package prefix, java.lang.String name) {
+    if(prefix!=null) {
+      ns = ((CBPackage)prefix).namespace();
+    }
     return new CBPackage_c(this, ns, prefix, name);
   }
 
+  /**
+   * @throws SemanticException  
+   */
   @Override
   public Package packageForName(URI ns, Package prefix, java.lang.String name)
       throws SemanticException {
@@ -282,6 +276,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return new CBClassContextResolver(this, type);
   }
 
+  @SuppressWarnings("rawtypes")
   @Override
   public Object placeHolder(TypeObject o, Set roots) {
     assert_(o);
@@ -722,6 +717,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return forName(platformResolver(), name);
   }
 
+  @SuppressWarnings("rawtypes")
   @Override
   public Type typeForClass(Class clazz) throws SemanticException {
     return typeForClass(platformResolver(), clazz);
@@ -761,7 +757,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     Store dest = extInfo.destinationStore();
     NodePrincipal w = Worker.getWorker().getPrincipal();
     NodePrincipal st = dest.getPrincipal();
-    if(w != null && st != null)
+    if (w != null && st != null)
       return LabelUtil._Impl.writerPolicyLabel(dest, w, st);
     throw new InternalCompilerError("Whatt?!? W: " + w + " ST: " + st);
   }
@@ -833,11 +829,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     throw toplevel_resolution_error();
   }
 
-  @Override
-  @Deprecated
-  public CBPackageContextResolver createPackageContextResolver(Package p) {
-    throw toplevel_resolution_error();
-  }
+//  @Override
+//  @Deprecated
+//  public CBPackageContextResolver createPackageContextResolver(Package p) {
+//    throw toplevel_resolution_error();
+//  }
 
   @Override
   @Deprecated
@@ -854,7 +850,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         "Import table must be associated with a namespace,"
             + " use importTable(Source,URI,Package) instead");
   }
-  
+
+  @Override
   public Label tjoin(Label L1, Label L2) {
     ConfPolicy cp1 = L1 == null ? null : L1.confProjection();
     ConfPolicy cp2 = L2 == null ? null : L2.confProjection();
@@ -865,6 +862,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return pairLabel(L1.position(), join(cp1, cp2), meet(ip1, ip2));
   }
 
+  @Override
   public Label tmeet(Label L1, Label L2) {
     ConfPolicy cp1 = L1 == null ? null : L1.confProjection();
     ConfPolicy cp2 = L2 == null ? null : L2.confProjection();

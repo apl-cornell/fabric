@@ -9,7 +9,7 @@ Element root = (Element) displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).i
 Element course = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE); 
 String courseID = course.getAttribute(XMLBuilder.A_COURSEID);
 boolean isadmin = false, isgroups = false, isgrades = false, isassign = false, iscategory = false;
-if(!p.isInStaffAsBlankMode()) /* privileges are possible only if acting as staff */
+if (!p.isInStaffAsBlankMode()) /* privileges are possible only if acting as staff */
 {
 	isadmin = course.hasAttribute(XMLBuilder.A_ISADMIN);
 	isgroups = course.hasAttribute(XMLBuilder.A_ISGROUPS);
@@ -34,7 +34,7 @@ if(!p.isInStaffAsBlankMode()) /* privileges are possible only if acting as staff
       	<jsp:include page="../course-title.jsp" />
 <%Element l= (Element) course.getElementsByTagName(XMLBuilder.TAG_DESCRIPTION).item(0);
 Text text= (Text)l.getFirstChild();
-if(isadmin)
+if (isadmin)
 {%>
       <div id="description_title" class="assignment_left">
         <h2>
@@ -51,7 +51,7 @@ if(isadmin)
 			*/
 			function editDescription(newEditState)
 			{
-				if(newEditState)
+				if (newEditState)
 				{
 					changeDisplay('desc_view_span', 'none');
 					changeDisplay('desc_form_span', 'inline');
@@ -89,7 +89,7 @@ if(isadmin)
 			</div>
 		</div><%
 }
-else if(!text.getData().equals(""))
+else if (!text.getData().equals(""))
 {%>
       <div id="description_title" class="assignment_left">
         <h2>

@@ -24,9 +24,6 @@ public final class Select extends InputNode {
         selected = selected_;    
     }
 
-    /* (non-Javadoc)
-     * @see servlet.Node#write(servlet.HTMLWriter)
-     */
     void writeImpl(HTMLWriter p) {
         // TODO Auto-generated method stub
         p.begin(2);

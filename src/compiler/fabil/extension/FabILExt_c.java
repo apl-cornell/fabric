@@ -3,10 +3,17 @@ package fabil.extension;
 import polyglot.ast.Ext_c;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
-import fabil.visit.*;
+import fabil.visit.AtomicRewriter;
+import fabil.visit.LabelAssigner;
+import fabil.visit.LocationAssigner;
+import fabil.visit.ProxyRewriter;
+import fabil.visit.RemoteCallRewriter;
+import fabil.visit.StaticInitializerCollector;
+import fabil.visit.ThreadRewriter;
 
 public class FabILExt_c extends Ext_c implements FabILExt {
 
+  @Override
   public Node collectStaticInitializers(StaticInitializerCollector sc) {
     return node();
   }
@@ -15,6 +22,7 @@ public class FabILExt_c extends Ext_c implements FabILExt {
    * @throws SemanticException
    *           when a label is missing and no default can be assigned.
    */
+  @Override
   public Node assignLabels(LabelAssigner la) throws SemanticException {
     return node();
   }
@@ -22,26 +30,32 @@ public class FabILExt_c extends Ext_c implements FabILExt {
   /**
    * @throws SemanticException
    */
+  @Override
   public Node assignLocations(LocationAssigner la) throws SemanticException {
     return node();
   }
 
+  @Override
   public Node rewriteProxiesOverride(ProxyRewriter rewriter) {
     return null;
   }
 
+  @Override
   public Node rewriteAtomic(AtomicRewriter ar) {
     return node();
   }
 
+  @Override
   public Node rewriteProxies(ProxyRewriter pr) {
     return node();
   }
 
+  @Override
   public Node rewriteThreads(ThreadRewriter tr) {
     return node();
   }
   
+  @Override
   public Node rewriteRemoteCalls(RemoteCallRewriter rr) {
     return node();
   }

@@ -12,7 +12,15 @@ import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
-import fabric.messages.*;
+import fabric.messages.AbortTransactionMessage;
+import fabric.messages.CommitTransactionMessage;
+import fabric.messages.DirtyReadMessage;
+import fabric.messages.InterWorkerStalenessMessage;
+import fabric.messages.MessageToWorkerHandler;
+import fabric.messages.ObjectUpdateMessage;
+import fabric.messages.PrepareTransactionMessage;
+import fabric.messages.RemoteCallMessage;
+import fabric.messages.TakeOwnershipMessage;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -64,6 +72,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     try {
       // Execute the requested method.
       Object result = Worker.runInSubTransaction(new Worker.Code<Object>() {
+        @Override
         public Object run() {
           // This is ugly. Wrap all exceptions that can be thrown with a runtime
           // exception and do the actual handling below.

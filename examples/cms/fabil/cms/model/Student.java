@@ -90,7 +90,7 @@ public class Student {
   //////////////////////////////////////////////////////////////////////////////
 
   public static Comparator getLAST_NAME_COMPARATOR() {
-    if(LAST_NAME_COMPARATOR == null) {
+    if (LAST_NAME_COMPARATOR == null) {
       LAST_NAME_COMPARATOR = new Comparator() {
         public int compare(Object o1, Object o2) {
           if (!(o1 instanceof Student && o2 instanceof Student)) return 0;
@@ -104,7 +104,7 @@ public class Student {
   }
   
   public static Comparator getNETID_COMPARATOR() {
-    if(NETID_COMPARATOR == null) {
+    if (NETID_COMPARATOR == null) {
       NETID_COMPARATOR = new Comparator() {
         public int compare(Object o1, Object o2) {
           if (!(o1 instanceof Student && o2 instanceof Student)) return 0;

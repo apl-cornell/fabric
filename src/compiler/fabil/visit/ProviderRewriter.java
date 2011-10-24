@@ -1,17 +1,18 @@
 package fabil.visit;
 
-import codebases.frontend.CodebaseSource;
-import codebases.types.CodebaseClassType;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.qq.QQ;
 import polyglot.types.ParsedClassType;
+import polyglot.util.InternalCompilerError;
 import polyglot.visit.NodeVisitor;
+import codebases.frontend.CodebaseSource;
+import codebases.types.CodebaseClassType;
 import fabil.ExtensionInfo;
 import fabil.ast.FabILNodeFactory;
 import fabil.ast.ProviderLabel;
-import fabil.types.FabILParsedClassType_c;
 import fabil.types.FabILTypeSystem;
+import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.WrappedJavaInlineable;
@@ -19,7 +20,7 @@ import fabric.util.Map;
 import fabric.worker.Worker;
 
 /**
- * Rewrites <code>ProviderLaber</code> AST nodes into <code>get$label()</code>
+ * Rewrites <code>ProviderLabel</code> AST nodes into <code>get$label()</code>
  * calls on class object proxies.
  */
 public class ProviderRewriter extends NodeVisitor {
@@ -44,16 +45,20 @@ public class ProviderRewriter extends NodeVisitor {
     }
     ProviderLabel pl = (ProviderLabel) n;
     CodebaseClassType ct = (CodebaseClassType) pl.typeNode().type();    
-    if(ct instanceof ParsedClassType && Worker.isInitialized()) {
+    if (ct instanceof ParsedClassType && Worker.isInitialized()) {
       CodebaseSource src = (CodebaseSource) ((ParsedClassType) ct).fromSource();
-      
+
       Codebase cb = ts.codebaseFromNS(src.canonicalNamespace());
       // Get a handle to the FClass object.
       Map classes = cb.getClasses();
+      Object obj = classes.get(WrappedJavaInlineable.$wrap(ct.fullName()));
+      if(obj == null)
+        throw new InternalCompilerError("Class not found in its own namespace: " + NSUtil.namespace(cb));
+      
       FClass fclass =
           (FClass) fabric.lang.Object._Proxy.$getProxy(classes
               .get(WrappedJavaInlineable.$wrap(ct.fullName())));
-      
+
       // Convert to an OID.
       String storeName = fclass.$getStore().name();
       long onum = fclass.$getOnum();

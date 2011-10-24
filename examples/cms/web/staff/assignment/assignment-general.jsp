@@ -56,7 +56,7 @@ General
 	<% } %>
 	  </td>
 	</tr>
-	<%if(assignType == Assignment.ASSIGNMENT){%>
+	<%if (assignType == Assignment.ASSIGNMENT){%>
 	  <tr>
       <td>Maximum Score</td>
       <td>
@@ -64,7 +64,7 @@ General
       </td>
     </tr>
     <%}%>
-	<% if(assignType != Assignment.SURVEY) {%>
+	<% if (assignType != Assignment.SURVEY) {%>
     <tr>
       <td>Weight</td>
       <td>

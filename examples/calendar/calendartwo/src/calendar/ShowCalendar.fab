@@ -28,7 +28,7 @@ public class ShowCalendar extends UAction[CalServEP] {
 
         final Main servlet = (Main)uservlet;
         final CalendarSessionState[{req.session←}] state = (CalendarSessionState[{req.session←}])ustate;
-        if(state.css == null) throw new ServletException("invalid args");
+        if (state.css == null) throw new ServletException("invalid args");
         
         // Direct the user to a session-specific show calendar action.
         // We store this session-specific action in the state, so that we
@@ -94,7 +94,7 @@ public class ShowCalendar extends UAction[CalServEP] {
         final CalendarSessionState[{sessState.sessionPrincipal←}] ss = CalendarSessionState.endorseState(p, sessState.sessionPrincipal, sessState);
         
         if (ss == null) return;
-        if(ss.sessionPrincipal equiv sessState.sessionPrincipal) {
+        if (ss.sessionPrincipal equiv sessState.sessionPrincipal) {
             updateStateHelper(ss.css, ss.sessionPrincipal, p, scsa);
         }
             

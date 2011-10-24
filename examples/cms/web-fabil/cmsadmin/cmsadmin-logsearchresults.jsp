@@ -50,7 +50,7 @@ NodeList logs = ((Element) root.getElementsByTagName(XMLBuilder.TAG_LOGSEARCH_RE
                 <th>Log Type</th><th>Action</th><th>Acting NetID</th><th>Acting IP Address</th>
                 <th>Affected NetIDs</th><th>Simulated NetID</th><th>Course</th><th>Assignment</th><th>Date</th>
              </tr>
-	           <% for(int i=0; i < logs.getLength(); i++) {
+	           <% for (int i=0; i < logs.getLength(); i++) {
 	               Element l = (Element) logs.item(i);
 	               String logID = l.getAttribute(XMLBuilder.A_LOGID);
 	               NodeList recs = l.getElementsByTagName(XMLBuilder.TAG_RECNETID);

@@ -31,7 +31,7 @@ public class CreateDB {
     // create courses
     for (Iterator sems = database.getAllSemesters().iterator(); sems.hasNext();) {
       Semester next = (Semester) sems.next();
-      for(int i = 0; i < 3; i++) {
+      for (int i = 0; i < 3; i++) {
         Course c = new Course(database, next, "Test Class " + i, "Test", "TEST 10" + i);
        
         Staff s = new Staff(andru, c);
@@ -48,7 +48,7 @@ public class CreateDB {
         s.setAssignmentsPriv(true);
         s.setCategoryPriv(true);
         
-        if(!next.getHidden()) {
+        if (!next.getHidden()) {
           //Create fake test data
           createFakeUsersForCourse(database, c, 10);
           createFakeAssignments(andru, c, 2, transactions);
@@ -62,7 +62,7 @@ public class CreateDB {
     while(count-- > 1) {
       String id = "au" + count;
       User u = database.getUser(id);
-      if(u == null)
+      if (u == null)
         u = new User(database, "au" + count, "Test", "User " + count, "00000", "Eng");
       new Student(course, u);
     }
@@ -102,10 +102,10 @@ public class CreateDB {
     Collection/*Group*/ groups = assign.getGroups();
     Collection/*SubProblem*/ subProblems = assign.getSubProblems();
     Random r = new Random();
-    for(Iterator i = groups.iterator(); i.hasNext();) {
+    for (Iterator i = groups.iterator(); i.hasNext();) {
       Group g = (Group)i.next();
-      for(Iterator mi = g.getMembers().iterator(); mi.hasNext();) {
-        if(!assign.hasSubProblems()) {
+      for (Iterator mi = g.getMembers().iterator(); mi.hasNext();) {
+        if (!assign.hasSubProblems()) {
           assign.addGrade(g, null, new Float(r.nextFloat() * 100), 
               ((GroupMember)mi.next()).getStudent().getUser(), grader);
         } else {
@@ -130,7 +130,7 @@ public class CreateDB {
         root = (Map) core.getRoot();
         
         database = (CMSRoot)root.get(name);
-        if(database == null) {
+        if (database == null) {
           // create and add test data
           System.err.println("No CMSRoot found, creating");
           database = new CMSRoot~label@core();

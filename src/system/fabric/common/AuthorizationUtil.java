@@ -1,11 +1,11 @@
 package fabric.common;
 
+import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.Principal;
-import fabric.worker.Worker;
 import fabric.worker.Store;
-import fabric.common.util.OidKeyHashMap;
+import fabric.worker.Worker;
 
 public class AuthorizationUtil {
 
@@ -75,6 +75,7 @@ public class AuthorizationUtil {
     // Call into the Jif label framework to perform the label check.
     final Label label = new Label._Proxy(store, labelOnum);
     boolean result = Worker.runInSubTransaction(new Worker.Code<Boolean>() {
+      @Override
       public Boolean run() {
         return LabelUtil._Impl.isReadableBy(label, principal);
       }
@@ -104,6 +105,7 @@ public class AuthorizationUtil {
     // Call into the Jif label framework to perform the label check.
     final Label label = new Label._Proxy(store, labelOnum);
     boolean result = Worker.runInSubTransaction(new Worker.Code<Boolean>() {
+      @Override
       public Boolean run() {
         return LabelUtil._Impl.isWritableBy(label, principal);
       }

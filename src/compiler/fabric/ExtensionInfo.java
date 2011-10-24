@@ -8,11 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import jif.ExtensionInfo.JifJobExt;
+import jif.types.JifTypeSystem;
 import jif.visit.LabelChecker;
 import polyglot.frontend.Compiler;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.FileSource;
 import polyglot.frontend.Job;
+import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.SourceLoader;
@@ -25,7 +28,7 @@ import polyglot.types.reflect.ClassFileLoader;
 import polyglot.types.reflect.ClassPathLoader;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
-import polyglot.util.TypeEncoder;
+import codebases.frontend.CBJobExt;
 import codebases.frontend.CBTargetFactory;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.CodebaseSourceLoader;
@@ -37,10 +40,9 @@ import codebases.frontend.URISourceLoader;
 import codebases.types.CBTypeEncoder;
 import codebases.types.CodebaseResolver;
 import codebases.types.CodebaseTypeSystem;
-import codebases.types.PathResolver;
 import codebases.types.NamespaceResolver;
-import codebases.types.NamespaceResolver_c;
-import fabil.FabILOptions;
+import codebases.types.PathResolver;
+import fabil.SafeResolver;
 import fabil.SimpleResolver;
 import fabil.types.ClassFile;
 import fabil.types.FabILTypeSystem;
@@ -49,7 +51,6 @@ import fabric.ast.FabricNodeFactory_c;
 import fabric.common.NSUtil;
 import fabric.common.SysUtil;
 import fabric.lang.FClass;
-import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
 import fabric.parse.Grm;
 import fabric.parse.Lexer_c;
@@ -111,10 +112,10 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
   @Override
   public Goal getCompileGoal(Job job) {
     FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
-    if(opts.createSkeleton())
+    if (opts.createSkeleton())
       return scheduler().FabILSkeletonGenerated(job);
-    else if(opts.publishOnly()) {
-       return scheduler().ConsistentNamespace();
+    else if (opts.publishOnly()) {
+       return scheduler().Serialized(job);
     } else
       return scheduler().FabricToFabilRewritten(job);
   }
@@ -135,7 +136,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
   /* Overridden Factory Methods ***********************************************/
   @Override
   public CBTypeEncoder typeEncoder() {
-    if(typeEncoder == null) {
+    if (typeEncoder == null) {
       typeEncoder = new CBTypeEncoder(ts);
     }
     return typeEncoder;
@@ -167,6 +168,11 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
       return new ClassFile(classFileSource, code, this);
   }
   
+  @Override
+  public JobExt jobExt() {
+      return new CBJobExt();
+  }
+
   /* Overridden typed accessors ***********************************************/
   
   @Override
@@ -211,6 +217,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
   
   // XXX: the obj argument really should be some more general interface that
   // FClass implements
+  @Override
   public FileSource createRemoteSource(URI ns, fabric.lang.Object obj, boolean user)
       throws IOException {
     if (!(obj instanceof FClass))
@@ -248,7 +255,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
   @Override
   public URISourceLoader sourceLoader(URI ns) {
     if ("fab".equals(ns.getScheme())) {
-      if(ns.isOpaque())
+      if (ns.isOpaque())
         throw new InternalCompilerError("Unexpected URI:" + ns);
       return new CodebaseSourceLoader(this, ns);
     } else if ("file".equals(ns.getScheme())) {
@@ -261,7 +268,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
   public ClassPathLoader classpathLoader(URI ns) {
     if ("fab".equals(ns.getScheme())) {
       // Load previously compiled classes from cache
-      if(ns.isOpaque())
+      if (ns.isOpaque())
         throw new InternalCompilerError("Unexpected URI:" + ns);
  
       String java_pkg = NSUtil.javaPackageName(ns);      
@@ -284,7 +291,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
    * @return
    */
   public NamespaceResolver createNamespaceResolver(URI ns) {
-    if(ns == null)
+    if (ns == null)
       throw new NullPointerException("Namespace is null");
     if (Report.should_report("resolver", 3))
       Report.report(3, "Creating namespace resolver for " + ns);
@@ -309,11 +316,9 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
       return new PathResolver(this, ns, path, opt.codebaseAliases());
 
     } else if ("fab".equals(ns.getScheme())) {
-      List<NamespaceResolver> path = new ArrayList<NamespaceResolver>(2);
-      // Codebases may never resolve platform types.
-      path.add(typeSystem().platformResolver());
-      path.add(new CodebaseResolver(this, ns));
-      return new PathResolver(this, ns, path);
+      // Codebases may never resolve platform types, so always resolve against
+      //  the platformResolver first.
+      return new SafeResolver(this, new CodebaseResolver(this, ns));    
 
     } else if ("file".equals(ns.getScheme())) {
       return new SimpleResolver(this, ns);

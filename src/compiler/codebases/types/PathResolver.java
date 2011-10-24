@@ -4,20 +4,15 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.plaf.LabelUI;
-
 import polyglot.main.Report;
-import polyglot.types.ClassType;
 import polyglot.types.Importable;
 import polyglot.types.LazyClassInitializer;
 import polyglot.types.NoClassException;
 import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
-import polyglot.util.CollectionUtil;
 import codebases.frontend.ExtensionInfo;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
@@ -25,11 +20,14 @@ import fabric.worker.Store;
 
 public class PathResolver extends NamespaceResolver_c implements
     NamespaceResolver {
-  private static final Collection<String> TOPICS = CollectionUtil.list(Report.types,
-      Report.resolver);
+  private static final Collection<String> TOPICS;
+  static {
+    TOPICS = new ArrayList<String>(2);
+    TOPICS.add(Report.types);
+    TOPICS.add(Report.resolver);
+  }
 
   protected final List<NamespaceResolver> path;
-  protected final Map<String, URI> aliases;
   protected boolean load_raw = false;
   protected boolean load_enc = false;
   protected boolean load_src = false;
@@ -41,18 +39,18 @@ public class PathResolver extends NamespaceResolver_c implements
 
   public PathResolver(ExtensionInfo extInfo, URI ns,
       List<NamespaceResolver> path, Map<String, URI> aliases) {
-    super(extInfo, ns, null);
+    super(extInfo, ns, null, aliases);
     if (path.contains(null))
       throw new NullPointerException("Null resolver in path!");
     this.path = path;
-    this.aliases = aliases;
   }
 
   /**
    * Searches for a type for name in path in order. Following polyglot, there is
    * some subtlety to how resources are loaded from disk based on whether
-   * source, encoded classes, or raw classes are permitted. * If loading source
-   * and encoded classes:
+   * source, encoded classes, or raw classes are permitted. 
+   * 
+   * If loading source and encoded classes:
    *
    * - The first source file or encoded class returned by a resolver the path
    *    will be loaded. If a source file and encoded class occur in the same
@@ -64,8 +62,15 @@ public class PathResolver extends NamespaceResolver_c implements
    *    emulates polyglot's SourceClassResolver logic. Here, any ParsedClassType
    *    whose LazyClassInitializer returns true for fromClassFile() is considered
    *    to be from a raw class file.
+   *    
+   * 
    */
-  @Override
+  
+  // XXX: An outstanding question: in Java, a package is not allowed to contain
+  // a subpackage and type of the same name. Although we can enforce this for
+  // individual codebases, when we combine them in a path resolver, both might
+  // exist.  It's not actually clear what happens for this case currently.
+ @Override
   public Importable findImpl(String name) throws SemanticException {
     Importable from_raw = null;
     for (NamespaceResolver nr : path) {
@@ -102,14 +107,6 @@ public class PathResolver extends NamespaceResolver_c implements
     for (NamespaceResolver nr : path)
       if (nr.packageExists(name)) return true;
     return false;
-  }
-
-  @Override
-  public URI resolveCodebaseName(String name) throws SemanticException {
-    URI ns = aliases.get(name);
-    if (ns == null)
-      throw new SemanticException("Unknown codebase name: " + name);
-    return ns;
   }
 
   /**
@@ -162,13 +159,13 @@ public class PathResolver extends NamespaceResolver_c implements
 
   @Override 
   public Label label() {
-    if(extInfo.platformNamespace().equals(namespace)) {
+    if (extInfo.platformNamespace().equals(namespace)) {
       return LabelUtil._Impl.toLabel(extInfo.destinationStore(),
           LabelUtil._Impl.topInteg());
     }
     Store s = extInfo.destinationStore();
     Label join = LabelUtil._Impl.noComponents();
-    for(NamespaceResolver nr : path) {
+    for (NamespaceResolver nr : path) {
       join = LabelUtil._Impl.join(s, join, nr.label());
     }
     //TODO: Should we actually return worker meet join?

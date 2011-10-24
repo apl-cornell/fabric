@@ -33,18 +33,18 @@ going strictly by the class names of the TDs
 --%>
 function insertRegradeImages(table)
 {
-	for(var i = 0; i < table.rows.length; i++)
+	for (var i = 0; i < table.rows.length; i++)
 	{
-		for(var j = 0; j < table.rows[i].cells.length; j++)
+		for (var j = 0; j < table.rows[i].cells.length; j++)
 		{
-			if(table.rows[i].cells[j].className == 'regrade_pending')
+			if (table.rows[i].cells[j].className == 'regrade_pending')
 			{
 				var img = document.createElement('img');
 				img.setAttribute('alt', '(Regrade pending)');
 				img.setAttribute('src', 'images/tag_red.gif');
 				table.rows[i].cells[j].insertBefore(img, table.rows[i].cells[j].firstChild);
 			}
-			else if(table.rows[i].cells[j].className == 'regraded')
+			else if (table.rows[i].cells[j].className == 'regraded')
 			{
 				var img = document.createElement('img');
 				img.setAttribute('src', 'images/tag_orange.gif');
@@ -223,7 +223,7 @@ for (int i= 0; i < studs.getLength(); i++) {
     String assignTag= "id"+assign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNID());
     Element grade= (Element)student.getElementsByTagName(assignTag).item(0);
     String score= "*";
-    if(grade != null && grade.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_SCORE())) score= grade.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_SCORE());
+    if (grade != null && grade.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_SCORE())) score= grade.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_SCORE());
     String assignID=grade.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNID());
     String groupID=grade.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_GROUPID());
     String regradeStatus = grade.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_REGRADE());

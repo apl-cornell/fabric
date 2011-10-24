@@ -59,8 +59,11 @@ is compiled with the Apache Ant build tool (http://ant.apache.org/).
 
 Configuring Fabric
 ------------------
-Before using Fabric, you must configure the scripts in the 'bin'
-directory by running
+Before using Fabric, you must tell Fabric where to find the
+Polyglot and Jif distributions. Copy config.properties.in to
+config.properties, and edit appropriately.
+
+Then configure the scripts in the 'bin' directory by running
 
   $ ant bin
 

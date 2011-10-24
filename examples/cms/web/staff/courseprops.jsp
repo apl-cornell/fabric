@@ -58,7 +58,7 @@ permissions checking: which of {staff, students, Cornell community, guests} can 
 <div id="course_wrapper_withnav">
 <table id="course_wrapper_table" summary="course wrapper" cellpadding="0" cellspacing="0" border="0" width="100%">
 	<tr>
-<%	if(!cmsAdminOnly)
+<%	if (!cmsAdminOnly)
 	{%>
 		<jsp:include page="navbar.jsp"/>
 <%	} %>
@@ -66,7 +66,7 @@ permissions checking: which of {staff, students, Cornell community, guests} can 
       <form action="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_SETCOURSEPROPS + "&amp;" + AccessController.P_COURSEID + "=" + courseid %>" method="post">
         <div id="course_page">
 			<jsp:include page="../problem-report.jsp"/>
-<%	if(cmsAdminOnly)
+<%	if (cmsAdminOnly)
 	{%>
 			<jsp:include page="../course-title.jsp" />
 <%	}  %>
@@ -84,7 +84,7 @@ permissions checking: which of {staff, students, Cornell community, guests} can 
 deal with both CMS admins and normal course admins viewing this page,
 since a CMS admin with course admin permission will see this page rather than the cmsadmincourseprops page
 */
-if(p.isCMSAdmin()) //give permission to change the actual code
+if (p.isCMSAdmin()) //give permission to change the actual code
 { %>
 					<%-- <input type="hidden" name="<%= AccessController.P_DISPLAYEDCODE %>" value="<%= course.getAttribute(XMLBuilder.A_DISPLAYEDCODE) %>"> --%>
 					<td>Course Code</td>

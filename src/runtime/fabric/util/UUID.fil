@@ -78,7 +78,7 @@ public final class UUID
    */
   public int clockSequence()
   {
-    if( version() != 1 )
+    if ( version() != 1 )
       throw new UnsupportedOperationException("Not a type 1 UUID");
     return (int)((leastSigBits & 0x3FFF000000000000L) >> 48);
   }
@@ -102,13 +102,13 @@ public final class UUID
    */
   public int compareTo(UUID o)
   {
-    if( mostSigBits < o.mostSigBits )
+    if ( mostSigBits < o.mostSigBits )
       return -1;
-    if( mostSigBits > o.mostSigBits )
+    if ( mostSigBits > o.mostSigBits )
       return 1;
-    if( leastSigBits < o.leastSigBits )
+    if ( leastSigBits < o.leastSigBits )
       return -1;
-    if( leastSigBits > o.mostSigBits )
+    if ( leastSigBits > o.mostSigBits )
       return 1;
     return 0;
   }
@@ -118,7 +118,7 @@ public final class UUID
    */
   public boolean equals(Object obj)
   {
-    if( !(obj instanceof UUID ) )
+    if ( !(obj instanceof UUID ) )
       return false;
     return ( ((UUID)obj).mostSigBits == mostSigBits && 
 	     ((UUID)obj).leastSigBits == leastSigBits );
@@ -135,7 +135,7 @@ public final class UUID
   public static UUID fromString(String name)
   {
     StringTokenizer st = new StringTokenizer( name.trim(), "-" );
-    if( st.countTokens() < 5 )
+    if ( st.countTokens() < 5 )
       throw new IllegalArgumentException( "Incorrect UUID string"+
 					  " representation:"+name );
 
@@ -253,7 +253,7 @@ public final class UUID
    */
   public long node() 
   {
-    if( version() != 1 )
+    if ( version() != 1 )
       throw new UnsupportedOperationException("Not a type 1 UUID");
     return (leastSigBits & 0xFFFFFFFFFFFFL);
   }
@@ -267,7 +267,7 @@ public final class UUID
    */
   public long timestamp()
   {
-    if( version() != 1 )
+    if ( version() != 1 )
       throw new UnsupportedOperationException("Not a type 1 UUID");
     long time = (( mostSigBits & 0xFFFFFFFF00000000L) >> 32);
     time |= (( mostSigBits & 0xFFFF0000L ) << 16);
@@ -319,9 +319,9 @@ public final class UUID
   {
     // Get the top 3 bits (not all may be part of the variant)
     int v = (int)((leastSigBits & 0xE000000000000000L) >> 61);
-    if( (v & 0x04) == 0 ) // msb of the variant is 0
+    if ( (v & 0x04) == 0 ) // msb of the variant is 0
       return 0;
-    if( (v & 0x02) == 0 ) // variant is 0 1 (Leach-Salz)
+    if ( (v & 0x02) == 0 ) // variant is 0 1 (Leach-Salz)
       return 2;
     return v; // 6 or 7 
   }

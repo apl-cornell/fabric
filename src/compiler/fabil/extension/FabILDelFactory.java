@@ -10,5 +10,6 @@ public interface FabILDelFactory extends DelFactory {
   JL delProviderLabel();
   JL delCodebaseNode();
   JL delCodebaseDecl();
+  JL delCodebaseTypeNode();
 
 }

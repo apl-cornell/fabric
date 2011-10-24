@@ -1,6 +1,10 @@
 package fabil.types;
 
-import polyglot.types.*;
+import polyglot.types.ArrayType_c;
+import polyglot.types.FieldInstance;
+import polyglot.types.Type;
+import polyglot.types.TypeObject;
+import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 
 public class FabricArrayType_c extends ArrayType_c implements FabricArrayType {
@@ -28,10 +32,6 @@ public class FabricArrayType_c extends ArrayType_c implements FabricArrayType {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * @see polyglot.types.ReferenceType_c#descendsFromImpl(polyglot.types.Type)
-   */
   @Override
   public boolean descendsFromImpl(Type ancestor) {
     // Fabric arrays are subtypes of fabric.lang.Object.

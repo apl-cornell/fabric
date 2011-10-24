@@ -97,7 +97,7 @@ function ts_resortTable(lnk) {
     var column= -1;
     for (var i= 0; i <= td.cellIndex; i++) {
       if (tr.cells[i].colSpan) {
-        if(tr.cells[i].id == "gradeheader")
+        if (tr.cells[i].id == "gradeheader")
           column += numprobs + 1;
         else column+= tr.cells[i].colSpan;
       } else {

@@ -36,6 +36,7 @@ public class CBClassContextResolver extends ClassContextResolver {
   @SuppressWarnings("unchecked")
   @Override
   public Named find(String name, ClassType accessor) throws SemanticException {
+
       if (Report.should_report(TOPICS, 2))
           Report.report(2, "Looking for " + name + " in " + this);
 
@@ -114,7 +115,7 @@ public class CBClassContextResolver extends ClassContextResolver {
       
       // Collect all members of the super types.
       // Use a Set to eliminate duplicates.
-      Set acceptable = new HashSet();
+      Set<Named> acceptable = new HashSet<Named>();
       
       if (type.superType() != null) {
           Type sup = type.superType();
@@ -129,8 +130,8 @@ public class CBClassContextResolver extends ClassContextResolver {
           }
       }
       
-      for (Iterator i = type.interfaces().iterator(); i.hasNext(); ) {
-          Type sup = (Type) i.next();
+      for (Iterator<Type> i = type.interfaces().iterator(); i.hasNext(); ) {
+          Type sup = i.next();
           if (sup instanceof ClassType) {
               Resolver r = ts.classContextResolver((ClassType) sup, accessor);
               try {
@@ -146,9 +147,9 @@ public class CBClassContextResolver extends ClassContextResolver {
           throw new NoClassException(name, type);
       }
       else if (acceptable.size() > 1) {
-          Set containers = new HashSet(acceptable.size());
-          for (Iterator i = acceptable.iterator(); i.hasNext(); ) {
-              Named n = (Named) i.next();
+          Set<Type> containers = new HashSet<Type>(acceptable.size());
+          for (Iterator<Named> i = acceptable.iterator(); i.hasNext(); ) {
+              Named n = i.next();
               if (n instanceof MemberInstance) {
                   MemberInstance mi = (MemberInstance) n;
                   containers.add(mi.container());
@@ -156,9 +157,9 @@ public class CBClassContextResolver extends ClassContextResolver {
           }
           
           if (containers.size() == 2) {
-              Iterator i = containers.iterator();
-              Type t1 = (Type) i.next();
-              Type t2 = (Type) i.next();
+              Iterator<Type> i = containers.iterator();
+              Type t1 = i.next();
+              Type t2 = i.next();
               throw new SemanticException("Member \"" + name +
                                           "\" of " + type + " is ambiguous; it is defined in both " +
                                           t1 + " and " + t2 + ".");
@@ -170,7 +171,7 @@ public class CBClassContextResolver extends ClassContextResolver {
           }
       }
       
-      Named t = (Named) acceptable.iterator().next();
+      Named t = acceptable.iterator().next();
       
       if (Report.should_report(TOPICS, 2))
           Report.report(2, "Found member class " + t);

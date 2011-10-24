@@ -101,7 +101,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
               lbl <= {*:req.session},
               caller(session)
     {
-        if(evLbl <= new label {*lbl;session!:}) {
+        if (evLbl <= new label {*lbl;session!:}) {
             invokeSessImplImpl(lbl, req, uservlet, ustate, currentUser);
         }
     }
@@ -130,7 +130,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
             state_ = (CalendarSessionState)ustate;
         } catch (ClassCastException imposs) {}
         final CalendarSessionState state = state_;
-        if(state == null) {
+        if (state == null) {
             throw new ServletException("invalid args");
         }
         if (isReadOnly) {
@@ -145,11 +145,11 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
 //                throw new ServletException("Cannot view event! CreateEditEvent.invokeSessImpl: lbl too high: " + lblString);
 //            }
         }
-        else if(evLbl <= new label {currentUser:;currentUser!:} && lbl <= new label {currentUser:;currentUser!:}) {
+        else if (evLbl <= new label {currentUser:;currentUser!:} && lbl <= new label {currentUser:;currentUser!:}) {
             declassify ({currentUser:;currentUser!:} to {currentUser!:}) {
             
             final Event event_ = Event.declassifyEvent(currentUser, this.event);
-            if(event_ != null) 
+            if (event_ != null) 
             if (inpName != null && inpStart != null && inpEnd != null && inpNote != null) {
                 if (event_.infoLbl <= new label {currentUser:;currentUser!:} &&
                         new label {currentUser!:} <= event_.timeLbl && event_.timeLbl <= event_.infoLbl && 
@@ -163,13 +163,13 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
                         final User[CalServEP, {currentUser:;currentUser!:}] currentUser_ = declassify(currentUser, {currentUser:;currentUser!:} to {currentUser!:});
                         final User[CalServEP, {currentUser!:}] cu_ = User.declassifyUser(currentUser_, CalServEP, currentUser_);  
                         final principal cu = cu_;
-                        if(cu equiv currentUser) {
+                        if (cu equiv currentUser) {
                             declassify ({currentUser:;currentUser!:} to {currentUser!:}) {
                             CalendarSessionState state2 = declassify(state, {currentUser:;currentUser!:} to {currentUser!:});
                             final CalendarSessionState[{cu!:}] state1 = CalendarSessionState.declassifyState(cu, state2);
-                            if(state1 != null) 
+                            if (state1 != null) 
                             
-                            if(session equiv state1.sessionPrincipal && cu_ equiv currentUser) {
+                            if (session equiv state1.sessionPrincipal && cu_ equiv currentUser) {
                                 declassify ({currentUser:;currentUser!:} to {currentUser!:}) {
 
                                     produceEditPage(new label {cu!:}, 
@@ -483,7 +483,7 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
               lbl <= {*:req.session},
               caller(session)
     {
-        if(createEditEvent != null && createEditEvent.evLbl <= lbl) {
+        if (createEditEvent != null && createEditEvent.evLbl <= lbl) {
             invokeSessImplImpl(lbl, req, uservlet, ustate, currentUser);
         }
     }
@@ -571,7 +571,7 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
             state_ = (CalendarSessionState)ustate;
         } catch (ClassCastException imposs) {}
         final CalendarSessionState state = state_;
-        if(state == null) {
+        if (state == null) {
             throw new ServletException("null args");
         }
         ServletException{*lbl;req.session!:} ex = null;
@@ -614,7 +614,7 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
                         final Event event = Event.declassifyEvent(currentUser, createEditEvent.event);
                         final label tcei = this.createEditEvent.event.infoLbl;
                         final label tcet = this.createEditEvent.event.timeLbl;
-                        if(event !=null && event.infoLbl equiv tcei && event.timeLbl equiv tcet) {
+                        if (event !=null && event.infoLbl equiv tcei && event.timeLbl equiv tcet) {
                             pageProduced = createEditEvent.produceEditPage(new label {currentUser!:},
                                     req, 
                                     servlet, 

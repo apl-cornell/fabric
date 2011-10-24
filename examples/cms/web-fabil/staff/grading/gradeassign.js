@@ -141,9 +141,9 @@
    	
     //change display property
     var gradestable= getElementById('grades_table_' + aid);
-	for(var i = 0; i < gradestable.rows.length; i++)
-		for(var j = 0; j < gradestable.rows[i].cells.length; j++)
-			if(gradestable.rows[i].cells[j].className == 'subprob_score_cell')
+	for (var i = 0; i < gradestable.rows.length; i++)
+		for (var j = 0; j < gradestable.rows[i].cells.length; j++)
+			if (gradestable.rows[i].cells[j].className == 'subprob_score_cell')
 				gradestable.rows[i].cells[j].style.display = '';
     // Redo sortability
     ts_makeSortable(gradestable);
@@ -169,9 +169,9 @@
     gradespace.colSpan=2;
     //change display property
     var gradestable= getElementById('grades_table_' + aid);
-	for(var i = 0; i < gradestable.rows.length; i++)
-		for(var j = 0; j < gradestable.rows[i].cells.length; j++)
-			if(gradestable.rows[i].cells[j].className == 'subprob_score_cell')
+	for (var i = 0; i < gradestable.rows.length; i++)
+		for (var j = 0; j < gradestable.rows[i].cells.length; j++)
+			if (gradestable.rows[i].cells[j].className == 'subprob_score_cell')
 				gradestable.rows[i].cells[j].style.display = 'none';
     
     // Redo sortability
@@ -222,14 +222,14 @@ function selectAssignedTo(graderSelectID, subproblemSelectID, assignID, numProbs
 {
 	var graderSelector = getElementById(graderSelectID);
 	var grader = graderSelector.options[graderSelector.selectedIndex].value; //netID of selected grader
-	if(grader =='<unassigned>') grader = '';
+	if (grader =='<unassigned>') grader = '';
 	var graderRegexp = new RegExp('\\s*' + grader + '\\s*');
 	var subproblemSelector = getElementById(subproblemSelectID);
 	var subprobs;
-	if(subproblemSelector != null)
+	if (subproblemSelector != null)
 	{
 		subprobs = new Array(subproblemSelector.options.length); //will map indices to bools
-		for(var i = 0; i < subproblemSelector.options.length; i++) {
+		for (var i = 0; i < subproblemSelector.options.length; i++) {
 			subprobs[i] = subproblemSelector.options[i].selected;
 		}
 	}
@@ -242,23 +242,23 @@ function selectAssignedTo(graderSelectID, subproblemSelectID, assignID, numProbs
 	selectNone(assignID);
 	var gradesTable = getElementById('grades_table_' + assignID);
 	var groupRows = gradesTable.tBodies[0].rows;
-	for(var i = 2; i < groupRows.length; i++) //first two rows are header stuff
+	for (var i = 2; i < groupRows.length; i++) //first two rows are header stuff
 	{
 		var assignedToIndex = 6; //index of first cell with assigned-to info
 		var numAssignedToCells;
-		if(subproblemSelector == null) //there are no subproblems
+		if (subproblemSelector == null) //there are no subproblems
 			numAssignedToCells = 1;
 		else numAssignedToCells = numProbs;
-		for(var j = 0; j < numAssignedToCells; j++)
+		for (var j = 0; j < numAssignedToCells; j++)
 		{
 			var cell = groupRows[i].cells[j + assignedToIndex];
 			var divs = cell.getElementsByTagName('div');
-			if(divs.length > 0) //there's an assigned grader
+			if (divs.length > 0) //there's an assigned grader
 			{
-				if(grader != '') //we're looking for an assigned grader
+				if (grader != '') //we're looking for an assigned grader
 				{
 					var assignedGrader = divs[0].firstChild.nodeValue; //should be a netID
-					if(subprobs[j] && assignedGrader.match(graderRegexp))
+					if (subprobs[j] && assignedGrader.match(graderRegexp))
 					{
 						//check the checkbox at the beginning of the row
 						var checkbox = groupRows[i].cells[1].getElementsByTagName('input')[0];
@@ -268,7 +268,7 @@ function selectAssignedTo(graderSelectID, subproblemSelectID, assignID, numProbs
 			}
 			else //no assigned grader
 			{
-				if(grader == '' && subprobs[j]) //we're looking for unassigned people
+				if (grader == '' && subprobs[j]) //we're looking for unassigned people
 				{
 					//check the checkbox at the beginning of the row
 					var checkbox = groupRows[i].cells[1].getElementsByTagName('input')[0];

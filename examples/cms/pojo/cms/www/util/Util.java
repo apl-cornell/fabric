@@ -24,7 +24,7 @@ public class Util
    * separated by commas
    */
   public static String listElements(Collection c) {
-    if(c == null) return "<null Collection>";
+    if (c == null) return "<null Collection>";
     Iterator i = c.iterator();
     String result = "";
     while (i.hasNext()) {
@@ -36,9 +36,9 @@ public class Util
     return result;
   }
   public static String listElements(long[] c) {
-    if(c == null) return "<null array>";
+    if (c == null) return "<null array>";
     String result = "";
-    for(int i = 0; i < c.length - 1; i++)
+    for (int i = 0; i < c.length - 1; i++)
       result += c[i] + ", ";
     return result + c[c.length - 1];
   }
@@ -49,7 +49,7 @@ public class Util
    */
   public static String listUniqueElements(Collection c)
   {
-    if(c == null) return "<null Collection>";
+    if (c == null) return "<null Collection>";
     Set s = new HashSet();
     s.addAll(c);
     Iterator i = s.iterator();
@@ -100,8 +100,8 @@ public class Util
         "C+", "C", "C-", "D+", "D", "D-",
         "F", "S", "U", "W", "INC", "AUD"
                                              };
-    for(int i = 0; i < gradeStrings.length; i++)
-      if(nospace.equalsIgnoreCase(gradeStrings[i]))
+    for (int i = 0; i < gradeStrings.length; i++)
+      if (nospace.equalsIgnoreCase(gradeStrings[i]))
         return gradeStrings[i];
     return null;
   }

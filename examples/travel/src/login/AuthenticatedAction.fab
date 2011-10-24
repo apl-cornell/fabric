@@ -63,7 +63,7 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
     throws (ServletException{*lbl;*:req.session;req.session!:})
         where caller(req.session),
         lbl <= {*:req.session} {
-        if(req == null) throw new ServletException("Error processing request");
+        if (req == null) throw new ServletException("Error processing request");
         Servlet[servP] servlet_ = getServlet();
         atomic {
             SessionState state_ = req.getSessionState(lbl);
@@ -100,7 +100,7 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
                 req.session equiv state.sessionPrincipal {
         if (state == null || req == null) return;
         final principal currentUser = state.currentUser();
-        if(req.session actsfor currentUser) {
+        if (req.session actsfor currentUser) {
             this.invokeImpl(lbl, req, servlet, state, currentUser);
         }
     }

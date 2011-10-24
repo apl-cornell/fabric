@@ -32,7 +32,7 @@ NodeList lognames = ((Element)root.getElementsByTagName(XMLBuilder.TAG_LOGNAMES)
                         } else {
                           var aid = -1;
                         }
-                        <% for(int i=0; i < assigns.getLength(); i++) { 
+                        <% for (int i=0; i < assigns.getLength(); i++) { 
                              Element a = ((Element) assigns.item(i)); %>
                              if (cid == 0 || cid == <%= a.getAttribute(XMLBuilder.A_COURSEID) %>) {
                                 if (aid == <%= a.getAttribute(XMLBuilder.A_ASSIGNID) %>) {
@@ -44,7 +44,7 @@ NodeList lognames = ((Element)root.getElementsByTagName(XMLBuilder.TAG_LOGNAMES)
                              }
                         <% } %>">
              <option value="0" selected>Any Course</option>
-					<% for(int i = 0; i < courses.getLength(); i++) {
+					<% for (int i = 0; i < courses.getLength(); i++) {
 	             Element item = (Element)courses.item(i); %>
 						    <option value="<%= item.getAttribute(XMLBuilder.A_COURSEID) %>">
 									<%= item.getAttribute(XMLBuilder.A_CODE) + ": " + item.getAttribute(XMLBuilder.A_COURSENAME) %>
@@ -60,20 +60,20 @@ NodeList lognames = ((Element)root.getElementsByTagName(XMLBuilder.TAG_LOGNAMES)
                         var csel = getElementById('<%= AccessController.P_LOGSEARCH_COURSE %>');
                         if (asel.selectedIndex != 0) {
                           var aid = asel.options[asel.selectedIndex].value;
-                          <% for(int i=0; i < assigns.getLength(); i++) {
+                          <% for (int i=0; i < assigns.getLength(); i++) {
                                 Element a = ((Element) assigns.item(i)); %>
                                 if (aid == <%= a.getAttribute(XMLBuilder.A_ASSIGNID) %>) {
                                   var cid = <%= a.getAttribute(XMLBuilder.A_COURSEID) %>;
                                 }
                           <% } %>
-                          for(var j=0; j < csel.options.length; j++) {
+                          for (var j=0; j < csel.options.length; j++) {
                             if (csel.options[j].value == cid) {
                               csel.selectedIndex = j;
                             }
                           }
                         }">
 	    			  <option value="0" selected>Any Assignment</option>
-	    			  <% for(int i=0; i < assigns.getLength(); i++) {
+	    			  <% for (int i=0; i < assigns.getLength(); i++) {
 	    			        Element a = ((Element) assigns.item(i)); %>
                     <option value="<%= a.getAttribute(XMLBuilder.A_ASSIGNID) %>">
                       <%= a.getAttribute(XMLBuilder.A_NAME) %>
@@ -137,7 +137,7 @@ NodeList lognames = ((Element)root.getElementsByTagName(XMLBuilder.TAG_LOGNAMES)
                         var tsel = getElementById('<%= AccessController.P_LOGSEARCH_TYPE %>');
                         var nsel = getElementById('<%= AccessController.P_LOGSEARCH_NAME %>');
                         nsel.options.length = 0;
-                        for(var j=0; j < tsel.options.length; j++) {
+                        for (var j=0; j < tsel.options.length; j++) {
                           if (tsel.options[j].selected) {
                             <% for (int i=0; i < lognames.getLength(); i++) {
                                   Element n = (Element) lognames.item(i); %>
@@ -155,7 +155,7 @@ NodeList lognames = ((Element)root.getElementsByTagName(XMLBuilder.TAG_LOGNAMES)
               <% } %>
             </select></td></tr><tr>
             <td align="center" colspan="2"><a href="#" onclick="var tsel = getElementById('<%= AccessController.P_LOGSEARCH_TYPE %>');
-                                     for(var j=0; j < tsel.options.length; j++) {
+                                     for (var j=0; j < tsel.options.length; j++) {
                                        tsel.options[j].selected = true;
                                      }
                                      tsel.onchange();
@@ -178,7 +178,7 @@ NodeList lognames = ((Element)root.getElementsByTagName(XMLBuilder.TAG_LOGNAMES)
             </td></tr><tr>
             <td align="center" colspan="2">
 	    		  <a href="#" onclick="var nsel = getElementById('<%= AccessController.P_LOGSEARCH_NAME %>');
-                                     for(var j=0; j < nsel.options.length; j++) {
+                                     for (var j=0; j < nsel.options.length; j++) {
                                        nsel.options[j].selected = true;
                                      }
                                      return false;">

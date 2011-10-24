@@ -21,7 +21,7 @@ public class SimpleResolver extends NamespaceResolver_c {
   protected boolean load_raw = false;
   protected boolean load_enc = true;
   protected boolean load_src = true;
-
+  protected boolean ignore_mod_times;
   public SimpleResolver(ExtensionInfo extInfo, URI namespace) {
     this(extInfo, namespace, null);
   }
@@ -29,6 +29,7 @@ public class SimpleResolver extends NamespaceResolver_c {
     super(extInfo, namespace, parent);
     this.classpathLoader = extInfo.classpathLoader(namespace);
     this.sourceLoader = extInfo.sourceLoader(namespace);
+    this.ignore_mod_times = extInfo.getOptions().ignore_mod_times;
   }
 
   @Override
@@ -37,7 +38,8 @@ public class SimpleResolver extends NamespaceResolver_c {
     // Look for a class file first
     if (Report.should_report(report_topics, 3))
       Report.report(3, "NamespaceResolver_c.find(" + name + ")");
-  
+    if(name.equals("Server"))
+      Thread.dumpStack();
     // Find class file.
     ClassFile clazz = null;
     ClassFile encodedClazz = null;
@@ -77,12 +79,11 @@ public class SimpleResolver extends NamespaceResolver_c {
       clazz = null;
     }
     
-    if(encodedClazz != null && source != null) {
+    if (encodedClazz != null && source != null) {
       long classModTime = encodedClazz.sourceLastModified(version);
       long sourceModTime = source.lastModified().getTime();
-      boolean ignoreModTimes = extInfo.getOptions().ignore_mod_times;
       
-      if (! ignoreModTimes && classModTime < sourceModTime) {
+      if (! ignore_mod_times && classModTime < sourceModTime) {
         if (Report.should_report(report_topics, 3))
             Report.report(3, "Source file version is newer than compiled for " +
                       name + ".");
@@ -95,7 +96,7 @@ public class SimpleResolver extends NamespaceResolver_c {
       }
     }
     Importable result = null;
-    if(encodedClazz != null) {
+    if (encodedClazz != null) {
       if (Report.should_report(report_topics, 4))
         Report.report(4, "Using encoded class type for " + name);
       try {
@@ -126,7 +127,7 @@ public class SimpleResolver extends NamespaceResolver_c {
         Report.report(4, "Using source file for " + name);
       result = getTypeFromSource(source, name);
     }
-    if( result != null) {
+    if ( result != null) {
       return result;
     }
     throw new NoClassException(name);

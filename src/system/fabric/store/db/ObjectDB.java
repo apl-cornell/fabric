@@ -9,20 +9,26 @@ import java.util.Iterator;
 
 import javax.security.auth.x500.X500Principal;
 
-import fabric.lang.security.Label;
-import fabric.lang.security.NodePrincipal;
-import fabric.lang.security.PairLabel;
-import fabric.lang.security.ReaderPolicy;
-import fabric.lang.security.WriterPolicy;
-import fabric.worker.Worker;
-import fabric.worker.Store;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
-import fabric.common.util.*;
-import fabric.store.SubscriptionManager;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
+import fabric.common.util.MutableInteger;
+import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Pair;
+import fabric.lang.security.Label;
+import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.PairLabel;
 import fabric.lang.security.Principal;
+import fabric.lang.security.ReaderPolicy;
+import fabric.lang.security.WriterPolicy;
+import fabric.store.SubscriptionManager;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * <p>
@@ -116,20 +122,24 @@ public abstract class ObjectDB {
     /**
      * Returns an iterator of onums involved in this transaction.
      */
+    @Override
     public Iterator<Long> iterator() {
       return new Iterator<Long>() {
         private Iterator<Long> readIt = reads.iterator();
         private Iterator<SerializedObject> modIt = modData.iterator();
 
+        @Override
         public boolean hasNext() {
           return readIt.hasNext() || modIt.hasNext();
         }
 
+        @Override
         public Long next() {
           if (readIt.hasNext()) return readIt.next();
           return modIt.next().getOnum();
         }
 
+        @Override
         public void remove() {
           throw new UnsupportedOperationException();
         }
@@ -139,6 +149,7 @@ public abstract class ObjectDB {
     /**
      * Serializes this object out to the given output stream.
      */
+    @Override
     public void write(DataOutput out) throws IOException {
       out.writeLong(tid);
 
@@ -536,6 +547,7 @@ public abstract class ObjectDB {
     final Store store = Worker.getWorker().getStore(name);
 
     Worker.runInSubTransaction(new Worker.Code<Void>() {
+      @Override
       public Void run() {
         // No need to initialize global constants here, as those objects will be
         // supplied by the workers' local store.

@@ -8,11 +8,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import polyglot.util.InternalCompilerError;
-
 import fabric.common.exceptions.InternalError;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
@@ -20,7 +18,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 
 public final class NSUtil {
-  private static List TOPICS = new ArrayList<String>();
+  private static List<String> TOPICS = new ArrayList<String>();
   static {
     TOPICS.add("nsutil");
   }
@@ -35,19 +33,19 @@ public final class NSUtil {
    * @return the parent package name for classes in the codebase
    */
   public static String javaPackageName(URI codebase_oid) {
-    if(codebase_oid.isOpaque()) 
+    if (codebase_oid.isOpaque()) 
       throw new InternalError("Cannot create java package name for " + codebase_oid);
     //URI is of form : 'fab://store/123'
     String store = codebase_oid.getAuthority();
 
     //URI may contain trailing '/'
     String onum = codebase_oid.getPath().substring(1);
-    if(onum.endsWith("/"))
+    if (onum.endsWith("/"))
       onum = onum.substring(0, onum.length()-1);
 
     String[] host = store.split("[.]");
     StringBuilder sb = new StringBuilder("$$");
-    for(int i = host.length - 1; i>=0; i--) {
+    for (int i = host.length - 1; i>=0; i--) {
       sb.append(escapeHost(host[i]));
       sb.append('.');
     }
@@ -75,13 +73,13 @@ public final class NSUtil {
    * @return the uri representing the parent directory
    */
   public static URI dirname(URI uri) {
-    if(uri.isOpaque())
+    if (uri.isOpaque())
       throw new InternalCompilerError("Cannot get dirname of opaque URI: " + uri);
     String scheme = uri.getScheme();
     String auth = uri.getAuthority();
     String path = uri.getPath();
     int idx = path.lastIndexOf('/');
-    if(idx+1 < path.length())
+    if (idx+1 < path.length())
       path = path.substring(0,idx+1);
     
     try {
@@ -96,12 +94,12 @@ public final class NSUtil {
    * @return the last component in uri's path
    */
   public static String basename(URI uri) {
-    if(uri.isOpaque())
+    if (uri.isOpaque())
       throw new InternalCompilerError("Cannot get basename of opaque URI: " + uri);
 
     String path = uri.getPath();
     int idx = path.lastIndexOf('/');
-    if(idx == path.length()-1) 
+    if (idx == path.length()-1) 
       return path.substring(path.lastIndexOf(idx-1,'/')+1,idx);
     else
       return path.substring(path.lastIndexOf('/')+1);
@@ -117,7 +115,7 @@ public final class NSUtil {
 
     //URI may contain trailing '/'
     String s = oid.getPath().substring(1);
-    if(s.endsWith("/"))
+    if (s.endsWith("/"))
       s = s.substring(0, s.length()-1);
     Long onum = Long.parseLong(s); // skip leading
 
@@ -178,16 +176,16 @@ public final class NSUtil {
     while (idx < path.length()) {
       if (path.charAt(idx) == '<') {
         int end = path.indexOf('>',idx);
-        if(end < 0)
+        if (end < 0)
           throw new InternalCompilerError("Invalid path");
         String cb = path.substring(idx + 1, end);
-        if(!cb.endsWith("/"))
+        if (!cb.endsWith("/"))
           cb +="/";
         
         URI u = URI.create(cb);
         uris.add(u);
 
-        if(u.getScheme().equals("fab"))
+        if (u.getScheme().equals("fab"))
           needWorker = true;
         idx = end + 1;
         
@@ -197,7 +195,7 @@ public final class NSUtil {
         int end = path.indexOf(File.pathSeparatorChar,idx);
 
         String dir="";
-        if(end < 0) {
+        if (end < 0) {
           dir = path.substring(idx);
           idx = path.length();
         }
@@ -205,8 +203,8 @@ public final class NSUtil {
           dir = path.substring(idx, end);
           idx = end;
         }
-        if(!"".equals(dir)) {
-          if(!dir.endsWith("/"))
+        if (!"".equals(dir)) {
+          if (!dir.endsWith("/"))
             dir +="/";
 
           URI u = URI.create(dir);

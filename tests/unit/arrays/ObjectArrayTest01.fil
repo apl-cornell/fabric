@@ -27,7 +27,7 @@ public class ObjectArrayTest01 {
         int ITER_REPS;
         boolean isBatchOutput;
 
-        if(args.length < 5) {
+        if (args.length < 5) {
             System.out.println("I need 5 arguments - size1, size2, maxCount, iterReps, isBatchOutput");
             return;
         }
@@ -53,7 +53,7 @@ public class ObjectArrayTest01 {
         int percentage = 0;
         int step = 5;
 
-        if(args.length > 5) { 
+        if (args.length > 5) { 
             System.out.println("Starting test in 3 seconds");
             try {
                 Thread.sleep(3000);
@@ -65,7 +65,7 @@ public class ObjectArrayTest01 {
 
         long startTest = System.currentTimeMillis();
         atomic {
-            for(int count = 0; count < MAX_COUNT; count++) {
+            for (int count = 0; count < MAX_COUNT; count++) {
 
                 // create array
                 startTime = System.currentTimeMillis();
@@ -74,30 +74,30 @@ public class ObjectArrayTest01 {
 
                 // initialize array with element 1
                 startInitialize = System.currentTimeMillis();
-                for(int i = 0; i < SIZE1; i++) {
+                for (int i = 0; i < SIZE1; i++) {
                     testArray.set(i, element1);
                 }
 
 
                 // read entire array multiple times
                 startReadIteration = System.currentTimeMillis();
-                for(int j = 0; j < ITER_REPS; j++)
-                    for(int i = 0; i < SIZE1; i++) {
+                for (int j = 0; j < ITER_REPS; j++)
+                    for (int i = 0; i < SIZE1; i++) {
 //                      ObjectArrayTest01 element = (ObjectArrayTest01)testArray.get(i);
                         testArray.get(i);                        
                     }
 
                 // replace all elements of the array multiple times
                 startWriteIteration = System.currentTimeMillis();
-                for(int j = 0; j < ITER_REPS; j++)
-                    for(int i = 0; i < SIZE1; i++) {
+                for (int j = 0; j < ITER_REPS; j++)
+                    for (int i = 0; i < SIZE1; i++) {
                         testArray.set(i, element2);
                     }
 
                 // resize array
                 startResize = System.currentTimeMillis();
 //              _ObjectArray testArrayNew = new _ObjectArray@store(ObjectArrayTest01.class, SIZE2);
-//              for(int i = 0; i < SIZE1; i++) {
+//              for (int i = 0; i < SIZE1; i++) {
 //              testArrayNew.set(i, testArray.get(i));
 //              }
 //              testArray = testArrayNew;
@@ -113,10 +113,10 @@ public class ObjectArrayTest01 {
                 resizing += endTime - startResize;
 
                 // show progress
-                if(!isBatchOutput && count == (percentage * MAX_COUNT)/100) {
+                if (!isBatchOutput && count == (percentage * MAX_COUNT)/100) {
                     System.out.print(percentage + "%");
                     long timeNow = System.currentTimeMillis() - startTest;
-                    if(percentage > 0) {
+                    if (percentage > 0) {
                         long estimatedEnd = (timeNow*100)/percentage;
                         System.out.println("(" + timeNow + "ms/" + estimatedEnd + "ms)");
                     } else {
@@ -127,7 +127,7 @@ public class ObjectArrayTest01 {
 
             }
         }
-        if(!isBatchOutput) System.out.println("100%Completed");
+        if (!isBatchOutput) System.out.println("100%Completed");
 
         creation = creation * 1000 / MAX_COUNT;
         initialization = initialization * 1000 / MAX_COUNT;
@@ -140,7 +140,7 @@ public class ObjectArrayTest01 {
 
         NumberFormat formatter = new DecimalFormat("#0.0000");
 
-        if(!isBatchOutput) {
+        if (!isBatchOutput) {
             System.out.println("\nArray Creation: " + formatter.format(creation)
                 + "us\nArray Initialization: " + formatter.format(initialization)
                 + "us (" + formatter.format(initializationPer) 

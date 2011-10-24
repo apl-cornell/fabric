@@ -1,6 +1,7 @@
 package fabil.ast;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import polyglot.ast.Block_c;
 import polyglot.ast.Stmt;
@@ -52,10 +53,12 @@ public class Atomic_c extends Block_c implements Atomic {
     return super.acceptCFG(v, succs);
   }
   
+  @Override
   public List<LocalInstance> updatedLocals() {
     return updatedLocals;
   }
   
+  @Override
   public Atomic updatedLocals(List<LocalInstance> s) {
     if (s == this.updatedLocals) {
       return this;
@@ -65,10 +68,12 @@ public class Atomic_c extends Block_c implements Atomic {
     return n;
   }
   
+  @Override
   public boolean mayAbort() {
     return mayAbort;
   }
   
+  @Override
   public Atomic mayAbort(boolean b) {
     if (b == mayAbort) {
       return this;

@@ -23,11 +23,6 @@ public class FieldExt_c extends ExprExt_c {
    */
   private State accessState;
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   protected Expr rewriteProxiesOverrideImpl(ProxyRewriter pr) {
     Field field = node();
@@ -46,11 +41,6 @@ public class FieldExt_c extends ExprExt_c {
     return ((FieldExt_c)field.ext()).rewriteProxiesImpl(pr);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     Field field = node();
@@ -91,11 +81,6 @@ public class FieldExt_c extends ExprExt_c {
     return getter.target(target).targetImplicit(false);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public Field node() {
     return (Field) super.node();

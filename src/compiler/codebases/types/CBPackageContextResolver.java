@@ -14,9 +14,9 @@ import polyglot.util.StringUtil;
 
 public class CBPackageContextResolver extends PackageContextResolver {
   protected URI ns;
-  public CBPackageContextResolver(CodebaseTypeSystem ts, URI ns, Package p) {
+  public CBPackageContextResolver(CodebaseTypeSystem ts, Package p) {
     super(ts, p);
-    this.ns = ns;
+    this.ns = ((CBPackage)p).namespace();
   }
   
   /**

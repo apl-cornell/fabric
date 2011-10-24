@@ -64,7 +64,7 @@ public class Event[covariant label T] /*implements Comparable*/ implements JifOb
 
 
 	public String{CalServEP:;CalServEP!:;T} toString() {
-	    if(uid != null) {
+	    if (uid != null) {
 	        return Integer.toString(uid.uid);
 	    } else {
 	        return "<null>";
@@ -72,7 +72,7 @@ public class Event[covariant label T] /*implements Comparable*/ implements JifOb
 	}
 
 	public int{CalServEP:;CalServEP!:;T} hashCode() {
-	    if(uid == null) return -1;
+	    if (uid == null) return -1;
 		return uid.uid;
 	}
 
@@ -82,7 +82,7 @@ public class Event[covariant label T] /*implements Comparable*/ implements JifOb
 	public boolean{o;CalServEP:;CalServEP!:;lbl;*lbl;T} equals(label lbl, IDComparable[lbl] o) {
 		if (o instanceof Event[lbl]) {
 			Event[lbl] that = (Event[lbl])o;
-			if(this.uid == null || that.uid == null) return false;
+			if (this.uid == null || that.uid == null) return false;
 			return this.uid.uid == that.uid.uid;
 		}
 		return false;

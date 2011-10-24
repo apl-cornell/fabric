@@ -33,11 +33,11 @@ id references the element with which we're concerned
 */
 function stringIsInteger(str, id)
 {
-	if(str.length == 0) return true; //empty means no data
+	if (str.length == 0) return true; //empty means no data
 	var i = 0;
-	if(str.charAt(0) == '-') i = 1;
-	for(i; i < str.length; i++)
-		if(str.charCodeAt(i) < 48 || str.charCodeAt(i) > 57)
+	if (str.charAt(0) == '-') i = 1;
+	for (i; i < str.length; i++)
+		if (str.charCodeAt(i) < 48 || str.charCodeAt(i) > 57)
 			return false;
 	return true;
 }
@@ -48,10 +48,10 @@ id references the element with which we're concerned
 */
 function stringIsDate(str, id)
 {
-	if(str.length == 0) return true; //empty means no data
+	if (str.length == 0) return true; //empty means no data
 	//parseDate() is in CalendarPopup.js
 	var date = parseDate(str); //date is a Date object
-	if(date != null)
+	if (date != null)
 	{
 		//in case the date is in a format parsable by our Javascript but not our Java code
 		getElementById(id).value = formatDate(date, 'MMM dd, yyyy');
@@ -66,7 +66,7 @@ id references the element with which we're concerned
 */
 function stringIsTime(str, id)
 {
-	if(str.length == 0) return true; //empty means no data
+	if (str.length == 0) return true; //empty means no data
 	//parseTime() is in datetime.js
 	var time = parseTime(str); //time is a Date object
 	return (time != null);
@@ -85,10 +85,10 @@ formatDesc is a short string (first letter lowercase) describing the format
 function validateAllBoxesOfOneType(boxList, testFunc, highlightColor, colorName, formatDesc)
 {
 	var errors = 0;
-	for(var i = 0; i < boxList.length; i++)
+	for (var i = 0; i < boxList.length; i++)
 	{
 		var element = getElementById(boxList[i]);
-		if(element && !testFunc(element.value, boxList[i]))
+		if (element && !testFunc(element.value, boxList[i]))
 		{
 			errors++;
 			element.style.borderWidth = '4px';
@@ -100,9 +100,9 @@ function validateAllBoxesOfOneType(boxList, testFunc, highlightColor, colorName,
 			element.style.borderColor = '';
 		}
 	}
-	if(errors > 0)
+	if (errors > 0)
 	{
-		if(errors == 1) alert('Textbox highlighted in ' + colorName + ' must have ' + formatDesc + ' format.');
+		if (errors == 1) alert('Textbox highlighted in ' + colorName + ' must have ' + formatDesc + ' format.');
 		else alert('Textboxes highlighted in ' + colorName + ' must have ' + formatDesc + ' format.');
 		return false;
 	}

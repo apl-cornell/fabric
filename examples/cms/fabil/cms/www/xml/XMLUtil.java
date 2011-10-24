@@ -17,8 +17,8 @@ public class XMLUtil
 	{
 		NodeList children = element.getChildNodes();
 		CMSNodeList result = new CMSNodeList();
-		for(int i = 0; i < children.getLength(); i++)
-			if(((Element)children.item(i)).getTagName().equals(tag))
+		for (int i = 0; i < children.getLength(); i++)
+			if (((Element)children.item(i)).getTagName().equals(tag))
 				result.add(children.item(i));
 		return result;
 	}
@@ -50,8 +50,8 @@ public class XMLUtil
 	{
 		NodeList children = element.getChildNodes();
 		CMSNodeList result = new CMSNodeList();
-		for(int i = 0; i < children.getLength(); i++)
-			if(((Element)children.item(i)).getAttribute(attribute).equals(value))
+		for (int i = 0; i < children.getLength(); i++)
+			if (((Element)children.item(i)).getAttribute(attribute).equals(value))
 				result.add(children.item(i));
 		return result;
 	}
@@ -60,8 +60,8 @@ public class XMLUtil
 	{
 		NodeList children = element.getChildNodes();
 		CMSNodeList result = new CMSNodeList();
-		for(int i = 0; i < children.getLength(); i++)
-			if(((Element)children.item(i)).getTagName().equals(tag)
+		for (int i = 0; i < children.getLength(); i++)
+			if (((Element)children.item(i)).getTagName().equals(tag)
 				&& ((Element)children.item(i)).getAttribute(attribute).equals(value))
 				result.add(children.item(i));
 		return result;
@@ -71,8 +71,8 @@ public class XMLUtil
 	{
 		NodeList children = element.getElementsByTagName(tag);
 		CMSNodeList result = new CMSNodeList();
-		for(int i = 0; i < children.getLength(); i++)
-			if(((Element)children.item(i)).getAttribute(attribute).equals(value))
+		for (int i = 0; i < children.getLength(); i++)
+			if (((Element)children.item(i)).getAttribute(attribute).equals(value))
 				result.add(children.item(i));
 		return result;
 	}

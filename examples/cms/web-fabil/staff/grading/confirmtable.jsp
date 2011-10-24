@@ -48,7 +48,7 @@ String ID = (confirm_type == XMLBuilder.CONFIRM_ASSIGNINFO) ? root.getAttribute(
               Element error= (Element)errors.item(j); %>
               <li><%= error.getAttribute(XMLBuilder.A_DATA) %></li><%
               
-              if(error.getAttribute(XMLBuilder.A_DATA).indexOf("is not an enrolled student in this course") != -1)
+              if (error.getAttribute(XMLBuilder.A_DATA).indexOf("is not an enrolled student in this course") != -1)
               {
               	String errorString = error.getAttribute(XMLBuilder.A_DATA);
              	newNetIDs.add(errorString.split(" ")[0].replaceAll("'", ""));
@@ -69,14 +69,14 @@ String ID = (confirm_type == XMLBuilder.CONFIRM_ASSIGNINFO) ? root.getAttribute(
 	        
 	        NodeList errors= root.getElementsByTagName(XMLBuilder.TAG_ERROR);
             boolean stopError = false;
-            if(root.hasAttribute(XMLBuilder.A_ERROR) && errors.getLength() > newNetIDs.size())
+            if (root.hasAttribute(XMLBuilder.A_ERROR) && errors.getLength() > newNetIDs.size())
             {
             	stopError = true;
             }
             
             if (!root.hasAttribute(XMLBuilder.A_ERROR)) { %>
 	            <form action="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_CONFIRMTABLE %>&amp;<%= AccessController.P_ASSIGNID %>=<%= ID %>" method="post">
-		            <%if(newNetIDs.size() > 0)
+		            <%if (newNetIDs.size() > 0)
 		            {
 			            Iterator it = newNetIDs.iterator();
 				       	%>
@@ -86,7 +86,7 @@ String ID = (confirm_type == XMLBuilder.CONFIRM_ASSIGNINFO) ? root.getAttribute(
 							while(it.hasNext())
 							{
 								String currentNetID = it.next().toString();
-								if(needsComma)
+								if (needsComma)
 								{%>,<%}
 								%><%=currentNetID%><%
 							needsComma = true;
@@ -115,9 +115,9 @@ String ID = (confirm_type == XMLBuilder.CONFIRM_ASSIGNINFO) ? root.getAttribute(
 	              Re-upload grades file: <input type="file" size="10" name="<%= AccessController.P_GRADESFILE %>"><input type="submit" value="Upload">
 	            </form>
 				<br>
-				<%if(!stopError) {%>
+				<%if (!stopError) {%>
 					<form id = "submitgrades" enctype="multipart/form-data" action="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_CONFIRMTABLE %>&amp;<%= AccessController.P_ASSIGNID %>=<%= ID %>&amp;<%=AccessController.P_NEWNETIDS%>=true" method="post">
-			            <%if(newNetIDs.size() > 0)
+			            <%if (newNetIDs.size() > 0)
 			            {
 				            Iterator it = newNetIDs.iterator();
 					       	%>
@@ -127,7 +127,7 @@ String ID = (confirm_type == XMLBuilder.CONFIRM_ASSIGNINFO) ? root.getAttribute(
 								while(it.hasNext())
 								{
 									String currentNetID = it.next().toString();
-									if(needsComma)
+									if (needsComma)
 									{%>,<%}
 									%><%=currentNetID%><%
 								needsComma = true;
@@ -161,7 +161,7 @@ String ID = (confirm_type == XMLBuilder.CONFIRM_ASSIGNINFO) ? root.getAttribute(
             }
             else
             {
-            	if(session.getAttribute(AccessController.A_ISCLASSLIST).equals(new Boolean(true)))
+            	if (session.getAttribute(AccessController.A_ISCLASSLIST).equals(new Boolean(true)))
 					{%>
 					<form method="post" enctype="multipart/form-data" action="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_UPLOADSTUDENTINFO + "&amp;" + AccessController.P_COURSEID + "=" + ID + "&amp;" + AccessController.P_ISCLASSLIST + "=yes" %>">
 <%					}
@@ -175,7 +175,7 @@ String ID = (confirm_type == XMLBuilder.CONFIRM_ASSIGNINFO) ? root.getAttribute(
 	          break;
 	        //confirming student info for the system
 	        case XMLBuilder.CONFIRM_GENERAL:
-	        	if(!root.hasAttribute(XMLBuilder.A_ERROR)) { %>
+	        	if (!root.hasAttribute(XMLBuilder.A_ERROR)) { %>
               <form action="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_CONFIRMSTUDENTINFO %>" method="post">
                 <input type="submit" value="Commit Data">
               </form><%

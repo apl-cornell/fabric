@@ -40,10 +40,12 @@ public interface FabricThread {
       setDaemon(true);
     }
     
+    @Override
     public TransactionManager getTransactionManager() {
       return this.tm;
     }
 
+    @Override
     public void setTransactionManager(TransactionManager tm) {
       this.tm = tm;
     }

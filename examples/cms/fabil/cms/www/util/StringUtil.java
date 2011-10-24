@@ -53,7 +53,7 @@ public class StringUtil
 		int startIndex = 0;
 		while(startIndex < list.length())
 		{
-			if(matcher.find(startIndex))
+			if (matcher.find(startIndex))
 			{
 				result.add(matcher.group(1).toLowerCase()); //group 0 is the entire match
 				startIndex = matcher.end();
@@ -115,7 +115,7 @@ public class StringUtil
 	public static String charsToASCII(String s)
 	{
 		String ascii = "";
-		for(int i = 0; i < s.length(); i++)
+		for (int i = 0; i < s.length(); i++)
 			ascii += new Integer(s.charAt(i)).toString() + " ";
 		return ascii;
 	}

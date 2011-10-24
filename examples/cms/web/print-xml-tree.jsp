@@ -1,6 +1,6 @@
 <%@page language="java" import="org.w3c.dom.*,java.io.StringWriter, cms.www.*, cms.www.util.*" %>
 <%
-if(((Boolean)session.getAttribute(AccessController.A_DEBUG)).booleanValue())
+if (((Boolean)session.getAttribute(AccessController.A_DEBUG)).booleanValue())
 { %>
 <div>
 	<h4>

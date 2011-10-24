@@ -97,10 +97,6 @@ public class FabILOptions_c extends polyglot.main.Options implements
     super(extension);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see polyglot.main.Options#setDefaultValues()
-   */
   @Override
   public void setDefaultValues() {
     super.setDefaultValues();
@@ -125,14 +121,13 @@ public class FabILOptions_c extends polyglot.main.Options implements
     this.needWorker = false;
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public int parseCommand(String[] args, int index, Set source)
       throws UsageError, TerminationException {
     return parseCommand(args, index, source, true);
   }
 
-  @SuppressWarnings("rawtypes")
   public int parseCommand(String[] args, int index, Set<String> source,
       boolean call_super) throws UsageError, TerminationException {
     if (args[index].equals("-sig")) {
@@ -239,10 +234,6 @@ public class FabILOptions_c extends polyglot.main.Options implements
     codebase_aliases.put(alias[0], uri);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see polyglot.main.Options#usage(java.io.PrintStream)
-   */
   @Override
   public void usage(PrintStream out) {
     super.usage(out);

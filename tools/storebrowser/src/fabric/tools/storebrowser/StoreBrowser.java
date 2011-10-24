@@ -126,22 +126,22 @@ public class StoreBrowser extends JFrame implements TreeSelectionListener {
 
     String clientName = null, storeName = null;
     long onum = -1;
-    if(args.length > 0)
+    if (args.length > 0)
     	clientName = args[0];
-    if(args.length > 1)
+    if (args.length > 1)
     	storeName = args[1];
-    if(args.length > 2)
+    if (args.length > 2)
     	onum = Long.parseLong(args[2]);
-    if(clientName == null) {
+    if (clientName == null) {
     	clientName = JOptionPane.showInputDialog("Please enter client name");
     } 
-    if(storeName == null) {
+    if (storeName == null) {
     	storeName = JOptionPane.showInputDialog("Please enter store name");
     }
     
     // Create and set up the window.
     JFrame frame;
-    if(onum > 0) {
+    if (onum > 0) {
     	frame = new StoreBrowser(new FabricDataProvider(clientName, storeName, onum));
     } else {
     	frame = new StoreBrowser(new FabricDataProvider(clientName, storeName));

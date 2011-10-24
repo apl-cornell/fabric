@@ -38,7 +38,7 @@ public class Diagnostics {
     atomic {
       Map root = (Map) store.getRoot();
       Blog instance = (Blog)root.get("blog");
-      if(instance == null) {
+      if (instance == null) {
         atomic {
           Blog.createNewInstance(store, currentLabel);
           //TODO: bug?

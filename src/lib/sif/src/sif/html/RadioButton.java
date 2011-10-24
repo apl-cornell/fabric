@@ -17,9 +17,7 @@ public final class RadioButton extends InputNode {
         super(servletP, L, E, i);		
         checked = checked_;
     }
-    /* (non-Javadoc)
-     * @see servlet.Node#write(servlet.HTMLWriter)
-     */
+
     void writeImpl(HTMLWriter p) {
         p.print("<input type=radio");
         p.print(" name=");

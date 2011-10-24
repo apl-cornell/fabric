@@ -5,7 +5,7 @@ Element root = (Element) displayData.getFirstChild();
 Element assignment = (Element)XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
 NodeList comments = assignment.getElementsByTagName(XMLBuilder.TAG_COMMENTS).item(0).getChildNodes();
 %>
-<% if(comments.getLength() > 0) { %>
+<% if (comments.getLength() > 0) { %>
 	<h2>
 	  Grading Comments &amp; Requests
 	  <span id="historyhead">

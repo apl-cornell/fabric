@@ -53,38 +53,46 @@ public interface Principal extends fabric.lang.Object {
       super(store, onum);
     }
 
+    @Override
     public String name() {
       return ((Principal) fetch()).name();
     }
 
+    @Override
     public boolean delegatesTo(Principal p) {
       return ((Principal) fetch()).delegatesTo(p);
     }
 
+    @Override
     public boolean equals(Principal p) {
       return ((Principal) fetch()).equals(p);
     }
 
+    @Override
     public boolean isAuthorized(java.lang.Object authPrf, Closure closure,
         Label lb, boolean executeNow) {
       return ((Principal) fetch()).isAuthorized(authPrf, closure, lb,
           executeNow);
     }
 
+    @Override
     public ActsForProof findProofUpto(Store store, Principal p,
         java.lang.Object searchState) {
       return ((Principal) fetch()).findProofUpto(store, p, searchState);
     }
 
+    @Override
     public ActsForProof findProofDownto(Store store, Principal q,
         java.lang.Object searchState) {
       return ((Principal) fetch()).findProofDownto(store, q, searchState);
     }
 
+    @Override
     public PublicKey getPublicKey() {
       return ((Principal) fetch()).getPublicKey();
     }
 
+    @Override
     public PrivateKeyObject getPrivateKeyObject() {
       return ((Principal) fetch()).getPrivateKeyObject();
     }
@@ -140,18 +148,24 @@ public interface Principal extends fabric.lang.Object {
               keyPair.getPrivate());
     }
 
+    @Override
     abstract public String name();
 
+    @Override
     abstract public boolean delegatesTo(final Principal p);
 
+    @Override
     abstract public boolean equals(final Principal p);
 
+    @Override
     abstract public boolean isAuthorized(final java.lang.Object authPrf,
         final Closure closure, final Label lb, final boolean executeNow);
 
+    @Override
     abstract public ActsForProof findProofUpto(final Store store,
         final Principal p, final java.lang.Object searchState);
 
+    @Override
     abstract public ActsForProof findProofDownto(final Store store,
         final Principal q, final java.lang.Object searchState);
 
@@ -175,11 +189,13 @@ public interface Principal extends fabric.lang.Object {
           intraStoreRefs);
     }
 
+    @Override
     public final PublicKey getPublicKey() {
       TransactionManager.getInstance().registerRead(this);
       return publicKey;
     }
 
+    @Override
     public final PrivateKeyObject getPrivateKeyObject() {
       TransactionManager.getInstance().registerRead(this);
       return privateKeyObject;

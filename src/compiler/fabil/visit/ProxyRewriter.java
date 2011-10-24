@@ -59,22 +59,11 @@ public class ProxyRewriter extends NodeVisitor {
     return super.enter(parent, n);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.visit.NodeVisitor#override(polyglot.ast.Node)
-   */
   @Override
   public Node override(Node n) {
     return ext(n).rewriteProxiesOverride(this);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.visit.NodeVisitor#leave(polyglot.ast.Node, polyglot.ast.Node,
-   *      polyglot.visit.NodeVisitor)
-   */
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     n = ext(n).rewriteProxies(this);

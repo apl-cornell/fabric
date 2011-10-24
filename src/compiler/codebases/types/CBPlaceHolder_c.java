@@ -13,7 +13,6 @@ import polyglot.types.TypeObject;
 import polyglot.types.TypeSystem;
 import polyglot.util.CannotResolvePlaceHolderException;
 import codebases.frontend.CBScheduler;
-import codebases.types.CodebaseClassType;
 
 /**
  * This class is basically copied from the superclass with following additions:
@@ -34,6 +33,7 @@ public class CBPlaceHolder_c extends PlaceHolder_c implements CBPlaceHolder {
     this(t.canonicalNamespace(), t.fullName());
   }
 
+  @Override
   public URI namespace() {
     return namespace;
   }
@@ -104,6 +104,7 @@ public class CBPlaceHolder_c extends PlaceHolder_c implements CBPlaceHolder {
 
     throw new CannotResolvePlaceHolderException("Could not resolve " + name);
   }
+  @Override
   public String toString() {
     return "CBPlaceHolder(" + name + ")";
 }

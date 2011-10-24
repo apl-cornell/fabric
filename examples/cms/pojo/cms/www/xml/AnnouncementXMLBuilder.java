@@ -104,7 +104,7 @@ public class AnnouncementXMLBuilder {
     xAnnouncement.setAttribute(XMLBuilder.A_DATE, DateTimeUtil.MONTH_DAY_TIME
         .format(announcement.getPosted()));
     String text = announcement.getText();
-    // if(formatForWeb) text= Util.formatWebString(text);
+    // if (formatForWeb) text= Util.formatWebString(text);
     xAnnouncement.setAttribute(XMLBuilder.A_TEXT, text);
     xAnnouncement.setAttribute(XMLBuilder.A_OLDTEXT, announcement.getEditInfo());
     return xAnnouncement;
@@ -119,7 +119,7 @@ public class AnnouncementXMLBuilder {
     while (i.hasNext()) {
       OldAnnouncement oldAnnounce = (OldAnnouncement) i.next();
       text = oldAnnounce.getText();
-      // if(formatForWeb)text = Util.formatWebString(text);
+      // if (formatForWeb)text = Util.formatWebString(text);
       xOldAnnouncement = xml.createElement(XMLBuilder.TAG_ANNOUNCEMENT);
       xOldAnnouncement.setAttribute(XMLBuilder.A_ID, oldAnnounce.toString());
       xOldAnnouncement.setAttribute(XMLBuilder.A_TEXT, text);

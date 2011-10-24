@@ -27,8 +27,8 @@ public class Server[principal Airline] implements broker.Server[Airline]
 		where {Airline->;Airline<-} <= {*auctionLbl}
 	{
 		final Store store = worker$.getStore(Config.brokerStoreName);
-		//if(store actsfor Airline) --- XXX: why is this insufficient?
-		if(new label{Airline->} <= new label{store->}
+		//if (store actsfor Airline) --- XXX: why is this insufficient?
+		if (new label{Airline->} <= new label{store->}
 			&& new label{*<-store} <= new label{Airline<-}
 			&& auctionLbl <= new label{store->})
 			return new Agent[Airline, auctionLbl]@store(this);

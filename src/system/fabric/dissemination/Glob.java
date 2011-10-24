@@ -1,17 +1,35 @@
 package fabric.dissemination;
 
-import java.io.*;
-import java.security.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
 
-import javax.crypto.*;
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.SecretKey;
 
-import fabric.lang.security.Label;
-import fabric.worker.Worker;
-import fabric.worker.Store;
-import fabric.worker.Worker.Code;
-import fabric.common.*;
+import fabric.common.Crypto;
+import fabric.common.FastSerializable;
+import fabric.common.ObjectGroup;
+import fabric.common.SerializedObject;
 import fabric.common.exceptions.InternalError;
+import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
+import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.worker.Worker.Code;
 
 /**
  * A glob is an ObjectGroup that has been encrypted and signed.
@@ -144,6 +162,7 @@ public class Glob implements FastSerializable {
     byte[] key = null;
     if (keyObject != null) {
       key = Worker.runInSubTransaction(new Code<SecretKey>() {
+        @Override
         public SecretKey run() {
           return keyObject.getKey();
         }
@@ -216,6 +235,7 @@ public class Glob implements FastSerializable {
   }
 
   /** Serializer. */
+  @Override
   public void write(DataOutput out) throws IOException {
     out.writeLong(timestamp);
     if (keyObject == null) {

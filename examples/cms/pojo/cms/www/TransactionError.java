@@ -68,6 +68,6 @@ public class TransactionError {
 	public void print()
 	{
 		System.out.println("TransactionError: " + error);
-		if(hasException()) getException().printStackTrace();
+		if (hasException()) getException().printStackTrace();
 	}
 }

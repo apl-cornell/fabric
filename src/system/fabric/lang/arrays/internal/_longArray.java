@@ -6,12 +6,12 @@ import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.List;
 
-import fabric.worker.Store;
-import fabric.worker.transaction.TransactionManager;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.security.Label;
+import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
 
 public interface _longArray extends Object {
   int get$length();
@@ -63,31 +63,19 @@ public interface _longArray extends Object {
         value[i] = in.readLong();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.longArray#getLength()
-     */
+    @Override
     public int get$length() {
       TransactionManager.getInstance().registerRead(this);
       return value.length;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.longArray#get(int)
-     */
+    @Override
     public long get(int i) {
       TransactionManager.getInstance().registerRead(this);
       return this.value[i];
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.longArray#set(int, long)
-     */
+    @Override
     public long set(int i, long value) {
       boolean transactionCreated =
           TransactionManager.getInstance().registerWrite(this);
@@ -96,11 +84,6 @@ public interface _longArray extends Object {
       return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.Object._Impl#$copyAppStateFrom(fabric.lang.Object._Impl)
-     */
     @Override
     public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
@@ -112,21 +95,11 @@ public interface _longArray extends Object {
       value = value.clone();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.Object._Impl#$makeProxy()
-     */
     @Override
     protected _longArray._Proxy $makeProxy() {
       return new _longArray._Proxy(this);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.Object._Impl#$serialize(java.io.ObjectOutput)
-     */
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
@@ -148,29 +121,17 @@ public interface _longArray extends Object {
       super(impl);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.longArray#getLength()
-     */
+    @Override
     public int get$length() {
       return ((_longArray) fetch()).get$length();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.longArray#get(int)
-     */
+    @Override
     public long get(int i) {
       return ((_longArray) fetch()).get(i);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.longArray#set(int, long)
-     */
+    @Override
     public long set(int i, long value) {
       return ((_longArray) fetch()).set(i, value);
     }

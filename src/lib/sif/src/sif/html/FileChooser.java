@@ -22,9 +22,7 @@ public final class FileChooser extends InputNode {
         super(servletP, L, E, new Input(servletP, s, inputLabel));
         this.size = size;
     }
-    /* (non-Javadoc)
-     * @see servlet.Node#write(servlet.HTMLWriter)
-     */
+
     void writeImpl(HTMLWriter p) {
         p.print("<input type=file name=");
         p.printq(input.getName());

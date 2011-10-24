@@ -488,7 +488,7 @@ public class TransactionHandler {
           Group      group   = database.getGroup(vals[3]);
           Assignment assign  = isAssign ? assignment : group.getAssignment();
           
-          if(!seenUsers.contains(student)) {
+          if (!seenUsers.contains(student)) {
             assignment.resetGradesForStudent(student);
             seenUsers.add(student);
           }
@@ -751,7 +751,7 @@ public class TransactionHandler {
         }
         if (isList) {
           List l = StringUtil.parseNetIDList(list);
-          for(int y = 0; y < l.size(); y++)
+          for (int y = 0; y < l.size(); y++)
             netids.add(l.get(y));
           
         } else // isFile
@@ -1959,7 +1959,7 @@ public class TransactionHandler {
   
   public String[] convertIt(String native[] in) {
     String[] n = new String[in.length];
-    for(int i = 0; i < in.length; i++)
+    for (int i = 0; i < in.length; i++)
       n[i] = in[i];
     return n;
   }

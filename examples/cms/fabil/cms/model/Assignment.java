@@ -244,9 +244,9 @@ public class Assignment implements Comparable {
    */
   public Collection/*Group*/ getGradedGroups(Collection/*Group*/ groups) {
     Collection result = new ArrayList();
-    for(Iterator i = groups.iterator(); i.hasNext();) {
+    for (Iterator i = groups.iterator(); i.hasNext();) {
       Group g = (Group)i.next();
-      if(g.getGrade() != null)
+      if (g.getGrade() != null)
         result.add(g);
     }
     return result;
@@ -254,7 +254,7 @@ public class Assignment implements Comparable {
 
   public Set/*RegradeRequest*/ findRegradeRequests() {
     Set result = new HashSet();
-    for(Iterator i = regradeRequests.values().iterator(); i.hasNext();) {
+    for (Iterator i = regradeRequests.values().iterator(); i.hasNext();) {
       Set r = (Set)i.next();
       result.addAll(r);
     }
@@ -301,12 +301,12 @@ public class Assignment implements Comparable {
 
   public Set/*Group*/ findLateGroups() {
     Set result = new HashSet();
-    for(Iterator i = groups.iterator(); i.hasNext();) {
+    for (Iterator i = groups.iterator(); i.hasNext();) {
       Group g = (Group)i.next();
       boolean cont = true;
-      for(Iterator fi = g.getSubmittedFiles().iterator(); fi.hasNext() && cont;) {
+      for (Iterator fi = g.getSubmittedFiles().iterator(); fi.hasNext() && cont;) {
         SubmittedFile f = (SubmittedFile)fi.next();
-        if(f.getLateSubmission()) {
+        if (f.getLateSubmission()) {
           result.add(g);
           cont = false;
         }
@@ -332,7 +332,7 @@ public class Assignment implements Comparable {
   public Collection/*Grade*/ getGrades() {
     Collection allGrades = new LinkedList();
     allGrades.addAll(grades.values());
-    for(Iterator i = subProblemGrades.values().iterator(); i.hasNext();) {
+    for (Iterator i = subProblemGrades.values().iterator(); i.hasNext();) {
       allGrades.addAll((Collection)i.next());
     }
     return Collections.unmodifiableCollection(allGrades);
@@ -352,7 +352,7 @@ public class Assignment implements Comparable {
 
   public Collection/*SolutionFile*/ findHiddenSolutionFiles() {
     ArrayList c = new ArrayList();
-    if(solutionFile != null) c.add(solutionFile);
+    if (solutionFile != null) c.add(solutionFile);
     return c;
   }
 
@@ -370,7 +370,7 @@ public class Assignment implements Comparable {
       Group group = (Group) git.next();
       for (Iterator mit = group.members.values().iterator(); mit.hasNext();) {
         GroupMember member = (GroupMember) mit.next();
-        if(member.getStudent().getUser().getNetID() == user.getNetID() &&
+        if (member.getStudent().getUser().getNetID() == user.getNetID() &&
             member.getStatus().equalsIgnoreCase("invited"))
           result.add(member);
       }
@@ -427,17 +427,17 @@ public class Assignment implements Comparable {
    * not associated with a particular subproblem.
    */
   public Grade findMostRecentGrade(Student student) {
-    if(grades.containsKey(student)) 
+    if (grades.containsKey(student)) 
       return (Grade)grades.get(student);
     return null;
   }
 
   public Grade findMostRecentGrade(Student student, SubProblem sp) {
     Set grades = (Set)subProblemGrades.get(student);
-    if(grades == null) return null;
-    for(Iterator i = grades.iterator(); i.hasNext();) {
+    if (grades == null) return null;
+    for (Iterator i = grades.iterator(); i.hasNext();) {
       Grade g = (Grade)i.next();
-      if(g.getSubProblem().toString().equals(sp.toString()))
+      if (g.getSubProblem().toString().equals(sp.toString()))
         return g;
     }
     return null;
@@ -461,11 +461,11 @@ public class Assignment implements Comparable {
   public void addGrade(Group group, SubProblem subProb, Float grade, User studentUser, User grader) {
     Student student = course.getStudent(studentUser);
     Grade g = new Grade(this, subProb, grade, studentUser, grader);
-    if(subProb == null) {
+    if (subProb == null) {
       grades.put(student, g);
     } else {
       Set grades = (Set)subProblemGrades.get(student);
-      if(grades == null) grades = new HashSet();
+      if (grades == null) grades = new HashSet();
       grades.add(g);
       subProblemGrades.put(student, grades);
       Grade gr = (Grade)this.grades.get(student);
@@ -480,7 +480,7 @@ public class Assignment implements Comparable {
     if (result != 0) return result;
     
     result = dueDate.compareTo(a.dueDate);
-    if(result != 0) return result;
+    if (result != 0) return result;
     return name.compareTo(a.name);
   }
 

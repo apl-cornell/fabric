@@ -167,7 +167,7 @@ public class Course implements Comparable {
     SortedSet result = new TreeSet();
     for (Iterator it = assignments.values().iterator(); it.hasNext();) {
       Assignment assignment = (Assignment) it.next();
-      if(!assignment.getHidden())
+      if (!assignment.getHidden())
         result.add(assignment);
     }
     
@@ -240,11 +240,11 @@ public class Course implements Comparable {
   
   public Collection/*Group*/ findGroupsByUser(User user) {
     Collection/*Group*/ result = new ArrayList();
-    for(Iterator ai = assignments.values().iterator(); ai.hasNext();) {
+    for (Iterator ai = assignments.values().iterator(); ai.hasNext();) {
       Assignment a = (Assignment)ai.next();
-      for(Iterator gi = a.getGroups().iterator(); gi.hasNext();) {
+      for (Iterator gi = a.getGroups().iterator(); gi.hasNext();) {
         Group g = (Group)gi.next();
-        if(g.hasMember(user)) {
+        if (g.hasMember(user)) {
           result.add(g);
         }
       }
@@ -254,11 +254,11 @@ public class Course implements Comparable {
   
   public Collection/*GroupMember*/ findGroupMembersByUser(User user) {
     Collection/*GroupMember*/ result = new ArrayList();
-    for(Iterator ai = assignments.values().iterator(); ai.hasNext();) {
+    for (Iterator ai = assignments.values().iterator(); ai.hasNext();) {
       Assignment a = (Assignment)ai.next();
-      for(Iterator gi = a.getGroups().iterator(); gi.hasNext();) {
+      for (Iterator gi = a.getGroups().iterator(); gi.hasNext();) {
         Group g = (Group)gi.next();
-        if(g.hasMember(user)) {
+        if (g.hasMember(user)) {
           result.add(g.getMember(user));
         }
       }
@@ -318,7 +318,7 @@ public class Course implements Comparable {
   
   public Collection/*RequiredSubmission*/ getRequiredSubmissions() {
     Collection result = new ArrayList();
-    for(Iterator i = assignments.values().iterator(); i.hasNext();) {
+    for (Iterator i = assignments.values().iterator(); i.hasNext();) {
       Assignment a = (Assignment)i.next();
       result.addAll(a.requiredSubmissions);
     }
@@ -354,7 +354,7 @@ public class Course implements Comparable {
     return result;
   }
   public Student getStudent(User user) {
-    if(!students.containsKey(user))
+    if (!students.containsKey(user))
       return null;
     return (Student) students.get(user);
   }

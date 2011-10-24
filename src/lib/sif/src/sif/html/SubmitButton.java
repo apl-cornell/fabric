@@ -21,9 +21,7 @@ public final class SubmitButton extends InputNode {
         super(servletP, L, E, new Input(servletP, s, inputLabel));
         name = name_;
     }
-    /* (non-Javadoc)
-     * @see servlet.Node#write(servlet.HTMLWriter)
-     */
+
     void writeImpl(HTMLWriter p) {
         p.print("<input ");
         p.begin();

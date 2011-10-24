@@ -32,7 +32,6 @@ import codebases.frontend.CBScheduler;
 import codebases.frontend.CBTypeExists;
 import codebases.frontend.CodebaseImportsInitialized;
 import codebases.frontend.CodebaseSource;
-import codebases.types.CBPlaceHolder;
 import codebases.visit.CBTypeBuilder;
 import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
@@ -131,7 +130,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     try {
       addPrerequisiteDependency(g, Parsed(job));
       addPrerequisiteDependency(g, ExplicitSuperclassesAdded(job));
-      if(!opts.signatureMode()) {
+      if (!opts.signatureMode()) {
         addPrerequisiteDependency(g, RemoteCallWrappersAdded(job));
       } else {
         addPrerequisiteDependency(g, Parsed(job));
@@ -162,7 +161,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();    
     Goal g = super.TypeChecked(job);
     try {
-      if(!opts.signatureMode()) {
+      if (!opts.signatureMode()) {
         addPrerequisiteDependency(g, RemoteCallWrappersUpdated(job));
       } else {
         addPrerequisiteDependency(g, Disambiguated(job));
@@ -198,6 +197,9 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     if (!opts.signatureMode()) {
       g = super.Serialized(job);
       try {
+        if(opts.publish())
+          g.addPrerequisiteGoal(FClassGenerated(job), this);
+
         g.addPrerequisiteGoal(ThisLabelChecked(job), this);
       } catch (CyclicDependencyException e) {
         throw new InternalCompilerError(e);
@@ -238,8 +240,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
       Goal g = internGoal(new EmptyGoal(job));
 
       try {
-        addPrerequisiteDependency(g, Serialized(job));
-        addPrerequisiteDependency(g, PrincipalCastsAdded(job));
+        addPrerequisiteDependency(g, ThisLabelChecked(job));
       } catch (CyclicDependencyException e) {
         // Cannot happen.
         throw new InternalCompilerError(e);
@@ -312,14 +313,12 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     FabricTypeSystem  ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
     Goal g = internGoal(new VisitorGoal(job, new FabricToFabilRewriter(job, ts, nf, filext)));     
-
     try {
         addPrerequisiteDependency(g, this.Serialized(job));
         addPrerequisiteDependency(g, this.PrincipalCastsAdded(job));
-        FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
 
         //TODO: only run if publishing classes
-        if(!((CodebaseSource) job.source()).shouldPublish())        
+        if(fabext.getFabricOptions().publish())        
           addPrerequisiteDependency(g, this.ConsistentNamespace());
         
         // make sure that if Object.fab is being compiled, it is always
@@ -372,7 +371,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
   
   public Goal FabILSkeletonGenerated(final Job job) {
     Goal g = internGoal(new AbstractGoal(job){
-      @SuppressWarnings({ "unchecked", "rawtypes" })
+      @SuppressWarnings("unchecked")
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
           List<Goal> l = new ArrayList<Goal>();
@@ -402,7 +401,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
      */
     boolean fab_complete = super.runToCompletion();
     long endTime = System.currentTimeMillis();
-    if(Report.should_report(Topics.profile, 1)) {
+    if (Report.should_report(Topics.profile, 1)) {
       Report.report(1, "Fabric passes complete: "+ (endTime - startTime) + "ms");
     }
     if (fab_complete) {

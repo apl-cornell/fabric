@@ -9,10 +9,12 @@ import java.util.Map;
 import polyglot.frontend.FileSource;
 import polyglot.main.Report;
 import polyglot.util.InternalCompilerError;
-import codebases.types.CodebaseTypeSystem;
 import fabric.Topics;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
+import fabric.lang.WrappedJavaInlineable;
+import fabric.util.Iterator;
+import fabric.util.Set;
 
 public class CodebaseSourceLoader implements URISourceLoader {
   protected static String[] TOPICS = new String[] {Report.loader, Topics.mobile};
@@ -51,14 +53,20 @@ public class CodebaseSourceLoader implements URISourceLoader {
   @Override
   //FIXME:
   public boolean packageExists(String name) {
-    throw new UnsupportedOperationException();
+    //XXX: Something better than this?
+    Set names = codebase.getClasses().keySet();
+    for (Iterator it = names.iterator(); it
+        .hasNext();) {
+      String classname = (String) WrappedJavaInlineable.$unwrap(it.next());
+      if(classname.startsWith(name))
+        return true;
+    }
+    return false;
   }
 
   @Override
   public FileSource classSource(String className) {
-    CodebaseTypeSystem ts = (CodebaseTypeSystem) extInfo.typeSystem();
-        
-    if(Report.should_report(TOPICS, 3))
+    if (Report.should_report(TOPICS, 3))
       Report.report(3, "Checking " + NSUtil.namespace(codebase) + " for " + className);
 
     fabric.lang.Object obj = codebase.resolveClassName(className);
@@ -67,6 +75,9 @@ public class CodebaseSourceLoader implements URISourceLoader {
       URI class_uri = ns.resolve(className);
 
       FileSource s = loadedSources.get(class_uri);
+      if(Report.should_report(TOPICS, 3))
+        Report.report(3, "FileSource already loaded: " + s);
+
       if (s != null) return s;
 
       //NB: ns may be different from obj.getCodebase() if we are re-publishing
@@ -91,10 +102,10 @@ public class CodebaseSourceLoader implements URISourceLoader {
       throws IOException {
     
     FileSource s = loadedSources.get(file);
-    if(s != null)
+    if (s != null)
       return s;
     
-    if(!NSUtil.dirname(file).equals(this.ns))
+    if (!NSUtil.dirname(file).equals(this.ns))
       throw new FileNotFoundException("Cannot load " + file + " from " + ns);
     
     String className = NSUtil.basename(file);

@@ -19,21 +19,21 @@ public class DOMWriter
 	
 	private static void write(Element element, Writer writer, int numIndents) throws IOException
 	{
-		for(int i = 0; i < numIndents; i++) writer.write("   ");
+		for (int i = 0; i < numIndents; i++) writer.write("   ");
 		writer.write("&lt;" + element.getTagName());
 		String namespace = element.getNamespaceURI();
 		if (namespace != null) {
 		    writer.write(" namespace=\"" + namespace + "\"");
 		}
 		NamedNodeMap attrs = element.getAttributes();
-		for(int i = 0; i < attrs.getLength(); i++)
+		for (int i = 0; i < attrs.getLength(); i++)
 		{
 			Node attr = attrs.item(i);
 			writer.write(" " + attr.getNodeName() + "=\"" + attr.getNodeValue() + "\""); 
 		}
 		writer.write("&gt;\n");
 		NodeList children = element.getChildNodes();
-		for(int i = 0; i < children.getLength(); i++)
+		for (int i = 0; i < children.getLength(); i++)
 		{
 			Node node = children.item(i);
 			switch(node.getNodeType())
@@ -47,7 +47,7 @@ public class DOMWriter
 			}
 		}
 		if (children.getLength() > 0) {
-		    for(int i = 0; i < numIndents; i++) writer.write("   ");
+		    for (int i = 0; i < numIndents; i++) writer.write("   ");
 		    writer.write("&lt;" + "/" + element.getTagName() + "&gt;\n");
 		}
 	}

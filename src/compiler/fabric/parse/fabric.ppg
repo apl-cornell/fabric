@@ -10,8 +10,10 @@ import fabric.types.FabricTypeSystem;
 import fabric.types.FabricFlags;
 import fabric.parse.Name;
 import codebases.ast.CodebaseDecl;
+import codebases.ast.CodebaseNode;
+import codebases.types.NamespaceResolver;
 import fabric.lang.Codebase;
-
+import polyglot.types.Package;
 import java.net.URI;
 
 parser Grm extends jif.parse.Grm {:
@@ -87,43 +89,114 @@ parser Grm extends jif.parse.Grm {:
       }
     }
 
-	//Override methods in jif.ppg to use new packageForName    
+	//Override methods in jif.ppg   
     public PackageNode exprToPackage(Expr e) throws Exception {
+        throw new UnsupportedOperationException("Use exprToQualifier instead");
+    }
+    public QualifierNode exprToQualifier(Expr e) throws Exception {
+    
         if (e instanceof Wrapper) {
-            return ((Wrapper) e).amb.toPackage();
+            //amb can/should only be a name
+        	if(((Wrapper) e).amb instanceof Name) {
+        	   Name n = (Name)((Wrapper) e).amb;
+               return n.toQualifier();
+        	}
+        	else die(pos(e));
         }
 
         if (e instanceof AmbExpr) {
             AmbExpr a = (AmbExpr) e;
+            NamespaceResolver nr = ts.namespaceResolver(this.ns);
+	        try {
+	        	//try to resolve name as a codebase alias
+	            return nf.CodebaseNode(pos(e), this.ns, a.name(), nr.resolveCodebaseName(a.name()));
+	        } catch (SemanticException s) {
+	        }
+            
             return nf.PackageNode(pos(e), ts.packageForName(this.ns, a.name()));
         }
 
         if (e instanceof Field) {
             Field f = (Field) e;
-            PackageNode pn = prefixToPackage(f.target());
-            return nf.PackageNode(pos(e),
-                                ts.packageForName(this.ns, pn.package_(), f.name()));
+            QualifierNode pn = prefixToQualifier(f.target());
+            if(pn instanceof CodebaseNode) {
+            	//create a CodebaseNode if our prefix is a codebase
+            	CodebaseNode cn = (CodebaseNode) pn;
+            	Package pkg = ts.packageForName(cn.externalNamespace(), cn.package_(), f.name());
+            	return nf.CodebaseNode(pos(e), this.ns, cn.alias(), cn.externalNamespace(), pkg);
+            	
+            }
+            else if(pn instanceof PackageNode) {
+            	//otherwise, we create a PackageNode
+            	Package pkg = ((PackageNode)pn).package_();
+            	return nf.PackageNode(pos(e), ts.packageForName(this.ns, pkg, f.name()));
+            }
         }
 
         die(pos(e));
         return null;
     }
 	
-    public PackageNode prefixToPackage(Prefix p) throws Exception {
+	public PackageNode prefixToPackage(Prefix p) throws Exception {
+	    throw new UnsupportedOperationException("Use prefixToQualifier instead");
+	}
+	
+    public QualifierNode prefixToQualifier(Prefix p) throws Exception {
         if (p instanceof Expr) {
-            return exprToPackage((Expr) p);
+            return exprToQualifier((Expr) p);
         }
 
         if (p instanceof AmbPrefix) {
             AmbPrefix a = (AmbPrefix) p;
             Prefix ap = a.prefix();
-            polyglot.types.Package pkg = null;
-            if (ap != null) pkg = prefixToPackage(a.prefix()).package_();
-            return nf.PackageNode(pos(p),
-                                ts.packageForName(this.ns, pkg, a.name()));
+            Package pkg = null;         
+            if(ap != null) {
+                QualifierNode pn = prefixToQualifier(ap);
+                if(pn instanceof CodebaseNode) {
+                	//If prefix is a CodebaseNode, create a new CodebaseNode 
+                	//	for the subpackage
+                	CodebaseNode cn = (CodebaseNode) pn;
+                	Package cbpkg = ts.packageForName(cn.externalNamespace(), cn.package_(), a.name());    	
+                 	return nf.CodebaseNode(pos(p), this.ns, cn.alias(), cn.externalNamespace(), cbpkg);
+                }
+                else if(pn instanceof PackageNode) {
+                	//otherwise get the package of the prefix
+            	    pkg = ((PackageNode)pn).package_();
+                }
+            }
+            else if(ap == null) {
+            	//If there is no prefix, see if there is a codebase alias for this name
+            	NamespaceResolver nr = ts.namespaceResolver(this.ns);
+	            try {
+	                return nf.CodebaseNode(pos(p), this.ns, a.name(), nr.resolveCodebaseName(a.name()));
+	            } catch (SemanticException e) {
+	            }
+            }
+            //pkg is null or is the package of the prefix node
+            //the prefix is null and not a codebase alias, or not null and not a CodebaseNode
+            return nf.PackageNode(pos(p), ts.packageForName(this.ns, pkg, a.name()));
         }
 
         die(pos(p));
+        return null;
+    }
+        public TypeNode exprToUninstType(Expr e) throws Exception {
+        if (e instanceof Wrapper) {
+            return ((Wrapper) e).amb.toUnlabeledType();
+        }
+
+        if (e instanceof AmbExpr) {
+            AmbExpr a = (AmbExpr) e;
+            return nf.AmbTypeNode(pos(e), a.name());
+        }
+
+        if (e instanceof Field) {
+            Field f = (Field) e;
+            Receiver r = f.target();
+            return nf.AmbTypeNode(pos(e), prefixToQualifier(r), f.name());
+        }
+
+        die(pos(e));
         return null;
     }
     
@@ -148,6 +221,26 @@ non terminal List codebase_declarations_opt, codebase_declarations;
 non terminal CodebaseDecl codebase_declaration;
 
 start with goal;
+
+////////////////////////////////////////////////////////////////////////
+// Disallow covariant labels                                          //
+////////////////////////////////////////////////////////////////////////
+
+drop { COVARIANT }
+
+override parameter ::=
+            // ParamDecl
+    LABEL:x IDENTIFIER:a
+        {: RESULT = parser.nf.ParamDecl(parser.pos(x, a),
+                                        ParamInstance.INVARIANT_LABEL,
+                                        parser.nf.Id(parser.pos(a), a.getIdentifier()));
+                                        :}
+    |   PRINCIPAL:x IDENTIFIER:a
+        {: RESULT = parser.nf.ParamDecl(parser.pos(x, a),
+                                        ParamInstance.PRINCIPAL,
+                                        parser.nf.Id(parser.pos(a), a.getIdentifier()));
+                                        :}
+    ;
 
 //////////////
 // Names 	//
@@ -214,6 +307,29 @@ codebase_declaration ::=
                     // CodebaseDecl
         CODEBASE simple_name:a SEMICOLON
             {: RESULT = parser.nf.CodebaseDecl(parser.pos(a), a.toIdentifier()); :}
+    ;
+
+override dynamic_label ::=
+        accesspath:a
+            {: RESULT = parser.nf.AmbDynamicLabelNode(parser.pos(a), a); :}
+    |   provider:a
+            {: RESULT = a; :}
+    |   accesspath_receiver:a DOT PROVIDER:b
+            {: TypeNode clazz;
+               if (a instanceof Expr) {
+                   clazz = parser.exprToUninstType((Expr) a);
+               } else if (a instanceof AmbReceiver) {
+                   AmbReceiver ar = (AmbReceiver) a;
+                   Prefix prefix = ar.prefix();
+                   QualifierNode pn = null;
+                   if (prefix != null) pn = parser.prefixToQualifier(ar.prefix());
+                   clazz = parser.nf.AmbTypeNode(parser.pos(a), pn, ar.name());
+               } else {
+                   clazz = null;
+                   parser.die(parser.pos(a));
+               }
+               RESULT = parser.nf.AmbProviderLabelNode(parser.pos(a, b), clazz);
+            :}
     ;
 
 

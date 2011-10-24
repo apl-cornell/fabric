@@ -1,12 +1,30 @@
 package fabric.worker.transaction;
 
 import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
-import static fabric.worker.transaction.Log.CommitState.Values.*;
+import static fabric.worker.transaction.Log.CommitState.Values.ABORTED;
+import static fabric.worker.transaction.Log.CommitState.Values.ABORTING;
+import static fabric.worker.transaction.Log.CommitState.Values.COMMITTED;
+import static fabric.worker.transaction.Log.CommitState.Values.COMMITTING;
+import static fabric.worker.transaction.Log.CommitState.Values.PREPARED;
+import static fabric.worker.transaction.Log.CommitState.Values.PREPARE_FAILED;
+import static fabric.worker.transaction.Log.CommitState.Values.PREPARING;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 
-import fabric.common.*;
+import fabric.common.FabricThread;
+import fabric.common.Logging;
+import fabric.common.SerializedObject;
+import fabric.common.Timing;
+import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
@@ -18,7 +36,16 @@ import fabric.lang.security.SecurityCache;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
-import fabric.worker.*;
+import fabric.worker.AbortException;
+import fabric.worker.FabricSoftRef;
+import fabric.worker.RemoteStore;
+import fabric.worker.Store;
+import fabric.worker.TransactionAbortingException;
+import fabric.worker.TransactionAtomicityViolationException;
+import fabric.worker.TransactionCommitFailedException;
+import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.TransactionRestartingException;
+import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.UpdateMap;
 
@@ -433,6 +460,7 @@ public final class TransactionManager {
     for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
       Runnable runnable = new Runnable() {
+        @Override
         public void run() {
           try {
             Collection<_Impl> creates = current.getCreatesForStore(store);
@@ -604,6 +632,7 @@ public final class TransactionManager {
     for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
       Runnable runnable = new Runnable() {
+        @Override
         public void run() {
           try {
             store.commitTransaction(current.tid.topTid);
@@ -989,6 +1018,7 @@ public final class TransactionManager {
     for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
       Runnable runnable = new Runnable() {
+        @Override
         public void run() {
           LongKeyMap<Integer> reads = current.getReadsForStore(store, true);
           if (store.checkForStaleObjects(reads))

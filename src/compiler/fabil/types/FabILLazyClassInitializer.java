@@ -5,13 +5,16 @@ import java.util.StringTokenizer;
 
 import polyglot.main.Report;
 import polyglot.types.ClassType;
+import polyglot.types.ConstructorInstance;
+import polyglot.types.FieldInstance;
+import polyglot.types.MethodInstance;
 import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
+import polyglot.types.Type;
 import polyglot.types.reflect.ClassFileLazyClassInitializer;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
 import codebases.frontend.ExtensionInfo;
-import codebases.types.CodebaseClassType;
 import codebases.types.CodebaseTypeSystem;
 
 /**
@@ -41,7 +44,7 @@ public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
   public void initInterfaces() {
     if (interfacesInitialized) return;
     // Clear first in case we were interrupted
-    ct.setInterfaces(new ArrayList());
+    ct.setInterfaces(new ArrayList<Type>());
     super.initInterfaces();
   }
 
@@ -49,7 +52,7 @@ public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
   public void initFields() {
     if (fieldsInitialized) return;
     // Clear first in case we were interrupted
-    ct.setFields(new ArrayList());
+    ct.setFields(new ArrayList<FieldInstance>());
     super.initFields();
   }
 
@@ -57,7 +60,7 @@ public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
   public void initConstructors() {
     if (constructorsInitialized) return;
     // Clear first in case we were interrupted
-    ct.setConstructors(new ArrayList());
+    ct.setConstructors(new ArrayList<ConstructorInstance>());
     super.initConstructors();
   }
 
@@ -66,7 +69,7 @@ public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
     if (memberClassesInitialized) return;
 
     // Clear first in case we were interrupted
-    ct.setMemberClasses(new ArrayList());
+    ct.setMemberClasses(new ArrayList<Type>());
     super.initMemberClasses();
   }
 
@@ -75,7 +78,7 @@ public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
     if (methodsInitialized) return;
 
     // Clear first in case we were interrupted
-    ct.setMethods(new ArrayList());
+    ct.setMethods(new ArrayList<MethodInstance>());
     super.initMethods();
   }
 

@@ -26,7 +26,7 @@ public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
         
         try {
             ArrayMapEntry[K,V]{K}[]{K} newEntryArray = new ArrayMapEntry[K,V][newCapacity];
-            for(int i = 0; i < size; i++) {
+            for (int i = 0; i < size; i++) {
                 newEntryArray[i] = entryArray[i];
             }
             entryArray = newEntryArray;
@@ -41,7 +41,7 @@ public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
     
     public JifObject[V]{K;*lbl;lbl;key} get(label lbl, JifObject[lbl] key) {
         try {
-            for(int i = 0; i < size; i++) {
+            for (int i = 0; i < size; i++) {
                 ArrayMapEntry[K,V] e = entryArray[i]; 
                 JifObject[K] k = e.key;
                 if (k == key || (k != null && k.equals(lbl, key))) {
@@ -56,7 +56,7 @@ public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
     
     public boolean{K;*lbl;lbl;key} containsKey(label lbl, JifObject[lbl] key) {
         try {
-            for(int i = 0; i < size; i++) {
+            for (int i = 0; i < size; i++) {
                 ArrayMapEntry[K,V] e = entryArray[i]; 
                 JifObject[K] k = e.key;
                 if (k == key || (k != null && k.equals(lbl, key))) {
@@ -76,7 +76,7 @@ public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
         JifObject[V] old = null;
         
         try {
-            for(int i = 0; i < size; i++) {
+            for (int i = 0; i < size; i++) {
                 ArrayMapEntry[K,V] e = entryArray[i]; 
                 JifObject[K] k = e.key;
                 if (k == key || (k != null && k.equals(key))) {
@@ -86,9 +86,9 @@ public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
                     break;
                 }
             }
-            if(!found) {
+            if (!found) {
                 // need a new entry
-                if(capacity < size + 1) {
+                if (capacity < size + 1) {
                     extendCapacity();
                 }
                 ArrayMapEntry[K,V] e = new ArrayMapEntry[K,V](key, value);
@@ -108,7 +108,7 @@ public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
     public JifObject[V]{K} remove{K}(JifObject[K]{K} key) {
         JifObject[V] old;
         try {
-            for(int i = 0; i < size; i++) {
+            for (int i = 0; i < size; i++) {
                 ArrayMapEntry[K,V] e = entryArray[i]; 
                 JifObject[K] k = e.key;
                 if (k == key || (k != null && k.equals(key))) {
@@ -127,7 +127,7 @@ public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
     protected void remove{K}(int{K} i) throws (ArrayIndexOutOfBoundsException{K}) {
         size--;
         try {
-            for(int j = i; j < size; j++) {
+            for (int j = i; j < size; j++) {
                 entryArray[j] = entryArray[j+1];
             }
         } 
@@ -205,8 +205,8 @@ class ArrayMapEntrySet[label K, label V] extends AbstractSet[K] {
     
     public boolean{K;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o) {
         try {
-            for(int i = 0; i < parent.size; i++) {
-                if(parent.entryArray[i].equals(lbl, o)) {
+            for (int i = 0; i < parent.size; i++) {
+                if (parent.entryArray[i].equals(lbl, o)) {
                     return true;
                 }
             }
@@ -220,8 +220,8 @@ class ArrayMapEntrySet[label K, label V] extends AbstractSet[K] {
     // XXX no locking required?
     public boolean{K} remove{K}(JifObject[K]{K} o) {
         try {
-            for(int i = 0; i < parent.size; i++) {
-                if(parent.entryArray[i].equals(o)) {
+            for (int i = 0; i < parent.size; i++) {
+                if (parent.entryArray[i].equals(o)) {
                     parent.remove(i);
                     return true;
                 }
@@ -267,7 +267,7 @@ class ArrayMapEntrySetIterator[label K, label V] implements Iterator[K] {
     
     public JifObject[K]{K} next{K}() throws (NoSuchElementException{K}) {
         try {
-            if(next >= parent.size) {
+            if (next >= parent.size) {
                 throw new NoSuchElementException();
             }
             current = next;
@@ -283,7 +283,7 @@ class ArrayMapEntrySetIterator[label K, label V] implements Iterator[K] {
     
     public void remove{K}() throws (IllegalStateException{K}) {
         try {
-            if(current < 0 || current >= parent.size) {
+            if (current < 0 || current >= parent.size) {
                 throw new IllegalStateException();
             }
             parent.remove(current);

@@ -197,12 +197,35 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
   }
 
   @Override
-  public final Ext extCodebaseNode() {
+  public Ext extCodebaseNode() {
+    Ext e = extCodebaseNodeImpl();
+    if (nextExtFactory() != null &&
+        nextExtFactory() instanceof FabricExtFactory) {
+      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
+      Ext e2 = nextFac.extCodebaseNode();
+      e = composeExts(e, e2);
+    }
+    return e;
+  }
+  protected Ext extCodebaseNodeImpl() {
     return extNode();
   }
 
   @Override
-  public final Ext extCodebaseDecl() {
+  public Ext extCodebaseDecl() {
+    Ext e = extCodebaseDeclImpl();
+    if (nextExtFactory() != null &&
+        nextExtFactory() instanceof FabricExtFactory) {
+      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
+      Ext e2 = nextFac.extCodebaseDecl();
+      e = composeExts(e, e2);
+    }
+    return e;
+  }
+
+  protected Ext extCodebaseDeclImpl() {
     return extNode();
   }
+  
+
 }

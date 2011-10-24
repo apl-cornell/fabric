@@ -1,4 +1,4 @@
-package fabil.visit;
+package codebases.visit;
 
 import java.net.URI;
 
@@ -11,7 +11,6 @@ import polyglot.util.CodeWriter;
 import polyglot.visit.Translator;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.ExtensionInfo;
-import fabric.common.SysUtil;
 
 public class CodebaseTranslator extends Translator {
   protected final ExtensionInfo extInfo;

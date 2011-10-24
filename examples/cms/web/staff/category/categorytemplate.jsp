@@ -27,7 +27,7 @@ and, if there's a new category, the order and properties of its columns
       <div id="course_page">
 		<jsp:include page="../../problem-report.jsp"/>
         <span class="assignment_title">Content</span><%
-if(ctgID.equals("0"))
+if (ctgID.equals("0"))
 {%>
 		<h2>
 			Existing Content
@@ -54,7 +54,7 @@ if(ctgID.equals("0"))
         	<div class="assignment_left">
          	<jsp:include page="categorytemplate-columns.jsp"/>
 			</div><%
-if(ctgID.equals("0"))
+if (ctgID.equals("0"))
 {%>
 			<div class="assignment_left">
 				<table>

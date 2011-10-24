@@ -7,6 +7,7 @@ import rice.p2p.commonapi.Message;
  */
 public class AggregateInterval implements Message {
 
+  @Override
   public int getPriority() {
     return LOW_PRIORITY;
   }

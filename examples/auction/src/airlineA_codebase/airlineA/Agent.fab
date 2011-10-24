@@ -11,7 +11,7 @@ public class Agent[principal Airline, label Auction] implements broker.Agent[Air
 			{*broker.Agent.provider} equiv {*broker.Server.provider}
 {
     private final Server[Airline]{Airline->;Airline<-}@{Auction;⊥←} server;
-    private int {Airline->;Airline<-}@{Auction;⊥←} lowestprice; 
+    private int {Airline->;Airline<-}@{Auction;⊥←} lowestprice;
 
     public Agent{Airline->;Airline<-}(Server[Airline]{Airline->;Airline<-} server) {
 		this.server = server;
@@ -26,7 +26,7 @@ public class Agent[principal Airline, label Auction] implements broker.Agent[Air
 		prepareForAuction(); 
 		int price = 2*lowestprice;
                 final Store store = worker$.getStore(Config.brokerStoreName);
-		if(new label{Auction;*broker.Offer.provider} <= new label {store->} 
+		if (new label{Auction;*broker.Offer.provider} <= new label {store->} 
 			&&  new label {store<-} <= Auction) {
 				return new Offer[Auction]@store(price, 0);
 		} else
@@ -42,7 +42,7 @@ public class Agent[principal Airline, label Auction] implements broker.Agent[Air
 		int price = 2*lowestprice;  // possible read-channel??? 
                 final Store store = worker$.getStore(Config.brokerStoreName);
 
-		if(new label {Auction;*broker.Offer.provider} <= new label {store->} 
+		if (new label {Auction;*broker.Offer.provider} <= new label {store->} 
 			&&  new label {store<-} <= Auction) {
 			Offer[Auction] newOffer = new Offer[Auction]@store(price, 0);
 

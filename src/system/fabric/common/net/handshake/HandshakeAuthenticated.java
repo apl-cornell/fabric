@@ -1,5 +1,7 @@
 package fabric.common.net.handshake;
 
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -21,21 +23,18 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
 
-import javax.net.ssl.SSLContext;
-
 import fabric.common.Crypto;
 import fabric.common.KeyMaterial;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.Store;
 import fabric.worker.Worker;
-
-import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
 
 /**
  * @see https://apl.cs.cornell.edu/wiki/Fabric:Fabric_Communication_Layer
@@ -88,6 +87,7 @@ public class HandshakeAuthenticated implements Protocol {
     this.initiatorTrust   = endpoints[0].getTrustedCerts();
   }
   
+  @Override
   public ShakenSocket initiate(String name, Socket s) throws IOException {
     DataOutputStream clearOut = new DataOutputStream(s.getOutputStream());
     clearOut.writeUTF(name);
@@ -108,6 +108,7 @@ public class HandshakeAuthenticated implements Protocol {
     return new ShakenSocket(name, peer, sock);
   }
 
+  @Override
   public ShakenSocket receive(Socket s) throws IOException {
     DataInputStream in = new DataInputStream(s.getInputStream());
     String name = in.readUTF();
@@ -146,14 +147,17 @@ public class HandshakeAuthenticated implements Protocol {
       this.keys = keys;
     }
     
+    @Override
     public String chooseClientAlias(String[] keyTypes, Principal[] issuers, Socket s) {
       return ".principal";
     }
 
+    @Override
     public String chooseServerAlias(String keyType, Principal[] issuers, Socket s) {
       return keys.getName();
     }
 
+    @Override
     public X509Certificate[] getCertificateChain(String alias) {
       if (alias.equals(".principal"))
         return keys.getPrincipalChain();
@@ -163,10 +167,12 @@ public class HandshakeAuthenticated implements Protocol {
         return null;
     }
 
+    @Override
     public String[] getClientAliases(String keyType, Principal[] issuers) {
       return new String[] {".principal"};
     }
 
+    @Override
     public PrivateKey getPrivateKey(String keyType) {
       if (keyType.equals(".principal"))
         return keys.getPrivateKey();
@@ -176,6 +182,7 @@ public class HandshakeAuthenticated implements Protocol {
         return null;
     }
 
+    @Override
     public String[] getServerAliases(String arg0, Principal[] arg1) {
       return new String[] {keys.getName()};
     }
@@ -192,10 +199,12 @@ public class HandshakeAuthenticated implements Protocol {
       this.keys = keys;
     }
     
+    @Override
     public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
       checkTrusted(chain);
     }
 
+    @Override
     public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
       checkTrusted(chain);
     }
@@ -208,6 +217,7 @@ public class HandshakeAuthenticated implements Protocol {
       }
     }
 
+    @Override
     public X509Certificate[] getAcceptedIssuers() {
       X509Certificate[] result = new X509Certificate[keys.getTrustedCerts().size()];
      

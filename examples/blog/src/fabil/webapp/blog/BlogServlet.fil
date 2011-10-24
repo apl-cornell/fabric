@@ -105,15 +105,15 @@ public class BlogServlet extends HttpServlet {
     long start = 0;
     atomic {
       Collection posts = Blog.getInstance().getBlogPosts();
-      for(Iterator i = posts.iterator(); i.hasNext();) {
+      for (Iterator i = posts.iterator(); i.hasNext();) {
         BlogPost post = (BlogPost)i.next();
         Collection comments = post.getComments();
-        for(Iterator j = comments.iterator(); j.hasNext();) {
+        for (Iterator j = comments.iterator(); j.hasNext();) {
           Comment c = (Comment)j.next();
-          if(c.getContent().contains("comment")) {
+          if (c.getContent().contains("comment")) {
             c.setContent(c.getContent().replace("comment", "blag"));
             post.setTitle("Replaced");
-          } else if(c.getContent().contains("blag")) {
+          } else if (c.getContent().contains("blag")) {
             c.setContent(c.getContent().replace("blag", "comment"));
             post.setTitle("Reverted");
           }
@@ -229,7 +229,7 @@ public class BlogServlet extends HttpServlet {
     request.setAttribute("actions", Action.values());
     request.setAttribute("busyclients", Statistics.getBusyClients());
     java.util.LinkedList list = new java.util.LinkedList();
-    for(Iterator iter = Statistics.getClients().iterator(); iter.hasNext();) {
+    for (Iterator iter = Statistics.getClients().iterator(); iter.hasNext();) {
       list.add(iter.next());
     }
     request.setAttribute("clientslist", list);
@@ -270,7 +270,7 @@ public class BlogServlet extends HttpServlet {
         Integer.parseInt(request.getParameter("id")));
     request.setAttribute("entry", p);
     java.util.LinkedList list = new java.util.LinkedList();
-    for(Iterator iter = p.getComments().iterator(); iter.hasNext();) {
+    for (Iterator iter = p.getComments().iterator(); iter.hasNext();) {
       list.add(iter.next());
     }
     request.setAttribute("comments", list);
@@ -283,14 +283,14 @@ public class BlogServlet extends HttpServlet {
     fabric.util.Iterator iter = Blog.getInstance().getBlogPosts().iterator();
     int size = Blog.getInstance().getBlogPosts().size();
     int start = 0;
-    if(request.getParameter("start") != null)
+    if (request.getParameter("start") != null)
       start = Integer.parseInt(request.getParameter("start"));
     int end = 3;
-    if(request.getParameter("end") != null)
+    if (request.getParameter("end") != null)
       end = Integer.parseInt(request.getParameter("end"));
-    for(int j = 0; j < start; j++) 
+    for (int j = 0; j < start; j++) 
       iter.next();
-    for(int i = start; i <= end && i < size && i >= 0; i++) {
+    for (int i = start; i <= end && i < size && i >= 0; i++) {
       posts.add(iter.next());
     }
     request.setAttribute("posts", posts);

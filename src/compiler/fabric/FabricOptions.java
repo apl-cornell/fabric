@@ -116,7 +116,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   }
 
   
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   protected int parseCommand(String[] args, int index, Set source)
       throws UsageError, TerminationException {

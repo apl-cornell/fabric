@@ -85,7 +85,7 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
           throwTypes.addAll(md.throwTypes());
 
           ClassMember newCM = qq.parseMember(cm_fmt, md.returnType(), formals, stmts);
-          if(newCM instanceof JifMethodDecl) {
+          if (newCM instanceof JifMethodDecl) {
             JifMethodDecl rmd = (JifMethodDecl) newCM;
             rmd = (JifMethodDecl) rmd.flags(md.flags());
             rmd = (JifMethodDecl) rmd.throwTypes(md.throwTypes());

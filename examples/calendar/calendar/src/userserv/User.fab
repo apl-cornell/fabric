@@ -32,12 +32,12 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
         return this.password;
     }
     public String{servP:;servP!:;T} getFirstName() {
-    	if(remote1 == null) return null;
+    	if (remote1 == null) return null;
         return remote1.firstName;
     }
 
     public String{servP:;servP!:;T} getLastName() {
-    	if(remote1 == null) return null;
+    	if (remote1 == null) return null;
         return remote1.lastName;
     }
 
@@ -87,9 +87,9 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
         return equals(new label {servP:;servP!:}, o);
     }
     public boolean{servP:;servP!:;o;lbl;*lbl} equals(label lbl, IDComparable[lbl] o) {
-    	if(o instanceof fabric.lang.Object) {
+    	if (o instanceof fabric.lang.Object) {
     		fabric.lang.Object obj = (fabric.lang.Object)o;
-//    		if(this instanceof fabric.lang.Object) {
+//    		if (this instanceof fabric.lang.Object) {
     			return equals(obj);
 //    		}
     	} 
@@ -98,7 +98,7 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
     
     public static User[Q,{P←}]{P←} declassifyUser{P←}(principal{P←} P, principal{P←} Q, User[Q,{P→;P←}]{P←} user) 
     where caller(P) {
-    	if(user == null) return null;
+    	if (user == null) return null;
     	final User$1[Q]{P←} nremote1 = declassify(user.remote1, {P→;P←} to {P←});
     	final String{P←} npassword = declassify(user.password, {P→;P←} to {P←});
     	final String{P←} nname = declassify(user.name(), {P→;P←} to {P←});
@@ -108,7 +108,7 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
     public static User[EP, {P→;Q←}]{P→;Q←} endorseUser{P→;P←}(principal{P→;P←} EP, principal{P→;P←} P, principal{P→;P←} Q, User[EP,{P→;P←}]{P→;P←} user_) 
     where caller(Q), endorse({P→;Q←}) {
         User[EP,{P→;P←}]{P→;Q←} user = endorse(user_, {P→;P←;Q←} to {P→;Q←});
-        if(user == null) return null;
+        if (user == null) return null;
         final User$1[EP] nremote1 = endorse(user.remote1, {P→;P←;Q←} to {P→;Q←});
         final String npassword = endorse(user.password, {P→;P←;Q←} to {P→;Q←});
         final String nname = endorse(user.name(), {P→;P←;Q←} to {P→;Q←});
@@ -120,7 +120,7 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
     where Q actsfor P, caller(Q) {
         declassify({Q←}) {
             User[EP,{P→;Q←}]{Q←} user = declassify(user_, {P→;Q←} to {Q←});
-            if(user == null) return null;
+            if (user == null) return null;
             final User$1[EP] nremote1 = declassify(user.remote1, {P→;Q←} to {Q←});
             final String npassword = declassify(user.password, {P→;Q←} to {Q←});
             final String nname = declassify(user.name(), {P→;Q←} to {Q←});

@@ -1,7 +1,7 @@
 package fabric.worker;
 
-import static fabric.common.Logging.WORKER_LOGGER;
 import static fabric.common.Logging.TIMING_LOGGER;
+import static fabric.common.Logging.WORKER_LOGGER;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -20,7 +20,6 @@ import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
 import fabric.common.KeyMaterial;
-import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -56,7 +55,11 @@ import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
-import fabric.worker.shell.*;
+import fabric.worker.shell.ChainedCommandSource;
+import fabric.worker.shell.CommandSource;
+import fabric.worker.shell.InteractiveCommandSource;
+import fabric.worker.shell.TokenizedCommandSource;
+import fabric.worker.shell.WorkerShell;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
@@ -426,7 +429,7 @@ public final class Worker {
    * 
    */
   public FabricClassLoader getClassLoader() {
-    if(loader == null)
+    if (loader == null)
       loader = new FabricClassLoader(Worker.class.getClassLoader()); 
     return loader;
   }
@@ -472,6 +475,7 @@ public final class Worker {
       // Attempt to read the principal object to ensure that it exists.
       final NodePrincipal workerPrincipal = worker.getPrincipal();
       runInSubTransaction(new Code<Void>() {
+        @Override
         public Void run() {
           WORKER_LOGGER.config("Worker principal is " + workerPrincipal);
           return null;
@@ -517,6 +521,7 @@ public final class Worker {
     final Store local = getLocalStore();
     final NodePrincipal workerPrincipal = getPrincipal();
     Object argsProxy = runInSubTransaction(new Code<Object>() {
+      @Override
       public Object run() {
         ConfPolicy conf =
             LabelUtil._Impl.readerPolicy(local, workerPrincipal,

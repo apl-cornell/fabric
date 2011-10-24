@@ -22,7 +22,7 @@ class Test {
     }
     public void foo{*lbl}(label{*lbl} lbl) {
         try {
-            if(this.copy.obj.infoLbl <= lbl) {
+            if (this.copy.obj.infoLbl <= lbl) {
                 bar(lbl);
             } 
         } catch (NullPointerException whocares) {}

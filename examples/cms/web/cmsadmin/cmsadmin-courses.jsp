@@ -20,7 +20,7 @@ Element root = (Element)displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).it
      	</tr>
 <% Element crs = (Element)root.getElementsByTagName(XMLBuilder.TAG_ALLCOURSES).item(0);
 NodeList courseList = crs.getChildNodes();
-for(int i = 0; i < courseList.getLength(); i++)
+for (int i = 0; i < courseList.getLength(); i++)
 { 
 	Element item = (Element)courseList.item(i); %>
       <tr>

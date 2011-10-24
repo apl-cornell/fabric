@@ -11,7 +11,7 @@ public class DummyDataProvider implements DataProvider {
   }
   
   public List<Object> getChildrenForNode(Object obj) {
-    if(obj.equals("fab://store0")) {
+    if (obj.equals("fab://store0")) {
       return Arrays.asList(new Object[] {"one", "two", "three"});
     }
     return Arrays.asList(new Object[] {"blah", "fang"});

@@ -8,7 +8,7 @@ User p = (User)session.getAttribute(AccessController.A_PRINCIPAL);
 Element root = (Element)displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).item(0);
 Element course = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
 String courseID = null;
-if(course != null) /* course-specific page */
+if (course != null) /* course-specific page */
 {
 	courseID = course.getAttribute(XMLBuilder.A_COURSEID);
 }%>
@@ -41,9 +41,9 @@ div.filetransfer div {margin: 1em 0em 0em 1em}
 								<ul><%
 /* display the list of columns that can be uploaded with whatever permission the principal has */
 List appropriateColumnNames = null;
-if(course != null) appropriateColumnNames = CSVFileFormatsUtil.getStaffAppropriateFlexibleColumnList();
+if (course != null) appropriateColumnNames = CSVFileFormatsUtil.getStaffAppropriateFlexibleColumnList();
 else appropriateColumnNames = CSVFileFormatsUtil.getCMSAdminAppropriateFlexibleColumnList();
-for(int i = 0; i < appropriateColumnNames.size(); i++)
+for (int i = 0; i < appropriateColumnNames.size(); i++)
 {%>
 									<li><%= (String)appropriateColumnNames.get(i) %><%
 }%>

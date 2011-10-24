@@ -9,6 +9,7 @@ import polyglot.ast.Ext;
 public class FabILExtFactory_c extends AbstractExtFactory_c implements
     FabILExtFactory {
 
+  @Override
   public Ext extFabricArrayTypeNode() {
     Ext e = extFabricArrayTypeNodeImpl();
     
@@ -30,6 +31,7 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   }
 
   /** Factory method for Atomic objects */
+  @Override
   public final Ext extAtomic() {
     Ext e = extAtomicImpl();
 
@@ -49,6 +51,7 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
     return postExtBlock(ext);
   }
   
+  @Override
   public final Ext extAbort() {
     Ext e = extAbortImpl();
     
@@ -68,6 +71,7 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
     return postExtStmt(ext);
   }
 
+  @Override
   public final Ext extRetry() {
     Ext e = extRetryImpl();
     
@@ -97,6 +101,7 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
     return new ArrayAccessExt_c();
   }
   
+  @Override
   public final Ext extFabricArrayInit() {
     Ext e = extFabricArrayInitImpl();
     
@@ -197,6 +202,7 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
     return new NewExt_c();
   }
 
+  @Override
   public Ext extNewFabricArray() {
     Ext e = extNewFabricArrayImpl();
     
@@ -242,6 +248,7 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
     return new UnaryExt_c();
   }
   
+  @Override
   public final Ext extProviderLabel() {
     Ext e = extProviderLabelImpl();
     
@@ -269,5 +276,10 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public Ext extCodebaseDecl() {
     return extNode();
+  }
+
+  @Override
+  public Ext extCodebaseTypeNode() {
+    return extCanonicalTypeNode();
   }
 }

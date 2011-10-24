@@ -34,7 +34,7 @@ public class StartTransaction extends CustomerAction {
         final Store bstore = worker$.getStore(Config.brokerStoreName);
         FabricWorker local = FabricWorker.getWorker();
         RemoteWorker bworkerprime = null;
-        if(local != null) {
+        if (local != null) {
             bworkerprime = local.getWorker(Config.brokerStoreName);
         }
         final RemoteWorker bworker = bworkerprime;

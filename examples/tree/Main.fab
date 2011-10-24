@@ -16,7 +16,7 @@ public class Main {
   private final String{*bot} storeName = "store0";
 
   public Main() {
-//    if(worker$ != null) {
+//    if (worker$ != null) {
       treeStore = worker$.getStore(storeName);
       nodeStore = treeStore; //worker$.getStore("store1");
 //    }
@@ -28,7 +28,7 @@ public class Main {
   }
 
   public static void main{*bot}(String{*bot}[]{*bot} args) {
-    if(args == null) return;
+    if (args == null) return;
     Main m_ = null;
     atomic {
       m_ = new Main();
@@ -40,11 +40,11 @@ public class Main {
     }
 
     try {
-      for(int i = 0; i < args.length; i++) {
+      for (int i = 0; i < args.length; i++) {
         argsCopy[i] = args[i];
       }
       atomic {
-        if(m.lbl <= new label {m.pp→;m.pp←} && new label {m.pp→;m.pp←} <= m.lbl) {
+        if (m.lbl <= new label {m.pp→;m.pp←} && new label {m.pp→;m.pp←} <= m.lbl) {
           m.begin(argsCopy);
         }
       }
@@ -60,7 +60,7 @@ public class Main {
     atomic {
       runtime = Runtime[pp].getRuntime();
     }
-    if(runtime == null || args == null) return;
+    if (runtime == null || args == null) return;
 
     String arg = null;
     PrintStream[{pp→;⊥←⊥}] out = null;
@@ -78,7 +78,7 @@ public class Main {
     } catch (ArrayIndexOutOfBoundsException imposs) {}
     catch (NullPointerException imposs) {}
 
-    if(out == null || arg == null) return;
+    if (out == null || arg == null) return;
     try {
       Map root = (Map) worker$.getStore(storeName).getRoot();
       //    Random random = new Random();

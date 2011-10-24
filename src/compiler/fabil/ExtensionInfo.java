@@ -11,6 +11,7 @@ import java.util.Map;
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.FileSource;
+import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.SourceLoader;
@@ -24,6 +25,7 @@ import polyglot.types.reflect.ClassFileLoader;
 import polyglot.types.reflect.ClassPathLoader;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
+import codebases.frontend.CBJobExt;
 import codebases.frontend.CBTargetFactory;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.CodebaseSourceLoader;
@@ -172,7 +174,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
       throws IOException {
     if (!(obj instanceof FClass))
       throw new InternalCompilerError("Expected FClass.");
-    
+
     FClass fcls = (FClass) obj;    
     if (!LabelUtil._Impl.relabelsTo(fcls.get$label(), fcls.getCodebase()
         .get$label())) {
@@ -250,7 +252,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
 
   @Override
   public CBTypeEncoder typeEncoder() {
-    if(typeEncoder == null) {
+    if (typeEncoder == null) {
       typeEncoder = new CBTypeEncoder(ts);
     }
     return typeEncoder;
@@ -260,7 +262,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   @Override
   public URISourceLoader sourceLoader(URI uri) {
     if ("fab".equals(uri.getScheme())) {
-      if(uri.isOpaque())
+      if (uri.isOpaque())
         throw new InternalCompilerError("Unexpected URI:" + uri);
       return new CodebaseSourceLoader(this, uri);
     } else if ("file".equals(uri.getScheme())) {
@@ -273,7 +275,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   public ClassPathLoader classpathLoader(URI ns) {
     if ("fab".equals(ns.getScheme())) {
       // Load previously compiled classes from cache
-      if(ns.isOpaque())
+      if (ns.isOpaque())
         throw new InternalCompilerError("Unexpected URI:" + ns);
  
       String java_pkg = NSUtil.javaPackageName(ns);      
@@ -291,9 +293,9 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
 
   @Override
   public String namespaceToJavaPackagePrefix(URI ns) {
-    if(ns.equals(localNamespace()) || ns.equals(platformNamespace()))
+    if (ns.equals(localNamespace()) || ns.equals(platformNamespace()))
       return "";
-    else if(ns.getScheme().equals("fab")) {
+    else if (ns.getScheme().equals("fab")) {
       return NSUtil.javaPackageName(ns) + ".";
     }
     else {
@@ -344,4 +346,10 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
       return Worker.getWorker().getLocalStore();
     return Worker.getWorker().getStore(storeName);
   }
+  
+  @Override
+  public JobExt jobExt() {
+      return new CBJobExt();
+  }
+
 }

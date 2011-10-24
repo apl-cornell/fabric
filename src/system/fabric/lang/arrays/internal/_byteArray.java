@@ -6,12 +6,12 @@ import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.List;
 
-import fabric.worker.Store;
-import fabric.worker.transaction.TransactionManager;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.security.Label;
+import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
 
 public interface _byteArray extends Object {
   int get$length();
@@ -64,31 +64,19 @@ public interface _byteArray extends Object {
         value[i] = in.readByte();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.byteArray#getLength()
-     */
+    @Override
     public int get$length() {
       TransactionManager.getInstance().registerRead(this);
       return value.length;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.byteArray#get(int)
-     */
+    @Override
     public byte get(int i) {
       TransactionManager.getInstance().registerRead(this);
       return this.value[i];
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.byteArray#set(int, byte)
-     */
+    @Override
     public byte set(int i, byte value) {
       boolean transactionCreated =
           TransactionManager.getInstance().registerWrite(this);
@@ -97,11 +85,6 @@ public interface _byteArray extends Object {
       return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.Object._Impl#$copyAppStateFrom(fabric.lang.Object._Impl)
-     */
     @Override
     public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
@@ -109,25 +92,16 @@ public interface _byteArray extends Object {
       value = src.value;
     }
 
+    @Override
     public void cloneValues() {
       value = value.clone();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.Object._Impl#$makeProxy()
-     */
     @Override
     protected _byteArray._Proxy $makeProxy() {
       return new _byteArray._Proxy(this);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.Object._Impl#$serialize(java.io.ObjectOutput)
-     */
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
@@ -149,29 +123,17 @@ public interface _byteArray extends Object {
       super(impl);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.byteArray#getLength()
-     */
+    @Override
     public int get$length() {
       return ((_byteArray) fetch()).get$length();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.byteArray#get(int)
-     */
+    @Override
     public byte get(int i) {
       return ((_byteArray) fetch()).get(i);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.byteArray#set(int, byte)
-     */
+    @Override
     public byte set(int i, byte value) {
       return ((_byteArray) fetch()).set(i, value);
     }

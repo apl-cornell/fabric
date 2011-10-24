@@ -17,7 +17,7 @@ before using the README.
 Edit src/system/fabric/common/Util.java
 add the following lines to the beginning of public static byte[] hash(Class<?> c):
 
-if(true)
+if (true)
   return new byte[0];
 
 
