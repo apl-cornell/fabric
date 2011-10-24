@@ -51,6 +51,12 @@ public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
     }
   }
   
+
+  public boolean isDisambiguated() {
+    //CodebaseNodes may have null packages. 
+    return package_ == null || super.isDisambiguated();
+  }
+
   @Override
   public URI namespace() {
     return namespace;
