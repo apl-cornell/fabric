@@ -415,7 +415,7 @@ public abstract class Options {
     });
     
     flags.add(new Flag(Kind.SECRET, "--bootclasspath", "<path>",
-        "directory for code compiled by the worker") {
+        "directory for Fabric runtime classes") {
       @Override
       public int handle(String[] args, int index) {
         Options.this.bootcp = args[index];
