@@ -9,8 +9,6 @@ import polyglot.ast.ArrayAccessAssign;
 import polyglot.ast.ArrayTypeNode;
 import polyglot.ast.Assign.Operator;
 import polyglot.ast.Call;
-import polyglot.ast.CanonicalTypeNode;
-import polyglot.ast.CanonicalTypeNode_c;
 import polyglot.ast.Cast;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
@@ -27,21 +25,17 @@ import polyglot.ast.TopLevelDecl;
 import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
 import polyglot.types.Package;
-import polyglot.types.Type;
 import polyglot.util.CollectionUtil;
-import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.ast.CBSourceFile_c;
 import codebases.ast.CodebaseDecl;
 import codebases.ast.CodebaseDecl_c;
 import codebases.ast.CodebaseNode;
 import codebases.ast.CodebaseNode_c;
-import codebases.ast.CodebaseTypeNode;
 import fabil.extension.FabILDelFactory;
 import fabil.extension.FabILDelFactory_c;
 import fabil.extension.FabILExtFactory;
 import fabil.extension.FabILExtFactory_c;
-import fabric.lang.Codebase;
 /**
  * NodeFactory for FabIL extension.
  */
