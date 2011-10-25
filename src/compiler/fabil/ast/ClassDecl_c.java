@@ -32,14 +32,12 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
     
     if (! type.supertypesResolved()) {
         if (superClass != null && ! superClass.isDisambiguated()) {
-          System.err.println("SUPERCLASS is ambiguous:" + superClass);
             supertypesResolved = false;
         }
         
         for (Iterator i = interfaces.iterator(); supertypesResolved && i.hasNext(); ) {
             TypeNode tn = (TypeNode) i.next();
             if (! tn.isDisambiguated()) {
-              System.err.println("INTERFACE is ambiguous:" + tn + " in " + name);
 
                 supertypesResolved = false;
             }

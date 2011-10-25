@@ -29,16 +29,7 @@ public class SourceFileToFabilExt_c extends SourceFileToJavaExt_c {
     PackageNode pkgNode = n.package_();
     FabILNodeFactory nf = (FabILNodeFactory) rw.java_nf();
     
-    List<CodebaseDecl> codebases = new ArrayList<CodebaseDecl>();
-    
-    //XXX: Why weren't these visited already?
-    for(CodebaseDecl cd : n.codebaseDecls()) {
-      Jif ext = JifUtil.jifExt(cd);
-      CodebaseDecl m = (CodebaseDecl) ext.toJava().toJava(rw);
-      codebases.add(m);
-    }
-    
-    n = (CBSourceFile) nf.SourceFile(n.position(), pkgNode, codebases,
+    n = (CBSourceFile) nf.SourceFile(n.position(), pkgNode, n.codebaseDecls(),
             n.imports(), n.decls());
 
     // Create a source derived from the fabric one. This is in support

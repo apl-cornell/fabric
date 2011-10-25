@@ -150,7 +150,7 @@
   		<param name="dest.store" value="${airlineA2.store}"/>
   		<param name="codebase.dir" value="${airlineA2.src}"/>
   		<param name="target.codebasefile" value="${airlineA2.codebase.file}"/>
-  		<param name="publish.args" value="-codebase-alias cb=fab://brokerStore/38/ -publish"/>
+  		<param name="publish.args" value="-codebase-alias cb=fab://brokerStore/1072/ -publish"/>
     </antcall>
     <uptodate property="airlineA2.up-to-date" targetfile="${airlineA2.codebase.file}">
       <srcfiles dir="${airlineA2.src}" includes="**/*.fab" />
@@ -219,7 +219,7 @@
       <arg value="-report" /> <arg value="profile=1" />
       <!--<arg value="-publish" />-->
       <!--<arg value="-publish-only" />-->
-      <arg value="-publish-only" />
+      <arg value="-publish" />
       <arg value="-codebase-output-file" /> <arg value="${target.codebasefile}"/>
       <arg value="-sourcepath" /> <arg value="${codebase.dir}" />
       <arg value="-worker" /> <arg value="${provider}" />

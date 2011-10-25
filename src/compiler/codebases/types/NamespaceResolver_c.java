@@ -103,7 +103,6 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     this.extInfo = extInfo;
     this.te = extInfo.typeEncoder();
     this.parent = parent;
-    System.err.println("Creating " + namespace + " with " + aliases);
     this.alias_cache = new HashMap<String,URI>(aliases);
     this.no_alias = new HashSet<String>();
   }

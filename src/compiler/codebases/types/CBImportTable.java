@@ -222,7 +222,6 @@ public class CBImportTable extends ImportTable {
         Report.report(2, this + ": import " + longName);
 
       try {
-        System.err.println("LAZY from "+ import_ns + ":" + longName);
         Importable t = ts.namespaceResolver(import_ns).find(longName);
 
         String shortName = StringUtil.getShortNameComponent(longName);
@@ -252,7 +251,6 @@ public class CBImportTable extends ImportTable {
   }
 
   public void addCodebaseName(String name, Position position) {
-    System.err.println("ADDING ALIAS: " + name);
     aliases.add(name);
   }
 

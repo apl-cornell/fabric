@@ -122,11 +122,9 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
       if(ct instanceof FabricSubstType)
         ct = (CodebaseClassType) ((FabricSubstType) ct).base();
       if (ext.isExternal(ct)) {
-        System.err.println("EXTERNAL TYPE " + ct);
         String alias = ext.aliasFor(ct);
         return fabil_nf.TypeNodeFromQualifiedName(pos, alias + "." + t.toClass().fullName());
       }
-      System.err.println("INTERNAL TYPE " + ct);
     }
     return super.typeToJava(t, pos);
   }

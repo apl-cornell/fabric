@@ -15,6 +15,7 @@ import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.util.Iterator;
+import fabric.util.Map.Entry;
 import fabric.util.Set;
 
 public class CodebaseSourceLoader implements URISourceLoader {
@@ -50,15 +51,16 @@ public class CodebaseSourceLoader implements URISourceLoader {
     this.codebase = codebase;
     this.loadedSources = new HashMap<URI, FileSource>();
   }
-
+  
   @Override
   //FIXME:
   public boolean packageExists(String name) {
     //XXX: Something better than this?
-    Set names = codebase.getClasses().keySet();
+    Set names = codebase.getClasses().entrySet();
     for (Iterator it = names.iterator(); it
         .hasNext();) {
-      String classname = (String) WrappedJavaInlineable.$unwrap(it.next());
+      Entry entry = (Entry) it.next();
+      String classname = (String) WrappedJavaInlineable.$unwrap(entry.getKey());
       String pkgName = StringUtil.getPackageComponent(classname);
       if(pkgName.startsWith(name))
         return true;
