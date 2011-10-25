@@ -6,7 +6,6 @@ import polyglot.qq.QQ;
 import polyglot.types.ParsedClassType;
 import polyglot.util.InternalCompilerError;
 import polyglot.visit.NodeVisitor;
-import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseClassType;
 import fabil.ExtensionInfo;
 import fabil.ast.FabILNodeFactory;
@@ -50,7 +49,7 @@ public class ProviderRewriter extends NodeVisitor {
       // Get a handle to the FClass object.
       Map classes = cb.getClasses();
       Object obj = classes.get(WrappedJavaInlineable.$wrap(ct.fullName()));
-      if(obj == null)
+      if (obj == null)
         throw new InternalCompilerError("Class not found in its own namespace: " + NSUtil.namespace(cb));
       
       FClass fclass =

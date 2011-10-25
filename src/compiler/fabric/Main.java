@@ -14,7 +14,6 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -373,6 +372,7 @@ public class Main extends polyglot.main.Main {
   }
 
   // /HACK :: copied from superclass
+  @SuppressWarnings("unchecked")
   @Override
   protected boolean invokePostCompiler(Options options, Compiler compiler,
       ErrorQueue eq) {
@@ -403,10 +403,8 @@ public class Main extends polyglot.main.Main {
         javacCmd[j++] = "-g";
       }
 
-      @SuppressWarnings("unchecked")
-      Iterator<String> iter = compiler.outputFiles().iterator();
-      for (; iter.hasNext(); j++) {
-        javacCmd[j] = iter.next();
+      for (String s : (Collection<String>) compiler.outputFiles()) {
+        javacCmd[j++] = s;
       }
 
       if (Report.should_report(verbose, 1)) {

@@ -97,7 +97,7 @@ parser Grm extends jif.parse.Grm {:
     
         if (e instanceof Wrapper) {
             //amb can/should only be a name
-        	if(((Wrapper) e).amb instanceof Name) {
+        	if (((Wrapper) e).amb instanceof Name) {
         	   Name n = (Name)((Wrapper) e).amb;
                return n.toQualifier();
         	}
@@ -119,14 +119,14 @@ parser Grm extends jif.parse.Grm {:
         if (e instanceof Field) {
             Field f = (Field) e;
             QualifierNode pn = prefixToQualifier(f.target());
-            if(pn instanceof CodebaseNode) {
+            if (pn instanceof CodebaseNode) {
             	//create a CodebaseNode if our prefix is a codebase
             	CodebaseNode cn = (CodebaseNode) pn;
             	Package pkg = ts.packageForName(cn.externalNamespace(), cn.package_(), f.name());
             	return nf.CodebaseNode(pos(e), this.ns, cn.alias(), cn.externalNamespace(), pkg);
             	
             }
-            else if(pn instanceof PackageNode) {
+            else if (pn instanceof PackageNode) {
             	//otherwise, we create a PackageNode
             	Package pkg = ((PackageNode)pn).package_();
             	return nf.PackageNode(pos(e), ts.packageForName(this.ns, pkg, f.name()));
@@ -150,21 +150,21 @@ parser Grm extends jif.parse.Grm {:
             AmbPrefix a = (AmbPrefix) p;
             Prefix ap = a.prefix();
             Package pkg = null;         
-            if(ap != null) {
+            if (ap != null) {
                 QualifierNode pn = prefixToQualifier(ap);
-                if(pn instanceof CodebaseNode) {
+                if (pn instanceof CodebaseNode) {
                 	//If prefix is a CodebaseNode, create a new CodebaseNode 
                 	//	for the subpackage
                 	CodebaseNode cn = (CodebaseNode) pn;
                 	Package cbpkg = ts.packageForName(cn.externalNamespace(), cn.package_(), a.name());    	
                  	return nf.CodebaseNode(pos(p), this.ns, cn.alias(), cn.externalNamespace(), cbpkg);
                 }
-                else if(pn instanceof PackageNode) {
+                else if (pn instanceof PackageNode) {
                 	//otherwise get the package of the prefix
             	    pkg = ((PackageNode)pn).package_();
                 }
             }
-            else if(ap == null) {
+            else if (ap == null) {
             	//If there is no prefix, see if there is a codebase alias for this name
             	NamespaceResolver nr = ts.namespaceResolver(this.ns);
 	            try {

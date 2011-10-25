@@ -1,9 +1,7 @@
 package codebases.frontend;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.Reader;
 import java.net.URI;
 import java.util.Date;
 

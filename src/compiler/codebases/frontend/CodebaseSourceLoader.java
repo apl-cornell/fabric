@@ -62,7 +62,7 @@ public class CodebaseSourceLoader implements URISourceLoader {
       Entry entry = (Entry) it.next();
       String classname = (String) WrappedJavaInlineable.$unwrap(entry.getKey());
       String pkgName = StringUtil.getPackageComponent(classname);
-      if(pkgName.startsWith(name))
+      if (pkgName.startsWith(name))
         return true;
     }
     return false;
@@ -79,7 +79,7 @@ public class CodebaseSourceLoader implements URISourceLoader {
       URI class_uri = ns.resolve(className);
 
       FileSource s = loadedSources.get(class_uri);
-      if(Report.should_report(TOPICS, 3))
+      if (Report.should_report(TOPICS, 3))
         Report.report(3, "FileSource already loaded: " + s);
 
       if (s != null) return s;

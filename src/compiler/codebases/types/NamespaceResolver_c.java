@@ -115,7 +115,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
       return false;
     else {
       URI alias_ns = null;
-      if(!StringUtil.isNameShort(name)) {
+      if (!StringUtil.isNameShort(name)) {
         //First check if name uses a codebase alias.
         String first = StringUtil.getFirstComponent(name);
         try {
@@ -123,7 +123,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
         } catch (SemanticException e) {  
         }
       }
-      if(alias_ns != null) {
+      if (alias_ns != null) {
         CodebaseTypeSystem ts = extInfo.typeSystem();
         NamespaceResolver nr = ts.namespaceResolver(alias_ns);
         String pkg = StringUtil.removeFirstComponent(name);
@@ -133,7 +133,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
         else
           res = true;
         
-        if(res)
+        if (res)
           packages.add(name);
         else
           no_package.add(name);
@@ -168,7 +168,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
       try {
         URI alias_ns = null;
-        if(!StringUtil.isNameShort(name)) {
+        if (!StringUtil.isNameShort(name)) {
           //First check if name uses a codebase alias.
           String first = StringUtil.getFirstComponent(name);
           try {
@@ -176,7 +176,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
           } catch (SemanticException e) {  
           }
         }
-        if(alias_ns != null) {
+        if (alias_ns != null) {
           CodebaseTypeSystem ts = extInfo.typeSystem();
           NamespaceResolver nr = ts.namespaceResolver(alias_ns);
           q = nr.find(StringUtil.removeFirstComponent(name));
@@ -448,12 +448,12 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   @Override
   public final URI resolveCodebaseName(String name) throws SemanticException {
     URI ns = alias_cache.get(name);
-    if(ns != null)
+    if (ns != null)
       return ns;
-    if(!no_alias.contains(name)) {
+    if (!no_alias.contains(name)) {
       try {
         ns = resolveCodebaseNameImpl(name);
-        if(ns == null)
+        if (ns == null)
           no_alias.add(name);
         else {
           alias_cache.put(name, ns);

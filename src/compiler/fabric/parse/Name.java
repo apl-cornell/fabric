@@ -43,13 +43,15 @@ public class Name extends jif.parse.Name {
     return (PackageNode) toQualifier();
   }
   
+  @Override
   public TypeNode toType() throws Exception {
     if (prefix == null) {
-        return parser.nf.AmbTypeNode(pos, name);
+        return parser.nf.AmbTypeNode(pos, parser.nf.Id(pos, name));
     }
     
-    return parser.nf.AmbTypeNode(pos, ((Name)prefix).toQualifier(), name);
-}
+    return parser.nf.AmbTypeNode(pos, ((Name) prefix).toQualifier(),
+        parser.nf.Id(pos, name));
+  }
 
   public QualifierNode toQualifier() throws Exception {
     if (prefix == null) {
@@ -63,13 +65,13 @@ public class Name extends jif.parse.Name {
     } else {
       Name p = (Name)prefix;
       QualifierNode qn = p.toQualifier();
-      if(qn instanceof CodebaseNode) {
+      if (qn instanceof CodebaseNode) {
         CodebaseNode cn = (CodebaseNode)qn;
         CodebaseNodeFactory nf = (CodebaseNodeFactory) parser.nf;
         return nf.CodebaseNode(pos, ns, cn.alias(), cn.externalNamespace(), 
             ts.createPackage(cn.externalNamespace(), null, name));
       }
-      else if(qn instanceof PackageNode) {
+      else if (qn instanceof PackageNode) {
         PackageNode pn = (PackageNode) qn;
         return parser.nf.PackageNode(pos, ts.createPackage(this.ns, pn.package_(), name));
       }

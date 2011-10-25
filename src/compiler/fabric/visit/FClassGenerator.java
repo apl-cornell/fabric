@@ -45,7 +45,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
     this.codebase = fts.codebaseFromNS(namespace);
     //Sanity check 
     fabric.ExtensionInfo fabext = (ExtensionInfo) job.extensionInfo();
-    if(!codebase.$getStore().name().equals(fabext.destinationStore().name())) {
+    if (!codebase.$getStore().name().equals(fabext.destinationStore().name())) {
       throw new InternalCompilerError("Expected codebase to be at store "
           + fabext.destinationStore().name() + " but got "
           + codebase.$getStore().name());
@@ -71,9 +71,9 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         Report.report(3, "Adding codebase alias " + cd.name() + " to new codebase");
       
       Codebase cb = NSUtil.fetch_codebase(cb_ns);
-      if(cb == null)
+      if (cb == null)
         throw new SemanticException("Codebase " + cb_ns + " does not exist.");
-      if(namespace.equals(cb_ns)) 
+      if (namespace.equals(cb_ns)) 
         throw new SemanticException("Codebase " + cb_ns + " is the current namespace.");
 
       codebase.addCodebaseName(cd.name().id(), cb);
@@ -107,7 +107,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
           Report.report(3, "Inserting " + className + " with label " + update_lbl + " into codebase "
               + NSUtil.namespace(codebase));
         }
-        if(codebase.resolveClassName(className) != null)
+        if (codebase.resolveClassName(className) != null)
           throw new SemanticException("class " + className + " already exists in " + codebase);
         codebase.insertClass(className, fcls);
         
@@ -125,8 +125,8 @@ public class FClassGenerator extends ErrorHandlingVisitor {
           }
           FClass entry = codebase.resolveClassName(dep.fullName());
           FClass depcls = NSUtil.fetch_fclass(fcls_ref);
-          if(entry != null) {
-            if(!depcls.equals(entry))
+          if (entry != null) {
+            if (!depcls.equals(entry))
               throw new SemanticException("class " + dep.fullName() + " already exists in " + codebase);
             else
               continue;

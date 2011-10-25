@@ -1,7 +1,6 @@
 package codebases.frontend;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,7 +12,6 @@ import java.util.Date;
 import jif.parse.UTF8FileSource;
 import polyglot.frontend.Source;
 import polyglot.util.InternalCompilerError;
-import polyglot.util.StringUtil;
 import fabric.common.NSUtil;
 import fabric.lang.FClass;
 import fabric.lang.security.Label;
@@ -103,7 +101,7 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
    */
   @Override
   public boolean equals(Object o) {
-    if(o instanceof CodebaseSource) {
+    if (o instanceof CodebaseSource) {
       CodebaseSource s = (CodebaseSource)o;
       return name().equals(s.name()) && canonicalNamespace().equals(s.canonicalNamespace());
     }

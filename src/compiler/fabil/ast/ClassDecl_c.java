@@ -1,6 +1,5 @@
 package fabil.ast;
 
-import java.util.Iterator;
 import java.util.List;
 
 import polyglot.ast.ClassBody;
@@ -17,7 +16,6 @@ import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
 import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
-import fabil.ast.ClassDecl_c;
 
 public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
 
@@ -25,20 +23,20 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
       List<TypeNode> interfaces, ClassBody body) {
     super(pos, flags, name, superClass, interfaces, body);
   }
-  protected ClassDecl_c disambiguateSupertypes(AmbiguityRemover ar) throws SemanticException {
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  protected ClassDecl_c disambiguateSupertypes(AmbiguityRemover ar)
+      throws SemanticException {
     boolean supertypesResolved = true;
-    
-//    System.out.println("  " + ar + ".disamsuper: " + this);
     
     if (! type.supertypesResolved()) {
         if (superClass != null && ! superClass.isDisambiguated()) {
             supertypesResolved = false;
         }
         
-        for (Iterator i = interfaces.iterator(); supertypesResolved && i.hasNext(); ) {
-            TypeNode tn = (TypeNode) i.next();
-            if (! tn.isDisambiguated()) {
-
+        for (TypeNode tn : (List<TypeNode>) interfaces) {
+            if (!tn.isDisambiguated()) {
                 supertypesResolved = false;
             }
         }

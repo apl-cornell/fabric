@@ -4,22 +4,20 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import jif.translate.JifToJavaRewriter;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
-import polyglot.ast.SourceCollection;
 import polyglot.ast.SourceFile;
+import polyglot.ast.TopLevelDecl;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.Job;
 import polyglot.frontend.Source;
 import polyglot.main.Report;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
-import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 import codebases.ast.CBSourceFile;
 import codebases.frontend.CBJobExt;
@@ -37,8 +35,12 @@ import fabric.types.FabricSubstType;
 import fabric.types.FabricTypeSystem;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
-  private static final Collection<String> TOPICS = CollectionUtil.list(
-      "publish", "mobile");
+  private static final Collection<String> TOPICS;
+  static {
+    TOPICS = new ArrayList<String>(2);
+    TOPICS.add("publish");
+    TOPICS.add("mobile");
+  }
 
   protected boolean principalExpected = false;
   
@@ -52,7 +54,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     fabric.ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
     FabricTypeSystem fab_ts = (FabricTypeSystem) jif_ts();
     Source derived;
-    if(src.shouldPublish() && 
+    if (src.shouldPublish() && 
         extInfo.localNamespace().equals(src.namespace())) {
       //If the source we are deriving source is being published, 
       // we should use the published namespace.
@@ -65,7 +67,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
       //Otherwise, we just create a derived source with a new name
       derived = src.derivedSource(newName);
     }
-    if(Report.should_report(TOPICS, 2)) {
+    if (Report.should_report(TOPICS, 2)) {
       Report.report(2, "Creating derived source " + derived + " from " + src);
     }
     
@@ -119,7 +121,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     if (t.isClass() && !fabric_ts.isLabel(t) && !fabric_ts.isPrincipal(t)) {
       CodebaseClassType ct= (CodebaseClassType) t.toClass();
       CBJobExt ext = (CBJobExt) job().ext();
-      if(ct instanceof FabricSubstType)
+      if (ct instanceof FabricSubstType)
         ct = (CodebaseClassType) ((FabricSubstType) ct).base();
       if (ext.isExternal(ct)) {
         String alias = ext.aliasFor(ct);
@@ -138,10 +140,11 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
   @SuppressWarnings("unchecked")
   @Override
   public Node leavingSourceFile(SourceFile n) {
-    List l = new ArrayList(n.decls().size() + additionalClassDecls.size());
+    List<TopLevelDecl> l =
+        new ArrayList<TopLevelDecl>(n.decls().size()
+            + additionalClassDecls.size());
     l.addAll(n.decls());
-    for (Iterator iter = this.additionalClassDecls.iterator(); iter.hasNext();) {
-      ClassDecl cd = (ClassDecl) iter.next();
+    for (ClassDecl cd : (Collection<ClassDecl>) additionalClassDecls) {
       if (cd.flags().isPublic()) {
         // cd is public, we will put it in it's own source file.
         SourceFile sf =

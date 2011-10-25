@@ -4,7 +4,6 @@ import java.net.URI;
 
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
-import polyglot.ast.PackageNode;
 import polyglot.ast.PackageNode_c;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.types.Package;
@@ -41,7 +40,7 @@ public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
     this.alias = alias;
     if (package_ != null) {
       CBPackage pkg = (CBPackage) package_;
-      if(!pkg.namespace().equals(externalNS)) {
+      if (!pkg.namespace().equals(externalNS)) {
         throw new InternalCompilerError("Expected package " + pkg
             + " to have namespace " + externalNS + " but got "
             + pkg.namespace());
@@ -79,7 +78,7 @@ public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
   @Override
   public Node copy(ExtensionInfo extInfo) throws SemanticException {
     Package pkg = null;
-    if(package_ != null) {
+    if (package_ != null) {
       CodebaseTypeSystem ts = (CodebaseTypeSystem) extInfo.typeSystem();
       pkg = ts.packageForName(externalNS, package_.fullName());
     }

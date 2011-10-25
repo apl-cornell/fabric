@@ -3,7 +3,6 @@ package fabric;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import jif.JifScheduler;
@@ -197,7 +196,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     if (!opts.signatureMode()) {
       g = super.Serialized(job);
       try {
-        if(opts.publish())
+        if (opts.publish())
           g.addPrerequisiteGoal(FClassGenerated(job), this);
 
         g.addPrerequisiteGoal(ThisLabelChecked(job), this);
@@ -318,7 +317,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
         addPrerequisiteDependency(g, this.PrincipalCastsAdded(job));
 
         //TODO: only run if publishing classes
-        if(fabext.getFabricOptions().publish())        
+        if (fabext.getFabricOptions().publish())        
           addPrerequisiteDependency(g, this.ConsistentNamespace());
         
         // make sure that if Object.fab is being compiled, it is always
@@ -406,9 +405,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     }
     if (fab_complete) {
       // Create a goal to compile every source file.
-      for (Iterator<Job> i = filext.scheduler().jobs().iterator(); i.hasNext(); ) {
-          Job job = i.next();
-          filext.scheduler().addGoal(filext.getCompileGoal(job));
+      for (Job job : (Collection<Job>) filext.scheduler().jobs()) { 
+        filext.scheduler().addGoal(filext.getCompileGoal(job));
       }
       return filext.scheduler().runToCompletion();
     }

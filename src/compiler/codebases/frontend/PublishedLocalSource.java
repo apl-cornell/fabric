@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
 
-import polyglot.frontend.Source;
-
 public class PublishedLocalSource extends DerivedLocalSource {
 
   protected PublishedLocalSource(String path, String name, File derivedFrom,

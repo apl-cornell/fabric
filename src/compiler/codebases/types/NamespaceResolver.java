@@ -2,15 +2,13 @@ package codebases.types;
 
 import java.net.URI;
 import java.util.Map;
-import java.util.Set;
-
-import fabric.lang.Codebase;
-import fabric.lang.security.Label;
 
 import polyglot.types.Importable;
 import polyglot.types.SemanticException;
 import polyglot.types.TopLevelResolver;
 import polyglot.util.Copy;
+import fabric.lang.Codebase;
+import fabric.lang.security.Label;
 
 public interface NamespaceResolver extends TopLevelResolver, Copy {
   

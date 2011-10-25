@@ -237,7 +237,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   // identify the situations it is called in.
   @Override
   public Package createPackage(URI ns, Package prefix, java.lang.String name) {
-    if(prefix!=null) {
+    if (prefix!=null) {
       ns = ((CBPackage)prefix).namespace();
     }
     return new CBPackage_c(this, ns, prefix, name);

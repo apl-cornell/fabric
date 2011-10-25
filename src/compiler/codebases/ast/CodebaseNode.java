@@ -2,11 +2,7 @@ package codebases.ast;
 
 import java.net.URI;
 
-import polyglot.ast.Node;
 import polyglot.ast.PackageNode;
-import polyglot.ast.Prefix;
-import polyglot.ast.QualifierNode;
-import polyglot.types.Qualifier;
 
 public interface CodebaseNode extends PackageNode {
   /**

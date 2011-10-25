@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -111,8 +110,7 @@ public class CBImportTable extends ImportTable {
 
       // It wasn't a ClassImport. Maybe it was a PackageImport?
       Named resolved = null;
-      for (Iterator<String> iter = imports.iterator(); iter.hasNext();) {
-        String pkgName = iter.next();
+      for (String pkgName : imports) {
         Named n = findInPkg(name, pkgName);
         if (n != null) {
           if (resolved == null) {
@@ -161,14 +159,15 @@ public class CBImportTable extends ImportTable {
   /**
    * Add a package import.
    */
+  @Override
   public void addPackageImport(String pkgName) {
-      // don't add the import if it is a 
+    // don't add the import if it is a 
     String first = StringUtil.getFirstComponent(pkgName);                    
-    if(aliases.contains(first)) {
+    if (aliases.contains(first)) {
       throw new InternalCompilerError("Package imports with explicit codebases not yet supported");
-    }
-    else
+    } else {
       super.addPackageImport(pkgName);
+    }
   }
 
   public void addExplicitCodebaseImport(String pkgName) {
@@ -211,7 +210,7 @@ public class CBImportTable extends ImportTable {
       URI import_ns = ns;
       // Check if this is an explicit codebase import
       String first = StringUtil.getFirstComponent(longName);                    
-      if(aliases.contains(first)) {
+      if (aliases.contains(first)) {
         import_ns = ts.namespaceResolver(ns).resolveCodebaseName(first);
         longName = StringUtil.removeFirstComponent(longName);
         if (Report.should_report(TOPICS, 2))
@@ -225,7 +224,7 @@ public class CBImportTable extends ImportTable {
         Importable t = ts.namespaceResolver(import_ns).find(longName);
 
         String shortName = StringUtil.getShortNameComponent(longName);
-        if(!import_ns.equals(ns))
+        if (!import_ns.equals(ns))
           fromExternal.put(shortName,first);
         
         map.put(shortName, t);
@@ -255,7 +254,7 @@ public class CBImportTable extends ImportTable {
   }
 
   public boolean isExternal(String name) {
-    if(StringUtil.isNameShort(name)) 
+    if (StringUtil.isNameShort(name)) 
       return fromExternal.containsKey(name); 
     else
       return aliases.contains(StringUtil.getFirstComponent(name));
@@ -263,11 +262,11 @@ public class CBImportTable extends ImportTable {
   
   public String aliasFor(String name) throws SemanticException {
     String alias;
-    if(StringUtil.isNameShort(name)) 
+    if (StringUtil.isNameShort(name)) 
       alias = fromExternal.get(name); 
     else
       alias = StringUtil.getFirstComponent(name);
-    if(aliases.contains(alias))
+    if (aliases.contains(alias))
       return alias;
     
     throw new SemanticException("Unknown codebase name: " + name);
@@ -276,7 +275,7 @@ public class CBImportTable extends ImportTable {
   public URI resolveCodebaseName(String name) {
     //Only resolve codebase names that were declared in this 
     // sourcefile.
-//    if(aliases.contains(name)) XXX: ?
+//    if (aliases.contains(name)) XXX: ?
       try {
         return ts.namespaceResolver(ns).resolveCodebaseName(name);
       } catch (SemanticException e) {
