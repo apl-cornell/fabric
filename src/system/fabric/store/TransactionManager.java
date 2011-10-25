@@ -343,7 +343,7 @@ public class TransactionManager {
       }
     };
 
-    AccessException failure = Worker.runInTransaction(null, checker);
+    AccessException failure = Worker.runInTopLevelTransaction(checker, true);
 
     if (failure != null) throw failure;
   }

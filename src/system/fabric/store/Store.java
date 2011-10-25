@@ -269,7 +269,7 @@ class Store extends MessageToStoreHandler {
     
     // Create a principal object on the store and get the resulting object's
     // onum.
-    long principalOnum = Worker.runInTransaction(null, new Code<Long>() {
+    long principalOnum = Worker.runInTopLevelTransaction(new Code<Long>() {
       @Override
       public Long run() {
         NodePrincipal principal =
@@ -277,7 +277,7 @@ class Store extends MessageToStoreHandler {
         principal.addDelegatesTo(store.getPrincipal());
         return principal.$getOnum();
       }
-    });
+    }, true);
     
     // Create a certificate that binds the requester's key to the new principal
     // object's OID.

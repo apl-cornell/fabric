@@ -302,7 +302,7 @@ public class Main extends polyglot.main.Main {
             x);
       }
 
-      Worker.runInTransaction(null, new Worker.Code<Void>() {
+      Worker.runInTopLevelTransaction(new Worker.Code<Void>() {
         @Override
         public Void run() {
           try {
@@ -313,7 +313,7 @@ public class Main extends polyglot.main.Main {
           }
           return null;
         }
-      });
+      }, false);
     } catch (Throwable e) {
       throw new InternalCompilerError(e);
     }
