@@ -36,6 +36,7 @@ public class CBClassContextResolver extends ClassContextResolver {
   @SuppressWarnings("unchecked")
   @Override
   public Named find(String name, ClassType accessor) throws SemanticException {
+
       if (Report.should_report(TOPICS, 2))
           Report.report(2, "Looking for " + name + " in " + this);
 

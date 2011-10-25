@@ -34,6 +34,7 @@ import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.ObjectDumper;
 import polyglot.util.SimpleCodeWriter;
+import polyglot.util.StringUtil;
 import polyglot.util.TypeEncoder;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.ExtensionInfo;
@@ -62,7 +63,6 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   protected final TypeEncoder te;
   protected final NamespaceResolver parent;
 
-  protected final Map<String,URI> codebaseAliases;
 
   /** Caches **/
   // packageExists == true cache
@@ -73,6 +73,11 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   protected Map<String, Importable> cache;
   // class not found cache
   protected Map<String, SemanticException> not_found;
+  
+  // alias cache
+  protected final Map<String,URI> alias_cache;
+  // no such alias cache
+  protected Set<String> no_alias;
 
   protected Label integrity;
 
@@ -98,8 +103,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     this.extInfo = extInfo;
     this.te = extInfo.typeEncoder();
     this.parent = parent;
-    
-    this.codebaseAliases = aliases;
+    this.alias_cache = new HashMap<String,URI>(aliases);
+    this.no_alias = new HashSet<String>();
   }
 
   @Override
@@ -109,6 +114,31 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     else if (no_package.contains(name))
       return false;
     else {
+      URI alias_ns = null;
+      if(!StringUtil.isNameShort(name)) {
+        //First check if name uses a codebase alias.
+        String first = StringUtil.getFirstComponent(name);
+        try {
+          alias_ns = resolveCodebaseName(first);
+        } catch (SemanticException e) {  
+        }
+      }
+      if(alias_ns != null) {
+        CodebaseTypeSystem ts = extInfo.typeSystem();
+        NamespaceResolver nr = ts.namespaceResolver(alias_ns);
+        String pkg = StringUtil.removeFirstComponent(name);
+        boolean res;
+        if (!"".equals(pkg)) 
+          res = nr.packageExists(pkg);
+        else
+          res = true;
+        
+        if(res)
+          packages.add(name);
+        else
+          no_package.add(name);
+      }
+
       if (packageExistsImpl(name)) {
         packages.add(name);
         return true;
@@ -121,8 +151,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
   @Override
   public final Importable find(String name) throws SemanticException {
-
-    if (Report.should_report(TOPICS, 2))
+ 
+     if (Report.should_report(TOPICS, 2))
       Report.report(2, "[" + namespace + "] " + "NamespaceResolver_c: find: "
           + name);
 
@@ -137,7 +167,22 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
             + "NamespaceResolver_c: not cached: " + name);
 
       try {
-        q = findImpl(name);
+        URI alias_ns = null;
+        if(!StringUtil.isNameShort(name)) {
+          //First check if name uses a codebase alias.
+          String first = StringUtil.getFirstComponent(name);
+          try {
+            alias_ns = resolveCodebaseName(first);
+          } catch (SemanticException e) {  
+          }
+        }
+        if(alias_ns != null) {
+          CodebaseTypeSystem ts = extInfo.typeSystem();
+          NamespaceResolver nr = ts.namespaceResolver(alias_ns);
+          q = nr.find(StringUtil.removeFirstComponent(name));
+        } else {
+          q = findImpl(name);
+        }
       } catch (NoClassException e) {
         // Not found in this namespace, try parent.
         if (parent != null) {
@@ -401,17 +446,30 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   }
 
   @Override
-  public URI resolveCodebaseName(String name) throws SemanticException {
-    URI ns = codebaseAliases.get(name);
+  public final URI resolveCodebaseName(String name) throws SemanticException {
+    URI ns = alias_cache.get(name);
     if(ns != null)
       return ns;
-    
+    if(!no_alias.contains(name)) {
+      try {
+        ns = resolveCodebaseNameImpl(name);
+        if(ns == null)
+          no_alias.add(name);
+        else {
+          alias_cache.put(name, ns);
+        }
+      } catch(SemanticException e) {
+        no_alias.add(name);
+        throw e;
+      }
+      return ns;
+    }
     throw new SemanticException("Unknown codebase name: " + name);
   }
   
   @Override
   public Map<String, URI> codebaseAliases() {
-    return Collections.unmodifiableMap(codebaseAliases);
+    return Collections.unmodifiableMap(alias_cache);
   }
 
   @Override

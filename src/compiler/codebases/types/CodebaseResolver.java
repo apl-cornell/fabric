@@ -7,7 +7,10 @@ import codebases.frontend.ExtensionInfo;
 import fabil.SimpleResolver;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
+import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.security.Label;
+import fabric.util.Iterator;
+import fabric.util.Set;
 
 public class CodebaseResolver extends SimpleResolver implements
     NamespaceResolver {
@@ -44,7 +47,7 @@ public class CodebaseResolver extends SimpleResolver implements
   }
 
   @Override
-  public URI resolveCodebaseName(String name) throws SemanticException {
+  public URI resolveCodebaseNameImpl(String name) throws SemanticException {
     Codebase cb = codebase.resolveCodebaseName(name);
     if(cb == null)
       throw new SemanticException("Codebase name " + name + " not defined.");

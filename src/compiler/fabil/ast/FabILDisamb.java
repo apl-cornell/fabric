@@ -28,6 +28,7 @@ import codebases.types.CodebaseClassType;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
 import fabil.types.FabILContext;
+import polyglot.types.Package;
 
 public class FabILDisamb extends Disamb_c implements Disamb {
   protected URI namespace;
@@ -46,18 +47,22 @@ public class FabILDisamb extends Disamb_c implements Disamb {
 
 
     Node n  = super.disambiguate(amb, v, pos, prefix, name);
+    //System.err.println("DISAMB:"+ this + ":"+ name +" to " + n);
     return n;
   }
 
   protected Node disambiguateCodebaseNodePrefix(CodebaseNode cn) {
+
     if (cn.package_() == null) {
       // If there is no package, we use the toplevel namespace resolver
       NamespaceResolver nr = ts.namespaceResolver(cn.externalNamespace());
+
       if (nr.packageExists(name.id()) && packageOK()) {
         try {
-          return nf.CodebaseNode(pos, cn.namespace(), cn.alias(),
-              cn.externalNamespace(),
-              ts.packageForName(cn.externalNamespace(), name.id()));
+          Package p = ts.packageForName(cn.externalNamespace(), name.id());
+          Node n = nf.CodebaseNode(pos, cn.namespace(), cn.alias(),
+              cn.externalNamespace(),p);
+          return n;
         } catch (SemanticException e) {
           throw new InternalCompilerError("Error creating package node: "
               + name, e);
@@ -163,7 +168,8 @@ public class FabILDisamb extends Disamb_c implements Disamb {
     // no variable found. try types.
     if (typeOK()) {
       try {
-        Named n = c.find(name.id());
+        Named n = c.find(name.id());        
+        
         if (n instanceof Type) {
           Type type = (Type) n;
           if (!type.isCanonical()) {
@@ -185,6 +191,7 @@ public class FabILDisamb extends Disamb_c implements Disamb {
           }
         }
       } catch (NoClassException e) {
+
         if (!name.id().equals(e.getClassName())) {
           // hmm, something else must have gone wrong
           // rethrow the exception
@@ -203,7 +210,6 @@ public class FabILDisamb extends Disamb_c implements Disamb {
       FabILContext ctx = (FabILContext) v.context();
 
       URI ns = ctx.resolveCodebaseName(name.id());
-
       if (ns != null)
         return nf.CodebaseNode(pos, namespace, name.id(), ns);
       else

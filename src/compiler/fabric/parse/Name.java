@@ -41,16 +41,8 @@ public class Name extends jif.parse.Name {
   //This should only be used for the package declaration
   public PackageNode toPackage() throws Exception {
     return (PackageNode) toQualifier();
-//    Thread.dumpStack();
-//    throw new UnsupportedOperationException("Use toQualifier instead:" + this);
-//
-//    if (prefix == null) {
-//      return parser.nf.PackageNode(pos, ts.createPackage(this.ns, null, name));
-//    } else {
-//      return parser.nf.PackageNode(pos,
-//          ts.createPackage(ns, prefix.toPackage().package_(), name));
-//    }
   }
+  
   public TypeNode toType() throws Exception {
     if (prefix == null) {
         return parser.nf.AmbTypeNode(pos, name);

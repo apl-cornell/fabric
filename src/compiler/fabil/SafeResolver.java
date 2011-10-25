@@ -10,7 +10,7 @@ import codebases.types.PathResolver;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 
-/**
+/** 
  * This resolver preempts lookups to inner by first using the platform resolver.
  * This ensures the platform classes cannot be redefined by a codebase.
  * 
@@ -26,7 +26,7 @@ public class SafeResolver extends PathResolver implements NamespaceResolver {
   }
 
   @Override
-  public URI resolveCodebaseName(String name) throws SemanticException {
+  public URI resolveCodebaseNameImpl(String name) throws SemanticException {
     return inner.resolveCodebaseName(name);
   }
 

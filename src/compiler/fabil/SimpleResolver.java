@@ -38,8 +38,7 @@ public class SimpleResolver extends NamespaceResolver_c {
     // Look for a class file first
     if (Report.should_report(report_topics, 3))
       Report.report(3, "NamespaceResolver_c.find(" + name + ")");
-    if(name.equals("Server"))
-      Thread.dumpStack();
+
     // Find class file.
     ClassFile clazz = null;
     ClassFile encodedClazz = null;
@@ -166,7 +165,7 @@ public class SimpleResolver extends NamespaceResolver_c {
 
   @Override
   public boolean packageExistsImpl(String name) {
-    return false;
+    return sourceLoader.packageExists(name);
   }
   
   @Override
@@ -188,6 +187,11 @@ public class SimpleResolver extends NamespaceResolver_c {
     boolean old = load_src;
     load_src = use;
     return old;
+  }
+  
+  @Override
+  public URI resolveCodebaseNameImpl(String name) throws SemanticException {
+    throw new SemanticException("Unknown codebase name " + name);
   }
 
 }

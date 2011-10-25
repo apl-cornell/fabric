@@ -543,6 +543,33 @@ public final class Worker {
   }
   
   /**
+   * Executes the given code from within a new top-level Fabric transaction.
+   * Should not be called by generated code. This is here to abstract away the
+   * details of starting and finishing transactions.
+   * 
+   * @param autoRetry
+   *          whether the transaction should be automatically retried if it
+   *          fails during commit
+   */
+  public static <T> T runInTopLevelTransaction(Code<T> code, boolean autoRetry) {
+    return runInTransaction(null, code, autoRetry);
+  }
+  
+  /**
+   * Executes the given code from within a Fabric transaction. If the
+   * transaction fails, it will be automatically retried until it succeeds.
+   * Should not be called by generated code. This is here to abstract away the
+   * details of starting and finishing transactions.
+   * 
+   * @param tid
+   *          The parent transaction for the subtransaction that will be
+   *          created.
+   */
+  public static <T> T runInTransaction(TransactionID tid, Code<T> code) {
+    return runInTransaction(tid, code, true);
+  }
+  
+  /**
    * Executes the given code from within a Fabric transaction. Should not be
    * called by generated code. This is here to abstract away the details of
    * starting and finishing transactions.
@@ -550,8 +577,12 @@ public final class Worker {
    * @param tid
    *          The parent transaction for the subtransaction that will be
    *          created.
+   * @param autoRetry
+   *          whether the transaction should be automatically retried if it
+   *          fails during commit
    */
-  public static <T> T runInTransaction(TransactionID tid, Code<T> code) {
+  private static <T> T runInTransaction(TransactionID tid, Code<T> code,
+      boolean autoRetry) {
     TransactionManager tm = TransactionManager.getInstance();
     Log oldLog = tm.getCurrentLog();
 
@@ -559,7 +590,7 @@ public final class Worker {
     tm.associateAndSyncLog(log, tid);
 
     try {
-      return runInSubTransaction(code);
+      return runInSubTransaction(code, autoRetry);
     } finally {
       tm.associateLog(oldLog);
     }
@@ -571,6 +602,19 @@ public final class Worker {
    * abstract away the details of starting and finishing transactions.
    */
   public static <T> T runInSubTransaction(Code<T> code) {
+    return runInSubTransaction(code, true);
+  }
+  
+  /**
+   * Executes the given code from within a Fabric subtransaction of the current
+   * transaction. Should not be called by generated code. This is here to
+   * abstract away the details of starting and finishing transactions.
+   * 
+   * @param autoRetry
+   *          whether the transaction should be automatically retried if it
+   *          fails during commit
+   */
+  private static <T> T runInSubTransaction(Code<T> code, boolean autoRetry) {
     TransactionManager tm = TransactionManager.getInstance();
 
     boolean success = false;
@@ -626,6 +670,11 @@ public final class Worker {
           } catch (TransactionRestartingException e) {
             success = false;
             
+            if (!autoRetry) {
+              throw new AbortException(
+                  "Not retrying transaction that failed to commit (autoRetry=false)",
+                  e);
+            }
             // This is the TID for the parent of the transaction we just tried
             // to commit.
             TransactionID currentTid = tm.getCurrentTid();

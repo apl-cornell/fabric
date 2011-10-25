@@ -6,7 +6,6 @@ import jif.ast.ConstraintNode;
 import jif.ast.ParamDecl;
 import jif.ast.PrincipalNode;
 import jif.types.Assertion;
-
 import polyglot.ast.ClassBody;
 import polyglot.ast.Id;
 import polyglot.ast.TypeNode;

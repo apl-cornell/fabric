@@ -33,6 +33,7 @@ import fabric.ast.FabricNodeFactory;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.types.FabricContext;
+import fabric.types.FabricSubstType;
 import fabric.types.FabricTypeSystem;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
@@ -118,6 +119,8 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     if (t.isClass() && !fabric_ts.isLabel(t) && !fabric_ts.isPrincipal(t)) {
       CodebaseClassType ct= (CodebaseClassType) t.toClass();
       CBJobExt ext = (CBJobExt) job().ext();
+      if(ct instanceof FabricSubstType)
+        ct = (CodebaseClassType) ((FabricSubstType) ct).base();
       if (ext.isExternal(ct)) {
         String alias = ext.aliasFor(ct);
         return fabil_nf.TypeNodeFromQualifiedName(pos, alias + "." + t.toClass().fullName());

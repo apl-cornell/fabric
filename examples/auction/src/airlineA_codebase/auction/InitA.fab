@@ -1,5 +1,4 @@
 package auction;
-
 import fabric.util.Map;
 import fabric.runtime.Runtime;
 public class InitA where {*provider} equiv {*airlineA.Server.provider},

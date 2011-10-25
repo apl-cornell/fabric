@@ -43,7 +43,14 @@ public class FClassGenerator extends ErrorHandlingVisitor {
     this.namespace = src.namespace();
     FabricTypeSystem fts = (FabricTypeSystem) ts;
     this.codebase = fts.codebaseFromNS(namespace);
-
+    //Sanity check 
+    fabric.ExtensionInfo fabext = (ExtensionInfo) job.extensionInfo();
+    if(!codebase.$getStore().name().equals(fabext.destinationStore().name())) {
+      throw new InternalCompilerError("Expected codebase to be at store "
+          + fabext.destinationStore().name() + " but got "
+          + codebase.$getStore().name());
+    }
+      
   }
 
   @Override

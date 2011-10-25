@@ -4,6 +4,7 @@ import java.util.List;
 
 import polyglot.ast.Import;
 import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
 import polyglot.ast.PackageNode;
 import polyglot.ast.SourceFile_c;
 import polyglot.ast.TopLevelDecl;
@@ -26,21 +27,22 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
     super(pos, package1, imports, decls);
     this.codebases = codebaseDecls;
   }
+
   /** Visit the children of the source file. */
   @SuppressWarnings("rawtypes")
   @Override
   public Node visitChildren(NodeVisitor v) {
-      PackageNode package_ = (PackageNode) visitChild(this.package_, v);
-      List codebases = visitList(this.codebases, v);
-      List imports = visitList(this.imports, v);
-      List decls = visitList(this.decls, v);
-      return reconstruct(package_, codebases, imports, decls);
+    PackageNode package_ = (PackageNode) visitChild(this.package_, v);
+    List codebases = visitList(this.codebases, v);
+    List imports = visitList(this.imports, v);
+    List decls = visitList(this.decls, v);
+    return reconstruct(package_, codebases, imports, decls);
   }
-  
+
   /** Reconstruct the source file. */
   @SuppressWarnings("rawtypes")
-  protected CBSourceFile_c reconstruct(PackageNode package_, List codebases, List imports,
-      List decls) {
+  protected CBSourceFile_c reconstruct(PackageNode package_, List codebases,
+      List imports, List decls) {
     if (package_ != this.package_
         || !CollectionUtil.equals(imports, this.imports)
         || !CollectionUtil.equals(decls, this.decls)
@@ -65,4 +67,12 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
     n.codebases = codebaseDecls;
     return n;
   }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public Node copy(NodeFactory nf) {
+    return ((CodebaseNodeFactory) nf).SourceFile(this.position, this.package_,
+        this.codebases, this.imports, this.decls).source(this.source);
+  }
+
 }

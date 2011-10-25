@@ -1,11 +1,11 @@
 package fabric.translate;
 
-import codebases.ast.CodebaseDecl;
-import fabil.ast.FabILNodeFactory;
-import polyglot.ast.Node;
-import polyglot.types.SemanticException;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.ToJavaExt_c;
+import polyglot.ast.Node;
+import polyglot.types.SemanticException;
+import codebases.ast.CodebaseDecl;
+import fabil.ast.FabILNodeFactory;
 
 public class CodebaseDeclToFabilExt_c extends ToJavaExt_c {
 

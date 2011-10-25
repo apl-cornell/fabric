@@ -62,7 +62,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @Override
   public CodebaseNode CodebaseNode(Position pos, URI ns, String name, URI externalNS, Package package_) {  
-    CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, null);
+    CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, package_);
     n = (CodebaseNode) n.ext(extFactory().extCodebaseNode());
     n = (CodebaseNode) n.del(delFactory().delCodebaseNode());
     return n;  
@@ -273,7 +273,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   }
 
   @Override
-  public codebases.ast.CodebaseDecl CodebaseDecl(Position pos,
+  public CodebaseDecl CodebaseDecl(Position pos,
       polyglot.ast.Id name) {
     CodebaseDecl n = new CodebaseDecl_c(pos, name);
     n = (CodebaseDecl) n.ext(extFactory().extCodebaseDecl());

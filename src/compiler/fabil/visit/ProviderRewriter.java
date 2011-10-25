@@ -46,9 +46,7 @@ public class ProviderRewriter extends NodeVisitor {
     ProviderLabel pl = (ProviderLabel) n;
     CodebaseClassType ct = (CodebaseClassType) pl.typeNode().type();    
     if (ct instanceof ParsedClassType && Worker.isInitialized()) {
-      CodebaseSource src = (CodebaseSource) ((ParsedClassType) ct).fromSource();
-
-      Codebase cb = ts.codebaseFromNS(src.canonicalNamespace());
+      Codebase cb = ts.codebaseFromNS(ct.canonicalNamespace());
       // Get a handle to the FClass object.
       Map classes = cb.getClasses();
       Object obj = classes.get(WrappedJavaInlineable.$wrap(ct.fullName()));

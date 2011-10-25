@@ -54,6 +54,10 @@ public abstract class AbstractMap implements Map
    */
   protected AbstractMap()
   {
+    //Initialize caches to permit read-only iteration
+    entrySet();
+    keySet();
+    values();
   }
 
   /**
