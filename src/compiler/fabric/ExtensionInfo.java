@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jif.ExtensionInfo.JifJobExt;
-import jif.types.JifTypeSystem;
 import jif.visit.LabelChecker;
 import polyglot.frontend.Compiler;
 import polyglot.frontend.CupParser;

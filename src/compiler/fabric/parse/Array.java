@@ -1,13 +1,12 @@
 package fabric.parse;
 
-import fabric.ast.FabricArrayTypeNode;
-import fabric.ast.FabricNodeFactory;
 import jif.ast.ConstArrayTypeNode;
 import jif.ast.LabeledTypeNode;
 import jif.parse.Grm;
 import polyglot.ast.TypeNode;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
+import fabric.ast.FabricNodeFactory;
 
 public class Array extends jif.parse.Array {
 

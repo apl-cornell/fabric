@@ -1,18 +1,13 @@
 package fabric.types;
 
-import fabric.ast.FabricFieldDecl;
-import polyglot.ast.FieldDecl;
-import polyglot.ast.Formal;
-import polyglot.ast.ProcedureDecl;
-import polyglot.types.FieldInstance;
-import polyglot.types.Type;
-import polyglot.util.Position;
 import jif.ast.LabelNode;
-import jif.types.DefaultSignature;
 import jif.types.FixedSignature;
-import jif.types.JifTypeSystem;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
+import polyglot.ast.FieldDecl;
+import polyglot.types.Type;
+import polyglot.util.Position;
+import fabric.ast.FabricFieldDecl;
 
 public class FabricFixedSignature extends FixedSignature implements FabricDefaultSignature {
 
@@ -23,6 +18,7 @@ public class FabricFixedSignature extends FixedSignature implements FabricDefaul
     this.fts = fts;
   }
 
+  @Override
   public Label defaultAccessLabel(FieldDecl fd) {
     FabricFieldDecl ffd = (FabricFieldDecl) fd;
     LabelNode ln = ffd.accessLabel();

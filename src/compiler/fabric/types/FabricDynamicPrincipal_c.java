@@ -1,24 +1,24 @@
 package fabric.types;
 
-import polyglot.types.TypeObject;
-import polyglot.util.Position;
 import jif.translate.PrincipalToJavaExpr;
 import jif.types.JifClassType;
 import jif.types.JifContext;
 import jif.types.JifTypeSystem;
 import jif.types.PathMap;
 import jif.types.label.AccessPath;
-import jif.types.label.AccessPathLocal;
 import jif.types.label.Label;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.DynamicPrincipal_c;
 import jif.visit.LabelChecker;
+import polyglot.types.TypeObject;
+import polyglot.util.Position;
 
 public class FabricDynamicPrincipal_c extends DynamicPrincipal_c {
   public FabricDynamicPrincipal_c(AccessPath path, JifTypeSystem ts, Position pos, PrincipalToJavaExpr toJava) {
     super(path, ts, pos, toJava);
   }
   
+  @Override
   public boolean equalsImpl(TypeObject o) {
     if (this == o) return true;
     if (! (o instanceof DynamicPrincipal)) {
@@ -35,6 +35,7 @@ public class FabricDynamicPrincipal_c extends DynamicPrincipal_c {
     return super.equalsImpl(o);
   }
   
+  @Override
   public PathMap labelCheck(JifContext A, LabelChecker lc) {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
     if (ts.isLocalWorkerAccessPath(this.path())) {

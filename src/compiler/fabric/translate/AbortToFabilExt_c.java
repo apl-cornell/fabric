@@ -1,13 +1,16 @@
 package fabric.translate;
 
-import fabil.ast.FabILNodeFactory;
-import fabric.ast.AbortStmt;
-import polyglot.ast.Node;
-import polyglot.types.SemanticException;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.ToJavaExt_c;
+import polyglot.ast.Node;
+import polyglot.types.SemanticException;
+import fabil.ast.FabILNodeFactory;
+import fabric.ast.AbortStmt;
 
 public class AbortToFabilExt_c extends ToJavaExt_c {
+  /**
+   * @throws SemanticException  
+   */
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     AbortStmt abort = (AbortStmt)node();

@@ -9,6 +9,9 @@ import fabil.ast.FabILNodeFactory;
 
 public class CodebaseDeclToFabilExt_c extends ToJavaExt_c {
 
+  /**
+   * @throws SemanticException  
+   */
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     FabILNodeFactory nf = (FabILNodeFactory) rw.java_nf();

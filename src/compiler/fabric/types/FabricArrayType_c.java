@@ -22,6 +22,7 @@ public class FabricArrayType_c
     this.isNative = isNative;
   }
 
+  @Override
   public boolean isNative() {
     return isNative;
   }

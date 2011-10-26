@@ -16,6 +16,9 @@ public class PrincipalCastAdder extends AscriptionVisitor {
     super(job, ts, nf);
   }
   
+  /**
+   * @throws SemanticException  
+   */
   @Override
   public Expr ascribe(Expr e, Type toType) throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();

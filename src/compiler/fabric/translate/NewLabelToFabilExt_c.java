@@ -19,7 +19,6 @@ public class NewLabelToFabilExt_c extends NewLabelToJavaExt_c {
     return ffrw.pushLocation(ext.location());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     //toJava is called explicitly on label types, without actually visiting
@@ -27,7 +26,7 @@ public class NewLabelToFabilExt_c extends NewLabelToJavaExt_c {
     // to assign to new label objects.
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     NewLabelExt_c ext = (NewLabelExt_c)FabricUtil.fabricExt(node());
-    rw = (JifToJavaRewriter) ffrw.pushLocation(ext.location());
+    rw = ffrw.pushLocation(ext.location());
     Node n = super.toJava(rw);
     return n;
   }

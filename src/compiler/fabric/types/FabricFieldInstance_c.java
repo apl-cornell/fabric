@@ -1,11 +1,11 @@
 package fabric.types;
 
+import jif.types.JifFieldInstance_c;
+import jif.types.label.Label;
 import polyglot.types.Flags;
 import polyglot.types.ReferenceType;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import jif.types.JifFieldInstance_c;
-import jif.types.label.Label;
 
 public class FabricFieldInstance_c extends JifFieldInstance_c
                           implements FabricFieldInstance {
@@ -18,10 +18,12 @@ public class FabricFieldInstance_c extends JifFieldInstance_c
   }
   protected Label accessLabel;
   
+  @Override
   public Label accessLabel() {
     return accessLabel;
   }
   
+  @Override
   public void setAccessLabel(Label accessLabel) {
     this.accessLabel = accessLabel;
   }
