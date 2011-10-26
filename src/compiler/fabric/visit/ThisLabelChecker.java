@@ -68,7 +68,7 @@ public class ThisLabelChecker extends ErrorHandlingVisitor {
 
     if (p instanceof JoinConfPolicy_c) {
       JoinConfPolicy_c jcp = (JoinConfPolicy_c) p;
-      for (ConfPolicy cp : (Collection<ConfPolicy>) jcp.joinComponents()) {
+      for (ConfPolicy cp : jcp.joinComponents()) {
         if (hasThis(cp)) return true;
       }
     }
@@ -154,7 +154,7 @@ public class ThisLabelChecker extends ErrorHandlingVisitor {
             JoinIntegPolicy_c jip = (JoinIntegPolicy_c) ip;
             HashSet<IntegPolicy> set = new HashSet<IntegPolicy>();
             boolean thisInteg = false;
-            for (IntegPolicy p : (Collection<IntegPolicy>) jip.joinComponents()) {
+            for (IntegPolicy p : jip.joinComponents()) {
               if ((p instanceof WriterPolicy) && isThisInteg((WriterPolicy) p)) {
                 thisInteg = true;
               } else {

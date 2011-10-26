@@ -1,6 +1,5 @@
 package fabric.extension;
 
-import fabric.types.FabricParsedClassType;
 import jif.ast.JifClassDecl;
 import jif.extension.JifClassDeclExt;
 import jif.translate.ToJavaExt;
@@ -12,7 +11,6 @@ import jif.types.JifTypeSystem;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.PrincipalConstraint;
-import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
 import jif.types.label.ProviderLabel;
 import jif.types.principal.Principal;
@@ -21,6 +19,7 @@ import polyglot.ast.ClassBody;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
+import fabric.types.FabricParsedClassType;
 
 public class FabricClassDeclExt extends JifClassDeclExt {
 
@@ -114,6 +113,7 @@ public class FabricClassDeclExt extends JifClassDeclExt {
             new NamedLabel("access label", singleAccessLabel),
             A.labelEnv(), n.position(),
             new ConstraintMessage() {
+          @Override
           public String msg() {
             return "The access label of a class should be at least as restrictive" +
             " as its object label";

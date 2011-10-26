@@ -1,15 +1,5 @@
 package fabric.extension;
 
-import fabric.types.FabricArrayType;
-import fabric.types.FabricClassType;
-import fabric.types.FabricFieldInstance;
-import fabric.types.FabricTypeSystem;
-import polyglot.ast.Expr;
-import polyglot.ast.Field;
-import polyglot.ast.Node;
-import polyglot.ast.Receiver;
-import polyglot.types.ReferenceType;
-import polyglot.types.SemanticException;
 import jif.extension.JifFieldExt;
 import jif.translate.ToJavaExt;
 import jif.types.ConstraintMessage;
@@ -19,6 +9,16 @@ import jif.types.LabeledType;
 import jif.types.NamedLabel;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
+import polyglot.ast.Expr;
+import polyglot.ast.Field;
+import polyglot.ast.Node;
+import polyglot.ast.Receiver;
+import polyglot.types.ReferenceType;
+import polyglot.types.SemanticException;
+import fabric.types.FabricArrayType;
+import fabric.types.FabricClassType;
+import fabric.types.FabricFieldInstance;
+import fabric.types.FabricTypeSystem;
 
 
 public class FabricFieldExt extends JifFieldExt {
@@ -62,6 +62,7 @@ public class FabricFieldExt extends JifFieldExt {
               new NamedLabel("access label", al), A.labelEnv(), n.position(),
               new ConstraintMessage() {
 
+            @Override
             public String msg() {
               return "The join of the pc and the target label at a array access" +
               " should be bounded above by the array access label.";

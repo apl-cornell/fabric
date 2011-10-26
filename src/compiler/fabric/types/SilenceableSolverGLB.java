@@ -1,13 +1,13 @@
 package fabric.types;
 
 import java.util.Collection;
-import java.util.Iterator;
 
-import polyglot.types.SemanticException;
 import jif.types.Constraint;
 import jif.types.JifTypeSystem;
 import jif.types.SolverGLB;
 import jif.types.VarMap;
+import jif.types.label.Variable;
+import polyglot.types.SemanticException;
 
 /**
  * <code>SilenceableSolverGLB</code> can be muted, that is, not reporting any error.
@@ -55,8 +55,7 @@ public class SilenceableSolverGLB extends SolverGLB {
         else {        
           setStatus(STATUS_NO_SOLUTION);
   
-          for (Iterator iter = staticFailedConstraints.iterator(); iter.hasNext();) {
-            Constraint cons = (Constraint)iter.next();
+          for (Constraint cons : staticFailedConstraints) {
             System.err.println("Runtime check does not type-check, due to\n" + cons.technicalMsg() + 
                                "\nin the constraint\n" + cons + "\nat " + cons.position());
           }
@@ -70,7 +69,8 @@ public class SilenceableSolverGLB extends SolverGLB {
   }
   
   @Override
-  protected void reportError(Constraint c, Collection variables) throws SemanticException {
+  protected void reportError(Constraint c, Collection<Variable> variables)
+      throws SemanticException {
     if (muted()) {
       setStatus(STATUS_NO_SOLUTION);
       System.err.println("Runtime check does not type-check, due to\n" + errorMsg(c) + 

@@ -10,6 +10,7 @@ import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import polyglot.ast.Node;
+import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
@@ -23,6 +24,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     return ClassDeclToJavaExt_c.constructorTranslatedName(ct);
   }
   
+  @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     ClassDecl cd = (ClassDecl)super.toJava(rw);
@@ -49,26 +51,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
   @Override
   protected ClassBody addInitializer(ClassBody cb, JifToJavaRewriter rw) {
-    List inits = new ArrayList(rw.getInitializations());
-    if (!inits.isEmpty()) {
-      FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
-      FabILTypeSystem ts = (FabILTypeSystem)rw.java_ts();
-      
-      List newInits = new ArrayList(inits.size() + 1);
-      
-      TypeNode worker = nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Worker());
-//      newInits.add(nf.LocalDecl(Position.compilerGenerated(), 
-//                                Flags.FINAL, 
-//                                worker, 
-//                                nf.Id(Position.compilerGenerated(), 
-//                                      "worker$"),
-//                                nf.Call(Position.compilerGenerated(), 
-//                                        worker, 
-//                                        nf.Id(Position.compilerGenerated(), 
-//                                              "getWorker"))));
-      newInits.addAll(inits);
-      inits = newInits;
-    }
+    List<Stmt> inits = new ArrayList<Stmt>(rw.getInitializations());
     rw.getInitializations().clear();
     return cb.addMember(rw.qq().parseMember("private void %s() { %LS }", 
                                             INITIALIZATIONS_METHOD_NAME,

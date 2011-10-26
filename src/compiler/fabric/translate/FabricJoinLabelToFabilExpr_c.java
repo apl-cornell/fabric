@@ -14,7 +14,6 @@ import jif.types.label.Label;
 
 public class FabricJoinLabelToFabilExpr_c extends JoinLabelToJavaExpr_c {
   @Override
-  @SuppressWarnings("unchecked")
   public Expr toJava(Label label, JifToJavaRewriter rw) throws SemanticException {
     JoinLabel L = (JoinLabel) label;
 
@@ -22,12 +21,12 @@ public class FabricJoinLabelToFabilExpr_c extends JoinLabelToJavaExpr_c {
         return rw.labelToJava(L.joinComponents().iterator().next());
     }
 
-    LinkedList l = new LinkedList(L.joinComponents());
-    Iterator iter = l.iterator();            
-    Label head = (Label)iter.next();
+    LinkedList<Label> l = new LinkedList<Label>(L.joinComponents());
+    Iterator<Label> iter = l.iterator();
+    Label head = iter.next();
     Expr e = rw.labelToJava(head);
     while (iter.hasNext()) {
-        head = (Label)iter.next();
+        head = iter.next();
         Expr f = rw.labelToJava(head);
         Expr loc = ((FabricToFabilRewriter) rw).currentLocation();
         e = rw.qq().parseExpr("%E.join(%E, %E)", e, loc, f);

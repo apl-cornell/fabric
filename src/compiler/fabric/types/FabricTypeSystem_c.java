@@ -460,7 +460,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return super.strip(type);
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public Subst subst(Map substMap, Map cache) {
     return new FabricSubst_c(this, substMap, cache);

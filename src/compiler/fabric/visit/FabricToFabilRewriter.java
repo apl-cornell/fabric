@@ -144,7 +144,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
         new ArrayList<TopLevelDecl>(n.decls().size()
             + additionalClassDecls.size());
     l.addAll(n.decls());
-    for (ClassDecl cd : (Collection<ClassDecl>) additionalClassDecls) {
+    for (ClassDecl cd : additionalClassDecls) {
       if (cd.flags().isPublic()) {
         // cd is public, we will put it in it's own source file.
         SourceFile sf =

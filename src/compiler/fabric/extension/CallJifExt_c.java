@@ -1,28 +1,45 @@
 package fabric.extension;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import fabric.ast.FabricCall;
-import fabric.types.FabricClassType;
-import fabric.types.FabricTypeSystem;
-import polyglot.ast.*;
-import polyglot.types.ReferenceType;
-import polyglot.types.SemanticException;
-import polyglot.types.Type;
-import polyglot.util.Position;
 import jif.ast.JifInstantiator;
 import jif.extension.JifCallExt;
 import jif.translate.ToJavaExt;
-import jif.types.*;
-import jif.types.label.*;
+import jif.types.Assertion;
+import jif.types.CallerConstraint;
+import jif.types.ConstraintMessage;
+import jif.types.JifContext;
+import jif.types.JifMethodInstance;
+import jif.types.JifTypeSystem;
+import jif.types.LabelConstraint;
+import jif.types.NamedLabel;
+import jif.types.PathMap;
+import jif.types.PrincipalConstraint;
+import jif.types.label.ArgLabel;
+import jif.types.label.ConfPolicy;
+import jif.types.label.IntegPolicy;
+import jif.types.label.Label;
 import jif.types.principal.Principal;
 import jif.visit.LabelChecker;
+import polyglot.ast.Call;
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
+import polyglot.ast.Special;
+import polyglot.types.SemanticException;
+import polyglot.types.Type;
+import polyglot.util.Position;
+import fabric.ast.FabricCall;
+import fabric.types.FabricClassType;
+import fabric.types.FabricTypeSystem;
 
 public class CallJifExt_c extends JifCallExt {
   public CallJifExt_c(ToJavaExt toJava) {
     super(toJava);
   }
   
+  @SuppressWarnings("unchecked")
   protected void labelCheckArgs(LabelChecker lc, Call c, List<Label> actualLabels)
   throws SemanticException
   {
@@ -53,6 +70,7 @@ public class CallJifExt_c extends JifCallExt {
 //      return Xjoin;
   }
   
+  @SuppressWarnings("unchecked")
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
     Node n = super.labelCheck(lc);
@@ -90,11 +108,10 @@ public class CallJifExt_c extends JifCallExt {
       Label returnLabel = ts.join(mi.returnValueLabel(), mi.returnLabel());
       
       entryLabel = JifInstantiator.instantiate(entryLabel, A, target, target.type().toReference(), targetLabel, 
-          formalLabels, formalTypes, actualLabels, c.arguments(), Collections.EMPTY_LIST);
+          formalLabels, formalTypes, actualLabels, c.arguments(), Collections.<Label> emptyList());
       returnLabel = JifInstantiator.instantiate(returnLabel, A, target, target.type().toReference(), targetLabel, 
-          formalLabels, formalTypes, actualLabels, c.arguments(), Collections.EMPTY_LIST);
+          formalLabels, formalTypes, actualLabels, c.arguments(), Collections.<Label> emptyList());
       
-      Principal localPrincipal = ts.workerPrincipal(Position.compilerGenerated());
       Principal remotePrincipal = c.remoteWorkerPrincipal();
       
       // Fold in the policies of all the parameters.
@@ -187,10 +204,10 @@ public class CallJifExt_c extends JifCallExt {
         }        
       });
       
-      for (Assertion as : (List<Assertion>)mi.constraints()) {
+      for (Assertion as : mi.constraints()) {
         if (as instanceof CallerConstraint) {
           CallerConstraint cc = (CallerConstraint)as;
-          for (Principal p : (List<Principal>)cc.principals()) {
+          for (Principal p : cc.principals()) {
             lc.constrain(remotePrincipal, 
                          PrincipalConstraint.ACTSFOR, 
                          p, 

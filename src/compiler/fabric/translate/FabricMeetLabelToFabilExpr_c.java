@@ -14,7 +14,6 @@ import jif.types.label.MeetLabel;
 
 public class FabricMeetLabelToFabilExpr_c extends MeetLabelToJavaExpr_c {
   @Override
-  @SuppressWarnings("unchecked")
   public Expr toJava(Label label, JifToJavaRewriter rw)
       throws SemanticException {
     MeetLabel L = (MeetLabel) label;
@@ -23,12 +22,12 @@ public class FabricMeetLabelToFabilExpr_c extends MeetLabelToJavaExpr_c {
       return rw.labelToJava(L.meetComponents().iterator().next());
     }
 
-    LinkedList l = new LinkedList(L.meetComponents());
-    Iterator iter = l.iterator();
-    Label head = (Label) iter.next();
+    LinkedList<Label> l = new LinkedList<Label>(L.meetComponents());
+    Iterator<Label> iter = l.iterator();
+    Label head = iter.next();
     Expr e = rw.labelToJava(head);
     while (iter.hasNext()) {
-      head = (Label) iter.next();
+      head = iter.next();
       Expr f = rw.labelToJava(head);
       Expr loc = ((FabricToFabilRewriter) rw).currentLocation();
       e = rw.qq().parseExpr("%E.meet(%E, %E)", e, loc, f);
