@@ -1,7 +1,7 @@
 package fabric.ast;
 
-import java.util.List;
 import java.util.Collections;
+import java.util.List;
 
 import polyglot.ast.Branch_c;
 import polyglot.ast.Term;
@@ -14,7 +14,7 @@ public class RetryStmt_c extends Branch_c implements RetryStmt {
     super(pos, FabricBranch.RETRY, null);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     return Collections.EMPTY_LIST;

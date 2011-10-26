@@ -1,8 +1,8 @@
 package fabric.ast;
 
+import jif.ast.AbstractJifExtFactory_c;
 import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
-import jif.ast.AbstractJifExtFactory_c;
 
 /**
  * This class serves the same purpose as {@link AbstractJifExtFactory_c} and its
@@ -24,6 +24,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     super(next);
   }
   
+  @Override
   public final Ext extAtomic() {
     Ext e = extAtomicImpl();
     if (nextExtFactory() != null && 
@@ -43,6 +44,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     return postExtBlock(e);
   }
   
+  @Override
   public final Ext extAbortStmt() {
     Ext e = extAbortStmtImpl();
     if (nextExtFactory() != null && 
@@ -62,6 +64,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     return postExtStmt(e);
   }
 
+  @Override
   public final Ext extRetryStmt() {
     Ext e = extRetryStmtImpl();
     if (nextExtFactory() != null && 
@@ -81,6 +84,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     return postExtStmt(e);
   }
 
+  @Override
   public final Ext extWorker() {
     Ext e = extWorkerImpl();
     if (nextExtFactory() != null && 
@@ -100,6 +104,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     return postExtExpr(e);
   }
 
+  @Override
   public final Ext extNewFabricArray() {
     Ext e = extNewFabricArrayImpl();
     if (nextExtFactory() != null &&
@@ -119,6 +124,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     return postExtNewArray(e);
   }
   
+  @Override
   public final Ext extAmbNewFabricArray() {
     Ext e = extAmbNewFabricArrayImpl();
     if (nextExtFactory() != null &&
@@ -139,6 +145,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     return postExtAmbNewArray(e);
   }
   
+  @Override
   public final Ext extRemoteWorkerGetter() {
     Ext e = extRemoteWorkerGetterImpl();
     if (nextExtFactory() != null && 
@@ -158,6 +165,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     return postExtExpr(e);
   }
 
+  @Override
   public final Ext extFabricArrayInit() {
     Ext e = extFabricArrayInitImpl();
     if (nextExtFactory() != null &&
@@ -177,6 +185,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     return postExtArrayInit(e);
   }
 
+  @Override
   public Ext extFabricArrayTypeNode() {
     Ext e = extFabricArrayTypeNodeImpl();
     if (nextExtFactory() != null &&

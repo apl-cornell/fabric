@@ -2,24 +2,24 @@ package fabric.ast;
 
 import java.util.List;
 
-import fabric.extension.FabricExt;
-import fabric.extension.LocatedExt_c;
-
+import jif.ast.JifNew_c;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
 import polyglot.ast.Term;
 import polyglot.ast.TypeNode;
 import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
-import jif.ast.JifNew_c;
+import fabric.extension.FabricExt;
+import fabric.extension.LocatedExt_c;
 
 public class FabricNew_c extends JifNew_c {
 
-  public FabricNew_c(Position pos, TypeNode tn, List arguments, ClassBody body) {
+  public FabricNew_c(Position pos, TypeNode tn, List<Expr> arguments,
+      ClassBody body) {
     super(pos, tn, arguments, body);
   }
   
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     FabricExt fabExt = FabricUtil.fabricExt(this);

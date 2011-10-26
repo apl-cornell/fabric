@@ -2,8 +2,6 @@ package fabric.ast;
 
 import java.util.List;
 
-import fabric.types.FabricTypeSystem;
-
 import polyglot.ast.Expr;
 import polyglot.ast.Expr_c;
 import polyglot.ast.Node;
@@ -13,6 +11,7 @@ import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
+import fabric.types.FabricTypeSystem;
 
 public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
   protected Expr remoteWorkerName; // cannot be null
@@ -31,10 +30,12 @@ public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
     return this;
   }
   
+  @Override
   public Expr remoteWorkerName() {
     return remoteWorkerName;
   }
 
+  @Override
   public RemoteWorkerGetter remoteWorkerName(Expr expr) {
     return reconstruct(expr);
   }
@@ -45,13 +46,14 @@ public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
     return reconstruct(remoteWorkerName);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     v.visitCFG(remoteWorkerName, this, EXIT);
     return succs;
   }
 
+  @Override
   public Term firstChild() {
     return remoteWorkerName;
   }

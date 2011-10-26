@@ -3,23 +3,25 @@ package fabric.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabric.ast.AbortStmt;
-import fabric.ast.RetryStmt;
-import fabric.visit.AbortRetryCollector;
-
 import polyglot.ast.Block_c;
 import polyglot.ast.Stmt;
 import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
+import fabric.visit.AbortRetryCollector;
 
 public class Atomic_c extends Block_c implements Atomic {
 
-  @SuppressWarnings("unchecked")
-  public Atomic_c(Position pos, List statements) {
+  public Atomic_c(Position pos, List<Stmt> statements) {
     super(pos, statements);
   }
   
   @SuppressWarnings("unchecked")
+  @Override
+  public List<Stmt> statements() {
+    return super.statements();
+  }
+
+  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     // TODO There needs to be an edge for AbortException
@@ -29,7 +31,7 @@ public class Atomic_c extends Block_c implements Atomic {
     List<AbortStmt> aborts = new ArrayList<AbortStmt>();
     List<RetryStmt> retries = new ArrayList<RetryStmt>();
     
-    for (Stmt s : (List<Stmt>)statements()) {
+    for (Stmt s : statements()) {
       AbortRetryCollector c = new AbortRetryCollector(aborts, retries);
       s.visit(c);
     }

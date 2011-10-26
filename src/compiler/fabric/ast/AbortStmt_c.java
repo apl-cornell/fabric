@@ -1,9 +1,10 @@
 package fabric.ast;
 
-import java.util.List;
 import java.util.Collections;
+import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Branch_c;
+import polyglot.ast.Term;
 import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
 
@@ -13,7 +14,7 @@ public class AbortStmt_c extends Branch_c implements AbortStmt {
     super(pos, FabricBranch.ABORT, null);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     return Collections.EMPTY_LIST;

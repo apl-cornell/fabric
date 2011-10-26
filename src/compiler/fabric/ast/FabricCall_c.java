@@ -3,8 +3,11 @@ package fabric.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabric.types.FabricTypeSystem;
-
+import jif.ast.JifCall_c;
+import jif.ast.JifUtil;
+import jif.types.JifContext;
+import jif.types.LabeledType;
+import jif.types.principal.Principal;
 import polyglot.ast.Expr;
 import polyglot.ast.Id;
 import polyglot.ast.Node;
@@ -16,29 +19,24 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
-import jif.ast.JifCall_c;
-import jif.ast.JifUtil;
-import jif.types.JifContext;
-import jif.types.LabeledType;
-import jif.types.principal.Principal;
+import fabric.types.FabricTypeSystem;
 
 public class FabricCall_c extends JifCall_c implements FabricCall {
   protected Expr remoteWorker;
   protected Principal remoteWorkerPrincipal;
   
-  @SuppressWarnings("unchecked")
-  public FabricCall_c(Position pos, Receiver target, Id name, List args) {
+  public FabricCall_c(Position pos, Receiver target, Id name, List<Expr> args) {
     this(pos, target, name, null, args);
   }
 
-  @SuppressWarnings("unchecked")
-  public FabricCall_c(Position pos, Receiver target, Id name, Expr remoteWorker, List args) {
+  public FabricCall_c(Position pos, Receiver target, Id name,
+      Expr remoteWorker, List<Expr> args) {
     super(pos, target, name, args);
     this.remoteWorker = remoteWorker;
   }
   
-  @SuppressWarnings("unchecked")
-  protected FabricCall_c reconstruct(Receiver target, Id name, Expr remoteWorker, List arguments) {
+  protected FabricCall_c reconstruct(Receiver target, Id name,
+      Expr remoteWorker, List<Expr> arguments) {
     FabricCall_c n = (FabricCall_c)super.reconstruct(target, name, arguments);
     
     if (remoteWorker != this.remoteWorker) {
@@ -49,10 +47,12 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
     return n;
   }
 
+  @Override
   public Expr remoteWorker() {
     return remoteWorker;
   }
   
+  @Override
   public FabricCall remoteWorker(Expr remoteWorker) {
     if (remoteWorker == this.remoteWorker) {
       return this;
@@ -63,16 +63,17 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
     return n;
   }
   
-  @SuppressWarnings("unchecked")
   @Override
   public Node visitChildren(NodeVisitor v) {
     Receiver target = (Receiver) visitChild(this.target, v);
     Id name = (Id) visitChild(this.name, v);
     Expr remoteWorker = (Expr) visitChild(this.remoteWorker, v);
-    List arguments = visitList(this.arguments, v);
+    @SuppressWarnings("unchecked")
+    List<Expr> arguments = visitList(this.arguments, v);
     return reconstruct(target, name, remoteWorker, arguments);
   }
   
+  @SuppressWarnings("unchecked")
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
     FabricCall c = (FabricCall)super.typeCheck(tc);
@@ -109,10 +110,12 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
     return c;
   }
   
+  @Override
   public Principal remoteWorkerPrincipal() {
     return remoteWorkerPrincipal;
   }
   
+  @Override
   public FabricCall remoteWorkerPrincipal(Principal p) {
     if (p == remoteWorkerPrincipal) return this;
     FabricCall_c n = (FabricCall_c)copy();

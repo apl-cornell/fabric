@@ -224,6 +224,8 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
       throw new InternalCompilerError("Fabric does not support inner classes.");
     if (outer != null)
       throw new InternalCompilerError("Fabric does not support inner classes.");
+    
+    @SuppressWarnings("unchecked")
     New n = new FabricNew_c(pos, objectType, args, body);
     n = (New) n.ext(extFactory().extNew());
     n = (New) n.del(delFactory().delNew());
@@ -313,6 +315,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   @SuppressWarnings("rawtypes")
   @Override
   public ClassBody ClassBody(Position pos, List members) {
+    @SuppressWarnings("unchecked")
     ClassBody n = new ClassBody_c(pos, CollectionUtil.nonNullList(members));
     n = (ClassBody)n.ext(extFactory().extClassBody());
     n = (ClassBody)n.del(delFactory().delClassBody());

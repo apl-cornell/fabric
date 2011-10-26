@@ -2,7 +2,10 @@ package fabric.ast;
 
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.ArrayInit_c;
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
@@ -25,7 +28,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     this.label = label;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public FabricArrayInit elements(List elements) {
     return (FabricArrayInit) super.elements(elements);
@@ -35,6 +38,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     return location;
   }
 
+  @Override
   public FabricArrayInit_c location(Expr location) {
     FabricArrayInit_c n = (FabricArrayInit_c) copy();
     n.location = location;
@@ -45,6 +49,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     return label;
   }
 
+  @Override
   public FabricArrayInit_c label(Expr label) {
     FabricArrayInit_c n = (FabricArrayInit_c) copy();
     n.label = label;

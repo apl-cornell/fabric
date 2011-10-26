@@ -1,18 +1,21 @@
 package fabric.ast;
 
-import java.net.URI;
 import java.util.List;
-
-import codebases.ast.CodebaseNodeFactory;
-
-import fabric.lang.Codebase;
 
 import jif.ast.JifNodeFactory;
 import jif.ast.LabelNode;
 import jif.ast.NewLabel;
-import polyglot.ast.*;
+import polyglot.ast.Call;
+import polyglot.ast.ClassBody;
+import polyglot.ast.Expr;
+import polyglot.ast.Id;
+import polyglot.ast.New;
+import polyglot.ast.Receiver;
+import polyglot.ast.Stmt;
+import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
 import polyglot.util.Position;
+import codebases.ast.CodebaseNodeFactory;
 
 /**
  * NodeFactory for fabric extension.

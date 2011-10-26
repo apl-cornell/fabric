@@ -2,19 +2,16 @@ package fabric.ast;
 
 import java.util.List;
 
-import fabric.extension.ClassBodyJifExt_c;
-
 import jif.ast.JifUtil;
-
 import polyglot.ast.ClassMember;
 import polyglot.ast.Node;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
+import fabric.extension.ClassBodyJifExt_c;
 
 public class ClassBody_c extends polyglot.ast.ClassBody_c {
 
-  @SuppressWarnings("unchecked")
-  public ClassBody_c(Position pos, List members) {
+  public ClassBody_c(Position pos, List<ClassMember> members) {
     super(pos, members);
   }
 
