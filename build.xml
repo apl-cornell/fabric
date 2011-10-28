@@ -182,6 +182,7 @@
     <delete dir="${tmp}"/>
     <delete dir="${var}"/>
     <delete file="${jar.base}" />
+    <delete file="${jar.tools}" />
 
     <subant target="clean">
       <filelist dir="${examples}" files="build.xml" />
