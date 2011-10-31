@@ -29,9 +29,6 @@ public class FClass {
 	  return name;
   }
   
-  /**
-   * Sets the codebase the class should be loaded in. Should only be set once.
-   */
   public void setCodebase(Codebase c) {
 	  codebase = c;
   }

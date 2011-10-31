@@ -15,7 +15,7 @@ import fabric.util.Iterator;
  */
 public class Codebase {	
 	
-  /** All of the classes in the codebase **/
+  /* map from strings to classes */
   private Map/*String, FClass*/ classes;
   
   FClass resolveClassName(String name) {

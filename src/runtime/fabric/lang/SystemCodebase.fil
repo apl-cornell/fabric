@@ -1,0 +1,29 @@
+package fabric.lang;
+
+import java.io.IOException;
+import java.util.Properties;
+import fabric.util.Collections;
+import fabric.util.HashMap;
+import fabric.util.Map;
+import fabric.util.Iterator;
+
+/**
+ * Codebase associated with system classes. All classes in this codebase are 
+ * loaded using the system classloader.
+ * 
+ * @author Lucas Waye <lrw48@cornell.edu>
+ */
+public class SystemCodebase extends Codebase {	
+	
+	public SystemCodebase() {
+		super(new HashMap());
+	}
+	
+	public Class toJavaClass(String name) {
+		try {
+			return ClassLoader.getSystemClassLoader().loadClass(name);
+		} catch(ClassNotFoundException ex) {
+			return null;
+		}
+	}	
+}
