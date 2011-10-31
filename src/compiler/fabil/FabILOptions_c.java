@@ -20,11 +20,6 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    * Whether we're running in signature mode.
    */
   public boolean signatureMode;
-  
-  /**
-   * Whether to dump class dependencies for each class.
-   */
-  public boolean dumpDependencies;
 
   /**
    * The classpath for the FabIL signatures of Java objects.
@@ -60,7 +55,6 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     super.setDefaultValues();
     this.fully_qualified_names = true;
     this.signatureMode = false;
-    this.dumpDependencies = false;
     this.optLevel = 0;
     this.createJavaSkel = false;
   }
@@ -78,9 +72,6 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     if (args[index].equals("-sig")) {
       index++;
       signatureMode = true;
-    } else if (args[index].equals("-dumpdeps")) {
-      index++;
-      dumpDependencies = true;
     } else if (args[index].equals("-sigcp")) {
       index++;
       this.sigcp = args[index++];
@@ -119,7 +110,6 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
         "path for FabIL signatures (e.g. for fabric.lang.Object)");
     usageForFlag(out, "-addsigcp <path>",
         "additional path for FabIL signatures; prefixed to sigcp");
-    usageForFlag(out, "-dumpdeps", "output dependencies for each class");
     usageForFlag(out, "-bootstrap-skel", "generate java bootstrap skeletons for each class");
     usageForFlag(out, "-O", "turn optimizations on");
   }
@@ -161,13 +151,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   public int optLevel() {
     return optLevel;
   }
-  /*
-   * (non-Javadoc)
-   * @see fabil.FabILOptions#dumpDependencies()
-   */
-  public boolean dumpDependencies() {
-    return dumpDependencies;
-  }
+
   /*
    * (non-Javadoc)
    * @see fabil.FabILOptions#createJavaSkel()
