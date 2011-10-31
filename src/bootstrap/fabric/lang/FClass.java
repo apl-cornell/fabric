@@ -9,9 +9,7 @@ public interface FClass extends fabric.lang.Object {
     public java.lang.String get$source();
     
     public fabric.lang.arrays.byteArray get$bytecode();
-    
-    public fabric.lang.arrays.ObjectArray get$dependencies();
-    
+        
     public fabric.lang.Codebase getCodebase();
     
     public java.lang.String getName();
@@ -19,9 +17,7 @@ public interface FClass extends fabric.lang.Object {
     public java.lang.String getSource();
     
     public fabric.lang.arrays.byteArray getBytecode();
-    
-    public fabric.lang.arrays.ObjectArray dependencies();
-    
+        
     public static class _Proxy extends fabric.lang.Object._Proxy
       implements fabric.lang.FClass
     {
@@ -33,9 +29,7 @@ public interface FClass extends fabric.lang.Object {
         native public java.lang.String get$source();
         
         native public fabric.lang.arrays.byteArray get$bytecode();
-        
-        native public fabric.lang.arrays.ObjectArray get$dependencies();
-        
+                
         native public fabric.lang.Codebase getCodebase();
         
         native public java.lang.String getName();
@@ -43,9 +37,7 @@ public interface FClass extends fabric.lang.Object {
         native public java.lang.String getSource();
         
         native public fabric.lang.arrays.byteArray getBytecode();
-        
-        native public fabric.lang.arrays.ObjectArray dependencies();
-        
+                
         public _Proxy(FClass._Impl impl) { super(impl); }
         
         public _Proxy(fabric.worker.Store store, long onum) {
@@ -64,16 +56,13 @@ public interface FClass extends fabric.lang.Object {
         native public java.lang.String get$source();
         
         native public fabric.lang.arrays.byteArray get$bytecode();
-        
-        native public fabric.lang.arrays.ObjectArray get$dependencies();
-        
+                
         public _Impl(fabric.worker.Store $location,
                      fabric.lang.security.Label $label,
                      fabric.lang.security.Label $accesslabel,
                      fabric.lang.Codebase codebase, java.lang.String name,
                      java.lang.String source,
-                     fabric.lang.arrays.byteArray bytecode,
-                     fabric.lang.arrays.ObjectArray deps) {
+                     fabric.lang.arrays.byteArray bytecode) {
             super($location, $label, $accesslabel);
         }
         
@@ -84,9 +73,7 @@ public interface FClass extends fabric.lang.Object {
         native public java.lang.String getSource();
         
         native public fabric.lang.arrays.byteArray getBytecode();
-        
-        native public fabric.lang.arrays.ObjectArray dependencies();
-        
+                
         native protected fabric.lang.Object._Proxy $makeProxy();
         
         native public void $serialize(java.io.ObjectOutput out,

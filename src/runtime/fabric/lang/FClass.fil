@@ -22,14 +22,12 @@ public class FClass {
   protected final String   name;
   protected final String   source;
   protected final byte[]   bytecode;
-  protected final String[] dependencies;
   
-  public FClass(Codebase codebase, String name, String source, byte[] bytecode, String[] deps) {
+  public FClass(Codebase codebase, String name, String source, byte[] bytecode) {
     this.codebase = codebase;
     this.name = name;
     this.source = source;
     this.bytecode = bytecode;
-    this.dependencies = deps;
   }
 
   public Codebase getCodebase() {
@@ -51,9 +49,5 @@ public class FClass {
         copy[i] = bytecode[i];
       return copy;
     }
-  }
-  
-  public String[] dependencies() {
-    return dependencies;
   }
 }

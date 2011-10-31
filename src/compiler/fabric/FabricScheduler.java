@@ -44,6 +44,7 @@ import fabric.visit.PrincipalCastAdder;
 import fabric.visit.RemoteCallWrapperAdder;
 import fabric.visit.RemoteCallWrapperUpdater;
 import fabric.visit.ThisLabelChecker;
+import fabric.worker.Worker;
 
 public class FabricScheduler extends JifScheduler implements CBScheduler {
   protected  fabil.ExtensionInfo filext;
@@ -196,9 +197,11 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     if (!opts.signatureMode()) {
       g = super.Serialized(job);
       try {
-        if (opts.publish())
-          g.addPrerequisiteGoal(FClassGenerated(job), this);
-
+        //only run if we are publishing classes or
+        // compiling downloaded classes
+        if (Worker.isInitialized())
+          addPrerequisiteDependency(g, this.ConsistentNamespace());
+        
         g.addPrerequisiteGoal(ThisLabelChecked(job), this);
       } catch (CyclicDependencyException e) {
         throw new InternalCompilerError(e);
@@ -316,10 +319,6 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
         addPrerequisiteDependency(g, this.Serialized(job));
         addPrerequisiteDependency(g, this.PrincipalCastsAdded(job));
 
-        //TODO: only run if publishing classes
-        if (fabext.getFabricOptions().publish())        
-          addPrerequisiteDependency(g, this.ConsistentNamespace());
-        
         // make sure that if Object.fab is being compiled, it is always
         // written to FabIL before any other job.
         if (objectJob != null && job != objectJob)
