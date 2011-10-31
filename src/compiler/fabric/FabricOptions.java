@@ -31,10 +31,6 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     delegate.bootclasspath = this.bootclasspath;
     return delegate.constructFabILClasspath();
   }
-  
-  public boolean dumpDependencies() {
-    return delegate.dumpDependencies;
-  }
 
   public int optLevel() {
     return delegate.optLevel();
