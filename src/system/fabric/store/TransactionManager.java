@@ -14,7 +14,7 @@ import fabric.common.util.*;
 import fabric.dissemination.Glob;
 import fabric.lang.Statistics;
 import fabric.lang.security.Label;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.worker.Store;
@@ -22,7 +22,6 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
-import fabric.worker.remote.RemoteWorker;
 
 public class TransactionManager {
 
@@ -63,7 +62,7 @@ public class TransactionManager {
   /**
    * Instruct the transaction manager that the given transaction is aborting
    */
-  public void abortTransaction(NodePrincipal worker, long transactionID)
+  public void abortTransaction(Principal worker, long transactionID)
       throws AccessException {
     synchronized (database) {
       database.rollback(transactionID, worker);
@@ -75,12 +74,11 @@ public class TransactionManager {
   /**
    * Execute the commit phase of two phase commit.
    */
-  public void commitTransaction(RemoteWorker workerNode,
-      NodePrincipal workerPrincipal, long transactionID)
+  public void commitTransaction(Principal workerPrincipal, long transactionID)
       throws TransactionCommitFailedException {
     synchronized (database) {
       try {
-        database.commit(transactionID, workerNode, workerPrincipal, sm);
+        database.commit(transactionID, workerPrincipal, sm);
         STORE_TRANSACTION_LOGGER.fine("Committed transaction "
             + transactionID);
       } catch (final AccessException e) {
@@ -123,7 +121,7 @@ public class TransactionManager {
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public boolean prepare(NodePrincipal worker, PrepareRequest req)
+  public boolean prepare(Principal worker, PrepareRequest req)
       throws TransactionPrepareFailedException {
     final long tid = req.tid;
     boolean result = false;
@@ -289,7 +287,7 @@ public class TransactionManager {
    * Checks that the worker principal has permissions to read/write the given
    * objects. If it doesn't, a AccessException is thrown.
    */
-  private void checkPerms(final NodePrincipal worker, final LongSet reads,
+  private void checkPerms(final Principal worker, final LongSet reads,
       final Collection<SerializedObject> writes) throws AccessException {
     // The code that does the actual checking.
     Code<AccessException> checker = new Code<AccessException>() {
@@ -349,24 +347,24 @@ public class TransactionManager {
    *          True if the subscriber is a dissemination node; false if it's a
    *          worker.
    */
-  GroupContainer getGroupContainerAndSubscribe(long onum,
-      RemoteWorker subscriber, boolean dissemSubscribe, MessageHandlerThread handler)
+  GroupContainer getGroupContainerAndSubscribe(long onum)
       throws AccessException {
     GroupContainer container;
     synchronized (database) {
       container = database.getCachedGroupContainer(onum);
       if (container != null) {
-        if (subscriber != null)
-          sm.subscribe(onum, subscriber, dissemSubscribe);
+      //  if (subscriber != null)
+      //    sm.subscribe(onum, subscriber, dissemSubscribe);
         return container;
       }
     }
 
     // XXX Ideally, the subscription registration should happen atomically with
     // the read.
-    if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
-    ObjectGroup group = readGroup(onum, handler);
-    if (group == null) throw new AccessException(database.getName(), onum);
+    //if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
+    ObjectGroup group = readGroup(onum);
+    if (group == null)
+      throw new AccessException(database.getName(), onum);
 
     Store store = Worker.getWorker().getStore(database.getName());
     container = new GroupContainer(store, signingKey, group);
@@ -374,10 +372,6 @@ public class TransactionManager {
     // Cache the container.
     synchronized (database) {
       database.cacheGroupContainer(group.objects().keySet(), container);
-    }
-
-    if (handler != null) {
-      handler.getSession().recordGlobCreated(group.objects().size());
     }
 
     return container;
@@ -392,10 +386,8 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  public Glob getGlob(long onum, RemoteWorker subscriber,
-      MessageHandlerThread handler) throws AccessException {
-    return getGroupContainerAndSubscribe(onum, subscriber, true, handler)
-        .getGlob();
+  public Glob getGlob(long onum) throws AccessException {
+    return getGroupContainerAndSubscribe(onum).getGlob();
   }
 
   /**
@@ -411,11 +403,8 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  public ObjectGroup getGroup(NodePrincipal principal, RemoteWorker subscriber,
-      long onum, MessageHandlerThread handler) throws AccessException {
-    ObjectGroup group =
-        getGroupContainerAndSubscribe(onum, subscriber, false, handler)
-            .getGroup(principal);
+  public ObjectGroup getGroup(Principal principal, long onum) throws AccessException {
+    ObjectGroup group = getGroupContainerAndSubscribe(onum).getGroup(principal);
     if (group == null) throw new AccessException(database.getName(), onum);
     return group;
   }
@@ -428,7 +417,7 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  private ObjectGroup readGroup(long onum, MessageHandlerThread handler) {
+  private ObjectGroup readGroup(long onum) {
     SerializedObject obj = read(onum);
     if (obj == null) return null;
 
@@ -445,10 +434,6 @@ public class TransactionManager {
     while (!toVisit.isEmpty()) {
       SerializedObject curObj = toVisit.remove();
       group.put(curObj.getOnum(), curObj);
-
-      if (handler != null) {
-        handler.getSession().recordObjectSent(curObj.getClassName());
-      }
 
       if (group.size() == MAX_GROUP_SIZE) break;
 
@@ -497,7 +482,7 @@ public class TransactionManager {
       if (history != null) {
         int promise = history.generatePromise();
         if (promise > 0) {
-          NodePrincipal worker = Worker.getWorker().getPrincipal();
+          Principal worker = Worker.getWorker().getPrincipal();
           synchronized (database) {
             // create a promise
 
@@ -517,7 +502,7 @@ public class TransactionManager {
                 database.beginTransaction(tid, worker);
                 database.registerUpdate(tid, worker, newObj);
                 database.finishPrepare(tid, worker);
-                database.commit(tid, null, worker, sm);
+                database.commit(tid, worker, sm);
               } catch (AccessException exc) {
                 // TODO: this should probably use the store principal instead of
                 // the worker principal, and AccessExceptions should be
@@ -577,7 +562,7 @@ public class TransactionManager {
    * @throws AccessException
    *           if the principal is not allowed to create objects on this store.
    */
-  public long[] newOnums(NodePrincipal worker, int num) throws AccessException {
+  public long[] newOnums(Principal worker, int num) throws AccessException {
     synchronized (database) {
       return database.newOnums(num);
     }
@@ -598,7 +583,7 @@ public class TransactionManager {
    * for any stale objects found.
    */
   @SuppressWarnings("unchecked")
-  List<SerializedObject> checkForStaleObjects(NodePrincipal worker,
+  List<SerializedObject> checkForStaleObjects(Principal worker,
       LongKeyMap<Integer> versions) throws AccessException {
     // First, check read and write permissions.
     Store store = Worker.getWorker().getStore(database.getName());

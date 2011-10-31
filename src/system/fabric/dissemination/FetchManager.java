@@ -1,10 +1,9 @@
 package fabric.dissemination;
 
-import fabric.worker.RemoteStore;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
-import fabric.common.exceptions.FetchException;
 import fabric.net.UnreachableNodeException;
+import fabric.worker.RemoteStore;
 
 /**
  * A FetchManager is responsible for retrieving objects from Stores. Workers
@@ -24,7 +23,7 @@ public interface FetchManager {
    * @throws AccessException
    * @throws UnreachableNodeException
    */
-  public ObjectGroup fetch(RemoteStore store, long onum) throws FetchException;
+  public ObjectGroup fetch(RemoteStore store, long onum) throws AccessException;
 
   /**
    * Called to destroy and clean up the fetch manager.

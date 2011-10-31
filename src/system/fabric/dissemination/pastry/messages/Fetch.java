@@ -1,6 +1,7 @@
 package fabric.dissemination.pastry.messages;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 
 import rice.p2p.commonapi.Endpoint;
 import rice.p2p.commonapi.Id;
@@ -9,7 +10,6 @@ import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
 import fabric.worker.Worker;
-import fabric.common.exceptions.BadSignatureException;
 import fabric.dissemination.Glob;
 
 /**
@@ -174,8 +174,9 @@ public class Fetch implements RawMessage {
       
       Glob glob;
       try {
-        glob = new Glob(Worker.getWorker().getStore(store).getPublicKey(), in);
-      } catch (BadSignatureException e) {
+        glob = new Glob(in);
+        glob.verifySignature(Worker.getWorker().getStore(store).getPublicKey());
+      } catch (GeneralSecurityException e) {
         glob = null;
       }
       this.glob = glob;

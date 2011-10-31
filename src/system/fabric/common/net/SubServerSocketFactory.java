@@ -9,10 +9,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 
-import fabric.common.net.Channel.Connection;
-import fabric.common.net.SubServerSocketFactory.Acceptor.ConnectionQueue.ServerChannel;
-import fabric.common.net.handshake.HandshakeProtocol;
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
+import fabric.common.exceptions.NotImplementedException;
+import fabric.common.net.handshake.Protocol;
 import fabric.common.net.handshake.ShakenSocket;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.SocketAddress;
@@ -36,7 +37,7 @@ public class SubServerSocketFactory {
    * @param factory the ServerSocketFactory that will be used to create the
    *        ServerSockets used to implement SubServerSockets returned by this
    */
-  public SubServerSocketFactory(HandshakeProtocol handshake, NameService nameService) {
+  public SubServerSocketFactory(Protocol handshake, NameService nameService) {
     this.handshake   = handshake;
     this.nameService = nameService;
     
@@ -70,7 +71,7 @@ public class SubServerSocketFactory {
   // implementation                                                           //
   //////////////////////////////////////////////////////////////////////////////
   
-  private final HandshakeProtocol            handshake;
+  private final Protocol            handshake;
   private final NameService                  nameService;
   private final Map<SocketAddress, Acceptor> acceptors;
   
@@ -144,6 +145,7 @@ public class SubServerSocketFactory {
     }
     
     /** release the resources associated with a child */
+    @SuppressWarnings("unused")
     private void closeQueue(ConnectionQueue child) {
       // TODO
       throw new NotImplementedException();
@@ -152,6 +154,7 @@ public class SubServerSocketFactory {
     /** handle an incoming connection */
     private void recvConnection(Socket s) {
       try {
+        NETWORK_CONNECTION_LOGGER.log(Level.INFO, "receiving new connection from \"{0}\"", s.getInetAddress());
         ShakenSocket    conn  = handshake.receive(s);
         ConnectionQueue queue = queues.get(conn.name);
         if (null == queue) {
@@ -224,6 +227,7 @@ public class SubServerSocketFactory {
       }
       
       /** wait for an incoming SubSocket connection */
+      @SuppressWarnings("unused")
       SubSocket accept() throws IOException {
         try {
           return connections.take();
@@ -279,15 +283,14 @@ public class SubServerSocketFactory {
           return result;
         }
         
-        /** remove self from the connectionqueue */
         @Override
         protected void cleanup() {
-          throw new NotImplementedException();
+          ConnectionQueue.this.channels.remove(this);
         }
-
+        
         @Override
         public String toString() {
-          return "channel from " + sock.getInetAddress() + " to " + ConnectionQueue.this.toString();
+          return "channel from " + sock.getInetAddress() + " to \"" + ConnectionQueue.this.toString() + "\"";
         }
       }
     }

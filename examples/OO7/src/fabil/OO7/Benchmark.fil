@@ -17,7 +17,7 @@ import fabric.util.HashMap;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
-import fabric.worker.debug.Timing;
+import fabric.common.Timing;
 
 public class Benchmark {
   // database parameters

@@ -5,5 +5,5 @@
 source  "$(dirname $0)/defs"
 classpath="$TOP/classes:$classpath"
 
-command="\"$JAVA_HOME\"/bin/java -classpath \"$(fixpath $classpath)\" fabric.worker.debug.Timing"
+command="\"$JAVA_HOME\"/bin/java -classpath \"$(fixpath $classpath)\" fabric.common.Timing"
 eval "$command"

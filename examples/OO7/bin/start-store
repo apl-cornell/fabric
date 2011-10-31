@@ -5,5 +5,5 @@ PATH="${PATH}:${APP_HOME}/../../bin"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab-store -classpath "${APP_HOME}/classes" --store database
+fab-store -classpath "${APP_HOME}/classes" --name database
 

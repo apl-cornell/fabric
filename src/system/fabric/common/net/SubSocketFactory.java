@@ -4,12 +4,10 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
-import javax.net.SocketFactory;
-
-import fabric.common.net.Channel.Connection;
-import fabric.common.net.handshake.HandshakeProtocol;
-import fabric.common.net.handshake.ShakenSocket;
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
+import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.SocketAddress;
 
@@ -21,7 +19,7 @@ import fabric.common.net.naming.SocketAddress;
  * @author mdgeorge
  */
 public final class SubSocketFactory {
-  private final HandshakeProtocol protocol;
+  private final Protocol protocol;
   private final NameService       nameService;
   private final Map<String, ClientChannel> channels;
 
@@ -31,7 +29,7 @@ public final class SubSocketFactory {
    * attempt to share channels (as these channels may have different underlying
    * socket implementations).
    */ 
-  public SubSocketFactory(HandshakeProtocol protocol, NameService nameService) {
+  public SubSocketFactory(Protocol protocol, NameService nameService) {
     this.protocol    = protocol;
     this.nameService = nameService;
     this.channels    = new HashMap<String, ClientChannel>();
@@ -60,13 +58,20 @@ public final class SubSocketFactory {
   synchronized ClientChannel getChannel(String name) throws IOException {
     ClientChannel result = channels.get(name);
     if (null == result) {
-      result = new ClientChannel(name, nameService.resolve(name));
+      NETWORK_CONNECTION_LOGGER.log(Level.INFO, "establishing new connection to \"{0}\"", name);
+      SocketAddress addr = nameService.resolve(name);
+      
+      Socket s = new Socket(addr.getAddress(), addr.getPort());
+      s.setSoLinger(false, 0);
+      s.setTcpNoDelay(true);
+      
+      result = new ClientChannel(name, s);
       channels.put(name, result);
+      NETWORK_CONNECTION_LOGGER.log(Level.INFO, "connection to {0} established.", name);
     }
 
     return result;
   }
-  
   
   /**
    * Client channels are capable of making outgoing requests, but not of receiving
@@ -79,16 +84,12 @@ public final class SubSocketFactory {
     /* key for SubSocketFactory.this.channels */
     private final String name;
 
-    /* the remote address */
-    private final SocketAddress addr;
-    
     /* the next sequence number to be created */
     private int nextSequenceNumber;
     
-    public ClientChannel(String name, SocketAddress addr) throws IOException {
-      super(protocol.initiate(name, addr));
+    public ClientChannel(String name, Socket s) throws IOException {
+      super(protocol.initiate(name, s));
       
-      this.addr          = addr;
       this.name          = name;
       nextSequenceNumber = 1;
       
@@ -101,18 +102,18 @@ public final class SubSocketFactory {
     }
 
     @Override
-    public Connection accept(int sequence) throws IOException {
+    protected Connection accept(int sequence) throws IOException {
       throw new IOException("unexpected accept request on client channel");
     }
     
     @Override
-    public void cleanup() {
-      throw new NotImplementedException();
+    protected void cleanup () {
+      SubSocketFactory.this.channels.remove(this);
     }
-
+    
     @Override
     public String toString() {
-      return "channel to " + name + " [" + addr.toString() + "]";
+      return "channel to \"" + name + "\"";
     }
   }
 }

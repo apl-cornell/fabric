@@ -8,7 +8,8 @@ import java.util.*;
 
 import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
-import fabric.common.exceptions.FetchException;
+import fabric.common.Timing;
+import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.Pair;
@@ -17,8 +18,10 @@ import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
-import fabric.worker.*;
-import fabric.worker.debug.Timing;
+import fabric.worker.FabricSoftRef;
+import fabric.worker.LocalStore;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.ReadMapEntry;
@@ -147,8 +150,7 @@ public interface Object {
               Timing.FETCH.end();
             }
           }
-          
-        } catch (FetchException e) {
+        } catch (AccessException e) {
           throw new RuntimeFetchException(e);
         }
 

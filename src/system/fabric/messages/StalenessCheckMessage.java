@@ -8,21 +8,33 @@ import java.util.List;
 
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
-import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.net.RemoteNode;
-import fabric.net.UnreachableNodeException;
-import fabric.store.MessageHandlerThread;
-import fabric.worker.debug.Timing;
+import fabric.lang.security.Principal;
 
 /**
  * A <code>StalenessCheckMessage</code> represents a request to a store to check
  * whether a given set of objects is still fresh.
  */
-public class StalenessCheckMessage extends
-    Message<RemoteNode, StalenessCheckMessage.Response> {
+public final class StalenessCheckMessage
+           extends Message<StalenessCheckMessage.Response, AccessException>
+{
+
+  //////////////////////////////////////////////////////////////////////////////
+  // message contents                                                         //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public final LongKeyMap<Integer> versions;
+
+  public StalenessCheckMessage(LongKeyMap<Integer> versions) {
+    super(MessageType.STALENESS_CHECK, AccessException.class);
+    this.versions = versions;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // message contents                                                         //
+  //////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
     public final List<SerializedObject> staleObjects;
@@ -30,61 +42,25 @@ public class StalenessCheckMessage extends
     public Response(List<SerializedObject> staleObjects) {
       this.staleObjects = staleObjects;
     }
-
-    /**
-     * Deserialization constructor, used by the worker.
-     * 
-     * @param node
-     *          The node from which the response is being read.
-     * @param in
-     *          the input stream from which to read the response.
-     */
-    Response(RemoteNode node, DataInput in) throws IOException {
-      int size = in.readInt();
-      this.staleObjects = new ArrayList<SerializedObject>(size);
-      for (int i = 0; i < size; i++) {
-        staleObjects.add(new SerializedObject(in));
-      }
-    }
-
-    public void write(DataOutput out) throws IOException {
-      out.writeInt(staleObjects.size());
-      for (SerializedObject obj : staleObjects) {
-        obj.write(out);
-      }
-    }
   }
 
-  public final LongKeyMap<Integer> versions;
-
-  public StalenessCheckMessage(LongKeyMap<Integer> versions) {
-    super(MessageType.STALENESS_CHECK);
-    this.versions = versions;
-  }
-
-  /**
-   * Deserialization constructor. Used only by the store.
-   */
-  protected StalenessCheckMessage(DataInput in) throws IOException {
-    super(MessageType.STALENESS_CHECK);
-    int size = in.readInt();
-    versions = new LongKeyHashMap<Integer>(size);
-    for (int i = 0; i < size; i++)
-      versions.put(in.readLong(), in.readInt());
-  }
+  //////////////////////////////////////////////////////////////////////////////
+  // visitor methods                                                          //
+  //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(MessageHandlerThread handler) throws AccessException {
-    return new Response(handler.handle(this));
+  public Response dispatch(Principal p, MessageHandler h)
+      throws ProtocolError, AccessException {
+    return h.handle(p, this);
   }
 
-  @Override
-  public Response response(RemoteNode node, DataInput in) throws IOException {
-    return new Response(node, in);
-  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // serialization cruft                                                      //
+  //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public void write(DataOutput out) throws IOException {
+  protected void writeMessage(DataOutput out) throws IOException {
     out.writeInt(versions.size());
     for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
       out.writeLong(entry.getKey());
@@ -92,17 +68,39 @@ public class StalenessCheckMessage extends
     }
   }
 
-  public Response send(RemoteNode node) {
-    try {
-      Timing.STORE.begin();
-      return super.send(node, true);
-    } catch (UnreachableNodeException e) {
-      throw e;
-    } catch (FabricException e) {
-      throw new InternalError("Unexpected response from node.", e);
-    } finally {
-      Timing.STORE.end();
+  /* readMessage */
+  protected StalenessCheckMessage(DataInput in) throws IOException {
+    this(readMap(in));
+  }
+
+  /* helper method for deserialization constructor */
+  private static LongKeyHashMap<Integer> readMap(DataInput in) throws IOException {
+    int size = in.readInt();
+    LongKeyHashMap<Integer> versions = new LongKeyHashMap<Integer>(size);
+    for (int i = 0; i < size; i++)
+      versions.put(in.readLong(), in.readInt());
+
+    return versions;
+  }
+    
+
+  @Override
+  protected void writeResponse(DataOutput out, Response r) throws IOException {
+    out.writeInt(r.staleObjects.size());
+    for (SerializedObject obj : r.staleObjects) {
+      obj.write(out);
     }
+  }
+
+  @Override
+  protected Response readResponse(DataInput in) throws IOException {
+    int  size = in.readInt();
+    List<SerializedObject> staleObjects = new ArrayList<SerializedObject>(size);
+    for (int i = 0; i < size; i++) {
+      staleObjects.add(new SerializedObject(in));
+    }
+
+    return new Response(staleObjects);
   }
 
 }

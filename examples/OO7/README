@@ -33,33 +33,23 @@ traversals.
 
 	$ bin/start-store
 
-  2. If you are starting with a fresh store, you will need to initialize the
-     worker by creating its principal object on the store:
+  2. Create a OO7 database:
 
-	$ bin/init-worker
+	$ bin/create-db
 
-  3. Create a OO7 database:
+  3. Execute a traversal:
 
-	$ bin/create-db fab://[store_name]/[db_name] [db_size] [fanout]
-
-     e.g. to create a tiny database named "OO7" with fanout=3 on the
-     "database" store:
-
-	$ bin/create-db fab://database/OO7 tiny 3
-
-  4. Execute a traversal (e.g. T1 on the database named "OO7"):
-
-	$ bin/t1 fab://database/OO7
+	$ bin/t1
 
      The script will execute a traversal and print out timing information. To
      execute a traversal against a "hot" worker cache, add the "--hot" option:
 
-       $ bin/t1 fab://database/OO7 --hot
+       $ bin/t1 --hot
 
      Similar scripts for running T2a, T2b, T2c, and T6 traversals are also
      available in the 'bin' directory.
 
-  5. You can clean up the store's persistent state by removing the 'var'
+  4. You can clean up the store's persistent state by removing the 'var'
      directory:
 
 	$ rm -rf var

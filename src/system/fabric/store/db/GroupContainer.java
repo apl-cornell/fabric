@@ -9,10 +9,11 @@ import fabric.common.SerializedObject;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongSet;
 import fabric.dissemination.Glob;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 
 /**
- * Abstracts groups and globs.  This class is thread-safe.
+ * A group container contains a group or a glob, and supports converting between
+ * them.  This class is thread-safe.
  */
 public final class GroupContainer {
   private final Store store;
@@ -49,7 +50,7 @@ public final class GroupContainer {
    *          The principal accessing the group.
    * @return null if the given principal is not allowed to read the group.
    */
-  public ObjectGroup getGroup(NodePrincipal principal) {
+  public ObjectGroup getGroup(Principal principal) {
     if (!AuthorizationUtil.isReadPermitted(principal, store, labelOnum))
       return null;
 

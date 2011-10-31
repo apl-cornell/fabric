@@ -14,7 +14,7 @@ import polyglot.util.Position;
 public interface FabricNodeFactory extends JifNodeFactory {
   Atomic Atomic(Position pos, List<Stmt> statements);
   
-  AmbNewFabricArray AmbNewFabricArray(Position pos, TypeNode base, Expr location, Object expr, List dims, int addDims);
+  AmbNewFabricArray AmbNewFabricArray(Position pos, TypeNode base, Expr location, Object expr, List<Expr> dims, int addDims);
   
   New New(Position pos, TypeNode type, Expr location, List<Expr> args);
   New New(Position pos, TypeNode type, Expr location, List<Expr> args, ClassBody body);
@@ -33,8 +33,7 @@ public interface FabricNodeFactory extends JifNodeFactory {
   RetryStmt RetryStmt(Position pos);
   AbortStmt AbortStmt(Position pos);
   
-  @SuppressWarnings("unchecked")
-  Call Call(Position pos, Receiver target, Id name, Expr remoteWorker, List args);
+  Call Call(Position pos, Receiver target, Id name, Expr remoteWorker, List<Expr> args);
   
   Worker Worker(Position pos);
   

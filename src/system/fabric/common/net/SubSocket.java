@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import fabric.common.net.naming.SocketAddress;
+import fabric.lang.security.Principal;
 
 
 /**
@@ -53,6 +54,13 @@ public class SubSocket {
     return state.getInputStream();
   }
 
+  /** 
+   * Return the Principal that represents the remote endpoint of the connection
+   */
+  public final Principal getPrincipal() throws IOException {
+    return state.getPrincipal();
+  }
+  
   //////////////////////////////////////////////////////////////////////////////
   // State design pattern implementation                                      //
   //                                                                          //
@@ -87,6 +95,10 @@ public class SubSocket {
     public OutputStream getOutputStream() throws IOException {
       throw new IOException("Cannot get an output stream: socket " + this, cause);
     }
+    
+    public Principal getPrincipal() throws IOException {
+      throw new IOException("There is no principal associated with the socket: it " + this, cause);
+    }
   }
 
   /**
@@ -103,7 +115,7 @@ public class SubSocket {
         Channel.Connection conn = factory.getChannel(name).connect(); 
         state = new Connected(conn);
       } catch (final Exception exc) {
-        IOException wrapped = new IOException("failed to connect to " + name, exc);
+        IOException wrapped = new IOException("failed to connect to \"" + name + "\"", exc);
         state = new ErrorState(wrapped);
         throw wrapped;
       }
@@ -147,6 +159,11 @@ public class SubSocket {
       return conn.out;
     }
 
+    @Override
+    public Principal getPrincipal() {
+      return conn.getPrincipal();
+    }
+    
     public Connected(Channel.Connection conn) {
       this.conn = conn;
     }
