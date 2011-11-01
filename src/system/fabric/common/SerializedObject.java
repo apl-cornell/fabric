@@ -119,7 +119,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       out.write(className);
       
       // Class hash.
-      byte[] classHash = Util.hash(Surrogate.class);
+      byte[] classHash = SysUtil.hash(Surrogate.class);
       out.writeShort(classHash.length);
       out.write(classHash);
 
@@ -595,7 +595,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     byte[] className = implClass.getName().getBytes("UTF-8");
     out.writeShort(className.length);
     out.write(className);
-    byte[] hash = Util.hash(implClass);
+    byte[] hash = SysUtil.hash(implClass);
     out.writeShort(hash.length);
     out.write(hash);
 
@@ -759,8 +759,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
       String className = getClassName();
 
       // Check the class hash before deserializing.
-      if (!checkClassHash(Util.hashClass(className))) {
-        URL path = Util.locateClass(className);
+      if (!checkClassHash(SysUtil.hashClass(className))) {
+        URL path = SysUtil.locateClass(className);
         throw new InvalidClassException(
             className,
             "A class of the same name was found, but its hash did not match "

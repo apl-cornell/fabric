@@ -4,7 +4,7 @@ import java.util.*;
 
 import fabric.common.Timing;
 import fabric.common.TransactionID;
-import fabric.common.Util;
+import fabric.common.SysUtil;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
@@ -262,12 +262,12 @@ public final class Log {
     if (store.isLocalStore()) {
       Iterable<_Impl> writesToExclude =
           includeModified ? Collections.EMPTY_LIST : localStoreWrites;
-      for (_Impl write : Util.chain(writesToExclude, localStoreCreates))
+      for (_Impl write : SysUtil.chain(writesToExclude, localStoreCreates))
         result.remove(write.$getOnum());
     } else {
       Iterable<_Impl> writesToExclude =
           includeModified ? Collections.EMPTY_LIST : writes;
-      for (_Impl write : Util.chain(writesToExclude, creates))
+      for (_Impl write : SysUtil.chain(writesToExclude, creates))
         if (write.$getStore() == store) result.remove(write.$getOnum());
     }
 
@@ -363,7 +363,7 @@ public final class Log {
       entry.releaseLock(this);
 
     // Roll back writes and release write locks.
-    for (_Impl write : Util.chain(writes, localStoreWrites)) {
+    for (_Impl write : SysUtil.chain(writes, localStoreWrites)) {
       synchronized (write) {
         write.$copyStateFrom(write.$history);
 
@@ -534,7 +534,7 @@ public final class Log {
       throw new InternalError("something was read by a non-existent parent");
 
     // Release write locks and ownerships; update version numbers.
-    for (_Impl obj : Util.chain(writes, localStoreWrites)) {
+    for (_Impl obj : SysUtil.chain(writes, localStoreWrites)) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
@@ -557,7 +557,7 @@ public final class Log {
     }
 
     // Release write locks on created objects and set version numbers.
-    for (_Impl obj : Util.chain(creates, localStoreCreates)) {
+    for (_Impl obj : SysUtil.chain(creates, localStoreCreates)) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();

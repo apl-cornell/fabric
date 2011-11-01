@@ -4,7 +4,7 @@ import java.util.*;
 
 import fabric.common.RefTypeEnum;
 import fabric.common.SerializedObject;
-import fabric.common.Util;
+import fabric.common.SysUtil;
 import fabric.common.util.ComparablePair;
 
 /**
@@ -27,7 +27,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
         new TreeMap<ComparablePair<String, Long>, Long>();
     Collection<SerializedObject> surrogates = new ArrayList<SerializedObject>();
 
-    for (SerializedObject obj : Util.chain(req.creates, req.writes)) {
+    for (SerializedObject obj : SysUtil.chain(req.creates, req.writes)) {
       Iterator<Long> intraStore = obj.getIntraStoreRefIterator();
       Iterator<ComparablePair<String, Long>> interStore =
           obj.getInterStoreRefIterator();
