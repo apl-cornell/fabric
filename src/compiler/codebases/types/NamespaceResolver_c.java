@@ -118,10 +118,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
       if (!StringUtil.isNameShort(name)) {
         //First check if name uses a codebase alias.
         String first = StringUtil.getFirstComponent(name);
-        try {
-          alias_ns = resolveCodebaseName(first);
-        } catch (SemanticException e) {  
-        }
+        alias_ns = resolveCodebaseName(first);
       }
       if (alias_ns != null) {
         CodebaseTypeSystem ts = extInfo.typeSystem();
@@ -171,10 +168,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
         if (!StringUtil.isNameShort(name)) {
           //First check if name uses a codebase alias.
           String first = StringUtil.getFirstComponent(name);
-          try {
-            alias_ns = resolveCodebaseName(first);
-          } catch (SemanticException e) {  
-          }
+          alias_ns = resolveCodebaseName(first);
         }
         if (alias_ns != null) {
           CodebaseTypeSystem ts = extInfo.typeSystem();
@@ -446,25 +440,20 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   }
 
   @Override
-  public final URI resolveCodebaseName(String name) throws SemanticException {
+  public final URI resolveCodebaseName(String name) {
     URI ns = alias_cache.get(name);
     if (ns != null)
       return ns;
     if (!no_alias.contains(name)) {
-      try {
-        ns = resolveCodebaseNameImpl(name);
-        if (ns == null)
-          no_alias.add(name);
-        else {
-          alias_cache.put(name, ns);
-        }
-      } catch(SemanticException e) {
+      ns = resolveCodebaseNameImpl(name);
+      if (ns == null)
         no_alias.add(name);
-        throw e;
+      else {
+        alias_cache.put(name, ns);
       }
       return ns;
     }
-    throw new SemanticException("Unknown codebase name: " + name);
+    return null;
   }
   
   @Override

@@ -55,13 +55,14 @@ public class Name extends jif.parse.Name {
 
   public QualifierNode toQualifier() throws Exception {
     if (prefix == null) {
-      try {
-        FabricNodeFactory nf = (FabricNodeFactory) parser.nf;
-        URI cb = ts.namespaceResolver(ns).resolveCodebaseName(name);
+      FabricNodeFactory nf = (FabricNodeFactory) parser.nf;
+      URI cb = ts.namespaceResolver(ns).resolveCodebaseName(name);
+      if(cb != null) {
         return nf.CodebaseNode(pos, ns, name, cb);
+      } 
+      else {
+        return parser.nf.PackageNode(pos, ts.createPackage(this.ns, null, name));
       }
-      catch(SemanticException e) {}
-      return parser.nf.PackageNode(pos, ts.createPackage(this.ns, null, name));
     } else {
       Name p = (Name)prefix;
       QualifierNode qn = p.toQualifier();

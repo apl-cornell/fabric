@@ -173,7 +173,9 @@ public class PathResolver extends NamespaceResolver_c implements
   }
 
   @Override
-  public URI resolveCodebaseNameImpl(String name) throws SemanticException {
-    throw new SemanticException("Unknown codebase name " + name);
+  public URI resolveCodebaseNameImpl(String name) {
+    // if the name isn't in the cache, 
+    // then no codebase alias exists.
+    return null;
   }
 }

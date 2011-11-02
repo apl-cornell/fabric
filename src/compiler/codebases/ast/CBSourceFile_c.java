@@ -1,6 +1,10 @@
 package codebases.ast;
 
+import java.net.URI;
 import java.util.List;
+
+import codebases.frontend.CodebaseSource;
+import codebases.types.CodebaseTypeSystem;
 
 import polyglot.ast.Import;
 import polyglot.ast.Node;
@@ -8,10 +12,15 @@ import polyglot.ast.NodeFactory;
 import polyglot.ast.PackageNode;
 import polyglot.ast.SourceFile_c;
 import polyglot.ast.TopLevelDecl;
+import polyglot.types.ImportTable;
+import polyglot.types.Package;
+import polyglot.types.SemanticException;
+import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 import polyglot.util.TypedList;
 import polyglot.visit.NodeVisitor;
+import polyglot.visit.TypeBuilder;
 
 /**
  * An extension of SourceFiles that supports codebases.
@@ -26,6 +35,24 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
       List<TopLevelDecl> decls) {
     super(pos, package1, imports, decls);
     this.codebases = codebaseDecls;
+  }
+  
+  /**
+   * Build type objects for the source file.  Set the visitor's import table
+   * field before we recurse into the declarations.
+   */
+  @Override
+  public NodeVisitor buildTypesEnter(TypeBuilder tb) throws SemanticException {
+      CodebaseTypeSystem ts = (CodebaseTypeSystem) tb.typeSystem();
+      Package pkg = null;
+      if (package_ != null) {
+              pkg = package_.package_();
+      }
+      URI ns = ((CodebaseSource) source).namespace();
+      ImportTable it = ts.importTable(source, ns, pkg);
+      tb = tb.pushPackage(pkg);
+      tb.setImportTable(it);
+      return tb;
   }
 
   /** Visit the children of the source file. */
