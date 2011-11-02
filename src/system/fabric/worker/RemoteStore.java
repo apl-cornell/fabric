@@ -92,12 +92,9 @@ public class RemoteStore extends RemoteNode implements Store {
   private transient final SerializedCollector collector;
   
   private class SerializedCollector extends Thread {
-    private final ReferenceQueue<SerializedObject> queue;
-
     SerializedCollector() {
       super("Serialized object collector for store " + name);
       setDaemon(true);
-      queue = new ReferenceQueue<SerializedObject>();
     }
 
     @Override
@@ -105,7 +102,7 @@ public class RemoteStore extends RemoteNode implements Store {
       while (true) {
         try {
           SerializedObjectSoftRef ref =
-              (SerializedObjectSoftRef) queue.remove();
+              (SerializedObjectSoftRef) serializedRefQueue.remove();
 
           synchronized (serialized) {
             serialized.remove(ref.onum);
