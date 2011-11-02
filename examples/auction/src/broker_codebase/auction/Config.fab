@@ -6,10 +6,10 @@ public final class Config {
   public static final String{*!:} airlineBStoreName = "airlineBStore";
   public static final String{*!:} userStoreName = "userStore";
   
-  public static final String{*!:} brokerWorkerName = "brokerWorker";
-  public static final String{*!:} airlineAWorkerName = "airlineAWorker";
-  public static final String{*!:} airlineBWorkerName = "airlineBWorker";
-  public static final String{*!:} userWorkerName = "userWorker";
+  public static final String{*!:} brokerWorkerName = "brokerStore";
+  public static final String{*!:} airlineAWorkerName = "airlineAStore";
+  public static final String{*!:} airlineBWorkerName = "airlineBStore";
+  public static final String{*!:} userWorkerName = "userStore";
 
   /**
    * The key for the airlineA server object in the root map.

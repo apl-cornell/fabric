@@ -45,9 +45,10 @@
         <exclude name="blog/build.xml"/>
         <exclude name="cms/build.xml"/>
         <exclude name="sif-hello/build.xml"/>
-        <exclude name="social/build.xml"/>
+        <exclude name="birthday/build.xml"/>
         <exclude name="travel/build.xml"/>
         <exclude name="tree/build.xml"/>
+	<exclude name="auction/build.xml"/>
       </fileset>
     </subant>
   </target>

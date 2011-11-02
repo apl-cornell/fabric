@@ -21,10 +21,10 @@
   <property name="user.src" value="${home}/src/user_codebase/"/>
   <property name="airlineA2.src" value="${home}/src/airlineA2_codebase/"/>
 
-  <property name="broker.worker" value="brokerWorker"/>
-  <property name="airlineA.worker" value="airlineAWorker"/>
-  <property name="airlineB.worker" value="airlineBWorker"/>
-  <property name="user.worker" value="userWorker"/>
+  <property name="broker.worker" value="brokerStore"/>
+  <property name="airlineA.worker" value="airlineAStore"/>
+  <property name="airlineB.worker" value="airlineBStore"/>
+  <property name="user.worker" value="userStore"/>
   <property name="airlineA2.worker" value="airlineAWorker"/>
 
   <property name="broker.codebase.file" value="${home.codebases}/${broker.worker}.codebase"/>
@@ -334,7 +334,8 @@
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
       <arg line="--name ${user.worker} ${user.codebase}auction.InitUser"/>
-    </exec>	
+    </exec>
+    
   </target>
 
   <target name="init-remote2" depends="load-codebases-cb">
