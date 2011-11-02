@@ -1,0 +1,43 @@
+/**
+ * This class contains the main method, which executes the script of the example
+ * application, including initialization and execution.
+ */
+public class Main {
+
+	/** Global information that we assume everyone knows */
+	public static principal snappStore;
+	public static principal snappWorker;
+
+	public static principal mapAppStore;
+	public static principal mapAppWorker;
+
+	public static principal mapServStore;
+	public static principal mapServWorker;
+
+	public static principal aliceWorker;
+	public static principal bobWorker;
+
+
+	public static void main(principal God, String[] args) {
+		snapp_initialize();
+		mapserv_initialize();
+		mapapp_initialize();
+
+		a_initialize();
+		b_initialize();
+
+		a_add_delegations();
+		b_add_delegations();
+
+		a_run_app();
+	}
+
+
+}
+
+
+
+/*
+** vim: ts=2 sw=2 cindent cino=\:0 syntax=java
+*/
+

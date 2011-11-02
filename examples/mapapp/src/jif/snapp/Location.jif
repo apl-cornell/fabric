@@ -1,0 +1,10 @@
+package snapp;
+
+public class Location {
+  public final int x{this};
+  public final int y{this};
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
