@@ -49,7 +49,7 @@ public class Options extends polyglot.pth.Options {
     this.testFilter = testFilter;
   }
 
-  public boolean isShowResultsOnly() {
+  public boolean shouldShowResultsOnly() {
     return showResultsOnly;
   }
 
@@ -57,7 +57,7 @@ public class Options extends polyglot.pth.Options {
     this.showResultsOnly = showResultsOnly;
   }
 
-  public boolean isTestPreviouslyFailedOnly() {
+  public boolean shouldTestPreviouslyFailedOnly() {
     return testPreviouslyFailedOnly;
   }
 
@@ -65,7 +65,7 @@ public class Options extends polyglot.pth.Options {
     this.testPreviouslyFailedOnly = testPreviouslyFailedOnly;
   }
 
-  public boolean isDeleteOutputFiles() {
+  public boolean shouldDeleteOutputFiles() {
     return deleteOutputFiles;
   }
 

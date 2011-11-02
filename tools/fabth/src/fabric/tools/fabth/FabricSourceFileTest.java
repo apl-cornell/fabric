@@ -40,18 +40,20 @@ public class FabricSourceFileTest extends SourceFileTest {
     try {
       fabricMain.start(cmdLine, eq);
     } finally {
-      // if (Main.options.deleteOutputFiles) {
-      // deleteDir(tmpdir);
-      // }
+       if (Main.options.shouldDeleteOutputFiles()) {
+       deleteDir(tmpdir);
+       }
 
       setDestDir(null);
     }
   }
 
+  @Override
   protected void setExtensionClassname(String extClassname) {
     super.setExtensionClassname(extClassname);
   }
 
+  @Override
   protected void setExtraCmdLineArgs(String args) {
     super.setExtraCmdLineArgs(args);
   }

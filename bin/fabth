@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+source "$(dirname $0)/defs"
 
 prg=`basename "$0"`
 dir=`dirname "$0"`/..
@@ -60,7 +61,7 @@ vmargs=
 classpath=
 java=java
 
-polyglot() {
+fabth() {
   eval "$java" "$vmargs" -classpath "'$classpath'" fabric.tools.fabth.Main "$@"
 }
 
@@ -121,7 +122,7 @@ if [ "$usage" = 1 ]; then
 fi
 
 if [ "$verbose" = 1 ]; then
-  echo "$java" "$vmargs" -classpath "'$classpath'" polyglot.main.Main "$@"
+  echo "$java" "$vmargs" -classpath "'$classpath'" fabric.tools.fabth.Main "$@"
 fi
 
-polyglot "$args"
+fabth "$args"

@@ -9,7 +9,6 @@ import fabric.Main;
 import polyglot.pth.*;
 
 parser Grm extends polyglot.pth.Grm {:
-    Lexer_c lexer;
     public Grm(String filename) {
         super(filename);
     }
@@ -19,8 +18,13 @@ parser Grm extends polyglot.pth.Grm {:
 
     public Grm(Lexer_c l) {
         super(l);
-    }    
+    }
 :}
+
+scan with {:
+    return super.scan();
+:}
+
 
 start with goal;
 
