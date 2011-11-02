@@ -74,8 +74,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * 
    * @param obj
    *          The object to serialize.
-   * @deprecated This should only be used by fabric.store.InProcessStore and for
-   *             debugging (worker.debug.*).
+   * @deprecated This is method is rather inefficient. Use sparingly.
    */
   public SerializedObject(_Impl obj) {
     try {

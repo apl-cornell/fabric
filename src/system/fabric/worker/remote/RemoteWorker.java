@@ -2,21 +2,31 @@ package fabric.worker.remote;
 
 import java.io.IOException;
 
-import fabric.common.ObjectGroup;
-import fabric.common.TransactionID;
 import fabric.common.ClassRef.FabricClassRef;
+import fabric.common.ObjectGroup;
+import fabric.common.SerializedObject;
+import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubSocket;
 import fabric.common.net.SubSocketFactory;
+import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
-import fabric.messages.*;
+import fabric.messages.AbortTransactionMessage;
+import fabric.messages.CommitTransactionMessage;
+import fabric.messages.DirtyReadMessage;
+import fabric.messages.InterWorkerStalenessMessage;
+import fabric.messages.Message;
 import fabric.messages.Message.NoException;
+import fabric.messages.ObjectUpdateMessage;
+import fabric.messages.PrepareTransactionMessage;
+import fabric.messages.RemoteCallMessage;
+import fabric.messages.TakeOwnershipMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
@@ -109,22 +119,26 @@ public final class RemoteWorker extends RemoteNode {
    *          the tid for the current transaction.
    */
   public void readObject(TransactionID tid, _Impl obj) {
-    _Impl remoteObj;
+    Pair<Store, SerializedObject> remoteSerializedObj;
     try {
-      remoteObj = readObject(tid, obj.$getStore(), obj.$getOnum());
+      remoteSerializedObj = readObject(tid, obj.$getStore(), obj.$getOnum());
     } catch (AccessException e) {
       throw new InternalError("Inter-worker object read failed.", e);
     }
 
-    if (remoteObj == null)
+    if (remoteSerializedObj == null)
       throw new InternalError("Inter-worker object read failed.");
+    
+    _Impl remoteObj =
+        remoteSerializedObj.second.deserialize(remoteSerializedObj.first);
     obj.$copyAppStateFrom(remoteObj);
   }
 
-  public _Impl readObject(TransactionID tid, Store store, long onum)
+  public Pair<Store, SerializedObject> readObject(TransactionID tid, Store store, long onum)
       throws AccessException {
     DirtyReadMessage.Response response = send(new DirtyReadMessage(tid, store, onum));
-    return response.obj;
+    if (response.obj == null) return null;
+    return new Pair<Store, SerializedObject>(response.store, response.obj);
   }
 
   /**

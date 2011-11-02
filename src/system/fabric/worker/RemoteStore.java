@@ -195,10 +195,6 @@ public class RemoteStore extends RemoteNode implements Store {
 
   private final Object._Impl readObject(boolean useDissem, long onum)
       throws AccessException {
-    // Intercept reads of global constants and redirect them to the local store.
-    if (ONumConstants.isGlobalConstant(onum))
-      return Worker.instance.localStore.readObject(onum);
-
     // check object table. Use fetchlocks as a mutex for atomically checking the
     // cache and creating a mutex for the object fetch in the event of a cache
     // miss.
@@ -320,9 +316,7 @@ public class RemoteStore extends RemoteNode implements Store {
       else result = surrogate.store.readObjectNoDissem(surrogate.onum);
     }
 
-    synchronized (objects) {
-      objects.put(onum, result.$ref);
-    }
+    cache(result);
 
     return result;
   }
@@ -509,7 +503,10 @@ public class RemoteStore extends RemoteNode implements Store {
       throw new InternalError("Caching object at wrong store");
 
     synchronized (objects) {
-      if (objects.get(ref.onum) != null)
+      FabricSoftRef existingRef = objects.get(ref.onum);
+      if (ref == existingRef)
+        return;
+      else if (existingRef != null)
         throw new InternalError("Conflicting cache entry");
 
       objects.put(ref.onum, ref);

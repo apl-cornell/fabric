@@ -2,6 +2,7 @@ package fabric.worker;
 
 import java.util.Collection;
 
+import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
@@ -47,14 +48,14 @@ public interface Store {
   _Impl readObject(long onum) throws AccessException;
 
   /**
-   * Returns the requested _Impl object, fetching it directly from the Store if
-   * it is not resident.
+   * Returns a serialized copy of the requested object, fetching it directly
+   * from the Store if it is not resident.
    * 
    * @param onum
    *          The identifier of the requested object
-   * @return The requested object
+   * @return a serialized copy of the requested object
    */
-  _Impl readObjectNoDissem(long onum) throws AccessException;
+  SerializedObject readObjectNoDissem(long onum) throws AccessException;
 
   /**
    * Returns the requested _Impl object if it exists in the object cache.

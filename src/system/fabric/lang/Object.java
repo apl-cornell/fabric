@@ -43,7 +43,7 @@ public interface Object {
   /** The object's onum. */
   long $getOnum();
 
-  /** A proxy for this object. */
+  /** @return an exact proxy for this object. */
   _Proxy $getProxy();
 
   /** Label for this object */
@@ -116,54 +116,71 @@ public interface Object {
         this.anchor = impl;
       else this.anchor = null;
     }
+    
+    /**
+     * @return an _Impl for the object, if it exists in the worker's cache;
+     *         otherwise, null.
+     */
+    private final _Impl $checkCache() {
+      // Check soft ref.
+      _Impl result = ref.get();
+      if (result != null) return result;
+      
+      // Check anchor.
+      if (anchor != null) return anchor;
+      
+      // Intercept reads of global constants and redirect them to the local store.
+      if (ONumConstants.isGlobalConstant(ref.onum)) {
+        return Worker.getWorker().getLocalStore().readObject(ref.onum);
+      }
+      
+      // Check worker's cache.
+      result = ref.store.readObjectFromCache(ref.onum);
+      if (result != null) {
+        // The _Impl we just got has a fresher soft ref than ours.
+        ref = result.$ref;
+      }
+      
+      return result;
+    }
 
     @Override
     public final _Impl fetch() {
-      _Impl result = ref.get();
-      
-      if (result == null) result = anchor;
+      _Impl result = $checkCache();
+      if (result != null) return result;
 
-      if (result == null) {
-        // Object has been evicted.
-        try {
-          // First, check the worker's cache.
-          result = ref.store.readObjectFromCache(ref.onum);
-          
-          if (result == null) {
-            // Next, check the current transaction's create map.
-            try {
-              Timing.FETCH.begin();
-              TransactionManager tm = TransactionManager.getInstance();
-              RemoteWorker worker = tm.getFetchWorker(this);
-              if (worker != null) {
-                // Sanity check.
-                RemoteWorker localWorker = Worker.getWorker().getLocalWorker();
-                if (worker == localWorker) {
-                  throw new InternalError();
-                }
-
-                // Fetch from the worker.
-                result = worker.readObject(tm.getCurrentTid(), ref.store, ref.onum);
-                ref.store.cache(result);
-              } else if (this instanceof SecretKeyObject
-                  || ref.store instanceof InProcessStore) {
-                // Fetch from the store. Bypass dissemination when reading key
-                // objects and when reading from an in-process store.
-                result = ref.store.readObjectNoDissem(ref.onum);
-              } else {
-                // Fetch from the store.
-                result = ref.store.readObject(ref.onum);
-              }
-            } finally {
-              Timing.FETCH.end();
-            }
+      // Object has been evicted.
+      try {
+        // Check the current transaction's update map.
+        Timing.FETCH.begin();
+        TransactionManager tm = TransactionManager.getInstance();
+        RemoteWorker worker = tm.getFetchWorker(this);
+        if (worker != null) {
+          // Sanity check.
+          RemoteWorker localWorker = Worker.getWorker().getLocalWorker();
+          if (worker == localWorker) {
+            throw new InternalError();
           }
-        } catch (AccessException e) {
-          throw new RuntimeFetchException(e);
-        }
 
-        ref = result.$ref;
+          // Fetch from the worker.
+          result = worker.readObject(tm.getCurrentTid(), ref.store, ref.onum);
+          ref.store.cache(result);
+        } else if (this instanceof SecretKeyObject
+            || ref.store instanceof InProcessStore) {
+          // Fetch from the store. Bypass dissemination when reading key
+          // objects and when reading from an in-process store.
+          result = ref.store.readObjectNoDissem(ref.onum);
+        } else {
+          // Fetch from the store.
+          result = ref.store.readObject(ref.onum);
+        }
+      } catch (AccessException e) {
+        throw new RuntimeFetchException(e);
+      } finally {
+        Timing.FETCH.end();
       }
+
+      ref = result.$ref;
 
       return result;
     }
@@ -185,11 +202,26 @@ public interface Object {
 
     @Override
     public final Label get$label() {
+      _Impl impl = $checkCache();
+      if (impl != null) return impl.get$label();
+      
+      // Object not in worker cache. Avoid deserialization by obtaining a
+      // reference to the object's label directly from the serialized object. We
+      // can do this without interacting with the transaction manager, since
+      // labels are immutable, and stores are trusted to enforce this.
       return fetch().get$label();
     }
     
     @Override
     public final Label get$accesslabel() {
+      _Impl impl = $checkCache();
+      if (impl != null) return impl.get$accesslabel();
+      
+      // Object not in worker cache. Avoid deserialization by obtaining a
+      // reference to the object's access label directly from the serialized
+      // object. We can do this without interacting with the transaction
+      // manager, since access labels are immutable, and stores are trusted to
+      // enforce this.
       return fetch().get$accesslabel();
     }
 
