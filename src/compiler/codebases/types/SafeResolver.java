@@ -1,12 +1,10 @@
-package fabil;
+package codebases.types;
 
 import java.net.URI;
 import java.util.Arrays;
 
 import polyglot.types.SemanticException;
 import codebases.frontend.ExtensionInfo;
-import codebases.types.NamespaceResolver;
-import codebases.types.PathResolver;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 
@@ -26,7 +24,7 @@ public class SafeResolver extends PathResolver implements NamespaceResolver {
   }
 
   @Override
-  public URI resolveCodebaseNameImpl(String name) throws SemanticException {
+  public URI resolveCodebaseNameImpl(String name) {
     return inner.resolveCodebaseName(name);
   }
 
