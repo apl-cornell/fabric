@@ -1,0 +1,15 @@
+package util;
+
+import jif.util.Set;
+
+/**
+ * A group is a principal object that delegates to each of its members.
+ */
+public class Group[label entries] implements Set[entries], Principal {
+	
+}
+
+/*
+** vim: ts=2 sw=2 cindent cino=\:0 syntax=java
+*/
+

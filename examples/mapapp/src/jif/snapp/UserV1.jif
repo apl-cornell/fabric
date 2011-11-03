@@ -1,6 +1,6 @@
 package snapp;
 
-import jif.util.List;
+import util.Group;
 
 /**
  * A User object contains all of the data associated with a given user account
@@ -12,28 +12,33 @@ import jif.util.List;
  */
 public class UserV1 extends AbstractPrincipal {
 
-  public final List[{this←;this→friendInfo}]       {this←;this→friendInfo}   friends;  /** The user's friends */
-  public       Location[{this←;this→locationInfo}] {this←;this→locationInfo} location; /** The user's location */
+  /** The user's location, only readable by members of the locationInfo group */
+  public final Location [{this←;this→locationInfo}] {this←} location;
 
-  public final principal       {this←} owner;        /* The principal that owns this user account */
-  public final Snapp           {this←} network;      /* The social network that can act for this account. */
-  public final FriendPrincipal {this←} friends;      /* The group containing the user's friends */
+  /** The user's friends,  only readable by members of the friendInfo   group */
+  public final Group    [{this←;this→friendInfo}]   {this←}   friends;
 
-  public final principal       {this←} friendInfo;   /* The group containing anyone who can learn the user's friends */
-  public final principal       {this←} locationInfo; /* The group containing anyone who can see the user's location */
 
-  public UserV1(principal owner) {
-    this.owner = owner;
-    this.friendInfo   = new FriendPrincipal();
-    this.locationInfo = new DelegatingPrincipal(p);
-    this.friends      = new DelegatingPrincipal(p);
+  public final Snapp {this←} network;               /* The social network that can act for this account. */
+  public final Group[{this←}] {this←} friendInfo;   /* The group containing anyone who can learn the user's friends */
+  public final Group[{this←}] {this←} locationInfo; /* The group containing anyone who can see the user's location */
 
-    this.location = null;
-    this.friends  = new List();
-    this.friends.add(this);
+  public UserV1(String name, principal owner, Snapp network) throws NullPointerException {
+    super(name);
+
+    this.addDelegatesTo(owner);
+    this.addDelegatesTo(network);
+
+    this.network = network;
+
+    this.friendInfo   = new Group[{this←}]();
+    this.locationInfo = new Group[{this←}]();
+    this.friends      = new Group[{this←;this→friendInfo}]();
+
+    this.location = new Location();
   }
 
-  public void setLocation(Location loc) {
+  public void setLocation(Location[{this←;this→friendInfo}] loc) {
     this.location = loc;
   }
 
@@ -41,7 +46,7 @@ public class UserV1 extends AbstractPrincipal {
     this.friends.add(friend);
   }
 
-  public void unFriend(UserV1 friend) {
+  public void removeFriend(UserV1 friend) {
     if (friend == this)
       throw new Exception("you have to be your own friend");
     this.friends.remove(friend);

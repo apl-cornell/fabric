@@ -1,7 +1,9 @@
 package snapp;
 
-public class Snapp {
-
+public class Snapp extends AbstractPrincipal {
+  public Snapp() {
+    super("Snapp");
+  }
 }
 
 /*
