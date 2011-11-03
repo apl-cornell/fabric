@@ -139,11 +139,13 @@ public interface Object {
       }
       
       // Check worker's cache.
-      result = ref.store.readFromCache(ref.onum).getImpl(true);
-      if (result != null) {
-        // The _Impl we just got has a fresher soft ref than ours.
-        ref = result.$ref;
-      }
+      ObjectCache.Entry entry = ref.store.readFromCache(ref.onum);
+      if (entry == null) return null;
+      
+      result = entry.getImpl(true);
+
+      // The _Impl we just got has a fresher soft ref than ours.
+      ref = result.$ref;
       
       return result;
     }
