@@ -3,35 +3,60 @@
 APP_HOME="$(dirname $0)/.."
 # Fabric root
 FABRIC="${APP_HOME}/.."
-PATH="${PATH}:${FABRIC}/bin"
+export PATH="${PATH}:${FABRIC}/bin:${FABRIC}/tests/bin"
 export FABRIC_HOME="${APP_HOME}"
 
 name="tests"
+keep=false
+
 while true; do
   case "$1" in
     "") break;;
 	--name) name="$2"; shift 2;;
     --start-workers) workers=$2; shift 2;;
     --start-stores)  stores=$2; shift 2;;
+    --keep-nodes)  keep=true; shift 1;;
 	*) args="${args} '$1'"; shift;;
   esac
 done
+
 for s in ${stores//,/ }; 
 do 
 	echo "Starting store $s" 
-	screen -d -m -S $s fab-store --name $s;  
-	i=$[$i+1];
+	screen -L -dmS $s;
+	screenbug $s;
+	screen -S $s -X exec start-store --name $s;  
 done
+
 if [ -n ${stores} ]
 then
 	echo "Waiting for stores to start up" 
-	sleep 5	
+	for s in {0..10}
+	do 
+		printf "."
+		sleep 1	
+	done
+	echo "done"
 fi
+
 for w in ${workers//,/ }
 do	 
 	echo "Starting worker $w" 
-	screen -d -m -S $w fab --name $w;  
+	screen -L -dmS $w;
+	screenbug $w;
+	screen -S $w -X exec start-worker --name $w;  
 done
 
-echo "running fabth ${args}"
 fabth ${args}
+
+if [ ! ${keep} ] 
+then
+	for s in ${stores//,/ }
+	do 
+		screen -S $s -X quit
+	done
+	for w in ${workers//,/ }
+	do
+		screen -S $w -X quit
+	done
+fi
