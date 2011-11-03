@@ -25,6 +25,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.ComparablePair;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.worker.LocalStore;
 import fabric.worker.Store;
@@ -818,7 +819,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
           .synchronizedMap(new HashMap<Class<? extends _Impl>, Constructor<?>>());
 
   /**
-   * Used by the worker to deserialize this object.
+   * Deserializes this object, traversing surrogates as necessary.
    * 
    * @param store
    *          The store on which this object lives.
@@ -828,7 +829,13 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public _Impl deserialize(Store store) {
     try {
-      Class<? extends _Impl> implClass = getClassRef().toImplClass();
+      ClassRef classRef = getClassRef();
+      if (classRef.equals(ClassRef.SURROGATE)) {
+        // Chase down surrogate.
+        return new _Proxy(store, getOnum()).fetch();
+      }
+      
+      Class<? extends _Impl> implClass = classRef.toImplClass();
 
       Constructor<?> constructor = constructorTable.get(implClass);
 

@@ -12,6 +12,7 @@ import java.util.Map;
 
 import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
+import fabric.common.SerializedObject;
 import fabric.common.Timing;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
@@ -24,6 +25,7 @@ import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.LocalStore;
+import fabric.worker.ObjectCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
@@ -131,11 +133,13 @@ public interface Object {
       
       // Intercept reads of global constants and redirect them to the local store.
       if (ONumConstants.isGlobalConstant(ref.onum)) {
-        return Worker.getWorker().getLocalStore().readObject(ref.onum);
+        ObjectCache.Entry entry =
+            Worker.getWorker().getLocalStore().readObject(ref.onum);
+        return entry.getImpl(true);
       }
       
       // Check worker's cache.
-      result = ref.store.readObjectFromCache(ref.onum);
+      result = ref.store.readFromCache(ref.onum).getImpl(true);
       if (result != null) {
         // The _Impl we just got has a fresher soft ref than ours.
         ref = result.$ref;
@@ -149,7 +153,7 @@ public interface Object {
       _Impl result = $checkCache();
       if (result != null) return result;
 
-      // Object has been evicted.
+      // Object has been evicted.  Fetch from the network.
       try {
         // Check the current transaction's update map.
         Timing.FETCH.begin();
@@ -163,16 +167,18 @@ public interface Object {
           }
 
           // Fetch from the worker.
-          result = worker.readObject(tm.getCurrentTid(), ref.store, ref.onum);
-          ref.store.cache(result);
+          Pair<Store, SerializedObject> serialized =
+              worker.readObject(tm.getCurrentTid(), ref.store, ref.onum);
+          ObjectCache.Entry entry = serialized.first.cache(serialized.second);
+          result = entry.getImpl(true);
         } else if (this instanceof SecretKeyObject
             || ref.store instanceof InProcessStore) {
           // Fetch from the store. Bypass dissemination when reading key
           // objects and when reading from an in-process store.
-          result = ref.store.readObjectNoDissem(ref.onum);
+          result = ref.store.readObjectNoDissem(ref.onum).getImpl(true);
         } else {
           // Fetch from the store.
-          result = ref.store.readObject(ref.onum);
+          result = ref.store.readObject(ref.onum).getImpl(true);
         }
       } catch (AccessException e) {
         throw new RuntimeFetchException(e);
@@ -323,6 +329,12 @@ public interface Object {
     private _Proxy $proxy;
 
     public final FabricSoftRef $ref;
+    
+    /**
+     * Pins the worker's cache entry for this object. This prevents the cache
+     * entry from being garbage collected while this _Impl is still in memory.
+     */
+    private ObjectCache.Entry $cacheEntry;
 
     /**
      * A reference to the class object. TODO Figure out class loading.
@@ -560,6 +572,18 @@ public interface Object {
     @Override
     public final _Impl fetch() {
       return this;
+    }
+    
+    public final void $setCacheEntry(ObjectCache.Entry entry) {
+      // Sanity check.
+      if (this.$cacheEntry != null) {
+        throw new InternalError("Conflicting cache entry");
+      }
+      this.$cacheEntry = entry;
+    }
+    
+    public final ObjectCache.Entry $getCacheEntry() {
+      return this.$cacheEntry;
     }
     
     @Override

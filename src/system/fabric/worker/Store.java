@@ -38,34 +38,33 @@ public interface Store {
       TransactionPrepareFailedException;
 
   /**
-   * Returns the requested _Impl object. If the object is not resident, it is
-   * fetched from the Store via dissemination.
+   * Returns the cache entry for the given onum. If the object is not resident,
+   * it is fetched from the store via dissemination.
    * 
    * @param onum
    *          The identifier of the requested object
-   * @return The requested object
+   * @return cache entry for the requested object.
    */
-  _Impl readObject(long onum) throws AccessException;
+  ObjectCache.Entry readObject(long onum) throws AccessException;
 
   /**
-   * Returns a serialized copy of the requested object, fetching it directly
-   * from the Store if it is not resident.
+   * Returns the cache entry for the requested object. If the object is not
+   * resident, it is fetched directly from the store.
    * 
    * @param onum
    *          The identifier of the requested object
-   * @return a serialized copy of the requested object
+   * @return the cache entry for the requested object.
    */
-  SerializedObject readObjectNoDissem(long onum) throws AccessException;
+  ObjectCache.Entry readObjectNoDissem(long onum) throws AccessException;
 
   /**
-   * Returns the requested _Impl object if it exists in the object cache.
+   * Returns the cache entry for the given onum.
    * 
    * @param onum
    *          The identifier of the requested object.
-   * @return The requested object if it exists in the object cache; otherwise,
-   *         null.
+   * @return The entry if it exists in the object cache; otherwise, null.
    */
-  _Impl readObjectFromCache(long onum);
+  ObjectCache.Entry readFromCache(long onum);
 
   /**
    * Notifies the store that the transaction is being Aborted.
@@ -113,9 +112,8 @@ public interface Store {
    * 
    * @param onum
    *          Onum of the object that was evicted.
-   * @return true iff the onum was found in cache.
    */
-  public boolean notifyEvict(long onum);
+  public void notifyEvict(long onum);
 
   /**
    * Evicts the object with the given onum from cache.
@@ -128,4 +126,11 @@ public interface Store {
    * Adds the given object to the cache.
    */
   public void cache(_Impl impl);
+
+  /**
+   * Adds the given object to the cache.
+   * 
+   * @return the resulting cache entry.
+   */
+  public ObjectCache.Entry cache(SerializedObject obj);
 }

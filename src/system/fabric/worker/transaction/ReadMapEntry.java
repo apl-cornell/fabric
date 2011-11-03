@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fabric.worker.FabricSoftRef;
+import fabric.worker.ObjectCache;
 import fabric.lang.Object._Impl;
 
 public final class ReadMapEntry {
@@ -72,7 +73,8 @@ public final class ReadMapEntry {
       // If object was a local-store object, it doesn't exist anymore.
       if (this.obj.store.isLocalStore()) return;
       
-      obj = this.obj.store.readObjectFromCache(this.obj.onum);
+      ObjectCache.Entry entry = this.obj.store.readFromCache(this.obj.onum);
+      obj = entry.getImpl(false);
       if (obj == null) return;
 
       synchronized (this) {

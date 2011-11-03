@@ -25,19 +25,21 @@ public class FabricSoftRef extends SoftReference<_Impl> {
   }
   
   /**
-   * Evicts the Impl associated with this soft reference from the worker's cache.
+   * Evicts the _Impl associated with this soft reference from the worker's
+   * cache.
    * 
-   * @return true if the impl was found in cache.
+   * @return true iff the _Impl was found in cache.
    */
   public boolean evict() {
-    if (store instanceof LocalStore) {
-      throw new InternalError("evicting local store object");
-    }
-    
-    clear();
-    boolean result = store.notifyEvict(onum);
+    return store.evict(onum);
+  }
+  
+  /**
+   * Decrements the associated ReadMapEntry's pin count and does garbage
+   * collection if possible.
+   */
+  public void depin() {
     if (readMapEntry != null && readMapEntry.depin()) readMapEntry = null;
-    return result;
   }
   
   public void readMapEntry(ReadMapEntry readMapEntry) {
@@ -56,7 +58,7 @@ public class FabricSoftRef extends SoftReference<_Impl> {
         try {
           FabricSoftRef ref = (FabricSoftRef) queue.remove();
           ref.store.notifyEvict(ref.onum);
-          if (ref.readMapEntry.depin()) ref.readMapEntry = null;
+          ref.depin();
         } catch (InterruptedException e) {}
       }
     }
