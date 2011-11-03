@@ -1,6 +1,9 @@
 import snapp.*;
 import mapapp.*;
 import mapserv.*;
+import jif.principals.AliceNode;
+import jif.principals.BobNode;
+import jif.principals.SnappNode;
 
 /**
  * This class contains the main method, which executes the script of the example
@@ -8,6 +11,7 @@ import mapserv.*;
  */
 public class Main {
 
+  // these are the contents of the root maps
   static Snapp     snapp;
   static MapServer mapServ;
   static MapApp    mapApp;
@@ -15,6 +19,10 @@ public class Main {
   static UserV1    bob;
 
   public static void main(principal God, String[] args) {
+    // Each method here represents a step that is intended to be executed by
+    // the appropriate worker.  For example, snapp_initialize should be invoked by
+    // snapp's worker, whereas a_run_app should be invoked by alice's worker.
+
     snapp_initialize();
     mapserv_initialize();
     mapapp_initialize();
@@ -33,7 +41,7 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void snapp_initialize() {
-    snapp = new Snapp(SnappNode);
+    snapp = new Snapp(SnappNode.getInstance());
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -57,7 +65,7 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void a_initialize() {
-    alice = snapp.createUser(AliceNode);
+    alice = snapp.createUser(AliceNode.getInstance());
   }
 
   static void a_add_delegations() {
@@ -75,14 +83,13 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void b_initialize() {
-    bob = snapp.createUser(BobNode);
+    bob = snapp.createUser(BobNode.getInstance());
   }
 
   static void b_add_delegations() {
     bob.friends.add(alice);
     bob.locationInfo.add(bob.friends);
   }
-
 }
 
 
@@ -90,4 +97,3 @@ public class Main {
 /*
 ** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
 */
-

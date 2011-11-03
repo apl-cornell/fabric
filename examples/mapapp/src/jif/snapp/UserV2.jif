@@ -1,0 +1,23 @@
+package snapp;
+
+import util.Group;
+
+/**
+ * Version 2 of the User class.  Adds moods.
+ */
+public class UserV2 extends UserV1 {
+  public Mood [{this←;this→moodInfo}] {this←;this→moodInfo} mood;
+
+  public final Group [{this←}] {this←} moodInfo;
+
+  public UserV2(String name, principal owner, Snapp network) throws NullPointerException {
+    this.moodInfo = new Group[{this←}] ();
+    this.mood     = new Mood("indecisive");
+    super(name, owner, network);
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
