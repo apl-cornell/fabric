@@ -1,22 +1,18 @@
+import snapp.*;
+import mapapp.*;
+import mapserv.*;
+
 /**
  * This class contains the main method, which executes the script of the example
  * application, including initialization and execution.
  */
 public class Main {
 
-  /** Global information that we assume everyone knows */
-  public static principal snappStore;
-  public static principal snappWorker;
-
-  public static principal mapAppStore;
-  public static principal mapAppWorker;
-
-  public static principal mapServStore;
-  public static principal mapServWorker;
-
-  public static principal aliceWorker;
-  public static principal bobWorker;
-
+  static Snapp     snapp;
+  static MapServer mapServ;
+  static MapApp    mapApp;
+  static UserV1    alice;
+  static UserV1    bob;
 
   public static void main(principal God, String[] args) {
     snapp_initialize();
@@ -37,6 +33,7 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void snapp_initialize() {
+    snapp = new Snapp(SnappNode);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -44,6 +41,7 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void mapserv_initialize() {
+    mapServ = new MapServer();
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -51,6 +49,7 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void mapapp_initialize() {
+    mapApp = new MapApp(mapServ);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -58,13 +57,17 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void a_initialize() {
-    
+    alice = snapp.createUser(AliceNode);
   }
 
   static void a_add_delegations() {
+    alice.friends.add(bob);
+    alice.friendInfo.add(mapServ);
+    alice.locationInfo.add(mapServ);
   }
 
   static void a_run_app() {
+    mapApp.run(alice);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -72,9 +75,12 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void b_initialize() {
+    bob = snapp.createUser(BobNode);
   }
 
   static void b_add_delegations() {
+    bob.friends.add(alice);
+    bob.locationInfo.add(bob.friends);
   }
 
 }

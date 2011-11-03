@@ -18,10 +18,16 @@ public class UserV1 extends AbstractPrincipal {
   /** The user's friends,  only readable by members of the friendInfo   group */
   public final Group    [{this←;this→friendInfo}]   {this←}   friends;
 
+  /** The social network that can act for this account. */
+  public final Snapp {this←} network;
 
-  public final Snapp {this←} network;               /* The social network that can act for this account. */
-  public final Group[{this←}] {this←} friendInfo;   /* The group containing anyone who can learn the user's friends */
-  public final Group[{this←}] {this←} locationInfo; /* The group containing anyone who can see the user's location */
+  /** The group containing anyone who can learn the user's friends */
+  public final Group[{this←}] {this←} friendInfo;
+
+  /** The group containing anyone who can see the user's location */
+  public final Group[{this←}] {this←} locationInfo;
+
+
 
   public UserV1(String name, principal owner, Snapp network) throws NullPointerException {
     super(name);
@@ -52,6 +58,7 @@ public class UserV1 extends AbstractPrincipal {
     this.friends.remove(friend);
   }
 
+  
 }
 
 /*
