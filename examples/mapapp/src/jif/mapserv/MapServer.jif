@@ -1,7 +1,10 @@
 package mapserv;
 
-public class MapServer {
-
+public class MapServer extends AbstractPrincipal {
+  public MapServer(Principal owner) throws NullPointerException {
+    super(owner.name());
+    this.addDelegatesTo(owner);
+  }
 }
 
 

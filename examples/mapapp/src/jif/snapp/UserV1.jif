@@ -37,9 +37,9 @@ public class UserV1 extends AbstractPrincipal implements JifObject[{}] {
 
     this.network = network;
 
-    this.friendInfo   = new Group[{this←}]();
-    this.locationInfo = new Group[{this←}]();
-    this.friends      = new Group[{this←;this→friendInfo}]();
+    this.friendInfo   = new Group[{this←}](name + "'s friend readers");
+    this.locationInfo = new Group[{this←}](name + "'s location readers");
+    this.friends      = new Group[{this←;this→friendInfo}](name + "'s friends");
 
     this.location = null;
   }

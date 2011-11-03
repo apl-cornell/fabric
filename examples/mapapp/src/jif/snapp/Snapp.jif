@@ -1,8 +1,14 @@
 package snapp;
 
 public class Snapp extends AbstractPrincipal {
-  public Snapp() {
-    super("Snapp");
+
+  public Snapp(Principal owner) throws NullPointerException {
+    super(owner.name());
+    this.addDelegatesTo(owner);
+  }
+
+  public UserV1 createUser(String name, principal owner) {
+    return new UserV1(name, owner, this);
   }
 }
 
