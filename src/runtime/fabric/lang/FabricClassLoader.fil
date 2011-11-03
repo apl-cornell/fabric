@@ -36,7 +36,7 @@ public class FabricClassLoader extends ClassLoader {
   static long loadingTime = 0;
 
   /**
-   * Total time spent definig.
+   * Total time spent defining.
    */
   static long defineTime = 0;
 
@@ -61,7 +61,7 @@ public class FabricClassLoader extends ClassLoader {
     final long startTime = System.currentTimeMillis();
     final long endFSLoadTime;
 
-    Logging.log(Logging.TIMING_LOGGER, Level.INFO, "resolving {1}", name);
+    Logging.log(Logging.TIMING_LOGGER, Level.INFO, "resolving {0}", name);
 
     try {
       Class cls = parent.loadClass(name);
@@ -79,7 +79,7 @@ public class FabricClassLoader extends ClassLoader {
       FClass fcls = SysUtil.toProxy(name);
       long endCompileTime = -1;
       try {
-        Logging.log(Logging.TIMING_LOGGER, Level.FINE, "compiling {1}", name);
+        Logging.log(Logging.TIMING_LOGGER, Level.FINE, "compiling {0}", name);
         endCompileTime = Main.compile(fcls, classBytecodeMap);
       } catch (GeneralSecurityException e) {
         throw new ClassNotFoundException(name, e);
@@ -101,7 +101,7 @@ public class FabricClassLoader extends ClassLoader {
 
     // Time marker: endLoadingTime.
 
-    Logging.log(Logging.TIMING_LOGGER, Level.FINE, "loading {1}", name);
+    Logging.log(Logging.TIMING_LOGGER, Level.FINE, "loading {0}", name);
 
     try {
       Class javaCls = getJavaClass(name);
@@ -112,7 +112,7 @@ public class FabricClassLoader extends ClassLoader {
       return javaCls;
     } finally {
       defineTime += System.currentTimeMillis() - endLoadingTime;
-      Logging.log(Logging.TIMING_LOGGER, Level.INFO, "returning {1}", name);
+      Logging.log(Logging.TIMING_LOGGER, Level.INFO, "returning {0}", name);
     }
   }
 

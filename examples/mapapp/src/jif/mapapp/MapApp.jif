@@ -1,0 +1,19 @@
+package mapapp;
+
+import mapserv.MapServer;
+import snapp.UserV1;
+
+public class MapApp {
+  public MapApp(MapServer service) {
+    // TODO
+  }
+
+  public void run(UserV1 user) {
+    // TODO
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

@@ -1,0 +1,97 @@
+import snapp.*;
+import mapapp.*;
+import mapserv.*;
+import jif.principals.*;
+
+/**
+ * This class contains the main method, which executes the script of the example
+ * application, including initialization and execution.
+ */
+public class Main {
+
+  // these are the contents of the root maps
+  static Snapp     snapp;
+  static MapServer mapServ;
+  static MapApp    mapApp;
+  static UserV1    alice;
+  static UserV1    bob;
+
+  public static void main(principal God, String[] args) throws NullPointerException {
+    // Each method here represents a step that is intended to be executed by
+    // the appropriate worker.  For example, snapp_initialize should be invoked by
+    // snapp's worker, whereas a_run_app should be invoked by alice's worker.
+
+    snapp_initialize();
+    mapserv_initialize();
+    mapapp_initialize();
+
+    a_initialize();
+    b_initialize();
+
+    a_add_delegations();
+    b_add_delegations();
+
+    a_run_app();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // snapp's process                                                          //
+  //////////////////////////////////////////////////////////////////////////////
+
+  static void snapp_initialize() throws NullPointerException {
+    snapp = new Snapp(SnappNode.getInstance());
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // mapserv's process                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  static void mapserv_initialize() throws NullPointerException {
+    mapServ = new MapServer(MapServNode.getInstance());
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // mapapp's process                                                         //
+  //////////////////////////////////////////////////////////////////////////////
+
+  static void mapapp_initialize() throws NullPointerException {
+    mapApp = new MapApp(mapServ);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // alice's process                                                          //
+  //////////////////////////////////////////////////////////////////////////////
+
+  static void a_initialize() throws NullPointerException {
+    alice = snapp.createUser("Alice", AliceNode.getInstance());
+  }
+
+  static void a_add_delegations() throws NullPointerException {
+    alice.friends.add(bob);
+    alice.friendInfo.add(mapServ);
+    alice.locationInfo.add(mapServ);
+  }
+
+  static void a_run_app() throws NullPointerException {
+    mapApp.run(alice);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // bob's process                                                            //
+  //////////////////////////////////////////////////////////////////////////////
+
+  static void b_initialize() throws NullPointerException {
+    bob = snapp.createUser("Bob", BobNode.getInstance());
+  }
+
+  static void b_add_delegations() throws NullPointerException {
+    bob.friends.add(alice);
+    bob.locationInfo.add(bob.friends);
+  }
+}
+
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

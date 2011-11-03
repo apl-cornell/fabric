@@ -2,5 +2,5 @@ To generate a keystore for a new host h:
 
 1. bin/genkey --hostname h
 2. bin/ca-sign etc/csr/h.csr h.cert
-3. bin/import-cert --ca etc/ca/ca.crt --keystore etc/keys/h.cert h.cert
+3. bin/import-cert --ca etc/ca/ca.crt --keystore etc/keys/h.keystore h.cert
 4. rm h.cert

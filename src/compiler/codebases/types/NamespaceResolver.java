@@ -49,7 +49,7 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
    * Get the URI of a codebase using a local alias.
    * @throws SemanticException 
    */
-  URI resolveCodebaseName(String name) throws SemanticException;
+  URI resolveCodebaseName(String name);
   
   Map<String, URI> codebaseAliases();
   /**
@@ -104,5 +104,5 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
    * @return
    */
   Label label();
-  URI resolveCodebaseNameImpl(String name) throws SemanticException;
+  URI resolveCodebaseNameImpl(String name);
 }

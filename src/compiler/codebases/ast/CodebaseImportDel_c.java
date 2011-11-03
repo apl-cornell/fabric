@@ -32,22 +32,22 @@ public class CodebaseImportDel_c extends JL_c {
     // alias.
     String pkgName = StringUtil.getFirstComponent(im.name());
     URI import_ns;
-    Named nt;
-    try {
-      import_ns = ts.namespaceResolver(ns).resolveCodebaseName(pkgName);
+
+    Named nt = null;
+    import_ns = ts.namespaceResolver(ns).resolveCodebaseName(pkgName);
+    if(import_ns != null) {
+      // The type must exist in import_ns
       nt = ts.forName(import_ns, StringUtil.removeFirstComponent(im.name()));
-      
-    } catch (SemanticException e) {
+    
+    } else if (!ts.packageExists(ns, pkgName)) {
       // Not an alias. Must be a package.
-      if (!ts.packageExists(ns, pkgName)) {
-        throw new SemanticException("Package \"" + pkgName + "\" not found.",
-            im.position());
-      }
+      throw new SemanticException("Package \"" + pkgName + "\" not found.",
+          im.position());
+    } else {
+      // The type must exist.
+      nt = ts.forName(ns, im.name());
     }
-
-    // The type must exist.
-    nt = ts.forName(ns, im.name());
-
+    
     // And the type must be accessible.
     if (nt instanceof Type) {
       Type t = (Type) nt;

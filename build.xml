@@ -36,6 +36,7 @@
       location="${signatures.classes}/fabil"/>
   <property name="signatures.fabric.classes"
       location="${signatures.classes}/fabric"/>
+  <property name="tests" location="${fabric.home}/tests"/>
 
   <pathconvert property="polyglot.classes" refid="polyglot.classpath"/>
 
@@ -164,6 +165,15 @@
     Targets for cleaning up the directory tree.
   ****************************************************************************
   -->
+
+  <target name="clean-tests">
+    <delete>
+        <fileset dir="${tests}">
+            <include name="**/*.class"/>
+            <include name="regression/**/*.java"/>
+        </fileset>
+    </delete>
+  </target>
 
   <target name="dust"
       description="Cleans up the generated runtime and signatures">

@@ -107,13 +107,12 @@ parser Grm extends jif.parse.Grm {:
         if (e instanceof AmbExpr) {
             AmbExpr a = (AmbExpr) e;
             NamespaceResolver nr = ts.namespaceResolver(this.ns);
-	        try {
-	        	//try to resolve name as a codebase alias
-	            return nf.CodebaseNode(pos(e), this.ns, a.name(), nr.resolveCodebaseName(a.name()));
-	        } catch (SemanticException s) {
-	        }
-            
-            return nf.PackageNode(pos(e), ts.packageForName(this.ns, a.name()));
+	        //try to resolve name as a codebase alias
+            URI u = nr.resolveCodebaseName(a.name());
+            if (u != null)
+	            return nf.CodebaseNode(pos(e), this.ns, a.name(), u);
+            else
+                return nf.PackageNode(pos(e), ts.packageForName(this.ns, a.name()));
         }
 
         if (e instanceof Field) {
@@ -167,10 +166,9 @@ parser Grm extends jif.parse.Grm {:
             else if (ap == null) {
             	//If there is no prefix, see if there is a codebase alias for this name
             	NamespaceResolver nr = ts.namespaceResolver(this.ns);
-	            try {
-	                return nf.CodebaseNode(pos(p), this.ns, a.name(), nr.resolveCodebaseName(a.name()));
-	            } catch (SemanticException e) {
-	            }
+            	URI u = nr.resolveCodebaseName(a.name());
+            	if(u != null)
+            	    return nf.CodebaseNode(pos(p), this.ns, a.name(), u);
             }
             //pkg is null or is the package of the prefix node
             //the prefix is null and not a codebase alias, or not null and not a CodebaseNode

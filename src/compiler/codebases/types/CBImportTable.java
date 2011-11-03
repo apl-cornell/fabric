@@ -24,21 +24,23 @@ import polyglot.util.StringUtil;
 
 public class CBImportTable extends ImportTable {
   // NB: this field 'hides' a private superclass field that is used for the same
-  // purpose. However, we override all code that uses the superclass field, so we 
+  // purpose. However, we override all code that uses the superclass field, so
+  // we
   // don't depend on these values being equal.
   protected static final Object NOT_FOUND = "NOT FOUND";
 
   private final CodebaseTypeSystem ts;
-  
+
   protected URI ns;
   protected Set<String> aliases;
-  protected Map<String,String> fromExternal;
+  protected Map<String, String> fromExternal;
+
   public CBImportTable(CodebaseTypeSystem ts, URI ns, Package pkg, Source source) {
     super(ts, pkg, source.name());
     this.ts = ts;
     this.ns = ns;
     this.aliases = new HashSet<String>();
-    this.fromExternal = new HashMap<String,String>();
+    this.fromExternal = new HashMap<String, String>();
   }
 
   // /// The following methods are basically copied from the superclass, but
@@ -155,24 +157,25 @@ public class CBImportTable extends ImportTable {
       throw e;
     }
   }
-  
+
   /**
    * Add a package import.
    */
   @Override
   public void addPackageImport(String pkgName) {
-    // don't add the import if it is a 
-    String first = StringUtil.getFirstComponent(pkgName);                    
+    // don't add the import if it is a
+    String first = StringUtil.getFirstComponent(pkgName);
     if (aliases.contains(first)) {
-      throw new InternalCompilerError("Package imports with explicit codebases not yet supported");
+      throw new InternalCompilerError(
+          "Package imports with explicit codebases not yet supported");
     } else {
       super.addPackageImport(pkgName);
     }
   }
 
   public void addExplicitCodebaseImport(String pkgName) {
-          // TODO Auto-generated method stub
-          
+    // TODO Auto-generated method stub
+
   }
 
   @Override
@@ -206,27 +209,29 @@ public class CBImportTable extends ImportTable {
     }
 
     for (int i = 0; i < lazyImports.size(); i++) {
-      String longName = (String) lazyImports.get(i);
-      URI import_ns = ns;
-      // Check if this is an explicit codebase import
-      String first = StringUtil.getFirstComponent(longName);                    
-      if (aliases.contains(first)) {
-        import_ns = ts.namespaceResolver(ns).resolveCodebaseName(first);
-        longName = StringUtil.removeFirstComponent(longName);
-        if (Report.should_report(TOPICS, 2))
-          Report.report(2, this + ": importing from external namespace "+import_ns);
-      }
-      
-      if (Report.should_report(TOPICS, 2))
-        Report.report(2, this + ": import " + longName);
-
       try {
+        String longName = (String) lazyImports.get(i);
+        URI import_ns = ns;
+        // Check if this is an explicit codebase import
+        String first = StringUtil.getFirstComponent(longName);
+        if (aliases.contains(first)) {
+          URI u = ts.namespaceResolver(ns).resolveCodebaseName(first);
+          if (u == null)
+            throw new SemanticException("Unknown codebase \"" + first + "\"");
+          longName = StringUtil.removeFirstComponent(longName);
+          if (Report.should_report(TOPICS, 2))
+            Report.report(2, this + ": importing from external namespace "
+                + import_ns);
+        }
+
+        if (Report.should_report(TOPICS, 2))
+          Report.report(2, this + ": import " + longName);
+
         Importable t = ts.namespaceResolver(import_ns).find(longName);
 
         String shortName = StringUtil.getShortNameComponent(longName);
-        if (!import_ns.equals(ns))
-          fromExternal.put(shortName,first);
-        
+        if (!import_ns.equals(ns)) fromExternal.put(shortName, first);
+
         map.put(shortName, t);
       } catch (SemanticException e) {
         if (e.position() == null) {
@@ -254,33 +259,32 @@ public class CBImportTable extends ImportTable {
   }
 
   public boolean isExternal(String name) {
-    if (StringUtil.isNameShort(name)) 
-      return fromExternal.containsKey(name); 
-    else
-      return aliases.contains(StringUtil.getFirstComponent(name));
+    if (StringUtil.isNameShort(name))
+      return fromExternal.containsKey(name);
+    else return aliases.contains(StringUtil.getFirstComponent(name));
   }
-  
-  public String aliasFor(String name) throws SemanticException {
+
+  /**
+   * Returns the alias used to load type name, or null if name was not loaded
+   * via a codebase alias.
+   * 
+   * @param name
+   * @return
+   */
+  public String aliasFor(String name) {
     String alias;
-    if (StringUtil.isNameShort(name)) 
-      alias = fromExternal.get(name); 
-    else
-      alias = StringUtil.getFirstComponent(name);
+    if (StringUtil.isNameShort(name))
+      alias = fromExternal.get(name);
+    else alias = StringUtil.getFirstComponent(name);
     if (aliases.contains(alias))
       return alias;
-    
-    throw new SemanticException("Unknown codebase name: " + name);
+    else return null;
   }
 
   public URI resolveCodebaseName(String name) {
-    //Only resolve codebase names that were declared in this 
+    // Only resolve codebase names that were declared in this
     // sourcefile.
-//    if (aliases.contains(name)) XXX: ?
-      try {
-        return ts.namespaceResolver(ns).resolveCodebaseName(name);
-      } catch (SemanticException e) {
-        //just return null
-      }
-    return null;
+    // if (aliases.contains(name)) XXX: ?
+    return ts.namespaceResolver(ns).resolveCodebaseName(name);
   }
 }

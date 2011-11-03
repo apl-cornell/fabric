@@ -8,8 +8,8 @@ import polyglot.ast.Node_c;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import polyglot.visit.TypeChecker;
-import codebases.types.CodebaseContext;
+import polyglot.visit.TypeBuilder;
+import codebases.types.CBImportTable;
 import codebases.types.CodebaseTypeSystem;
 
 public class CodebaseDecl_c extends Node_c implements CodebaseDecl {
@@ -25,21 +25,18 @@ public class CodebaseDecl_c extends Node_c implements CodebaseDecl {
     return name;
   }
 
-  /** Check that imported classes and packages exist. */
   @Override
-  public Node typeCheck(TypeChecker tc) throws SemanticException {
-    CodebaseContext ctx = (CodebaseContext) tc.context();
-    CodebaseTypeSystem ts = (CodebaseTypeSystem) tc.typeSystem();
-    URI ns = ctx.namespace();
+  public Node buildTypes(TypeBuilder tb) throws SemanticException {
+    CodebaseTypeSystem ts = (CodebaseTypeSystem) tb.typeSystem();
+    CBImportTable it = (CBImportTable) tb.importTable();
+    URI ns = it.namespace();
     URI cb = ts.namespaceResolver(ns).resolveCodebaseName(name.id());
     
     // If the name doesn't exist, a semantic error should have been thrown.
     if (cb == null) {
-      throw new InternalCompilerError("Codebase name " + name
-          + " resolved to null.");
+      throw new SemanticException("Unknown codebase \"" + name +"\"", position());
     }
     
     return this;
   }
-
 }

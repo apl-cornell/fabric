@@ -1,0 +1,15 @@
+package mapserv;
+
+public class MapServer extends AbstractPrincipal {
+  public MapServer(Principal owner) throws NullPointerException {
+    super(owner.name());
+    this.addDelegatesTo(owner);
+  }
+}
+
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+

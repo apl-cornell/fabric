@@ -1,5 +1,5 @@
 public class ExCB01 extends A {
-	protected C c;
+	protected C{*->} c;
 	public void m(C c) { 
 		this.c = c;
 	}

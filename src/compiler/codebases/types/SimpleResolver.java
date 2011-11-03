@@ -1,4 +1,4 @@
-package fabil;
+package codebases.types;
 
 import java.net.URI;
 
@@ -12,8 +12,6 @@ import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassPathLoader;
 import codebases.frontend.ExtensionInfo;
 import codebases.frontend.URISourceLoader;
-import codebases.types.NamespaceResolver;
-import codebases.types.NamespaceResolver_c;
 
 public class SimpleResolver extends NamespaceResolver_c {
   protected final ClassPathLoader classpathLoader;
@@ -190,8 +188,10 @@ public class SimpleResolver extends NamespaceResolver_c {
   }
   
   @Override
-  public URI resolveCodebaseNameImpl(String name) throws SemanticException {
-    throw new SemanticException("Unknown codebase name " + name);
+  public URI resolveCodebaseNameImpl(String name) {
+    // if the name isn't in the cache, 
+    // then no codebase alias exists.
+    return null;
   }
 
 }

@@ -4,7 +4,6 @@ import java.net.URI;
 
 import polyglot.types.SemanticException;
 import codebases.frontend.ExtensionInfo;
-import fabil.SimpleResolver;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
@@ -44,10 +43,10 @@ public class CodebaseResolver extends SimpleResolver implements
   }
 
   @Override
-  public URI resolveCodebaseNameImpl(String name) throws SemanticException {
+  public URI resolveCodebaseNameImpl(String name) {
     Codebase cb = codebase.resolveCodebaseName(name);
     if (cb == null)
-      throw new SemanticException("Codebase name " + name + " not defined.");
+      return null;
     return NSUtil.namespace(cb);
   }
   

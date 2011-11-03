@@ -1,0 +1,27 @@
+package util;
+
+import jif.util.Set;
+
+/**
+ * A group is a principal object that delegates to each of its members.  It
+ * also serves as a collection, so it can be iterated over, etc..
+ */
+public class Group[label entries] extends AbstractPrincipal {
+
+	private Principal[] members;
+
+	public Group(String name) {
+		super(name);
+	}
+
+	public void add(Principal p) {
+	}
+
+	public void remove(Principal p) {
+	}
+}
+
+/*
+** vim: ts=2 sw=2 cindent cino=\:0 syntax=java
+*/
+

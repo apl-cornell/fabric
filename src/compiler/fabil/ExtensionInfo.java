@@ -39,6 +39,8 @@ import codebases.types.CodebaseResolver;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
 import codebases.types.PathResolver;
+import codebases.types.SafeResolver;
+import codebases.types.SimpleResolver;
 import fabil.ast.FabILNodeFactory;
 import fabil.ast.FabILNodeFactory_c;
 import fabil.frontend.FabILScheduler;

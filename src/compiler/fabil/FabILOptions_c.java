@@ -223,10 +223,23 @@ public class FabILOptions_c extends polyglot.main.Options implements
   }
 
   protected void addCodebaseAlias(String arg) throws UsageError {
+
     String[] alias = arg.split("=");
     if (alias.length != 2)
       throw new UsageError("Invalid codebase alias:" + arg);
     String cb = alias[1];
+
+    if (cb.startsWith("@")) {
+      try {
+        BufferedReader lr =
+            new BufferedReader(new FileReader(alias[1].substring(1)));
+        cb = lr.readLine().replaceAll("[<>]", "");
+      } catch (FileNotFoundException e) {
+        throw new InternalCompilerError(e);
+      } catch (IOException e) {
+        throw new InternalCompilerError(e);
+      }
+    }
     if (!cb.endsWith("/")) cb += "/";
     URI uri = URI.create(cb);
     if (uri.isOpaque() || !uri.isAbsolute())
