@@ -29,8 +29,12 @@
 # an appropriate class path, to make sure that pth can find the Jif compiler.
 #    $ pth pthScript -classpath "../classes:../lib-classes:../lib/jif.jar:../lib/jiflib.jar:."
 #InvariantThis4.jif (Semantic, "can not contain .*this");
-
-fabric.ExtensionInfo  "-bootclasspath ../../../rt-classes:../../../classes -sigcp ../../../sig-classes/fabric -filsigcp ../../../sig-classes/fabil -sourcepath ." {
+fabric.ExtensionInfo  "-bootclasspath ../../../rt-classes:../../../classes -sigcp ../../../sig-classes/fabric -filsigcp ../../../sig-classes/fabil -sourcepath . -publish-only -worker worker -deststore store -codebase-output-file ../abc.codebase" {
+	A.fab;		
+	B.fab;		
+	C.fab;		
+}
+fabric.ExtensionInfo  "-bootclasspath ../../../rt-classes:../../../classes -sigcp ../../../sig-classes/fabric -filsigcp ../../../sig-classes/fabil -publish-only -worker worker -deststore store -classpath @abc.codebase -codebase-alias cb=@abc.codebase" {
 	ExCB01.fab;		
 	ExCB02.fab;		
 	ExCB03.fab;		

@@ -1,0 +1,37 @@
+#!/bin/bash
+# tests directory (contains etc/ for test configs) 
+APP_HOME="$(dirname $0)/.."
+# Fabric root
+FABRIC="${APP_HOME}/.."
+PATH="${PATH}:${FABRIC}/bin"
+export FABRIC_HOME="${APP_HOME}"
+
+name="tests"
+while true; do
+  case "$1" in
+    "") break;;
+	--name) name="$2"; shift 2;;
+    --start-workers) workers=$2; shift 2;;
+    --start-stores)  stores=$2; shift 2;;
+	*) args="${args} '$1'"; shift;;
+  esac
+done
+for s in ${stores//,/ }; 
+do 
+	echo "Starting store $s" 
+	screen -d -m -S $s fab-store --name $s;  
+	i=$[$i+1];
+done
+if [ -n ${stores} ]
+then
+	echo "Waiting for stores to start up" 
+	sleep 5	
+fi
+for w in ${workers//,/ }
+do	 
+	echo "Starting worker $w" 
+	screen -d -m -S $w fab --name $w;  
+done
+
+echo "running fabth ${args}"
+fabth ${args}

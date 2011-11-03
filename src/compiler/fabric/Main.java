@@ -192,29 +192,6 @@ public class Main extends polyglot.main.Main {
   public void start(String[] args, ExtensionInfo _extInfo) {
     fabric.ExtensionInfo extInfo = (fabric.ExtensionInfo) _extInfo;
     super.start(args, extInfo);
-
-    if (extInfo.getFabricOptions().codebaseFilename() != null) {
-      FabricOptions opt = extInfo.getFabricOptions();
-      File f = new File(opt.codebaseFilename());
-      if (!f.isAbsolute()) f = new File(opt.outputDirectory(), f.getPath());
-      FileWriter fw;
-      try {
-        fw = new FileWriter(f);
-        URI localNS = extInfo.localNamespace();
-        Codebase cb = extInfo.typeSystem().codebaseFromNS(localNS);
-        URI ns = NSUtil.namespace(cb);
-        fw.write("<" + ns + ">");
-        fw.close();
-      } catch (fabric.common.exceptions.InternalError e) {
-        throw new TerminationException("Error writing codebase reference to "
-            + extInfo.getFabricOptions().codebaseFilename() + ": "
-            + e.getMessage(), 1);
-      } catch (IOException e) {
-        throw new TerminationException("Error writing codebase reference to "
-            + extInfo.getFabricOptions().codebaseFilename() + ": "
-            + e.getMessage(), 1);
-      }
-    }
   }
 
   @Override
@@ -281,7 +258,7 @@ public class Main extends polyglot.main.Main {
 
       final FabricOptions o = (FabricOptions) options;
       final Set<String> s = source;
-      final ExtensionInfo e = ext;
+      final fabric.ExtensionInfo extInfo = (fabric.ExtensionInfo) ext;
       final ErrorQueue q = eq;
 
       try {
@@ -305,7 +282,31 @@ public class Main extends polyglot.main.Main {
         @Override
         public Void run() {
           try {
-            start(o, s, e, q);
+            start(o, s, extInfo, q);
+
+            if (extInfo.getFabricOptions().codebaseFilename() != null) {
+              FabricOptions opt = extInfo.getFabricOptions();
+              File f = new File(opt.codebaseFilename());
+              if (!f.isAbsolute()) f = new File(opt.outputDirectory(), f.getPath());
+              FileWriter fw;
+              try {
+                fw = new FileWriter(f);
+                URI localNS = extInfo.localNamespace();
+                Codebase cb = extInfo.typeSystem().codebaseFromNS(localNS);
+                URI ns = NSUtil.namespace(cb);
+                fw.write("<" + ns + ">");
+                fw.close();
+              } catch (fabric.common.exceptions.InternalError e) {
+                throw new TerminationException("Error writing codebase reference to "
+                    + extInfo.getFabricOptions().codebaseFilename() + ": "
+                    + e.getMessage(), 1);
+              } catch (IOException e) {
+                throw new TerminationException("Error writing codebase reference to "
+                    + extInfo.getFabricOptions().codebaseFilename() + ": "
+                    + e.getMessage(), 1);
+              }
+            }
+
           } catch (Throwable e) {
             // Always abort the transaction on an exception
             throw new AbortException(e);

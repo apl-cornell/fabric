@@ -56,12 +56,6 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   protected FabILOptions_c delegate;
 
   /**
-   * A map from names to codebase URIs. Used to resolve explicit codebases in
-   * source.
-   */
-  protected Map<String, URI> codebase_aliases;
-
-  /**
    * Whether to publish source to Fabric.
    */  
   protected boolean publish;
