@@ -21,11 +21,6 @@ TODO: make run-all more portable
 	term3$ bin/start-store --name airlineBStore
 	term4$ bin/start-store --name userStore
 	
-	term5$ bin/start-worker --name brokerWorker
-	term6$ bin/start-worker --name airlineAWorker
-	term7$ bin/start-worker --name airlineBWorker
-	term8$ bin/start-worker --name userWorker
-
 It is reasonable to expect Pastry-related exception messages during these steps.
 TODO: remove and/or fix spurious error messages.
 
@@ -55,6 +50,6 @@ codebase file.
 Run the mobile code example by specifying auction.Main in the generated
 codebase.
 
-	brokerWorker> run fab://brokerStore/48/auction.Main 
+	brokerStore> run fab://brokerStore/48/auction.Main 
 
 TODO: reduce the steps, if possible.
