@@ -1,5 +1,7 @@
 package snapp;
 
+import jif.util.List;
+
 /**
  * A User object contains all of the data associated with a given user account
  * in the social network.  Users are principals, and delegate to the social
@@ -8,17 +10,17 @@ package snapp;
  * The V1 stands for version 1.  In Fabric, V1 and V2 will both be named User,
  * just in different codebases.
  */
-public class UserV1 extends DelegatingPrincipal {
+public class UserV1 extends AbstractPrincipal {
 
-  public final List[UserV1] {this←;this→friendInfo}   friends;  /** The user's friends */
-  public       Location     {this←;this→locationInfo} location; /** The user's location */
+  public final List[{this←;this→friendInfo}]       {this←;this→friendInfo}   friends;  /** The user's friends */
+  public       Location[{this←;this→locationInfo}] {this←;this→locationInfo} location; /** The user's location */
 
-  public final principal           {this←} owner;        /* The principal that owns this user account */
-  public final Snapp               {this←} network;      /* The social network that can act for this account. */
-  public final FriendsPrincipal    {this←} friends;      /* The group containing the user's friends */
+  public final principal       {this←} owner;        /* The principal that owns this user account */
+  public final Snapp           {this←} network;      /* The social network that can act for this account. */
+  public final FriendPrincipal {this←} friends;      /* The group containing the user's friends */
 
-  public final DelegatingPrincipal {this←} friendInfo;   /* The group containing anyone who can learn the user's friends */
-  public final DelegatingPrincipal {this←} locationInfo; /* The group containing anyone who can see the user's location */
+  public final principal       {this←} friendInfo;   /* The group containing anyone who can learn the user's friends */
+  public final principal       {this←} locationInfo; /* The group containing anyone who can see the user's location */
 
   public UserV1(principal owner) {
     this.owner = owner;
@@ -45,11 +47,6 @@ public class UserV1 extends DelegatingPrincipal {
     this.friends.remove(friend);
   }
 
-  private class FriendPrincipal implements Principal {
-    public boolean delegatesTo(principal p) {
-      // TODO: return
-    }
-  }
 }
 
 /*

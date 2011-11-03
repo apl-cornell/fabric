@@ -1,0 +1,18 @@
+package snapp;
+
+/**
+ * A Principal object that delegates to all of the friends of a User, as well as the user itself.
+ */
+class FriendPrincipal extends AbstractPrincipal {
+  private final UserV1 user;
+
+  public FriendPrincipal(UserV1 user) {
+    super(user.name());
+  }
+
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
