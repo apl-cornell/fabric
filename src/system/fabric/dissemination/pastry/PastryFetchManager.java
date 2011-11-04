@@ -8,23 +8,28 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
+import fabric.worker.DirectFetchManager;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 
 /**
  * A PastryFetchManager performs object fetching by consulting a pastry
  * dissemination network to see if the object is available there. When an
- * instance of PastryFetchManager is created, it starts a pastry node. That
- * node will attempt to join a pastry network by contacting a bootstrap node.
- * This is set in the pastry configuration file (by default etc/pastry.params).
+ * instance of PastryFetchManager is created, it starts a pastry node. That node
+ * will attempt to join a pastry network by contacting a bootstrap node. The
+ * bootstrap node is configured by setting the property
+ * fabric.dissemination.pastry.bootstrap in the Properties object given to the
+ * constructor.
  */
 public class PastryFetchManager implements FetchManager {
-  
-  private Node node;
-  
+
+  private final Node node;
+  private final FetchManager fallback;
+
   public PastryFetchManager(Worker worker, Properties dissemConfig) {
     try {
-      node = new Node(dissemConfig);  // start a new pastry node
+      this.fallback = new DirectFetchManager(worker, dissemConfig);
+      this.node = new Node(dissemConfig); // start a new pastry node
       worker.registerDisseminationCache(node.disseminator.cache);
     } catch (IOException e) {
       throw new InternalError(e);
@@ -39,12 +44,14 @@ public class PastryFetchManager implements FetchManager {
     } catch (DisseminationTimeoutException e) {
       glob = null;
     }
-    
-    if (glob == null) return c.readObjectFromStore(onum);
-    
+
+    if (glob == null) {
+      return fallback.fetch(c, onum);
+    }
+
     return glob.decrypt(c);
   }
-  
+
   @Override
   public void destroy() {
     node.destroy();

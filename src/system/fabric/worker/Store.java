@@ -2,6 +2,7 @@ package fabric.worker;
 
 import java.util.Collection;
 
+import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
@@ -37,34 +38,33 @@ public interface Store {
       TransactionPrepareFailedException;
 
   /**
-   * Returns the requested _Impl object. If the object is not resident, it is
-   * fetched from the Store via dissemination.
+   * Returns the cache entry for the given onum. If the object is not resident,
+   * it is fetched from the store via dissemination.
    * 
    * @param onum
    *          The identifier of the requested object
-   * @return The requested object
+   * @return cache entry for the requested object.
    */
-  _Impl readObject(long onum) throws AccessException;
+  ObjectCache.Entry readObject(long onum) throws AccessException;
 
   /**
-   * Returns the requested _Impl object, fetching it directly from the Store if
-   * it is not resident.
+   * Returns the cache entry for the requested object. If the object is not
+   * resident, it is fetched directly from the store.
    * 
    * @param onum
    *          The identifier of the requested object
-   * @return The requested object
+   * @return the cache entry for the requested object.
    */
-  _Impl readObjectNoDissem(long onum) throws AccessException;
+  ObjectCache.Entry readObjectNoDissem(long onum) throws AccessException;
 
   /**
-   * Returns the requested _Impl object if it exists in the object cache.
+   * Returns the cache entry for the given onum.
    * 
    * @param onum
    *          The identifier of the requested object.
-   * @return The requested object if it exists in the object cache; otherwise,
-   *         null.
+   * @return The entry if it exists in the object cache; otherwise, null.
    */
-  _Impl readObjectFromCache(long onum);
+  ObjectCache.Entry readFromCache(long onum);
 
   /**
    * Notifies the store that the transaction is being Aborted.
@@ -107,16 +107,6 @@ public interface Store {
   public fabric.util.Map getRoot();
 
   /**
-   * Notifies this Store object that an _Impl has been evicted, so that it can
-   * perform the necessary cache maintenance.
-   * 
-   * @param onum
-   *          Onum of the object that was evicted.
-   * @return true iff the onum was found in cache.
-   */
-  public boolean notifyEvict(long onum);
-
-  /**
    * Evicts the object with the given onum from cache.
    * 
    * @return true iff the onum was found in cache.
@@ -127,4 +117,11 @@ public interface Store {
    * Adds the given object to the cache.
    */
   public void cache(_Impl impl);
+
+  /**
+   * Adds the given object to the cache.
+   * 
+   * @return the resulting cache entry.
+   */
+  public ObjectCache.Entry cache(SerializedObject obj);
 }

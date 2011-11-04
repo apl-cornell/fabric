@@ -25,6 +25,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.ComparablePair;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.worker.LocalStore;
 import fabric.worker.Store;
@@ -74,8 +75,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * 
    * @param obj
    *          The object to serialize.
-   * @deprecated This should only be used by fabric.store.InProcessStore and for
-   *             debugging (worker.debug.*).
+   * @deprecated This is method is rather inefficient. Use sparingly.
    */
   public SerializedObject(_Impl obj) {
     try {
@@ -363,6 +363,19 @@ public final class SerializedObject implements FastSerializable, Serializable {
   public ClassRef getClassRef() {
     if (classRef != null) return classRef;
     return classRef = ClassRef.deserialize(objectData, classRefPos());
+  }
+
+  /**
+   * Determines whether this object is a surrogate.
+   */
+  public boolean isSurrogate() {
+    if (classRef != null) {
+      return classRef.isSurrogate();
+    }
+
+    // Class not loaded yet. Avoid loading by examining the serialized data
+    // directly.
+    return ClassRef.isSurrogate(objectData, classRefPos());
   }
 
   /**
@@ -819,7 +832,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
           .synchronizedMap(new HashMap<Class<? extends _Impl>, Constructor<?>>());
 
   /**
-   * Used by the worker to deserialize this object.
+   * Deserializes this object, traversing surrogates as necessary.
    * 
    * @param store
    *          The store on which this object lives.
@@ -828,6 +841,21 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *           Thrown when the class for this object is unavailable.
    */
   public _Impl deserialize(Store store) {
+    return deserialize(store, true);
+  }
+
+  /**
+   * Deserializes this object.
+   * 
+   * @param store
+   *          The store on which this object lives.
+   * @param chaseSurrogates
+   *          whether surrogates should be traversed.
+   * @return The deserialized object.
+   * @throws ClassNotFoundException
+   *           Thrown when the class for this object is unavailable.
+   */
+  public _Impl deserialize(Store store, boolean chaseSurrogates) {
     try {
       Class<? extends _Impl> implClass = getClassRef().toImplClass();
 
@@ -841,13 +869,21 @@ public final class SerializedObject implements FastSerializable, Serializable {
         constructorTable.put(implClass, constructor);
       }
 
-      return (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
-          getExpiry(), getUpdateLabelOnum(), getAccessLabelOnum(),
-          new ObjectInputStream(getSerializedDataStream()),
-          getRefTypeIterator(), getIntraStoreRefIterator());
+      _Impl result =
+          (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
+              getExpiry(), getUpdateLabelOnum(), getAccessLabelOnum(),
+              new ObjectInputStream(getSerializedDataStream()),
+              getRefTypeIterator(), getIntraStoreRefIterator());
+
+      if (chaseSurrogates && (result instanceof Surrogate)) {
+        // Chase the surrogate pointer.
+        Surrogate surrogate = (Surrogate) result;
+        return new _Proxy(surrogate.store, surrogate.onum).fetch();
+      }
+
+      return result;
     } catch (Exception e) {
       throw new InternalError(e);
     }
   }
-
 }

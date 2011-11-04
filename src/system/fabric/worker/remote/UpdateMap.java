@@ -5,7 +5,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,20 +31,18 @@ import fabric.worker.Worker;
  */
 public class UpdateMap implements FastSerializable {
 
-  private static final String ALG_HASH = "MD5";
-
   /**
    * The transaction ID for the topmost transaction that this map is a part of.
    */
   private final long tid;
 
   /**
-   * Maps md5(oid) to Label. These are the "create" entries.
+   * Maps hash(oid) to Label. These are the "create" entries.
    */
   private Map<Hash, Label> creates;
 
   /**
-   * Maps md5(oid, object key) to (iv, enc(hostname, object key, iv)).
+   * Maps hash(oid, object key) to (iv, enc(hostname, object key, iv)).
    */
   private Map<Hash, Pair<byte[], byte[]>> updates;
 
@@ -143,22 +140,12 @@ public class UpdateMap implements FastSerializable {
    */
   public boolean containsCreate(_Proxy proxy) {
     if (creates.isEmpty()) return false;
-
-    try {
-      return creates.containsKey(hash(proxy));
-    } catch (NoSuchAlgorithmException e) {
-      throw new InternalError(e);
-    }
+    return creates.containsKey(hash(proxy));
   }
 
   public Label getCreate(_Proxy proxy) {
     if (creates.isEmpty()) return null;
-
-    try {
-      return creates.get(hash(proxy));
-    } catch (NoSuchAlgorithmException e) {
-      throw new InternalError(e);
-    }
+    return creates.get(hash(proxy));
   }
 
   public RemoteWorker getUpdate(_Proxy proxy) {
@@ -220,11 +207,7 @@ public class UpdateMap implements FastSerializable {
     if (ONumConstants.isGlobalConstant(proxy.$getOnum())
         || proxy.$getStore() instanceof LocalStore) return;
 
-    try {
-      creates.put(hash(proxy), keyObject);
-    } catch (NoSuchAlgorithmException e) {
-      throw new InternalError(e);
-    }
+    creates.put(hash(proxy), keyObject);
   }
 
   public void put(_Proxy proxy, RemoteWorker worker) {
@@ -280,7 +263,7 @@ public class UpdateMap implements FastSerializable {
     }
   }
 
-  private Hash hash(_Proxy proxy) throws NoSuchAlgorithmException {
+  private Hash hash(_Proxy proxy) {
     return hash(proxy, null);
   }
 
@@ -288,33 +271,33 @@ public class UpdateMap implements FastSerializable {
    * Given a proxy and an encryption key, hashes the object location with the
    * transaction ID and the key.
    */
-  private Hash hash(_Proxy proxy, byte[] key) throws NoSuchAlgorithmException {
-    MessageDigest md5 = MessageDigest.getInstance(ALG_HASH);
+  private Hash hash(_Proxy proxy, byte[] key) {
+    MessageDigest digest = Crypto.digestInstance();
     Store store = proxy.$getStore();
     long onum = proxy.$getOnum();
 
-    md5.update(store.name().getBytes());
-    md5.update((byte) onum);
-    md5.update((byte) (onum >>> 8));
-    md5.update((byte) (onum >>> 16));
-    md5.update((byte) (onum >>> 24));
-    md5.update((byte) (onum >>> 32));
-    md5.update((byte) (onum >>> 40));
-    md5.update((byte) (onum >>> 48));
-    md5.update((byte) (onum >>> 56));
+    digest.update(store.name().getBytes());
+    digest.update((byte) onum);
+    digest.update((byte) (onum >>> 8));
+    digest.update((byte) (onum >>> 16));
+    digest.update((byte) (onum >>> 24));
+    digest.update((byte) (onum >>> 32));
+    digest.update((byte) (onum >>> 40));
+    digest.update((byte) (onum >>> 48));
+    digest.update((byte) (onum >>> 56));
 
-    md5.update((byte) tid);
-    md5.update((byte) (tid >>> 8));
-    md5.update((byte) (tid >>> 16));
-    md5.update((byte) (tid >>> 24));
-    md5.update((byte) (tid >>> 32));
-    md5.update((byte) (tid >>> 40));
-    md5.update((byte) (tid >>> 48));
-    md5.update((byte) (tid >>> 56));
+    digest.update((byte) tid);
+    digest.update((byte) (tid >>> 8));
+    digest.update((byte) (tid >>> 16));
+    digest.update((byte) (tid >>> 24));
+    digest.update((byte) (tid >>> 32));
+    digest.update((byte) (tid >>> 40));
+    digest.update((byte) (tid >>> 48));
+    digest.update((byte) (tid >>> 56));
 
-    if (key != null) md5.update(key);
+    if (key != null) digest.update(key);
 
-    return new Hash(md5.digest());
+    return new Hash(digest.digest());
   }
 
   /**
