@@ -111,9 +111,9 @@ while true; do
     esac
 done
 
-classpath="${COMMON_FABRIC_CP}:$dir/tools/fabth/classes"
-classpath="$classpath:${POLYGLOT}/lib/pth.jar"
-classpath="$classpath:$dir/lib/fabric-tools.jar:$extra_cp"
+classpath="$dir/tools/fabth/classes:$classpath:$dir/lib/fabric-tools.jar"
+classpath="$classpath:${COMMON_FABRIC_CP}:${POLYGLOT}/lib/pth.jar"
+classpath="$classpath:$extra_cp"
 classpath=`fixclasspath "$classpath"`
 
 if [ "$usage" = 1 ]; then

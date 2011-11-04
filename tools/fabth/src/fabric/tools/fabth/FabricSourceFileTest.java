@@ -3,8 +3,9 @@ package fabric.tools.fabth;
 import java.io.File;
 import java.util.List;
 
+import fabric.worker.Worker;
+
 import polyglot.pth.SourceFileTest;
-import polyglot.util.SilentErrorQueue;
 
 public class FabricSourceFileTest extends SourceFileTest {
   public FabricSourceFileTest(String filename) {
@@ -45,6 +46,9 @@ public class FabricSourceFileTest extends SourceFileTest {
        }
 
       setDestDir(null);
+      if (Worker.isInitialized()) {
+        Worker.getWorker().shutdown();
+      }
     }
   }
 
