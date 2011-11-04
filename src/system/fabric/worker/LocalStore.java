@@ -77,7 +77,7 @@ public final class LocalStore implements Store {
 
   @Override
   public ObjectCache.Entry readObjectNoDissem(long onum) {
-    return readImplNoDissem(onum).$getCacheEntry();
+    return readImplNoDissem(onum).$cacheEntry;
   }
   
   private _Impl readImplNoDissem(long onum) {

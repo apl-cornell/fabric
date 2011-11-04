@@ -143,9 +143,10 @@ public interface Object {
       if (entry == null) return null;
       
       result = entry.getImpl(true);
-
-      // The _Impl we just got has a fresher soft ref than ours.
-      ref = result.$ref;
+      if (result != null) {
+        // The _Impl we just got has a fresher soft ref than ours.
+        ref = result.$ref;
+      }
       
       return result;
     }
@@ -177,10 +178,12 @@ public interface Object {
             || ref.store instanceof InProcessStore) {
           // Fetch from the store. Bypass dissemination when reading key
           // objects and when reading from an in-process store.
-          result = ref.store.readObjectNoDissem(ref.onum).getImpl(true);
+          result =
+              ref.store.readObjectNoDissem(ref.onum).getImpl(true);
         } else {
           // Fetch from the store.
-          result = ref.store.readObject(ref.onum).getImpl(true);
+          result =
+              ref.store.readObject(ref.onum).getImpl(true);
         }
       } catch (AccessException e) {
         throw new RuntimeFetchException(e);
@@ -335,7 +338,7 @@ public interface Object {
     /**
      * The worker's cache entry object for this _Impl.
      */
-    private ObjectCache.Entry $cacheEntry;
+    public final ObjectCache.Entry $cacheEntry;
 
     /**
      * A reference to the class object. TODO Figure out class loading.
@@ -412,6 +415,7 @@ public interface Object {
       this.$history = null;
       this.$numWaiting = 0;
       this.$ref = new FabricSoftRef(store, onum, this);
+      this.$cacheEntry = new ObjectCache.Entry(this);
       this.$readMapEntry = TransactionManager.getReadMapEntry(this, expiry);
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
@@ -573,18 +577,6 @@ public interface Object {
     @Override
     public final _Impl fetch() {
       return this;
-    }
-    
-    public final void $setCacheEntry(ObjectCache.Entry entry) {
-      // Sanity check.
-      if (this.$cacheEntry != null) {
-        throw new InternalError("Conflicting cache entry");
-      }
-      this.$cacheEntry = entry;
-    }
-    
-    public final ObjectCache.Entry $getCacheEntry() {
-      return this.$cacheEntry;
     }
     
     @Override

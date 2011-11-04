@@ -20,67 +20,99 @@ public final class ObjectCache {
   /**
    * Entries hold either an _Impl or a SerializedObject (but not both). This
    * class is thread safe.
+   * <p>
+   * Possible states:
+   * <ol>
+   * <li><b>serialized:</b> <code>impl</code> and <code>deserializedEntry</code>
+   * are null, <code>serialized</code> and <code>store</code> are non-null</li>
+   * <li><b>deserialized:</b> <code>serialized</code> is null,
+   * <code>deserializedEntry</code> and <code>deserializedEntry.impl</code> are
+   * non-null</li>
+   * <li><b>evicted:</b> <code>impl</code>, <code>serialized</code>, and (
+   * <code>deserializedEntry</code> or <code>deserializedEntry.impl</code>) are
+   * null
+   * </ol>
    */
   public static final class Entry {
     private Object._Impl impl;
-
-    private final Store store;
+    private Store store;
     private SerializedObject serialized;
 
-    private Entry(Object._Impl obj) {
-      setImpl(obj);
+    /**
+     * Memoizes the deserialized version of this cache entry.
+     */
+    private Entry deserializedEntry;
+
+    /**
+     * Constructs an <code>Entry</code> object in <b>deserialized</b> state.
+     */
+    public Entry(Object._Impl obj) {
+      this.impl = obj;
 
       this.store = null;
       this.serialized = null;
+      this.deserializedEntry = this;
     }
 
+    /**
+     * Constructs an <code>Entry</code> object in <b>serialized</b> state.
+     */
     private Entry(Store store, SerializedObject obj) {
       this.impl = null;
-      
+
       this.store = store;
       this.serialized = obj;
-    }
-
-    private void setImpl(Object._Impl obj) {
-      this.impl = obj;
-      obj.$setCacheEntry(this);
+      this.deserializedEntry = null;
     }
 
     /**
-     * @return the onum for the object represented by this entry.
-     */
-    public synchronized long onum() {
-      if (impl != null) return impl.$getOnum();
-      return serialized.getOnum();
-    }
-
-    /**
-     * Ensures the object has been deserialized.
+     * Ensures this entry is not in <b>serialized</b> state.
      */
     private void ensureDeserialized() {
-      if (impl != null) return;
-      setImpl(serialized.deserialize(store));
+      synchronized (this) {
+        if (deserializedEntry != null) return;
+        if (serialized == null) {
+          // This entry has been evicted.
+          return;
+        }
+
+        // This entry is in serialized state. Deserialize.
+        deserializedEntry = serialized.deserialize(store).$cacheEntry;
+        store = null;
+        serialized = null;
+      }
     }
 
     /**
      * @param deserialize
-     *          whether to deserialized the object if it hasn't been
-     *          deserialized yet.
-     * @return the Impl for this entry. This will be null if the object hasn't
-     *         been deserialized yet, and <code>deserialize</code> is false.
+     *          whether to deserialize this entry if it's <b>serialized</b>.
+     * @return the Impl for this entry. This will be null if this entry is
+     *         <b>serialized<b> and <code>deserialize</code> is false, or if
+     *         this entry is <b>evicted</b>.
      */
-    public synchronized Object._Impl getImpl(boolean deserialize) {
-      if (impl == null && deserialize) ensureDeserialized();
-      return impl;
+    public Object._Impl getImpl(boolean deserialize) {
+      synchronized (this) {
+        if (deserialize) ensureDeserialized();
+        if (deserializedEntry != null) return deserializedEntry.impl;
+        return null;
+      }
     }
   }
 
   final class EntrySoftRef extends SoftReference<Entry> {
     final long onum;
 
+    /**
+     * @param entry
+     *          assumed to be not <b>evicted</b>.
+     */
     private EntrySoftRef(Entry entry) {
       super(entry, refQueue);
-      this.onum = entry.onum();
+      if (entry.impl != null) {
+        this.onum = entry.impl.$getOnum();
+      } else {
+        this.onum = entry.serialized.getOnum();
+      }
     }
 
     private EntrySoftRef(Store store, SerializedObject obj) {
@@ -102,21 +134,33 @@ public final class ObjectCache {
       if (entry == null) return false;
 
       synchronized (entry) {
-        if (entry.store.isLocalStore()) {
+        if (entry.store != null && entry.store.isLocalStore()) {
           throw new InternalError("evicting local store object");
         }
 
         clear();
 
-        if (entry.impl != null) {
-          entry.impl.$ref.clear();
+        Entry deserializedEntry = entry.deserializedEntry;
+        if (deserializedEntry != null) {
+          synchronized (deserializedEntry) {
+            if (deserializedEntry.impl != null) {
+              if (deserializedEntry.impl.$getStore().isLocalStore()) {
+                throw new InternalError("evicting local store object");
+              }
+              
+              deserializedEntry.impl.$ref.clear();
+              deserializedEntry.impl.$ref.depin();
+              deserializedEntry.impl = null;
+            }
+          }
+          
+          entry.deserializedEntry = null;
         }
+        
+        entry.impl = null;
+        entry.serialized = null;
 
         entries.remove(onum);
-
-        if (entry.impl != null) {
-          entry.impl.$ref.depin();
-        }
       }
 
       return true;
@@ -162,7 +206,7 @@ public final class ObjectCache {
 
   private final LongKeyMap<EntrySoftRef> entries;
 
-  public ObjectCache(String storeName) {
+  ObjectCache(String storeName) {
     this.entries = new LongKeyHashMap<ObjectCache.EntrySoftRef>();
     this.refQueue = new ReferenceQueue<Entry>();
 
@@ -171,22 +215,31 @@ public final class ObjectCache {
     new Collector(storeName).start();
   }
 
-  public Entry get(long onum) {
+  Entry get(long onum) {
     synchronized (entries) {
-      EntrySoftRef entry = entries.get(onum);
-      if (entry == null) return null;
-      return entry.get();
+      EntrySoftRef entrySoftRef = entries.get(onum);
+      if (entrySoftRef == null) return null;
+
+      Entry entry = entrySoftRef.get();
+      if (entry.deserializedEntry != null && entry != entry.deserializedEntry) {
+        // Snap the link.
+        entrySoftRef.clear();
+        entry = entry.deserializedEntry;
+        entries.put(onum, new EntrySoftRef(entry));
+      }
+
+      return entry;
     }
   }
 
-  public void put(Object._Impl impl) {
+  void put(Object._Impl impl) {
     long onum = impl.$getOnum();
 
     synchronized (entries) {
       EntrySoftRef existingRef = entries.get(onum);
       if (existingRef != null) {
         Entry existingEntry = existingRef.get();
-        if (impl.$getCacheEntry() == existingEntry) return;
+        if (impl.$cacheEntry == existingEntry) return;
         if (existingEntry != null)
           throw new InternalError("Conflicting cache entry");
       }
@@ -195,7 +248,7 @@ public final class ObjectCache {
     }
   }
 
-  public Entry put(Store store, SerializedObject obj) {
+  Entry put(Store store, SerializedObject obj) {
     return put(store, obj, false);
   }
 
@@ -220,7 +273,7 @@ public final class ObjectCache {
     }
   }
 
-  public void put(Store store, ObjectGroup group) {
+  void put(Store store, ObjectGroup group) {
     synchronized (entries) {
       for (SerializedObject obj : group.objects().values()) {
         put(store, obj, true);
@@ -235,7 +288,7 @@ public final class ObjectCache {
    * 
    * @return true iff an object with the given onum was evicted from cache.
    */
-  public boolean update(Store store, SerializedObject update) {
+  boolean update(Store store, SerializedObject update) {
     synchronized (entries) {
       boolean evicted = evict(update.getOnum());
 
