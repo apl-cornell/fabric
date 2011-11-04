@@ -1,0 +1,19 @@
+package jif.principals;
+
+public class AliceNode extends ExternalPrincipal {
+  public AliceNode() {
+    super("AliceNode");
+  }
+
+  private static AliceNode{*!:*} P;
+  public static Principal getInstance{*!:*}() {
+    if (P == null) {
+      P = new AliceNode();
+    }
+    return P;
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
