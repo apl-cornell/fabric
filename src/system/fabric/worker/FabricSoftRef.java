@@ -57,7 +57,6 @@ public class FabricSoftRef extends SoftReference<_Impl> {
       while (true) {
         try {
           FabricSoftRef ref = (FabricSoftRef) queue.remove();
-          ref.store.notifyEvict(ref.onum);
           ref.depin();
         } catch (InterruptedException e) {}
       }

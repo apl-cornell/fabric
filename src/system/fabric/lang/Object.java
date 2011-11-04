@@ -333,8 +333,7 @@ public interface Object {
     public final FabricSoftRef $ref;
     
     /**
-     * Pins the worker's cache entry for this object. This prevents the cache
-     * entry from being garbage collected while this _Impl is still in memory.
+     * The worker's cache entry object for this _Impl.
      */
     private ObjectCache.Entry $cacheEntry;
 

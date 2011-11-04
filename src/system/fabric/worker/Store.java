@@ -107,15 +107,6 @@ public interface Store {
   public fabric.util.Map getRoot();
 
   /**
-   * Notifies this Store object that an _Impl has been evicted, so that it can
-   * perform the necessary cache maintenance.
-   * 
-   * @param onum
-   *          Onum of the object that was evicted.
-   */
-  public void notifyEvict(long onum);
-
-  /**
    * Evicts the object with the given onum from cache.
    * 
    * @return true iff the onum was found in cache.

@@ -202,11 +202,6 @@ public final class LocalStore implements Store {
   }
 
   @Override
-  public void notifyEvict(long onum) {
-    // nothing to do
-  }
-
-  @Override
   public boolean evict(long onum) {
     // nothing to do
     return false;

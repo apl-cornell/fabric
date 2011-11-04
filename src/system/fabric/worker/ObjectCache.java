@@ -36,6 +36,7 @@ public final class ObjectCache {
 
     private Entry(Store store, SerializedObject obj) {
       this.impl = null;
+      
       this.store = store;
       this.serialized = obj;
     }
@@ -142,6 +143,8 @@ public final class ObjectCache {
         }
 
         if (ref != null) {
+          // An entry object has been GCed. Remove the corresponding element
+          // from the entry table.
           synchronized (entries) {
             EntrySoftRef removed = entries.remove(ref.onum);
             if (removed != ref) {
@@ -251,19 +254,6 @@ public final class ObjectCache {
       EntrySoftRef entry = entries.get(onum);
       if (entry == null) return false;
       return entry.evict();
-    }
-  }
-
-  /**
-   * Notifies the cache that an object has been evicted, so it can perform the
-   * necessary maintenance.
-   */
-  void notifyEvict(long onum) {
-    synchronized (entries) {
-      EntrySoftRef entry = entries.get(onum);
-      if (entry != null && entry.get() == null) {
-        entries.remove(onum);
-      }
     }
   }
 

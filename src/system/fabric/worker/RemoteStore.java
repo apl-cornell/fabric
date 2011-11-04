@@ -343,11 +343,6 @@ public class RemoteStore extends RemoteNode implements Store {
   }
 
   @Override
-  public void notifyEvict(long onum) {
-    cache.notifyEvict(onum);
-  }
-
-  @Override
   public boolean evict(long onum) {
     return cache.evict(onum);
   }
