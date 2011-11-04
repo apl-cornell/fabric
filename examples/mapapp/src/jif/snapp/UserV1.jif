@@ -48,16 +48,6 @@ public class UserV1 extends AbstractPrincipal implements JifObject[{}] {
     this.location = loc;
   }
 
-  public void addFriend(UserV1 friend) {
-    this.friends.add(friend);
-  }
-
-  public void removeFriend(UserV1 friend) {
-    if (friend == this)
-      throw new Exception("you have to be your own friend");
-    this.friends.remove(friend);
-  }
-
   //////////////////////////////////////////////////////////////////////////////
   // JifObject method implementations                                         //
   //////////////////////////////////////////////////////////////////////////////

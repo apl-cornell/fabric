@@ -1,9 +1,26 @@
 package mapserv;
 
+/**
+ * A very simple map service: given a request for a region, it returns a 10x10
+ * image containing the background value, scaled to the requested region.
+ */
 public class MapServer extends AbstractPrincipal {
-  public MapServer(Principal owner) throws NullPointerException {
+
+  private final char background;
+
+  public MapServer(Principal owner, char background) throws NullPointerException {
+    this.background = background;
     super(owner.name());
     this.addDelegatesTo(owner);
+  }
+
+  public Image getMap(float xmin, float ymin,
+                      float xmax, float ymax) {
+    char[] data = new char[100];
+    for (int i = 0; i < 100; i++)
+      data[i] = world;
+
+    return new Image(xmin, xmax, ymin, ymax, 10, 10, data);
   }
 }
 

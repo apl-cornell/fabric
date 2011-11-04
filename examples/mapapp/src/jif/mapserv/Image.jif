@@ -1,0 +1,58 @@
+package mapserv;
+
+
+/**
+ * A simple image.
+ */
+public class Image {
+  /* coordinates of map */
+  public final float xmin;
+  public final float ymin;
+  public final float xmax;
+  public final float ymax;
+
+  /* packed data */
+  private final int    width;
+  private final char[] data;
+
+  public Image(float xmin, float xmax,
+               float ymin, float ymax,
+               int width, int height, char[] data) throws OutOfBoundsException {
+
+    if (width * height != data.length)
+      throw new OutOfBoundsException();
+
+    this.xmin = xmin;
+    this.ymin = ymin;
+
+    this.xmax = xmax;
+    this.ymax = ymax;
+
+    this.width = width;
+    this.data  = data;
+  }
+
+  public char getAt(float x, float y) {
+    return data[index(x,y)];
+  }
+
+  public void setAt(float x, float y, char value) {
+    data[index(x,y)] = value;
+  }
+
+  public void print(label l, PrintStream[{*l}] out) {
+    //TODO
+  }
+
+  private int index(float x, float y) {
+    int xoff = (int) (width  * (x - xmin)/(xmax - xmin));
+    int yoff = (int) (height * (y - ymin)/(ymax - ymin));
+
+    return yoff * width + xoff;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

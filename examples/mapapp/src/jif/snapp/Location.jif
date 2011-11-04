@@ -4,8 +4,8 @@ package snapp;
  * A point on the plane.
  */
 public class Location[label THIS] {
-  public final int{THIS} x;
-  public final int{THIS} y;
+  public final float{THIS} x;
+  public final float{THIS} y;
 
   public Location(int{THIS} x, int{THIS} y) {
     this.x = x;
