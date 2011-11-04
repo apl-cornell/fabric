@@ -1,0 +1,67 @@
+
+public class PrincipalTest implements Principal {
+  public  int       {this←} foo;
+  private principal {this←} owner;
+
+  public PrincipalTest {owner←} (principal{owner←} owner) where authority(this) {
+    this.foo   = 0;
+    this.owner = endorse(owner, {owner←} to {this←});
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public String{this} name() {
+    // TODO
+    return "";
+  }
+
+  public boolean{this;p;this←} delegatesTo(principal p) {
+    return p == owner;
+  }
+
+  public boolean equals(Principal p) {
+    // TODO
+    return false;
+  }
+
+  public
+  boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+  isAuthorized {this←}
+              (Object           authPrf,
+               Closure[this,lb] closure,
+               label            lb,
+               boolean          executeNow)
+  where authority(this),
+        {authPrf;closure;lb;executeNow} <= lb
+  {
+    // TODO
+    return false;
+  }
+
+  public
+  ActsForProof{this; p; this←; p←}
+  findProofUpto {this←}
+               (Principal p,
+                Object searchState)
+  {
+    // TODO
+    return null;
+  }
+
+  public
+  ActsForProof{this; p; p←; this←}
+  findProofDownto {this←}
+                 (Principal p,
+                  Object searchState)
+  {
+    // TODO
+    return null;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

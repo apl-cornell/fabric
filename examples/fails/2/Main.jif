@@ -1,0 +1,10 @@
+public class Main {
+  public static void main {AliceNode←} (principal p, String[] args) {
+    principal q = new PrincipalTest(AliceNode);
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

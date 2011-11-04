@@ -1,0 +1,10 @@
+
+public class PrincipalTest[principal owner] extends AbstractPrincipal {
+	public int {owner←} foo;
+
+	public PrincipalTest {owner←} () {
+		super("foo");
+		this.foo = 0;
+		this.addDelegatesTo(owner);
+	}
+}
