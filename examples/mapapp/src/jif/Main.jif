@@ -16,7 +16,7 @@ public class Main {
   static UserV1    alice;
   static UserV1    bob;
 
-  public static void main(principal God, String[] args) throws NullPointerException {
+  public static void main {*←} (principal God, String[] args) {
     // Each method here represents a step that is intended to be executed by
     // the appropriate worker.  For example, snapp_initialize should be invoked by
     // snapp's worker, whereas a_run_app should be invoked by alice's worker.

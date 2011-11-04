@@ -1,8 +1,13 @@
 package mapapp;
 
+import java.io.PrintStream;
+
+import jif.runtime.Runtime;
+
 import mapserv.MapServer;
 import mapserv.Image;
 import snapp.UserV1;
+import util.GroupIterator;
 
 /**
  * This is the mapping application.  A MapApp is instantiated with a particular
@@ -24,7 +29,7 @@ public class MapApp extends AbstractPrincipal {
    * prints a map of the user's friends, visible to the user
    */
   public void viewMap(UserV1 user) {
-    Image result = getMap(new label {user→}, user);
+    Image result = createMap(new label {user→}, user);
 
     PrintStream[{user→}] out = Runtime[user].getRuntime().stdout(new label {user→});
     result.print(new label {user→}, out);
@@ -36,7 +41,7 @@ public class MapApp extends AbstractPrincipal {
    * prints a map of the user's friends, visible to the user's friends
    */
   public void postMap(final UserV1 user) {
-    Image result = getMap(new label {user→user.friends}, user);
+    Image result = createMap(new label {user→user.friends}, user);
 
     PrintStream[{user→user.friends}] out = Runtime[user].getRuntime().stdout(new label {user→user.friends});
     result.print(new label {user→user.friends}, out);
@@ -47,7 +52,7 @@ public class MapApp extends AbstractPrincipal {
   /**
    * creates a map of the user's friends, visible at label l
    */
-  public Image createMap(label l, UserV1 user) {
+  public Image createMap(label l, final UserV1 user) {
     // check that the server is sufficiently trusted
     // TODO
 
@@ -55,18 +60,22 @@ public class MapApp extends AbstractPrincipal {
     float{*l} xmin = 0, ymin = 0;
     float{*l} xmax = 0, ymax = 0;
 
-    GroupIterator i = user.friends.iterate();
+    GroupIterator i = user.friends.iterator();
     while (i.hasNext()) {
-      UserV1 friend = i.next();
-      if (new label {friend←;friend→friend.locationInfo} <= l) {
-        xmin = min(friend.location.x, xmin);
-        xmax = max(friend.location.x, xmax);
+      Principal next = i.next();
 
-        ymin = min(friend.location.y, ymin);
-        ymax = max(friend.location.y, ymax);
-      }
-      else {
-        // TODO: declassifiers
+      if (next instanceof UserV1) {
+        final UserV1 friend = (UserV1) next;
+        if (new label {friend←;friend→friend.locationInfo} <= l) {
+          xmin = min(friend.location.x, xmin);
+          xmax = max(friend.location.x, xmax);
+
+          ymin = min(friend.location.y, ymin);
+          ymax = max(friend.location.y, ymax);
+        }
+        else {
+          // TODO: declassifiers
+        }
       }
     }
 
@@ -77,11 +86,15 @@ public class MapApp extends AbstractPrincipal {
     // TODO
 
     // annotate map
-    GroupIterator i = user.friends.iterate();
+    i = user.friends.iterator();
     while (i.hasNext()) {
-      UserV1 friend = i.next();
-      if (new label {friend←;friend→friend.locationInfo} <= l) {
-        map.setAt(friend.location.x, friend.location.y, 'f');
+      Principal next = i.next();
+      if (next instanceof UserV1) {
+        final UserV1 friend = (UserV1) next;
+        if (new label {friend←;friend→friend.locationInfo} <= l) {
+          map.setAt(friend.location.x, friend.location.y, 'f');
+        } else {
+        }
       }
     }
 

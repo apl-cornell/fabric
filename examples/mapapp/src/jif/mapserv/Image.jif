@@ -1,8 +1,10 @@
 package mapserv;
 
+import java.io.PrintStream;
 
 /**
- * A simple image.
+ * A simple image class.  The image is indexed by floating point numbers, and
+ * stores its own boundary... puts and gets are done relative to the boundary.
  */
 public class Image {
   /* coordinates of map */
@@ -13,14 +15,22 @@ public class Image {
 
   /* packed data */
   private final int    width;
+  private final int    height;
   private final char[] data;
 
+  /**
+   * Create a new image with the given boundary and data.
+   * @throws ArrayIndexOutOfBoundsException
+   *         if the given width and height do not match the size of the data.
+   * @throws NullPointerException
+   *         if data is null
+   */
   public Image(float xmin, float xmax,
                float ymin, float ymax,
-               int width, int height, char[] data) throws OutOfBoundsException {
+               int width, int height, char[] data) throws ArrayIndexOutOfBoundsException, NullPointerException {
 
     if (width * height != data.length)
-      throw new OutOfBoundsException();
+      throw new ArrayIndexOutOfBoundsException();
 
     this.xmin = xmin;
     this.ymin = ymin;
@@ -28,15 +38,16 @@ public class Image {
     this.xmax = xmax;
     this.ymax = ymax;
 
-    this.width = width;
-    this.data  = data;
+    this.width  = width;
+    this.height = height;
+    this.data   = data;
   }
 
-  public char getAt(float x, float y) {
+  public char getAt(float x, float y) throws ArrayIndexOutOfBoundsException {
     return data[index(x,y)];
   }
 
-  public void setAt(float x, float y, char value) {
+  public void setAt(float x, float y, char value) throws ArrayIndexOutOfBoundsException {
     data[index(x,y)] = value;
   }
 
