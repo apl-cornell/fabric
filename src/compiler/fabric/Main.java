@@ -26,10 +26,12 @@ import polyglot.frontend.ExtensionInfo;
 import polyglot.main.Options;
 import polyglot.main.Report;
 import polyglot.main.UsageError;
+import polyglot.types.NoClassException;
 import polyglot.util.ErrorInfo;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.QuotedStringTokenizer;
+import polyglot.util.SilentErrorQueue;
 import polyglot.util.StdErrorQueue;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
@@ -253,7 +255,7 @@ public class Main extends polyglot.main.Main {
   }
 
   public void compileInWorker(Options options, Set<String> source,
-      ExtensionInfo ext, ErrorQueue eq) {
+      ExtensionInfo ext, ErrorQueue eq) throws TerminationException {
     try {
 
       final FabricOptions o = (FabricOptions) options;
@@ -294,6 +296,7 @@ public class Main extends polyglot.main.Main {
                 URI localNS = extInfo.localNamespace();
                 Codebase cb = extInfo.typeSystem().codebaseFromNS(localNS);
                 URI ns = NSUtil.namespace(cb);
+                System.err.println("Creating codebase file " + f.getAbsolutePath() + " with " + ns);
                 fw.write("<" + ns + ">");
                 fw.close();
               } catch (fabric.common.exceptions.InternalError e) {
@@ -314,8 +317,18 @@ public class Main extends polyglot.main.Main {
           return null;
         }
       }, false);
-    } catch (Throwable e) {
-      throw new InternalCompilerError(e);
+    } catch (AbortException e) {
+      if (e.getCause() != null) {
+        Throwable abortCause = e.getCause();
+        if (abortCause.getCause() != null) {
+          Throwable failCause = abortCause.getCause();
+          throw new TerminationException(failCause.getMessage());
+        }
+        else {
+          throw new TerminationException(abortCause.getMessage());
+        }
+      }
+      throw new TerminationException(e.getMessage());
     }
   }
 

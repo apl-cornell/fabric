@@ -3,11 +3,36 @@
 APP_HOME="$(dirname $0)/.."
 # Fabric root
 FABRIC="${APP_HOME}/.."
-export PATH="${PATH}:${FABRIC}/bin:${FABRIC}/tests/bin"
+PATH="${PATH}:${FABRIC}/bin:${FABRIC}/tests/bin"
 export FABRIC_HOME="${APP_HOME}"
 
 name="tests"
 keep=false
+
+cleanup()
+# shutdown nodes
+{
+	for s in ${stores//,/ }
+	do 
+		echo "Shutting down $s" 
+		screen -S $s -X quit
+	done
+	for w in ${workers//,/ }
+	do
+		echo "Shutting down $w" 
+		screen -S $w -X quit
+	done
+  	exit $?
+}
+
+control_c()
+# run if user hits control-c
+{
+  echo -en "\n*** Ouch! Exiting ***\n"
+  cleanup
+  exit $?
+}
+
 
 while true; do
   case "$1" in
@@ -19,6 +44,8 @@ while true; do
 	*) args="${args} '$1'"; shift;;
   esac
 done
+# trap keyboard interrupt (control-c)
+#trap control_c SIGINT
 
 for s in ${stores//,/ }; 
 do 
@@ -28,10 +55,10 @@ do
 	screen -S $s -X exec start-store --name $s;  
 done
 
-if [ -n ${stores} ]
+if [ -n "${stores}" ]
 then
 	echo "Waiting for stores to start up" 
-	for s in {0..10}
+	for s in {0..5}
 	do 
 		printf "."
 		sleep 1	
@@ -51,12 +78,5 @@ fabth ${args}
 
 if [ ! ${keep} ] 
 then
-	for s in ${stores//,/ }
-	do 
-		screen -S $s -X quit
-	done
-	for w in ${workers//,/ }
-	do
-		screen -S $w -X quit
-	done
+	cleanup
 fi

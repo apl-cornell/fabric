@@ -13,10 +13,12 @@ import util.Group;
 public class UserV1 extends AbstractPrincipal implements JifObject[{}] {
 
   /** The user's location, only readable by members of the locationInfo group */
-  public       Location [{this←;this→locationInfo}] {this←} location;
+  public final label locationLabel = new label {this←;this→locationInfo};
+  public Location {*locationLabel} location;
 
   /** The user's friends,  only readable by members of the friendInfo   group */
-  public final Group    [{this←;this→friendInfo}]   {this←}   friends;
+  public final label friendLabel = new label {this←;this→friendInfo};
+  public final Group[friendLabel] {*friendLabel} friends;
 
   /** The social network that can act for this account. */
   public final Snapp {this←} network;
@@ -44,18 +46,8 @@ public class UserV1 extends AbstractPrincipal implements JifObject[{}] {
     this.location = null;
   }
 
-  public void setLocation(Location[{this←;this→friendInfo}] loc) {
+  public void setLocation(Location{*locationLabel} loc) {
     this.location = loc;
-  }
-
-  public void addFriend(UserV1 friend) {
-    this.friends.add(friend);
-  }
-
-  public void removeFriend(UserV1 friend) {
-    if (friend == this)
-      throw new Exception("you have to be your own friend");
-    this.friends.remove(friend);
   }
 
   //////////////////////////////////////////////////////////////////////////////

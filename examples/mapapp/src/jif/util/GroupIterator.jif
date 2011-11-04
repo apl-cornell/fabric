@@ -1,0 +1,17 @@
+package util;
+
+public class GroupIterator {
+  public boolean hasNext() {
+    // TODO
+    return false;
+  }
+
+  public Principal next() {
+    // TODO
+    return null;
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

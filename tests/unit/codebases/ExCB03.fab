@@ -1,6 +1,6 @@
 codebase cb;
 public class ExCB03 extends cb.A { 
-	protected cb.C c;
+	protected cb.C{*->} c;
 	public void m(cb.C c) { 
 		this.c = c;
 	}

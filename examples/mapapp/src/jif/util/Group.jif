@@ -12,12 +12,19 @@ public class Group[label entries] extends AbstractPrincipal {
 
 	public Group(String name) {
 		super(name);
+		// TODO
 	}
 
 	public void add(Principal p) {
+		// TODO
 	}
 
 	public void remove(Principal p) {
+		// TODO
+	}
+
+	public GroupIterator iterator() {
+		// TODO
 	}
 }
 

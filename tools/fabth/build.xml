@@ -17,6 +17,7 @@
 
 	<dirname property="fabth.home" file="${ant.file.fabth}" />
 	<path id="fabth.classpath">
+		<pathelement path="${polyglot.home}/tools/pth/classes" />
 		<pathelement path="${polyglot.home}/lib/pth.jar" />
 		<path refid="fabric.classpath" />
 		<path refid="polyglot.classpath" />

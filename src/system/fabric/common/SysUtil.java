@@ -471,7 +471,7 @@ public final class SysUtil {
   // group 2: codebase onum  or null for platform class
   // group 3: fabric class name
   // group 4: $_Impl or $_Proxy or ""
-  private static final Pattern javaNameRegex = Pattern.compile("\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.(.*?)((?:\\$_Impl)|(?:\\$_Proxy)|)");
+  private static final Pattern javaNameRegex = Pattern.compile("(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)((?:\\$_Impl)|(?:\\$_Proxy)|)");
   
   /**
    * @param cb

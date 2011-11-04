@@ -1,5 +1,5 @@
 // Assumes pth.jar is in classpath
-include "polyglot/pth/script.cup"
+include "script.cup"
 
 package fabric.tools.fabth;
 

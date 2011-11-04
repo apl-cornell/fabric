@@ -218,6 +218,7 @@ public class CBImportTable extends ImportTable {
           URI u = ts.namespaceResolver(ns).resolveCodebaseName(first);
           if (u == null)
             throw new SemanticException("Unknown codebase \"" + first + "\"");
+          import_ns = u;
           longName = StringUtil.removeFirstComponent(longName);
           if (Report.should_report(TOPICS, 2))
             Report.report(2, this + ": importing from external namespace "
