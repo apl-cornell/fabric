@@ -2,15 +2,20 @@ package fabric.worker;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.lang.Object;
+import fabric.lang.Object._Proxy;
+import fabric.lang.security.Label;
 
 /**
  * A per-store object cache. This class is thread safe. Lock hierarchy:
@@ -68,19 +73,25 @@ public final class ObjectCache {
     /**
      * Ensures this entry is not in <b>serialized</b> state.
      */
-    private void ensureDeserialized() {
-      synchronized (this) {
-        if (deserializedEntry != null) return;
-        if (serialized == null) {
-          // This entry has been evicted.
-          return;
-        }
-
-        // This entry is in serialized state. Deserialize.
-        deserializedEntry = serialized.deserialize(store).$cacheEntry;
-        store = null;
-        serialized = null;
+    private synchronized void ensureDeserialized() {
+      if (deserializedEntry != null) return;
+      if (serialized == null) {
+        // This entry has been evicted.
+        return;
       }
+
+      // This entry is in serialized state. Deserialize.
+      deserializedEntry = serialized.deserialize(store).$cacheEntry;
+      store = null;
+      serialized = null;
+    }
+
+    /**
+     * Determines whether this entry is <b>evicted</b>.
+     */
+    private synchronized boolean isEvicted() {
+      return impl == null && serialized == null
+          && (deserializedEntry == null || deserializedEntry.impl == null);
     }
 
     /**
@@ -90,11 +101,62 @@ public final class ObjectCache {
      *         <b>serialized<b> and <code>deserialize</code> is false, or if
      *         this entry is <b>evicted</b>.
      */
-    public Object._Impl getImpl(boolean deserialize) {
-      synchronized (this) {
-        if (deserialize) ensureDeserialized();
-        if (deserializedEntry != null) return deserializedEntry.impl;
-        return null;
+    public synchronized Object._Impl getImpl(boolean deserialize) {
+      if (deserialize) ensureDeserialized();
+      if (deserializedEntry != null) return deserializedEntry.impl;
+      return null;
+    }
+
+    /**
+     * Obtains a reference to the object's update label. (Returns null if this
+     * entry has been evicted.
+     */
+    public synchronized Label getLabel() {
+      if (isEvicted()) return null;
+      Object._Impl impl = getImpl(false);
+      if (impl != null) return impl.get$label();
+      return new Label._Proxy(store, serialized.getUpdateLabelOnum());
+    }
+
+    /**
+     * Obtains a reference to the object's access label. (Returns null if this
+     * entry has been evicted.
+     */
+    public synchronized Label getAccessLabel() {
+      if (isEvicted()) return null;
+      Object._Impl impl = getImpl(false);
+      if (impl != null) return impl.get$accesslabel();
+      return new Label._Proxy(store, serialized.getAccessLabelOnum());
+    }
+
+    /**
+     * Obtains a reference to the object's exact proxy. (Returns null if this
+     * entry has been evicted.
+     */
+    public synchronized Object._Proxy getProxy() {
+      if (isEvicted()) return null;
+      
+      Object._Impl impl = getImpl(false);
+      if (impl != null) return impl.$getProxy();
+
+      Class<? extends Object._Proxy> proxyClass =
+          serialized.getClassRef().toProxyClass();
+      try {
+        Constructor<? extends _Proxy> constructor =
+            proxyClass.getConstructor(Store.class, long.class);
+        return constructor.newInstance(store, serialized.getOnum());
+      } catch (NoSuchMethodException e) {
+        throw new InternalError(e);
+      } catch (SecurityException e) {
+        throw new InternalError(e);
+      } catch (InstantiationException e) {
+        throw new InternalError(e);
+      } catch (IllegalAccessException e) {
+        throw new InternalError(e);
+      } catch (IllegalArgumentException e) {
+        throw new InternalError(e);
+      } catch (InvocationTargetException e) {
+        throw new InternalError(e);
       }
     }
   }
@@ -147,16 +209,16 @@ public final class ObjectCache {
               if (deserializedEntry.impl.$getStore().isLocalStore()) {
                 throw new InternalError("evicting local store object");
               }
-              
+
               deserializedEntry.impl.$ref.clear();
               deserializedEntry.impl.$ref.depin();
               deserializedEntry.impl = null;
             }
           }
-          
+
           entry.deserializedEntry = null;
         }
-        
+
         entry.impl = null;
         entry.serialized = null;
 
@@ -215,14 +277,25 @@ public final class ObjectCache {
     new Collector(storeName).start();
   }
 
+  /**
+   * Obtains the cache entry for a given onum. If the return result is non-null,
+   * it is guaranteed to not be evicted.
+   */
   Entry get(long onum) {
     synchronized (entries) {
       EntrySoftRef entrySoftRef = entries.get(onum);
       if (entrySoftRef == null) return null;
 
       Entry entry = entrySoftRef.get();
+
+      if (entry.isEvicted()) {
+        // Entry evicted. Remove from entries table.
+        entries.remove(onum);
+        return null;
+      }
+
       if (entry.deserializedEntry != null && entry != entry.deserializedEntry) {
-        // Snap the link.
+        // Snap the link to the deserialized entry.
         entrySoftRef.clear();
         entry = entry.deserializedEntry;
         entries.put(onum, new EntrySoftRef(entry));

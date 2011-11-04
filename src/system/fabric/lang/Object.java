@@ -118,42 +118,35 @@ public interface Object {
         this.anchor = impl;
       else this.anchor = null;
     }
-    
-    /**
-     * @return an _Impl for the object, if it exists in the worker's cache;
-     *         otherwise, null.
-     */
-    private final _Impl $checkCache() {
-      // Check soft ref.
-      _Impl result = ref.get();
-      if (result != null) return result;
-      
-      // Check anchor.
-      if (anchor != null) return anchor;
-      
-      // Intercept reads of global constants and redirect them to the local store.
-      if (ONumConstants.isGlobalConstant(ref.onum)) {
-        ObjectCache.Entry entry =
-            Worker.getWorker().getLocalStore().readObject(ref.onum);
-        return entry.getImpl(true);
-      }
-      
-      // Check worker's cache.
-      ObjectCache.Entry entry = ref.store.readFromCache(ref.onum);
-      if (entry == null) return null;
-      
-      result = entry.getImpl(true);
-      if (result != null) {
-        // The _Impl we just got has a fresher soft ref than ours.
-        ref = result.$ref;
-      }
-      
-      return result;
-    }
 
     @Override
     public final _Impl fetch() {
-      _Impl result = $checkCache();
+      // Paranoia: continually fetch in case the entry becomes evicted between
+      // the fetchEntry() and the getImpl().
+      while (true) {
+        _Impl result = fetchEntry().getImpl(true);
+        if (result != null) {
+          ref = result.$ref;
+          return result;
+        }
+      }
+    }
+    
+    private final ObjectCache.Entry fetchEntry() {
+      // Check soft ref.
+      _Impl impl = ref.get();
+      if (impl != null) return impl.$cacheEntry;
+      
+      // Check anchor.
+      if (anchor != null) return anchor.$cacheEntry;
+      
+      // Intercept reads of global constants and redirect them to the local store.
+      if (ONumConstants.isGlobalConstant(ref.onum)) {
+        return Worker.getWorker().getLocalStore().readObject(ref.onum);
+      }
+      
+      // Check worker's cache.
+      ObjectCache.Entry result = ref.store.readFromCache(ref.onum);
       if (result != null) return result;
 
       // Object has been evicted.  Fetch from the network.
@@ -172,26 +165,21 @@ public interface Object {
           // Fetch from the worker.
           Pair<Store, SerializedObject> serialized =
               worker.readObject(tm.getCurrentTid(), ref.store, ref.onum);
-          ObjectCache.Entry entry = serialized.first.cache(serialized.second);
-          result = entry.getImpl(true);
+          result = serialized.first.cache(serialized.second);
         } else if (this instanceof SecretKeyObject
             || ref.store instanceof InProcessStore) {
           // Fetch from the store. Bypass dissemination when reading key
           // objects and when reading from an in-process store.
-          result =
-              ref.store.readObjectNoDissem(ref.onum).getImpl(true);
+          result = ref.store.readObjectNoDissem(ref.onum);
         } else {
           // Fetch from the store.
-          result =
-              ref.store.readObject(ref.onum).getImpl(true);
+          result = ref.store.readObject(ref.onum);
         }
       } catch (AccessException e) {
         throw new RuntimeFetchException(e);
       } finally {
         Timing.FETCH.end();
       }
-
-      ref = result.$ref;
 
       return result;
     }
@@ -213,32 +201,50 @@ public interface Object {
 
     @Override
     public final Label get$label() {
-      _Impl impl = $checkCache();
-      if (impl != null) return impl.get$label();
+      // If the object hasn't been deserialized yet, avoid deserialization by
+      // obtaining a reference to the object's access label directly from the
+      // serialized object. We can do this without interacting with the
+      // transaction manager, since labels are immutable, and stores are trusted
+      // to enforce this.
       
-      // Object not in worker cache. Avoid deserialization by obtaining a
-      // reference to the object's label directly from the serialized object. We
-      // can do this without interacting with the transaction manager, since
-      // labels are immutable, and stores are trusted to enforce this.
-      return fetch().get$label();
+      // Paranoia: continually fetch in case the entry becomes evicted between
+      // the fetchEntry() and the getLabel().
+      while (true) {
+        Label result = fetchEntry().getLabel();
+        if (result != null) return result;
+      }
     }
     
     @Override
     public final Label get$accesslabel() {
-      _Impl impl = $checkCache();
-      if (impl != null) return impl.get$accesslabel();
+      // If the object hasn't been deserialized yet, avoid deserialization by
+      // obtaining a reference to the object's access label directly from the
+      // serialized object. We can do this without interacting with the
+      // transaction manager, since access labels are immutable, and stores are
+      // trusted to enforce this.
       
-      // Object not in worker cache. Avoid deserialization by obtaining a
-      // reference to the object's access label directly from the serialized
-      // object. We can do this without interacting with the transaction
-      // manager, since access labels are immutable, and stores are trusted to
-      // enforce this.
-      return fetch().get$accesslabel();
+      // Paranoia: continually fetch in case the entry becomes evicted between
+      // the fetchEntry() and the getAccessLabel().
+      while (true) {
+        Label result = fetchEntry().getAccessLabel();
+        if (result != null) return result;
+      }
     }
 
     @Override
     public final _Proxy $getProxy() {
-      return fetch().$getProxy();
+      // If the object hasn't been deserialized yet, avoid deserialization by
+      // obtaining a reference to the object's access label directly from the
+      // serialized object. We can do this without interacting with the
+      // transaction manager, since the object's class is immutable, and stores
+      // are trusted to enforce this.
+      
+      // Paranoia: continually fetch in case the entry becomes evicted between
+      // the fetchEntry() and the getProxy().
+      while (true) {
+        _Proxy result = fetchEntry().getProxy();
+        if (result != null) return result;
+      }
     }
 
     @Override
