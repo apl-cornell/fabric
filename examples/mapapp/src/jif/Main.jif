@@ -47,7 +47,8 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void mapserv_initialize() throws NullPointerException {
-    mapServ = new MapServer(MapServNode.getInstance());
+    // the world looks like a blank space :)
+    mapServ = new MapServer(MapServNode.getInstance(), ' ');
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -55,7 +56,7 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void mapapp_initialize() throws NullPointerException {
-    mapApp = new MapApp(mapServ);
+    mapApp = new MapApp("MapApp", mapServ, MapAppNode.getInstance());
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -73,7 +74,8 @@ public class Main {
   }
 
   static void a_run_app() throws NullPointerException {
-    mapApp.run(alice);
+    mapApp.viewMap(alice);
+    // TODO: mapApp.postMap(alice);
   }
 
   //////////////////////////////////////////////////////////////////////////////

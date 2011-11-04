@@ -1,6 +1,7 @@
 package mapapp;
 
 import mapserv.MapServer;
+import mapserv.Image;
 import snapp.UserV1;
 
 /**
@@ -25,8 +26,8 @@ public class MapApp extends AbstractPrincipal {
   public void viewMap(UserV1 user) {
     Image result = getMap(new label {user→}, user);
 
-    PrintStream[{user→}] out = Runtime[user].getRuntime().stdout({user→});
-    result.print({user→}, out);
+    PrintStream[{user→}] out = Runtime[user].getRuntime().stdout(new label {user→});
+    result.print(new label {user→}, out);
   }
 
 
@@ -37,8 +38,8 @@ public class MapApp extends AbstractPrincipal {
   public void postMap(final UserV1 user) {
     Image result = getMap(new label {user→user.friends}, user);
 
-    PrintStream[{user→user.friends}] out = Runtime[user].getRuntime().stdout({user→user.friends});
-    result.print({user→user.friends}, out);
+    PrintStream[{user→user.friends}] out = Runtime[user].getRuntime().stdout(new label {user→user.friends});
+    result.print(new label {user→user.friends}, out);
   }
 
 
@@ -57,7 +58,7 @@ public class MapApp extends AbstractPrincipal {
     GroupIterator i = user.friends.iterate();
     while (i.hasNext()) {
       UserV1 friend = i.next();
-      if ({friend←;friend→friend.locationInfo} ⊑ l) {
+      if (new label {friend←;friend→friend.locationInfo} <= l) {
         xmin = min(friend.location.x, xmin);
         xmax = max(friend.location.x, xmax);
 
@@ -79,7 +80,7 @@ public class MapApp extends AbstractPrincipal {
     GroupIterator i = user.friends.iterate();
     while (i.hasNext()) {
       UserV1 friend = i.next();
-      if ({friend←;friend→friend.locationInfo} ⊑ l) {
+      if (new label {friend←;friend→friend.locationInfo} <= l) {
         map.setAt(friend.location.x, friend.location.y, 'f');
       }
     }
