@@ -829,13 +829,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public _Impl deserialize(Store store) {
     try {
-      ClassRef classRef = getClassRef();
-      if (classRef.equals(ClassRef.SURROGATE)) {
-        // Chase down surrogate.
-        return new _Proxy(store, getOnum()).fetch();
-      }
-      
-      Class<? extends _Impl> implClass = classRef.toImplClass();
+      Class<? extends _Impl> implClass = getClassRef().toImplClass();
 
       Constructor<?> constructor = constructorTable.get(implClass);
 
@@ -847,10 +841,19 @@ public final class SerializedObject implements FastSerializable, Serializable {
         constructorTable.put(implClass, constructor);
       }
 
-      return (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
-          getExpiry(), getUpdateLabelOnum(), getAccessLabelOnum(),
-          new ObjectInputStream(getSerializedDataStream()),
-          getRefTypeIterator(), getIntraStoreRefIterator());
+      _Impl result =
+          (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
+              getExpiry(), getUpdateLabelOnum(), getAccessLabelOnum(),
+              new ObjectInputStream(getSerializedDataStream()),
+              getRefTypeIterator(), getIntraStoreRefIterator());
+      
+      if (result instanceof Surrogate) {
+        // Chase the surrogate pointer.
+        Surrogate surrogate = (Surrogate) result;
+        return new _Proxy(surrogate.store, surrogate.onum).fetch();
+      }
+      
+      return result;
     } catch (Exception e) {
       throw new InternalError(e);
     }
