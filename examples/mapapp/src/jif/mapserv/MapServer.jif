@@ -17,10 +17,16 @@ public class MapServer extends AbstractPrincipal {
   /**
    * create a new map with the given bounds, containing the background character.
    */
-  public MapImage[lbl]{*lbl} getMap {*lbl} (label lbl,
-                                            float xmin, float ymin,
-                                            float xmax, float ymax)
-  where lbl <= {this←} {
+  public
+  MapImage[lbl]
+  getMap
+  (
+    label lbl,
+    Box   boundary
+  )
+  where
+    lbl <= {this←}
+  {
     char[] data = new char[100];
     for (int i = 0; i < 100; i++)
       data[i] = world;

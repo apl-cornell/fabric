@@ -1,34 +1,90 @@
 package mapserv;
 
-public class Box[label L] {
-  public float{L} xmin, ymin;
-  public float{L} xmax, ymax;
+import util.Store;
 
-  /** Expand the bounding box so that it contains the given point. */
-  public void expand(float x, float y) {
-    this.xmin = min(this.xmin, x);
-    this.ymin = min(this,ymin, y);
+/**
+ * Represents a Box in the x,y plane.
+ */
+public class Box {
 
-    this.xmax = min(this.xmax, x);
-    this.ymax = max(this.ymax, y);
+  //////////////////////////////////////////////////////////////////////////////
+  // public fields                                                            //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public final float{this} xmin, ymin;
+  public final float{this} xmax, ymax;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public methods                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Create a new box
+   */
+  public Box(float xmin, float ymin, float xmax, float ymax) {
+    this.xmin = xmin;
+    this.ymin = ymin;
+
+    this.xmax = xmax;
+    this.ymax = ymax;
   }
 
-  /** Return a box-local x-coordinate for the given global x-coordinate.
-    * If x is within the x boundaries of the box, then the result will be between 0 and 1.
-    */
+  /**
+   * Return true if this box contains (x,y).
+   */
+  public boolean contains(float x, float y) {
+    return xmin < x && x < xmax
+        && ymin < y && y < ymax;
+  }
+
+  /**
+   * Expand the bounding box so that it contains the given point.
+   */
+  public Box expand(float x, float y) {
+    return new Box(
+        min(this.xmin, x), min(this,ymin, y),
+        min(this.xmax, x), max(this.ymax, y));
+  }
+
+  /**
+   * Return a box-local x-coordinate for the given global x-coordinate.
+   * If x is within the x boundaries of the box, then the result will be
+   * between 0 and 1.
+   */
   public float scale_x(float x) {
     return (x - xmin) / (xmax - xmin);
   }
 
 
-  /** Return a box-local y-coordinate for the given global y-coordinate.
-    * If y is within the y boundaries of the box, then the result will be between 0 and 1.
-    */
+  /**
+   * Return a box-local y-coordinate for the given global y-coordinate.
+   * If y is within the y boundaries of the box, then the result will be
+   * between 0 and 1.
+   */
   public float scale_y(float y) {
     return (y - ymin) / (ymay - ymin);
   }
 
 
+  /**
+   * Create a deep copy of this on store s with label l.
+   */
+  public
+  Box
+  copy
+  (
+    label l,
+    Store s
+  )
+  where
+    {this} <= l
+  {
+    return new Box(this.xmin, this.ymin, this.xmax, this.ymax);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // private helper methods                                                   //
+  //////////////////////////////////////////////////////////////////////////////
 
   private static float min (float a, float b) {
     if (a < b)

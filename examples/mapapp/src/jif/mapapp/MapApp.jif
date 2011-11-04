@@ -6,6 +6,7 @@ import jif.runtime.Runtime;
 
 import mapserv.MapServer;
 import mapserv.MapImage;
+import mapserv.Box;
 import snapp.UserV1;
 import util.GroupIterator;
 
@@ -64,10 +65,11 @@ public class MapApp extends AbstractPrincipal {
     service actsfor user.friendInfo
   {
     // this is the label of the data that gets sent to the service
-    final label fetchLabel = new label {*l⊔service→};
+    final label serviceLabel = new label {service→};
+    final label fetchLabel   = new label {*l meet serviceLabel};
 
     // compute the bounding box
-    Box[fetchLabel] bound = new Box();
+    Box boundary = new Box(0,0,0,0);
     GroupIterator i = user.friends.iterator();
     while (i.hasNext()) {
       Principal next = i.next();
@@ -78,7 +80,7 @@ public class MapApp extends AbstractPrincipal {
         // if the friend doesn't mind his location leaking to the map service,
         // then we expand the bounding box to contain him
         if (friend.locationLabel <= fetchLabel) {
-          bound.expand(friend.location.x, friend.location.y);
+          boundary = boundary.expand(friend.location.x, friend.location.y);
         }
 
         // TODO: declassifiers
@@ -90,10 +92,10 @@ public class MapApp extends AbstractPrincipal {
     }
 
     // get map
-    MapImage[fetchLabel] map = this.service.getMap(l, bound);
+    MapImage[fetchLabel] map = this.service.getMap(fetchLabel, boundary);
 
     // make a local copy (with label l)
-    MapImage[l] annotated = map.copy(l);
+    MapImage[l] annotated = map.copy(l, /* TODO: local store */ null);
 
     // annotate map
     i = user.friends.iterator();
@@ -109,7 +111,7 @@ public class MapApp extends AbstractPrincipal {
       }
     }
 
-    return map;
+    return annotated;
   }
 }
 

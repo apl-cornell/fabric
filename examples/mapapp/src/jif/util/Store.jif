@@ -1,0 +1,12 @@
+package util;
+
+/**
+ * Placeholder for Fabric store.
+ */
+public class Store {
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

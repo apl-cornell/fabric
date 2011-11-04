@@ -3,15 +3,14 @@ package snapp;
 /**
  * A point on the plane.
  */
-public class Location[label THIS] {
-  public final float{THIS} x;
-  public final float{THIS} y;
+public class Location {
+  public final float{this} x;
+  public final float{this} y;
 
-  public Location(int{THIS} x, int{THIS} y) {
+  public Location(int{this} x, int{this} y) {
     this.x = x;
     this.y = y;
   }
-
 }
 
 /*

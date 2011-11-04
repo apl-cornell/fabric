@@ -2,18 +2,34 @@ package mapserv;
 
 import java.io.PrintStream;
 
+import util.Store;
+import util.Util;
+
 /**
  * A simple image class.  The image is indexed by floating point numbers, and
  * stores its own boundary... puts and gets are done relative to the boundary.
  */
 public class MapImage[label L] {
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public fields                                                            //
+  //////////////////////////////////////////////////////////////////////////////
+
   /* coordinates of map */
-  public final Box[{L}] {L} boundary;
+  public final Box {L} boundary;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // internal state                                                           //
+  //////////////////////////////////////////////////////////////////////////////
 
   /* packed data */
-  private final int{L}       width;
-  private final int{L}       height;
-  private final char{L}[]{L} data;
+  protected final int{L}       width;
+  protected final int{L}       height;
+  protected final char{L}[]{L} data;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public methods                                                           //
+  //////////////////////////////////////////////////////////////////////////////
 
   /**
    * Create a new image with the given boundary and data.
@@ -41,18 +57,64 @@ public class MapImage[label L] {
     this.boundary = boundary;
   }
 
+  /**
+   * Get the pixel corresponding to the global location (x,y).
+   */
   public char getAt(float x, float y) throws ArrayIndexOutOfBoundsException {
     return data[index(x,y)];
   }
 
+  /**
+   * Set the pixel corresponding to the global location (x,y).
+   */
   public void setAt(float x, float y, char value) throws ArrayIndexOutOfBoundsException {
     data[index(x,y)] = value;
   }
 
-  public void print(label l, PrintStream[{*l}] out) {
-    //TODO
+  /**
+   * Create a deep copy of this image on store s with label l.
+   */
+  public
+  MapImage[l]
+  copy
+  (
+    label l,
+    Store s
+  )
+  where
+    L <= l
+  {
+    return new MapImage[l] (boundary.copy(l,s), width, height, Util.copyArray(data, l, l, s));
   }
 
+
+  /**
+   * Print image to the given output stream.
+   */
+  public void print(PrintStream[L] out) {
+    out.println("(" + boundary.xmin + ", " + boundary.ymin + ")");
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        out.print(data[j*width + i]);
+      }
+      out.println();
+    }
+
+    for (int j = 0; j < width; j++)
+      out.print(' ');
+
+    out.println("(" + boundary.xmax + ", " + boundary.ymax + ")");
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // private helper methods                                                   //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /** Return the index into data corresponding to the global coordinates (x,y).
+   *  Note that if (x,y) is outside the boundary, the result will be outside the bounds
+   *  of the data array.
+   */
   private int index(float x, float y) {
     int xoff = (int) (width  * boundary.scale_x(x));
     int yoff = (int) (height * boundary.scale_y(y));
