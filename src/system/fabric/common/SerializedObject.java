@@ -366,6 +366,19 @@ public final class SerializedObject implements FastSerializable, Serializable {
   }
 
   /**
+   * Determines whether this object is a surrogate.
+   */
+  public boolean isSurrogate() {
+    if (classRef != null) {
+      return classRef.isSurrogate();
+    }
+
+    // Class not loaded yet. Avoid loading by examining the serialized data
+    // directly.
+    return ClassRef.isSurrogate(objectData, classRefPos());
+  }
+
+  /**
    * @return the offset in objectData representing the start of an int
    *         representing the number of reference types (i.e.,
    *         inter-store/intra-store/serialized).
@@ -828,6 +841,21 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *           Thrown when the class for this object is unavailable.
    */
   public _Impl deserialize(Store store) {
+    return deserialize(store, true);
+  }
+
+  /**
+   * Deserializes this object.
+   * 
+   * @param store
+   *          The store on which this object lives.
+   * @param chaseSurrogates
+   *          whether surrogates should be traversed.
+   * @return The deserialized object.
+   * @throws ClassNotFoundException
+   *           Thrown when the class for this object is unavailable.
+   */
+  public _Impl deserialize(Store store, boolean chaseSurrogates) {
     try {
       Class<? extends _Impl> implClass = getClassRef().toImplClass();
 
@@ -846,17 +874,16 @@ public final class SerializedObject implements FastSerializable, Serializable {
               getExpiry(), getUpdateLabelOnum(), getAccessLabelOnum(),
               new ObjectInputStream(getSerializedDataStream()),
               getRefTypeIterator(), getIntraStoreRefIterator());
-      
-      if (result instanceof Surrogate) {
+
+      if (chaseSurrogates && (result instanceof Surrogate)) {
         // Chase the surrogate pointer.
         Surrogate surrogate = (Surrogate) result;
         return new _Proxy(surrogate.store, surrogate.onum).fetch();
       }
-      
+
       return result;
     } catch (Exception e) {
       throw new InternalError(e);
     }
   }
-
 }

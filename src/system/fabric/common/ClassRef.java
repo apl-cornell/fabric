@@ -54,6 +54,11 @@ public abstract class ClassRef implements FastSerializable {
       int lengthAt(byte[] data, int pos) {
         return PlatformClassRef.lengthAt(data, pos);
       }
+
+      @Override
+      boolean isSurrogate(byte[] data, int pos) {
+        return PlatformClassRef.isSurrogate(data, pos);
+      }
     },
     FABRIC {
       /**
@@ -81,6 +86,11 @@ public abstract class ClassRef implements FastSerializable {
       int lengthAt(byte[] data, int pos) {
         return FabricClassRef.lengthAt(data, pos);
       }
+
+      @Override
+      boolean isSurrogate(byte[] data, int pos) {
+        return false;
+      }
     };
 
     abstract ClassRef deserialize(byte[] data, int pos);
@@ -89,13 +99,15 @@ public abstract class ClassRef implements FastSerializable {
         throws IOException;
 
     abstract int lengthAt(byte[] data, int pos);
+    
+    abstract boolean isSurrogate(byte[] data, int pos);
   }
 
   /**
    * ClassRef for fabric.common.Surrogate.
    */
-  public static final ClassRef SURROGATE = new PlatformClassRef(
-      Surrogate.class);
+  public static final ClassRef SURROGATE =
+      new PlatformClassRef(Surrogate.class);
 
   /**
    * The <code>ClassRefType</code> corresponding to this class.
@@ -151,7 +163,7 @@ public abstract class ClassRef implements FastSerializable {
    *         or _Impl classes.
    */
   public abstract Class<?> toClass();
-  
+
   /**
    * @return the _Impl class object for this (assumed to be) Fabric class.
    * @throws InternalError
@@ -161,25 +173,25 @@ public abstract class ClassRef implements FastSerializable {
   @SuppressWarnings("unchecked")
   public Class<? extends _Impl> toImplClass() {
     Class<? extends Object> outer = (Class<? extends Object>) toClass();
-    
+
     if (outer.equals(Surrogate.class)) {
       // Special case for Surrogate: it itself is an _Impl class.
       return (Class<? extends _Impl>) outer;
     }
-    
+
     Class<? extends _Impl> result = SysUtil.getImplClass(outer);
     if (result == null) {
       throw new InternalError("No _Impl class found in " + outer);
     }
-    
+
     return result;
   }
-  
+
   /**
    * @return the _Proxy class object for this (assumed to be) Fabric class.
    * @throws InternalError
-   *           if no _Proxy class is found (usually because this is not a
-   *           Fabric class)
+   *           if no _Proxy class is found (usually because this is not a Fabric
+   *           class)
    */
   @SuppressWarnings("unchecked")
   public Class<? extends fabric.lang.Object._Proxy> toProxyClass() {
@@ -189,7 +201,7 @@ public abstract class ClassRef implements FastSerializable {
         return (Class<? extends _Proxy>) c;
       }
     }
-    
+
     throw new InternalError("No _Proxy class found in " + outer);
   }
 
@@ -240,7 +252,7 @@ public abstract class ClassRef implements FastSerializable {
     public String javaClassName() {
       return clazz.getName();
     }
-    
+
     @Override
     public final Class<?> toClass() {
       return clazz;
@@ -253,6 +265,11 @@ public abstract class ClassRef implements FastSerializable {
       } catch (IOException e) {
         throw new InternalError(e);
       }
+    }
+
+    @Override
+    boolean isSurrogate() {
+      return Surrogate.class.equals(clazz);
     }
 
     // ////////////////////////////////////////////////////////////////////////
@@ -304,7 +321,7 @@ public abstract class ClassRef implements FastSerializable {
       int classNameLength = in.readShort();
       out.writeShort(classNameLength);
       SerializationUtil.copyBytes(in, out, classNameLength, buf);
-      
+
       int classHashLength = in.readShort();
       out.writeShort(classHashLength);
       SerializationUtil.copyBytes(in, out, classHashLength, buf);
@@ -403,6 +420,10 @@ public abstract class ClassRef implements FastSerializable {
       return Arrays.copyOfRange(data, classHashPos, classHashPos
           + classHashLength(data, pos));
     }
+    
+    static boolean isSurrogate(byte[] data, int pos) {
+      return className(data, pos).equals(Surrogate.class.getName());
+    }
   }
 
   /**
@@ -482,7 +503,7 @@ public abstract class ClassRef implements FastSerializable {
     byte[] getHashImpl() {
       return SysUtil.hashFClass(this);
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public final Class<? extends fabric.lang.Object> toClass() {
@@ -506,6 +527,11 @@ public abstract class ClassRef implements FastSerializable {
     private FClass._Proxy getFClass() {
       if (fClass != null) return fClass;
       return (_Proxy) codebase.resolveClassName(className);
+    }
+
+    @Override
+    boolean isSurrogate() {
+      return false;
     }
 
     // ////////////////////////////////////////////////////////////////////////
@@ -556,17 +582,17 @@ public abstract class ClassRef implements FastSerializable {
      */
     public FabricClassRef(DataInput in) throws IOException {
       super(ClassRefType.FABRIC);
-      
+
       byte[] storeNameData = new byte[in.readShort()];
       in.readFully(storeNameData);
       String storeName = new String(storeNameData, "UTF-8");
       Store store = Worker.getWorker().getStore(storeName);
-      
+
       long onum = in.readLong();
       this.fClass = new FClass._Proxy(store, onum);
       this.codebase = null;
       this.className = null;
-      
+
       byte[] hash = new byte[in.readShort()];
       in.readFully(hash);
       checkHash(hash);
@@ -581,7 +607,7 @@ public abstract class ClassRef implements FastSerializable {
       int storeNameLength = in.readShort();
       out.writeShort(storeNameLength);
       SerializationUtil.copyBytes(in, out, storeNameLength, buf);
-      
+
       long onum = in.readLong();
       out.writeLong(onum);
 
@@ -723,6 +749,12 @@ public abstract class ClassRef implements FastSerializable {
     }
   }
 
+  /**
+   * @return true iff this ClassRef represents
+   *         <code>fabric.common.Surrogate</code>.
+   */
+  abstract boolean isSurrogate();
+
   // //////////////////////////////////////////////////////////////////////////
   // Serialization cruft.
 
@@ -772,5 +804,15 @@ public abstract class ClassRef implements FastSerializable {
   static int lengthAt(byte[] data, int pos) {
     ClassRefType type = ClassRefType.values()[data[pos]];
     return 1 + type.lengthAt(data, pos + 1);
+  }
+
+  /**
+   * Determines whether the ClassRef data occurring at the given offset position
+   * in the give byte array represents the class
+   * <code>fabric.common.Surrogate</code>.
+   */
+  static boolean isSurrogate(byte[] data, int pos) {
+    ClassRefType type = ClassRefType.values()[data[pos]];
+    return type.isSurrogate(data, pos + 1);
   }
 }

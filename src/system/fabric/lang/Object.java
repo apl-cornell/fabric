@@ -132,7 +132,11 @@ public interface Object {
       }
     }
     
-    private final ObjectCache.Entry fetchEntry() {
+    /**
+     * Ensures the object is resident in memory and returns its cache entry. If
+     * the object is fetched from the network, it will not be deserialized.
+     */
+    public final ObjectCache.Entry fetchEntry() {
       // Check soft ref.
       _Impl impl = ref.get();
       if (impl != null) return impl.$cacheEntry;

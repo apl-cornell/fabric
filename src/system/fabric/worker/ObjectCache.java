@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.Surrogate;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
@@ -14,7 +15,6 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.lang.Object;
-import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 
 /**
@@ -28,25 +28,29 @@ public final class ObjectCache {
    * <p>
    * Possible states:
    * <ol>
-   * <li><b>serialized:</b> <code>impl</code> and <code>deserializedEntry</code>
-   * are null, <code>serialized</code> and <code>store</code> are non-null</li>
-   * <li><b>deserialized:</b> <code>serialized</code> is null,
-   * <code>deserializedEntry</code> and <code>deserializedEntry.impl</code> are
-   * non-null</li>
-   * <li><b>evicted:</b> <code>impl</code>, <code>serialized</code>, and (
-   * <code>deserializedEntry</code> or <code>deserializedEntry.impl</code>) are
-   * null
+   * <li><b>overridden:</b> <code>next</code> is non-null, <code>impl</code> and
+   * <code>serialized</code> are null (the entry in <code>next</code> should be
+   * used instead of this)
+   * <ul>
+   * <li>This is done because we maintain the invariant that exactly one Entry
+   * object is associated with any given _Impl or SerializedObject.</li>
+   * </ul>
+   * </li>
+   * <li><b>serialized:</b> <code>impl</code> and <code>next</code> are null,
+   * <code>serialized</code> and <code>store</code> are non-null</li>
+   * <li><b>deserialized:</b> <code>serialized</code> and <code>next</code> are
+   * null, <code>impl</code> is non-null</li>
+   * <li><b>evicted:</b> <code>impl</code>, <code>serialized</code>, and
+   * <code>next</code> are null
    * </ol>
+   * <p>
    */
   public static final class Entry {
     private Object._Impl impl;
     private Store store;
     private SerializedObject serialized;
 
-    /**
-     * Memoizes the deserialized version of this cache entry.
-     */
-    private Entry deserializedEntry;
+    private Entry next;
 
     /**
      * Constructs an <code>Entry</code> object in <b>deserialized</b> state.
@@ -56,7 +60,7 @@ public final class ObjectCache {
 
       this.store = null;
       this.serialized = null;
-      this.deserializedEntry = this;
+      this.next = null;
     }
 
     /**
@@ -67,31 +71,94 @@ public final class ObjectCache {
 
       this.store = store;
       this.serialized = obj;
-      this.deserializedEntry = null;
+      this.next = null;
+    }
+
+    /**
+     * Flattens chains of <code>next</code> links. Ensures either
+     * <code>next</code> or <code>next.next</code> is null.
+     */
+    private synchronized void snapNextLinks() {
+      if (next == null) return;
+      synchronized (next) {
+        if (next.next != null) {
+          next.snapNextLinks();
+          next = next.next;
+        }
+      }
     }
 
     /**
      * Ensures this entry is not in <b>serialized</b> state.
+     * <p>
+     * When this method returns, either <code>next</code> or
+     * <code>next.next</code> is null.
      */
     private synchronized void ensureDeserialized() {
-      if (deserializedEntry != null) return;
-      if (serialized == null) {
-        // This entry has been evicted.
+      if (next != null) {
+        // Entry is overridden.
+        synchronized (next) {
+          next.ensureDeserialized();
+          if (next.next != null) next = next.next;
+        }
+        return;
+      }
+
+      if (impl != null || serialized == null) {
+        // This entry is either already deserialized or has been evicted.
         return;
       }
 
       // This entry is in serialized state. Deserialize.
-      deserializedEntry = serialized.deserialize(store).$cacheEntry;
+      next = serialized.deserialize(store).$cacheEntry;
       store = null;
       serialized = null;
+      snapNextLinks();
+    }
+
+    /**
+     * Ensures either this entry represents a non-Surrogate object or
+     * <code>next</code> does. Assumes this entry hasn't been evicted.
+     */
+    private synchronized void resolveSurrogates() {
+      if (next != null) {
+        // Entry is overridden.
+        synchronized (next) {
+          next.resolveSurrogates();
+          if (next.next != null) next = next.next;
+        }
+        return;
+      }
+
+      if (impl != null) {
+        if (!(impl instanceof Surrogate)) return;
+
+        Surrogate surrogate = (Surrogate) impl;
+        next = new Object._Proxy(surrogate.store, surrogate.onum).fetchEntry();
+      } else if (serialized.isSurrogate()) {
+        next = serialized.deserialize(store, false).$cacheEntry;
+      } else {
+        return;
+      }
+
+      synchronized (next) {
+        next.resolveSurrogates();
+        if (next.next != null) next = next.next;
+      }
     }
 
     /**
      * Determines whether this entry is <b>evicted</b>.
      */
     private synchronized boolean isEvicted() {
-      return impl == null && serialized == null
-          && (deserializedEntry == null || deserializedEntry.impl == null);
+      if (next != null) {
+        if (!next.isEvicted()) return false;
+
+        next = null;
+        return true;
+      }
+
+      return impl == null && serialized == null;
     }
 
     /**
@@ -103,8 +170,8 @@ public final class ObjectCache {
      */
     public synchronized Object._Impl getImpl(boolean deserialize) {
       if (deserialize) ensureDeserialized();
-      if (deserializedEntry != null) return deserializedEntry.impl;
-      return null;
+      if (next != null) return next.getImpl(deserialize);
+      return impl;
     }
 
     /**
@@ -113,8 +180,14 @@ public final class ObjectCache {
      */
     public synchronized Label getLabel() {
       if (isEvicted()) return null;
+
       Object._Impl impl = getImpl(false);
       if (impl != null) return impl.get$label();
+
+      // We have a serialized entry.
+      resolveSurrogates();
+
+      if (next != null) return next.getLabel();
       return new Label._Proxy(store, serialized.getUpdateLabelOnum());
     }
 
@@ -124,8 +197,14 @@ public final class ObjectCache {
      */
     public synchronized Label getAccessLabel() {
       if (isEvicted()) return null;
+
       Object._Impl impl = getImpl(false);
       if (impl != null) return impl.get$accesslabel();
+
+      // We have a serialized entry.
+      resolveSurrogates();
+
+      if (next != null) return next.getLabel();
       return new Label._Proxy(store, serialized.getAccessLabelOnum());
     }
 
@@ -135,14 +214,19 @@ public final class ObjectCache {
      */
     public synchronized Object._Proxy getProxy() {
       if (isEvicted()) return null;
-      
+
       Object._Impl impl = getImpl(false);
       if (impl != null) return impl.$getProxy();
+
+      // We have a serialized entry.
+      resolveSurrogates();
+
+      if (next != null) return next.getProxy();
 
       Class<? extends Object._Proxy> proxyClass =
           serialized.getClassRef().toProxyClass();
       try {
-        Constructor<? extends _Proxy> constructor =
+        Constructor<? extends Object._Proxy> constructor =
             proxyClass.getConstructor(Store.class, long.class);
         return constructor.newInstance(store, serialized.getOnum());
       } catch (NoSuchMethodException e) {
@@ -158,6 +242,15 @@ public final class ObjectCache {
       } catch (InvocationTargetException e) {
         throw new InternalError(e);
       }
+    }
+
+    /**
+     * Determines whether this entry represents an object on the local store.
+     */
+    private synchronized boolean isLocalStoreObject() {
+      if (next != null) return next.isLocalStoreObject();
+      if (impl != null) return impl.$getStore().isLocalStore();
+      return store != null && store.isLocalStore();
     }
   }
 
@@ -195,37 +288,36 @@ public final class ObjectCache {
       Entry entry = get();
       if (entry == null) return false;
 
+      boolean result;
       synchronized (entry) {
-        if (entry.store != null && entry.store.isLocalStore()) {
+        result = !entry.isEvicted();
+        if (entry.isLocalStoreObject()) {
           throw new InternalError("evicting local store object");
         }
 
         clear();
 
-        Entry deserializedEntry = entry.deserializedEntry;
-        if (deserializedEntry != null) {
-          synchronized (deserializedEntry) {
-            if (deserializedEntry.impl != null) {
-              if (deserializedEntry.impl.$getStore().isLocalStore()) {
-                throw new InternalError("evicting local store object");
-              }
-
-              deserializedEntry.impl.$ref.clear();
-              deserializedEntry.impl.$ref.depin();
-              deserializedEntry.impl = null;
+        while (entry != null) {
+          synchronized (entry) {
+            if (entry.impl != null) {
+              entry.impl.$ref.clear();
+              entry.impl.$ref.depin();
+              entry.impl = null;
             }
+
+            Entry next = entry.next;
+            entry.store = null;
+            entry.serialized = null;
+            entry.next = null;
+
+            entry = next;
           }
-
-          entry.deserializedEntry = null;
         }
-
-        entry.impl = null;
-        entry.serialized = null;
 
         entries.remove(onum);
       }
 
-      return true;
+      return result;
     }
   }
 
@@ -288,17 +380,21 @@ public final class ObjectCache {
 
       Entry entry = entrySoftRef.get();
 
-      if (entry.isEvicted()) {
-        // Entry evicted. Remove from entries table.
-        entries.remove(onum);
-        return null;
-      }
+      synchronized (entry) {
+        if (entry.isEvicted()) {
+          // Entry evicted. Remove from entries table.
+          entries.remove(onum);
+          return null;
+        }
 
-      if (entry.deserializedEntry != null && entry != entry.deserializedEntry) {
-        // Snap the link to the deserialized entry.
-        entrySoftRef.clear();
-        entry = entry.deserializedEntry;
-        entries.put(onum, new EntrySoftRef(entry));
+        entry.snapNextLinks();
+
+        if (entry.next != null) {
+          // Snap the link to the overriding entry.
+          entrySoftRef.clear();
+          entry = entry.next;
+          entries.put(onum, new EntrySoftRef(entry));
+        }
       }
 
       return entry;
