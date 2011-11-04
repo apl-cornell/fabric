@@ -6,17 +6,17 @@ import java.io.PrintStream;
  * A simple image class.  The image is indexed by floating point numbers, and
  * stores its own boundary... puts and gets are done relative to the boundary.
  */
-public class Image {
+public class MapImage[label L] {
   /* coordinates of map */
-  public final float xmin;
-  public final float ymin;
-  public final float xmax;
-  public final float ymax;
+  public final float{L} xmin;
+  public final float{L} ymin;
+  public final float{L} xmax;
+  public final float{L} ymax;
 
   /* packed data */
-  private final int    width;
-  private final int    height;
-  private final char[] data;
+  private final int{L}       width;
+  private final int{L}       height;
+  private final char{L}[]{L} data;
 
   /**
    * Create a new image with the given boundary and data.
@@ -25,7 +25,7 @@ public class Image {
    * @throws NullPointerException
    *         if data is null
    */
-  public Image(float xmin, float xmax,
+  public MapImage(float xmin, float xmax,
                float ymin, float ymax,
                int width, int height, char[] data) throws ArrayIndexOutOfBoundsException, NullPointerException {
 

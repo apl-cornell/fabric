@@ -5,7 +5,7 @@ import java.io.PrintStream;
 import jif.runtime.Runtime;
 
 import mapserv.MapServer;
-import mapserv.Image;
+import mapserv.MapImage;
 import snapp.UserV1;
 import util.GroupIterator;
 
@@ -29,7 +29,7 @@ public class MapApp extends AbstractPrincipal {
    * prints a map of the user's friends, visible to the user
    */
   public void viewMap(UserV1 user) {
-    Image result = createMap(new label {user→}, user);
+    MapImage result = createMap(new label {user→}, user);
 
     PrintStream[{user→}] out = Runtime[user].getRuntime().stdout(new label {user→});
     result.print(new label {user→}, out);
@@ -41,7 +41,7 @@ public class MapApp extends AbstractPrincipal {
    * prints a map of the user's friends, visible to the user's friends
    */
   public void postMap(final UserV1 user) {
-    Image result = createMap(new label {user→user.friends}, user);
+    MapImage result = createMap(new label {user→user.friends}, user);
 
     PrintStream[{user→user.friends}] out = Runtime[user].getRuntime().stdout(new label {user→user.friends});
     result.print(new label {user→user.friends}, out);
@@ -52,11 +52,12 @@ public class MapApp extends AbstractPrincipal {
   /**
    * creates a map of the user's friends, visible at label l
    */
-  public Image createMap(label l, final UserV1 user) {
+  public MapImage[l] createMap(label l, final UserV1 user) {
     // check that the server is sufficiently trusted
     // TODO
 
     // compute bounding box
+    // TODO: should be labelled l ⊓ service
     float{*l} xmin = 0, ymin = 0;
     float{*l} xmax = 0, ymax = 0;
 
@@ -80,7 +81,7 @@ public class MapApp extends AbstractPrincipal {
     }
 
     // get map
-    Image map = this.service.getMap(xmin, ymin, xmax, ymax);
+    MapImage[l] map = this.service.getMap(xmin, ymin, xmax, ymax);
 
     // make a local copy (with label l)
     // TODO
