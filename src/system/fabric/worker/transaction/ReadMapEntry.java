@@ -12,6 +12,10 @@ public final class ReadMapEntry {
   List<Log> readLocks;
   int  versionNumber;
   long promise;
+  
+  /**
+   * The number of _Impls that have a reference to this object.
+   */
   int pinCount;
 
   ReadMapEntry(_Impl obj, long expiry) {
