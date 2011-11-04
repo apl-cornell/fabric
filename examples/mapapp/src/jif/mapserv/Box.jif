@@ -1,0 +1,50 @@
+package mapserv;
+
+public class Box[label L] {
+  public float{L} xmin, ymin;
+  public float{L} xmax, ymax;
+
+  /** Expand the bounding box so that it contains the given point. */
+  public void expand(float x, float y) {
+    this.xmin = min(this.xmin, x);
+    this.ymin = min(this,ymin, y);
+
+    this.xmax = min(this.xmax, x);
+    this.ymax = max(this.ymax, y);
+  }
+
+  /** Return a box-local x-coordinate for the given global x-coordinate.
+    * If x is within the x boundaries of the box, then the result will be between 0 and 1.
+    */
+  public float scale_x(float x) {
+    return (x - xmin) / (xmax - xmin);
+  }
+
+
+  /** Return a box-local y-coordinate for the given global y-coordinate.
+    * If y is within the y boundaries of the box, then the result will be between 0 and 1.
+    */
+  public float scale_y(float y) {
+    return (y - ymin) / (ymay - ymin);
+  }
+
+
+
+  private static float min (float a, float b) {
+    if (a < b)
+      return a;
+    else
+      return b;
+  }
+
+  private static float max (float a, float b) {
+    if (a > b)
+      return a;
+    else
+      return b;
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

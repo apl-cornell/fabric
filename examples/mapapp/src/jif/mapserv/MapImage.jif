@@ -8,10 +8,7 @@ import java.io.PrintStream;
  */
 public class MapImage[label L] {
   /* coordinates of map */
-  public final float{L} xmin;
-  public final float{L} ymin;
-  public final float{L} xmax;
-  public final float{L} ymax;
+  public final Box[{L}] {L} boundary;
 
   /* packed data */
   private final int{L}       width;
@@ -25,22 +22,23 @@ public class MapImage[label L] {
    * @throws NullPointerException
    *         if data is null
    */
-  public MapImage(float xmin, float xmax,
-               float ymin, float ymax,
-               int width, int height, char[] data) throws ArrayIndexOutOfBoundsException, NullPointerException {
+  public
+  MapImage
+  (
+    Box boundary,
+    int width, int height, char[] data
+  )
+  throws ArrayIndexOutOfBoundsException
+  {
 
     if (width * height != data.length)
       throw new ArrayIndexOutOfBoundsException();
 
-    this.xmin = xmin;
-    this.ymin = ymin;
-
-    this.xmax = xmax;
-    this.ymax = ymax;
-
     this.width  = width;
     this.height = height;
     this.data   = data;
+
+    this.boundary = boundary;
   }
 
   public char getAt(float x, float y) throws ArrayIndexOutOfBoundsException {
@@ -56,8 +54,8 @@ public class MapImage[label L] {
   }
 
   private int index(float x, float y) {
-    int xoff = (int) (width  * (x - xmin)/(xmax - xmin));
-    int yoff = (int) (height * (y - ymin)/(ymax - ymin));
+    int xoff = (int) (width  * boundary.scale_x(x));
+    int yoff = (int) (height * boundary.scale_y(y));
 
     return yoff * width + xoff;
   }
