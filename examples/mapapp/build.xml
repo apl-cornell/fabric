@@ -71,7 +71,6 @@
       <arg value="-d"          /> <arg value="${home}/classes/jif"/>
       <arg value="-sourcepath" /> <arg value="${home}/src/jif"/>
       <arg value="-classpath"  /> <arg value="${home}/classes/principals"/>
-      <arg value="-e" />
       <srcfile />
 
       <fileset dir="${home}/src/jif" includes="**/*.jif" excludes="jif/principals/*.jif" />

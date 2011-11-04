@@ -74,7 +74,11 @@ public class Main {
   }
 
   static void a_run_app {AliceNode←} () {
-    mapApp.viewMap(alice);
+    final MapApp app = mapApp;
+    final UserV1 a   = alice;
+
+    if (app.service actsfor a.friendInfo)
+      app.viewMap(a);
     // TODO: mapApp.postMap(alice);
   }
 

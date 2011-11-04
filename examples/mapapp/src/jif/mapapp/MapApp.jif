@@ -16,7 +16,7 @@ import util.GroupIterator;
  * public output maps.
  */
 public class MapApp extends AbstractPrincipal {
-  private final MapServer {this←} service;
+  public final MapServer {this←} service;
 
   public MapApp(String name, MapServer service, Principal owner) {
     this.service = service;
@@ -29,11 +29,19 @@ public class MapApp extends AbstractPrincipal {
   /**
    * prints a map of the user's friends, visible to the user
    */
-  public void viewMap(UserV1 user) {
+  public
+  void
+  viewMap
+  (
+    UserV1 user
+  )
+  where
+    service actsfor user.friendInfo
+  {
     MapImage result = createMap(new label {user→}, user);
 
     PrintStream[{user→}] out = Runtime[user].getRuntime().stdout(new label {user→});
-    result.print(new label {user→}, out);
+    result.print(out);
   }
 
 
@@ -41,11 +49,19 @@ public class MapApp extends AbstractPrincipal {
   /**
    * prints a map of the user's friends, visible to the user's friends
    */
-  public void postMap(final UserV1 user) {
+  public
+  void
+  postMap
+  (
+    final UserV1 user
+  )
+  where
+    service actsfor user.friendInfo
+  {
     MapImage result = createMap(new label {user→user.friends}, user);
 
     PrintStream[{user→user.friends}] out = Runtime[user].getRuntime().stdout(new label {user→user.friends});
-    result.print(new label {user→user.friends}, out);
+    result.print(out);
   }
 
 
