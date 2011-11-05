@@ -101,3 +101,7 @@
   <target name="all"       depends="build-all" />
 
 </project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

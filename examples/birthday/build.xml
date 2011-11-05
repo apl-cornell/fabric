@@ -27,8 +27,10 @@
   <property name="bdaygirl.worker" value="bdayGirlWorker"/>
   <property name="bdayboy.worker" value="bdayBoyWorker"/>
 
-  <property name="social.codebase.file" value="${home.codebases}/${social.worker}.codebase"/>
-  <property name="agent.codebase.file" value="${home.codebases}/${agent.worker}.codebase"/>
+  <property name="social.codebase.file"
+      value="${home.codebases}/${social.worker}.codebase"/>
+  <property name="agent.codebase.file"
+      value="${home.codebases}/${agent.worker}.codebase"/>
 
   <property name="social.store" value="socialStore"/>
 
@@ -42,7 +44,8 @@
     <delete dir="${home}/codebases"/>
   </target>
 
-  <target name="clear-cache" description="Removes code cache of stores and workers">
+  <target name="clear-cache"
+      description="Removes code cache of stores and workers">
     <delete dir="${home}/.${social.worker}_cache"/>
     <delete dir="${home}/.${social.store}_cache"/>
     <delete dir="${home}/.${agent.worker}_cache"/>
@@ -51,7 +54,7 @@
   </target>
 
   <target name="clobber" depends="clean,clear-cache"
-          description="Removes state of stores and workers">
+      description="Removes state of stores and workers">
     <delete dir="${home}/var"/>
   </target>
 
@@ -72,35 +75,38 @@
     </uptodate>
   </target>
 
-  <target name="publish-all" depends="publish-social, publish-agent" description="Publish all source"/>
+  <target name="publish-all" depends="publish-social, publish-agent"
+      description="Publish all source"/>
 
   <target name="load-codebases" depends="publish-all">
-    <loadfile property="social.codebase" srcFile="${social.codebase.file}" failonerror="false"/>
-    <loadfile property="agent.codebase" srcFile="${agent.codebase.file}"  failonerror="false"/>
+    <loadfile property="social.codebase" srcFile="${social.codebase.file}"
+        failonerror="false"/>
+    <loadfile property="agent.codebase" srcFile="${agent.codebase.file}"
+        failonerror="false"/>
   </target>
 
-  <target name="publish-social" description="Publish social network source" depends="check-social"
-  	unless="social.up-to-date">
-  	<antcall target="publish">
-  		<param name="provider" value="${social.worker}"/>
-  		<param name="dest.store" value="${social.store}"/>
-  		<param name="codebase.dir" value="${social.src}"/>
-  		<param name="target.codebasefile" value="${social.codebase.file}"/>
-  		<param name="publish.args" value=""/>
+  <target name="publish-social" description="Publish social network source"
+      depends="check-social" unless="social.up-to-date">
+    <antcall target="publish">
+      <param name="provider" value="${social.worker}"/>
+      <param name="dest.store" value="${social.store}"/>
+      <param name="codebase.dir" value="${social.src}"/>
+      <param name="target.codebasefile" value="${social.codebase.file}"/>
+      <param name="publish.args" value=""/>
     </antcall>
     <uptodate property="social.up-to-date" targetfile="${social.codebase.file}">
       <srcfiles dir="${social.src}" includes="**/*.fab" />
     </uptodate>
   </target>
 
-  <target name="publish-agent" description="Publish agent source" depends="check-agent" 
-  	unless="agent.up-to-date">
-  	<antcall target="publish">
-  		<param name="provider" value="${agent.worker}"/>
-  		<param name="dest.store" value="${social.store}"/>
-  		<param name="codebase.dir" value="${agent.src}"/>
-  		<param name="target.codebasefile" value="${agent.codebase.file}"/>
-  		<param name="publish.args" value="-addCodebase ${social.codebase.file}"/>
+  <target name="publish-agent" description="Publish agent source"
+      depends="check-agent" unless="agent.up-to-date">
+    <antcall target="publish">
+      <param name="provider" value="${agent.worker}"/>
+      <param name="dest.store" value="${social.store}"/>
+      <param name="codebase.dir" value="${agent.src}"/>
+      <param name="target.codebasefile" value="${agent.codebase.file}"/>
+      <param name="publish.args" value="-addCodebase ${social.codebase.file}"/>
     </antcall>
     <uptodate property="agent.up-to-date" targetfile="${agent.codebase.file}">
       <srcfiles dir="${agent.src}" includes="**/*.fab" />
@@ -123,7 +129,7 @@
       <arg value="-e"/>
       <arg value="-d"          /> <arg value="${home.codebases}"/>
       <arg value="-publish-only" />
-      <arg value="-codebase-output-file" /> <arg value="${target.codebasefile}"/>
+      <arg value="-codebase-output-file"/> <arg value="${target.codebasefile}"/>
       <arg value="-sourcepath" /> <arg value="${codebase.dir}" />
       <arg value="-worker" /> <arg value="${provider}" />
       <arg value="-deststore" /> <arg value="${dest.store}" />
@@ -215,3 +221,7 @@
   </target>
 
 </project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

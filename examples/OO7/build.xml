@@ -59,8 +59,8 @@
       <arg value="classes" />
       <srcfile />
       <fileset dir="src/fabil">
-	<include name="OO7/*.fil" />
-	<include name="OO7/traversals/*.fil" />
+        <include name="OO7/*.fil" />
+        <include name="OO7/traversals/*.fil" />
       </fileset>
       <globmapper from="*.fil" to="*.class" />
     </apply>
@@ -70,3 +70,7 @@
   <target name="all" depends="build-all" />
 
 </project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

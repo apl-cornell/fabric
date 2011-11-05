@@ -46,7 +46,7 @@
       description="Builds the Fabric browser applet">
     <mkdir dir="${applet.classes}" />
     <javac source="1.6" target="1.6" srcdir="${applet.src}"
-	destdir="${applet.classes}" includeAntRuntime="false" debug="on">
+        destdir="${applet.classes}" includeAntRuntime="false" debug="on">
       <include name="**/*.java" />
       <classpath refid="fabric.classpath" />
     </javac>
@@ -65,21 +65,21 @@
   <target name="jar" depends="build-all,signed-jars"
       description="Packages the applet into a jar file">
     <jar jarfile="${applet.jar}" basedir="${applet.classes}"
-	excludes="**/*.java">
+        excludes="**/*.java">
       <manifest>
-	<attribute name="Built-By" value="${user.name}"/>
-	<attribute name="Class-Path" value="lib/FreePastry-2.1.jar 
-	    lib/JFlex.jar lib/fabcoll.jar lib/fabric-rt.jar lib/fabric.jar 
-	    lib/java_cup.jar lib/je-3.3.75.jar lib/jif.jar lib/polyglot.jar"/>
+        <attribute name="Built-By" value="${user.name}"/>
+        <attribute name="Class-Path" value="lib/FreePastry-2.1.jar 
+            lib/JFlex.jar lib/fabcoll.jar lib/fabric-rt.jar lib/fabric.jar 
+            lib/java_cup.jar lib/je-3.3.75.jar lib/jif.jar lib/polyglot.jar"/>
       </manifest>
       <fileset dir="${applet.src}" includes="JNLP-INF/**"/>
     </jar>
 
     <signjar jar="${applet.jar}" alias="Applet" storepass="password"
-	keystore="${applet.home}/appletcert.keystore"/>
+        keystore="${applet.home}/appletcert.keystore"/>
 
     <!-- <copy file="${applet.src}/JNLP-INF/APPLICATION.jnlp"
-	 tofile="${applet.home}/applets/fabapp.jnlp" overwrite="true"/> -->
+         tofile="${applet.home}/applets/fabapp.jnlp" overwrite="true"/> -->
   </target>
 
   <target name="jar-applet" depends="jar" />
@@ -95,16 +95,20 @@
       jars are up-to-date.
     -->
     <ant inheritAll="false" antfile="${fabric.home}/build.xml"
-	dir="${fabric.home}" target="jar-all" />
+        dir="${fabric.home}" target="jar-all" />
 
     <copy todir="${applet.lib}">
       <fileset dir="${lib}" includes="*.jar"/>
     </copy>
 
     <signjar alias="Applet" storepass="password"
-	keystore="${applet.home}/appletcert.keystore">
+        keystore="${applet.home}/appletcert.keystore">
       <fileset dir="${applet.lib}" includes="*.jar"/>
     </signjar>
   </target>
 
 </project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

@@ -52,8 +52,7 @@
 
   <target name="build-tree" depends=""
           description="Builds the tree example">
- 
-  	<apply executable="bash"
+    <apply executable="bash"
            parallel="true"
            failonerror="true"
            dir="${tree.home}"
@@ -89,7 +88,7 @@
       <globmapper from="*.fab" to="*.class" />
     </apply>
 
-  	<!-- Uncomment this part to compile from the fabil code
+    <!-- Uncomment this part to compile from the fabil code
     <apply executable="bash"
            parallel="true"
            failonerror="true"

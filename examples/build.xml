@@ -48,7 +48,7 @@
         <exclude name="birthday/build.xml"/>
         <exclude name="travel/build.xml"/>
         <exclude name="tree/build.xml"/>
-	<exclude name="auction/build.xml"/>
+        <exclude name="auction/build.xml"/>
       </fileset>
     </subant>
   </target>
@@ -58,3 +58,6 @@
 
 </project>
 
+<!--
+vim: ts=2 sw=2 et ai
+-->

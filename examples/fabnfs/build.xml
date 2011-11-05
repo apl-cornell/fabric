@@ -39,7 +39,7 @@
       description="Builds the Fabric NFS server implementation">
     <mkdir dir="${fabnfs.home}/classes" />
     <javac source="1.6" target="1.6" srcdir="${fabnfs.home}/src"
-	destdir="${fabnfs.home}/classes" includeAntRuntime="false" debug="on">
+        destdir="${fabnfs.home}/classes" includeAntRuntime="false" debug="on">
       <include name="fabnfs/**" />
       <classpath refid="fabric.classpath" />
     </javac>
@@ -70,3 +70,7 @@
   <target name="all" depends="build-all" />
 
 </project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

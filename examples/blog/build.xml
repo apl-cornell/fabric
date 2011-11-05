@@ -71,7 +71,7 @@
 
   <target name="build-client" depends="setup-dirs">
     <javac srcdir="${blog.home}/src/java" destdir="${blog.home}/classes/java"
-	includeAntRuntime="false">
+        includeAntRuntime="false">
       <classpath refid="blog.classpath" />
     </javac>
   </target>
@@ -85,12 +85,12 @@
     </javac>
     <echo message="Building FabIL blog server..." />
     <apply executable="bash"
-	parallel="true"
-	failonerror="true"
-	dir="${blog.home}/src/fabil"
-	relative="false"
-	skipemptyfilesets="true"
-	vmlauncher="false">
+        parallel="true"
+        failonerror="true"
+        dir="${blog.home}/src/fabil"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
       <arg value="${fabric.home}/bin/filc" />
       <arg value="-g"     />
       <arg value="-j"     /> <arg value="-Xmx500M" />
@@ -99,7 +99,7 @@
       <arg value="-d"     /> <arg value="${blog.home}/classes/fabil"/>
       <srcfile />
       <fileset dir="${blog.home}/src/fabil">
-	<include name="**/*.fil" />
+        <include name="**/*.fil" />
       </fileset>
       <globmapper from="*.fil" to="*.class" />
     </apply>
@@ -107,8 +107,8 @@
   </target>
 
   <target name="build-blog-uptodate">
-    <uptodate property="fabil-blog.uptodate" 
-	targetfile="${blog.home}/classes/fabil/.timestamp">
+    <uptodate property="fabil-blog.uptodate"
+        targetfile="${blog.home}/classes/fabil/.timestamp">
       <srcfiles dir="${blog.home}/src/fabil" includes="**/*.fil"/>
     </uptodate>
   </target>
@@ -145,8 +145,12 @@
       <arg value="-cp"    /> <arg pathref="blogserver.runtime.classpath" />
       <arg value="--name" /> <arg value="blog-worker" />
       <arg value="--debug" />
-      <arg value="webapp.blog.BlogServer" /> 
+      <arg value="webapp.blog.BlogServer" />
     </exec>
   </target>
 
 </project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

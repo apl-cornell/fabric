@@ -12,11 +12,8 @@
       <path refid="standard.classpath" />
         <pathelement location="${basedir}/${destdir}" />
     </path>
-	
-	<target name="dummy">
-	</target>
-	
-	<target name="principals" description="Compiles the principals necessary for this app">
+
+  <target name="principals" description="Compiles the principals necessary for this app">
     <apply executable="bash"
                     parallel="true"
                     failonerror="true"
@@ -28,8 +25,8 @@
         <arg value="-g"/>
         <arg value="-d"/>
         <arg value="${basedir}/web/WEB-INF/classes"/>
-  			<arg value="-cp" />
-  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes" />
+        <arg value="-cp" />
+        <arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes" />
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
         <srcfile />
@@ -38,10 +35,10 @@
                 from="^src(.*)\.fab"
                 to="classes\1\.class" />
     </apply>
-		
-	</target>
-	
-	<target name="user" description="Compiles the user library for this app">
+
+  </target>
+
+  <target name="user" description="Compiles the user library for this app">
     <apply executable="bash"
                     parallel="true"
                     failonerror="true"
@@ -53,33 +50,33 @@
         <arg value="-g"/>
         <arg value="-d"/>
         <arg value="${basedir}/web/WEB-INF/classes"/>
-  			<arg value="-cp" />
-  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${fabric.home}/lib/servlet-api.jar" />
+        <arg value="-cp" />
+        <arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${fabric.home}/lib/servlet-api.jar" />
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
-    		<arg value="-filsigcp"/>
-    		<arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
-    		<arg value="-e"/>
+        <arg value="-filsigcp"/>
+        <arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
+        <arg value="-e"/>
             
-    	<!--
+      <!--
             <arg value="-dump"/> <arg value="ParserPass"/>
             <arg value="-dump"/> <arg value="FabricToFabilRewriter"/>
             <arg value="-dump"/> <arg value="PrincipalCastAdder"/>
-  		    <arg value="-report"/> <arg value="frontend=1"/>
+          <arg value="-report"/> <arg value="frontend=1"/>
             <arg value="-debugpositions"/>
-	  	-->
-    	
+      -->
+
         <srcfile />
         <fileset dir="${basedir}" includes="src/userserv/*.fab" />
         <mapper type="regexp"
                 from="^src(.*)\.fab"
                 to="classes\1\.class" />
     </apply>
-		
-	</target>
-	
-	<target name="compile" depends="user,principals"
-		description="Compiles the calendar application code">
+
+  </target>
+
+  <target name="compile" depends="user,principals"
+      description="Compiles the calendar application code">
     <apply executable="bash"
                     parallel="true"
                     failonerror="true"
@@ -91,50 +88,53 @@
         <arg value="-g"/>
         <arg value="-d"/>
         <arg value="${basedir}/web/WEB-INF/classes"/>
-  			<arg value="-cp" />
-  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/web/WEB-INF/classes:${fabric.home}/lib/servlet-api.jar" />
+        <arg value="-cp" />
+        <arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/web/WEB-INF/classes:${fabric.home}/lib/servlet-api.jar" />
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
-    		<arg value="-filsigcp"/>
-    		<arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
+        <arg value="-filsigcp"/>
+        <arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
         <arg value="-e"/>
             
-    	<!--
+      <!--
             <arg value="-debugpositions"/>
             <arg value="-dump"/> <arg value="FabricToFabilRewriter"/>
             <arg value="-dump"/> <arg value="PrincipalCastAdder"/>
-  		<arg value="-report"/> <arg value="frontend=1"/>
-    	  <arg value="-report"/> <arg value="solver=5" />
-  		<arg value="-report"/> <arg value="visit=2"/>
-    	  <arg value="-report"/> <arg value="labelEnv=5" />
-  		<arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>
-  		<arg value="-print" /> <arg value="FieldLabelResolver"/>
-	  		<arg value="-report"/> <arg value="error=5"/>
-	  		<arg value="-report"/> <arg value="errors=5"/>
-    	  <arg value="-report"/> <arg value="debug=5" />
-    	-->
+      <arg value="-report"/> <arg value="frontend=1"/>
+        <arg value="-report"/> <arg value="solver=5" />
+      <arg value="-report"/> <arg value="visit=2"/>
+        <arg value="-report"/> <arg value="labelEnv=5" />
+      <arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>
+      <arg value="-print" /> <arg value="FieldLabelResolver"/>
+        <arg value="-report"/> <arg value="error=5"/>
+        <arg value="-report"/> <arg value="errors=5"/>
+        <arg value="-report"/> <arg value="debug=5" />
+      -->
         <srcfile />
         <fileset dir="${basedir}" includes="src/calendar/*.fab" />
         <mapper type="regexp"
                 from="^src(.*)\.fab"
                 to="classes\1\.class" />            
     </apply>
-		
-	</target>
-	
+
+  </target>
+
   <target name="clean" description="clean up">
       <delete dir="${basedir}/web/WEB-INF/classes" />
   </target>
-	
+
   <target name="install" depends="configure-install, compile" description="Copies the classes to the tomcat directory">
     <fail unless="catalina.home.defined"
           message="The Tomcat installation directory is unknown. Please either edit config.properties, or set the envirnoment variable CATALINA_HOME to the Tomcat installation directory." />
     <delete dir="${catalina.home}/webapps/calendartwo" />
     <copy todir="${catalina.home}/webapps/calendartwo" includeEmptyDirs="no">
-		<fileset dir="${basedir}/web" defaultexcludes="yes"/>
-	</copy>
+    <fileset dir="${basedir}/web" defaultexcludes="yes"/>
+  </copy>
   </target>
     
 
 </project>
 
+<!--
+vim: ts=2 sw=2 et ai
+-->
