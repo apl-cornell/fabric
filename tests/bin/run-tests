@@ -1,5 +1,5 @@
 #!/bin/bash
-# tests directory (contains etc/ for test configs) 
+# tests directory (contains etc/ for test configs)
 APP_HOME="$(dirname $0)/.."
 # Fabric root
 FABRIC="${APP_HOME}/.."
@@ -12,17 +12,17 @@ keep=false
 cleanup()
 # shutdown nodes
 {
-	for s in ${stores//,/ }
-	do 
-		echo "Shutting down $s" 
-		screen -S $s -X quit
-	done
-	for w in ${workers//,/ }
-	do
-		echo "Shutting down $w" 
-		screen -S $w -X quit
-	done
-  	exit $?
+  for s in ${stores//,/ }; do
+    echo "Shutting down $s"
+    screen -S $s -X quit
+  done
+
+  for w in ${workers//,/ }; do
+    echo "Shutting down $w"
+    screen -S $w -X quit
+  done
+
+  exit $?
 }
 
 control_c()
@@ -36,47 +36,61 @@ control_c()
 
 while true; do
   case "$1" in
-    "") break;;
-	--name) name="$2"; shift 2;;
-    --start-workers) workers=$2; shift 2;;
-    --start-stores)  stores=$2; shift 2;;
-    --keep-nodes)  keep=true; shift 1;;
-	*) args="${args} '$1'"; shift;;
+    "")
+      break
+      ;;
+    --name)
+      name="$2"
+      shift 2
+      ;;
+    --start-workers)
+      workers=$2
+      shift 2
+      ;;
+    --start-stores)
+      stores=$2
+      shift 2
+      ;;
+    --keep-nodes)
+      keep=true
+      shift 1
+      ;;
+    *)
+      args="${args} '$1'"
+      shift
+      ;;
   esac
 done
 # trap keyboard interrupt (control-c)
 #trap control_c SIGINT
 
-for s in ${stores//,/ }; 
-do 
-	echo "Starting store $s" 
-	screen -L -dmS $s;
-	screenbug $s;
-	screen -S $s -X exec start-store --name $s;  
+for s in ${stores//,/ }; do
+  echo "Starting store $s"
+  screen -d -m -S $s -c /dev/null
+  screenbug $s
+  screen -S $s -X screen -L 0 start-store --name $s
 done
 
-if [ -n "${stores}" ]
-then
-	echo "Waiting for stores to start up" 
-	for s in {0..5}
-	do 
-		printf "."
-		sleep 1	
-	done
-	echo "done"
+if [ -n "${stores}" ]; then
+  echo "Waiting for stores to start up"
+  for s in {0..5}; do
+    printf "."
+    sleep 1	
+  done
+  echo "done"
 fi
 
-for w in ${workers//,/ }
-do	 
-	echo "Starting worker $w" 
-	screen -L -dmS $w;
-	screenbug $w;
-	screen -S $w -X exec start-worker --name $w;  
+for w in ${workers//,/ }; do
+  echo "Starting worker $w"
+  screen -d -m -S $w -c /dev/null
+  screenbug $w
+  screen -S $w -X screen -L 0 start-worker --name $w
 done
 
 fabth ${args}
 
-if [ ! ${keep} ] 
-then
-	cleanup
+if [[ "${keep}" == "false" ]]; then
+  cleanup
 fi
+
+# vim: ts=2 sw=2 ai et
