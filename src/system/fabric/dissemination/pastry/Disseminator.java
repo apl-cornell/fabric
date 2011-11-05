@@ -27,6 +27,7 @@ import rice.pastry.routing.RouteSet;
 import rice.pastry.routing.RoutingTable;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
+import fabric.dissemination.Cache;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.messages.AggregateInterval;
 import fabric.dissemination.pastry.messages.Fetch;
@@ -202,7 +203,7 @@ public class Disseminator implements Application {
     synchronized (f) {
       if (f.reply() == null) {
         // XXX hack: wait at most 1 second for dissemination network. after
-        // that, we will revert to direct store fetch
+        // that, we fall back to the next fetch manager.
         try {
           f.wait(1000);
         } catch (InterruptedException e) {
@@ -256,12 +257,7 @@ public class Disseminator implements Application {
         Worker worker = Worker.getWorker();
         RemoteStore c = worker.getStore(msg.store());
         long onum = msg.onum();
-        Glob g = cache.get(c, onum);
-
-        if (g == null) {
-          g = cache.get(c, onum, true);
-        }
-
+        Glob g = cache.get(c, onum, true);
         reply(g, msg);
         return null;
       }

@@ -6,9 +6,9 @@ import fabric.net.UnreachableNodeException;
 import fabric.worker.RemoteStore;
 
 /**
- * A FetchManager is responsible for retrieving objects from Stores. Workers
- * may load different FetchManagers at run time to make use of different
- * dissemination networks.
+ * A FetchManager is responsible for retrieving objects from Stores via a
+ * dissemination layer. Workers may load different FetchManagers at run time to
+ * make use of different dissemination networks.
  */
 public interface FetchManager {
   

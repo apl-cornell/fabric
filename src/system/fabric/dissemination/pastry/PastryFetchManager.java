@@ -6,9 +6,9 @@ import java.util.Properties;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.dissemination.DummyFetchManager;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
-import fabric.worker.DirectFetchManager;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 
@@ -28,7 +28,7 @@ public class PastryFetchManager implements FetchManager {
 
   public PastryFetchManager(Worker worker, Properties dissemConfig) {
     try {
-      this.fallback = new DirectFetchManager(worker, dissemConfig);
+      this.fallback = new DummyFetchManager(worker, dissemConfig);
       this.node = new Node(dissemConfig); // start a new pastry node
       worker.registerDisseminationCache(node.disseminator.cache);
     } catch (IOException e) {
