@@ -180,7 +180,7 @@ public class FabricDisamb_c extends JifDisamb_c implements Disamb {
             // so it is an external dep
             CBJobExt ext = (CBJobExt) v.job().ext();
             String alias = it.aliasFor(name.id());
-            if(alias == null)
+            if (alias == null)
               throw new InternalCompilerError("Type " + type
                   + " is external, but the import table has no alias for it");
             ext.addExternalDependency((CodebaseClassType) type, alias);

@@ -7,7 +7,6 @@ import polyglot.ast.Id;
 import polyglot.ast.PackageNode;
 import polyglot.ast.QualifierNode;
 import polyglot.ast.TypeNode;
-import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.ast.CodebaseNode;
@@ -57,7 +56,7 @@ public class Name extends jif.parse.Name {
     if (prefix == null) {
       FabricNodeFactory nf = (FabricNodeFactory) parser.nf;
       URI cb = ts.namespaceResolver(ns).resolveCodebaseName(name);
-      if(cb != null) {
+      if (cb != null) {
         return nf.CodebaseNode(pos, ns, name, cb);
       } 
       else {

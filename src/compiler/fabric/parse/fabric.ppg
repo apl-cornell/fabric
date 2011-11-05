@@ -5,14 +5,12 @@ package fabric.parse;
 
 import fabric.ast.*;
 import jif.parse.*;
-import polyglot.parse.*;
 import fabric.types.FabricTypeSystem;
 import fabric.types.FabricFlags;
 import fabric.parse.Name;
 import codebases.ast.CodebaseDecl;
 import codebases.ast.CodebaseNode;
 import codebases.types.NamespaceResolver;
-import fabric.lang.Codebase;
 import polyglot.types.Package;
 import java.net.URI;
 
@@ -167,7 +165,7 @@ parser Grm extends jif.parse.Grm {:
             	//If there is no prefix, see if there is a codebase alias for this name
             	NamespaceResolver nr = ts.namespaceResolver(this.ns);
             	URI u = nr.resolveCodebaseName(a.name());
-            	if(u != null)
+            	if (u != null)
             	    return nf.CodebaseNode(pos(p), this.ns, a.name(), u);
             }
             //pkg is null or is the package of the prefix node

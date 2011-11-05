@@ -10,7 +10,6 @@ import fabil.ast.FabricArrayTypeNode;
 import polyglot.parse.*;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILFlags;
-import fabil.types.FabricArrayType;
 import fabil.parse.Name;
 import java.net.URI;
 

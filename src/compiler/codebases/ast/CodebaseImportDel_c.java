@@ -35,7 +35,7 @@ public class CodebaseImportDel_c extends JL_c {
 
     Named nt = null;
     import_ns = ts.namespaceResolver(ns).resolveCodebaseName(pkgName);
-    if(import_ns != null) {
+    if (import_ns != null) {
       // The type must exist in import_ns
       nt = ts.forName(import_ns, StringUtil.removeFirstComponent(im.name()));
     

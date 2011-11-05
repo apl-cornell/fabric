@@ -51,12 +51,12 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
       Set<String> closure = new HashSet<String>();
       Set<CodebaseClassType> seen = new HashSet<CodebaseClassType>(jobExt.dependencies());      
       for(CodebaseClassType dep : jobExt.dependencies()) {
-        if(!(dep instanceof ParsedClassType)) {
+        if (!(dep instanceof ParsedClassType)) {
           throw new InternalCompilerError("Expected ParsedClassType for " + dep
               + ", but got: " + dep.getClass());
         }
         //add direct dependency to closure
-        if(closure.contains(dep.fullName())) {
+        if (closure.contains(dep.fullName())) {
           //sanity check
           CodebaseClassType ct = (CodebaseClassType) resolver.check(dep.fullName());
           if (!(ct != null && ct.equals(dep)))
@@ -100,7 +100,7 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
   }
 
   protected Collection<CodebaseClassType> directDependencies(CodebaseClassType cct) {
-    if(!(cct instanceof ParsedClassType))
+    if (!(cct instanceof ParsedClassType))
       throw new InternalCompilerError("Expected ParsedClassType for " + cct
           + ", but got: " + cct.getClass());
 
@@ -108,20 +108,20 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
     ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
     Scheduler scheduler = extInfo.scheduler();
     
-    if(cct.canonicalNamespace().equals(extInfo.platformNamespace()))
+    if (cct.canonicalNamespace().equals(extInfo.platformNamespace()))
       return Collections.emptySet();
 
     CodebaseSource cs = (CodebaseSource) ct.fromSource();
-    if(cs == null)
+    if (cs == null)
       throw new InternalCompilerError("Null source for " + cct);
     
 
-    if(!scheduler.sourceHasJob( ct.fromSource()))
+    if (!scheduler.sourceHasJob( ct.fromSource()))
       throw new InternalCompilerError("No job for " + ct);
     
     Job dep_job = scheduler.loadSource((FileSource) ct.fromSource(), true);
 
-    if(dep_job == null)
+    if (dep_job == null)
       throw new InternalCompilerError("Null job for " + ct);
     
     CBJobExt dep_jobExt = (CBJobExt) dep_job.ext();
