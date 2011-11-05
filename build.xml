@@ -26,6 +26,7 @@
   <property name="compiler.src" location="${src}/compiler"/>
   <property name="bootstrap.src" location="${src}/bootstrap"/>
   <property name="runtime.src" location="${src}/runtime"/>
+  <property name="arrays.src" location="${src}/arrays"/>
   <property name="signatures.fabil.src" location="${src}/signatures/fabil"/>
   <property name="signatures.fabric.src" location="${src}/signatures/fabric"/>
 
@@ -38,7 +39,8 @@
       location="${signatures.classes}/fabric"/>
   <property name="tests" location="${fabric.home}/tests"/>
 
-  <pathconvert property="polyglot.classes" refid="polyglot.classpath"/>
+  <!-- Polyglot classpath -->
+  <pathconvert property="polyglot.classpath" refid="polyglot.classpath"/>
 
   <!-- Timestamp file for bootstrap classes. -->
   <property name="bootstrap.tstamp" location="${bootstrap.classes}/.tstamp"/>
@@ -91,7 +93,7 @@
 
     <echo message="java version is ${java.version}"/>
     <echo message="current directory is ${user.dir}"/>
-    <echo message="Jdk home directory is ${jdk.home}"/>
+    <echo message="JDK home directory is ${jdk.home}"/>
     <echo message="Polyglot home directory is ${polyglot.home}"/>
     <echo message="Jif home directory is ${jif.home}" />
     <echo message="Fabric version is ${fabric.version.build}" />
@@ -232,7 +234,7 @@
 
   <!-- Main target for compiling Fabric -->
   <target name="build-all"
-    depends="fabric-compiler,fabil-compiler,fabric-system,fabric-signatures,fabric-runtime"
+    depends="fabric-compiler,fabil-compiler,fabric-system,fabric-signatures,fabric-runtime,tools"
     description="Builds the Fabric compiler, system, runtime, and tools"/>
 
   <!-- This target is here for legacy reasons. -->
@@ -264,10 +266,8 @@
 
   <!-- Compiles the Fabric signatures -->
   <target name="fabric-signatures"
-      depends="init,fabric-compiler,bin,fabil-runtime,worker,store"
+      depends="init,bootstrap,bin,fabric-compiler,fabil-runtime,worker,store"
       description="Compiles the Fabric signature classes">
-    <mkdir dir="${signatures.fabric.classes}"/>
-
     <apply executable="bash"
            parallel="true"
            failonerror="true"
@@ -293,9 +293,9 @@
   </target>
 
   <!-- Compiles the FabIL signatures -->
-  <target name="fabil-signatures" depends="init,fabil-compiler,bin,native"
+  <target name="fabil-signatures"
+      depends="init,bootstrap,fabil-compiler,bin,native"
       description="Compiles the FabIL signature clasess">
-    <mkdir dir="${signatures.fabil.classes}" />
     <apply executable="bash"
            parallel="true"
            failonerror="true"
@@ -362,37 +362,37 @@
     <equals arg1="n" arg2="${do.regen}"/>
   </condition>
   <fail if="do.abort">Bootstrap regeneration aborted by user.</fail>
-		<apply executable="bash"
-					parallel="true"
-					failonerror="true"
-					dest="${bootstrap.src}"
-					dir="${runtime.src}"
-					relative="false"
-					skipemptyfilesets="true"
-					vmlauncher="false">
-			<!--<arg value="${fabc}" />-->
-			<arg value="${filc}" />
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dest="${bootstrap.src}"
+        dir="${runtime.src}"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <!--<arg value="${fabc}" />-->
+      <arg value="${filc}" />
       <arg value="-bootstrap-skel" /> 
       <arg value="-noserial" /> 
-			<arg value="-c" />
-			<arg value="-d" /> <arg value="${bootstrap.src}"/>
-			<arg value="-debugpositions" />
-			<arg value="-cp" />
+      <arg value="-c" />
+      <arg value="-d" /> <arg value="${bootstrap.src}"/>
+      <arg value="-debugpositions" />
+      <arg value="-cp" />
       <arg value="${runtime.classes}" />
       <arg value="-sourcepath"/>
-			<arg value="${runtime.src}"/>
-			<srcfile />
+      <arg value="${runtime.src}"/>
+      <srcfile />
       <!--
-			<fileset dir="${runtime.src}"
+      <fileset dir="${runtime.src}"
           includes="**/*.fab"
           excludes="**/*.fil" />
       <globmapper from="*.fab" to="*.*" />-->
-			<fileset dir="${runtime.src}"
+      <fileset dir="${runtime.src}"
           includes="**/*.fil"
           excludes="**/*.fab"/>
       <globmapper from="*.fil" to="*.*" />
-		</apply>
-	</target>
+    </apply>
+  </target>
 
   <!--
   ____________________________________________________________________________
@@ -445,7 +445,7 @@
   </target>
 
   <!-- Compiles the Fabric runtime classes that are implemented in Java -->
-  <target name="native" depends="bootstrap,native-check"
+  <target name="native" depends="init,bootstrap,native-check"
       unless="native.up-to-date">
     <javac source="1.6" target="1.6"
         srcdir="${system.src}" destdir="${classes}"
@@ -484,7 +484,7 @@
   </target>
 
   <!-- Compiles the Fabric worker -->
-  <target name="worker" depends="init,native,fabil-runtime">
+  <target name="worker" depends="init,bootstrap,native,fabil-runtime">
     <javac source="1.6" target="1.6"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
@@ -500,7 +500,7 @@
   </target>
 
   <!-- Compiles the Fabric dissemination node -->
-  <target name="dissemination" depends="worker">
+  <target name="dissemination" depends="bootstrap,worker">
     <javac source="1.6" target="1.6"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
@@ -522,9 +522,7 @@
     a change in the Fabric translation.
   -->
   <target name="fabric-arrays"
-      depends="bin,fabil-compiler,fabil-signatures">
-    <mkdir dir="${runtime.classes}" />
-
+      depends="init,bin,bootstrap,fabil-compiler,fabil-signatures">
     <javac source="1.6" target="1.6"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
@@ -548,19 +546,17 @@
       <arg value="${runtime.src}:${bootstrap.classes}" />
       <arg value="-O0" />
       <arg value="-d" />
-      <arg value="rt-classes" />
+      <arg value="${runtime.classes}" />
       <arg value="-platform-mode"/>
       <srcfile />
-      <fileset dir="src/arrays" includes="fabric/lang/arrays/*.fil"/>
+      <fileset dir="${arrays.src}" includes="fabric/lang/arrays/*.fil"/>
       <globmapper from="*.fil" to="*.class" />
     </apply>
   </target>
 
   <!-- Compiles the part of the Fabric runtime that is implemented in FabIL -->
   <target name="fabil-runtime"
-      depends="init,fabil-compiler,fabil-signatures,fabric-arrays">
-    <mkdir dir="${runtime.classes}" />
-
+      depends="init,bootstrap,fabil-compiler,fabil-signatures,fabric-arrays">
     <apply executable="bash"
         parallel="true"
         failonerror="true"
@@ -577,13 +573,14 @@
       <arg value="-j" />
       <arg value="-Xms256M" />
       <arg value="-d" />
-      <arg value="rt-classes" />
+      <arg value="${runtime.classes}" />
       <arg value="-bootclasspath" />
-      <arg value="${runtime.classes}:${runtime.src}:${polyglot.classes}:${bootstrap.classes}" />
+      <arg value="${runtime.classes}:${runtime.src}:${polyglot.classpath}:${bootstrap.classes}" />
       <arg value="-platform-mode"/>
       <srcfile />
       <fileset dir="${runtime.src}"
-          includes="**/*.fil" excludes="fabric/util/*.fil" />
+          includes="**/*.fil"
+          excludes="fabric/util/*.fil" />
       <filelist dir="${runtime.src}">
         <file name="fabric/util/HashMap.fil"/>
         <file name="fabric/util/LinkedList.fil"/>
@@ -603,8 +600,6 @@
   <!-- Compiles the part of the runtime that is implemented in Fabric -->
   <target name="fabric-runtime"
       depends="fabric-signatures,fabil-runtime">
-    <mkdir dir="${runtime.classes}" />
-
     <apply executable="bash"
         parallel="true"
         failonerror="true"
@@ -1229,21 +1224,21 @@ public class Version {
 
       <!-- Include library sources. -->
       <tarfileset dir="${libs}" prefix="fabric-${fabric.version}/src/lib">
-	<include name="build.xml" />
+        <include name="build.xml" />
 
-	<!-- SIF -->
-	<include name="sif/build.xml" />
-	<include name="sif/common.xml" />
-	<include name="sif/fab-src/**/*.fab" />
-	<include name="sif/sig-src/**/*.fab" />
-	<include name="sif/src/**/*.fil" />
-	<include name="sif/src/**/*.java" />
+        <!-- SIF -->
+        <include name="sif/build.xml" />
+        <include name="sif/common.xml" />
+        <include name="sif/fab-src/**/*.fab" />
+        <include name="sif/sig-src/**/*.fab" />
+        <include name="sif/src/**/*.fil" />
+        <include name="sif/src/**/*.java" />
 
-	<!-- transient -->
-	<include name="transient/README" />
-	<include name="transient/build.xml" />
-	<include name="transient/common.xml" />
-	<include name="transient/src/**/*.fab" />
+        <!-- transient -->
+        <include name="transient/README" />
+        <include name="transient/build.xml" />
+        <include name="transient/common.xml" />
+        <include name="transient/src/**/*.fab" />
       </tarfileset>
     </tar>
   </target>
@@ -1428,12 +1423,12 @@ public class Version {
     </antcall>
   </target>
 
-  <target name="compile-ext">
+  <target name="compile-ext" depends="init,bootstrap">
     <javac source="1.6" target="1.6" srcdir="${compiler.src}"
         destdir="${classes}" debug="on" includeAntRuntime="false"
-        includes="${ext.pkg}/**" >
-      <classpath >
-        <path refid="jif.classpath"/>
+        includes="${ext.pkg}/**">
+      <classpath>
+        <path refid="jif.classpath" />
         <pathelement location="${bootstrap.classes}" />
       </classpath>
     </javac>
