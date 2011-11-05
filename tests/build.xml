@@ -1,0 +1,62 @@
+<!--
+  This is the Apache Ant build file for the Fabric tests.
+-->
+
+<project name="fabric-tests" default="build-all" basedir=".">
+  <description>
+    Fabric tests build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean"
+      description="Removes generated files">
+    <!-- Recursively call "clean" on subdirectories. -->
+    <subant target="clean">
+      <fileset dir="." includes="*/build.xml" />
+
+      <!--
+           XXX this delete task is here until we can figure out how to do
+           XXX things modularly -MJL
+      -->
+      <delete>
+        <fileset dir=".">
+          <include name="**/*.class" />
+          <include name="regression/**/*.java" />
+        </fileset>
+      </delete>
+    </subant>
+  </target>
+
+  <!-- Makes the directory tree truly pristine. -->
+  <target name="clobber" depends="clean"
+      description="Removes generated files and state of stores">
+    <!-- Recursively call "clobber" on subdirectories. -->
+    <subant target="clobber">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <!-- Main target for compiling the Fabric tests -->
+  <target name="build" description="Compiles the Fabric tests">
+    <!-- Recursively call "build-all" on subdirectories. -->
+    <subant target="build-all">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+

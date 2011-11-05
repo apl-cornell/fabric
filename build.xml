@@ -37,7 +37,6 @@
       location="${signatures.classes}/fabil"/>
   <property name="signatures.fabric.classes"
       location="${signatures.classes}/fabric"/>
-  <property name="tests" location="${fabric.home}/tests"/>
 
   <!-- Polyglot classpath -->
   <pathconvert property="polyglot.classpath" refid="polyglot.classpath"/>
@@ -62,6 +61,9 @@
 
   <!-- Lib directory -->
   <property name="libs" location="${fabric.home}/src/lib"/>
+
+  <!-- Tests directory -->
+  <property name="tests" location="${fabric.home}/src/tests"/>
 
   <!-- tmp directory (for creating the distribution) -->
   <property name="tmp" location="${fabric.home}/tmp"/>
@@ -168,15 +170,6 @@
   ****************************************************************************
   -->
 
-  <target name="clean-tests">
-    <delete>
-        <fileset dir="${tests}">
-            <include name="**/*.class"/>
-            <include name="regression/**/*.java"/>
-        </fileset>
-    </delete>
-  </target>
-
   <target name="dust"
       description="Cleans up the generated runtime and signatures">
     <delete dir="${runtime.classes}"/>
@@ -200,6 +193,7 @@
       <filelist dir="${examples}" files="build.xml" />
       <filelist dir="${tools}"    files="build.xml" />
       <filelist dir="${libs}"     files="build.xml" />
+      <filelist dir="${tests}"    files="build.xml" />
     </subant>
   </target>
 
