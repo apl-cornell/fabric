@@ -18,18 +18,18 @@
     <!-- Recursively call "clean" on subdirectories. -->
     <subant target="clean">
       <fileset dir="." includes="*/build.xml" />
-
-      <!--
-           XXX this delete task is here until we can figure out how to do
-           XXX things modularly -MJL
-      -->
-      <delete>
-        <fileset dir=".">
-          <include name="**/*.class" />
-          <include name="regression/**/*.java" />
-        </fileset>
-      </delete>
     </subant>
+
+    <!--
+         XXX this delete task is here until we can figure out how to do
+         XXX things modularly -MJL
+    -->
+    <delete>
+      <fileset dir=".">
+        <include name="**/*.class" />
+        <include name="regression/**/*.java" />
+      </fileset>
+    </delete>
   </target>
 
   <!-- Makes the directory tree truly pristine. -->

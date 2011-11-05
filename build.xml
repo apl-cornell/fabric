@@ -63,7 +63,7 @@
   <property name="libs" location="${fabric.home}/src/lib"/>
 
   <!-- Tests directory -->
-  <property name="tests" location="${fabric.home}/src/tests"/>
+  <property name="tests" location="${fabric.home}/tests"/>
 
   <!-- tmp directory (for creating the distribution) -->
   <property name="tmp" location="${fabric.home}/tmp"/>
