@@ -6,7 +6,6 @@ import polyglot.ast.Id;
 import polyglot.ast.Node;
 import polyglot.ast.Node_c;
 import polyglot.types.SemanticException;
-import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.TypeBuilder;
 import codebases.types.CBImportTable;

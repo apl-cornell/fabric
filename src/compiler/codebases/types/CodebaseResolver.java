@@ -2,7 +2,6 @@ package codebases.types;
 
 import java.net.URI;
 
-import polyglot.types.SemanticException;
 import codebases.frontend.ExtensionInfo;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;

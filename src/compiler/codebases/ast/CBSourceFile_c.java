@@ -3,9 +3,6 @@ package codebases.ast;
 import java.net.URI;
 import java.util.List;
 
-import codebases.frontend.CodebaseSource;
-import codebases.types.CodebaseTypeSystem;
-
 import polyglot.ast.Import;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
@@ -15,12 +12,13 @@ import polyglot.ast.TopLevelDecl;
 import polyglot.types.ImportTable;
 import polyglot.types.Package;
 import polyglot.types.SemanticException;
-import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 import polyglot.util.TypedList;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeBuilder;
+import codebases.frontend.CodebaseSource;
+import codebases.types.CodebaseTypeSystem;
 
 /**
  * An extension of SourceFiles that supports codebases.
@@ -38,8 +36,10 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
   }
   
   /**
-   * Build type objects for the source file.  Set the visitor's import table
+   * Build type objects for the source file. Set the visitor's import table
    * field before we recurse into the declarations.
+   * 
+   * @throws SemanticException
    */
   @Override
   public NodeVisitor buildTypesEnter(TypeBuilder tb) throws SemanticException {

@@ -3,7 +3,6 @@ package codebases.types;
 import java.net.URI;
 import java.util.Arrays;
 
-import polyglot.types.SemanticException;
 import codebases.frontend.ExtensionInfo;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
