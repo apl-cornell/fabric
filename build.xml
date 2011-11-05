@@ -313,16 +313,8 @@
     </apply>
   </target>
 
-  <!-- Compiles the Fabric Test Harness -->
-  <target name="fabth" depends="build-all"
-      description="Builds the Fabric Test Harness">
-    <subant target="build-all">
-      <fileset dir="${tools}/fabth" includes="build.xml" />
-    </subant>
-  </target>
-
   <!-- Compiles the Fabric tools -->
-  <target name="tools" depends="fabil-runtime"
+  <target name="tools" depends="fabil-runtime,fabric-compiler"
       description="Builds all Fabric tools">
     <subant target="build-all">
       <fileset dir="${tools}" includes="build.xml" />
