@@ -407,67 +407,49 @@ public final class Worker {
 
   public static void initialize(String name) throws IllegalStateException,
       IOException, InternalError, UsageError, GeneralSecurityException {
-    initialize(name, null, null);
+    initialize(new ConfigProperties(name));
+  }
+  
+  public static void initialize(ConfigProperties props)
+      throws IllegalStateException, InternalError, UsageError, IOException,
+      GeneralSecurityException {
+    initialize(props, null, null);
   }
 
   public static void initializeForStore(String name,
       Map<String, RemoteStore> initStoreSet) throws IOException,
       IllegalStateException, InternalError, UsageError,
       GeneralSecurityException {
-    initialize(name, ONumConstants.STORE_PRINCIPAL, initStoreSet);
+    initialize(new ConfigProperties(name), ONumConstants.STORE_PRINCIPAL,
+        initStoreSet);
   }
 
-  /**
-   * @param principalOnum
-   *          non-null iff worker is being initialized for a store.
-   */
-  private static void initialize(String name, Long principalOnum,
-      Map<String, RemoteStore> initStoreSet) throws IOException,
-      IllegalStateException, InternalError, UsageError,
-      GeneralSecurityException {
-    ConfigProperties props = new ConfigProperties(name);
-    
-    initialize(props, principalOnum, initStoreSet);
-  }
-
-  /**
-   * 
-   */
   public FabricClassLoader getClassLoader() {
     if (loader == null)
       loader = new FabricClassLoader(Worker.class.getClassLoader()); 
     return loader;
   }
   
-  // TODO: throws exception?
   public static void main(String[] args) throws Throwable {
     WORKER_LOGGER.info("Worker node");
     WORKER_LOGGER.config("Fabric version " + new Version());
     WORKER_LOGGER.info("");
 
-    // Parse the command-line options.
     Worker worker = null;
-    final Options opts;
     try {
-      try {
-        opts = new Options(args);
-        initialize(opts.name);
-        worker = getWorker();
-        worker.sigcp = opts.sigcp;
-        worker.filsigcp = opts.filsigcp;
-        worker.code_cache = opts.code_cache;
-        worker.bootcp = opts.bootcp;
-
-      } catch (UsageError ue) {
-        PrintStream out = ue.exitCode == 0 ? System.out : System.err;
-        if (ue.getMessage() != null && ue.getMessage().length() > 0) {
-          out.println(ue.getMessage());
-          out.println();
-        }
-
-        Options.printUsage(out, ue.showSecretMenu);
-        throw new TerminationException(ue.exitCode);
-      }
+      // Parse the command-line options and read in the worker's configuration.
+      final Options opts = new Options(args);
+      final ConfigProperties config = new ConfigProperties(opts.name);
+      
+      // TODO If an instance of the worker is already running, connect to it and
+      // TODO act as a remote terminal.
+      
+      initialize(config);
+      worker = getWorker();
+      worker.sigcp = opts.sigcp;
+      worker.filsigcp = opts.filsigcp;
+      worker.code_cache = opts.code_cache;
+      worker.bootcp = opts.bootcp;
 
       // log the command line
       StringBuilder cmd = new StringBuilder("Command Line: Worker");
@@ -501,6 +483,15 @@ public final class Worker {
       
       // Drop into the worker shell.
       new WorkerShell(worker, commandSource).run();
+    } catch (UsageError ue) {
+      PrintStream out = ue.exitCode == 0 ? System.out : System.err;
+      if (ue.getMessage() != null && ue.getMessage().length() > 0) {
+        out.println(ue.getMessage());
+        out.println();
+      }
+
+      Options.printUsage(out, ue.showSecretMenu);
+      throw new TerminationException(ue.exitCode);
     } finally {
       if (worker != null) worker.shutdown();
     }
