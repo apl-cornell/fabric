@@ -26,6 +26,14 @@ public class Main {
    *          list of source files to normalize
    */
   public static void main(String[] args) {
+    if (args.length == 0) {
+      System.err.println("Usage: codenormalizer.Main [FILE]...");
+      System.err.println();
+      System.err.println("  FILE(s) are clobbered with normalized copies.");
+      System.err.println();
+      return;
+    }
+
     // Construct a list of Files from the given arguments, ensuring we can read
     // each file.
     List<File> files = new ArrayList<File>(args.length);
