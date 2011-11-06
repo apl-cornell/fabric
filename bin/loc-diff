@@ -1,0 +1,52 @@
+#!/usr/bin/perl
+
+use File::Path qw(remove_tree);
+
+# Counts and categorizes lines of code in the Fabric project that have changed
+# between trunk and a given branch.
+
+if (@ARGV != 1) {
+  # Print usage info.
+  my $progname = `basename $0`; chomp $progname;
+  print STDERR "Usage: $progname <branch_name>";
+  exit 1;
+}
+
+my $branch = $ARGV[0];
+my $width=40;
+
+if ($ENV{'FABRIC_HOME'} ne '') {
+  chdir($ENV{'FABRIC_HOME'});
+} else {
+  my $bindir = `dirname $0` ; chomp $bindir;
+  my $fabric = $bindir . '/..';
+  if (!chdir($fabric)) {
+    print STDERR "error\n";
+  }
+}
+
+if (! -d 'src' || ! -f 'bin/loc-diff') {
+  die 'Run from the top directory of Fabric';
+}
+
+# Make sure we're in a clean FABRIC/tmp.
+remove_tree('tmp', {safe => 0});
+mkdir('tmp');
+if (!chdir('tmp')) {
+  die 'error changing to FABRIC/tmp directory';
+}
+
+# Check out branch.
+system('svn', 'export',
+    'https://forge.cornell.edu/svn/repos/fabric/branches/' . $branch,
+    'branch');
+if ($? != 0) {
+  die 'Error checking out branch "', $branch, '"';
+}
+
+# Check out trunk.
+system('svn', 'export', 'https://forge.cornell.edu/svn/repos/fabric/trunk');
+if ($? != 0) {
+  die 'Error checking out trunk';
+}
+
