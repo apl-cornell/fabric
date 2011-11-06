@@ -8,7 +8,7 @@ if ($ENV{'FABRIC_HOME'} ne '') {
     chdir($ENV{'FABRIC_HOME'});
 } else {
     my $bindir = `dirname $0`; chomp $bindir;
-    my $fabric = `dirname $bindir`; chomp $fabric;
+    my $fabric = $bindir . '/..';
     if (chdir($fabric)) {} else {print "error\n";}
 }
 
