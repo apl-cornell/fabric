@@ -1,8 +1,6 @@
 #!/usr/bin/perl
 
 # Counts lines of code in the Fabric project and categorizes them.
-# This script no longer works.  Needs to be updated to account for the fact
-# that we're not using CVS anymore.
 
 my $width=40;
 
@@ -22,6 +20,7 @@ open (SVNFILES, "bin/svnfiles src |");
 
 my %pattern, %lines;
 
+$pattern{'Common compiler'} = '^src/compiler/codebases';
 $pattern{'FabIL compiler'} = '^src/compiler/fabil';
 $pattern{'Fabric compiler'} = '^src/compiler/fabric';
 $pattern{'Worker'} = '^src/system/fabric/worker';
@@ -30,7 +29,7 @@ $pattern{'Fabric runtime support (Java)'} = '^src/system/fabric/lang';
 $pattern{'Dissemination layer'} = '^src/system/fabric/dissemination';
 $pattern{'Message protocols'} = '^src/system/fabric/messages';
 $pattern{'Store'} = '^src/system/fabric/store';
-$pattern{'Arrays (FabIL)'} = '^src/runtime/fabric/lang/arrays';
+$pattern{'Arrays (FabIL)'} = '^src/arrays/fabric/lang/arrays';
 $pattern{'Arrays (Java)'} = '^src/system/fabric/lang/arrays';
 $pattern{'Fabric runtime support (FabIL)'} = '^src/runtime/fabric/lang';
 $pattern{'FabIL port of GNU classpath'} = '^src/runtime/fabric/util';
