@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use File::Path qw(remove_tree);
+use IPC::Open3;
 
 # Counts and categorizes lines of code in the Fabric project that have changed
 # between trunk and a given branch.
@@ -37,16 +38,33 @@ if (!chdir('tmp')) {
 }
 
 # Check out branch.
-system('svn', 'export',
-    'https://forge.cornell.edu/svn/repos/fabric/branches/' . $branch,
-    'branch');
+print 'Exporting branch "', $branch, '" from svn...', "\n";
+open(NULL, '>', File::Spec->devnull);
+my $pid = open3("<&NULL", ">&NULL", ">&STDOUT",
+  'svn', 'export',
+  'https://forge.cornell.edu/svn/repos/fabric/branches/' . $branch,
+  'branch');
+waitpid($pid, 0);
 if ($? != 0) {
-  die 'Error checking out branch "', $branch, '"';
+  die 'Error exporting branch "', $branch, '" from svn';
 }
 
 # Check out trunk.
-system('svn', 'export', 'https://forge.cornell.edu/svn/repos/fabric/trunk');
+print 'Exporting trunk from svn...', "\n";
+open(NULL, '>', File::Spec->devnull);
+$pid = open3("<&NULL", ">&NULL", ">&STDOUT",
+  'svn', 'export',
+  'https://forge.cornell.edu/svn/repos/fabric/trunk');
+waitpid($pid, 0);
 if ($? != 0) {
-  die 'Error checking out trunk';
+  die 'Error exporting trunk from svn';
 }
+
+# Normalize sources.
+print 'Normalizing source files...', "\n";
+print `find \\( -name \\*.java -o -name \\*.fab -o -name \\*.fil -o -name \\*.jif \\) -print0 | xargs -0 ../tools/code-normalizer/bin/normalize-code`;
+
+# Do the diff.
+print 'Diffing...', "\n";
+print `diff -urN --suppress-common-lines branch trunk|diffstat -b -m -s`;
 
