@@ -233,6 +233,7 @@ SignedInteger = [-+]? [0-9]+
 OctalEscape = \\ [0-7]
             | \\ [0-7][0-7]
             | \\ [0-3][0-7][0-7]
+UnicodeEscape = \\ u[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]
 
 %%
 
@@ -376,6 +377,16 @@ OctalEscape = \\ [0-7]
                                                   + yytext() + "\"", pos());
                                    }
                                  }
+    {UnicodeEscape}              { try {
+                                       int x = Integer.parseInt(chop(2,0), 16);
+				       sb.append((char) x);
+                                   }
+				   catch (NumberFormatException e) {
+				       eq.enqueue(ErrorInfo.LEXICAL_ERROR,
+				                  "Illegal unicode escape \""
+						  + yytext() + "\"", pos());
+				   }
+                                 }
 
     /* Illegal escape character */
     \\.                          { eq.enqueue(ErrorInfo.LEXICAL_ERROR,
@@ -415,6 +426,16 @@ OctalEscape = \\ [0-7]
                                                   "Illegal octal escape \""
                                                   + yytext() + "\"", pos());
                                    }
+                                 }
+    {UnicodeEscape}              { try {
+                                       int x = Integer.parseInt(chop(2,0), 16);
+				       sb.append((char) x);
+                                   }
+				   catch (NumberFormatException e) {
+				       eq.enqueue(ErrorInfo.LEXICAL_ERROR,
+				                  "Illegal unicode escape \""
+						  + yytext() + "\"", pos());
+				   }
                                  }
 
     /* Illegal escape character */
