@@ -1,0 +1,139 @@
+<!--
+  This is the Apache Ant build file for the code normalizer.
+-->
+
+<project name="code-normalizer" default="build-all" basedir=".">
+  <description>
+    Code-normalizing tool build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="code-normalizer.home" file="${ant.file.code-normalizer}" />
+  <path id="code-normalizer.classpath">
+    <path refid="polyglot.classpath" />
+  </path>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${code-normalizer.home}/classes" />
+  </target>
+
+  <target name="clobber" depends="clean">
+    <delete>
+      <fileset dir="${code-normalizer.home}/src">
+        <include name="codenormalizer/Lexer.java" />
+        <include name="codenormalizer/Grm.java" />
+        <include name="codenormalizer/sym.java" />
+      </fileset>
+    </delete>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build" description="Builds the code normalizer">
+    <mkdir dir="${code-normalizer.home}/classes" />
+    <antcall target="jflex-lexer">
+      <param name="lexer.dir"
+          value="${code-normalizer.home}/src/codenormalizer" />
+      <param name="lexer.class" value="Lexer" />
+      <param name="jflex.file" value="lexer.flex" />
+    </antcall>
+
+    <antcall target="cup-parser">
+      <param name="parser.dir"
+          value="${code-normalizer.home}/src/codenormalizer" />
+      <param name="parser.class" value="Grm" />
+      <param name="symbol.class" value="sym" />
+      <param name="cup.file" value="grm.cup" />
+    </antcall>
+
+    <javac source="1.6" target="1.6" srcdir="${code-normalizer.home}/src"
+        destdir="${code-normalizer.home}/classes" debug="on"
+        includes="**">
+      <classpath>
+        <path refid="code-normalizer.classpath" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+  <!--
+  ****************************************************************************
+    Generic helper stuff for building Polyglot extensions.
+  ****************************************************************************
+  -->
+
+  <target name="jflex-lexer" depends="jflex-lexer-deps"
+      unless="jflex.lexer.up-to-date">
+    <java classname="JFlex.Main" fork="true" dir="${lexer.dir}"
+        failonerror="true">
+      <classpath refid="code-normalizer.classpath" />
+      <arg value="${jflex.file}" />
+    </java>
+  </target>
+
+  <target name="jflex-lexer-deps">
+    <dependset>
+      <srcfileset dir="${lexer.dir}" includes="${jflex.file}" />
+      <targetfileset dir="${lexer.dir}" includes="${lexer.class}.java" />
+    </dependset>
+    <available property="jflex.lexer.up-to-date"
+        file="${lexer.dir}/${lexer.class}.java" />
+  </target>
+
+  <target name="cup-parser" depends="cup-parser-using-jar"
+      unless="cup.parser.up-to-date">
+  </target>
+
+  <target name="cup-parser-using-jar" depends="cup-parser-deps"
+      unless="cup.parser.up-to-date">
+    <java classname="java_cup.Main" fork="true" dir="${parser.dir}"
+        failonerror="true">
+      <classpath refid="code-normalizer.classpath" />
+      <arg value="-parser" />
+      <arg value="${parser.class}" />
+      <arg value="-symbols" />
+      <arg value="${symbol.class}" />
+      <arg value="${cup.file}" />
+    </java>
+  </target>
+
+  <target name="cup-parser-deps">
+    <dependset>
+      <srcfileset dir="${parser.dir}" includes="${cup.file}" />
+      <targetfileset dir="${parser.dir}">
+        <include name="${parser.class}.java" />
+        <include name="${symbol.class}.java" />
+      </targetfileset>
+    </dependset>
+    <condition property="cup.parser.up-to-date">
+      <and>
+        <available file="${parser.dir}/${parser.class}.java" />
+        <available file="${parser.dir}/${symbol.class}.java" />
+      </and>
+    </condition>
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->
