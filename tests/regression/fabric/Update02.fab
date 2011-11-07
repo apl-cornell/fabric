@@ -1,0 +1,19 @@
+public class Update02 {
+	final int{this} x;
+}
+
+class TestUpdate02 {
+	public void foo{*l}(final label{*l} l) {
+		FabricWorker local = FabricWorker.getWorker();
+		final Store s = local.getStore("bob");		
+		Update02{*l} u2 = new Update02@s(); 
+		// u2 should be created with object label {alice←}
+	}
+	
+	public void bar{*l}(label{*l} l) {
+		FabricWorker local = FabricWorker.getWorker();
+		final RemoteWorker w = local.getWorker("alice");
+		foo@w(l);
+	}
+	
+}

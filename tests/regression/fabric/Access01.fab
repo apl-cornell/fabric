@@ -1,0 +1,10 @@
+public class Access01[label L] {
+    int{L}@{L} x;
+    int y; // default will not work at runtime
+    
+    public void foo{L}() {
+        int y;
+        y = this.x;
+    }
+    
+}

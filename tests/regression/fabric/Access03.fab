@@ -1,0 +1,13 @@
+public class Access03[label L, label A] where L <= A {
+    int{L}@{A} x;
+}
+
+class Main[label L, label A] where L <= A, provider <= L {
+    public void foo{L}() {
+        int y;
+        Access03[L,A] o = new Access03[L,A]();
+        y = o.x; // read
+
+        o.x = 5; // write
+    }
+}
