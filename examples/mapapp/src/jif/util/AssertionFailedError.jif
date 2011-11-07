@@ -1,0 +1,12 @@
+package util;
+
+public class AssertionFailedError extends Error {
+  public AssertionFailedError(String message) {
+    super(message);
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

@@ -5,31 +5,143 @@ import jif.util.Set;
 /**
  * A group is a principal object that delegates to each of its members.  It
  * also serves as a collection, so it can be iterated over, etc..
+ *
+ * A group is parameterized by an owner; only the owner may change the group
+ * membership.  The owner acts for the group, but is not listed as a member
+ * (unless explicitly added).
+ *
+ * Because of the absence of Fabric collections, this class uses a fixed-size
+ * array to hold the members, and the add() method throws an
+ * ArrayIndexOutOfBoundsException if the array is full.
  */
-public class Group[label entries] extends AbstractPrincipal {
+public class Group[principal owner, label entries]
+  implements Principal
+// TODO: where the integrity of "entries" is higher than owner←
+{
 
-	private Principal[] members;
+  private final Principal[] members;
+  private final String      name;
+  private       int         size;
 
-	public Group(String name) {
-		super(name);
-		// TODO
-	}
+  private final static int SIZE = 100;
 
-	public void add(Principal p) {
-		// TODO
-	}
+  /**
+   * Create a new group with the given name.
+   */
+  public Group(String name) {
+    this.name    = name;
+    this.size    = 0;
+    this.members = new Principal[SIZE];
+  }
 
-	public void remove(Principal p) {
-		// TODO
-	}
+  //////////////////////////////////////////////////////////////////////////////
+  // Group membership operations                                              //
+  //////////////////////////////////////////////////////////////////////////////
 
-	public GroupIterator iterator() {
-		// TODO
-		return null;
-	}
+  /**
+   * Add a new member to the group.
+   */
+  public void add(Principal p) throws ArrayIndexOutOfBoundsException {
+    if (this.members == null)
+      throw new AssertionFailedError("this.members should always be non-null.");
+
+    if (size >= this.members.length)
+      throw new ArrayIndexOutOfBoundsException();
+
+    this.members[this.size++] = p;
+
+    PrincipalUtil.notifyNewDelegation(this,p);
+  }
+
+
+  /**
+   * Remove a member of the group.
+   */
+  public void remove(Principal p) {
+    try {
+
+      if (this.members == null)
+
+      for (int i = 0; i < size; i++)
+        if (p == this.members[i])
+        {
+          // put last member into current slot and then resize
+          this.members[i]    = this.members[--size];
+          this.members[size] = null;
+        }
+
+      PrincipalUtil.notifyRevokeDelegation(this,p);
+
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("this.size <= this.members.length");
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("this.members should always be non-null.");
+    }
+  }
+
+
+  /**
+   * Iterate over the members of the group.
+   */
+  public GroupIterator iterator() {
+    // TODO
+    return null;
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public String{this} name() {
+    return this.name;
+  }
+
+  public boolean{this;p;this←} delegatesTo(principal p) {
+    return p == owner;
+  }
+
+  public boolean equals(Principal p) {
+    // TODO
+    return false;
+  }
+
+  public
+  boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+  isAuthorized {this←}
+              (Object           authPrf,
+               Closure[this,lb] closure,
+               label            lb,
+               boolean          executeNow)
+  where authority(this),
+        {authPrf;closure;lb;executeNow} <= lb
+  {
+    // TODO
+    return false;
+  }
+
+  public
+  ActsForProof{this; p; this←; p←}
+  findProofUpto {this←}
+               (Principal p,
+                Object searchState)
+  {
+    // TODO
+    return null;
+  }
+
+  public
+  ActsForProof{this; p; p←; this←}
+  findProofDownto {this←}
+                 (Principal p,
+                  Object searchState)
+  {
+    // TODO
+    return null;
+  }
 }
 
 /*
-** vim: ts=2 sw=2 cindent cino=\:0 syntax=java
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
 */
 
