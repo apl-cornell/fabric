@@ -9,7 +9,20 @@ use IPC::Open3;
 if (@ARGV != 1) {
   # Print usage info.
   my $progname = `basename $0`; chomp $progname;
-  print STDERR "Usage: $progname <branch_name>";
+  print STDERR <<END;
+Usage: $progname BRANCH
+
+  Determines the number of lines of code that have been added, modified and
+  deleted in trunk, relative to BRANCH.
+
+  This script exports a fresh copy of trunk into a temporary directory. The
+  only prerequisites for running this script are:
+
+    - have config.properties point to a Polyglot installation,
+    - have tools/code-normalizer built (done automatically by
+	the default Ant target in the top-level build file), and
+    - have diffstat installed.
+END
   exit 1;
 }
 
