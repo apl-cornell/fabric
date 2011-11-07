@@ -1,31 +1,6 @@
-import jif.runtime.Runtime;
+package util;
 
-public class PrincipalTest authority(*) {
-  public static
-  void
-  main {p←}
-  (
-    principal{p←} p,
-    String[] args
-  ) : {p→}
-  throws
-    Exception
-  where
-    authority(p)
-  {
-    final principal{p→} q = new Delegator(p);
-
-    if (q actsfor p) {
-      Runtime[p].getRuntime().stdout(new label {p→}).println("delegation successful");
-    }
-    else {
-      Runtime[p].getRuntime().stdout(new label {p→}).println("delegation failed");
-    }
-  }
-}
-
-
-class Delegator implements Principal {
+public class Delegator implements Principal {
   public  int       {this←} foo;
   private principal {this←} owner;
 

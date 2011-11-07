@@ -1,0 +1,33 @@
+package util.tests;
+
+import jif.runtime.Runtime;
+import util.Delegator;
+
+public class PrincipalTest authority(*) {
+  public static
+  void
+  main {p←}
+  (
+    principal{p←} p,
+    String[] args
+  ) : {p→}
+  throws
+    Exception
+  where
+    authority(p)
+  {
+    final principal{p→} q = new Delegator(p);
+
+    if (q actsfor p) {
+      Runtime[p].getRuntime().stdout(new label {p→}).println("delegation successful");
+    }
+    else {
+      Runtime[p].getRuntime().stdout(new label {p→}).println("delegation failed");
+    }
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

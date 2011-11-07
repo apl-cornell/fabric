@@ -1,8 +1,17 @@
 package snapp;
 
+/**
+ * An instance of Snapp corresponds to an instance of the Snapp social network.
+ */
 public class Snapp extends AbstractPrincipal {
 
-  public Snapp(Principal owner) throws NullPointerException {
+  /**
+   * Create a new Snapp, operated by owner.
+   *
+   * @throws NullPointerException
+   *    if owner is null.
+   */
+  public {this←} Snapp(Principal{this←} owner) throws NullPointerException {
     super(owner.name());
     this.addDelegatesTo(owner);
   }

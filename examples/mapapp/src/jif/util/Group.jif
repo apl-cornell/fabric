@@ -25,6 +25,7 @@ public class Group[label entries] extends AbstractPrincipal {
 
 	public GroupIterator iterator() {
 		// TODO
+		return null;
 	}
 }
 
