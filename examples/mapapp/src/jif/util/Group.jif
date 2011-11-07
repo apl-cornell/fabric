@@ -10,31 +10,50 @@ import jif.util.Set;
  * membership.  The owner acts for the group, but is not listed as a member
  * (unless explicitly added).
  *
- * Because of the absence of Fabric collections, this class uses a fixed-size
- * array to hold the members, and the add() method throws an
+ * TODO: Because of the absence of Fabric collections, this class uses a
+ * fixed-size array to hold the members, and the add() method throws an
  * ArrayIndexOutOfBoundsException if the array is full.
  */
 public class Group[principal owner]
   implements Principal
 {
-  private final String              {this}   name;
+  private final String      {this}   name;
 
-  private final Principal{owner←}[] {owner←} members;
-  private       int                 {owner←} size;
+  final Principal{owner←}[] {owner←} members;
+  int                       {owner←} size;
 
-  private final static int {*←} SIZE = 100;
+  private final static int  {*←}     SIZE = 100;
 
   //////////////////////////////////////////////////////////////////////////////
   // Group constructors                                                       //
   //////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Create a new group with the given name.
+   * Create a new group with the given name and the default maximum size.
    */
   public Group{owner←} (String{this} name) {
+    this.name = name;
+    this.size = 0;
+    this.members = new Principal[SIZE];
+  }
+
+
+
+  /**
+   * Create a new group with the given name and maximum size.
+   */
+  public
+  Group{owner←}
+  (
+    String{this} name,
+    int{this} maxSize
+  )
+  :{owner←;this}
+  throws NegativeArraySizeException
+  {
     this.name    = name;
     this.size    = 0;
-    this.members = new Principal[SIZE];
+    this.members = new Principal[size];
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -73,6 +92,7 @@ public class Group[principal owner]
     try
     {
 
+      // method implementation
       for (int i = 0; i < size; i++)
         if (p == this.members[i])
         {
@@ -95,9 +115,11 @@ public class Group[principal owner]
   /**
    * Iterate over the members of the group.
    */
-  public GroupIterator iterator() {
-    // TODO
-    return null;
+  public GroupIterator[owner, l] iterator {*l} (label l) where {owner←} <= {*l} {
+    if (owner actsfor this)
+      return new GroupIterator[owner, l](this);
+    else
+      throw new AssertionFailedError("owner must act for group");
   }
 
 
@@ -105,6 +127,9 @@ public class Group[principal owner]
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * See Principal.name()
+   */
   public String{this} name() {
     if (owner actsfor this)
       return this.name;
@@ -191,6 +216,7 @@ public class Group[principal owner]
           final principal s = members[i];
 
           if (s actsfor this) {
+            // find a proof and extend it to include the group
             ActsForProof{this;s;this←} proof = PrincipalUtil.findActsForProof(p, s, searchState);
             if (proof != null)
                 return new TransitiveProof(proof, s, new DelegatesProof(s, this));
