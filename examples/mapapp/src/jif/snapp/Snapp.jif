@@ -1,9 +1,11 @@
 package snapp;
 
+import util.Delegator;
+
 /**
  * An instance of Snapp corresponds to an instance of the Snapp social network.
  */
-public class Snapp extends AbstractPrincipal {
+public class Snapp extends Delegator {
 
   /**
    * Create a new Snapp, operated by owner.
@@ -11,9 +13,15 @@ public class Snapp extends AbstractPrincipal {
    * @throws NullPointerException
    *    if owner is null.
    */
-  public {this←} Snapp(Principal{this←} owner) throws NullPointerException {
-    super(owner.name());
-    this.addDelegatesTo(owner);
+  public
+  Snapp {owner←}
+  (
+    String   {owner←} name,
+    principal{owner←} owner
+  )
+  throws NullPointerException
+  {
+    super(name, owner);
   }
 
   public UserV1 createUser(String name, principal owner) {

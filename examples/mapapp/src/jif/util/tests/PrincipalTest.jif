@@ -16,7 +16,7 @@ public class PrincipalTest authority(*) {
   where
     authority(p)
   {
-    final principal{p→} q = new Delegator(p);
+    final principal{p→} q = new Delegator("foo", p);
 
     if (q actsfor p) {
       Runtime[p].getRuntime().stdout(new label {p→}).println("delegation successful");

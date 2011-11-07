@@ -1,18 +1,22 @@
 package util;
 
+/**
+ * Convenience principal class the delegates to a single owner.
+ */
 public class Delegator implements Principal {
-  public  int       {this←} foo;
-  private principal {this←} owner;
+  private final String    {this←} name;
+  private final principal {this←} owner;
 
   public
   Delegator {owner←}
   (
+    String{owner←}    name,
     principal{owner←} owner
   )
   where authority(this)
   {
-    this.foo   = 0;
     this.owner = endorse(owner, {owner←} to {this←});
+    this.name  = endorse(name,  {owner←} to {this←});
   }
 
   //////////////////////////////////////////////////////////////////////////////
