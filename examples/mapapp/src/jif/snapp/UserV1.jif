@@ -19,16 +19,16 @@ public class UserV1 extends Delegator implements JifObject[{}] {
 
   /** The user's friends,  only readable by members of the friendInfo   group */
   public final label friendLabel = new label {this←;this→friendInfo};
-  public final Group[friendLabel] {*friendLabel} friends;
+  public final Group[this] {*friendLabel} friends;
 
   /** The social network that can act for this account. */
   public final Snapp {this←} network;
 
   /** The group containing anyone who can learn the user's friends */
-  public final Group[{this←}] {this←} friendInfo;
+  public final Group[this] {this←} friendInfo;
 
   /** The group containing anyone who can see the user's location */
-  public final Group[{this←}] {this←} locationInfo;
+  public final Group[this] {this←} locationInfo;
 
 
 
@@ -44,9 +44,9 @@ public class UserV1 extends Delegator implements JifObject[{}] {
   {
     this.network = network;
 
-    this.friendInfo   = new Group[{this←}](name + "'s friend readers");
-    this.locationInfo = new Group[{this←}](name + "'s location readers");
-    this.friends      = new Group[{this←;this→friendInfo}](name + "'s friends");
+    this.friendInfo   = new Group[this](name + "'s friend readers");
+    this.locationInfo = new Group[this](name + "'s location readers");
+    this.friends      = new Group[this](name + "'s friends");
 
     this.location = null;
 
