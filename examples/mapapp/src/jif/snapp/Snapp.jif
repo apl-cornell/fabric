@@ -24,7 +24,14 @@ public class Snapp extends Delegator {
     super(name, owner);
   }
 
-  public UserV1 createUser(String name, principal owner) {
+  public
+  UserV1
+  createUser {owner←}
+  (
+    String    {owner←} name,
+    principal {owner←} owner
+  )
+  {
     return new UserV1(name, owner, this);
   }
 }

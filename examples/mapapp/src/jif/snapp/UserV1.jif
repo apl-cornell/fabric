@@ -1,6 +1,7 @@
 package snapp;
 
 import util.Group;
+import util.Delegator;
 
 /**
  * A User object contains all of the data associated with a given user account
@@ -8,9 +9,9 @@ import util.Group;
  * network as well as the user who created them.
  *
  * The V1 stands for version 1.  In Fabric, V1 and V2 will both be named User,
- * just in different codebases.
+ * but will reside in different codebases.
  */
-public class UserV1 extends AbstractPrincipal implements JifObject[{}] {
+public class UserV1 extends Delegator implements JifObject[{}] {
 
   /** The user's location, only readable by members of the locationInfo group */
   public final label locationLabel = new label {this←;this→locationInfo};
@@ -31,12 +32,16 @@ public class UserV1 extends AbstractPrincipal implements JifObject[{}] {
 
 
 
-  public UserV1(String name, principal owner, Snapp network) throws NullPointerException {
-    super(name);
-
-    this.addDelegatesTo(owner);
-    this.addDelegatesTo(network);
-
+  /** Create a new user with the given name */
+  UserV1 {owner←}
+  (
+    String    {owner←} name,
+    principal {owner←} owner,
+    Snapp     {owner←} network
+  )
+  throws NullPointerException
+  where authority(this)
+  {
     this.network = network;
 
     this.friendInfo   = new Group[{this←}](name + "'s friend readers");
@@ -44,6 +49,8 @@ public class UserV1 extends AbstractPrincipal implements JifObject[{}] {
     this.friends      = new Group[{this←;this→friendInfo}](name + "'s friends");
 
     this.location = null;
+
+    super(name, owner);
   }
 
   public void setLocation(Location{*locationLabel} loc) {
