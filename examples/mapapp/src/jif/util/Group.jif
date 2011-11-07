@@ -16,19 +16,23 @@ import jif.util.Set;
  */
 public class Group[principal owner, label entries]
   implements Principal
-// TODO: where the integrity of "entries" is higher than owner←
+       where {owner←} <= entries
 {
+  private final String               {this}    name;
 
-  private final Principal[] members;
-  private final String      name;
-  private       int         size;
+  private final Principal{entries}[] {entries} members;
+  private       int                  {entries} size;
 
-  private final static int SIZE = 100;
+  private final static int {*←} SIZE = 100;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Group constructors                                                       //
+  //////////////////////////////////////////////////////////////////////////////
 
   /**
    * Create a new group with the given name.
    */
-  public Group(String name) {
+  public Group{entries} (String{this} name) {
     this.name    = name;
     this.size    = 0;
     this.members = new Principal[SIZE];
@@ -41,10 +45,12 @@ public class Group[principal owner, label entries]
   /**
    * Add a new member to the group.
    */
-  public void add(Principal p) throws ArrayIndexOutOfBoundsException {
+  public void add {entries} (Principal{entries} p):{entries} throws ArrayIndexOutOfBoundsException {
+    // invariant check
     if (this.members == null)
       throw new AssertionFailedError("this.members should always be non-null.");
 
+    // method implementation
     if (size >= this.members.length)
       throw new ArrayIndexOutOfBoundsException();
 
@@ -57,10 +63,9 @@ public class Group[principal owner, label entries]
   /**
    * Remove a member of the group.
    */
-  public void remove(Principal p) {
-    try {
-
-      if (this.members == null)
+  public void remove {owner←} (Principal{owner←} p) {
+    try
+    {
 
       for (int i = 0; i < size; i++)
         if (p == this.members[i])
@@ -74,6 +79,7 @@ public class Group[principal owner, label entries]
 
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError("this.size <= this.members.length");
+
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("this.members should always be non-null.");
     }
@@ -94,7 +100,10 @@ public class Group[principal owner, label entries]
   //////////////////////////////////////////////////////////////////////////////
 
   public String{this} name() {
-    return this.name;
+    if (owner actsfor this)
+      return this.name;
+    else
+      throw new AssertionFailedError("owner ≽ this");
   }
 
   public boolean{this;p;this←} delegatesTo(principal p) {
