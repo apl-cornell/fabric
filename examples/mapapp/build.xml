@@ -72,7 +72,7 @@
       <arg value="-e" />
       <srcfile />
 
-      <fileset dir="${home}/src/jif" includes="mapserv/*.jif" excludes="jif/principals/*.jif" />
+      <fileset dir="${home}/src/jif" includes="mapserv/MapImage.jif" excludes="jif/principals/*.jif" />
       <globmapper from="*.jif" to="*.class" />
     </apply>
   </target>

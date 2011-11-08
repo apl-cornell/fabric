@@ -9,6 +9,11 @@ import util.AssertionFailedError;
 /**
  * A simple image class.  The image is indexed by floating point numbers, and
  * stores its own boundary... puts and gets are done relative to the boundary.
+ *
+ * The labels on this class could be relaxed to {this}, which would make the
+ * copy method unnecessary.  However, once we port to fabric, we will need to
+ * parameterize the access label, so I will just parameterize everything.
+ *
  */
 public class MapImage[label L] {
 
@@ -41,11 +46,12 @@ public class MapImage[label L] {
    *         if either data or boundary is null
    */
   public
-  MapImage
+  MapImage {L}
   (
-    Box boundary,
-    int width, int height, char[] data
+    Box{L} boundary,
+    int{L} width, int{L} height, char{L}[]{L} data
   )
+  :{L}
   throws
     ArrayIndexOutOfBoundsException,
     NullPointerException
@@ -63,18 +69,20 @@ public class MapImage[label L] {
     this.boundary = boundary;
   }
 
+
   /**
    * Get the pixel corresponding to the global location (x,y).
    *
    * @throws ArrayIndexOutOfBoundsException
    *         if (x,y) lies outside the bounding box of the image.
    */
-  public char getAt(float x, float y) throws ArrayIndexOutOfBoundsException {
+  public char{L} getAt {L} (float {L} x, float {L} y):{L} throws ArrayIndexOutOfBoundsException {
     if (this.data == null)
       throw new AssertionFailedError("data must be non-null");
 
     return data[index(x,y)];
   }
+
 
   /**
    * Set the pixel corresponding to the global location (x,y).
@@ -82,29 +90,30 @@ public class MapImage[label L] {
    * @throws ArrayIndexOutOfBoundsException
    *         if (x,y) lies outside the bounding box of the image.
    */
-  public void setAt(float x, float y, char value) throws ArrayIndexOutOfBoundsException {
+  public void setAt{L} (float {L} x, float {L} y, char {L} value):{L} throws ArrayIndexOutOfBoundsException {
     if (this.data == null)
       throw new AssertionFailedError("data must be non-null");
 
     data[index(x,y)] = value;
   }
 
+
   /**
    * Create a deep copy of this image on store s with label l.
    */
   public
-  MapImage[l]
-  copy
+  MapImage[l] {*l}
+  copy {L}
   (
-    label l,
-    Store s
+    label{*l} l,
+    Store{*l} s
   )
   where
     L <= l
   {
     try {
 
-      return new MapImage[l] (boundary.copy(l,s), width, height, Util.copyArray(data, L, L, l, l, s));
+      return new MapImage[l] (boundary.copy(l,s), width, height, Util.copyArray(data, l, l, L, L, s));
 
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("data and boundary must be non-null");
@@ -117,7 +126,7 @@ public class MapImage[label L] {
   /**
    * Print image to the given output stream.
    */
-  public void print(PrintStream[L] out) {
+  public void print {L} (PrintStream[L] {L} out) {
 
     try {
       out.println("(" + boundary.xmin + ", " + boundary.ymin + ")");
@@ -160,7 +169,7 @@ public class MapImage[label L] {
    *  Note that if (x,y) is outside the boundary, the result will be outside the bounds
    *  of the data array.
    */
-  private int index(float x, float y) {
+  private int{L} index (float {L} x, float {L} y) {
     if (this.boundary == null)
       throw new AssertionFailedError("boundary must be non-null");
 
