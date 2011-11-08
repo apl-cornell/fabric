@@ -44,7 +44,6 @@
            dest="${home}/classes/principals/"
            vmlauncher="false">
       <arg value="${jifc}"/>
-      <arg value="-fail-on-exception"/>
       <arg value="-d"          /> <arg value="${home}/classes/principals"/>
       <arg value="-sourcepath" /> <arg value="${home}/src/jif"/>
       <srcfile />
@@ -67,14 +66,13 @@
            dest="${home}/classes/jif/"
            vmlauncher="false">
       <arg value="${jifc}"/>
-      <arg value="-fail-on-exception"/>
       <arg value="-d"          /> <arg value="${home}/classes/jif"/>
       <arg value="-sourcepath" /> <arg value="${home}/src/jif"/>
       <arg value="-classpath"  /> <arg value="${home}/classes/principals"/>
       <arg value="-e" />
       <srcfile />
 
-      <fileset dir="${home}/src/jif" includes="snapp/*.jif" excludes="jif/principals/*.jif" />
+      <fileset dir="${home}/src/jif" includes="mapserv/*.jif" excludes="jif/principals/*.jif" />
       <globmapper from="*.jif" to="*.class" />
     </apply>
   </target>

@@ -14,9 +14,9 @@ public class Snapp extends Delegator {
    *    if owner is null.
    */
   public
-  Snapp {owner←}
+  Snapp {this}
   (
-    String   {owner←} name,
+    String   {this} name,
     principal{owner←} owner
   )
   throws NullPointerException
@@ -25,10 +25,10 @@ public class Snapp extends Delegator {
   }
 
   public
-  UserV1
+  UserV1 {owner←}
   createUser {owner←}
   (
-    String    {owner←} name,
+    String    {this} name,
     principal {owner←} owner
   )
   {

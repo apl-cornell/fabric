@@ -8,10 +8,16 @@ import util.Group;
 public class UserV2 extends UserV1 {
   public Mood [{this←;this→moodInfo}] {this←;this→moodInfo} mood;
 
-  public final Group [{this←}] {this←} moodInfo;
+  public final Group [this] {this←} moodInfo;
 
-  public UserV2(String name, principal owner, Snapp network) throws NullPointerException {
-    this.moodInfo = new Group[{this←}] ();
+  public
+  UserV2{this} (
+    String    {this}   name,
+    principal {owner←} owner,
+    Snapp     {owner←} network
+  )
+  throws NullPointerException {
+    this.moodInfo = new Group[this] (name + "'s mood readers");
     this.mood     = new Mood("indecisive");
     super(name, owner, network);
   }

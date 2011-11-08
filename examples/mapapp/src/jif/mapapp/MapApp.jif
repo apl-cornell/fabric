@@ -28,6 +28,10 @@ public class MapApp extends Delegator {
   )
   where authority (this)
   {
+    // these endorsements are safe, because owner ≽ this,
+    // and thus {owner←} ⊑ {this←}
+    // we just can't convince the compiler of this fact.
+
     this.service = endorse(service, {owner←} to {this←});
     super(name, owner);
   }

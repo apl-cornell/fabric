@@ -33,16 +33,20 @@ public class UserV1 extends Delegator implements JifObject[{}] {
 
 
   /** Create a new user with the given name */
-  UserV1 {owner←}
+  UserV1 {this}
   (
-    String    {owner←} name,
+    String    {this} name,
     principal {owner←} owner,
     Snapp     {owner←} network
   )
   throws NullPointerException
   where authority(this)
   {
-    this.network = network;
+    // these endorsements are safe, because owner ≽ this,
+    // and thus {owner←} ⊑ {this←}
+    // this just isn't true until after the superclass constructor is called.
+
+    this.network = endorse(network, {owner←} to {this←});
 
     this.friendInfo   = new Group[this](name + "'s friend readers");
     this.locationInfo = new Group[this](name + "'s location readers");
@@ -53,7 +57,7 @@ public class UserV1 extends Delegator implements JifObject[{}] {
     super(name, owner);
   }
 
-  public void setLocation(Location{*locationLabel} loc) {
+  public void setLocation {*locationLabel} (Location{*locationLabel} loc) {
     this.location = loc;
   }
 

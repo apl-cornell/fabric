@@ -42,7 +42,7 @@ public class Box {
    */
   public Box expand(float x, float y) {
     return new Box(
-        min(this.xmin, x), min(this,ymin, y),
+        min(this.xmin, x), min(this.ymin, y),
         min(this.xmax, x), max(this.ymax, y));
   }
 
@@ -62,7 +62,7 @@ public class Box {
    * between 0 and 1.
    */
   public float scale_y(float y) {
-    return (y - ymin) / (ymay - ymin);
+    return (y - ymin) / (ymax - ymin);
   }
 
 
