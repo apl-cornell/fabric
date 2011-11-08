@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jline.ConsoleReader;
+import jline.ConsoleReaderInputStream;
+import jline.Terminal;
+
 import fabric.common.exceptions.InternalError;
 
 public class WorkerShell {
@@ -16,6 +20,10 @@ public class WorkerShell {
   protected final boolean interactive;
   protected final Map<String, CommandHandler> handlers;
   protected final CommandHandler defaultHandler;
+
+  static {
+    Terminal.setupTerminal();
+  }
 
   private static interface CommandHandler {
     void handle(List<String> args) throws HandlerException;
@@ -31,20 +39,20 @@ public class WorkerShell {
     }
   }
 
-  public WorkerShell(Worker worker) {
-    this(worker, System.in, System.out, true);
+  public WorkerShell(Worker worker) throws IOException {
+    this(worker, new ConsoleReaderInputStream(new ConsoleReader(System.in,
+        new OutputStreamWriter(System.out))), System.out, true);
   }
 
   public WorkerShell(Worker worker, File in, PrintStream out)
       throws FileNotFoundException {
-    this(worker, new FileInputStream(in), out, false);
+    this(worker, new BufferedInputStream(new FileInputStream(in)), out, false);
   }
 
   protected WorkerShell(Worker worker, InputStream in, PrintStream out,
       boolean consoleMode) {
     this.worker = worker;
-    this.in =
-        new StreamTokenizer(new BufferedReader(new InputStreamReader(in)));
+    this.in = new StreamTokenizer(new InputStreamReader(in));
     this.out = out;
     this.err = System.err;
     this.interactive = consoleMode;

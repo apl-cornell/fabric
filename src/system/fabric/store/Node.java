@@ -3,6 +3,7 @@ package fabric.store;
 import static fabric.common.Logging.STORE_LOGGER;
 
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Map;
@@ -14,6 +15,7 @@ import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
+import fabric.worker.WorkerShell;
 
 /**
  * The Node class encapsulates the shared resources for multiple stores and
@@ -131,7 +133,29 @@ public class Node {
 
   /** Launch all workers and stores. */
   public void run() {
-    store.run();
+    // Run the store's message-processing code in its own thread.
+    Thread t = new Thread(store, "Fabric network connection acceptor");
+    t.setDaemon(true);
+    t.start();
+    
+    // Drop into a worker shell.
+    try {
+      Worker worker = Worker.getWorker();
+      try {
+        try {
+          new WorkerShell(worker).run();
+        } catch (IOException e) {
+          e.printStackTrace();
+          t.join();
+        }
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      } finally {
+        worker.shutdown();
+      }
+    } catch (IllegalStateException e) {
+      throw new InternalError(e);
+    }
   }
 
   /** Gracefully tear down all workers and stores. */
