@@ -6,23 +6,35 @@ public class Util {
    * Copy the contents of an array into another array with the given labels.
    */
   public static
-  char{l}[]{m}
-  copyArray
+  char{*l}[]{*m}
+  copyArray {*l; *m}
   (
-    char{n}[]{o} data,
+    final char{*n}[]{*o} data,
     label l,
     label m,
     label n,
     label o,
     Store s
   )
+  :{*o}
+  throws
+    NullPointerException
   where
     n <= l,
-    o <= m
+    o <= m,
+    m <= l
   {
-    char{l}[]{m} result = new char[data.length];
-    for (int i = 0; i < data.length; i++)
-      result[i] = data[i];
+    final char{*l}[]{*m} result = new char[data.length];
+
+    try {
+
+      for (int i = 0; i < data.length; i++)
+        result[i] = data[i];
+
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("result and data have the same length.");
+    }
+
     return result;
   }
 }
