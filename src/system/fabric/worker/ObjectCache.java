@@ -15,6 +15,8 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.lang.Object;
+import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 
 /**
@@ -188,30 +190,14 @@ public final class ObjectCache {
       resolveSurrogates();
 
       if (next != null) return next.getLabel();
-      return new Label._Proxy(store, serialized.getUpdateLabelOnum());
-    }
-
-    /**
-     * Obtains a reference to the object's access label. (Returns null if this
-     * entry has been evicted.
-     */
-    public synchronized Label getAccessLabel() {
-      if (isEvicted()) return null;
-
-      Object._Impl impl = getImpl(false);
-      if (impl != null) return impl.get$accesslabel();
-
-      // We have a serialized entry.
-      resolveSurrogates();
-
-      if (next != null) return next.getLabel();
-      return new Label._Proxy(store, serialized.getAccessLabelOnum());
+      return new Label._Proxy(store, serialized.getLabelOnum());
     }
 
     /**
      * Obtains a reference to the object's exact proxy. (Returns null if this
      * entry has been evicted.
      */
+    @SuppressWarnings("unchecked")
     public synchronized Object._Proxy getProxy() {
       if (isEvicted()) return null;
 
@@ -222,9 +208,23 @@ public final class ObjectCache {
       resolveSurrogates();
 
       if (next != null) return next.getProxy();
+      
+      Class<? extends Object._Proxy> proxyClass = null;
+      try {
+        Class<? extends Object._Impl> implClass =
+            (Class<? extends _Impl>) Class.forName(serialized.getClassName());
+        for (Class<?> c : implClass.getDeclaringClass().getClasses()) {
+          if (c.getSimpleName().equals("_Proxy")) {
+            proxyClass = (Class<? extends _Proxy>) c;
+            break;
+          }
+        }
+        
+        if (proxyClass == null) throw new InternalError();
+      } catch (ClassNotFoundException e1) {
+        throw new InternalError(e1);
+      }
 
-      Class<? extends Object._Proxy> proxyClass =
-          serialized.getClassRef().toProxyClass();
       try {
         Constructor<? extends Object._Proxy> constructor =
             proxyClass.getConstructor(Store.class, long.class);

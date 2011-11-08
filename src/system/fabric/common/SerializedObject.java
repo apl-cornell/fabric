@@ -1,18 +1,37 @@
 package fabric.common;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InvalidClassException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
-import fabric.worker.LocalStore;
-import fabric.worker.Store;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.ComparablePair;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
+import fabric.worker.LocalStore;
+import fabric.worker.Store;
 
 /**
  * <code>_Impl</code> objects are stored on stores in serialized form as
@@ -309,13 +328,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * Determines whether this object is a surrogate.
    */
   public boolean isSurrogate() {
-    if (classRef != null) {
-      return classRef.isSurrogate();
-    }
-
-    // Class not loaded yet. Avoid loading by examining the serialized data
-    // directly.
-    return ClassRef.isSurrogate(objectData, classRefPos());
+    return Surrogate.class.getName().equals(getClassName());
   }
 
   /**
@@ -810,7 +823,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       _Impl result =
           (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
-              getExpiry(), getUpdateLabelOnum(), getAccessLabelOnum(),
+              getExpiry(), getLabelOnum(),
               new ObjectInputStream(getSerializedDataStream()),
               getRefTypeIterator(), getIntraStoreRefIterator());
 

@@ -78,24 +78,6 @@ public class Options extends fabric.common.Options {
         throw new UsageError("Invalid timing category");
       }
     });
-
-    flags.add(new Flag(Kind.SECRET, new String[] { "--sigcp", "-sigcp" },
-        "<path>", "path for Fabric signatures") {
-      @Override
-      public int handle(String[] args, int index) {
-        Options.this.sigcp = args[index];
-        return index + 1;
-      }
-    });
-
-    flags.add(new Flag(Kind.SECRET, new String[] { "--filsigcp", "-filsigcp" },
-        "<path>", "path for FabIL signatures") {
-      @Override
-      public int handle(String[] args, int index) {
-        Options.this.filsigcp = args[index];
-        return index + 1;
-      }
-    });
   }
 
   @Override

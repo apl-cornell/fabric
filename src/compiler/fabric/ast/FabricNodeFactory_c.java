@@ -178,7 +178,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
   public ClassDecl ClassDecl(Position pos, Flags flags, Id name, TypeNode superClass, List interfaces, ClassBody body) {
     ClassDecl n = new ClassDecl_c(pos, flags, name,
                                   Collections.EMPTY_LIST, superClass, interfaces, 
-                                  Collections.EMPTY_LIST, Collections.EMPTY_LIST, body);
+                                  Collections.EMPTY_LIST, body);
     n = (ClassDecl)n.ext(extFactory().extClassDecl());
     n = (ClassDecl)n.del(delFactory().delClassDecl());
     return n;
@@ -189,9 +189,9 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
   public JifClassDecl JifClassDecl(Position pos, Flags flags, Id name,
                                    List params, 
                                    TypeNode superClass, List interfaces,
-                                   List authority, List constraints, ClassBody body) {
+                                   List authority, ClassBody body) {
     JifClassDecl n = new ClassDecl_c(pos, flags, name, params, superClass,
-                                     interfaces, authority, constraints, body);
+                                     interfaces, authority, body);
     n = (JifClassDecl)n.ext(extFactory().extClassDecl());
     n = (JifClassDecl)n.del(delFactory().delClassDecl());
     return n;

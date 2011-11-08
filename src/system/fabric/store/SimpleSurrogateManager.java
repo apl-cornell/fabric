@@ -19,6 +19,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
     this.tm = tm;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
   public void createSurrogates(PrepareRequest req) {
     Map<ComparablePair<String, Long>, Long> cache =
@@ -37,18 +38,11 @@ public class SimpleSurrogateManager implements SurrogateManager {
 
       long labelOnum;
       if (obj.labelRefIsInterStore()) {
+        // Add a surrogate reference to the label.
         ComparablePair<String, Long> ref = obj.getInterStoreLabelRef();
-        Long cachedOnum = cache.get(ref);
 
-        if (cachedOnum == null) {
-          // Add a surrogate reference to the access label.
-          accessLabelOnum = tm.newOnums(1)[0];
-          surrogates.add(new SerializedObject(accessLabelOnum, accessLabelOnum,
-              accessLabelOnum, ref));
-          cache.put(ref, accessLabelOnum);
-        } else {
-          accessLabelOnum = cachedOnum;
-        }
+        labelOnum = tm.newOnums(1)[0];
+        surrogates.add(new SerializedObject(labelOnum, labelOnum, ref));
         hadRemotes = true;
         newrefs.add(labelOnum);
       } else {

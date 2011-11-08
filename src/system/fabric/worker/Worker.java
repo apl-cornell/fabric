@@ -2,14 +2,29 @@ package fabric.worker;
 
 import static fabric.common.Logging.WORKER_LOGGER;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Random;
 
-import fabric.common.*;
+import fabric.common.ConfigProperties;
+import fabric.common.KeyMaterial;
+import fabric.common.ONumConstants;
+import fabric.common.ObjectGroup;
+import fabric.common.SerializedObject;
+import fabric.common.Threading;
+import fabric.common.Timing;
+import fabric.common.TransactionID;
+import fabric.common.Version;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
@@ -23,16 +38,23 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.DefaultNameService;
 import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.common.net.naming.NameService;
+import fabric.dissemination.Cache;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
-import fabric.dissemination.Cache;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
-import fabric.lang.security.*;
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.IntegPolicy;
+import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
+import fabric.lang.security.NodePrincipal;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
-import fabric.worker.shell.*;
+import fabric.worker.shell.ChainedCommandSource;
+import fabric.worker.shell.CommandSource;
+import fabric.worker.shell.InteractiveCommandSource;
+import fabric.worker.shell.TokenizedCommandSource;
 import fabric.worker.shell.WorkerShell;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
@@ -350,6 +372,7 @@ public final class Worker {
   public static void initialize(String name) throws IllegalStateException,
       IOException, InternalError, UsageError, GeneralSecurityException {
     initialize(new ConfigProperties(name));
+  }
   
   public static void initialize(ConfigProperties props)
       throws IllegalStateException, InternalError, UsageError, IOException,
@@ -381,10 +404,6 @@ public final class Worker {
       
       initialize(config);
       worker = getWorker();
-      worker.sigcp = opts.sigcp;
-      worker.filsigcp = opts.filsigcp;
-      worker.code_cache = opts.code_cache;
-      worker.bootcp = opts.bootcp;
 
       // log the command line
       StringBuilder cmd = new StringBuilder("Command Line: Worker");
@@ -397,6 +416,7 @@ public final class Worker {
       // Attempt to read the principal object to ensure that it exists.
       final NodePrincipal workerPrincipal = worker.getPrincipal();
       runInSubTransaction(new Code<Void>() {
+        @Override
         public Void run() {
           WORKER_LOGGER.config("Worker principal is " + workerPrincipal);
           return null;
@@ -451,6 +471,7 @@ public final class Worker {
     final Store local = getLocalStore();
     final NodePrincipal workerPrincipal = getPrincipal();
     Object argsProxy = runInSubTransaction(new Code<Object>() {
+      @Override
       public Object run() {
         ConfPolicy conf =
             LabelUtil._Impl.readerPolicy(local, workerPrincipal,

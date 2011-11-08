@@ -28,9 +28,9 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
 
   @SuppressWarnings("rawtypes")
   public ClassDecl_c(Position pos, Flags flags, Id name, List params,
-                     TypeNode superClass, List interfaces, List authority, List constraints,
+                     TypeNode superClass, List interfaces, List authority,
                      ClassBody body) {
-    super(pos, flags, name, params, superClass, interfaces, authority, constraints, body);
+    super(pos, flags, name, params, superClass, interfaces, authority, body);
   }
 
   /*

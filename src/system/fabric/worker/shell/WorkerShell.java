@@ -1,7 +1,16 @@
 package fabric.worker.shell;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 import fabric.common.exceptions.InternalError;
 import fabric.worker.Worker;
@@ -59,21 +68,6 @@ public class WorkerShell {
         };
 
     this.handlers.put("run", defaultHandler);
-
-    this.handlers.put("fabc", new CommandHandler("Compiles a Fabric program.") {
-      @Override
-      public void handle(List<String> args) {
-        // TODO: should we pass in the correct i/o streams?
-        fabric.Main.compile_from_shell(args, System.in, System.out);
-      }
-    });
-
-    this.handlers.put("filc", new CommandHandler("Compiles a FabIL program.") {
-      @Override
-      public void handle(List<String> args) throws HandlerException {
-        throw new HandlerException("Not implemented yet!");
-      }
-    });
 
     this.handlers.put("help", new CommandHandler("[CMD]", "Displays a help "
         + "message for CMD.") {

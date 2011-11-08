@@ -26,6 +26,7 @@
   <property name="compiler.src" location="${src}/compiler"/>
   <property name="bootstrap.src" location="${src}/bootstrap"/>
   <property name="runtime.src" location="${src}/runtime"/>
+  <property name="arrays.src" location="${src}/arrays"/>
   <property name="signatures.fabil.src" location="${src}/signatures/fabil"/>
   <property name="signatures.fabric.src" location="${src}/signatures/fabric"/>
 
@@ -505,7 +506,7 @@
       <arg value="-cp" />
       <arg value="${bootstrap.classes}" />
       <srcfile />
-      <fileset dir="${runtime.src}" includes="fabric/lang/arrays/*.fil"/>
+      <fileset dir="${arrays.src}" includes="fabric/lang/arrays/*.fil"/>
       <globmapper from="*.fil" to="*.class" />
     </apply>
   </target>
