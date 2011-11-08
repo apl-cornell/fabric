@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import fabric.common.ONumConstants;
+import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
@@ -30,10 +31,16 @@ public final class LocalStore implements Store {
   private IntegPolicy bottomIntegPolicy;
   private Label emptyLabel;
   private Label publicReadonlyLabel;
+  
+  /**
+   * Only used to obtain ObjectCache.Entry objects so we can satisfy the
+   * contract for readFromCache(long).
+   */
+  private final ObjectCache cache;
 
   private Set<Pair<Principal, Principal>> localDelegates;
 
-  public synchronized boolean prepareTransaction(
+  public boolean prepareTransaction(
       long tid, long commitTime, Collection<Object._Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object._Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
@@ -42,11 +49,11 @@ public final class LocalStore implements Store {
     return false;
   }
 
-  public synchronized void abortTransaction(TransactionID tid) {
+  public void abortTransaction(TransactionID tid) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction aborting");
   }
 
-  public synchronized void commitTransaction(long transactionID) {
+  public void commitTransaction(long transactionID) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction committing");
   }
 
@@ -54,11 +61,15 @@ public final class LocalStore implements Store {
     return freshOID++;
   }
 
-  public synchronized Object._Impl readObject(long onum) {
+  public ObjectCache.Entry readObject(long onum) {
     return readObjectNoDissem(onum);
   }
 
-  public synchronized Object._Impl readObjectNoDissem(long onum) {
+  public ObjectCache.Entry readObjectNoDissem(long onum) {
+    return readImplNoDissem(onum).$cacheEntry;
+  }
+  
+  private _Impl readImplNoDissem(long onum) {
     if (!ONumConstants.isGlobalConstant(onum))
       throw new InternalError("Not supported.");
 
@@ -90,8 +101,8 @@ public final class LocalStore implements Store {
     throw new InternalError("Unknown global constant: onum " + onum);
   }
 
-  public Object._Impl readObjectFromCache(long onum) {
-    return readObject(onum);
+  public ObjectCache.Entry readFromCache(long onum) {
+    return cache.get(onum);
   }
   
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
@@ -104,6 +115,7 @@ public final class LocalStore implements Store {
    * @see fabric.worker.Worker.getLocalStore
    */
   protected LocalStore() {
+    this.cache = new ObjectCache(name());
   }
 
   @Override
@@ -172,11 +184,6 @@ public final class LocalStore implements Store {
     return 0;
   }
 
-  public boolean notifyEvict(long onum) {
-    // nothing to do
-    return false;
-  }
-
   public boolean evict(long onum) {
     // nothing to do
     return false;
@@ -184,6 +191,12 @@ public final class LocalStore implements Store {
 
   public void cache(_Impl impl) {
     // nothing to do
+  }
+  
+  @Override
+  public ObjectCache.Entry cache(SerializedObject obj) {
+    throw new InternalError(
+        "Unexpected attempt to cache a serialized local-store object.");
   }
 
   public void initialize() {
@@ -263,5 +276,14 @@ public final class LocalStore implements Store {
         return null;
       }
     });
+
+    // Put global constants into the cache.
+    this.cache.put((_Impl) topPrincipal.fetch());
+    this.cache.put((_Impl) topConfidPolicy.fetch());
+    this.cache.put((_Impl) bottomConfidPolicy.fetch());
+    this.cache.put((_Impl) topIntegPolicy.fetch());
+    this.cache.put((_Impl) bottomIntegPolicy.fetch());
+    this.cache.put((_Impl) emptyLabel.fetch());
+    this.cache.put((_Impl) publicReadonlyLabel.fetch());
   }
 }

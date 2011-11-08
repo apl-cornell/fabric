@@ -10,8 +10,6 @@ import fabric.common.util.ComparablePair;
 /**
  * This is a simple surrogate policy. It keeps no state between requests, and
  * simply creates lots of new surrogate objects.
- * 
- * @author mdgeorge
  */
 public class SimpleSurrogateManager implements SurrogateManager {
 
@@ -39,12 +37,18 @@ public class SimpleSurrogateManager implements SurrogateManager {
 
       long labelOnum;
       if (obj.labelRefIsInterStore()) {
-        // Add a surrogate reference to the label.
         ComparablePair<String, Long> ref = obj.getInterStoreLabelRef();
+        Long cachedOnum = cache.get(ref);
 
-        labelOnum = tm.newOnums(1)[0];
-        surrogates.add(new SerializedObject(labelOnum, labelOnum, ref));
-        cache.put(ref, labelOnum);
+        if (cachedOnum == null) {
+          // Add a surrogate reference to the access label.
+          accessLabelOnum = tm.newOnums(1)[0];
+          surrogates.add(new SerializedObject(accessLabelOnum, accessLabelOnum,
+              accessLabelOnum, ref));
+          cache.put(ref, accessLabelOnum);
+        } else {
+          accessLabelOnum = cachedOnum;
+        }
         hadRemotes = true;
         newrefs.add(labelOnum);
       } else {

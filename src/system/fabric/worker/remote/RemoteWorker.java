@@ -105,22 +105,26 @@ public final class RemoteWorker extends RemoteNode {
    *          the tid for the current transaction.
    */
   public void readObject(TransactionID tid, _Impl obj) {
-    _Impl remoteObj;
+    Pair<Store, SerializedObject> remoteSerializedObj;
     try {
-      remoteObj = readObject(tid, obj.$getStore(), obj.$getOnum());
+      remoteSerializedObj = readObject(tid, obj.$getStore(), obj.$getOnum());
     } catch (AccessException e) {
       throw new InternalError("Inter-worker object read failed.", e);
     }
 
-    if (remoteObj == null)
+    if (remoteSerializedObj == null)
       throw new InternalError("Inter-worker object read failed.");
+    
+    _Impl remoteObj =
+        remoteSerializedObj.second.deserialize(remoteSerializedObj.first);
     obj.$copyAppStateFrom(remoteObj);
   }
 
-  public _Impl readObject(TransactionID tid, Store store, long onum)
+  public Pair<Store, SerializedObject> readObject(TransactionID tid, Store store, long onum)
       throws AccessException {
     DirtyReadMessage.Response response = send(new DirtyReadMessage(tid, store, onum));
-    return response.obj;
+    if (response.obj == null) return null;
+    return new Pair<Store, SerializedObject>(response.store, response.obj);
   }
 
   /**

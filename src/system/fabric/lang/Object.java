@@ -8,6 +8,7 @@ import java.util.*;
 
 import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
+import fabric.common.SerializedObject;
 import fabric.common.Timing;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
@@ -20,6 +21,7 @@ import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.LocalStore;
+import fabric.worker.ObjectCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
@@ -39,7 +41,7 @@ public interface Object {
   /** The object's onum. */
   long $getOnum();
 
-  /** A proxy for this object. */
+  /** @return an exact proxy for this object. */
   _Proxy $getProxy();
 
   /** Label for this object */
@@ -111,50 +113,68 @@ public interface Object {
     }
 
     public final _Impl fetch() {
-      _Impl result = ref.get();
-      
-      if (result == null) result = anchor;
-
-      if (result == null) {
-        // Object has been evicted.
-        try {
-          // First, check the worker's cache.
-          result = ref.store.readObjectFromCache(ref.onum);
-          
-          if (result == null) {
-            // Next, check the current transaction's create map.
-            try {
-              Timing.FETCH.begin();
-              TransactionManager tm = TransactionManager.getInstance();
-              RemoteWorker worker = tm.getFetchWorker(this);
-              if (worker != null) {
-                // Sanity check.
-                RemoteWorker localWorker = Worker.getWorker().getLocalWorker();
-                if (worker == localWorker) {
-                  throw new InternalError();
-                }
-
-                // Fetch from the worker.
-                result = worker.readObject(tm.getCurrentTid(), ref.store, ref.onum);
-                ref.store.cache(result);
-              } else if (this instanceof SecretKeyObject
-                  || ref.store instanceof InProcessStore) {
-                // Fetch from the store. Bypass dissemination when reading key
-                // objects and when reading from an in-process store.
-                result = ref.store.readObjectNoDissem(ref.onum);
-              } else {
-                // Fetch from the store.
-                result = ref.store.readObject(ref.onum);
-              }
-            } finally {
-              Timing.FETCH.end();
-            }
-          }
-        } catch (AccessException e) {
-          throw new RuntimeFetchException(e);
+      // Paranoia: continually fetch in case the entry becomes evicted between
+      // the fetchEntry() and the getImpl().
+      while (true) {
+        _Impl result = fetchEntry().getImpl(true);
+        if (result != null) {
+          ref = result.$ref;
+          return result;
         }
+      }
+    }
+    
+    /**
+     * Ensures the object is resident in memory and returns its cache entry. If
+     * the object is fetched from the network, it will not be deserialized.
+     */
+    public final ObjectCache.Entry fetchEntry() {
+      // Check soft ref.
+      _Impl impl = ref.get();
+      if (impl != null) return impl.$cacheEntry;
+      
+      // Check anchor.
+      if (anchor != null) return anchor.$cacheEntry;
+      
+      // Intercept reads of global constants and redirect them to the local store.
+      if (ONumConstants.isGlobalConstant(ref.onum)) {
+        return Worker.getWorker().getLocalStore().readObject(ref.onum);
+      }
+      
+      // Check worker's cache.
+      ObjectCache.Entry result = ref.store.readFromCache(ref.onum);
+      if (result != null) return result;
 
-        ref = result.$ref;
+      // Object has been evicted.  Fetch from the network.
+      try {
+        // Check the current transaction's update map.
+        Timing.FETCH.begin();
+        TransactionManager tm = TransactionManager.getInstance();
+        RemoteWorker worker = tm.getFetchWorker(this);
+        if (worker != null) {
+          // Sanity check.
+          RemoteWorker localWorker = Worker.getWorker().getLocalWorker();
+          if (worker == localWorker) {
+            throw new InternalError();
+          }
+
+          // Fetch from the worker.
+          Pair<Store, SerializedObject> serialized =
+              worker.readObject(tm.getCurrentTid(), ref.store, ref.onum);
+          result = serialized.first.cache(serialized.second);
+        } else if (this instanceof SecretKeyObject
+            || ref.store instanceof InProcessStore) {
+          // Fetch from the store. Bypass dissemination when reading key
+          // objects and when reading from an in-process store.
+          result = ref.store.readObjectNoDissem(ref.onum);
+        } else {
+          // Fetch from the store.
+          result = ref.store.readObject(ref.onum);
+        }
+      } catch (AccessException e) {
+        throw new RuntimeFetchException(e);
+      } finally {
+        Timing.FETCH.end();
       }
 
       return result;
@@ -173,11 +193,33 @@ public interface Object {
     }
 
     public final Label get$label() {
-      return fetch().get$label();
+      // If the object hasn't been deserialized yet, avoid deserialization by
+      // obtaining a reference to the object's access label directly from the
+      // serialized object. We can do this without interacting with the
+      // transaction manager, since labels are immutable, and stores are trusted
+      // to enforce this.
+      
+      // Paranoia: continually fetch in case the entry becomes evicted between
+      // the fetchEntry() and the getLabel().
+      while (true) {
+        Label result = fetchEntry().getLabel();
+        if (result != null) return result;
+      }
     }
 
     public final _Proxy $getProxy() {
-      return fetch().$getProxy();
+      // If the object hasn't been deserialized yet, avoid deserialization by
+      // obtaining a reference to the object's access label directly from the
+      // serialized object. We can do this without interacting with the
+      // transaction manager, since the object's class is immutable, and stores
+      // are trusted to enforce this.
+      
+      // Paranoia: continually fetch in case the entry becomes evicted between
+      // the fetchEntry() and the getProxy().
+      while (true) {
+        _Proxy result = fetchEntry().getProxy();
+        if (result != null) return result;
+      }
     }
 
     public final java.lang.Object $unwrap() {
@@ -269,6 +311,11 @@ public interface Object {
     private _Proxy $proxy;
 
     public final FabricSoftRef $ref;
+    
+    /**
+     * The worker's cache entry object for this _Impl.
+     */
+    public final ObjectCache.Entry $cacheEntry;
 
     /**
      * A reference to the class object. TODO Figure out class loading.
@@ -342,6 +389,7 @@ public interface Object {
       this.$history = null;
       this.$numWaiting = 0;
       this.$ref = new FabricSoftRef(store, onum, this);
+      this.$cacheEntry = new ObjectCache.Entry(this);
       this.$readMapEntry = TransactionManager.getReadMapEntry(this, expiry);
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;

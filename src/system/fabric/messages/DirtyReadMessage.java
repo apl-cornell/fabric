@@ -40,9 +40,26 @@ public class DirtyReadMessage extends
 
   public static class Response implements Message.Response {
 
-    public final _Impl obj;
+    /**
+     * The store on which the serialized object resides.
+     */
+    public final Store store;
+    
+    public final SerializedObject obj;
 
+    @SuppressWarnings("deprecation")
     public Response(_Impl obj) {
+      if (obj == null) {
+        this.store = null;
+        this.obj = null;
+      } else {
+        this.store = obj.$getStore();
+        this.obj = new SerializedObject(obj);
+      }
+    }
+    
+    public Response(Store store, SerializedObject obj) {
+      this.store = store;
       this.obj = obj;
     }
   }
@@ -78,8 +95,8 @@ public class DirtyReadMessage extends
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     if (r.obj != null) {
       out.writeBoolean(true);
-      out.writeUTF(r.obj.$getStore().name());
-      SerializedObject.write(r.obj, out);
+      out.writeUTF(store.name());
+      r.obj.write(out);
     } else {
       out.writeBoolean(false);
     }
@@ -93,9 +110,8 @@ public class DirtyReadMessage extends
 
     Store store = Worker.getWorker().getStore(in.readUTF());
     SerializedObject serialized = new SerializedObject(in);
-    _Impl deserialized = serialized.deserialize(store);
 
-    return new Response(deserialized);
+    return new Response(store, serialized);
   }
 
 }

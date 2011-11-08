@@ -1,0 +1,45 @@
+package fabil.types;
+
+import java.util.List;
+
+import polyglot.types.*;
+import polyglot.util.Position;
+
+public class FabILMethodInstance_c extends MethodInstance_c {
+
+  @SuppressWarnings("rawtypes")
+  public FabILMethodInstance_c(TypeSystem ts, Position pos,
+      ReferenceType container, Flags flags, Type returnType, String name,
+      List formalTypes, List excTypes) {
+    super(ts, pos, container, flags, returnType, name, formalTypes, excTypes);
+  }
+
+  @Override
+  public boolean moreSpecificImpl(ProcedureInstance p) {
+    // Augment default behaviour to support class-file wonkiness. Apparently,
+    // modern class files can have entries for each method that have identical
+    // argument types but different return types. e.g., java.lang.StringBuffer
+    // in JRE 1.6.0_27 has both of the following.
+    // public synchronized java.lang.StringBuffer append(java.lang.String)
+    // public java.lang.AbstractStringBuilder append(java.lang.String)
+
+    MethodInstance p1 = this;
+    MethodInstance p2 = (MethodInstance) p;
+
+    // Get the reference types that declare p1 and p2.
+    ReferenceType t1 =
+        ((MemberInstance) ((Declaration) p1).declaration()).container();
+    ReferenceType t2 =
+        ((MemberInstance) ((Declaration) p2).declaration()).container();
+
+    if ((t1 == null ? t2 == null : t1.equals(t2))
+        && p1.formalTypes().equals(p2.formalTypes())) {
+      // Both procedures were declared in the same place with the same argument
+      // types. p1 is not more specific if its return type is a supertype of
+      // p2's return type.
+      if (p2.returnType().isSubtype(p1.returnType())) return false;
+    }
+
+    return super.moreSpecificImpl(p);
+  }
+}

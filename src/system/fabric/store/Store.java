@@ -248,8 +248,7 @@ class Store extends MessageToStoreHandler {
     // Note: p should always be null.
     
     // Get the store's node object and its signing key. 
-    final String storeName = name;
-    final fabric.worker.Store store = Worker.getWorker().getStore(storeName);
+    final fabric.worker.Store store = Worker.getWorker().getStore(name);
     final PrivateKey storeKey = privateKey;
     
     // Create a principal object on the store and get the resulting object's
@@ -267,7 +266,7 @@ class Store extends MessageToStoreHandler {
     X509Certificate cert;
     try {
       cert = Crypto.createCertificate(Long.toString(principalOnum),
-          msg.requesterKey, storeName, storeKey);
+          msg.requesterKey, name, storeKey);
     } catch (GeneralSecurityException e) {
       throw new FabricGeneralSecurityException(e);
     }

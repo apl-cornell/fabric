@@ -26,16 +26,11 @@ public final class Surrogate extends _Impl {
    */
   public final long onum;
 
-  /**
-   * The host name of the store for the object being pointed to.
-   */
-  private final String storeName;
-
   public Surrogate(Store store, long onum, int version, long expiry,
       long label, ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
       Iterator<Long> intraStoreRefs) throws IOException, ClassNotFoundException {
     super(store, onum, version, expiry, label, serializedInput, refTypes, intraStoreRefs);
-    this.storeName = serializedInput.readUTF();
+    String storeName = serializedInput.readUTF();
     this.store = Worker.getWorker().getStore(storeName);
     this.onum = serializedInput.readLong();
   }

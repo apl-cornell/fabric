@@ -355,6 +355,18 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return isJavaInlineable(type.type());
   }
 
+  @SuppressWarnings("rawtypes")
+  @Override
+  public MethodInstance methodInstance(Position pos, ReferenceType container,
+      Flags flags, Type returnType, String name, List argTypes, List excTypes) {
+    assert_(container);
+    assert_(returnType);
+    assert_(argTypes);
+    assert_(excTypes);
+    return new FabILMethodInstance_c(this, pos, container, flags,
+                                returnType, name, argTypes, excTypes);
+  }
+
   /**
    * Determines whether a type was compiled by fabc.
    */
