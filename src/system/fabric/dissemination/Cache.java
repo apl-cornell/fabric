@@ -1,10 +1,14 @@
-package fabric.dissemination.pastry;
+package fabric.dissemination;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.Pair;
-import fabric.dissemination.Glob;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 
@@ -35,30 +39,31 @@ public class Cache {
   }
 
   /**
-   * Retrieves a glob from the cache, or fetches it from the store.
+   * Retrieves a glob from the cache or fetches it from the store.
    * 
    * @param store
    *          the store of the object to retrieve.
    * @param onum
    *          the onum of the object.
    * @param fetch
-   *          true if we should fetch from store.
+   *          whether the glob should be should fetched from store in the event
+   *          of a cache miss.
    * @return the glob, or null if fetch is false and glob does not exists in
    *         cache.
    */
   public Glob get(RemoteStore store, long onum, boolean fetch) {
     Pair<Store, Long> key = new Pair<Store, Long>(store, onum);
-    Glob g = null;
 
-    if (fetch) {
-      g = fetch(store, onum);
-    } else {
-      g = map.get(key);
+    synchronized (map) {
+      Glob g = map.get(key);
+      if (g == null) g = fetch(store, onum);
+      return g;
     }
-
-    return g;
   }
 
+  /**
+   * Fetches a glob from the store and caches it.
+   */
   private Glob fetch(RemoteStore c, long onum) {
     Glob g = null;
 
@@ -154,6 +159,7 @@ public class Cache {
 
   private final Comparator<Pair<Pair<Store, Long>, Long>> TIMESTAMP_COMPARATOR =
       new Comparator<Pair<Pair<Store, Long>, Long>>() {
+        @Override
         public int compare(Pair<Pair<Store, Long>, Long> o1,
             Pair<Pair<Store, Long>, Long> o2) {
           Glob g1 = map.get(o1.first);

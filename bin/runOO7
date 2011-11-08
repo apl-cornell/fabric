@@ -34,7 +34,7 @@ def main():
 
 	for size,hot in (("small", True), ("medium", False)):
 		print "===== Creating database  ====="
-		result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=fabric.worker.DirectFetchManager --name %s --time all OO7.Benchmark     fab://%s/OO7 %s 3" % (worker, store, size) )
+		result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=fabric.dissemination.DummyFetchManager --name %s --time all OO7.Benchmark     fab://%s/OO7 %s 3" % (worker, store, size) )
 
 		for traversal in ("T1", "T6"):
 			print "===== Executing %3s ===========" % traversal
@@ -104,7 +104,7 @@ def runTraversal(traversal, dissem, hot, repeat):
 		dissemCls = "fabric.dissemination.pastry.PastryFetchManager"
 	else:
 		dissemStr = "no dissem"
-		dissemCls = "fabric.worker.DirectFetchManager"
+		dissemCls = "fabric.dissemination.DummyFetchManager"
 
 	if hot:
 		hotStr = "--hot 1"
