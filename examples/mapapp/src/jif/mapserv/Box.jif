@@ -21,7 +21,14 @@ public class Box {
   /**
    * Create a new box
    */
-  public Box(float xmin, float ymin, float xmax, float ymax) {
+  public Box {this}
+  (
+    float {this} xmin,
+    float {this} ymin,
+    float {this} xmax,
+    float {this} ymax
+  )
+  {
     this.xmin = xmin;
     this.ymin = ymin;
 
@@ -40,7 +47,7 @@ public class Box {
   /**
    * Expand the bounding box so that it contains the given point.
    */
-  public Box expand(float x, float y) {
+  public Box{this} expand{this}(float {this} x, float {this} y) {
     return new Box(
         min(this.xmin, x), min(this.ymin, y),
         min(this.xmax, x), max(this.ymax, y));
@@ -70,8 +77,8 @@ public class Box {
    * Create a deep copy of this on store s with label l.
    */
   public
-  Box
-  copy
+  Box  {*l}
+  copy {*l}
   (
     label l,
     Store s
