@@ -114,3 +114,5 @@ for i in "${TOP}"/lib/je-*.jar ; do
   FABRIC_STORE_CP="${FABRIC_STORE_CP}:$i"
 done
 
+# Give the JVM more memory.
+vmargs="-Xmx1024M -Xms256M"
