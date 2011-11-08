@@ -44,7 +44,7 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
         final SubSocket connection = server.accept();
 
         Threading.getPool().submit(
-            new Threading.NamedRunnable("Message handler thread") {
+            new Threading.NamedRunnable("Fabric network message handler thread") {
               @Override
               protected void runImpl() {
                 try {

@@ -403,16 +403,6 @@ public final class Worker {
       }
       WORKER_LOGGER.config(cmd.toString());
 
-      if (opts.app == null) {
-        // Act as a dissemination node.
-        while (true) {
-          try {
-            Thread.sleep(Long.MAX_VALUE);
-          } catch (InterruptedException e) {
-          }
-        }
-      }
-
       // Attempt to read the principal object to ensure that it exists.
       final NodePrincipal workerPrincipal = worker.getPrincipal();
       runInSubTransaction(new Code<Void>() {
@@ -422,29 +412,19 @@ public final class Worker {
         }
       });
 
-      // Run the requested application.
-      Class<?> mainClass = Class.forName(opts.app[0] + "$_Impl");
-      Method main =
-          mainClass.getMethod("main", new Class[] { ObjectArray.class });
-      final String[] newArgs = new String[opts.app.length - 1];
-      for (int i = 0; i < newArgs.length; i++)
-        newArgs[i] = opts.app[i + 1];
-
-      final Store local = worker.getLocalStore();
-      Object argsProxy = runInSubTransaction(new Code<Object>() {
-        public Object run() {
-          ConfPolicy conf =
-              LabelUtil._Impl.readerPolicy(local, workerPrincipal,
-                  workerPrincipal);
-          IntegPolicy integ =
-              LabelUtil._Impl.writerPolicy(local, workerPrincipal,
-                  workerPrincipal);
-          Label label = LabelUtil._Impl.toLabel(local, conf, integ);
-          return WrappedJavaInlineable.$wrap(local, label, newArgs);
-        }
-      });
-
-      MainThread.invoke(opts, main, argsProxy);
+      if (opts.app != null) {
+        // Run the requested application.
+        String app = opts.app[0];
+        String[] appArgs = new String[opts.app.length - 1];
+        for (int i = 0; i < appArgs.length; i++) {
+          appArgs[i] = opts.app[i + 1];
+         }
+        
+        worker.runFabricApp(app, appArgs);
+      } else {
+        // Drop into the worker shell.
+        new WorkerShell(worker).run();
+      }
     } finally {
       if (worker != null) worker.shutdown();
     }
@@ -453,6 +433,38 @@ public final class Worker {
   public void setStore(String name, RemoteStore store) {
     stores.put(name, store);
   }
+  
+  /**
+   * Runs the given Fabric program.
+   * 
+   * @param mainClassName the unmangled name of the application's main class.
+   * @param args arguments to be passed to the application.
+   * @throws Throwable 
+   */
+  public void runFabricApp(String mainClassName, final String[] args)
+      throws Throwable {
+    Class<?> mainClass = Class.forName(mainClassName + "$_Impl");
+    Method main =
+        mainClass.getMethod("main", new Class[] { ObjectArray.class });
+
+    final Store local = getLocalStore();
+    final NodePrincipal workerPrincipal = getPrincipal();
+    Object argsProxy = runInSubTransaction(new Code<Object>() {
+      public Object run() {
+        ConfPolicy conf =
+            LabelUtil._Impl.readerPolicy(local, workerPrincipal,
+                workerPrincipal);
+        IntegPolicy integ =
+            LabelUtil._Impl.writerPolicy(local, workerPrincipal,
+                workerPrincipal);
+        Label label = LabelUtil._Impl.toLabel(local, conf, integ);
+        return WrappedJavaInlineable.$wrap(local, label, args);
+      }
+    });
+
+    MainThread.invoke(main, argsProxy);
+  }
+  
 
   /**
    * Executes the given code from within a Fabric transaction. Should not be
