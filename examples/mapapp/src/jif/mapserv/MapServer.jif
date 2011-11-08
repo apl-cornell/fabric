@@ -1,37 +1,64 @@
 package mapserv;
 
+import util.AssertionFailedError;
+import util.Delegator;
+
 /**
  * A very simple map service: given a request for a region, it returns a 10x10
  * image containing the background value, scaled to the requested region.
  */
-public class MapServer extends AbstractPrincipal {
+public class MapServer extends Delegator {
 
   private final char {this←} background;
 
-  public MapServer(Principal owner, char background) throws NullPointerException {
-    this.background = background;
-    super(owner.name());
-    this.addDelegatesTo(owner);
+  /**
+   * Create a new map server, with the given background character.
+   */
+  public
+  MapServer {this}
+  (
+    String{this} name,
+    Principal{owner←} owner,
+    char{owner←} background
+  )
+  throws NullPointerException
+  where  authority(this)
+  {
+    // these endorsements are safe, because owner ≽ this,
+    // and thus {owner←} ⊑ {this←}
+    // we just can't convince the compiler of this fact.
+
+    this.background = endorse(background, {owner←} to {this←});
+    super(name, owner);
   }
 
   /**
    * create a new map with the given bounds, containing the background character.
+   *
+   * @throws NullPointerException
+   *     if boundary is null.
    */
   public
   MapImage[lbl]
-  getMap
+  getMap {*lbl}
   (
-    label lbl,
-    Box   boundary
+    label {*lbl} lbl,
+    Box   {*lbl} boundary
   )
+  :{*lbl}
+  throws NullPointerException
   where
-    lbl <= {this←}
+    {this←} <= lbl
   {
-    char[] data = new char[100];
-    for (int i = 0; i < 100; i++)
-      data[i] = world;
+    final char{*lbl}[]{*lbl} data = new char[100];
+    for (int i = 0; i < data.length; i++)
+      data[i] = background;
 
-    return new MapImage[lbl](xmin, xmax, ymin, ymax, 10, 10, data);
+    try {
+      return new MapImage[lbl](boundary, 10, 10, data);
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("10 * 10 = 100");
+    }
   }
 }
 
