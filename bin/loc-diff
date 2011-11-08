@@ -222,10 +222,12 @@ categoryFormatter = '{:.<' + str(maxCatNameLen+3) + '}'
 insFormatter = '{:>' + str(fieldLen[0]) + '}'
 delFormatter = '{:>' + str(fieldLen[1]) + '}'
 modFormatter = '{:>' + str(fieldLen[2]) + '}'
+noChanges = ('{:-^' + str(fieldLen[0] + fieldLen[1] + fieldLen[2] + 16)
+    + '}').format('(no changes)')
 for cat, (ins, dels, mods) in categories.items():
   output = categoryFormatter.format(cat + ' ') + ' '
   if ins + dels + mods == 0:
-    output += '(no changes)'
+    output += noChanges
   else:
     if ins == 0: ins = ''
     output += insFormatter.format(ins)
