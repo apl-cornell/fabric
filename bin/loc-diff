@@ -16,6 +16,7 @@ normalizeCode = 'tools/code-normalizer/bin/normalize-code'
 ignoreFilesRE = re.compile("""^.*/(
                               bin/[^/]*  # bin scripts
                             | etc/.*     # etc directories
+                            | \.cvsignore
                             | README
                             | build.xml
                             | package-info.java
@@ -23,12 +24,12 @@ ignoreFilesRE = re.compile("""^.*/(
                             )$""", re.X)
 
 # Regexp for examples to include. All other examples will be ignored.
-includeExamplesRE = re.compile("""^\./(trunk|branch)/examples/
+includeExamplesRE = re.compile("""^\./fab-(trunk|branch)/examples/
       (auction|mapapp)
     /.*$""")
 
 # Regexp for source files.
-sourceFilesRE = re.compile('^.*\.(java|jif|fil|flex|ppg|fab)$')
+sourceFilesRE = re.compile('^.*\.(java|jif|fil|flex|ppg|fab|cpp|h|cup)$')
 
 categories = collections.OrderedDict()
 
@@ -57,7 +58,8 @@ categories['FabIL port of GNU classpath'] = ['src/runtime/fabric/util']
 
 # Stuff in src/signatures.
 categories['Fabric signatures for java.*'] = ['src/signatures/fabric/java']
-categories['Fabric signatures for fabric.*'] = ['src/signatures/fabric/fabric']
+categories['Fabric signatures for fabric.*'] = \
+  ['src/signatures/fabric/fabric']
 categories['FabIL signatures for java.*'] = ['src/signatures/fabil/java/']
 categories['Fabric signatures for javax.*'] = ['src/signatures/fabil/javax']
 categories['FabIL signatures for fabric.*'] = ['src/signatures/fabil/fabric']
@@ -73,16 +75,17 @@ categories['Bootstrap support'] = ['src/bootstrap']
 
 ########################################################################
 
-if len(sys.argv) != 2:
+if len(sys.argv) != 3:
   # Print usage info.
   scriptName = re.match('^(?:.*/)?([^/]+)$', sys.argv[0]).group(1)
   print("""\
-Usage: %s BRANCH
+Usage: %s BRANCH DATE
   Determines the number of lines of code that have been added, modified and
-  deleted in trunk, relative to BRANCH.
+  deleted in Fabric trunk (relative to BRANCH), and in Jif HEAD (relative to
+  DATE).
 
-  This script exports a fresh copy of trunk into a temporary directory. The
-  only prerequisites for running this script are:
+  This script exports fresh working copies into a temporary directory. The only
+  prerequisites for running this script are:
 
     - have config.properties point to a Polyglot installation,
     - have tools/code-normalizer built (done automatically by
@@ -108,6 +111,7 @@ for i in range(len(catKey)):
                 % (path1, catKey[i], path2, catKey[j]))
 
 branchName = sys.argv[1]
+date = sys.argv[2]
 
 try:
   if 'FABRIC_HOME' in os.environ:
@@ -124,41 +128,73 @@ if (not os.path.isdir('src') or not os.path.isfile('bin/loc-diff')):
   sys.exit('Run from the top directory of Fabric')
 
 # Make sure we're in a clean FABRIC/tmp.
-shutil.rmtree('tmp')
+try: shutil.rmtree('tmp')
+except OSError: pass
 os.mkdir('tmp')
 try: os.chdir('tmp')
 except OSError: sys.exit('error changing to FABRIC/tmp directory')
 
-# Export branch/src.
-print('Exporting branch "%s" from svn...' % branchName)
+# Export fab-branch/src.
+print('Exporting Fabric branch "%s" from svn...' % branchName)
 if subprocess.call(['svn', 'export',
       'https://forge.cornell.edu/svn/repos/fabric/branches/' + branchName +
-      '/src', 'branch/src'], stdout=open(os.devnull, 'w')) != 0:
-  sys.exit('Error exporting branch "%s" from svn' % branchName)
+      '/src', 'fab-branch/src'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
 
-# Export branch/examples.
+# Export fab-branch/examples.
 if subprocess.call(['svn', 'export',
       'https://forge.cornell.edu/svn/repos/fabric/branches/' + branchName +
-      '/examples', 'branch/examples'], stdout=open(os.devnull, 'w')) != 0:
-  sys.exit('Error exporting branch "%s" from svn' % branchName)
+      '/examples', 'fab-branch/examples'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
 
-# Export trunk/src.
-print('Exporting trunk from svn...')
+# Export fab-trunk/src.
+print('Exporting Fabric trunk from svn...')
 if subprocess.call(['svn', 'export',
       'https://forge.cornell.edu/svn/repos/fabric/trunk/src',
-      'trunk/src'], stdout=open(os.devnull, 'w')) != 0:
-  sys.exit('Error exporting trunk from svn')
+      'fab-trunk/src'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
 
-# Export trunk/examples.
+# Export fab-trunk/examples.
 if subprocess.call(['svn', 'export',
       'https://forge.cornell.edu/svn/repos/fabric/trunk/examples',
-      'trunk/examples'], stdout=open(os.devnull, 'w')) != 0:
-  sys.exit('Error exporting trunk from svn')
+      'fab-trunk/examples'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Export jif-branch.
+print('Exporting Jif ("%s") from cvs...' % date)
+if subprocess.call(['cvs', '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/jif',
+      'export', '-D', date, '-d', 'jif-branch', 'jif/src'],
+      stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Export jif-trunk.
+print('Exporting Jif HEAD from cvs...')
+if subprocess.call(['cvs', '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/jif',
+      'export', '-r', 'HEAD', '-d', 'jif-trunk', 'jif/src'],
+      stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Export polyglot-branch.
+print('Exporting Polyglot ("%s") from cvs...' % date)
+if subprocess.call(['cvs',
+      '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/polyglot',
+      'export', '-D', date, '-d', 'polyglot-branch', 'polyglot/src'],
+      stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Export polyglot-trunk.
+print('Exporting Polyglot HEAD from cvs...')
+if subprocess.call(['cvs',
+      '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/polyglot',
+      'export', '-r', 'HEAD', '-d', 'polyglot-trunk', 'polyglot/src'],
+      stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
 
 # Construct the command to normalize sources.  While we do this, delete all
 # non-source files, and make sure the categories are exhaustive.
 normalizeCmd = ['../' + normalizeCode]
-examplesRE = re.compile('^\./(trunk|branch)/examples/.*$')
+examplesRE = re.compile('^\./fab-(trunk|branch)/examples/.*$')
+baseCompilersRE = re.compile('^\./(jif|polyglot)-(trunk|branch)/.*$')
 for root, dirs, files in os.walk('.'):
   for filename in files:
     fullPath = os.path.join(root, filename)
@@ -177,10 +213,12 @@ for root, dirs, files in os.walk('.'):
 
     normalizeCmd.append(fullPath)
 
+    if baseCompilersRE.match(fullPath) != None: continue
+
     matched = False
-    for cat, paths in categories.items():
+    for cat, paths in chain(categories.items()):
       for path in paths:
-        matched = re.match('^\./(branch|trunk)/' + path, fullPath) != None
+        matched = re.match('^\./fab-(branch|trunk)/' + path, fullPath) != None
         if matched: break
       if matched: break
 
@@ -200,22 +238,28 @@ regexps = [
   re.compile(', (\d+) modifications')
 ]
 fieldLen = [0, 0, 0]
-for cat, paths in categories.items():
-  stats = [0, 0, 0]
-  for path in paths:
-    output = subprocess.check_output(
-        'diff -urN branch/"%s" trunk/"%s" | diffstat -bms'
-          % (path, path),
-        shell=True).decode('utf-8')
+for base, cats in {
+    'fab': categories,
+    'jif':
+      {'Jif compiler': ['.']},
+    'polyglot':
+      {'Polyglot compiler': ['.']}}.items():
+  for cat, paths in cats.items():
+    stats = [0, 0, 0]
+    for path in paths:
+      output = subprocess.check_output(
+          'diff -urN %s-branch/"%s" %s-trunk/"%s" | diffstat -bms'
+            % (base, path, base, path),
+          shell=True).decode('utf-8')
 
-    for i in [0, 1, 2]:
-      match = regexps[i].search(output)
-      if match != None:
-        if fieldLen[i] < len(match.group(1)):
-          fieldLen[i] = len(match.group(1))
-        stats[i] += int(match.group(1))
+      for i in [0, 1, 2]:
+        match = regexps[i].search(output)
+        if match != None:
+          if fieldLen[i] < len(match.group(1)):
+            fieldLen[i] = len(match.group(1))
+          stats[i] += int(match.group(1))
 
-  categories[cat] = stats
+    categories[cat] = stats
 
 # Output.
 categoryFormatter = '{:.<' + str(maxCatNameLen+3) + '}'
