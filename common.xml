@@ -85,6 +85,12 @@
   <!-- filc executable -->
   <property name="filc" location="${bin}/filc" />
 
+  <!-- jifc executable -->
+  <property name="jifc" location="${jif.home}/bin/jifc"/>
+
+  <!-- jif executable -->
+  <property name="jif" location="${jif.home}/bin/jif"/>
+
   <!-- Debug flag to be passed to fabc and filc. -->
   <property name="debug.flag" value="-g" />
 
