@@ -4,10 +4,10 @@ package util;
  * Convenience principal class the delegates to a single owner.
  */
 public class Delegator implements Principal {
-  private final String    {this←} name;
-  private final principal {this←} owner;
+  protected final String    {this←} name;
+  protected final principal {this←} owner;
 
-  public
+  protected
   Delegator {owner←}
   (
     String{owner←}    name,

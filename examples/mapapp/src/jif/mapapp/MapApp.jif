@@ -9,19 +9,27 @@ import mapserv.MapImage;
 import mapserv.Box;
 import snapp.UserV1;
 import util.GroupIterator;
+import util.Delegator;
 
 /**
  * This is the mapping application.  A MapApp is instantiated with a particular
  * mapping service, and then can be run by any User to generate private or
  * public output maps.
  */
-public class MapApp extends AbstractPrincipal {
+public class MapApp extends Delegator {
   public final MapServer {this←} service;
 
-  public MapApp(String name, MapServer service, Principal owner) {
-    this.service = service;
-    super(name);
-    this.addDelegatesTo(owner);
+  public
+  MapApp {owner←}
+  (
+    String    {owner←} name,
+    MapServer {owner←} service,
+    Principal {owner←} owner
+  )
+  where authority (this)
+  {
+    this.service = endorse(service, {owner←} to {this←});
+    super(name, owner);
   }
 
 
@@ -86,7 +94,7 @@ public class MapApp extends AbstractPrincipal {
 
     // compute the bounding box
     Box boundary = new Box(0,0,0,0);
-    GroupIterator i = user.friends.iterator();
+    GroupIterator i = user.friends.iterator(serviceLabel);
     while (i.hasNext()) {
       Principal next = i.next();
 
@@ -114,7 +122,7 @@ public class MapApp extends AbstractPrincipal {
     MapImage[l] annotated = map.copy(l, /* TODO: local store */ null);
 
     // annotate map
-    i = user.friends.iterator();
+    i = user.friends.iterator(l);
     while (i.hasNext()) {
       Principal next = i.next();
       if (next instanceof UserV1) {
