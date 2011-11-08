@@ -90,11 +90,12 @@ public class MapApp extends Delegator {
   {
     // this is the label of the data that gets sent to the service
     final label serviceLabel = new label {service→};
-    final label fetchLabel   = new label {*l meet serviceLabel};
+    // TODO: does the compiler understand this is a meet?
+    final label fetchLabel   = LabelUtil.singleton().meetLbl(l, serviceLabel);
 
     // compute the bounding box
     Box boundary = new Box(0,0,0,0);
-    GroupIterator i = user.friends.iterator(serviceLabel);
+    GroupIterator i = user.friends.iterator(fetchLabel);
     while (i.hasNext()) {
       Principal next = i.next();
 
