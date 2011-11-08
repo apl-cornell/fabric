@@ -1,21 +1,13 @@
 package fabric.worker.remote;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.TransactionID;
-import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
-import fabric.common.net.handshake.HandshakeBogus;
-import fabric.common.net.handshake.HandshakeComposite;
-import fabric.common.net.handshake.Protocol;
-import fabric.common.net.naming.DefaultNameService;
-import fabric.common.net.naming.DefaultNameService.PortType;
-import fabric.common.net.naming.NameService;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;

@@ -391,7 +391,7 @@ public final class Worker {
           out.println();
         }
 
-        Options.usage(out);
+        Options.printUsage(out, ue.showSecretMenu);
         throw new TerminationException(ue.exitCode);
       }
 

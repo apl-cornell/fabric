@@ -84,7 +84,7 @@ public class Node {
       out.println();
     }
 
-    Options.usage(out);
+    Options.printUsage(out, ue.showSecretMenu);
   }
 
   //////////////////////////////////////////////////////////////////////////////
