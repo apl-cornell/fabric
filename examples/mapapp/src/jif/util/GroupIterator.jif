@@ -33,12 +33,20 @@ public class GroupIterator[principal owner, label L]
   Principal {L}
   next {L}
   ():{L}
-  throws ArrayIndexOutOfBoundsException
+  throws NoSuchElementException
   {
+    if (!this.hasNext())
+      throw new NoSuchElementException();
+
     try {
+
       return this.g.members[this.i++];
+
     } catch (NullPointerException e) {
       throw new AssertionFailedError("g must be non-null");
+
+    } catch (ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("this.hasNext() but index is off-the-end");
     }
   }
 }

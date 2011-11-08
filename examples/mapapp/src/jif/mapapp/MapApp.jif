@@ -8,8 +8,11 @@ import mapserv.MapServer;
 import mapserv.MapImage;
 import mapserv.Box;
 import snapp.UserV1;
+import snapp.Location;
 import util.GroupIterator;
 import util.Delegator;
+import util.AssertionFailedError;
+import util.NoSuchElementException;
 
 /**
  * This is the mapping application.  A MapApp is instantiated with a particular
@@ -17,6 +20,7 @@ import util.Delegator;
  * public output maps.
  */
 public class MapApp extends Delegator {
+  /** The map service that this app uses to fetch maps.  Must be non-null. */
   public final MapServer {this←} service;
 
   public
@@ -40,6 +44,11 @@ public class MapApp extends Delegator {
 
   /**
    * prints a map of the user's friends, visible to the user
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   * @throws SecurityException
+   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
   public
   void
@@ -47,19 +56,24 @@ public class MapApp extends Delegator {
   (
     UserV1 user
   )
+  throws
+    SecurityException,
+    NullPointerException
   where
     service actsfor user.friendInfo
   {
-    MapImage result = createMap(new label {user→}, user);
-
-    PrintStream[{user→}] out = Runtime[user].getRuntime().stdout(new label {user→});
-    result.print(out);
+    printMap(user, new label {user→});
   }
 
 
 
   /**
    * prints a map of the user's friends, visible to the user's friends
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   * @throws SecurityException
+   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
   public
   void
@@ -67,15 +81,49 @@ public class MapApp extends Delegator {
   (
     final UserV1 user
   )
+  throws
+    SecurityException,
+    NullPointerException
   where
     service actsfor user.friendInfo
   {
-    MapImage result = createMap(new label {user→user.friends}, user);
-
-    PrintStream[{user→user.friends}] out = Runtime[user].getRuntime().stdout(new label {user→user.friends});
-    result.print(out);
+    printMap(user, new label {user→user.friends});
   }
 
+
+  /**
+   * Helper method that gets the map and prints it out.
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   * @throws SecurityException
+   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+   */
+  private
+  void
+  printMap
+  (
+    final UserV1 user,
+    final label  lbl
+  )
+  throws
+    NullPointerException,
+    SecurityException
+  where
+    service actsfor user.friendInfo
+  {
+    if (user == null)
+      throw new NullPointerException();
+
+    MapImage result = createMap(lbl, user);
+
+    try {
+      PrintStream[lbl] out = Runtime[user].getRuntime().stdout(lbl);
+      result.print(out);
+    } catch (NullPointerException e) {
+      throw new AssertionFailedError("Runtime.getRuntime() and Runtime.stdout() return values should be non-null.");
+    }
+  }
 
 
   /**
@@ -99,9 +147,13 @@ public class MapApp extends Delegator {
 
     // compute the bounding box
     Box boundary = new Box(0,0,0,0);
-    GroupIterator i = user.friends.iterator(fetchLabel);
+
+    final GroupIterator i = user.friends.iterator(fetchLabel);
+    if (i == null)
+      throw new AssertionFailedError("Group.iterator() should return a non-null value");
     while (i.hasNext()) {
-      Principal next = i.next();
+      Principal next;
+      try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");}
 
       if (next instanceof UserV1) {
         final UserV1 friend = (UserV1) next;
@@ -124,19 +176,33 @@ public class MapApp extends Delegator {
     MapImage[fetchLabel] map = this.service.getMap(fetchLabel, boundary);
 
     // make a local copy (with label l)
-    MapImage[l] annotated = map.copy(l, /* TODO: local store */ null);
+    final MapImage[l] annotated = map.copy(l, /* TODO: local store */ null);
+
+    if (annotated == null)          throw new AssertionFailedError("MapImage.copy return value should be non-null");
+    if (annotated.boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
 
     // annotate map
-    i = user.friends.iterator(l);
-    while (i.hasNext()) {
-      Principal next = i.next();
+    final GroupIterator j = user.friends.iterator(l);
+    if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
+    while (j.hasNext()) {
+      Principal next;
+      try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("if j.hasNext() then j.next() should return normally."); }
       if (next instanceof UserV1) {
         final UserV1 friend = (UserV1) next;
 
         // add friend to the map if possible
-        if (friend.locationLabel <= l)
-          if (annotated.boundary.contains(friend.location.x, friend.location.y))
-            annotated.setAt(friend.location.x, friend.location.y, 'f');
+        if (friend.locationLabel <= l) {
+          final Location loc = friend.location;
+          if (loc != null && annotated.boundary.contains(loc.x, loc.y)) {
+            try {
+
+              annotated.setAt(loc.x, loc.y, 'f');
+
+            } catch (final ArrayIndexOutOfBoundsException e) {
+              throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally");
+            }
+          }
+        }
       }
     }
 

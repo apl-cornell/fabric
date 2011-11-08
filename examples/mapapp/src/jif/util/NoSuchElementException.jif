@@ -1,0 +1,13 @@
+package util;
+
+
+public class NoSuchElementException extends RuntimeException {
+  public NoSuchElementException() {
+    super();
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

@@ -21,7 +21,7 @@ public class MapImage[label L] {
   // public fields                                                            //
   //////////////////////////////////////////////////////////////////////////////
 
-  /* coordinates of map */
+  /* coordinates of map.  non-null. */
   public final Box {L} boundary;
 
   //////////////////////////////////////////////////////////////////////////////
