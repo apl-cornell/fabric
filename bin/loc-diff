@@ -1,17 +1,83 @@
-#!/usr/bin/perl
-
-use File::Path qw(remove_tree);
-use IPC::Open3;
-
+#!/usr/bin/python
+####
 # Counts and categorizes lines of code in the Fabric project that have changed
 # between trunk and a given branch.
 
-if (@ARGV != 1) {
-  # Print usage info.
-  my $progname = `basename $0`; chomp $progname;
-  print STDERR <<END;
-Usage: $progname BRANCH
+import collections, os, re, shutil, subprocess, sys
 
+###
+# Configuration
+###
+
+# Location of normalize-code script, relative to Fabric home.
+normalizeCode = 'tools/code-normalizer/bin/normalize-code'
+
+# Regexp for full paths of files to ignore.
+ignoreFilesRE = re.compile("""^.*/(
+                              bin/[^/]*  # bin scripts
+                            | etc/.*     # etc directories
+                            | README
+                            | build.xml
+                            | package-info.java
+                            | .*\.(png|dia|xml|html|flex)
+                            )$""", re.X)
+
+# Regexp for examples to include. All other examples will be ignored.
+includeExamplesRE = re.compile("""^\./(trunk|branch)/examples/
+      (auction|mapapp)
+    /.*$""")
+
+# Regexp for source files.
+sourceFilesRE = re.compile('^.*\.(java|jif|fil|flex|ppg|fab)$')
+
+categories = collections.OrderedDict()
+
+# Stuff in src/compiler.
+categories['Common compiler'] = ['src/compiler/codebases']
+categories['FabIL compiler'] = ['src/compiler/fabil']
+categories['Fabric compiler'] = ['src/compiler/fabric']
+
+# Stuff in src/system.
+categories['Common system functionality'] = \
+  [ 'src/system/fabric/common',
+    'src/system/fabric/net' ]
+categories['Dissemination layer'] = ['src/system/fabric/dissemination']
+categories['Fabric runtime support (Java)'] = ['src/system/fabric/lang']
+categories['Message protocols'] = ['src/system/fabric/messages']
+categories['Store'] = ['src/system/fabric/store']
+categories['Worker'] = ['src/system/fabric/worker']
+
+# Stuff in src/arrays and src/runtime.
+categories['Fabric runtime support (FabIL)'] = \
+  [ 'src/runtime/fabric/applet',
+    'src/runtime/fabric/lang',
+    'src/runtime/fabric/runtime',
+    'src/arrays' ]
+categories['FabIL port of GNU classpath'] = ['src/runtime/fabric/util']
+
+# Stuff in src/signatures.
+categories['Fabric signatures for java.*'] = ['src/signatures/fabric/java']
+categories['Fabric signatures for fabric.*'] = ['src/signatures/fabric/fabric']
+categories['FabIL signatures for java.*'] = ['src/signatures/fabil/java/']
+categories['Fabric signatures for javax.*'] = ['src/signatures/fabil/javax']
+categories['FabIL signatures for fabric.*'] = ['src/signatures/fabil/fabric']
+
+# Stuff in src/lib.
+categories['SIF (Java)'] = ['src/lib/sif/src']
+categories['SIF (Fabric)'] = ['src/lib/sif/fab-src']
+categories['SIF (signatures)'] = ['src/lib/sif/sig-src']
+categories['Transient collections'] = ['src/lib/transient']
+
+# Other.
+categories['Bootstrap support'] = ['src/bootstrap']
+
+########################################################################
+
+if len(sys.argv) != 2:
+  # Print usage info.
+  scriptName = re.match('^(?:.*/)?([^/]+)$', sys.argv[0]).group(1)
+  print("""\
+Usage: %s BRANCH
   Determines the number of lines of code that have been added, modified and
   deleted in trunk, relative to BRANCH.
 
@@ -20,64 +86,161 @@ Usage: $progname BRANCH
 
     - have config.properties point to a Polyglot installation,
     - have tools/code-normalizer built (done automatically by
-	the default Ant target in the top-level build file), and
-    - have diffstat installed.
-END
-  exit 1;
-}
+        the default Ant target in the top-level build file), and
+    - have diffstat installed.""" % scriptName)
+  sys.exit(1)
 
-my $branch = $ARGV[0];
-my $width=40;
+# Sanity check: make sure categories are non-overlapping.
+# Also compute max category name length for pretty output later.
+maxCatNameLen = 0
+catKey = list(categories.keys())
+for i in range(len(catKey)):
+  if maxCatNameLen < len(catKey[i]):
+    maxCatNameLen = len(catKey[i])
 
-if ($ENV{'FABRIC_HOME'} ne '') {
-  chdir($ENV{'FABRIC_HOME'});
-} else {
-  my $bindir = `dirname $0` ; chomp $bindir;
-  my $fabric = $bindir . '/..';
-  if (!chdir($fabric)) {
-    print STDERR "error\n";
-  }
-}
+  for j in range(i+1, len(catKey)):
+    for path1 in categories[catKey[i]]:
+        for path2 in categories[catKey[j]]:
+          if path1.startswith(path2) or path2.startswith(path1):
+            sys.stderr.write(
+              ('Warning: Path "%s" in category "%s" is redundant with '
+                + 'path "%s" in category "%s"' + '\n')
+                % (path1, catKey[i], path2, catKey[j]))
 
-if (! -d 'src' || ! -f 'bin/loc-diff') {
-  die 'Run from the top directory of Fabric';
-}
+branchName = sys.argv[1]
+
+try:
+  if 'FABRIC_HOME' in os.environ:
+    os.chdir(os.environ['FABRIC_HOME'])
+  else:
+    bindir = re.match('(.*/)(?:[^/]+)?$', sys.argv[0]).group(1)
+    if bindir == '': bindir = '.'
+    fabric = bindir + '/..'
+    os.chdir(fabric)
+except OSError:
+  sys.exit('Run from the top directory of Fabric')
+
+if (not os.path.isdir('src') or not os.path.isfile('bin/loc-diff')):
+  sys.exit('Run from the top directory of Fabric')
 
 # Make sure we're in a clean FABRIC/tmp.
-remove_tree('tmp', {safe => 0});
-mkdir('tmp');
-if (!chdir('tmp')) {
-  die 'error changing to FABRIC/tmp directory';
-}
+shutil.rmtree('tmp')
+os.mkdir('tmp')
+try: os.chdir('tmp')
+except OSError: sys.exit('error changing to FABRIC/tmp directory')
 
-# Check out branch.
-print 'Exporting branch "', $branch, '" from svn...', "\n";
-open(NULL, '>', File::Spec->devnull);
-my $pid = open3("<&NULL", ">&NULL", ">&STDOUT",
-  'svn', 'export',
-  'https://forge.cornell.edu/svn/repos/fabric/branches/' . $branch,
-  'branch');
-waitpid($pid, 0);
-if ($? != 0) {
-  die 'Error exporting branch "', $branch, '" from svn';
-}
+# Export branch/src.
+print('Exporting branch "%s" from svn...' % branchName)
+if subprocess.call(['svn', 'export',
+      'https://forge.cornell.edu/svn/repos/fabric/branches/' + branchName +
+      '/src', 'branch/src'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit('Error exporting branch "%s" from svn' % branchName)
 
-# Check out trunk.
-print 'Exporting trunk from svn...', "\n";
-open(NULL, '>', File::Spec->devnull);
-$pid = open3("<&NULL", ">&NULL", ">&STDOUT",
-  'svn', 'export',
-  'https://forge.cornell.edu/svn/repos/fabric/trunk');
-waitpid($pid, 0);
-if ($? != 0) {
-  die 'Error exporting trunk from svn';
-}
+# Export branch/examples.
+if subprocess.call(['svn', 'export',
+      'https://forge.cornell.edu/svn/repos/fabric/branches/' + branchName +
+      '/examples', 'branch/examples'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit('Error exporting branch "%s" from svn' % branchName)
+
+# Export trunk/src.
+print('Exporting trunk from svn...')
+if subprocess.call(['svn', 'export',
+      'https://forge.cornell.edu/svn/repos/fabric/trunk/src',
+      'trunk/src'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit('Error exporting trunk from svn')
+
+# Export trunk/examples.
+if subprocess.call(['svn', 'export',
+      'https://forge.cornell.edu/svn/repos/fabric/trunk/examples',
+      'trunk/examples'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit('Error exporting trunk from svn')
+
+# Construct the command to normalize sources.  While we do this, delete all
+# non-source files, and make sure the categories are exhaustive.
+normalizeCmd = ['../' + normalizeCode]
+examplesRE = re.compile('^\./(trunk|branch)/examples/.*$')
+for root, dirs, files in os.walk('.'):
+  for filename in files:
+    fullPath = os.path.join(root, filename)
+
+    ignored = ignoreFilesRE.match(fullPath) != None
+    isExample = examplesRE.match(fullPath) != None
+    isIncludedExample = includeExamplesRE.match(fullPath) != None
+
+    if ignored or isExample and not isIncludedExample:
+      os.remove(fullPath)
+      continue
+
+    if sourceFilesRE.match(filename) == None:
+      sys.stderr.write('Warning: unrecognized source file: %s\n' % fullPath)
+      continue
+
+    normalizeCmd.append(fullPath)
+
+    matched = False
+    for cat, paths in categories.items():
+      for path in paths:
+        matched = re.match('^\./(branch|trunk)/' + path, fullPath) != None
+        if matched: break
+      if matched: break
+
+    if not matched:
+      sys.stderr.write('Warning: file not counted: "%s"\n' % fullPath)
 
 # Normalize sources.
-print 'Normalizing source files...', "\n";
-print `find \\( -name \\*.java -o -name \\*.fab -o -name \\*.fil -o -name \\*.jif \\) -print0 | xargs -0 ../tools/code-normalizer/bin/normalize-code`;
+print('Normalizing source files...')
+if subprocess.call(normalizeCmd) != 0:
+  sys.exit('Error while normalizing code')
 
-# Do the diff.
-print 'Diffing...', "\n";
-print `diff -urN --suppress-common-lines branch trunk|diffstat -b -m -s`;
+# Collect stats.
+print('Diffing...')
+regexps = [
+  re.compile(', (\d+) insertions'),
+  re.compile(', (\d+) deletions'),
+  re.compile(', (\d+) modifications')
+]
+fieldLen = [0, 0, 0]
+for cat, paths in categories.items():
+  stats = [0, 0, 0]
+  for path in paths:
+    output = subprocess.check_output(
+        'diff -urN branch/"%s" trunk/"%s" | diffstat -bms'
+          % (path, path),
+        shell=True).decode('utf-8')
 
+    for i in [0, 1, 2]:
+      match = regexps[i].search(output)
+      if match != None:
+        if fieldLen[i] < len(match.group(1)):
+          fieldLen[i] = len(match.group(1))
+        stats[i] += int(match.group(1))
+
+  categories[cat] = stats
+
+# Output.
+categoryFormatter = '{:.<' + str(maxCatNameLen+3) + '}'
+insFormatter = '{:>' + str(fieldLen[0]) + '}'
+delFormatter = '{:>' + str(fieldLen[1]) + '}'
+modFormatter = '{:>' + str(fieldLen[2]) + '}'
+for cat, (ins, dels, mods) in categories.items():
+  output = categoryFormatter.format(cat + ' ') + ' '
+  if ins + dels + mods == 0:
+    output += '(no changes)'
+  else:
+    if ins == 0: ins = ''
+    output += insFormatter.format(ins)
+    if ins != '': output += ' ins  '
+    else: output += '      '
+
+    if dels == 0: dels = ''
+    output += delFormatter.format(dels)
+    if dels != '': output += ' del  '
+    else: output += '      '
+
+    if mods == 0: mods = ''
+    output += modFormatter.format(mods)
+    if mods != '': output += ' mod'
+    else: output += '      '
+  print(output)
+
+# vim: ts=2 sw=2 ai et
