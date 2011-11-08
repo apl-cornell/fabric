@@ -216,7 +216,7 @@ for root, dirs, files in os.walk('.'):
     if baseCompilersRE.match(fullPath) != None: continue
 
     matched = False
-    for cat, paths in chain(categories.items()):
+    for cat, paths in categories.items():
       for path in paths:
         matched = re.match('^\./fab-(branch|trunk)/' + path, fullPath) != None
         if matched: break
