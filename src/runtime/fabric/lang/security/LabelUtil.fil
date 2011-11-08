@@ -728,8 +728,8 @@ public final class LabelUtil {
   public static boolean isWritableBy(Label lbl, Principal p) {
 //    try {
 //      enterTiming();
-      Label L = toLabel(localStore, topConf(), writerPolicy(localStore, null, p));
-      return relabelsTo(lbl, L);
+      Label L = toLabel(localStore, PrincipalUtil.writableByPrinPolicy(localStore, p));
+      return relabelsTo(L, lbl);
 //    } finally {
 //      exitTiming();
 //    }

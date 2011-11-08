@@ -7,7 +7,6 @@ import fabric.common.Options.Flag.Kind;
 import fabric.common.exceptions.UsageError;
 
 public class Options extends fabric.common.Options {
-
   /**
    * The name of the store.
    */
@@ -18,6 +17,11 @@ public class Options extends fabric.common.Options {
 
   private static final int DEFAULT_TIMEOUT = 15;
   public int timeout;
+
+  /**
+   * The worker shell command to run.
+   */
+  public String[] cmd;
 
   private Options() {
   }
@@ -81,6 +85,7 @@ public class Options extends fabric.common.Options {
     this.storeName = null;
     this.threadPool = DEFAULT_THREAD_POOL_SIZE;
     this.timeout = DEFAULT_TIMEOUT;
+    this.cmd = null;
   }
 
   @Override
@@ -90,7 +95,18 @@ public class Options extends fabric.common.Options {
 
   @Override
   public void usageHeader(PrintStream out) {
-    out.println("Usage: fab-store [options]");
-    out.println("where [options] includes:");
+    out.println("Usage: fab-store [options] [cmd...]");
+    out.println("where");
+    out.println("  [cmd...] is a command for the worker shell to execute");
+    out.println("and [options] includes:");
+  }
+
+  @Override
+  protected int defaultHandler(String[] args, int index) {
+    this.cmd = new String[args.length - index];
+    for (int idx = index; idx < args.length; idx++)
+      this.cmd[idx - index] = args[idx];
+    
+    return args.length;
   }
 }

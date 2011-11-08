@@ -9,15 +9,21 @@ import fabric.common.exceptions.UsageError;
 
 public class Options extends fabric.common.Options {
   /**
-   * The application to run and its parameters.
+   * The worker shell command to run.
    */
-  public String[] app;
+  public String[] cmd;
 
   /**
    * This worker's name.
    */
   public String name;
-  
+
+  /**
+   * Whether the worker should stay running after executing the commands
+   * specified on the command line.
+   */
+  protected boolean keepOpen;
+
   private Options() {
   }
 
@@ -36,6 +42,14 @@ public class Options extends fabric.common.Options {
       public int handle(String[] args, int index) {
         Options.this.name = args[index];
         return index + 1;
+      }
+    });
+    
+    flags.add(new Flag("--keep-open", null, "keep the worker running after executing CMD") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.keepOpen = true;
+        return index;
       }
     });
 
@@ -87,7 +101,8 @@ public class Options extends fabric.common.Options {
   @Override
   public void setDefaultValues() {
     this.name = System.getenv("HOSTNAME");
-    this.app = null;
+    this.cmd = null;
+    this.keepOpen = false;
   }
 
   @Override
@@ -97,10 +112,9 @@ public class Options extends fabric.common.Options {
 
   @Override
   public void usageHeader(PrintStream out) {
-    out.println("Usage: fab [options] [app] [param...]");
+    out.println("Usage: fab [options] [cmd...]");
     out.println("where");
-    out.println("  [app] is the name of Fabric application's main class");
-    out.println("  [param...] are the parameters to the Fabric application");
+    out.println("  [cmd...] is a command for the worker shell to execute");
     out.println("and [options] includes:");
   }
 
@@ -117,9 +131,9 @@ public class Options extends fabric.common.Options {
 
   @Override
   protected int defaultHandler(String[] args, int index) {
-    this.app = new String[args.length - index];
+    this.cmd = new String[args.length - index];
     for (int idx = index; idx < args.length; idx++)
-      this.app[idx - index] = args[idx];
+      this.cmd[idx - index] = args[idx];
 
     return args.length;
   }

@@ -1,90 +1,34 @@
-package fabric.worker;
+package fabric.worker.shell;
 
 import java.io.*;
 import java.util.*;
 
-import jline.ConsoleReader;
-import jline.ConsoleReaderInputStream;
-import jline.Terminal;
 import fabric.common.exceptions.InternalError;
+import fabric.worker.Worker;
 
 public class WorkerShell {
   protected final Worker worker;
-  protected final StreamTokenizer in;
+  protected final CommandSource commandSource;
   protected final PrintStream out;
-  protected final PrintStream err;
-  protected final boolean interactive;
   protected final Map<String, CommandHandler> handlers;
   protected final CommandHandler defaultHandler;
 
-  static {
-    Terminal.setupTerminal();
-  }
-
-  private static abstract class CommandHandler {
-    private final String params;
-    private final String usage;
-
-    public CommandHandler(String usage) {
-      this(null, usage);
-    }
-
-    public CommandHandler(String params, String usage) {
-      this.params = params;
-      this.usage = usage;
-    }
-
-    public abstract void handle(List<String> args) throws HandlerException;
-  }
-
-  private static class HandlerException extends Exception {
-    public HandlerException(String message, Throwable cause) {
-      super(message, cause);
-    }
-
-    public HandlerException(String message) {
-      super(message);
-    }
-  }
-
   /**
-   * Creates an interactive shell for the given worker that reads from System.in
-   * and outputs to System.out.
+   * Creates an interactive shell for the given worker.
    */
   public WorkerShell(Worker worker) throws IOException {
-    this(worker, new ConsoleReader(System.in,
-        new OutputStreamWriter(System.out)), System.out);
+    this(worker, new InteractiveCommandSource(worker));
   }
 
-  protected WorkerShell(Worker worker, ConsoleReader cr, PrintStream out) {
-    this(worker, new ConsoleReaderInputStream(cr), out, true);
-    cr.setDefaultPrompt("\n" + worker.config.name + "> ");
+  public WorkerShell(Worker worker, File in) throws FileNotFoundException {
+    this(worker, new StreamCommandSource(new FileInputStream(in)));
   }
 
-  public WorkerShell(Worker worker, File in, PrintStream out)
-      throws FileNotFoundException {
-    this(worker, new BufferedInputStream(new FileInputStream(in)), out, false);
-  }
-
-  protected WorkerShell(Worker worker, InputStream in, PrintStream out,
-      boolean consoleMode) {
+  public WorkerShell(Worker worker, CommandSource commandSource) {
     this.worker = worker;
-    this.in = new StreamTokenizer(new InputStreamReader(in));
-    this.out = out;
-    this.err = System.err;
-    this.interactive = consoleMode;
-
-    // Configure the input reader.
-    this.in.commentChar('#');
-    this.in.eolIsSignificant(true);
-    this.in.slashSlashComments(false);
-    this.in.slashStarComments(false);
-    this.in.ordinaryChars('0', '9');
-    this.in.ordinaryChar('-');
-    this.in.wordChars('0', '9');
-    this.in.wordChars('-', '-');
-    this.in.wordChars(':', ':');
-    this.in.wordChars('/', '/');
+    this.commandSource = commandSource;
+    
+    this.out = System.out;
 
     // Set up the command handlers.
     this.handlers = new TreeMap<String, CommandHandler>();
@@ -118,8 +62,9 @@ public class WorkerShell {
 
     this.handlers.put("fabc", new CommandHandler("Compiles a Fabric program.") {
       @Override
-      public void handle(List<String> args) throws HandlerException {
-        throw new HandlerException("Not implemented yet!");
+      public void handle(List<String> args) {
+        // TODO: should we pass in the correct i/o streams?
+        fabric.Main.compile_from_shell(args, System.in, System.out);
       }
     });
 
@@ -285,14 +230,9 @@ public class WorkerShell {
   }
 
   public void run() {
+    List<String> commandLine = new ArrayList<String>();
     while (true) {
-      List<String> commandLine = new ArrayList<String>();
-      try {
-        commandLine = prompt(commandLine);
-      } catch (IOException e) {
-        e.printStackTrace();
-        return;
-      }
+      commandLine = commandSource.getNextCommand(commandLine);
 
       if (commandLine == null) return;
 
@@ -311,67 +251,7 @@ public class WorkerShell {
       try {
         handler.handle(args);
       } catch (HandlerException e) {
-        reportError(e.getMessage());
-        if (e.getCause() != null) e.getCause().printStackTrace(err);
-        if (!interactive) return;
-      }
-    }
-  }
-
-  private void reportError(String message) {
-    if (!interactive) {
-      err.print("Error on line " + in.lineno() + ": ");
-    }
-
-    err.println(message);
-  }
-
-  /**
-   * Prompts the user for a command, reads the command, parses it, and returns
-   * the result.
-   * 
-   * @param command
-   *          a list into which the command will be parsed.
-   * @return the parsed command, or null if there are no more commands.
-   */
-  private List<String> prompt(List<String> command) throws IOException {
-    command.clear();
-
-    while (true) {
-      int token = in.nextToken();
-      switch (token) {
-      case StreamTokenizer.TT_EOF:
-        if (command.isEmpty()) {
-          if (interactive) out.println("exit");
-          return null;
-        }
-        //$FALL-THROUGH$
-      case StreamTokenizer.TT_EOL:
-      case ';':
-        return command;
-
-      case StreamTokenizer.TT_NUMBER:
-        throw new InternalError("Tokenizer returned unexpected number.");
-
-      case StreamTokenizer.TT_WORD:
-      case '\'':
-      case '"':
-        command.add(in.sval);
-        continue;
-
-      default:
-        reportError("Unexpected character: '" + (char) token + "'");
-        command.clear();
-
-        if (interactive) {
-          // Read to end of line.
-          while (token != StreamTokenizer.TT_EOF
-              && token != StreamTokenizer.TT_EOL) {
-            token = in.nextToken();
-          }
-        }
-
-        return interactive ? command : null;
+        if (commandSource.reportError(e)) return;
       }
     }
   }

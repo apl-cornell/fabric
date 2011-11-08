@@ -9,8 +9,6 @@ import java.lang.Object;
 /**
  * This is an abstract implementation of the principal interface.
  * It provides convenience methods for delgating authority to superiors.
- * This class assumes that principals are equal if they are the same class
- * with the same name.
  */
 public abstract class AbstractPrincipal extends DelegatingPrincipal {
     private String name;
@@ -99,26 +97,14 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
         }
         return null;        
     }
-
-    public int hashCode() {
-        return this.name == null ? 0 : this.name.hashCode();
-    }
     
     public boolean equals(fabric.lang.Object o) {
-        if (o instanceof Principal) {
-            Principal p = (Principal)o;
-            return (this.name == p.name() || (this.name != null && 
-                    this.name.equals(p.name()))) &&
-                    this.getClass() == p.getClass();        
-        }
-        return false;
+        return (o instanceof Principal) && equals((Principal) o);
     }
 
     public boolean equals(Principal p) {
-        if (p == null) return false;
-        return (this.name == p.name() || (this.name != null && 
-                this.name.equals(p.name()))) &&
-                this.getClass() == p.getClass();        
+        // Default to pointer equality (i.e., oid equality).
+        return this == p;        
     }
 
 }
