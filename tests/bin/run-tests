@@ -66,9 +66,13 @@ done
 
 for s in ${stores//,/ }; do
   echo "Starting store $s"
-  screen -d -m -S $s -c /dev/null
-  screenbug $s
-  screen -S $s -X screen -L 0 start-store --name $s
+  screen -S $s -X exec start-store --name $s || {
+    screen -d -m -S $s -c /dev/null
+    screenbug $s
+    screen -S $s -X logfile $s.log
+    screen -S $s -X log on
+    screen -S $s -X exec start-store --name $s
+  }
 done
 
 if [ -n "${stores}" ]; then
@@ -82,9 +86,13 @@ fi
 
 for w in ${workers//,/ }; do
   echo "Starting worker $w"
-  screen -d -m -S $w -c /dev/null
-  screenbug $w
-  screen -S $w -X screen -L 0 start-worker --name $w
+  screen -S $w -X exec start-worker --name $w || {
+    screen -d -m -S $w -c /dev/null
+    screenbug $w
+    screen -S $s -X logfile $s.log
+    screen -S $s -X log on
+    screen -S $w -X exec start-worker --name $w
+  }
 done
 
 fabth ${args}
