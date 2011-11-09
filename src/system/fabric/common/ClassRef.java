@@ -38,6 +38,11 @@ public abstract class ClassRef implements FastSerializable {
       ClassRef deserialize(byte[] data, int pos) {
         return new PlatformClassRef(data, pos);
       }
+      
+      @Override
+      String className(byte[] data, int pos) {
+        return PlatformClassRef.className(data, pos);
+      }
 
       @Override
       void copySerialization(DataInput in, DataOutput out, byte[] buf)
@@ -70,6 +75,12 @@ public abstract class ClassRef implements FastSerializable {
       ClassRef deserialize(byte[] data, int pos) {
         return new FabricClassRef(data, pos);
       }
+      
+      @Override
+      String className(byte[] data, int pos) {
+        return "fab://" + FabricClassRef.storeName(data, pos) + "/"
+            + FabricClassRef.onum(data, pos);
+      }
 
       @Override
       void copySerialization(DataInput in, DataOutput out, byte[] buf)
@@ -94,6 +105,8 @@ public abstract class ClassRef implements FastSerializable {
     };
 
     abstract ClassRef deserialize(byte[] data, int pos);
+    
+    abstract String className(byte[] data, int pos);
 
     abstract void copySerialization(DataInput in, DataOutput out, byte[] buf)
         throws IOException;
@@ -795,6 +808,15 @@ public abstract class ClassRef implements FastSerializable {
   public static ClassRef deserialize(byte[] data, int pos) {
     ClassRefType type = ClassRefType.values()[data[pos]];
     return type.deserialize(data, pos + 1);
+  }
+  
+  /**
+   * Gets the name of the class represented by the ClassRef starting at the
+   * given position in the given byte array.
+   */
+  public static String getClassName(byte[] data, int pos) {
+    ClassRefType type = ClassRefType.values()[data[pos]];
+    return type.className(data, pos + 1);
   }
 
   /**
