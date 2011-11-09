@@ -19,6 +19,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.OidKeyHashMap;
+import fabric.lang.FClass;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
 
@@ -469,14 +470,24 @@ public class BdbDB extends ObjectDB {
       long updateLabelOnum = obj.getUpdateLabelOnum();
       long accessLabelOnum = obj.getAccessLabelOnum();
       String extraInfo = "";
-      if (Surrogate.class.getName().equals(className)) {
-        try {
+      try {
+        // Get extra information on surrogates and FClasses.
+        // This code depends on the serialization format of those classes, and
+        // is therefore rather fragile.
+        if (Surrogate.class.getName().equals(className)) {
           ObjectInputStream ois =
               new ObjectInputStream(obj.getSerializedDataStream());
           extraInfo = ",ref=" + ois.readUTF() + "/" + ois.readLong();
-        } catch (IOException e) {
-          e.printStackTrace();
+        } else if (FClass.class.getName().equals(className)) {
+          ObjectInputStream ois =
+              new ObjectInputStream(obj.getSerializedDataStream());
+          extraInfo = ",name=" + ois.readObject();
         }
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (ClassNotFoundException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
       }
       System.out.println(onum + "," + className + "," + version + ","
           + updateLabelOnum + "," + accessLabelOnum + extraInfo);
