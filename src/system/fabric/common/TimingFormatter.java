@@ -23,7 +23,8 @@ public final class TimingFormatter extends Formatter {
     
     result.append(record.getMillis());
     result.append(", ");
-    result.append(Worker.getWorker().config.name);
+    result.append(Worker.isInitialized() ? Worker.getWorker().config.name
+        : "(uninitialized)");
     result.append(", thread ");
     result.append(record.getThreadID());
     result.append(", ");
