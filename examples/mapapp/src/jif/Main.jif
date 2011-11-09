@@ -48,7 +48,7 @@ public class Main {
 
   static void mapserv_initialize {MapServNode←} () {
     // the world looks like a blank space :)
-    mapServ = new MapServer(MapServNode, ' ');
+    mapServ = new MapServer("map serv", MapServNode, ' ');
   }
 
   //////////////////////////////////////////////////////////////////////////////

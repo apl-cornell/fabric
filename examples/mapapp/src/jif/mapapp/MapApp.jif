@@ -24,9 +24,9 @@ public class MapApp extends Delegator {
   public final MapServer {this←} service;
 
   public
-  MapApp {owner←}
+  MapApp {this}
   (
-    String    {owner←} name,
+    String    {this} name,
     MapServer {owner←} service,
     Principal {owner←} owner
   )
@@ -50,24 +50,23 @@ public class MapApp extends Delegator {
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
-  /*
   public
   void
-  viewMap {user→; user←}
+  viewMap {user→}
   (
-    UserV1 {user→; user←} user
+    UserV1 {user→} user
   )
   throws
   (
-    NullPointerException {user→;user←},
-    SecurityException    {user←;user→}
+    NullPointerException {user→},
+    SecurityException    {user→}
   )
   where
-    service actsfor user.friendInfo
+    service actsfor user.friendInfo,
+    {service←} <= {user←}
   {
-    printMap(user, new label {user→;user←});
+    printMap(user, new label {user→});
   }
-  */
 
   /**
    * prints a map of the user's friends, visible to the user's friends
@@ -77,24 +76,23 @@ public class MapApp extends Delegator {
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
-  /*
   public
   void
   postMap {*user.friendLabel}
   (
     final UserV1 {*user.friendLabel} user
   )
-  :{*user.friendLabel}
   throws
-    SecurityException,
-    NullPointerException
+  (
+    NullPointerException {*user.friendLabel},
+    SecurityException    {*user.friendLabel; user←}
+  )
   where
     service actsfor user.friendInfo,
     {service←} <= {*user.friendLabel}
   {
     printMap(user, user.friendLabel);
   }
-  */
 
 
   /**
@@ -148,14 +146,24 @@ public class MapApp extends Delegator {
     label l,
     final UserV1 user
   )
+  throws
+  (
+    NullPointerException{user}
+  )
   where
     {service←} <= l,
     service actsfor user.friendInfo
   {
+    // invariant checks
+    if (user == null)
+      throw new NullPointerException();
+    if (user.friends == null)
+      throw new AssertionFailedError("user.friends must be non-null");
+
     // this is the label of the data that gets sent to the service
     final label serviceLabel = new label {service→};
     // TODO: does the compiler understand this is a meet?
-    final label fetchLabel   = LabelUtil.singleton().meetLbl(l, serviceLabel);
+    final label fetchLabel   = new label {*l meet *serviceLabel};
 
     // compute the bounding box
     Box boundary = new Box(0,0,0,0);
