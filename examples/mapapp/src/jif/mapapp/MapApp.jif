@@ -50,22 +50,24 @@ public class MapApp extends Delegator {
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
+  /*
   public
   void
-  viewMap
+  viewMap {user→; user←}
   (
-    UserV1 user
+    UserV1 {user→; user←} user
   )
   throws
-    SecurityException,
-    NullPointerException
+  (
+    NullPointerException {user→;user←},
+    SecurityException    {user←;user→}
+  )
   where
     service actsfor user.friendInfo
   {
-    printMap(user, new label {user→});
+    printMap(user, new label {user→;user←});
   }
-
-
+  */
 
   /**
    * prints a map of the user's friends, visible to the user's friends
@@ -75,20 +77,24 @@ public class MapApp extends Delegator {
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
+  /*
   public
   void
-  postMap
+  postMap {*user.friendLabel}
   (
-    final UserV1 user
+    final UserV1 {*user.friendLabel} user
   )
+  :{*user.friendLabel}
   throws
     SecurityException,
     NullPointerException
   where
-    service actsfor user.friendInfo
+    service actsfor user.friendInfo,
+    {service←} <= {*user.friendLabel}
   {
-    printMap(user, new label {user→user.friends});
+    printMap(user, user.friendLabel);
   }
+  */
 
 
   /**
@@ -101,25 +107,31 @@ public class MapApp extends Delegator {
    */
   private
   void
-  printMap
+  printMap {*lbl}
   (
     final UserV1 user,
     final label  lbl
   )
   throws
-    NullPointerException,
-    SecurityException
+  (
+    NullPointerException {user},
+    SecurityException    {*lbl; user; lbl; user←}
+  )
   where
-    service actsfor user.friendInfo
+    service actsfor user.friendInfo, // because the service will learn about the users friends.
+    {service←}    <= lbl             // because the service influences the map.
   {
     if (user == null)
       throw new NullPointerException();
 
-    MapImage result = createMap(lbl, user);
+    MapImage[lbl] result = createMap(lbl, user);
 
     try {
+
       PrintStream[lbl] out = Runtime[user].getRuntime().stdout(lbl);
-      result.print(out);
+      int {*lbl} x = 0;
+      out.println(x);
+      //result.print(out);
     } catch (NullPointerException e) {
       throw new AssertionFailedError("Runtime.getRuntime() and Runtime.stdout() return values should be non-null.");
     }
