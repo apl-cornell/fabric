@@ -1,6 +1,6 @@
-<project name="mapapp" default="build-all" basedir=".">
+<project name="friendmap" default="build-all" basedir=".">
   <description>
-    mapapp build file
+    FriendMap build file
   </description>
 
   <!--
@@ -11,7 +11,7 @@
 
   <import file="../../common.xml" />
 
-  <dirname property="home" file="${ant.file.mapapp}" />
+  <dirname property="home" file="${ant.file.friendmap}" />
 
   <!--
   ****************************************************************************
@@ -55,7 +55,7 @@
 
 
   <target name="build-jif"
-          description="Builds the Jif version of mapapp"
+          description="Builds the Jif version of friendmap"
           depends="build-jif-static-principals">
     <mkdir dir="${home}/classes" />
     <apply executable="bash"
@@ -73,13 +73,13 @@
       <arg value="-e" />
       <srcfile />
 
-      <fileset dir="${home}/src/jif" includes="mapapp/*.jif" excludes="jif/principals/*.jif" />
+      <fileset dir="${home}/src/jif" includes="friendmap/*.jif" excludes="jif/principals/*.jif" />
       <globmapper from="*.jif" to="*.class" />
     </apply>
   </target>
 
 
-  <target name="build-fabric" description="Builds the fabric version of mapapp">
+  <target name="build-fabric" description="Builds the fabric version of friendmap">
     <mkdir dir="${home}/classes" />
     <apply executable="bash"
            parallel="true"

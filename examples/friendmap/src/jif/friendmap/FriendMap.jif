@@ -1,4 +1,4 @@
-package mapapp;
+package friendmap;
 
 import java.io.PrintStream;
 
@@ -15,16 +15,16 @@ import util.AssertionFailedError;
 import util.NoSuchElementException;
 
 /**
- * This is the mapping application.  A MapApp is instantiated with a particular
+ * This is the mapping application.  A FriendMap is instantiated with a particular
  * mapping service, and then can be run by any User to generate private or
  * public output maps.
  */
-public class MapApp extends Delegator {
+public class FriendMap extends Delegator {
   /** The map service that this app uses to fetch maps.  Must be non-null. */
   public final MapServer {this←} service;
 
   public
-  MapApp {this}
+  FriendMap {this}
   (
     String    {this} name,
     MapServer {owner←} service,

@@ -1,5 +1,5 @@
 import snapp.*;
-import mapapp.*;
+import friendmap.*;
 import mapserv.*;
 import jif.principals.*;
 
@@ -12,7 +12,7 @@ public class Main {
   // these are the contents of the root maps
   static Snapp     snapp;
   static MapServer mapServ;
-  static MapApp    mapApp;
+  static FriendMap friendMap;
   static UserV1    alice;
   static UserV1    bob;
 
@@ -23,7 +23,7 @@ public class Main {
 
     snapp_initialize();
     mapserv_initialize();
-    mapapp_initialize();
+    friendmap_initialize();
 
     a_initialize();
     b_initialize();
@@ -52,11 +52,11 @@ public class Main {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  // mapapp's process                                                         //
+  // friendmap's process                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  static void mapapp_initialize {MapAppNode←} () {
-    mapApp = new MapApp("MapApp", mapServ, MapAppNode);
+  static void friendmap_initialize {FriendMapNode←} () {
+    friendMap = new FriendMap("FriendMap", mapServ, FriendMapNode);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -74,12 +74,12 @@ public class Main {
   }
 
   static void a_run_app {AliceNode←} () {
-    final MapApp app = mapApp;
+    final FriendMap app = friendMap;
     final UserV1 a   = alice;
 
     if (app.service actsfor a.friendInfo)
       app.viewMap(a);
-    // TODO: mapApp.postMap(alice);
+    // TODO: friendMap.postMap(alice);
   }
 
   //////////////////////////////////////////////////////////////////////////////

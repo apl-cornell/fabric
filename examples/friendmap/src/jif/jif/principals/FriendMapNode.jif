@@ -1,14 +1,14 @@
 package jif.principals;
 
-public class MapAppNode extends ExternalPrincipal {
-  public MapAppNode() {
-    super("MapAppNode");
+public class FriendMapNode extends ExternalPrincipal {
+  public FriendMapNode() {
+    super("FriendMapNode");
   }
 
-  private static MapAppNode{*!:*} P;
+  private static FriendMapNode{*!:*} P;
   public static Principal getInstance{*!:*}() {
     if (P == null) {
-      P = new MapAppNode();
+      P = new FriendMapNode();
     }
     return P;
   }
