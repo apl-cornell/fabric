@@ -13,6 +13,7 @@ import util.GroupIterator;
 import util.Delegator;
 import util.AssertionFailedError;
 import util.NoSuchElementException;
+import util.Util;
 
 /**
  * This is the mapping application.  A FriendMap is instantiated with a particular
@@ -63,7 +64,8 @@ public class FriendMap extends Delegator {
   )
   where
     service actsfor user.friendInfo,
-    {service←} <= {user←}
+    {service←} <= {user←},
+    user actsfor Util.user
   {
     printMap(user, new label {user→});
   }
@@ -89,7 +91,8 @@ public class FriendMap extends Delegator {
   )
   where
     service actsfor user.friendInfo,
-    {service←} <= {*user.friendLabel}
+    {service←}       <= user.friendLabel,
+    user.friendLabel <= {Util.user→; _←}
   {
     printMap(user, user.friendLabel);
   }
@@ -117,22 +120,16 @@ public class FriendMap extends Delegator {
   )
   where
     service actsfor user.friendInfo, // because the service will learn about the users friends.
-    {service←}    <= lbl             // because the service influences the map.
+    {service←}    <= lbl,            // because the service influences the map.
+    lbl <= {Util.user→; _←}
   {
     if (user == null)
       throw new NullPointerException();
 
     MapImage[lbl] result = createMap(lbl, user);
+    PrintStream[lbl] out = Util.stdout(lbl);
 
-    try {
-
-      PrintStream[lbl] out = Runtime[user].getRuntime().stdout(lbl);
-      int {*lbl} x = 0;
-      out.println(x);
-      //result.print(out);
-    } catch (NullPointerException e) {
-      throw new AssertionFailedError("Runtime.getRuntime() and Runtime.stdout() return values should be non-null.");
-    }
+    result.print(out);
   }
 
 

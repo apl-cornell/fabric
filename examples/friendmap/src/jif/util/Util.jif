@@ -45,7 +45,7 @@ public class Util {
   public static final principal user = null;
 
   public static
-  PrintStream[lbl] {user←;user→}
+  PrintStream[lbl] {user←; user→; lbl; *lbl}  // TODO: *lbl should not be here, but needs to be due to overly restrictive jif sig
   stdout
   (
     label lbl

@@ -36,8 +36,10 @@
 
   <target name="build-jif"
           description="Builds the Jif version of friendmap">
+    <echo message="building principals" />
     <jifc srcdir="${home}/src/jif" includes="jif/principals/*.jif"/>
-    <jifc srcdir="${home}/src/jif" excludes="jif/principals/*.jif"/>
+    <echo message="building example" />
+    <jifc srcdir="${home}/src/jif" excludes="jif/principals/*.jif" includes="**/*.jif" />
   </target>
 
   <target name="build-local" depends="build-trusted" description="Builds the fabric version of friendmap">
@@ -119,6 +121,7 @@
              vmlauncher="false">
         <arg value="${jifc}"/>
         <arg value="-fail-on-exception"/>
+        <arg value="-e"/>
         <arg value="-d"          /> <arg value="${home}/classes/jif"/>
         <arg value="-sourcepath" /> <arg value="@{srcdir}"/>
         <arg value="-classpath"  /> <arg value="${home}/classes/jif"/>
