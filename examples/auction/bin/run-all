@@ -15,9 +15,9 @@ if [[ $# -lt 3 ]] ; then
   gnome-terminal \
     --working-directory "${BINDIR}" \
     --tab --title "broker store" --command "./${MYNAME} 0s store brokerStore"   \
-    --tab --title "A store"      --command "./${MYNAME} 2s store airlineAStore" \
-    --tab --title "B store"      --command "./${MYNAME} 4s store airlineBStore" \
-    --tab --title "U store"      --command "./${MYNAME} 6s store userStore"     \
+    --tab --title "A store"      --command "./${MYNAME} 0s store airlineAStore" \
+    --tab --title "B store"      --command "./${MYNAME} 0s store airlineBStore" \
+    --tab --title "U store"      --command "./${MYNAME} 0s store userStore"     \
 
 #  sleep 10s
 #
