@@ -302,6 +302,8 @@
       <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg value="-nooutput" />
+      <arg value="-classpath" />
+      <arg value="${bootstrap.classes}" />
       <arg value="-bootclasspath" />
       <arg value="${bootstrap.classes}" />
       <arg value="-sigcp" />
@@ -458,6 +460,7 @@
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
       <include name="fabric/store/**" />
+      <exclude name="**/package-info.java" />
       <classpath>
         <pathelement location="${runtime.classes}" />
         <path refid="lib.classpath"/>
@@ -473,6 +476,7 @@
       <include name="fabric/worker/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
+      <exclude name="**/package-info.java" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
         <path refid="lib.classpath"/>
@@ -487,6 +491,7 @@
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/dissemination/**" />
+      <exclude name="**/package-info.java" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
         <path refid="lib.classpath"/>
