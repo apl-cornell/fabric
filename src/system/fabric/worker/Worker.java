@@ -20,6 +20,7 @@ import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
 import fabric.common.KeyMaterial;
+import fabric.common.NSUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -510,7 +511,7 @@ public final class Worker {
    */
   public void runFabricApp(String mainClassName, final String[] args)
       throws Throwable {
-    Class<?> mainClass = getClassLoader().loadClass(SysUtil.mangle(mainClassName));
+    Class<?> mainClass = getClassLoader().loadClass(NSUtil.toJavaImplName(mainClassName));
     Method main =
         mainClass.getMethod("main", new Class[] { ObjectArray.class });
 

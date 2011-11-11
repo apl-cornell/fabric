@@ -13,7 +13,7 @@ import fabric.lang.Codebase;
 import fabric.Main;
 
 import fabric.common.Logging;
-import fabric.common.SysUtil;
+import fabric.common.NSUtil;
 
 /**
  * Loads Java classes from Fabric.
@@ -31,12 +31,15 @@ public class FabricClassLoader extends ClassLoader {
         Class cls = parent.loadClass(name);
         return cls;
       } catch (ClassNotFoundException e) {
+        if(NSUtil.isPlatformName(name)) {
+          // Unless the name is a mangled Fabric class, we're done.
+          throw e;
+        }
       }
-      
       Logging.log(Logging.TIMING_LOGGER, Level.FINE, "checking bytecode cache for {0}", name);
   
       if (!classBytecodeMap.containsKey(name)) {
-        FClass fcls = SysUtil.toProxy(name);
+        FClass fcls = NSUtil.toProxy(name);
         try {
           Logging.log(Logging.TIMING_LOGGER, Level.FINE, "compiling {0}", name);
           Main.compile(fcls, classBytecodeMap);

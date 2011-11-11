@@ -148,8 +148,8 @@ public abstract class ClassRef implements FastSerializable {
    */
   @SuppressWarnings("unchecked")
   public static ClassRef makeRef(Class<?> clazz) {
-    boolean isPlatformClass = SysUtil.codebasePart(clazz.getName()).equals("");
-    if (isPlatformClass) return new PlatformClassRef(clazz);
+    if (NSUtil.isPlatformName(clazz.getName())) 
+      return new PlatformClassRef(clazz);
     return new FabricClassRef((Class<? extends fabric.lang.Object>) clazz);
   }
 
@@ -485,7 +485,7 @@ public abstract class ClassRef implements FastSerializable {
     public FabricClassRef(Class<? extends fabric.lang.Object> clazz) {
       super(ClassRefType.FABRIC);
       try {
-        this.fClass = (FClass._Proxy) SysUtil.toProxy(clazz.getName());
+        this.fClass = (FClass._Proxy) NSUtil.toProxy(clazz.getName());
       } catch (final ClassNotFoundException e) {
         throw new InternalError("failed to resolve existing class", e);
       }
@@ -509,7 +509,7 @@ public abstract class ClassRef implements FastSerializable {
 
     @Override
     public String javaClassName() {
-      return SysUtil.pseudoname(getFClass());
+      return NSUtil.javaClassName(getFClass());
     }
 
     @Override
