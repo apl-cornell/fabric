@@ -56,7 +56,7 @@
   -->
 
   <target name="build-trusted">
-    <fabc-local srcdir="${home}/src/fabric/trusted">
+    <fabc-local srcdir="${home}/src/fabric/trusted" includes="**/*.fab">
       <arg value="-trusted-providers" />
     </fabc-local>
   </target>
@@ -76,6 +76,8 @@
   -->
   <macrodef name="fabc-local">
     <attribute name="srcdir" />
+    <attribute name="includes" default="**/*.fab" />
+    <attribute name="excludes" default="" />
     <element name="extra-args" implicit="true" />
     <sequential>
       <mkdir dir="${home}/classes/fabric" />
@@ -96,7 +98,7 @@
         <extra-args />
         <srcfile />
 
-        <fileset dir="@{srcdir}" includes="**/*.fab" />
+        <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
         <globmapper from="*.fab" to="*.class" />
       </apply>
     </sequential>
