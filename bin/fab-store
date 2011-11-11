@@ -8,7 +8,7 @@ source "$(dirname $0)/defs"
 app_home="$(dirname $0)/.."
 
 # default cache name is hostname
-cache_name=".${HOSTNAME}_cache"
+cache_name="${HOSTNAME}_cache"
 
 while true; do
   case "$1" in
@@ -21,7 +21,7 @@ while true; do
         shift 2
         ;;
     --name)
-        cache_name=".$2_cache"
+        cache_name="$2_cache"
         args="${args} --name '$2'"
         shift 2
         ;;

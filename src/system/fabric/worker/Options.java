@@ -5,6 +5,7 @@ import java.io.PrintStream;
 import java.util.Set;
 
 import fabric.common.Options.Flag.Kind;
+import fabric.common.Resources;
 import fabric.common.Timing;
 import fabric.common.exceptions.UsageError;
 
@@ -92,8 +93,7 @@ public class Options extends fabric.common.Options {
   public void validateOptions() throws UsageError {
     if (null == this.name) throw new UsageError("No worker name specified");
     if (null == this.code_cache)
-      this.code_cache =
-        System.getProperty("user.dir") + File.separator + "." + name + "_cache";
+      this.code_cache = Resources.relpathRewrite("var",name + "_cache");
   }
 
   @Override
