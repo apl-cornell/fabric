@@ -1,6 +1,6 @@
 package util.tests;
 
-import jif.runtime.Runtime;
+import fabric.runtime.Runtime;
 import util.Delegator;
 
 public class PrincipalTest authority(*) {

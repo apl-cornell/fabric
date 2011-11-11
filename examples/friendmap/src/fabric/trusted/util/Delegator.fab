@@ -3,11 +3,11 @@ package util;
 /**
  * Convenience principal class the delegates to a single owner.
  */
-public class Delegator implements Principal {
+public class Delegator extends Principal {
   protected final String    {this}  name;
   protected final principal {this←} owner;
 
-  protected
+  public
   Delegator {this}
   (
     String    {this} name,
@@ -43,7 +43,7 @@ public class Delegator implements Principal {
   public
   boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
   isAuthorized {this←}
-              (Object           authPrf,
+              (java.lang.Object authPrf,
                Closure[this,lb] closure,
                label            lb,
                boolean          executeNow)
@@ -57,8 +57,9 @@ public class Delegator implements Principal {
   public
   ActsForProof{this; p; this←; p←}
   findProofUpto {this←}
-               (Principal p,
-                Object searchState)
+               (Store s,
+                Principal p,
+                java.lang.Object searchState)
   {
     // TODO
     return null;
@@ -67,8 +68,9 @@ public class Delegator implements Principal {
   public
   ActsForProof{this; p; p←; this←}
   findProofDownto {this←}
-                 (Principal p,
-                  Object searchState)
+                 (Store s,
+                  Principal p,
+                  java.lang.Object searchState)
   {
     // TODO
     return null;

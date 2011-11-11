@@ -46,7 +46,7 @@
     <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" />
   </target>
 
-  <target name="build-all" depends="build-jif"/>
+  <target name="build-all" depends="build-local"/>
   <target name="all"       depends="build-all"/>
 
   <!--
