@@ -1,0 +1,206 @@
+package mapserv;
+
+import java.io.PrintStream;
+
+import util.Store;
+import util.Util;
+import util.AssertionFailedError;
+
+/**
+ * A simple image class.  The image is indexed by floating point numbers, and
+ * stores its own boundary... puts and gets are done relative to the boundary.
+ *
+ * The labels on this class could be relaxed to {this}, which would make the
+ * copy method unnecessary.  However, once we port to fabric, we will need to
+ * parameterize the access label, so I will just parameterize everything.
+ *
+ */
+public class MapImage[label L] {
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public fields                                                            //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /* coordinates of map.  non-null. */
+  public final Box {L} boundary;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // internal state                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /* packed data */
+  protected final int{L}       width;
+  protected final int{L}       height;
+  protected final char{L}[]{L} data;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public methods                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Create a new image with the given boundary and data.
+   *
+   * @throws ArrayIndexOutOfBoundsException
+   *         if the given width and height do not match the size of the data.
+   * @throws NullPointerException
+   *         if either data or boundary is null
+   */
+  public
+  MapImage {L}
+  (
+    Box{L} boundary,
+    int{L} width, int{L} height, char{L}[]{L} data
+  )
+  :{L}
+  throws
+    ArrayIndexOutOfBoundsException,
+    NullPointerException
+  {
+    if (data == null || boundary == null)
+      throw new NullPointerException();
+
+    if (width * height != data.length)
+      throw new ArrayIndexOutOfBoundsException();
+
+    this.width  = width;
+    this.height = height;
+    this.data   = data;
+
+    this.boundary = boundary;
+  }
+
+
+  /**
+   * Get the pixel corresponding to the global location (x,y).
+   *
+   * @throws ArrayIndexOutOfBoundsException
+   *         if (x,y) lies outside the bounding box of the image (subject to accuracy errors).
+   */
+  public char{L} getAt {L} (float {L} x, float {L} y):{L} throws ArrayIndexOutOfBoundsException {
+    if (this.data == null)
+      throw new AssertionFailedError("data must be non-null");
+
+    return data[index(x,y)];
+  }
+
+
+  /**
+   * Set the pixel corresponding to the global location (x,y).
+   *
+   * @throws ArrayIndexOutOfBoundsException
+   *         if (x,y) lies outside the bounding box of the image (subject to accuracy errors).
+   */
+  public void setAt{L} (float {L} x, float {L} y, char {L} value):{L} throws ArrayIndexOutOfBoundsException {
+    if (this.data == null)
+      throw new AssertionFailedError("data must be non-null");
+
+    data[index(x,y)] = value;
+  }
+
+
+  /**
+   * Create a deep copy of this image on store s with label l.
+   */
+  public
+  MapImage[l] {*l}
+  copy {L}
+  (
+    label{*l} l,
+    Store{*l} s
+  )
+  where
+    L <= l
+  {
+    try {
+
+      return new MapImage[l] (boundary.copy(l,s), width, height, Util.copyArray(data, l, l, L, L, s));
+
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("data and boundary must be non-null");
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("width * height = data.length = Util.copyArray(data, ...).length");
+    }
+  }
+
+
+  /**
+   * Print image to the given output stream.
+   *
+   * @throws NullPointerException if out is null
+   */
+  public
+  void
+  print {L}
+  (
+    final PrintStream[L] out
+  )
+  throws
+  (
+    NullPointerException{out}
+  )
+  {
+    // check assertions
+    if (out == null)
+      throw new NullPointerException();
+    if (this.boundary == null)
+      throw new AssertionFailedError("boundary is non-null");
+    if (this.data == null)
+      throw new AssertionFailedError("data is non-null");
+
+    out.println("(" + boundary.xmin + ", " + boundary.ymin + ")");
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        try {
+
+          out.print(data[i*width + j]);
+
+        } catch (final ArrayIndexOutOfBoundsException e) {
+          // claim: i*width + j < data.length
+          // proof:
+          //  0 <= i <= height - 1
+          //  0 <= j <= width  - 1
+          //  i*width + j <= (height - 1) * width + width - 1
+          //               = height * width - 1
+          //               < data.length
+          throw new AssertionFailedError ("width * height = data.length");
+        }
+      }
+      out.println();
+    }
+
+    for (int j = 0; j < width; j++)
+      out.print(' ');
+
+    out.println("(" + boundary.xmax + ", " + boundary.ymax + ")");
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // private helper methods                                                   //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /** Return the index into data corresponding to the global coordinates (x,y).
+   *  Note that if (x,y) is outside the boundary, the result will be outside the bounds
+   *  of the data array.
+   */
+  private int{L} index (float {L} x, float {L} y) {
+    // claim: if boundary.contains(x,y) then 0 <= index < data.length
+    // proof: since boundary.contains(x,y), boundary.scale_x(x) and
+    //        boundary.scale_y(y) ∈ [0,1).
+    //        Thus xoff ∈ [0, width) and yoff ∈ [0,height)
+    //        TODO: this step could have accuracy problems.
+    //        thus yoff * width + xoff ∈ [0, height * width) = [0, data.length)
+    if (this.boundary == null)
+      throw new AssertionFailedError("boundary must be non-null");
+
+    int xoff = (int) (width  * boundary.scale_x(x));
+    int yoff = (int) (height * boundary.scale_y(y));
+
+    return yoff * width + xoff;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

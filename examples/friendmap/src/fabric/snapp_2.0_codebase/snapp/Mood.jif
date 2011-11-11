@@ -1,0 +1,14 @@
+package snapp;
+
+public class Mood [label THIS] {
+  public final String {THIS} description;
+
+  public Mood(String{THIS} description) {
+    this.description = description;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

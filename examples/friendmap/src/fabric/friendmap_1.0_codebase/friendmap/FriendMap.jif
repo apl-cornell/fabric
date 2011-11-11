@@ -1,0 +1,236 @@
+package friendmap;
+
+import java.io.PrintStream;
+
+import jif.runtime.Runtime;
+
+import mapserv.MapServer;
+import mapserv.MapImage;
+import mapserv.Box;
+import snapp.UserV1;
+import snapp.Location;
+import util.GroupIterator;
+import util.Delegator;
+import util.AssertionFailedError;
+import util.NoSuchElementException;
+
+/**
+ * This is the mapping application.  A FriendMap is instantiated with a particular
+ * mapping service, and then can be run by any User to generate private or
+ * public output maps.
+ */
+public class FriendMap extends Delegator {
+  /** The map service that this app uses to fetch maps.  Must be non-null. */
+  public final MapServer {this←} service;
+
+  public
+  FriendMap {this}
+  (
+    String    {this} name,
+    MapServer {owner←} service,
+    Principal {owner←} owner
+  )
+  where authority (this)
+  {
+    // these endorsements are safe, because owner ≽ this,
+    // and thus {owner←} ⊑ {this←}
+    // we just can't convince the compiler of this fact.
+
+    this.service = endorse(service, {owner←} to {this←});
+    super(name, owner);
+  }
+
+
+
+  /**
+   * prints a map of the user's friends, visible to the user
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   * @throws SecurityException
+   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+   */
+  public
+  void
+  viewMap {user→}
+  (
+    UserV1 {user→} user
+  )
+  throws
+  (
+    NullPointerException {user→},
+    SecurityException    {user→}
+  )
+  where
+    service actsfor user.friendInfo,
+    {service←} <= {user←}
+  {
+    printMap(user, new label {user→});
+  }
+
+  /**
+   * prints a map of the user's friends, visible to the user's friends
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   * @throws SecurityException
+   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+   */
+  public
+  void
+  postMap {*user.friendLabel}
+  (
+    final UserV1 {*user.friendLabel} user
+  )
+  throws
+  (
+    NullPointerException {*user.friendLabel},
+    SecurityException    {*user.friendLabel; user←}
+  )
+  where
+    service actsfor user.friendInfo,
+    {service←} <= {*user.friendLabel}
+  {
+    printMap(user, user.friendLabel);
+  }
+
+
+  /**
+   * Helper method that gets the map and prints it out.
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   * @throws SecurityException
+   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+   */
+  private
+  void
+  printMap {*lbl}
+  (
+    final UserV1 user,
+    final label  lbl
+  )
+  throws
+  (
+    NullPointerException {user},
+    SecurityException    {*lbl; user; lbl; user←}
+  )
+  where
+    service actsfor user.friendInfo, // because the service will learn about the users friends.
+    {service←}    <= lbl             // because the service influences the map.
+  {
+    if (user == null)
+      throw new NullPointerException();
+
+    MapImage[lbl] result = createMap(lbl, user);
+
+    try {
+
+      PrintStream[lbl] out = Runtime[user].getRuntime().stdout(lbl);
+      int {*lbl} x = 0;
+      out.println(x);
+      //result.print(out);
+    } catch (NullPointerException e) {
+      throw new AssertionFailedError("Runtime.getRuntime() and Runtime.stdout() return values should be non-null.");
+    }
+  }
+
+
+  /**
+   * creates a map of the user's friends, visible at label l
+   */
+  public
+  MapImage[l]
+  createMap
+  (
+    label l,
+    final UserV1 user
+  )
+  throws
+  (
+    NullPointerException{user}
+  )
+  where
+    {service←} <= l,
+    service actsfor user.friendInfo
+  {
+    // invariant checks
+    if (user == null)
+      throw new NullPointerException();
+    if (user.friends == null)
+      throw new AssertionFailedError("user.friends must be non-null");
+
+    // this is the label of the data that gets sent to the service
+    final label serviceLabel = new label {service→};
+    // TODO: does the compiler understand this is a meet?
+    final label fetchLabel   = new label {*l meet *serviceLabel};
+
+    // compute the bounding box
+    Box boundary = new Box(0,0,0,0);
+
+    final GroupIterator i = user.friends.iterator(fetchLabel);
+    if (i == null)
+      throw new AssertionFailedError("Group.iterator() should return a non-null value");
+    while (i.hasNext()) {
+      Principal next;
+      try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");}
+
+      if (next instanceof UserV1) {
+        final UserV1 friend = (UserV1) next;
+
+        // if the friend doesn't mind his location leaking to the map service,
+        // then we expand the bounding box to contain him
+        if (friend.locationLabel <= fetchLabel) {
+          boundary = boundary.expand(friend.location.x, friend.location.y);
+        }
+
+        // TODO: declassifiers
+        else {
+        }
+
+        // otherwise we leave him off the map.
+      }
+    }
+
+    // get map
+    MapImage[fetchLabel] map = this.service.getMap(fetchLabel, boundary);
+
+    // make a local copy (with label l)
+    final MapImage[l] annotated = map.copy(l, /* TODO: local store */ null);
+
+    if (annotated == null)          throw new AssertionFailedError("MapImage.copy return value should be non-null");
+    if (annotated.boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
+
+    // annotate map
+    final GroupIterator j = user.friends.iterator(l);
+    if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
+    while (j.hasNext()) {
+      Principal next;
+      try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("if j.hasNext() then j.next() should return normally."); }
+      if (next instanceof UserV1) {
+        final UserV1 friend = (UserV1) next;
+
+        // add friend to the map if possible
+        if (friend.locationLabel <= l) {
+          final Location loc = friend.location;
+          if (loc != null && annotated.boundary.contains(loc.x, loc.y)) {
+            try {
+
+              annotated.setAt(loc.x, loc.y, 'f');
+
+            } catch (final ArrayIndexOutOfBoundsException e) {
+              throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally");
+            }
+          }
+        }
+      }
+    }
+
+    return annotated;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
