@@ -15,6 +15,7 @@ import polyglot.ast.Node;
 import polyglot.ast.Receiver;
 import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
+import polyglot.util.Position;
 import fabric.types.FabricArrayType;
 import fabric.types.FabricClassType;
 import fabric.types.FabricFieldInstance;
@@ -56,7 +57,7 @@ public class FabricFieldExt extends JifFieldExt {
           if (al == null) {
             // TODO Using the array label as its access label
             // Need to add syntax to specify array access labels
-            al = ((LabeledType)fat.base()).labelPart();
+            al = fts.join(((LabeledType)fat.base()).labelPart(), fts.noComponentsLabel());
           }
           lc.constrain(new NamedLabel("pc ⊔ object label", lhs), LabelConstraint.LEQ,
               new NamedLabel("access label", al), A.labelEnv(), n.position(),
