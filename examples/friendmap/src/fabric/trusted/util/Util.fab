@@ -10,24 +10,30 @@ public class Util {
    */
   public static
   char{*l}[]{*m}
-  copyArray {*l; *m}
+  copyArray
   (
     final char{*n}[]{*o} data,
     label l,
-    label m,
+    label m, // TODO: remove, replace with {data}
     label n,
-    label o,
+    label o, // TODO: remove
     Store s
   )
   :{*o}
   throws
     NullPointerException
   where
+    // s ≽ l because s will store the result, labelled l
+    // m ⊑ l because the contents of the array flow to the result
+    // caller_pc and data ⊑ C(m) because the fetch on data reflects information
+    //       about the data reference and the calling context
+    // caller_pc ⊑ l because the calling context flows because external state
+    //       (the contents of the result) with label l are updated.
     n <= l,
     o <= m,
     m <= l
   {
-    final char{*l}[]{*m} result = new char[data.length];
+    final char{*l}[]{*m} result = new char[data.length]@s;
 
     try {
 
