@@ -56,7 +56,9 @@
   -->
 
   <target name="build-trusted">
-    <fabc-local srcdir="${home}/src/fabric/trusted" />
+    <fabc-local srcdir="${home}/src/fabric/trusted">
+      <arg value="-trusted-providers" />
+    </fabc-local>
   </target>
 
 
@@ -74,6 +76,7 @@
   -->
   <macrodef name="fabc-local">
     <attribute name="srcdir" />
+    <element name="extra-args" implicit="true" />
     <sequential>
       <mkdir dir="${home}/classes/fabric" />
       <apply executable="bash"
@@ -90,6 +93,7 @@
         <arg value="-d" />         <arg value="${home}/classes/fabric" />
         <arg value="-sourcepath"/> <arg value="@{srcdir}" />
         <arg value="-classpath" /> <arg value="${home}/classes/fabric" />
+        <extra-args />
         <srcfile />
 
         <fileset dir="@{srcdir}" includes="**/*.fab" />
