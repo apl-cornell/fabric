@@ -3,14 +3,10 @@ package fabric.worker;
 import static fabric.common.Logging.TIMING_LOGGER;
 import static fabric.common.Logging.WORKER_LOGGER;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
@@ -21,8 +17,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Level;
-
-import polyglot.util.InternalCompilerError;
 
 import fabric.common.ConfigProperties;
 import fabric.common.KeyMaterial;
@@ -437,19 +431,8 @@ public final class Worker {
   }
 
   public FabricClassLoader getClassLoader() {
-    if (loader == null) {
-      File cache = new File(code_cache).getAbsoluteFile();
-      ClassLoader parent = Worker.class.getClassLoader();
-      // TODO: create a URLStreamHandlerFactory that handles the fab: protocol
-      // to support peer-caching of bytecode
-      ClassLoader cacheLoader;
-      try {
-        cacheLoader = new URLClassLoader(new URL[] { cache.toURI().toURL() }, parent);
-      } catch (MalformedURLException e) {
-        throw new InternalCompilerError(e);
-      }
-      loader = new FabricClassLoader(cacheLoader);
-    }
+    if (loader == null)
+      loader = new FabricClassLoader(Worker.class.getClassLoader());
     return loader;
   }
 
