@@ -45,11 +45,9 @@ public class Main extends polyglot.main.Main {
   protected Compiler compiler;
 
   /**
-   * @return System clock time between compilation and loading for timing
-   *         purposes.
    * @throws IOException
    */
-  public static long compile(FClass fcls, Map<String, byte[]> bytecodeMap)
+  public static void compile(FClass fcls, Map<String, byte[]> bytecodeMap)
       throws GeneralSecurityException, IOException {
     if (fcls == null || bytecodeMap == null)
       throw new GeneralSecurityException("Invalid arguments to compile");
@@ -99,8 +97,6 @@ public class Main extends polyglot.main.Main {
       fabric.ExtensionInfo extInfo = new fabric.ExtensionInfo(bytecodeMap);
       main.start(args.toArray(new String[0]), extInfo);
 
-      long endCompileTime = System.currentTimeMillis(); 
-
       @SuppressWarnings("unchecked")
       Collection<String> outputFiles = main.compiler.outputFiles();
       File output_directory = extInfo.getFabricOptions().outputDirectory();
@@ -133,7 +129,6 @@ public class Main extends polyglot.main.Main {
           }
         }
       }
-      return endCompileTime;
     } catch (TerminationException e) {
       throw new GeneralSecurityException(e);
     }

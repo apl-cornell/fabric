@@ -17,101 +17,45 @@ import fabric.common.SysUtil;
 
 /**
  * Loads Java classes from Fabric.
- * 
- * @author Lucas Waye <lrw48@cornell.edu>
  */
 public class FabricClassLoader extends ClassLoader {
   Map/* String, Class */classes;
   Map/* String, byte native[] */classBytecodeMap;
   ClassLoader parent;
-
-  /**
-   * Total time spent compiling.
-   */
-  static long compileTime = 0;
-
-  /**
-   * Total time spent loading.
-   */
-  static long loadingTime = 0;
-
-  /**
-   * Total time spent defining.
-   */
-  static long defineTime = 0;
-
-  /**
-   * Total time spent loading from FS.
-   */
-  static long fsLoadingTime = 0;
-  
-  // Add a shutdown hook for reporting numbers to stdout.
-  static {
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      public void run() {
-        System.out.println("   Compile time: " + compileTime + " ms");
-        System.out.println("   Loading time: " + loadingTime + " ms");
-        System.out.println("    Define time: " + defineTime + " ms");
-        System.out.println("FS loading time: " + fsLoadingTime + " ms");
-      }
-    });
-  }
 	
   public Class findClass(String name) throws ClassNotFoundException {
-    final long startTime = System.currentTimeMillis();
-    final long endFSLoadTime;
-
     Logging.log(Logging.TIMING_LOGGER, Level.INFO, "resolving {0}", name);
 
     try {
-      Class cls = parent.loadClass(name);
-      return cls;
-    } catch (ClassNotFoundException e) {
-    } finally {
-      endFSLoadTime = System.currentTimeMillis();
-      fsLoadingTime += endFSLoadTime - startTime;
-    }
-
-    // Time marker: endFSLoadTime.
-
-    final long endLoadingTime;
-    if (!classBytecodeMap.containsKey(name)) {
-      FClass fcls = SysUtil.toProxy(name);
-      long endCompileTime = -1;
       try {
-        Logging.log(Logging.TIMING_LOGGER, Level.FINE, "compiling {0}", name);
-        endCompileTime = Main.compile(fcls, classBytecodeMap);
-      } catch (GeneralSecurityException e) {
-        throw new ClassNotFoundException(name, e);
-      } catch (IOException e) {
-        throw new ClassNotFoundException(name, e);
-      } finally {
-        endLoadingTime = System.currentTimeMillis();
-        if (endCompileTime < 0) {
-          // Error during compilation; just attribute time to compiler.
-          compileTime += endLoadingTime - endFSLoadTime;
-        } else {
-          compileTime += endCompileTime - endFSLoadTime;
-          loadingTime += endLoadingTime - endCompileTime;
+        Class cls = parent.loadClass(name);
+        return cls;
+      } catch (ClassNotFoundException e) {
+      }
+      
+      Logging.log(Logging.TIMING_LOGGER, Level.FINE, "checking bytecode cache for {0}", name);
+  
+      if (!classBytecodeMap.containsKey(name)) {
+        FClass fcls = SysUtil.toProxy(name);
+        try {
+          Logging.log(Logging.TIMING_LOGGER, Level.FINE, "compiling {0}", name);
+          Main.compile(fcls, classBytecodeMap);
+        } catch (GeneralSecurityException e) {
+          throw new ClassNotFoundException(name, e);
+        } catch (IOException e) {
+          throw new ClassNotFoundException(name, e);
         }
       }
-    } else {
-      endLoadingTime = System.currentTimeMillis();
-    }
-
-    // Time marker: endLoadingTime.
-
-    Logging.log(Logging.TIMING_LOGGER, Level.FINE, "loading {0}", name);
-
-    try {
+  
+      Logging.log(Logging.TIMING_LOGGER, Level.FINE, "loading {0}", name);
+  
       Class javaCls = getJavaClass(name);
       if (javaCls == null) {
         throw new ClassNotFoundException(name);
       }
-
+  
       return javaCls;
     } finally {
-      defineTime += System.currentTimeMillis() - endLoadingTime;
       Logging.log(Logging.TIMING_LOGGER, Level.INFO, "returning {0}", name);
     }
   }

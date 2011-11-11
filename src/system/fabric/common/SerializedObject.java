@@ -893,4 +893,11 @@ public final class SerializedObject implements FastSerializable, Serializable {
       throw new InternalError(e);
     }
   }
+
+  /**
+   * @return the size of this serialized object, in bytes.
+   */
+  public int size() {
+    return objectData.length;
+  }
 }

@@ -132,7 +132,6 @@ public final class Logging {
   /**
    * For detailed timing analysis.
    */
-  
   public static final Logger TIMING_LOGGER =
       Logger.getLogger("fabric.timing");
   

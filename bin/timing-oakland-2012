@@ -1,0 +1,225 @@
+#!/usr/bin/python
+####
+# Outputs evaluation statistics for our Oakland 2012 paper.
+#
+# Assumes classes are only deserialized once (implying that FClasses are never
+# evicted from cache).
+
+import fileinput, math, re, sys
+
+if len(sys.argv) != 2:
+  # Print usage info.
+  scriptName = re.match('^(?:.*/)?([^/]+)$', sys.argv[0]).group(1)
+  print('''\
+Usage: %s LOGFILE
+  Outputs evaluation statistics for our Oakland 2012 paper, reading from
+  LOGFILE.''' % scriptName)
+  sys.exit(1)
+
+class Event:
+  def __init__(self, process, thread, time, label):
+    self.process = process
+    self.thread = thread
+    self.time = time
+    self.label = label
+
+# Regexp for parsing log events.
+logLineRE = \
+  re.compile('''(?P<time>.*),\ (?P<process>.*),\ thread\ (?P<thread>\d*),\ 
+    (?P<label>.*)''', re.X)
+
+# Event handlers.
+eventHandlers = {}
+
+# Application start
+def appStartHandler(event, command):
+  global appStart, appName
+  if appStart != None: raise Exception('malformed log')
+  appStart = int(event.time)
+  appName = command
+eventHandlers\
+  [re.compile('\[(?P<command>.*)\]')] = \
+    appStartHandler
+
+# Application end
+def appEndHandler(event):
+  global appStart, appName, appTimes
+  if appStart == None: return
+  if appName != '':
+    appTimes.append((appName, int(event.time) - appStart))
+  appStart = None
+eventHandlers\
+  [re.compile('waiting for command')] = \
+    appEndHandler
+
+# Deserialization start
+def deserializationStartHandler(event, size):
+  global deserializeStart, bytesDownloaded
+  if deserializeStart != None: raise Exception('malformed log')
+  deserializeStart = int(event.time)
+  bytesDownloaded = bytesDownloaded + int(size)
+eventHandlers\
+  [re.compile('Start deserializing FClass \((?P<size>\d*) bytes\)')] = \
+    deserializationStartHandler
+
+# Deserialization done
+def deserializationDoneHandler(event):
+  global deserializeStart, deserializationTimes
+  if deserializeStart == None: raise Exception('malformed log')
+  deserializationTimes.append(int(event.time) - deserializeStart)
+  deserializeStart = None
+eventHandlers\
+  [re.compile('Done deserializing FClass')] = \
+    deserializationDoneHandler
+
+# Resolving start
+def resolvingStartHandler(event, className):
+  global classes
+  if className not in classes:
+    classes[className] = []
+  else:
+    # Make sure previous record was done.
+    data = getLastRecForClass(className)
+    if 'done' not in data: raise Exception('malformed log')
+
+  # Add a new record for the class.
+  classes[className].append(dict([('start', int(event.time))]))
+eventHandlers\
+  [re.compile('resolving (?P<className>.*)')] = \
+    resolvingStartHandler
+
+# Check cache
+def checkCacheHandler(event, className):
+  global classes
+  data = getLastRecForClass(className)
+  data['check cache'] = int(event.time)
+eventHandlers\
+  [re.compile('checking bytecode cache for (?P<className>.*)')] = \
+    checkCacheHandler
+
+# Compiling code
+def compileHandler(event, className):
+  global classes
+  data = getLastRecForClass(className)
+  data['compiling'] = int(event.time)
+eventHandlers\
+  [re.compile('compiling (?P<className>.*)')] = \
+    compileHandler
+
+# Loading code
+def loadingHandler(event, className):
+  global classes
+  data = getLastRecForClass(className)
+  data['loading'] = int(event.time)
+eventHandlers\
+  [re.compile('loading (?P<className>.*)')] = \
+    loadingHandler
+
+# Done resolving
+def doneResolvingHandler(event, className):
+  global classes
+  data = getLastRecForClass(className)
+  data['done'] = int(event.time)
+eventHandlers\
+  [re.compile('returning (?P<className>.*)')] = \
+    doneResolvingHandler
+
+# Fetch start
+def fetchStartHandler(event):
+  global fetchStart
+  if fetchStart != None: raise Exception('malformed log')
+  fetchStart = int(event.time)
+eventHandlers\
+  [re.compile('begin fetching FClass')] = \
+    fetchStartHandler
+
+# Fetch done
+def fetchDoneHandler(event):
+  global fetchStart, fetchTimes
+  if fetchStart == None: raise Exception('malformed log')
+  fetchTimes.append(int(event.time) - fetchStart)
+  fetchStart = None
+eventHandlers\
+  [re.compile('done fetching FClass')] = \
+    fetchDoneHandler
+
+def getLastRecForClass(className):
+  classTimings = classes[className]
+  return classTimings[len(classTimings)-1]
+
+appStart = None
+deserializeStart = None
+fetchStart = None
+classes = dict()
+appTimes = []
+deserializationTimes = []
+fetchTimes = []
+compileTimes = []
+loadTimes = []
+bytesDownloaded = 0
+
+# Process the log file.
+for line in fileinput.input():
+  event = Event(**logLineRE.match(line).groupdict())
+
+  for regexp, handler in eventHandlers.items():
+    m = regexp.match(event.label)
+    if m != None:
+      handler(event, **m.groupdict())
+      continue
+
+# Go through classes that were loaded and collect stats.
+for records in classes.values():
+  data = records[0]
+  if 'compiling' in data:
+    compileTimes.append(data['loading'] - data['compiling'])
+    loadTimes.append(data['done'] - data['loading'])
+
+#Output.
+def getStats(data):
+  if len(data) == 0:
+    return (-1, -1)
+
+  data.sort()
+  total = sum(data)
+  mean = int(total/len(data))
+  return (mean, total)
+
+def report(header, mean, total):
+  print('{:<13s}  {:>5d}  {:>5d}'.format(header, mean, total))
+
+print('{:<13s}  {:>5s}  {:>5s}'.format('Event', 'Mean', 'Total'))
+
+(fetchMean, fetchTotal) = getStats(fetchTimes)
+# report('Fetching', fetchMean, fetchTotal)
+
+totalMean = 0
+totalTotal = 0
+
+(deserializeMean, deserializeTotal) = getStats(deserializationTimes)
+report('Deserializing', deserializeMean, deserializeTotal)
+totalMean += deserializeMean
+totalTotal += deserializeTotal
+
+(compileMean, compileTotal) = getStats(compileTimes)
+compileMean -= fetchMean + deserializeMean
+compileTotal -= fetchTotal + deserializeTotal
+report('Compiling', compileMean, compileTotal)
+totalMean += compileMean
+totalTotal += compileTotal
+
+(loadMean, loadTotal) = getStats(loadTimes)
+report('Loading', loadMean, loadTotal)
+totalMean += loadMean
+totalTotal += loadTotal
+
+report('Total (ms)', totalMean, totalTotal)
+
+print()
+print('%d bytes of FClasses downloaded' % bytesDownloaded)
+print()
+print('List of shell commands executed, and time to execute:')
+for (cmd, time) in appTimes:
+  print('  %s' % cmd)
+  print('    {:>5d} ms'.format(time))
+  print()

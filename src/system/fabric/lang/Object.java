@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
 import fabric.common.SerializedObject;
@@ -157,6 +158,11 @@ public interface Object {
       try {
         // Check the current transaction's update map.
         Timing.FETCH.begin();
+        // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
+        if (this instanceof FClass) {
+          Logging.TIMING_LOGGER.fine("begin fetching FClass");
+        }
+        // XXX END HACK FOR OAKLAND 2012 TIMING STUFF
         TransactionManager tm = TransactionManager.getInstance();
         RemoteWorker worker = tm.getFetchWorker(this);
         if (worker != null) {
@@ -183,6 +189,11 @@ public interface Object {
         throw new RuntimeFetchException(e);
       } finally {
         Timing.FETCH.end();
+        // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
+        if (this instanceof FClass) {
+          Logging.TIMING_LOGGER.fine("done fetching FClass");
+        }
+        // XXX END HACK FOR OAKLAND 2012 TIMING STUFF
       }
 
       return result;

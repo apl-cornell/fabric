@@ -5,6 +5,7 @@ import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
@@ -14,6 +15,7 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.lang.FClass;
 import fabric.lang.Object;
 import fabric.lang.security.Label;
 
@@ -110,10 +112,26 @@ public final class ObjectCache {
       }
 
       // This entry is in serialized state. Deserialize.
-      next = serialized.deserialize(store).$cacheEntry;
-      store = null;
-      serialized = null;
-      snapNextLinks();
+      // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
+      boolean fclass = FClass.class.getName().equals(serialized.getClassName());
+      if (fclass) {
+        Logging.TIMING_LOGGER.fine("Start deserializing FClass ("
+            + serialized.size() + " bytes)");
+      }
+      try {
+        // XXX END HACK FOR OAKLAND 2012 TIMING STUFF
+        next = serialized.deserialize(store).$cacheEntry;
+        store = null;
+        serialized = null;
+        snapNextLinks();
+        // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
+      } finally {
+        if (fclass) {
+          Logging.TIMING_LOGGER.fine("Done deserializing FClass ("
+              + ((FClass) next.impl).getName() + ")");
+        }
+      }
+      // XXX END HACK FOR OAKLAND 2012 TIMING STUFF
     }
 
     /**
