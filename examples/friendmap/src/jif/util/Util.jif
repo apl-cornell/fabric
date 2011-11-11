@@ -7,27 +7,39 @@ public class Util {
 
   /**
    * Copy the contents of an array into another array with the given labels.
+   *
+   * @throws NullPointerException
+   *         if data is null
    */
   public static
-  char{*l}[]{*m}
-  copyArray {*l; *m}
+  char{*l}[]
+  // caller_pc ⊑ C(m) because the fetch on data reflects information
+  //       about the data reference and the calling context
+  // caller_pc ⊑ l because the calling context flows because external state
+  //       (the contents of the result) with label l are updated.
+  // thus caller_pc ⊑ l meet C(m) = l meet (m join {_→;_←})
+  copyArray {*l} meet {*m;_→;_←}
   (
-    final char{*n}[]{*o} data,
+    final char{*m}[] data,
     label l,
     label m,
-    label n,
-    label o,
     Store s
   )
-  :{*o}
-  throws
-    NullPointerException
+  throws (
+    NullPointerException{data}
+  )
   where
-    n <= l,
-    o <= m,
-    m <= l
+    // s ≽ l because s will store the result, labelled l
+    // TODO: s actsfor l
+    // m ⊑ l because the contents of the array flow to the result
+    m <= l,
+    // data ⊑ C(m) because the fetch on data reflects information about the reference to data
+    {data} <= {*m;_→;_←},
+    // data ⊑ {*l} because the output is affected by the reference to the input
+    {data} <= {*l}
+
   {
-    final char{*l}[]{*m} result = new char[data.length];
+    final char{*l}[] result = new char[data.length];
 
     try {
 
