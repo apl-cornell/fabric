@@ -16,166 +16,234 @@ Usage: %s LOGFILE
   LOGFILE.''' % scriptName)
   sys.exit(1)
 
-class Event:
+def peek(stack):
+  if len(stack) == 0: return None
+  return stack[len(stack) - 1]
+
+def ensure(cond):
+  if not cond: raise Exception('malformed log')
+
+class LogEvent:
   def __init__(self, process, thread, time, label):
-    self.process = process
-    self.thread = thread
+    self.thread = process + ' (' + thread + ')'
     self.time = time
     self.label = label
+
+class ClassLoad:
+  def __init__(self, name, startTime):
+    self.name = name
+    self.start = int(startTime)
+    self.checkingCache = None
+    self.compiling = None
+    self.loading = None
+
+    self.startAdjust = 0
+    self.checkingAdjust = 0
+    self.compilingAdjust = 0
+
+  def setCheckingCache(self, name, time, adjust):
+    ensure(self.name == name and self.checkingCache == None)
+    self.startAdjust = adjust
+    self.checkingCache = int(time)
+
+  def setCompiling(self, name, time, adjust):
+    ensure(self.name == name and self.checkingCache != None
+      and self.compiling == None)
+    self.checkingAdjust = adjust
+    self.compiling = int(time)
+
+  def setLoading(self, name, time, adjust):
+    ensure(self.name == name and self.checkingCache != None
+      and self.loading == None)
+    if self.compiling != None:
+      self.compilingAdjust = adjust
+    else:
+      self.checkingAdjust = adjust
+    self.loading = int(time)
+
+  def done(self, name, time, adjust):
+    global checkParentTimes, checkBytecodeCacheTimes, compileTimes, loadTimes
+    ensure(self.name == name and self.loading != None)
+    self.loadingAdjust = adjust
+
+    if self.compiling != None:
+      checkParentTimes.append(
+	self.checkingCache - self.start - self.startAdjust)
+      checkBytecodeCacheTimes.append(
+	self.compiling - self.checkingCache - self.checkingAdjust)
+      compileTimes.append(self.loading - self.compiling - self.compilingAdjust)
+      loadTimes.append(int(time) - self.loading - self.loadingAdjust)
+
+class Event:
+  def __init__(self, desc, data):
+    self.desc = desc
+    self.adjust = 0
+    self.data = data
+
+def ensureEventDesc(event, desc):
+  ensure(event != None and event.desc == desc)
+
+class State:
+  def __init__(self):
+    # Map from (process, thread) to (Stack of Events)
+    self.events = {}
+
+    self.appStart = None
+    self.appTimes = []
+
+    self.deserializationTimes = []
+
+    self.bytesDownloaded = 0
+
+  def getStack(self, logEvent):
+    if logEvent.thread not in self.events:
+      self.events[logEvent.thread] = []
+    return self.events[logEvent.thread]
+
+  def append(self, logEvent, event):
+    self.getStack(logEvent).append(event)
+
+  def peek(self, logEvent):
+    return peek(self.getStack(logEvent))
+
+  def pop(self, logEvent):
+    return self.getStack(logEvent).pop()
+
+  def adjustPrev(self, logEvent, time):
+    prev = self.peek(logEvent)
+    if prev == None: return
+    prev.adjust += time
+
+  def appStartHandler(self, logEvent, command):
+    ensure(self.peek(logEvent) == None and self.appStart == None)
+    self.appStart = int(logEvent.time)
+    self.appName = command
+
+  def appEndHandler(self, logEvent):
+    if self.appStart == None: return
+    if self.appName != '':
+      self.appTimes.append((self.appName, int(logEvent.time) - self.appStart))
+    self.appStart = None
+
+  def deserializationStartHandler(self, logEvent, size):
+    self.append(logEvent, Event('deserialize', int(logEvent.time)))
+    self.bytesDownloaded = self.bytesDownloaded + int(size)
+
+  def deserializationDoneHandler(self, logEvent):
+    event = self.pop(logEvent)
+    ensureEventDesc(event, 'deserialize')
+    time = int(logEvent.time) - event.data - event.adjust
+    self.deserializationTimes.append(time)
+
+    self.adjustPrev(logEvent, int(logEvent.time) - event.data)
+
+  def resolvingStartHandler(self, logEvent, className):
+    self.append(logEvent,
+      Event('class load', ClassLoad(className, logEvent.time)))
+
+  def checkCacheHandler(self, logEvent, className):
+    event = self.peek(logEvent)
+    ensureEventDesc(event, 'class load')
+    event.data.setCheckingCache(className, logEvent.time, event.adjust)
+    event.adjust = 0
+
+  def compileHandler(self, logEvent, className):
+    event = self.peek(logEvent)
+    ensureEventDesc(event, 'class load')
+    event.data.setCompiling(className, logEvent.time, event.adjust)
+    event.adjust = 0
+
+  def loadingHandler(self, logEvent, className):
+    event = self.peek(logEvent)
+    ensureEventDesc(event, 'class load')
+    event.data.setLoading(className, logEvent.time, event.adjust)
+    event.adjust = 0
+
+  def doneResolvingHandler(self, logEvent, className):
+    event = self.pop(logEvent)
+    ensureEventDesc(event, 'class load')
+    ensure(event.data.name == className)
+    event.data.done(className, logEvent.time, event.adjust)
+
+  def fetchStartHandler(self, logEvent):
+    self.append(logEvent, Event('fetch', int(logEvent.time)))
+
+  def fetchDoneHandler(self, logEvent):
+    global fetchTimes
+    event = self.pop(logEvent)
+    ensureEventDesc(event, 'fetch')
+    fetchTimes.append(int(logEvent.time) - event.data - event.adjust)
 
 # Regexp for parsing log events.
 logLineRE = \
   re.compile('''(?P<time>.*),\ (?P<process>.*),\ thread\ (?P<thread>\d*),\ 
     (?P<label>.*)''', re.X)
 
-# Event handlers.
-eventHandlers = {}
+# Global state.
+state = State()
 
-# Application start
-def appStartHandler(event, command):
-  global appStart, appName
-  if appStart != None: raise Exception('malformed log')
-  appStart = int(event.time)
-  appName = command
-eventHandlers\
-  [re.compile('\[(?P<command>.*)\]')] = \
-    appStartHandler
+logEventHandlers = {
+  # Application start
+  re.compile('\[(?P<command>.*)\]'):
+    state.appStartHandler,
 
-# Application end
-def appEndHandler(event):
-  global appStart, appName, appTimes
-  if appStart == None: return
-  if appName != '':
-    appTimes.append((appName, int(event.time) - appStart))
-  appStart = None
-eventHandlers\
-  [re.compile('waiting for command')] = \
-    appEndHandler
+  # Application end
+  re.compile('waiting for command'):
+    state.appEndHandler,
 
-# Deserialization start
-def deserializationStartHandler(event, size):
-  global deserializeStart, bytesDownloaded
-  if deserializeStart != None: raise Exception('malformed log')
-  deserializeStart = int(event.time)
-  bytesDownloaded = bytesDownloaded + int(size)
-eventHandlers\
-  [re.compile('Start deserializing FClass \((?P<size>\d*) bytes\)')] = \
-    deserializationStartHandler
+  # Deserialization start
+  re.compile('Start deserializing FClass \((?P<size>\d*) bytes\)'):
+    state.deserializationStartHandler,
 
-# Deserialization done
-def deserializationDoneHandler(event):
-  global deserializeStart, deserializationTimes
-  if deserializeStart == None: raise Exception('malformed log')
-  deserializationTimes.append(int(event.time) - deserializeStart)
-  deserializeStart = None
-eventHandlers\
-  [re.compile('Done deserializing FClass')] = \
-    deserializationDoneHandler
+  # Deserialization done
+  re.compile('Done deserializing FClass'):
+    state.deserializationDoneHandler,
 
-# Resolving start
-def resolvingStartHandler(event, className):
-  global classes
-  if className not in classes:
-    classes[className] = []
-  else:
-    # Make sure previous record was done.
-    data = getLastRecForClass(className)
-    if 'done' not in data: raise Exception('malformed log')
+  # Resolving start
+  re.compile('resolving (?P<className>.*)'):
+    state.resolvingStartHandler,
 
-  # Add a new record for the class.
-  classes[className].append(dict([('start', int(event.time))]))
-eventHandlers\
-  [re.compile('resolving (?P<className>.*)')] = \
-    resolvingStartHandler
+  # Check cache
+  re.compile('checking bytecode cache for (?P<className>.*)'):
+    state.checkCacheHandler,
 
-# Check cache
-def checkCacheHandler(event, className):
-  global classes
-  data = getLastRecForClass(className)
-  data['check cache'] = int(event.time)
-eventHandlers\
-  [re.compile('checking bytecode cache for (?P<className>.*)')] = \
-    checkCacheHandler
+  # Compiling code
+  re.compile('compiling (?P<className>.*)'):
+    state.compileHandler,
 
-# Compiling code
-def compileHandler(event, className):
-  global classes
-  data = getLastRecForClass(className)
-  data['compiling'] = int(event.time)
-eventHandlers\
-  [re.compile('compiling (?P<className>.*)')] = \
-    compileHandler
+  # Loading code
+  re.compile('loading (?P<className>.*)'):
+    state.loadingHandler,
 
-# Loading code
-def loadingHandler(event, className):
-  global classes
-  data = getLastRecForClass(className)
-  data['loading'] = int(event.time)
-eventHandlers\
-  [re.compile('loading (?P<className>.*)')] = \
-    loadingHandler
+  # Done resolving
+  re.compile('returning (?P<className>.*)'):
+    state.doneResolvingHandler,
 
-# Done resolving
-def doneResolvingHandler(event, className):
-  global classes
-  data = getLastRecForClass(className)
-  data['done'] = int(event.time)
-eventHandlers\
-  [re.compile('returning (?P<className>.*)')] = \
-    doneResolvingHandler
+  # Fetch start
+  re.compile('begin fetching FClass'):
+    state.fetchStartHandler,
 
-# Fetch start
-def fetchStartHandler(event):
-  global fetchStart
-  if fetchStart != None: raise Exception('malformed log')
-  fetchStart = int(event.time)
-eventHandlers\
-  [re.compile('begin fetching FClass')] = \
-    fetchStartHandler
+  # Fetch done
+  re.compile('done fetching FClass'):
+    state.fetchDoneHandler
+}
 
-# Fetch done
-def fetchDoneHandler(event):
-  global fetchStart, fetchTimes
-  if fetchStart == None: raise Exception('malformed log')
-  fetchTimes.append(int(event.time) - fetchStart)
-  fetchStart = None
-eventHandlers\
-  [re.compile('done fetching FClass')] = \
-    fetchDoneHandler
-
-def getLastRecForClass(className):
-  classTimings = classes[className]
-  return classTimings[len(classTimings)-1]
-
-appStart = None
-deserializeStart = None
-fetchStart = None
-classes = dict()
-appTimes = []
-deserializationTimes = []
 fetchTimes = []
+checkParentTimes = []
+checkBytecodeCacheTimes = []
 compileTimes = []
 loadTimes = []
-bytesDownloaded = 0
 
 # Process the log file.
 for line in fileinput.input():
-  event = Event(**logLineRE.match(line).groupdict())
+  logEvent = LogEvent(**logLineRE.match(line).groupdict())
 
-  for regexp, handler in eventHandlers.items():
-    m = regexp.match(event.label)
+  for regexp, handler in logEventHandlers.items():
+    m = regexp.match(logEvent.label)
     if m != None:
-      handler(event, **m.groupdict())
-      continue
+      handler(logEvent, **m.groupdict())
 
-# Go through classes that were loaded and collect stats.
-for records in classes.values():
-  data = records[0]
-  if 'compiling' in data:
-    compileTimes.append(data['loading'] - data['compiling'])
-    loadTimes.append(data['done'] - data['loading'])
-
-#Output.
+# Output.
 def getStats(data):
   if len(data) == 0:
     return (-1, -1)
@@ -185,25 +253,42 @@ def getStats(data):
   mean = int(total/len(data))
   return (mean, total)
 
+reportMeans = False
+
 def report(header, mean, total):
-  print('{:<13s}  {:>5d}  {:>5d}'.format(header, mean, total))
+  if reportMeans:
+    print('  {:.<25s}  {:>5d}  {:>5d}'.format(header, mean, total))
+  else:
+    print('  {:.<25s}  {:>5d}'.format(header, total))
 
-print('{:<13s}  {:>5s}  {:>5s}'.format('Event', 'Mean', 'Total'))
+print('Times for class loads that require compilation')
 
-(fetchMean, fetchTotal) = getStats(fetchTimes)
-# report('Fetching', fetchMean, fetchTotal)
+if reportMeans:
+  print('  {:<25s}  {:>5s}  {:>5s}'.format('Event', 'Mean', 'Total'))
+  print('  ---------------------------------------')
+else:
+  print('  {:<25s}  {:>5s} (ms)'.format('Event', 'Time'))
+  print('  -------------------------------------')
 
 totalMean = 0
 totalTotal = 0
 
-(deserializeMean, deserializeTotal) = getStats(deserializationTimes)
+(checkParentMean, checkParentTotal) = getStats(checkParentTimes)
+report('Checking parent loader', checkParentMean, checkParentTotal)
+totalMean += checkParentMean
+totalTotal += checkParentTotal
+
+(checkCacheMean, checkCacheTotal) = getStats(checkBytecodeCacheTimes)
+report('Checking bytecode cache', checkCacheMean, checkCacheTotal)
+totalMean += checkCacheMean
+totalTotal += checkCacheTotal
+
+(deserializeMean, deserializeTotal) = getStats(state.deserializationTimes)
 report('Deserializing', deserializeMean, deserializeTotal)
 totalMean += deserializeMean
 totalTotal += deserializeTotal
 
 (compileMean, compileTotal) = getStats(compileTimes)
-compileMean -= fetchMean + deserializeMean
-compileTotal -= fetchTotal + deserializeTotal
 report('Compiling', compileMean, compileTotal)
 totalMean += compileMean
 totalTotal += compileTotal
@@ -216,10 +301,10 @@ totalTotal += loadTotal
 report('Total (ms)', totalMean, totalTotal)
 
 print()
-print('%d bytes of FClasses downloaded' % bytesDownloaded)
+print('%d bytes of FClasses downloaded' % state.bytesDownloaded)
 print()
 print('List of shell commands executed, and time to execute:')
-for (cmd, time) in appTimes:
+for (cmd, time) in state.appTimes:
   print('  %s' % cmd)
   print('    {:>5d} ms'.format(time))
   print()
