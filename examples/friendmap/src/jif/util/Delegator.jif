@@ -7,7 +7,7 @@ public class Delegator implements Principal {
   protected final String    {this}  name;
   protected final principal {this←} owner;
 
-  protected
+  public
   Delegator {this}
   (
     String    {this} name,
