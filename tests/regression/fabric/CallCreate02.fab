@@ -1,0 +1,10 @@
+
+public class CallCreate02 {
+    public static void bar{*l}(label{*l} l) {
+        FabricWorker local = FabricWorker.getWorker();
+        final RemoteWorker w = local.getWorker("alice");
+        final Store s = local.getStore("bob");      
+        CreateUpdate02 cu2 = new CreateUpdate02();
+        cu2.foo@w(l);
+    }
+}
