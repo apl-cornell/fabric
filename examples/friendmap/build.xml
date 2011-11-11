@@ -47,7 +47,9 @@
   </target>
 
   <target name="build-jif-mapserv" depends="build-jif-util">
-    <jifc srcdir="${home}/src/jif" includes="mapserv/*.jif" />
+    <jifc srcdir="${home}/src/jif" includes="mapserv/*.jif">
+      <arg value="-rdebug"/>
+    </jifc>
   </target>
 
   <target name="build-jif-friendmap" depends="build-jif-snapp, build-jif-mapserv">

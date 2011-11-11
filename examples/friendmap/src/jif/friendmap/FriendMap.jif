@@ -51,6 +51,8 @@ public class FriendMap extends Delegator {
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
+  /*
+     TODO
   public
   void
   viewMap {user→}
@@ -69,6 +71,7 @@ public class FriendMap extends Delegator {
   {
     printMap(user, new label {user→});
   }
+  */
 
   /**
    * prints a map of the user's friends, visible to the user's friends
@@ -78,6 +81,8 @@ public class FriendMap extends Delegator {
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
+  /*
+     TODO
   public
   void
   postMap {*user.friendLabel}
@@ -96,6 +101,7 @@ public class FriendMap extends Delegator {
   {
     printMap(user, user.friendLabel);
   }
+  */
 
 
   /**
