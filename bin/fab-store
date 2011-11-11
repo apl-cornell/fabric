@@ -16,28 +16,28 @@ while true; do
     -v) verbose="1"; shift;;
     --jvm-cp) jvmcp=$2; shift; shift;;    
     --code-cache)
-        code_cache=$2
-        args="${args} --code-cache '$2'"
-        shift 2
-        ;;
+      code_cache=$2
+      args="${args} --code-cache '$2'"
+      shift 2
+      ;;
     --name)
-        cache_name="$2_cache"
-        args="${args} --name '$2'"
-        shift 2
-        ;;
+      cache_name="$2_cache"
+      args="${args} --name '$2'"
+      shift 2
+      ;;
     --app-home)
       app_home=$2
       shift 2
       ;;
     -j)
-            shift
-            vmargs="${vmargs} '$1'"
-            shift
-            ;;
+      shift
+      vmargs="${vmargs} '$1'"
+      shift
+      ;;
     --debug)
-            shift
-            vmargs="${vmargs} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3370"
-            ;;
+      shift
+      vmargs="${vmargs} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3370"
+      ;;
     *) args="${args} '$1'"; shift;;
   esac
 done

@@ -20,23 +20,23 @@ while true; do
       ;;
     -j) vmargs="${vmargs} '$2'"; shift 2;;
     --code-cache)
-        code_cache=$2
-        args="${args} --code-cache '$2'"
-        shift 2
-        ;;
+      code_cache=$2
+      args="${args} --code-cache '$2'"
+      shift 2
+      ;;
     --name)
-        cache_name="$2_cache"
-        args="${args} --name '$2'"
-        shift 2
-        ;;
+      cache_name="$2_cache"
+      args="${args} --name '$2'"
+      shift 2
+      ;;
     --debug)
-        vmargs="${vmargs} ${debug_opts},suspend=n"
-        shift 1
-        ;;
+      vmargs="${vmargs} ${debug_opts},suspend=n"
+      shift 1
+      ;;
     --suspend)
-        vmargs="${vmargs} ${debug_opts},suspend=y"
-        shift 1
-        ;;
+      vmargs="${vmargs} ${debug_opts},suspend=y"
+      shift 1
+      ;;
     *) args="${args} '$1'"; shift;;
   esac
 done
