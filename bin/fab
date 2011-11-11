@@ -25,6 +25,7 @@ while true; do
         shift 2
         ;;
     --name)
+        cache_name=".$2_cache"
         args="${args} --name '$2'"
         shift 2
         ;;
