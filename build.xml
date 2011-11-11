@@ -299,6 +299,8 @@
            skipemptyfilesets="true"
            vmlauncher="false">
       <arg value="${filc}" />
+      <arg value="-jvm-cp" />
+      <arg value="${bootstrap.classes}" />
       <arg value="-nooutput" />
       <arg value="-bootclasspath" />
       <arg value="${bootstrap.classes}" />
@@ -356,22 +358,15 @@
         relative="false"
         skipemptyfilesets="true"
         vmlauncher="false">
-      <!--<arg value="${fabc}" />-->
       <arg value="${filc}" />
       <arg value="-bootstrap-skel" /> 
       <arg value="-noserial" /> 
       <arg value="-c" />
       <arg value="-d" /> <arg value="${bootstrap.src}"/>
       <arg value="-debugpositions" />
-      <arg value="-cp" />
-      <arg value="${runtime.classes}" />
       <arg value="-sourcepath"/>
       <arg value="${runtime.src}"/>
       <srcfile />
-      <!--
-      <fileset dir="${runtime.src}"
-          includes="**/*.fab"
-          excludes="**/*.fil" />
       <globmapper from="*.fab" to="*.*" />-->
       <fileset dir="${runtime.src}"
           includes="**/*.fil"
@@ -526,7 +521,7 @@
         skipemptyfilesets="true"
         vmlauncher="false">
       <arg value="${filc}" />
-      <arg value="-cp" />
+      <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg line="${debug.flag}" />
       <arg value="-bootclasspath" />
@@ -555,7 +550,7 @@
       <arg value="${filc}" />
       <arg line="${debug.flag}" />
       <arg value="-O0" />
-      <arg value="-cp" />
+      <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg value="-j" />
       <arg value="-Xms256M" />

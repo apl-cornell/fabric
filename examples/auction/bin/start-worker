@@ -8,5 +8,4 @@ CP="${APP_HOME}/classes"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab -classpath "${CP}" "$@"
-
+fab --jvm-cp ${CP} --app-home ${FABRIC_HOME} $@
