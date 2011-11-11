@@ -7,11 +7,23 @@ source "$(dirname $0)/defs"
 # default app home is Fabric root
 app_home="$(dirname $0)/.."
 
+# default cache name is hostname
+cache_name=".${HOSTNAME}_cache"
+
 while true; do
   case "$1" in
     "") break;;
     -v) verbose="1"; shift;;
     --jvm-cp) jvmcp=$2; shift; shift;;    
+    --code-cache)
+        code_cache=$2
+        args="${args} --code-cache '$2'"
+        shift 2
+        ;;
+    --name)
+        args="${args} --name '$2'"
+        shift 2
+        ;;
     --app-home)
       app_home=$2
       shift 2
@@ -31,8 +43,13 @@ done
 
 # Export location of config, etc, and var 
 export FABRIC_HOME="${app_home}"
+if [ -z "${code_cache}" ] 
+ then
+ 	code_cache=${FABRIC_HOME}/var/${cache_name}
+ fi
+ mkdir -p ${code_cache}
 
-classpath="${FABRIC_STORE_CP}:${jvmcp}:${classpath}"
+classpath="${FABRIC_STORE_CP}:${jvmcp}:${classpath}:${code_cache}"
 
 sigcp="${TOP}/sig-classes/fabric:${TOP}/lib/fabric-sig.jar"
 filsigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar"

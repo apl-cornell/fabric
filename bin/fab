@@ -19,11 +19,11 @@ while true; do
       shift 2
       ;;
     -j) vmargs="${vmargs} '$2'"; shift 2;;
-#    --code-cache)
-#        code_cache=$2
-#        args="${args} --code-cache '$2'"
-#        shift 2
-#        ;;
+    --code-cache)
+        code_cache=$2
+        args="${args} --code-cache '$2'"
+        shift 2
+        ;;
     --name)
         args="${args} --name '$2'"
         shift 2
@@ -42,14 +42,13 @@ done
 
 # Export location of config, etc, and var 
 export FABRIC_HOME="${app_home}"
-# if [ -z "${code_cache}" ] 
-# then
-# 	code_cache=${FABRIC_HOME}/var/${cache_name}
-# fi
-# mkdir -p ${code_cache}
+if [ -z "${code_cache}" ] 
+ then
+ 	code_cache=${FABRIC_HOME}/var/${cache_name}
+ fi
+ mkdir -p ${code_cache}
 
-classpath="${FABRIC_WORKER_CP}:${jvmcp}:${classpath}"
-#:${code_cache}"
+classpath="${FABRIC_WORKER_CP}:${jvmcp}:${classpath}:${code_cache}"
 
 sigcp="${TOP}/sig-classes/fabric:${TOP}/lib/fabric-sig.jar"
 filsigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar"
