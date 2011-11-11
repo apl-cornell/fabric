@@ -13,7 +13,7 @@ package util;
  * ArrayIndexOutOfBoundsException if the array is full.
  */
 public class Group[principal owner]
-  implements Principal
+  extends Principal
 {
   private final String      {this}   name;
 
@@ -33,6 +33,7 @@ public class Group[principal owner]
     this.name = name;
     this.size = 0;
     this.members = new Principal[SIZE];
+    super();
   }
 
 
@@ -52,6 +53,7 @@ public class Group[principal owner]
     this.name    = name;
     this.size    = 0;
     this.members = new Principal[size];
+    super();
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -185,12 +187,10 @@ public class Group[principal owner]
   public
   boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
   isAuthorized {this←}
-              (Object           authPrf,
+              (java.lang.Object authPrf,
                Closure[this,lb] closure,
                label            lb,
                boolean          executeNow)
-  where authority(this),
-        {authPrf;closure;lb;executeNow} <= lb
   {
     return false;
   }
@@ -202,8 +202,8 @@ public class Group[principal owner]
   public
   ActsForProof{this; p; this←; p←}
   findProofUpto {this←}
-               (Principal p,
-                Object searchState)
+               (Store c, Principal p,
+                java.lang.Object searchState)
   {
     if (owner actsfor this) {
       try
@@ -244,8 +244,8 @@ public class Group[principal owner]
   public
   ActsForProof{this; p; p←; this←}
   findProofDownto {this←}
-                 (Principal p,
-                  Object searchState)
+                 (Store c, Principal p,
+                  java.lang.Object searchState)
   {
     // who knows who we act for?
     return null;

@@ -21,6 +21,7 @@ public class Delegator extends Principal {
 
     this.owner = endorse(owner, {owner←} to {this←});
     this.name  = name;
+    super();
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -47,8 +48,6 @@ public class Delegator extends Principal {
                Closure[this,lb] closure,
                label            lb,
                boolean          executeNow)
-  where authority(this),
-        {authPrf;closure;lb;executeNow} <= lb
   {
     // TODO
     return false;
