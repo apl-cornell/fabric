@@ -30,31 +30,43 @@
 
   <!--
   ****************************************************************************
-    Compilation targets.
+    Jif compilation targets.
   ****************************************************************************
   -->
 
-  <target name="build-jif"
-          description="Builds the Jif version of friendmap">
-    <echo message="building principals" />
+  <target name="build-jif-principals">
     <jifc srcdir="${home}/src/jif" includes="jif/principals/*.jif"/>
-    <echo message="building example" />
-    <jifc srcdir="${home}/src/jif" excludes="jif/principals/*.jif" includes="**/*.jif" />
+  </target>
+    
+  <target name="build-jif-util">
+    <jifc srcdir="${home}/src/jif" includes="util/*.jif" />
   </target>
 
-  <target name="build-local" depends="build-trusted" description="Builds the fabric version of friendmap">
-    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase" />
-    <fabc-local srcdir="${home}/src/fabric/mapserv_1.0_codebase" />
-    <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" />
+  <target name="build-jif-snapp" depends="build-jif-util">
+    <jifc srcdir="${home}/src/jif" includes="snapp/*.jif" />
   </target>
 
-  <target name="build-all" depends="build-jif"/>
-  <target name="all"       depends="build-all"/>
+  <target name="build-jif-mapserv" depends="build-jif-util">
+    <jifc srcdir="${home}/src/jif" includes="mapserv/*.jif" />
+  </target>
+
+  <target name="build-jif-friendmap" depends="build-jif-snapp, build-jif-mapserv">
+    <jifc srcdir="${home}/src/jif" includes="friendmap/*.jif" />
+  </target>
+    
+  <target name="build-jif"
+          description="Builds the Jif version of friendmap"
+          depends="build-jif-friendmap,build-jif-principals">
+    <jifc srcdir="${home}/src/jif" includes="Main.jif" />
+  </target>
+
+
+
 
   <!--
-  ******************************************************************************
-    Auxiliary builds
-  ******************************************************************************
+  ****************************************************************************
+    Fabric local compilation targets
+  ****************************************************************************
   -->
 
   <target name="build-trusted">
@@ -63,18 +75,27 @@
     </fabc-local>
   </target>
 
+  <target name="build-local" depends="build-trusted" description="Builds the fabric version of friendmap">
+    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase" />
+    <fabc-local srcdir="${home}/src/fabric/mapserv_1.0_codebase" />
+    <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" />
+  </target>
+
+
+
+
+  <target name="build-all" depends="build-jif"/>
+  <target name="all"       depends="build-all"/>
+
 
   <!--
   ******************************************************************************
-    Subroutines
+    Macros
   ******************************************************************************
   -->
 
-  <!--
-  compile classes locally (without pushing to fabric).
-
-  Parameters:
-    srcdir - the directory containing the source
+  <!-- fabc-local
+       compile fabric code locally
   -->
   <macrodef name="fabc-local">
     <attribute name="srcdir" />
@@ -106,10 +127,15 @@
     </sequential>
   </macrodef>
 
+  <!-- jifc
+       compile jif code
+  -->
+
   <macrodef name="jifc">
     <attribute name="srcdir" />
     <attribute name="includes" default="**/*.jif" />
     <attribute name="excludes" default="" />
+    <element name="extra-args" implicit="true" optional="yes"/>
     <sequential>
       <mkdir dir="${home}/classes/jif" />
       <apply executable="bash"
@@ -125,6 +151,7 @@
         <arg value="-d"          /> <arg value="${home}/classes/jif"/>
         <arg value="-sourcepath" /> <arg value="@{srcdir}"/>
         <arg value="-classpath"  /> <arg value="${home}/classes/jif"/>
+        <extra-args />
         <srcfile />
 
         <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
