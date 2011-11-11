@@ -35,7 +35,7 @@
   -->
 
   <target name="build-jif-static-principals">
-    <mkdir dir="${home}/classes/jif" />
+    <mkdir dir="${home}/classes/principals" />
     <apply executable="bash"
            parallel="true"
            failonerror="true"
@@ -57,7 +57,7 @@
   <target name="build-jif"
           description="Builds the Jif version of friendmap"
           depends="build-jif-static-principals">
-    <mkdir dir="${home}/classes" />
+    <mkdir dir="${home}/classes/jif" />
     <apply executable="bash"
            parallel="true"
            failonerror="true"
@@ -78,33 +78,63 @@
     </apply>
   </target>
 
-
-  <target name="build-fabric" description="Builds the fabric version of friendmap">
-    <mkdir dir="${home}/classes" />
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${home}"
-           dest="${home}/classes/fabric"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabc}"/>
-      <arg value="-g"/>
-      <arg value="-e"/>
-      <arg value="-d"          /> <arg value="${home}/classes"/>
-      <arg value="-sourcepath" /> <arg value="${home}/src/fabric" />
-      <arg value="-cp"         /> <arg value="${home}/classes" />
-      <arg value="-e"/>
-      <srcfile />
-
-      <fileset dir="${home}/src/fabric" includes="**/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
+  <target name="build-local" depends="build-trusted" description="Builds the fabric version of friendmap">
+    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase" />
+    <fabc-local srcdir="${home}/src/fabric/mapserv_1.0_codebase" />
+    <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" />
   </target>
 
   <target name="build-all" depends="build-jif"/>
   <target name="all"       depends="build-all"/>
+
+  <!--
+  ******************************************************************************
+    Auxiliary builds
+  ******************************************************************************
+  -->
+
+  <target name="build-trusted">
+    <fabc-local srcdir="${home}/src/fabric/trusted" />
+  </target>
+
+
+  <!--
+  ******************************************************************************
+    Subroutines
+  ******************************************************************************
+  -->
+
+  <!--
+  compile classes locally (without pushing to fabric).
+
+  Parameters:
+    srcdir - the directory containing the source
+  -->
+  <macrodef name="fabc-local">
+    <attribute name="srcdir" />
+    <sequential>
+      <mkdir dir="${home}/classes/fabric" />
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dir="@{srcdir}"
+             dest="${home}/classes/fabric"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${fabc}" />
+        <arg value="-g" />
+        <arg value="-e" />
+        <arg value="-d" />         <arg value="${home}/classes/fabric" />
+        <arg value="-sourcepath"/> <arg value="@{srcdir}" />
+        <arg value="-classpath" /> <arg value="${home}/classes/fabric" />
+        <srcfile />
+
+        <fileset dir="@{srcdir}" includes="**/*.fab" />
+        <globmapper from="*.fab" to="*.class" />
+      </apply>
+    </sequential>
+  </macrodef>
 
 </project>
 
