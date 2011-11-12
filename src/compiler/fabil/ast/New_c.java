@@ -83,7 +83,8 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     if (qualifier != this.qualifier || tn != this.tn
         || !CollectionUtil.equals(arguments, this.arguments)
         || body != this.body || location != this.location
-        || label != this.label) {
+        || label != this.label
+        || accessLabel != this.accessLabel) {
       New_c n = (New_c) copy();
       n.tn = tn;
       n.qualifier = qualifier;
