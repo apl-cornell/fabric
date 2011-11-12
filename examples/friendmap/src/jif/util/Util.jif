@@ -30,7 +30,8 @@ public class Util {
   )
   where
     // s ≽ l because s will store the result, labelled l
-    // TODO: s actsfor l
+    {s←} <= l,
+    l <= {s→},
     // m ⊑ l because the contents of the array flow to the result
     m <= l,
     // data ⊑ C(m) because the fetch on data reflects information about the reference to data
