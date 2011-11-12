@@ -40,6 +40,7 @@ class ClassLoad:
     self.startAdjust = 0
     self.checkingAdjust = 0
     self.compilingAdjust = 0
+    self.loadingAdjust = 0
 
   def setCheckingCache(self, name, time, adjust):
     ensure(self.name == name and self.checkingCache == None)
@@ -62,9 +63,14 @@ class ClassLoad:
     self.loading = int(time)
 
   def done(self, name, time, adjust):
-    global checkParentTimes, checkBytecodeCacheTimes, compileTimes, loadTimes
-    ensure(self.name == name and self.loading != None)
-    self.loadingAdjust = adjust
+    global checkParentTimes, checkBytecodeCacheTimes, compileTimes, loadTimes, \
+      loadTimesAllClasses
+    ensure(self.name == name)
+    if self.loading != None:
+      self.loadingAdjust = adjust
+    else:
+      ensure(self.checkingCache == None)
+      self.startAdjust = adjust
 
     if self.compiling != None:
       checkParentTimes.append(
@@ -73,6 +79,10 @@ class ClassLoad:
 	self.compiling - self.checkingCache - self.checkingAdjust)
       compileTimes.append(self.loading - self.compiling - self.compilingAdjust)
       loadTimes.append(int(time) - self.loading - self.loadingAdjust)
+
+    loadTimesAllClasses.append(
+      int(time) - self.start - self.startAdjust - self.checkingAdjust
+	- self.compilingAdjust - self.loadingAdjust)
 
 class Event:
   def __init__(self, desc, data):
@@ -233,6 +243,7 @@ checkParentTimes = []
 checkBytecodeCacheTimes = []
 compileTimes = []
 loadTimes = []
+loadTimesAllClasses = []
 
 # Process the log file.
 for line in fileinput.input():
@@ -246,7 +257,7 @@ for line in fileinput.input():
 # Output.
 def getStats(data):
   if len(data) == 0:
-    return (-1, -1)
+    return None
 
   data.sort()
   total = sum(data)
@@ -255,11 +266,16 @@ def getStats(data):
 
 reportMeans = False
 
-def report(header, mean, total):
-  if reportMeans:
-    print('  {:.<25s}  {:>5d}  {:>5d}'.format(header, mean, total))
+def report(header, stats):
+  if stats == None:
+    (mean, total) = 'n/a', 'n/a'
   else:
-    print('  {:.<25s}{:>5d}'.format(header, total))
+    (mean, total) = stats
+
+  if reportMeans:
+    print('  {:.<25s}  {:>5s}  {:>5s}'.format(header, str(mean), str(total)))
+  else:
+    print('  {:.<25s}{:>5s}'.format(str(header), str(total)))
 
 print('Times for class loads that require compilation')
 
@@ -270,35 +286,43 @@ else:
   print('  {:<25s}{:>5s} (ms)'.format('Event', 'Time'))
   print('  -----------------------------------')
 
-totalMean = 0
-totalTotal = 0
+total = (0, 0)
 
-(checkParentMean, checkParentTotal) = getStats(checkParentTimes)
-report('Checking parent loader', checkParentMean, checkParentTotal)
-totalMean += checkParentMean
-totalTotal += checkParentTotal
+def addTotal(stats):
+  global total
+  if stats != None:
+    total = (total[0] + stats[0], total[1] + stats[1])
 
-(checkCacheMean, checkCacheTotal) = getStats(checkBytecodeCacheTimes)
-report('Checking bytecode cache', checkCacheMean, checkCacheTotal)
-totalMean += checkCacheMean
-totalTotal += checkCacheTotal
+checkParent = getStats(checkParentTimes)
+report('Checking parent loader', checkParent)
+addTotal(checkParent)
 
-(deserializeMean, deserializeTotal) = getStats(state.deserializationTimes)
-report('Deserializing', deserializeMean, deserializeTotal)
-totalMean += deserializeMean
-totalTotal += deserializeTotal
+checkCache = getStats(checkBytecodeCacheTimes)
+report('Checking bytecode cache', checkCache)
+addTotal(checkCache)
 
-(compileMean, compileTotal) = getStats(compileTimes)
-report('Compiling', compileMean, compileTotal)
-totalMean += compileMean
-totalTotal += compileTotal
+deserialize = getStats(state.deserializationTimes)
+report('Deserializing FClasses', deserialize)
+addTotal(deserialize)
 
-(loadMean, loadTotal) = getStats(loadTimes)
-report('Loading', loadMean, loadTotal)
-totalMean += loadMean
-totalTotal += loadTotal
+compileTime = getStats(compileTimes)
+report('Compiling', compileTime)
+addTotal(compileTime)
 
-report('Total (ms)', totalMean, totalTotal)
+load = getStats(loadTimes)
+report('Loading', load)
+addTotal(load)
+
+report('Total (ms)', total)
+
+print()
+loadAll = getStats(loadTimesAllClasses)
+if loadAll == None: loadAll = ('n/a', 'n/a')
+else: loadAll = (str(loadAll[0]), str(loadAll[1]))
+if reportMeans:
+  print(' Mean classloading time for all classes (ms): {:>5s}' \
+    .format(loadAll[0]))
+print('Total classloading time for all classes (ms): {:>5s}'.format(loadAll[1]))
 
 print()
 print('%d bytes of FClasses downloaded' % state.bytesDownloaded)
