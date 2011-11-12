@@ -1,10 +1,10 @@
 package fabric.store;
 
-import java.io.File;
 import java.io.PrintStream;
 import java.util.Set;
 
 import fabric.common.Options.Flag.Kind;
+import fabric.common.Resources;
 import fabric.common.exceptions.UsageError;
 
 public class Options extends fabric.common.Options {
@@ -87,14 +87,17 @@ public class Options extends fabric.common.Options {
     this.threadPool = DEFAULT_THREAD_POOL_SIZE;
     this.timeout = DEFAULT_TIMEOUT;
     this.cmd = null;
+    // Default codeCache is set in validateOptions because it depends on
+    // storeName.
   }
 
   @Override
   public void validateOptions() throws UsageError {
-    if (null == storeName) throw new UsageError("No store specified");
-    if (null == this.codeCache)
-      this.codeCache =
-        System.getProperty("user.dir") + File.separator + "." + storeName + "_cache";
+    if (null == storeName) throw new UsageError("No store name specified");
+    
+    // Default codeCache is set here because it depends on storeName.
+    if (null == codeCache)
+      this.codeCache = Resources.relpathRewrite("var", storeName + "_cache");
   }
 
   @Override

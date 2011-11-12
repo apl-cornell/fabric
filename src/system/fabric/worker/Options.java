@@ -86,11 +86,14 @@ public class Options extends fabric.common.Options {
     this.name = System.getenv("HOSTNAME");
     this.cmd = null;
     this.keepOpen = false;
+    // Default codeCache is set in validateOptions because it depends on name.
   }
 
   @Override
   public void validateOptions() throws UsageError {
     if (null == this.name) throw new UsageError("No worker name specified");
+    
+    // Default codeCache is set here because it depends on storeName.
     if (null == this.codeCache)
       this.codeCache = Resources.relpathRewrite("var", name + "_cache");
   }
