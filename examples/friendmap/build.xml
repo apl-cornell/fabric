@@ -216,8 +216,7 @@
              destdir="${home}/classes/jif-sig-impl"
              includes="@{includes}"
              excludes="@{excludes}"
-             classpath="${jif.home}/rt-classes"
-             includeantruntime="false">
+             classpath="${jif.home}/rt-classes">
         <extra-args />
       </javac>
     </sequential>
