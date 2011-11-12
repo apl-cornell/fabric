@@ -318,7 +318,8 @@ public abstract class ClassRef implements FastSerializable {
     private PlatformClassRef(byte[] data, int pos) {
       super(ClassRefType.PLATFORM);
       try {
-        this.clazz = Class.forName(className(data, pos));
+        this.clazz =
+            Worker.getWorker().getClassLoader().loadClass(className(data, pos));
       } catch (ClassNotFoundException e) {
         throw new InternalError(e);
       }
@@ -521,18 +522,9 @@ public abstract class ClassRef implements FastSerializable {
     @Override
     public final Class<? extends fabric.lang.Object> toClass() {
       try {
-        return (Class<? extends fabric.lang.Object>) Class
-            .forName(javaClassName());
+        return (Class<? extends Object>) Worker.getWorker().getClassLoader()
+            .loadClass(javaClassName());
       } catch (ClassNotFoundException e) {
-        // Class not loaded yet.
-        if (Worker.isInitialized()) {
-          try {
-            return Worker.getWorker().getClassLoader()
-                .findClass(javaClassName());
-          } catch (ClassNotFoundException e1) {
-            throw new InternalError(e1);
-          }
-        }
         throw new InternalError(e);
       }
     }

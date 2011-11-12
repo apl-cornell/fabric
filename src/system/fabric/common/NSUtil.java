@@ -96,7 +96,7 @@ public final class NSUtil {
 
   /**
    * Returns the Java name of a Fabric or FabIL class suitable for passing to
-   * ClassLoader.findClass(). If className is the absolute name of a published
+   * ClassLoader.loadClass(). If className is the absolute name of a published
    * Fabric class qualified by a fabric codebase URI, toJavaImplName will return
    * a mangled java name.
    * 

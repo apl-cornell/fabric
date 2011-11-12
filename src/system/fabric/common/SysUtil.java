@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigInteger;
-import java.net.URI;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.Collections;
@@ -18,17 +17,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import polyglot.types.Named;
 import fabric.common.ClassRef.FabricClassRef;
 import fabric.common.exceptions.InternalError;
-import fabric.lang.Codebase;
-import fabric.lang.FClass;
 import fabric.lang.Object._Impl;
-import fabric.lang.Object._Proxy;
-import fabric.worker.Store;
 import fabric.worker.Worker;
 
 /**
@@ -228,8 +220,7 @@ public final class SysUtil {
 
   public static URL locateClass(String className)
       throws ClassNotFoundException {
-    // TODO: copied from hash(className)
-    Class<?> c = Class.forName(className);
+    Class<?> c = Worker.getWorker().getClassLoader().loadClass(className);
 
     ClassLoader classLoader = c.getClassLoader();
     if (classLoader == null) {

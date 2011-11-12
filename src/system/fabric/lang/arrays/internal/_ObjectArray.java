@@ -15,6 +15,7 @@ import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.security.Label;
 import fabric.worker.Store;
+import fabric.worker.Worker;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _ObjectArray<T extends Object> extends Object {
@@ -74,7 +75,9 @@ public interface _ObjectArray<T extends Object> extends Object {
         ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
           intraStoreRefs);
-      proxyType = (Class<? extends Object._Proxy>) Class.forName(in.readUTF());
+      proxyType =
+          (Class<? extends Object._Proxy>) Worker.getWorker().getClassLoader()
+              .loadClass(in.readUTF());
       value = new Object[in.readInt()];
       for (int i = 0; i < value.length; i++) {
         value[i] =
