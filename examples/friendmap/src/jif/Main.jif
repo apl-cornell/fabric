@@ -2,6 +2,9 @@ import snapp.*;
 import friendmap.*;
 import mapserv.*;
 import jif.principals.*;
+import util.*;
+
+import util.System;
 
 /**
  * This class contains the main method, which executes the script of the example
@@ -9,29 +12,30 @@ import jif.principals.*;
  */
 public class Main {
 
-  // these are the contents of the root maps
-  static Snapp     snapp;
-  static MapServer mapServ;
-  static FriendMap friendMap;
-  static UserV1    alice;
-  static UserV1    bob;
-
-  public static void main {*←} (principal God, String[] args) {
+  public static void main {System.user←} (principal God, String[] args) {
     // Each method here represents a step that is intended to be executed by
     // the appropriate worker.  For example, snapp_initialize should be invoked by
     // snapp's worker, whereas a_run_app should be invoked by alice's worker.
 
-    snapp_initialize();
-    mapserv_initialize();
-    friendmap_initialize();
+    if (System.user actsfor SnappNode     &&
+        System.user actsfor MapServNode   &&
+        System.user actsfor FriendMapNode &&
+        System.user actsfor AliceNode     &&
+        System.user actsfor BobNode)
+    {
+      snapp_initialize();
+      mapserv_initialize();
+      friendmap_initialize();
 
-    a_initialize();
-    b_initialize();
+      a_initialize();
+      b_initialize();
 
-    a_add_delegations();
-    b_add_delegations();
+      a_add_delegations();
+      b_add_delegations();
 
-    a_run_app();
+      a_run_app();
+    }
+    else throw new AssertionFailedError("principals delegate to System.user");
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -39,7 +43,7 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void snapp_initialize {SnappNode←} () {
-    snapp = new Snapp("snapp", SnappNode);
+    // snapp = new Snapp("snapp", SnappNode);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -48,7 +52,7 @@ public class Main {
 
   static void mapserv_initialize {MapServNode←} () {
     // the world looks like a blank space :)
-    mapServ = new MapServer("map serv", MapServNode, ' ');
+    // mapServ = new MapServer("map serv", MapServNode, ' ');
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -56,7 +60,7 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void friendmap_initialize {FriendMapNode←} () {
-    friendMap = new FriendMap("FriendMap", mapServ, FriendMapNode);
+    // friendMap = new FriendMap("FriendMap", mapServ, FriendMapNode);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -64,22 +68,23 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void a_initialize {AliceNode←} () {
-    alice = snapp.createUser("Alice", AliceNode);
+    // alice = snapp.createUser("Alice", AliceNode);
   }
 
   static void a_add_delegations {AliceNode←} () {
-    alice.friends.add(bob);
-    alice.friendInfo.add(mapServ);
-    alice.locationInfo.add(mapServ);
+    // alice.friends.add(bob);
+    // alice.friendInfo.add(mapServ);
+    // alice.locationInfo.add(mapServ);
   }
 
   static void a_run_app {AliceNode←} () {
-    final FriendMap app = friendMap;
-    final UserV1 a   = alice;
+    // final FriendMap app = friendMap;
+    // final UserV1 a   = alice;
 
-    if (app.service actsfor a.friendInfo)
-      app.viewMap(a);
-    // TODO: friendMap.postMap(alice);
+    // if (app.service actsfor a.friendInfo)
+      // app.viewMap(a);
+    // TODO:
+    // friendMap.postMap(alice);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -87,12 +92,12 @@ public class Main {
   //////////////////////////////////////////////////////////////////////////////
 
   static void b_initialize {BobNode←} () {
-    bob = snapp.createUser("Bob", BobNode);
+    // bob = snapp.createUser("Bob", BobNode);
   }
 
   static void b_add_delegations {BobNode←} () {
-    bob.friends.add(alice);
-    bob.locationInfo.add(bob.friends);
+    // bob.friends.add(alice);
+    // bob.locationInfo.add(bob.friends);
   }
 }
 
