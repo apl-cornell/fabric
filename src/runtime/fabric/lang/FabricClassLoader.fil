@@ -22,6 +22,13 @@ public class FabricClassLoader extends ClassLoader {
   Map/* String, Class */classes;
   Map/* String, byte native[] */classBytecodeMap;
   ClassLoader parent;
+
+  public FabricClassLoader(ClassLoader parent) {
+    super(parent);
+    this.parent = parent;
+    this.classes = new HashMap/* String, Class */();
+    this.classBytecodeMap = new HashMap/* String, byte native[] */();
+  }
 	
   public Class findClass(String name) throws ClassNotFoundException {
     Logging.log(Logging.TIMING_LOGGER, Level.INFO, "resolving {0}", name);
@@ -74,13 +81,6 @@ public class FabricClassLoader extends ClassLoader {
       }
     }
     return result;
-  }
-
-  public FabricClassLoader(ClassLoader parent) {
-    super(parent);
-    this.parent = parent;
-    this.classes = new HashMap/* String, Class */();
-    this.classBytecodeMap = new HashMap/* String, byte native[] */();
   }
 
   public InputStream getResourceAsStream(String name) {
