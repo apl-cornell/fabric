@@ -21,7 +21,7 @@ import fabric.common.NSUtil;
 public class FabricClassLoader extends ClassLoader {
   Map/* String, Class */classes;
   Map/* String, byte native[] */classBytecodeMap;
-  ClassLoader parent;
+  final ClassLoader parent;
 
   public FabricClassLoader(ClassLoader parent) {
     super(parent);
@@ -29,48 +29,43 @@ public class FabricClassLoader extends ClassLoader {
     this.classes = new HashMap/* String, Class */();
     this.classBytecodeMap = new HashMap/* String, byte native[] */();
   }
-	
-  public Class findClass(String name) throws ClassNotFoundException {
+  
+  public Class loadClass(String name, boolean resolve)
+      throws ClassNotFoundException {
     Logging.log(Logging.TIMING_LOGGER, Level.INFO, "resolving {0}", name);
-
     try {
-      try {
-        Class cls = parent.loadClass(name);
-        return cls;
-      } catch (ClassNotFoundException e) {
-        if(NSUtil.isPlatformName(name)) {
-          // Unless the name is a mangled Fabric class, we're done.
-          throw e;
-        }
-      }
-      Logging.log(Logging.TIMING_LOGGER, Level.FINE, "checking bytecode cache for {0}", name);
-  
-      if (!classBytecodeMap.containsKey(name)) {
-        FClass fcls = NSUtil.toProxy(name);
-        try {
-          Logging.log(Logging.TIMING_LOGGER, Level.FINE, "compiling {0}", name);
-          Main.compile(fcls, classBytecodeMap);
-        } catch (GeneralSecurityException e) {
-          throw new ClassNotFoundException(name, e);
-        } catch (IOException e) {
-          throw new ClassNotFoundException(name, e);
-        }
-      }
-  
-      Logging.log(Logging.TIMING_LOGGER, Level.FINE, "loading {0}", name);
-  
-      Class javaCls = getJavaClass(name);
-      if (javaCls == null) {
-        throw new ClassNotFoundException(name);
-      }
-  
-      return javaCls;
+      return super.loadClass(name, resolve);
     } finally {
       Logging.log(Logging.TIMING_LOGGER, Level.INFO, "returning {0}", name);
     }
   }
 
-  Class getJavaClass(String cls) {
+  protected Class findClass(String name) throws ClassNotFoundException {
+    Logging.log(Logging.TIMING_LOGGER, Level.FINE, "checking bytecode cache for {0}", name);
+
+    if (!classBytecodeMap.containsKey(name)) {
+      FClass fcls = NSUtil.toProxy(name);
+      try {
+        Logging.log(Logging.TIMING_LOGGER, Level.FINE, "compiling {0}", name);
+        Main.compile(fcls, classBytecodeMap);
+      } catch (GeneralSecurityException e) {
+        throw new ClassNotFoundException(name, e);
+      } catch (IOException e) {
+        throw new ClassNotFoundException(name, e);
+      }
+    }
+
+    Logging.log(Logging.TIMING_LOGGER, Level.FINE, "loading {0}", name);
+
+    Class javaCls = getJavaClass(name);
+    if (javaCls == null) {
+      throw new ClassNotFoundException(name);
+    }
+
+    return javaCls;
+  }
+
+  private Class getJavaClass(String cls) {
     Class result = (Class)classes.get(cls);
     if (result == null) {
       if (classBytecodeMap.containsKey(cls)) {
