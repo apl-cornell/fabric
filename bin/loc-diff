@@ -26,7 +26,7 @@ ignoreFilesRE = re.compile("""^.*/(
 # Regexp for examples to include. All other examples will be ignored.
 includeExamplesRE = re.compile("""^\./fab-(trunk|branch)/examples/
       (auction|mapapp)
-    /.*$""")
+    /src/.*$""", re.X)
 
 # Regexp for source files.
 sourceFilesRE = re.compile('^.*\.(java|jif|fil|flex|ppg|fab|cpp|h|cup)$')
@@ -72,6 +72,13 @@ categories['Transient collections'] = ['src/lib/transient']
 
 # Other.
 categories['Bootstrap support'] = ['src/bootstrap']
+
+# Examples.
+categories['Auction example (FabIL)'] = ['examples/auction/src/fabil']
+categories['Auction example (Fabric)'] = ['examples/auction/src/fabric']
+
+categories['MapApp example (Jif)'] = ['examples/mapapp/src/jif']
+categories['MapApp example (Fabric)'] = ['examples/mapapp/src/fabric']
 
 ########################################################################
 
@@ -203,7 +210,7 @@ for root, dirs, files in os.walk('.'):
     isExample = examplesRE.match(fullPath) != None
     isIncludedExample = includeExamplesRE.match(fullPath) != None
 
-    if ignored or isExample and not isIncludedExample:
+    if ignored or (isExample and not isIncludedExample):
       os.remove(fullPath)
       continue
 

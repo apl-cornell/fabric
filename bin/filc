@@ -13,14 +13,9 @@ while true; do
       vmargs="${vmargs} '$1'"
       shift
       ;;
-# Should be able to actually replace the sigcp
-# Commenting out pending complaints. Otherwise this will be deleted.
-#    -sigcp)
-#      shift
-#      sigcp="${sigcp}:$1"
-#      shift
-#      ;;
-    -cp)
+	# Add entries to the JVM classpath.	Primarily used to bootstrap compilation
+	# of the FabIL runtime.
+    -jvm-cp)
       shift
       cp="${cp}:$1"
       shift

@@ -364,6 +364,13 @@ public final class SerializedObject implements FastSerializable, Serializable {
     if (classRef != null) return classRef;
     return classRef = ClassRef.deserialize(objectData, classRefPos());
   }
+  
+  /**
+   * @return the object's class's name.
+   */
+  public String getClassName() {
+    return ClassRef.getClassName(objectData, classRefPos());
+  }
 
   /**
    * Determines whether this object is a surrogate.
@@ -885,5 +892,12 @@ public final class SerializedObject implements FastSerializable, Serializable {
     } catch (Exception e) {
       throw new InternalError(e);
     }
+  }
+
+  /**
+   * @return the size of this serialized object, in bytes.
+   */
+  public int size() {
+    return objectData.length;
   }
 }

@@ -1,0 +1,61 @@
+package util;
+
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+public class Util {
+
+  /**
+   * Copy the contents of an array into another array with the given labels.
+   *
+   * @throws NullPointerException
+   *         if data is null
+   */
+  public static
+  char{*l}[]
+  // caller_pc ⊑ C(m) because the fetch on data reflects information
+  //       about the data reference and the calling context
+  // caller_pc ⊑ l because the calling context flows because external state
+  //       (the contents of the result) with label l are updated.
+  // thus caller_pc ⊑ l meet C(m) = l meet (m join {_→;_←})
+  copyArray {*l} meet {*m;_→;_←}
+  (
+    final char{*m}[] data,
+    label l,
+    label m,
+    Store s
+  )
+  throws (
+    NullPointerException{data}
+  )
+  where
+    // s ≽ l because s will store the result, labelled l
+    {s←} <= l,
+    l <= {s→},
+    // m ⊑ l because the contents of the array flow to the result
+    m <= l,
+    // data ⊑ C(m) because the fetch on data reflects information about the reference to data
+    {data} <= {*m;_→;_←},
+    // data ⊑ {*l} because the output is affected by the reference to the input
+    {data} <= {*l}
+
+  {
+    final char{*l}[] result = new char[data.length];
+
+    try {
+
+      for (int i = 0; i < data.length; i++)
+        result[i] = data[i];
+
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("result and data have the same length.");
+    }
+
+    return result;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

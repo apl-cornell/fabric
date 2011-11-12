@@ -1,0 +1,103 @@
+import snapp.*;
+import friendmap.*;
+import mapserv.*;
+import jif.principals.*;
+
+/**
+ * This class contains the main method, which executes the script of the example
+ * application, including initialization and execution.
+ */
+public class Main {
+
+  // these are the contents of the root maps
+  static Snapp     snapp;
+  static MapServer mapServ;
+  static FriendMap friendMap;
+  static UserV1    alice;
+  static UserV1    bob;
+
+  public static void main {*←} (principal God, String[] args) {
+    // Each method here represents a step that is intended to be executed by
+    // the appropriate worker.  For example, snapp_initialize should be invoked by
+    // snapp's worker, whereas a_run_app should be invoked by alice's worker.
+
+    snapp_initialize();
+    mapserv_initialize();
+    friendmap_initialize();
+
+    a_initialize();
+    b_initialize();
+
+    a_add_delegations();
+    b_add_delegations();
+
+    a_run_app();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // snapp's process                                                          //
+  //////////////////////////////////////////////////////////////////////////////
+
+  static void snapp_initialize {SnappNode←} () {
+    snapp = new Snapp("snapp", SnappNode);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // mapserv's process                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  static void mapserv_initialize {MapServNode←} () {
+    // the world looks like a blank space :)
+    mapServ = new MapServer("map serv", MapServNode, ' ');
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // friendmap's process                                                      //
+  //////////////////////////////////////////////////////////////////////////////
+
+  static void friendmap_initialize {FriendMapNode←} () {
+    friendMap = new FriendMap("FriendMap", mapServ, FriendMapNode);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // alice's process                                                          //
+  //////////////////////////////////////////////////////////////////////////////
+
+  static void a_initialize {AliceNode←} () {
+    alice = snapp.createUser("Alice", AliceNode);
+  }
+
+  static void a_add_delegations {AliceNode←} () {
+    alice.friends.add(bob);
+    alice.friendInfo.add(mapServ);
+    alice.locationInfo.add(mapServ);
+  }
+
+  static void a_run_app {AliceNode←} () {
+    final FriendMap app = friendMap;
+    final UserV1 a   = alice;
+
+    if (app.service actsfor a.friendInfo)
+      app.viewMap(a);
+    // TODO: friendMap.postMap(alice);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // bob's process                                                            //
+  //////////////////////////////////////////////////////////////////////////////
+
+  static void b_initialize {BobNode←} () {
+    bob = snapp.createUser("Bob", BobNode);
+  }
+
+  static void b_add_delegations {BobNode←} () {
+    bob.friends.add(alice);
+    bob.locationInfo.add(bob.friends);
+  }
+}
+
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

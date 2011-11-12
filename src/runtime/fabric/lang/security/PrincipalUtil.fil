@@ -331,9 +331,9 @@ public class PrincipalUtil {
    * Execute the given closure, if the principal agrees.
    */
   public static java.lang.Object execute(Principal p, java.lang.Object authPrf,
-      Closure c, Label lb) {
+      Closure c, Label lb, Label al) {
     final Store localStore = Worker.getWorker().getLocalStore();
-    Capability cap = authorize(localStore, p, authPrf, c, lb, true);
+    Capability cap = authorize(localStore, p, authPrf, c, lb, al, true);
     if (cap != null) {
       return cap.invoke();
     }
@@ -344,18 +344,18 @@ public class PrincipalUtil {
    * Obtain a Capability for the given principal and closure.
    */
   public static Capability authorize(Store store, Principal p,
-      java.lang.Object authPrf, Closure c, Label lb) {
-    return authorize(store, p, authPrf, c, lb, false);
+      java.lang.Object authPrf, Closure c, Label lb, Label al) {
+    return authorize(store, p, authPrf, c, lb, al, false);
   }
 
   public static Capability authorize(Principal p, java.lang.Object authPrf,
-      Closure c, Label lb) {
+      Closure c, Label lb, Label al) {
     final Store localStore = Worker.getWorker().getLocalStore();
-    return authorize(localStore, p, authPrf, c, lb, false);
+    return authorize(localStore, p, authPrf, c, lb, al, false);
   }
 
   private static Capability authorize(Store store, Principal p, java.lang.Object authPrf,
-      Closure c, Label lb, boolean executeNow) {
+      Closure c, Label lb, Label al, boolean executeNow) {
 //    try {
 //      LabelUtil.enterTiming();
       Principal closureP = c.jif$getfabric_lang_security_Closure_P();
@@ -370,7 +370,7 @@ public class PrincipalUtil {
             // either p is null (and the "null" principal always
             // gives authority!) or p grants authority to execute the
             // closure.
-            return new Capability@store(closureP, closureL, c);
+            return new Capability@store(closureP, closureL, al, c);
           }
         }
       }

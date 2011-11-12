@@ -1,0 +1,258 @@
+package util;
+
+/**
+ * A group is a principal object that delegates to each of its members.  It
+ * also serves as a collection, so it can be iterated over, etc..
+ *
+ * A group is parameterized by an owner; only the owner may change the group
+ * membership.  The owner acts for the group, but is not listed as a member
+ * (unless explicitly added).
+ *
+ * TODO: Because of the absence of Fabric collections, this class uses a
+ * fixed-size array to hold the members, and the add() method throws an
+ * ArrayIndexOutOfBoundsException if the array is full.
+ */
+public class Group[principal owner]
+  extends Principal
+{
+  private final String      {this}   name;
+
+  final Principal{owner←}[] {owner←} members;
+  int                       {owner←} size;
+
+  private final static int  {*←}     SIZE = 100;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Group constructors                                                       //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Create a new group with the given name and the default maximum size.
+   */
+  public Group{owner←} (String{this} name) {
+    this.name = name;
+    this.size = 0;
+    this.members = new Principal[SIZE];
+    super();
+  }
+
+
+
+  /**
+   * Create a new group with the given name and maximum size.
+   */
+  public
+  Group{owner←}
+  (
+    String{this} name,
+    int{this} maxSize
+  )
+  :{owner←;this}
+  throws NegativeArraySizeException
+  {
+    this.name    = name;
+    this.size    = 0;
+    this.members = new Principal[size];
+    super();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Group membership operations                                              //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Add a new member to the group.
+   */
+  public
+  void
+  add {owner←}
+  (
+    Principal{owner←} p
+  ):{owner←}
+  throws ArrayIndexOutOfBoundsException
+  {
+    // invariant check
+    if (this.members == null)
+      throw new AssertionFailedError("this.members should always be non-null.");
+
+    // method implementation
+    if (size >= this.members.length)
+      throw new ArrayIndexOutOfBoundsException();
+
+    this.members[this.size++] = p;
+
+    PrincipalUtil.notifyNewDelegation(this,p);
+  }
+
+
+  /**
+   * Remove a member of the group.
+   */
+  public void remove {owner←} (Principal{owner←} p) {
+    try
+    {
+
+      // method implementation
+      for (int i = 0; i < size; i++)
+        if (p == this.members[i])
+        {
+          // put last member into current slot and then resize
+          this.members[i]    = this.members[--size];
+          this.members[size] = null;
+        }
+
+      PrincipalUtil.notifyRevokeDelegation(this,p);
+
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("this.size <= this.members.length");
+
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("this.members should always be non-null.");
+    }
+  }
+
+
+  /**
+   * Iterate over the members of the group.
+   */
+  public GroupIterator[owner, l] iterator {*l} (label l) where {owner←} <= {*l} {
+    if (owner actsfor this)
+      return new GroupIterator[owner, l](this);
+    else
+      throw new AssertionFailedError("owner must act for group");
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * See Principal.name()
+   */
+  public String{this} name() {
+    if (owner actsfor this)
+      return this.name;
+    else
+      throw new AssertionFailedError("owner ≽ this");
+  }
+
+
+  /**
+   * Return true if p is either owner or is a member of the group.
+   */
+  public boolean{this;p;this←} delegatesTo(principal p) {
+    if (p == owner)
+      return true;
+
+    if (owner actsfor this) {
+      try {
+
+        for (int i = 0; i < this.size; i++)
+          if (p == this.members[i])
+            return true;
+
+        return false;
+
+      } catch (final ArrayIndexOutOfBoundsException e) {
+        throw new AssertionFailedError("this.size <= this.members.length");
+
+      } catch (final NullPointerException e) {
+        throw new AssertionFailedError("this.members should always be non-null.");
+      }
+    }
+    else
+      throw new AssertionFailedError("this.owner actsfor this");
+  }
+
+
+  /**
+   * Returns true if this equals p.
+   */
+  public boolean equals(Principal p) {
+    // TODO: It is not clear from the spec what equality means for principals.
+    // Possible reasonable interpretations include:
+    //
+    // 1. equality in the trust hierarchy
+    // 2. pointer equality
+    // 3. name + class equality (since the Principal interface says that names +
+    //    classes should be unique).
+    //
+    return this == p;
+  }
+
+  /**
+   * Returns true if this principal authorizes the given closure.
+   */
+  public
+  boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+  isAuthorized {this←}
+              (java.lang.Object authPrf,
+               Closure[this,lb] closure,
+               label            lb,
+               boolean          executeNow)
+  {
+    return false;
+  }
+
+
+  /**
+   * See Principal.findProofUpto.
+   */
+  public
+  ActsForProof{this; p; this←; p←}
+  findProofUpto {this←}
+               (Store c, Principal p,
+                java.lang.Object searchState)
+  {
+    if (owner actsfor this) {
+      try
+      {
+
+        // search for a proof from any of our delegatees
+        for (int i = 0; i < size; i++) {
+          final principal s = members[i];
+
+          if (s actsfor this) {
+            // find a proof and extend it to include the group
+            ActsForProof{this;s;this←} proof = PrincipalUtil.findActsForProof(c, p, s, searchState);
+            if (proof != null)
+                return new TransitiveProof(proof, s, new DelegatesProof(s, this));
+          }
+          else
+            throw new AssertionFailedError("this must delegate to all entries in the members array.");
+        }
+
+        // no proof could be found.
+        return null;
+
+      } catch (final ArrayIndexOutOfBoundsException e) {
+        throw new AssertionFailedError("this.size <= this.members.length");
+
+      } catch (final NullPointerException e) {
+        throw new AssertionFailedError("this.members should always be non-null.");
+      }
+
+    } else {
+      throw new AssertionFailedError("this must delegate to owner");
+    }
+  }
+
+  /**
+   * See Principal.findProofDownto
+   */
+  public
+  ActsForProof{this; p; p←; this←}
+  findProofDownto {this←}
+                 (Store c, Principal p,
+                  java.lang.Object searchState)
+  {
+    // who knows who we act for?
+    return null;
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+

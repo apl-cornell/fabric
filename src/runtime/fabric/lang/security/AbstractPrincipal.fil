@@ -91,7 +91,8 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
             ActsForProof prf = PrincipalUtil.findActsForProof(store, p, s, searchState);            
             if (prf != null) {
                 if (PrincipalUtil.actsFor(s, this)) {
-                    return new TransitiveProof@localStore(prf, s, new DelegatesProof@localStore(s, this));
+                    Label al = LabelUtil.readerPolicyLabel(localStore, localStore.getPrincipal(), localStore.getPrincipal());
+                    return new TransitiveProof@localStore(al, prf, s, new DelegatesProof@localStore(s, this));
                 }
             }
         }

@@ -5,6 +5,11 @@ package fabric.lang.security;
  * file, $JIF/sig-src/jif/lang/Principal.jif.
  */
 public abstract class Principal {
+  /**
+   * Jif initializer.
+   */
+  public native Principal fabric$lang$security$Principal$();
+
   public abstract String name();
 
   public abstract boolean delegatesTo(final Principal p);

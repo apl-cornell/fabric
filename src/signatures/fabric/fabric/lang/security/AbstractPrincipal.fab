@@ -23,6 +23,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
         isAuthorized{this!:}(java.lang.Object authPrf, 
                 Closure[this, lb] closure,
                 label lb,
+                label al,
                 boolean executeNow) where authority (this);
     
     

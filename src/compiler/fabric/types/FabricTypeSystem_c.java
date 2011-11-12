@@ -368,6 +368,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
 
   private JifLocalInstance workerLocalInstance = null;
 
+  
+  @Override
+  public ThisLabel thisLabel(Position pos, ReferenceType ct) {
+    return new FabricThisLabel_c(this, ct, pos);
+  }
+
   @Override
   public JifLocalInstance workerLocalInstance() {
     if (workerLocalInstance == null) {

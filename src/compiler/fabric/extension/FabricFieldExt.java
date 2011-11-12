@@ -15,6 +15,7 @@ import polyglot.ast.Node;
 import polyglot.ast.Receiver;
 import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
+import polyglot.util.Position;
 import fabric.types.FabricArrayType;
 import fabric.types.FabricClassType;
 import fabric.types.FabricFieldInstance;
@@ -56,7 +57,7 @@ public class FabricFieldExt extends JifFieldExt {
           if (al == null) {
             // TODO Using the array label as its access label
             // Need to add syntax to specify array access labels
-            al = ((LabeledType)fat.base()).labelPart();
+            al = fts.join(((LabeledType)fat.base()).labelPart(), fts.noComponentsLabel());
           }
           lc.constrain(new NamedLabel("pc ⊔ object label", lhs), LabelConstraint.LEQ,
               new NamedLabel("access label", al), A.labelEnv(), n.position(),
@@ -77,14 +78,16 @@ public class FabricFieldExt extends JifFieldExt {
           // We do not need access label checking for non fabric classes
           // since their instances will always be read only locally
           Label rhs = fct.getFoldedAccessLabel();
+          Label wtr = fts.writersToReadersLabel(target.position(), objLabel);
+          rhs = fts.meet(rhs, wtr);
           lc.constrain(new NamedLabel("pc ⊔ object label", lhs), LabelConstraint.LEQ,
-              new NamedLabel("access label", rhs), A.labelEnv(), n.position(),
+              new NamedLabel("access label ⊓ writersToReaders(object label)", rhs), A.labelEnv(), n.position(),
               new ConstraintMessage() {
 
             @Override
             public String msg() {
               return "The join of the pc and the target label at a field access" +
-              " should be bounded above by the field access label.";
+              " should be bounded above by the field access label joined with the writersToReaders component of the label on the object reference.";
             }
           }
           );

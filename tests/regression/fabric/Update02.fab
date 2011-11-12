@@ -1,19 +1,12 @@
-public class Update02 {
-	final int{this} x;
+public class Update02[label A] where {this} <= A {
+	final int{this}@{A} x = 10;
 }
 
-class TestUpdate02 {
+class CreateUpdate02 {
 	public void foo{*l}(final label{*l} l) {
 		FabricWorker local = FabricWorker.getWorker();
 		final Store s = local.getStore("bob");		
 		Update02{*l} u2 = new Update02@s(); 
-		// u2 should be created with object label {alice←}
+		// u2 should be created with object label {worker$←} = {alice←}
 	}
-	
-	public void bar{*l}(label{*l} l) {
-		FabricWorker local = FabricWorker.getWorker();
-		final RemoteWorker w = local.getWorker("alice");
-		foo@w(l);
-	}
-	
 }

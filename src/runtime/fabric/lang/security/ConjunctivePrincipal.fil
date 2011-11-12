@@ -90,7 +90,8 @@ public final class ConjunctivePrincipal extends Principal {
       if (prf != null) {
         // have found a proof from witness to q
         DelegatesProof step = new DelegatesProof@store(this, witness);
-        return new TransitiveProof@store(step, witness, prf);
+        Label al = LabelUtil.readerPolicyLabel(store, store.getPrincipal(), store.getPrincipal());
+        return new TransitiveProof@store(al, step, witness, prf);
       }
     }
     return null;

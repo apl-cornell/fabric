@@ -299,7 +299,11 @@
            skipemptyfilesets="true"
            vmlauncher="false">
       <arg value="${filc}" />
+      <arg value="-jvm-cp" />
+      <arg value="${bootstrap.classes}" />
       <arg value="-nooutput" />
+      <arg value="-classpath" />
+      <arg value="${bootstrap.classes}" />
       <arg value="-bootclasspath" />
       <arg value="${bootstrap.classes}" />
       <arg value="-sigcp" />
@@ -356,22 +360,15 @@
         relative="false"
         skipemptyfilesets="true"
         vmlauncher="false">
-      <!--<arg value="${fabc}" />-->
       <arg value="${filc}" />
       <arg value="-bootstrap-skel" /> 
       <arg value="-noserial" /> 
       <arg value="-c" />
       <arg value="-d" /> <arg value="${bootstrap.src}"/>
       <arg value="-debugpositions" />
-      <arg value="-cp" />
-      <arg value="${runtime.classes}" />
       <arg value="-sourcepath"/>
       <arg value="${runtime.src}"/>
       <srcfile />
-      <!--
-      <fileset dir="${runtime.src}"
-          includes="**/*.fab"
-          excludes="**/*.fil" />
       <globmapper from="*.fab" to="*.*" />-->
       <fileset dir="${runtime.src}"
           includes="**/*.fil"
@@ -438,6 +435,7 @@
         includeAntRuntime="false" debug="on">
       <include name="fabric/lang/**" />
       <include name="fabric/common/**" />
+      <exclude name="**/package-info.java" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
         <path refid="lib.classpath"/>
@@ -462,6 +460,7 @@
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
       <include name="fabric/store/**" />
+      <exclude name="**/package-info.java" />
       <classpath>
         <pathelement location="${runtime.classes}" />
         <path refid="lib.classpath"/>
@@ -477,6 +476,7 @@
       <include name="fabric/worker/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
+      <exclude name="**/package-info.java" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
         <path refid="lib.classpath"/>
@@ -491,6 +491,7 @@
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/dissemination/**" />
+      <exclude name="**/package-info.java" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
         <path refid="lib.classpath"/>
@@ -525,7 +526,7 @@
         skipemptyfilesets="true"
         vmlauncher="false">
       <arg value="${filc}" />
-      <arg value="-cp" />
+      <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg line="${debug.flag}" />
       <arg value="-bootclasspath" />
@@ -554,7 +555,7 @@
       <arg value="${filc}" />
       <arg line="${debug.flag}" />
       <arg value="-O0" />
-      <arg value="-cp" />
+      <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg value="-j" />
       <arg value="-Xms256M" />
@@ -1412,7 +1413,8 @@ public class Version {
   <target name="compile-ext" depends="init,bootstrap">
     <javac source="1.6" target="1.6" srcdir="${compiler.src}"
         destdir="${classes}" debug="on" includeAntRuntime="false"
-        includes="${ext.pkg}/**">
+        includes="${ext.pkg}/**"
+        excludes="**/package-info.java">
       <classpath>
         <path refid="jif.classpath" />
         <pathelement location="${bootstrap.classes}" />

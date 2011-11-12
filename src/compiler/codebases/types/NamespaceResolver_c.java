@@ -45,15 +45,12 @@ import fabric.lang.security.NodePrincipal;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
-/**
- * @author owen
- */
 // /TODO: Disentangle the ideas of classpath and class cache/output directory
 public abstract class NamespaceResolver_c implements NamespaceResolver {
   @SuppressWarnings("unchecked")
   private static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.resolver);
-  protected static List<String> report_topics = Arrays.asList(new String[] {
+  protected static final List<String> REPORT_TOPICS = Arrays.asList(new String[] {
       Report.types, Report.resolver, Report.loader });
   protected static final int NOT_COMPATIBLE = -1;
   protected static final int MINOR_NOT_COMPATIBLE = 1;
@@ -64,20 +61,23 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   protected final NamespaceResolver parent;
 
 
-  /** Caches **/
-  // packageExists == true cache
-  protected Set<String> packages;
-  // packageExists == false cache
-  protected Set<String> no_package;
-  // type cached
-  protected Map<String, Importable> cache;
-  // class not found cache
-  protected Map<String, SemanticException> not_found;
+  ///////////////////////////////////////////////////////////////////////////
+  // Caches
+  ///////////////////////////////////////////////////////////////////////////
   
-  // alias cache
-  protected final Map<String,URI> alias_cache;
-  // no such alias cache
-  protected Set<String> no_alias;
+  /** packageExists == true cache */
+  protected Set<String> packages;
+  /** packageExists == false cache */
+  protected Set<String> noPackage;
+  /** type cached */
+  protected Map<String, Importable> cache;
+  /** class not found cache */
+  protected Map<String, SemanticException> notFound;
+  
+  /** alias cache */
+  protected final Map<String,URI> aliasCache;
+  /** no such alias cache */
+  protected Set<String> noAlias;
 
   protected Label integrity;
 
@@ -92,8 +92,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
       NamespaceResolver parent, Map<String, URI> aliases) {
     this.cache = new HashMap<String, Importable>();
     this.packages = new HashSet<String>();
-    this.no_package = new HashSet<String>();
-    this.not_found = new HashMap<String, SemanticException>();
+    this.noPackage = new HashSet<String>();
+    this.notFound = new HashMap<String, SemanticException>();
     // A namespace URI must end with a '/' so we can properly
     // compare URIs and create new ones using resolve()
     if (!namespace.isOpaque() && !namespace.getScheme().equals("file")
@@ -103,26 +103,26 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     this.extInfo = extInfo;
     this.te = extInfo.typeEncoder();
     this.parent = parent;
-    this.alias_cache = new HashMap<String,URI>(aliases);
-    this.no_alias = new HashSet<String>();
+    this.aliasCache = new HashMap<String,URI>(aliases);
+    this.noAlias = new HashSet<String>();
   }
 
   @Override
   public final boolean packageExists(String name) {
     if (packages.contains(name))
       return true;
-    else if (no_package.contains(name))
+    else if (noPackage.contains(name))
       return false;
     else {
-      URI alias_ns = null;
+      URI aliasNS = null;
       if (!StringUtil.isNameShort(name)) {
         //First check if name uses a codebase alias.
         String first = StringUtil.getFirstComponent(name);
-        alias_ns = resolveCodebaseName(first);
+        aliasNS = resolveCodebaseName(first);
       }
-      if (alias_ns != null) {
+      if (aliasNS != null) {
         CodebaseTypeSystem ts = extInfo.typeSystem();
-        NamespaceResolver nr = ts.namespaceResolver(alias_ns);
+        NamespaceResolver nr = ts.namespaceResolver(aliasNS);
         String pkg = StringUtil.removeFirstComponent(name);
         boolean res;
         if (!"".equals(pkg)) 
@@ -133,14 +133,14 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
         if (res)
           packages.add(name);
         else
-          no_package.add(name);
+          noPackage.add(name);
       }
 
       if (packageExistsImpl(name)) {
         packages.add(name);
         return true;
       } else {
-        no_package.add(name);
+        noPackage.add(name);
         return false;
       }
     }
@@ -156,7 +156,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     Importable q = cache.get(name);
 
     if (q == null) {
-      SemanticException se = not_found.get(name);
+      SemanticException se = notFound.get(name);
       if (se != null) throw se;
 
       if (Report.should_report(TOPICS, 3))
@@ -164,15 +164,15 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
             + "NamespaceResolver_c: not cached: " + name);
 
       try {
-        URI alias_ns = null;
+        URI aliasNS = null;
         if (!StringUtil.isNameShort(name)) {
           //First check if name uses a codebase alias.
           String first = StringUtil.getFirstComponent(name);
-          alias_ns = resolveCodebaseName(first);
+          aliasNS = resolveCodebaseName(first);
         }
-        if (alias_ns != null) {
+        if (aliasNS != null) {
           CodebaseTypeSystem ts = extInfo.typeSystem();
-          NamespaceResolver nr = ts.namespaceResolver(alias_ns);
+          NamespaceResolver nr = ts.namespaceResolver(aliasNS);
           q = nr.find(StringUtil.removeFirstComponent(name));
         } else {
           q = findImpl(name);
@@ -194,7 +194,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
                 + "NamespaceResolver_c: installing " + name
                 + "-> (not found) in resolver cache");
           }
-          not_found.put(name, e);
+          notFound.put(name, e);
           throw e;
         }
       }
@@ -217,8 +217,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     try {
       NamespaceResolver_c r = (NamespaceResolver_c) super.clone();
       r.packages = new HashSet<String>(this.packages);
-      r.no_package = new HashSet<String>(this.no_package);
-      r.not_found = new HashMap<String, SemanticException>();
+      r.noPackage = new HashSet<String>(this.noPackage);
+      r.notFound = new HashMap<String, SemanticException>();
       r.cache = new HashMap<String, Importable>(this.cache);
       return r;
     } catch (CloneNotSupportedException e) {
@@ -392,7 +392,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
         new ObjectDumper(new SimpleCodeWriter(System.out, 72)).dump(dt);
       }
 
-      if (Report.should_report(report_topics, 2))
+      if (Report.should_report(REPORT_TOPICS, 2))
         Report.report(2, "Returning serialized ClassType for " + clazz.name()
             + ".");
 
@@ -441,15 +441,15 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
   @Override
   public final URI resolveCodebaseName(String name) {
-    URI ns = alias_cache.get(name);
+    URI ns = aliasCache.get(name);
     if (ns != null)
       return ns;
-    if (!no_alias.contains(name)) {
+    if (!noAlias.contains(name)) {
       ns = resolveCodebaseNameImpl(name);
       if (ns == null)
-        no_alias.add(name);
+        noAlias.add(name);
       else {
-        alias_cache.put(name, ns);
+        aliasCache.put(name, ns);
       }
       return ns;
     }
@@ -458,7 +458,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   
   @Override
   public Map<String, URI> codebaseAliases() {
-    return Collections.unmodifiableMap(alias_cache);
+    return Collections.unmodifiableMap(aliasCache);
   }
 
   @Override

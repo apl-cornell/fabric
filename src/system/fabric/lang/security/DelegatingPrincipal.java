@@ -9,6 +9,11 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 
 public interface DelegatingPrincipal extends Principal {
+  /**
+   * Jif initializer.
+   */
+  public DelegatingPrincipal fabric$lang$security$DelegatingPrincipal$();
+  
   void addDelegatesTo(Principal p);
 
   void removeDelegatesTo(Principal p);
@@ -22,6 +27,12 @@ public interface DelegatingPrincipal extends Principal {
 
     public _Proxy(Store store, long onum) {
       super(store, onum);
+    }
+
+    @Override
+    public DelegatingPrincipal fabric$lang$security$DelegatingPrincipal$() {
+      return ((DelegatingPrincipal) fetch())
+          .fabric$lang$security$DelegatingPrincipal$();
     }
 
     @Override
@@ -64,6 +75,11 @@ public interface DelegatingPrincipal extends Principal {
       return p;
     }
     
+    @Override
+    public DelegatingPrincipal fabric$lang$security$DelegatingPrincipal$() {
+      return (DelegatingPrincipal) this.$getProxy();
+    }
+
     @Override
     public abstract void addDelegatesTo(Principal p);
     

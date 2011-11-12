@@ -96,6 +96,8 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
       List<Type> argTypes = new ArrayList<Type>(c.methodInstance().formalTypes().size() + 1);
       argTypes.add(ts.Principal());
       argTypes.addAll(c.methodInstance().formalTypes());
+      // TODO This assumes that all passes have already run on rcvrType
+      // The assumption is not true if rcvrType is the same class as this call is present in
       if (rcvrType.methods(c.name() + "_remote", argTypes).isEmpty()) {
         // See RemoteCallWrapperAdder.java#leave for conditions for remotely callable methods
         throw new SemanticException("Illegal remote call \"" + c + "\", " +

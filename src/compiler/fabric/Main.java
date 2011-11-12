@@ -45,11 +45,9 @@ public class Main extends polyglot.main.Main {
   protected Compiler compiler;
 
   /**
-   * @return System clock time between compilation and loading for timing
-   *         purposes.
    * @throws IOException
    */
-  public static long compile(FClass fcls, Map<String, byte[]> bytecodeMap)
+  public static void compile(FClass fcls, Map<String, byte[]> bytecodeMap)
       throws GeneralSecurityException, IOException {
     if (fcls == null || bytecodeMap == null)
       throw new GeneralSecurityException("Invalid arguments to compile");
@@ -79,11 +77,11 @@ public class Main extends polyglot.main.Main {
       args.add("-filsigcp");
       args.add(worker.filsigcp);
     }
-    if (worker.code_cache != null) {
+    if (worker.codeCache != null) {
       args.add("-d");
-      args.add(worker.code_cache);
+      args.add(worker.codeCache);
       args.add("-classpath");
-      args.add(worker.code_cache);
+      args.add(worker.codeCache);
     }
     if (worker.bootcp != null) {
       args.add("-bootclasspath");
@@ -99,11 +97,9 @@ public class Main extends polyglot.main.Main {
       fabric.ExtensionInfo extInfo = new fabric.ExtensionInfo(bytecodeMap);
       main.start(args.toArray(new String[0]), extInfo);
 
-      long endCompileTime = System.currentTimeMillis(); 
-
       @SuppressWarnings("unchecked")
       Collection<String> outputFiles = main.compiler.outputFiles();
-      File output_directory = extInfo.getFabricOptions().outputDirectory();
+      File outputDirectory = extInfo.getFabricOptions().outputDirectory();
       String[] suffixes =
           new String[] { "$_Impl", "$_Proxy", "$_Static", "$_Static$_Impl",
               "$_Static$_Proxy" };
@@ -111,7 +107,7 @@ public class Main extends polyglot.main.Main {
         int e = fname.lastIndexOf(".java");
         String baseFileName = fname.substring(0, e);
         String baseClassName =
-            baseFileName.substring(output_directory.getPath().length() + 1);
+            baseFileName.substring(outputDirectory.getPath().length() + 1);
         baseClassName = baseClassName.replace(File.separator, ".");
         // load base class file
         File classFile = new File(baseFileName + ".class");
@@ -133,43 +129,42 @@ public class Main extends polyglot.main.Main {
           }
         }
       }
-      return endCompileTime;
     } catch (TerminationException e) {
       throw new GeneralSecurityException(e);
     }
   }
 
-  public static void compile_from_shell(List<String> args, InputStream in,
+  public static void compileFromShell(List<String> args, InputStream in,
       PrintStream out) {
-    InputStream save_in = System.in;
-    PrintStream save_out = System.out;
-    PrintStream save_err = System.err;
+    InputStream saveIn = System.in;
+    PrintStream saveOut = System.out;
+    PrintStream saveErr = System.err;
 
     System.setIn(in);
     System.setOut(out);
     System.setErr(out);
 
-    List<String> new_args = new ArrayList<String>(args.size() + 2);
+    List<String> newArgs = new ArrayList<String>(args.size() + 2);
     Worker worker = Worker.getWorker();
     // Set code cache first to allow it to be overridden
-    if (worker.code_cache != null) {
-      new_args.add("-d");
-      new_args.add(worker.code_cache);
+    if (worker.codeCache != null) {
+      newArgs.add("-d");
+      newArgs.add(worker.codeCache);
     }
-    new_args.addAll(args);
+    newArgs.addAll(args);
 
     polyglot.main.Main main = new Main();
     fabric.ExtensionInfo extInfo = new fabric.ExtensionInfo();
 
     try {
-      main.start(new_args.toArray(new String[] {}), extInfo);
+      main.start(newArgs.toArray(new String[] {}), extInfo);
 
     } catch (TerminationException e) {
       System.err.println(e.getMessage());
     } finally {
-      System.setIn(save_in);
-      System.setOut(save_out);
-      System.setErr(save_err);
+      System.setIn(saveIn);
+      System.setOut(saveOut);
+      System.setErr(saveErr);
     }
   }
 
@@ -189,9 +184,9 @@ public class Main extends polyglot.main.Main {
   }
 
   @Override
-  public void start(String[] args, ExtensionInfo _extInfo) {
-    fabric.ExtensionInfo extInfo = (fabric.ExtensionInfo) _extInfo;
-    super.start(args, extInfo);
+  public void start(String[] args, ExtensionInfo extInfo) {
+    fabric.ExtensionInfo fabExtInfo = (fabric.ExtensionInfo) extInfo;
+    super.start(args, fabExtInfo);
   }
 
   @Override
@@ -391,18 +386,18 @@ public class Main extends polyglot.main.Main {
     if (options.post_compiler != null && !options.output_stdout) {
       QuotedStringTokenizer st =
           new QuotedStringTokenizer(options.post_compiler);
-      int pc_size = st.countTokens();
-      int options_size = 2;
+      int pcSize = st.countTokens();
+      int optionsSize = 2;
       if (options.class_output_directory != null) {
-        options_size += 2;
+        optionsSize += 2;
       }
-      if (options.generate_debugging_info) options_size++;
+      if (options.generate_debugging_info) optionsSize++;
       String[] javacCmd =
-          new String[pc_size + options_size + compiler.outputFiles().size() - 1];
+          new String[pcSize + optionsSize + compiler.outputFiles().size() - 1];
       int j = 0;
       // skip "javac"
       st.nextToken();
-      for (int i = 1; i < pc_size; i++) {
+      for (int i = 1; i < pcSize; i++) {
         javacCmd[j++] = st.nextToken();
       }
       javacCmd[j++] = "-classpath";

@@ -1,6 +1,10 @@
 package fabric.lang.security;
 
 public abstract class DelegatingPrincipal extends Principal {
+  /**
+   * Jif initializer.
+   */
+  public native DelegatingPrincipal fabric$lang$security$DelegatingPrincipal$();
 
   public abstract void addDelegatesTo(final Principal p);
   

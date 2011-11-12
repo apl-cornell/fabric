@@ -20,10 +20,10 @@ import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
 import fabric.common.KeyMaterial;
+import fabric.common.NSUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
-import fabric.common.SysUtil;
 import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
@@ -74,48 +74,50 @@ public final class Worker {
 
   public final ConfigProperties config;
 
-  // The path for Fabric runtime classes
+  /** The path for Fabric runtime classes */
   public String bootcp;
 
-  // The path for Fabric signatures
+  /** The path for Fabric signatures */
   public String sigcp;
 
-  // The path for FabIL signatures
+  /** The path for FabIL signatures */
   public String filsigcp;
 
-  // The directory for dynamically compiled mobile code
-  public String code_cache;
-  
-  // The loader used by this worker for loading classes from fabric
+  /** The directory for dynamically compiled mobile code */
+  public String codeCache;
+
+  /** The loader used by this worker for loading classes from fabric */
   public FabricClassLoader loader;
 
-  // A map from store hostnames to Store objects
+  /** A map from store hostnames to Store objects */
   protected final Map<String, RemoteStore> stores;
 
-  // A map from worker hostnames to RemoteWorker objects.
+  /** A map from worker hostnames to RemoteWorker objects. */
   private final Map<String, RemoteWorker> remoteWorkers;
 
   protected final LocalStore localStore;
 
-  // A subsocket factory for unauthenticated connections to stores.
+  /** A subsocket factory for unauthenticated connections to stores. */
   public final SubSocketFactory unauthToStore;
-  
-  // A subsocket factory for authenticated connections to stores.
+
+  /** A subsocket factory for authenticated connections to stores. */
   public final SubSocketFactory authToStore;
-  
-  // A subsocket factory for authenticated connections to workers
+
+  /** A subsocket factory for authenticated connections to workers */
   public final SubSocketFactory authToWorker;
-  
-  // The subserversocket factory
+
+  /** The subserversocket factory */
   public final SubServerSocketFactory authFromAll;
-  
-  // The manager to use for fetching objects from stores.
+
+  /** The manager to use for fetching objects from stores. */
   protected final FetchManager fetchManager;
-  
+
   protected final NodePrincipal principal;
 
-  // The collection of dissemination caches used by this worker's dissemination
-  // node.
+  /**
+   * The collection of dissemination caches used by this worker's
+   * dissemination node.
+   */
   private final List<Cache> disseminationCaches;
 
   private final RemoteCallManager remoteCallManager;
@@ -125,7 +127,6 @@ public final class Worker {
   // force Timing to load.
   @SuppressWarnings("unused")
   private static final Timing t = Timing.APP;
-
 
   /**
    * Initializes the Fabric <code>Worker</code>. When connecting to a store, the
@@ -156,8 +157,8 @@ public final class Worker {
    * @param useSSL
    *          Whether SSL encryption is desired. Used for debugging purposes.
    */
-  private static Worker initialize(ConfigProperties config,
-      Long principalOnum, Map<String, RemoteStore> initStoreSet) throws InternalError,
+  private static Worker initialize(ConfigProperties config, Long principalOnum,
+      Map<String, RemoteStore> initStoreSet) throws InternalError,
       IllegalStateException, UsageError, IOException, GeneralSecurityException {
 
     if (instance != null)
@@ -169,21 +170,22 @@ public final class Worker {
     WORKER_LOGGER.config("timeout:             " + config.timeout);
     WORKER_LOGGER.config("retries:             " + config.retries);
     WORKER_LOGGER.config("use ssl:             " + config.useSSL);
-    
+
     instance = new Worker(config, principalOnum, initStoreSet);
 
     Threading.getPool().execute(instance.remoteCallManager);
     instance.localStore.initialize();
-    
+
     System.out.println("Worker started");
     TIMING_LOGGER.log(Level.INFO, "Worker started");
 
     Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override public void run() {
+      @Override
+      public void run() {
         TIMING_LOGGER.log(Level.INFO, "Worker shutting down");
       }
     });
-    
+
     return instance;
   }
 
@@ -195,44 +197,48 @@ public final class Worker {
   public static boolean isInitialized() {
     return instance != null;
   }
-  
+
   /** convenience method for getting the node's name */
   public String getName() {
     return config.name;
   }
-  
+
   @SuppressWarnings("unchecked")
-  private Worker(ConfigProperties config, Long principalOnum, Map<String, RemoteStore> initStoreSet) throws InternalError, UsageError,
+  private Worker(ConfigProperties config, Long principalOnum,
+      Map<String, RemoteStore> initStoreSet) throws InternalError, UsageError,
       IOException, GeneralSecurityException {
     // Sanitise input.
-    
+
     this.config = config;
-    
+
     fabric.common.Options.DEBUG_NO_SSL = !config.useSSL;
-    
+
     this.stores = new HashMap<String, RemoteStore>();
     if (initStoreSet != null) this.stores.putAll(initStoreSet);
     this.remoteWorkers = new HashMap<String, RemoteWorker>();
     this.localStore = new LocalStore();
 
-    NameService storeNameService  = new DefaultNameService(PortType.STORE);
+    NameService storeNameService = new DefaultNameService(PortType.STORE);
     NameService workerNameService = new DefaultNameService(PortType.WORKER);
 
     // initialize the various socket factories
     Protocol authProt;
     if (config.useSSL)
       authProt = new HandshakeAuthenticated(config.getKeyMaterial());
-    else
-      authProt = new HandshakeBogus();
-    
-    Protocol authenticateProtocol = new HandshakeComposite(authProt);
-    Protocol nonAuthenticateProtocol = new HandshakeComposite(new HandshakeUnauthenticated());
+    else authProt = new HandshakeBogus();
 
-    this.authToStore   = new SubSocketFactory(authenticateProtocol, storeNameService);
-    this.authToWorker  = new SubSocketFactory(authenticateProtocol, workerNameService);
-    this.unauthToStore = new SubSocketFactory(nonAuthenticateProtocol, storeNameService);
-    this.authFromAll   = new SubServerSocketFactory(authenticateProtocol, workerNameService);
-    
+    Protocol authenticateProtocol = new HandshakeComposite(authProt);
+    Protocol nonAuthenticateProtocol =
+        new HandshakeComposite(new HandshakeUnauthenticated());
+
+    this.authToStore =
+        new SubSocketFactory(authenticateProtocol, storeNameService);
+    this.authToWorker =
+        new SubSocketFactory(authenticateProtocol, workerNameService);
+    this.unauthToStore =
+        new SubSocketFactory(nonAuthenticateProtocol, storeNameService);
+    this.authFromAll =
+        new SubServerSocketFactory(authenticateProtocol, workerNameService);
 
     this.remoteCallManager = new RemoteCallManager(this);
     this.disseminationCaches = new ArrayList<Cache>(1);
@@ -240,23 +246,25 @@ public final class Worker {
     // Initialize the fetch manager.
     try {
       Constructor<FetchManager> fetchManagerConstructor =
-          (Constructor<FetchManager>) Class.forName(config.dissemClass).getConstructor(
-              Worker.class, Properties.class);
+          (Constructor<FetchManager>) Class.forName(config.dissemClass)
+              .getConstructor(Worker.class, Properties.class);
       this.fetchManager =
-          fetchManagerConstructor.newInstance(this, config.disseminationProperties);
+          fetchManagerConstructor.newInstance(this,
+              config.disseminationProperties);
     } catch (Exception e) {
       throw new InternalError("Unable to load fetch manager", e);
     }
-    
-    this.principal = initializePrincipal(config.homeStore, principalOnum, this.config.getKeyMaterial());
+
+    this.principal =
+        initializePrincipal(config.homeStore, principalOnum,
+            this.config.getKeyMaterial());
   }
-  
+
   /**
-   *  Initialize the reference to the principal object.
+   * Initialize the reference to the principal object.
    */
   private NodePrincipal initializePrincipal(String homeStore,
-      Long principalOnum, KeyMaterial keys)
-      throws UsageError {
+      Long principalOnum, KeyMaterial keys) throws UsageError {
     if (principalOnum != null) {
       // First, handle the case where we're initializing a store's worker.
       return new NodePrincipal._Proxy(getStore(config.name), principalOnum);
@@ -264,24 +272,24 @@ public final class Worker {
 
     // Next, look in the key set for a principal certificate.
     NodePrincipal p = keys.getPrincipal(this);
-    if (p != null)
-      return p;
-    
+    if (p != null) return p;
+
     // Still no principal? Create one.
     if (homeStore == null) {
       throw new UsageError(
           "No fabric.worker.homeStore specified in the worker configuration.");
     }
-    
+
     PublicKey workerKey = keys.getPublicKey();
-    X509Certificate[] certChain = getStore(homeStore).makeWorkerPrincipal(this, workerKey);
-    
+    X509Certificate[] certChain =
+        getStore(homeStore).makeWorkerPrincipal(this, workerKey);
+
     // Add the certificate to the key store.
     keys.setPrincipalChain(certChain);
-    
+
     return keys.getPrincipal(this);
   }
-  
+
   /**
    * Returns the Singleton Worker instance.
    * 
@@ -397,7 +405,7 @@ public final class Worker {
       store.clearCache();
     }
   }
-  
+
   /**
    * Shuts down and cleans up the worker.
    */
@@ -409,7 +417,7 @@ public final class Worker {
       IOException, InternalError, UsageError, GeneralSecurityException {
     initialize(new ConfigProperties(name));
   }
-  
+
   public static void initialize(ConfigProperties props)
       throws IllegalStateException, InternalError, UsageError, IOException,
       GeneralSecurityException {
@@ -426,10 +434,10 @@ public final class Worker {
 
   public FabricClassLoader getClassLoader() {
     if (loader == null)
-      loader = new FabricClassLoader(Worker.class.getClassLoader()); 
+      loader = new FabricClassLoader(Worker.class.getClassLoader());
     return loader;
   }
-  
+
   public static void main(String[] args) throws Throwable {
     WORKER_LOGGER.info("Worker node");
     WORKER_LOGGER.config("Fabric version " + new Version());
@@ -440,15 +448,15 @@ public final class Worker {
       // Parse the command-line options and read in the worker's configuration.
       final Options opts = new Options(args);
       final ConfigProperties config = new ConfigProperties(opts.name);
-      
+
       // TODO If an instance of the worker is already running, connect to it and
       // TODO act as a remote terminal.
-      
+
       initialize(config);
       worker = getWorker();
       worker.sigcp = opts.sigcp;
       worker.filsigcp = opts.filsigcp;
-      worker.code_cache = opts.code_cache;
+      worker.codeCache = opts.codeCache;
       worker.bootcp = opts.bootcp;
 
       // log the command line
@@ -480,7 +488,7 @@ public final class Worker {
       } else {
         commandSource = new InteractiveCommandSource(worker);
       }
-      
+
       // Drop into the worker shell.
       new WorkerShell(worker, commandSource).run();
     } catch (UsageError ue) {
@@ -496,21 +504,24 @@ public final class Worker {
       if (worker != null) worker.shutdown();
     }
   }
-  
+
   public void setStore(String name, RemoteStore store) {
     stores.put(name, store);
   }
-  
+
   /**
    * Runs the given Fabric program.
    * 
-   * @param mainClassName the unmangled name of the application's main class.
-   * @param args arguments to be passed to the application.
-   * @throws Throwable 
+   * @param mainClassName
+   *          the unmangled name of the application's main class.
+   * @param args
+   *          arguments to be passed to the application.
+   * @throws Throwable
    */
   public void runFabricApp(String mainClassName, final String[] args)
       throws Throwable {
-    Class<?> mainClass = getClassLoader().loadClass(SysUtil.mangle(mainClassName));
+    Class<?> mainClass =
+        getClassLoader().loadClass(NSUtil.toJavaImplName(mainClassName));
     Method main =
         mainClass.getMethod("main", new Class[] { ObjectArray.class });
 
@@ -532,7 +543,7 @@ public final class Worker {
 
     MainThread.invoke(main, argsProxy);
   }
-  
+
   /**
    * Executes the given code from within a new top-level Fabric transaction.
    * Should not be called by generated code. This is here to abstract away the
@@ -545,7 +556,7 @@ public final class Worker {
   public static <T> T runInTopLevelTransaction(Code<T> code, boolean autoRetry) {
     return runInTransaction(null, code, autoRetry);
   }
-  
+
   /**
    * Executes the given code from within a Fabric transaction. If the
    * transaction fails, it will be automatically retried until it succeeds.
@@ -559,7 +570,7 @@ public final class Worker {
   public static <T> T runInTransaction(TransactionID tid, Code<T> code) {
     return runInTransaction(tid, code, true);
   }
-  
+
   /**
    * Executes the given code from within a Fabric transaction. Should not be
    * called by generated code. This is here to abstract away the details of
@@ -595,7 +606,7 @@ public final class Worker {
   public static <T> T runInSubTransaction(Code<T> code) {
     return runInSubTransaction(code, true);
   }
-  
+
   /**
    * Executes the given code from within a Fabric subtransaction of the current
    * transaction. Should not be called by generated code. This is here to
@@ -633,24 +644,24 @@ public final class Worker {
         continue;
       } catch (TransactionRestartingException e) {
         success = false;
-        
+
         TransactionID currentTid = tm.getCurrentTid();
         if (e.tid.isDescendantOf(currentTid))
-          // Restart this transaction.
+        // Restart this transaction.
           continue;
-        
+
         // Need to restart a parent transaction.
         if (currentTid.parent != null) throw e;
-        
+
         throw new InternalError("Something is broken with transaction "
             + "management. Got a signal to restart a different transaction "
             + "than the one being managed.");
       } catch (Throwable e) {
         success = false;
-        
+
         // Retry if the exception was a result of stale objects.
         if (tm.checkForStaleObjects()) continue;
-        
+
         throw new AbortException(e);
       } finally {
         if (success) {
@@ -660,7 +671,7 @@ public final class Worker {
             success = false;
           } catch (TransactionRestartingException e) {
             success = false;
-            
+
             if (!autoRetry) {
               throw new AbortException(
                   "Not retrying transaction that failed to commit (autoRetry=false)",
@@ -671,9 +682,9 @@ public final class Worker {
             TransactionID currentTid = tm.getCurrentTid();
             if (currentTid == null || e.tid.isDescendantOf(currentTid)
                 && !currentTid.equals(e.tid))
-              // Restart the transaction just we tried to commit.
+            // Restart the transaction just we tried to commit.
               continue;
-            
+
             // Need to restart a parent transaction.
             throw e;
           }
@@ -689,6 +700,5 @@ public final class Worker {
   public static interface Code<T> {
     T run() throws Throwable;
   }
-
 
 }

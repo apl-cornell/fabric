@@ -16,7 +16,6 @@ import fabric.common.NSUtil;
 import fabric.lang.FClass;
 import fabric.lang.security.Label;
 
-// XXX: this class should actually extend jif.parse.UTF8FileSource
 public class RemoteSource extends UTF8FileSource implements CodebaseSource {
   protected final URI namespace;
   protected final FClass fcls;

@@ -16,6 +16,7 @@ public abstract class Principal {
 	isAuthorized{this←}(java.lang.Object authPrf, 
 			    Closure[this, lb] closure,
 			    label lb,
+			    label al,
 			    boolean executeNow) where authority (this);
     
     public abstract ActsForProof{this; p; this←; p←}

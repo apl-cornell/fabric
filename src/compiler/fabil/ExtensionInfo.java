@@ -181,7 +181,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
     if (!LabelUtil._Impl.relabelsTo(fcls.get$label(), fcls.getCodebase()
         .get$label())) {
       // XXX: should we throw a more security-related exception here?
-      throw new IOException("The label of class " + SysUtil.absoluteName(fcls)
+      throw new IOException("The label of class " + NSUtil.absoluteName(fcls)
           + " is higher than the label of its codebase ");
     }
     

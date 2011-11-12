@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Wrapper script for fabric.store.db.BdbDB, the BDB object DB dumper.
+
+source "$(dirname $0)/defs"
+
+if [[ $# -ne 1 && $# -ne 2 ]] ; then
+  cat >&2 <<EOF
+Usage: $(basename "$0") [FABRIC_HOME] STORE_NAME
+
+  Dumps the BDB object DB for store STORE_NAME, using FABRIC_HOME as the
+  Fabric home directory.  If FABRIC_HOME is omitted, the current working
+  directory is used.
+EOF
+  exit 1
+fi
+
+FABRIC_HOME=.
+if [[ $# -eq 2 ]] ; then
+  FABRIC_HOME="$1"
+  shift
+fi
+
+"${JAVA}" -classpath "$(fixpath "${FABRIC_STORE_CP}")" fabric.store.db.BdbDB \
+  "$@"

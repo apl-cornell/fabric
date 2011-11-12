@@ -66,7 +66,7 @@ public class WorkerShell {
       @Override
       public void handle(List<String> args) {
         // TODO: should we pass in the correct i/o streams?
-        fabric.Main.compile_from_shell(args, System.in, System.out);
+        fabric.Main.compileFromShell(args, System.in, System.out);
       }
     });
 

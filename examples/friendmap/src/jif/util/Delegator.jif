@@ -1,0 +1,81 @@
+package util;
+
+/**
+ * Convenience principal class the delegates to a single owner.
+ */
+public class Delegator implements Principal {
+  protected final String    {this}  name;
+  protected final principal {this←} owner;
+
+  public
+  Delegator {this}
+  (
+    String    {this} name,
+    principal {owner←} owner
+  )
+  where authority(this)
+  {
+    // these endorsements are safe, because owner ≽ this,
+    // and thus {owner←} ⊑ {this←}
+    // we just can't convince the compiler of this fact.
+
+    this.owner = endorse(owner, {owner←} to {this←});
+    this.name  = name;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public String{this} name() {
+    return this.name;
+  }
+
+  public boolean{this;p;this←} delegatesTo(principal p) {
+    return p == owner;
+  }
+
+  public boolean equals(Principal p) {
+    // TODO
+    return false;
+  }
+
+  public
+  boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+  isAuthorized {this←}
+              (Object           authPrf,
+               Closure[this,lb] closure,
+               label            lb,
+               boolean          executeNow)
+  where authority(this),
+        {authPrf;closure;lb;executeNow} <= lb
+  {
+    // TODO
+    return false;
+  }
+
+  public
+  ActsForProof{this; p; this←; p←}
+  findProofUpto {this←}
+               (Principal p,
+                Object searchState)
+  {
+    // TODO
+    return null;
+  }
+
+  public
+  ActsForProof{this; p; p←; this←}
+  findProofDownto {this←}
+                 (Principal p,
+                  Object searchState)
+  {
+    // TODO
+    return null;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

@@ -76,7 +76,8 @@ public final class DisjunctivePrincipal extends Principal {
       if (prf != null) {
         // have found a proof from p to witness.
         DelegatesProof step = new DelegatesProof@store(witness, this);
-        return new TransitiveProof@store(prf, witness, step);
+        Label al = LabelUtil.readerPolicyLabel(store, store.getPrincipal(), store.getPrincipal());
+        return new TransitiveProof@store(al, prf, witness, step);
       }
     }
     return null;
