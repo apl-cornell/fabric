@@ -22,6 +22,10 @@ import fabric.worker.transaction.TransactionManager;
  * labels so that a Principal p can be labelled with {p→_; p←p}.
  */
 public interface Principal extends fabric.lang.Object {
+  /**
+   * Jif initializer.
+   */
+  Principal fabric$lang$security$Principal$();
 
   String name();
 
@@ -51,6 +55,11 @@ public interface Principal extends fabric.lang.Object {
 
     public _Proxy(fabric.worker.Store store, long onum) {
       super(store, onum);
+    }
+    
+    @Override
+    public Principal fabric$lang$security$Principal$() {
+      return ((Principal) fetch()).fabric$lang$security$Principal$();
     }
 
     @Override
@@ -146,6 +155,11 @@ public interface Principal extends fabric.lang.Object {
       this.privateKeyObject =
           new PrivateKeyObject._Impl(store, privateLabel, privateLabel,
               keyPair.getPrivate());
+    }
+    
+    @Override
+    public Principal fabric$lang$security$Principal$() {
+      return (Principal) this.$getProxy();
     }
 
     @Override
