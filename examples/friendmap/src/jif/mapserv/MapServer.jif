@@ -21,7 +21,6 @@ public class MapServer extends Delegator {
     Principal{owner←} owner,
     char{owner←} background
   )
-  throws NullPointerException
   where  authority(this)
   {
     // these endorsements are safe, because owner ≽ this,

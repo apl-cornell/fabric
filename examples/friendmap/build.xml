@@ -67,7 +67,7 @@
   <target name="build-jif"
           description="Builds the Jif version of friendmap"
           depends="build-jif-friendmap,build-jif-principals,build-jif-java">
-    <jifc srcdir="${home}/src/jif" includes="Main.jif" />
+    <jifc srcdir="${home}/src/jif" includes="Main2.jif" />
   </target>
 
 

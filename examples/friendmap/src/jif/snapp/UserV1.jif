@@ -13,11 +13,11 @@ import util.Delegator;
  */
 public class UserV1 extends Delegator implements JifObject[{}] {
 
-  /** The user's location, only readable by members of the locationInfo group */
+  /** The user's location, only readable by members of the locationInfo group.  non-null */
   public final label {this←}          locationLabel = new label {this←;this→locationInfo};
   public Location    {*locationLabel} location;
 
-  /** The user's friends,  only readable by members of the friendInfo   group */
+  /** The user's friends,  only readable by members of the friendInfo group. non-null. */
   public final label       {this←}        friendLabel = new label {this←;this→friendInfo};
   public final Group[this] {*friendLabel} friends;
 

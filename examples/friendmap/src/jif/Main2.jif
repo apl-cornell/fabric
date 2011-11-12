@@ -1,0 +1,47 @@
+import snapp.*;
+import friendmap.*;
+import mapserv.*;
+import jif.principals.*;
+import util.*;
+
+import util.System;
+
+public class Main2
+authority(System.user)
+{
+  final Snapp     {System.user←} snapp;
+  final MapServer {System.user←} mapServ;
+  final FriendMap {System.user←} friendMap;
+  final UserV1    {System.user←} alice;
+  final UserV1    {System.user←} bob;
+
+  public
+  Main2 {System.user←}
+  ()
+  throws ArrayIndexOutOfBoundsException, NullPointerException
+  where
+    System.user actsfor SnappNode,
+    System.user actsfor MapServNode,
+    System.user actsfor FriendMapNode,
+    System.user actsfor AliceNode,
+    System.user actsfor BobNode,
+    authority(System.user)
+  {
+    // create service objects
+    this.snapp     = endorse(new     Snapp("snapp",     SnappNode),              {SnappNode←}        to {System.user←});
+    this.mapServ   = endorse(new MapServer("mapserv",   MapServNode, ' '),       {MapServNode←}      to {System.user←});
+    this.friendMap = endorse(new FriendMap("friendmap", mapServ, FriendMapNode), {FriendMapNode←}    to {System.user←});
+
+    // create users
+    this.alice     = endorse(snapp.createUser("Alice", AliceNode),               {AliceNode←;snapp←} to {System.user←});
+    this.bob       = endorse(snapp.createUser("Bob",   BobNode),                 {BobNode←;snapp←}   to {System.user←});
+
+    // add delegations
+    alice.friends.add(bob);
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

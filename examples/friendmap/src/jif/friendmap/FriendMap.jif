@@ -25,6 +25,12 @@ public class FriendMap extends Delegator {
   /** The map service that this app uses to fetch maps.  Must be non-null. */
   public final MapServer {this←} service;
 
+  /**
+   * Create a new instance of the mapping service.
+   *
+   * @throws NullPointerException
+   *         if service is null.
+   */
   public
   FriendMap {this}
   (
@@ -32,6 +38,7 @@ public class FriendMap extends Delegator {
     MapServer {owner←} service,
     Principal {owner←} owner
   )
+  throws NullPointerException
   where authority (this)
   {
     // these endorsements are safe, because owner ≽ this,
