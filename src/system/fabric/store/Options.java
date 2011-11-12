@@ -96,8 +96,9 @@ public class Options extends fabric.common.Options {
     if (null == storeName) throw new UsageError("No store name specified");
     
     // Default codeCache is set here because it depends on storeName.
-    if (null == codeCache)
-      this.codeCache = Resources.relpathRewrite("var", storeName + "_cache");
+    if (null == codeCache) {
+      this.codeCache = Resources.relpathRewrite("var", "cache", storeName);
+    }
   }
 
   @Override

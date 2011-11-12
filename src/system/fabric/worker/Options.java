@@ -93,9 +93,10 @@ public class Options extends fabric.common.Options {
   public void validateOptions() throws UsageError {
     if (null == this.name) throw new UsageError("No worker name specified");
     
-    // Default codeCache is set here because it depends on storeName.
-    if (null == this.codeCache)
-      this.codeCache = Resources.relpathRewrite("var", name + "_cache");
+    // Default codeCache is set here because it depends on name.
+    if (null == this.codeCache) {
+      this.codeCache = Resources.relpathRewrite("var", "cache", name);
+    }
   }
 
   @Override
