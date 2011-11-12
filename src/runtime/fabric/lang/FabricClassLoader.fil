@@ -21,11 +21,9 @@ import fabric.common.NSUtil;
 public class FabricClassLoader extends ClassLoader {
   Map/* String, Class */classes;
   Map/* String, byte native[] */classBytecodeMap;
-  final ClassLoader parent;
 
   public FabricClassLoader(ClassLoader parent) {
     super(parent);
-    this.parent = parent;
     this.classes = new HashMap/* String, Class */();
     this.classBytecodeMap = new HashMap/* String, byte native[] */();
   }
