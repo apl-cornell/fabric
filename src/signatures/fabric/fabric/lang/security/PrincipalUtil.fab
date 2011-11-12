@@ -8,7 +8,7 @@ public class PrincipalUtil {
     public static native boolean{p;q;p←;q←} equivalentTo(Principal p, Principal q);
 
     public static native ActsForProof{p;q;q←}
-	findActsForProof(Principal p, Principal q, java.lang.Object searchState);
+	findActsForProof(Store s, Principal p, Principal q, java.lang.Object searchState);
 
     public static native boolean verifyProof(ActsForProof{p;q;q←} proof, 
                                              Principal p, Principal q);
