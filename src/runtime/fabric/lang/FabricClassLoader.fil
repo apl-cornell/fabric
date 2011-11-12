@@ -79,9 +79,10 @@ public class FabricClassLoader extends ClassLoader {
   }
 
   public InputStream getResourceAsStream(String name) {
-    InputStream in = parent.getResourceAsStream(name);
-    if (in != null)
+    InputStream in = super.getResourceAsStream(name);
+    if (in != null) {
       return in;
+    }
     
     /* TODO: support non-class resources also */
     name = name.substring(0,name.length()-".class".length());
