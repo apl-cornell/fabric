@@ -8,7 +8,7 @@ public abstract class Principal {
   /**
    * Jif initializer.
    */
-  public Principal fabric$lang$security$Principal$();
+  public native Principal fabric$lang$security$Principal$();
 
   public abstract String name();
 

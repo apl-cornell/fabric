@@ -4,7 +4,7 @@ public abstract class DelegatingPrincipal extends Principal {
   /**
    * Jif initializer.
    */
-  public DelegatingPrincipal fabric$lang$security$DelegatingPrincipal$();
+  public native DelegatingPrincipal fabric$lang$security$DelegatingPrincipal$();
 
   public abstract void addDelegatesTo(final Principal p);
   
