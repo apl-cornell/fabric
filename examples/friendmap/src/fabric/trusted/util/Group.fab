@@ -215,7 +215,7 @@ public class Group[principal owner]
 
           if (s actsfor this) {
             // find a proof and extend it to include the group
-            ActsForProof{this;s;this←} proof = PrincipalUtil.findActsForProof(p, s, searchState);
+            ActsForProof{this;s;this←} proof = PrincipalUtil.findActsForProof(c, p, s, searchState);
             if (proof != null)
                 return new TransitiveProof(proof, s, new DelegatesProof(s, this));
           }
