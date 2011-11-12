@@ -1,0 +1,18 @@
+package fabric.lang.security;
+
+/**
+ *  A placeholder for the "this" principal to be used in labels passed into
+ *  Principal constructors.
+ */
+final class ThisPrincipalPlaceholder extends AbstractPrincipal {
+  private static ThisPrincipalPlaceholder INSTANCE = null;
+
+  public static ThisPrincipalPlaceholder getInstance() {
+    if (INSTANCE == null) {
+      INSTANCE = new ThisPrincipalPlaceholder();
+    }
+
+    return INSTANCE;
+  }
+}
+

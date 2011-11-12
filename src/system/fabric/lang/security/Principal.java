@@ -105,6 +105,14 @@ public interface Principal extends fabric.lang.Object {
     public PrivateKeyObject getPrivateKeyObject() {
       return ((Principal) fetch()).getPrivateKeyObject();
     }
+    
+    /**
+     * @return a placeholder for the "this" principal to be used in labels
+     *         passed into Principal constructors.
+     */
+    public static Principal thisPrincipalPlaceholder() {
+      return Principal._Impl.thisPrincipalPlaceholder();
+    }
   }
 
   abstract public static class _Impl extends fabric.lang.Object._Impl implements
@@ -213,6 +221,14 @@ public interface Principal extends fabric.lang.Object {
     public final PrivateKeyObject getPrivateKeyObject() {
       TransactionManager.getInstance().registerRead(this);
       return privateKeyObject;
+    }
+    
+    /**
+     * @return a placeholder for the "this" principal to be used in labels
+     *         passed into Principal constructors.
+     */
+    public static Principal thisPrincipalPlaceholder() {
+      return ThisPrincipalPlaceholder._Proxy.getInstance();
     }
   }
 
