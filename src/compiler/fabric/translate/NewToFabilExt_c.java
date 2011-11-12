@@ -141,7 +141,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
         return new AccessPathThis((ClassType) ap.type(), ap.position()) {
           @Override
           public String exprString() {
-            return "fabric.lang.security.Principal.thisPrincipalPlaceHolder()";
+            return "fabric.lang.security.Principal.thisPrincipalPlaceholder()";
           }
         };
       }
