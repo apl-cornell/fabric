@@ -109,11 +109,14 @@ public class MapImage[label L] {
     Store{*l} s
   )
   where
+    // see util.Util.copyArray for details about restrictions
+    {s←} <= l,
+    l <= {s→},
     L <= l
   {
     try {
 
-      return new MapImage[l] (boundary.copy(l,s), width, height, Util.copyArray(data, l, l, L, L, s));
+      return new MapImage[l] (boundary.copy(l,s), width, height, Util.copyArray(data, l, L, s));
 
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("data and boundary must be non-null");
