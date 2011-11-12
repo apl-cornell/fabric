@@ -73,22 +73,6 @@
   <target name="clobber" depends="clean"
           description="Removes generated files and state of stores and workers">
     <delete dir="${home}/var"/>
-    <delete dir="${home}/.${broker.worker}_cache"/>
-    <delete dir="${home}/.${user.worker}_cache"/>
-    <delete dir="${home}/.${airlineA.worker}_cache"/>
-    <delete dir="${home}/.${airlineB.worker}_cache"/>
-    <delete dir="${home}/.${broker.store}_cache"/>
-    <delete dir="${home}/.${user.store}_cache"/>
-    <delete dir="${home}/.${airlineA.store}_cache"/>
-    <delete dir="${home}/.${airlineB.store}_cache"/>
-    <delete dir="${home}/bin/.${broker.worker}_cache"/>
-    <delete dir="${home}/bin/.${user.worker}_cache"/>
-    <delete dir="${home}/bin/.${airlineA.worker}_cache"/>
-    <delete dir="${home}/bin/.${airlineB.worker}_cache"/>
-    <delete dir="${home}/bin/.${broker.store}_cache"/>
-    <delete dir="${home}/bin/.${user.store}_cache"/>
-    <delete dir="${home}/bin/.${airlineA.store}_cache"/>
-    <delete dir="${home}/bin/.${airlineB.store}_cache"/>
   </target>
 
   <!--
