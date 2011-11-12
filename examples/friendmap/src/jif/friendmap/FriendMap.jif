@@ -14,6 +14,7 @@ import util.Delegator;
 import util.AssertionFailedError;
 import util.NoSuchElementException;
 import util.Util;
+import util.System;
 
 /**
  * This is the mapping application.  A FriendMap is instantiated with a particular
@@ -121,26 +122,27 @@ public class FriendMap extends Delegator {
   )
   throws
   (
-    NullPointerException {user},
-    SecurityException    {*lbl; user; lbl; user←}
+    NullPointerException {user}
   )
   where
     service actsfor user.friendInfo, // because the service will learn about the users friends.
     {service←}    <= lbl,            // because the service influences the map.
-    lbl <= {Util.user→; _←}
+    lbl <= {System.user→; _←},       // because data will be output to the system user
+    {System.user→; System.user←; user; lbl} <= lbl
   {
     if (user == null)
       throw new NullPointerException();
 
     MapImage[lbl] result = createMap(lbl, user);
-    PrintStream[lbl] out = Util.stdout(lbl);
+    PrintStream[lbl] out = System.stdout(lbl);
 
-    result.print(out);
+    if (result == null)                                             { throw new AssertionFailedError("createMap() returns a non-null value."); }
+    try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("System.stdout must return a non-null value"); }
   }
 
 
   /**
-   * creates a map of the user's friends, visible at label l
+   * creates a map of the user's friends, visible at label l.  Return value is non-null.
    */
   public
   MapImage[l]
@@ -157,6 +159,8 @@ public class FriendMap extends Delegator {
     {service←} <= l,
     service actsfor user.friendInfo
   {
+    return null;
+    /*
     // invariant checks
     if (user == null)
       throw new NullPointerException();
@@ -199,7 +203,9 @@ public class FriendMap extends Delegator {
     MapImage[fetchLabel] map = this.service.getMap(fetchLabel, boundary);
 
     // make a local copy (with label l)
-    final MapImage[l] annotated = map.copy(l, /* TODO: local store */ null);
+    // TODO
+    final Store localStore = null;
+    final MapImage[l] annotated = map.copy(l, localStore);
 
     if (annotated == null)          throw new AssertionFailedError("MapImage.copy return value should be non-null");
     if (annotated.boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
@@ -230,6 +236,7 @@ public class FriendMap extends Delegator {
     }
 
     return annotated;
+  */
   }
 }
 

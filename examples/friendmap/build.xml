@@ -156,9 +156,9 @@
         <arg value="${jifc}"/>
         <arg value="-fail-on-exception"/>
         <arg value="-e"/>
-        <arg value="-sourcepath" /> <arg value="@{srcdir}"                />
-        <arg value="-d"          /> <arg value="${home}/classes/jif"      />
-        <arg value="-classpath"  /> <arg value="${home}/classes/jif"      />
+        <arg value="-sourcepath" /> <arg value="@{srcdir}"              />
+        <arg value="-d"          /> <arg value="${home}/classes/jif"    />
+        <arg value="-classpath"  /> <arg value="${home}/classes/jif"    />
         <arg value="-addsigcp"  /> <arg value="${home}/classes/jif-sig" />
         <extra-args />
         <srcfile />
@@ -193,7 +193,6 @@
         <arg value="-sourcepath" /> <arg value="@{srcdir}"                />
         <arg value="-d"          /> <arg value="${home}/classes/jif"      />
         <arg value="-classpath"  /> <arg value="${home}/classes/jif"      />
-        <arg value="-addsigcp"   /> <arg value="${home}/classes/jif-sig" />
         <extra-args />
         <srcfile />
 
@@ -212,9 +211,9 @@
     <attribute name="excludes" default="" />
     <element name="extra-args" implicit="true" optional="yes"/>
     <sequential>
-      <mkdir dir="${home}/classes/jif-sig" />
+      <mkdir dir="${home}/classes/jif-sig-impl" />
       <javac srcdir="@{srcdir}"
-             destdir="${home}/classes/jif-sig"
+             destdir="${home}/classes/jif-sig-impl"
              includes="@{includes}"
              excludes="@{excludes}"
              classpath="${jif.home}/rt-classes"

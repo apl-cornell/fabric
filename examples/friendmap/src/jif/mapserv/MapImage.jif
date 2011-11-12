@@ -141,6 +141,8 @@ public class MapImage[label L] {
   (
     NullPointerException{out}
   )
+  where
+    {out} <= L
   {
     // check assertions
     if (out == null)
