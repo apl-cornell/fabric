@@ -8,10 +8,14 @@ import jif.translate.NewToJavaExt_c;
 import jif.types.JifPolyType;
 import jif.types.JifSubst;
 import jif.types.JifSubstType;
+import jif.types.LabelSubstitution;
 import jif.types.ParamInstance;
+import jif.types.label.AccessPath;
+import jif.types.label.AccessPathThis;
 import jif.types.label.Label;
 import polyglot.ast.Expr;
 import polyglot.ast.New;
+import polyglot.types.ClassType;
 import polyglot.types.SemanticException;
 import polyglot.visit.NodeVisitor;
 import fabil.ast.FabILNodeFactory;
@@ -70,6 +74,17 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       // translate the labels to FabIL
       Label fieldLabel = ct.singleFabilFieldLabel();
       Label accessLabel = ct.singleFabilAccessLabel();
+      
+      if(ct.descendsFrom(ts.PrincipalClass())) {
+        // special case for classes extending Principal
+        // replace all references to "this" in the fieldLabel and accessLabel
+        // with a placeholder
+        ThisPrincipalPlaceholderSubstitution thisSubst = 
+            new ThisPrincipalPlaceholderSubstitution();
+        fieldLabel = fieldLabel.subst(thisSubst);
+        accessLabel = accessLabel.subst(thisSubst);
+      }
+      
       if (fieldLabel != null && !sigMode) {
         labelExpr = rw.labelToJava(fieldLabel);
       }
@@ -118,4 +133,20 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       return rw.qq().parseExpr("new %T(%LE)", n.objectType(), allArgs);
     }
   }
+  
+  private static class ThisPrincipalPlaceholderSubstitution extends LabelSubstitution {
+    @Override
+    public AccessPath substAccessPath(AccessPath ap) {
+      if(ap instanceof AccessPathThis) {
+        return new AccessPathThis((ClassType) ap.type(), ap.position()) {
+          @Override
+          public String exprString() {
+            return "fabric.lang.security.Principal.thisPrincipalPlaceHolder()";
+          }
+        };
+      }
+      return ap;
+    }
+  };
+
 }
