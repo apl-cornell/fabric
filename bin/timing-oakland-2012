@@ -259,7 +259,7 @@ def report(header, mean, total):
   if reportMeans:
     print('  {:.<25s}  {:>5d}  {:>5d}'.format(header, mean, total))
   else:
-    print('  {:.<25s}  {:>5d}'.format(header, total))
+    print('  {:.<25s}{:>5d}'.format(header, total))
 
 print('Times for class loads that require compilation')
 
@@ -267,8 +267,8 @@ if reportMeans:
   print('  {:<25s}  {:>5s}  {:>5s}'.format('Event', 'Mean', 'Total'))
   print('  ---------------------------------------')
 else:
-  print('  {:<25s}  {:>5s} (ms)'.format('Event', 'Time'))
-  print('  -------------------------------------')
+  print('  {:<25s}{:>5s} (ms)'.format('Event', 'Time'))
+  print('  -----------------------------------')
 
 totalMean = 0
 totalTotal = 0
