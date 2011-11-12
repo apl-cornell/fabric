@@ -1,0 +1,130 @@
+#!/bin/bash
+# Fabric root
+FABRIC="$(dirname $0)/.."
+PATH="${PATH}:${FABRIC}/bin"
+app_home="$(dirname $0)/.."
+
+keep=false
+
+cleanup()
+# shutdown nodes
+{
+  exit $?
+#  for s in ${stores//,/ }; do
+#    echo "Shutting down $s"
+#    screen -S $s -X stuff "exit 
+#"
+#    screen -S $s -X quit
+#  done
+#
+#  for w in ${workers//,/ }; do
+#    echo "Shutting down $w"
+#    screen -S $w -X stuff "exit 
+#"
+#    screen -S $w -X quit
+#  done
+#
+#  exit $?
+}
+
+control_c()
+# run if user hits control-c
+{
+  echo -en "\n*** Exiting ***\n"
+  cleanup
+  exit $?
+}
+
+
+while true; do
+  case "$1" in
+    "")
+      break
+      ;;
+    --start-workers)
+      workers=$2
+      shift 2
+      ;;
+    --start-stores)
+      stores=$2
+      shift 2
+      ;;
+    --keep-nodes)
+      keep=true
+      shift 1
+      ;;
+    --app-home)
+      app_home="$2"
+      shift 2
+      ;;
+    --jvm-cp)
+      jvmcp="--jvm-cp $2"
+      shift 2
+      ;;
+    --run-command)
+      cmd=$2
+      shift 2
+      ;;
+    *)
+      args="${args} '$1'"
+      shift
+      ;;
+  esac
+done
+
+# Set fabric home in case cmd needs it.
+export FABRIC_HOME="${app_home}" 
+app_home_arg="--app-home ${FABRIC_HOME}" 
+
+# trap keyboard interrupt (control-c)
+trap control_c SIGINT
+
+for s in ${stores//,/ }; do
+  echo "Starting store $s"
+  screen -S $s -X exec fab-store -v ${jvmcp} ${app_home_arg} --name $s || {
+    screen -d -m -S $s -c /dev/null
+    screenbug $s
+    screen -S $s -X logfile $s.log
+    screen -S $s -X log on
+    screen -S $s -X exec fab-store -v ${jvmcp} ${app_home_arg} --name $s
+  }
+done
+
+if [ -n "${stores}" ]; then
+  echo "Waiting for stores to start up"
+  for s in {0..5}; do
+    printf "."
+    sleep 1	
+  done
+  echo "done"
+fi
+
+for s in ${workers//,/ }; do
+  echo "Starting worker $s"
+  screen -S $s -X exec fab -v ${jvmcp} ${app_home_arg} --name $s || {
+    screen -d -m -S $s -c /dev/null
+    screenbug $s
+    screen -S $s -X logfile $s.log
+    screen -S $s -X log on
+    screen -S $s -X exec fab -v ${jvmcp} ${app_home_arg} --name $s
+  }
+done
+
+if [ -n "${stores}" ]; then
+  echo "Waiting for workers to start up"
+  for s in {0..5}; do
+    printf "."
+    sleep 1	
+  done
+  echo "done"
+fi
+
+if [ -n "${cmd}" ]; then
+  ${cmd} ${args}
+fi
+
+if [[ "${keep}" == "false" ]]; then
+  cleanup
+fi
+
+# vim: ts=2 sw=2 ai et

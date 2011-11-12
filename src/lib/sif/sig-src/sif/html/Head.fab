@@ -1,0 +1,23 @@
+package sif.html;
+
+/**
+ * The head of an HTML page.
+ */
+public final class Head[label L, label E] extends Node[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    private final String{L} title;
+    private final String{L} styleFile;
+    
+    /** Create a page head. Non-public to allow servlet to control
+     *  creation through the createHead() method.
+     * @param t The page title
+     * @param styleFile The URL of the style file. May be null to signal absence.
+     */	 
+    private Head(String{L} t, String{L} s) {
+	super();
+        title = t;
+        styleFile = s;
+    }    
+}

@@ -1,0 +1,26 @@
+import fabricated.util.LinkedList;
+
+public class Subclass01 {
+  private final principal        {p<-; p->} p;
+  private final Store             {p<-; p->} store;
+  private LinkedList[{p->; p<-}] {p->; p<-} foo;
+
+  public Subclass01() {
+    store = worker$.getLocalStore();
+    p    = store;
+    foo  = new LinkedList();
+  }
+
+  public void f{p->; p<-}() {
+    JifObject[{p<-; p->}] bar = new Subclass02[{p<-; p->}]@store();
+    try {
+      foo.add(bar);
+    } catch(final NullPointerException e) {
+    }
+  }
+
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0
+*/

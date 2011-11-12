@@ -1,0 +1,10 @@
+package jif.util;
+
+/**
+ * An iterator interface for the Jif collection framework.
+ */
+public interface Iterator2[label S, label C] {
+    boolean{S} hasNext();
+    JifObject[C]{S} next{S}() throws (NoSuchElementException{S});
+    void remove{S}() throws (IllegalStateException{S});
+}

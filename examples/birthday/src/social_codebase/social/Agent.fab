@@ -1,0 +1,11 @@
+package social;
+/**
+ * {SN<-A} = provider
+ */
+
+public interface Agent[principal A, principal SN] 
+    where SN actsfor A, {*provider} <= {SN<-A} {
+  void happyBirthday{bdayPerson<-bdayUser.friends, A}
+      (final principal{SN<-} bdayPerson, User[bdayPerson, SN]{SN<-} bdayUser)
+      where SN actsfor bdayPerson, SN actsfor bdayUser.friends;
+}

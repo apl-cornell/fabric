@@ -1,0 +1,67 @@
+package fabric.util;
+
+/**
+ * This exception is thrown when a resource is missing.
+ *
+ * @author Jochen Hoenicke
+ * @author Warren Levy (warrenl@cygnus.com)
+ * @see ResourceBundle
+ * @since 1.1
+ * @status updated to 1.4
+ */
+public class MissingResourceException extends RuntimeException
+{
+  /**
+   * Compatible with JDK 1.1+.
+   */
+  private static final long serialVersionUID = -4876345176062000401L;
+
+  /**
+   * The name of the resource bundle requested by user.
+   *
+   * @serial the class name of the resource bundle
+   */
+  private final String className;
+
+  /**
+   * The key of the resource in the bundle requested by user.
+   *
+   * @serial the name of the resouce
+   */
+  private final String key;
+
+  /**
+   * Creates a new exception, with the specified parameters.
+   *
+   * @param s the detail message
+   * @param className the name of the resource bundle
+   * @param key the key of the missing resource
+   */
+  public MissingResourceException(String s, String className, String key)
+  {
+    super(s);
+    this.className = className;
+    this.key = key;
+  }
+
+  /**
+   * Gets the name of the resource bundle, for which a resource is missing.
+   *
+   * @return the name of the resource bundle
+   */
+  public String getClassName()
+  {
+    return className;
+  }
+
+  /**
+   * Gets the key of the resource that is missing bundle, this is an empty
+   * string if the whole resource bundle is missing.
+   *
+   * @return the name of the resource bundle
+   */
+  public String getKey()
+  {
+    return key;
+  }
+}

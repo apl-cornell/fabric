@@ -1,0 +1,23 @@
+package sif.html;
+
+public final class Header[label L, label E] extends BlockContainer[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    private final int{L} level;
+    
+    public Header(int{L} level, 
+            label cL, label cE, 
+            Node[cL,cE]{L} contents) where {*cL} <= L, {E;contents} <= {*cE} {
+        super(cL, cE, contents, "h"+(level<1?"1":(level>5?"5":Integer.toString(level))));
+        this.level = level<1?1:(level>5?5:level);;
+    }
+    
+    /**
+     * @param i
+     * @param header
+     */
+      public Header(int{L} i, String{L} header) {
+          this(i, L, E, new Text[L, E](header));
+      }
+}

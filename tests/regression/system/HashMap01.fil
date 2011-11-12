@@ -1,0 +1,52 @@
+package system;
+
+import fabric.util.*;
+
+public class HashMap01 {
+  static String key = "HashMap01";
+  static int numItems = 1000;
+
+  public static class Init {
+    public static void main(String[] args) {
+      atomic {
+        Store c = Worker.getWorker().getStore("store0");
+        Map root = (Map) c.getRoot();
+  
+        Map m = new HashMap@c();
+  
+        for (int i = 0; i < numItems; i++) {
+          m.put(new Object@c(), new Object@c());
+        }
+  
+        root.put(key, m);
+      }
+      System.out.println("TEST PASSED.");
+    }
+  }
+  
+  public static class Run {
+    public static void main(String[] args) {
+      int i = 0;
+      atomic {
+        Store c = Worker.getWorker().getStore("store0");
+        Map root = (Map) c.getRoot();
+  
+        Map m = (Map) root.get(key);
+        Iterator it = m.values().iterator(Worker.getWorker().getLocalStore());
+  
+        while (it.hasNext()) {
+          it.next();
+          i++;
+        }
+      }
+
+      if (i == numItems) {
+        System.out.println("TEST PASSED.");
+      } else {
+        System.out.println("TEST FAILED: Expected " + numItems
+            + " items but got " + i);
+      }
+    }
+  }
+  
+}

@@ -1,0 +1,22 @@
+public class Hetero1[principal S] {
+	int{S→} x; // high variable
+	int{} y; // low variable
+}
+
+class A {
+	public void foo() {
+	    FabricWorker local = FabricWorker.getWorker();
+		final RemoteWorker w = local.getWorker("alice");
+		final Store s = local.getStore("bob");
+		if (s actsfor w) {
+		    // worker is less trusted than store
+		    Hetero1 h = new Hetero1[s]@s();
+		    bar@w(h);
+		}
+	}
+
+	public void bar(Hetero1 h) {
+		int a;
+		a = h.y; // allowed statically but fails dynamically?
+	}
+}

@@ -1,0 +1,41 @@
+This is a simple example illustrating how to create and access a (secret) binary search tree
+on a Fabric store. This tree is only readable and writable by the creator (and the store).
+
+====Compiling the tree Example====
+
+Running 'ant examples' in the Fabric base directory will compile all examples
+including the tree example.
+
+If only this tree example needs to be compiled, first run 'ant libs' in the
+Fabric base directory to make sure all library code is compiled. Then run 'ant'
+in the $FABRIC/exampes/tree directory to compile the this example.
+
+====Running the tree Example====
+
+The tree example runs on one store (store0) and one worker (worker0)
+The store does not have any persistent application data.
+
+Follow these steps to run this example. The following items should be on the classpath:
+
+a. $FABRIC/examples/tree/classes
+b. $FABRIC/src/lib/transient/classes
+c. $FABRIC/classes
+d. $FABRIC/rt-classes
+e. $FABRIC/src/lib/sif/classes
+
+Step 1. Start a fresh instance of the store0
+
+Running the following command will start a new store for this application:
+$ fab-store --name store0
+
+Step 2. 
+Make sure $FABRIC/examples/tree/classes is on your classpath, and
+Run the following command in any terminal to create a tree at store0:
+
+$ fab --name worker0 tree.Main create
+
+Step 3.
+Make sure $FABRIC/examples/tree/classes is on your classpath, and
+Run the following command in any terminal to read from the tree just created:
+
+$ fab --name worker0 tree.Main read

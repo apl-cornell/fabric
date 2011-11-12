@@ -1,0 +1,40 @@
+package social;
+
+import java.io.PrintStream;
+import fabric.runtime.Runtime;
+
+class Main where {*social.Agent.provider} equiv {*provider}, {*social.SocialNetwork.provider} equiv {*social.Agent.provider} {
+    public static final void main{⊤ <- }  (principal{*provider} p, String[] args)  
+	throws SecurityException, IllegalArgumentException  
+	       where caller(p), provider actsfor p, {*provider} equiv {*SocialNetwork.provider},
+               {*provider} <= {p <- }
+    {
+	PrintStream[{}] out = null;
+          try {
+              Runtime[p] runtime = Runtime[p].getRuntime();
+              out = runtime==null?null:runtime.stdout(new label {});
+          }
+          catch (SecurityException e) {
+              // just let out be null.
+          }
+
+          PrintStream[{}] out1 = endorse(out, {*provider; p->; _<-_} to {{p→p; p<-*} ⊔ {⊤→⊤;⊤←⊤} ⊓ {*provider}});
+          PrintStream[{}] out2 = declassify(out1, {});
+	  
+	  try {
+	      out2.println("Main is running");
+	  } catch (NullPointerException e) {
+	  }
+	  
+	  final RemoteWorker bg = worker$.getWorker("bdayGirlWorker"); 
+	  final RemoteWorker bb = worker$.getWorker("bdayBoyWorker"); 
+	  final RemoteWorker agent = worker$.getWorker("agentWorker"); 
+
+	  final Store soc = worker$.getStore("socialStore"); 
+
+	  if (soc actsfor bb && soc actsfor bg && soc actsfor agent && p equiv soc && provider actsfor soc) {
+		  SocialNetwork[soc, bg, bb, agent] snet = new SocialNetwork[soc, bg, bb, agent](out2);
+		  snet.go();
+	  }
+    }
+}

@@ -1,0 +1,14 @@
+package sif.html;
+
+/** A Node represents part of an HTML document.
+ *  It can be written out to an HTMLWriter in a
+ *  somewhat pretty-printed style. The label L 
+ *  is an upper bound on the information contained in 
+ *  the node. The label E is an upper bound on the information
+ *  gained by knowing that this node is present in the HTML sent 
+ *  to the client.
+ **/
+public abstract class Node[label L, label E] extends java.lang.Object {    
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+}

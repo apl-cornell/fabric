@@ -1,0 +1,16 @@
+package fabric.lang.security;
+
+import fabric.worker.Worker;
+import fabric.worker.Store;
+import fabric.util.Iterator;
+import fabric.util.LinkedHashSet;
+import fabric.util.Set;
+import fabric.util.HashMap;
+import fabric.util.Map;
+
+public final class NodePrincipal extends AbstractPrincipal {
+
+  public NodePrincipal(String name) {
+    super(name);
+  }
+}

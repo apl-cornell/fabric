@@ -1,0 +1,70 @@
+package social;
+import java.io.PrintStream;
+import fabric.runtime.Runtime;
+import fabric.util.Map;
+
+public class SocialNetwork[principal SN, principal A, principal B, principal C] authority (SN) 
+    where {*Agent.provider} equiv {*provider}, {*provider} actsfor SN, {*provider} <= {SN <- }
+{
+  
+  protected final PrintStream[{}] out;
+  
+  public SocialNetwork{}(final PrintStream[{}]{} out) {
+    this.out = out;
+  }
+  
+  public void go{SN<-}() where authority(SN) {
+    final principal user = new principal(C, SN);
+    final principal bb = new principal(B, SN);
+    final principal bg = new principal(A, SN);
+    
+    final principal bbf = new principal(bb, A);
+    final principal bgf = new principal(bg, B);
+
+    if (SN actsfor bb && SN actsfor bg && SN actsfor user) {
+
+      final User[bb, SN] bdayBoy = new User(new label {bb->bbf; bb<-}, 10, bbf);
+      final User[bg, SN] bdayGirl = new User(new label {bg->bgf; bg<-}, 10, new principal (_));
+
+	  final Store socialStore = worker$.getStore("socialStore");
+	  	Map root = socialStore.getRoot();
+        Agent[user, SN] userAgent = (Agent[user,SN])root.get("bdayAgent");
+        final principal bbFriends = bdayBoy.friends;
+        endorse(bbFriends, {bb<-} to {SN<-})
+        if (user actsfor bbFriends) {
+		  userAgent.happyBirthday(bb, bdayBoy);
+        }
+      
+        final principal bgFriends = bdayGirl.friends;
+        endorse(bgFriends, {bg<-} to {SN<-})
+        if (user actsfor bgFriends) {
+		  userAgent.happyBirthday(bg, bdayGirl);
+        }      
+      
+        printWall(bb, bdayBoy);
+        printWall(bg, bdayGirl);
+    }
+  }
+  
+  public void printWall{SN<-}(principal{SN<-} U, User[U, SN]{SN<-} user)
+      where authority(SN), SN actsfor U {
+    String endorsedWall = endorse(user.wall, {U->; U<-user.friends} to {U->; SN<-});
+    String{} wall = declassify(endorsedWall, {});
+    
+    out.println("-----");
+    out.println(wall);
+  }
+
+  public void println{}(String{} s) {
+      out.println(s);
+  }
+}
+
+
+
+	  // Should be able to write this, but jifc is too brain-dead to reason accurately
+	  // enough.
+	  //         if (endorse(SN actsfor bdayBoy.friends, {bb<-} to {SN<-})) {
+	  //           userAgent.happyBirthday(bb, bdayBoy);
+	  //         }
+      

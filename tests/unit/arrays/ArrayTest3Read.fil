@@ -1,0 +1,29 @@
+package arrays;
+
+import fabric.worker.Store;
+import fabric.lang.arrays.ObjectArray;
+import fabric.util.HashMap;
+
+/**
+ * This program is executed after ArrayTest3 is executed
+ */
+
+public class ArrayTest3Read {
+    public static void main(String[] args) {
+        Store store = fabric.worker.Worker.getWorker().getStore("store0");
+        HashMap map = (HashMap)store.getRoot();
+        System.out.println("Map obtained is " + map.toString());
+        
+        System.out.println("Fetching the persistent object array from the store");
+        ObjectArray array = (ObjectArray) map.get("testArray");
+        
+        System.out.println("Fetched array: " + array.toString());
+        
+        System.out.println("The three objects: " + 
+            ((ArrayTest3)array.get(0)).id + "," + 
+            ((ArrayTest3)array.get(999)).id + "," +
+            ((ArrayTest3)array.get(1099)).id);
+        
+        
+    }
+}

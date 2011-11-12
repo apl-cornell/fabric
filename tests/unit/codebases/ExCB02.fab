@@ -1,0 +1,9 @@
+codebase cb;
+import cb.A;
+import cb.C;
+public class ExCB02 extends A {
+	protected C{*->} c;
+	public void m(C c) { 
+		this.c = c;
+	}
+}

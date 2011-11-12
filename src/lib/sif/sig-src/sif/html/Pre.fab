@@ -1,0 +1,21 @@
+package sif.html;
+
+/**
+ * Preformatted text, like <pre>example</example>
+ *
+ * @author andru
+ *
+ **/
+public final class Pre[label L, label E] extends Container[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    public Pre(label cL, label cE, 
+               Node[cL,cE]{L} n) where {*cL} <= L, {E; n} <= {*cE} {
+        super("pre", cL, cE, n);
+    }
+
+    public Pre(String{L} text) {
+        super("pre", L, E, new Text[L, E](text));
+    }
+}

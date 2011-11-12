@@ -1,0 +1,14 @@
+package fabil;
+
+public class Array03 {
+  void m() {
+    fabric.lang.Object[] fo = new fabric.lang.Object[1];
+    String[] s = new String[1];
+    java.lang.Object j = s[0];
+    fo[0] = s[0];
+    fo[0] = (fabric.lang.Object) j;
+    s[0] = (String) j;
+    s[0] = (String) fo[0];
+  }
+}
+

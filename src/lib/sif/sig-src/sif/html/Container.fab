@@ -1,0 +1,25 @@
+package sif.html;
+
+/**
+ * @author andru
+ *
+ * A container is an HTML form that starts with a
+ * begin tag and ends with an end tag. This class has
+ * package scope to prevent arbitrary use.
+ */
+abstract class Container[label L, label E] extends Tag[L, E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+    
+    Container(String{L} tag_,
+    		label cL, label cE,
+            Node[cL,cE]{L} n) where {*cL} <= L, {E; n} <= {*cE} {
+        super(tag_, null);
+    }
+    
+    Container(String{L} tag_, String{L} class_, 
+            label cL, label cE, 
+            Node[cL,cE]{L} n) where {*cL} <= L, {E; n} <= {*cE} {
+        super(tag_, class_);
+    }
+}

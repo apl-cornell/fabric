@@ -1,0 +1,77 @@
+package system;
+
+import fabric.runtime.Runtime;
+import java.io.PrintStream;
+
+public class RemoteCall02 {
+  final Store{_->_; worker$<-*} store;
+
+  final RemoteWorker{_->_; worker$<-*} remoteWorker;
+
+  final RemoteCall02Data[{worker$->; worker$<-}]{_->_; worker$<-*} data;
+
+  RemoteCall02() {
+    store = worker$.getStore("store0");
+
+    remoteWorker = worker$("store0");
+	if (store actsfor worker$) {
+      data = new RemoteCall02Data[{worker$->; worker$<-}]@store();
+	}
+	else {
+      data = null;
+	}
+  }
+
+  public void moo{worker$->;worker$<-}(int arg) : {worker$->;worker$<-} {
+    if (data == null) return;
+    data.i+=arg;
+  }
+
+  void run{worker$->;worker$<-}() {
+    try {
+      atomic {
+        if (remoteWorker actsfor worker$)
+          moo@remoteWorker(42);
+      }
+
+      int{worker$->; worker$<-} curI = 0;
+      atomic {
+        if (data == null) return;
+        curI = data.i;
+      }
+
+      Runtime[worker$] runtime = null;
+      atomic {
+        runtime = Runtime.getRuntime();
+      }
+      if (runtime == null) return;
+
+      PrintStream out = null;
+      out = runtime.out();
+      if (out == null) return;
+      out.println();
+
+      if (curI == 1) out.println("TEST PASSED.");
+      else out.println("TEST FAILED: expected t.i == 1 but got " + curI);
+    } catch (SecurityException e) {
+    }
+  }
+  
+  public static void main{_->_; *<-*}(String[] args) {
+    final Store store = worker$.getStore("store0");
+    
+    RemoteCall02 obj = null;
+    atomic {
+      if (store actsfor worker$) {
+        obj = new RemoteCall02@store();
+      }
+    }
+
+    if (obj != null) obj.run();
+  }
+}
+
+class RemoteCall02Data[label L] {
+  int{L} i;
+}
+

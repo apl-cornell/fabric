@@ -1,0 +1,26 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.io;
+
+public class BufferedReader[label L] extends Reader[L] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    public BufferedReader(Reader[L] in, int{L} sz) {super();}
+    public BufferedReader(Reader[L] in) {super();}
+
+
+    public native int{L;cbuf} read{cbuf;L}(char{L}[] cbuf, int{L} off, int{L} len) throws (IOException{L;cbuf});
+
+    public native String{L} readLine{L}() throws (IOException{L});
+    public native long{L} skip{L}(long{L} n) throws (IOException{L});
+    public native boolean{L} ready() throws (IOException{L});
+    public native boolean{L} markSupported();
+    public native void mark{L}(int{L} readAheadLimit) throws (IOException{L});
+    public native void reset{L}() throws (IOException{L});
+    public native void close{L}() throws (IOException{L});
+
+}

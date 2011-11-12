@@ -1,0 +1,50 @@
+package calendar;
+
+import userserv.*;
+import sif.servlet.SessionState;
+import fabricated.util.Date;
+
+class State[covariant label T] {
+    State(User[CalServEP, T]{T} currentUser, 
+          Date[{currentUser←}]{T} displayDate, 
+          int{T} displayKind, 
+          User[CalServEP, T]{T} displayUser) {
+        this.currentUser = currentUser;
+        this.displayDate = displayDate;
+        this.displayKind = displayKind;
+        this.displayUser = displayUser;
+    }
+    final User[CalServEP, T]{T} currentUser;
+    final Date[{currentUser←}]{T} displayDate;
+    final int{T} displayKind;
+    final User[CalServEP, T]{T} displayUser;
+    
+    State[lbl] changeDisplayUser{*lbl}(label{*lbl} lbl, User[CalServEP, lbl]{*lbl} displayUser)
+    where T <= lbl {
+        return new State[lbl](this.currentUser, this.displayDate, this.displayKind, displayUser);
+    }
+    
+    State[lbl] changeDisplayDate{*lbl}(label{*lbl} lbl, Date[{currentUser←}]{*lbl} displayDate, int{*lbl} displayKind)
+    where T <= lbl {
+        return new State[lbl](this.currentUser, displayDate, displayKind, this.displayUser);
+    }
+    State[lbl] changeDisplayDate{*lbl}(label{*lbl} lbl, Date[{currentUser←}]{*lbl} displayDate)
+    where T <= lbl {
+        return new State[lbl](this.currentUser, displayDate, this.displayKind, this.displayUser);
+    }
+    
+    static State[{P←;S←}]{P←;S←} declassifyState{P←}(principal{P←} P, principal{P←} S, State[{P←;P→;S←}]{P←;P→;S←} state) {
+        State[{P←;P→;S←}]{P←;S←} state_ = declassify(state, {P←;P→;S←} to {P←;S←});
+        if (state_ == null) return null;
+        User nuser1 = declassify(state_.currentUser, {P←;P→} to {P←});
+        User nuser2 = User.declassifyUser(P, CalServEP, nuser1);
+        Date ndate = declassify(state_.displayDate, {P←;P→} to {P←});
+        int nkind = declassify(state_.displayKind, {P←;P→} to {P←});
+        User ndisp1 = declassify(state_.displayUser, {P←;P→} to {P←});
+        User ndisp2 = User.declassifyUser(P, CalServEP, ndisp1);
+        
+        State[{P←}] toReturn = new State[{P←}](nuser2, ndate, nkind, ndisp2);
+        return toReturn;
+    }
+}
+

@@ -1,0 +1,224 @@
+package fabnfs.util;
+
+import fabric.worker.Store;
+import fabric.util.HashMap;
+import java.util.StringTokenizer;
+
+
+/**
+ * This tries to mimic java.io.File. However, the spirit is different, since
+ * java.io.File is just a layer over the actual file in the filesystem, whereas
+ * fabnfs.util.File is the file itself
+ *
+ * Also, let's say all paths are absolute
+ */
+public class FileImpl implements File {
+    /**
+     * The full pathname for this file
+     */
+    String name;
+
+    FabDirectory parentDir = null;
+    FileSystemObject element = null;
+    String lastName = null;
+
+    Store remoteStore;
+
+    // attributes
+    public FileImpl(Store remoteStore, String name) {
+        this.name = name;
+        this.remoteStore = remoteStore;
+    }
+
+    // all the methods in java.io.File
+    private void searchFile() {
+        atomic {
+            if (parentDir != null || element != null || lastName != null) return;
+            HashMap root = (HashMap)remoteStore.getRoot();
+            FabDirectory rootDir = (FabDirectory)root.get("fileSystem");
+            FabDirectory dir = rootDir;
+
+            StringTokenizer tokenizer = new StringTokenizer(name, FileSystemObject.separatorChar);
+            FileSystemObject obj = dir;
+            String token = null;
+            while(tokenizer.hasMoreTokens()) {
+                token = tokenizer.nextToken();
+                obj = dir.getFile(token);
+                boolean moreToks = tokenizer.hasMoreTokens();
+                boolean isDir = (obj instanceof FabDirectory);
+                if (moreToks) {
+                    if (!isDir) {
+                        return;
+                    }
+                    dir = (FabDirectory)obj;
+                }
+            }
+            element = obj;
+            parentDir = dir;
+            lastName = token;
+            return;
+        }
+    }
+
+    public boolean exists() {
+        atomic {
+            searchFile();
+//            System.out.println("Checking for existence of " + name + " in " + parentDir.fullPath + parentDir.listString());
+            return(element != null);
+        }
+    }
+
+    public boolean isFile() {
+        atomic {
+            if (element == null) {
+                if (!exists()) {
+                    return false;
+                }
+            }
+            if (element instanceof FabFile) {
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public boolean isDirectory() {
+        atomic {
+            if (element == null) {
+                if (!exists()) {
+                    return false;
+                }
+            }
+            if (element instanceof FabDirectory) {
+                return true;
+            }
+            return false;
+        }
+    }
+
+
+    // TODO apply access control here
+    public boolean canRead() {
+        return exists();
+    }
+
+    // TODO apply access control here
+    public boolean canWrite() {
+        return exists();
+    }
+
+    public long lastModified() {
+        atomic {
+                searchFile();
+            if (element == null) {
+                return 0;
+            }
+            return element.lastModifiedDate;
+        }
+    }
+
+    public boolean delete() {
+        atomic {
+            element.selfDestruct();
+            element = null;
+            parentDir = null;
+            return true;
+        }
+    }
+
+    public StringArray list() {
+        atomic {
+            if (!isDirectory()) {
+                return null;
+            }
+            FabDirectory dir = (FabDirectory)element;
+            return dir.list();
+        }
+    }
+
+    public boolean mkdir() {
+        atomic {
+            if (element != null) {
+                return false;
+            }
+            if (parentDir == null) {
+                searchFile();
+            }
+
+            element = parentDir.mkdir(lastName, name);
+            if (element == null) {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public boolean mkfile() {
+        atomic {
+            if (element != null) {
+                return false;
+            }
+            if (parentDir == null) {
+                searchFile();
+            }
+
+//            System.out.println("Going to add file to parent");
+            element = parentDir.mkfile(lastName, name);
+            if (element == null) {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public boolean renameTo(File dest) {
+        atomic {
+//          XXX Allowing rename even if dest exists
+//          if (dest.exists()) {
+//          return false;
+//          }
+
+            // setup the dest file
+            FileImpl destImpl = (FileImpl)dest;
+            destImpl.searchFile();
+            destImpl.element = this.element;
+            destImpl.element.moveTo(destImpl.lastName, destImpl.parentDir, destImpl.name);
+            destImpl.parentDir.addFile(destImpl.lastName, element);
+
+            // delete this file from here
+            this.parentDir.deleteFile(lastName);
+            this.element = null;
+            this.parentDir = null;
+
+            return true;
+        }
+    }
+
+    public boolean reset() {
+        atomic {
+            if (!exists()) {
+                return false;
+            }
+            if (!(element instanceof FabFile)) {
+                return false;
+            }
+            FabFile file = (FabFile)element;
+            file.contents.setLength(0);
+            return true;
+        }
+    }
+
+    public long length() {
+        atomic {
+            if (!exists()) {
+                return 0;
+            }
+            if (!(element instanceof FabFile)) {
+                return 0;
+            }
+            FabFile file = (FabFile)element;
+            return file.contents.getLength();
+        }
+    }
+
+}

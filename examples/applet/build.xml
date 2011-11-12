@@ -1,0 +1,114 @@
+<!--
+  This is the Apache Ant build file for the Fabric applet example.
+-->
+
+<project name="applet" default="build-all" basedir=".">
+  <description>
+    Fabric applet build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="applet.home" file="${ant.file.applet}" />
+
+  <property name="applet.src" location="${applet.home}/src"/>
+  <property name="applet.classes" location="${applet.home}/classes"/>
+  <property name="applet.lib" location="${applet.home}/applets/lib" />
+  <property name="applet.jar" location="${applet.home}/applets/fabapp.jar" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${applet.classes}"/>
+    <delete dir="${applet.lib}"/>
+    <delete file="${applet.jar}"/>
+  </target>
+
+  <target name="clobber" depends="clean" />
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+      description="Builds the Fabric browser applet">
+    <mkdir dir="${applet.classes}" />
+    <javac source="1.6" target="1.6" srcdir="${applet.src}"
+        destdir="${applet.classes}" includeAntRuntime="false" debug="on">
+      <include name="**/*.java" />
+      <classpath refid="fabric.classpath" />
+    </javac>
+  </target>
+
+  <target name="applet" depends="build-all" />
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+  <!--
+  ****************************************************************************
+    Jar targets
+  ****************************************************************************
+  -->
+
+  <target name="jar" depends="build-all,signed-jars"
+      description="Packages the applet into a jar file">
+    <jar jarfile="${applet.jar}" basedir="${applet.classes}"
+        excludes="**/*.java">
+      <manifest>
+        <attribute name="Built-By" value="${user.name}"/>
+        <attribute name="Class-Path" value="lib/FreePastry-2.1.jar 
+            lib/JFlex.jar lib/fabcoll.jar lib/fabric-rt.jar lib/fabric.jar 
+            lib/java_cup.jar lib/je-3.3.75.jar lib/jif.jar lib/polyglot.jar"/>
+      </manifest>
+      <fileset dir="${applet.src}" includes="JNLP-INF/**"/>
+    </jar>
+
+    <signjar jar="${applet.jar}" alias="Applet" storepass="password"
+        keystore="${applet.home}/appletcert.keystore"/>
+
+    <!-- <copy file="${applet.src}/JNLP-INF/APPLICATION.jnlp"
+         tofile="${applet.home}/applets/fabapp.jnlp" overwrite="true"/> -->
+  </target>
+
+  <target name="jar-applet" depends="jar" />
+
+  <!--
+  ____________________________________________________________________________
+    Jar helper targets.
+  -->
+
+  <target name="signed-jars">
+    <!--
+      Call the "jar-all" target on the Fabric build file to ensure the Fabric
+      jars are up-to-date.
+    -->
+    <ant inheritAll="false" antfile="${fabric.home}/build.xml"
+        dir="${fabric.home}" target="jar-all" />
+
+    <copy todir="${applet.lib}">
+      <fileset dir="${lib}" includes="*.jar"/>
+    </copy>
+
+    <signjar alias="Applet" storepass="password"
+        keystore="${applet.home}/appletcert.keystore">
+      <fileset dir="${applet.lib}" includes="*.jar"/>
+    </signjar>
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

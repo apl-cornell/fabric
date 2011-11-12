@@ -1,0 +1,98 @@
+Store & worker in cluster
+
+Small create:
+
+   app:     861 ms
+ begin:      23 ms
+commit:     497 ms
+ txlog:     969 ms
+ subtx:       1 ms
+ fetch:      38 ms
+ store:   26010 ms
+ Total:   28399 ms (750766   measurements)
+
+ Total:   28183 ms (2        measurements)
+
+
+Small cold (no cached groups):
+
+   app:     867 ms
+ begin:       0 ms
+commit:     199 ms
+ txlog:    1030 ms
+ subtx:       0 ms
+ fetch:    6642 ms
+ store:     196 ms
+ Total:    8934 ms (947860   measurements)
+
+ Total:    9153 ms (2        measurements)
+
+
+Small cold (cached groups):
+
+   app:    1735 ms
+ begin:       0 ms
+commit:     199 ms
+ txlog:     380 ms
+ subtx:       0 ms
+ fetch:    3861 ms
+ store:     174 ms
+ Total:    6349 ms (948538   measurements)
+
+ Total:    6043 ms (2        measurements)
+
+
+Small hot:  w/o commit = 733 ms  (w/o timing: 535 ms)
+
+   app:    1443 ms
+ begin:       0 ms
+commit:     430 ms
+ txlog:     757 ms
+ subtx:       0 ms
+ fetch:       0 ms
+ store:     527 ms
+ Total:    3157 ms (2335526  measurements)
+
+ Total:    2520 ms (2        measurements)
+
+
+Medium create:
+
+   app:    4697 ms
+ begin:      47 ms
+commit:    5157 ms
+ txlog:    8832 ms
+ subtx:       7 ms
+ fetch:      36 ms
+ store:   86518 ms
+ Total:  105294 ms (6497110  measurements)
+
+ Total:  101630 ms (2        measurements)
+
+
+Medium cold (no cached groups):
+
+   app:    6266 ms
+ begin:       0 ms
+commit:    1232 ms
+ txlog:    2351 ms
+ subtx:       1 ms
+ fetch:   74014 ms
+ store:   11465 ms
+ Total:   95329 ms (8598468  measurements)
+
+ Total:   87254 ms (2        measurements)
+
+Medium cold (cached groups):
+
+   app:   10707 ms
+ begin:       0 ms
+commit:    1146 ms
+ txlog:    2430 ms
+ subtx:       0 ms
+ fetch:   40089 ms
+ store:    4904 ms
+ Total:   59276 ms (8598464  measurements)
+
+ Total:   61729 ms (2        measurements)
+

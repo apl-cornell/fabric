@@ -1,0 +1,9 @@
+#!/bin/bash
+# tests directory (contains etc/ for test configs)
+APP_HOME="$(dirname $0)/.."
+# Fabric root
+FABRIC="${APP_HOME}/.."
+PATH="${PATH}:${FABRIC}/bin:${FABRIC}/tests/bin"
+
+launch-nodes --app-home ${APP_HOME} --run-command fabth $@
+# vim: ts=2 sw=2 ai et

@@ -1,0 +1,16 @@
+public class PrincipalTest {
+ public static void main(String[] args) {
+  atomic {
+   Store broker  = Worker.getWorker().getStore(args[0]);
+   Store airline = Worker.getWorker().getStore(args[1]);
+
+   Principal p = new P@broker();
+   IntegPolicy airlineTrusted = LabelUtil.writerPolicy(airline, p, p);  // {bank<-airline} 
+   System.out.println("zarro boogs");
+  }
+ }
+}
+
+class P extends AbstractPrincipal {
+ P() { super("foo"); }
+}

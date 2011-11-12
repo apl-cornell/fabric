@@ -1,0 +1,15 @@
+#!/bin/bash
+
+APP_HOME="$(dirname $0)/.."
+FABRIC_HOME="${APP_HOME}/../.."
+
+source "${FABRIC_HOME}/bin/defs"
+
+CP="${APP_HOME}/classes"
+CP="${CP}:${POLYGLOT}/classes"
+CP="${CP}:${POLYGLOT}/lib/polyglot.jar"
+CP="${CP}:${POLYGLOT}/lib/java_cup.jar"
+CP="${CP}:${POLYGLOT}/lib/JFlex.jar"
+
+java -classpath "${CP}" codenormalizer.Main "$@"
+

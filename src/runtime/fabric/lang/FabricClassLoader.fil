@@ -1,0 +1,104 @@
+package fabric.lang;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.security.GeneralSecurityException;
+import java.util.logging.Level;
+
+import fabric.lang.Codebase;
+import fabric.Main;
+
+import fabric.common.Logging;
+import fabric.common.NSUtil;
+
+/**
+ * Loads Java classes from Fabric.
+ */
+public class FabricClassLoader extends ClassLoader {
+  Map/* String, Class */classes;
+  Map/* String, byte native[] */classBytecodeMap;
+  ClassLoader parent;
+	
+  public Class findClass(String name) throws ClassNotFoundException {
+    Logging.log(Logging.TIMING_LOGGER, Level.INFO, "resolving {0}", name);
+
+    try {
+      try {
+        Class cls = parent.loadClass(name);
+        return cls;
+      } catch (ClassNotFoundException e) {
+        if(NSUtil.isPlatformName(name)) {
+          // Unless the name is a mangled Fabric class, we're done.
+          throw e;
+        }
+      }
+      Logging.log(Logging.TIMING_LOGGER, Level.FINE, "checking bytecode cache for {0}", name);
+  
+      if (!classBytecodeMap.containsKey(name)) {
+        FClass fcls = NSUtil.toProxy(name);
+        try {
+          Logging.log(Logging.TIMING_LOGGER, Level.FINE, "compiling {0}", name);
+          Main.compile(fcls, classBytecodeMap);
+        } catch (GeneralSecurityException e) {
+          throw new ClassNotFoundException(name, e);
+        } catch (IOException e) {
+          throw new ClassNotFoundException(name, e);
+        }
+      }
+  
+      Logging.log(Logging.TIMING_LOGGER, Level.FINE, "loading {0}", name);
+  
+      Class javaCls = getJavaClass(name);
+      if (javaCls == null) {
+        throw new ClassNotFoundException(name);
+      }
+  
+      return javaCls;
+    } finally {
+      Logging.log(Logging.TIMING_LOGGER, Level.INFO, "returning {0}", name);
+    }
+  }
+
+  Class getJavaClass(String cls) {
+    Class result = (Class)classes.get(cls);
+    if (result == null) {
+      if (classBytecodeMap.containsKey(cls)) {
+        byte native[] bytecode = (byte native[]) classBytecodeMap.get(cls);
+        
+        result = defineClass(cls, bytecode, 0, bytecode.length);
+        classes.put(cls, result);
+      }
+    }
+    return result;
+  }
+
+  public FabricClassLoader(ClassLoader parent) {
+    super(parent);
+    this.parent = parent;
+    this.classes = new HashMap/* String, Class */();
+    this.classBytecodeMap = new HashMap/* String, byte native[] */();
+  }
+
+  public InputStream getResourceAsStream(String name) {
+    InputStream in = parent.getResourceAsStream(name);
+    if (in != null)
+      return in;
+    
+    /* TODO: support non-class resources also */
+    name = name.substring(0,name.length()-".class".length());
+    name = name.replace("/",".");
+    if (!classBytecodeMap.containsKey(name)) {
+      try {
+        findClass(name);
+      } catch (ClassNotFoundException e) {
+        return null;
+      }
+    }
+    byte native[] bytecode = (byte native[]) classBytecodeMap.get(name);
+    return new ByteArrayInputStream(bytecode);
+  }
+}

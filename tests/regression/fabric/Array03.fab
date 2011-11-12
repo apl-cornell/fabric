@@ -1,0 +1,10 @@
+public class Array03  {
+    void m{*!:*}() throws (Exception{*!:*}) {
+        int{Bob:} native [] y = new int native[10];
+        String{Bob:}[] z = new String[10];
+        for (int i = 0; i < 10; i++) {
+        	y[i] = i;
+        	z[i] = "int:" + i;
+        }
+    }
+}

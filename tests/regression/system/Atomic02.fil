@@ -1,0 +1,13 @@
+package fabil;
+
+public class Atomic03 {
+  public static void main(String[] args) {
+    Store store0 = Worker.getWorker().getStore("store0");
+    Store store1 = Worker.getWorker().getStore("store1");
+    atomic {
+      Foo a = new Foo@store0();
+      Foo b = new Foo@store1();
+    }
+  }
+}
+class Foo { }

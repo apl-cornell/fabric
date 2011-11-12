@@ -1,0 +1,2 @@
+dir=$1
+svn list -R -r BASE "$dir" | grep -v "/$" | sed -e "s#^#$dir/#"

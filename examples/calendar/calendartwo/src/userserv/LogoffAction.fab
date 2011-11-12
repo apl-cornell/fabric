@@ -1,0 +1,52 @@
+package userserv;
+
+import javax.servlet.ServletException;
+
+import sif.servlet.*;
+import sif.html.*;
+
+public class LogoffAction[principal servP] extends UAction[servP] {
+    public LogoffAction(UServlet[servP]{this} servlet) {
+        super("logoff",servlet);
+    }
+
+    protected UAction[servP] directAfterLogin{*:req.session}(Request[servP]{*:req.session} req, UServlet[servP]{*:req.session} servlet) { 
+        if (servlet == null) return null;
+        try {
+            return (UAction[servP])servlet.findStartAction(req, servlet.defaultActionName(req));
+        }
+        catch (ClassCastException impossible) { return null; }
+    }
+
+    public void invokeImpl{*lbl}(label{*lbl} lbl,
+            Request[servP]{*lbl} req,
+            UServlet[servP]{*lbl} servlet,
+            USessState[servP, lbl]{*lbl} state) 
+     throws (ServletException{*lbl})
+          where caller(req.session),
+          lbl <= {*:req.session},
+          req.session equiv state.sessionPrincipal
+    {
+        if (req == null || servlet == null || state == null) 
+            throw new ServletException("invalid args");
+        
+        
+        final User[servP,{req.session!:}]{req.session!:;*lbl} currentUser = state.currentUser();
+        if (currentUser != null && 
+                req.session actsfor currentUser && 
+                lbl <= new label {currentUser:;currentUser!:}) {
+            currentUser.removeDelegatesTo(req.session);
+        }
+        
+        // invalidate the session.
+        req.invalidateSession();
+        
+        // produce the goodbye page.
+        String title = "Goodbye";
+        Paragraph[lbl, lbl] para = new Paragraph[lbl, lbl]("You have succesfully logged off.");
+        NodeList[lbl, lbl] content = new NodeList[lbl, lbl](lbl, lbl, para); 
+        content = content==null?null:content.append(lbl, lbl, new Hyperlink[servP, lbl, lbl](req.contextURL(), "Login again"));
+        content = new NodeList[lbl, lbl](lbl, lbl, createBanner(lbl, title), createBody(lbl, lbl, content));
+        servlet.createPage(req, title, lbl, lbl, content);        
+    }    
+}

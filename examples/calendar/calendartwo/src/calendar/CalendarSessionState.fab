@@ -1,0 +1,38 @@
+package calendar;
+
+import userserv.*;
+import sif.servlet.SessionState;
+import sif.servlet.SessionPrincipal;
+import jif.util.*;
+
+public class CalendarSessionState[covariant label T] extends USessState[CalServEP, T] {
+    final CSS[T, {sessionPrincipal!:}]{T} css = new CSS();
+    public CalendarSessionState(String{T} id, SessionPrincipal{T} session) {
+        super(id, session);
+    }
+    
+    static CalendarSessionState[{P←}]{P←} declassifyState{P←;P→}(principal{P←;P→} P, CalendarSessionState[{P←;P→}]{P←;P→} state)
+        where caller(P)
+    {
+        // TODO Implement me!
+        return null;
+    }
+    
+    static CalendarSessionState[{Q←}]{Q←} endorseState{P←}(principal{P←} P, principal{P←} Q, CalendarSessionState[{P←}]{P←} state)
+        where caller(Q), Q actsfor P
+    {
+        // TODO Implement me!
+        return null;
+    }
+    
+}
+
+class CSS[covariant label T, label L] {
+    State[T]{L} state;
+    ShowCalendarSessAction{L} scsa;
+    
+    CSS() {
+        state = null;
+        scsa = null;
+    }
+}

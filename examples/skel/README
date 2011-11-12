@@ -1,0 +1,14 @@
+This is a template for creating fabric examples.  Many of our examples have
+multiple versions - maybe the example is modeled in java and then ported to
+fabil, or modeled in jif and ported to fabric, and this directory layout and
+build file are designed for this scenario.
+
+To create an example, copy this directory and perform the following steps:
+
+1. Write your source code in the appropriate src/ subdirectory
+2. Update the build file, replacing "skel" with the name of your example
+3. Create etc/keys/node and etc/config/node for any fabric nodes required to
+   run your example
+4. Create shell scripts in bin/ to run your example
+5. Replace this README with documentation for your example
+

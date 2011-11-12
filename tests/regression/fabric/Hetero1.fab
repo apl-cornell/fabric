@@ -1,0 +1,19 @@
+public class Hetero1[principal S] {
+	int{S→} x; // high variable
+	int{} y; // low variable
+}
+
+class A {
+	public void foo() {
+		Worker w = ...
+		Store s = ...
+		Hetero1 h = new Hetero1[s]@s();
+		// worker is less trusted than store
+		bar@w(h);
+	}
+
+	public void bar(Hetero1 h) {
+		int a;
+		a = h.y; // allowed statically but fails dynamically?
+	}
+}

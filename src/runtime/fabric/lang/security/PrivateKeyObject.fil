@@ -1,0 +1,24 @@
+package fabric.lang.security;
+
+import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
+
+import javax.crypto.KeyGenerator;
+
+import fabric.common.Crypto;
+import fabric.common.exceptions.InternalError;
+
+/**
+ * This wraps a Java PrivateKey object.
+ */
+public class PrivateKeyObject {
+  private PrivateKey key;
+  
+  public PrivateKeyObject(PrivateKey key) {
+    this.key = key;
+  }
+
+  public PrivateKey getKey() {
+    return key;
+  }
+}

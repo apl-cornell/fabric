@@ -1,0 +1,242 @@
+package codenormalizer;
+
+import java.util.*;
+
+import java_cup.runtime.*;
+
+import polyglot.ast.*;
+import polyglot.lex.*;
+import polyglot.util.*;
+import polyglot.types.*;
+import polyglot.ast.Assert;
+import polyglot.main.Options;
+
+parser Grm extends lr_parser {:
+
+  public final Lexer lexer;
+  public final ErrorQueue eq;
+
+  public Grm(Lexer l, ErrorQueue q) {
+    this.lexer = l;
+    this.eq = q;
+  }
+
+  /**
+   * Override the default CUP routine.
+   */
+  public void syntax_error (java_cup.runtime.Symbol current)
+  {
+    Position p = ((Token) current.value).getPosition ();
+    report_error ("Syntax error: unexpected " + current.value + ".", p);
+  }
+
+  /**
+   * Override the default CUP routine.
+   */
+  public void report_error (String message, Object info)
+  {
+    if (info instanceof Position)
+      eq.enqueue (ErrorInfo.SYNTAX_ERROR, message, (Position) info);
+    else
+      eq.enqueue (ErrorInfo.SYNTAX_ERROR, message);
+  }
+
+  public Symbol nextSymbol() throws java.io.IOException {
+    Token t = lexer.nextToken();
+    return new Symbol(t.symbol(), t);
+  }
+:};
+
+scan with {: return nextSymbol(); :};
+
+terminal Token LBRACK, RBRACK;
+terminal Identifier IDENTIFIER;
+terminal Token DOT;
+terminal Token SEMICOLON, MULT, COMMA, LBRACE, RBRACE, EQ;
+terminal Token AT;
+terminal Token LPAREN, RPAREN, COLON;
+terminal Token PLUSPLUS;
+terminal Token MINUSMINUS;
+terminal Token PLUS, MINUS, COMP, NOT, DIV, MOD;
+terminal Token LSHIFT, RSHIFT, URSHIFT;
+terminal Token LT, GT, LTEQ, GTEQ;
+terminal Token EQEQ, NOTEQ;
+terminal Token AND;
+terminal Token XOR;
+terminal Token OR;
+terminal Token ANDAND;
+terminal Token OROR;
+terminal Token QUESTION;
+terminal Token MULTEQ, DIVEQ, MODEQ, PLUSEQ, MINUSEQ;
+terminal Token LSHIFTEQ, RSHIFTEQ, URSHIFTEQ;
+terminal Token ANDEQ, XOREQ, OREQ;
+
+terminal Token OVERRIDE, SUPPRESS_WARNINGS;
+terminal Token NEWLINE;
+terminal Token JOIN, MEET, LEFTARROW, TOP, BOTTOM, RIGHTARROW;
+
+terminal polyglot.lex.IntegerLiteral INTEGER_LITERAL;
+terminal polyglot.lex.IntegerLiteral INTEGER_LITERAL_BD;
+terminal polyglot.lex.LongLiteral LONG_LITERAL;
+terminal polyglot.lex.LongLiteral LONG_LITERAL_BD;
+terminal polyglot.lex.DoubleLiteral DOUBLE_LITERAL;
+terminal polyglot.lex.FloatLiteral FLOAT_LITERAL;
+terminal polyglot.lex.BooleanLiteral BOOLEAN_LITERAL;
+terminal polyglot.lex.CharacterLiteral CHARACTER_LITERAL;
+terminal polyglot.lex.StringLiteral STRING_LITERAL;
+terminal polyglot.lex.NullLiteral NULL_LITERAL;
+
+non terminal String goal;
+non terminal StringBuilder unit;
+non terminal StringBuilder line;
+non terminal String token;
+non terminal String non_newline_token;
+non terminal String parens;
+
+start with goal;
+
+goal ::=
+  // String
+    unit:a {:
+      if (parser.eq.hasErrors()) RESULT = null;
+      else RESULT = a.toString();
+    :}
+  ;
+
+unit ::=
+  // StringBuilder
+    unit:a NEWLINE line:b {:
+      if (a.length() == 0) {
+	RESULT = b;
+      } else {
+	if (b.length() > 0) a.append(System.getProperty("line.separator"));
+	a.append(b.toString());
+	RESULT = a;
+      }
+    :}
+  | line:a {:
+      RESULT = a;
+    :}
+  ;
+
+line ::=
+  // StringBuilder
+    line:a token:b {:
+      a.append(b);
+      RESULT = a;
+    :}
+  | {:
+      RESULT = new StringBuilder();
+    :}
+  ;
+
+token ::=
+  // String
+    AT OVERRIDE {:
+      RESULT = "";
+    :}
+  | AT SUPPRESS_WARNINGS parens {:
+      RESULT = "";
+    :}
+  | non_newline_token:a {:
+      RESULT = a + " ";
+    :}
+  ;
+
+parens ::=
+  // String
+    LPAREN unit:a RPAREN {:
+      RESULT = "(" + a + ")";
+    :}
+  ;
+
+non_newline_token ::=
+  // String
+    LBRACK {: RESULT = "["; :}
+  | RBRACK {: RESULT = "]"; :}
+  | IDENTIFIER:a {:
+      RESULT = a.getIdentifier();
+    :}
+  | DOT {: RESULT = "."; :}
+  | SEMICOLON {: RESULT = ";"; :}
+  | MULT {: RESULT = "*"; :}
+  | COMMA {: RESULT = ","; :}
+  | LBRACE {: RESULT = "{"; :}
+  | RBRACE {: RESULT = "}"; :}
+  | EQ {: RESULT = "="; :}
+  | AT {: RESULT = "@"; :}
+  | COLON {: RESULT = ":"; :}
+  | PLUSPLUS {: RESULT = "++"; :}
+  | MINUSMINUS {: RESULT = "--"; :}
+  | PLUS {: RESULT = "+"; :}
+  | MINUS {: RESULT = "-"; :}
+  | COMP {: RESULT = "~"; :}
+  | NOT {: RESULT = "!"; :}
+  | DIV {: RESULT = "/"; :}
+  | MOD {: RESULT = "%"; :}
+  | LSHIFT {: RESULT = "<<"; :}
+  | RSHIFT {: RESULT = ">>"; :}
+  | URSHIFT {: RESULT = ">>>"; :}
+  | LT {: RESULT = "<"; :}
+  | GT {: RESULT = ">"; :}
+  | LTEQ {: RESULT = "<="; :}
+  | GTEQ {: RESULT = ">="; :}
+  | EQEQ {: RESULT = "=="; :}
+  | NOTEQ {: RESULT = "!="; :}
+  | AND {: RESULT = "&"; :}
+  | XOR {: RESULT = "^"; :}
+  | OR {: RESULT = "|"; :}
+  | ANDAND {: RESULT = "&&"; :}
+  | OROR {: RESULT = "||"; :}
+  | QUESTION {: RESULT = "?"; :}
+  | MULTEQ {: RESULT = "*="; :}
+  | DIVEQ {: RESULT = "/="; :}
+  | MODEQ {: RESULT = "%="; :}
+  | PLUSEQ {: RESULT = "+="; :}
+  | MINUSEQ {: RESULT = "-="; :}
+  | LSHIFTEQ {: RESULT = "<<="; :}
+  | RSHIFTEQ {: RESULT = ">>="; :}
+  | URSHIFTEQ {: RESULT = ">>>="; :}
+  | ANDEQ {: RESULT = "&="; :}
+  | XOREQ {: RESULT = "^="; :}
+  | OREQ {: RESULT = "|="; :}
+  | JOIN {: RESULT = "\u2294"; :}
+  | MEET {: RESULT = "\u2293"; :}
+  | LEFTARROW {: RESULT = "\u2190"; :}
+  | RIGHTARROW {: RESULT = "\u2192"; :}
+  | TOP {: RESULT = "\u22a4"; :}
+  | BOTTOM {: RESULT = "\u22a5"; :}
+  | INTEGER_LITERAL:a {:
+      RESULT = Long.toString(a.getValue().intValue());
+    :}
+  | INTEGER_LITERAL_BD:a {:
+      RESULT = Long.toString(a.getValue().intValue());
+    :}
+  | LONG_LITERAL:a {:
+      RESULT = Long.toString(a.getValue().longValue()) + "L";
+    :}
+  | LONG_LITERAL_BD:a {:
+      RESULT = Long.toString(a.getValue().longValue()) + "L";
+    :}
+  | DOUBLE_LITERAL:a {:
+      RESULT = Double.toString(a.getValue().doubleValue());
+    :}
+  | FLOAT_LITERAL:a {:
+      RESULT = Float.toString(a.getValue().floatValue()) + "F";
+    :}
+  | BOOLEAN_LITERAL:a {:
+      RESULT = String.valueOf(a.getValue().booleanValue());
+    :}
+  | CHARACTER_LITERAL:a {:
+      RESULT = "'" + StringUtil.escape(a.getValue().charValue()) + "'";
+    :}
+  | STRING_LITERAL:a {:
+      RESULT = "\"" + StringUtil.escape(a.getValue()) + "\"";
+    :}
+  | NULL_LITERAL {:
+      RESULT = "null";
+    :}
+  | parens:a {:
+      RESULT = a;
+    :}
+  ;

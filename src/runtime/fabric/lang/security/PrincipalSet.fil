@@ -1,0 +1,26 @@
+package fabric.lang.security;
+
+import fabric.util.LinkedHashSet;
+import fabric.util.Set;
+
+/**
+ * This code is mostly copied from Jif.
+ */
+public class PrincipalSet {
+  private Set set;
+
+  public PrincipalSet() {
+    set = new LinkedHashSet();
+  }
+
+  public PrincipalSet add(Principal p) {
+    PrincipalSet ps = new PrincipalSet();
+    ps.set.addAll(set);
+    ps.set.add(p);
+    return ps;
+  }
+
+  Set getSet() {
+    return set;
+  }
+}

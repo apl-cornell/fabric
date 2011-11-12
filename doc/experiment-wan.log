@@ -1,0 +1,104 @@
+Worker: dalek
+Store: cluster
+
+>>  bin/calibrate
+0.001799 ms
+
+
+Small create:
+
+   app:    1759 ms
+ begin:      40 ms
+commit:     412 ms
+ txlog:    1749 ms
+ subtx:       0 ms
+ fetch:      39 ms
+ store:   32405 ms
+ Total:   36404 ms (750766   measurements)
+
+ Total:   35335 ms (2        measurements)
+
+
+Small cold (no cached groups):
+
+   app:    2203 ms
+ begin:       8 ms
+commit:     494 ms
+ txlog:    1024 ms
+ subtx:       0 ms
+ fetch:   30759 ms
+ store:     260 ms
+ Total:   34748 ms (949872   measurements)
+
+ Total:   33352 ms (2        measurements)
+
+
+Small cold (cached groups):
+
+   app:    1958 ms
+ begin:       0 ms
+commit:     564 ms
+ txlog:     991 ms
+ subtx:       0 ms
+ fetch:   28455 ms
+ store:     223 ms
+ Total:   32191 ms (946600   measurements)
+
+ Total:   30223 ms (2        measurements)
+
+
+Small hot:  w/o commit = 1855 ms  (w/o timing: 539 ms)
+
+   app:    3192 ms
+ begin:       1 ms
+commit:    2310 ms
+ txlog:    2373 ms
+ subtx:       0 ms
+ fetch:       0 ms
+ store:     726 ms
+ Total:    8602 ms (2332610  measurements)
+
+
+ Total:    4664 ms (2        measurements)
+
+
+
+Medium create:
+
+   app:   13488 ms
+ begin:      90 ms
+commit:    2143 ms
+ txlog:   21114 ms
+ subtx:      15 ms
+ fetch:      45 ms
+ store:  102244 ms
+ Total:  139139 ms (6497110  measurements)
+
+ Total:  129384 ms (2        measurements)
+
+Medium cold (no cached groups):
+
+   app:   45714 ms
+ begin:       1 ms
+commit:   16903 ms
+ txlog:   32386 ms
+ subtx:       0 ms
+ fetch:  947000 ms
+ store:    5455 ms
+ Total: 1047459 ms (11551408 measurements)
+
+ Total: 1079971 ms (2        measurements)
+
+Medium cold (cached groups):
+
+   app:   34331 ms
+ begin:       0 ms
+commit:   19505 ms
+ txlog:   28894 ms
+ subtx:       0 ms
+ fetch:  1012052 ms
+ store:    1706 ms
+ Total: 1096488 ms (11680512 measurements)
+
+ Total: 1106262 ms (2        measurements)
+

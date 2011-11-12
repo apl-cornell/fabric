@@ -1,0 +1,11 @@
+package fabil;
+
+public class Atomic02 {
+  public static atomic void m(String[] args) {
+	  atomic {
+		  args.toString();
+	  }
+  }
+  public Atomic02() {}
+  private atomic final int foo() { return 1; }
+}

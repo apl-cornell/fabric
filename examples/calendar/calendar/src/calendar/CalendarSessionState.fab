@@ -1,0 +1,67 @@
+package calendar;
+
+import userserv.*;
+import sif.servlet.SessionState;
+import sif.servlet.SessionPrincipal;
+import jif.util.*;
+
+public class CalendarSessionState[covariant label T] extends USessState[CalServEP, T] {
+    final CSS[{sessionPrincipal!:}]{T} css;
+    public CalendarSessionState(String{T} id, SessionPrincipal{T} session) {
+        super.sessionPrincipal = session;
+        css = new CSS();
+        super(id, session);
+    }
+    
+    public CalendarSessionState(SessionPrincipal{T} session, String{T} id,
+            UserWrapper[CalServEP, {session←}]{T} uwrap, CSS[{session←}]{T} css) {
+        super.sessionPrincipal = session;
+        this.css = css;
+        super(session, id, uwrap);
+    }
+    
+    static CalendarSessionState[{P←}]{P←} declassifyState{P←}(principal{P←} P, CalendarSessionState[{P←;P→}]{P←;P→} state)
+        where caller(P)
+    {
+        final CalendarSessionState[{P←;P→}]{P←} state_ = declassify(state, {P←;P→} to {P←});
+        if (state_ == null) return null;
+        final SessionPrincipal nsession = declassify(state_.sessionPrincipal, {P←;P→} to {P←});
+        String nid = declassify(state_.sessionId, {P←;P→} to {P←});
+        UserWrapper[CalServEP, {state_.sessionPrincipal←}] nwrap = null;
+        UserWrapper[CalServEP, {state_.sessionPrincipal←}] uwrap = state_.uwrapper;
+        nwrap = declassify(uwrap, {P←;P→} to {P←});
+        
+        CSS[{state_.sessionPrincipal←}] ncss0 = state_.css;
+        CSS[{state_.sessionPrincipal←}] ncss1 = declassify(ncss1, {P←;P→} to {P←});
+        if (ncss1 == null) return null;
+//        CSS[{P←}, {nsession←}] ncss2 = new CSS[{P←}, {nsession←}]();
+        if (nsession equiv state_.sessionPrincipal) {
+            declassify({P←;P→} to {P←}) {
+//                ncss2.scsa = ncss1.scsa;
+//                ncss2.state = State.declassifyState(P, nsession, ncss1.state);
+                CalendarSessionState[{P←}]{P←} toReturn = new CalendarSessionState[{P←}]{P←}(nsession,
+                        nid, nwrap, ncss1);
+                return toReturn;
+            }
+        }
+        return null;
+    }
+    
+    static CalendarSessionState[{Q←}]{Q←} endorseState{P←}(principal{P←} P, principal{P←} Q, CalendarSessionState[{P←}]{P←} state)
+        where caller(Q), Q actsfor P
+    {
+        // TODO Implement me!
+        return null;
+    }
+    
+}
+
+class CSS[label L] {
+    State[{L}]{L} state;
+    ShowCalendarSessAction{L} scsa;
+    
+    CSS() {
+        state = null;
+        scsa = null;
+    }
+}

@@ -1,0 +1,146 @@
+
+#
+# output paths compatible with the current platform
+#
+fixpath() {
+  windows=0
+
+  if [ `uname | grep -c CYGWIN` -ne 0 ]; then
+    windows=1
+  fi
+
+  cp="$1"
+
+  if [ "${windows}" = 1 ]; then 
+    cygpath -pw "${cp}"
+  else
+    echo "${cp}"
+  fi
+}
+
+#
+# output filenames compatible with the current platform
+#
+fixfilename() {
+  if [ `uname  | grep -c CYGWIN` -ne 0 ]; then
+    cygpath -w "$1"
+  else
+    echo "$1"
+  fi
+}
+
+#
+# output filenames compatible with unix syntax
+#
+unixfilename() {
+  windows=0
+
+  if [ `uname | grep -c CYGWIN` -ne 0 ]; then
+    windows=1
+  fi
+
+  cp="$1"
+
+  if [ "${windows}" = 1 ]; then 
+    cygpath -u "${cp}"
+  else
+    echo "${cp}"
+  fi
+}
+
+#
+# output paths compatible with unix syntax
+#
+unixpath() {
+  windows=0
+
+  if [ `uname | grep -c CYGWIN` -ne 0 ]; then
+    windows=1
+  fi
+
+  cp="$1"
+
+  if [ "${windows}" = 1 ]; then 
+    cygpath -pu "${cp}"
+  else
+    echo "${cp}"
+  fi
+}
+
+JAVA_HOME=$(unixfilename "@JAVA_HOME@")
+JAVA="${JAVA_HOME}/bin/java"
+TOP=$(unixfilename "@TOP@")
+POLYGLOT=$(unixfilename "@POLYGLOT@")
+JIF=$(unixfilename "@JIF@")
+
+if [ "${FABRIC_HOME}" == "" ]; then
+	export FABRIC_HOME="${TOP}"
+fi
+
+classpath="$(unixpath "${CLASSPATH}")"
+
+# Give the JVM more memory.
+vmargs="-Xmx1024M -Xms256M"
+
+####################
+
+# Common classpath for all parts of Fabric.
+# Jar files should always appear *after* their corresponding class directories.
+##########
+# Fabric
+COMMON_FABRIC_CP="${TOP}/classes"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/lib/fabric.jar"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/rt-classes"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/lib/fabric-rt.jar"
+# Polyglot
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${POLYGLOT}/classes"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${POLYGLOT}/lib/polyglot.jar"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${POLYGLOT}/lib/java_cup.jar"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${POLYGLOT}/lib/JFlex.jar"
+# Jif
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${JIF}/classes"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${JIF}/lib/jif.jar"
+# Pastry
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/lib/FreePastry-2.1.jar"
+# BouncyCastle
+for i in "${TOP}"/lib/bcprov-*.jar ; do
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:$i"
+done
+# Java libraries
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${JAVA_HOME}/lib/tools.jar"
+
+# Common classpath for libraries used when running either the worker or the
+# store.
+##########
+# JLine
+COMMON_SYS_LIB_CP="${TOP}/lib/jline-0.9.94.jar"
+
+# Fabric bootstrap classes 
+FABRIC_BOOTCP="${TOP}/rt-classes:${TOP}/classes"
+FABRIC_BOOTCP="${FABRIC_BOOTCP}:${TOP}/lib/fabric-rt.jar"
+
+# FabIL bootstrap classes 
+FABIL_BOOTCP="${TOP}/rt-classes:${TOP}/classes"
+FABIL_BOOTCP="${FABIL_BOOTCP}:${TOP}/lib/fabric-rt.jar"
+
+# Classpath for compiling FabIL applications.
+# Jar files should always appear *after* their corresponding class directories.
+FILC_CP="${COMMON_FABRIC_CP}"
+
+# Classpath for compiling Fabric applications.
+# Jar files should always appear *after* their corresponding class directories.
+FABC_CP="${COMMON_FABRIC_CP}"
+
+# Classpath for running Fabric applications.
+# Jar files should always appear *after* their corresponding class directories.
+FABRIC_WORKER_CP="${COMMON_FABRIC_CP}"
+FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${COMMON_SYS_LIB_CP}"
+
+# Classpath for Fabric stores.
+# Jar files should always appear *after* their corresponding class directories.
+FABRIC_STORE_CP="${COMMON_FABRIC_CP}"
+FABRIC_STORE_CP="${FABRIC_STORE_CP}:${COMMON_SYS_LIB_CP}"
+# BDB
+for i in "${TOP}"/lib/je-*.jar ; do
+  FABRIC_STORE_CP="${FABRIC_STORE_CP}:$i"
+done

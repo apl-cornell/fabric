@@ -1,0 +1,227 @@
+<!--
+  This is the Apache Ant build file for the Auction exampl
+-->
+
+<project name="social" default="publish-all" basedir=".">
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="home" file="${ant.file}"/>
+  <property name="home.codebases" value="${home}/codebases"/>
+
+  <path id="standard.classpath">
+    <path refid="lib.classpath" />
+  </path>
+
+  <property name="social.src" value="${home}/src/social_codebase/"/>
+  <property name="agent.src" value="${home}/src/agent_codebase/"/>
+
+  <property name="social.worker" value="socialWorker"/>
+  <property name="agent.worker" value="agentWorker"/>
+  <property name="bdaygirl.worker" value="bdayGirlWorker"/>
+  <property name="bdayboy.worker" value="bdayBoyWorker"/>
+
+  <property name="social.codebase.file"
+      value="${home.codebases}/${social.worker}.codebase"/>
+  <property name="agent.codebase.file"
+      value="${home.codebases}/${agent.worker}.codebase"/>
+
+  <property name="social.store" value="socialStore"/>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+  <target name="clean" description="Removes generated files">
+    <delete dir="${home}/classes"/>
+    <delete dir="${home}/codebases"/>
+  </target>
+
+  <target name="clear-cache"
+      description="Removes code cache of stores and workers">
+    <delete dir="${home}/.${social.worker}_cache"/>
+    <delete dir="${home}/.${social.store}_cache"/>
+    <delete dir="${home}/.${agent.worker}_cache"/>
+    <delete dir="${home}/.${bdaygirl.worker}_cache"/>
+    <delete dir="${home}/.${bdayboy.worker}_cache"/>
+  </target>
+
+  <target name="clobber" depends="clean,clear-cache"
+      description="Removes state of stores and workers">
+    <delete dir="${home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+  <target name="check-social">
+    <uptodate property="social.up-to-date" targetfile="${social.codebase.file}">
+      <srcfiles dir="${social.src}" includes="**/*.fab" />
+    </uptodate>
+  </target>
+  <target name="check-agent">
+    <uptodate property="agent.up-to-date" targetfile="${agent.codebase.file}">
+      <srcfiles dir="${agent.src}" includes="**/*.fab" />
+      <srcfiles file="${social.codebase.file}"/>
+    </uptodate>
+  </target>
+
+  <target name="publish-all" depends="publish-social, publish-agent"
+      description="Publish all source"/>
+
+  <target name="load-codebases" depends="publish-all">
+    <loadfile property="social.codebase" srcFile="${social.codebase.file}"
+        failonerror="false"/>
+    <loadfile property="agent.codebase" srcFile="${agent.codebase.file}"
+        failonerror="false"/>
+  </target>
+
+  <target name="publish-social" description="Publish social network source"
+      depends="check-social" unless="social.up-to-date">
+    <antcall target="publish">
+      <param name="provider" value="${social.worker}"/>
+      <param name="dest.store" value="${social.store}"/>
+      <param name="codebase.dir" value="${social.src}"/>
+      <param name="target.codebasefile" value="${social.codebase.file}"/>
+      <param name="publish.args" value=""/>
+    </antcall>
+    <uptodate property="social.up-to-date" targetfile="${social.codebase.file}">
+      <srcfiles dir="${social.src}" includes="**/*.fab" />
+    </uptodate>
+  </target>
+
+  <target name="publish-agent" description="Publish agent source"
+      depends="check-agent" unless="agent.up-to-date">
+    <antcall target="publish">
+      <param name="provider" value="${agent.worker}"/>
+      <param name="dest.store" value="${social.store}"/>
+      <param name="codebase.dir" value="${agent.src}"/>
+      <param name="target.codebasefile" value="${agent.codebase.file}"/>
+      <param name="publish.args" value="-addCodebase ${social.codebase.file}"/>
+    </antcall>
+    <uptodate property="agent.up-to-date" targetfile="${agent.codebase.file}">
+      <srcfiles dir="${agent.src}" includes="**/*.fab" />
+      <srcfiles file="${social.codebase.file}"/>
+    </uptodate>
+  </target>
+
+  <target name="publish" description="Publish Fabric source">
+    <mkdir dir="${home.codebases}"/>
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${home}"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <env key="FABRIC_HOME" value="${home}"/>
+      <arg value="${fabc}"/>
+      <arg value="-g"/>
+      <arg value="-e"/>
+      <arg value="-d"          /> <arg value="${home.codebases}"/>
+      <arg value="-publish-only" />
+      <arg value="-codebase-output-file"/> <arg value="${target.codebasefile}"/>
+      <arg value="-sourcepath" /> <arg value="${codebase.dir}" />
+      <arg value="-worker" /> <arg value="${provider}" />
+      <arg value="-deststore" /> <arg value="${dest.store}" />
+      <arg line="${publish.args}"/> 
+      <srcfile />
+      <fileset dir="${codebase.dir}" includes="**/*.fab" />
+    </apply>
+  </target>
+
+  <target name="build-local" description="">
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${home}"
+           dest="${home}/classes"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabric.home}/bin/fabc"/>
+      <arg value="-g"/>
+      <arg value="-debugpositions"/>
+      <arg value="-e"/>
+      <arg value="-d"/> <arg value="${home}/classes"/>
+      <arg value="-cp"/> <arg pathref="standard.classpath" />
+      <arg value="-cp"/> <arg value="${home}/classes" />
+      <srcfile />
+      <fileset dir="${social.src}" includes="**/*.fab" />
+      <fileset dir="${agent.src}" includes="**/*.fab" />
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Initialization targets.
+  ****************************************************************************
+  -->
+  <target name="fabil-init" description="Build init classes">
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${home}"
+           dest="${home}/classes"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabric.home}/bin/filc"/>
+      <arg value="-g"/>
+      <arg value="-d" /> <arg value="${home}/classes"/>
+      <arg value="-cp"/> <arg pathref="standard.classpath" />
+      <arg value="-cp" /> <arg value="${home}/classes"/>
+      <srcfile />
+      <fileset dir="${home}/src/social_codebase" includes="**/*.fil" />
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="init-local" description="" depends="build-local">
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${agent.worker} agent.Init"/>
+    </exec>
+  </target>
+
+  <target name="init-remote" depends="load-codebases">
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${agent.worker} ${agent.codebase}/agent.Init"/>
+    </exec>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Run targets.
+  ****************************************************************************
+  -->
+  <target name="run-local" description="" depends="init-local">
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${social.worker} social.Main"/>
+    </exec>
+  </target>
+
+  <target name="run-remote" depends="init-remote">
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${social.worker} ${social.codebase}/social.Main"/>
+    </exec>
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

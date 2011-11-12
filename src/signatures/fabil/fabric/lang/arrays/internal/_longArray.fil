@@ -1,0 +1,13 @@
+package fabric.lang.arrays.internal;
+
+public class _longArray {
+  public native long set(int i, long value);
+
+  public native long get(int i);
+
+  public _longArray(int length) {
+  }
+
+  public _longArray(long native[] value) {
+  }
+}

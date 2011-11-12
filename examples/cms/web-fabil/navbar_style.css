@@ -1,0 +1,260 @@
+/*** Static formatting ***/
+
+#sidenav {
+ font-family: Arial, Helvetica, Sans-Serif;
+ font-size:14px;
+ width: 224px;
+ background-color: #646686; /* also change color for nav header */
+ color: #ffffff;
+}
+
+#sidenav ul {
+ background-color: #646686; /* for dropdowns */
+ list-style-type: none; /* bullets should be within text so they can be part of the active links */
+ padding-left: 10px; /* FF uses padding for space that would be taken by bullet */
+ margin-left: 10px; /* IE uses margin for bullet space */
+}
+
+#sidenav > ul {
+ padding: 14px;
+ margin: 0px; /* silly IE */
+}
+
+#sidenav hr {
+ height: 1px;
+}
+
+#sidenav a, #topnav a {
+ display: block; /* makes whole line clickable in FF, but IE must click text */
+}
+
+#sidenav li.menuhead ul {
+ margin: 0px;
+ padding-left: 5px; /* remove room for bullet */
+ border: 1px solid white;
+}
+
+#sidenav li.menuhead {
+ background: url(/web/images/rightarrow.gif) no-repeat right;
+}
+
+#sidenav li.sep {
+ height: 1%; /* silly IE */
+}
+
+#topnav {
+ font-family: Arial, Helvetica, Sans-Serif;
+ font-size:12px;
+ color: white;
+}
+
+#topnav ul {
+ list-style-type: none;
+ background-color: #9b0a1a;
+ width: 100%;
+ padding-left: 5px;
+ margin-left: 0px;
+}
+
+#topnav > ul {
+ background-color: #ab1a2a;
+}
+
+#topnav .menuhead {
+ list-style-type: none;
+}
+
+#topnav .menuhead > a {
+ font-weight: bold;
+}
+
+#topnav li.menuhead ul {
+ border: 1px solid white;
+}
+
+#sidenav .course {
+ font-weight: bold;
+ font-size: 16px;
+}
+
+#sidenav .semester {
+ font-weight: bold;
+ font-size: 10px;
+}
+
+#topnav .unavailable, #sidenav .unavailable{
+ color: #bbbbbb;
+}
+
+/*** Link formatting ***/
+#sidenav a {
+ color: #FFFFFF; /* overrides blue, "inherit" doesn't work in IE */
+ text-decoration: none;
+}
+
+#sidenav a.currentpage, #topnav a.currentpage {
+ font-weight: bold;
+ color: #FFFF66; /* overrides blue */
+}
+
+#sidenav a:hover {
+ background-color: #747696;
+}
+
+#sidenav .menuhead > a:hover {
+ /* use > because don't want menu's links to have arrows */
+ background-image: url(/web/images/rightarrow.gif);
+ background-repeat: no-repeat;
+ background-position: right;
+}
+
+#sidenavheader:hover {
+ background-color: #646686; /* override, don't want the class/semester to change color */
+}
+
+#topnav a {
+ text-decoration: none;
+ color: #FFFFFF; /* overrides blue, "inherit" doesn't work in IE */
+}
+
+#topnav li.menuhead li a:hover {
+ background-color: #bb2a3a;
+}
+
+/*** Positioning ***/
+#sidenav li,
+#topnav li {
+ position: relative;
+}
+
+#sidenav li.menuhead ul {
+ position: absolute;
+ top: 0px;
+ left: 100%;
+ width: 224px;
+}
+
+#topnav li.menuhead ul {
+ position: absolute;
+ top: 14px;
+ left: 0px;
+ width: 150px; /* arbitrary? */
+ padding: 3px;
+}
+
+#topnav > ul {
+ margin: 0px;
+}
+
+#topnav > ul > li { /* titles */
+ display: inline;
+ float: left;
+ margin: 0px 10px 0px 50px;
+}
+
+/*** Open-close menu functionality ***/
+.menuhead > ul {
+ display: none;
+}
+
+.menuhead:hover > ul {
+ display: block;
+}
+
+.menuhead { /* keep popup menus on top of other page content */
+ z-index: 1000;
+}
+
+/*********** OLD CSS **********/
+
+/* Styles for the navigation bar */
+td.staff_navigation {
+	height: 100%;
+	background-color: #fff;
+	vertical-align: top;
+	padding: 0em;
+	white-space: nowrap;
+	nowrap; /* for IE; deprecated in HTML 4.0 */
+}
+
+/* -1px bottom margin works around a Gecko bug */
+#navbar_content {
+	background-color: #646686;
+	color: #FFFFFF;
+	font-size: 14px;
+	list-style-type: none;
+	padding: 1em;
+	margin: 0em 0em -1px 0em;
+}
+
+/*
+#navbar_content li {
+	margin: .15em 0em;
+	padding: 0em;
+}
+
+#navbar_content .currentpage {
+	font-weight: bold;
+	color: #FFFF66;
+}
+
+#navbar_content .course {
+	font-weight: bold;
+	font-size: 16px;
+	margin: 0em 0em -1px 0em;
+	color: #FFFFFF;
+
+}
+#navbar_content .semester {
+	font-weight: bold;
+	font-size: 10px;
+	margin: 0em 0em -1px 0em;
+	color: #FFFFFF;
+}
+
+#navbar_content .unavailable {
+	color: #BBBBBB;
+}*/
+
+#navbar_content .small {
+	font-size: 9px;
+}
+
+#navbar_content span#gradestudents {
+    display: block;
+}
+
+#navbar_top {
+	background-color: #fff;
+	height: 1em;
+}
+
+#navbar_bottom {
+	background-color: #fff;
+	background-image: url(/web/images/hz_shadow_bottom.gif);
+	background-repeat: repeat-x;
+}
+
+#navbar_bottom_left {
+	background-image: url(/web/images/hz_shadow_bottom_left.gif);
+	background-repeat: no-repeat;
+	background-color: #fff;
+}
+
+#navbar_menu_container {
+ background-image: url(/web/images/vt_shadow_nonav.gif);
+ background-repeat: repeat-y;
+ background-color: #ffffff;
+ width: 14px;
+ vertical-align: top;
+}
+
+#navbar_menu_top {
+ background-image: url(/web/images/vt_shadow.gif);
+ background-repeat: no-repeat;
+}
+
+#navbar_menu_bottom {
+ background-image: url(/web/images/navbar_shadow_bottom.gif);
+ background-repeat: no-repeat;
+}

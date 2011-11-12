@@ -1,0 +1,8 @@
+package fabil;
+
+public class Private01 {
+  private void m(Private01 p) {
+    p.m(this);
+  }
+}
+

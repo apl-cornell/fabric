@@ -1,0 +1,16 @@
+package system;
+
+import fabric.worker.*;
+import fabric.util.*;
+
+public class Transaction01 {
+  public static void main(String[] args) {
+    Store store = Worker.getWorker().getStore("store0");
+    
+    atomic {
+      HashMap m = new HashMap@store();
+    }
+    
+    System.out.println("TEST PASSED.");
+  }
+}

@@ -1,0 +1,40 @@
+/****************************************
+ * Cornell University
+ * Web Template with 75px Banner
+ * Imports CSS for Screen Medium
+ ****************************************/
+
+/*
+	This stylesheet should be linked to each of your documents by putting
+	the following tag in the head:
+		
+	<link rel="stylesheet" type="text/css" media="screen" href="styles/screen.css" />
+	
+	The only purpose of this stylesheet is to import style rules from other stylesheets
+	based on the user's web browser. All modern browsers are given the rules found in 
+	main.css. Only Internet Explorer v5.x on Windows gets rules found in hacks/ie5win.css, 
+	and only Internet Explorer v5.x on Macintosh gets rules found in hacks/ie5mac.css.
+	
+	Do not place any style rules in this stylesheet, and do not change the import
+	syntax in any way. See main.css.
+*/
+ 
+/* Import styles
+------------------------------*/
+@import url("main.css");
+
+/* Import IE5/Mac hacks
+   Uses the IE5/Mac Band Pass Filter:
+   http://stopdesign.com/examples/ie5mac-bpf/
+----------------------------------------------- */
+/*\*//*/
+  @import "hacks/ie5mac.css";
+/**/
+
+/* Import IE5/Win hacks
+   Uses the Mid Pass Filter:
+   http://tantek.com/CSS/Examples/midpass.html
+----------------------------------------------- */
+@media tty {
+ i{content:"\";/*" "*/}} @import 'hacks/ie5win.css'; /*";}
+}/* */

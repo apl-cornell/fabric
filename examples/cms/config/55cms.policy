@@ -1,0 +1,20 @@
+// This file needs to go in /etc/tomcat5.5/policy.d
+
+grant codeBase "file:/var/lib/tomcat5.5/webapps/web/-" {
+permission java.security.AllPermission;
+};
+
+grant {
+permission java.lang.RuntimePermission "loadLibrary.jifrt";
+permission java.lang.RuntimePermission "createClassLoader";
+permission java.lang.RuntimePermission "getClassLoader";
+permission java.util.PropertyPermission "*", "read,write";
+permission java.lang.RuntimePermission "getenv.FABRIC_HOME";
+permission java.io.FilePermission "<<ALL FILES>>", "read";
+permission java.net.SocketPermission "*", "resolve";
+permission java.net.SocketPermission "*", "connect";
+permission java.net.SocketPermission "*", "listen";
+permission java.net.SocketPermission "*", "accept";
+};
+
+

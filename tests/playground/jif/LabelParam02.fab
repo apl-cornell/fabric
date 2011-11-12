@@ -1,0 +1,36 @@
+public class LabelParam {
+    final label{this} lbl;
+    final Event[this.lbl]{this} obj;
+    
+    public LabelParam(label{this} lbl, Event[lbl]{this} event) {
+        this.lbl = lbl;
+        this.obj = obj;
+    }
+}
+
+class Event[covariant label T] {
+    final label{T} infoLbl;
+    public Event{*infoLbl_}(label{T} infoLbl_) {
+        this.infoLbl = infoLbl_;
+    }
+}
+
+class Test {
+    final LabelParam{this} copy;
+    Test(LabelParam{this} param) {
+        this.copy = param;
+    }
+    public void foo{*lbl}(label{*lbl} lbl) {
+        try {
+            if (this.copy.obj.infoLbl <= lbl) {
+                bar(lbl);
+            } 
+        } catch (NullPointerException whocares) {}
+    }
+    
+    void bar{*lbl}(label{*lbl} lbl)
+        where this.copy.obj.infoLbl <= lbl
+    {
+        
+    }
+}

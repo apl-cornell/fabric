@@ -1,0 +1,32 @@
+package fabric.lang.security;
+
+public class PrincipalUtil {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    public static native boolean{p;q;q←} acts_for(Principal p, Principal q);
+
+    public static native boolean{p;q;p←;q←} equivalentTo(Principal p, Principal q);
+
+    public static native ActsForProof{p;q;q←}
+	findActsForProof(Store s, Principal p, Principal q, java.lang.Object searchState);
+
+    public static native boolean verifyProof(ActsForProof{p;q;q←} proof, 
+                                             Principal p, Principal q);
+
+    public static native void notifyNewDelegation(Principal granter, Principal superior);
+
+    public static native void notifyRevokeDelegation(Principal granter,
+						     Principal superior);
+
+    public static native Capability[p, lb, al]
+                authorize(principal p, Object authPrf, Closure[p, lb] c, label lb, label al);
+                
+    public static native Object{c;lb;authPrf;p;*lb}
+	execute{*lb}(principal p, Object authPrf, Closure[p, lb] c, label lb);
+
+    public static native principal{*←*} nullPrincipal();
+    
+    public static native String stringValue(principal p); 
+
+    public static native String toString(principal p); 
+}

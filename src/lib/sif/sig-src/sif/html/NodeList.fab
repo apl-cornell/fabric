@@ -1,0 +1,242 @@
+package sif.html;
+
+/**
+ * @author andru
+ *
+ * A NodeList is a sequence of HTML nodes acting as a single node.
+ */
+public final class NodeList[label L, label E] extends Node[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    public static native NodeList[L, E] EMPTY();
+
+    public NodeList(label cL, label cE, Node[cL,cE]{L} n1) where {*cL} <= L, {E;n1} <= {*cE} {
+        super();
+    }        
+
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+                      label cL2, label cE2, Node[cL2,cE2]{L} n2) 
+                      where {*cL2} <= L, {E; n1} <= {*cE}, {E; n2} <= {*cE2} {
+        super();
+    }
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            label cL2, label cE2, Node[cL2,cE2]{L} n2, 
+            label cL3, label cE3, Node[cL3,cE3]{L} n3) 
+    where {*cL2;*cL3} <= L, {E; n1} <= {*cE}, {E; n2} <= {*cE2}, {E; n3} <= {*cE3} {
+        super();
+    }
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            label cL2, label cE2, Node[cL2,cE2]{L} n2, 
+            label cL3, label cE3, Node[cL3,cE3]{L} n3,
+            label cL4, label cE4, Node[cL4,cE4]{L} n4) 
+    where {*cL2;*cL3;*cL4} <= L, {E; n1} <= {*cE}, {E; n2} <= {*cE2}, {E; n3} <= {*cE3}, {E; n4} <= {*cE4} {
+        super();
+    }
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            label cL2, label cE2, Node[cL2,cE2]{L} n2, 
+            label cL3, label cE3, Node[cL3,cE3]{L} n3,
+            label cL4, label cE4, Node[cL4,cE4]{L} n4,
+            label cL5, label cE5, Node[cL5,cE5]{L} n5) 
+    where {*cL2;*cL3;*cL4;*cL5} <= L, {E; n1} <= {*cE}, {E; n2} <= {*cE2}, {E; n3} <= {*cE3}, {E; n4} <= {*cE4}, {E; n5} <= {*cE5} {
+        super();
+    }
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            label cL2, label cE2, Node[cL2,cE2]{L} n2, 
+            label cL3, label cE3, Node[cL3,cE3]{L} n3,
+            label cL4, label cE4, Node[cL4,cE4]{L} n4,
+            label cL5, label cE5, Node[cL5,cE5]{L} n5,
+            label cL6, label cE6, Node[cL6,cE6]{L} n6) 
+    where {*cL2;*cL3;*cL4;*cL5;*cL6} <= L, {E; n1} <= {*cE}, {E; n2} <= {*cE2}, {E; n3} <= {*cE3}, {E; n4} <= {*cE4}, {E; n5} <= {*cE5}, {E; n6} <= {*cE6} {
+        super();
+    }
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            label cL2, label cE2, Node[cL2,cE2]{L} n2, 
+            label cL3, label cE3, Node[cL3,cE3]{L} n3,
+            label cL4, label cE4, Node[cL4,cE4]{L} n4,
+            label cL5, label cE5, Node[cL5,cE5]{L} n5,
+            label cL6, label cE6, Node[cL6,cE6]{L} n6,
+            label cL7, label cE7, Node[cL7,cE7]{L} n7) 
+    where {*cL2;*cL3;*cL4;*cL5;*cL6;*cL7} <= L, {E; n1} <= {*cE}, {E; n2} <= {*cE2}, {E; n3} <= {*cE3}, {E; n4} <= {*cE4}, {E; n5} <= {*cE5}, {E; n6} <= {*cE6}, {E; n7} <= {*cE7} {
+        super();
+    }
+
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            label cL2, label cE2, Node[cL2,cE2]{L} n2, 
+            label cL3, label cE3, Node[cL3,cE3]{L} n3,
+            label cL4, label cE4, Node[cL4,cE4]{L} n4,
+            label cL5, label cE5, Node[cL5,cE5]{L} n5,
+            label cL6, label cE6, Node[cL6,cE6]{L} n6,
+            label cL7, label cE7, Node[cL7,cE7]{L} n7,
+            label cL8, label cE8, Node[cL8,cE8]{L} n8) 
+    where {*cL2;*cL3;*cL4;*cL5;*cL6;*cL7;*cL8} <= L, {E; n1} <= {*cE}, {E; n2} <= {*cE2}, {E; n3} <= {*cE3}, {E; n4} <= {*cE4}, {E; n5} <= {*cE5}, {E; n6} <= {*cE6}, {E; n7} <= {*cE7}, {E; n8} <= {*cE8} {
+        super();
+    }
+    
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            label cL2, label cE2, Node[cL2,cE2]{L} n2, 
+            label cL3, label cE3, Node[cL3,cE3]{L} n3,
+            label cL4, label cE4, Node[cL4,cE4]{L} n4,
+            label cL5, label cE5, Node[cL5,cE5]{L} n5,
+            label cL6, label cE6, Node[cL6,cE6]{L} n6,
+            label cL7, label cE7, Node[cL7,cE7]{L} n7,
+            label cL8, label cE8, Node[cL8,cE8]{L} n8,
+            label cL9, label cE9, Node[cL9,cE9]{L} n9) 
+    where {*cL2;*cL3;*cL4;*cL5;*cL6;*cL7;*cL8;*cL9} <= L, {E; n1} <= {*cE}, {E; n2} <= {*cE2}, {E; n3} <= {*cE3}, {E; n4} <= {*cE4}, {E; n5} <= {*cE5}, {E; n6} <= {*cE6}, {E; n7} <= {*cE7}, {E; n8} <= {*cE8}, {E; n9} <= {*cE9} {
+        super();
+    }
+        
+    /*
+     * NodeList(Node[L, E], Node[L, E], ...)
+     */
+    public NodeList{L}(Node[L,E]{L} n1, Node[L,E]{L} n2) 
+    where {n1; n2} <= {E} {
+        super();
+    }
+    public NodeList{L}(Node[L,E]{L} n1) 
+    where {n1} <= {E} {
+        super();
+    }
+    public NodeList{L}(Node[L,E]{L} n1, Node[L,E]{L} n2, Node[L,E]{L} n3) 
+    where {n1; n2; n3} <= {E} {
+        super();
+    }
+    public NodeList{L}(Node[L,E]{L} n1, 
+            Node[L,E]{L} n2, 
+            Node[L,E]{L} n3,
+            Node[L,E]{L} n4) 
+    where {n1; n2; n3; n4} <= {E} {
+        super();
+    }
+    public NodeList{L}(Node[L,E]{L} n1, 
+            Node[L,E]{L} n2, 
+            Node[L,E]{L} n3,
+            Node[L,E]{L} n4,
+            Node[L,E]{L} n5) 
+    where {E; n1; n2; n3; n4; n5} <= {E} {
+        super();
+    }
+    public NodeList{L}(Node[L,E]{L} n1, 
+            Node[L,E]{L} n2, 
+            Node[L,E]{L} n3,
+            Node[L,E]{L} n4,
+            Node[L,E]{L} n5,
+            Node[L,E]{L} n6) 
+    where {E; n1; n2; n3; n4; n5; n6} <= {E} {
+        super();
+    }
+    public NodeList{L}(Node[L,E]{L} n1, 
+            Node[L,E]{L} n2, 
+            Node[L,E]{L} n3,
+            Node[L,E]{L} n4,
+            Node[L,E]{L} n5,
+            Node[L,E]{L} n6,
+            Node[L,E]{L} n7) 
+    where {E; n1; n2; n3; n4; n5; n6; n7} <= {E} {
+        super();
+    }
+
+    public NodeList{L}(Node[L,E]{L} n1, 
+            Node[L,E]{L} n2, 
+            Node[L,E]{L} n3,
+            Node[L,E]{L} n4,
+            Node[L,E]{L} n5,
+            Node[L,E]{L} n6,
+            Node[L,E]{L} n7,
+            Node[L,E]{L} n8) 
+    where {E; n1; n2; n3; n4; n5; n6; n7; n8} <= {E} {
+        super();
+    }
+    
+    public NodeList{L}(Node[L,E]{L} n1, 
+            Node[L,E]{L} n2, 
+            Node[L,E]{L} n3,
+            Node[L,E]{L} n4,
+            Node[L,E]{L} n5,
+            Node[L,E]{L} n6,
+            Node[L,E]{L} n7,
+            Node[L,E]{L} n8,
+            Node[L,E]{L} n9) 
+    where {E; n1; n2; n3; n4; n5; n6; n7; n8; n9} <= {E} {
+        super();
+    }
+
+    /*
+     * NodeList(cL, cE, Node[cL, cE], Node[cL, cE], ...)
+     */
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, Node[cL,cE]{L} n2) 
+    where {*cL} <= L, {E; n1; n2} <= {*cE} {
+        super();
+    }
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, Node[cL,cE]{L} n2, Node[cL,cE]{L} n3) 
+    where {*cL} <= L, {E; n1; n2; n3} <= {*cE} {
+        super();
+    }
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            Node[cL,cE]{L} n2, 
+            Node[cL,cE]{L} n3,
+            Node[cL,cE]{L} n4) 
+    where {*cL} <= L, {E; n1; n2; n3; n4} <= {*cE} {
+        super();
+    }
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            Node[cL,cE]{L} n2, 
+            Node[cL,cE]{L} n3,
+            Node[cL,cE]{L} n4,
+            Node[cL,cE]{L} n5) 
+    where {*cL} <= L, {E; n1; n2; n3; n4; n5} <= {*cE} {
+        super();
+    }
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            Node[cL,cE]{L} n2, 
+            Node[cL,cE]{L} n3,
+            Node[cL,cE]{L} n4,
+            Node[cL,cE]{L} n5,
+            Node[cL,cE]{L} n6) 
+    where {*cL} <= L, {E; n1; n2; n3; n4; n5; n6} <= {*cE} {
+        super();
+    }
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            Node[cL,cE]{L} n2, 
+            Node[cL,cE]{L} n3,
+            Node[cL,cE]{L} n4,
+            Node[cL,cE]{L} n5,
+            Node[cL,cE]{L} n6,
+            Node[cL,cE]{L} n7) 
+    where {*cL} <= L, {E; n1; n2; n3; n4; n5; n6; n7} <= {*cE} {
+        super();
+    }
+
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            Node[cL,cE]{L} n2, 
+            Node[cL,cE]{L} n3,
+            Node[cL,cE]{L} n4,
+            Node[cL,cE]{L} n5,
+            Node[cL,cE]{L} n6,
+            Node[cL,cE]{L} n7,
+            Node[cL,cE]{L} n8) 
+    where {*cL} <= L, {E; n1; n2; n3; n4; n5; n6; n7; n8} <= {*cE} {
+        super();
+    }
+    
+    public NodeList{L}(label cL, label cE, Node[cL,cE]{L} n1, 
+            Node[cL,cE]{L} n2, 
+            Node[cL,cE]{L} n3,
+            Node[cL,cE]{L} n4,
+            Node[cL,cE]{L} n5,
+            Node[cL,cE]{L} n6,
+            Node[cL,cE]{L} n7,
+            Node[cL,cE]{L} n8,
+            Node[cL,cE]{L} n9) 
+    where {*cL} <= L, {E; n1; n2; n3; n4; n5; n6; n7; n8; n9} <= {*cE} {
+        super();
+    }
+
+    public native NodeList[L, E] append{L}(label cL, label cE, Node[cL, cE]{L} n2)
+    where {*cL} <= {L}, {E;n2} <= {*cE};
+    public native NodeList[L, E] append{L}(Node[L, E]{L} n2) where {n2} <= {E};
+    
+    public native NodeList[rL, rE] append{*rL}(label rL, label rE, label cL, label cE, Node[cL, cE]{*rL} n2)
+    where {*cL;L} <= {*rL}, {*rE;n2} <= {*cE}, {*rE;this} <= {E};
+}

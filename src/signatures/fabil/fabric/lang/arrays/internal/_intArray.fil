@@ -1,0 +1,13 @@
+package fabric.lang.arrays.internal;
+
+public class _intArray {
+  public native int set(int i, int value);
+
+  public native int get(int i);
+
+  public _intArray(int length) {
+  }
+
+  public _intArray(int native[] value) {
+  }
+}

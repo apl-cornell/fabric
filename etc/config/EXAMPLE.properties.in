@@ -1,0 +1,40 @@
+# This is an example node configuration file.
+# Copy this file to <node name>.properties and edit that file.
+
+
+# File in ${FABRIC_HOME}/etc/keys that holds the node's private key store.
+# This is optional.  By default, this is <node name>.keystore.
+#
+# Create the private key store with:
+#   ${FABRIC_HOME}/bin/genkey <node name>
+
+#fabric.node.keystore = node.name.example.keystore
+
+
+
+# The name of the worker's home store.
+# This is required for workers.  It specifies where the worker's principal
+# object is to be created.
+
+#fabric.worker.homeStore = store.name.example
+
+
+
+# The port for the worker to listen on for remote-call requests.
+# This is optional.
+
+#fabric.worker.port    = 3372
+
+
+
+# The port for the store to listen on.
+# This is optional.
+
+#fabric.store.port    = 3472
+
+
+# The IP address or DNS name that this node can be reached at.  This is
+# optional; the default is <node name>
+
+#fabric.node.hostname = fabric.example.net
+

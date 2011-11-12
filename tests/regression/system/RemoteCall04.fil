@@ -1,0 +1,53 @@
+package system;
+
+public class RemoteCall04 {
+  int i;
+  RemoteCall04 child;
+
+  public void m() {
+    i++;
+
+    Store store = Worker.getWorker().getStore("store0");
+    child = new RemoteCall04@store();
+  }
+
+  public void m_remote(fabric.lang.security.Principal p) {
+    m();
+  }
+
+  public static void main(String[] args) {
+    RemoteCall04 t = null;
+    Store store = Worker.getWorker().getStore("store0");
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker("store0");
+    atomic {
+      t = new RemoteCall04@store();
+      t.i = 10;
+      t.m_remote@remoteWorker(Worker.getWorker().getPrincipal());
+      t.child.i = 42;
+      t.child.m_remote@remoteWorker(Worker.getWorker().getPrincipal());
+    }
+
+    int curI = -1;
+    int curChildI = -1;
+    int curGrandchildI = -1;
+    atomic {
+      curI = t.i;
+      curChildI = t.child.i;
+      curGrandchildI = t.child.child.i;
+    }
+
+    if (curI == 11 && curChildI == 43 && curGrandchildI == 0)
+      System.out.println("TEST PASSED.");
+    else {
+      if (curI != 11)
+	System.out.println("TEST FAILED: expected t.i == 11 but got " + curI);
+      if (curChildI != 43)
+	System.out.println("TEST FAILED: expected t.child.i == 43 but got "
+	  + curChildI);
+      if (curGrandchildI != 0)
+	System.out.println("TEST FAILED: expected t.child.child.i == 0 but got "
+	  + curGrandchildI);
+    }
+  }
+}
+

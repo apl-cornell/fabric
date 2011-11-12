@@ -1,0 +1,12 @@
+package fabric.lang.security;
+
+/**
+ * This code is mostly copied from Jif.
+ */
+public interface Closure {
+  java.lang.Object invoke();
+
+  Principal jif$getfabric_lang_security_Closure_P();
+
+  Label jif$getfabric_lang_security_Closure_L();
+}

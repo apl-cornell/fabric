@@ -1,0 +1,133 @@
+package fabric.lang.security;
+
+import fabric.worker.Worker;
+import fabric.worker.Store;
+import fabric.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
+
+/**
+ * This code is mostly copied from Jif.
+ */
+public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
+  private final Principal owner;
+  private final Principal writer;
+
+  public WriterPolicy(Principal owner, Principal writer) {
+    this.owner = owner;
+    this.writer = writer;
+  }
+
+  public Principal owner() {
+    return owner;
+  }
+
+  public Principal writer() {
+    return writer;
+  }
+
+  public boolean relabelsTo(Policy p, Set s) {
+    if (this == p || this.equals(p)) return true;
+    
+    final Store localStore = Worker.getWorker().getLocalStore();
+    if (p instanceof JoinIntegPolicy) {
+      JoinPolicy jp = (JoinPolicy) p;
+      // this <= p1 join ... join p2 if there exists a pi such that
+      // this <= pi
+      for (Iterator iter = jp.joinComponents().iterator(); iter.hasNext();) {
+        Policy pi = (Policy) iter.next();
+        if (LabelUtil.relabelsTo(this, pi, s)) return true;
+      }
+      return false;
+    } else if (p instanceof MeetIntegPolicy) {
+      MeetPolicy mp = (MeetPolicy) p;
+      // this <= p1 meet ... meet p2 if for all pi
+      // this <= pi
+      Set temp = new HashSet@localStore();
+      for (Iterator iter = mp.meetComponents().iterator(); iter.hasNext();) {
+        Policy pi = (Policy) iter.next();
+        if (!LabelUtil.relabelsTo(this, pi, temp)) return false;
+      }
+      s.addAll(temp);
+      return true;
+    } else if (!(p instanceof WriterPolicy)) return false;
+
+    WriterPolicy pp = (WriterPolicy) p;
+
+    // this = { o : .. ri .. }
+    // p = { o' : .. rj' .. }
+
+    // o' >= o?
+
+    ActsForProof ownersProof =
+      PrincipalUtil.actsForProof(localStore, owner, pp.owner);
+    if (ownersProof == null) {
+      return false;
+    }
+
+    // for all j . rj' >= o || exists i . rj' >= ri
+    ActsForProof writerWriterProof =
+        PrincipalUtil.actsForProof(localStore, this.writer, pp.writer);
+    if (writerWriterProof != null) {
+      ownersProof.gatherDelegationDependencies(s);
+      writerWriterProof.gatherDelegationDependencies(s);
+      return true;
+    }
+    ActsForProof writerOwnerProof =
+        PrincipalUtil.actsForProof(localStore, this.writer, pp.owner);
+    if (writerOwnerProof != null) {
+      ownersProof.gatherDelegationDependencies(s);
+      writerOwnerProof.gatherDelegationDependencies(s);
+      return true;
+    }
+    return false;
+  }
+
+  public int hashCode() {
+    return (owner == null ? 0 : owner.hashCode())
+        ^ (writer == null ? 0 : writer.hashCode()) ^ -124978;
+  }
+
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof WriterPolicy)) {
+      return false;
+    }
+
+    WriterPolicy policy = (WriterPolicy) o;
+
+    if (owner == policy.owner
+        || (owner != null && owner.equals(policy.owner) && policy.owner != null && policy.owner
+            .equals(owner))) {
+      return (writer == policy.writer || (writer != null
+          && writer.equals(policy.writer) && policy.writer != null && policy.writer
+          .equals(writer)));
+    }
+
+    return false;
+  }
+
+  public String toString() {
+    String str = PrincipalUtil.toString(owner) + "!: ";
+    if (!PrincipalUtil.isTopPrincipal(writer))
+      str += PrincipalUtil.toString(writer);
+    return str;
+  }
+
+  public IntegPolicy join(Store store, IntegPolicy p, Set s) {
+    return LabelUtil.join(store, this, p, s);
+  }
+
+  public IntegPolicy meet(Store store, IntegPolicy p, Set s) {
+    return LabelUtil.meet(store, this, p, s);
+  }
+
+  public IntegPolicy join(Store store, IntegPolicy p) {
+    return LabelUtil.join(store, this, p);
+  }
+
+  public IntegPolicy meet(Store store, IntegPolicy p) {
+    return LabelUtil.meetPol(store, this, p);
+  }
+
+}

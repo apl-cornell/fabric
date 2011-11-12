@@ -1,0 +1,23 @@
+<project name="transient.common">
+  <description>
+    This is the include file for projects that build against the transient library.
+  </description>
+
+  <dirname property="transient.home" file="${ant.file.transient.common}" />
+
+  <property name="jar.transient" location="${fabric.home}/lib/fabric-transient.jar" />
+
+  <path id="transient.classpath">
+    <pathelement path="${jar.transient}" />
+  </path>
+
+  <target name="transient">
+    <subant target="jar">
+      <fileset dir="${transient.home}" includes="build.xml" />
+    </subant>
+  </target>
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

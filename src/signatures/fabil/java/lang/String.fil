@@ -1,0 +1,190 @@
+package java.lang;
+
+public final class String implements fabric.lang.JavaInlineable,
+    java.lang.Comparable, java.lang.CharSequence {
+
+  public String() {
+  }
+
+  public String(java.lang.String arg0) {
+  }
+
+  public String(char native[] arg0) {
+  }
+
+  public String(char native[] arg0, int arg1, int arg2) {
+  }
+
+  public String(int native[] arg0, int arg1, int arg2) {
+  }
+
+  public String(byte native[] arg0, int arg1, int arg2, int arg3) {
+  }
+
+  public String(byte native[] arg0, int arg1) {
+  }
+
+  public String(byte native[] arg0, int arg1, int arg2, java.lang.String arg3) {
+  }
+
+  public String(byte native[] arg0, int arg1, int arg2, java.nio.charset.Charset arg3) {
+  }
+
+  public String(byte native[] arg0, java.lang.String arg1) {
+  }
+
+  public String(byte native[] arg0, java.nio.charset.Charset arg1) {
+  }
+
+  public String(byte native[] arg0, int arg1, int arg2) {
+  }
+
+  public String(byte native[] arg0) {
+  }
+
+  public String(java.lang.StringBuffer arg0) {
+  }
+
+  public String(java.lang.StringBuilder arg0) {
+  }
+
+  public native int hashCode();
+
+  public native int compareTo(java.lang.String arg0);
+
+  public native int compareTo(java.lang.Object arg0);
+
+  public native int indexOf(int arg0);
+
+  public native int indexOf(int arg0, int arg1);
+
+  public native int indexOf(java.lang.String arg0);
+
+  public native int indexOf(java.lang.String arg0, int arg1);
+
+  public native boolean equals(java.lang.Object arg0);
+
+  public native java.lang.String toString();
+
+  public native char charAt(int arg0);
+
+  public native int codePointAt(int arg0);
+
+  public native int codePointBefore(int arg0);
+
+  public native int codePointCount(int arg0, int arg1);
+
+  public native int compareToIgnoreCase(java.lang.String arg0);
+
+  public native java.lang.String concat(java.lang.String arg0);
+
+  public native boolean contains(java.lang.CharSequence arg0);
+
+  public native boolean contentEquals(java.lang.StringBuffer arg0);
+
+  public native boolean contentEquals(java.lang.CharSequence arg0);
+
+  public static native java.lang.String copyValueOf(char native[] arg0, int arg1,
+      int arg2);
+
+  public static native java.lang.String copyValueOf(char native[] arg0);
+
+  public native boolean endsWith(java.lang.String arg0);
+
+  public native boolean equalsIgnoreCase(java.lang.String arg0);
+
+  public static native java.lang.String format(java.lang.String arg0,
+      java.lang.Object native[] arg1);
+
+  public static native java.lang.String format(java.util.Locale arg0,
+      java.lang.String arg1, java.lang.Object native[] arg2);
+
+  public native void getBytes(int arg0, int arg1, byte native[] arg2, int arg3);
+
+  public native byte native[] getBytes(java.lang.String arg0);
+
+  public native byte native[] getBytes(java.nio.charset.Charset arg0);
+
+  public native byte native[] getBytes();
+
+  public native void getChars(int arg0, int arg1, char native[] arg2, int arg3);
+
+  public native java.lang.String intern();
+
+  public native boolean isEmpty();
+
+  public native int lastIndexOf(int arg0);
+
+  public native int lastIndexOf(int arg0, int arg1);
+
+  public native int lastIndexOf(java.lang.String arg0);
+
+  public native int lastIndexOf(java.lang.String arg0, int arg1);
+
+  public native int length();
+
+  public native boolean matches(java.lang.String arg0);
+
+  public native int offsetByCodePoints(int arg0, int arg1);
+
+  public native boolean regionMatches(int arg0, java.lang.String arg1,
+      int arg2, int arg3);
+
+  public native boolean regionMatches(boolean arg0, int arg1,
+      java.lang.String arg2, int arg3, int arg4);
+
+  public native java.lang.String replace(char arg0, char arg1);
+
+  public native java.lang.String replace(java.lang.CharSequence arg0,
+      java.lang.CharSequence arg1);
+
+  public native java.lang.String replaceAll(java.lang.String arg0,
+      java.lang.String arg1);
+
+  public native java.lang.String replaceFirst(java.lang.String arg0,
+      java.lang.String arg1);
+
+  public native java.lang.String native[] split(java.lang.String arg0, int arg1);
+
+  public native java.lang.String native[] split(java.lang.String arg0);
+
+  public native boolean startsWith(java.lang.String arg0, int arg1);
+
+  public native boolean startsWith(java.lang.String arg0);
+
+  public native java.lang.CharSequence subSequence(int arg0, int arg1);
+
+  public native java.lang.String substring(int arg0);
+
+  public native java.lang.String substring(int arg0, int arg1);
+
+  public native char native[] toCharArray();
+
+  public native java.lang.String toLowerCase(java.util.Locale arg0);
+
+  public native java.lang.String toLowerCase();
+
+  public native java.lang.String toUpperCase(java.util.Locale arg0);
+
+  public native java.lang.String toUpperCase();
+
+  public native java.lang.String trim();
+
+  public static native java.lang.String valueOf(java.lang.Object arg0);
+
+  public static native java.lang.String valueOf(char native[] arg0);
+
+  public static native java.lang.String valueOf(char native[] arg0, int arg1, int arg2);
+
+  public static native java.lang.String valueOf(boolean arg0);
+
+  public static native java.lang.String valueOf(char arg0);
+
+  public static native java.lang.String valueOf(int arg0);
+
+  public static native java.lang.String valueOf(long arg0);
+
+  public static native java.lang.String valueOf(float arg0);
+
+  public static native java.lang.String valueOf(double arg0);
+}

@@ -1,0 +1,1428 @@
+<!--
+  This is the Apache Ant build file for Fabric.
+  See doc/ant-dep-graph.png to visualize the inter-target dependencies.
+
+  Targets are public (i.e., intended to be callable by the user) if and only if
+  they have a description attribute.  Public targets will show up when the user
+  runs "ant -p".  Internal targets should not have description attributes!
+-->
+<project name="fabric" default="build-all" basedir=".">
+  <description>
+    Fabric build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <!-- Import common definitions. -->
+  <import file="common.xml" />
+
+  <!-- Source directories -->
+  <property name="src" location="${fabric.home}/src"/>
+  <property name="system.src" location="${src}/system"/>
+  <property name="compiler.src" location="${src}/compiler"/>
+  <property name="bootstrap.src" location="${src}/bootstrap"/>
+  <property name="runtime.src" location="${src}/runtime"/>
+  <property name="arrays.src" location="${src}/arrays"/>
+  <property name="signatures.fabil.src" location="${src}/signatures/fabil"/>
+  <property name="signatures.fabric.src" location="${src}/signatures/fabric"/>
+
+  <!-- Directories for class file targets -->
+  <property name="bootstrap.classes" location="${fabric.home}/bs-classes"/>
+  <property name="signatures.classes" location="${fabric.home}/sig-classes"/>
+  <property name="signatures.fabil.classes"
+      location="${signatures.classes}/fabil"/>
+  <property name="signatures.fabric.classes"
+      location="${signatures.classes}/fabric"/>
+
+  <!-- Polyglot classpath -->
+  <pathconvert property="polyglot.classpath" refid="polyglot.classpath"/>
+
+  <!-- Timestamp file for bootstrap classes. -->
+  <property name="bootstrap.tstamp" location="${bootstrap.classes}/.tstamp"/>
+
+  <!-- Documentation directory -->
+  <property name="doc" location="${fabric.home}/doc"/>
+
+  <!-- Configuration directory -->
+  <property name="etc" location="${fabric.home}/etc"/>
+
+  <!-- var directory (for store databases) -->
+  <property name="var" location="${fabric.home}/var"/>
+
+  <!-- Examples directory -->
+  <property name="examples" location="${fabric.home}/examples"/>
+
+  <!-- Tools directory -->
+  <property name="tools" location="${fabric.home}/tools"/>
+
+  <!-- Lib directory -->
+  <property name="libs" location="${fabric.home}/src/lib"/>
+
+  <!-- Tests directory -->
+  <property name="tests" location="${fabric.home}/tests"/>
+
+  <!-- tmp directory (for creating the distribution) -->
+  <property name="tmp" location="${fabric.home}/tmp"/>
+
+  <!-- SCM root locations -->
+  <property name="svn.root.fabric"
+      value="https://forge.cornell.edu/svn/repos/fabric/trunk"/>
+  <property name="cvs.root.jif"
+      value=":ext:gforge.cis.cornell.edu:/cvsroot/jif"/>
+  <property name="cvs.root.polyglot"
+      value=":ext:gforge.cis.cornell.edu:/cvsroot/polyglot"/>
+
+  <!-- Jar files -->
+  <property name="jar.base" location="${lib}/fabric.jar" />
+  <property name="jar.runtime" location="${lib}/fabric-rt.jar" />
+  <property name="jar.signature.fabil" location="${lib}/fabric-il-sig.jar" />
+  <property name="jar.signature.fabric" location="${lib}/fabric-sig.jar" />
+  <property name="jar.tools" location="${lib}/fabric-tools.jar" />
+
+  <!--
+  ****************************************************************************
+    Configuration targets.
+  ****************************************************************************
+  -->
+
+  <!-- Main configuration target. -->
+  <target name="configure" description="Configures Fabric"
+      depends="configure-buildstring" unless="configure.up-to-date">
+
+    <echo message="java version is ${java.version}"/>
+    <echo message="current directory is ${user.dir}"/>
+    <echo message="JDK home directory is ${jdk.home}"/>
+    <echo message="Polyglot home directory is ${polyglot.home}"/>
+    <echo message="Jif home directory is ${jif.home}" />
+    <echo message="Fabric version is ${fabric.version.build}" />
+
+    <property name="configure.up-to-date" value="true"/>
+  </target>
+
+  <!-- Configures the executables in the bin directory. -->
+  <target name="bin" depends="configure,bin-check" unless="bin.up-to-date"
+      description="Configures the executables in the bin directory">
+    <fail message="Failed to find Polyglot.  Make sure that your POLYGLOT environment variable is set, and that you have built Polyglot.">
+      <condition>
+        <not>
+          <and>
+            <isset property="polyglot.home" />
+            <available classname="polyglot.main.Version"
+                classpathref="polyglot.classpath" />
+          </and>
+        </not>
+      </condition>
+    </fail>
+
+    <fail message="Failed to find Jif.  Make sure that your JIF environment variable is set and that you have built Jif.">
+      <condition>
+        <not>
+          <and>
+            <isset property="jif.home" />
+            <available classname="jif.Version"
+                classpathref="jif.classpath" />
+          </and>
+        </not>
+      </condition>
+    </fail>
+
+    <copy file="${bin}/defs.in" tofile="${bin}/defs">
+      <filterset>
+        <filter token="JAVA_HOME" value="${jdk.home}"    />
+        <filter token="TOP"       value="${fabric.home}"      />
+        <filter token="POLYGLOT"  value="${polyglot.home}" />
+        <filter token="JIF"       value="${jif.home}" />
+      </filterset>
+    </copy>
+  </target>
+
+  <!--
+  ____________________________________________________________________________
+    Configuration helper targets.
+  -->
+
+  <target name="configure-buildstring" depends="configure-version"
+      unless="fabric.version.build">
+    <tstamp>
+      <format property="now" timezone="America/New_York"
+          pattern="yyyy-MM-dd HH:mm:ss z" />
+    </tstamp>
+    <property name="fabric.version.build" value="${fabric.version} (${now})" />
+  </target>
+
+  <target name="configure-version" unless="fabric.version">
+    <property file="${fabric.home}/version.properties" prefix="fabric" />
+    <property name="fabric.version" value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}" />
+  </target>
+
+  <target name="bin-check">
+    <uptodate property="bin.up-to-date" srcfile="bin/defs.in"
+        targetfile="bin/defs" />
+  </target>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="dust"
+      description="Cleans up the generated runtime and signatures">
+    <delete dir="${runtime.classes}"/>
+    <delete dir="${signatures.classes}"/>
+    <delete file="${jar.runtime}" />
+    <delete file="${jar.signature.fabil}" />
+    <delete file="${jar.signature.fabric}" />
+  </target>
+
+  <target name="clean" depends="dust"
+      description="Cleans up the directory tree: deletes the distribution directory and the classes directories">
+    <!-- Delete the ${classes} and ${tmp} directory trees -->
+    <delete dir="${classes}"/>
+    <delete dir="${bootstrap.classes}"/>
+    <delete dir="${tmp}"/>
+    <delete dir="${var}"/>
+    <delete file="${jar.base}" />
+    <delete file="${jar.tools}" />
+
+    <subant target="clean">
+      <filelist dir="${examples}" files="build.xml" />
+      <filelist dir="${tools}"    files="build.xml" />
+      <filelist dir="${libs}"     files="build.xml" />
+      <filelist dir="${tests}"    files="build.xml" />
+    </subant>
+  </target>
+
+  <!-- Makes the directory tree truly pristine. -->
+  <target name="clobber" depends="clean"
+      description="Cleans up the directory tree, deleting generated binaries, scripts and source files">
+    <delete>
+      <fileset dir="${bin}">
+        <include name="defs"/>
+      </fileset>
+
+      <fileset dir="${compiler.src}">
+        <include name="**/Grm.java" />
+        <include name="**/sym.java" />
+        <include name="**/Lexer_c.java" />
+        <include name="**/*_ppg.cup" />
+      </fileset>
+    </delete>
+
+    <subant target="clobber">
+      <filelist dir="${examples}" files="build.xml" />
+      <filelist dir="${tools}"    files="build.xml" />
+      <filelist dir="${libs}"     files="build.xml" />
+    </subant>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <!-- Main target for compiling Fabric -->
+  <target name="build-all"
+    depends="fabric-compiler,fabil-compiler,fabric-system,fabric-signatures,fabric-runtime,tools"
+    description="Builds the Fabric compiler, system, runtime, and tools"/>
+
+  <!-- This target is here for legacy reasons. -->
+  <target name="all" depends="build-all" />
+
+  <!-- Compiles the Fabric system -->
+  <target name="fabric-system" depends="store,worker,dissemination"
+      description="Builds the Fabric system"/>
+
+  <!-- Compiles the Fabric compiler -->
+  <target name="fabric-compiler" depends="init,fabil-compiler"
+      description="Builds the Fabric compiler">
+    <antcall target="standard-ext">
+      <param name="ext" value="fabric" />
+      <param name="ext.pkg" value="fabric" />
+      <param name="parser.type" value="ppg" />
+    </antcall>
+  </target>
+
+  <!-- Compiles the FabIL compiler -->
+  <target name="fabil-compiler" depends="init,bootstrap,native"
+      description="Builds the FabIL compiler">
+    <antcall target="standard-ext">
+      <param name="ext" value="fabil" />
+      <param name="ext.pkg" value="fabil" />
+      <param name="parser.type" value="ppg" />
+    </antcall>
+  </target>
+
+  <!-- Compiles the Fabric signatures -->
+  <target name="fabric-signatures"
+      depends="init,bootstrap,bin,fabric-compiler,fabil-runtime,worker,store"
+      description="Compiles the Fabric signature classes">
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${fabric.home}"
+           dest="${signatures.fabric.classes}"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabc}"/>
+      <arg value="-bootclasspath" />
+      <arg value="${runtime.classes}:${classes}"/>
+      <arg value="-nooutput"/>
+      <arg value="-trusted-providers" />
+      <arg value="-sigcp"/>
+      <arg value="${signatures.fabric.src}" />
+      <arg value="-sig"/>
+      <arg value="-d"/>
+      <arg value="${signatures.fabric.classes}"/>
+      <srcfile />
+      <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+  </target>
+
+  <!-- Compiles the FabIL signatures -->
+  <target name="fabil-signatures"
+      depends="init,bootstrap,fabil-compiler,bin,native"
+      description="Compiles the FabIL signature clasess">
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${fabric.home}"
+           dest="${signatures.fabil.classes}"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${filc}" />
+      <arg value="-jvm-cp" />
+      <arg value="${bootstrap.classes}" />
+      <arg value="-nooutput" />
+      <arg value="-classpath" />
+      <arg value="${bootstrap.classes}" />
+      <arg value="-bootclasspath" />
+      <arg value="${bootstrap.classes}" />
+      <arg value="-sigcp" />
+      <arg value="${signatures.fabil.src}:${runtime.src}" />
+      <arg value="-sig" />
+      <arg value="-d" />
+      <arg value="${signatures.fabil.classes}" />
+      <srcfile />
+      <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+  </target>
+
+  <!-- Compiles the Fabric tools -->
+  <target name="tools" depends="fabil-runtime,fabric-compiler"
+      description="Builds all Fabric tools">
+    <subant target="build-all">
+      <fileset dir="${tools}" includes="build.xml" />
+    </subant>
+  </target>
+
+  <!-- Compiles the Fabric libraries -->
+  <target name="libs" depends="build-all"
+      description="Builds the libraries built on top of Fabric">
+    <subant target="build-all">
+      <fileset dir="${libs}" includes="build.xml" />
+    </subant>
+  </target>
+
+  <!-- Compiles the Fabric examples -->
+  <target name="examples" depends="build-all"
+      description="Builds the Fabric application examples">
+    <subant target="build-all">
+      <fileset dir="${examples}" includes="build.xml" />
+    </subant>
+  </target>
+
+  <target name="regen-bootstrap"
+      description="Create bootstrap classes of collections written in Fabric.">
+
+  <echo message="This will overwrite the contents of ${bootstrap.src} "/>
+  <echo message="with skeleton classes generated from ${runtime.src}"/>
+  <input message="Continue?" validargs="y,n" addproperty="do.regen" />
+
+  <condition property="do.abort">
+    <equals arg1="n" arg2="${do.regen}"/>
+  </condition>
+  <fail if="do.abort">Bootstrap regeneration aborted by user.</fail>
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dest="${bootstrap.src}"
+        dir="${runtime.src}"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${filc}" />
+      <arg value="-bootstrap-skel" /> 
+      <arg value="-noserial" /> 
+      <arg value="-c" />
+      <arg value="-d" /> <arg value="${bootstrap.src}"/>
+      <arg value="-debugpositions" />
+      <arg value="-sourcepath"/>
+      <arg value="${runtime.src}"/>
+      <srcfile />
+      <globmapper from="*.fab" to="*.*" />-->
+      <fileset dir="${runtime.src}"
+          includes="**/*.fil"
+          excludes="**/*.fab"/>
+      <globmapper from="*.fil" to="*.*" />
+    </apply>
+  </target>
+
+  <!--
+  ____________________________________________________________________________
+    Compilation helper targets.
+  -->
+
+  <!-- Initializes the build -->
+  <target name="init" depends="configure">
+    <!-- Create the time stamp -->
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="${classes}"/>
+    <mkdir dir="${bootstrap.classes}"/>
+    <mkdir dir="${runtime.classes}"/>
+    <mkdir dir="${signatures.fabil.classes}"/>
+    <mkdir dir="${signatures.fabric.classes}"/>
+  </target>
+
+  <!-- Compiles the bootstrap classes. -->
+  <target name="bootstrap" depends="init,bootstrap-check"
+      unless="bootstrap.up-to-date">
+    <javac source="1.6" target="1.6"
+        srcdir="${bootstrap.src}" destdir="${bootstrap.classes}"
+        includeAntRuntime="false" debug="on">
+      <include name="**/*.java" />
+      <sourcepath path="${system.src}"/>
+      <classpath>
+        <path refid="lib.classpath"/>
+        <path refid="polyglot.classpath" />
+      </classpath>
+    </javac>
+    <touch file="${bootstrap.tstamp}"/>
+
+    <!--
+      The bootstrap classes pull in stuff from the system.  Give all class
+      files in ${bootstrap.classes} an ancient timestamp so they get recompiled
+      when we build things for real.
+    -->
+    <touch millis="0">
+      <fileset dir="${bootstrap.classes}">
+        <include name="**/*.class"/>
+      </fileset>
+    </touch>
+  </target>
+
+  <target name="bootstrap-check">
+    <uptodate property="bootstrap.up-to-date" targetfile="${bootstrap.tstamp}">
+      <srcfiles dir="${bootstrap.src}" includes="**" />
+    </uptodate>
+  </target>
+
+  <!-- Compiles the Fabric runtime classes that are implemented in Java -->
+  <target name="native" depends="init,bootstrap,native-check"
+      unless="native.up-to-date">
+    <javac source="1.6" target="1.6"
+        srcdir="${system.src}" destdir="${classes}"
+        includeAntRuntime="false" debug="on">
+      <include name="fabric/lang/**" />
+      <include name="fabric/common/**" />
+      <exclude name="**/package-info.java" />
+      <classpath>
+        <pathelement location="${bootstrap.classes}" />
+        <path refid="lib.classpath"/>
+        <path refid="polyglot.classpath" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="native-check">
+    <uptodate property="native.up-to-date">
+      <srcfiles dir="${system.src}" includes="fabric/lang/**" />
+      <srcfiles dir="${system.src}" includes="fabric/common/util/**" />
+      <globmapper from="*.java" to="../../classes/*.class" />
+    </uptodate>
+  </target>
+
+  <!-- Compiles the Fabric store -->
+  <target name="store" depends="init,native,fabil-runtime">
+    <javac source="1.6" target="1.6"
+        srcdir="${system.src}" destdir="${classes}"
+        includeAntRuntime="false" debug="on">
+      <include name="fabric/common/**" />
+      <include name="fabric/messages/**" />
+      <include name="fabric/store/**" />
+      <exclude name="**/package-info.java" />
+      <classpath>
+        <pathelement location="${runtime.classes}" />
+        <path refid="lib.classpath"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <!-- Compiles the Fabric worker -->
+  <target name="worker" depends="init,bootstrap,native,fabil-runtime">
+    <javac source="1.6" target="1.6"
+        srcdir="${system.src}" destdir="${classes}"
+        includeAntRuntime="false" debug="on">
+      <include name="fabric/worker/**" />
+      <include name="fabric/common/**" />
+      <include name="fabric/messages/**" />
+      <exclude name="**/package-info.java" />
+      <classpath>
+        <pathelement location="${bootstrap.classes}" />
+        <path refid="lib.classpath"/>
+        <path refid="polyglot.classpath" />
+      </classpath>
+    </javac>
+  </target>
+
+  <!-- Compiles the Fabric dissemination node -->
+  <target name="dissemination" depends="bootstrap,worker">
+    <javac source="1.6" target="1.6"
+        srcdir="${system.src}" destdir="${classes}"
+        includeAntRuntime="false" debug="on">
+      <include name="fabric/dissemination/**" />
+      <exclude name="**/package-info.java" />
+      <classpath>
+        <pathelement location="${bootstrap.classes}" />
+        <path refid="lib.classpath"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <!--
+    Compiles the Fabric array classes.
+
+    Though these are technically part of fabil-runtime, they need to be
+    compiled separately because the compiler uses the generated class files for
+    typing information.  Things are done this way because we don't want to
+    hardcode this typing information in the compiler in case it changes due to
+    a change in the Fabric translation.
+  -->
+  <target name="fabric-arrays"
+      depends="init,bin,bootstrap,fabil-compiler,fabil-signatures">
+    <javac source="1.6" target="1.6"
+        srcdir="${system.src}" destdir="${classes}"
+        includeAntRuntime="false" debug="on">
+      <include name="fabric/worker/RetryException.java" />
+      <include name="fabric/worker/UserAbortException.java" />
+    </javac>
+
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${fabric.home}"
+        dest="${runtime.classes}"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${filc}" />
+      <arg value="-jvm-cp" />
+      <arg value="${bootstrap.classes}" />
+      <arg line="${debug.flag}" />
+      <arg value="-bootclasspath" />
+      <arg value="${runtime.src}:${bootstrap.classes}" />
+      <arg value="-O0" />
+      <arg value="-d" />
+      <arg value="${runtime.classes}" />
+      <arg value="-platform-mode"/>
+      <srcfile />
+      <fileset dir="${arrays.src}" includes="fabric/lang/arrays/*.fil"/>
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+  </target>
+
+  <!-- Compiles the part of the Fabric runtime that is implemented in FabIL -->
+  <target name="fabil-runtime"
+      depends="init,bootstrap,fabil-compiler,fabil-signatures,fabric-arrays">
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${fabric.home}"
+        dest="${runtime.classes}"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${filc}" />
+      <arg line="${debug.flag}" />
+      <arg value="-O0" />
+      <arg value="-jvm-cp" />
+      <arg value="${bootstrap.classes}" />
+      <arg value="-j" />
+      <arg value="-Xms256M" />
+      <arg value="-d" />
+      <arg value="${runtime.classes}" />
+      <arg value="-bootclasspath" />
+      <arg value="${runtime.classes}:${runtime.src}:${polyglot.classpath}:${bootstrap.classes}" />
+      <arg value="-platform-mode"/>
+      <srcfile />
+      <fileset dir="${runtime.src}"
+          includes="**/*.fil"
+          excludes="fabric/util/*.fil" />
+      <filelist dir="${runtime.src}">
+        <file name="fabric/util/HashMap.fil"/>
+        <file name="fabric/util/LinkedList.fil"/>
+        <file name="fabric/util/HashSet.fil"/>
+        <file name="fabric/util/LinkedHashSet.fil"/>
+        <file name="fabric/util/ArrayList.fil"/>
+        <file name="fabric/util/Collections.fil"/>
+        <file name="fabric/util/Arrays.fil"/>
+        <file name="fabric/util/TreeMap.fil"/>
+        <file name="fabric/util/TreeSet.fil"/>
+      </filelist>
+
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+  </target>
+
+  <!-- Compiles the part of the runtime that is implemented in Fabric -->
+  <target name="fabric-runtime"
+      depends="fabric-signatures,fabil-runtime">
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${fabric.home}"
+        dest="${runtime.classes}"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${fabc}" />
+      <arg line="${debug.flag}" />
+      <arg value="-j" />
+      <arg value="-Xms256M" />
+      <arg value="-O0" />
+      <arg value="-e" />
+      <arg value="-bootclasspath" />
+      <arg value="${runtime.classes}:${classes}"/>
+      <arg value="-trusted-providers" />
+      <arg value="-d" />
+      <arg value="${runtime.classes}" />
+      <arg value="-sourcepath" />
+      <arg value="${runtime.src}" />
+
+      <srcfile />
+      <fileset dir="${runtime.src}"
+          includes="**/*.fab" />
+
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Version-management targets
+  ****************************************************************************
+  -->
+
+  <target name="bump-version">
+    <antcall target="bump-patch" />
+  </target>
+
+  <target name="bump-major">
+    <propertyfile file="${fabric.home}/version.properties">
+      <entry key="version.major" type="int" operation="+" value="1"
+          pattern="0" />
+      <entry key="version.minor" type="int" value="0" />
+      <entry key="version.patch" type="int" value="0" />
+    </propertyfile>
+
+    <!-- Reread version info and regenerate version files -->
+    <antcall target="configure-buildstring" />
+    <antcall target="gen-version" />
+  </target>
+
+  <target name="bump-minor">
+    <propertyfile file="${fabric.home}/version.properties">
+      <entry key="version.minor" type="int" operation="+" value="1"
+          pattern="0" />
+      <entry key="version.patch" type="int" value="0" />
+    </propertyfile>
+
+    <!-- Reread version info and regenerate version files -->
+    <antcall target="configure-buildstring" />
+    <antcall target="gen-version" />
+  </target>
+
+  <target name="bump-patch">
+    <propertyfile file="${fabric.home}/version.properties">
+      <entry key="version.patch" type="int" operation="+" value="1"
+          pattern="0" />
+    </propertyfile>
+
+    <!-- Reread version info and regenerate version files -->
+    <antcall target="configure-buildstring" />
+    <antcall target="gen-version" />
+  </target>
+
+  <!--
+  ____________________________________________________________________________
+    Version-management helper targets.
+  -->
+
+  <!-- Generates version files in the source tree. -->
+  <target name="gen-version">
+    <antcall target="configure-buildstring" />
+    <antcall target="gen-version-java" />
+  </target>
+
+  <!-- Puts version information into the Java sources. -->
+  <target name="gen-version-java"
+      depends="configure-buildstring">
+    <antcall target="gen-version-java-compiler">
+      <param name="name.code" value="fabil" />
+      <param name="name.human" value="FabIL" />
+    </antcall>
+    <antcall target="gen-version-java-compiler">
+      <param name="name.code" value="fabric" />
+      <param name="name.human" value="Fabric" />
+    </antcall>
+    <antcall target="gen-version-java-system" />
+  </target>
+
+  <!--
+    Puts version information into the Java sources for one of the compilers.
+
+    Parameters:
+      name.human - Human-readable version of the name of the extension.
+      name.code - Source-code version of the name of the extension.
+  -->
+  <target name="gen-version-java-compiler">
+    <echo file="${compiler.src}/${name.code}/Version.java">package ${name.code};
+
+/**
+ * Version information for ${name.human} extension.
+ *
+ * DO NOT EDIT THIS CLASS BY HAND!  This is automatically generated by Ant.  If
+ * you wish to change the version number, run one of the following:
+ *
+ *   ant bump-version  (Bumps the version number.)
+ *   ant bump-major    (Bumps the major version number.)
+ *   ant bump-minor    (Bumps the minor version number.)
+ *   ant bump-patch    (Bumps the patch level.)
+ */
+public class Version extends polyglot.main.Version {
+  @Override
+  public String name() {
+    return "${name.code}";
+  }
+
+  @Override
+  public int major() {
+    return ${fabric.version.major};
+  }
+
+  @Override
+  public int minor() {
+    return ${fabric.version.minor};
+  }
+
+  @Override
+  public int patch_level() {
+    return ${fabric.version.patch};
+  }
+
+  @Override
+  public String toString() {
+    return "${fabric.version.build}";
+  }
+}
+</echo>
+  </target>
+
+  <!--
+    Puts version information into the Java sources for the Fabric system.
+  -->
+  <target name="gen-version-java-system">
+    <echo file="${system.src}/fabric/common/Version.java">package fabric.common;
+
+/**
+ * This encapsulates the version of Fabric.
+ *
+ * DO NOT EDIT THIS CLASS BY HAND!  This is automatically generated by Ant.  If
+ * you wish to change the version number, run one of the following:
+ *
+ *   ant bump-version  (Bumps the version number.)
+ *   ant bump-major    (Bumps the major version number.)
+ *   ant bump-minor    (Bumps the minor version number.)
+ *   ant bump-patch    (Bumps the patch level.)
+ */
+public class Version {
+  private int major = ${fabric.version.major};
+  private int minor = ${fabric.version.minor};
+  private int patch = ${fabric.version.patch};
+
+  public int major() { return major; }
+  public int minor() { return minor; }
+  public int patch() { return patch; }
+
+  @Override
+  public String toString() {
+    return "${fabric.version.build}";
+  }
+}
+</echo>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Javadoc target
+  ****************************************************************************
+  -->
+
+  <target name="javadoc"
+          depends="javadoc-compiler, javadoc-system"
+          description="Runs javadoc over the Fabric source code" />
+
+  <!-- Compiler classes -->
+  <target name="javadoc-compiler">
+    <javadoc sourcepath="${compiler.src}"
+             destdir="${doc}/api/compiler"
+             encoding="UTF-8"
+             overview="${compiler.src}/overview.html">
+
+      <packageset dir="${compiler.src}" defaultexcludes="yes" />
+
+      <group title="Fabric Compiler" packages="fabric*" />
+
+      <group title="Fabil Compiler" packages="fabil*" />
+
+    </javadoc>
+  </target>
+
+  <!-- System classes -->
+  <target name="javadoc-system">
+    <javadoc sourcepath="${system.src}"
+             overview="${system.src}/overview.html"
+             destdir="${doc}/api/system"
+             encoding="UTF-8">
+
+      <packageset dir="${system.src}" defaultexcludes="yes" />
+
+      <group title="Worker Implementation">
+        <package name="fabric.worker*" />
+        <package name="fabric.lang" />
+        <package name="fabric.lang.security" />
+      </group>
+
+      <group title="Store Implementation"  packages="fabric.store*" />
+      <group title="Dissemination Layer"   packages="fabric.dissemination*" />
+
+    </javadoc>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Jar targets
+  ****************************************************************************
+  -->
+
+  <!-- Main target for generating jars. -->
+  <target name="jar-all" description="Builds all jars"
+      depends="jar-base,jar-runtime,jar-sig,jar-tools,jar-libs" />
+
+  <target name="jar-base" depends="fabil-compiler,fabric-system"
+      description="Builds fabric.jar">
+    <antcall target="make-jar">
+      <param name="file" value="${jar.base}" />
+      <param name="base" value="${classes}" />
+    </antcall>
+  </target>
+
+  <target name="jar-runtime" depends="fabil-runtime,fabric-runtime"
+      description="Builds fabric-rt.jar">
+    <antcall target="make-jar">
+      <param name="file" value="${jar.runtime}" />
+      <param name="base" value="${runtime.classes}" />
+    </antcall>
+  </target>
+
+  <target name="jar-sig" depends="fabil-signatures,fabric-signatures"
+      description="Builds fabric-sig.jar and fabric-il-sig.jar">
+    <antcall target="make-jar">
+      <param name="file" value="${jar.signature.fabil}" />
+      <param name="base" value="${signatures.fabil.classes}" />
+    </antcall>
+
+    <antcall target="make-jar">
+      <param name="file" value="${jar.signature.fabric}" />
+      <param name="base" value="${signatures.fabric.classes}" />
+    </antcall>
+  </target>
+
+  <target name="jar-tools" depends="tools"
+      description="Builds Jar files for all the Fabric tools">
+    <!-- Create the jar's directory structure in a temporary directory. --> 
+    <antcall target="mkdir-tmp" />
+
+    <copy todir="${tmp}">
+      <fileset dir="${tools}">
+        <include name="*/classes/**/*.class" />
+      </fileset>
+      <regexpmapper from="^[^/]*/classes/(.*)$$" to="\1" />
+    </copy>
+
+    <antcall target="make-jar">
+      <param name="file" value="${jar.tools}" />
+      <param name="base" value="${tmp}" />
+    </antcall>
+
+    <antcall target="rmdir-tmp" />
+  </target>
+
+  <target name="jar-libs"
+      description="Builds Jar files for all the libraries that are built on top of Fabric">
+    <subant target="jar">
+      <fileset dir="${libs}" includes="build.xml" />
+    </subant>
+  </target>
+
+  <!--
+  ____________________________________________________________________________
+    Jar helper targets.
+  -->
+
+  <!--
+    Common target for creating jar files.
+
+    Parameters:
+      file - Destination jar file.
+      base - base directory from which all class files will be included.
+  -->
+  <target name="make-jar" depends="jar-manifest">
+    <jar jarfile="${file}" basedir="${base}" manifest="${tmp.manifest}"
+        includes="**/*.class" />
+  </target>
+
+  <target name="jar-manifest" depends="configure-buildstring">
+    <tempfile property="tmp.manifest" deleteonexit="true" />
+    <manifest file="${tmp.manifest}">
+      <attribute name="Built-By" value="${user.name}" />
+      <attribute name="Implementation-Version" value="${fabric.version}" />
+      <attribute name="Built-Date" value="${fabric.version.build}" />
+    </manifest>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Distribution targets.
+  ****************************************************************************
+  -->
+
+  <!-- Main target for generating the Fabric distribution. -->
+  <target name="dist" depends="dist-tarball"
+      description="Generates the distribution">
+    <!-- Output a checklist for verifying that the distribution is good. -->
+    <echo message="Examples build and run" />
+    <echo message="CHANGES file up-to-date" />
+    <echo message="Version bump" />
+  </target>
+
+  <!--
+  ____________________________________________________________________________
+    Distribution helper targets.
+  -->
+
+  <!-- Creates the distribution tarball from CVS and SVN. -->
+  <target name="dist-tarball"
+      depends="configure-buildstring">
+    <antcall target="mkdir-tmp" />
+
+    <!-- Check out Polyglot from CVS. -->
+    <antcall target="cvs-checkout">
+      <param name="name" value="polyglot" />
+      <param name="root" value="${cvs.root.polyglot}" />
+    </antcall>
+
+    <!-- Build Polyglot jars. -->
+    <antcall target="sub-ant-dist">
+      <param name="sub-ant.dir" value="polyglot" />
+      <param name="sub-ant.target" value="jar-all" />
+    </antcall>
+
+    <!-- Check out Jif from CVS. -->
+    <antcall target="cvs-checkout">
+      <param name="name" value="jif" />
+      <param name="root" value="${cvs.root.jif}" />
+    </antcall>
+
+    <!-- Configure Jif to build against the above copy of Polyglot. -->
+    <concat destfile="${tmp}/jif/config.properties" append="no">
+      polyglot.home=${tmp}/polyglot
+      jdk.home=${jdk.home}
+    </concat>
+
+    <!-- Build Jif jars. -->
+    <antcall target="sub-ant-dist">
+      <param name="sub-ant.dir" value="jif" />
+      <param name="sub-ant.target" value="jar" />
+    </antcall>
+
+    <!-- Check out Fabric from SVN. -->
+    <antcall target="svn-checkout">
+      <param name="name" value="fabric" />
+      <param name="root" value="${svn.root.fabric}" />
+    </antcall>
+
+    <!-- Generate version information in the scratch copy. -->
+    <antcall target="sub-ant-dist">
+      <param name="sub-ant.dir" value="fabric" />
+      <param name="sub-ant.target" value="gen-version" />
+    </antcall>
+
+    <!-- Copy tarballs into the scratch copy. -->
+    <copy todir="${tmp}/fabric/lib">
+      <fileset dir="${tmp}/polyglot/lib">
+        <include name="polyglot.jar" />
+        <include name="ppg.jar" />
+        <include name="JFlex.jar" />
+        <include name="java_cup.jar" />
+      </fileset>
+      <fileset dir="${tmp}/jif/lib">
+        <include name="jif.jar" />
+      </fileset>
+    </copy>
+
+    <!-- Attach copyright notices to source files in the scratch copy. -->
+    <antcall target="sub-ant-dist">
+      <param name="sub-ant.dir" value="fabric" />
+      <param name="sub-ant.target" value="copyright-stamp" />
+    </antcall>
+
+    <!-- Create the distribution tarball in the scratch copy. -->
+    <antcall target="sub-ant-dist">
+      <param name="sub-ant.dir" value="fabric" />
+      <param name="sub-ant.target" value="dist.tar" />
+    </antcall>
+
+    <!-- Move the distribution tarball out of the scratch directory. -->
+    <move tofile="${fabric.home}/fabric-${fabric.version}.tar.gz"
+        file="${tmp}/fabric/fabric-${fabric.version}.tar.gz" />
+
+    <!-- Clean up. -->
+    <antcall target="rmdir-tmp" />
+  </target>
+
+  <!-- Stamps all source files with a copyright notice. -->
+  <target name="copyright-stamp">
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${fabric.home}"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${bin}/copyright-stamp" />
+      <fileset dir="${fabric.home}">
+        <include name="**/*.java" />
+        <include name="**/*.fil" />
+        <include name="**/*.fab" />
+
+        <!-- Don't stamp third-party software. -->
+        <exclude name="lib/**" />
+      </fileset>
+    </apply>
+  </target>
+
+  <!-- Creates a distribution tarball from the current working copy. -->
+  <target name="dist.tar"
+      depends="configure-version,build-all,jar-all,javadoc">
+    <delete dir="${fabric.home}/fabric-${fabric.version}" />
+    <tar destfile="${fabric.home}/fabric-${fabric.version}.tar.gz"
+        compression="gzip">
+      <!-- Include top-level files. -->
+      <tarfileset dir="${fabric.home}" prefix="fabric-${fabric.version}">
+        <include name="version.properties" />
+        <include name="build.xml" />
+        <include name="common.xml" />
+        <include name="config.properties.in" />
+        <include name="COPYING" />
+        <include name="CREDITS" />
+        <include name="README" />
+      </tarfileset>
+
+      <!-- Include scripts in bin and make them executable. -->
+      <tarfileset dir="${bin}" prefix="fabric-${fabric.version}/bin"
+          filemode="755">
+        <include name="add-trusted-ca" />
+        <include name="ca-sign" />
+        <include name="codebase-tool" />
+        <include name="fab" />
+        <include name="fabc" />
+        <include name="fab-store" />
+        <include name="filc" />
+        <include name="genkey" />
+        <include name="import-cert" />
+        <include name="make-ca" />
+        <include name="make-node" />
+        <include name="run-fab-class" />
+        <include name="store-browser" />
+        <include name="fab-http" />
+      </tarfileset>
+
+      <!-- Include bin/defs.in. -->
+      <tarfileset dir="${bin}" prefix="fabric-${fabric.version}/bin">
+        <include name="defs.in" />
+      </tarfileset>
+
+      <!-- Include docs. -->
+      <tarfileset dir="${doc}" prefix="fabric-${fabric.version}/doc">
+        <include name="api/**" />
+      </tarfileset>
+
+      <!-- Include licences. -->
+      <tarfileset dir="${doc}/licenses"
+          prefix="fabric-${fabric.version}/doc/licenses">
+        <include name="apache-2.0.txt" />
+        <include name="eclipse-1.0.html" />
+        <include name="free-pastry.txt" />
+        <include name="gpl-2.0.txt" />
+        <include name="lgpl-2.1.txt" />
+        <include name="mit-x11.txt" />
+        <include name="sleepycat.txt" />
+      </tarfileset>
+
+      <!-- Include configuration files. -->
+      <tarfileset dir="${etc}" prefix="fabric-${fabric.version}/etc">
+        <include name="config/EXAMPLE.properties.in" />
+        <include name="config.properties" />
+        <include name="logging.properties" />
+      </tarfileset>
+
+      <!-- Include library dependencies. -->
+      <tarfileset dir="${lib}" prefix="fabric-${fabric.version}/lib">
+        <!-- Compiled jars -->
+        <include name="fabric.jar" />
+        <include name="fabric-rt.jar" />
+        <include name="fabric-il-sig.jar" />
+        <include name="fabric-sig.jar" />
+        <include name="fabric-tools.jar" />
+
+        <!-- Compiled library jars -->
+        <include name="fabric-sif.jar" />
+        <include name="fabric-sif-sig.jar" />
+        <include name="fabric-transient.jar" />
+
+        <!-- Polyglot, PPG, and Jif -->
+        <include name="polyglot.jar" />
+        <include name="jif.jar" />
+        <include name="ppg.jar" />
+
+        <!--
+          ********************************************************************
+          * The following are all third-party libraries!                     *
+          *                                                                  *
+          * If you add anything here, be sure to add a corresponding section *
+          * to the COPYING file.                                             *
+          ********************************************************************
+        -->
+        <!-- JFlex -->
+        <include name="JFlex.jar" />
+        <!-- Java CUP -->
+        <include name="java_cup.jar" />
+        <!-- FreePastry -->
+        <include name="FreePastry-*.jar" />
+        <!-- BDB -->
+        <include name="je-*.jar" />
+        <include name="src/je-*.tar.gz" />
+        <!-- BouncyCastle -->
+        <include name="bcprov-*.jar" />
+        <!-- Jetty -->
+        <include name="jetty/jetty-*.jar" />
+        <include name="jetty/jsp-*.jar" /> <!-- part of Jetty -->
+        <!-- JDT Core -->
+        <include name="jetty/core-*.jar" />
+        <!-- Apache Commons -->
+        <include name="jetty/commons-*.jar" />
+        <!-- Java Servlet API -->
+        <include name="jetty/servlet-api-*.jar" />
+      </tarfileset>
+
+      <!-- Include compiler and system sources. -->
+      <tarfileset dir="${src}" prefix="fabric-${fabric.version}/src">
+        <include name="**/README" />
+        <include name="bootstrap/**/*.java" />
+        <include name="compiler/**/*.java" />
+        <include name="compiler/**/package.html" />
+        <include name="compiler/**/parse/*.flex" />
+        <include name="compiler/**/parse/*.cup" />
+        <include name="compiler/**/parse/*.ppg" />
+        <include name="compiler/**/doc-files/**" />
+        <include name="runtime/**/*.fil" />
+        <include name="runtime/**/*.fab" />
+        <include name="signatures/fabil/**/*.fil" />
+        <include name="signatures/fabric/**/*.fab" />
+        <include name="system/**/*.java" />
+        <!-- These will be handled below. -->
+        <exclude name="runtime/fabric/util/**" />
+      </tarfileset>
+
+      <!-- Handle runtime/fabric/util specially to exclude unused classes. -->
+      <tarfileset dir="${runtime.src}/fabric/util"
+          prefix="fabric-${fabric.version}/src/runtime/fabric/util">
+        <include name="**/*.fil" />
+        <!-- Only include classes that were compiled. -->
+        <present targetdir="${runtime.classes}/fabric/util">
+          <globmapper from="*.fil" to="*.java" />
+        </present>
+      </tarfileset>
+
+      <!-- Include tools. -->
+      <tarfileset dir="${tools}" prefix="fabric-${fabric.version}/tools">
+        <include name="build.xml" />
+        <include name="storebrowser/**/README" />
+        <include name="storebrowser/**/build.xml" />
+        <include name="storebrowser/**/*.java" />
+        <include name="classloader/**/README" />
+        <include name="classloader/**/build.xml" />
+        <include name="classloader/**/*.java" />
+      </tarfileset>
+
+      <!-- Include examples. -->
+      <tarfileset dir="${examples}" prefix="fabric-${fabric.version}/examples">
+        <include name="build.xml" />
+        <include name="blog/**" />
+        <include name="hello/**" />
+        <include name="OO7/**" />
+        <include name="sif-hello/**" />
+        <include name="travel/**" />
+        <exclude name="travel/prototype/**" />
+        <!-- Exclude scripts.  These will be handled below. -->
+        <exclude name="*/bin/*" />
+      </tarfileset>
+
+      <!-- Include examples. -->
+      <tarfileset dir="${examples}" prefix="fabric-${fabric.version}/examples"
+          filemode="755">
+        <include name="blog/bin/**" />
+        <include name="hello/bin/**" />
+        <include name="OO7/bin/**" />
+        <include name="sif-hello/bin/**" />
+        <include name="travel/bin/**" />
+      </tarfileset>
+
+      <!-- Include library sources. -->
+      <tarfileset dir="${libs}" prefix="fabric-${fabric.version}/src/lib">
+        <include name="build.xml" />
+
+        <!-- SIF -->
+        <include name="sif/build.xml" />
+        <include name="sif/common.xml" />
+        <include name="sif/fab-src/**/*.fab" />
+        <include name="sif/sig-src/**/*.fab" />
+        <include name="sif/src/**/*.fil" />
+        <include name="sif/src/**/*.java" />
+
+        <!-- transient -->
+        <include name="transient/README" />
+        <include name="transient/build.xml" />
+        <include name="transient/common.xml" />
+        <include name="transient/src/**/*.fab" />
+      </tarfileset>
+    </tar>
+  </target>
+
+  <!--
+    Checks out a fresh copy of a project from CVS into ${tmp}.
+
+    Parameters:
+      root - the CVS root
+      name - the name of the module to check out
+  -->
+  <target name="cvs-checkout">
+    <cvs command="checkout ${name}" quiet="true" cvsRsh="ssh" cvsRoot="${root}"
+        dest="${tmp}" failonerror="true" />
+  </target>
+
+  <!--
+    Checks out a fresh copy of a project from SVN into ${tmp}.
+
+    Parameters:
+      root - the SVN URL to check out
+      name - the name of the destination in ${tmp}.
+  -->
+  <target name="svn-checkout">
+    <exec executable="svn" failonerror="true">
+      <arg value="co" />
+      <arg value="-q" />
+      <arg value="${root}" />
+      <arg value="${tmp}/${name}" />
+    </exec>
+  </target>
+
+  <target name="mkdir-tmp">
+    <antcall target="rmdir-tmp" />
+    <mkdir dir="${tmp}" />
+  </target>
+
+  <target name="rmdir-tmp">
+    <delete dir="${tmp}" />
+  </target>
+
+  <!--
+    Runs an Ant target in the ${tmp} scratch area.
+
+    Parameters:
+      sub-ant.dir - the subdirectory in ${tmp} in which to find the build.xml
+                    file.
+      sub-ant.target - the target to run.
+  -->
+  <target name="sub-ant-dist">
+    <ant inheritAll="false"
+         antfile="${tmp}/${sub-ant.dir}/build.xml"
+         dir="${tmp}/${sub-ant.dir}"
+         target="${sub-ant.target}" />
+  </target>
+
+  <!--
+  ****************************************************************************
+    Generic helper stuff for building Polyglot extensions.
+  ****************************************************************************
+  -->
+
+  <target name="standard-ext">
+    <antcall target="standard-ext-lexer" />
+    <antcall target="standard-ext-${parser.type}-parser" />
+    <antcall target="standard-ext-qq-dep" />
+    <antcall target="compile-ext" />
+  </target>
+
+  <target name="standard-ext-lexer">
+    <antcall target="jflex-lexer">
+      <param name="lexer.dir" value="${compiler.src}/${ext.pkg}/parse" />
+      <param name="lexer.class" value="Lexer_c" />
+      <param name="jflex.file" value="${ext}.flex" />
+    </antcall>
+  </target>
+
+  <target name="jflex-lexer" depends="jflex-lexer-deps"
+      unless="jflex.lexer.up-to-date">
+    <java classname="JFlex.Main" fork="true" dir="${lexer.dir}"
+        failonerror="true">
+      <classpath refid="polyglot.classpath" />
+      <arg value="${jflex.file}" />
+    </java>
+  </target>
+
+  <target name="jflex-lexer-deps">
+    <dependset>
+      <srcfileset dir="${lexer.dir}" includes="${jflex.file}" />
+      <targetfileset dir="${lexer.dir}" includes="${lexer.class}.java" />
+    </dependset>
+    <available property="jflex.lexer.up-to-date"
+        file="${lexer.dir}/${lexer.class}.java" />
+  </target>
+
+  <target name="standard-ext-ppg-parser">
+    <antcall target="ppg-parser">
+      <param name="parser.dir" value="${compiler.src}/${ext.pkg}/parse" />
+      <param name="ppg.file" value="${ext}.ppg" />
+      <param name="cup.file" value="${ext}_ppg.cup" />
+      <param name="parser.class" value="Grm" />
+      <param name="symbol.class" value="sym" />
+    </antcall>
+  </target>
+
+  <target name="ppg-parser" depends="ppg-parser-deps"
+      unless="ppg.parser.up-to-date">
+    <java classname="ppg.PPG" fork="true" dir="${parser.dir}"
+        output="${parser.dir}/${cup.file}" failonerror="true" logError="true">
+      <classpath refid="jif.classpath" />
+      <arg value="${ppg.file}" />
+    </java>
+    <antcall target="cup-parser" />
+  </target>
+
+  <target name="ppg-parser-deps">
+    <dependset>
+      <srcfileset dir="${parser.dir}" includes="${ppg.file}" />
+      <targetfileset dir="${parser.dir}">
+        <include name="${cup.file}" />
+        <include name="${parser.class}.java" />
+        <include name="${symbol.class}.java" />
+      </targetfileset>
+    </dependset>
+    <condition property="ppg.parser.up-to-date">
+      <and>
+        <available file="${parser.dir}/${cup.file}" />
+        <available file="${parser.dir}/${parser.class}.java" />
+        <available file="${parser.dir}/${symbol.class}.java" />
+      </and>
+    </condition>
+  </target>
+
+  <target name="cup-parser" depends="cup-parser-using-jar"
+    unless="cup.parser.up-to-date">
+  </target>
+
+  <target name="cup-parser-using-jar" depends="cup-parser-deps"
+      unless="cup.parser.up-to-date">
+    <java classname="java_cup.Main" fork="true" dir="${parser.dir}" failonerror="true">
+      <classpath refid="polyglot.classpath" />
+      <arg value="-parser"/>
+      <arg value="${parser.class}"/>
+      <arg value="-symbols"/>
+      <arg value="${symbol.class}"/>
+      <arg value="${cup.file}"/>
+    </java>
+  </target>
+
+  <target name="cup-parser-deps">
+    <dependset>
+      <srcfileset dir="${parser.dir}" includes="${cup.file}" />
+      <targetfileset dir="${parser.dir}">
+        <include name="${parser.class}.java" />
+        <include name="${symbol.class}.java" />
+      </targetfileset>
+    </dependset>
+    <condition property="cup.parser.up-to-date">
+      <and>
+        <available file="${parser.dir}/${parser.class}.java" />
+        <available file="${parser.dir}/${symbol.class}.java" />
+      </and>
+    </condition>
+  </target>
+
+  <target name="standard-ext-qq-dep" if="has-qq">
+    <antcall target="standard-ext-qq" />
+  </target>
+
+  <target name="standard-ext-qq">
+    <antcall target="jflex-lexer">
+      <param name="lexer.dir" value="${compiler.src}/${ext.pkg}/qq" />
+      <param name="lexer.class" value="Lexer_c" />
+      <param name="jflex.file" value="qq.flex" />
+    </antcall>
+    <antcall target="ppg-parser">
+      <param name="parser.dir" value="${compiler.src}/${ext.pkg}/qq" />
+      <param name="ppg.file" value="qq.ppg" />
+      <param name="cup.file" value="qq_ppg.cup" />
+      <param name="parser.class" value="Grm" />
+      <param name="symbol.class" value="sym" />
+    </antcall>
+  </target>
+
+  <target name="compile-ext" depends="init,bootstrap">
+    <javac source="1.6" target="1.6" srcdir="${compiler.src}"
+        destdir="${classes}" debug="on" includeAntRuntime="false"
+        includes="${ext.pkg}/**"
+        excludes="**/package-info.java">
+      <classpath>
+        <path refid="jif.classpath" />
+        <pathelement location="${bootstrap.classes}" />
+      </classpath>
+    </javac>
+  </target>
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

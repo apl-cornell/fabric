@@ -1,0 +1,43 @@
+package sif.html;
+
+import sif.servlet.*;
+
+/**
+ * @author andru
+ *
+ * A Hyperlink -- an "a href=" tag.
+ */
+public final class Hyperlink[principal servletP, label L, label E] extends Container[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    private final String{L} url;
+    public Hyperlink{L}(String{L} url_, String{L} s) {
+        this(url_, L, E, new Text[L,E](s));
+    }
+    public Hyperlink(String{L} url_, 
+            label cL, label cE, 
+            Node[cL,cE]{L} n) where {*cL} <= L, {E; n} <= {*cE} {
+        super("a", cL, cE, n);
+        url = url_;
+    }
+            public Hyperlink(String{L} url_, 
+                    Node[L,E]{L} n) where {n} <= {E} {
+                super("a", L, E, n);
+                url = url_;
+            }
+    public Hyperlink{L}(Action[servletP]{this} a, String{L} s) {
+        this(a, L, E, new Text[L,E](s));        
+    }
+    public Hyperlink(Action[servletP]{this} a, 
+            label cL, label cE, 
+            Node[cL,cE]{L} n) where {*cL} <= L, {E; n} <= {*cE} {
+        super("a", cL, cE, n);
+	url = null; // dummy
+    }
+            public Hyperlink(Action[servletP]{this} a, 
+                    Node[L,E]{L} n) where {n} <= {E} {
+                super("a", L, E, n);
+                url = null; // dummy
+            }
+}

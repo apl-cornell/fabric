@@ -1,0 +1,70 @@
+package util;
+
+/** This class encapsulates a multimap - a map that can contain multiple values
+ *  for each key.
+ */
+
+public class Index {
+  // impl is guaranteed to have values which are non-empty
+  protected Map/*K, Set<V>*/ impl;
+  // size contains the number of values
+  protected int              size;
+
+  protected class ValuesIterator implements Iterator {
+    Iterator/*Set<V>*/  mapIter;
+    Iterator/*V*/       current;
+
+    public ValuesIterator() {
+      mapIter = impl.values().iterator();
+      current = ((Iterator) mapIter.next()).iterator();
+    }
+
+    public boolean hasNext() {
+      return current.hasNext();
+    }
+
+    public Object/*V*/ next() {
+      Object/*V*/ result = current.next();
+      advance();
+    }
+
+    private void advance() {
+      if (mapIter.hasNext() && !current.hasNext())
+        current = ((Collection) mapIter.next()).iterator();
+    }
+
+    public void remove() {
+      // TODO
+      throw new NotImplementedException();
+    }
+  }
+
+  public Collection/*V*/ values() {
+    return new AbstractCollection() {
+      public Iterator iterator() { return new ValuesIterator(); }
+      public int      size()     { return Index.this.size(); }
+    }
+  }
+
+  public Set/*K*/ keys() {
+    return impl.keys();
+  }
+
+  /** Returns the number of values in this collection.  Call keys().size() to
+   *  determine the number of keys */
+  public int size() {
+    return size;
+  }
+
+  public Set/*V*/ get(Object/*K*/ key) {
+    return Collections.unmodifiableSet(impl.get(key));
+  }
+
+  public Object/*V*/ put(Object/*K*/ key, Object/*V*/ value) {
+    return 
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+

@@ -1,0 +1,20 @@
+package system;
+
+import fabric.worker.*;
+
+public class Array01 {
+  public static void main(String[] args) {
+    atomic {
+      Store store = Worker.getWorker().getStore("store0");
+      Object[] foo = new Object[]@store {};
+      Object[] bar = new Object[][]@store {foo, foo};
+      Object[][] baz = (Object[][]) bar;
+      foo = baz[0];
+    }
+    System.out.println("TEST PASSED.");
+  }
+}
+
+/*
+** vim: ts=2 sw=2 cindent cino=\:0 syntax=java et
+*/

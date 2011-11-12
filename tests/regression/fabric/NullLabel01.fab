@@ -1,0 +1,7 @@
+
+public class NullLabel01 {
+	public void f() {
+		final Store c = worker$.getLocalStore();
+		NullLabel01 x = new NullLabel01@c();
+	}
+}

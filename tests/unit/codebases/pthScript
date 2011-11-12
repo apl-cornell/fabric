@@ -1,0 +1,53 @@
+# pth test script
+#
+# This file is a test script for pth (Polyglot Test Harness). It
+# conforms to the following grammar.
+#
+#      ScriptFile   ::= CompilerTest+
+#      CompilerTest ::= ExtClassName ["CmdLineArgs"] { FileTest [; FileTest]* }
+#      FileTest     ::= Filenames [Description] [FailureSet]
+#      Filenames    ::= Filename [Filename]*
+#      Description  ::= LitString
+#      FailureSet   ::= Failure [, Failure]*
+#      Failure      ::= ( ErrorKind )
+#                    |  ( ErrorKind, "RegExp" )
+#                    |  ( "RegExp" )
+#                    |  ( )
+#      ErrorKind    :   one of, or a unique prefix of one of the following
+#                       strings: "Warning", "Internal Error", "I/O Error",
+#                       "Lexical Error", "Syntax Error", "Semantic Error"
+#                       or "Post-compiler Error".
+#      Filename     :   the name of a file. Is interpreted from the
+#                       directory where pth is run.
+#      LitString    :   a literal string, enclosed in quotes.
+#      RegExp       :   a regular expression, as in java.util.regex;
+#                       is always enclosed in quotes.
+#      CmdLineArgs  :   additional command line args for the Polyglot
+#                       compiler; is always enclosed in quotes.
+#
+# When invoking this script, it will probably be necessary to supply
+# an appropriate class path, to make sure that pth can find the Jif compiler.
+#    $ pth pthScript -classpath "../classes:../lib-classes:../lib/jif.jar:../lib/jiflib.jar:."
+#
+fabric.ExtensionInfo  "-bootclasspath ../../../rt-classes:../../../classes " + 
+    "-sigcp ../../../sig-classes/fabric -filsigcp ../../../sig-classes/fabil " +
+    "-sourcepath . -publish-only " +
+    "-worker worker -deststore store " + 
+    "-codebase-output-file ../abc.codebase" 
+{
+    A.fab B.fab	C.fab;		
+}
+fabric.ExtensionInfo  "-bootclasspath ../../../rt-classes:../../../classes " +
+    "-sigcp ../../../sig-classes/fabric -filsigcp ../../../sig-classes/fabil " + 
+    "-publish-only -worker worker -deststore store -classpath @abc.codebase" 
+{
+    ExCB01.fab;
+}
+fabric.ExtensionInfo  "-bootclasspath ../../../rt-classes:../../../classes " +
+	#"-report resolver=3 " +
+    "-sigcp ../../../sig-classes/fabric -filsigcp ../../../sig-classes/fabil " + 
+    "-publish-only -worker worker -deststore store -codebase-alias cb=@abc.codebase" 
+{
+	ExCB02.fab;		
+	ExCB03.fab;		
+}

@@ -1,0 +1,22 @@
+/** This class supports Subclass01 */
+public class Subclass02[label L] implements JifObject[L] {
+  public boolean{L; obj} equals(IDComparable[L] obj) {
+    return false;
+  }
+
+  public boolean{L; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
+    return false;
+  }
+
+  public int{L} hashCode() {
+    return 0;
+  }
+
+  public String{L} toString() {
+    return "";
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0
+*/

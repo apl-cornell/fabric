@@ -1,0 +1,53 @@
+package fabric.lang;
+
+import java.io.IOException;
+import java.io.FileOutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import fabric.worker.Worker;
+import fabric.worker.Store;
+import fabric.util.Set;
+import fabric.util.HashSet;
+
+/**
+ * A Fabric class; it has the bytecode and source of the fabric class and the 
+ * codebase it is associated to.
+ * 
+ * @author Lucas Waye <lrw48@cornell.edu>
+ */
+public class FClass {
+  protected final Codebase codebase;
+  protected final String   name;
+  protected final String   source;
+  protected final byte[]   bytecode;
+  
+  public FClass(Codebase codebase, String name, String source, byte[] bytecode) {
+    this.codebase = codebase;
+    this.name = name;
+    this.source = source;
+    this.bytecode = bytecode;
+  }
+
+  public Codebase getCodebase() {
+    return codebase;
+  }
+
+  public String getName() {
+    return name;
+  }
+  
+  public String getSource() {
+    return source;
+  }  
+    
+  public byte[] getBytecode() {
+    atomic {
+      byte[] copy = new byte[bytecode.length];
+      for (int i = 0; i < copy.length; i++)
+        copy[i] = bytecode[i];
+      return copy;
+    }
+  }
+}

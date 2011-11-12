@@ -1,0 +1,60 @@
+package sif.html;
+
+/** An HTML table. */
+public final class Table[label L, label E] extends Tag[L, E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    private final int{L} cell_spacing; // no way to do this in a style file!
+    private final boolean{L} have_cell_spacing;
+    
+    public Table(label hL, label hE, label bL, label bE,
+                 Node[hL,hE]{L} h, Node[bL,bE]{L} b) 
+    where {*hL;*bL} <= L, {E; h} <= {*hE}, {E; b} <= {*bE} {
+        this(null, hL, hE, bL, bE, h, b);
+    }
+    public Table(label hL, label hE, Node[hL,hE]{L} h, 
+                 label bL, label bE, Node[bL,bE]{L} b) 
+    where {*hL;*bL} <= L, {E; h} <= {*hE}, {E; b} <= {*bE} {
+       this(null, hL, hE, bL, bE, h, b);
+    }
+    public Table(String{L} class_, label hL, label hE, label bL, label bE,
+            Node[hL,hE]{L} h, Node[bL,bE]{L} b) 
+    where {*hL;*bL} <= L, {E; h} <= {*hE}, {E; b} <= {*bE} {
+       super("table", class_);
+            cell_spacing = 0;
+            have_cell_spacing = false;
+    }
+    public Table(String{L} class_, label hL, label hE, Node[hL,hE]{L} h,
+                                   label bL, label bE, Node[bL,bE]{L} b) 
+    where {*hL;*bL} <= L, {E; h} <= {*hE}, {E; b} <= {*bE} {
+        super("table", class_);
+        cell_spacing = 0;
+        have_cell_spacing = false;
+    }
+    
+    public Table(label bL, label bE, 
+            Node[bL,bE]{L} b) where {*bL} <= L, {E;b} <= {*bE} {
+        this(null, L, E, bL, bE, null, b);
+	
+    }
+    public Table(String{L} class_, Node[L,E]{L} h, Node[L,E]{L} b, int{L} cellSpacing)
+    where {h;b} <= {E} {
+        super("table", class_);
+	cell_spacing = cellSpacing;
+	have_cell_spacing = true;
+    }
+    public Table(Node[L,E]{L} h, Node[L,E]{L} b) 
+    where {h;b} <= {E} {
+       this(null, L, E, L, E, h, b);
+    }
+    public Table(String{L} class_, Node[L,E]{L} h, Node[L,E]{L} b) where {h;b} <= {E} {
+        super("table", class_);
+        cell_spacing = 0;
+        have_cell_spacing = false;
+    }
+
+    public Table(Node[L,E]{L} b) where {b} <= {E} {
+        this((String)null, L, E, L, E, (Node[L,E])null, b);        
+    }
+}

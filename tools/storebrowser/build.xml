@@ -1,0 +1,57 @@
+<!--
+  This is the Apache Ant build file for the Fabric store browser GUI.
+-->
+
+<project name="storebrowser" default="build-all" basedir=".">
+  <description>
+    Fabric store browser GUI build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="storebrowser.home" file="${ant.file.storebrowser}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${storebrowser.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean" />
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+      description="Builds the Fabric store browser GUI tool">
+    <mkdir dir="${storebrowser.home}/classes" />
+    <javac source="1.6" target="1.6" srcdir="${storebrowser.home}/src"
+        destdir="${storebrowser.home}/classes" includeAntRuntime="false"
+        debug="on">
+      <classpath>
+        <path refid="fabric.classpath" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

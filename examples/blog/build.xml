@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  This is the Apache Ant build file for the Fabric blog webapp example.
+-->
+
+<project name="fabric-blog" default="build-all" basedir=".">
+  <description>
+    Fabric blog webapp build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+  <dirname property="blog.home" file="${ant.file.fabric-blog}" />
+  <property name="fabric.home" value="${blog.home}/../.." />
+
+  <path id="blog.classpath">
+    <path refid="fabric.classpath"/>
+    <fileset dir="${lib}/jetty">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <path id="blog.runtime.classpath">
+    <path refid="blog.classpath" />
+    <pathelement location="${blog.home}/classes/java" />
+  </path>
+
+  <path id="blogserver.runtime.classpath">
+    <path refid="blog.classpath" />
+    <pathelement location="${blog.home}/classes/fabil" />
+  </path>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${blog.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${blog.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <!-- Main target for compiling the webapp. -->
+  <target name="build" depends="build-blog, build-client"
+      description="Builds the Fabric blog webapp" />
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+  <!--
+  ____________________________________________________________________________
+    Compilation helper targets.
+  -->
+
+  <target name="build-client" depends="setup-dirs">
+    <javac srcdir="${blog.home}/src/java" destdir="${blog.home}/classes/java"
+        includeAntRuntime="false">
+      <classpath refid="blog.classpath" />
+    </javac>
+  </target>
+
+  <target name="build-blog" depends="build-blog-uptodate, setup-dirs"
+      unless="fabil-blog.uptodate">
+    <javac destdir="${blog.home}/classes/fabil" includeAntRuntime="false">
+      <src path="${blog.home}/src/fabil" />
+      <include name="webapp/FabricUtils.java" />
+      <classpath refid="blog.classpath" />
+    </javac>
+    <echo message="Building FabIL blog server..." />
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${blog.home}/src/fabil"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${fabric.home}/bin/filc" />
+      <arg value="-g"     />
+      <arg value="-j"     /> <arg value="-Xmx500M" />
+      <arg value="-j"     /> <arg value="-Xss100M" />
+      <arg value="-cp"    /> <arg pathref="blog.classpath" />
+      <arg value="-d"     /> <arg value="${blog.home}/classes/fabil"/>
+      <srcfile />
+      <fileset dir="${blog.home}/src/fabil">
+        <include name="**/*.fil" />
+      </fileset>
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+    <touch file="${blog.home}/classes/fabil/.timestamp" />
+  </target>
+
+  <target name="build-blog-uptodate">
+    <uptodate property="fabil-blog.uptodate"
+        targetfile="${blog.home}/classes/fabil/.timestamp">
+      <srcfiles dir="${blog.home}/src/fabil" includes="**/*.fil"/>
+    </uptodate>
+  </target>
+
+  <target name="setup-dirs">
+    <mkdir dir="${blog.home}/classes" />
+    <mkdir dir="${blog.home}/classes/java" />
+    <mkdir dir="${blog.home}/classes/fabil" />
+    <copy todir="${blog.home}/classes/java/web">
+      <fileset dir="${blog.home}/src/java/web" />
+    </copy>
+    <copy todir="${blog.home}/classes/fabil/web">
+      <fileset dir="${blog.home}/src/fabil/web" />
+    </copy>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Targets for running the application.
+  ****************************************************************************
+  -->
+
+  <target name="run-client" depends="build-client"
+      description="Runs a web client that stress tests the blog">
+    <java fork="true" classname="webapp.client.ClientServer">
+      <classpath refid="blog.runtime.classpath" />
+    </java>
+  </target>
+
+  <target name="run-blog" depends="build-blog"
+      description="Starts the blog webapp">
+    <exec executable="bash" failonerror="true">
+      <arg value="${fabric.home}/bin/fab" />
+      <arg value="-cp"    /> <arg pathref="blogserver.runtime.classpath" />
+      <arg value="--name" /> <arg value="blog-worker" />
+      <arg value="--debug" />
+      <arg value="webapp.blog.BlogServer" />
+    </exec>
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

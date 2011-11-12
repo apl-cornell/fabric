@@ -1,0 +1,41 @@
+package snapp;
+
+import util.Delegator;
+
+/**
+ * An instance of Snapp corresponds to an instance of the Snapp social network.
+ */
+public class Snapp extends Delegator {
+
+  /**
+   * Create a new Snapp, operated by owner.
+   *
+   * @throws NullPointerException
+   *    if owner is null.
+   */
+  public
+  Snapp {this}
+  (
+    String   {this} name,
+    principal{owner←} owner
+  )
+  throws NullPointerException
+  {
+    super(name, owner);
+  }
+
+  public
+  UserV1 {owner←}
+  createUser {owner←}
+  (
+    String    {this} name,
+    principal {owner←} owner
+  )
+  {
+    return new UserV1(name, owner, this);
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

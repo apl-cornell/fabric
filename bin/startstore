@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Vikram's wrapper script for fab-store.
+
+source "$(dirname $0)/defs"
+
+pushd $TOP
+while true; do
+    case "$1" in
+    "") break;;
+    -v) verbose="1"; shift;;
+    -debug)
+        debug="1"
+        shift
+        port=$1
+        shift
+        ;;
+    -fresh)
+        fresh="1"; shift;;
+    *) break;;
+    esac
+done
+
+if [ -n "$fresh" ] 
+  then
+    if [ -n "$verbose" ]
+        then
+        echo "Deleting the var directory. This will start a fresh store with no initial persistent data"
+    fi
+    rm -rf var
+  else
+    if [ -n "$verbose" ]
+        then
+        echo "Using persistent data in var to initialize this store."
+    fi
+fi
+
+SIF=$FABRIC/src/lib/sif
+export CLASSPATH="$FABRIC/examples/travel/classes:$FABRIC/src/lib/transient/classes:$FABRIC/classes:$FABRIC/rt-classes:$POLYGLOT/java_cup.jar:$POLYGLOT/JFlex.jar:$JIF/classes:$POLYGLOT/classes:$JAVA_HOME/jre/lib/rt.jar:$SIF/classes:$FABRIC/lib/je-3.3.75.jar:$FABRIC/lib/FreePastry-2.1.jar:."
+
+if [ -n "$debug" ]
+    then
+    CMD="fab-store -j -Xdebug -j -Xrunjdwp:transport=dt_socket,address=$port,server=y,suspend=n --name $1"
+    else
+    CMD="fab-store --name $1"
+fi
+
+if [ -n "$verbose" ]
+    then
+    echo Using CLASSPATH=$CLASSPATH
+    echo executing command
+    echo $CMD
+fi
+$CMD
+popd
+

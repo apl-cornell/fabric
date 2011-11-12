@@ -1,0 +1,137 @@
+package travel;
+
+class Balance[principal bank, principal user]
+{ // on bank store and worker
+    int{bank←; bank→user} value = 0;
+
+    int{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
+        if (amt <= value & value > 0 & amt > 0) {
+            value -= amt;
+        }
+        return value;
+    }
+    int{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
+        if (amt > 0) {
+            value += amt;
+        }
+        return value;
+    }
+}
+
+class Account[principal bank]
+{ // on bank store and worker
+    final principal{bank←} user;
+    final Balance[bank,user] {bank←} balance;
+
+    Account(principal{bank←} user_) {
+        user = user_;
+        balance = new Balance(); // @ bank store
+    }
+    int{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
+        try { balance.debit(amt); return balance.value; }
+	catch (NullPointerException e) { return 0; }
+    }
+    int{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
+        try { balance.credit(amt); return balance.value; }
+	catch (NullPointerException e) { return 0; }
+    }
+
+}
+
+class Tickets[principal bank, principal airline, principal user]
+{ // on airline store and worker
+    int {airline←bank; airline→user} num_tickets;
+    Tickets{airline←}() {
+        num_tickets = 0;
+    }
+}
+
+class Airline
+{ // on airline store and worker
+    final principal{airline←} bank;
+    final principal{airline←} user;
+    final principal{airline←} airline;
+
+    final Tickets[bank, airline, user]{airline←} tickets;
+
+    Airline{airline_←}(principal{airline_←} bank_,
+		       principal{airline_←} user_,
+		       principal{airline_←} airline_) {
+	airline = airline_;
+	user = user_;
+	bank = bank_;
+	tickets = new Tickets[bank, airline, user](); // @ airline store
+    }
+}
+
+class Broker[principal bank, principal customer] extends AbstractPrincipal
+{ // on broker worker (and store)
+    final Account[bank]{this←} customerAcct;
+    final Account[bank]{this←} airlineAcct;
+    final principal{this←} airline;
+    final Tickets[bank, airline, customer]{this←} custTickets;
+
+    void coordinatePurchase{}()
+	where authority(this), endorse({this←})
+    {
+      try {
+        final principal cust1 = customerAcct.user; // bank←
+        final principal cust2 = customer;
+        final principal airline_ = airlineAcct.user;
+        if (this actsfor bank
+	       & this actsfor airline
+	    // & this actsfor cust1
+	    // & this actsfor cust2
+	    // & this actsfor airline_
+	    // & bank actsfor airline // this is not acceptable. For debugging.
+	    )
+	{
+            customerAcct.debit(1000);   // @wBank
+            airlineAcct.credit(1000);   // @wBank
+            custTickets.num_tickets++;  // @wAirline
+        }
+      } catch (NullPointerException e) {}
+
+    }
+
+    Broker{this←}(Account[bank]{this←} ca,
+		  Account[bank]{this←} aa,
+		  Tickets[bank, airline_, customer]{this←} tick,
+		  principal{this←} airline_) {
+        customerAcct = ca;
+        airlineAcct = aa;
+        custTickets = tick;
+	airline = airline_;
+        super("broker");
+    }
+}
+
+class SimplePrincipal extends AbstractPrincipal {
+    SimplePrincipal(String{*<-} name) { super(name); }
+}
+
+class Main
+{ // this should be fabIL code that runs somewhere trusted.
+
+    final principal{*←} customer = new SimplePrincipal("customer"); // @ root store
+    final principal{*←} bank     = new SimplePrincipal("bank");         // @ root store
+    final principal{*←} airline  = new SimplePrincipal("airline");   // @ root store
+
+    Broker[bank, customer]{*←} broker;
+
+    public void setup{*←}() {
+        Account customerAcct = new Account(customer); // @ bank store
+        customerAcct.credit(10000);
+
+        Account airlineAcct = new Account(airline); // @ bank store
+        Tickets custTickets = new Tickets(); // @ airline store
+
+        broker = new Broker(customerAcct, airlineAcct, custTickets, airline); // @ root store
+    }
+
+    public void runit{}() {
+	final Broker broker = this.broker;
+	if (broker != null)
+	    broker.coordinatePurchase();
+    }
+}

@@ -1,0 +1,26 @@
+
+public class Disjunct01[principal P, principal Q] implements JifObject[{P->P,Q; P<-Q; Q<-Q}] {
+  public int{P->P,Q; P<-Q; Q<-Q} hashCode() {
+    return 0;
+  }
+
+  public String{P->P,Q; P<-Q; Q<-Q} toString() {
+    return "Disjunct01";
+  }
+
+  public boolean equals(IDComparable[{P->P,Q; P<-Q; Q<-Q}] obj) {
+    if (this == obj)
+      return true;
+    return false;
+  }
+
+  public boolean equals(label lbl, IDComparable[{*lbl}] obj){
+    if (this == obj)
+      return true;
+    return false; 
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0
+*/

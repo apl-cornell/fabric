@@ -1,0 +1,71 @@
+package jif.util;
+
+/**
+ * Base implementation for Set.
+ */
+public abstract class AbstractSet[label L] extends AbstractCollection[L] 
+                                           implements Set[L] {
+    protected AbstractSet() {
+    }
+
+    public boolean{L;o} equals(IDComparable[L] o) {
+        return equals(L, o);
+    }
+    public boolean{L;o;lbl;*lbl} equals(label lbl, IDComparable[lbl] o) {
+        if (o == this) return true;
+        if (!(o instanceof Set[lbl])) return false;
+        Set[lbl] that = (Set[lbl])o;
+        if (this.size() != that.size()) return false;
+        for (int i = 0; i < this.size(); i++) {
+            try {
+                JifObject[L] elem = this.get(i);
+                if (!that.contains(L, elem)) return false;
+            }
+            catch (IndexOutOfBoundsException imposs) { }
+        }
+        return true;
+    }
+    public int{L} hashCode() {
+        int hashCode = 0;
+        int i = 0;
+        
+        while (i < size()) {
+            try {
+                JifObject[L] obj = get(i);
+                hashCode += (obj==null ? 0 : obj.hashCode());
+            }
+            catch (IndexOutOfBoundsException e) {}
+            i++;
+        }
+        return hashCode;
+    }
+    
+    public boolean{L} removeAll{L}(Collection[L]{L} c) {
+        if (c == null) return false;
+
+        boolean modified = false;
+
+        if (size() > c.size()) {
+            for (Iterator[L] i = c.iterator(); i != null && i.hasNext(); )
+                try {
+                    modified |= remove(i.next());
+                }
+                catch (NoSuchElementException impossible) { }
+        } 
+        else {
+            for (Iterator[L] i = iterator(); i != null && i.hasNext(); ) {
+                try {
+                    if (c.contains(i.next())) {
+                        i.remove();
+                        modified = true;
+                    }
+                }
+                catch (NoSuchElementException impossible) { }
+                catch (IllegalStateException impossible) { }
+
+            }
+        }
+        return modified;
+    }
+
+}

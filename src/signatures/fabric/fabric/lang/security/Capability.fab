@@ -1,0 +1,9 @@
+package fabric.lang.security;
+
+public final class Capability[principal P, label L, label A] authority(P) {
+    private final Closure[P, L]{this}@{A} closure = null;
+    
+    public native Closure[P,L]{this} getClosure();
+
+    public native java.lang.Object{closure; L} invoke{L}() where authority(P);
+}

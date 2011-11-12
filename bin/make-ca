@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# Creates a new certificate authority.
+
+source "$(dirname "$0")/defs"
+
+DEFAULT_DIR="${TOP}/etc/ca"
+DEFAULT_KEYSIZE=2048
+DEFAULT_DAYS=3653
+
+function usage() {
+  cat >&2 <<EOF
+Usage: $(basename "$0") [options]
+
+  Creates a new certificate authority.
+
+Options:
+  --dir directory
+      the directory that will store the CA's data.
+      Default: ${DEFAULT_DIR}
+
+  --keysize bits
+      the length of the CA's private key. Default: ${DEFAULT_KEYSIZE}
+
+  --days n
+      number of days to certify the CA certificate for. Default: ${DEFAULT_DAYS}
+EOF
+  exit 1
+}
+
+function error() {
+  echo "$(basename "$0")": "$@" >&2
+  echo "Try \`$(basename "$0") --help' for more information" >&2
+  exit 1
+}
+
+function noArg() {
+  error "Missing argument to --$1 option."
+}
+
+DIR="${DEFAULT_DIR}"
+KEYSIZE="${DEFAULT_KEYSIZE}"
+DAYS="${DEFAULT_DAYS}"
+
+while true; do
+  case "$1" in
+    "") break ;;
+    --dir)
+      shift
+      DIR="$1"
+      shift || noArg dir
+      ;;
+    --keysize)
+      shift
+      KEYSIZE="$1"
+      shift || noArg keysize
+      ;;
+    --days)
+      shift
+      DAYS="$1"
+      shift || noArg days
+      ;;
+    -h|--help|-\?)
+      usage
+      ;;
+    -*)
+      error "Invalid option: $1"
+      ;;
+    *)
+      error "Invalid argument: $1"
+  esac
+done
+
+mkdir -p "${DIR}" 2>/dev/null
+openssl req -new -x509 -outform pem -newkey rsa:"${KEYSIZE}" -nodes \
+  -keyout "${DIR}/ca.key" -keyform pem -out "${DIR}/ca.crt" -days "${DAYS}"
+
+cat <<EOF
+
+===============================================================================
+
+CA certificate saved in ${DIR}/ca.crt
+
+Copy this file to any nodes that will be trusting this CA and run the
+\`add-trusted-ca' script on those nodes.
+EOF
+

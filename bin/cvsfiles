@@ -1,0 +1,42 @@
+#!/bin/sh
+exists=n
+dir=.
+while test $# != 0
+do
+    case "$1" in
+      -e) exists=y;;
+      -*) echo "Usage: cvsfiles [-e] [directory]" >&2
+         echo "  Finds all CVS source files under the named directory" >&2
+	 exit 1;;
+      *) dir=$1;;
+    esac
+    shift
+done
+
+if test $exists = n
+then
+    find $dir -name Entries -print | (
+	while read e
+	do
+	    dir=`echo $e | sed -e 's#/CVS/Entries##'`
+	    awk -F/ '/^\// {print "'$dir'/"$2}' $e
+	done
+    )
+else
+    echo "Reporting only existing files" >&2
+    find $dir -name Entries -print | (
+	while read e
+	do
+	    dir=`echo $e | sed -e 's#CVS/Entries##'`
+	    awk -F/ '/^\// {print "'$dir'/"$2}' $e
+	done
+    ) | (
+        while read f
+	do
+	    if test -r $f
+	    then
+	       echo $f
+	    fi
+	done
+    )
+fi

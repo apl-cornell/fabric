@@ -1,0 +1,67 @@
+<!--
+  This is the Apache Ant build file for the Fabric tools.
+-->
+
+<project name="fabric-tools" default="build-all" basedir=".">
+  <description>
+    Fabric tools build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean"
+      description="Removes generated files">
+    <!-- Recursively call "clean" on subdirectories. -->
+    <subant target="clean">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+  <!-- Makes the directory tree truly pristine. -->
+  <target name="clobber" depends="clean">
+    <!-- Recursively call "clobber" on subdirectories. -->
+    <subant target="clobber">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <!-- Main target for compiling the Fabric tools -->
+  <target name="build" description="Compiles the Fabric tools">
+    <!-- Recursively call "build-all" on subdirectories. -->
+    <subant target="build-all">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+  <!--
+  ****************************************************************************
+    Jar targets
+  ****************************************************************************
+  -->
+
+  <!-- Main target for generating jars for the Fabric tools -->
+  <target name="jar-all" description="Creates jar files for all Fabric tools">
+    <!-- Recursively call "jar-all" on subdirectories. -->
+    <subant target="jar-all">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

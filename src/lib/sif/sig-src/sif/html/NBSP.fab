@@ -1,0 +1,13 @@
+package sif.html;
+
+/**
+ * Non-breaking space character (&nbsp;)
+ */
+public final class NBSP[label L, label E] extends SpecialChar[L, E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    public NBSP() {
+        super("nbsp");
+    }    
+}

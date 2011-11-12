@@ -1,0 +1,22 @@
+package fabnfs;
+
+import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabnfs.util.FileSystemFactory;
+import fabnfs.util.FileSystemFactoryImpl;
+
+public class NFSServer {
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.out.println("Usage: fab fabnfs.NFSServer <store>");
+            return;
+        }
+        Store localStore = Worker.getWorker().getLocalStore();
+        Store remoteStore = Worker.getWorker().getStore(args[0]);
+        FileSystemFactory factory = null;
+	atomic {
+	  factory = new FileSystemFactoryImpl@localStore();
+	}
+        unixnfs.startServer(localStore, remoteStore, factory, null);
+    }
+}

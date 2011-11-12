@@ -1,0 +1,4 @@
+#!/usr/bin/expect
+spawn screen -x [lindex $argv 0]
+expect "bash"
+send_tty "\x01d"

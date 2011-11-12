@@ -1,0 +1,10 @@
+package fabric.lang;
+
+public class Object extends java.lang.Object {
+  public native boolean equals(Object o);
+  public native Statistics createStatistics();
+  public native Store $getStore();
+  public native Label get$label();
+  public static native void _npe(Label lbl) throws NullPointerException;
+}
+

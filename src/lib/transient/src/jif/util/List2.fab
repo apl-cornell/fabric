@@ -1,0 +1,33 @@
+package jif.util;
+
+/**
+ * A list of JifObjects.
+ *
+ * @see jif.util.Collection
+ */
+public interface List2[label S, label C] extends Collection2[S,C] {
+    JifObject[C]{S;index} get(int index):{S;index}
+	throws (IndexOutOfBoundsException{S;index});
+        
+    JifObject[C]{S} set{S}(int{S} index, JifObject[C]{S} element):{S}
+	throws (IndexOutOfBoundsException{S});
+        
+    void add{S}(int{S} index, JifObject[C]{S} element):{S}
+	throws (IndexOutOfBoundsException{S});
+        
+    JifObject[C]{S} remove{S}(int{S} index)
+	throws (IndexOutOfBoundsException{S});
+
+    int{S;C;o} indexOf(JifObject[C] o);
+    int{S;C;o} lastIndexOf(JifObject[C] o);
+    int{S;C;*lbl;lbl;o} indexOf(label lbl, JifObject[lbl] o);
+    int{S;C;*lbl;lbl;o} lastIndexOf(label lbl, JifObject[lbl] o);
+    int{S;o} indexOfByRef(JifObject[C] o);
+    int{S;o} lastIndexOfByRef(JifObject[C] o);
+    int{S;lbl;o} indexOfByRef(label lbl, JifObject[lbl] o);
+    int{S;lbl;o} lastIndexOfByRef(label lbl, JifObject[lbl] o);
+
+    ListIterator2[S,C]{this} listIterator();
+    ListIterator2[S,C]{this;S} listIterator{S}(int{S} index)
+	throws (IndexOutOfBoundsException{S});
+}

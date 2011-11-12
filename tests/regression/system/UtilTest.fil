@@ -1,0 +1,62 @@
+/**
+ * A test harness for some of the classes in fabric.util.
+ */
+
+package system;
+
+import fabric.util.*;
+import fabric.worker.*;
+
+public class UtilTest {
+  public static void main(String[] args) {
+    Store store = Worker.getWorker().getStore("store0");
+    Map map;
+    List list;
+    atomic {
+      map = new HashMap@store();
+      map.put("1", "6");
+      map.put("8", "7");
+      map.put("8", "1");
+      map.put("0", "5");
+      map.put("9", "2");
+      map.put("7", "7");
+      map.put("2", "5");
+      map.put("3", "0");
+      map.put("5", "2");
+      map.put("6", "9");
+      map.put("4", "8");
+      map.put("2", "4");
+      map.put("5", "3");
+    }
+
+    atomic {
+      list = new LinkedList@store();
+      list.add("3");
+      list.add("8");
+      list.add("9");
+      list.add("5");
+      list.add("2");
+      list.add("0");
+      list.add("1");
+      list.add("7");
+      list.add("4");
+      list.add("6");
+    }
+
+    Store local = Worker.getWorker().getLocalStore();
+    int i = 0;
+    atomic {
+      for (Iterator it = list.iterator(local); it.hasNext(); ) {
+        int j = Integer.parseInt((String) map.get(it.next()));
+        if (j != i) {
+          System.out.println("TEST FAILED: Expected " + i + " but got " + j
+              + " instead.");
+          return;
+        }
+        i++;
+      }
+    }
+
+    System.out.println("TEST PASSED.");
+  }
+}
