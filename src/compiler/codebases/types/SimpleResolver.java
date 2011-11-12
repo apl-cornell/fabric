@@ -34,7 +34,7 @@ public class SimpleResolver extends NamespaceResolver_c {
   public Importable findImpl(String name) throws SemanticException {
     String version = extInfo.version().name();
     // Look for a class file first
-    if (Report.should_report(report_topics, 3))
+    if (Report.should_report(REPORT_TOPICS, 3))
       Report.report(3, "NamespaceResolver_c.find(" + name + ")");
 
     // Find class file.
@@ -44,7 +44,7 @@ public class SimpleResolver extends NamespaceResolver_c {
     if (clazz != null) {
       // Check for encoded type information.
       if (clazz.encodedClassType(version) != null) {
-        if (Report.should_report(report_topics, 4))
+        if (Report.should_report(REPORT_TOPICS, 4))
           Report.report(4, "Class " + name + " has encoded type info");
         encodedClazz = clazz;
       }
@@ -63,7 +63,7 @@ public class SimpleResolver extends NamespaceResolver_c {
         return getTypeFromSource(source, name);
     }
 
-    if (Report.should_report(report_topics, 4)) {
+    if (Report.should_report(REPORT_TOPICS, 4)) {
       if (source == null)
         Report.report(4, "Class " + name + " not found in source file");
       else Report.report(4, "Class " + name + " found in source " + source);
@@ -71,7 +71,7 @@ public class SimpleResolver extends NamespaceResolver_c {
 
     // Don't use the raw class if the source or encoded class is available.
     if (encodedClazz != null || source != null) {
-      if (Report.should_report(report_topics, 4))
+      if (Report.should_report(REPORT_TOPICS, 4))
         Report.report(4, "Not using raw class file for " + name);
       clazz = null;
     }
@@ -81,20 +81,20 @@ public class SimpleResolver extends NamespaceResolver_c {
       long sourceModTime = source.lastModified().getTime();
       
       if (! ignore_mod_times && classModTime < sourceModTime) {
-        if (Report.should_report(report_topics, 3))
+        if (Report.should_report(REPORT_TOPICS, 3))
             Report.report(3, "Source file version is newer than compiled for " +
                       name + ".");
         encodedClazz = null;
       }
       else if (checkCompilerVersion(encodedClazz.compilerVersion(version)) != COMPATIBLE) {
-        if (Report.should_report(report_topics, 3))
+        if (Report.should_report(REPORT_TOPICS, 3))
           Report.report(3, "Incompatible encoding version for " + name + " in class cache.");
         encodedClazz = null;
       }
     }
     Importable result = null;
     if (encodedClazz != null) {
-      if (Report.should_report(report_topics, 4))
+      if (Report.should_report(REPORT_TOPICS, 4))
         Report.report(4, "Using encoded class type for " + name);
       try {
         result = getEncodedType(encodedClazz, name);
@@ -103,24 +103,24 @@ public class SimpleResolver extends NamespaceResolver_c {
         throw e;
       }
       catch (SemanticException e) {
-        if (Report.should_report(report_topics, 4))
+        if (Report.should_report(REPORT_TOPICS, 4))
           Report.report(4, "Could not load encoded class " + name);
         encodedClazz = null;
       }
     }
     // At this point, at most one of clazz and source should be set.
     if (result == null && clazz != null && load_raw) {
-      if (Report.should_report(report_topics, 4))
+      if (Report.should_report(REPORT_TOPICS, 4))
         Report.report(4, "Using raw class file for " + name);
       result = extInfo.typeSystem().classFileLazyClassInitializer(clazz).type();
     }
     else {
-      if (Report.should_report(report_topics, 4))
+      if (Report.should_report(REPORT_TOPICS, 4))
         Report.report(4, "Not using raw class file for " + name + "( load_raw = " + load_raw + ")" );
     }
 
     if (result == null && source != null) {
-      if (Report.should_report(report_topics, 4))
+      if (Report.should_report(REPORT_TOPICS, 4))
         Report.report(4, "Using source file for " + name);
       result = getTypeFromSource(source, name);
     }
@@ -139,23 +139,23 @@ public class SimpleResolver extends NamespaceResolver_c {
       ClassFile clazz = classpathLoader.loadClass(name);
   
       if (clazz == null) {
-        if (Report.should_report(report_topics, 4)) {
+        if (Report.should_report(REPORT_TOPICS, 4)) {
           Report.report(4, "ClassFile for " + name + " not found in "
               + namespace);
         }
       } else {
-        if (Report.should_report(report_topics, 4)) {
+        if (Report.should_report(REPORT_TOPICS, 4)) {
           Report.report(4, "Class " + name + " found in "
               + namespace);
         }
         if (clazz.encodedClassType(extInfo.version().name()) != null) {
-          if (Report.should_report(report_topics, 4))
+          if (Report.should_report(REPORT_TOPICS, 4))
             Report.report(4, "ClassFile for " + name + " has encoded type info");
         }
         return clazz;
       }
     } catch (ClassFormatError e) {
-      if (Report.should_report(report_topics, 4))
+      if (Report.should_report(REPORT_TOPICS, 4))
         Report.report(4, "Class " + name + " format error");
     }
     return null;

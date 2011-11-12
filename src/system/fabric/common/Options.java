@@ -34,7 +34,7 @@ public abstract class Options {
   /**
    * Directory for caching dynamically compiled code 
    */
-  public String code_cache;
+  public String codeCache;
 
 
   /**
@@ -409,7 +409,7 @@ public abstract class Options {
         "directory for code compiled by the worker") {
       @Override
       public int handle(String[] args, int index) {
-        Options.this.code_cache = args[index];
+        Options.this.codeCache = args[index];
         return index + 1;
       }
     });

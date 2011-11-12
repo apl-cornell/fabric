@@ -1,6 +1,5 @@
 package fabric.worker;
 
-import java.io.File;
 import java.io.PrintStream;
 import java.util.Set;
 
@@ -92,8 +91,8 @@ public class Options extends fabric.common.Options {
   @Override
   public void validateOptions() throws UsageError {
     if (null == this.name) throw new UsageError("No worker name specified");
-    if (null == this.code_cache)
-      this.code_cache = Resources.relpathRewrite("var",name + "_cache");
+    if (null == this.codeCache)
+      this.codeCache = Resources.relpathRewrite("var", name + "_cache");
   }
 
   @Override

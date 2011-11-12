@@ -74,48 +74,50 @@ public final class Worker {
 
   public final ConfigProperties config;
 
-  // The path for Fabric runtime classes
+  /** The path for Fabric runtime classes */
   public String bootcp;
 
-  // The path for Fabric signatures
+  /** The path for Fabric signatures */
   public String sigcp;
 
-  // The path for FabIL signatures
+  /** The path for FabIL signatures */
   public String filsigcp;
 
-  // The directory for dynamically compiled mobile code
-  public String code_cache;
+  /** The directory for dynamically compiled mobile code */
+  public String codeCache;
 
-  // The loader used by this worker for loading classes from fabric
+  /** The loader used by this worker for loading classes from fabric */
   public FabricClassLoader loader;
 
-  // A map from store hostnames to Store objects
+  /** A map from store hostnames to Store objects */
   protected final Map<String, RemoteStore> stores;
 
-  // A map from worker hostnames to RemoteWorker objects.
+  /** A map from worker hostnames to RemoteWorker objects. */
   private final Map<String, RemoteWorker> remoteWorkers;
 
   protected final LocalStore localStore;
 
-  // A subsocket factory for unauthenticated connections to stores.
+  /** A subsocket factory for unauthenticated connections to stores. */
   public final SubSocketFactory unauthToStore;
 
-  // A subsocket factory for authenticated connections to stores.
+  /** A subsocket factory for authenticated connections to stores. */
   public final SubSocketFactory authToStore;
 
-  // A subsocket factory for authenticated connections to workers
+  /** A subsocket factory for authenticated connections to workers */
   public final SubSocketFactory authToWorker;
 
-  // The subserversocket factory
+  /** The subserversocket factory */
   public final SubServerSocketFactory authFromAll;
 
-  // The manager to use for fetching objects from stores.
+  /** The manager to use for fetching objects from stores. */
   protected final FetchManager fetchManager;
 
   protected final NodePrincipal principal;
 
-  // The collection of dissemination caches used by this worker's dissemination
-  // node.
+  /**
+   * The collection of dissemination caches used by this worker's
+   * dissemination node.
+   */
   private final List<Cache> disseminationCaches;
 
   private final RemoteCallManager remoteCallManager;
@@ -454,7 +456,7 @@ public final class Worker {
       worker = getWorker();
       worker.sigcp = opts.sigcp;
       worker.filsigcp = opts.filsigcp;
-      worker.code_cache = opts.code_cache;
+      worker.codeCache = opts.codeCache;
       worker.bootcp = opts.bootcp;
 
       // log the command line

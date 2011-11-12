@@ -92,8 +92,8 @@ public class Options extends fabric.common.Options {
   @Override
   public void validateOptions() throws UsageError {
     if (null == storeName) throw new UsageError("No store specified");
-    if (null == this.code_cache)
-      this.code_cache =
+    if (null == this.codeCache)
+      this.codeCache =
         System.getProperty("user.dir") + File.separator + "." + storeName + "_cache";
   }
 
