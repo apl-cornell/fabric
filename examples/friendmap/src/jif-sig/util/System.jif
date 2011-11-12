@@ -10,7 +10,7 @@ public final class System {
   public static final principal user = Worker;
 
   public static native
-  PrintStream[lbl] {user←; user→}
+  PrintStream[lbl]
   stdout
   (
     label lbl

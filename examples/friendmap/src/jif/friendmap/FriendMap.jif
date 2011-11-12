@@ -52,8 +52,6 @@ public class FriendMap extends Delegator {
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
-  /*
-     TODO
   public
   void
   viewMap {user→}
@@ -62,17 +60,15 @@ public class FriendMap extends Delegator {
   )
   throws
   (
-    NullPointerException {user→},
-    SecurityException    {user→}
+    NullPointerException {user→}
   )
   where
     service actsfor user.friendInfo,
     {service←} <= {user←},
-    user actsfor Util.user
+    System.user actsfor user
   {
     printMap(user, new label {user→});
   }
-  */
 
   /**
    * prints a map of the user's friends, visible to the user's friends
@@ -82,8 +78,6 @@ public class FriendMap extends Delegator {
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
-  /*
-     TODO
   public
   void
   postMap {*user.friendLabel}
@@ -92,17 +86,19 @@ public class FriendMap extends Delegator {
   )
   throws
   (
-    NullPointerException {*user.friendLabel},
-    SecurityException    {*user.friendLabel; user←}
+    NullPointerException {user; user←}
   )
   where
     service actsfor user.friendInfo,
-    {service←}       <= user.friendLabel,
-    user.friendLabel <= {Util.user→; _←}
+    {service←}       <= user.friendLabel,    // because information comes from the service
+    user.friendLabel <= {System.user→; _←},  // because the result gets output to the system user
+    {user←}          <= user.friendLabel     // because the user can affect the output
   {
+    if (user == null)
+      throw new NullPointerException();
+
     printMap(user, user.friendLabel);
   }
-  */
 
 
   /**
@@ -128,7 +124,7 @@ public class FriendMap extends Delegator {
     service actsfor user.friendInfo, // because the service will learn about the users friends.
     {service←}    <= lbl,            // because the service influences the map.
     lbl <= {System.user→; _←},       // because data will be output to the system user
-    {System.user→; System.user←; user; lbl} <= lbl
+    {user; lbl} <= lbl
   {
     if (user == null)
       throw new NullPointerException();
