@@ -171,7 +171,7 @@
         <arg value="-sourcepath" /> <arg value="@{srcdir}"              />
         <arg value="-d"          /> <arg value="${home}/classes/jif"    />
         <arg value="-classpath"  /> <arg value="${home}/classes/jif"    />
-        <arg value="-addsigcp"  /> <arg value="${home}/classes/jif-sig" />
+        <arg value="-classpath"  /> <arg value="${home}/classes/jif-sig" />
         <extra-args />
         <srcfile />
 
@@ -203,7 +203,7 @@
         <arg value="-fail-on-exception"/>
         <arg value="-e"/>
         <arg value="-sourcepath" /> <arg value="@{srcdir}"                />
-        <arg value="-d"          /> <arg value="${home}/classes/jif"      />
+        <arg value="-d"          /> <arg value="${home}/classes/jif-sig"  />
         <arg value="-classpath"  /> <arg value="${home}/classes/jif"      />
         <extra-args />
         <srcfile />

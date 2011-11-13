@@ -94,6 +94,7 @@ where
     System.user actsfor BobNode
   {
     new Main2();
+    System.stdout(new label{System.user→}).println("done");
   }
 }
 
