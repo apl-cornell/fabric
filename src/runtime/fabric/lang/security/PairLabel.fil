@@ -95,4 +95,9 @@ public final class PairLabel implements Label {
   public SecretKeyObject keyObject() {
     return keyObject;
   }
+  
+  public void clobberThisPlaceholders(Principal replacement) {
+    confPol.clobberThisPlaceholders(replacement);
+    integPol.clobberThisPlaceholders(replacement);
+  }
 }

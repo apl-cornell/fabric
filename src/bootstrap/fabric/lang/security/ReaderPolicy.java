@@ -14,6 +14,8 @@ public interface ReaderPolicy
     
     public boolean relabelsTo(fabric.lang.security.Policy p, java.util.Set s);
     
+    public void clobberThisPlaceholders(Principal replacement);
+    
     public int hashCode();
     
     public boolean equals(fabric.lang.Object o);
@@ -61,6 +63,8 @@ public interface ReaderPolicy
         
         native public boolean relabelsTo(fabric.lang.security.Policy arg1,
                                          java.util.Set arg2);
+        
+        native public void clobberThisPlaceholders(Principal replacement);
         
         native public java.lang.String toString();
         
@@ -118,6 +122,8 @@ public interface ReaderPolicy
         
         native public boolean relabelsTo(fabric.lang.security.Policy p,
                                          java.util.Set s);
+        
+        native public void clobberThisPlaceholders(Principal replacement);
         
         native public int hashCode();
         

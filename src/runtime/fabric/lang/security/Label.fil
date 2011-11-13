@@ -23,4 +23,10 @@ public interface Label {
   IntegPolicy integPolicy();
   
   SecretKeyObject keyObject();
+  
+  /**
+   * Traverses the label and clobbers all instances of ThisPrincipalPlaceholder
+   * with the given replacement.
+   */
+  void clobberThisPlaceholders(Principal replacement);
 }

@@ -2,6 +2,7 @@ package fabric.lang.security;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;
+import fabric.lang.security.Principal;
 import fabric.util.Iterator;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,8 +11,10 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
-  private final Principal owner;
-  private final Principal reader;
+  // These should be final, but aren't to allow for the implementation of
+  // clobberThisPlaceholders().
+  private Principal owner;
+  private Principal reader;
 
   public ReaderPolicy(Principal owner, Principal reader) {
     this.owner = owner;
@@ -128,4 +131,13 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
     return LabelUtil.meetPol(store, this, p);
   }
 
+  public void clobberThisPlaceholders(Principal replacement) {
+    if (owner instanceof ThisPrincipalPlaceholder) {
+      owner = replacement;
+    }
+    
+    if (reader instanceof ThisPrincipalPlaceholder) {
+      reader = replacement;
+    }
+  }
 }

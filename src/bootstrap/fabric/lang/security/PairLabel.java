@@ -34,6 +34,8 @@ public interface PairLabel
     
     public fabric.lang.security.SecretKeyObject keyObject();
     
+    public void clobberThisPlaceholders(Principal replacement);
+    
     public static class _Proxy extends fabric.lang.Object._Proxy
       implements fabric.lang.security.PairLabel
     {
@@ -70,6 +72,8 @@ public interface PairLabel
         native public fabric.lang.security.IntegPolicy integPolicy();
         
         native public fabric.lang.security.SecretKeyObject keyObject();
+        
+        native public void clobberThisPlaceholders(Principal replacement);
         
         public _Proxy(PairLabel._Impl impl) { super(impl); }
         
@@ -121,6 +125,8 @@ public interface PairLabel
         native public fabric.lang.security.IntegPolicy integPolicy();
         
         native public fabric.lang.security.SecretKeyObject keyObject();
+        
+        native public void clobberThisPlaceholders(Principal replacement);
         
         native protected fabric.lang.Object._Proxy $makeProxy();
         

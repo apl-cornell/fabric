@@ -149,7 +149,15 @@ public interface Principal extends fabric.lang.Object {
           this.$label =
               LabelUtil._Impl.join(this.$label.$getStore(), this.$label,
                   thisIntegLabel);
+          
+          // Traverse the label and clobber ThisPrincipalPlaceholders.
+//          this.$label.clobberThisPlaceholders((Principal) this.$getProxy());
         }
+      }
+      
+      if (accessLabel != null) {
+        // Traverse the access label and clobber ThisPrincipalPlaceholders.
+//        this.$accessLabel.clobberThisPlaceholders((Principal) this.$getProxy());
       }
 
       // Generate a new key pair for this principal.

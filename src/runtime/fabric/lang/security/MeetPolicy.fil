@@ -88,4 +88,10 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
     }
     return str;
   }
+  
+  public void clobberThisPlaceholders(Principal replacement) {
+    for (Iterator it = components.iterator(); it.hasNext(); ) {
+      ((Policy) it.next()).clobberThisPlaceholders(replacement);
+    }
+  }
 }
