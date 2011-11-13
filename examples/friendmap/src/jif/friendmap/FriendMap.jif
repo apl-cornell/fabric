@@ -39,7 +39,7 @@ public class FriendMap extends Delegator {
     Principal {owner←} owner
   )
   throws NullPointerException
-  where authority (this)
+  where authority (this), provider <= {this}
   {
     // these endorsements are safe, because owner ≽ this,
     // and thus {owner←} ⊑ {this←}
@@ -72,7 +72,9 @@ public class FriendMap extends Delegator {
   where
     service actsfor user.friendInfo,
     {service←} <= {user←},
-    System.user actsfor user
+    System.user actsfor user,
+    provider <= {user←},
+    MapImage.provider <= {user←}
   {
     printMap(user, new label {user→});
   }
@@ -99,7 +101,9 @@ public class FriendMap extends Delegator {
     service actsfor user.friendInfo,
     {service←}       <= user.friendLabel,    // because information comes from the service
     user.friendLabel <= {System.user→; _←},  // because the result gets output to the system user
-    {user←}          <= user.friendLabel     // because the user can affect the output
+    {user←}          <= user.friendLabel,    // because the user can affect the output
+    provider <= {*user.friendLabel},          // because the provider can affect the output
+    MapImage.provider <= {user←}
   {
     if (user == null)
       throw new NullPointerException();
@@ -131,7 +135,9 @@ public class FriendMap extends Delegator {
     service actsfor user.friendInfo, // because the service will learn about the users friends.
     {service←}    <= lbl,            // because the service influences the map.
     lbl <= {System.user→; _←},       // because data will be output to the system user
-    {user; lbl} <= lbl
+    {user; lbl} <= lbl,
+    provider <= {*lbl},               
+    MapImage.provider <= {*lbl}
   {
     if (user == null)
       throw new NullPointerException();
