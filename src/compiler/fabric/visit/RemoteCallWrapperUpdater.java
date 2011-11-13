@@ -88,27 +88,6 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
           pct.removeMethod(mi);
           return null;
         }
-        
-//        // (rv meet {conf.top;integ.bot}) join ({worker$<-}) <= ({worker$->}) join (m meet {conf.bot;integ.top})
-//        Label left = ts.join(
-//            ts.meet(
-//                returnLabel,
-//                ts.pairLabel(Position.compilerGenerated(),
-//                    ts.topConfPolicy(Position.compilerGenerated()), 
-//                    ts.bottomIntegPolicy(Position.compilerGenerated()))),
-//                    ts.pairLabel(Position.compilerGenerated(),
-//                        ts.bottomConfPolicy(Position.compilerGenerated()),
-//                        ts.writerPolicy(Position.compilerGenerated(), workerPrincipal, workerPrincipal)));
-//
-//        Label right = ts.join(
-//            ts.meet(
-//                startLabel,
-//                ts.pairLabel(Position.compilerGenerated(),
-//                    ts.bottomConfPolicy(Position.compilerGenerated()), 
-//                    ts.topIntegPolicy(Position.compilerGenerated()))),
-//                    ts.pairLabel(Position.compilerGenerated(),
-//                        ts.readerPolicy(Position.compilerGenerated(), workerPrincipal, workerPrincipal),
-//                        ts.bottomIntegPolicy(Position.compilerGenerated())));
 
         // Fold in all integrity policies of method parameters.
         IntegPolicy startIntegPolicy = ts.representableIntegProjection(startLabel);
