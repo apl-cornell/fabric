@@ -643,8 +643,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       for (Label l : jl.joinComponents()) {
         if (containsThisLabel(l)) return true;
       }
+    } else if (label instanceof ArgLabel) {
+      ArgLabel jl = (ArgLabel) label;
+      return containsThisLabel(jl.upperBound());
     }
-
     return false;
   }
 
