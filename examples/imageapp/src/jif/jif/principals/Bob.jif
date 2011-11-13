@@ -1,0 +1,15 @@
+package jif.principals;
+
+public class Bob extends ExternalPrincipal {
+    public Bob() {
+	super("Bob");
+    }
+
+    private static Bob{*!:*} P;
+    public static Principal getInstance{*!:*}() {
+	if (P == null) {
+	    P = new Bob();
+	}
+	return P;
+    }
+}

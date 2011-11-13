@@ -1,0 +1,135 @@
+<project name="imageapp" default="build-all" basedir=".">
+  <description>
+    ImageApp build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="home" file="${ant.file.imageapp}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build-jif"
+          description="Builds the Jif version of imageapp">
+    <jifc srcdir="${home}/src/jif" includes="jif/principals/*.jif"/>
+    <jifc srcdir="${home}/src/jif" excludes="jif/principals/*.jif"/>
+  </target>
+
+  <target name="build-local" depends="build-trusted" description="Builds the fabric version of imageapp">
+    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase" />
+    <fabc-local srcdir="${home}/src/fabric/mapserv_1.0_codebase" />
+    <fabc-local srcdir="${home}/src/fabric/imageapp_1.0_codebase" />
+  </target>
+
+  <target name="build-all" depends="build-local"/>
+  <target name="all"       depends="build-all"/>
+
+  <!--
+  ******************************************************************************
+    Auxiliary builds
+  ******************************************************************************
+  -->
+
+  <target name="build-trusted">
+    <fabc-local srcdir="${home}/src/fabric/trusted">
+      <arg value="-trusted-providers" />
+    </fabc-local>
+  </target>
+
+
+  <!--
+  ******************************************************************************
+    Subroutines
+  ******************************************************************************
+  -->
+
+  <!--
+  compile classes locally (without pushing to fabric).
+
+  Parameters:
+    srcdir - the directory containing the source
+  -->
+  <macrodef name="fabc-local">
+    <attribute name="srcdir" />
+    <element name="extra-args" implicit="true" />
+    <sequential>
+      <mkdir dir="${home}/classes/fabric" />
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dir="@{srcdir}"
+             dest="${home}/classes/fabric"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${fabc}" />
+        <arg value="-g" />
+        <arg value="-e" />
+        <arg value="-d" />         <arg value="${home}/classes/fabric" />
+        <arg value="-sourcepath"/> <arg value="@{srcdir}" />
+        <arg value="-classpath" /> <arg value="${home}/classes/fabric" />
+        <extra-args />
+        <srcfile />
+
+        <fileset dir="@{srcdir}" includes="**/*.fab" />
+        <globmapper from="*.fab" to="*.class" />
+      </apply>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="jifc">
+    <attribute name="srcdir" />
+    <attribute name="includes" default="**/*.jif" />
+    <attribute name="excludes" default="" />
+    <sequential>
+      <mkdir dir="${home}/classes/jif" />
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dir="${home}"
+             skipemptyfilesets="true"
+             dest="${home}/classes/jif/"
+             vmlauncher="false">
+        <arg value="${jifc}"/>
+        <arg value="-fail-on-exception"/>
+        <arg value="-d"          /> <arg value="${home}/classes/jif"/>
+        <arg value="-sourcepath" /> <arg value="@{srcdir}"/>
+        <arg value="-classpath"  /> <arg value="${home}/classes/jif"/>
+        <srcfile />
+
+        <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
+        <globmapper from="*.jif" to="*.class" />
+      </apply>
+    </sequential>
+  </macrodef>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

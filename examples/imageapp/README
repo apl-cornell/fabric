@@ -1,0 +1,63 @@
+Image App example for Mobile Fabric paper. 
+
+
+We assume we have sensitive images stored on the client machine. Every image contains a number of fields that include the image bitmap itself with additional fields such as
+
+-- capture time
+-- geo location of where the image has been captured
+-- name of the camera 
+-- title
+
+We assume there is additional meta-data, connected to every image which encodes whether  
+
+
+We assume there is a third-party partially trusted app that can access the local images. Depending on the 
+meta-data labels, the app is going to upload the app to a remote server.
+
+As part of the user interface to the user, the app can show all images, generate thumbnails, and provide other such functionality to the user.
+
+~~~ What do discuss ~~~
+
+We want to present the source for the labels and want to discuss the code for the untrusted app where labels. 
+
+
+
+
+
+~~~ App functionality ~~~
+
+The image app can 
+
+- access all images and generate thumbnails for all images (as example of information flow). We assume that the app can do something special about the generated thumbnails, for example it can produce a b/w version or offer adding additional effects. 
+
+- upload images to a third party for those images that have a corresponding label.
+
+
+Assume we have a user with a smartphone who runs some sort of image 
+sharing app. The app is provided by the sharing provider. Let sensitive 
+attributes for an image be the image itself, date of capture, and 
+location of where the image has been taken.
+
+Assume we express confidentiality of these attributes using DLM labels 
+in Fabric. The image sharing app may upload public images to the sharing 
+server, but a copy of the image (with all the sensitive information) may 
+be still stored on the smartphone.
+
+The user may specify that certain attributes (e.g., location or date) 
+are not public. In this case the app will not be able to share those 
+attributes. The app, however, may display such information to the user 
+on the phone, if a copy of the image is still available locally.
+
+In this scenario, the app may use sensitive data to present user with a 
+better UI - it shall display all the relevant information about the 
+image, that would facilitate other features (for example, the user may 
+search for all the images taken in the same location that are stored on 
+the smartphone and possibly decide to upload more). Still, user's 
+top-level policy about not-sharing the date/time or the exact location 
+with public are going to be
+
+
+
+
+
+

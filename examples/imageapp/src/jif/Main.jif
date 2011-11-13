@@ -1,0 +1,18 @@
+import jif.principals.*;
+
+public class Main {   
+    public static void main{*<-} (principal p, String[] args) {
+	go() ;
+    }
+    
+
+    public static void go {Alice <-} () {
+	Camera [Alice ] theCamera = new Camera();
+	ImageApp [Alice, Bob ] theApp = new ImageApp();
+
+	CameraUser [Alice, Bob] cameraUser = new CameraUser(theCamera, theApp); 
+	cameraUser.useCamera();
+	cameraUser.useApp();
+
+    }
+}

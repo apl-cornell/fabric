@@ -1,0 +1,15 @@
+package jif.principals;
+
+public class Alice extends ExternalPrincipal {
+    public Alice() {
+	super("Alice");
+    }
+
+    private static Alice{*!:*} P;
+    public static Principal getInstance{*!:*}() {
+	if (P == null) {
+	    P = new Alice();
+	}
+	return P;
+    }
+}

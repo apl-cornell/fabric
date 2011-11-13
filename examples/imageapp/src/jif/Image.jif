@@ -1,0 +1,30 @@
+public class Image [principal p] { // p is the camera principal
+
+    public final label{p<-} lb_img; 
+    public final label{p<-} lb_meta;
+    public final byte{lb_img}[]{lb_img} bmp;
+    public string{lb_img} title;
+
+    public final int {lb_meta} gpsX;
+    public final int {lb_meta} gpsY;
+
+    public Image (final label{p<-} lb_i,   
+                  final label{p<-} lb_m, 
+                  byte {lb_i}[]{lb_i} bmp, 
+                  string{lb_i} title,  
+                  int {lb_m} x ,  
+                  int {lb_m} y) where {p<-} <= {lb_i} {
+	
+        this.lb_img  = lb_i; 
+	this.lb_meta = lb_m;
+
+       	this.bmp  = bmp;
+	this.title = title;
+	this.gpsX = x;
+	this.gpsY = y;
+    }
+
+    public void setTitle {title} (string {title} new_title) {
+	this.title = new_title;
+    }
+}
