@@ -36,7 +36,7 @@
 
   <target name="build-jif-principals">
     <jifc srcdir="${home}/src/jif" includes="jif/principals/*.jif">
-        <arg value="-trusted-providers"/>
+      <!--<arg value="-trusted-providers"/>-->
     </jifc>
   </target>
     
@@ -50,26 +50,26 @@
 
   <target name="build-jif-util" depends="build-jif-sig">
     <jifc srcdir="${home}/src/jif" includes="util/*.jif">
-        <arg value="-trusted-providers"/> 
-     </jifc>
+      <!--<arg value="-trusted-providers"/> -->
+    </jifc>
   </target>
 
   <target name="build-jif-snapp" depends="build-jif-util">
     <jifc srcdir="${home}/src/jif" includes="snapp/*.jif">
-        <arg value="-untrusted-providers"/>
+      <arg value="-untrusted-providers"/>
     </jifc>
   </target>
 
   <target name="build-jif-mapserv" depends="build-jif-util">
     <jifc srcdir="${home}/src/jif" includes="mapserv/*.jif">
       <!--<arg value="-rdebug"/>-->
-        <arg value="-untrusted-providers"/>
+      <!--<arg value="-untrusted-providers"/>-->
     </jifc>
   </target>
 
   <target name="build-jif-friendmap" depends="build-jif-snapp, build-jif-mapserv">
     <jifc srcdir="${home}/src/jif" includes="friendmap/*.jif">
-        <arg value="-untrusted-providers"/>
+      <!--<arg value="-untrusted-providers"/>-->
     </jifc>
   </target>
 
@@ -77,7 +77,7 @@
           description="Builds the Jif version of friendmap"
           depends="build-jif-friendmap,build-jif-principals,build-jif-java">
     <jifc srcdir="${home}/src/jif" includes="Main2.jif">
-        <arg value="-untrusted-providers"/>
+      <!--<arg value="-untrusted-providers"/> -->
     </jifc>    
   </target>
 
@@ -90,7 +90,7 @@
 
   <target name="build-trusted">
     <fabc-local srcdir="${home}/src/fabric/trusted" includes="**/*.fab">
-      <arg value="-trusted-providers" />
+      <!--<arg value="-trusted-providers" />-->
     </fabc-local>
   </target>
 
