@@ -15,7 +15,7 @@ public class Object extends java.lang.Object {
   /**
    * Initializes the object's update label and access policy.
    */
-  public Object $initLabels();
+  public native Object $initLabels();
   
   public native boolean equals(Object o);
   
