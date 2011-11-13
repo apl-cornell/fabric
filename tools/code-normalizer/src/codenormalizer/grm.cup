@@ -99,7 +99,8 @@ goal ::=
   // String
     unit:a {:
       if (parser.eq.hasErrors()) RESULT = null;
-      else RESULT = a.toString();
+      else if (a.length() == 0) RESULT = "";
+      else RESULT = a.toString() + System.getProperty("line.separator");
     :}
   ;
 

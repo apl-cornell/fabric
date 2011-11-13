@@ -244,7 +244,7 @@ regexps = [
   re.compile(', (\d+) deletions'),
   re.compile(', (\d+) modifications')
 ]
-fieldLen = [0, 0, 0]
+fieldLen = [0, 0, 0, 0]
 for base, cats in {
     'fab': categories,
     'jif':
@@ -252,8 +252,9 @@ for base, cats in {
     'polyglot':
       {'Polyglot compiler': ['.']}}.items():
   for cat, paths in cats.items():
-    stats = [0, 0, 0]
+    stats = [0, 0, 0, 0]
     for path in paths:
+      # Get diff counts.
       output = subprocess.check_output(
           'diff -urN %s-branch/"%s" %s-trunk/"%s" | diffstat -bms'
             % (base, path, base, path),
@@ -266,6 +267,17 @@ for base, cats in {
             fieldLen[i] = len(match.group(1))
           stats[i] += int(match.group(1))
 
+      # Get line count.
+      output = subprocess.check_output(
+        'find %s-trunk/"%s" -type f -print0 | wc -l --files0-from=- | tail -n 1'
+          % (base, path),
+        shell=True).decode('utf-8')
+      match = re.match('(\d+) total', output)
+      if match != None:
+        if fieldLen[3] < len(match.group(1)):
+          fieldLen[3] = len(match.group(1))
+        stats[3] += int(match.group(1))
+
     categories[cat] = stats
 
 # Output.
@@ -274,8 +286,9 @@ insFormatter = '{:>' + str(fieldLen[0]) + '}'
 delFormatter = '{:>' + str(fieldLen[1]) + '}'
 modFormatter = '{:>' + str(fieldLen[2]) + '}'
 noChanges = ('{:-^' + str(fieldLen[0] + fieldLen[1] + fieldLen[2] + 16)
-    + '}').format('(no changes)')
-for cat, (ins, dels, mods) in categories.items():
+    + '}  ').format('(no changes)')
+locFormatter = '| {:>' + str(fieldLen[3]) + '}'
+for cat, (ins, dels, mods, totalLOC) in categories.items():
   output = categoryFormatter.format(cat + ' ') + ' '
   if ins + dels + mods == 0:
     output += noChanges
@@ -292,8 +305,9 @@ for cat, (ins, dels, mods) in categories.items():
 
     if mods == 0: mods = ''
     output += modFormatter.format(mods)
-    if mods != '': output += ' mod'
+    if mods != '': output += ' mod  '
     else: output += '      '
+  output += locFormatter.format(totalLOC) + ' loc'
   print(output)
 
 # vim: ts=2 sw=2 ai et
