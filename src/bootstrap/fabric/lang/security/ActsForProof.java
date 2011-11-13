@@ -41,10 +41,10 @@ public interface ActsForProof extends fabric.lang.Object {
         
         native public fabric.lang.security.Principal get$granter();
         
-        _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
+        _Impl(fabric.worker.Store $location,
               fabric.lang.security.Principal actor,
               fabric.lang.security.Principal granter) {
-            super($location, $label, accessLabel);
+            super($location);
         }
         
         native public fabric.lang.security.Principal getActor();
@@ -93,10 +93,9 @@ public interface ActsForProof extends fabric.lang.Object {
           implements fabric.lang.security.ActsForProof._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

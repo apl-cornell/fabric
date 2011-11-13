@@ -74,28 +74,18 @@ public interface PrincipalUtil
             public _Impl(fabric.
                            worker.
                            Store $location,
-                         fabric.
-                           lang.
-                           security.
-                           Label $label, fabric.lang.security.Label accessLabel,
                          fabric.lang.security.Principal p,
                          fabric.lang.security.Principal q) {
-                super($location,
-                      $label, accessLabel);
+                super($location);
             }
             
             private _Impl(fabric.
                             worker.
                             Store $location,
-                          fabric.
-                            lang.
-                            security.
-                            Label $label, Label accessLabel,
                           fabric.lang.security.PrincipalUtil.ProofSearchState ss,
                           fabric.lang.security.Principal p,
                           fabric.lang.security.Principal q) {
-                super($location,
-                      $label, accessLabel);
+                super($location);
             }
             
             native public boolean
@@ -221,16 +211,11 @@ public interface PrincipalUtil
                 
                 public _Impl(fabric.
                                worker.
-                               Store store,
-                             fabric.
-                               lang.
-                               security.
-                               Label label, fabric.lang.security.Label accessLabel)
+                               Store store)
                       throws fabric.
                   net.
                   UnreachableNodeException {
-                    super(store,
-                          label, accessLabel);
+                    super(store);
                 }
                 
                 native protected fabric.
@@ -318,13 +303,8 @@ public interface PrincipalUtil
             
             public _Impl(fabric.
                            worker.
-                           Store $location,
-                         fabric.
-                           lang.
-                           security.
-                           Label $label, fabric.lang.security.Label accessLabel) {
-                super($location,
-                      $label, accessLabel);
+                           Store $location) {
+                super($location);
             }
             
             native public java.lang.String
@@ -469,16 +449,11 @@ public interface PrincipalUtil
                 
                 public _Impl(fabric.
                                worker.
-                               Store store,
-                             fabric.
-                               lang.
-                               security.
-                               Label label, fabric.lang.security.Label accessLabel)
+                               Store store)
                       throws fabric.
                   net.
                   UnreachableNodeException {
-                    super(store,
-                          label, accessLabel);
+                    super(store);
                 }
                 
                 native protected fabric.
@@ -875,13 +850,8 @@ public interface PrincipalUtil
         
         public _Impl(fabric.
                        worker.
-                       Store $location,
-                     fabric.
-                       lang.
-                       security.
-                       Label $label, fabric.lang.security.Label accessLabel) {
-            super($location,
-                  $label, accessLabel);
+                       Store $location) {
+            super($location);
         }
         
         native protected fabric.
@@ -992,16 +962,11 @@ public interface PrincipalUtil
             
             public _Impl(fabric.
                            worker.
-                           Store store,
-                         fabric.
-                           lang.
-                           security.
-                           Label label, fabric.lang.security.Label accessLabel)
+                           Store store)
                   throws fabric.
               net.
               UnreachableNodeException {
-                super(store,
-                      label, accessLabel);
+                super(store);
             }
             
             native protected fabric.

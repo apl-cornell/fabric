@@ -151,7 +151,7 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
 
   @Override
   public Label label() {
-    return fcls.get$label();
+    return fcls.get$$updateLabel();
   }
 
   @Override

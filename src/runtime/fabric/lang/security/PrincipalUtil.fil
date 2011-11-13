@@ -622,7 +622,6 @@ public class PrincipalUtil {
         java.lang.Object searchState) {
       return null;
     }
-
   }
 }
 

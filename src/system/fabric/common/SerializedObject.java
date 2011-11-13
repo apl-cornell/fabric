@@ -26,6 +26,7 @@ import fabric.common.util.ComparablePair;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
+import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.LocalStore;
 import fabric.worker.Store;
@@ -45,10 +46,10 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * <li>short update label's store's name length (only present if inter-store)</li>
    * <li>byte[] update label's store's name data (only present if inter-store)</li>
    * <li>long update label's onum</li>
-   * <li>byte whether the access label pointer is an inter-store ref</li>
-   * <li>short access label's store's name length (only present if inter-store)</li>
-   * <li>byte[] access label's store's name data (only present if inter-store)</li>
-   * <li>long access label's onum</li>
+   * <li>byte whether the access policy pointer is an inter-store ref</li>
+   * <li>short access policy's store's name length (only present if inter-store)</li>
+   * <li>byte[] access policy's store's name data (only present if inter-store)</li>
+   * <li>long access policy's onum</li>
    * <li>ClassRef object's class</li>
    * <li>int # ref types</li>
    * <li>int # intra-store refs</li>
@@ -102,7 +103,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @param remoteRef
    *          The name of the remote object being referred to.
    */
-  public SerializedObject(long onum, long updateLabel, long accessLabel,
+  public SerializedObject(long onum, long updateLabel, long accessPolicy,
       Pair<String, Long> remoteRef) {
     try {
       // Create a byte array containing the surrogate object's serialized data.
@@ -127,13 +128,13 @@ public final class SerializedObject implements FastSerializable, Serializable {
       // Promise expiry
       out.writeLong(0);
 
-      // Update Label reference.
+      // Update label reference.
       out.writeBoolean(false);
       out.writeLong(updateLabel);
 
-      // Access Label reference.
+      // Access policy reference.
       out.writeBoolean(false);
-      out.writeLong(accessLabel);
+      out.writeLong(accessPolicy);
 
       // Class ref.
       ClassRef.SURROGATE.write(out);
@@ -215,17 +216,15 @@ public final class SerializedObject implements FastSerializable, Serializable {
   }
 
   /**
-   * @return an inter-store reference to the the serialized object's label.
-   * @throws InternalError
-   *           if the serialized object has an intra-store reference to its
-   *           label.
+   * Obtains an inter-store reference at the given position in the serialized
+   * data.
    */
-  public ComparablePair<String, Long> getInterStoreLabelRef(int labelPos) {
+  private ComparablePair<String, Long> getInterStoreRef(int refPos) {
     int storeNameLength =
-        SerializationUtil.unsignedShortAt(objectData, labelPos);
-    int onumPos = labelPos + 2 + storeNameLength;
+        SerializationUtil.unsignedShortAt(objectData, refPos);
+    int onumPos = refPos + 2 + storeNameLength;
     DataInput in =
-        new DataInputStream(new ByteArrayInputStream(objectData, labelPos,
+        new DataInputStream(new ByteArrayInputStream(objectData, refPos,
             onumPos));
     try {
       return new ComparablePair<String, Long>(in.readUTF(),
@@ -270,7 +269,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     if (!updateLabelRefIsInterStore())
       throw new InternalError("Unsupported operation: Attempted to get an "
           + "inter-store reference to an intra-store label.");
-    return getInterStoreLabelRef(updateLabelPos());
+    return getInterStoreRef(updateLabelPos());
   }
 
   /**
@@ -290,10 +289,11 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   /**
    * @return the offset in objectData representing the start of a boolean that
-   *         indicates whether the label pointer is an inter-store reference.
+   *         indicates whether the access policy pointer is an inter-store
+   *         reference.
    */
-  private final int isInterStoreAccessLabelPos() {
-    int labelPos = updateLabelPos(); // access label is after the update label
+  private final int isInterStoreAccessPolicyPos() {
+    int labelPos = updateLabelPos(); // access policy is after the update label
     return labelPos
         + 8
         + (updateLabelRefIsInterStore() ? (SerializationUtil.unsignedShortAt(
@@ -301,48 +301,50 @@ public final class SerializedObject implements FastSerializable, Serializable {
   }
 
   /**
-   * @return whether the reference to the serialized object's label is an
-   *         inter-store reference.
+   * @return whether the reference to the serialized object's access policy is
+   *         an inter-store reference.
    */
-  public boolean accessLabelRefIsInterStore() {
+  public boolean accessPolicyRefIsInterStore() {
     return SerializationUtil
-        .booleanAt(objectData, isInterStoreAccessLabelPos());
+        .booleanAt(objectData, isInterStoreAccessPolicyPos());
   }
 
   /**
    * @return the offset in objectData representing the start of the label
    *         reference.
    */
-  private final int accessLabelPos() {
-    return isInterStoreAccessLabelPos() + 1;
+  private final int accessPolicyPos() {
+    return isInterStoreAccessPolicyPos() + 1;
   }
 
   /**
-   * @return an inter-store reference to the the serialized object's label.
+   * @return an inter-store reference to the the serialized object's access
+   *         policy.
    * @throws InternalError
    *           if the serialized object has an intra-store reference to its
    *           label.
    */
-  public ComparablePair<String, Long> getInterStoreAccessLabelRef() {
-    if (!accessLabelRefIsInterStore())
+  public ComparablePair<String, Long> getInterStoreAccessPolicyRef() {
+    if (!accessPolicyRefIsInterStore())
       throw new InternalError("Unsupported operation: Attempted to get an "
           + "inter-store reference to an intra-store label.");
-    return getInterStoreLabelRef(accessLabelPos());
+    return getInterStoreRef(accessPolicyPos());
   }
 
   /**
-   * @return an intra-store reference to the serialized object's label.
+   * @return an intra-store reference to the serialized object's access policy.
    * @throws InternalError
    *           if the serialized object has an inter-store reference to its
    *           label.
    */
-  public long getAccessLabelOnum() {
-    if (accessLabelRefIsInterStore())
-      throw new InternalError("Unsupported operation: Attempted to get label "
-          + "onum of an object whose inter-store references have not yet been "
-          + "swizzled." + getInterStoreAccessLabelRef());
+  public long getAccessPolicyOnum() {
+    if (accessPolicyRefIsInterStore())
+      throw new InternalError(
+          "Unsupported operation: Attempted to get access "
+              + "policy onum of an object whose inter-store references have not yet "
+              + "been swizzled." + getInterStoreAccessPolicyRef());
 
-    return SerializationUtil.longAt(objectData, accessLabelPos());
+    return SerializationUtil.longAt(objectData, accessPolicyPos());
   }
 
   /**
@@ -350,10 +352,10 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         ClassRef for the object's class.
    */
   private final int classRefPos() {
-    int labelPos = accessLabelPos();
+    int labelPos = accessPolicyPos();
     return labelPos
         + 8
-        + (accessLabelRefIsInterStore() ? (SerializationUtil.unsignedShortAt(
+        + (accessPolicyRefIsInterStore() ? (SerializationUtil.unsignedShortAt(
             objectData, labelPos) + 2) : 0);
   }
 
@@ -601,11 +603,11 @@ public final class SerializedObject implements FastSerializable, Serializable {
         out.writeLong(intraStoreRefIt.next());
       else out.writeLong(getUpdateLabelOnum());
 
-      // Write the access label reference.
+      // Write the access policy reference.
       out.writeBoolean(false);
-      if (accessLabelRefIsInterStore())
+      if (accessPolicyRefIsInterStore())
         out.writeLong(intraStoreRefIt.next());
-      else out.writeLong(getAccessLabelOnum());
+      else out.writeLong(getAccessPolicyOnum());
 
       // Write the ClassRef and number of ref types.
       int classRefPos = classRefPos();
@@ -662,7 +664,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @see #SerializedObject(DataInput)
    */
   public static void write(_Impl impl, DataOutput out) throws IOException {
-    Label updateLabel = impl.get$label();
+    Label updateLabel = impl.get$$updateLabel();
     Store updateLabelStore = updateLabel.$getStore();
     long updateLabelOnum = updateLabel.$getOnum();
     boolean interStoreUpdateLabel =
@@ -688,26 +690,26 @@ public final class SerializedObject implements FastSerializable, Serializable {
     }
     out.writeLong(updateLabelOnum);
 
-    // Write the access label
-    Label accessLabel = impl.get$accesslabel();
-    Store accessLabelStore = accessLabel.$getStore();
-    long accessLabelOnum = accessLabel.$getOnum();
+    // Write the access policy
+    ConfPolicy accessPolicy = impl.get$$accessPolicy();
+    Store accessPolicyStore = accessPolicy.$getStore();
+    long accessPolicyOnum = accessPolicy.$getOnum();
     boolean interStoreAccessLabel =
-        !ONumConstants.isGlobalConstant(accessLabelOnum)
-            && !impl.$getStore().equals(accessLabelStore);
+        !ONumConstants.isGlobalConstant(accessPolicyOnum)
+            && !impl.$getStore().equals(accessPolicyStore);
 
     out.writeBoolean(interStoreAccessLabel);
     if (interStoreAccessLabel) {
-      if (accessLabelStore instanceof LocalStore) {
+      if (accessPolicyStore instanceof LocalStore) {
         Class<?> objClass = impl.getClass();
         String objStr = impl.toString();
         throw new InternalError("Creating remote ref to local store.  Remote "
             + "object has class " + objClass + ".  Its string representation "
-            + "is \"" + objStr + "\", and its accessLabel is local.");
+            + "is \"" + objStr + "\", and its accessPolicy is local.");
       }
-      out.writeUTF(accessLabelStore.name());
+      out.writeUTF(accessPolicyStore.name());
     }
-    out.writeLong(accessLabelOnum);
+    out.writeLong(accessPolicyOnum);
 
     // Write the object's type information
     Class<?> implClass = impl.getClass();
@@ -878,7 +880,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       _Impl result =
           (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
-              getExpiry(), getUpdateLabelOnum(), getAccessLabelOnum(),
+              getExpiry(), getUpdateLabelOnum(), getAccessPolicyOnum(),
               new ObjectInputStream(getSerializedDataStream()),
               getRefTypeIterator(), getIntraStoreRefIterator());
 

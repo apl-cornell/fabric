@@ -20,10 +20,10 @@ public interface ReflexiveProof extends fabric.lang.security.ActsForProof {
       implements fabric.lang.security.ReflexiveProof
     {
         
-        _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
+        _Impl(fabric.worker.Store $location,
               fabric.lang.security.Principal p,
               fabric.lang.security.Principal q) {
-            super($location, $label, accessLabel, p, q);
+            super($location, p, q);
         }
         
         native public void gatherDelegationDependencies(java.util.Set s);
@@ -66,10 +66,9 @@ public interface ReflexiveProof extends fabric.lang.security.ActsForProof {
           implements fabric.lang.security.ReflexiveProof._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

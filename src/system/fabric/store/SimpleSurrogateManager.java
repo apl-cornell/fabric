@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
@@ -47,7 +48,8 @@ public class SimpleSurrogateManager implements SurrogateManager {
         ComparablePair<String, Long> ref = obj.getInterStoreUpdateLabelRef();
 
         updateLabelOnum = tm.newOnums(1)[0];
-        surrogates.add(new SerializedObject(updateLabelOnum, updateLabelOnum, updateLabelOnum, ref));
+        surrogates.add(new SerializedObject(updateLabelOnum, updateLabelOnum,
+            ONumConstants.BOTTOM_CONFIDENTIALITY, ref));
         cache.put(ref, updateLabelOnum);
         hadRemotes = true;
         newrefs.add(updateLabelOnum);
@@ -55,24 +57,24 @@ public class SimpleSurrogateManager implements SurrogateManager {
         updateLabelOnum = obj.getUpdateLabelOnum();
       }
       
-      long accessLabelOnum;
+      long accessPolicyOnum;
       if (obj.updateLabelRefIsInterStore()) {
         ComparablePair<String, Long> ref = obj.getInterStoreUpdateLabelRef();
         Long cachedOnum = cache.get(ref);
 
         if (cachedOnum == null) {
-          // Add a surrogate reference to the access label.
-          accessLabelOnum = tm.newOnums(1)[0];
-          surrogates.add(new SerializedObject(accessLabelOnum, accessLabelOnum,
-              accessLabelOnum, ref));
-          cache.put(ref, accessLabelOnum);
+          // Add a surrogate reference to the access policy.
+          accessPolicyOnum = tm.newOnums(1)[0];
+          surrogates.add(new SerializedObject(accessPolicyOnum,
+              ONumConstants.PUBLIC_READONLY_LABEL, accessPolicyOnum, ref));
+          cache.put(ref, accessPolicyOnum);
         } else {
-          accessLabelOnum = cachedOnum;
+          accessPolicyOnum = cachedOnum;
         }
         hadRemotes = true;
-        newrefs.add(accessLabelOnum);
+        newrefs.add(accessPolicyOnum);
       } else {
-        accessLabelOnum = obj.getAccessLabelOnum();
+        accessPolicyOnum = obj.getAccessPolicyOnum();
       }
 
       for (Iterator<RefTypeEnum> it = obj.getRefTypeIterator(); it.hasNext();) {
@@ -95,7 +97,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
           if (onum == null) {
             // create surrogate
             onum = tm.newOnums(1)[0];
-            surrogates.add(new SerializedObject(onum, updateLabelOnum, accessLabelOnum, ref));
+            surrogates.add(new SerializedObject(onum, updateLabelOnum, accessPolicyOnum, ref));
             cache.put(ref, onum);
           }
           hadRemotes = true;

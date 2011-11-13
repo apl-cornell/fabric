@@ -54,7 +54,7 @@ public interface DelegatingPrincipal extends Principal {
       DelegatingPrincipal {
 
     public _Impl(Store store, Label label, Label accessLabel) {
-      super(store, label, accessLabel);
+      super(store);
     }
 
     public _Impl(Store store, long onum, int version, long expiry, long label,

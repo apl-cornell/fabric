@@ -60,9 +60,9 @@ public interface MeetPolicy
         
         native public fabric.worker.Store get$localStore();
         
-        _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
+        _Impl(fabric.worker.Store $location,
               fabric.util.Set policies) {
-            super($location, $label, accessLabel);
+            super($location);
         }
         
         native public fabric.util.Set meetComponents();
@@ -117,10 +117,9 @@ public interface MeetPolicy
           implements fabric.lang.security.MeetPolicy._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

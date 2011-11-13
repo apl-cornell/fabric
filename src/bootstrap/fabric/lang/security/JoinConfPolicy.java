@@ -72,9 +72,9 @@ public interface JoinConfPolicy
       implements fabric.lang.security.JoinConfPolicy
     {
         
-        _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
+        _Impl(fabric.worker.Store $location,
               fabric.util.Set policies) {
-            super($location, $label, accessLabel, policies);
+            super($location, policies);
         }
         
         native public fabric.lang.security.ConfPolicy join(
@@ -141,10 +141,9 @@ public interface JoinConfPolicy
           implements fabric.lang.security.JoinConfPolicy._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

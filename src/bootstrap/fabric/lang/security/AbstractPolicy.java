@@ -32,9 +32,8 @@ public interface AbstractPolicy
       implements fabric.lang.security.AbstractPolicy
     {
         
-        protected _Impl(fabric.worker.Store $location,
-                        fabric.lang.security.Label $label, Label accessLabel) {
-            super($location, $label, accessLabel);
+        protected _Impl(fabric.worker.Store $location) {
+            super($location);
         }
         
         abstract public boolean equals(fabric.lang.Object that);
@@ -79,10 +78,9 @@ public interface AbstractPolicy
           implements fabric.lang.security.AbstractPolicy._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

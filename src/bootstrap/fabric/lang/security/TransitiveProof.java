@@ -51,11 +51,10 @@ public interface TransitiveProof extends fabric.lang.security.ActsForProof {
         native public fabric.lang.security.Principal get$p();
         
         public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
                      fabric.lang.security.ActsForProof actorToP,
                      fabric.lang.security.Principal p,
                      fabric.lang.security.ActsForProof pToGranter) {
-            super($location, $label, accessLabel,
+            super($location,
                   !fabric.lang.Object._Proxy.idEquals(actorToP, null)
                     ? actorToP.getActor()
                     : null,
@@ -112,10 +111,9 @@ public interface TransitiveProof extends fabric.lang.security.ActsForProof {
           implements fabric.lang.security.TransitiveProof._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

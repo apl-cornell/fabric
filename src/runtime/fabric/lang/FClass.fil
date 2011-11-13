@@ -8,6 +8,8 @@ import java.util.Properties;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.Label;
 import fabric.util.Set;
 import fabric.util.HashSet;
 
@@ -23,11 +25,14 @@ public class FClass {
   protected final String   source;
   protected final byte[]   bytecode;
   
-  public FClass(Codebase codebase, String name, String source, byte[] bytecode) {
+  public FClass(Codebase codebase, Label updateLabel, Label accessLabel,
+      String name, String source, byte[] bytecode) {
     this.codebase = codebase;
     this.name = name;
     this.source = source;
     this.bytecode = bytecode;
+    this.$updateLabel = updateLabel;
+    this.$accessPolicy = accessLabel.confPolicy();
   }
 
   public Codebase getCodebase() {
@@ -49,5 +54,9 @@ public class FClass {
         copy[i] = bytecode[i];
       return copy;
     }
+  }
+  
+  public Object $initLabels() {
+    return this;
   }
 }

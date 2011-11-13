@@ -752,7 +752,7 @@ public final class TransactionManager {
       // Own the object. The call to ensureOwnership is responsible for adding
       // the object to the set of created objects.
       ensureOwnership(obj);
-      current.updateMap.put(obj.$getProxy(), obj.get$label());
+      current.updateMap.put(obj.$getProxy(), obj.get$$updateLabel());
     } finally {
       Timing.TXLOG.end();
     }

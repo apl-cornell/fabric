@@ -60,7 +60,7 @@ public interface DisjunctivePrincipal extends fabric.lang.security.Principal {
         
         _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
               fabric.util.Set disjuncts) {
-            super($location, $label, accessLabel);
+            super($location);
         }
         
         native public java.lang.String name();
@@ -131,10 +131,9 @@ public interface DisjunctivePrincipal extends fabric.lang.security.Principal {
             
             native public fabric.worker.Store get$localStore();
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

@@ -11,10 +11,8 @@ import java.util.HashSet;
  * This code is mostly copied from Jif.
  */
 public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
-  // These should be final, but aren't to allow for the implementation of
-  // clobberThisPlaceholders().
-  private Principal owner;
-  private Principal writer;
+  private final Principal owner;
+  private final Principal writer;
 
   public WriterPolicy(Principal owner, Principal writer) {
     this.owner = owner;
@@ -131,15 +129,5 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
 
   public IntegPolicy meet(Store store, IntegPolicy p) {
     return LabelUtil.meetPol(store, this, p);
-  }
-
-  public void clobberThisPlaceholders(Principal replacement) {
-    if (owner instanceof ThisPrincipalPlaceholder) {
-      owner = replacement;
-    }
-    
-    if (writer instanceof ThisPrincipalPlaceholder) {
-      writer = replacement;
-    }
   }
 }

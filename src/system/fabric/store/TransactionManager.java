@@ -313,7 +313,7 @@ public class TransactionManager {
           fabric.lang.Object storeCopy =
               new fabric.lang.Object._Proxy(store, onum);
 
-          Label label = storeCopy.get$label();
+          Label label = storeCopy.get$$updateLabel();
 
           // Check read permissions.
           if (!AuthorizationUtil.isReadPermitted(worker, label.$getStore(),
@@ -329,7 +329,7 @@ public class TransactionManager {
           fabric.lang.Object storeCopy =
               new fabric.lang.Object._Proxy(store, onum);
 
-          Label label = storeCopy.get$label();
+          Label label = storeCopy.get$$updateLabel();
 
           // Check write permissions.
           if (!AuthorizationUtil.isWritePermitted(worker, label.$getStore(),

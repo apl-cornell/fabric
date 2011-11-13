@@ -39,9 +39,8 @@ public interface PrincipalSet extends fabric.lang.Object {
         
         native public fabric.util.Set set$set(fabric.util.Set val);
         
-        public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel) {
-            super($location, $label, accessLabel);
+        public _Impl(fabric.worker.Store $location) {
+            super($location);
         }
         
         native public fabric.lang.security.PrincipalSet add(
@@ -89,10 +88,9 @@ public interface PrincipalSet extends fabric.lang.Object {
           implements fabric.lang.security.PrincipalSet._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

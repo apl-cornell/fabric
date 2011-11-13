@@ -468,7 +468,7 @@ public class BdbDB extends ObjectDB {
       String className = obj.getClassName();
       int version = obj.getVersion();
       long updateLabelOnum = obj.getUpdateLabelOnum();
-      long accessLabelOnum = obj.getAccessLabelOnum();
+      long accessPolicyOnum = obj.getAccessPolicyOnum();
       String extraInfo = "";
       try {
         // Get extra information on surrogates and FClasses.
@@ -490,7 +490,7 @@ public class BdbDB extends ObjectDB {
         e.printStackTrace();
       }
       System.out.println(onum + "," + className + "," + version + ","
-          + updateLabelOnum + "," + accessLabelOnum + extraInfo);
+          + updateLabelOnum + "," + accessPolicyOnum + extraInfo);
     }
   }
 

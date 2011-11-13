@@ -1,13 +1,14 @@
 package fabric.util;
 
+import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.Store;
 import fabric.lang.Object;
 
 public interface AbstractMap extends Map, Object {
   public abstract static class _Impl extends Object._Impl {
-    public _Impl(Store store, Label label, Label accessLabel) {
-      super(store, label, accessLabel);
+    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy) {
+      super(store);
     }
   }
 }

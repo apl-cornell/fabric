@@ -305,7 +305,7 @@ public class UpdateMap implements FastSerializable {
    * given object. If the object is public, null is returned.
    */
   private byte[] getKey(_Proxy proxy) {
-    return getKey(proxy.get$label());
+    return getKey(proxy.get$$updateLabel());
   }
 
   /**

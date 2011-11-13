@@ -9,6 +9,7 @@ import java.util.List;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
+import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
@@ -32,8 +33,8 @@ public interface _charArray extends Object {
      * @param length
      *                The length of the array.
      */
-    public _Impl(Store store, Label label, Label accessLabel, int length) {
-      this(store, label, accessLabel, new char[length]);
+    public _Impl(Store store, Label label, ConfPolicy accessPolicy, int length) {
+      this(store, label, accessPolicy, new char[length]);
     }
 
     /**
@@ -45,9 +46,12 @@ public interface _charArray extends Object {
      * @param value
      *                The backing array to use.
      */
-    public _Impl(Store store, Label label, Label accessLabel, char[] value) {
-      super(store, label, accessLabel);
+    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy, char[] value) {
+      super(store);
       this.value = value;
+      
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
     }
 
     /**
@@ -110,6 +114,11 @@ public interface _charArray extends Object {
       out.writeInt(value.length);
       for (int i = 0; i < value.length; i++)
         out.writeChar(value[i]);
+    }
+
+    @Override
+    public Object $initLabels() {
+      return $getProxy();
     }
   }
 

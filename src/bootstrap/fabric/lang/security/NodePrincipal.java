@@ -61,10 +61,9 @@ public interface NodePrincipal extends fabric.lang.security.AbstractPrincipal {
           implements fabric.lang.security.NodePrincipal._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();
