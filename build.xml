@@ -361,7 +361,7 @@
         skipemptyfilesets="true"
         vmlauncher="false">
       <arg value="${filc}" />
-      <arg value="-bootstrap-skel" /> 
+      <arg value="-generate-native-skeletons" /> 
       <arg value="-noserial" /> 
       <arg value="-c" />
       <arg value="-d" /> <arg value="${bootstrap.src}"/>
@@ -369,7 +369,6 @@
       <arg value="-sourcepath"/>
       <arg value="${runtime.src}"/>
       <srcfile />
-      <globmapper from="*.fab" to="*.*" />-->
       <fileset dir="${runtime.src}"
           includes="**/*.fil"
           excludes="**/*.fab"/>
