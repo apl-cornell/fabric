@@ -7,7 +7,8 @@ import util.Delegator;
  * A very simple map service: given a request for a region, it returns a 10x10
  * image containing the background value, scaled to the requested region.
  */
-public class MapServer extends Delegator {
+public class MapServer extends Delegator 
+  where MapImage.provider <= provider, provider <= MapImage.provider {
 
   private final char {this←} background;
 
@@ -21,7 +22,7 @@ public class MapServer extends Delegator {
     Principal{owner←} owner,
     char{owner←} background
   )
-  where  authority(this)
+  where  authority(this), provider <= {this}
   {
     // these endorsements are safe, because owner ≽ this,
     // and thus {owner←} ⊑ {this←}
@@ -47,7 +48,7 @@ public class MapServer extends Delegator {
   :{*lbl}
   throws NullPointerException
   where
-    {this←} <= lbl
+    {this←} <= lbl, provider <= {*lbl}
   {
     final char{*lbl}[]{*lbl} data = new char[100];
     for (int i = 0; i < data.length; i++)
