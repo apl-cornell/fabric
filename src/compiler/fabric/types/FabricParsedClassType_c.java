@@ -179,28 +179,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
       // recompute the access label
     }
     return singleAccessLabel();
-//    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
-//
-//    // or if this is a DelegatingPrincipal (XXX Principal instead?)
-//    // then compute access label
-//    if (!accessLabelFound || isSubtype(ts.DelegatingPrincipal())) {
-//      FabricClassType superType = (FabricClassType)superType();
-//      if (superType != null && superType.singleFabilAccessLabel() != null) {
-//        singleAccessLabel = superType.singleFabilAccessLabel();
-//      }
-//      else {
-//        for (FieldInstance fi : (List<FieldInstance>)fields()) {
-//          if (fi.flags().isStatic()) continue;
-//          Type t = fi.type();
-//          if (ts.isLabeled(t)) {
-//            singleAccessLabel = ts.labelOfType(t);
-//            break;
-//          }
-//        }
-//      }
-//      accessLabelFound = true;
-//    }
-//    return singleAccessLabel;
   }
   
   
@@ -212,34 +190,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
       // recompute the field label
     }
     return singleFieldLabel();
-    
-//    // Type checking has been done, so all field labels are guaranteed to
-//    // be the same
-//    // ThisLabelChecker has already run and checked that 'this' is
-//    // being used correctly.
-//    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
-//
-//    // If the default field label has not been computed yet
-//    // or if this is a DelegatingPrincipal (XXX Principal instead?)
-//    // then compute defaultFieldLabel
-//    if (!fieldLabelFound || isSubtype(ts.DelegatingPrincipal())) {
-//      FabricClassType superType = (FabricClassType)superType();
-//      if (superType != null && superType.singleFabilFieldLabel() != null) {
-//        singleFieldLabel = superType.singleFabilFieldLabel();
-//      }
-//      else {
-//        for (FieldInstance fi : (List<FieldInstance>)fields()) {
-//          if (fi.flags().isStatic()) continue;
-//          Type t = fi.type();
-//          if (ts.isLabeled(t)) {
-//            singleFieldLabel = ts.labelOfType(t);
-//            break;
-//          }
-//        }
-//      }
-//      fieldLabelFound = true;
-//    }
-//    return singleFieldLabel;
   }
   
   @SuppressWarnings("unchecked")
