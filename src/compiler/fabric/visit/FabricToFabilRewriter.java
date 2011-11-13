@@ -36,6 +36,7 @@ import fabric.types.FabricTypeSystem;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
   private static final Collection<String> TOPICS;
+  public static final String LABEL_INITIALIZER_METHOD_NAME = "$initLabels";
   static {
     TOPICS = new ArrayList<String>(2);
     TOPICS.add("publish");

@@ -53,12 +53,12 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   }
 
   @Override
-  public Expr label() {
+  public Expr updateLabel() {
     return label;
   }
 
   @Override
-  public FabricArrayInit_c label(Expr label) {
+  public FabricArrayInit_c updateLabel(Expr label) {
     FabricArrayInit_c n = (FabricArrayInit_c) copy();
     n.label = label;
     return n;

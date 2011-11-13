@@ -14,7 +14,6 @@ import fabil.ExtensionInfo;
 import fabil.ast.FabILNodeFactory;
 import fabil.ast.New;
 import fabil.types.FabILTypeSystem;
-import fabric.translate.ClassDeclToFabilExt_c;
 
 /**
  * Rewrites Principal constructor calls to add default delegations.
@@ -32,16 +31,14 @@ public class PrincipalDelegator extends NodeVisitor {
     this.qq = new QQ(extInfo);
   }
 
-  
   @Override
   public NodeVisitor begin() {
-    //Wait until pass actually starts to access runtime type.
-    //This allows dependencies to be properly resolved and 
-    //avoids bootstrapping issues.
+    // Wait until pass actually starts to access runtime type.
+    // This allows dependencies to be properly resolved and
+    // avoids bootstrapping issues.
     this.delegatingPrincipal = ts.DelegatingPrincipal();
     return super.begin();
   }
-
 
   @SuppressWarnings("unchecked")
   @Override
@@ -79,10 +76,9 @@ public class PrincipalDelegator extends NodeVisitor {
       if (!newCall.objectType().type().isSubtype(delegatingPrincipal))
         return super.leave(old, n, v);
 
-      String initName =
-          ClassDeclToFabilExt_c
-              .jifConstructorTranslatedName((ClassType) newCall.objectType()
-                  .type());
+      ClassType nct =  ((ClassType) newCall.objectType().type());
+      //XXX: This replace must match ClassDeclToJavaExt_c.constructorTranslatedName
+      String initName = (nct.fullName() + ".").replace('.', '$');
       if (!call.name().equals(initName)) return super.leave(old, n, v);
 
       // Wrap around the Jif initializer call instead. We do this by mangling
@@ -101,5 +97,4 @@ public class PrincipalDelegator extends NodeVisitor {
 
     return super.leave(old, n, v);
   }
-
 }

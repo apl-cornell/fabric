@@ -149,11 +149,11 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @Override
   @SuppressWarnings("unchecked")
-  public New New(Position pos, Expr outer, TypeNode objectType, Expr label, Expr accessLabel,
+  public New New(Position pos, Expr outer, TypeNode objectType,
       Expr location, List<Expr> args, ClassBody body) {
     New n =
         new New_c(pos, outer, objectType, CollectionUtil.nonNullList(args),
-            body, label, accessLabel, location);
+            body, location);
     n = (New) n.ext(extFactory().extNew());
     n = (New) n.del(delFactory().delNew());
 
@@ -166,25 +166,25 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   @Override
   public New New(Position pos, Expr outer, TypeNode objectType,
       @SuppressWarnings("rawtypes") List args, ClassBody body) {
-    return New(pos, outer, objectType, null, null, null, args, body);
+    return New(pos, outer, objectType, null, args, body);
   }
 
   @Override
-  public New New(Position pos, TypeNode objectType, Expr label, Expr accessLabel, Expr location,
+  public New New(Position pos, TypeNode objectType, Expr location,
       List<Expr> args) {
-    return New(pos, null, objectType, label, accessLabel, location, args);
+    return New(pos, null, objectType, location, args);
   }
 
   @Override
-  public New New(Position pos, Expr outer, TypeNode objectType, Expr label, Expr accessLabel,
+  public New New(Position pos, Expr outer, TypeNode objectType,
       Expr location, List<Expr> args) {
-    return New(pos, outer, objectType, label, accessLabel, location, args, null);
+    return New(pos, outer, objectType, location, args, null);
   }
 
   @Override
-  public New New(Position pos, TypeNode type, Expr label, Expr accessLabel, Expr location,
+  public New New(Position pos, TypeNode type, Expr location,
       List<Expr> args, polyglot.ast.ClassBody body) {
-    return New(pos, null, type, label, accessLabel, location, args, body);
+    return New(pos, null, type, location, args, body);
   }
 
   @Override

@@ -12,6 +12,8 @@ public interface FabricArrayInit extends Annotated, polyglot.ast.ArrayInit {
   @Override
   FabricArrayInit location(Expr location);
   
-  @Override
-  FabricArrayInit label(Expr label);
+  Expr updateLabel();
+  Expr accessLabel();
+  FabricArrayInit updateLabel(Expr label);
+  FabricArrayInit accessLabel(Expr accesslabel);
 }

@@ -47,7 +47,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
   }
 
   @Override
-  public Expr label() {
+  public Expr updateLabel() {
     return label;
   }
 
@@ -57,7 +57,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
   }
 
   @Override
-  public NewFabricArray_c label(Expr label) {
+  public NewFabricArray_c updateLabel(Expr label) {
     NewFabricArray_c n = (NewFabricArray_c) copy();
     n.label = label;
     return n;

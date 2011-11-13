@@ -12,7 +12,6 @@ import polyglot.util.Position;
 import fabil.ast.Annotated;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
-import fabil.visit.LabelAssigner;
 import fabil.visit.LocationAssigner;
 
 /**
@@ -20,78 +19,6 @@ import fabil.visit.LocationAssigner;
  * location fields.
  */
 public abstract class AnnotatedExt_c extends ExprExt_c {
-  @Override
-  public Annotated assignLabels(LabelAssigner la) throws SemanticException {
-    Annotated expr = node();
-    expr = assignLabel(la, expr);
-    expr = assignAccessLabel(la, expr);
-    return expr;
-  }
-
-  private Annotated assignLabel(LabelAssigner la, Annotated expr)
-      throws SemanticException {
-    if (expr.label() != null) return expr;
-
-    FabILNodeFactory nf = la.nodeFactory();
-    FabILTypeSystem ts = la.typeSystem();
-    QQ qq = la.qq();
-
-    if (!ts.isFabricReference(expr.type())) return expr;
-
-    // Need a label. Use null by default for principal objects. The Principal
-    // constructor will fill in the appropriate label.
-    if (ts.isPrincipalClass(expr.type())) {
-      return expr.label(qq.parseExpr("null").type(ts.Null()));
-    }
-
-    // Need a label. By default, we use the same label as the context.
-    Context context = la.context();
-    ClassType currentClass = context.currentClass();
-    if (!ts.isFabricReference(currentClass)) {
-      throw new SemanticException("Missing label", expr.position());
-    }
-
-    Receiver receiver;
-    if (context.inStaticContext()) {
-      receiver =
-          nf.CanonicalTypeNode(Position.compilerGenerated(), currentClass);
-    } else {
-      receiver = qq.parseExpr("this").type(currentClass);
-    }
-
-    Position pos = Position.compilerGenerated();
-    Call defaultLabel = nf.Call(pos, receiver, nf.Id(pos, "get$label"));
-
-    Flags flags = Flags.NONE;
-    if (context.inStaticContext()) flags = Flags.STATIC;
-
-    MethodInstance lmi =
-        ts.methodInstance(pos, currentClass, flags, ts.Label(), "get$label",
-            Collections.emptyList(), Collections.emptyList());
-    defaultLabel = (Call) defaultLabel.type(ts.Label());
-    defaultLabel = defaultLabel.methodInstance(lmi);
-    return expr.label(defaultLabel);
-  }
-
-  private Annotated assignAccessLabel(LabelAssigner la, Annotated expr) {
-    if (expr.accessLabel() != null) return expr;
-
-    FabILTypeSystem ts = la.typeSystem();
-    QQ qq = la.qq();
-
-    if (!ts.isFabricReference(expr.type())) return expr;
-
-    // Need an access label. Use null by default for principal objects. The
-    // Principal constructor will fill in the appropriate access label.
-    if (ts.isPrincipalClass(expr.type())) {
-      return expr.accessLabel(qq.parseExpr("null").type(ts.Null()));
-    }
-
-    // Need a label. Use the object label by default.
-    Expr label = expr.label();
-    return expr.accessLabel(label);
-  }
-
   @Override
   public Annotated assignLocations(LocationAssigner la)
       throws SemanticException {

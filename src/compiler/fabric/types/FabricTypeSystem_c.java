@@ -23,8 +23,10 @@ import jif.types.Solver;
 import jif.types.label.AccessPath;
 import jif.types.label.AccessPathConstant;
 import jif.types.label.AccessPathLocal;
+import jif.types.label.AccessPathThis;
 import jif.types.label.ArgLabel;
 import jif.types.label.ConfPolicy;
+import jif.types.label.DynamicLabel;
 import jif.types.label.IntegPolicy;
 import jif.types.label.JoinLabel;
 import jif.types.label.Label;
@@ -627,6 +629,32 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     Flags f = super.legalInterfaceFlags();
     f = f.set(FabricFlags.NONFABRIC);
     return f;
+  }
+  
+  public boolean containsThisLabelOrAccessPath(Label label) {
+    if (label instanceof ThisLabel) {
+      return true;
+    } else if (label instanceof MeetLabel) {
+      MeetLabel ml = (MeetLabel) label;
+      for (Label l : ml.meetComponents()) {
+        if (containsThisLabelOrAccessPath(l)) return true;
+      }
+    } else if (label instanceof JoinLabel) {
+      JoinLabel jl = (JoinLabel) label;
+      for (Label l : jl.joinComponents()) {
+        if (containsThisLabelOrAccessPath(l)) return true;
+      }
+    } else if (label instanceof ArgLabel) {
+      ArgLabel jl = (ArgLabel) label;
+      return containsThisLabelOrAccessPath(jl.upperBound());
+    }
+    else if (label instanceof DynamicLabel) {
+      DynamicLabel dl = (DynamicLabel) label;
+      if(dl.path().root() instanceof AccessPathThis)
+        return true;
+    }
+    
+    return false;
   }
 
   @Override

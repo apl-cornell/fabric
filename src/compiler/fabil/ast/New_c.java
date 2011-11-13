@@ -21,46 +21,18 @@ import fabil.types.FabILTypeSystem;
 
 public class New_c extends polyglot.ast.New_c implements New, Annotated {
 
-  protected Expr label;
   protected Expr location;
-  protected Expr accessLabel;
 
   public New_c(Position pos, Expr qualifier, TypeNode tn, List<Expr> arguments,
-      ClassBody body, Expr label, Expr accessLabel, Expr location) {
+      ClassBody body, Expr location) {
     super(pos, qualifier, tn, arguments, body);
 
     this.location = location;
-    this.label = label;
-    this.accessLabel = accessLabel;
   }
 
   @Override
   public New objectType(TypeNode tn) {
     return (New) super.objectType(tn);
-  }
-
-  @Override
-  public Expr label() {
-    return label;
-  }
-  
-  @Override
-  public Expr accessLabel() {
-    return accessLabel;
-  }
-
-  @Override
-  public New_c label(Expr label) {
-    New_c n = (New_c) copy();
-    n.label = label;
-    return n;
-  }
-  
-  @Override
-  public New_c accessLabel(Expr accessLabel) {
-    New_c n = (New_c) copy();
-    n.accessLabel = accessLabel;
-    return n;
   }
 
   @Override
@@ -79,20 +51,17 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
    * Reconstructs the expression.
    */
   protected New_c reconstruct(Expr qualifier, TypeNode tn,
-      List<Expr> arguments, ClassBody body, Expr location, Expr label, Expr accessLabel) {
+      List<Expr> arguments, ClassBody body, Expr location) {
     if (qualifier != this.qualifier || tn != this.tn
         || !CollectionUtil.equals(arguments, this.arguments)
-        || body != this.body || location != this.location
-        || label != this.label
-        || accessLabel != this.accessLabel) {
+        || body != this.body || location != this.location) {
       New_c n = (New_c) copy();
       n.tn = tn;
       n.qualifier = qualifier;
       n.arguments = TypedList.copyAndCheck(arguments, Expr.class, true);
       n.body = body;
       n.location = location;
-      n.label = label;
-      n.accessLabel = accessLabel;
+
       return n;
     }
 
@@ -107,9 +76,8 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     List<Expr> arguments = visitList(this.arguments, v);
     ClassBody body = (ClassBody) visitChild(this.body, v);
     Expr location = (Expr) visitChild(this.location, v);
-    Expr label = (Expr) visitChild(this.label, v);
-    Expr accessLabel = (Expr) visitChild(this.accessLabel, v);
-    return reconstruct(qualifier, tn, arguments, body, location, label, accessLabel);
+
+    return reconstruct(qualifier, tn, arguments, body, location);
   }
 
   @Override
@@ -124,18 +92,6 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
       }
     }
 
-    if (label != null) {
-      if (!ts.isImplicitCastValid(label.type(), ts.Label())) {
-        throw new SemanticException("Invalid array label.", label.position());
-      }
-    }
-
-    if (accessLabel != null) {
-      if (!ts.isImplicitCastValid(accessLabel.type(), ts.Label())) {
-        throw new SemanticException("Invalid access policy.", accessLabel.position());
-      }
-    }
-
     return result;
   }
 
@@ -147,16 +103,6 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     }
 
     Term last = tn;
-    if (label != null) {
-      v.visitCFG(last, label, ENTRY);
-      last = label;
-    }
-    
-    last = tn;
-    if (accessLabel != null) {
-      v.visitCFG(last, accessLabel, ENTRY);
-      last = accessLabel;
-    }
 
     if (location != null) {
       v.visitCFG(last, location, ENTRY);
@@ -184,15 +130,6 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
       throws SemanticException {
     New_c nn = (New_c) super.disambiguateOverride(parent, ar);
 
-    // Disambiguate location and label.
-    if (nn.label != null) {
-      nn = nn.label((Expr) nn.visitChild(nn.label, ar));
-    }
-    
-    if (nn.accessLabel != null) {
-      nn = nn.accessLabel((Expr) nn.visitChild(nn.accessLabel, ar));
-    }
-
     if (nn.location != null) {
       nn = nn.location((Expr) nn.visitChild(nn.location, ar));
     }
@@ -213,16 +150,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
       throws SemanticException {
     New_c n = (New_c) super.typeCheckOverride(parent, tc);
     if (n == null) return null;
-    
-    if (n.label != null) {
-      n = n.label((Expr) n.visitChild(n.label, tc));
-    }
-    
-    if (n.accessLabel != null) {
-      n = n.accessLabel((Expr) n.visitChild(n.accessLabel, tc));
-    }
-
-    
+        
     if (n.location != null) {
       n = n.location((Expr) n.visitChild(n.location, tc));
     }
@@ -234,7 +162,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
   @Override
   public Node copy(NodeFactory nf) {
     FabILNodeFactory filNf = (FabILNodeFactory) nf;
-    return filNf.New(this.position, this.qualifier, this.tn, this.label, this.accessLabel,
+    return filNf.New(this.position, this.qualifier, this.tn,
         this.location, this.arguments, this.body);
   }
 }

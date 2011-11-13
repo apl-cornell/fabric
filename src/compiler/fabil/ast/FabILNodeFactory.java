@@ -15,17 +15,16 @@ public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
 
   Atomic Atomic(Position pos, List<Stmt> statements);
 
-  New New(Position pos, TypeNode type, Expr label, Expr accessLabel, Expr location,
+  New New(Position pos, TypeNode type, Expr location, List<Expr> args);
+
+  New New(Position pos, TypeNode type, Expr location, List<Expr> args,
+      ClassBody body);
+
+  New New(Position pos, Expr outer, TypeNode objectType, Expr location,
       List<Expr> args);
 
-  New New(Position pos, TypeNode type, Expr label, Expr accessLabel, Expr location,
+  New New(Position pos, Expr outer, TypeNode objectType, Expr location,
       List<Expr> args, ClassBody body);
-
-  New New(Position pos, Expr outer, TypeNode objectType, Expr label, Expr accessLabel,
-      Expr location, List<Expr> args);
-
-  New New(Position pos, Expr outer, TypeNode objectType, Expr label, Expr accessLabel,
-      Expr location, List<Expr> args, ClassBody body);
 
   /**
    * Creates an AST node representing the creation of a Fabric array.
