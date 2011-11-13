@@ -89,26 +89,23 @@ public class FriendMap extends Delegator {
    */
   public
   void
-  postMap {*user.friendLabel}
+  postMap {user.friends→; _←}
   (
-    final UserV1 {*user.friendLabel} user
+    final UserV1 {user.friends→; _←} user
   )
   throws
   (
     NullPointerException {user; user←}
   )
   where
-    service actsfor user.friendInfo,
-    {service←}       <= user.friendLabel,    // because information comes from the service
-    user.friendLabel <= {System.user→; _←},  // because the result gets output to the system user
-    {user←}          <= user.friendLabel,    // because the user can affect the output
-    provider <= {*user.friendLabel},          // because the provider can affect the output
+    System.user actsfor user.friends, // because the result gets output to the system user
+    provider <= {user.friends→},      // because the provider can affect the output
     MapImage.provider <= {user←}
   {
     if (user == null)
       throw new NullPointerException();
 
-    printMap(user, user.friendLabel);
+    printMap(user, new label {user.friends→; _←});
   }
 
 
@@ -132,9 +129,8 @@ public class FriendMap extends Delegator {
     NullPointerException {user}
   )
   where
-    service actsfor user.friendInfo, // because the service will learn about the users friends.
-    {service←}    <= lbl,            // because the service influences the map.
-    lbl <= {System.user→; _←},       // because data will be output to the system user
+    {service←}  <= lbl,                // because the service influences the map.
+    lbl         <= {System.user→; _←}, // because data will be output to the system user
     {user; lbl} <= lbl,
     provider <= {*lbl},               
     MapImage.provider <= {*lbl}
@@ -165,8 +161,7 @@ public class FriendMap extends Delegator {
     NullPointerException{user}
   )
   where
-    {service←} <= l,
-    service actsfor user.friendInfo
+    {service←} <= l
   {
     return null;
     /*

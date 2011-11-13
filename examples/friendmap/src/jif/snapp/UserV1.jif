@@ -19,8 +19,7 @@ public class UserV1 extends Delegator
   public Location    {*locationLabel} location;
 
   /** The user's friends,  only readable by members of the friendInfo group. non-null. */
-  public final label       {this←}        friendLabel = new label {this←;this→friendInfo};
-  public final Group[this] {*friendLabel} friends;
+  public final Group[this] {this←} friends;
 
   /** The social network that can act for this account. */
   public final Snapp {this←} network;
