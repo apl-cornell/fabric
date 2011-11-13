@@ -58,9 +58,9 @@ public interface ConjunctivePrincipal extends fabric.lang.security.Principal {
         
         native public java.lang.Integer set$hashCode(java.lang.Integer val);
         
-        _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
+        _Impl(fabric.worker.Store $location,
               fabric.util.Set conjuncts) {
-            super($location, $label, accessLabel);
+            super($location);
         }
         
         native public java.lang.String name();
@@ -131,10 +131,9 @@ public interface ConjunctivePrincipal extends fabric.lang.security.Principal {
             
             native public fabric.worker.Store get$localStore();
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

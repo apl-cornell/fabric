@@ -57,7 +57,6 @@ public abstract class ObjectDB {
 
   protected final String name;
   private Principal storePrincipal;
-  private Label publicReadonlyLabel;
   private long nextGlobID;
 
   /**
@@ -558,17 +557,17 @@ public abstract class ObjectDB {
 
         // Create the label {store->_; store<-_} for the root map.
         ReaderPolicy confid =
-            (ReaderPolicy) new ReaderPolicy._Impl(store, publicReadonlyLabel(),
-                publicReadonlyLabel(), storePrincipal(), null).$getProxy();
+            (ReaderPolicy) new ReaderPolicy._Impl(store, storePrincipal(), null)
+                .$initLabels();
         WriterPolicy integ =
-            (WriterPolicy) new WriterPolicy._Impl(store, publicReadonlyLabel(),
-                publicReadonlyLabel(), storePrincipal(), null).$getProxy();
+            (WriterPolicy) new WriterPolicy._Impl(store, storePrincipal(), null)
+                .$initLabels();
         Label label =
-            (Label) new PairLabel._Impl(store, null, null, confid, integ)
-                .$getProxy();
+            (Label) new PairLabel._Impl(store, confid, integ).$initLabels();
 
         fabric.util.HashMap._Impl map =
-            new fabric.util.HashMap._Impl(store, label, label);
+            (fabric.util.HashMap._Impl) new fabric.util.HashMap._Impl(store,
+                label, confid).$initLabels().fetch();
         map.$forceRenumber(ONumConstants.ROOT_MAP);
 
         return null;
@@ -586,16 +585,6 @@ public abstract class ObjectDB {
     }
 
     return storePrincipal;
-  }
-
-  private final Label publicReadonlyLabel() {
-    if (publicReadonlyLabel == null) {
-      Store store = Worker.getWorker().getStore(name);
-      publicReadonlyLabel =
-          new Label._Proxy(store, ONumConstants.PUBLIC_READONLY_LABEL);
-    }
-
-    return publicReadonlyLabel;
   }
 
 }

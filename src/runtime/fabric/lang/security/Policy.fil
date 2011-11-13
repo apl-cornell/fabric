@@ -18,10 +18,4 @@ public interface Policy {
    * @return
    */
   boolean relabelsTo(Policy p, Set s);
-  
-  /**
-   * Traverses the policy and clobbers all instances of ThisPrincipalPlaceholder
-   * with the given replacement.
-   */
-  void clobberThisPlaceholders(Principal replacement);
 }

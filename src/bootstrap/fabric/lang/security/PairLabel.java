@@ -93,10 +93,9 @@ public interface PairLabel
         native public fabric.lang.security.SecretKeyObject get$keyObject();
         
         public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
                      fabric.lang.security.ConfPolicy confPol,
                      fabric.lang.security.IntegPolicy integPol) {
-            super($location, $label, accessLabel);
+            super($location);
         }
         
         native public boolean relabelsTo(fabric.lang.security.Label l,
@@ -167,10 +166,9 @@ public interface PairLabel
           implements fabric.lang.security.PairLabel._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

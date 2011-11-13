@@ -5,6 +5,7 @@ import java.util.WeakHashMap;
 
 import fabric.common.exceptions.InternalError;
 import fabric.lang.arrays.ObjectArray;
+import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.Store;
 
@@ -52,10 +53,10 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * array should be instances of fabric.lang.Object from the Fabric type
    * system's point of view.
    */
-  public static ObjectArray $wrap(Store store, Label label, Label accessLabel,
-      java.lang.Object[] array) {
+  public static ObjectArray $wrap(Store store, Label label,
+      ConfPolicy accessPolicy, java.lang.Object[] array) {
     ObjectArray result =
-        new ObjectArray._Impl(store, label, accessLabel, Object._Proxy.class,
+        new ObjectArray._Impl(store, label, accessPolicy, Object._Proxy.class,
             array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, $wrap(array[i]));
@@ -73,17 +74,28 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   }
 
   @Override
-  public Label get$label() {
+  public Label get$$updateLabel() {
     throw new InternalError("WrappedJavaInlineables don't have labels.");
   }
 
   @Override
-  public Label get$accesslabel() {
-    throw new InternalError("WrappedJavaInlineables don't have access labels.");
+  public Label set$$updateLabel(Label val) {
+    throw new InternalError("WrappedJavaInlineables don't have labels.");
+  }
+
+  @Override
+  public ConfPolicy get$$accessPolicy() {
+    throw new InternalError("WrappedJavaInlineables don't have access policies.");
+  }
+
+  @Override
+  public ConfPolicy set$$accessPolicy(ConfPolicy val) {
+    throw new InternalError("WrappedJavaInlineables don't have access policies.");
   }
   
-  public Label set$label(Label label) {
-    throw new InternalError("WrappedJavaInlineables don't have labels.");
+  @Override
+  public Object $initLabels() {
+    return this;
   }
   
   @Override

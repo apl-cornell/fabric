@@ -24,10 +24,4 @@ public abstract class Principal {
 
   public abstract ActsForProof findProofDownto(final Store store,
       final Principal q, final java.lang.Object searchState);
-  
-  /**
-   * @return a placeholder for the "this" principal to be used in labels passed
-   *         into Principal constructors.
-   */
-  public static native Principal thisPrincipalPlaceholder();
 }

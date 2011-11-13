@@ -110,10 +110,9 @@ public interface WriterPolicy
         native public fabric.lang.security.Principal get$writer();
         
         public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
                      fabric.lang.security.Principal owner,
                      fabric.lang.security.Principal writer) {
-            super($location, $label, accessLabel);
+            super($location);
         }
         
         native public fabric.lang.security.Principal owner();
@@ -197,10 +196,9 @@ public interface WriterPolicy
           implements fabric.lang.security.WriterPolicy._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

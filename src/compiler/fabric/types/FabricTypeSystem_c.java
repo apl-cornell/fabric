@@ -743,10 +743,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         // or the highest integrity the worker can claim?
         fabric.lang.security.Label lbl = defaultPublishingLabel();
         fabric.util.HashMap classes =
-            new fabric.util.HashMap._Impl(dest, lbl, lbl);
+            (fabric.util.HashMap) new fabric.util.HashMap._Impl(dest, lbl,
+                lbl.confPolicy()).$initLabels();
         new_codebase =
-            (Codebase) new Codebase._Impl(dest, lbl, lbl, classes)
-                .$getProxy();
+            (Codebase) new Codebase._Impl(dest, lbl, lbl.confPolicy(), classes)
+                .$initLabels();
       }
       return new_codebase;
     } else if (extInfo.platformNamespace().equals(namespace)

@@ -11,7 +11,7 @@ import java.util.List;
 import fabric.common.Crypto;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
-import fabric.lang.security.PrincipalUtil.TopPrincipal;
+import fabric.lang.Object;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -105,14 +105,6 @@ public interface Principal extends fabric.lang.Object {
     public PrivateKeyObject getPrivateKeyObject() {
       return ((Principal) fetch()).getPrivateKeyObject();
     }
-    
-    /**
-     * @return a placeholder for the "this" principal to be used in labels
-     *         passed into Principal constructors.
-     */
-    public static Principal thisPrincipalPlaceholder() {
-      return Principal._Impl.thisPrincipalPlaceholder();
-    }
   }
 
   abstract public static class _Impl extends fabric.lang.Object._Impl implements
@@ -121,58 +113,40 @@ public interface Principal extends fabric.lang.Object {
     private PublicKey publicKey;
     private PrivateKeyObject privateKeyObject;
 
-    public _Impl(Store store, Label label, Label accessLabel) {
+    public _Impl(Store store) {
       // If the given label is null, temporarily create the object with an
       // overly restrictive label.  If access label is null, default to public.
-      super(store, label == null ? Worker.getWorker().getLocalStore()
-          .getPublicReadonlyLabel() : label, accessLabel == null ? Worker
-          .getWorker().getLocalStore().getPublicReadonlyLabel() : accessLabel);
-
-      Principal._Proxy thisProxy = (Principal._Proxy) this.$getProxy();
-      IntegPolicy integ =
-          LabelUtil._Impl.writerPolicy(store, thisProxy, thisProxy);
-
-      // Always ensure that the principal can modify its own object.
-      // Because of bootstrapping issues, we special case the top principal.
-      if (!(this instanceof TopPrincipal)) {
-        // {this <- this}
-        ConfPolicy bottomConf =
-            Worker.getWorker().getLocalStore().getBottomConfidPolicy();
-        Label thisIntegLabel =
-            LabelUtil._Impl.toLabel(store, bottomConf, integ);
-
-        if (label == null) {
-          // Replace the temporary label with {this <- this}.
-          this.$label = thisIntegLabel;
-        } else {
-          // Join the given label with {this <- this}.
-          this.$label =
-              LabelUtil._Impl.join(this.$label.$getStore(), this.$label,
-                  thisIntegLabel);
-          
-          // Traverse the label and clobber ThisPrincipalPlaceholders.
-//          this.$label.clobberThisPlaceholders((Principal) this.$getProxy());
-        }
-      }
-      
-      if (accessLabel != null) {
-        // Traverse the access label and clobber ThisPrincipalPlaceholders.
-//        this.$accessLabel.clobberThisPlaceholders((Principal) this.$getProxy());
-      }
+      super(store);
 
       // Generate a new key pair for this principal.
       KeyPair keyPair = Crypto.genKeyPair();
       this.publicKey = keyPair.getPublic();
 
-      // Create the label {this->this; this<-this} for the private key object.
-      ConfPolicy conf =
-          LabelUtil._Impl.readerPolicy(store, thisProxy, thisProxy);
-      Label privateLabel = LabelUtil._Impl.toLabel(store, conf, integ);
       this.privateKeyObject =
-          new PrivateKeyObject._Impl(store, privateLabel, privateLabel,
-              keyPair.getPrivate());
+          (PrivateKeyObject) new PrivateKeyObject._Impl(store, this,
+              keyPair.getPrivate()).$initLabels();
     }
     
+    @Override
+    public Object $initLabels() {
+      Store store = this.$getStore();
+      Principal._Proxy thisProxy = (Principal._Proxy) this.$getProxy();
+      
+      // Always ensure that the principal can modify its own object.
+      // {this <- this}
+      ConfPolicy bottomConf =
+          Worker.getWorker().getLocalStore().getBottomConfidPolicy();
+      IntegPolicy integ =
+          LabelUtil._Impl.writerPolicy(store, thisProxy, thisProxy);
+      Label thisIntegLabel =
+          LabelUtil._Impl.toLabel(store, bottomConf, integ);
+
+      this.set$$updateLabel(thisIntegLabel);
+      this.set$$accessPolicy(bottomConf);
+      
+      return thisProxy;
+    }
+
     @Override
     public Principal fabric$lang$security$Principal$() {
       return (Principal) this.$getProxy();
@@ -230,14 +204,6 @@ public interface Principal extends fabric.lang.Object {
       TransactionManager.getInstance().registerRead(this);
       return privateKeyObject;
     }
-    
-    /**
-     * @return a placeholder for the "this" principal to be used in labels
-     *         passed into Principal constructors.
-     */
-    public static Principal thisPrincipalPlaceholder() {
-      return ThisPrincipalPlaceholder._Proxy.getInstance();
-    }
   }
 
   interface _Static extends fabric.lang.Object, Cloneable {
@@ -266,9 +232,9 @@ public interface Principal extends fabric.lang.Object {
     class _Impl extends fabric.lang.Object._Impl implements
         fabric.lang.security.Principal._Static {
 
-      public _Impl(Store store, Label label, Label accessLabel)
+      public _Impl(Store store)
           throws UnreachableNodeException {
-        super(store, label, accessLabel);
+        super(store);
       }
 
       @Override

@@ -1,5 +1,8 @@
 package fabric.lang;
 
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.Label;
+
 public interface Codebase extends fabric.lang.Object {
     
     public fabric.util.Map get$classes();
@@ -74,17 +77,14 @@ public interface Codebase extends fabric.lang.Object {
         native public void addCodebaseName(java.lang.String name,
             fabric.lang.Codebase codebase);
 
-        public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label,
-                     fabric.lang.security.Label $accesslabel) {
-            super($location, $label, $accesslabel);
+        public _Impl(fabric.worker.Store $location, Label updateLabel,
+                     ConfPolicy accessPolicy) {
+            super($location);
         }
         
-        public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label,
-                     fabric.lang.security.Label $accesslabel,
-                     fabric.util.Map classes) {
-            super($location, $label, $accesslabel);
+        public _Impl(fabric.worker.Store $location, Label updateLabel,
+                     ConfPolicy accessPolicy, fabric.util.Map classes) {
+            super($location);
         }
         
         native public void insertClass(java.lang.String name,
@@ -131,11 +131,9 @@ public interface Codebase extends fabric.lang.Object {
           implements fabric.lang.Codebase._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label,
-                         fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();
