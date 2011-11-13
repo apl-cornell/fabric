@@ -34,20 +34,21 @@
   ****************************************************************************
   -->
 
-  <target name="build-jif-principals">
+  <target name="build-jif-sig">
+    <jifc     srcdir="${home}/src/jif-sig" includes="jif/principals/Worker.jif" />
+    <jifsigc  srcdir="${home}/src/jif-sig" excludes="jif/principals/Worker,jif" />
+  </target>
+
+  <target name="build-jif-java">
+    <jifjavac srcdir="${home}/src/jif-sig" />
+  </target>
+
+  <target name="build-jif-principals" depends="build-jif-sig">
     <jifc srcdir="${home}/src/jif" includes="jif/principals/*.jif">
       <!--<arg value="-trusted-providers"/>-->
     </jifc>
   </target>
     
-  <target name="build-jif-java">
-    <jifjavac srcdir="${home}/src/jif-sig" />
-  </target>
-
-  <target name="build-jif-sig" depends="build-jif-principals">
-    <jifsigc srcdir="${home}/src/jif-sig" />
-  </target>
-
   <target name="build-jif-util" depends="build-jif-sig">
     <jifc srcdir="${home}/src/jif" includes="util/*.jif">
       <!--<arg value="-trusted-providers"/> -->
@@ -55,7 +56,7 @@
   </target>
 
   <target name="build-jif-snapp" depends="build-jif-util">
-    <jifc srcdir="${home}/src/jif" includes="snapp/*.jif">
+    <jifc srcdir="${home}/src/jif" includes="snapp/*.jif" excludes="snapp/UserV2.jif">
       <arg value="-untrusted-providers"/>
     </jifc>
   </target>

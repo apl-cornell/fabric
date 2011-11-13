@@ -82,6 +82,19 @@ where
     } else throw new AssertionFailedError("Delegation relationships hold");
     } else throw new AssertionFailedError("Delegation relationships hold");
   }
+
+  public static
+  void
+  main {System.user←} (String[] args)
+  where
+    System.user actsfor SnappNode,
+    System.user actsfor MapServNode,
+    System.user actsfor FriendMapNode,
+    System.user actsfor AliceNode,
+    System.user actsfor BobNode
+  {
+    new Main2();
+  }
 }
 
 
