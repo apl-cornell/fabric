@@ -1,0 +1,10 @@
+public class ImageApp [principal p, principal q] { 
+
+    // p is the principal providing the camera 
+    // q is the principal providing the app
+
+    public Camera [p] camera;
+    public Image[p] genThumbnail(Image[p] img) {
+	return img;
+    }
+}
