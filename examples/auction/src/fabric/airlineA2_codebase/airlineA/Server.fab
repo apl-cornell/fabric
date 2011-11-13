@@ -2,10 +2,6 @@ package airlineA;
 codebase cb;
 import cb.auction.Config;
 public class Server[principal Airline] implements cb.broker.Server[Airline] 
-	where  {*provider} <= {Airline<-},  
-		{*provider} equiv {*Agent.provider}, 
-		{*cb.broker.Agent.provider} <= {*provider}, 
-		{*cb.broker.Agent.provider} equiv {*cb.broker.Server.provider}
 {
     int {Airline->;Airline<-} cost;
     int {Airline->;Airline<-} seats; 

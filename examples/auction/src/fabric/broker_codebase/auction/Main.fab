@@ -8,13 +8,8 @@ import broker.User;
 import broker.UserAgent;
 
 class Main  {
-    public static final void main{* <- }  (principal{*provider} p, String[] args)  throws SecurityException, IllegalArgumentException  
-		where caller(p), provider actsfor p, {*provider} <= {p<-}, 
-			{*provider} equiv {*AirlineExample.provider},
-			{*provider} equiv {*Server.provider}, 
-			{*provider} equiv {*Agent.provider}, 
-			{*provider} equiv {*User.provider},
-			{*provider} equiv {*UserAgent.provider}
+    public static final void main{* <- }  (principal{*<-} p, String[] args)  throws SecurityException, IllegalArgumentException  
+		where caller(p)
     {
 		PrintStream[{}] out = null;
           try {
@@ -25,39 +20,67 @@ class Main  {
               // just let out be null.
           }
 
-      PrintStream[{}] out1 = endorse(out, {*provider; p->; _<-_} to {{p->p; p<-* ; *->*;*<-*} meet {p->p; p<-*; *provider}});
+      PrintStream[{}] out1 = endorse(out, {p->; _<-_} to {{p->p; p<-* ; *->*;*<-*} meet {p->p; p<-*}});
       PrintStream[{}] out2 = declassify(out1,  {});
 
 	  final Store a_store = worker$.getStore(Config.airlineAStoreName);   
 	  final RemoteWorker a_worker = worker$.getWorker(Config.airlineAWorkerName);   
-	  final principal airlineA = a_worker.getPrincipal();
+	  principal airlineA_;
+	  try {
+	  airlineA_ = a_worker.getPrincipal();
+	  } catch (NullPointerException e) {throw new Error();}
+	  final principal airlineA = airlineA_;
 
 	  final Store b_store = worker$.getStore(Config.airlineBStoreName);   
 	  final RemoteWorker b_worker = worker$.getWorker(Config.airlineBWorkerName);   
-	  final principal airlineB = b_worker.getPrincipal();
+	  principal airlineB_;
+	  try {
+	  airlineB_ = b_worker.getPrincipal();
+	  } catch (NullPointerException e) {throw new Error();}
+	  final principal airlineB = airlineB_;
 
 	  final Store user_store = worker$.getStore(Config.userStoreName);   
 	  final RemoteWorker user_worker = worker$.getWorker(Config.userWorkerName);   
-	  final principal user = user_worker.getPrincipal();
+	  principal user_;
+	  try {
+	  user_ = user_worker.getPrincipal();
+	  } catch (NullPointerException e) {throw new Error();}
+	  final principal user = user_;
 
-	  final Server[airlineA] a_serv =(Server[airlineA])a_store.getRoot().get(Config.airlineAServerName);
+	  Server[airlineA] a_serv_;
+	  try {
+	  a_serv_ =(Server[airlineA])a_store.getRoot().get(Config.airlineAServerName);
+	  } catch (RuntimeException e) {throw new Error();}
+	  final Server[airlineA] a_serv = a_serv_;
 	  if (a_serv == null)
 		throw new Error("Could not find fab://" + a_store.name() + "/" + Config.airlineAServerName);
 
-	  final Server[airlineB] b_serv = (Server[airlineB])b_store.getRoot().get(Config.airlineBServerName);
+	  Server[airlineB] b_serv_;
+	  try {
+	  b_serv_ = (Server[airlineB])b_store.getRoot().get(Config.airlineBServerName);
+	  } catch (RuntimeException e) {throw new Error();}
+	  final Server[airlineB] b_serv = b_serv_;
 	  if (b_serv == null)
 		throw new Error("Could not find fab://" + b_store.name() + "/" + Config.airlineBServerName);
 
-	  final User[user] user_serv = (User[user])user_store.getRoot().get(Config.userServerName);
+	  User[user] user_serv_;
+	  try {
+	  user_serv_ = (User[user])user_store.getRoot().get(Config.userServerName);
+	  } catch (RuntimeException e) {throw new Error();}
+	  final User[user] user_serv = user_serv_;
 	  if (user_serv == null)
 		throw new Error("Could not find fab://" + user_store.name() + "/" + Config.userServerName);
 
 	  final Store broker_store = worker$.getStore(Config.brokerStoreName); 
 	  final RemoteWorker broker_worker = worker$.getWorker(Config.brokerWorkerName); 
-	  final principal broker = broker_worker.getPrincipal();
+	  principal broker_;
+	  try {
+	  broker_ = broker_worker.getPrincipal();
+	  } catch (RuntimeException e) { throw new Error(); }
+	  final principal broker = broker_;
 
       if (broker actsfor airlineA && broker actsfor airlineB && broker actsfor user
-	    	&& p equiv broker && provider actsfor broker && broker equiv broker_store) 
+	    	&& p equiv broker && broker equiv broker_store) 
 	  	new AirlineExample[airlineA, airlineB, user, broker](a_serv,b_serv,user_serv).go(out2);
     }
 }

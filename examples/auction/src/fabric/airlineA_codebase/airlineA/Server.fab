@@ -1,10 +1,6 @@
 package airlineA;
 import auction.Config;
 public class Server[principal Airline] implements broker.Server[Airline] 
-	where  {*provider} <= {Airline<-},  
-		{*provider} equiv {*Agent.provider}, 
-		{*broker.Agent.provider} <= {*provider}, 
-		{*broker.Agent.provider} equiv {*broker.Server.provider}
 {
     int {Airline->;Airline<-} cost;
     int {Airline->;Airline<-} seats; 

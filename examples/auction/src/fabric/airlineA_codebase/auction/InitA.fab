@@ -1,17 +1,12 @@
 package auction;
 import fabric.util.Map;
 import fabric.runtime.Runtime;
-public class InitA where {*provider} equiv {*airlineA.Server.provider},
-                        {*airlineA.Server.provider} equiv {*airlineA.Agent.provider}, 
-                        {*broker.Server.provider} equiv {*broker.Agent.provider},
-                        {*broker.Server.provider} <= {*airlineA.Server.provider}
+public class InitA
 {
-  public static final void main{* <- }  (principal{*provider} p, String[] args):{p<-;p->}
+  public static final void main{* <- }  (principal{*<-} p, String[] args):{p<-;p->}
     throws SecurityException,
            IllegalArgumentException  
-    where caller(p),
-          provider actsfor p,
-          {*provider} <= {p<-}
+    where caller(p)
   {
     // already in transaction due to method constraints
 
@@ -19,12 +14,15 @@ public class InitA where {*provider} equiv {*airlineA.Server.provider},
     final principal w = worker$.getPrincipal();
     if (store actsfor p) {
       if (store actsfor w) {
-        if (airlineA.Server.provider <= new label {store<-}) {
-          Map root = store.getRoot();
+          Map root;
+          try {
+          root = store.getRoot();
+          } catch (RuntimeException e) { throw new Error(); }
+          try {
           root.put(Config.airlineAServerName, new airlineA.Server[w]@store(13500, 100));
-        } else { throw new Error("provider label !<= {store<-}"); }
-      } else   { throw new Error(store.name() + " doesn't act for " + worker$.getName()); }
-    } else     { throw new Error(store.name() + " does not act for caller"); }
+          } catch (RuntimeException e) { throw new Error(); }
+      } else   { throw new Error(); }
+    } else     { throw new Error(); }
   }
 }
 

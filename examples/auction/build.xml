@@ -2,7 +2,7 @@
   This is the Apache Ant build file for the Auction exampl
 -->
 
-<project name="auction" default="publish-all" basedir=".">
+<project name="auction" default="build-local" basedir=".">
 
   <!--
   ****************************************************************************
@@ -291,6 +291,7 @@
            vmlauncher="false">
       <arg value="${fabric.home}/bin/fabc"/>
       <arg value="-g"/>
+      <arg value="-e"/>
       <arg value="-d"/> <arg value="${home}/classes"/>
       <srcfile />
       <fileset dir="${broker.fab.src}" includes="**/*.fab"/>
@@ -318,7 +319,7 @@
     </apply>
   </target>
 
-  <target name="build-local" description="">
+  <target name="build-local" description="" depends="fabil-init">
     <apply executable="bash"
            parallel="true"
            failonerror="true"
@@ -331,7 +332,6 @@
       <arg value="-report" /> <arg value="profile=1" />
       <arg value="-g"/>
       <arg value="-debugpositions"/>
-      <arg value="-trusted-providers"/>
       <arg value="-e"/>
       <!--
       <arg value="-rdebug"/>
