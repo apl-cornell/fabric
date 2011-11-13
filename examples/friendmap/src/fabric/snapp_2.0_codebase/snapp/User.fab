@@ -5,7 +5,10 @@ import util.Group;
 /**
  * Version 2 of the User class.  Adds moods.
  */
-public class UserV2 extends UserV1 {
+public class UserV2 extends UserV1 
+  where provider <= UserV1.provider, UserV1.provider <= provider,
+  provider <= Snapp.provider, Snapp.provider <= provider
+{
   public Mood [{this←;this→moodInfo}] {this←;this→moodInfo} mood;
 
   public final Group [this] {this←} moodInfo;
@@ -15,8 +18,7 @@ public class UserV2 extends UserV1 {
     String    {this}   name,
     principal {owner←} owner,
     Snapp     {owner←} network
-  )
-  throws NullPointerException {
+  ) throws NullPointerException where provider <= {this} {
     this.moodInfo = new Group[this] (name + "'s mood readers");
     this.mood     = new Mood("indecisive");
     super(name, owner, network);

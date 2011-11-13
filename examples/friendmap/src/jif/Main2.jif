@@ -7,7 +7,7 @@ import util.*;
 import util.System;
 
 public class Main2
-authority(System.user)
+authority(System.user) where provider <= {System.user←}
 {
   final Snapp     {System.user←} snapp;
   final MapServer {System.user←} mapServ;
@@ -36,6 +36,17 @@ authority(System.user)
     this.alice     = endorse(snapp.createUser("Alice", AliceNode),               {AliceNode←;snapp←} to {System.user←});
     this.bob       = endorse(snapp.createUser("Bob",   BobNode),                 {BobNode←;snapp←}   to {System.user←});
 
+    init();
+  }
+  private void init{System.user←}() 
+  where
+    System.user actsfor SnappNode,
+    System.user actsfor MapServNode,
+    System.user actsfor FriendMapNode,
+    System.user actsfor AliceNode,
+    System.user actsfor BobNode,
+    authority(System.user)
+  {
     // add delegations
     alice.friends.add(bob);
   }

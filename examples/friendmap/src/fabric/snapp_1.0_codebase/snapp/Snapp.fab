@@ -5,32 +5,30 @@ import util.Delegator;
 /**
  * An instance of Snapp corresponds to an instance of the Snapp social network.
  */
-public class Snapp extends Delegator {
+public class Snapp extends Delegator 
+  where provider <= UserV1.provider, UserV1.provider <= provider
+{
 
   /**
    * Create a new Snapp, operated by owner.
-   *
-   * @throws NullPointerException
-   *    if owner is null.
    */
   public
   Snapp {this}
   (
     String   {this} name,
     principal{owner←} owner
-  )
-  throws NullPointerException
+  ) where provider <= {this}
   {
     super(name, owner);
   }
 
   public
-  UserV1 {owner←}
+  UserV1 {owner←; this←}
   createUser {owner←}
   (
     String    {this} name,
     principal {owner←} owner
-  )
+  ) where provider <= {owner← meet this←}
   {
     return new UserV1(name, owner, this);
   }

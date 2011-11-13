@@ -61,7 +61,6 @@ public class UserV1 extends Delegator
   public void setLocation {*locationLabel} (Location{*locationLabel} loc) where provider <= {*locationLabel} {
     this.location = loc;
   }
-
 }
 
 /*

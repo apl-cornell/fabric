@@ -11,13 +11,14 @@ import util.Delegator;
  * The V1 stands for version 1.  In Fabric, V1 and V2 will both be named User,
  * but will reside in different codebases.
  */
-public class UserV1 extends Delegator implements JifObject[{}] {
-
-  /** The user's location, only readable by members of the locationInfo group */
+public class UserV1 extends Delegator 
+  where provider <= Snapp.provider, Snapp.provider <= provider
+{
+  /** The user's location, only readable by members of the locationInfo group.  non-null */
   public final label {this←}          locationLabel = new label {this←;this→locationInfo};
   public Location    {*locationLabel} location;
 
-  /** The user's friends,  only readable by members of the friendInfo   group */
+  /** The user's friends,  only readable by members of the friendInfo group. non-null. */
   public final label       {this←}        friendLabel = new label {this←;this→friendInfo};
   public final Group[this] {*friendLabel} friends;
 
@@ -40,7 +41,7 @@ public class UserV1 extends Delegator implements JifObject[{}] {
     Snapp     {owner←} network
   )
   throws NullPointerException
-  where authority(this)
+  where authority(this), provider <= {this}
   {
     // these endorsements are safe, because owner ≽ this,
     // and thus {owner←} ⊑ {this←}
@@ -57,31 +58,8 @@ public class UserV1 extends Delegator implements JifObject[{}] {
     super(name, owner);
   }
 
-  public void setLocation {*locationLabel} (Location{*locationLabel} loc) {
+  public void setLocation {*locationLabel} (Location{*locationLabel} loc) where provider <= {*locationLabel} {
     this.location = loc;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // JifObject method implementations                                         //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public boolean equals(IDComparable[{}] other) {
-    // TODO
-    return false;
-  }
-
-  public boolean equals(label lbl, IDComparable[lbl] other) {
-    // TODO
-    return false;
-  }
-
-  public int hashCode() {
-    // TODO
-    return 0;
-  }
-
-  public String toString() {
-    return name();
   }
 }
 
