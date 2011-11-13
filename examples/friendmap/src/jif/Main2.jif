@@ -7,7 +7,14 @@ import util.*;
 import util.System;
 
 public class Main2
-authority(System.user) where provider <= {System.user←}
+authority(System.user)
+where
+  {System.user←} <= provider,                   provider                   <= {System.user←},
+  {SnappNode←}   <= snapp.Snapp.provider,       snapp.Snapp.provider       <= {SnappNode←},
+  {SnappNode←}   <= snapp.UserV1.provider,      snapp.UserV1.provider      <= {SnappNode←},
+  {MapServNode←} <= mapserv.MapServer.provider, mapserv.MapServer.provider <= {MapServNode←},
+  {MapServNode←} <= mapserv.MapImage.provider,  mapserv.MapImage.provider  <= {MapServNode←},
+  {SnappNode←}   <= snapp.UserV1.provider, snapp.UserV1.provider <= {SnappNode←}
 {
   final Snapp     {System.user←} snapp;
   final MapServer {System.user←} mapServ;
@@ -28,16 +35,31 @@ authority(System.user) where provider <= {System.user←}
     authority(System.user)
   {
     // create service objects
-    this.snapp     = endorse(new     Snapp("snapp",     SnappNode),              {SnappNode←}        to {System.user←});
-    this.mapServ   = endorse(new MapServer("mapserv",   MapServNode, ' '),       {MapServNode←}      to {System.user←});
-    this.friendMap = endorse(new FriendMap("friendmap", mapServ, FriendMapNode), {FriendMapNode←}    to {System.user←});
+    this.snapp      = endorse(new     Snapp("snapp",     SnappNode),              {SnappNode←}        to {System.user←});
+    if (SnappNode     actsfor snapp) {
+
+    this.mapServ    = endorse(new MapServer("mapserv",   MapServNode, ' '),       {MapServNode←}      to {System.user←});
+    if (MapServNode   actsfor mapServ) {
+
+    this.friendMap  = endorse(new FriendMap("friendmap", mapServ, FriendMapNode), {FriendMapNode←}    to {System.user←});
+    if (FriendMapNode actsfor friendMap) {
 
     // create users
-    this.alice     = endorse(snapp.createUser("Alice", AliceNode),               {AliceNode←;snapp←} to {System.user←});
-    this.bob       = endorse(snapp.createUser("Bob",   BobNode),                 {BobNode←;snapp←}   to {System.user←});
+    this.alice      = endorse(snapp.createUser("Alice", AliceNode),               {AliceNode←;snapp←} to {System.user←});
+    if (AliceNode     actsfor alice) {
 
-    init();
+    this.bob        = endorse(snapp.createUser("Bob",   BobNode),                 {BobNode←;snapp←}   to {System.user←});
+    if (BobNode       actsfor bob) {
+
+
+    //init();
+    } else throw new AssertionFailedError("Delegation relationships hold");
+    } else throw new AssertionFailedError("Delegation relationships hold");
+    } else throw new AssertionFailedError("Delegation relationships hold");
+    } else throw new AssertionFailedError("Delegation relationships hold");
+    } else throw new AssertionFailedError("Delegation relationships hold");
   }
+
   private void init{System.user←}() 
   where
     System.user actsfor SnappNode,
@@ -48,7 +70,7 @@ authority(System.user) where provider <= {System.user←}
     authority(System.user)
   {
     // add delegations
-    alice.friends.add(bob);
+    // alice.friends.add(bob);
   }
 }
 

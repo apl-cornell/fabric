@@ -17,7 +17,9 @@ public class Snapp extends Delegator
   (
     String   {this} name,
     principal{owner←} owner
-  ) where provider <= {this}
+  )
+  where
+    provider <= {this}
   {
     super(name, owner);
   }
@@ -28,7 +30,9 @@ public class Snapp extends Delegator
   (
     String    {this} name,
     principal {owner←} owner
-  ) where provider <= {owner← meet this←}
+  )
+  where
+    provider <= {owner←;this←}
   {
     return new UserV1(name, owner, this);
   }

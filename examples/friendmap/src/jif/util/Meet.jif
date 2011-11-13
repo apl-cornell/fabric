@@ -1,0 +1,84 @@
+package util;
+
+public class Meet implements Principal {
+
+  protected final String {this} name;
+
+  protected final Principal{this←} left;
+  protected final Principal{this←} right;
+
+  public
+  Meet
+  (
+    Principal {left←; right←} left,
+    Principal {left←; right←} right
+  )
+  where
+    authority(this),
+    {left←; right←} <= {this}
+  {
+    this.left  = endorse(left,  {left←; right←} to {this←});
+    this.right = endorse(right, {left←; right←} to {this←});
+
+    final String leftName  = (left  == null ? "_" : left.name());
+    final String rightName = (right == null ? "_" : right.name());
+
+    this.name = "(" + leftName + " meet " + rightName + ")";
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public String{this} name() {
+    return this.name;
+  }
+
+  public boolean{this;p;this←} delegatesTo(principal p) {
+    return p == left || p == right;
+  }
+
+  public boolean equals(Principal p) {
+    // TODO
+    return false;
+  }
+
+  public
+  boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+  isAuthorized {this←}
+              (Object           authPrf,
+               Closure[this,lb] closure,
+               label            lb,
+               boolean          executeNow)
+  where authority(this),
+        {authPrf;closure;lb;executeNow} <= lb
+  {
+    // TODO
+    return false;
+  }
+
+  public
+  ActsForProof{this; p; this←; p←}
+  findProofUpto {this←}
+               (Principal p,
+                Object searchState)
+  {
+    // TODO
+    return null;
+  }
+
+  public
+  ActsForProof{this; p; p←; this←}
+  findProofDownto {this←}
+                 (Principal p,
+                  Object searchState)
+  {
+    // TODO
+    return null;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
