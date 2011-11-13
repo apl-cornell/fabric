@@ -5,9 +5,9 @@ public class _intArray {
 
   public native int get(int i);
 
-  public _intArray(int length) {
+  public _intArray(Label updateLabel, ConfPolicy accessPolicy, int length) {
   }
 
-  public _intArray(int native[] value) {
+  public _intArray(Label updateLabel, ConfPolicy accessPolicy, int native[] value) {
   }
 }

@@ -5,9 +5,9 @@ public class _ObjectArray {
 
   public native Object get(int i);
 
-  public _ObjectArray(Class proxyType, int length) {
+  public _ObjectArray(Label updateLabel, ConfPolicy accessPolicy, Class proxyType, int length) {
   }
 
-  public _ObjectArray(Class proxyType, Object native[] value) {
+  public _ObjectArray(Label updateLabel, ConfPolicy accessPolicy, Class proxyType, Object native[] value) {
   }
 }

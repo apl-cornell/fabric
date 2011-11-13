@@ -268,7 +268,7 @@ public interface Object {
     }
     
     @Override
-    public final Object $initLabels() {
+    public Object $initLabels() {
       return fetch().$initLabels();
     }
 
