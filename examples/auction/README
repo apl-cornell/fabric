@@ -1,0 +1,55 @@
+This is the auction example program.  It is intended to model a complex auction
+in which sellers submit confidential sales strategies, and a buyer submits a
+confidential purchasing strategy.  Each seller may make an offer based on the
+buyer, and the buyer may then choose among these options.  At the end of the
+auction, the identity of the winner is revealed to all participants.
+
+First, compile the initialization code that will set up the principal hierarchy.
+
+	$ ant fabil-init
+
+You can expect messages warning that certain exceptions will be treated as
+fatal errors during this and subsequent steps.
+TODO: remove and/or fix spurious error messages.
+
+Next, start the stores and workers, each in a separate terminal window
+(if you have gnome-terminal, bin/run-all will do this for you).
+TODO: make run-all more portable
+
+	term1$ bin/start-store --name brokerStore
+	term2$ bin/start-store --name airlineAStore
+	term3$ bin/start-store --name airlineBStore
+	term4$ bin/start-store --name userStore
+	
+It is reasonable to expect Pastry-related exception messages during these steps.
+TODO: remove and/or fix spurious error messages.
+
+Now run the initialization program for each store.
+	
+	brokerStore> run auction.InitBrokerStore
+	airlineAStore> run auction.InitAStore
+	airlineBStore> run auction.InitBStore
+	userStore> run auction.InitUserStore
+
+Next, publish each entity's mobile code...
+
+	$ ant publish-all
+
+It is reasonable to get BindException messages during this process.
+
+And create a Server object on each airline store, and a User object on the
+user's store. 
+
+	$ ant init-remote
+
+Now we are ready to run the example.  Examine the broker worker's generated 
+codebase file.
+	$ cat codebases/brokerStore.codebase
+	fab://brokerStore/34
+
+Run the mobile code example by specifying auction.Main in the generated
+codebase.
+
+	brokerStore> run fab://brokerStore/34/auction.Main 
+
+TODO: reduce the steps, if possible.
