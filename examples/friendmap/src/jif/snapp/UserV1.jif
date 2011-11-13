@@ -1,7 +1,7 @@
 package snapp;
 
 import util.Group;
-import util.Delegator;
+import util.Meet;
 
 /**
  * A User object contains all of the data associated with a given user account
@@ -11,9 +11,12 @@ import util.Delegator;
  * The V1 stands for version 1.  In Fabric, V1 and V2 will both be named User,
  * but will reside in different codebases.
  */
-public class UserV1 extends Delegator 
+public class UserV1 extends Meet 
   where provider <= Snapp.provider, Snapp.provider <= provider
 {
+  /** The name of this principal */
+  public final String{this} name;
+
   /** The user's location, only readable by members of the locationInfo group.  non-null */
   public final label {this←}          locationLabel = new label {this←;this→locationInfo};
   public Location    {*locationLabel} location;
@@ -35,31 +38,37 @@ public class UserV1 extends Delegator
   /** Create a new user with the given name */
   UserV1 {this}
   (
-    String    {this} name,
-    principal {owner←} owner,
-    Snapp     {owner←} network
+    String    {this}            name,
+    principal {owner←;network←} owner,
+    Snapp     {owner←;network←} network
   )
   throws NullPointerException
-  where authority(this), provider <= {this}
+  where
+    authority(this),
+    provider           <= {this},
+    {owner←; network←} <= {this}
   {
     // these endorsements are safe, because owner ≽ this,
-    // and thus {owner←} ⊑ {this←}
+    // and thus {owner←;network←} ⊑ {this←}
     // this just isn't true until after the superclass constructor is called.
 
-    this.network = endorse(network, {owner←} to {this←});
+    this.network = endorse(network, {owner←;network←} to {network←});
 
     this.friendInfo   = new Group[this](name + "'s friend readers");
     this.locationInfo = new Group[this](name + "'s location readers");
     this.friends      = new Group[this](name + "'s friends");
 
     this.location = null;
+    this.name     = name;
 
-    super(name, owner);
+    super(owner, network);
   }
 
   public void setLocation {*locationLabel} (Location{*locationLabel} loc) where provider <= {*locationLabel} {
     this.location = loc;
   }
+
+  public String{this} name() { return this.name; }
 }
 
 /*
