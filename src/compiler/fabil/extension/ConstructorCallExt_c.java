@@ -22,18 +22,13 @@ public class ConstructorCallExt_c extends FabILExt_c {
 
     // Ensure that we're translating a Fabric type.
     Type containerType = call.constructorInstance().container();
-//    if (!"java.lang.Object".equals(containerType.toString())
-//        && !pr.typeSystem().isFabricClass(containerType))
+
     if (!pr.typeSystem().isFabricClass(containerType))
       return super.rewriteProxies(pr);
 
     List<Expr> args = new LinkedList<Expr>(call.arguments());
     args.add(0, nf.AmbExpr(Position.compilerGenerated(), nf.Id(Position
         .compilerGenerated(), "$location")));
-    args.add(1, nf.AmbExpr(Position.compilerGenerated(), nf.Id(Position
-        .compilerGenerated(), "$label")));
-    args.add(2, nf.AmbExpr(Position.compilerGenerated(), nf.Id(Position
-        .compilerGenerated(), "$accesslabel")));
     
     return call.arguments(args);
   }

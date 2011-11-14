@@ -453,11 +453,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the impl constructor declarations and add them to the list of
     // static impl members.
     ClassMember implConstructorDecl =
-        qq.parseMember("public _Impl(fabric.worker.Store store, "
-            + "fabric.lang.security.Label label, "
-            + "fabric.lang.security.Label accessLabel) "
+        qq.parseMember("public _Impl(fabric.worker.Store store) "
             + "throws fabric.net.UnreachableNodeException {"
-            + "super(store, label, accessLabel); }");
+            + "super(store); }");
     implMembers.add(implConstructorDecl);
 
     // Create the $makeProxy method declaration and add it to the list of static
