@@ -225,6 +225,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class EmptySet
 
@@ -412,6 +414,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class EmptyList
 
@@ -557,6 +561,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class EmptyMap
 
@@ -758,6 +764,8 @@ public class Collections
 //	// access policy: {_ ->}
 //	this.$updateLabel = LabelUtil.noComponents();
 //	this.$accessPolicy = LabelUtil.bottomConf();
+//
+//  return this;
 //      }
 //    }.$initLabels();
 //  }
@@ -1080,7 +1088,7 @@ public class Collections
      */
     public String toString()
     {
-      StringBuffer r = (StringBuffer) new StringBuffer("{").$initLabels();
+      StringBuffer r = new StringBuffer("{");
       for (int i = n - 1; --i > 0; )
         r.append(element).append(", ");
       r.append(element).append("}");
@@ -1093,6 +1101,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class CopiesList
 
@@ -1209,6 +1219,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }
 
@@ -1494,6 +1506,8 @@ public class Collections
 	  // access policy: {_ ->}
 	  this.$updateLabel = LabelUtil.noComponents();
 	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
 	}
       }.$initLabels();
     }
@@ -1565,6 +1579,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class SingletonSet
 
@@ -1749,6 +1765,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class SingletonList
 
@@ -1839,6 +1857,8 @@ public class Collections
 	    // access policy: {_ ->}
 	    this.$updateLabel = LabelUtil.noComponents();
 	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
 	  }
         }.$initLabels());
       return entries;
@@ -1945,6 +1965,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class SingletonMap
 
@@ -3335,6 +3357,8 @@ public class Collections
 //			// access policy: {_ ->}
 //			this.$updateLabel = LabelUtil.noComponents();
 //			this.$accessPolicy = LabelUtil.bottomConf();
+//
+//  return this;
 //		      }
 //                    }.$initLabels();
 //                  }
@@ -3346,6 +3370,8 @@ public class Collections
 //		// access policy: {_ ->}
 //		this.$updateLabel = LabelUtil.noComponents();
 //		this.$accessPolicy = LabelUtil.bottomConf();
+//
+//  return this;
 //	      }
 //            }.$initLabels();
 //          }
@@ -4337,6 +4363,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableCollection
 
@@ -4404,6 +4432,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableIterator
 
@@ -4656,6 +4686,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableList
 
@@ -4690,6 +4722,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableRandomAccessList
 
@@ -4799,6 +4833,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableListIterator
 
@@ -5028,6 +5064,8 @@ public class Collections
 	  // access policy: {_ ->}
 	  this.$updateLabel = LabelUtil.noComponents();
 	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
 	}
       }
 
@@ -5069,6 +5107,8 @@ public class Collections
 	    // access policy: {_ ->}
 	    this.$updateLabel = LabelUtil.noComponents();
 	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
 	  }
 	}.$initLabels();
       }
@@ -5082,8 +5122,8 @@ public class Collections
 
         if (mapEntryResult != null)
           {
-            result = (UnmodifiableMapEntry) new UnmodifiableMapEntry[mapEntryResult.length];
-            for (int i = 0; i < mapEntryResult.length; i++).$initLabels()
+            result = new UnmodifiableMapEntry[mapEntryResult.length];
+            for (int i = 0; i < mapEntryResult.length; i++)
               {
                 Map.Entry r = (Map.Entry) mapEntryResult[i];
                 result[i] = (UnmodifiableMapEntry) new UnmodifiableMapEntry(r).$initLabels();
@@ -5115,6 +5155,8 @@ public class Collections
 	// access policy: {_ ->}
 	this.$updateLabel = LabelUtil.noComponents();
 	this.$accessPolicy = LabelUtil.bottomConf();
+
+	return this;
       }
     } // class UnmodifiableEntrySet
 
@@ -5276,6 +5318,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableMap
 
@@ -5353,6 +5397,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableSet
 
@@ -5534,6 +5580,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableSortedMap
 
@@ -5717,6 +5765,8 @@ public class Collections
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableSortedSet
 
@@ -5726,5 +5776,7 @@ public class Collections
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 } // class Collections

@@ -95,6 +95,8 @@ public class WeakHashMap extends AbstractMap implements Map
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }.$initLabels();
 
@@ -309,6 +311,8 @@ public class WeakHashMap extends AbstractMap implements Map
 	  // access policy: {_ ->}
 	  this.$updateLabel = LabelUtil.noComponents();
 	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
 	}
       }.$initLabels();
     }
@@ -319,6 +323,8 @@ public class WeakHashMap extends AbstractMap implements Map
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }
 
@@ -488,6 +494,8 @@ public class WeakHashMap extends AbstractMap implements Map
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }
 
@@ -875,5 +883,7 @@ public class WeakHashMap extends AbstractMap implements Map
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 } // class WeakHashMap

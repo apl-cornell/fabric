@@ -291,6 +291,8 @@ public class IdentityHashMap extends AbstractMap
 	  // access policy: {_ ->}
 	  this.$updateLabel = LabelUtil.noComponents();
 	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
 	}
       }.$initLabels();
     return entries;
@@ -443,6 +445,8 @@ public class IdentityHashMap extends AbstractMap
 	  // access policy: {_ ->}
 	  this.$updateLabel = LabelUtil.noComponents();
 	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
 	}
       }.$initLabels();
     return keys;
@@ -656,6 +660,8 @@ public class IdentityHashMap extends AbstractMap
 	  // access policy: {_ ->}
 	  this.$updateLabel = LabelUtil.noComponents();
 	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
 	}
       }.$initLabels();
     return values;
@@ -806,6 +812,8 @@ public class IdentityHashMap extends AbstractMap
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class IdentityIterator
 
@@ -940,6 +948,8 @@ public class IdentityHashMap extends AbstractMap
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class IdentityEntry
 
@@ -996,5 +1006,7 @@ public class IdentityHashMap extends AbstractMap
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

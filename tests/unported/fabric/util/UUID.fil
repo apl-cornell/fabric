@@ -349,5 +349,7 @@ public final class UUID
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

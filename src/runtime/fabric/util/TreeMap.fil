@@ -136,6 +136,8 @@ public class TreeMap extends AbstractMap
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }
 
@@ -340,6 +342,8 @@ public class TreeMap extends AbstractMap
 	  // access policy: {_ ->}
 	  this.$updateLabel = LabelUtil.noComponents();
 	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
 	}
       }.$initLabels();
     return entries;
@@ -449,6 +453,8 @@ public class TreeMap extends AbstractMap
 	  // access policy: {_ ->}
 	  this.$updateLabel = LabelUtil.noComponents();
 	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
 	}
       }.$initLabels();
     return keys;
@@ -666,6 +672,8 @@ public class TreeMap extends AbstractMap
 	  // access policy: {_ ->}
 	  this.$updateLabel = LabelUtil.noComponents();
 	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
 	}
       }.$initLabels();
     return values;
@@ -1388,6 +1396,8 @@ public class TreeMap extends AbstractMap
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class TreeIterator
 
@@ -1543,6 +1553,8 @@ public class TreeMap extends AbstractMap
 	    // access policy: {_ ->}
 	    this.$updateLabel = LabelUtil.noComponents();
 	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
 	  }
         }.$initLabels();
       return entries;
@@ -1620,6 +1632,8 @@ public class TreeMap extends AbstractMap
 	    // access policy: {_ ->}
 	    this.$updateLabel = LabelUtil.noComponents();
 	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
 	  }
         }.$initLabels();
       return this.keys;
@@ -1704,6 +1718,8 @@ public class TreeMap extends AbstractMap
 	    // access policy: {_ ->}
 	    this.$updateLabel = LabelUtil.noComponents();
 	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
 	  }
         }.$initLabels();
       return this.values;
@@ -1715,6 +1731,8 @@ public class TreeMap extends AbstractMap
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class SubMap  
 
@@ -1724,5 +1742,7 @@ public class TreeMap extends AbstractMap
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 } // class TreeMap

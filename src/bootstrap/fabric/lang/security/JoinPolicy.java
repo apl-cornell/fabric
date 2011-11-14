@@ -14,8 +14,6 @@ public interface JoinPolicy
     
     public boolean relabelsTo(fabric.lang.security.Policy pol, java.util.Set s);
     
-    public void clobberThisPlaceholders(Principal replacement);
-    
     public boolean equals(fabric.lang.Object o);
     
     public int hashCode();
@@ -37,8 +35,6 @@ public interface JoinPolicy
         
         native public boolean relabelsTo(fabric.lang.security.Policy arg1,
                                          java.util.Set arg2);
-        
-        native public void clobberThisPlaceholders(Principal replacement);
         
         final native public java.lang.String toString();
         
@@ -69,8 +65,6 @@ public interface JoinPolicy
         
         native public boolean relabelsTo(fabric.lang.security.Policy pol,
                                          java.util.Set s);
-        
-        native public void clobberThisPlaceholders(Principal replacement);
         
         native public boolean equals(fabric.lang.Object o);
         

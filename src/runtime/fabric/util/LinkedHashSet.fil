@@ -124,5 +124,7 @@ public class LinkedHashSet extends HashSet
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

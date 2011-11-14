@@ -20,8 +20,6 @@ public interface Label extends fabric.lang.Object {
     
     fabric.lang.security.SecretKeyObject keyObject();
     
-    void clobberThisPlaceholders(Principal replacement);
-    
     public static class _Proxy extends fabric.lang.Object._Proxy
       implements fabric.lang.security.Label
     {
@@ -46,8 +44,6 @@ public interface Label extends fabric.lang.Object {
         native public fabric.lang.security.IntegPolicy integPolicy();
         
         native public fabric.lang.security.SecretKeyObject keyObject();
-        
-        native public void clobberThisPlaceholders(Principal replacement);
         
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);

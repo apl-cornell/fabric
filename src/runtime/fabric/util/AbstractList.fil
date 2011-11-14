@@ -353,6 +353,8 @@ while (i.hasNext())
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }
 
@@ -740,6 +742,8 @@ while (i.hasNext())
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }
 
@@ -924,6 +928,8 @@ while (i.hasNext())
 	// access policy: {_ ->}
 	this.$updateLabel = LabelUtil.noComponents();
 	this.$accessPolicy = LabelUtil.bottomConf();
+
+	return this;
       }
     }
 
@@ -1194,6 +1200,8 @@ while (i.hasNext())
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class SubList
 
@@ -1224,6 +1232,8 @@ while (i.hasNext())
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class RandomAccessSubList
 

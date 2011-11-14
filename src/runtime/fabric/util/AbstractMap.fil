@@ -322,6 +322,8 @@ public abstract class AbstractMap implements Map
 	    // access policy: {_ ->}
 	    this.$updateLabel = LabelUtil.noComponents();
 	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
 	  }
 	}
 
@@ -343,6 +345,8 @@ public abstract class AbstractMap implements Map
 	  // access policy: {_ ->}
 	  this.$updateLabel = LabelUtil.noComponents();
 	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
 	}
       }.$initLabels();
     return keys;
@@ -461,7 +465,7 @@ public abstract class AbstractMap implements Map
   public String toString()
   {
     Iterator entries = entrySet().iterator(LOCAL_STORE);
-    StringBuffer r = (StringBuffer) new StringBuffer("{").$initLabels();
+    StringBuffer r = new StringBuffer("{");
     for (int pos = size(); pos > 0; pos--)
       {
         Map.Entry entry = (Map.Entry) entries.next();
@@ -576,6 +580,8 @@ public abstract class AbstractMap implements Map
 	    // access policy: {_ ->}
 	    this.$updateLabel = LabelUtil.noComponents();
 	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
 	  }
 	}
 
@@ -597,6 +603,8 @@ public abstract class AbstractMap implements Map
 	  // access policy: {_ ->}
 	  this.$updateLabel = LabelUtil.noComponents();
 	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
 	}
       }.$initLabels();
     return values;
@@ -765,6 +773,8 @@ public abstract class AbstractMap implements Map
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class BasicMapEntry
 }

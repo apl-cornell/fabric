@@ -2624,7 +2624,7 @@ public class Arrays
   {
     if (v == null)
       return "null";
-    StringBuilder b = (StringBuilder) new StringBuilder("[").$initLabels();
+    StringBuilder b = new StringBuilder("[");
     for (int i = 0; i < v.length; ++i)
       {
 	if (i > 0)
@@ -2646,7 +2646,7 @@ public class Arrays
   {
     if (v == null)
       return "null";
-    StringBuilder b = (StringBuilder) new StringBuilder("[").$initLabels();
+    StringBuilder b = new StringBuilder("[");
     for (int i = 0; i < v.length; ++i)
       {
 	if (i > 0)
@@ -2668,7 +2668,7 @@ public class Arrays
   {
     if (v == null)
       return "null";
-    StringBuilder b = (StringBuilder) new StringBuilder("[").$initLabels();
+    StringBuilder b = new StringBuilder("[");
     for (int i = 0; i < v.length; ++i)
       {
 	if (i > 0)
@@ -2690,7 +2690,7 @@ public class Arrays
   {
     if (v == null)
       return "null";
-    StringBuilder b = (StringBuilder) new StringBuilder("[").$initLabels();
+    StringBuilder b = new StringBuilder("[");
     for (int i = 0; i < v.length; ++i)
       {
 	if (i > 0)
@@ -2712,7 +2712,7 @@ public class Arrays
   {
     if (v == null)
       return "null";
-    StringBuilder b = (StringBuilder) new StringBuilder("[").$initLabels();
+    StringBuilder b = new StringBuilder("[");
     for (int i = 0; i < v.length; ++i)
       {
 	if (i > 0)
@@ -2734,7 +2734,7 @@ public class Arrays
   {
     if (v == null)
       return "null";
-    StringBuilder b = (StringBuilder) new StringBuilder("[").$initLabels();
+    StringBuilder b = new StringBuilder("[");
     for (int i = 0; i < v.length; ++i)
       {
 	if (i > 0)
@@ -2756,7 +2756,7 @@ public class Arrays
   {
     if (v == null)
       return "null";
-    StringBuilder b = (StringBuilder) new StringBuilder("[").$initLabels();
+    StringBuilder b = new StringBuilder("[");
     for (int i = 0; i < v.length; ++i)
       {
 	if (i > 0)
@@ -2778,7 +2778,7 @@ public class Arrays
   {
     if (v == null)
       return "null";
-    StringBuilder b = (StringBuilder) new StringBuilder("[").$initLabels();
+    StringBuilder b = new StringBuilder("[");
     for (int i = 0; i < v.length; ++i)
       {
 	if (i > 0)
@@ -2800,7 +2800,7 @@ public class Arrays
   {
     if (v == null)
       return "null";
-    StringBuilder b = (StringBuilder) new StringBuilder("[").$initLabels();
+    StringBuilder b = new StringBuilder("[");
     for (int i = 0; i < v.length; ++i)
       {
 	if (i > 0)
@@ -2860,7 +2860,7 @@ public class Arrays
     if (v == null)
       return "null";
     HashSet seen = (HashSet) new HashSet().$initLabels();
-    StringBuilder b = (StringBuilder) new StringBuilder().$initLabels();
+    StringBuilder b = new StringBuilder();
     deepToString(v, b, seen);
     return b.toString();
   }
@@ -3042,6 +3042,8 @@ public class Arrays
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }
 
@@ -3051,5 +3053,7 @@ public class Arrays
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

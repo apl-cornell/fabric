@@ -269,6 +269,8 @@ public class Vector extends AbstractList
 	// access policy: {_ ->}
 	this.$updateLabel = LabelUtil.noComponents();
 	this.$accessPolicy = LabelUtil.bottomConf();
+
+	return this;
       }
     }.$initLabels();
   }
@@ -909,5 +911,7 @@ public class Vector extends AbstractList
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

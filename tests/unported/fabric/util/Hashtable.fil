@@ -169,6 +169,8 @@ public class Hashtable extends Dictionary
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }
 
@@ -546,7 +548,7 @@ public class Hashtable extends Dictionary
     // would repeatedly re-lock/release the monitor, we directly use the
     // unsynchronized EntryIterator instead.
     Iterator entries = (EntryIterator) new EntryIterator@LOCAL_STORE().$initLabels();
-    StringBuffer r = (StringBuffer) new StringBuffer("{").$initLabels();
+    StringBuffer r = new StringBuffer("{");
     for (int pos = size; pos > 0; pos--)
       {
         r.append(entries.next());
@@ -613,6 +615,8 @@ public class Hashtable extends Dictionary
 	    // access policy: {_ ->}
 	    this.$updateLabel = LabelUtil.noComponents();
 	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
 	  }
         }.$initLabels();
         // We must specify the correct object to synchronize upon, hence the
@@ -667,6 +671,8 @@ public class Hashtable extends Dictionary
 	    // access policy: {_ ->}
 	    this.$updateLabel = LabelUtil.noComponents();
 	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
 	  }
         }.$initLabels();
         // We must specify the correct object to synchronize upon, hence the
@@ -743,6 +749,8 @@ public class Hashtable extends Dictionary
 	    // access policy: {_ ->}
 	    this.$updateLabel = LabelUtil.noComponents();
 	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
 	  }
         }.$initLabels();
         // We must specify the correct object to synchronize upon, hence the
@@ -1066,6 +1074,8 @@ public class Hashtable extends Dictionary
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class EntryIterator
 
@@ -1096,6 +1106,8 @@ public class Hashtable extends Dictionary
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class KeyIterator
 
@@ -1128,6 +1140,8 @@ public class Hashtable extends Dictionary
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class ValueIterator
 
@@ -1203,6 +1217,8 @@ public class Hashtable extends Dictionary
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class EntryEnumerator
 
@@ -1243,6 +1259,8 @@ public class Hashtable extends Dictionary
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class KeyEnumerator
 
@@ -1283,6 +1301,8 @@ public class Hashtable extends Dictionary
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class ValueEnumerator
 
@@ -1292,5 +1312,7 @@ public class Hashtable extends Dictionary
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 } // class Hashtable

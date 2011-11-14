@@ -85,6 +85,8 @@ public class LinkedList extends AbstractSequentialList
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class Entry
 
@@ -924,6 +926,8 @@ public class LinkedList extends AbstractSequentialList
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class LinkedListItr
 
@@ -933,5 +937,7 @@ public class LinkedList extends AbstractSequentialList
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

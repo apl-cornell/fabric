@@ -305,7 +305,7 @@
       <arg value="-classpath" />
       <arg value="${bootstrap.classes}" />
       <arg value="-bootclasspath" />
-      <arg value="${bootstrap.classes}" />
+      <arg value="${bootstrap.classes}:${polyglot.classpath}" />
       <arg value="-sigcp" />
       <arg value="${signatures.fabil.src}:${runtime.src}" />
       <arg value="-sig" />
@@ -564,20 +564,7 @@
       <arg value="${runtime.classes}:${runtime.src}:${polyglot.classpath}:${bootstrap.classes}" />
       <arg value="-platform-mode"/>
       <srcfile />
-      <fileset dir="${runtime.src}"
-          includes="**/*.fil"
-          excludes="fabric/util/*.fil" />
-      <filelist dir="${runtime.src}">
-        <file name="fabric/util/HashMap.fil"/>
-        <file name="fabric/util/LinkedList.fil"/>
-        <file name="fabric/util/HashSet.fil"/>
-        <file name="fabric/util/LinkedHashSet.fil"/>
-        <file name="fabric/util/ArrayList.fil"/>
-        <file name="fabric/util/Collections.fil"/>
-        <file name="fabric/util/Arrays.fil"/>
-        <file name="fabric/util/TreeMap.fil"/>
-        <file name="fabric/util/TreeSet.fil"/>
-      </filelist>
+      <fileset dir="${runtime.src}" includes="**/*.fil" />
 
       <globmapper from="*.fil" to="*.class" />
     </apply>

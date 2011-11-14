@@ -185,6 +185,8 @@ public class LinkedHashMap extends HashMap
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class LinkedHashEntry
 
@@ -480,6 +482,8 @@ public class LinkedHashMap extends HashMap
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }
 
@@ -489,5 +493,7 @@ public class LinkedHashMap extends HashMap
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 } // class LinkedHashMap
