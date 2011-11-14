@@ -32,13 +32,14 @@ where
     System.user actsfor FriendMapNode,
     System.user actsfor AliceNode,
     System.user actsfor BobNode,
+    {this} <= {System.user←},
     authority(System.user)
   {
     // create service objects
-    this.snapp      = new     Snapp("snapp",     SnappNode);
+    this.snapp      = endorse(new Snapp("snapp",     SnappNode), {SnappNode←} to {System.user←});
     if (SnappNode     actsfor snapp) {
 
-    this.mapServ    = new MapServer("mapserv",   MapServNode, ' ');
+    this.mapServ    = endorse(new MapServer("mapserv",   MapServNode, ' '), {MapServNode←} to {System.user←});
     if (MapServNode   actsfor mapServ) {
 
     // create users
@@ -46,7 +47,7 @@ where
     this.alice      = endorse(makeUser(snapp, "Alice", AliceNode), {SnappNode←} to {System.user←});
     if (AliceNode     actsfor alice) {
 
-    this.bob        = endorse(snapp.createUser("Bob",   BobNode),                 {BobNode←;snapp←}   to {System.user←});
+    this.bob        = endorse(makeUser(snapp, "Bob",   BobNode),   {SnappNode←} to {System.user←});
     if (BobNode       actsfor bob) {
 
     // add delegations
@@ -70,7 +71,7 @@ where
 
     // let'er rip!
 
-    try   { this.friendMap  = new FriendMap(mapServ); }
+    try   { this.friendMap  = endorse (new FriendMap(mapServ), {FriendMapNode←} to {System.user←}); }
     catch (final NullPointerException e) { throw new AssertionFailedError("mapServ is not null"); }
     // friendMap.viewMap(alice);
 
@@ -88,11 +89,15 @@ where
     final String    {SnappNode←} name,
     final principal {SnappNode←} node
   )
+  where
+    provider <= {SnappNode←}
   {
     if (snapp == null)
       throw new AssertionFailedError("snapp is not null");
-    final UserV1{SnappNode←} result = snapp.createUser(name,  node);
-    return result;
+    endorse ({SnappNode←} to {SnappNode←}) {
+      final UserV1{SnappNode←} result = snapp.createUser(name,  node);
+      return result;
+    }
   }
 
   public static
