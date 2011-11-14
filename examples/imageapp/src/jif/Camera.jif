@@ -10,7 +10,7 @@ public class Camera [principal p] authority (p) {
     /*** Camera State ***/
 
     // Camera state consists of the image counter, array of the
-    // images, and the coordinaets, all labeled with {lb_camera}
+    // images, and the coordinaets, all labeled with {*lb_camera}
 
     public int {*lb_camera} n_images;
     public Image[p] {*lb_camera} [] {*lb_camera} images;

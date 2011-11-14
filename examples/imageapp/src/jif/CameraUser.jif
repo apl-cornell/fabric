@@ -9,7 +9,10 @@ public class CameraUser [principal p, principal q] authority (p) {
 
     public CameraUser (Camera[p] {p<-} camera, ImageApp[p,q ] {q<-} imgeapp) {
 	this.camera = camera;
-	this.imageapp = imgeapp; // todo: renaming the argument to imageapp introduces a weird error in the complier!!! 
+	this.imageapp = imgeapp; // todo: bug alert!!! renaming the
+                           	 // argument to "imageapp" results in
+                           	 // a translation bug in the
+                           	 // complier!!!
     }
 
     public void useCamera{p<-}() where authority (p) {
@@ -32,7 +35,6 @@ public class CameraUser [principal p, principal q] authority (p) {
     // to grow up and automate this eventually. Method markShared
     // declassifies the bitmap of the i-th image in camera
     public void markShared{p<-}(int {*this.camera.lb_camera} i) where caller (p) {
-
 	byte{p<-} [] {p<-} bmp0 = null;
 	try {bmp0 = new byte[camera.CAMERA_RESOLUTION];} catch (Exception ignored) {}
 	if (bmp0 == null) return;
