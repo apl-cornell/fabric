@@ -1,12 +1,19 @@
 package jif.principals;
 
+import util.System;
+
 public class BobNode extends ExternalPrincipal {
-  public BobNode() {
+  public
+  BobNode{*←}
+  ()
+  where authority(this)
+  {
     super("BobNode");
+    addDelegatesTo(System.user);
   }
 
-  private static BobNode{*!:*} P;
-  public static Principal getInstance{*!:*}() {
+  private static BobNode{*←} P;
+  public static Principal getInstance{*←}() {
     if (P == null) {
       P = new BobNode();
     }

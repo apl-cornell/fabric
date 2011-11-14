@@ -9,12 +9,12 @@ import util.System;
 public class Main2
 authority(System.user)
 where
-  {System.user←} <= provider,                   provider                   <= {System.user←},
-  {SnappNode←}   <= snapp.Snapp.provider,       snapp.Snapp.provider       <= {SnappNode←},
-  {SnappNode←}   <= snapp.UserV1.provider,      snapp.UserV1.provider      <= {SnappNode←},
-  {MapServNode←} <= mapserv.MapServer.provider, mapserv.MapServer.provider <= {MapServNode←},
-  {MapServNode←} <= mapserv.MapImage.provider,  mapserv.MapImage.provider  <= {MapServNode←},
-  {SnappNode←}   <= snapp.UserV1.provider, snapp.UserV1.provider <= {SnappNode←}
+  {System.user←}   <= provider,                     provider                     <= {System.user←},
+  {SnappNode←}     <= snapp.Snapp.provider,         snapp.Snapp.provider         <= {SnappNode←},
+  {SnappNode←}     <= snapp.UserV1.provider,        snapp.UserV1.provider        <= {SnappNode←},
+  {MapServNode←}   <= mapserv.MapServer.provider,   mapserv.MapServer.provider   <= {MapServNode←},
+  {MapServNode←}   <= mapserv.MapImage.provider,    mapserv.MapImage.provider    <= {MapServNode←},
+  {FriendMapNode←} <= friendmap.FriendMap.provider, friendmap.FriendMap.provider <= {FriendMapNode←}
 {
   final Snapp     {System.user←} snapp;
   final MapServer {System.user←} mapServ;
@@ -25,7 +25,10 @@ where
   public
   Main2 {System.user←}
   ()
-  throws ArrayIndexOutOfBoundsException, NullPointerException
+  :{_←}
+  throws
+    NullPointerException,
+    ArrayIndexOutOfBoundsException
   where
     System.user actsfor SnappNode,
     System.user actsfor MapServNode,
@@ -51,8 +54,28 @@ where
     this.bob        = endorse(snapp.createUser("Bob",   BobNode),                 {BobNode←;snapp←}   to {System.user←});
     if (BobNode       actsfor bob) {
 
+    // add delegations
+    try {
+      alice.friends.add(bob);
+      alice.locationInfo.add(mapServ);
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("UserV1.friends and .locationInfo are non-null.");
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("Alice has too many friends");
+    }
 
-    //init();
+    try {
+      bob.friends.add(alice);
+      bob.locationInfo.add(bob.friends);
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("UserV1.friends and .locationInfo are non-null.");
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("Alice has too many friends");
+    }
+
+    // let'er rip!
+    // friendMap.viewMap(alice);
+
     } else throw new AssertionFailedError("Delegation relationships hold");
     } else throw new AssertionFailedError("Delegation relationships hold");
     } else throw new AssertionFailedError("Delegation relationships hold");
@@ -60,17 +83,18 @@ where
     } else throw new AssertionFailedError("Delegation relationships hold");
   }
 
-  private void init{System.user←}() 
+  public static
+  void
+  main {System.user←} (String[] args)
   where
     System.user actsfor SnappNode,
     System.user actsfor MapServNode,
     System.user actsfor FriendMapNode,
     System.user actsfor AliceNode,
-    System.user actsfor BobNode,
-    authority(System.user)
+    System.user actsfor BobNode
   {
-    // add delegations
-    // alice.friends.add(bob);
+    new Main2();
+    System.stdout(new label{System.user→}).println("done");
   }
 }
 

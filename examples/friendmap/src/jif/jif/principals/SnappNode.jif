@@ -1,8 +1,15 @@
 package jif.principals;
 
+import util.System;
+
 public class SnappNode extends ExternalPrincipal {
-  public SnappNode() {
+  public
+  SnappNode{*←}
+  ()
+  where authority(this)
+  {
     super("SnappNode");
+    addDelegatesTo(System.user);
   }
 
   private static SnappNode{*!:*} P;

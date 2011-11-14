@@ -1,12 +1,19 @@
 package jif.principals;
 
+import util.System;
+
 public class FriendMapNode extends ExternalPrincipal {
-  public FriendMapNode() {
+  public
+  FriendMapNode{*←}
+  ()
+  where authority(this)
+  {
     super("FriendMapNode");
+    addDelegatesTo(System.user);
   }
 
-  private static FriendMapNode{*!:*} P;
-  public static Principal getInstance{*!:*}() {
+  private static FriendMapNode{*←} P;
+  public static Principal getInstance{*←}() {
     if (P == null) {
       P = new FriendMapNode();
     }

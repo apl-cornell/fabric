@@ -1,8 +1,15 @@
 package jif.principals;
 
+import util.System;
+
 public class MapServNode extends ExternalPrincipal {
-  public MapServNode() {
+  public
+  MapServNode{*←}
+  ()
+  where authority(this)
+  {
     super("MapServNode");
+    addDelegatesTo(System.user);
   }
 
   private static MapServNode{*!:*} P;

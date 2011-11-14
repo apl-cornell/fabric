@@ -1,19 +1,19 @@
 public class Image [principal p] { // p is the camera principal
 
-    public final label{p<-} lb_img; 
-    public final label{p<-} lb_meta;
-    public final byte{lb_img}[]{lb_img} bmp;
-    public string{lb_img} title;
+    public final label{this} lb_img; 
+    public final label{this} lb_meta;
 
-    public final int {lb_meta} gpsX;
-    public final int {lb_meta} gpsY;
+    public final byte{*lb_img}[]{*lb_img} bmp;
+    public string{*lb_img} title;
 
-    public Image (final label{p<-} lb_i,   
-                  final label{p<-} lb_m, 
-                  byte {lb_i}[]{lb_i} bmp, 
-                  string{lb_i} title,  
-                  int {lb_m} x ,  
-                  int {lb_m} y) where {p<-} <= {lb_i} {
+    public final int {*lb_meta} gpsX;
+    public final int {*lb_meta} gpsY;
+
+    public Image (final label{this} lb_i, final label{this} lb_m, 
+                  byte {*lb_i}[]{*lb_i} bmp, 
+                  string{*lb_i} title,  
+                  int {*lb_m} x ,  
+                  int {*lb_m} y) {
 	
         this.lb_img  = lb_i; 
 	this.lb_meta = lb_m;
