@@ -10,6 +10,7 @@ import polyglot.types.ClassType;
 import polyglot.types.Context;
 import polyglot.types.Flags;
 import polyglot.types.MethodInstance;
+import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
@@ -82,7 +83,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
   public Annotated assignLabels(LabelAssigner la) throws SemanticException {
     NewFabricArray expr = node();
     expr = assignUpdateLabel(la, expr);
-    expr = assignAccessLabel(la, expr);
+    expr = assignAccessPolicy(la, expr);
     return expr;
   }
 
@@ -118,36 +119,39 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
         }
       
         Position pos = Position.compilerGenerated();
-        Call defaultLabel = nf.Call(pos, receiver, nf.Id(pos, "get$label"));
+        Call defaultLabel = nf.Call(pos, receiver,
+	    nf.Id(pos, "get$$updateLabel"));
       
         Flags flags = Flags.NONE;
         if (context.inStaticContext()) flags = Flags.STATIC;
       
         MethodInstance lmi =
-            ts.methodInstance(pos, currentClass, flags, ts.Label(), "get$label",
-                Collections.emptyList(), Collections.emptyList());
+            ts.methodInstance(pos, currentClass, flags, ts.Label(),
+		"get$$updateLabel", Collections.emptyList(),
+		Collections.emptyList());
         defaultLabel = (Call) defaultLabel.type(ts.Label());
         defaultLabel = defaultLabel.methodInstance(lmi);
         return expr.updateLabel(defaultLabel);
       }
 
-  private NewFabricArray assignAccessLabel(LabelAssigner la, NewFabricArray expr) {
+  private NewFabricArray assignAccessPolicy(LabelAssigner la, NewFabricArray expr) {
     if (expr.accessLabel() != null) return expr;
   
     FabILTypeSystem ts = la.typeSystem();
     QQ qq = la.qq();
   
     if (!ts.isFabricReference(expr.type())) return expr;
-  
-    // Need an access label. Use null by default for principal objects. The
-    // Principal constructor will fill in the appropriate access label.
-    if (ts.isPrincipalClass(expr.type())) {
-      return expr.accessLabel(qq.parseExpr("null").type(ts.Null()));
-    }
-  
-    // Need a label. Use the object label by default.
+    
+    // Need a policy. Use the object label's confidentiality policy by default.
     Expr label = expr.updateLabel();
-    return expr.accessLabel(label);
+    Expr policy = qq.parseExpr("%E.confPolicy()", label).type(ts.ConfPolicy());
+    
+    MethodInstance mi =
+        ts.methodInstance(Position.compilerGenerated(),
+            (ReferenceType) ts.Label(), Flags.PUBLIC, ts.ConfPolicy(),
+            "confPolicy", Collections.emptyList(), Collections.emptyList());
+    policy = ((Call) policy).methodInstance(mi);
+    return expr.accessPolicy(policy);
   }
 
 }

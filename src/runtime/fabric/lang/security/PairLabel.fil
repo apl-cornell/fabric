@@ -30,7 +30,7 @@ public final class PairLabel implements Label {
     if (confPol == localStore.getBottomConfidPolicy()) {
       this.keyObject = null;
     } else {
-      this.keyObject = (SecretKeyObject) new SecretKeyObject~this().$initLabels();
+      this.keyObject = (SecretKeyObject) new SecretKeyObject().$initLabels();
     }
   }
 
@@ -40,7 +40,7 @@ public final class PairLabel implements Label {
       if (this == that || this.equals(that)) return true;
       
       final Store localStore = Worker.getWorker().getLocalStore();
-      Set temp = (HashSet) new HashSet().$initLabels();
+      Set temp = new HashSet();
       if (LabelUtil.relabelsTo(this.confPol, that.confPol, temp)
           && LabelUtil.relabelsTo(this.integPol, that.integPol, temp)) {
         s.addAll(temp);
@@ -95,11 +95,6 @@ public final class PairLabel implements Label {
   public SecretKeyObject keyObject() {
     return keyObject;
   }
-  
-  public void clobberThisPlaceholders(Principal replacement) {
-    confPol.clobberThisPlaceholders(replacement);
-    integPol.clobberThisPlaceholders(replacement);
-  }
 
   public Object $initLabels() {
     // XXX What should this be?  Using completely permissive values for now.
@@ -107,5 +102,7 @@ public final class PairLabel implements Label {
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

@@ -33,5 +33,7 @@ public final class MeetConfPolicy extends MeetPolicy implements ConfPolicy {
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

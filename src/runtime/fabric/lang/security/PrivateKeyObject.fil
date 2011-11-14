@@ -42,7 +42,9 @@ public class PrivateKeyObject {
     Label privateLabel = LabelUtil.toLabel(store, conf, integ);
     
     this.$updateLabel = privateLabel;
-    this.$accessLabel = conf;
+    this.$accessPolicy = conf;
+
+    return this;
   }
 
   public PrivateKey getKey() {

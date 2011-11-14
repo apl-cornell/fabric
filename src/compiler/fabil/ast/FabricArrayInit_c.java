@@ -65,12 +65,12 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   }
   
   @Override
-  public Expr accessLabel() {
+  public Expr accessPolicy() {
     return accessLabel;
   }
 
   @Override
-  public FabricArrayInit_c accessLabel(Expr accessLabel) {
+  public FabricArrayInit_c accessPolicy(Expr accessLabel) {
     FabricArrayInit_c n = (FabricArrayInit_c) copy();
     n.accessLabel = accessLabel;
     return n;

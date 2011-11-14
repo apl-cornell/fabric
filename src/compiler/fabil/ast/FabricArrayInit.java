@@ -13,7 +13,7 @@ public interface FabricArrayInit extends Annotated, polyglot.ast.ArrayInit {
   FabricArrayInit location(Expr location);
   
   Expr updateLabel();
-  Expr accessLabel();
+  Expr accessPolicy();
   FabricArrayInit updateLabel(Expr label);
-  FabricArrayInit accessLabel(Expr accesslabel);
+  FabricArrayInit accessPolicy(Expr accesslabel);
 }

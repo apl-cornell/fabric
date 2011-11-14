@@ -154,7 +154,7 @@ public final class LabelUtil {
 //    try {
 //      enterTiming();
       Label label = localStore.getPublicReadonlyLabel();
-      return (ReaderPolicy) new ReaderPolicy~label@store(owner, reader).$initLabels();
+      return (ReaderPolicy) new ReaderPolicy@store(owner, reader).$initLabels();
 //    } finally {
 //      exitTiming();
 //    }
@@ -249,7 +249,7 @@ public final class LabelUtil {
 //    try {
 //      enterTiming();
       Label label = localStore.getPublicReadonlyLabel();
-      return (WriterPolicy) new WriterPolicy~label@store(owner, writer).$initLabels();
+      return (WriterPolicy) new WriterPolicy@store(owner, writer).$initLabels();
 //    } finally {
 //      exitTiming();
 //    }
@@ -374,7 +374,7 @@ public final class LabelUtil {
       if (l2 == null) return l1;
 
       if (l1 instanceof PairLabel && l2 instanceof PairLabel) {
-        SecurityCache.Pair pair = (SecurityCache.Pair) new SecurityCache.Pair(l1, l2).$initLabels();
+        SecurityCache.Pair pair = new SecurityCache.Pair(l1, l2);
         Label result = cache.getLabelJoin(pair);
 
         if (result == null) {
@@ -420,7 +420,7 @@ public final class LabelUtil {
       if (l2 == null) return l1;
 
       if (l1 instanceof PairLabel && l2 instanceof PairLabel) {
-        SecurityCache.Pair pair = (SecurityCache.Pair) new SecurityCache.Pair(l1, l2).$initLabels();
+        SecurityCache.Pair pair = new SecurityCache.Pair(l1, l2);
         Label result = cache.getLabelMeet(pair);
 
         if (result == null) {
@@ -627,7 +627,7 @@ public final class LabelUtil {
       if (from == to || from.equals(to)) return true;
       
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
-      SecurityCache.Pair pair = (SecurityCache.Pair) new SecurityCache.Pair(from, to).$initLabels();
+      SecurityCache.Pair pair = new SecurityCache.Pair(from, to);
       if (cache.containsTrueLabelRelabel(pair)) return true;
       if (cache.containsFalseLabelRelabel(pair)) return false;
       
@@ -686,7 +686,7 @@ public final class LabelUtil {
       if (from == to || from.equals(to)) return true;
       
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
-      SecurityCache.Pair pair = (SecurityCache.Pair) new SecurityCache.Pair(from, to).$initLabels();
+      SecurityCache.Pair pair = new SecurityCache.Pair(from, to);
       if (cache.containsTruePolicyRelabel(pair)) {
         s.addAll(cache.getTruePolicyRelabels(pair));
         return true;
@@ -814,7 +814,7 @@ public final class LabelUtil {
   static void notifyRevokeDelegation(Principal granter, Principal superior) {
     SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
     SecurityCache.DelegationPair del =
-      (SecurityCache.DelegationPair) new SecurityCache.DelegationPair(superior, granter).$initLabels();
+      new SecurityCache.DelegationPair(superior, granter);
     
     java.util.Set/* <Pair> */deps =
       (java.util.Set) cache.removeTrueLabelRelabelsDependencies(del);
@@ -856,5 +856,7 @@ public final class LabelUtil {
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

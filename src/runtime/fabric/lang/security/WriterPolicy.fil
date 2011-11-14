@@ -44,7 +44,7 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
       MeetPolicy mp = (MeetPolicy) p;
       // this <= p1 meet ... meet p2 if for all pi
       // this <= pi
-      Set temp = (HashSet) new HashSet@localStore().$initLabels();
+      Set temp = new HashSet();
       for (Iterator iter = mp.meetComponents().iterator(); iter.hasNext();) {
         Policy pi = (Policy) iter.next();
         if (!LabelUtil.relabelsTo(this, pi, temp)) return false;
@@ -137,5 +137,7 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

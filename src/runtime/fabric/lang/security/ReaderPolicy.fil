@@ -135,5 +135,7 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

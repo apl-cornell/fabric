@@ -20,5 +20,7 @@ public final class NodePrincipal extends AbstractPrincipal {
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

@@ -43,7 +43,7 @@ public class Codebase {
   }
   
   public Codebase(Label updateLabel, ConfPolicy accessPolicy) {
-    this((Map) new HashMap().$initLabels(), updateLabel, accessPolicy);
+    this(updateLabel, accessPolicy, (Map) new HashMap().$initLabels());
   }	
 	
   public Codebase(Label updateLabel, ConfPolicy accessPolicy,

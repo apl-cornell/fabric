@@ -33,5 +33,7 @@ public final class JoinIntegPolicy extends JoinPolicy implements IntegPolicy {
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

@@ -45,7 +45,7 @@ public class PrincipalUtil {
       TransactionManager.getInstance().getSecurityCache();
     
     // try cache
-    SecurityCache.ActsForPair pair = (SecurityCache.ActsForPair) new SecurityCache.ActsForPair(p, q).$initLabels();
+    SecurityCache.ActsForPair pair = new SecurityCache.ActsForPair(p, q);
     if (cache.containsActsFor(pair)) {
       return cache.getActsFor(pair);
     }
@@ -66,7 +66,7 @@ public class PrincipalUtil {
       cache.putActsFor(pair, prf);
 
       // add dependencies that this actsfor relies on.
-      java.util.Set s = (HashSet) new HashSet().$initLabels();
+      java.util.Set s = new HashSet();
       prf.gatherDelegationDependencies(s);
       
       // for each DelegationPair in s, if that delegation is removed, the
@@ -105,7 +105,7 @@ public class PrincipalUtil {
       Principal superior) {
     SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
     SecurityCache.DelegationPair del =
-      (SecurityCache.DelegationPair) new SecurityCache.DelegationPair(superior, granter).$initLabels();
+      new SecurityCache.DelegationPair(superior, granter);
     java.util.Set deps = cache.removeActsForDependencies(del);
     if (deps != null) {
       for (java.util.Iterator iter = deps.iterator(); iter.hasNext();) {
@@ -189,7 +189,7 @@ public class PrincipalUtil {
 
     public ProofSearchState(Principal p, Principal q) {
       goalstack = new SecurityCache.ActsForPair native[1];
-      goalstack[0] = (SecurityCache.ActsForPair) new SecurityCache.ActsForPair(p, q).$initLabels();
+      goalstack[0] = new SecurityCache.ActsForPair(p, q);
     }
 
     private ProofSearchState(ProofSearchState ss, Principal p, Principal q) {
@@ -197,7 +197,7 @@ public class PrincipalUtil {
       goalstack = new SecurityCache.ActsForPair native[len];
       for (int i = 0; i < len - 1; i++)
         goalstack[i] = ss.goalstack[i];
-      goalstack[len - 1] = (SecurityCache.ActsForPair) new SecurityCache.ActsForPair(p, q).$initLabels();
+      goalstack[len - 1] = new SecurityCache.ActsForPair(p, q);
     }
 
     public boolean contains(Principal p, Principal q) {
@@ -217,6 +217,8 @@ public class PrincipalUtil {
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+        return this;
     }
   }
 
@@ -636,6 +638,8 @@ public class PrincipalUtil {
       // access policy: {_ ->}
       this.$updateLabel = LabelUtil.noComponents();
       this.$accessPolicy = LabelUtil.bottomConf();
+
+        return this;
     }
   }
 
@@ -645,6 +649,8 @@ public class PrincipalUtil {
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
   }
 }
 

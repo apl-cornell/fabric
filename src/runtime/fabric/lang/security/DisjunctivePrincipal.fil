@@ -18,7 +18,7 @@ public final class DisjunctivePrincipal extends Principal {
   }
 
   public String name() {
-    StringBuffer sb = (StringBuffer) new StringBuffer@localStore().$initLabels();
+    StringBuffer sb = new StringBuffer();
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
       sb.append(PrincipalUtil.toString(p));
@@ -41,7 +41,7 @@ public final class DisjunctivePrincipal extends Principal {
 
   public int hashCode() {
     if (hashCode == null) {
-      hashCode = (Integer) new Integer(disjuncts.hashCode()).$initLabels();
+      hashCode = new Integer(disjuncts.hashCode());
     }
     return hashCode.intValue();
   }
@@ -102,5 +102,7 @@ public final class DisjunctivePrincipal extends Principal {
     // access policy: {_ ->}
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }
