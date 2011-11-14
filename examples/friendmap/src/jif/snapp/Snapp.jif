@@ -1,6 +1,7 @@
 package snapp;
 
 import util.Delegator;
+import util.AssertionFailedError;
 
 /**
  * An instance of Snapp corresponds to an instance of the Snapp social network.
@@ -35,7 +36,8 @@ public class Snapp extends Delegator
   where
     provider <= {owner←;this←}
   {
-    return new UserV1(name, owner, this);
+    try { return new UserV1(name, owner, this); }
+    catch (final NullPointerException e) { throw new AssertionFailedError("UserV1 constructor succeeds unless network is null"); }
   }
 }
 

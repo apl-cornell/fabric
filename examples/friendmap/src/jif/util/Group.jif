@@ -22,8 +22,8 @@ where
 {
   private final String      {this}   name;
 
-  final Principal{owner←}[] {owner←} members;
-  int                       {owner←} size;
+  final Principal{owner←}[] {this}   members;
+  int                       {owner←} size = 0;
 
   private final static int  {*←}     SIZE = 100;
 
@@ -34,12 +34,10 @@ where
   /**
    * Create a new group with the given name and the default maximum size.
    */
-  public Group{owner←} (String{this} name) {
+  public Group (String{this} name) {
     this.name = name;
-    this.size = 0;
     this.members = new Principal[SIZE];
   }
-
 
 
   /**

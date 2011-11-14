@@ -4,21 +4,18 @@ public class Meet implements Principal {
 
   protected final String {this} name;
 
-  protected final Principal{this←} left;
-  protected final Principal{this←} right;
+  protected final Principal{this} left;
+  protected final Principal{this} right;
 
   public
   Meet
   (
-    Principal {left←; right←} left,
-    Principal {left←; right←} right
+    Principal {this} left,
+    Principal {this} right
   )
-  where
-    authority(this),
-    {left←; right←} <= {this}
   {
-    this.left  = endorse(left,  {left←; right←} to {this←});
-    this.right = endorse(right, {left←; right←} to {this←});
+    this.left  = left;
+    this.right = right;
 
     final String leftName  = (left  == null ? "_" : left.name());
     final String rightName = (right == null ? "_" : right.name());

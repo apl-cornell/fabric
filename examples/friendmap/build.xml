@@ -160,7 +160,7 @@
              dest="${home}/classes/jif/"
              vmlauncher="false">
         <arg value="${jifc}"/>
-        <arg value="-fail-on-exception"/>
+        <!--<arg value="-fail-on-exception"/>-->
         <arg value="-untrusted-providers"/>
         <arg value="-e"/>
         <arg value="-sourcepath" /> <arg value="@{srcdir}"              />
@@ -196,7 +196,7 @@
              dest="${home}/classes/jif/"
              vmlauncher="false">
         <arg value="${jifc}"/>
-        <arg value="-fail-on-exception"/>
+        <!--<arg value="-fail-on-exception"/>-->
         <arg value="-e"/>
         <arg value="-sourcepath" /> <arg value="@{srcdir}"                />
         <arg value="-d"          /> <arg value="${home}/classes/jif-sig"  />
