@@ -10,11 +10,11 @@ public class PrincipalSet {
   private Set set;
 
   public PrincipalSet() {
-    set = new LinkedHashSet();
+    set = (LinkedHashSet) new LinkedHashSet().$initLabels();
   }
 
   public PrincipalSet add(Principal p) {
-    PrincipalSet ps = new PrincipalSet();
+    PrincipalSet ps = (PrincipalSet) new PrincipalSet().$initLabels();
     ps.set.addAll(set);
     ps.set.add(p);
     return ps;

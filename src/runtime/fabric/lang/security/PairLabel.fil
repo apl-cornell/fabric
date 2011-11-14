@@ -30,7 +30,7 @@ public final class PairLabel implements Label {
     if (confPol == localStore.getBottomConfidPolicy()) {
       this.keyObject = null;
     } else {
-      this.keyObject = new SecretKeyObject~this();
+      this.keyObject = (SecretKeyObject) new SecretKeyObject~this().$initLabels();
     }
   }
 
@@ -40,7 +40,7 @@ public final class PairLabel implements Label {
       if (this == that || this.equals(that)) return true;
       
       final Store localStore = Worker.getWorker().getLocalStore();
-      Set temp = new HashSet();
+      Set temp = (HashSet) new HashSet().$initLabels();
       if (LabelUtil.relabelsTo(this.confPol, that.confPol, temp)
           && LabelUtil.relabelsTo(this.integPol, that.integPol, temp)) {
         s.addAll(temp);

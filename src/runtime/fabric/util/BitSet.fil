@@ -326,7 +326,7 @@ public class BitSet implements Cloneable, Serializable
   {
     if (from < 0 || from > to)
       throw new IndexOutOfBoundsException();
-    BitSet bs = new BitSet(to - from);
+    BitSet bs = (BitSet) new BitSet(to - from).$initLabels();
     int lo_offset = from >>> 6;
     if (lo_offset >= bits.length || to == from)
       return bs;
@@ -650,7 +650,7 @@ public class BitSet implements Cloneable, Serializable
    */
   public String toString()
   {
-    StringBuffer r = new StringBuffer("{");
+    StringBuffer r = (StringBuffer) new StringBuffer("{").$initLabels();
     boolean first = true;
     for (int i = 0; i < bits.length; ++i)
       {

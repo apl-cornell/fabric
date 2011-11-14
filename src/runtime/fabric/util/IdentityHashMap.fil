@@ -65,7 +65,7 @@ public class IdentityHashMap extends AbstractMap
    * the JVM will clear new arrays for us.
    * Package visible for use by nested classes.
    */
-  static final Object nullslot = new Object();
+  static final Object nullslot = (Object) new Object().$initLabels();
 
   /**
    * Compatible with JDK 1.4.
@@ -237,7 +237,7 @@ public class IdentityHashMap extends AbstractMap
   public Set entrySet()
   {
     if (entries == null)
-      entries = new AbstractSet()
+      entries = (AbstractSet) new AbstractSet()
       {
         public int size()
         {
@@ -246,7 +246,7 @@ public class IdentityHashMap extends AbstractMap
 
         public Iterator iterator(fabric.worker.Store store)
         {
-          return new IdentityIterator@store(ENTRIES);
+          return (IdentityIterator) new IdentityIterator@store(ENTRIES).$initLabels();
         }
 
         public void clear()
@@ -284,7 +284,7 @@ public class IdentityHashMap extends AbstractMap
             }
           return false;
         }
-      };
+      }.$initLabels();
     return entries;
   }
 
@@ -380,7 +380,7 @@ public class IdentityHashMap extends AbstractMap
   public Set keySet()
   {
     if (keys == null)
-      keys = new AbstractSet()
+      keys = (AbstractSet) new AbstractSet()
       {
         public int size()
         {
@@ -389,7 +389,7 @@ public class IdentityHashMap extends AbstractMap
 
         public Iterator iterator(fabric.worker.Store store)
         {
-          return new IdentityIterator@store(KEYS);
+          return (IdentityIterator) new IdentityIterator@store(KEYS).$initLabels();
         }
 
         public void clear()
@@ -428,7 +428,7 @@ public class IdentityHashMap extends AbstractMap
             }
           return false;
         }
-      };
+      }.$initLabels();
     return keys;
   }
 
@@ -602,7 +602,7 @@ public class IdentityHashMap extends AbstractMap
   public Collection values()
   {
     if (values == null)
-      values = new AbstractCollection()
+      values = (AbstractCollection) new AbstractCollection()
       {
         public int size()
         {
@@ -611,7 +611,7 @@ public class IdentityHashMap extends AbstractMap
 
         public Iterator iterator(fabric.worker.Store store)
         {
-          return new IdentityIterator@store(VALUES);
+          return (IdentityIterator) new IdentityIterator@store(VALUES).$initLabels();
         }
 
         public void clear()
@@ -633,7 +633,7 @@ public class IdentityHashMap extends AbstractMap
               }
           return false;
         }
-      };
+      }.$initLabels();
     return values;
   }
 
@@ -754,7 +754,7 @@ public class IdentityHashMap extends AbstractMap
 
       return type == KEYS ? unxform(key) 
                           : (type == VALUES ? unxform(table[loc + 1])
-                                            : new IdentityEntry(loc));
+                                            : (IdentityEntry) new IdentityEntry(loc).$initLabels());
     }
 
     /**

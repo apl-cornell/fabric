@@ -115,7 +115,7 @@ public class LinkedHashSet extends HashSet
    */
   HashMap init(int capacity, float load)
   {
-    return new LinkedHashMap(capacity, load);
+    return (LinkedHashMap) new LinkedHashMap(capacity, load).$initLabels();
   }
 
 }

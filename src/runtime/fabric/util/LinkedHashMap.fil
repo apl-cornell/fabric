@@ -370,7 +370,7 @@ public class LinkedHashMap extends HashMap
    */
   void addEntry(Object key, Object value, int idx, boolean callRemove)
   {
-    LinkedHashEntry e = new LinkedHashEntry(key, value);
+    LinkedHashEntry e = (LinkedHashEntry) new LinkedHashEntry(key, value).$initLabels();
     e.next = buckets[idx];
     buckets[idx] = e;
     if (callRemove && removeEldestEntry(root))
@@ -398,7 +398,7 @@ public class LinkedHashMap extends HashMap
    */
   Iterator iterator(fabric.worker.Store store, final int type)
   {
-    return new LinkedHashIterator@store(type);
+    return (LinkedHashIterator) new LinkedHashIterator@store(type).$initLabels();
   }
   
   private final class LinkedHashIterator implements Iterator

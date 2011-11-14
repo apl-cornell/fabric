@@ -266,7 +266,7 @@ while (i.hasNext())
   public Iterator iterator(fabric.worker.Store store)
   {
     // Bah, Sun's implementation forbids using listIterator(0).
-    return new AnonymousIterator@store();
+    return (AnonymousIterator) new AnonymousIterator@store().$initLabels();
   }
   
   private class AnonymousIterator implements Iterator {
@@ -402,7 +402,7 @@ while (i.hasNext())
       throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
                                           + size());
 
-    return new AbstractListIterator@store(index);
+    return (AbstractListIterator) new AbstractListIterator@store(index).$initLabels();
   }
 
   /**
@@ -527,8 +527,8 @@ while (i.hasNext())
       throw new IndexOutOfBoundsException();
 
     if (this instanceof RandomAccess)
-      return new RandomAccessSubList(this, fromIndex, toIndex);
-    return new SubList(this, fromIndex, toIndex);
+      return (RandomAccessSubList) new RandomAccessSubList(this, fromIndex, toIndex).$initLabels();
+    return (SubList) new SubList(this, fromIndex, toIndex).$initLabels();
   }
 
   /**
@@ -1161,7 +1161,7 @@ while (i.hasNext())
       checkMod();
       checkBoundsInclusive(index);
 
-      return new SubListIterator@store(index);
+      return (SubListIterator) new SubListIterator@store(index).$initLabels();
     }
   } // class SubList
 

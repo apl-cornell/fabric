@@ -247,7 +247,7 @@ public class Vector extends AbstractList
   // No need to synchronize as the Enumeration is not thread-safe!
   public Enumeration elements()
   {
-    return new Enumeration()
+    return (Enumeration) new Enumeration()
     {
       private int i = 0;
 
@@ -262,7 +262,7 @@ public class Vector extends AbstractList
           throw new NoSuchElementException();
         return elementData[i++];
       }
-    };
+    }.$initLabels();
   }
 
   /**
@@ -823,7 +823,7 @@ public class Vector extends AbstractList
     List sub = super.subList(fromIndex, toIndex);
     // We must specify the correct object to synchronize upon, hence the
     // use of a non-public API
-    return new Collections.SynchronizedList(this, sub);
+    return (Collections.SynchronizedList) new Collections.SynchronizedList(this, sub).$initLabels();
   }
 
   /**

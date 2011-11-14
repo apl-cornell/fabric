@@ -245,7 +245,7 @@ public abstract class AbstractMap implements Map
   public Set keySet()
   {
     if (keys == null)
-      keys = new AbstractSet()
+      keys = (AbstractSet) new AbstractSet()
       {
 	/**
 	 * Retrieves the number of keys in the backing map.
@@ -326,9 +326,9 @@ public abstract class AbstractMap implements Map
 	 */
         public Iterator iterator(final fabric.worker.Store store)
         {
-          return new KeysIterator@store(store);
+          return (KeysIterator) new KeysIterator@store(store).$initLabels();
         }
-      };
+      }.$initLabels();
     return keys;
   }
 
@@ -445,7 +445,7 @@ public abstract class AbstractMap implements Map
   public String toString()
   {
     Iterator entries = entrySet().iterator(LOCAL_STORE);
-    StringBuffer r = new StringBuffer("{");
+    StringBuffer r = (StringBuffer) new StringBuffer("{").$initLabels();
     for (int pos = size(); pos > 0; pos--)
       {
         Map.Entry entry = (Map.Entry) entries.next();
@@ -482,7 +482,7 @@ public abstract class AbstractMap implements Map
   public Collection values()
   {
     if (values == null)
-      values = new AbstractCollection()
+      values = (AbstractCollection) new AbstractCollection()
       {
 	/**
 	 * Returns the number of values stored in
@@ -564,9 +564,9 @@ public abstract class AbstractMap implements Map
 	 */
         public Iterator iterator(final fabric.worker.Store store)
         {
-          return new ValuesIterator@store(store);
+          return (ValuesIterator) new ValuesIterator@store(store).$initLabels();
         }
-      };
+      }.$initLabels();
     return values;
   }
 

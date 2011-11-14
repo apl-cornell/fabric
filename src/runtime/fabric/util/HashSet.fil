@@ -209,7 +209,7 @@ public class HashSet extends AbstractSet
    */
   HashMap init(int capacity, float load)
   {
-    return new HashMap(capacity, load);
+    return (HashMap) new HashMap(capacity, load).$initLabels();
   }
 
   /**

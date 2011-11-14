@@ -18,7 +18,7 @@ public final class DisjunctivePrincipal extends Principal {
   }
 
   public String name() {
-    StringBuffer sb = new StringBuffer@localStore();
+    StringBuffer sb = (StringBuffer) new StringBuffer@localStore().$initLabels();
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
       sb.append(PrincipalUtil.toString(p));
@@ -41,7 +41,7 @@ public final class DisjunctivePrincipal extends Principal {
 
   public int hashCode() {
     if (hashCode == null) {
-      hashCode = new Integer(disjuncts.hashCode());
+      hashCode = (Integer) new Integer(disjuncts.hashCode()).$initLabels();
     }
     return hashCode.intValue();
   }
@@ -67,7 +67,7 @@ public final class DisjunctivePrincipal extends Principal {
 
   public ActsForProof findProofUpto(Store store, Principal p, java.lang.Object searchState) {
     if (delegatesTo(p)) {
-      return new DelegatesProof@store(p, this);
+      return (DelegatesProof) new DelegatesProof@store(p, this).$initLabels();
     }
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal witness = (Principal) iter.next();
@@ -75,15 +75,15 @@ public final class DisjunctivePrincipal extends Principal {
           PrincipalUtil.findActsForProof(store, p, witness, searchState);
       if (prf != null) {
         // have found a proof from p to witness.
-        DelegatesProof step = new DelegatesProof@store(witness, this);
-        return new TransitiveProof@store(prf, witness, step);
+        DelegatesProof step = (DelegatesProof) new DelegatesProof@store(witness, this).$initLabels();
+        return (TransitiveProof) new TransitiveProof@store(prf, witness, step).$initLabels();
       }
     }
     return null;
   }
 
   public ActsForProof findProofDownto(Store store, Principal q, java.lang.Object searchState) {
-    Map proofs = new HashMap@store();
+    Map proofs = (HashMap) new HashMap@store().$initLabels();
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
       ActsForProof prf = PrincipalUtil.findActsForProof(store, p, q, searchState);
@@ -93,6 +93,6 @@ public final class DisjunctivePrincipal extends Principal {
 
     // proofs contains a proof for every disjunct,
     // which is sufficent for a proof for the disjunctive principal
-    return new FromDisjunctProof@store(this, q, proofs);
+    return (FromDisjunctProof) new FromDisjunctProof@store(this, q, proofs).$initLabels();
   }
 }

@@ -32,7 +32,7 @@ public final class LabelUtil {
 //  private static ThreadLocal statsPerThread = new ThreadLocal() {
 //    protected Object initialValue() {
 //      Store store = Worker.getWorker().getLocalStore();
-//      return new Stats@store();
+//      return (Stats) new Stats@store().$initLabels();
 //    }
 //  };
 //  public static final boolean COUNT_TIME = false;
@@ -154,7 +154,7 @@ public final class LabelUtil {
 //    try {
 //      enterTiming();
       Label label = localStore.getPublicReadonlyLabel();
-      return new ReaderPolicy~label@store(owner, reader);
+      return (ReaderPolicy) new ReaderPolicy~label@store(owner, reader).$initLabels();
 //    } finally {
 //      exitTiming();
 //    }
@@ -249,7 +249,7 @@ public final class LabelUtil {
 //    try {
 //      enterTiming();
       Label label = localStore.getPublicReadonlyLabel();
-      return new WriterPolicy~label@store(owner, writer);
+      return (WriterPolicy) new WriterPolicy~label@store(owner, writer).$initLabels();
 //    } finally {
 //      exitTiming();
 //    }
@@ -330,7 +330,7 @@ public final class LabelUtil {
 //      enterTiming();
       if (cPolicy == null || iPolicy == null)
         throw new NullPointerException@localStore();
-      return new PairLabel@store(cPolicy, iPolicy);
+      return (PairLabel) new PairLabel@store(cPolicy, iPolicy).$initLabels();
 //    } finally {
 //      exitTiming();
 //    }
@@ -339,7 +339,7 @@ public final class LabelUtil {
   public static Label toLabel(Store store, ConfPolicy policy) {
 //    try {
 //      enterTiming();
-      return new PairLabel@store(policy, topInteg());
+      return (PairLabel) new PairLabel@store(policy, topInteg()).$initLabels();
 //    } finally {
 //      exitTiming();
 //    }
@@ -348,7 +348,7 @@ public final class LabelUtil {
   public static Label toLabel(Store store, IntegPolicy policy) {
 //    try {
 //      enterTiming();
-      return new PairLabel@store(bottomConf(), policy);
+      return (PairLabel) new PairLabel@store(bottomConf(), policy).$initLabels();
 //    } finally {
 //      exitTiming();
 //    }
@@ -360,10 +360,10 @@ public final class LabelUtil {
 //      return liftToLabel(localStore, policy);
 //  }
   public static Label liftToLabel(Store store, ConfPolicy policy) {
-      return new PairLabel@store(policy, bottomInteg());
+      return (PairLabel) new PairLabel@store(policy, bottomInteg()).$initLabels();
   }
   public static Label liftToLabel(Store store, IntegPolicy policy) {
-      return new PairLabel@store(topConf(), policy);
+      return (PairLabel) new PairLabel@store(topConf(), policy).$initLabels();
   }
   
   public static Label join(Store store, Label l1, Label l2) {
@@ -374,7 +374,7 @@ public final class LabelUtil {
       if (l2 == null) return l1;
 
       if (l1 instanceof PairLabel && l2 instanceof PairLabel) {
-        SecurityCache.Pair pair = new SecurityCache.Pair(l1, l2);
+        SecurityCache.Pair pair = (SecurityCache.Pair) new SecurityCache.Pair(l1, l2).$initLabels();
         Label result = cache.getLabelJoin(pair);
 
         if (result == null) {
@@ -382,8 +382,8 @@ public final class LabelUtil {
           PairLabel pl2 = (PairLabel) l2;
           java.util.Set dependencies = new java.util.HashSet();
           result =
-              new PairLabel@store(pl1.confPolicy().join(store, pl2.confPolicy(), dependencies),
-                  pl1.integPolicy().join(store, pl2.integPolicy(), dependencies));
+              (PairLabel) new PairLabel@store(pl1.confPolicy().join(store, pl2.confPolicy(), dependencies),
+                  pl1.integPolicy().join(store, pl2.integPolicy(), dependencies)).$initLabels();
           // add dependencies from delegations to the cache result
           // i.e., what dependencies does this result rely on?
           for (java.util.Iterator iter = dependencies.iterator(); iter.hasNext();) {
@@ -420,7 +420,7 @@ public final class LabelUtil {
       if (l2 == null) return l1;
 
       if (l1 instanceof PairLabel && l2 instanceof PairLabel) {
-        SecurityCache.Pair pair = new SecurityCache.Pair(l1, l2);
+        SecurityCache.Pair pair = (SecurityCache.Pair) new SecurityCache.Pair(l1, l2).$initLabels();
         Label result = cache.getLabelMeet(pair);
 
         if (result == null) {
@@ -428,8 +428,8 @@ public final class LabelUtil {
           PairLabel pl2 = (PairLabel) l2;
           java.util.Set dependencies = new java.util.HashSet();
           result =
-              new PairLabel@store(pl1.confPolicy().meet(store, pl2.confPolicy(), dependencies),
-                  pl1.integPolicy().meet(store, pl2.integPolicy(), dependencies));
+              (PairLabel) new PairLabel@store(pl1.confPolicy().meet(store, pl2.confPolicy(), dependencies),
+                  pl1.integPolicy().meet(store, pl2.integPolicy(), dependencies)).$initLabels();
           // add dependencies from delegations to the cache result
           // i.e., what dependencies does this result rely on?
           for (java.util.Iterator iter = dependencies.iterator(); iter.hasNext();) {
@@ -462,7 +462,7 @@ public final class LabelUtil {
       java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
-      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store();
+      Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().$initLabels();
       if (p1 instanceof JoinConfPolicy) {
         comps.addAll(((JoinConfPolicy) p1).joinComponents());
       } else {
@@ -478,7 +478,7 @@ public final class LabelUtil {
       if (comps.size() == 1) {
         return (ConfPolicy) comps.iterator().next();
       }
-      return new JoinConfPolicy@store(comps);
+      return (JoinConfPolicy) new JoinConfPolicy@store(comps).$initLabels();
 //    } finally {
 //      exitTiming();
 //    }
@@ -497,7 +497,7 @@ public final class LabelUtil {
   static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
-      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store();
+      Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().$initLabels();
       if (p1 instanceof JoinIntegPolicy) {
         comps.addAll(((JoinIntegPolicy) p1).joinComponents());
       } else {
@@ -513,7 +513,7 @@ public final class LabelUtil {
       if (comps.size() == 1) {
         return (IntegPolicy) comps.iterator().next();
       }
-      return new JoinIntegPolicy@store(comps);
+      return (JoinIntegPolicy) new JoinIntegPolicy@store(comps).$initLabels();
 //    } finally {
 //      exitTiming();
 //    }
@@ -533,7 +533,7 @@ public final class LabelUtil {
       java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
-      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store();
+      Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().$initLabels();
       if (p1 instanceof MeetConfPolicy) {
         comps.addAll(((MeetConfPolicy) p1).meetComponents());
       } else {
@@ -549,7 +549,7 @@ public final class LabelUtil {
       if (comps.size() == 1) {
         return (ConfPolicy) comps.iterator().next();
       }
-      return new MeetConfPolicy@store(comps);
+      return (MeetConfPolicy) new MeetConfPolicy@store(comps).$initLabels();
 //    } finally {
 //      exitTiming();
 //    }
@@ -567,7 +567,7 @@ public final class LabelUtil {
   static IntegPolicy meet(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
-      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store();
+      Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().$initLabels();
       if (p1 instanceof MeetIntegPolicy) {
         comps.addAll(((MeetIntegPolicy) p1).meetComponents());
       } else {
@@ -583,7 +583,7 @@ public final class LabelUtil {
       if (comps.size() == 1) {
         return (IntegPolicy) comps.iterator().next();
       }
-      return new MeetIntegPolicy@store(comps);
+      return (MeetIntegPolicy) new MeetIntegPolicy@store(comps).$initLabels();
 //    } finally {
 //      exitTiming();
 //    }
@@ -627,7 +627,7 @@ public final class LabelUtil {
       if (from == to || from.equals(to)) return true;
       
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
-      SecurityCache.Pair pair = new SecurityCache.Pair(from, to);
+      SecurityCache.Pair pair = (SecurityCache.Pair) new SecurityCache.Pair(from, to).$initLabels();
       if (cache.containsTrueLabelRelabel(pair)) return true;
       if (cache.containsFalseLabelRelabel(pair)) return false;
       
@@ -686,7 +686,7 @@ public final class LabelUtil {
       if (from == to || from.equals(to)) return true;
       
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
-      SecurityCache.Pair pair = new SecurityCache.Pair(from, to);
+      SecurityCache.Pair pair = (SecurityCache.Pair) new SecurityCache.Pair(from, to).$initLabels();
       if (cache.containsTruePolicyRelabel(pair)) {
         s.addAll(cache.getTruePolicyRelabels(pair));
         return true;
@@ -745,7 +745,7 @@ public final class LabelUtil {
 
   private static Set/* <Policy> */simplifyJoin(Store store, Set/* <Policy> */policies,
       java.util.Set/* <DelegationPair> */dependencies) {
-    Set/* <Policy> */needed = new LinkedHashSet/* <Policy> */@store();
+    Set/* <Policy> */needed = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().$initLabels();
     for (Iterator/* <Policy> */i = policies.iterator(); i.hasNext();) {
       Policy ci = (Policy) i.next();
 
@@ -771,7 +771,7 @@ public final class LabelUtil {
 
   private static Set/* <Policy> */simplifyMeet(Store store, Set/* <Policy> */policies,
       java.util.Set/* <DelegationPair> */dependencies) {
-    Set/* <Policy> */needed = new LinkedHashSet/* <Policy> */@store();
+    Set/* <Policy> */needed = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().$initLabels();
     for (Iterator/* <Policy> */i = policies.iterator(); i.hasNext();) {
       Policy ci = (Policy) i.next();
 
@@ -814,7 +814,7 @@ public final class LabelUtil {
   static void notifyRevokeDelegation(Principal granter, Principal superior) {
     SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
     SecurityCache.DelegationPair del =
-      new SecurityCache.DelegationPair(superior, granter);
+      (SecurityCache.DelegationPair) new SecurityCache.DelegationPair(superior, granter).$initLabels();
     
     java.util.Set/* <Pair> */deps =
       (java.util.Set) cache.removeTrueLabelRelabelsDependencies(del);

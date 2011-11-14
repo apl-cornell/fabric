@@ -157,7 +157,7 @@ public class TreeMap extends AbstractMap
   public TreeMap(Comparator c)
   {
 	// Nil is self-referential, so we must initialize it after creation.
-	nil = new Node(null, null, BLACK);
+	nil = (Node) new Node(null, null, BLACK).$initLabels();
 	nil.parent = nil;
 	nil.left = nil;
 	nil.right = nil;
@@ -286,7 +286,7 @@ public class TreeMap extends AbstractMap
     if (entries == null)
       // Create an AbstractSet with custom implementations of those methods
       // that can be overriden easily and efficiently.
-      entries = new AbstractSet()
+      entries = (AbstractSet) new AbstractSet()
       {
         public int size()
         {
@@ -295,7 +295,7 @@ public class TreeMap extends AbstractMap
 
         public Iterator iterator(fabric.worker.Store store)
         {
-          return new TreeIterator@store(ENTRIES);
+          return (TreeIterator) new TreeIterator@store(ENTRIES).$initLabels();
         }
 
         public void clear()
@@ -325,7 +325,7 @@ public class TreeMap extends AbstractMap
             }
           return false;
         }
-      };
+      }.$initLabels();
     return entries;
   }
 
@@ -379,7 +379,7 @@ public class TreeMap extends AbstractMap
    */
   public SortedMap headMap(Object toKey)
   {
-    return new SubMap(nil, toKey);
+    return (SubMap) new SubMap(nil, toKey).$initLabels();
   }
 
   /**
@@ -396,7 +396,7 @@ public class TreeMap extends AbstractMap
     if (keys == null)
       // Create an AbstractSet with custom implementations of those methods
       // that can be overriden easily and efficiently.
-      keys = new AbstractSet()
+      keys = (AbstractSet) new AbstractSet()
       {
         public int size()
         {
@@ -405,7 +405,7 @@ public class TreeMap extends AbstractMap
 
         public Iterator iterator(fabric.worker.Store store)
         {
-          return new TreeIterator@store(KEYS);
+          return (TreeIterator) new TreeIterator@store(KEYS).$initLabels();
         }
 
         public void clear()
@@ -426,7 +426,7 @@ public class TreeMap extends AbstractMap
           removeNode(n);
           return true;
         }
-      };
+      }.$initLabels();
     return keys;
   }
 
@@ -479,7 +479,7 @@ public class TreeMap extends AbstractMap
       }
 
     // Set up new node.
-    Node n = new Node(key, value, RED);
+    Node n = (Node) new Node(key, value, RED).$initLabels();
     n.left = nil;
     n.right = nil;
     n.parent = nil;
@@ -581,7 +581,7 @@ public class TreeMap extends AbstractMap
    */
   public SortedMap subMap(Object fromKey, Object toKey)
   {
-    return new SubMap(fromKey, toKey);
+    return (SubMap) new SubMap(fromKey, toKey).$initLabels();
   }
 
   /**
@@ -601,7 +601,7 @@ public class TreeMap extends AbstractMap
    */
   public SortedMap tailMap(Object fromKey)
   {
-    return new SubMap(fromKey, nil);
+    return (SubMap) new SubMap(fromKey, nil).$initLabels();
   }
 
   /**
@@ -619,7 +619,7 @@ public class TreeMap extends AbstractMap
     if (values == null)
       // We don't bother overriding many of the optional methods, as doing so
       // wouldn't provide any significant performance advantage.
-      values = new AbstractCollection()
+      values = (AbstractCollection) new AbstractCollection()
       {
         public int size()
         {
@@ -628,14 +628,14 @@ public class TreeMap extends AbstractMap
 
         public Iterator iterator(fabric.worker.Store store)
         {
-          return new TreeIterator@store(VALUES);
+          return (TreeIterator) new TreeIterator@store(VALUES).$initLabels();
         }
 
         public void clear()
         {
           TreeMap.this.clear();
         }
-      };
+      }.$initLabels();
     return values;
   }
 
@@ -784,7 +784,7 @@ public class TreeMap extends AbstractMap
     // then updating those links to the children when working on the next row.
 
     // Make the root node.
-    root = new Node(null, null, BLACK);
+    root = (Node) new Node(null, null, BLACK).$initLabels();
     root.left = nil;
     root.right = nil;
     root.parent = nil;
@@ -799,8 +799,8 @@ public class TreeMap extends AbstractMap
         Node last = null;
         for (int i = 0; i < rowsize; i += 2)
           {
-            Node left = new Node(null, null, BLACK);
-            Node right = new Node(null, null, BLACK);
+            Node left = (Node) new Node(null, null, BLACK).$initLabels();
+            Node right = (Node) new Node(null, null, BLACK).$initLabels();
             left.left = nil;
             right.left = nil;
             right.right = nil;
@@ -824,8 +824,8 @@ public class TreeMap extends AbstractMap
     int i;
     for (i = 0; i < overflow; i += 2)
       {
-        Node left = new Node(null, null, RED);
-        Node right = new Node(null, null, RED);
+        Node left = (Node) new Node(null, null, RED).$initLabels();
+        Node right = (Node) new Node(null, null, RED).$initLabels();
         left.left = nil;
         left.right = nil;
         left.parent = nil;
@@ -842,7 +842,7 @@ public class TreeMap extends AbstractMap
     // Add a lone left node if necessary.
     if (i - overflow == 0)
       {
-        Node left = new Node(null, null, RED);
+        Node left = (Node) new Node(null, null, RED).$initLabels();
         left.left = nil;
         left.right = nil;
         left.parent = parent;
@@ -1449,7 +1449,7 @@ public class TreeMap extends AbstractMap
       if (entries == null)
         // Create an AbstractSet with custom implementations of those methods
         // that can be overriden easily and efficiently.
-        entries = new AbstractSet()
+        entries = (AbstractSet) new AbstractSet()
         {
           public int size()
           {
@@ -1460,7 +1460,7 @@ public class TreeMap extends AbstractMap
           {
             Node first = lowestGreaterThan(minKey, true);
             Node max = lowestGreaterThan(maxKey, false);
-            return new TreeIterator@store(ENTRIES, first, max);
+            return (TreeIterator) new TreeIterator@store(ENTRIES, first, max).$initLabels();
           }
 
           public void clear()
@@ -1496,7 +1496,7 @@ public class TreeMap extends AbstractMap
               }
             return false;
           }
-        };
+        }.$initLabels();
       return entries;
     }
 
@@ -1519,7 +1519,7 @@ public class TreeMap extends AbstractMap
     {
       if (! keyInRange(toKey))
         throw new IllegalArgumentException("key outside range");
-      return new SubMap(minKey, toKey);
+      return (SubMap) new SubMap(minKey, toKey).$initLabels();
     }
 
     public Set keySet()
@@ -1527,7 +1527,7 @@ public class TreeMap extends AbstractMap
       if (this.keys == null)
         // Create an AbstractSet with custom implementations of those methods
         // that can be overriden easily and efficiently.
-        this.keys = new AbstractSet()
+        this.keys = (AbstractSet) new AbstractSet()
         {
           public int size()
           {
@@ -1538,7 +1538,7 @@ public class TreeMap extends AbstractMap
           {
             Node first = lowestGreaterThan(minKey, true);
             Node max = lowestGreaterThan(maxKey, false);
-            return new TreeIterator@store(KEYS, first, max);
+            return (TreeIterator) new TreeIterator@store(KEYS, first, max).$initLabels();
           }
 
           public void clear()
@@ -1565,7 +1565,7 @@ public class TreeMap extends AbstractMap
               }
             return false;
           }
-        };
+        }.$initLabels();
       return this.keys;
     }
 
@@ -1608,14 +1608,14 @@ public class TreeMap extends AbstractMap
     {
       if (! keyInRange(fromKey) || ! keyInRange(toKey))
         throw new IllegalArgumentException("key outside range");
-      return new SubMap(fromKey, toKey);
+      return (SubMap) new SubMap(fromKey, toKey).$initLabels();
     }
 
     public SortedMap tailMap(Object fromKey)
     {
       if (! keyInRange(fromKey))
         throw new IllegalArgumentException("key outside range");
-      return new SubMap(fromKey, maxKey);
+      return (SubMap) new SubMap(fromKey, maxKey).$initLabels();
     }
 
     public Collection values()
@@ -1623,7 +1623,7 @@ public class TreeMap extends AbstractMap
       if (this.values == null)
         // Create an AbstractCollection with custom implementations of those
         // methods that can be overriden easily and efficiently.
-        this.values = new AbstractCollection()
+        this.values = (AbstractCollection) new AbstractCollection()
         {
           public int size()
           {
@@ -1634,14 +1634,14 @@ public class TreeMap extends AbstractMap
           {
             Node first = lowestGreaterThan(minKey, true);
             Node max = lowestGreaterThan(maxKey, false);
-            return new TreeIterator@store(VALUES, first, max);
+            return (TreeIterator) new TreeIterator@store(VALUES, first, max).$initLabels();
           }
 
           public void clear()
           {
             SubMap.this.clear();
           }
-        };
+        }.$initLabels();
       return this.values;
     }
   } // class SubMap  

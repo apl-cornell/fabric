@@ -258,7 +258,7 @@ public class Hashtable extends Dictionary
    */
   public Enumeration keys()
   {
-    return new KeyEnumerator();
+    return (KeyEnumerator) new KeyEnumerator().$initLabels();
   }
 
   /**
@@ -272,7 +272,7 @@ public class Hashtable extends Dictionary
    */
   public Enumeration elements()
   {
-    return new ValueEnumerator();
+    return (ValueEnumerator) new ValueEnumerator().$initLabels();
   }
 
   /**
@@ -415,7 +415,7 @@ public class Hashtable extends Dictionary
         idx = hash(key);
       }
 
-    e = new HashEntry(key, value);
+    e = (HashEntry) new HashEntry(key, value).$initLabels();
 
     e.next = buckets[idx];
     buckets[idx] = e;
@@ -537,8 +537,8 @@ public class Hashtable extends Dictionary
     // Since we are already synchronized, and entrySet().iterator(store)
     // would repeatedly re-lock/release the monitor, we directly use the
     // unsynchronized EntryIterator instead.
-    Iterator entries = new EntryIterator@LOCAL_STORE();
-    StringBuffer r = new StringBuffer("{");
+    Iterator entries = (EntryIterator) new EntryIterator@LOCAL_STORE().$initLabels();
+    StringBuffer r = (StringBuffer) new StringBuffer("{").$initLabels();
     for (int pos = size; pos > 0; pos--)
       {
         r.append(entries.next());
@@ -570,7 +570,7 @@ public class Hashtable extends Dictionary
       {
         // Create a synchronized AbstractSet with custom implementations of
         // those methods that can be overridden easily and efficiently.
-        Set r = new AbstractSet()
+        Set r = (AbstractSet) new AbstractSet()
         {
           public int size()
           {
@@ -579,7 +579,7 @@ public class Hashtable extends Dictionary
 
           public Iterator iterator(fabric.worker.Store store)
           {
-            return new KeyIterator@store();
+            return (KeyIterator) new KeyIterator@store().$initLabels();
           }
 
           public void clear()
@@ -598,10 +598,10 @@ public class Hashtable extends Dictionary
           {
             return Hashtable.this.remove(o) != null;
           }
-        };
+        }.$initLabels();
         // We must specify the correct object to synchronize upon, hence the
         // use of a non-public API
-        keys = new Collections.SynchronizedSet(this, r);
+        keys = (Collections.SynchronizedSet) new Collections.SynchronizedSet(this, r).$initLabels();
       }
     return keys;
   }
@@ -628,7 +628,7 @@ public class Hashtable extends Dictionary
       {
         // We don't bother overriding many of the optional methods, as doing so
         // wouldn't provide any significant performance advantage.
-        Collection r = new AbstractCollection()
+        Collection r = (AbstractCollection) new AbstractCollection()
         {
           public int size()
           {
@@ -637,17 +637,17 @@ public class Hashtable extends Dictionary
 
           public Iterator iterator(fabric.worker.Store store)
           {
-            return new ValueIterator@store();
+            return (ValueIterator) new ValueIterator@store().$initLabels();
           }
 
           public void clear()
           {
             Hashtable.this.clear();
           }
-        };
+        }.$initLabels();
         // We must specify the correct object to synchronize upon, hence the
         // use of a non-public API
-        values = new Collections.SynchronizedCollection(this, r);
+        values = (Collections.SynchronizedCollection) new Collections.SynchronizedCollection(this, r).$initLabels();
       }
     return values;
   }
@@ -680,7 +680,7 @@ public class Hashtable extends Dictionary
       {
         // Create an AbstractSet with custom implementations of those methods
         // that can be overridden easily and efficiently.
-        Set r = new AbstractSet()
+        Set r = (AbstractSet) new AbstractSet()
         {
           public int size()
           {
@@ -689,7 +689,7 @@ public class Hashtable extends Dictionary
 
           public Iterator iterator(fabric.worker.Store store)
           {
-            return new EntryIterator@store();
+            return (EntryIterator) new EntryIterator@store().$initLabels();
           }
 
           public void clear()
@@ -712,10 +712,10 @@ public class Hashtable extends Dictionary
               }
             return false;
           }
-        };
+        }.$initLabels();
         // We must specify the correct object to synchronize upon, hence the
         // use of a non-public API
-        entries = new Collections.SynchronizedSet(this, r);
+        entries = (Collections.SynchronizedSet) new Collections.SynchronizedSet(this, r).$initLabels();
       }
     return entries;
   }
@@ -754,7 +754,7 @@ public class Hashtable extends Dictionary
     // Since we are already synchronized, and entrySet().iterator(store)
     // would repeatedly re-lock/release the monitor, we directly use the
     // unsynchronized EntryIterator instead.
-    Iterator itr = new EntryIterator@LOCAL_STORE();
+    Iterator itr = (EntryIterator) new EntryIterator@LOCAL_STORE().$initLabels();
     int hashcode = 0;
     for (int pos = size; pos > 0; pos--)
       hashcode += itr.next().hashCode();
@@ -824,7 +824,7 @@ public class Hashtable extends Dictionary
 	Map.Entry e = (Map.Entry) itr.next();
 	Object key = e.getKey();
 	int idx = hash(key);
-	HashEntry he = new HashEntry(key, e.getValue());
+	HashEntry he = (HashEntry) new HashEntry(key, e.getValue()).$initLabels();
 	he.next = buckets[idx];
 	buckets[idx] = he;
       }
@@ -900,7 +900,7 @@ public class Hashtable extends Dictionary
     // Since we are already synchronized, and entrySet().iterator(store)
     // would repeatedly re-lock/release the monitor, we directly use the
     // unsynchronized EntryIterator instead.
-    Iterator it = new EntryIterator@LOCAL_STORE();
+    Iterator it = (EntryIterator) new EntryIterator@LOCAL_STORE().$initLabels();
     while (it.hasNext())
       {
         HashEntry entry = (HashEntry) it.next();
