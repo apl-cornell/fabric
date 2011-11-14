@@ -552,7 +552,7 @@ public abstract class ObjectDB {
         // supplied by the workers' local store.
         String principalName = new X500Principal("CN=" + name).getName();
         NodePrincipal._Impl principal =
-            new NodePrincipal._Impl(store, null, null, principalName);
+            new NodePrincipal._Impl(store, principalName);
         principal.$forceRenumber(ONumConstants.STORE_PRINCIPAL);
 
         // Create the label {store->_; store<-_} for the root map.

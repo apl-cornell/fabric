@@ -18,9 +18,8 @@ public interface NodePrincipal extends fabric.lang.security.AbstractPrincipal {
       implements fabric.lang.security.NodePrincipal
     {
         
-        public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel, java.lang.String name) {
-            super($location, $label, accessLabel, name);
+        public _Impl(fabric.worker.Store $location, java.lang.String name) {
+            super($location, name);
         }
         
         native protected fabric.lang.Object._Proxy $makeProxy();

@@ -114,10 +114,8 @@ public interface AbstractPrincipal
         
         native public fabric.util.Map set$superiors(fabric.util.Map val);
         
-        public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label,
-		     fabric.lang.security.Label $accessLabel) {
-            super($location, $label, $accessLabel);
+        public _Impl(fabric.worker.Store $location) {
+            super($location);
         }
         
         native private void jif$init();
@@ -130,10 +128,8 @@ public interface AbstractPrincipal
           final java.lang.String name, final fabric.lang.security.Principal p);
         
         protected _Impl(fabric.worker.Store $location,
-                        fabric.lang.security.Label $label,
-			fabric.lang.security.Label $accessLabel,
                         java.lang.String name) {
-            this($location, $label, $accessLabel);
+            this($location);
         }
         
         native public java.lang.String name();
