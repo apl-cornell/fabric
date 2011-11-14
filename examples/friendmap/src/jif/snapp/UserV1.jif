@@ -52,7 +52,7 @@ public class UserV1 extends Meet
     // and thus {owner←;network←} ⊑ {this←}
     // this just isn't true until after the superclass constructor is called.
 
-    this.network = endorse(network, {owner←;network←} to {network←});
+    this.network = endorse(network, {owner←;network←} to {this←});
 
     this.friendInfo   = new Group[this](name + "'s friend readers");
     this.locationInfo = new Group[this](name + "'s location readers");

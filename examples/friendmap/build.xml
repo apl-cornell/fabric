@@ -48,7 +48,7 @@
   </target>
     
   <target name="build-jif-util" depends="build-jif-sig">
-    <jifc srcdir="${home}/src/jif" includes="util/*.jif util/tests/ProviderTest.jif" />
+    <jifc srcdir="${home}/src/jif" includes="util/*.jif" />
   </target>
 
   <target name="build-jif-snapp" depends="build-jif-util">
