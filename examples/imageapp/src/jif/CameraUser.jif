@@ -28,9 +28,9 @@ public class CameraUser [principal p, principal q] authority (p) {
 	}
     }
 
-    // Boilerplate declassification... We need to grow up and automate
-    // this eventually. Method markShared declassifies the bitmap of the
-    // i-th image in camera
+    // A lot of boilerplate declassification happens here... We need
+    // to grow up and automate this eventually. Method markShared
+    // declassifies the bitmap of the i-th image in camera
     public void markShared{p<-}(int {*this.camera.lb_camera} i) where caller (p) {
 
 	byte{p<-} [] {p<-} bmp0 = null;
@@ -63,15 +63,16 @@ public class CameraUser [principal p, principal q] authority (p) {
 
 		String title0  = declassify (theImage.title, {p<-});
 
-		// by now we have declassified the bitmap, now we
-		// shall construct a new Image object note that
-		// metadata is still confidential
+		// By now we have declassified the bitmap, so next we
+		// construct a new Image object. Note that metadata is
+		// still confidential
 
 		Image[p] {p<-} sharedImage = new Image (
-			   new label {p <-}, 
+			new label {p <-},  // use public label for the bitmap
 				theImage.lb_meta, bmp0, title0, 
 				      theImage.gpsX, theImage.gpsY);
 
+		// Update the image array with the shared image
 		camera.images[i] = sharedImage;
 	    }
 	}
@@ -79,18 +80,7 @@ public class CameraUser [principal p, principal q] authority (p) {
 
     public void useApp{q<-}(PrintStream[{}]{} out) { 
 	final ImageApp[p,q]{q<-} theapp = this.imageapp; 
-
-	if (theapp == null) {
-	    return;
-	}
-
+	if (theapp == null) return;
 	theapp.firstRunAction();
-	/*
-	final Camera[p] {p<-} camera = this.camera; if (camera == null) return;
-	final Image[p]{p<-} img = camera.getImage(2);
-	String {*img.lb_img} t = img.title;
-	if (img.lb_img <= new label {})  {
-	    out.println ("Title of image 2  is " + t);
-	    }*/
     }
 }

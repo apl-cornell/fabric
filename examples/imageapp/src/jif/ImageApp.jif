@@ -18,7 +18,8 @@ public class ImageApp [principal p, principal q] authority (q) {
     }
     
 
-    // we simulate generating a thumbnail by returning a 4-byte new image
+    // We simulate generating a thumbnail by returning a 4-byte new
+    // image that contains some of the original bytes
 
     public Image[p]{p,q<-} genThumbnail{p,q<-}(Image[p] {p,q<-} img)  {
 	if (img == null) return null;
@@ -26,7 +27,7 @@ public class ImageApp [principal p, principal q] authority (q) {
 	    return img; // the image is small enough to be its own thumbnail
 
 	byte{*img.lb_img; p,q <-} []{*img.lb_img; p,q <-} b  = new byte [4];
-	int k = 4; 
+	int k = 1;
 	try { 
 	     k= camera.CAMERA_RESOLUTION/4;
 	} catch (Exception ignored){}
@@ -41,36 +42,35 @@ public class ImageApp [principal p, principal q] authority (q) {
 	return thb;
     }
     
-    // example action that is run by the app on the first run
-    // 
-
-
+    // Example action that is run by the app on the first run
+  
     public void firstRunAction{p,q<-}() { // todo: justify the begin-label
 	display.show("First run");
 	for (int i = 0; i < camera.getNImages(); i++) {
 	    final Image[p]{p<-} img = camera.getImage(i);
-	    if (new label {p<-} <= img.lb_img && 
-                new label {p<-} <= img.lb_meta  ) { // should always hold..
+	    if (new label {p<-} <= img.lb_img &&    // these comparisons 
+                new label {p<-} <= img.lb_meta  ) { // should always hold...
 
 		final Image[p] {p<-} thb = genThumbnail(img);
 		if (thb.lb_img <= new label { p->; p,q <-} && 
 		    thb.lb_meta <= new label { p->; p,q <-} ) {	
+
+		    // We display thumbnails of each image on trused display
+		    display.show (Integer.toString(thb.bmp[0]));
+		    
 		    // todo: substitute by a method that is supposed 
 		    // to display a thumbnail on the user's display
-		    display.show (Integer.toString(thb.bmp[0]));
 		}
-		// but we can also ship data outside
-		
-		if (img.lb_img <= new label {} ) {
+
+		// We publish shared images
+		if (img.lb_img <= new label {} ) {  // only holds for shared images
+
 		    out.print ("outputing the first byte of the image on {}:  ");
 		    out.println (Integer.toString(img.bmp[0]));
+
 		}   
 	    }
 	}
 	display.show("End of first run");
-    }
-
-    public void publishShared() {
-	
     }
 }

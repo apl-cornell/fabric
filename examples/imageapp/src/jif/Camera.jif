@@ -36,8 +36,9 @@ public class Camera [principal p] authority (p) {
 	if (n_images >= MAX_IMAGE_CAPACITY) 
 	    return -1;
 
-	// camera full; an alternative implementation would throw a
-        // special exception, but we do not do that just yet.
+	// When camera is full we return -1; an alternative
+        // implementation would throw a special exception, but we do
+        // not do that just yet.
 					
 	byte{*lb_camera}[]{*lb_camera} bmp = new byte[CAMERA_RESOLUTION];
 	for (int i= 0; i <= CAMERA_RESOLUTION; i++) {
