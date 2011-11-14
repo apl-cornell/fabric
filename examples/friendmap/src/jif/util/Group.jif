@@ -15,7 +15,10 @@ import jif.util.Set;
  * ArrayIndexOutOfBoundsException if the array is full.
  */
 public class Group[principal owner]
-  implements Principal
+implements Principal
+where
+  provider               <= {owner←},
+  GroupIterator.provider <= {owner←}
 {
   private final String      {this}   name;
 

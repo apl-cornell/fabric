@@ -1,0 +1,14 @@
+package util.tests;
+
+public class ProviderTest {
+  public final String {this} name;
+
+  public ProviderTest(String{this} name) {
+    this.name = name;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

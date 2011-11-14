@@ -45,7 +45,7 @@ public class UserV1 extends Meet
   throws NullPointerException
   where
     authority(this),
-    provider           <= {this},
+    provider           <= {network←;owner←},
     {owner←; network←} <= {this}
   {
     // these endorsements are safe, because owner ≽ this,
