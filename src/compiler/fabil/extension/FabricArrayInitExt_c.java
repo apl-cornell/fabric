@@ -87,12 +87,6 @@ public class FabricArrayInitExt_c extends AnnotatedExt_c {
       
         if (!ts.isFabricReference(expr.type())) return expr;
       
-        // Need a label. Use null by default for principal objects. The Principal
-        // constructor will fill in the appropriate label.
-        if (ts.isPrincipalClass(expr.type())) {
-          return expr.updateLabel(qq.parseExpr("null").type(ts.Null()));
-        }
-      
         // Need a label. By default, we use the same label as the context.
         Context context = la.context();
         ClassType currentClass = context.currentClass();

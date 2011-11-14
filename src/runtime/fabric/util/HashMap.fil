@@ -227,7 +227,10 @@ public class HashMap extends AbstractMap
 
     if (initialCapacity == 0)
       initialCapacity = 1;
-    buckets = new HashEntry[initialCapacity];
+    
+    // XXX This label is wrong. HashMap should be parameterized
+    Label label = LabelUtil.noComponents();
+    buckets = new HashEntry[initialCapacity]~label;
     this.loadFactor = loadFactor;
     threshold = (int) (initialCapacity * loadFactor);
   }

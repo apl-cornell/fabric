@@ -806,7 +806,7 @@ public interface Object {
         out.writeObject(obj.$unwrap());
         return;
       }
-
+      
       _Proxy p = (_Proxy) obj;
       if (ONumConstants.isGlobalConstant(p.ref.onum) || p.ref.store.equals(store)) {
         // Intra-store reference.
@@ -900,9 +900,8 @@ public interface Object {
           @Override
           public Object run() throws Throwable {
             Constructor<? extends Object._Impl> constr =
-              c.getConstructor(Store.class, Label.class, Label.class);
-            Label emptyLabel = store.getEmptyLabel();
-            return constr.newInstance(store, emptyLabel, emptyLabel);
+              c.getConstructor(Store.class);
+            return constr.newInstance(store);
           }
         });
       }
