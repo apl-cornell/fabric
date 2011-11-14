@@ -682,9 +682,16 @@ public final class SerializedObject implements FastSerializable, Serializable {
       if (updateLabelStore instanceof LocalStore) {
         Class<?> objClass = impl.getClass();
         String objStr = impl.toString();
-        throw new InternalError("Creating remote ref to local store.  Remote "
+        String message = "Creating remote ref to local store.  Remote "
             + "object has class " + objClass + ".  Its string representation "
-            + "is \"" + objStr + "\", and its updateLabel is local.");
+            + "is \"" + objStr + "\", and its updateLabel is local.";
+        if (impl.$stackTrace != null) {
+          message +=
+              "  A stack trace for the creation of the remote object follows.";
+          for (StackTraceElement e : impl.$stackTrace)
+            message += System.getProperty("line.separator") + "  " + e;
+        }
+        throw new InternalError(message);
       }
       out.writeUTF(updateLabelStore.name());
     }
@@ -703,9 +710,16 @@ public final class SerializedObject implements FastSerializable, Serializable {
       if (accessPolicyStore instanceof LocalStore) {
         Class<?> objClass = impl.getClass();
         String objStr = impl.toString();
-        throw new InternalError("Creating remote ref to local store.  Remote "
+        String message = "Creating remote ref to local store.  Remote "
             + "object has class " + objClass + ".  Its string representation "
-            + "is \"" + objStr + "\", and its accessPolicy is local.");
+            + "is \"" + objStr + "\", and its accessPolicy is local.";
+        if (impl.$stackTrace != null) {
+          message +=
+              "  A stack trace for the creation of the remote object follows.";
+          for (StackTraceElement e : impl.$stackTrace)
+            message += System.getProperty("line.separator") + "  " + e;
+        }
+        throw new InternalError(message);
       }
       out.writeUTF(accessPolicyStore.name());
     }

@@ -449,6 +449,11 @@ public interface Object {
      * The version number on the last update-map that was checked.
      */
     public int $updateMapVersion;
+    
+    /**
+     * A stack trace of where this object was created. Used for debugging.
+     */
+    public final StackTraceElement[] $stackTrace;
 
     /**
      * A private constructor for initializing transaction-management state.
@@ -466,7 +471,18 @@ public interface Object {
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
       this.$updateMapVersion = -1;
+      
+      if (TRACE_OBJECTS)
+        this.$stackTrace = Thread.currentThread().getStackTrace();
+      else this.$stackTrace = null;
     }
+    
+    /**
+     * A debugging switch for storing a stack trace each time an _Impl is
+     * created. This is enabled by passing "--trace-objects" as a command-line
+     * argument to the worker.
+     */
+    public static boolean TRACE_OBJECTS = false;
 
     /**
      * Creates a new Fabric object that will reside on the given Store.
