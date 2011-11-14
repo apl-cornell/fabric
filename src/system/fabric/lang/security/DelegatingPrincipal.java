@@ -53,7 +53,7 @@ public interface DelegatingPrincipal extends Principal {
   public abstract static class _Impl extends Principal._Impl implements
       DelegatingPrincipal {
 
-    public _Impl(Store store, Label label, Label accessLabel) {
+    public _Impl(Store store) {
       super(store);
     }
 
