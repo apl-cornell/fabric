@@ -15,6 +15,7 @@ import util.AssertionFailedError;
 import util.NoSuchElementException;
 import util.Util;
 import util.System;
+import util.Store;
 
 /**
  * This is the mapping application.  A FriendMap is instantiated with a particular
@@ -61,9 +62,9 @@ public class FriendMap extends Delegator {
    */
   public
   void
-  viewMap {user→}
+  viewMap {{user→} meet {service→}}
   (
-    UserV1 {user→} user
+    UserV1 {{user→} meet {service→}} user
   )
   throws
   (
@@ -89,9 +90,9 @@ public class FriendMap extends Delegator {
    */
   public
   void
-  postMap {user.friends→; _←}
+  postMap {{user.friends→; _←} meet {service→}}
   (
-    final UserV1 {user.friends→; _←} user
+    final UserV1 {{user.friends→; _←} meet {service→}} user // why??
   )
   throws
   (
@@ -119,7 +120,7 @@ public class FriendMap extends Delegator {
    */
   private
   void
-  printMap {*lbl}
+  printMap {{*lbl} meet {service→}}
   (
     final UserV1 user,
     final label  lbl
@@ -133,7 +134,9 @@ public class FriendMap extends Delegator {
     lbl         <= {System.user→; _←}, // because data will be output to the system user
     {user; lbl} <= lbl,
     provider <= {*lbl},               
-    MapImage.provider <= {*lbl}
+    MapImage.provider <= {*lbl},
+    {user←} <= lbl,
+    {user} <= {service→}
   {
     if (user == null)
       throw new NullPointerException();
@@ -151,20 +154,19 @@ public class FriendMap extends Delegator {
    */
   public
   MapImage[l]
-  createMap
+  createMap {{*l} meet {service→}}
   (
     label l,
-    final UserV1 user
+    final UserV1 {{*l} meet {service→}} user
   )
   throws
   (
     NullPointerException{user}
   )
   where
-    {service←} <= l
+    {service←} <= l,
+    {user←} <= l
   {
-    return null;
-    /*
     // invariant checks
     if (user == null)
       throw new NullPointerException();
@@ -206,6 +208,8 @@ public class FriendMap extends Delegator {
     // get map
     MapImage[fetchLabel] map = this.service.getMap(fetchLabel, boundary);
 
+    return null;
+    /*
     // make a local copy (with label l)
     // TODO
     final Store localStore = null;
@@ -240,7 +244,7 @@ public class FriendMap extends Delegator {
     }
 
     return annotated;
-  */
+    */
   }
 }
 
