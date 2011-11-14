@@ -26,14 +26,14 @@ public class Snapp extends Delegator
   }
 
   public
-  UserV1 {owner←; this←}
-  createUser {owner←}
+  UserV1     {this}
+  createUser {this}
   (
     String    {this} name,
-    principal {owner←} owner
+    principal {this} owner
   )
   where
-    provider <= {owner←;this←}
+    provider <= {this}
   {
     try { return new UserV1(name, owner, this); }
     catch (final NullPointerException e) { throw new AssertionFailedError("UserV1 constructor succeeds unless network is null"); }

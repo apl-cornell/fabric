@@ -22,7 +22,7 @@ where
 
   /** The user's location, only readable by members of the locationInfo group. */
   public final label {this}           locationLabel = new label {this←;this→locationInfo};
-  public Location    {*locationLabel} location;
+  public Location    {*locationLabel} location      = null;
 
   /** The user's friends. non-null. */
   public final Group[this] {this} friends;
@@ -52,7 +52,6 @@ where
     NullPointerException{network}
   )
   where
-    {this}    <= {owner←; network←},
     provider  <= {this}
   {
     // these endorsements are safe, because owner ≽ this,
@@ -67,11 +66,6 @@ where
     this.name     = name;
 
     super(owner, network);
-
-    if (owner actsfor this && network actsfor this)
-      this.location = null;
-    else
-      throw new AssertionFailedError("util.Meet delegates to left and right delegatees");
   }
 
   public void setLocation {*locationLabel} (Location{*locationLabel} loc) where provider <= {*locationLabel} {

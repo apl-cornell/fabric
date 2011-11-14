@@ -14,6 +14,7 @@ where
   {SnappNode←}     <= snapp.UserV1.provider,        snapp.UserV1.provider        <= {SnappNode←},
   {MapServNode←}   <= mapserv.MapServer.provider,   mapserv.MapServer.provider   <= {MapServNode←},
   {MapServNode←}   <= mapserv.MapImage.provider,    mapserv.MapImage.provider    <= {MapServNode←},
+  {MapServNode←}   <= mapserv.Box.provider,         mapserv.Box.provider         <= {MapServNode←},
   {FriendMapNode←} <= friendmap.FriendMap.provider, friendmap.FriendMap.provider <= {FriendMapNode←}
 {
   final Snapp     {System.user←} snapp;
@@ -25,10 +26,6 @@ where
   public
   Main2 {System.user←}
   ()
-  :{_←}
-  throws
-    NullPointerException,
-    ArrayIndexOutOfBoundsException
   where
     System.user actsfor SnappNode,
     System.user actsfor MapServNode,
@@ -38,17 +35,14 @@ where
     authority(System.user)
   {
     // create service objects
-    this.snapp      = endorse(new     Snapp("snapp",     SnappNode),              {SnappNode←}        to {System.user←});
+    this.snapp      = new     Snapp("snapp",     SnappNode);
     if (SnappNode     actsfor snapp) {
 
-    this.mapServ    = endorse(new MapServer("mapserv",   MapServNode, ' '),       {MapServNode←}      to {System.user←});
+    this.mapServ    = new MapServer("mapserv",   MapServNode, ' ');
     if (MapServNode   actsfor mapServ) {
 
-    this.friendMap  = endorse(new FriendMap("friendmap", mapServ, FriendMapNode), {FriendMapNode←}    to {System.user←});
-    if (FriendMapNode actsfor friendMap) {
-
     // create users
-    this.alice      = endorse(snapp.createUser("Alice", AliceNode),               {AliceNode←;snapp←} to {System.user←});
+    this.alice      = snapp.createUser("Alice", AliceNode);
     if (AliceNode     actsfor alice) {
 
     this.bob        = endorse(snapp.createUser("Bob",   BobNode),                 {BobNode←;snapp←}   to {System.user←});
@@ -74,9 +68,11 @@ where
     }
 
     // let'er rip!
+
+    try   { this.friendMap  = new FriendMap(mapServ); }
+    catch (final NullPointerException e) { throw new AssertionFailedError("mapServ is not null"); }
     // friendMap.viewMap(alice);
 
-    } else throw new AssertionFailedError("Delegation relationships hold");
     } else throw new AssertionFailedError("Delegation relationships hold");
     } else throw new AssertionFailedError("Delegation relationships hold");
     } else throw new AssertionFailedError("Delegation relationships hold");
@@ -94,7 +90,8 @@ where
     System.user actsfor BobNode
   {
     new Main2();
-    System.stdout(new label{System.user→}).println("done");
+    try { System.stdout(new label{System.user→}).println("done"); }
+    catch (final NullPointerException e) { throw new AssertionFailedError("System.out is non-null"); }
   }
 }
 
