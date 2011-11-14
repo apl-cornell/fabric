@@ -1,3 +1,5 @@
+import java.io.PrintStream;
+
 // principal p runs the camera
 
 public class Camera [principal p] authority (p) { 
@@ -14,7 +16,7 @@ public class Camera [principal p] authority (p) {
     public Image[p] {*lb_camera} [] {*lb_camera} images;
     public int {*lb_camera} gpsX, gpsY;
 
-    public Camera {*lb_camera} () {
+    public Camera {p<-; p->} () {
 	this.gpsX = 0; 
 	this.gpsY = 0;
 	resetCamera();
@@ -59,5 +61,32 @@ public class Camera [principal p] authority (p) {
     public byte{*lb_camera} read_raw_source_of_data{*lb_camera}() {
 	return 0; // we pretend to return something meaningful... 
                   // note the begin_label is {lb_camera}, but it could be higher
+    }
+
+    // debugging method
+    public void printImageLabels{p<-}(PrintStream[{}]{} out) where authority (p) {
+	int{} n = declassify (n_images, {});
+	out.println("There are total " + n +" images");
+    }
+
+
+    // todo: justify auto-endorse
+    public int {p<-} getNImages {} () where authority (p), endorse({p<-}) {
+	return declassify (n_images, {p<-});
+    }
+    
+    // for the lack of label-heterogenous data structures in Jif we add this helper method
+    // todo: justify auto-endorse
+    public Image[p]{p<-} getImage{}(int {} i0) where authority (p), endorse({p<-}) {
+	// Justification - it is (is it?) okay to declassify the individual element of the images array
+	// because nothing about the image is public otherwise
+	
+	int i = endorse (i0, {p<-});
+	Image [p] {p -> ; p<-} img = null;
+	try {
+	    img = images [i];
+	} catch (Exception ignored) {}
+	Image[p] {p<-} ret = declassify (img, {p ->; p<-} to {p <-});
+	return ret;
     }
 }

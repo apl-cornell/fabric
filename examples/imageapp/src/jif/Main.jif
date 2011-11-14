@@ -1,18 +1,37 @@
 import jif.principals.*;
 
-public class Main {   
-    public static void main{*<-} (principal p, String[] args) {
-	go() ;
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+public class Main authority (Alice, Bob) {   
+    public static void main{*<-} (principal{} p, String[] args) where caller (p) {
+	go(p) ;
     }
     
 
-    public static void go {Alice <-} () {
-	Camera [Alice ] theCamera = new Camera();
-	ImageApp [Alice, Bob ] theApp = new ImageApp();
+    public static void go { *<- } (principal {} p) where caller (p), authority (Alice, Bob) {
+	PrintStream[{}] out = null;
+	try {
+	    Runtime[p] runtime = Runtime[p].getRuntime();
+	    out = runtime==null?null:runtime.stdout(new label{});
+	} catch (SecurityException e) {
+	}
 
-	CameraUser [Alice, Bob] cameraUser = new CameraUser(theCamera, theApp); 
+	PrintStream[{}] out1 = endorse (out, {p->*} to {p->*; p<-*} ); 
+	PrintStream[{}] out2 = declassify (out1, {p<-*});
+
+	Camera [Alice ] theCamera = new Camera[Alice]();
+	Display [Alice ] display = new Display [Alice](out2);
+	ImageApp [Alice, Bob ] theApp = new ImageApp[Alice, Bob] (theCamera, out2, display);
+	CameraUser [Alice, Bob] cameraUser = new CameraUser[Alice, Bob] (theCamera, theApp); 	
+	
 	cameraUser.useCamera();
-	cameraUser.useApp();
+
+
+	theCamera.printImageLabels(out2);
+	if (theApp != null) {
+	    cameraUser.useApp(out2);
+	}
 
     }
 }
