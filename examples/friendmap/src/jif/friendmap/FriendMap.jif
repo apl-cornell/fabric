@@ -161,7 +161,7 @@ public class FriendMap {
   MapImage[l]
   createMap {{*l} meet {service→}}
   (
-    label l,
+    final label  {{*l} meet {service→}} l,
     final UserV1 {{*l} meet {service→}} user
   )
   throws
@@ -170,10 +170,10 @@ public class FriendMap {
   )
   where
     {service←} <= l,
-    {user←} <= l
+    {user←}    <= l,
+    provider   <= l,
+    provider   <= {service→}
   {
-    return null;
-    /*
     // invariant checks
     if (user == null)
       throw new NullPointerException();
@@ -181,14 +181,12 @@ public class FriendMap {
       throw new AssertionFailedError("user.friends must be non-null");
 
     // this is the label of the data that gets sent to the service
-    final label serviceLabel = new label {service→};
-    // TODO: does the compiler understand this is a meet?
-    final label fetchLabel   = new label {*l meet *serviceLabel};
+    final label fetchLabel   = new label {{*l} meet {service→}};
 
     // compute the bounding box
     Box boundary = new Box(0,0,0,0);
 
-    final GroupIterator i = user.friends.iterator(fetchLabel);
+    final GroupIterator[user, fetchLabel] i = user.friends.iterator(fetchLabel);
     if (i == null)
       throw new AssertionFailedError("Group.iterator() should return a non-null value");
     while (i.hasNext()) {
@@ -201,7 +199,11 @@ public class FriendMap {
         // if the friend doesn't mind his location leaking to the map service,
         // then we expand the bounding box to contain him
         if (friend.locationLabel <= fetchLabel) {
-          boundary = boundary.expand(friend.location.x, friend.location.y);
+          final Location loc = friend.location;
+          if (loc != null) {
+            try { boundary = boundary.expand(loc.x, loc.y); }
+            catch (final NullPointerException e) { throw new AssertionFailedError("boundary is non-null."); }
+          }
         }
 
         // TODO: declassifiers
@@ -212,6 +214,8 @@ public class FriendMap {
       }
     }
 
+    return null;
+    /*
     // get map
     MapImage[fetchLabel] map = this.service.getMap(fetchLabel, boundary);
 
