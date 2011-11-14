@@ -310,6 +310,7 @@ class Store extends MessageToStoreHandler {
   }
   
   private String nameOf(Principal p) {
-    return p == null ? "BOTTOM" : p.name();
+    return p == null ? "BOTTOM" : ("fab://" + p.$getStore().name() + "/" + p
+        .$getOnum());
   }
 }
