@@ -93,6 +93,10 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
       if (updateLabel == null || accessLabel == null) {
         throw new InternalCompilerError("Null field or access label");
       }
+
+      // locate labels at the same store as the object
+      rw = ((FabricToFabilRewriter) rw).pushLocation(rw.qq().parseExpr("this.$getStore()"));
+
       Expr updateLabelExpr = rw.labelToJava(updateLabel);
       Expr accessLabelExpr = rw.labelToJava(accessLabel);
 
