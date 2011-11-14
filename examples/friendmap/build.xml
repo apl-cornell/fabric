@@ -35,8 +35,13 @@
   -->
 
   <target name="build-jif-sig">
-    <jifc     srcdir="${home}/src/jif-sig" includes="jif/principals/Worker.jif" />
-    <jifsigc  srcdir="${home}/src/jif-sig" excludes="jif/principals/Worker,jif" />
+    <jifc     srcdir="${home}/src/jif-sig" includes="jif/principals/Worker.jif">
+      <arg value="-trusted-providers" />
+    </jifc>
+
+    <jifsigc  srcdir="${home}/src/jif-sig" excludes="jif/principals/Worker,jif">
+      <arg value="-trusted-providers" />
+    </jifsigc>
   </target>
 
   <target name="build-jif-java">
@@ -48,11 +53,13 @@
   </target>
     
   <target name="build-jif-util" depends="build-jif-sig">
-    <jifc srcdir="${home}/src/jif" includes="util/*.jif" />
+    <jifc srcdir="${home}/src/jif" includes="util/*.jif">
+      <arg value="-trusted-providers"/>
+    </jifc>
   </target>
 
   <target name="build-jif-snapp" depends="build-jif-util">
-    <jifc srcdir="${home}/src/jif" includes="snapp/*.jif" excludes="snapp/UserV2.jif"/>
+    <jifc srcdir="${home}/src/jif" includes="snapp/*.jif" excludes="snapp/UserV2.jif snapp/Mood.jif"/>
   </target>
 
   <target name="build-jif-mapserv" depends="build-jif-util">

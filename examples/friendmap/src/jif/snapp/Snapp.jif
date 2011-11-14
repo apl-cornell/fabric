@@ -19,7 +19,8 @@ public class Snapp extends Delegator
     principal{owner←} owner
   )
   where
-    provider <= {this}
+    provider <= {this},
+    provider <= {owner←}
   {
     super(name, owner);
   }
