@@ -49,7 +49,9 @@
   </target>
 
   <target name="build-jif-principals" depends="build-jif-sig">
-    <jifc srcdir="${home}/src/jif" includes="jif/principals/*.jif" />
+    <jifc srcdir="${home}/src/jif" includes="jif/principals/*.jif">
+      <arg value="-trusted-providers" />
+    </jifc>
   </target>
     
   <target name="build-jif-util" depends="build-jif-sig">

@@ -22,9 +22,10 @@ import util.Store;
  * mapping service, and then can be run by any User to generate private or
  * public output maps.
  */
-public class FriendMap extends Delegator {
+public class FriendMap {
+
   /** The map service that this app uses to fetch maps.  Must be non-null. */
-  public final MapServer {this←} service;
+  public final MapServer {this} service;
 
   /**
    * Create a new instance of the mapping service.
@@ -35,21 +36,18 @@ public class FriendMap extends Delegator {
   public
   FriendMap {this}
   (
-    String    {this} name,
-    MapServer {owner←} service,
-    Principal {owner←} owner
+    MapServer {this} service
   )
-  throws NullPointerException
-  where authority (this), provider <= {this}
+  throws
+    NullPointerException
+  where
+    provider <= {this}
   {
-    // these endorsements are safe, because owner ≽ this,
-    // and thus {owner←} ⊑ {this←}
-    // we just can't convince the compiler of this fact.
+    if (service == null)
+      throw new NullPointerException();
 
-    this.service = endorse(service, {owner←} to {this←});
-    super(name, owner);
+    this.service = service;
   }
-
 
 
   /**
@@ -60,6 +58,7 @@ public class FriendMap extends Delegator {
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
+  /*
   public
   void
   viewMap {{user→} meet {service→}}
@@ -71,7 +70,6 @@ public class FriendMap extends Delegator {
     NullPointerException {user→}
   )
   where
-    service actsfor user.friendInfo,
     {service←} <= {user←},
     System.user actsfor user,
     provider <= {user←},
@@ -79,6 +77,7 @@ public class FriendMap extends Delegator {
   {
     printMap(user, new label {user→});
   }
+  */
 
   /**
    * prints a map of the user's friends, visible to the user's friends
@@ -88,26 +87,30 @@ public class FriendMap extends Delegator {
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
+  /*
   public
   void
-  postMap {{user.friends→; _←} meet {service→}}
+  postMap {user.friends,service→}
   (
-    final UserV1 {{user.friends→; _←} meet {service→}} user // why??
+    final UserV1 {{user.friends→} meet {service→}} user // why??
   )
   throws
   (
     NullPointerException {user; user←}
   )
   where
-    System.user actsfor user.friends, // because the result gets output to the system user
-    provider <= {user.friends→},      // because the provider can affect the output
-    MapImage.provider <= {user←}
+    System.user actsfor user.friends,     // because the result gets output to the system user
+    provider          <= {user.friends→}, // because the provider can affect the output
+    MapImage.provider <= {user←},
+    user actsfor user.friends,
+    {user} <= {service←}
   {
     if (user == null)
       throw new NullPointerException();
 
     printMap(user, new label {user.friends→; _←});
   }
+  */
 
 
   /**
@@ -118,6 +121,7 @@ public class FriendMap extends Delegator {
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
+  /*
   private
   void
   printMap {{*lbl} meet {service→}}
@@ -147,6 +151,7 @@ public class FriendMap extends Delegator {
     if (result == null)                                             { throw new AssertionFailedError("createMap() returns a non-null value."); }
     try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("System.stdout must return a non-null value"); }
   }
+  */
 
 
   /**
@@ -167,6 +172,8 @@ public class FriendMap extends Delegator {
     {service←} <= l,
     {user←} <= l
   {
+    return null;
+    /*
     // invariant checks
     if (user == null)
       throw new NullPointerException();
@@ -208,8 +215,6 @@ public class FriendMap extends Delegator {
     // get map
     MapImage[fetchLabel] map = this.service.getMap(fetchLabel, boundary);
 
-    return null;
-    /*
     // make a local copy (with label l)
     // TODO
     final Store localStore = null;

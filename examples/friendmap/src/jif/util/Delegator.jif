@@ -4,22 +4,21 @@ package util;
  * Convenience principal class the delegates to a single owner.
  */
 public class Delegator implements Principal {
-  protected final String    {this}  name;
-  protected final principal {this←} owner;
+  protected final String    {this} name;
+  protected final principal {this} owner;
 
   public
   Delegator {this}
   (
     String    {this} name,
-    principal {owner←} owner
+    principal {this} owner
   )
-  where authority(this)
   {
     // these endorsements are safe, because owner ≽ this,
     // and thus {owner←} ⊑ {this←}
     // we just can't convince the compiler of this fact.
 
-    this.owner = endorse(owner, {owner←} to {this←});
+    this.owner = owner;
     this.name  = name;
   }
 

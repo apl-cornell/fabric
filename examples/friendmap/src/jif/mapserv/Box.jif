@@ -29,6 +29,8 @@ public class Box {
     float {this} xmax,
     float {this} ymax
   )
+  where
+    provider <= {this}
   {
     this.xmin = xmin;
     this.ymin = ymin;
@@ -48,7 +50,15 @@ public class Box {
   /**
    * Expand the bounding box so that it contains the given point.
    */
-  public Box{this} expand{this}(float {this} x, float {this} y) {
+  public
+  Box
+  expand{this}
+  (
+    float {this} x, float {this} y
+  )
+  where
+    provider <= {this}
+  {
     return new Box(
         min(this.xmin, x), min(this.ymin, y),
         min(this.xmax, x), max(this.ymax, y));
@@ -85,7 +95,8 @@ public class Box {
     Store s
   )
   where
-    {this} <= l
+    provider <= l,
+    {this}   <= l
   {
     return new Box(this.xmin, this.ymin, this.xmax, this.ymax);
   }

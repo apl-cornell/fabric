@@ -16,12 +16,11 @@ public class Snapp extends Delegator
   public
   Snapp {this}
   (
-    String   {this} name,
-    principal{owner←} owner
+    String    {this} name,
+    principal {this} owner
   )
   where
-    provider <= {this},
-    provider <= {owner←}
+    provider <= {this}
   {
     super(name, owner);
   }
