@@ -81,17 +81,17 @@ public final class byteArray {
 
     switch (height) {
     case 1:
-      root = (_byteArray) (_byteArray) new _byteArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE).$initLabels().$initLabels();
+      root = (_byteArray) new _byteArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE).$initLabels();
       break;
     case 2:
       root =
-          new _ObjectArray(this.$updateLabel, this.$accessPolicy,
-              _byteArray.class, CHUNK_SIZE);
+          (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy,
+              _byteArray.class, CHUNK_SIZE).$initLabels();
       break;
     default:
       root =
-          new _ObjectArray(this.$updateLabel, this.$accessPolicy,
-              _ObjectArray.class, CHUNK_SIZE);
+          (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy,
+              _ObjectArray.class, CHUNK_SIZE).$initLabels();
     }
   }
 
