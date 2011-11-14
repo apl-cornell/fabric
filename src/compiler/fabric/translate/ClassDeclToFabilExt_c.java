@@ -87,8 +87,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     if (!sigMode && ts.isFabricClass(ct)) {
 
       // translate the labels to FabIL
-      Label updateLabel = ct.singleFabilFieldLabel();
-      Label accessLabel = ct.singleFabilAccessLabel();
+      Label updateLabel = ct.classUpdateLabel();
+      Label accessLabel = ct.classAccessLabel();
 
       if (updateLabel == null || accessLabel == null) {
         throw new InternalCompilerError("Null field or access label");

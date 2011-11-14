@@ -49,7 +49,7 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
     Label baseLabel = null;
     Expr labelExpr = null;
     if (base instanceof FabricClassType && ts.isFabricClass(base)) {
-      baseLabel = ((FabricClassType)base).singleFieldLabel();
+      baseLabel = ((FabricClassType)base).classUpdateLabel();
       if (baseLabel != null) {
         labelExpr = rw.labelToJava(baseLabel);      
       }
@@ -58,7 +58,7 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
     Label accessLabel = null;
     Expr accessLabelExpr = null;
     if (base instanceof FabricClassType && ts.isFabricClass(base)) {
-      accessLabel = ((FabricClassType)base).singleAccessLabel();
+      accessLabel = ((FabricClassType)base).classAccessLabel();
       if (accessLabel != null) { 
         accessLabelExpr = rw.labelToJava(accessLabel);
       }

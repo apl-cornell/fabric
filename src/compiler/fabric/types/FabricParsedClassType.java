@@ -12,10 +12,10 @@ public interface FabricParsedClassType extends JifParsedPolyType,
   void removeMethod(MethodInstance mi);
 
   @Override
-  public Label getFoldedAccessLabel();
+  public Label providerFoldedClassAccessLabel();
 
   @Override
-  public Label singleAccessLabel();
+  public Label classAccessLabel();
 
   void setCanonicalNamespace(URI ns);
 }

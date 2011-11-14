@@ -7,24 +7,21 @@ import jif.types.label.Label;
 public interface FabricClassType extends JifClassType, CodebaseClassType {
   
   /**
-   * Return the label associated with this class' fields, or null if this class
-   * has no fields.
+   * Return the update label that objects of this type are enforced at. This
+   * label is the join in the trust ordering of the update labels of every
+   * field.
    */
-  Label singleFieldLabel();
+  Label classUpdateLabel();
   
   
   /**
-   * Same behavior as above, except change the field labels
-   * of Principal classes, so that they don't mention 'this'
+   * Return the access label that objects of this type are enforced at. This
+   * label is the join in the trust ordering of the access labels of every
+   * field and the confidentiality projection of every method's begin label.
    */
-  Label singleFabilFieldLabel();
-
-
-  Label singleAccessLabel();
-  
-  Label singleFabilAccessLabel();
+  Label classAccessLabel();
   
   // Use this method if you want the provider label folded in
-  Label getFoldedAccessLabel();
+  Label providerFoldedClassAccessLabel();
   
 }
