@@ -284,6 +284,14 @@ public class IdentityHashMap extends AbstractMap
             }
           return false;
         }
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+	}
       }.$initLabels();
     return entries;
   }
@@ -428,6 +436,14 @@ public class IdentityHashMap extends AbstractMap
             }
           return false;
         }
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+	}
       }.$initLabels();
     return keys;
   }
@@ -633,6 +649,14 @@ public class IdentityHashMap extends AbstractMap
               }
           return false;
         }
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+	}
       }.$initLabels();
     return values;
   }
@@ -775,6 +799,14 @@ public class IdentityHashMap extends AbstractMap
       removeAtIndex(loc);
       knownMod++;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class IdentityIterator
 
   /**
@@ -901,6 +933,14 @@ public class IdentityHashMap extends AbstractMap
         throw new ConcurrentModificationException();
       return unxform(table[loc]) + "=" + unxform(table[loc + 1]);
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class IdentityEntry
 
   /**
@@ -948,5 +988,13 @@ public class IdentityHashMap extends AbstractMap
             s.writeObject(unxform(table[i + 1]));
           }
       }
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
   }
 }

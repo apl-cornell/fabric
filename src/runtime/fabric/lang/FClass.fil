@@ -57,6 +57,7 @@ public class FClass {
   }
   
   public Object $initLabels() {
+    // Handled by constructor.
     return this;
   }
 }

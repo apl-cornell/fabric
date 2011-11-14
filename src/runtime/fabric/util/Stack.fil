@@ -116,4 +116,12 @@ public class Stack extends Vector
         return elementCount - i;
     return -1;
   }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+  }
 }

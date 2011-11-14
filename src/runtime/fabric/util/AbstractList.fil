@@ -346,6 +346,14 @@ while (i.hasNext())
       last = -1;
       knownMod = modCount;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   }
 
   /**
@@ -725,6 +733,14 @@ while (i.hasNext())
       lastReturned = -1;
       knownMod = modCount;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   }
 
   /**
@@ -900,6 +916,14 @@ while (i.hasNext())
         size++;
         position++;
         modCount = backingList.modCount;
+      }
+
+      public Object $initLabels() {
+	// XXX What should this be?  Using completely permissive values for now.
+	// update label: {_ <-}
+	// access policy: {_ ->}
+	this.$updateLabel = LabelUtil.noComponents();
+	this.$accessPolicy = LabelUtil.bottomConf();
       }
     }
 
@@ -1163,6 +1187,14 @@ while (i.hasNext())
 
       return (SubListIterator) new SubListIterator@store(index).$initLabels();
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class SubList
 
   /**
@@ -1184,6 +1216,14 @@ while (i.hasNext())
     RandomAccessSubList(AbstractList backing, int fromIndex, int toIndex)
     {
       super(backing, fromIndex, toIndex);
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class RandomAccessSubList
 

@@ -33,7 +33,8 @@ public class PrivateKeyObject {
   }
   
   public Object $initLabels() {
-    // Create the label {this->this; this<-this} for the private key object.
+    // {principal->; principal<-}
+    Store store = $getStore();
     ConfPolicy conf =
         LabelUtil.readerPolicy(store, principal, principal);
     IntegPolicy integ =

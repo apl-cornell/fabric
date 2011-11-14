@@ -36,4 +36,11 @@ public final class TransitiveProof extends ActsForProof {
     pToGranter.gatherDelegationDependencies(s);
   }
 
+  public Object $initLabels() {
+    // Fields have label {this}.
+    //   update label: {_ <-}
+    //   access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+  }
 }

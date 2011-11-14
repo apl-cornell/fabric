@@ -162,6 +162,14 @@ public class Hashtable extends Dictionary
         throw new NullPointerException();
       return super.setValue(newVal);
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   }
 
   /**
@@ -598,6 +606,14 @@ public class Hashtable extends Dictionary
           {
             return Hashtable.this.remove(o) != null;
           }
+
+	  public Object $initLabels() {
+	    // XXX What should this be?  Using completely permissive values for now.
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+	  }
         }.$initLabels();
         // We must specify the correct object to synchronize upon, hence the
         // use of a non-public API
@@ -644,6 +660,14 @@ public class Hashtable extends Dictionary
           {
             Hashtable.this.clear();
           }
+
+	  public Object $initLabels() {
+	    // XXX What should this be?  Using completely permissive values for now.
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+	  }
         }.$initLabels();
         // We must specify the correct object to synchronize upon, hence the
         // use of a non-public API
@@ -712,6 +736,14 @@ public class Hashtable extends Dictionary
               }
             return false;
           }
+
+	  public Object $initLabels() {
+	    // XXX What should this be?  Using completely permissive values for now.
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+	  }
         }.$initLabels();
         // We must specify the correct object to synchronize upon, hence the
         // use of a non-public API
@@ -1027,6 +1059,14 @@ public class Hashtable extends Dictionary
       last = null;
       knownMod++;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class EntryIterator
 
   /**
@@ -1048,6 +1088,14 @@ public class Hashtable extends Dictionary
     public Object next()
     {
       return ((HashEntry)super.next()).key;
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class KeyIterator
 
@@ -1072,6 +1120,14 @@ public class Hashtable extends Dictionary
     public Object next()
     {
       return ((HashEntry)super.next()).value;
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class ValueIterator
 
@@ -1140,6 +1196,14 @@ public class Hashtable extends Dictionary
       next = e.next;
       return e;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class EntryEnumerator
 
 
@@ -1171,6 +1235,14 @@ public class Hashtable extends Dictionary
       if (entry != null)
         retVal = entry.key;
       return retVal;
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class KeyEnumerator
 
@@ -1204,6 +1276,21 @@ public class Hashtable extends Dictionary
         retVal = entry.value;
       return retVal;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class ValueEnumerator
 
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+  }
 } // class Hashtable

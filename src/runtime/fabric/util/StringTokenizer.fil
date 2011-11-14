@@ -226,4 +226,12 @@ public class StringTokenizer implements Enumeration
     // if counting delmiters add them into the token count
     return retDelims ? count + delimiterCount : count;
   }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+  }
 } // class StringTokenizer

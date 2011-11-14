@@ -218,6 +218,14 @@ public class Collections
     {
       return "[]";
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class EmptySet
 
   /**
@@ -397,6 +405,14 @@ public class Collections
     {
       return "[]";
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class EmptyList
 
   /**
@@ -533,6 +549,14 @@ public class Collections
     public String toString()
     {
       return "[]";
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class EmptyMap
 
@@ -726,6 +750,14 @@ public class Collections
 //      public final Object nextElement()
 //      {
 //	return i.next();
+//      }
+//
+//      public Object $initLabels() {
+//	// XXX What should this be?  Using completely permissive values for now.
+//	// update label: {_ <-}
+//	// access policy: {_ ->}
+//	this.$updateLabel = LabelUtil.noComponents();
+//	this.$accessPolicy = LabelUtil.bottomConf();
 //      }
 //    }.$initLabels();
 //  }
@@ -1054,6 +1086,14 @@ public class Collections
       r.append(element).append("}");
       return r.toString();
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class CopiesList
 
   /**
@@ -1161,6 +1201,14 @@ public class Collections
     public int compare(Object a, Object b)
     {
       return ((Comparable) b).compareTo(a);
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   }
 
@@ -1439,6 +1487,14 @@ public class Collections
         {
           throw new UnsupportedOperationException();
         }
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+	}
       }.$initLabels();
     }
 
@@ -1501,6 +1557,14 @@ public class Collections
     public String toString()
     {
       return "[" + element + "]";
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class SingletonSet
 
@@ -1678,6 +1742,14 @@ public class Collections
     {
       return "[" + element + "]";
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class SingletonList
 
   /**
@@ -1760,6 +1832,14 @@ public class Collections
           {
             throw new UnsupportedOperationException();
           }
+
+	  public Object $initLabels() {
+	    // XXX What should this be?  Using completely permissive values for now.
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+	  }
         }.$initLabels());
       return entries;
     }
@@ -1857,6 +1937,14 @@ public class Collections
     public String toString()
     {
       return "{" + k + "=" + v + "}";
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class SingletonMap
 
@@ -3240,9 +3328,25 @@ public class Collections
 //                            return (SynchronizedMapEntry) new SynchronizedMapEntry(super.next()).$initLabels();
 //                          }
 //                      }
+//
+//		      public Object $initLabels() {
+//			// XXX What should this be?  Using completely permissive values for now.
+//			// update label: {_ <-}
+//			// access policy: {_ ->}
+//			this.$updateLabel = LabelUtil.noComponents();
+//			this.$accessPolicy = LabelUtil.bottomConf();
+//		      }
 //                    }.$initLabels();
 //                  }
 //              }
+//
+//	      public Object $initLabels() {
+//		// XXX What should this be?  Using completely permissive values for now.
+//		// update label: {_ <-}
+//		// access policy: {_ ->}
+//		this.$updateLabel = LabelUtil.noComponents();
+//		this.$accessPolicy = LabelUtil.bottomConf();
+//	      }
 //            }.$initLabels();
 //          }
 //      return entries;
@@ -4226,6 +4330,14 @@ public class Collections
     {
       return c.toString();
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class UnmodifiableCollection
 
   /**
@@ -4284,6 +4396,14 @@ public class Collections
     public void remove()
     {
       throw new UnsupportedOperationException();
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class UnmodifiableIterator
 
@@ -4529,6 +4649,14 @@ public class Collections
     {
       return unmodifiableList($getStore(),list.subList(fromIndex, toIndex));
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class UnmodifiableList
 
   /**
@@ -4554,6 +4682,14 @@ public class Collections
     UnmodifiableRandomAccessList(List l)
     {
       super(l);
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class UnmodifiableRandomAccessList
 
@@ -4655,6 +4791,14 @@ public class Collections
     public void set(Object o)
     {
       throw new UnsupportedOperationException();
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class UnmodifiableListIterator
 
@@ -4877,6 +5021,14 @@ public class Collections
         {
           return e.toString();
         }
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+	}
       }
 
       /**
@@ -4910,6 +5062,14 @@ public class Collections
             final Map.Entry e = (Map.Entry) super.next();
             return (UnmodifiableMapEntry) new UnmodifiableMapEntry(e).$initLabels();
           }
+
+	  public Object $initLabels() {
+	    // XXX What should this be?  Using completely permissive values for now.
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+	  }
 	}.$initLabels();
       }
 
@@ -4948,6 +5108,14 @@ public class Collections
         return array;
       }
       
+
+      public Object $initLabels() {
+	// XXX What should this be?  Using completely permissive values for now.
+	// update label: {_ <-}
+	// access policy: {_ ->}
+	this.$updateLabel = LabelUtil.noComponents();
+	this.$accessPolicy = LabelUtil.bottomConf();
+      }
     } // class UnmodifiableEntrySet
 
     /**
@@ -5101,6 +5269,14 @@ public class Collections
         values = (UnmodifiableCollection) new UnmodifiableCollection(m.values()).$initLabels();
       return values;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class UnmodifiableMap
 
   /**
@@ -5169,6 +5345,14 @@ public class Collections
     public int hashCode()
     {
       return c.hashCode();
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class UnmodifiableSet
 
@@ -5342,6 +5526,14 @@ public class Collections
     public SortedMap tailMap(Object fromKey)
     {
       return (UnmodifiableSortedMap) new UnmodifiableSortedMap(sm.tailMap(fromKey)).$initLabels();
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class UnmodifiableSortedMap
 
@@ -5518,5 +5710,21 @@ public class Collections
     {
       return (UnmodifiableSortedSet) new UnmodifiableSortedSet(ss.tailSet(fromElement)).$initLabels();
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class UnmodifiableSortedSet
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+  }
 } // class Collections

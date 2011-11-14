@@ -129,6 +129,14 @@ public class TreeMap extends AbstractMap
       super(key, value);
       this.color = color;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   }
 
   /**
@@ -325,6 +333,14 @@ public class TreeMap extends AbstractMap
             }
           return false;
         }
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+	}
       }.$initLabels();
     return entries;
   }
@@ -426,6 +442,14 @@ public class TreeMap extends AbstractMap
           removeNode(n);
           return true;
         }
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+	}
       }.$initLabels();
     return keys;
   }
@@ -635,6 +659,14 @@ public class TreeMap extends AbstractMap
         {
           TreeMap.this.clear();
         }
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+	}
       }.$initLabels();
     return values;
   }
@@ -1349,6 +1381,14 @@ public class TreeMap extends AbstractMap
       last = null;
       knownMod++;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class TreeIterator
 
   /**
@@ -1496,6 +1536,14 @@ public class TreeMap extends AbstractMap
               }
             return false;
           }
+
+	  public Object $initLabels() {
+	    // XXX What should this be?  Using completely permissive values for now.
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+	  }
         }.$initLabels();
       return entries;
     }
@@ -1565,6 +1613,14 @@ public class TreeMap extends AbstractMap
               }
             return false;
           }
+
+	  public Object $initLabels() {
+	    // XXX What should this be?  Using completely permissive values for now.
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+	  }
         }.$initLabels();
       return this.keys;
     }
@@ -1641,8 +1697,32 @@ public class TreeMap extends AbstractMap
           {
             SubMap.this.clear();
           }
+
+	  public Object $initLabels() {
+	    // XXX What should this be?  Using completely permissive values for now.
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+	  }
         }.$initLabels();
       return this.values;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   } // class SubMap  
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+  }
 } // class TreeMap

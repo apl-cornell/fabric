@@ -130,4 +130,12 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
   public IntegPolicy meet(Store store, IntegPolicy p) {
     return LabelUtil.meetPol(store, this, p);
   }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+  }
 }

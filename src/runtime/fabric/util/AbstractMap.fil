@@ -315,6 +315,14 @@ public abstract class AbstractMap implements Map
 	  {
 	    map_iterator.remove();
 	  }
+
+	  public Object $initLabels() {
+	    // XXX What should this be?  Using completely permissive values for now.
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+	  }
 	}
 
 	/**
@@ -328,6 +336,14 @@ public abstract class AbstractMap implements Map
         {
           return (KeysIterator) new KeysIterator@store(store).$initLabels();
         }
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+	}
       }.$initLabels();
     return keys;
   }
@@ -553,6 +569,14 @@ public abstract class AbstractMap implements Map
 	  {
 	    map_iterator.remove();
 	  }
+
+	  public Object $initLabels() {
+	    // XXX What should this be?  Using completely permissive values for now.
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+	  }
 	}
 
 	/**
@@ -566,6 +590,14 @@ public abstract class AbstractMap implements Map
         {
           return (ValuesIterator) new ValuesIterator@store(store).$initLabels();
         }
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+	}
       }.$initLabels();
     return values;
   }
@@ -725,6 +757,14 @@ public abstract class AbstractMap implements Map
     public final String toString()
     {
       return key + "=" + value;
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   } // class BasicMapEntry
 }

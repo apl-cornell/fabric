@@ -128,4 +128,12 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
   public ConfPolicy meet(Store store, ConfPolicy p) {
     return LabelUtil.meetPol(store, this, p);
   }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+  }
 }

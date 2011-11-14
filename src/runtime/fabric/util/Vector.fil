@@ -262,6 +262,14 @@ public class Vector extends AbstractList
           throw new NoSuchElementException();
         return elementData[i++];
       }
+
+      public Object $initLabels() {
+	// XXX What should this be?  Using completely permissive values for now.
+	// update label: {_ <-}
+	// access policy: {_ ->}
+	this.$updateLabel = LabelUtil.noComponents();
+	this.$accessPolicy = LabelUtil.bottomConf();
+      }
     }.$initLabels();
   }
 
@@ -895,4 +903,11 @@ public class Vector extends AbstractList
     s.defaultWriteObject();
   }
 
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+  }
 }

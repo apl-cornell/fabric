@@ -88,6 +88,14 @@ public class WeakHashMap extends AbstractMap implements Map
     {
       return null == o || this == o;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+    }
   }.$initLabels();
 
   /**
@@ -294,7 +302,23 @@ public class WeakHashMap extends AbstractMap implements Map
           lastEntry = null;
           knownMod++;
         }
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+	}
       }.$initLabels();
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   }
 
@@ -456,6 +480,14 @@ public class WeakHashMap extends AbstractMap implements Map
       if (key == null)
         return null;
       return (WeakEntry) new WeakEntry(key).$initLabels();
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
     }
   }
 
@@ -835,5 +867,13 @@ public class WeakHashMap extends AbstractMap implements Map
   {
     cleanQueue();
     return super.values();
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
   }
 } // class WeakHashMap

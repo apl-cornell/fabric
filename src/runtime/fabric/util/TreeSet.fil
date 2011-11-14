@@ -306,4 +306,12 @@ public class TreeSet extends AbstractSet
   {
     return (TreeSet) new TreeSet(map.tailMap(from)).$initLabels();
   }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+  }
 }
