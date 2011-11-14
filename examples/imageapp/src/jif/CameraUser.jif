@@ -50,15 +50,16 @@ public class CameraUser [principal p, principal q] authority (p) {
 	    final Image[p]{p<-} theImage = declassify (theImage0, {p<-});
 	    if (theImage == null) return;
 
-
-	    if (theImage.lb_img equiv camera.lb_camera &&  
-		// todo: generalize the constraints...
-                theImage.lb_meta equiv camera.lb_camera) {
+ 
+	    if (theImage.lb_img equiv camera.lb_camera &&  // these always hold
+                theImage.lb_meta equiv camera.lb_camera) { // todo: generalize the constraints...
+		                             
 		byte{p->; p<-}[]{p<-; p->} bmp1 = theImage.bmp;
 		byte{p->; p<-}[]{p<-} bmp = declassify (bmp1, {p<-});
+
 		for (int j = 0; j < camera.CAMERA_RESOLUTION; j++) {
 		    try {
-			byte {p<-} t = declassify (bmp[0], {p<-; p->} to {p<-});
+			byte {p<-} t = declassify (bmp[j], {p<-; p->} to {p<-});
 			bmp0[j] = t;
 		    } catch (Exception ignored) {}
 		} 
