@@ -808,12 +808,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public fabric.lang.security.Label sourceAccessLabel(CodebaseSource src) {
+  public fabric.lang.security.ConfPolicy sourceAccessPolicy(CodebaseSource src) {
     // Re-use update label for access label. In general the store may allow
     // a more restricted access label, but we can only use the provider
     // label to statically figure out when we can fetch from the store vs.
     // using a replica.
-    return sourceUpdateLabel(src);
+    return sourceUpdateLabel(src).confPolicy();
   }
 
   @Override

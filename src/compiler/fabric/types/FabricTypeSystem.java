@@ -71,6 +71,6 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   Label tmeet(Label L1, Label L2);
   
   fabric.lang.security.Label sourceUpdateLabel(CodebaseSource src);
-  fabric.lang.security.Label sourceAccessLabel(CodebaseSource src);
+  fabric.lang.security.ConfPolicy sourceAccessPolicy(CodebaseSource src);
 
 }

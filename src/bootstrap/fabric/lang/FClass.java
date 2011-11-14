@@ -59,7 +59,7 @@ public interface FClass extends fabric.lang.Object {
                 
         public _Impl(fabric.worker.Store $location,
                      fabric.lang.security.Label label,
-                     fabric.lang.security.Label accessPolicy,
+                     fabric.lang.security.ConfPolicy accessPolicy,
                      fabric.lang.Codebase codebase, java.lang.String name,
                      java.lang.String source,
                      fabric.lang.arrays.byteArray bytecode) {

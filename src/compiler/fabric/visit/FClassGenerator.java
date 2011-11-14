@@ -24,6 +24,7 @@ import fabric.Topics;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
+import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.types.FabricParsedClassType;
 import fabric.types.FabricTypeSystem;
@@ -91,7 +92,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
             "Running FClassGenerator on unpublished source!");
 
       Label update_lbl = fts.sourceUpdateLabel(src);
-      Label access_lbl = fts.sourceAccessLabel(src);
+      ConfPolicy access_lbl = fts.sourceAccessPolicy(src);
 
       Store store = fabext.destinationStore();
       String className = pct.fullName();

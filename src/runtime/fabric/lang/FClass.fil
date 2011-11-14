@@ -25,14 +25,14 @@ public class FClass {
   protected final String   source;
   protected final byte[]   bytecode;
   
-  public FClass(Codebase codebase, Label updateLabel, Label accessLabel,
+  public FClass(Label updateLabel, ConfPolicy accessPolicy, Codebase codebase,
       String name, String source, byte[] bytecode) {
     this.codebase = codebase;
     this.name = name;
     this.source = source;
     this.bytecode = bytecode;
     this.$updateLabel = updateLabel;
-    this.$accessPolicy = accessLabel.confPolicy();
+    this.$accessPolicy = accessPolicy;
   }
 
   public Codebase getCodebase() {
