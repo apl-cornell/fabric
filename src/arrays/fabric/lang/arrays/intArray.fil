@@ -80,13 +80,13 @@ public final class intArray {
 
     switch (height) {
     case 1:
-      root = new _intArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE);
+      root = (_intArray) new _intArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE).$initLabels();
       break;
     case 2:
-      root = new _ObjectArray(this.$updateLabel, this.$accessPolicy, _intArray.class, CHUNK_SIZE);
+      root = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _intArray.class, CHUNK_SIZE).$initLabels();
       break;
     default:
-      root = new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE);
+      root = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
     }
   }
 
@@ -120,7 +120,7 @@ public final class intArray {
   private void setZeroLength() {
     this.length = 0;
     this.height = 1;
-    root = new _intArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE);
+    root = (_intArray) new _intArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE).$initLabels();
   }
 
   public void setLength(int newSize) {
@@ -137,13 +137,13 @@ public final class intArray {
     if (difference > 0) {
       // Make sure the leaves are at the right level - push down the root.
       if (oldHeight == 1) {
-        _ObjectArray newRoot = new _ObjectArray(this.$updateLabel, this.$accessPolicy, _intArray.class, CHUNK_SIZE);
+        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _intArray.class, CHUNK_SIZE).$initLabels();
         newRoot.set(0, root);
         root = newRoot;
         difference--;
       }
       for (int count = 0; count < difference; count++) {
-        _ObjectArray newRoot = new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE);
+        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
         newRoot.set(0, root);
         root = newRoot;
       }
@@ -217,13 +217,13 @@ public final class intArray {
         // Writing to a node that doesn't exist yet. Time to create it.
         switch (level) {
         case 3:
-          nextObject = new _ObjectArray(this.$updateLabel, this.$accessPolicy, _intArray.class, CHUNK_SIZE);
+          nextObject = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _intArray.class, CHUNK_SIZE).$initLabels();
           break;
         case 2:
-          nextObject = new _intArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE);
+          nextObject = (_intArray) new _intArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE).$initLabels();
           break;
         default:
-          nextObject = new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE);
+          nextObject = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
         }
         oArray.set(firstDigit, nextObject);
       }
