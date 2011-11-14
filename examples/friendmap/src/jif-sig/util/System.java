@@ -9,7 +9,7 @@ import java.io.PrintStream;
 public final class System {
   public static final Principal user = Runtime.getRuntime(null).user(null);
 
-  public PrintStream stdout(Label lbl) {
+  public static PrintStream stdout(Label lbl) {
     // this is safe because the where clause gaurantees that information can
     // flow from the label to the user.
 

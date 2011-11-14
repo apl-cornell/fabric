@@ -59,14 +59,14 @@
     <jifc srcdir="${home}/src/jif" includes="mapserv/*.jif" />
   </target>
 
-  <target name="build-jif-friendmap" depends="build-jif-snapp, build-jif-mapserv">
+  <target name="build-jif-friendmap" depends="build-jif-sig,build-jif-java,build-jif-snapp, build-jif-mapserv">
     <jifc srcdir="${home}/src/jif" includes="friendmap/*.jif" />
   </target>
 
   <target name="build-jif"
           description="Builds the Jif version of friendmap"
-          depends="build-jif-friendmap,build-jif-principals,build-jif-java">
-    <jifc srcdir="${home}/src/jif" includes="Main2.jif"/>
+          depends="build-jif-friendmap,build-jif-principals">
+    <jifc srcdir="${home}/src/jif" includes="Main2.jif">
   </target>
 
 
@@ -159,7 +159,8 @@
         <arg value="-sourcepath" /> <arg value="@{srcdir}"              />
         <arg value="-d"          /> <arg value="${home}/classes/jif"    />
         <arg value="-classpath"  /> <arg value="${home}/classes/jif"    />
-        <arg value="-classpath"  /> <arg value="${home}/classes/jif-sig" />
+        <arg value="-classpath"  /> <arg value="${home}/classes/jif-sig-impl"    />
+        <arg value="-addsigcp"  /> <arg value="${home}/classes/jif-sig" />
         <extra-args />
         <srcfile />
 
