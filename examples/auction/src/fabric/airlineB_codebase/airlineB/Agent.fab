@@ -28,7 +28,8 @@ public class Agent[principal Airline, label Auction] implements broker.Agent[Air
 		int price = 2*lowestprice;
 		final Store store = worker$.getStore(Config.brokerStoreName);
 		if (new label{Auction;*broker.Offer.provider} <= new label {store->} 
-			&&  new label {store<-} <= Auction) {
+			&&  new label {store<-} <= Auction
+			&& broker.Offer.provider <= Auction) {
 				return new Offer[Auction]@store(price, 0);
 		} else
 			throw new Error("Invalid store");
@@ -44,7 +45,8 @@ public class Agent[principal Airline, label Auction] implements broker.Agent[Air
                 final Store store = worker$.getStore(Config.brokerStoreName);
 
 		if (new label {Auction;*broker.Offer.provider} <= new label {store->} 
-			&&  new label {store<-} <= Auction) {
+			&&  new label {store<-} <= Auction
+			&& broker.Offer.provider <= Auction) {
 			Offer[Auction] newOffer = new Offer[Auction]@store(price, 0);
 
 			while (userChoice.choice (newOffer, bestOffer)  >= 0 && price >= lowestprice) {
