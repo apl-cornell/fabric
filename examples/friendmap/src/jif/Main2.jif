@@ -42,7 +42,8 @@ where
     if (MapServNode   actsfor mapServ) {
 
     // create users
-    this.alice      = snapp.createUser("Alice", AliceNode);
+    // final UserV1{SnappNode←} _alice = snapp.createUser("Alice", AliceNode);
+    this.alice      = endorse(makeUser(snapp, "Alice", AliceNode), {SnappNode←} to {System.user←});
     if (AliceNode     actsfor alice) {
 
     this.bob        = endorse(snapp.createUser("Bob",   BobNode),                 {BobNode←;snapp←}   to {System.user←});
@@ -77,6 +78,21 @@ where
     } else throw new AssertionFailedError("Delegation relationships hold");
     } else throw new AssertionFailedError("Delegation relationships hold");
     } else throw new AssertionFailedError("Delegation relationships hold");
+  }
+
+  private static
+  UserV1  {SnappNode←}
+  makeUser{SnappNode←}
+  (
+    final Snapp     {SnappNode←} snapp,
+    final String    {SnappNode←} name,
+    final principal {SnappNode←} node
+  )
+  {
+    if (snapp == null)
+      throw new AssertionFailedError("snapp is not null");
+    final UserV1{SnappNode←} result = snapp.createUser(name,  node);
+    return result;
   }
 
   public static
