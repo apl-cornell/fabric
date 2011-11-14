@@ -3,7 +3,8 @@
 # Wrapper script for fabric.store.Main, the Fabric store.
 source "$(dirname $0)/defs"
 
-debug_opts="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=3370"
+debug_opts="-Xdebug -Xrunjdwp:transport=dt_socket,server=y"
+debug_port=3370
 
 # default app home is Fabric root
 app_home="$(dirname $0)/.."
@@ -40,17 +41,25 @@ while true; do
       args="${args} --name '$2'"
       shift 2
       ;;
+    --debug-port)
+      debug_port="$2"
+      shift 2
+      ;;
     --debug)
-      vmargs="${vmargs} ${debug_opts},suspend=n"
+      debug_suspend=n
       shift
       ;;
     --suspend)
-      vmargs="${vmargs} ${debug_opts},suspend=y"
+      debug_suspend=y
       shift
       ;;
     *) args="${args} '$1'"; shift;;
   esac
 done
+
+if [[ -n "${debug_suspend}" ]]; then
+  vmargs="${vmargs} ${debug_opts},address=${debug_port},suspend=${debug_suspend}"
+fi
 
 # Export location of config, etc, and var 
 export FABRIC_HOME="${app_home}"
