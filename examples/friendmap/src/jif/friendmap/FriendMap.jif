@@ -74,7 +74,12 @@ where
   )
   where
     System.user actsfor user,
-    {user; *provider; *MapServer.provider} <= {{user→} meet {*→service}}
+    {user} <= {user.friends→},
+    {user} <= {*→service},
+    {*provider} <= {user.friends→},
+    {*provider} <= {*→service},
+    {*MapServer.provider} <= {user.friends→},
+    {*MapServer.provider} <= {*→service}
   {
     printMap(user, new label {user→});
   }
@@ -100,7 +105,12 @@ where
   where
     System.user actsfor user,
     user        actsfor user.friends,
-    {user; *provider; *MapServer.provider} <= {{user.friends→} meet {*→service}}
+    {user} <= {user.friends→},
+    {user} <= {*→service},
+    {*provider} <= {user.friends→},
+    {*provider} <= {*→service},
+    {*MapServer.provider} <= {user.friends→},
+    {*MapServer.provider} <= {*→service}
   {
     if (user == null)
       throw new NullPointerException();
