@@ -1,12 +1,13 @@
 package snapp;
 
 import util.Delegator;
+import util.AssertionFailedError;
 
 /**
  * An instance of Snapp corresponds to an instance of the Snapp social network.
  */
 public class Snapp extends Delegator 
-  where provider <= UserV1.provider, UserV1.provider <= provider
+  where provider <= User.provider, User.provider <= provider
 {
 
   /**
@@ -15,22 +16,27 @@ public class Snapp extends Delegator
   public
   Snapp {this}
   (
-    String   {this} name,
-    principal{owner←} owner
-  ) where provider <= {this}
+    String    {this} name,
+    principal {this} owner
+  )
+  where
+    provider <= {this}
   {
     super(name, owner);
   }
 
   public
-  UserV1 {owner←; this←}
-  createUser {owner←}
+  User     {this}
+  createUser {this}
   (
     String    {this} name,
-    principal {owner←} owner
-  ) where provider <= {owner← meet this←}
+    principal {this} owner
+  )
+  where
+    provider <= {this}
   {
-    return new UserV1(name, owner, this);
+    try { return new User(name, owner, this); }
+    catch (final NullPointerException e) { throw new AssertionFailedError("User constructor succeeds unless network is null"); }
   }
 }
 
