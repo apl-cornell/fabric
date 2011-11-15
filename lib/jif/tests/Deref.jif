@@ -1,0 +1,5 @@
+public class Deref {
+    public int{*lx} m(int{*lx} x, int{*lx} y, label{} lx) {
+	return x + 1;
+    }
+}

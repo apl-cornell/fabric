@@ -1,0 +1,11 @@
+class C {
+    void m{*!:}() {
+	int{Alice:}[] a = {1, 2, 3};
+	Object o = a;
+	try {
+	    int{}[] b = (int{}[])o; // BAD: leak!
+	    // int{} leak = b[0];
+	}
+	catch (ClassCastException e) { }
+    }
+}

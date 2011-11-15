@@ -1,0 +1,11 @@
+// Test conflicting interfaces
+interface I[covariant label L] { 
+    int{L} foo(int{L} x);
+}
+
+//class C extends D implements I[{Bob:}] { // bad: no int{Bob:} foo(int{Bob:}) method
+//}
+//
+//class D implements I[{}] {
+//    public int{} foo(int{} x) { return 3; }
+//}

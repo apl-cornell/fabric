@@ -1,0 +1,144 @@
+Jif Change Log
+==============
+
+This file documents changes between releases of Jif.
+
+2009-03-16    Jif 3.3.2
+    * Top/bottom Unicode syntax for principals supported.
+    * Small refactoring change to better support extensions to Jif.
+    * Other bug fixes.
+
+2009-02-24    Jif 3.3.1
+    * Small bug fixes in Jif and upgrades to Polyglot.
+    * Subclasses of java.lang.Error now cannot be caught.
+    * Output format for labels uses more readable -> and <-
+    * Document -nonrobust option, which turns off robustness checking.
+
+2009-02-02    Jif 3.3.0
+    * Jif now infers arguments to parameterized types, both for principal
+      and label parameters.
+
+2008-04-15    Jif 3.2.0
+    * Refactoring for cleaner support of extensions, including Jifclipse.
+    * Minor bug fixes and style changes.
+    * Allow reader policies o->_ and writer policies o<-_ to be
+      dropped from labels. (Principal _ is the bottom principal, and
+      thus o->_ and o<-_ do not restrict the the sets of readers and 
+      writers.)
+      
+2007-11-01    Jif 3.1.1
+    * Based on Polyglot 2.3.0
+    * Checked endorse construct
+       * A useful form of the endorse statement for the common
+         case of validating an untrusted value. See the Jif 
+         manual for more details.
+    * Constant arrays
+       * Arrays can be declared constant, meaning their
+         contents will not change after initialization. This
+         allows more permissive label checking. See the Jif 
+         manual for more details.
+    * Dataflow analysis for array bounds
+       * Analysis is able to determine if some array access
+         and new array expressions will not throw
+         runtime exceptions.
+    * Numerous bug fixes
+    
+2006-06-09    Jif 3.0.0
+    * Added integrity
+       * See the Jif manual for a full explanation.
+       * Labels now form a complete lattice (meet operation
+         supported).
+    * Optional checking for robustness
+       * See the Jif manual for a full explanation.
+       * Label checking rules to enforce robustness against all
+         attackers can be turned on using the "-robust" command line
+         option.
+    * Syntactical/lexical changes
+       * UTF-8 encoded source files accepted
+       * A reader policy "p:q" can also be written "p->q" or
+         "p&#8594;q" (the arrow is Unicode character 8594)
+       * A writer policy "p!:q" can also be written "p-<q" or
+         "p&#8592;q" (the arrow is Unicode character 8592)
+       * Downgrades now explicitly mention the from and to labels
+            e.g., declassify(h, {Alice:} to {Alice:Bob})
+    * Richer principals       
+       * Top and bottom principals now explicitly represented.
+       * Conjunctive and disjunctive principals now supported.
+    * Runtime label and principal tests
+       * A new binary operator "equiv" added. For principals, "p equiv
+         q" is equivalent to "p actsfor q" and "q actsfor p". For
+         labels, "L1 equiv L2" is equivalent to "L1 <= L2" and "L2 <=
+         L1".
+       * Principal and label comparisons can be used as arbitrary
+         boolean expressions. e.g., "boolean b = (p actsfor q);" if a
+         principal or label test occurs as a conjunct of an
+         if-statement, then the label environment used to label check
+         the consequent will include this fact.
+    * Jif manual significantly expanded, including section on the
+      label checking rules in Jif.
+    * Jif library code now has HashMap and HashSet implementations.
+    * Numerous bug fixes.
+
+2006-03-13    Jif 2.0.1
+    * Numerous bug fixes.
+    * Label less-than-or-equal constraints for methods.
+    * Map implementation in jif.util library.
+    * Simple runtime class analysis removes the need to statically handle 
+            some spurious ClassCastExceptions
+    * jif.lang.IDComparable interface now with additional method
+            equals(label lbl, IDComparable[lbl] o)
+        
+2005-08-26    Jif 2.0.0
+    * Class parameters now represented at runtime.
+    * Dynamic labels and principals more expressive: now allow access paths.
+    * Allow user-defined principals.
+    * Not-null checking more precise.
+    * Better documentation.
+    * Based on the Polyglot 2.0.0 architecture.
+
+2004-10-04    Jif 1.1.1
+    * Based on the Polyglot 1.3.0 architecture
+    * Now includes required Polyglot jar files in the distribution
+    
+2004-04-13    Jif 1.1.0
+    * Based on the Polyglot 1.2.0 architecture.
+    * Improved error messages.
+    * New command line option to the Jif compiler: "-explain" (or "-e") 
+      makes the compiler provide more information about why label checking 
+      failed.      
+    * The signature for the "public static void main" method for Jif 
+      programs can now optionally include a dynamic principal, who is the 
+      current user. See the file examples/README in the distribution for 
+      more information.
+    * Misc bug fixes, including:
+          * The label "this" cannot be used in a static context.
+          * Incorrect labels missing colons (e.g., "{Alice}") are detected.
+          * Parameterized classes cannot be subclasses of 
+            "java.lang.Throwable".
+          * Final local variables require an initializer.
+          * Implementation of acts for corrected.
+
+2003-07-11    Jif 1.0.0
+    * Based on the Polyglot 1.0.0 architecture.
+    * Bounded label parameters
+    * Non-null analysis to remove spurious exceptions
+    * New example program: Battleship 
+
+2001-09-06    Jif 0.9.2
+    * Fixed a bug with loading external principals.
+    * Fixed a bug with label checking loop statements.
+    * Fixed serialization bug with jltools.util.Enum.
+    * Installation procedure simplified.
+    * Fixed Jif runtime interface.
+
+2001-08-08    Jif 0.9.0
+    * Fixed many bugs with label/principal parameters and dynamic labels.
+    * Improved error reporting.
+    * Added Jif runtime, which provides the ability to read and write files.
+    * Added a utility to convert local users to Jif external principals.
+
+2001-06-08    Jif 0.8.0
+    * Many bug fixes with porting Jif to JLTools 0.9.0.
+
+2001-05-16    Jif 0.7.0 (JLTools 0.9.0)
+    * JLTools completely rewritten.

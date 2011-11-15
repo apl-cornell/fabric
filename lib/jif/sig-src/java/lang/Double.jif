@@ -1,0 +1,46 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+public final class Double extends Number /*implements Comparable*/ {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+        public static final double POSITIVE_INFINITY = 1.0 / 0.0;
+        public static final double NEGATIVE_INFINITY = -1.0 / 0.0;
+        public static final double NaN = 0.0d / 0.0;
+        public static final double MAX_VALUE = 1.7976931348623157e+308; // 0x1.fffffffffffffP+1023
+        public static final double MIN_VALUE = 4.9e-324; // 0x0.0000000000001P-1022
+        public static final int SIZE = 64;
+        public static native String toString(double d);
+        public static native String toHexString(double d);
+        public static native Double valueOf(String s) throws NumberFormatException;
+        public static native Double valueOf(double d);
+        public static native double parseDouble(String s) throws NumberFormatException;
+        static public native boolean isNaN(double v);
+        static public native boolean isInfinite(double v);
+         
+        public Double(double value) { }
+        public Double(String s) throws NumberFormatException { }
+       
+        public native boolean isNaN();
+        public native boolean isInfinite();
+        public native String toString();
+        public native byte byteValue();
+        public native short shortValue();
+        public native int intValue();
+        public native long longValue();
+        public native float floatValue();
+        public native double doubleValue();
+        public native int hashCode();
+        public native boolean equals(Object obj);
+
+        public static native long doubleToLongBits(double value);
+        public static native long doubleToRawLongBits(double value);
+        public static native double longBitsToDouble(long bits);
+        public native int compareTo(Double anotherDouble);
+        public native static int compare(double d1, double d2);
+}

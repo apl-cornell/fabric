@@ -1,0 +1,20 @@
+// As of 4 March 2005 (Jif 1.1.1), this code permits a leak.
+
+class C { 
+    public C(label{} l, int{*!:} x) { this.lb = l; this.x = x; }
+    final label{} lb; 
+    int{*lb} x = 5; 
+}
+class D { 
+    void foo{*!:}() { 
+	final C{} a = new C(new label {Alice:}, 5); 
+        final C{} b = new C(new label {Bob:}, 7); 
+
+	// The following assignment should be disallowed, since
+	// the label of a.x is {Alice:} and the label of b.x
+	// is {Bob:}. Currently, the assignment is allowed,
+	// since the label of both a.x and b.x is regarded as being the
+	// same dynamic label.
+	a.x = b.x; 
+    } 
+}

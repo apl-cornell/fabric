@@ -1,0 +1,19 @@
+class Data {
+    int{Alice:} a;
+    int{Alice:} b;
+    int{Alice:} c;
+
+    public int{Alice:Bob} sum() where caller(Alice) {
+        return declassify(a+b+c, {Alice:Bob});
+    }
+}
+
+public class Caller authority(Alice)
+{
+    Data data;
+
+    public int{Alice:Bob} dataSum() throws (NullPointerException)
+    {
+        return data.sum();
+    }
+}

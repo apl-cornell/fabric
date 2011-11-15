@@ -1,0 +1,36 @@
+// a list whose spine is basically public but whose items are
+// "L" -secret.
+
+public class PairList2[label L] implements List2[L] 
+{
+    private final Object{L} head;
+    private final List2[L]{this} tail;
+
+    PairList2{L}(Object{L} head, List2[L]{this} tail) {
+	this.head = head;
+	this.tail = tail;
+    }
+
+    public Object{L} first() throws (Exception) {
+	return head;
+    }
+
+    public List2[L] rest() throws (Exception) {
+	return tail;
+    }
+
+    public Object get(int i):{i; L} throws (Exception) {
+	if (i == 0) return head;
+	else return tail.get(i-1);
+    }
+
+    public int{} size() {
+	try {
+	    return 1 + tail.size();
+	} catch (final NullPointerException e) {
+	    return 1;
+	}
+    }
+}
+
+

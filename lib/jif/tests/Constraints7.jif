@@ -1,0 +1,21 @@
+public class Constraints7 {
+    // This example is interesting because it causes an exception
+    // during translation (as at June 14, 2002). So even though there
+    // is a solution to the system (everything at top), the translator
+    // ends up attempting to translate the <all-runtime> label.
+    public void foo()
+    {
+
+	int x = 0;
+
+  	switch label (x) {
+  	    case (int{x} xx) 
+		// So I believe this case should always be true,
+		// as the variable x will always be assignable to
+		// xx, which has the same label as x.
+  		;
+  	}
+    }
+}
+
+

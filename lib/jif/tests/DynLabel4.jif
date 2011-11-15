@@ -1,0 +1,16 @@
+class DynLabel4 {
+    final label{} f;
+    DynLabel4{} g;
+
+    DynLabel4(label{} l, DynLabel4{} o) {
+	this.f = l;
+	this.g = o;
+    }
+  
+    void m(label{} q, DynLabel4 arg) {	
+	final DynLabel4 local = new DynLabel4(q, null);
+
+	int{*this} x2; // not ok, wrong type
+
+    }
+}

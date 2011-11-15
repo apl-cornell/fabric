@@ -1,0 +1,19 @@
+class C {
+    final C{*!:*} foo = null;
+    public void m() throws NullPointerException {       
+	C o = new C();
+	D x = null;
+        if (o.foo instanceof D) {
+	    x = (D)o.foo; // ok	    
+	}
+        if (o.foo.foo instanceof D) {
+	    x = (D)o.foo.foo; // ok	    
+	    o = null;
+	    try {
+		x = (D)o.foo.foo; // not ok 
+	    }
+	    catch (ClassCastException mustBeCaught) { }
+	}
+    }
+}
+class D extends C { }

@@ -1,0 +1,18 @@
+/*
+ * As at July 17th 2003, this test fails, since the local s is tainted
+ * by the label "this", which prevents it from being used as an
+ * argument to foo.
+ */
+
+public class Declassify2 {
+    int{Alice:} a;
+
+    public int{Alice:Bob} sum() where caller(Alice) {
+
+	int s = declassify(a, {Alice:Bob; this});
+	foo(s);
+	return s;	    
+    }
+
+    static void foo(int{Alice:Bob} x) { }
+}

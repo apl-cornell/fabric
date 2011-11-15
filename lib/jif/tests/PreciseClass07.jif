@@ -1,0 +1,8 @@
+class C {
+    public void m(C{} x) throws NullPointerException {       
+	((D)x).foo += 4; // not ok, throws a CCE
+    }
+}
+class D extends C { 
+    int foo = 0;
+}

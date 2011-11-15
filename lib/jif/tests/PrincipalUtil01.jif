@@ -1,0 +1,60 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+public class PrincipalUtil01
+{
+    public PrincipalUtil01() {}
+    public static void main{*!:*}(principal{} pp, String[]{} args)
+        throws (SecurityException)
+    {
+        final principal nullP = PrincipalUtil.nullPrincipal();
+        final principal stupid1 = new StupidPrincipal("dumb");
+        final principal stupid2 = new StupidPrincipal("dumber", stupid1);
+        final principal stupid3 = new StupidPrincipal("dumbest", stupid2);
+
+        Runtime[pp] runtime = Runtime[pp].getRuntime();
+        try {
+            PrintStream[{pp:;_!:_}] out = runtime.out();
+            out.println("nullP is " + PrincipalUtil.toString(nullP));
+            out.println("stupid1 is " + PrincipalUtil.stringValue(stupid1));
+            out.println("stupid1 actsfor stupid2? " + PrincipalUtil.acts_for(stupid1, stupid2));
+            out.println("stupid2 actsfor stupid1? " + PrincipalUtil.acts_for(stupid2, stupid1));
+            out.println("stupid1 actsfor nullP " + PrincipalUtil.acts_for(stupid1, nullP));
+            out.println("stupid1 actsfor stupid3? " + PrincipalUtil.acts_for(stupid1, stupid3));
+
+            ActsForProof prf = PrincipalUtil.findActsForProof(stupid1, stupid2, null);
+            out.println("proof between stupid1 and stupid2 verified? " + PrincipalUtil.verifyProof(prf, stupid1, stupid2));
+            out.println("(false) proof between stupid1 and stupid1 verified? " + PrincipalUtil.verifyProof(prf, stupid1, stupid1));
+            out.println("(false) proof between stupid1 and stupid1 verified? " + PrincipalUtil.verifyProof(null, stupid1, nullP));
+
+            ActsForProof prf2 = PrincipalUtil.findActsForProof(stupid1, stupid3, null);
+            out.println("proof between stupid1 and stupid3 verified? " + PrincipalUtil.verifyProof(prf2, stupid1, stupid3));
+ 
+        }
+        catch (NullPointerException ignored) { }
+    }
+}
+
+class StupidPrincipal extends AbstractPrincipal {
+    public StupidPrincipal(String{this} name) {
+        super(name);
+    }
+    public StupidPrincipal{this:;this!:}(String{this} name, principal{this} del) where authority (this) {
+        super(name);
+        addDelegatesTo(del);
+    }
+
+    public boolean{authPrf; closure; lb; this} isAuthorized(Object authPrf, 
+                                                     Closure[this, lb] closure,
+                                                     label lb,
+                                                     boolean executeNow) where authority (this) {
+        return true;
+    }
+    
+}
+
+
+//public static boolean{p;q} equivalentTo(Principal p, Principal q) {//public static native ActsForProof findActsForProof(Principal p, Principal q);
+//public static native Capability[p, lb]{p; authPrf; c; lb} 
+//            authorize(principal p, Object authPrf, Closure[p, lb] c, label lb);
+//            

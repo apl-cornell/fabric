@@ -1,0 +1,11 @@
+import jif.lang.*;
+
+public class NullExcept10 {
+    final NullExcept10 f = null;
+    public void m() {
+	if (f != null) {
+	    f.m(); // ok, a final field of this tested for null
+	}
+    }    
+}
+

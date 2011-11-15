@@ -1,0 +1,28 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+public final class Boolean /*implements Comparable*/ {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    public static final Boolean{*<-*} TRUE = null; // PLACEHOLDER
+    public static final Boolean{*<-*} FALSE = null; // PLACEHOLDER 
+
+    public Boolean(boolean{this} value) { }
+
+    public Boolean(String{this} s) { }
+
+    public static native boolean parseBoolean(String s);
+    public native boolean{this} booleanValue();
+    public static native Boolean valueOf(boolean b);
+    public static native Boolean valueOf(String s);
+    public static native String toString(boolean b);
+    public native String{this} toString();
+    public native int{this} hashCode();
+    public native boolean{this;obj} equals(Object obj);
+    //public static boolean getBoolean(String name);
+}

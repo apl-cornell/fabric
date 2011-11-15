@@ -1,0 +1,15 @@
+public class Deref2 {
+    public static double{*L} f(final label L, final label M, double{*L} x) {
+	return x;
+    }
+
+    public static void g{*!:*}() {
+	final label L = new label { Alice : };
+	final label M = new label { Bob : };
+
+	double{*L} x = 1.0;
+	double{*L} y;
+
+	y = f(L, M, x);
+    }
+}

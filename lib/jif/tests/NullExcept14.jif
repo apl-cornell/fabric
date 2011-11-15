@@ -1,0 +1,15 @@
+import jif.lang.*;
+
+public class NullExcept14 {
+    public void m() {
+	try {
+	    NullExcept14 x = null;
+	    x.m();
+	}
+	catch (Exception e) {
+	    // e is never null
+	    e.getMessage();
+	}
+    }    
+}
+

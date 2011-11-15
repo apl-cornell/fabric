@@ -1,0 +1,6 @@
+class C[label L] {
+    // cast and instanceof for arrays
+    void m(Object o) throws (ClassCastException{o}) {
+	C[{Alice:}][] x = (C[{Alice:}][])o;  // illegal (not supported)
+    }
+}

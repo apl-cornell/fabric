@@ -1,0 +1,17 @@
+/*
+ * David Naumann's illegal program he pointed out.
+ */
+class X {
+    boolean {} v=false;
+}
+
+class HiRefLowField[label H]{
+    boolean {} test{}(boolean{H} b){
+	X{} lf = new X();
+	X{H} hf = new X();
+	if (b) 
+	    hf = lf;
+	hf.v=true;
+	return lf.v; // leaks b
+    }
+}

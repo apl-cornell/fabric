@@ -1,0 +1,20 @@
+class A {
+    final int{this} f;
+
+    public int{this} getF() {
+        return f;
+    }
+}
+
+public class This {
+    A{Alice:} a;
+
+    public This() {
+        a = new A();
+    }
+
+    public void run():{Alice:} throws (NullPointerException) {
+        int{Alice:Bob} y = a.getF();
+        int{Alice:} x = a.getF();
+    }
+}

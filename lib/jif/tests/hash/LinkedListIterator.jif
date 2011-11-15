@@ -1,0 +1,42 @@
+/**
+ * Simple LinkedListIterator class
+ *
+ * Where label L refers to the label of the contents
+ * of the list
+ */
+class LinkedListIterator[label L] implements java.util.Iterator {
+
+    private LinkNode[L]{L} curr;
+
+    public LinkedListIterator{L}( LinkNode[L]{L} curr ) {
+        this.curr = curr;
+    }
+
+    public boolean{L} hasNext() {
+        if ( curr != null ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public Object{L} next{L}() throws ( java.util.NoSuchElementException ) {
+        Object nxt = null;
+        if ( curr != null ) {
+            try {
+                nxt = curr.getValue();
+                curr = curr.getNext();
+            } catch (NullPointerException npe) {}
+        } else {
+            throw new java.util.NoSuchElementException();
+        }
+        return nxt;
+    }
+
+    public void remove() throws ( java.lang.UnsupportedOperationException,
+                                  java.lang.IllegalStateException )
+    {
+        throw new UnsupportedOperationException();
+    }
+
+}

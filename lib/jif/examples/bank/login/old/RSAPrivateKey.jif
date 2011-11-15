@@ -1,0 +1,5 @@
+class RSAPrivateKey extends Key {
+    public RSAPublicKey createPublicKey() {
+	return new RSAPublicKey(this.keyData);
+    }
+}

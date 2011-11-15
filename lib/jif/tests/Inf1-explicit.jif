@@ -1,0 +1,22 @@
+import jif.util.*;
+
+public class Inf1 { 
+    public static void main{}(String[] argv) {
+	List[{_:_}] x = new LinkedList[{_:_}]();
+	JifObject[{_:_}] one = new JifInteger[{_:_}](1);
+	JifObject[{_:_}] two = new JifInteger[{_:_}](2);
+
+        try {
+	    x.add(one);
+	} catch (Exception exc) {}
+
+	Iterator[{_:_}] it = x.iterator();
+
+	if (it != null)
+	try {
+	    while (it.hasNext()) {
+		JifObject[{_:_}] o = it.next();
+	    }
+	} catch (NoSuchElementException e) {}
+    }
+}

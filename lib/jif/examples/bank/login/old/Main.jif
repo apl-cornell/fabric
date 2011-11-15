@@ -1,0 +1,8 @@
+import java.lang.*;
+
+public class Main authority (client, host) {
+    public static void main(String args[]) where authority(client, host) {
+	Logon l = new Logon();
+	l.run();
+    }
+}

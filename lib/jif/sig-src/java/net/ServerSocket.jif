@@ -1,0 +1,58 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.net;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.IOException;
+
+/**
+ * The label L is the label of all state of the socket, including host, port,
+ * closed, etc. Both input and output streams are assumed to be publically 
+ * readable and untrusted.
+ */
+public class ServerSocket[label L] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    public ServerSocket() throws (IOException{L}, SecurityException{L}) {
+    }
+
+    public ServerSocket(int{L} port) throws (IOException{L}, SecurityException{L}, IllegalArgumentException{L}) {
+    }
+
+    public ServerSocket(int{L} port, int{L} backlog) throws (IOException{L}, SecurityException{L}, IllegalArgumentException{L}) {
+    }
+
+    public ServerSocket(int{L} port, int{L} backlog, InetAddress[L]{L} bindAddr) throws (IOException{L}, SecurityException{L}, IllegalArgumentException{L}) {
+    }
+
+    public native void bind{L}(SocketAddress[L]{L} endpoint) throws (IOException{L}, SecurityException{L}, IllegalArgumentException{L});
+
+    public native void bind{L}(SocketAddress[L]{L} endpoint, int{L} backlog) throws (IOException{L}, SecurityException{L}, IllegalArgumentException{L});
+    public native InetAddress[L]{L} getInetAddress();
+
+    public native int{L} getLocalPort();
+
+    public native SocketAddress[L]{L} getLocalSocketAddress();
+
+    public native Socket[L]{L} accept{L}() throws (IOException{L});
+    public native void close{L}() throws (IOException{L});
+
+//    public native ServerSocketChannel{L} getChannel();
+
+    public native boolean{L} isBound();
+
+    public native boolean{L} isClosed();
+
+    public native void setSoTimeout{L}(int{L} timeout) throws (SocketException{L});
+
+    public native int{L} getSoTimeout() throws (IOException{L});
+    public native void setReuseAddress{L}(boolean{L} on) throws (SocketException{L});
+    public native boolean{L} getReuseAddress() throws (SocketException{L});
+    public native String{L} toString();
+    public native void setReceiveBufferSize{L}(int{L} size) throws (SocketException{L});
+    public native int{L} getReceiveBufferSize();
+}

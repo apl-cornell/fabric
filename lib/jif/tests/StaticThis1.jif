@@ -1,0 +1,4 @@
+class StaticThis1 {    
+    static final int{this} f = 10; // BAD: "this" label used in static context.
+}
+

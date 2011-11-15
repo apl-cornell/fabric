@@ -1,0 +1,21 @@
+/**
+ * Wrapper class for a secure cryptographic hash function
+ */
+package skey;
+
+class SecureHash authority(root) {
+
+	/**
+	 * NOTE: all trust is concentrated on the secure hash algorithm;
+	 *       that is, given a hash value, it is intractable to find
+	 *       the seed string
+	 */
+	public static String{} hash(String{*lb} str, label lb) {
+
+		String tmp = str.toLowerCase(); // of course, replace this with
+										// a secure hash algorithm
+		return declassify(tmp, {});
+
+	}
+
+}

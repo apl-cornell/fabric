@@ -1,0 +1,10 @@
+class C {
+    void m{*!:*}() throws (Exception{*!:*}) {
+	C{Bob:}[]{Alice:}[] x = null;
+	C{}[][] y = null; // is a C{}[]{}[]
+	C{Alice:}[][] z = null; // is a C{Alice:}[]{Alice:}[]
+
+	C{Alice:}[] w = null;
+	y[0] = w; //bad
+    }
+}

@@ -1,0 +1,7 @@
+public class E[covariant label T] {
+    final label{T} elbl;
+    public E(label{T} elbl_) {
+        this.elbl = elbl_;
+    }
+}
+

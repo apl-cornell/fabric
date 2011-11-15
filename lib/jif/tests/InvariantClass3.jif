@@ -1,0 +1,11 @@
+class CovariantClass3   {
+    final int{this} f = 3;
+}
+
+class CovariantClass3b {
+    void m() {
+	CovariantClass3{} a = new CovariantClass3();
+	CovariantClass3{Alice:} b;
+	b = a; // ok
+    }
+}

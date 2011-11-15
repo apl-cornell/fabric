@@ -1,0 +1,12 @@
+// Test if authority of the "this" object is correct
+class C extends jif.lang.AbstractPrincipal {
+    public C(String{this} name) {
+	super(name);
+    }
+
+    public void m{this:;this!:}() where authority (this) {
+	int{this:;this!:} x = 5;
+	int{} y = declassify(x, {});
+    }
+}
+

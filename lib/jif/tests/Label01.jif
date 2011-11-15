@@ -1,0 +1,10 @@
+class Label01[principal u, principal b] {
+ public void f() throws Exception {
+  int {b<-} x = 0;
+  int {u->b; u<-b; b<-} y = x;
+  if (new label  {b<-} <= new label {u->b; u<-b; b<-}) {
+      throw new Exception();
+  }
+ }
+}
+

@@ -1,0 +1,21 @@
+import java.lang.*;
+import java.io.*;
+
+//** EncryptedObjects are parametric with respect to the security level of the encapsulated object
+public class EncryptedObject[label L] extends Object implements Serializable {
+    private UniqueID{L} tag;
+    private Object{L} o;
+
+    public EncryptedObject(UniqueID{L} tag, Object{L} o) {
+	this.tag = tag;
+	this.o = o;
+    }
+
+    public UniqueID{L} getTag() {
+	return tag;
+    }
+
+    public Object{L} getObject() {
+	return o;
+    }
+}

@@ -1,0 +1,79 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+class Authority06 {
+    public static void main{*!:*}(principal{} p, String[] args) {
+	final Principal a1 = new TestPrincipal("A1");
+	final Principal a2 = new TestPrincipal("A2");
+	final Principal a3 = new TestPrincipal("A3");
+	final Principal a4 = new TestPrincipal("A4");
+	final Principal a5 = new TestPrincipal("A5");
+	final Principal a6 = new TestPrincipal("A6");
+	
+	// Create a delegation chain 
+	try {
+	    AddDelClosure[a6] c6 = new AddDelClosure[a6](a5);
+	    PrincipalUtil.authorize(a6, null, c6, new label {a6:;a6!:}).invoke();
+	}
+	catch (NullPointerException ignore) { // wont happen if the principal approves the closure.
+	}
+	try {
+	    AddDelClosure[a5] c5 = new AddDelClosure[a5](a4);
+	    PrincipalUtil.authorize(a5, null, c5, new label {a5:;a5!:}).invoke();
+	}
+	catch (NullPointerException ignore) { // wont happen if the principal approves the closure.
+	}
+	try {
+	    AddDelClosure[a4] c4 = new AddDelClosure[a4](a3);
+	    PrincipalUtil.authorize(a4, null, c4, new label {a4:;a4!:}).invoke();
+	}
+	catch (NullPointerException ignore) { // wont happen if the principal approves the closure.
+	}
+	try {
+	    AddDelClosure[a3] c3 = new AddDelClosure[a3](a2);
+	    PrincipalUtil.authorize(a3, null, c3, new label {a3:;a3!:}).invoke();
+	}
+	catch (NullPointerException ignore) { // wont happen if the principal approves the closure.
+	}
+	try {
+	    AddDelClosure[a2] c2 = new AddDelClosure[a2](a1);
+	    PrincipalUtil.authorize(a2, null, c2, new label {a2:;a2!:}).invoke();
+	}
+	catch (NullPointerException ignore) { // wont happen if the principal approves the closure.
+	}
+
+	// now test the delgation chain!
+        Runtime[p] runtime;
+	PrintStream[{p:}] out = null;
+	try {
+	    runtime = Runtime[p].getRuntime();
+	    if (runtime == null) return;
+	    out = runtime.stdout(new label {p:});
+	}
+	catch (SecurityException e) { }
+	if (out == null) return;
+	
+
+	if (a1 actsfor a6) {
+	    out.println("a1 acts for a6!");
+	}
+
+    }
+}
+
+class AddDelClosure[principal P] extends TestClosure[P, {P:;P!:}] {
+    final principal{} del;
+    AddDelClosure(principal{} del) {
+	this.del = del;
+	super();
+    }
+    
+    public Object{P:;P!:} invoke{P:;P!:}() where caller (P) {
+        final Principal p = P;
+        if (p instanceof TestPrincipal) {
+            final TestPrincipal tp = endorse((TestPrincipal)p, {P:;P!:});
+            tp.addDelegatesTo(endorse(this.del, {P:;P!:}));
+        }
+	return null;
+    }
+}

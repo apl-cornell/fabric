@@ -1,0 +1,12 @@
+//** Is this the right way to express inheritance with a polymorphic class?
+class RSAPrivateKey[principal keyOwner] extends Key[keyOwner] {
+    public RSAPublicKey createPublicKey() 
+    where caller(keyOwner) {
+	return declassify(new RSAPublicKey(this.keyData), {});
+    }
+
+    public SignedObject signObject(Object o) 
+    where caller(keyOwner) {
+	return new SignedObject[keyOwner](this.keyData, o);
+    }
+}

@@ -1,0 +1,6 @@
+public interface clientList {
+  public Object first():{client:} throws (Exception);
+  public clientList rest():{client:} throws (Exception);
+  public Object get(int i): {client:; i} throws (Exception);
+  public int{client:} size();
+}

@@ -1,0 +1,12 @@
+class C {
+    void m(boolean{Alice:} secret) {
+	boolean{} leak = true;
+	
+	try {
+	    if (!secret) throw new NullPointerException();
+	}
+	catch (Exception e) {  // ok
+	    leak = false; // bad
+	}
+    }
+}

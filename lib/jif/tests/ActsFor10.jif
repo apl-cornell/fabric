@@ -1,0 +1,84 @@
+class ActsFor10[principal P]
+{
+    static final principal PRIN = Alice;
+
+    public void p{}(principal{} a, principal{} b) throws NullPointerException {
+        int{a:} x = 0;
+        int{b:} y = 0;
+	int{Alice:} z = 0;
+	int{P:} w;
+	int{Alice:PRIN} q = 7;
+
+	// dyn dyn
+	if (a actsfor b) {
+	    x = y; // allowed
+	}
+
+	// dyn staticfield
+	if (a actsfor PRIN) {
+	    int{Alice:a} zz = q; // allowed
+	}
+
+	// dyn ext
+	if (a actsfor Alice) {
+	    x = z; // allowed
+	}
+
+
+	// ext dyn
+	if (Alice actsfor a) {
+	    z = x;
+	}
+
+	// ext staticfield
+	if (Bob actsfor PRIN) {
+	    int{Alice:Bob} zz = q; // allowed
+	}
+
+	// ext ext
+	if (Bob actsfor Alice) {
+	    if (Alice actsfor a) {
+		int{Bob:} zz = x;
+	    }
+	}
+
+
+	final OwnedObject oo = new OwnedObject(Alice, null);
+	// ext dynpath
+	if (Alice actsfor oo.p) {
+	    Object{Alice:} o = oo.o;
+	}
+
+	// dyn dynpath
+	if (a actsfor oo.p) {
+	    Object{a:} o = oo.o;
+	}
+
+	// dynpath dyn
+	if (oo.p actsfor a) {
+	    int{oo.p:} i = x;
+	}
+	// dynpath staticfield
+	if (oo.p actsfor PRIN) {
+	    int{Alice:oo.p} zz = q; // allowed
+	}
+
+	// dynpath ext
+	if (oo.p actsfor Alice) {
+	    int{oo.p:} i = z;
+	}
+
+	final OwnedObject oo2 = new OwnedObject(Bob, oo);
+	// dynpath dynpath
+	if (oo.p actsfor oo2.p) {
+	    Object{oo.p:} i = oo2.o;
+	}
+
+	// staticfield ext
+	if (PRIN actsfor Bob) {
+	    int{Alice:Bob} zz = 4;
+	    q = zz;
+	}
+    }
+}
+

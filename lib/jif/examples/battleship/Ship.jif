@@ -1,0 +1,125 @@
+/**
+ * This class represents a Ship in the BattleShip game.
+ *
+ * A ship has a length, a coordinate for the bottom left position, and 
+ * a flag indicating whether the ship is laid out horizontally or vertically.  
+ *
+ * It is parameterized by the label L, which is the level of information 
+ * that the ship contains.
+ */
+public class Ship[label L] implements JifObject[L] {
+    /**
+     * The bottom left position of the ship. ( i.e., minimum 
+     * values of x and y coords that the ship covers)
+     */
+    final Coordinate[L]{this} pos;
+    
+    /**
+     * Length of the ship.
+     */  
+    final int{L} length;
+
+    /**
+     * Is the ship horizontal? If so, then it covers coords from
+     * (pos.x, pos.y) to (pos.x+length-1, pos.y); otherwise from
+     * (pos.x, pos.y) to (pos.x, pos.y+length-1).
+     */
+    final boolean{L} isHorizontal;
+
+    public Ship(Coordinate[L]{this} pos, int{L} len, boolean{L} isHoriz) {
+        this.pos = pos;
+        this.length = len;
+        this.isHorizontal = isHoriz;
+    }
+
+    /**
+     * Does the ship cover the co-ordinate coord?
+     */
+    public boolean{*lbl;L;coord} covers(Coordinate[lbl] coord, label lbl) {
+	Coordinate[L] pos = this.pos;
+	if (coord == null || pos == null) 
+	    return false;
+
+	if (isHorizontal) {
+	    return coord.y == pos.y && 
+		pos.x <= coord.x && 
+		coord.x < pos.x + length;
+	}
+	else {
+	    return coord.x == pos.x && 
+		pos.y <= coord.y && 
+		coord.y < pos.y + length;
+	}	
+    }
+
+    /**
+     * Does this Ship intersect with the Ship ship?
+     */
+    public boolean{L;ship} intersects(Ship[L] ship) {
+	if (ship == null) return false;
+
+	Coordinate[L] c = this.pos;
+	for (int i = 0; i < length && c != null; i++) {
+	    if (ship.covers(c, L)) 
+		return true;
+
+	    if (isHorizontal) {
+		c = new Coordinate[L](c.x+1, c.y);
+	    }
+	    else {
+		c = new Coordinate[L](c.x, c.y+1);
+	    }
+	}
+	return false;
+    }
+
+    public String{L} toString() {
+	Coordinate[L] pos = this.pos;
+	Coordinate[L] end = null;
+	
+	if (pos == null) pos = new Coordinate[L](0,0);
+
+	if (isHorizontal)
+	    end = new Coordinate[L](pos.x + length, pos.y);
+	else 
+	    end = new Coordinate[L](pos.x, pos.y + length);
+
+	return pos.toString() + " to " + end.toString();
+    }
+
+    public int{L} hashCode() {
+	Coordinate[L] pos = this.pos;
+	if (pos == null) pos = new Coordinate[L](0,0);
+	return 
+	    pos.hashCode() ^ 
+	    (4007 * length) ^ 
+	    (isHorizontal ? 1861 : 2713);
+    }
+
+    public boolean{lbl;*lbl;L;o} equals(label lbl, IDComparable[lbl] o) {
+	if (o == null || !(o instanceof Ship[lbl])) {
+	    return false;
+	}
+
+
+        Ship[lbl] that = (Ship[lbl])o;
+
+        // use local variables to allow the NullPointerException
+        // analysis to work.
+        Coordinate[L] thispos = this.pos;
+        Coordinate[lbl] thatpos = that.pos;
+
+
+        return this.length == that.length && 
+            this.isHorizontal == that.isHorizontal &&
+            (thispos == thatpos || 
+             (thispos != null && thispos.equals(lbl, thatpos)));
+    }
+    
+    public boolean{L;o} equals(IDComparable[L] o) {
+        return equals(L, o);
+    }
+    
+}
+
+

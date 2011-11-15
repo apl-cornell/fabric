@@ -1,0 +1,119 @@
+This directory contains a collection of Jif sample programs. These
+programs are designed to test the correctness of the Jif
+compiler. This means that some of the test programs are intended to
+compile successfully, and others are intended to be be rejected by the
+Jif compiler. We are working toward having automated test harnesses
+to compile these test programs and ensure that they are accepted or
+rejected as appropriate.
+
+These test programs are provided in the distribution as a means for
+users to learn from small Jif programs how various language features
+should (and should not) be used.
+
+
+Compiling and Running Test Programs
+-----------------------------------
+
+First, follow the installation directions in the file $JIF/README,
+where $JIF is the root of the Jif installation. Upon successfully
+building the Jif compiler, you will be able to compile and run Jif
+test programs in this directory.
+
+For example, to compile the Hello.jif program, go to the $JIF/tests
+directory, where $JIF is the root directory of the Jif installation
+(i.e., go to the directory this README is in), and execute the
+following command.
+
+        $ $JIF/bin/jifc Hello.jif
+
+This will compile the Jif program. To run the compiled program, execute
+the following.
+
+        $ $JIF/bin/jif -classpath . Hello
+
+which will produce the output
+        Hello, the world!
+
+Note the need to explicitly include the current directory in the
+classpath. To see what command the jifc and jif scripts are actually
+executing, try including the "-v" flag. For example: 
+
+        $ $JIf/bin/jif -v -classpath . Hello
+
+To automatically execute the tests in this directory, make sure that
+the Polyglot Test Harness (pth) is on the path, and run the pthScript:
+
+        $ pth pthScript -cp "../classes:../lib-classes:."
+
+See the Polyglot documentation for building the pth tool. Note that
+some of the test programs require the external principals to be
+compiled (see below).
+
+Principals
+----------
+
+Some of the test programs in this directory have Jif labels which
+refer explicitly to principals, such as {Alice:Bob}. Principals with
+constant names, such as Alice and Bob, are referred to as "external
+principals", and are provided primarily to allow easy testing of Jif
+programs.  In this Jif implementation, external principals are
+represented by classes in the special package jif.principals. For
+example, the principal "Dolores" is represented by the class
+"jif.principals.Dolores". The test programs that refer to external
+principals require the appropriate principal classes to be compiled
+and on the classpath.
+
+The directory ./jif/principals contains Jif classes for all
+principals referred to in the test programs provided here. To compile
+these classes, go to the $JIF/tests directory and compile all Java
+files in the jif/principal directory:
+
+        $ cd $JIF/tests
+        $ $JIF/bin/jifc jif/principals/*.jif
+
+
+
+More Info about Principals
+--------------------------
+
+Let's examine ./jif/principals/Dolores.jif, the class for the
+principal Dolores.
+
+	package jif.principals;
+
+	public class Dolores extends ExternalPrincipal {
+	    public Dolores{this:}() where authority (this) {
+		super("Dolores");
+
+		// Dolores allows Chuck to act for her.
+		// Note that in order to add Chuck to Dolores' superiors,
+		// we need the authority of Dolores, which is captured
+		// by the "where authority (this)" caluse on the
+		// constructor signature.
+		final principal c = new Chuck();
+		addDelegatesTo(c);
+
+		// If we were sure that jif.principals.Chuck was
+		// already compiled when we compile this class,
+		// we could simply use the following code to
+		// add Chuck to the delegates list.
+
+		// addDelegatesTo(Chuck);
+	    }
+	}
+
+Note that the class Dolores extends the class
+jif.lang.ExternalPrincipal, which in turn extends
+jif.lang.AbstractPrincipal.
+
+Dolores allows the principal Chuck to act for her, that is, she
+delegates to Chuck. The signature for the method addDelegatesTo is
+found in jif.lang.AbstractPrincipal:
+        public void addDelegatesTo{this:}(principal{this} p) where caller(this)
+
+Note that in order to add a principal to Dolores' superiors, the
+caller of the addDelegatesTo method requires Dolores' authority, as
+specified by the "where caller (this)" clause of addDelegatesTo. This
+authority is asserted in the "where authority (this)" clause of the
+constructor for the class Dolores.
+

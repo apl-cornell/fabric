@@ -1,0 +1,15 @@
+class Dyn4 {
+    int x;
+
+    public int{*L} g{*!:*}(label{*!:*} L) {
+        //int x = 1;
+        int{*L} x = f(L, 1);
+        return f(L, 1);
+    }
+
+    public int{} getX() {
+        return x;
+    }
+
+    public static int{*M} f(label M, int{*M} y) { return y; }
+}

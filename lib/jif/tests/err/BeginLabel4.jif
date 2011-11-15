@@ -1,0 +1,10 @@
+class Wrapper
+{
+    int{Alice:Bob} f;
+
+    public void set (int{Alice:Bob}[]{Alice:Bob} d):{Alice:Bob}
+        throws (NullPointerException, ArrayIndexOutOfBoundsException)
+    {
+        d[0] = f;
+    }
+}

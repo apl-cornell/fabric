@@ -1,0 +1,16 @@
+import java.lang.*;
+
+class RSAPublicKey[principal keyOwner] extends Key[keyOwner] {
+    public RSAPublicKey(UniqueID keyData) {
+	super(keyData);
+    }
+
+    public Object{keyOwner:} decrypt(EncryptedObject[{keyOwner:}]{} e) {
+	return new Object();   // Just return junk...
+    }
+
+    public boolean verifySignature(SignedObject[keyOwner] s) 
+    where authority(keyOwner) {
+	return declassify((s.signature.isEqual(this.keyData)), {});
+    }
+}

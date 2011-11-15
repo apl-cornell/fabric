@@ -1,0 +1,12 @@
+// Test info leaked by params in a cast
+class C[label L] { 
+    
+}
+
+
+class D {
+    void m(C[{*la}]{} o, label{} la) {
+	final label{Alice:} lb = new label {Bob:};
+	C[{*lb}] m = (C[{*lb}])o; // should throw a class cast exception
+    }
+}

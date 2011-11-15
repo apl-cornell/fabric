@@ -1,0 +1,14 @@
+public class Declassify2 authority(Alice,Bob) {
+    int{Alice:} secret;
+
+    public int{Alice:Bob} leak() where authority(Bob) {
+        int{Alice:Bob} ret = 1;
+        if (secret == 100) {
+            //insufficient authority
+            declassify({Alice:Bob}) {
+                ret = 0;
+            }
+        }
+        return ret;
+    }
+}

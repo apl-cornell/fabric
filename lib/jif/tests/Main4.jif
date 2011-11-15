@@ -1,0 +1,13 @@
+class Main4 {
+    static void main(principal p, String[] args) 
+    where p actsfor Alice { // BAD
+
+    }
+}
+
+class Main4a {
+    static void main(principal p, String[] args) 
+    where {p:} <= {Alice:} { // BAD
+
+    }
+}

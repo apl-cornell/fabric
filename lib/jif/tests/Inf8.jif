@@ -1,0 +1,12 @@
+// test principal params
+class C[principal P] { 
+    void m(principal q) where P actsfor q { 
+    }
+}
+
+class D {
+    void m() {
+        C x = new C(); // should be inferred to be Alice
+        x.m(Alice);
+    }
+}

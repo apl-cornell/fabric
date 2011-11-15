@@ -1,0 +1,6 @@
+class C {
+    void m() {
+        C [] const[] foo = {{1,2},{3,4}}; // should be a syntax error, but maybe won't be.
+        //foo[0] = null;
+    }
+}

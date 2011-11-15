@@ -1,0 +1,15 @@
+class Try1 {
+    public void run() {
+        boolean{Alice:} b;
+        boolean{Alice:Bob} x;
+        x = true;
+        try {
+            try { if (b) throw new E1(); }
+            finally { }
+            x = false;
+        } catch (E1 e) { }
+    }
+}
+
+class E1 extends Throwable {
+}

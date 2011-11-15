@@ -1,0 +1,155 @@
+/**
+ * Simple Hashtable class with separate chaining
+ *
+ * NOTE: this is still causing InternalCompilerErrors;
+ *		 something to do with use of Object[] and Object?
+ */
+class Hashtable[label L] /* extends java.util.Dictionary (almost) */ {
+
+	private Object{L}[]{L} data;
+	private float loadfactor;
+	private float growthfactor;
+	private int{L} size;  // we could imagine the size being less secret than L
+
+	public Hashtable( int{L} orig_size ) {
+		data = new Object{L}[orig_size];
+		size = 0;
+		loadfactor   = (float)0.75;
+		growthfactor = (float)2.00;
+	}
+
+	public boolean{L} isEmpty() {
+		return ( size == 0 );
+	}
+
+	public int{L} size() {
+		return size;
+	}
+	
+	public Object{L} put{L}( Object{L} key, Object{L} value ) {
+		
+		Object{L} prev = null;
+
+		try { // begin blanket NullPointerException handler
+
+		int hashval = key.hashCode() & (data.length - 1);
+		boolean alreadyIn = true;
+
+		Item[L] item = new Item[L]( key, value );
+		prev = data[hashval];
+
+		if ( prev == null ) {
+
+			LinkedList[L] list = new LinkedList[L]();
+			list.add( item );
+			data[hashval] = list;
+
+		} else if (prev instanceof LinkedList[L] ) {
+
+			LinkedList[L] list = (LinkedList[L])(prev);
+			LinkedListIterator[L] i = list.iterator();
+			while( i.hasNext() ) {
+				Item[L] nxt = (Item[L])( i.next() );
+				if ( nxt.getKey().equals( key ) ) {
+					prev = nxt.clone();
+					nxt.setValue( value );
+					alreadyIn = true;
+					break;
+				}
+			}
+
+			if (!alreadyIn) {
+				prev = null;
+				list.add( item );
+			}
+		}
+
+		size += (alreadyIn) ? 0 : 1;
+		
+		if ( (float)(size) > (float)(data.length) * loadfactor ) {
+			// make sure table size stays within load factor
+			expand();
+		}
+
+		} catch ( Exception e ) {} // end blanket NullPointerException catcher
+
+		return prev;
+	}
+
+	public Object{L} get{L}( Object{L} key ) {
+
+		int hashval = key.hashCode() & (data.length - 1);
+		Object{L} prev = data[hashval];
+
+		if ( prev == null ) {
+			// no value found
+		} else if ( prev instanceof LinkedList[L] ) {
+			LinkedList[L] list = (LinkedList[L])prev;
+			LinkedListIterator[L]{L} i = list.iterator();
+			while( i.hasNext() ) {
+				Item[L]{L} item = (Item[L])( i.next() );
+				if ( item.getKey().equals( key ) ) {
+					return item.getValue();
+				}
+			}
+			// no value found in list
+		}
+
+		return null;
+	}
+
+	public Object{L} remove{L}( Object{L} key ) {
+		int hashval = key.hashCode() & (data.size - 1);
+		Object{L} prev = data[hashval];
+
+		if ( prev == null ) {
+			// no value found
+		} else if ( prev instanceof LinkedList[L] ) {
+			LinkedList[L] list = (LinkedList[L])prev;
+			LinkedListIterator[L] i = list.iterator();
+			while( i.hasNext() ) {
+				Item[L] item = (Item[L])( i.next() );
+				if ( item.getKey().equals( key ) ) {
+
+					list.remove(item);
+					if (list.size() == 0) {
+						data[hashval] = null;
+					}
+					size--;
+					return item.getValue();
+				}
+			}
+			// else, no value found
+		}
+
+		return null;
+	}
+
+	private void expand() {
+		Object[] olddata = data;
+		int oldsize = size;
+
+		data = new Object[ (int)((float)(data.length) * growthfactor) ];
+		size = 0;
+
+		for (int i=0; i<olddata.length; i++) {
+
+			Object{L} prev = olddata[i];
+
+			if ( prev == null ) {
+				continue;
+			} else if ( prev instanceof LinkedList[L] ) {
+
+				LinkedList[L] list = (LinkedList[L])prev;
+				LinkedListIterator[L] i = list.iterator();
+				while( i.hasNext() ) {
+					Item[L] prv = (Item[L])prev;
+					put( prv.getKey(), prv.getValue() );
+				}
+
+			}
+		}
+	}
+
+}
+

@@ -1,0 +1,9 @@
+class Call2[label L]
+{
+    Call2[L] m(Call2[L] c) {
+	return n(c, L);
+    }
+    Call2[lb] n(Call2[lb] d, label lb) {
+	return d;
+    }
+}

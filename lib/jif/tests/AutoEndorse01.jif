@@ -1,0 +1,5 @@
+class C[principal P] authority (P) {
+    int{P!:} m{}() where endorse({P!:}) { // BAD: not enough authority
+	return 7;
+    }
+}

@@ -1,0 +1,38 @@
+package java.sql;
+
+public class SQLException extends Exception {
+
+//    public SQLException(String reason, String SQLState, int vendorCode) {
+//    }
+
+//    public SQLException(String reason, String SQLState) {
+//    }
+
+//    public SQLException(String reason) {
+//    }
+
+//    public SQLException() {
+//    }
+    
+//    public SQLException(Throwable cause) {
+//    }
+
+//    public SQLException(String reason, Throwable cause) {
+//    }
+    
+//    public SQLException(String reason, String sqlState, Throwable cause) {
+//    }
+    
+//    public SQLException(String reason, String sqlState, int vendorCode, Throwable cause) {
+//    }
+    
+//    public native String getSQLState();
+
+//    public native int getErrorCode();
+
+//    public native SQLException getNextException();
+
+//    public native void setNextException(SQLException ex);
+ 
+//    public native Iterator<Throwable> iterator();
+}

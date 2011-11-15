@@ -1,0 +1,16 @@
+class ActsFor10[principal P]
+{
+    public void p(principal{} a, principal{} b) {
+        int{this;a:} x = 0;
+        int{b:} y = 0;
+	int{Alice:} z = 0;
+	int{P:} w = -8;
+
+	// dyn param
+	if (a actsfor P) { // ok
+	    x = w;
+	}
+
+    }
+}
+

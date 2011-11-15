@@ -1,0 +1,11 @@
+public class Do {
+    int{Alice:} secret;
+
+    public void run() {
+        int{Alice:Bob} x;
+
+        do {
+            x = x + 1;
+        } while (x < secret);
+    }
+}

@@ -1,0 +1,49 @@
+/**
+ * Simple CalendarClient
+ *
+ * Specification by NN and SRG
+ * Prototype by NN
+ * Revisions by SRG
+ */
+package calendar;
+
+import java.util.*;
+
+
+/**
+ * NOTE: this class depends on the method Policy.make(principal, Set),
+ *       which does not yet exist in the runtime ...
+ */
+class CalendarClient[principal p]
+{
+  private CalendarServer cal;
+  
+  public CalendarClient(CalendarServer cal)
+  {
+  	this.cal = cal;
+  }
+
+  void addEvent(Set invitees, Date start, Date end, String text)
+  {
+    for (Iterator i = invitees.iterator(); i.hasNext(); ) {
+      String user = (String) i.next();
+
+      try {
+		final principal q = Principal.forName(user);
+		label L = makeLabel(q, invitees); // {q : invitees}
+		Schedule[q] s = cal.getSchedule(q);
+		s.addEvent(start, end, L, text, p, L);
+      }
+      catch (PrincipalNotFoundException e) {
+      }
+    }
+  }
+
+  // Make a label {r: p, invitees}
+  label makeLabel(principal r, Set invitees) {
+    Set readers = invitees.clone();
+	readers.add(p);
+	label l1 = Policy.make(r, readers.iterator());
+	return l1;
+  }
+}

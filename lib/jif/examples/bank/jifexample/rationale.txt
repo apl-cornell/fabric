@@ -1,0 +1,26 @@
+The principals in the Bank example consist of:
+
+Customer_i   - the bank's customers (one per account)
+Accountant   - an auditor who works for the bank  (Allowed to see some
+	       parts of the bank's log)
+Investor     - bank employee who decides how to allocate the bank's assets
+Manager      - bank employee in charge of creating new accounts
+
+Bank	     - a principal that represents the bank as a whole
+Atm_j        - principal representing an ATM.
+
+Note:  The comments //** refer to info-flow related stuff
+
+Questions:
+--The way withdrawals work, the customer can learn what the bank
+  liquidAssets are by requesting a large sum (which gets rejected), and
+  then reducing the amt until the error switches from ATM_DEPLETED to
+  INSUFFICIENT_FUNDS.  What's the right way to do this?
+
+--Should the atm log the replies it gets from the bank?  Or simply log
+  the fact that it received a reply?
+
+The principle of least privilege suggests that in an OO setting, if a
+field of an object is "owned" by one principal (p) but manipulated by
+another (q), the label of the field should be {p:} and the
+declassification should take place in the accessor methods for the field.

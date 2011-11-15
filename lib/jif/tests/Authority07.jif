@@ -1,0 +1,58 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+// test authorization with a password!
+class Authority07 {
+    public static void main{*!:*}(principal{} p, String[] args) {
+	final Principal a1 = new TestPrincipal("A1", "pass1");
+	
+	AddDelClosure[a1] closure = new AddDelClosure[a1](p);
+
+        Runtime[p]{} runtime;
+	PrintStream[{p:}] out = null;
+	try {
+	    runtime = Runtime[p].getRuntime();
+	    if (runtime == null) 
+		out = null; 
+	    else 
+		out = runtime.stdout(new label {p:});
+	}
+	catch (SecurityException e) { }
+	
+	Capability[a1, {a1:;a1!:}] cap = PrincipalUtil.authorize(a1, "wrong", closure, new label {a1:;a1!:});
+	if (cap == null) {
+	    if (out != null) out.println("authority correctly denied!");
+	}
+	else {
+	    if (out != null) out.println("authority incorrectly given!");
+	    cap.invoke();
+	}
+
+	cap = PrincipalUtil.authorize(a1, "pass1", closure, new label {a1:;a1!:});
+	if (cap == null) {
+	    if (out != null) out.println("authority incorrectly denied!");
+	}
+	else {
+	    if (out != null) out.println("authority correctly given!");
+	    cap.invoke();
+	}
+
+    }
+}
+
+class AddDelClosure[principal P] extends TestClosure[P, {P:;P!:}] {
+    final principal{} del;
+    AddDelClosure(principal{} del) {
+        this.del = del;
+        super();
+    }
+    
+    public Object{P:;P!:} invoke{P:;P!:}() where caller (P) {
+        final Principal p = P;
+        if (p instanceof TestPrincipal) {
+            final TestPrincipal tp = endorse((TestPrincipal)p, {P:;P!:});
+            tp.addDelegatesTo(endorse(this.del, {P:;P!:}));
+        }
+        return null;
+    }
+}

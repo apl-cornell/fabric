@@ -1,0 +1,15 @@
+class ActsFor3
+{
+    public void m2() {
+        int{Ethel:Bob} x = 0;
+        int{Ethel:Alice} y = 0;
+
+        if (Alice actsFor Bob) {
+            y = x; // replace a reader that acts for the existing reader
+        }
+        else {
+            // y = x; // error
+            // x = y; // error
+        }
+    }
+}

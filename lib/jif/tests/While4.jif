@@ -1,0 +1,15 @@
+class C {
+    void m{*!:}() {
+        boolean{Alice:} secret = true;
+        boolean{} leak = false;
+        
+        try {
+            while (4 < 5) {
+                if (secret) break;                
+                throw new Exception();
+            }
+            leak = true; // BAD: leak since we get here only if secret is true.
+        }
+        catch (Exception e) { }
+    }
+}

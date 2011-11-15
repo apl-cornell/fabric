@@ -1,0 +1,21 @@
+class A[label LL] {
+    public int{LL} f;
+}
+
+class B[label L] extends A[L] {
+    A[L]{L} a;
+
+    public void run{L}():{L} throws (NullPointerException) {
+        //f = 2;
+        a.f = 2;
+    }
+}
+
+/*class C[label L] extends A[L] {
+    A[L]{L} a;
+
+    public void run{L}():{L} throws (NullPointerException) {
+        //f = 2;
+        a.f = 2;
+    }
+}*/

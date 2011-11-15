@@ -1,0 +1,24 @@
+/*
+ * Check that subtype checker is checking exceptions
+ */
+class SubtypeChecker4 {
+    public static void main(String[] args) {
+	int{} low = 0;
+	try {
+	    n();
+	}
+	catch (LeakyEx[{}] e) { if (e != null) low = e.data;}
+	catch (Exception e) {}
+
+    }
+
+    public static void n() throws (Exception) {
+	int{Alice:} secret = 4;
+	throw new LeakyEx[{Alice:}](secret);
+    }
+}
+
+class LeakyEx[label L] extends Exception {
+    LeakyEx(int{L} d) { this.data = d; }
+    public int{L} data;
+}

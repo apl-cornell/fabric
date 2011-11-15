@@ -1,0 +1,116 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+class JunctivePrincipals06a[principal P, principal Q, principal R] {
+    // test runtime and static equivalences between tautologies
+
+    // commutation of & and or
+    boolean m() { 
+	int{P&Q:} x = 6;
+	int{Q&P:} y = 7;
+	x = y;
+	y = x;
+
+	int{(P,Q):} a = 0;
+	int{(Q,P):} b = 0;
+	b = a;
+	a = b;
+
+	if (new principal (P&Q) equiv new principal (Q&P)) {
+	}
+	else {
+	    return false;
+	}
+	if (new principal (P,Q) equiv new principal (Q,P)) {
+	}
+	else {
+	    return false;
+	}
+	return true;
+    }
+    
+    // associativity of & and or
+    boolean n() { 
+	int{(P&Q)&R:} x = 0;
+	int{P&(Q&R):} y = 0;
+	x = y;
+	y = x;
+	
+	int{((P,Q),R):} a = 0;
+	int{(P,(Q,R)):} b = 0;
+	a = b;
+	b = a;
+	
+	if (new principal ((P&Q)&R) equiv new principal (P&(Q&R))) {
+	}
+	else {
+	    return false;
+	}
+	if (new principal ((P,Q),R) equiv new principal (P,(Q,R))) {
+	}
+	else {
+	    return false;
+	}
+	return true;
+    }
+    
+    // distributivity of & over or
+    boolean o() { 
+//  	int{(P,Q)&R:} x = 0;
+//  	int{(P&R,Q&R):} y = 0;
+//  	x = y;
+//  	y = x;
+	
+//  	if (new principal ((P,Q)&R) equiv new principal (P&R,Q&R)) {
+//  	}
+//  	else {
+//  	    return false;
+//  	}
+  	return true;
+    }
+
+	// distributivity of or over and
+    boolean p() { 
+//  	int{((P&Q),R):} x = 6;
+//  	int{((P,R)&(Q,R)):} y = 5;
+//  	x = y;
+//  	y = x;
+	
+//  	if (new principal ((P&Q),R) equiv new principal ((P,R)&(Q,R))) {
+//  	}
+//  	else {
+//  	    return false;
+//  	}
+  	return true;
+    }
+}
+class JunctivePrincipals06 {
+    public static void main{}(principal{} pp, String[]{} args)
+        throws (SecurityException)
+    {
+        Runtime[pp] runtime = Runtime[pp].getRuntime();
+        try {
+            PrintStream[{pp:;_!:_}] out = runtime.out();
+	    JunctivePrincipals06a[Alice,Bob,Chuck] x = new JunctivePrincipals06a[Alice,Bob,Chuck]();
+	    out.println("test 1 ok: " + x.m());
+	    out.println("test 2 ok: " + x.n());
+	    out.println("test 3 ok: " + x.o());
+	    out.println("test 4 ok: " + x.p());
+
+	    if (new principal (Alice&Bob) equiv new principal (Bob&Alice)) {	 
+		out.println("yes");
+	    }
+	    else {
+		out.println("no");
+	    }
+	    if (new principal (Alice,Bob) equiv new principal (Bob,Alice)) {
+		out.println("yes");
+	    }
+	    else {
+		out.println("no");
+	    }
+        }
+        catch (NullPointerException ignored) { }
+    }
+
+}

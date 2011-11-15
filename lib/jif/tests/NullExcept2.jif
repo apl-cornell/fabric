@@ -1,0 +1,9 @@
+import jif.lang.*;
+
+public class NullExcept2 {
+      public void foo{}() {
+    	MyInteger i = new MyInteger(4);
+    	int j = i.val; // OK, field access to non-null target.
+      }
+}
+

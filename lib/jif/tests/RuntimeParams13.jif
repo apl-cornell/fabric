@@ -1,0 +1,12 @@
+// Test conflicting interfaces
+interface I[label L] { 
+    int{L} foo();
+}
+
+class C extends D implements I[{Alice:}] {
+    // bad, no definition of I[{Bob:}]
+    public int{Alice:} foo() { return 3; }
+}
+
+abstract class D implements I[{Bob:}] {
+}

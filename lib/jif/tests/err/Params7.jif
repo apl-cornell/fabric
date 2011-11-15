@@ -1,0 +1,15 @@
+class ClassA {
+    int f;
+
+    public int read(label L) {
+        return f;
+    }
+}
+
+public class Params7[label L] {
+    ClassA{Alice:} a;
+
+    public int{Alice:} run():{Alice:} throws (NullPointerException) {
+        return a.read(new label{L});
+    }
+}

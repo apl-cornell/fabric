@@ -1,0 +1,111 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.net;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.IOException;
+
+/**
+ * The label L is the label of all state of the socket, including host, port,
+ * closed, etc. Both input and output streams are assumed to be publically 
+ * readable and untrusted.
+ */
+public class Socket[label L] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    public Socket{L}() { }
+
+    public Socket{L}(String{L} host, int{L} port)
+        throws (UnknownHostException{L}, IOException{L}, IllegalArgumentException{L})
+    { 
+        
+    }
+
+    public Socket(InetAddress[L]{L} address, int{L} port) throws (IOException{L}, IllegalArgumentException{L}) { }
+
+    public Socket(String{L} host, int{L} port, InetAddress[L]{L} localAddr, 
+                  int{L} localPort) throws (IOException{L}, IllegalArgumentException{L}) {
+    }
+
+    public Socket(InetAddress[L]{L} address, int{L} port, InetAddress[L]{L} localAddr,
+                  int{L} localPort) throws (IOException{L}, IllegalArgumentException{L}) {
+    }
+
+    public Socket(String{L} host, int{L} port, boolean{L} stream) throws (IOException{L}, IllegalArgumentException{L}) {
+    }
+
+    public Socket(InetAddress[L]{L} host, int{L} port, boolean{L} stream) throws (IOException{L}, IllegalArgumentException{L}) {
+    }
+
+    public native void connect{L}(SocketAddress[L]{L} endpoint) throws (IOException{L}, IllegalArgumentException{L});
+    public native void connect{L}(SocketAddress[L]{L} endpoint, int{L} timeout) throws (IOException{L}, IllegalArgumentException{L});
+    public native void bind{L}(SocketAddress[L]{L} bindpoint) throws (IOException{L}, IllegalArgumentException{L});
+    public native InetAddress[L]{L} getInetAddress();
+    public native InetAddress[L]{L} getLocalAddress();
+    public native int{L} getPort();
+    public native int{L} getLocalPort();
+
+    public native SocketAddress[L]{L} getRemoteSocketAddress();
+    public native SocketAddress[L]{L} getLocalSocketAddress();
+
+//    public native SocketChannel getChannel();
+
+    public native InputStream[{}] getInputStream() throws (IOException{L});
+
+    public native OutputStream[{}] getOutputStream() throws (IOException{L});
+
+    public native void setTcpNoDelay{L}(boolean{L} on) throws (SocketException{L});
+
+    public native boolean{L} getTcpNoDelay() throws (SocketException{L});
+
+    public native void setSoLinger{L}(boolean{L} on, int{L} linger) throws (SocketException{L});
+    public native int{L} getSoLinger() throws (SocketException{L});
+    public native void sendUrgentData{}(int{} data) throws (IOException{L;_<-_});
+    public native void setOOBInline{L}(boolean{L} on) throws (SocketException{L});
+    public native boolean{L} getOOBInline() throws (SocketException{L});
+
+    public native void setSoTimeout{L}(int{L} timeout) throws (SocketException{L});
+
+    public native int{L} getSoTimeout() throws (SocketException{L});
+
+    public native void setSendBufferSize{L}(int{L} size) throws (SocketException{L});
+
+    public native int{L} getSendBufferSize() throws (SocketException{L});
+
+    public native void setReceiveBufferSize{L}(int{L} size) throws (SocketException{L});
+
+    public native int{L} getReceiveBufferSize() throws (SocketException{L});
+
+    public native void setKeepAlive{L}(boolean{L} on) throws (SocketException{L});
+
+    public native boolean{L} getKeepAlive() throws (SocketException{L});
+
+    public native void setTrafficClass{L}(int{L} tc) throws (SocketException{L});
+
+    public native int{L} getTrafficClass() throws (SocketException{L});
+
+    public native void setReuseAddress{L}(boolean{L} on) throws (SocketException{L});
+
+    public native boolean{L} getReuseAddress() throws (SocketException{L});
+
+    public native void close{L}() throws (IOException{L});
+
+    public native void shutdownInput{L}() throws (IOException{L});
+    
+    public native void shutdownOutput{L}() throws (IOException{L});
+    public native String{L} toString();
+
+    public native boolean{L} isConnected();
+
+    public native boolean{L} isBound();
+
+    public native boolean{L} isClosed();
+
+    public native boolean{L} isInputShutdown();
+
+    public native boolean{L} isOutputShutdown();
+}

@@ -1,0 +1,17 @@
+class C {
+    void m{*!:}() {
+	boolean{Alice:} secret = true;
+	boolean{} leak = false;
+	int i = 0;
+	
+	try {
+	    switch (i) {
+	    case 0:	       
+		if (secret) throw new Exception();
+	    case 1:
+		leak = true; // BAD: leak from the fall through
+	    }
+	}
+	catch (Exception e) { }
+    }
+}

@@ -1,0 +1,15 @@
+class ActsFor4
+{
+    public void n() {
+        int{Bob:} x = 0;
+        int{Bob:Alice} y = 0;
+
+        if (Alice actsFor Bob) {
+            y = x; // add a reader that acts for the owner
+        }
+        else {
+            // y = x; // error
+            x = y; // add a reader
+        }
+    }
+}

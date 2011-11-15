@@ -1,0 +1,18 @@
+class C {
+    int{} f = 0;
+    int{}[]{} a = new int[2];
+    void m{*!:}() {
+        boolean{Alice:} secret = true;
+        
+        if (secret) leak();
+        
+    }
+    
+    void leak{Alice:}() {
+	try {
+            a[0]++; // BAD, is a side-effect.
+	}
+        catch (ArrayIndexOutOfBoundsException e) { }
+        catch (NullPointerException e) { }
+    }
+}

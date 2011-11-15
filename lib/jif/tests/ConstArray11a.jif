@@ -1,0 +1,5 @@
+class C {
+    void m{*<-*}() {
+        int []const[] foo = null; // bad, should not be able to mix constantness of arrays
+    }
+}

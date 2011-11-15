@@ -1,0 +1,11 @@
+public class ActsFor1 {
+    int{Alice:} a;
+    int{Alice:} b;
+    int{Alice:} c;
+
+    public int{Alice:Bob} sum()
+        where Bob actsFor Alice
+    {
+        return a + b + c;
+    }
+}

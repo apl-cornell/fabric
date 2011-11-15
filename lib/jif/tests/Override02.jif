@@ -1,0 +1,9 @@
+class C {
+    void m(principal{pp:} pp, String{pp:} s) {
+    }
+}
+
+class D extends C {
+    void m(principal{qq:} qq, String{qq:} s) {
+    }
+}

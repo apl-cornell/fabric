@@ -1,0 +1,12 @@
+/*
+ * Test the rejection of special field and methd names.
+ */
+
+class Z {
+    int $x = 0; // BAD
+    int x$ = 0; // BAD
+    int foo$bar = 0; // BAD
+    void $y() { } // BAD
+    void y$() { } // BAD
+    void fooo$baar() { } // BAD
+}

@@ -1,0 +1,30 @@
+public class Constraints1 {
+
+    // The solver as of 30/05/02 when attempting to solve
+    // these constraints will go into an infinite loop.
+    // This is due to a bug in PolicyLabel_c.java, in which
+    // meets were calculated incorrectly, and has now been fixed.
+
+    // the (problematic) constraints to be solved are:
+    // 1. v <= b where Alice actsfor Bob
+    // 2. a <= v where Alice actsfor Bob
+    // 3. v <= a where Bob actsfor Alice
+    // 4. b <= v where Bob actsfor Alice
+
+    public void foo()
+    {
+	int v = 0;
+	int{Alice:} a = 0;
+	int{Bob:} b = 0;
+
+	if (Alice actsFor Bob) {
+	    a = v;
+	    v = b;
+	}
+
+	if (Bob actsFor Alice) {
+	    b = v;
+	    v = a;
+	}
+    }
+}

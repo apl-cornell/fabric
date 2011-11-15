@@ -1,0 +1,9 @@
+class C[label L] {
+    boolean foo(C[L] o) { return true; }
+}
+
+class D extends C[{Alice:}] {
+    boolean foo(C[{Alice:;Bob:}] o) {  // not OK
+        return false;
+    }
+}

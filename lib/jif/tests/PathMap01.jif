@@ -1,0 +1,9 @@
+class C {
+    int{Alice:} m() {
+        int{Bob:} result = 3;
+        if (Alice actsfor Bob) {
+            return result; // OK, since {Bob:} <= {Alice:} in this context
+        }
+        return -1;
+    }
+}

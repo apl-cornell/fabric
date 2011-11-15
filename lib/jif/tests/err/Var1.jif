@@ -1,0 +1,7 @@
+class Var1 {
+    int{Alice:} f;
+
+    public void m{Alice:}(int{x;Alice:} x) {
+        f = x;
+    }
+}

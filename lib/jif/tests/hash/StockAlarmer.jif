@@ -1,0 +1,26 @@
+public class StockAlarmer {
+    Hashtable[{Alice:}]{Alice:} portfolio;
+    LinkedList[{Alice:}]{Alice:} buffer;
+
+    public StockAlarmer{Alice:}(Hashtable[{Alice:}]{Alice:} p) {
+        this.portfolio = p;
+        buffer = new LinkedList[{Alice:}]();
+    }
+
+    public boolean{Alice:} alarm(String{Alice:} stock, double{Alice:} threshold) {
+        try {
+            Real{Alice:} percentage = (Real) portfolio.get(stock);
+            return (percentage.value() <= threshold);
+        }
+        catch (NullPointerException e) {}
+        return false;
+    }
+
+    public void delayAlarm{Alice:}(String{Alice:} stock, double{Alice:} threshold):{Alice:}
+        throws(NullPointerException)
+    {
+        if (alarm(stock, threshold)) {
+            buffer.add(stock);
+        }
+    }
+}

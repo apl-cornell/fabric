@@ -1,0 +1,11 @@
+class C {
+    int{} m{Alice:}() where caller(Alice), Alice actsfor Bob { return 5; }
+}
+
+class D extends C {
+    int{Alice:; Bob:} secret;
+    int{} m{Alice:}() where caller(Alice), caller(Bob) // ok
+    { 
+	return declassify(secret, {this; _!:_}); 
+    }
+}

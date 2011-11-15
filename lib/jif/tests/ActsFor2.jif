@@ -1,0 +1,15 @@
+class ActsFor2
+{
+    public void m() {
+        int{Ethel:Bob} x = 0;
+        int{Ethel:Bob,Alice} y = 0;
+
+        if (Alice actsFor Bob) {
+            y = x; // add a reader that acts for an existing reader
+        }
+        else {
+            // y = x; // error
+            x = y; // remove an reader
+        }
+    }
+}

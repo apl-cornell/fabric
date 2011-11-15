@@ -1,0 +1,69 @@
+/**
+ * Simple Entry in SKEY password file
+ *
+ * The security of this scheme depends on the monotonicity
+ * of secure hashing functions, that is, given hash^(n+1) of x,
+ * it is intractable to guess hash^n of x
+ *
+ * For more info, see CS513 notes at:
+ *    http://www.cs.cornell.edu/Courses/cs513/2000SP/NL11.html
+ *
+ * Schneier's "Applied Cryptography" is also a fine book.
+ */
+package skey;
+
+class SkeyEntry {
+
+	private int{} n;			// number of remaining login requests (n < m)
+	private int{} m;			// # of remaining logins at last successful login
+	private String{} token;		// successful token at last successful login
+
+	/**
+	 * Create a new entry
+	 *
+	 * We assume that "token" is hash()^m of the password,
+	 * and n is the n-value of the first login
+	 *
+	 * (Obviously, use good passwords to prevent against
+	 * dictionary attacks)
+	 */
+	public SkeyEntry(String{} token, int n, int m) {
+		this.token = token;
+
+		// enforce some sanity checking
+		if ((n >= m) || (m < 1000)) { n = 0; m = 0; }
+
+		this.n = n;
+		this.m = m;
+	}
+
+	/**
+	 * Get next value of n for login ... unless n <= 0
+	 */
+	public int getN() {
+		if ( n <= 0 ) {
+			return 0;
+		} else {
+			return n--;
+		}
+	}
+
+
+	public boolean check( int n_, String tok ) {
+		// only process the latest request
+		if ( n_ - 1 != n ) return false;
+
+		for (int i=n_; i < m; i++) {
+			tok = SecureHash.hash(tok, {tok});
+		}
+
+		if ( tok.equals( token ) ) {
+			m = n_;
+			token = tok;
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+}

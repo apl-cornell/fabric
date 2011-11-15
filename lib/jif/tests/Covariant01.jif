@@ -1,0 +1,9 @@
+// An example of a covariant label unsoundness
+class C[covariant label L] {
+    int{} leak(int{L} secret)  { // covariant L appears in contravariant position
+        if (L <= new label {}) { 
+            return secret; // BAD: leaks information
+        }
+        return -1;
+    }
+}

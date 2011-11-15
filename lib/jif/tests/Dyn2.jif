@@ -1,0 +1,12 @@
+class Dyn2
+{
+    private final label{} lb;
+   
+    public Dyn2() {
+	lb = new label{Alice:Bob};
+    }
+    
+    public int{*lb} m() {
+	return 100;
+    }
+}

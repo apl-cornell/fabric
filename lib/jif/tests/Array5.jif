@@ -1,0 +1,14 @@
+class Array5
+{
+    int{Alice:;Alice!:}[]{} fa = new int[10];
+    int{Alice:Bob;Alice!:}[]{} fb = new int[10];
+    int{Alice:Bob;Alice!:}[]{} fc = {2, 3, 4};
+    int{Alice:Bob;Alice!:}[]{} fd = new int[] {2, 3, 4};
+
+    void m{Alice:Bob;Alice!:}() throws (Exception{Alice:}) {
+        int{Alice:;Alice!:}[]{} a = new int[10];
+        int{Alice:Bob;Alice!:}[]{} b = new int[10];
+        int{Alice:Bob;Alice!:}[]{} c = {2, 3, 4};
+        int{Alice:Bob;Alice!:}[]{} d = new int[] {2, 3, 4};
+    }
+}

@@ -1,0 +1,3 @@
+class C[label L] {
+    final label{this} f = L; // check that translation of initializing expressions work
+}

@@ -1,0 +1,27 @@
+import java.lang.*;
+import java.io.*;
+
+class Key[principal keyOwner] extends Object implements Serializable {
+    UniqueID{keyOwner:} keyData;
+    public Key() {
+	keyData = new UniqueID();
+    }
+
+    public Key(UniqueID{keyOwner:} keyData) {
+	this.keyData = keyData;
+    }
+
+    public EncryptedObject[{keyOwner:}]{} encrypt(Object{keyOwner:} o) 
+    where caller(keyOwner) {
+	return declassify(new EncryptedObject[{keyOwner:}](keyData, o), {});
+    }
+
+    public Object{keyOwner:} decrypt(EncryptedObject[{keyOwner:}]{} e) {
+	if (keyData.isEqual(e.getTag())) {
+	    return e.getObject();
+	} else {
+	    // return junk
+	    return new Object();
+	}
+    }
+}

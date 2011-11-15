@@ -1,0 +1,11 @@
+// test that the exceptions thrown by a method body are correctly matched up
+// against the signature.
+class C {
+    void m() throws (Exception{}, java.io.IOException{Alice!:}) {
+	boolean{} b = false;
+	if (b) n();
+    }
+
+    void n() throws (Exception{}) {
+    }
+}

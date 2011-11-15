@@ -1,0 +1,14 @@
+class C[covariant label L] {
+    void m{*!:}(boolean{} b) {
+	C[{}] x = b?null:foo(new label {});
+	
+	D{Alice:} d = new D();
+	C[{Alice:}] c = d.f;
+    }
+    void n(C[{}] x) {}
+    native C[{*lbl}] foo(label lbl);
+}
+
+class D {
+    final C[{this}] f = null;
+}

@@ -1,0 +1,7 @@
+class C {
+    int{Alice:} m(label lbl1) where {*lbl1} <= {Alice:} { 
+	int{*lbl1} x = 5;
+	return x;
+    }
+}
+

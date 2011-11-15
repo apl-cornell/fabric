@@ -1,0 +1,8 @@
+class C[label L] {
+    C() {
+	this.f = L; // OK, in translation L is initialized before this assignment occurs.
+    }
+    final label{this} f;
+    static final int k = 9; // not translated into the init body.
+
+}

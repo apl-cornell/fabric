@@ -1,0 +1,14 @@
+// test principal params
+class C[principal P] { 
+    void m(int{P:} x)  {
+    }
+}
+
+class D {
+    void m{}() {
+        C x = new C(); // solver won't infer param correctly at moment.
+        int{Bob:} z = 5;
+        x.m(z);
+    }
+}
+

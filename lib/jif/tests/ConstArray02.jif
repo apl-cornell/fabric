@@ -1,0 +1,9 @@
+class C {
+    void m{*<-*}() {
+        try {
+            int{} const[] foo = {1, 2, 3};        
+            foo[0] = 2; // BAD: cannot assign to a constant array
+        }
+        catch (ArrayIndexOutOfBoundsException e) { }
+    }
+}

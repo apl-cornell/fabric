@@ -1,0 +1,18 @@
+// Test info leaked by params in an instanceof
+class C[label L] { 
+    
+}
+
+
+class D {
+    void m(C[{*la}]{} o, label{} la) {
+	final label{Alice:} lb = new label {Bob:};
+	int{} x;
+	if (o instanceof C[{*lb}]) {
+	    // now we know information about the contents of 
+	    // lb, namely, that it is the same as the
+	    // contents of la
+	    x = 4; // illegal, since PC is tainted with {Alice:}
+	}	
+    }
+}

@@ -1,0 +1,11 @@
+class C {
+    void m{*!:*}() throws (Exception{*!:*}) { // test parsing of additional dims
+        C{Bob:}[][] x = new C[3][4];
+        C{Bob:}[][] y = new C[5][];
+        C[][] z = new C[7][];
+
+        int{Bob:}[][] a = new int[3][4];
+        int{Bob:}[][] b = new int[5][];
+        int[][] c = new int[7][];
+    }
+}

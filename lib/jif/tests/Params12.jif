@@ -1,0 +1,13 @@
+/*
+ * Test instantiating an invariant param with an invariant label.
+ *
+ * SHould be accepted.
+ */
+
+class Params12a[label L] {
+    int{L} data = 8;
+}
+
+class Params12b[label M] extends Params12a[M] {
+}
+

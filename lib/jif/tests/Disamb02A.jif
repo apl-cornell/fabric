@@ -1,0 +1,4 @@
+public class Disamb02A[principal P] {
+    final label L = new label {};
+}
+

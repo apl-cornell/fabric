@@ -1,0 +1,9 @@
+// a list whose spine is as secret as the pointer to the first cons node
+// but whose items are "L"-secret.
+
+public interface List2[label L] {
+  public Object{L} first() throws (Exception);
+  public List2[L]{} rest() throws (Exception);
+  public Object{i; L} get(int i):{i;L} throws (Exception);
+  public int{} size();
+}

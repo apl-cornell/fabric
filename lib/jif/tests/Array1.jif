@@ -1,0 +1,13 @@
+class Array1
+{
+    void m{Alice:}() throws (Exception{Alice:}) {
+	int{Alice:}[]{} a = new int[10];
+	int{Alice:Bob}[]{} b = new int[10];
+	a = b; // BAD: Not subtypes!
+	int{Alice:} s = 100;
+	if (s > 90) 
+	    a[5] = 1;
+
+	int{Alice:Bob} p = b[5];
+    }
+}

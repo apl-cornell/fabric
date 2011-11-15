@@ -1,0 +1,9 @@
+class Complex
+{
+    public final float{this} real, imag;
+
+    public Complex{r;i}(float{this} r, float{this} i) {
+	real = r;
+	imag = i;
+    }
+}

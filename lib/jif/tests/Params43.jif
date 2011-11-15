@@ -1,0 +1,9 @@
+// test that param getters are added correctly.
+interface A extends JifObject[{}] { }
+
+class B implements A { 
+    public boolean equals(IDComparable[{}] o) { return false; }
+    public boolean equals(label l, IDComparable[l] o) { return false; }
+    public int{} hashCode() { return 0; }
+    public String{} toString() { return ""; }
+}

@@ -1,0 +1,5 @@
+class C[label L] { }
+
+class Inf3 { 
+    C x;  // BAD, field types need params
+}

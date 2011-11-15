@@ -1,0 +1,9 @@
+/*
+ * Test extending invariant classes.
+ *
+ */
+class A  {
+}
+
+class B (invariant) extends A { // invariant class cannot extend a covariant class.
+}

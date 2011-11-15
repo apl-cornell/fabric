@@ -1,0 +1,11 @@
+class C {
+    void m(label lbl1, label lbl2) where {*lbl1} <= {*lbl2} { 
+	int{*lbl1} x = 5;
+	int{*lbl2} y = x;
+    }
+
+    void foo(label lbl1, label lbl2) where {*lbl1} <= {*lbl2} { 
+	m(lbl1, lbl2); // ok
+    }
+}
+

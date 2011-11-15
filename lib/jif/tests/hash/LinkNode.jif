@@ -1,0 +1,63 @@
+/**
+ * Simple LinkNode for a LinkList
+ *
+ *     param L: label of contents,
+ *       plus label of 'next' node
+ */
+class LinkNode[label L] {
+
+    private Object{L} value;
+    private LinkNode[L]{L} next;
+
+    public LinkNode{L}() {
+        value = null;
+        next = null;
+    }
+
+    public LinkNode{L}( Object{L} value ) {
+        this.value = value;
+        next = null;
+    }
+
+    public Object{L} getValue() {
+        return value;
+    }
+
+    public void setValue{L}( Object{L} value ) {
+        this.value = value;
+    }
+
+    public LinkNode[L]{L} getNext() {
+        return next;
+    }
+
+    public void setNext{L}( LinkNode[L]{L} next ) {
+        this.next = next;
+    }
+
+    public LinkNode[L]{L} remove{L}( Object{L} obj ) {
+        try {
+
+        if ( value != null && value.equals(obj) ) {
+            return next;
+        } else if ( next != null ) {
+            next = next.remove( obj );
+        }
+
+        } catch (NullPointerException npe) {}
+
+        return this;
+    }
+
+    public int{L} size() {
+        int s = 1;
+        try {
+            if ( next != null ) {
+                s += next.size();
+            }
+        } catch (NullPointerException npe) {}
+
+        return s;
+    }
+
+}

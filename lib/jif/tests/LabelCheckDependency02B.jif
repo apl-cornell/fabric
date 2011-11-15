@@ -1,0 +1,4 @@
+// check that field label resolution occurs before label checking.
+public class LabelCheckDependency02B[label L]  {
+    public String {} text2; 
+}

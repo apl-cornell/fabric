@@ -1,0 +1,9 @@
+class StaticThis5 {    
+    StaticThis5() {
+	this((long{this})5); // BAD: "this" label used in static context.
+    }
+
+    StaticThis5(long{this} x) {
+    }
+}
+

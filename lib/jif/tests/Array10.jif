@@ -1,0 +1,12 @@
+class C {
+    void m{*!:}() {
+        int[] x = {3, 4, 5};
+        int[][] y =  {{1,2,3},{3,4,5},{5,34,3}}; // nested array inits
+        int[][][] z =  {{{1, 5, 6},{2},{3}},{{3},{4},{5}},{{5},{34},{3}}}; // nested array inits
+        try {
+            z[0][0] = y[0];
+        }
+        catch (ArrayIndexOutOfBoundsException e) { }
+        catch (NullPointerException e) { }
+    }
+}

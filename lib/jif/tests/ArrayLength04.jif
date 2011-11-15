@@ -1,0 +1,20 @@
+class C {
+    int[] data = new int[7];
+    int size = 0;
+    void m{}() {
+	int[] data = this.data;
+	int size = this.size;
+	if (data != null) {
+	    if (size == data.length) {
+		int[] newData = new int[data.length * 2];
+		int i = 0;
+		while (i < size && i < newData.length) {
+		    newData[i] = data[i]; // OK, no exceptions can be thrown
+		    i = i + 1;
+		}
+	    }
+	}
+	
+
+    }
+}

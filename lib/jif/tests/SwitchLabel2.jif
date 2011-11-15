@@ -1,0 +1,17 @@
+class SwitchLabel2 {
+    public int{*L} m(label L, int{*L} x):{L} throws (Exception) {
+	// As of April 13, 2004, this example does not compile, due
+	// to the fact that we cannot prove that the
+	// actual label of the argument x is runtime representable.
+	int{} y = 1;
+//  	switch label (x+y) {
+//  	    case (int{*L} sum) return sum;
+//  	    else throw new Exception();
+//  	}
+	int z = x + y;
+	if (new label {z} <= L) {
+	    return z;
+	}
+	else throw new Exception();
+    }
+}

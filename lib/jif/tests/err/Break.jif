@@ -1,0 +1,13 @@
+public class Break {
+    int{Alice:} secret;
+
+    //catch a termination channel
+    public int{Alice:Bob} leak() {
+        int i = 0;
+        while (i < 100) {
+            if (i > secret) break;
+            i++;
+        }
+        return i;
+    }
+}

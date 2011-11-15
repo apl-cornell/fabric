@@ -1,0 +1,18 @@
+class C {
+    int x = 0;
+    final C c = null;
+    
+    void m{}() {
+	// all ok
+	this.x = 2;
+	this.x++;
+	this.x += 3;
+	this.x -= 4;
+	if (this.c != null) {
+	    this.c.x = 2;
+	    this.c.x++;
+	    this.c.x += 3;
+	    this.c.x -= 4;
+	}
+    }
+}

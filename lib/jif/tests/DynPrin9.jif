@@ -1,0 +1,22 @@
+// check to make sure the label checking of dynamic principals in labels
+// is throwing a NPE
+class DynPrin9 {
+    final DynPrin9{} f = null;
+    final principal{} p = Alice;
+
+    void m(Object{} o) {
+	try {
+	    if (new label {this.f.p:} <= new label {}) {
+	    }
+	}
+	catch (NullPointerException e) {} // from the label checking of the type
+	
+	try {
+	    if (o instanceof C[{this.f.p:}]) {
+	    }
+	}
+	catch (NullPointerException e) {} // from the label checking of the type
+    }
+}
+
+class C[label L] {}

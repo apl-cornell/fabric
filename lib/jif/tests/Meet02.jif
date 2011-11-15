@@ -1,0 +1,11 @@
+class C {
+    // test meets of labels
+    void m(label l, label m) {
+	D[{*l meet *m}] d = new D[{*l meet *m}]();
+	D[l] e = d;
+	D[m] f = d;
+    }
+}
+
+class D[covariant label L] {
+}

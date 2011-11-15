@@ -1,0 +1,23 @@
+import jif.runtime.Runtime;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class FileTester {
+    public static void main{me→}(principal{} me, String{}[]{} args):{me→}
+	throws (Exception)
+	where caller(me)
+    {
+        final label lb = new label{me→}; // the label we expect: private to me
+        Runtime runtime = Runtime[me].getRuntime();
+        FileInputStream f = runtime.openFileRead(args[0], lb);
+        int i;
+        try {
+            i = f.read();
+        }
+	    catch (IOException e) { i = -1; }
+	    catch (NullPointerException e) { i = -1; }
+        FileOutputStream out = runtime.openFileWrite("test1.txt", false, lb);
+        out.write(i);
+    }
+}

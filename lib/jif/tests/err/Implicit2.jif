@@ -1,0 +1,12 @@
+public class Implicit2 {
+    boolean{Alice:} secret;
+
+    public int{Alice:Bob} leak{Alice:}() {
+        int x = 0;
+        while (secret) {
+            x = 1;
+            secret = false;
+        }
+        return x;
+    }
+}

@@ -1,0 +1,16 @@
+class C {
+    final label f = new label {Alice:};
+    int{*this.f} m(label lbl1) where {*lbl1} <= {*this.f} { 
+	int{*lbl1} x = 5;
+	return x;
+    }
+}
+
+class D {
+    void foo() {
+	final C c = new C();
+	if (new label {Alice:} <= c.f) 
+	    c.m(new label {Bob:}); // fail
+    }
+}
+

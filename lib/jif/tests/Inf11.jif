@@ -1,0 +1,29 @@
+class ParamCell[principal P, principal Q] {
+    int{P:Q; P←Q} contents;
+    void m(principal x, principal y) where P actsfor x, Q actsfor y {  }
+}
+
+class Vector[label L] {
+    private int{L} length;
+    private Object{L}[]{L} elements;
+
+    public Vector() {}
+    public Object elementAt(int i):{L; i}
+                    throws IndexOutOfBoundsException {
+			return null;
+    }
+		    public void setElementAt{L}(Object{L} o, int{L} i) {}
+    public int{L} size() { return length; }
+    public void clear{L}() {}
+}
+
+
+class C {
+    void m{*<-*}() {
+	ParamCell{*<-*} cell = new ParamCell();
+	cell.m(Alice, Bob);
+
+	Vector v = new Vector();
+	v.setElementAt(null, cell.contents);
+    }
+}

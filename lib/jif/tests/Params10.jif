@@ -1,0 +1,28 @@
+class  TC[principal p] {
+
+    String{p:} str;
+
+    public TC{p:}(String{p:} str) {
+	this.str = str;
+    }
+
+    public String{p:} getStr() {
+	return str;
+    }
+
+}
+
+public class Params10 {
+    public boolean{p:} equals(TC[p]{} tc, principal{} p):{p:} 
+    throws (NullPointerException) {
+	boolean{p:} doMatch = false;
+	if (tc.getStr().equals("Hello")) 
+	    doMatch = true;
+	
+	return doMatch;
+    }
+
+    public static void main{}(String args[]) {
+
+    }
+}

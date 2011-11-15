@@ -1,0 +1,9 @@
+import java.lang.*;
+
+public class BadExcept1 {
+      public void foo(JifObject[{}] o) { 
+    	o.toString(); // null pointer exception could be thrown
+      }
+    
+}
+

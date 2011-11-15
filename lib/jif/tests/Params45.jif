@@ -1,0 +1,4 @@
+// test disambiguation of label parameters.
+class C[label L] {
+    void m(C[o] o) { }
+}

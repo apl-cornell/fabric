@@ -1,0 +1,13 @@
+class E {
+    public final label lb = new label {};
+}
+
+class C {
+    void m(E e, String{*e.lb} s) {
+    }
+}
+
+class D extends C {
+    void m(E f, String{*f.lb} t) {
+    }
+}

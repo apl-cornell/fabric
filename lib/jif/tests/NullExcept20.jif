@@ -1,0 +1,10 @@
+class C {
+    // method as a whole may throw NPE
+    void m{}(C{} c, C{} d) { 
+	c.m(this, this); // may throw NPE
+	try {
+	    d.m(null, null); // may throw NPE
+	}
+	catch (NullPointerException e) { }
+    }
+}

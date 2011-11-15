@@ -1,0 +1,9 @@
+import jif.lang.*;
+
+public class NullExcept9 {
+    public static void main(String[] args) {
+	String s = "hello";
+	s.toString(); // OK, as initialized to non-null value.
+    }    
+}
+

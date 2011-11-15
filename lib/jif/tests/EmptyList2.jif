@@ -1,0 +1,18 @@
+class EmptyListException extends Exception {
+  EmptyListException() {}
+}
+
+public class EmptyList2[label L] implements List2[L] {
+  EmptyList2() {}
+
+  public Object{L} first() throws (EmptyListException) {
+    throw new EmptyListException();
+  }
+  public List2[L] rest() throws (EmptyListException) {
+    throw new EmptyListException();
+  }
+  public Object{L; i} get(int i) throws (Exception) {
+    throw new EmptyListException();
+  }
+  public int size() { return 0; }
+}

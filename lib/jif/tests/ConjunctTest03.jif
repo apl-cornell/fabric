@@ -1,0 +1,9 @@
+class C {
+    void m(principal{} p, principal{} r, label{} L1, label{} L2) {
+	int{p:; L2} x = 4;
+	int{r:; L1} y = 4;
+	if (L1 <= L2) {
+	    //x = y; // OK
+	}
+    }
+}

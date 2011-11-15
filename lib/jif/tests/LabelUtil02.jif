@@ -1,0 +1,37 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+public class LabelUtil02
+{
+    public LabelUtil02() {}
+    public static void main{}(principal{} pp, String[]{} args)
+        throws (SecurityException)
+    {
+	final principal own = Alice;
+	principal{}[] ps = new principal[] {Bob, Chuck };
+
+        Runtime[pp] runtime = Runtime[pp].getRuntime();
+        try {
+            PrintStream[{pp:;_!:_}] out = runtime.out();
+	    final label lb = LabelUtil.singleton().writerPolicyLabel(new label {}, own, ps);
+            out.println("Label is " + LabelUtil.singleton().stringValue(lb));
+            
+            final label lb2 = new label {Alice!:Bob,Chuck; Bob!:Chuck}; 
+            out.println("Label2 is " + LabelUtil.singleton().stringValue(lb2));
+
+            final label lb3 = LabelUtil.singleton().join(lb, lb2); 
+            out.println("Label3 is " + LabelUtil.singleton().stringValue(lb3));
+
+            final label lb4 = new label {Alice!:Alice; Alice!:Bob}; 
+            out.println("Label4 is " + LabelUtil.singleton().stringValue(lb4));
+            out.println("Label1 is equivalent to Label4? " + LabelUtil.singleton().equivalentTo(lb, lb4));
+            out.println("Label1 relabels to Label4? " + LabelUtil.singleton().relabelsTo(lb, lb4));
+            
+            final label lb5 = new label{Alice!:};
+            out.println("Label5 is " + LabelUtil.singleton().stringValue(lb5));
+            out.println("Label5 relabels to Label1? " + LabelUtil.singleton().relabelsTo(lb5, lb));
+            out.println("Label1 relabels to Label5? " + LabelUtil.singleton().relabelsTo(lb, lb5));
+        }
+        catch (NullPointerException ignored) { }
+    }
+}

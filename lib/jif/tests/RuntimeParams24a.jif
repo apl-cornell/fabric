@@ -1,0 +1,13 @@
+// Check param instantiations are checked for type.
+class C[label L, principal P] { 
+}
+
+
+class D {
+    final D d;
+    final principal p;
+    final label l;
+    void m2() {
+	C[this.d.l, this.d] o = null;
+    }
+}

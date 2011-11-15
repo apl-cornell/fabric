@@ -1,0 +1,11 @@
+class C {
+    final label{} f = new label {};
+}
+class D extends C {
+    int{*this.f} foo; // use of a field from super
+    int{*f} bar; // use of a field from super, without referring to "this"
+    void m(int{*this.f} a, int{*f} b) throws NullPointerException {	
+	int{*this.f} x = 4;
+	int{*f} y = 3;
+    }
+}

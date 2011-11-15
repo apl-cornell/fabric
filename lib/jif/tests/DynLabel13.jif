@@ -1,0 +1,21 @@
+/*
+ * Test that names of dynamic labels are not confused.
+ */
+class C {
+    void m{*<-*}() {
+	final label{*<-*} x = new label {};
+	int{*x} a = 0;
+
+	{
+	    final label{*<-*} y = new label {};
+	    int{*y} b = 0;
+	    a = b;
+	}
+	{
+	    final label{*->*} y = new label {*->*};
+	    int{*y} c = 0;
+	    a = c; // should fail. Make sure that this y is distinct from 
+         	    // previous y.
+	}
+    }
+}

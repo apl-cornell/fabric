@@ -1,0 +1,21 @@
+class C {
+    int x = 0;
+    final C c = new C();
+    
+    void m1{}() {
+	// may throw an exception
+	this.c.x = 2;
+    }
+    void m2{}() {
+	// may throw an exception
+	this.c.x++;
+    }
+    void m3{}() {
+	// may throw an exception
+	this.c.x += 3;
+    }
+    void m4{}() {
+	// may throw an exception
+	this.c.x -= 4;
+    }
+}

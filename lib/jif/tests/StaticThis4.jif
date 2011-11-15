@@ -1,0 +1,6 @@
+class StaticThis4 {    
+    static void foo() {
+	label l = new label {this}; // BAD: "this" label used in static context.	
+    }
+}
+

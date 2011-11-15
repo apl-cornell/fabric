@@ -1,0 +1,12 @@
+// Test if authority of the "this" object is correct
+class C  {
+    public C(String{this} name) {
+	super();
+    }
+
+    public void m() where authority (this) { // bad! not a principal
+	int{this:} x = 5;
+	int{} y = declassify(x, {});
+    }
+}
+

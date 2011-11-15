@@ -1,0 +1,78 @@
+package jif.util;
+
+/**
+ * An implementatin of Set, using a linked list to store the
+ * list elements.
+ */
+public class LinkedListSet[label L] extends AbstractSet[L] 
+{
+    private final LinkedList[L]{this} list;
+
+    public LinkedListSet() {
+        list = new LinkedList[L]();
+        super();
+    }
+    public int{L} size() {
+        try {
+            return list.size();
+        }
+        catch (NullPointerException impossible) { return 0;}
+    }
+
+
+    public boolean{L;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o) {
+        try {
+            return list.contains(lbl,o);
+        }
+        catch (NullPointerException impossible) { return false;}
+    }
+
+    public boolean{L} add{L}(JifObject[L]{L} o) {
+        try {
+            if (!list.contains(o)) {
+                list.add(o);
+                return true;
+            }
+            return false;
+        }
+        catch (NullPointerException impossible) { return false;}
+    }
+
+    public JifObject[L]{L;index} get(int index):{L;index} throws (IndexOutOfBoundsException{L;index}) {
+        try {
+            return list.get(index);
+        }
+        catch (NullPointerException impossible) { return null;}
+    }
+    
+    public boolean{L} remove{L}(JifObject[L]{L} o) {
+        try {
+            return list.remove(o);
+        }
+        catch (NullPointerException impossible) { return false;}
+    }
+    
+    public Iterator[L]{this} iterator() {
+        try {
+            return list.iterator();
+        }
+        catch (NullPointerException impossible) { return null;}        
+    }
+
+    public int{L} hashCode() {
+        try {
+            return list.hashCode();
+        }
+        catch (NullPointerException impossible) { return 0;}
+
+    }
+
+    //  String conversion
+    public String{L} toString() {
+        try {
+            return list.toString();
+        }
+        catch (NullPointerException impossible) { return "";}
+    }
+
+}

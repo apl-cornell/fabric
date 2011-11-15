@@ -1,0 +1,10 @@
+class Call7 authority (Alice)
+{
+    void foo() where authority (Alice) {
+	new C[Alice]().m();
+    }
+}
+
+class C[principal P] {
+    void m() where caller(P) {}
+}

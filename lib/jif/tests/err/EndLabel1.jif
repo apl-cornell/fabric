@@ -1,0 +1,10 @@
+public class EndLabel1
+{
+    boolean{Alice:} secret;
+
+    public void leak() throws (ArithmeticException) {
+        if (secret) {
+            int i = 1/0;
+        }
+    }
+}

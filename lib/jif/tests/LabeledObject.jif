@@ -1,0 +1,9 @@
+public class LabeledObject {
+    final label{} L;
+    Object{*L} o;
+
+    public LabeledObject(label{} newL, Object{*newL} newO) {
+	this.L = newL;
+	this.o = newO;
+    }
+}

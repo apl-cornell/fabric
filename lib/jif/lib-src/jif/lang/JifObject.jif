@@ -1,0 +1,15 @@
+package jif.lang;
+
+/**
+ * This interface combines the Jif signatures for the methods
+ * equals(), hashCode() and toString(). Since all of these
+ * methods return values that depend on fields in the class
+ * (which may have arbitrary labels), the signatures
+ * for the equivalent methods in java.lang.Object are unsuitable.
+ */
+public interface JifObject[covariant label L] extends IDComparable[L], 
+					    Hashable[L], 
+					    ToStringable[L] 
+{
+
+}

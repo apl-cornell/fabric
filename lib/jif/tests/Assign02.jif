@@ -1,0 +1,7 @@
+class C { 
+    int{*->*} f = 4;
+    void m() {
+        f /= 4; // OK
+        f |= 3; // OK
+    }
+}

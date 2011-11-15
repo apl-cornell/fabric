@@ -1,0 +1,30 @@
+class clientPairList implements clientList {
+  Object head;
+  clientList tail;
+
+  public Object first():{client:} throws (Exception) {
+    return head;
+  }
+
+  public clientList rest():{client:} throws (Exception) {
+    return tail;
+  }
+
+  public Object get(int i): {client:; i} throws (Exception) {
+    if (i == 0) return head;
+    else try { return tail.get(i-1); }
+	 catch (NullPointerException e) { throw new Exception(); }
+  }
+
+  public int{client:} size() {
+    try { return 1 + tail.size(); }
+	 catch (NullPointerException e) { return 0; }
+  }
+}
+
+interface clientList {
+  public Object first():{client:} throws (Exception);
+  public clientList rest():{client:} throws (Exception);
+  public Object get(int i): {client:; i} throws (Exception);
+  public int{client:} size();
+}

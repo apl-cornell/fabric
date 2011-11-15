@@ -1,0 +1,30 @@
+class C {
+    void m()
+    {
+	int{Alice: Bob} x1 = 7;
+	int{Alice: Chuck} y1 = 7;
+	int{Alice: Bob&Chuck} z1 = x1; // ok, since Bob&Chuck actsfor Bob
+	z1 = y1; // ok, since Bob&Chuck actsfor Chuck
+
+	int{Alice: Bob,Chuck} x2 = 7;
+	int{Alice: Bob} y2 = x2; // ok, since Bob actsfor Bob,Chuck
+	int{Alice: Chuck} z2 = x2; // ok, since Chuck actsfor Bob,Chuck
+    }    
+
+    void n() {
+	int{Alice: Bob&Chuck} z1 = 7; 
+	int{Alice: Bob} x1 = z1; // not ok
+    }
+    void n2() {
+	int{Alice: Bob&Chuck} z1 = 7; 
+	int{Alice: Chuck} y1 = z1; // not ok
+    }
+    void n3() {
+	int{Alice: Bob} y2 = 7; 
+	int{Alice: Bob,Chuck} x2 = y2; // not ok
+    }
+    void n4() {
+	int{Alice: Chuck} z2 = 7; 
+	int{Alice: Bob,Chuck} x2 = z2; // not ok
+    }
+}

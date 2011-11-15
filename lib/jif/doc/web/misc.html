@@ -1,0 +1,456 @@
+<html>
+
+<head>
+<link rel=StyleSheet href="jifdoc.css" type="text/css">
+<title>Jif Manual</title>
+</head>
+
+<body>
+
+<h1><a name="java">Interacting with Java</a></h1>
+
+<h2><a name="main"></a>The <code>main</code> method</h2>
+
+<p>Jif provides two possible signatures for the main method of a
+class. The first is compatible with the signature for Java main
+methods, and accepts a single argument of an array of <code>String</code>, that is,
+<div class="code"><pre>
+public static void main(String[] args) { ... }
+</pre></div>
+
+
+<p>The second signature takes two arguments, the first a principal, and
+the second an array of <code>String</code>:
+
+<div class="code"><pre>
+public static void main(principal p, String[] args) { ... }
+</pre></div>
+
+
+<p>The principal <code>p</code> is the principal representing the current user that invoked the <code>main</code>. The signature
+may optionally have the authority of the current user:
+
+<div class="code"><pre>
+public static void main(principal p, String[] args) where caller(p)
+{
+    ...
+}
+</pre></div>
+
+<p>A class may have at most one static method named
+<code>main</code>. Classes with label or principal parameters cannot
+have a <code>main</code> method, as there is no way to specify
+appropriate instantiations for the parameters when invoking the
+<code>main</code> method.</p>
+
+<h2><a name="java-classes"></a>Interacting with Java classes</h2>
+
+<p>The Jif compiler provides a mechanism to allow Jif code to be compiled
+against and linked to existing Java classes. However, appropriate Jif
+signatures must be supplied for the Java classes. <b>NOTE: the Jif compiler
+does not verify that the Java code conforms to these provided
+signatures.</b>
+
+<p>
+Suppose that you have an existing Java class, called <code>Foo</code>,
+i.e. you have a file <code>Foo.java</code>, and a file
+<code>Foo.class</code> that was produced by compiling
+<code>Foo.java</code>. Furthermore, suppose you want to use the class
+<code>Foo</code> in some Jif code you are writing. You can do this by supplying a
+Jif signature for the class <code>Foo</code>; at compile time, your Jif code will
+be compiled against the signature you provide, but at runtime the
+original <code>Foo.class</code> will be loaded. The steps for doing this are as
+follows:</p>
+
+<ol>
+<li> In a file <code>Foo.jif</code> write an appropriate Jif signature for the
+   methods and fields in the class <code>Foo</code>.  Take a look at
+   $JIF/sig-src/java/lang/*.jif for some examples of this.
+
+   <p>Note the use of the <code>native</code> flag to avoid the need to provide a
+   body for the methods. Note also that there is a <code>private static int</code>
+   field named <code>__JIF_SIG_OF_JAVA_CLASS$20030619</code>; this is a hack to
+   let the Jif compiler to know that the class provides a Jif
+   signature for an existing Java class.
+</li>
+
+<li> Compile <code>Foo.jif</code> to produce the file <code>Foo.class</code>
+</li>
+
+<li> Make sure that the <code>Foo.class</code> you created in step 2 is on the
+   signature classpath. Do this either by dropping the class file into
+   the $JIF/sig-classes directory, or by specifying the directory with
+   the <code>-addsigcp</code> flag to the Jif compiler. 
+</li>
+
+<li> Compile your Jif code that uses the class <code>Foo</code>. The Jif compiler
+   will use the signature you created in step 1 when compiling your Jif code.
+</li>
+
+<li> To run your Jif compiled code, make sure that the original
+   <code>Foo.class</code> is on the classpath, but that the
+   <code>Foo.class</code> you created in step 2 is not. Thus, when
+   running your Jif compiled code, the original <code>Foo.class</code>
+   will be loaded by the classloader.
+</li>
+</ol>
+
+<p>More explicitly, here is a suggested directory structure.</p>
+<div class="code"><pre>
+jif-src/
+   Bar.jif <span class="comment">// Jif code that uses the Java class Foo</span>
+
+java-src/
+   Foo.java <span class="comment">// Java source code</span>
+   Quux.java <span class="comment">// More Java source code, not used by any Jif code</span>
+
+sig-src/
+   Foo.jif <span class="comment">// Jif signature for the Java source code</span>
+</pre></div>
+
+<p>
+Now compile the Java code. (You'll need to create the directory <code>java-classes</code> first.)
+<div class="code"><pre>
+$ javac -d java-classes -sourcepath java-src java-src/*.java
+</pre></div>
+
+<p class="cont">
+Now compile the Jif signatures of the Java code. (Create the directory <code>sig-classes</code> first.)
+<div class="code"><pre>
+$ $JIF/bin/jifc -d sig-classes -sourcepath sig-src \
+      sig-src/Foo.jif
+</pre></div>
+
+
+<p class="cont">
+Now compile the Jif code. (Create the directory <code>jif-classes</code> first.)
+<div class="code"><pre>
+$ $JIF/bin/jifc -d jif-classes -sourcepath jif-src \ 
+      -addsigcp sig-classes \ 
+      -classpath &quot;java-classes:$CLASSPATH&quot; jif-src/Bar.jif
+</pre></div>
+
+<p class="cont">
+Note that the signature class is added to the signature classpath
+using <code>-addsigcp sig-classes</code>, and the Java classes are put
+on the classpath using <code>-classpath
+&quot;java-classes:$CLASSPATH&quot;</code>.
+
+<p>
+To run code, make sure that the classpath contains both
+<code>java-classes</code> and <code>jif-classes</code>, but that it
+<b>does not</b> contain <code>sig-classes</code>: 
+
+<div class="code"><pre>
+$ $JIF/bin/jif -classpath &quot;java-classes:jif-classes:$CLASSPATH&quot; Bar
+</pre></div>
+
+
+<p>Two other indicator fields can also be used in the Jif signature file of a 
+Java class:
+<ul>
+<li> <code>__JIF_SAFE_CONSTRUCTORS$20050907</code>
+<p>Adding a <code>private static int</code> field named
+<code>__JIF_SAFE_CONSTRUCTORS$20050907</code> to a Jif signature file is an
+assertion that during the execution of the constructors of the Java class there
+is no possible way to access a final field of a subclass of the class 
+(for example, by invoking an overridden method that accesses final fields,
+or by leaking a reference to the object being created to some class that
+may attempt to access a final field of the class). Accessing final fields before
+they are initialized may be leveraged to leak information; the Jif typing rules
+prevent any access to final fields before they are accessed.</p>
+
+<p>The assertion that the Java constructors are &quot;safe&quot; means the Jif
+compiler can impose fewer restrictions in the constructor bodies of Jif 
+subclasses of the Java class.
+</li>
+
+<li> <code>__JIF_PARAMS_RUNTIME_REPRESENTED$20051007</code>
+<p>Adding a <code>private static int</code> field named
+<code>___JIF_PARAMS_RUNTIME_REPRESENTED$20051007</code> to a Jif signature file 
+is an assertion that the Java class conforms to the Jif conventions for
+runtime representation of label and principal parameters. 
+
+Suppose that we have some Java class <code>C</code> and the Jif signature for 
+the class states that the class has <i class="math">n</i> parameters:
+<code>class C[<i class="math">Q</i><sub>1</sub> <i class="math">q</i><sub>1</sub>,
+    ..., <i class="math">Q</i><sub>n</sub> <i class="math">q</i><sub>n</sub>]
+    </code>,
+ where each <i class="math">Q<sub>i</sub></i> is either <code>label</code>
+ or <code>principal</code>, and <i class="math">q<sub>i</sub></i> is the name
+ of the <i class="math">i</i>th parameter.
+ 
+<p>Then the Java class <code>C</code> must conform to the following conventions:
+<ol>
+<li> <p>If <code>C</code> is not an interface, then a method 
+    <code>public static boolean 
+    jif$Instanceof(<i class="math">Q</i><sub>1</sub> a1,
+    ..., <i class="math">Q</i><sub>n</sub> an, Object o)</code> must be present 
+    in the class, where each <i class="math">Q<sub>i</sub></i> is either
+    <code>jif.lang.Label</code> or <code>jif.lang.Principal</code> as 
+    appropriate.
+    
+    <p>The method must return <code>true</code> if and only if the 
+    object <code>o</code>
+    is an instance of <code>C[a1, ..., an]</code>, that is, the class 
+    <code>C</code> instantiated with the parameters <code>a1, ..., an</code>.
+    
+    <p>The method may not throw any exceptions.
+    
+<li>  <p>If <code>C</code> is not an interface, then a  method 
+    <code>public static C
+    jif$cast$<i>classname</i>(<i class="math">Q</i><sub>1</sub> a1,
+    ..., <i class="math">Q</i><sub>n</sub> an, Object o)</code> must be present 
+    in the class, where each <i class="math">Q<sub>i</sub></i> is either
+    <code>jif.lang.Label</code> or <code>jif.lang.Principal</code> as 
+    appropriate, and <i>classname</i> is the full classname of the 
+    Java class <code>C</code>, with periods (&quot;<code>.</code>&quot;) 
+    replaced by underscores (&quot;<code>_</code>&quot;) (e.g., for the 
+    class <code>C</code> in the package <code>foo.bar</code>, 
+    <i>classname</i> would be <code>foo_bar_C</code>). 
+    
+    
+    <p>The method must return <code>o</code> if and only if the 
+    object <code>o</code>
+    is an instance of <code>C[a1, ..., an]</code>, that is, the class 
+    <code>C</code> instantiated with the parameters <code>a1, ..., an</code>.
+    
+    <p>Otherwise, the method must throw a <code>ClassCastException</code>.
+    
+<li> <p>For each static method <code>m(...)</code> declared in the Jif 
+    signature, the Java class must provide a static method
+    <code>m(<i class="math">Q</i><sub>1</sub> a1,
+    ..., <i class="math">Q</i><sub>n</sub> an, ...)</code>.
+    
+    <p>Jif code that calls the static method <code>m</code> on 
+    class <code>C[a1, ..., an]</code> will be translated into the Java
+    method call <code>C.m(a1, ..., an, ...)</code>.
+
+<li> <p>For each constructor <code>C(...)</code> declared in the Jif 
+    signature, the Java class must provide a constructor
+    <code>C(<i class="math">Q</i><sub>1</sub> a1,
+    ..., <i class="math">Q</i><sub>n</sub> an, ...)</code>.
+    
+    <p>Jif code that constructs new <code>C</code> objects via a 
+    <code>new</code> expression
+    (<code>new C[a1, ..., an](...)</code> will be translated into the Java
+    code <code>new C(a1, ..., an, ...)</code>.
+
+    <p>Note that if Jif classes are able to subclass the class 
+    <code>C</code>, then the Jif typing rules require that the Jif signature for 
+    <code>C</code> includes a default constructor (that is, a constructor
+    with no arguments), and thus the Java code for the class <code>C</code> must
+    provide a constructor 
+    <code>C(<i class="math">Q</i><sub>1</sub> a1,
+    ..., <i class="math">Q</i><sub>n</sub> an)</code>
+
+<li> <p>If <code>C</code> is an interface, then a class named 
+<code>C_JIF_IMPL</code> in the same package, with the same visibility
+must be provided. This class must contain two static methods: <code>public static boolean 
+    jif$Instanceof(<i class="math">Q</i><sub>1</sub> a1,
+    ..., <i class="math">Q</i><sub>n</sub> an, Object o)</code> and
+    <code>public static C
+    jif$cast$<i>classname</i>(<i class="math">Q</i><sub>1</sub> a1,
+    ..., <i class="math">Q</i><sub>n</sub> an, Object o)</code>. These two
+    methods provide
+    implementations for <code>instanceof</code> tests and class casts, as
+    described above in items 1 and 2.
+    
+</ol>
+</li>
+</ul>
+
+<h1><a name="debugging"></a>Debugging Jif programs</h1> 
+
+<p>Tracking down and correcting compilation errors in Jif code can be
+difficult. While there is not as yet a debugger specifically for the
+Jif language, the Jif compiler has a number of reporting options that
+will result in additional information being displayed.
+
+
+<h2><a name="explain"></a>Constraint explanations</h2>
+
+<p>The <code>-explain</code> or <code>-e</code> flag of the Jif compiler can be used to view
+more information about failed label checking. For example, consider
+the program, in which there is a potential implicit information flow
+from the high security argument <code>h</code>, whose label is the dynamic label
+<code>lbl</code>, to the low security local variable <code>l</code>:
+
+<div class="code"><pre>
+class Implicit {
+    void m(boolean{*lbl} h, label{} lbl) {
+        if (lbl <= new label {Alice:}) {
+            boolean{} l = false;
+            if (h) {
+                l = true;
+            }
+        }
+    }
+}
+</pre></div>
+
+Trying to compile this program produces the following output:
+
+<div class="code"><pre>
+$ $JIF/bin/jifc Implicit.jif
+Implicit.jif:6: Label of right hand side not less restrictive than the label
+    for local variable l
+                l = true;
+                ^
+
+1 error.
+</pre></div>
+
+<p>More information can be gleaned by using the <code>-explain</code> flag:
+
+<div class="code"><pre>
+$ $JIF/bin/jifc Implicit.jif -explain
+Implicit.jif:6: Unsatisfiable constraint:    
+     rhs.nv &lt;= label of var l    
+        {h; caller_pc; lbl} &lt;= {caller_pc; _: _; _!: _}    
+     in environment    
+     [{this} &lt;= {caller_pc}, {*lbl} &lt;= {Alice: }]    
+        
+     Label Descriptions    
+     ------------------    
+     - rhs.nv = label of successful evaluation of right hand of assignment    
+     - rhs.nv = {h; caller_pc; lbl}    
+     - label of var l = {caller_pc; _: _; _!: _}    
+     - h = polymorphic label of formal argument h of method m (bounded above
+    by {*lbl})    
+     - caller_pc = The pc at the call site of this method (bounded above by
+    {*: })    
+     - lbl = polymorphic label of formal argument lbl of method m (bounded
+    above by {})    
+     - this = label of the special variable "this"    
+     - *lbl = dynamic label represented by the final access path lbl    
+        
+     More information is revealed by the successful evaluation of the right
+    hand side of the assignment than is allowed to flow to the local variable
+    l.
+                l = true;
+                ^
+
+1 error.
+</pre></div>
+
+<p>The more detailed error message first shows what the symbolic
+unsatisfiable constraint is (<code>rhs.nv <= label of var l</code>),
+and then shows the same constraints with the actual labels substituted
+for the symbols (<code>{h; caller_pc; lbl} <= {caller_pc; _: _; _!:
+_}</code>). The label environment in which the constraint must be
+satisfied is also shown. Here, the environment indicates that the
+value held in the label variable <code>lbl</code> is bounded above by
+the label <code>{Alice:}</code>, and that the label of the receiver
+object (<code>{this}</code>) is bounded above by the label
+<code>{caller_pc}</code>. Brief descriptions of the labels that appear
+in the unsatisfiable constraint are also shown. Here, we see that
+<code>rhs.nv</code> represents the label of the information that may
+be acquired by knowing the <em>v</em>alue of the successful
+(<em>n</em>ormal) evaluation of the <em>r</em>ight <em>h</em>and
+<em>s</em>ide of the assignment; for this assignment, that label is
+<code>{h; caller_pc; lbl}</code>, where <code>{h}</code> and
+<code>{lbl}</code> are the labels of the formal arguments
+<code>h</code> and <code>lbl</code>, and <code>{caller_pc}</code>
+represents the <u>pc</u> of the call site, which is bounded above the
+method's begin-label, which in this case is the most restrictive
+label, <code>{*: }</code>.</p>
+
+
+<h2><a name="report"></a>Detailed reporting</h2>
+
+<p>Sometimes the additional information provided by the <code>-explain</code> option
+is not sufficient to determine why a Jif program fails to
+compile. There are two additional useful ways to gain more information
+about the label checking process: reporting the topics <code>debug</code> and
+<code>solver</code>.
+
+Specifying the command line option <code>-report debug=</code><i>n</i>, where <i>n</i> is a
+non-negative integer, will display more information about labels. The
+higher the value for <i>n</i>, the more information is displayed. For
+example:
+<div class="code"><pre>
+$ $JIF/bin/jifc Implicit.jif -report debug=1 -explain
+Implicit.jif:6: Unsatisfiable constraint:    
+     rhs.nv &lt;= label of var l    
+        {&lt;arg h {&lt;dynamic lbl&gt;}&gt;; &lt;arg caller_pc {*: ; _!: _}&gt;; &lt;arg lbl {_: _;
+    _!: _}&gt;} &lt;= {&lt;arg caller_pc {*: ; _!: _}&gt;; _: _; _!: _}    
+     in environment    
+     [{&lt;this (of Implicit)&gt;} &lt;= {&lt;arg caller_pc {*: ; _!: _}&gt;}, {&lt;dynamic
+    lbl&gt;} &lt;= {&lt;pr-external Alice&gt;: ; _!: _}]    
+        
+     Label Descriptions    
+     ------------------    
+     - rhs.nv = label of successful evaluation of right hand of assignment    
+     - rhs.nv = {&lt;arg h {&lt;dynamic lbl&gt;}&gt;; &lt;arg caller_pc {*: ; _!: _}&gt;; &lt;arg
+    lbl {_: _; _!: _}&gt;}    
+     - label of var l = {&lt;arg caller_pc {*: ; _!: _}&gt;; _: _; _!: _}    
+     - &lt;arg h {&lt;dynamic lbl&gt;}&gt; = polymorphic label of formal argument h of
+    method m (bounded above by {&lt;dynamic lbl&gt;})    
+     - &lt;arg caller_pc {*: ; _!: _}&gt; = The pc at the call site of this method
+    (bounded above by {*: ; _!: _})    
+     - &lt;arg lbl {_: _; _!: _}&gt; = polymorphic label of formal argument lbl of
+    method m (bounded above by {_: _; _!: _})    
+     - &lt;this (of Implicit)&gt; = label of the special variable &quot;this&quot;    
+     - &lt;dynamic lbl&gt; = dynamic label represented by the final access path lbl    
+        
+     More information is revealed by the successful evaluation of the right
+    hand side of the assignment than is allowed to flow to the local variable
+    l.
+                l = true;
+                ^
+
+1 error.
+</pre></div>
+
+
+<p>In the environment, we see that the label of the actual argument
+for <code>h</code> is displayed as <code>&lt;arg h {&lt;dynamic
+lbl&gt;}&gt;</code>. That is, we see that the label is the argument
+label for the argument <code>h</code>, and that this arg-label is
+bounded above by the label <code>&lt;dynamic lbl&gt;</code>, that is by the dynamic label 
+<code>lbl</code>.</p>
+
+<p>The arg-label for <code>h</code> would normally be displayed simply
+as <code>h</code>, and the dynamic label <code>lbl</code> would normal
+be displayed as <code>*lbl</code>. But with the <code>debug</code>
+topic reporting at level 1, we see more detail about the labels, which
+can be helpful to determine what reasoning the compiler is
+performing. Setting the report level higher reveals even more
+information.</p>
+
+<p>Thus, reporting the debug topic provides more information about
+the labels and their meaning, but a less readable display.</p>
+
+
+<p>Specifying the command line option <code>-report solver=</code><i>n</i>, for a
+nonnegative <i>n</i>, will display more information about the constraint
+solver, which attempts to solve the system of constraints generated by
+label checking. The higher the value for <i>n</i>, the more information is
+displayed.</p>
+
+<p>When the constraint solver is unable to solve a system of constraints,
+it attempts to find the most appropriate constraint to &quot;blame&quot;: this
+is the constraint that is displayed in the error message. However,
+sometimes this constraint is not the real culprit, and one or more
+other constraints are really preventing successful
+compilation. Enabling reporting for the solver allows the user to
+determine which constraint(s) are problematic, when the error message
+does not appear to be helpful.</p>
+
+<h1><a name="runtime-interface">Jif runtime interface</a></h1>
+
+
+<p>To interact with the external environment, Jif provides a runtime
+interface to allow Jif code to read and write files, and access stdin,
+stdout and stderr, and also to obtain a principal representing the current user. The runtime interface is <code>jif.runtime.Runtime</code>.
+</p>
+
+<p>Although
+the runtime code is itself is written in Java (see $JIF/rt-src/jif/runtime/Runtime.java), a Jif signature is
+provided to allow calls to this interface can be checked
+statically (see $JIF/sig-src/jif/runtime/Runtime.jif). 
+</p>
+</body>
+
+</html>

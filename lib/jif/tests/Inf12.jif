@@ -1,0 +1,19 @@
+import jif.util.*;
+
+public class Inf12 { 
+
+    final principal Client = new TestPrincipal("Blah");
+    final TestParamInf[Client] testParam;
+//    final TestParamInf testParam;
+
+    public Inf12()
+    {
+        testParam = new TestParamInf();
+    }
+}
+
+class TestParamInf[principal testP] {
+    public void foo{testP:}() {
+        int{testP:} x = 42;
+    }
+}

@@ -1,0 +1,1786 @@
+<html>
+
+<head>
+<link rel=StyleSheet href="jifdoc.css" type="text/css">
+<title>Label checking</title>
+</head>
+
+<body>
+
+<h1><a name="label-checking">Label checking</a></h1>
+
+<p>In addition to the standard type-checking performed by Java
+compilers, the Jif compiler performs <em>label checking</em>, ensuring
+that programs respect the security policies contained in the labels of
+information. The label checking rules are intended to enforce the
+following two properties.</p>
+
+<ol>
+<li> The apparent label of every expression is at least as restrictive
+as the actual label of every value it might produce.</li> 
+
+<li> The actual label of a value is at least as restrictive as the
+label of any value that might affect it (modulo downgrading).
+</li>
+</ol>
+
+This section describes informally the label checking rules used in the
+Jif compiler.
+
+
+<h2><a name="key-concepts">Key concepts</a></h2>
+
+<h3><a name="pc-label">Program counter labels</a></h3>
+<p>Every program
+point has a program counter label <u>pc</u> (introduced in <a
+class="secref" href="language.html#implicit-flows">Implicit flows and
+program-counter labels</a>). For any given program point, <u>pc</u> is
+an upper bound on the information that may be deduced by knowing that
+program execution reaches the program point. Equivalently, <u>pc</u>
+can be regarded as an upper bound on the labels of all values that
+have affected the control flow of the program to reach the program point.</p>
+
+<h3><a name="path-maps">Normal and exceptional termination</a></h3>
+<p>The evaluation of an expression or statement may result in the
+throwing of an exception. As described in <a class="secref"
+href="language.html#runtime-exceptions">Runtime exceptions</a>,
+exceptions are a covert information channel, and label checking must
+therefore carefully track the information encoded in the presence or
+absence of exceptions. For every expression and statement in a
+program, a label is associated with every subclass of
+<code>Exception</code>; this label is an upper bound on the
+information that may be deduced by observing that the expression or
+statement throws an object of that class. (Equivalently, the label is
+an upper bound on the labels of all values that may influence the
+throwing of the exception.) In addition, a label is associated with
+the <em>normal termination</em> of each expression and statement, that
+is an upper bound of the information that may be deduced by the
+termination of the expression or statement without an exception.</p>
+
+<p>For example, consider the following (compound) statement.</p>
+<div class="code"><pre>
+if (i == 0) x = o.foo; else x = x/a;
+</pre></div>
+
+<p class="cont">The statement throws a
+<code>NullPointerException</code> only if the local variable
+<code>i</code> is zero and the local variable <code>o</code> is
+<code>null</code>. The statement throws an
+<code>ArithmeticException</code> only if the local variable
+<code>i</code> is non-zero and the integer variable <code>a</code> is
+zero. The statement will terminate normally if <code>i</code> and
+<code>a</code> are non-zero, or if <code>i</code> is non-zero and
+<code>o</code> is not <code>null</code>. Therefore, the label
+associated with normal termination is
+<code>{i;a;o}</code>&#8852;<u>pc</u>, where <code>{i;a;o}</code> is
+the join of the labels of the local variables <code>i</code>,
+<code>a</code>, and <code>o</code>, and <u>pc</u> is the program
+counter label associated with the program point at the start of this
+statement. Similarly, the label associated with a
+<code>NullPointerException</code> being thrown is
+<code>{i;o}</code>&#8852;<u>pc</u>, and the label associated with an
+<code>ArithmeticException</code> is
+<code>{i;a}</code>&#8852;<u>pc</u>. The statement cannot throw any
+other exception. Note that the labels for normal termination and the
+exceptions do not mention the variable <code>x</code>, which appears
+in the statement, but does not affect whether an exception is
+thrown. In general, the label associated with normal termination is at
+least as restrictive as the label associated with each possible
+exception, as an expression or statement terminates normally only if
+it does not throw an exception.
+</p>
+
+<p>Note that in Jif, unlike Java, all subtypes of
+<code>Exception</code> are checked. That is, subtypes of
+<code>RuntimeException</code>s must be either caught or declared to be
+thrown.</p>
+
+<h3><a name="nv-label">Normal value label</a></h3>
+<p>Label checking also determines for every expression an upper bound
+on the label of any value that the expression may evaluate to. This
+label is called the <em>normal value</em> label of the expression (or
+often, the label of the expression) and is in general at least as
+restrictive as the normal termination label of the expression, since
+the expression will only evaluate to a value it does not throw an
+exception.</p>
+
+<h3><a name="label-envs">Label environments</a></h3>
+<p>Each program point in a Jif program also has a <em>label
+environment</em> associated with it. A label environment records the
+relationships statically known to hold between labels, as well as the
+<code>actsfor</code> relationships statically known to hold between
+principals. Relationships between labels and between principals are
+known to hold statically through the use of label and actsfor <a
+href="language.html#method-constraints">method constraints</a>, and
+through the use of <a href="language.html#runtime-tests">runtime
+tests</a> of label and principal relationships.  All label checking
+constraints are checked using the label environment at the program
+point where the constraint arises. For example, in the following code,
+label checking requires that at the assignment, the label of <code>y</code> is no
+more restrictive than the label of <code>x</code>. Due to the actsfor relation
+contained in the label environment at that point, this constraint does
+indeed hold.
+</p>
+<div class="code"><pre>
+int{Alice: Bob} x;
+int{Alice: Chuck} y;
+if (Bob actsfor Chuck) {
+    x = y; <span class="comment">// OK, since {Alice: Chuck} &#8849; {Alice: Bob} is</span>
+           <span class="comment">// deducible from the label environment at this point</span>
+}
+</pre></div>
+
+<h2><a name="basics">Basics of label checking</a></h2>
+
+<p>Label checking closely follows the operational semantics of Java.
+As an example, consider label checking an integer division expression
+<i class="math">e</i><sub>1</sub>/<i class="math">e</i><sub>2</sub>,
+assuming that <u>pc</u><sub>0</sub> is the program counter label for
+this expression. This expression is evaluated by first evaluating <i
+class="math">e</i><sub>1</sub>, then evaluating <i
+class="math">e</i><sub>2</sub>, and then performing the division
+operation. Label checking this division expression requires first
+label checking <i class="math">e</i><sub>1</sub>, using
+<u>pc</u><sub>0</sub> as the program counter label. Since <i
+class="math">e</i><sub>2</sub> will be evaluated only if <i
+class="math">e</i><sub>1</sub> terminates normally, the program
+counter label for checking <i class="math">e</i><sub>2</sub> is the
+normal termination label for <i class="math">e</i><sub>1</sub>, which
+is at least as restrictive as <u>pc</u><sub>0</sub>. If the evaluation
+of <i class="math">e</i><sub>2</sub> terminates normally, then the
+division operation occurs. Integer division will throw an
+<code>ArithmeticException</code> if <i class="math">e</i><sub>2</sub>
+evaluates to 0. Thus, label checking associates the normal value label
+of <i class="math">e</i><sub>2</sub> with the
+<code>ArithmeticException</code> that may be thrown by the division
+operation.
+</p>
+
+<p>
+What exceptions can be thrown by the expression <i
+class="math">e</i><sub>1</sub>/<i class="math">e</i><sub>2</sub>, and
+what labels are associated with these exceptions? Clearly, <i
+class="math">e</i><sub>1</sub>/<i class="math">e</i><sub>2</sub> may
+throw any exception thrown by <i class="math">e</i><sub>1</sub>, or <i
+class="math">e</i><sub>2</sub>, and the division operation itself may
+throw an <code>ArithmeticException</code>. Thus, the label associated
+with an <code>ArithmeticException</code> is the normal value label of
+<i class="math">e</i><sub>2</sub>, joined with the label associated
+with <code>ArithmeticException</code> by <i
+class="math">e</i><sub>1</sub>, joined with the label associated with
+<code>ArithmeticException</code> by <i
+class="math">e</i><sub>2</sub>. Similarly, for any other exception
+type <code>T</code>, the label associated with it is the label
+associated with <code>T</code> by <i class="math">e</i><sub>1</sub>,
+joined with the label associated with <code>T</code> by <i
+class="math">e</i><sub>2</sub>.</p>
+
+<p>
+The normal termination label of <i class="math">e</i><sub>1</sub>/<i
+class="math">e</i><sub>2</sub> is an upper bound on information that
+may be gained by knowing <i class="math">e</i><sub>1</sub>/<i
+class="math">e</i><sub>2</sub> terminates normally, which happens if
+<i class="math">e</i><sub>2</sub> terminates normally, and
+evaluates to a non-zero value. Thus,
+the normal termination label of <i class="math">e</i><sub>1</sub>/<i
+class="math">e</i><sub>2</sub> is the normal termination label of <i
+class="math">e</i><sub>2</sub> joined with the normal value label of
+<i class="math">e</i><sub>2</sub>.</p>
+
+<p>The normal value label of <i class="math">e</i><sub>1</sub>/<i
+class="math">e</i><sub>2</sub> is an upper bound on the information
+that may be gained by knowing what value the expression evaluates
+to. The value of <i class="math">e</i><sub>1</sub>/<i
+class="math">e</i><sub>2</sub> depends on the values of <i
+class="math">e</i><sub>1</sub> and <i class="math">e</i><sub>2</sub>,
+and thus the normal value label of <i
+class="math">e</i><sub>1</sub>/<i class="math">e</i><sub>2</sub> is
+the normal value label of <i class="math">e</i><sub>1</sub> joined
+with the normal value label of <i class="math">e</i><sub>2</sub>.
+</p>
+
+<p>
+The example of label checking <i class="math">e</i><sub>1</sub>/<i
+class="math">e</i><sub>2</sub> highlights two general principles
+used in Jif's label checking rules. 
+</p>
+<ul class="ulpara">
+<li> 
+If evaluation of expression
+(or statement) <i class="math">e'</i> immediately follows the
+successful evaluation of expression (or statement) <i
+class="math">e</i>, then the program counter label used to label check
+<i class="math">e'</i> is the normal termination label of <i
+class="math">e</i>.</li>
+<li>The label associated with any exception
+thrown by an expression or statement is the join of the labels
+associated with the exception in any sub-expressions or
+sub-statements, and (if the expression or statement itself can throw
+the exception), joined with the label associated with the exception by
+the expression or statement itself.
+</li>
+</ul>
+
+<p>
+Jif's label checking rules preserve several invariants.</p>
+<ul class="ulpara">
+<li> The normal value label of an expression is at least as
+restrictive as the normal termination label of the expression.</li>
+
+<li> The normal termination label of an expression or statement is at
+least as restrictive as the program counter label for the expression
+or statement.</li>
+
+<li> The normal termination label of an expression or statement is at
+least as restrictive as the labels associated with each exception that
+the expression or statement may throw.</li>
+</ul>
+
+<p>
+The label checking rules used in Jif are in large part explained by
+applying the general principles presented above to the operational
+semantics of Java, while ensuring that the invariants are
+preserved. In the presentation of the label checking rules in the
+remainder of the section, unless otherwise stated, these principles
+and invariants should be assumed to apply.
+</p>
+
+<p><a name="single-path-rule"/>
+An additional label checking rule permits increased precision in
+checking expressions and statements. The <em>single path rule</em>
+states that if an expression or statement <i class="math">e</i> can
+only terminate normally (that is, <i class="math">e</i> cannot throw
+any exceptions, and does not contain any <code>return</code>
+statements), then the normal termination label of <i
+class="math">e</i> is the program counter label of <i
+class="math">e</i>. In the following example, even though an exception
+may be thrown depending on the value of <code>i</code>, the
+<code>try-catch</code> block can only terminate normally: no
+additional information is gained by knowing that execution of the
+<code>try-catch</code> block terminates successfully.  Thus, by the
+single path rule, the normal termination label of the
+<code>try-catch</code> block is the same as the program counter label.
+</p>
+<div class="code"><pre>
+try {
+    if (i < 0) 
+        throw new Exception();
+}
+catch (Exception e) { }
+</pre></div>
+
+
+
+<h2><a name="lits-ops">Literals, binary and unary operators</a></h2>
+
+<p>The normal value label of a literal expression (including numeric literals
+such as <code>42</code>, <code>0.5f</code>, and <code>'r'</code>, and
+string literals such as <code>&quot;Hello world&quot;</code>) is the
+<u>pc</u> label at the program point where the expression
+occurs. Since literal expressions cannot throw exceptions, the
+label of normal termination label of a literal expression is just the
+<u>pc</u> label.</p>
+
+<p>A binary expression <i class="math">e</i><sub>1</sub>&oplus;<i
+class="math">e</i><sub>2</sub> is evaluated by first evaluating <i
+class="math">e</i><sub>1</sub>, then evaluating <i
+class="math">e</i><sub>2</sub>, and then performing the binary
+operation. For short-circuit evaluation operators
+<code>&amp;&amp;</code> and <code>||</code>, the evaluation of <i
+class="math">e</i><sub>2</sub> depends on the value of <i
+class="math">e</i><sub>1</sub>, and so the <u>pc</u> label for <i
+class="math">e</i><sub>2</sub> is the normal value label of <i
+class="math">e</i><sub>1</sub>; for all other binary operators the
+<u>pc</u> label for evaluating <i class="math">e</i><sub>2</sub> is
+the normal termination label of <i class="math">e</i><sub>2</sub>.
+</p>
+
+
+<p>Unless a simple dataflow analysis is able to prove that the value
+of <i class="math">e</i><sub>2</sub> is non-zero, 
+Jif conservatively assumes that any division or modulo operation
+may throw an <code>ArithmeticException</code>. Thus, the label of such an
+<code>ArithmeticException</code> is the normal value label of <i
+class="math">e</i><sub>2</sub>.</p>
+
+
+<p>Pre- and post-increment and decrement operators are label checked
+as if they were assignments. For example <code>e++</code> is label
+checked as if it were <code>e+=1</code>.</p>
+
+<p>Label checking for other unary expressions, such as
+<code>!e</code>, <code>~e</code>, and <code>-e</code>, is identical to
+label checking for the subexpression <code>e</code>.
+
+
+<h2><a name="local-vars">Local variable declarations</a></h2>
+
+<p>
+Declarations of local variables may optionally contain a label
+annotation, called the <em>declared label</em> of the local
+variable. The label of the local variable is the join of the declared
+label with the program counter label for the declaration. If no
+declared label is supplied, then the local variable's label is
+inferred.</p>
+
+<p>
+A local variable declaration may contain an initializing
+expression. Similar to assignments, the label-checking rules require
+that the normal value label of the initializing expression is no more
+restrictive than the label of the local variable. The label checking
+rules for array initializing expressions are described under <a
+class="secref" href="#arrays">Arrays</a>.
+</p>
+
+<p>
+If the local variable is declared <code>final</code> and is of type
+<code>label</code>, <code>principal</code>, or a subclass of
+<code>jif.lang.Principal</code>, and the initializing expression is a
+<a href="language.html#dynamic-labels">final access path</a>, then the
+label environment is extended to record that the local variable is
+equivalent to the label or principal denoted by the initializing
+expression.
+</p>
+
+<h2><a name="var-access">Variable access</a></h2>
+
+<p>A local variable access, such as the expression <code>x</code>,
+cannot throw an exception, and so the normal termination label of a
+local variable access is just the program counter label. The normal
+value label of a local variable access is the label of the local
+variable joined with the program counter label. Accesses to formal
+arguments are just a special case of local variable accesses, where
+the label of a formal argument is a <a
+href="language.html#label-polymorphism">polymorphic argument
+label</a>.</p>
+
+
+<p>A field access <code>e.f</code> may throw a
+<code>NullPointerException</code> if the target <code>e</code> is
+<code>null</code>. The Jif compiler uses a simple intra-procedural
+dataflow analysis to track whether local variables and final access
+path expressions are known to be non-<code>null</code>. If this dataflow analysis
+is unable to determine that the target <code>e</code> is definitely
+non-<code>null</code>, then the label associated with the
+<code>NullPointerException</code> is the normal value label of the
+target <code>e</code>. The normal termination label of a field access
+is thus the normal value label of the target <code>e</code>.</p>
+
+<p>The normal value label of a field access <code>e.f</code> is the
+join of the normal value label of the target <code>e</code> with the
+label of the field <code>f</code>. Let <i class="math">L</i> be the
+declared label of the field <code>f</code>; the label of the field
+<code>f</code> is obtained by substituting all occurrences of
+<code>this</code> appearing in the access paths of dynamic label or
+principals with <code>e</code>, as well as substituting actual label
+and principal parameters for formal label and principal parameters as
+appropriate. For example, consider the following declaration of the
+class <Code>C</code>.</p>
+
+<div class="code"><pre>
+class C[principal P] {
+    label{} lbl;
+    int{P: Alice; *this.lbl} foo;
+}
+
+...
+
+C[Bob] c = ...;
+int x = c.foo;
+</pre></div>
+
+<p class="cont">
+When the field <code>foo</code> is accessed in the field access
+<code>c.foo</code>, the label of the field <code>foo</code> is
+<code>{Bob: Alice; *c.lbl}</code>. Thus, the normal value label of the
+field access is join of the normal value label of <code>c</code> and
+<code>{Bob: Alice; *c.lbl}</code>.
+</p>
+
+
+<h2><a name="var-assignment">Variable assignment</a></h2> 
+
+<p>Variable assignments include assignments to both local variables
+and to fields. Assignments to elements of arrays are described <a
+href="#arrays">below</a>.</p>
+
+<p>For a local variable <code>x</code>, an assignment <code>x=<i
+class="math">e</i></code> is evaluated by first evaluating the
+expression <i class="math">e</i>, and then performing the
+assignment. The label checking of <code>x=<i class="math">e</i></code>
+is straightforward: the expression <i class="math">e</i> is label
+checked using the same program counter label as the assignment itself,
+and the normal value label of <i class="math">e</i> is required to be
+no more restrictive than the label of <code>x</code>. See <a
+class="secref" href="#local-vars">Local variable declarations</a> for
+the definition of the label of a local variable. The assignment
+<code>x=<i class="math">e</i></code> throws only the exceptions thrown
+by <i class="math">e</i>. The normal and exception termination labels
+are therefore the same as that for <i class="math">e</i>. The normal
+value label of the assignment expression is also the same as that of <i
+class="math">e</i>.
+</p>
+
+<p>An assignment <code>x <i class="math">op</i>= <i
+class="math">e</i></code> for local variable <code>x</code> (such as
+<code>x*=4+y</code>) is label checked as if it were the assignment
+<code>x = x <i class="math">op</i> <i class="math">e</i></code> . In
+particular, if <i class="math">op</i> is the division
+('<code>/</code>') or modulo ('<code>%</code>') operator, 
+then label checking conservatively assumes that an
+<code>ArithmeticException</code> may be thrown (unless a simple 
+dataflow analysis can prove that <i class="math">e</i> is non-zero), and the label
+associated with this exception is the normal value label of the
+expression <i class="math">e</i>. The normal value label for the right
+hand side of the assignment is the label of <code>x</code> joined with
+the normal value label of <i class="math">e</i>.</p>
+
+<p>An assignment to a field, <code><i class="math">e</i><sub>1</sub>.f
+= <i class="math">e</i><sub>2</sub></code>, is evaluated by first
+evaluating <code><i class="math">e</i><sub>1</sub></code>, then
+evaluating <code><i class="math">e</i><sub>2</sub></code>. At this
+point, if <code><i class="math">e</i><sub>1</sub></code> evaluated to
+<code>null</code>, then a <code>NullPointerException</code> is
+thrown. Otherwise, the assignment proceeds. Label checking a field
+assignment first label checks <code><i
+class="math">e</i><sub>1</sub></code> using the same program counter
+label as the program counter label for the assignment itself. The
+normal termination label of <code><i
+class="math">e</i><sub>1</sub></code> is then used as the program
+counter label to label check <code><i
+class="math">e</i><sub>2</sub></code>. If Jif's not-null dataflow
+analysis is unable to determine that the expression <code><i
+class="math">e</i><sub>1</sub></code> is always non-<code>null</code>,
+then a <code>NullPointerException</code> may be thrown, and the label
+associated with it is the normal value label of <code><i
+class="math">e</i><sub>1</sub></code> joined with the normal
+termination label of <code><i class="math">e</i><sub>2</sub></code>.
+The normal termination label of a field assignment (and also its
+normal value label) is thus the join of the normal value label of
+<code><i class="math">e</i><sub>1</sub></code> and the normal
+termination label of <code><i class="math">e</i><sub>2</sub></code>.
+</p>
+
+
+<p>We require that the information that may be revealed by the
+assignment occurring is allowed to flow into the field location. That
+is, the normal value labels of <code><i
+class="math">e</i><sub>1</sub></code> and <code><i
+class="math">e</i><sub>2</sub></code> must be no more restrictive than
+the label of the field <code><i
+class="math">e</i><sub>1</sub>.f</code>, which is defined to be the
+declared label of <code>f</code> with appropriate substitutions
+applied. That is, any formal label parameter or principal parameter
+occurring in the declared label of <code>f</code> is substituted based
+on the type of the expression of the target <code><i
+class="math">e</i><sub>1</sub></code>, and any occurrence of
+<code>this</code> in the final access paths of dynamic labels or
+principals is replaced with <code><i
+class="math">e</i><sub>1</sub></code>. Since an assignment to a field
+may be observable in other scopes, the label of the field <code><i
+class="math">e</i><sub>1</sub>.f</code> must be bounded below by the
+start-label of the current method, which is a lower bound on
+observable side-effects of the method.
+
+
+<p>The label checking of an assignment <code><i
+class="math">e</i><sub>1</sub>.f <i class="math">op</i>= <i
+class="math">e</i><sub>2</sub></code> is identical to the label
+checking of the assignment <code><i class="math">e</i><sub>1</sub>.f =
+<i class="math">e</i><sub>1</sub>.f <i class="math">op</i> <i
+class="math">e</i><sub>2</sub></code>. </p> 
+
+<p>Assignments to fields that occur in a constructor prologue (that
+is, in a constructor body prior to the call to <code>super(...)</code>)
+are label checked slightly differently. Refer to <a class="secref"
+href="#constructors">Constructors</a> for more details.</p>
+
+
+<h2><a name="arrays">Arrays</a></h2>
+
+<p>Array types may be used in Jif programs, with some
+restrictions. Arrays must always have a labeled type as their base
+type. When declaring a local, field, or method argument with an array
+type, if no label is given for the base type, then the <a
+href="language.html#default-labels">default</a> label for the base
+type is the empty label <code>{}</code>. </p>
+
+<p>Jif allows <a 
+href="language.html#const-arrays">constant arrays</a>: the contents of a constant array cannot be changed after initialization. 
+Constant arrays have less restrictive label checking requirements. In 
+particular, the base type of a non-constant array cannot contain the <code>{this}</code>
+label, or a covariant label parameter; this restriction does not apply 
+to constant arrays.</p>
+
+<p>Jif does not
+support <code>instanceof</code> and run-time casts to array types.</p>
+
+<p>An array initialization expression <code>new <i
+class="math">T</i>[] {<i class="math">e<sub>1</sub></i>, ..., <i
+class="math">e<sub>n</sub></i>}</code> or <code>{<i
+class="math">e<sub>1</sub></i>, ..., <i
+class="math">e<sub>n</sub></i>}</code> is evaluated by evaluating each
+array initialization expression <i class="math">e<sub>1</sub></i> to
+<i class="math">e<sub>n</sub></i>. Label checking proceeds similarly,
+label checking each expression in turn. In addition, Jif checks that
+each array element expression <i class="math">e<sub>i</sub></i> can be
+assigned into the array, that is, that the normal value label of <i
+class="math">e<sub>i</sub></i> is no more restrictive than the label
+of the array's base type.</p>
+
+<p>Every array has a special <code>length</code> field. An expression
+<code><i class="math">e</i>.length</code> is evaluated like a normal
+field access, where the label of the pseudo-field <code>length</code>
+is <code>{this}</code>, and thus the normal value label of <code><i
+class="math">e</i>.length</code> is just the normal value label of <i
+class="math">e</i>. A <code>NullPointerException</code> will be thrown
+if <i class="math">e</i> evaluates to <code>null</code>, and the label
+associated with this exception is the normal value label of <i
+class="math">e</i>.</p>
+
+
+<p>An array access <code><i class="math">e<sub>a</sub></i>[<i
+class="math">e<sub>i</sub></i>]</code> is evaluated by evaluating the
+array expression <i class="math">e<sub>a</sub></i>, and then
+evaluating the index expression <i
+class="math">e<sub>i</sub></i>. Then, if <i
+class="math">e<sub>a</sub></i> evaluated to <code>null</code>, a
+<code>NullPointerException</code> is thrown. If <i
+class="math">e<sub>a</sub></i> is not <code>null</code>, but <i
+class="math">e<sub>i</sub></i> is not a valid index into the array, an
+<code>ArrayIndexOutOfBoundsException</code> is thrown. Otherwise, the
+expression evaluates to the appropriate element of the array. Label
+checking of array access expressions associates the normal value label
+of <i class="math">e<sub>a</sub></i> with the
+<code>NullPointerException</code>, and the join of the normal value
+labels of <i class="math">e<sub>a</sub></i> and <i
+class="math">e<sub>i</sub></i> with the
+<code>ArrayIndexOutOfBoundsException</code>. The normal termination
+label of the array access expression is thus the join of the normal
+value labels of <i class="math">e<sub>a</sub></i> and <i
+class="math">e<sub>i</sub></i>. The normal value label of the array
+access expression is the join of the normal value labels of <i
+class="math">e<sub>a</sub></i> and <i class="math">e<sub>i</sub></i>
+and the label of the base type of the array.</p>
+
+<p> An assignment to an array location <code><i
+class="math">e<sub>a</sub></i>[<i class="math">e<sub>i</sub></i>]=<i
+class="math">e</i></code> is evaluated by first evaluating <i
+class="math">e<sub>a</sub></i>, then evaluating <i
+class="math">e<sub>i</sub></i>, and then <i class="math">e</i>. At
+this point, if <i class="math">e<sub>a</sub></i> evaluated to
+<code>null</code>, a <code>NullPointerException</code> is thrown. If
+<i class="math">e<sub>a</sub></i> is not <code>null</code>, but <i
+class="math">e<sub>i</sub></i> is not a valid index into the array, an
+<code>ArrayIndexOutOfBoundsException</code> is thrown. If the base
+type of the array is a non-primitive type, and the type of the value
+that <i class="math">e</i> evaluated to is not a subtype of the array's base
+type, an <code>ArrayStoreException</code> is
+thrown. Otherwise, the assignment then occurs. To label check an array
+assignment, the expressions <i class="math">e<sub>a</sub></i>, <i
+class="math">e<sub>i</sub></i>, and <i class="math">e</i> are label
+checked in turn. The label associated with the
+<code>NullPointerException</code> is the normal termination label of
+<i class="math">e</i> joined with the normal value label of <i
+class="math">e<sub>a</sub></i>. The label associated with the
+<code>ArrayIndexOutOfBoundsException</code> is the join of the normal
+termination label of <i class="math">e</i>, the normal value labels of
+<i class="math">e<sub>a</sub></i> and <i
+class="math">e<sub>i</sub></i>. The label associated with the
+<code>ArrayStoreException</code> is the join of the normal termination
+label of <i class="math">e</i>, and the normal value labels of <i
+class="math">e<sub>a</sub></i>, <i class="math">e<sub>i</sub></i>, and
+<i class="math">e</i>. Let <u>n</u> be the normal termination label of
+the assignment, which is the join of the labels
+associated with each exception that can be thrown. We require that
+<u>n</u> is no more restrictive than the label of the array base type,
+and also (since the assignment is an observable side-effect), the
+label of the array base type must be bounded below by the current
+method's start-label, which is a lower bound on the method's
+side-effects.</p>
+
+<p>An <code><i class="math">op</i>=</code> assignment to an array
+location, <code><i class="math">e<sub>a</sub></i>[<i
+class="math">e<sub>i</sub></i>] <i class="math">op</i>= <i
+class="math">e</i></code>, is similar to an array assignment, but
+different exceptions are thrown at different times. Evaluation
+proceeds by first evaluating <i class="math">e<sub>a</sub></i>, and
+then <i class="math">e<sub>i</sub></i>. At this point, the value in
+the location is read, which may result in a
+<code>NullPointerException</code> or
+<code>ArrayIndexOutOfBoundsException</code> being thrown. The right
+hand side <i class="math">e</i> is then evaluated, after which the
+assignment occurs. Jif conservatively assumes that all <code>/=</code>
+and <code>%=</code> may throw an <code>ArithmeticException</code> when
+the assignment occurs, unless a simple dataflow analysis can prove
+that the operand is non-zero. The label associated with this exception is the
+normal value label of <i class="math">e</i> joined with the label of
+termination reaching the assignment without throwing an
+exception. Note that no <code>ArrayStoreException</code> can be
+thrown, since the base type of the array must be a primitive type.</p>
+
+
+<h2><a name="subtyping">Subtyping</a></h2>
+
+<p>Many statements in Jif require checking a subtype relationship
+between two types. For example, the type of the right hand side of an
+assignment must be a subtype of the assigned location's type; the type
+of expression <i class="math">e</i> in a statement <code>return <i
+class="math">e</i>;</code> must be a subtype of the method's return
+type. Checking subtype relationships in Jif may require checking label
+relationships.</p>
+
+<p>An array type <code><i class="math">T</i>{<i
+class="math">L</i>}[]</code> is a subtype type of array type <code><i
+class="math">T'</i>{<i class="math">L'</i>}[]</code> if and only if <i
+class="math">L</i> and <i class="math">L'</i> are equivalent (that is,
+<i class="math">L</i> &#8849; <i class="math">L'</i> and <i
+class="math">L'</i> &#8849; <i class="math">L</i>) and the types <i
+class="math">T</i> and <i class="math">T'</i> are equivalent (that is,
+<i class="math">T</i> is a subtype of <i class="math">T'</i> and vice
+versa).</p>
+
+<p>Suppose <code>C</code> is a class with a label parameter <i
+class="math">Q</i> occurring as the <i class="math">i</i>th
+parameter. If <i class="math">Q</i> is an invariant label parameter
+(the default), then <code>C[<i class="math">..., L, ...</i>]</code> is
+a subtype of <code>C[<i class="math">..., L', ...</i>]</code> if and
+only if <i class="math">L</i> and <i class="math">L'</i> are
+equivalent. On the other hand, if <i class="math">Q</i> is a
+covariant label parameter, then <code>C[<i
+class="math">..., L, ...</i>]</code> is a subtype of <code>C[<i
+class="math">..., L', ...</i>]</code> if and only if <i
+class="math">L</i> &#8849; <i class="math">L'</i>.</p>
+
+<p>Consider the following example.</p>
+<div class="code"><pre>
+class C[covariant label L, label M] { } 
+class D[covariant label L] extends C[L, {Alice:}] { }
+</pre></div>
+<ul class="ulpara">
+<li> <code>C[{Bob:Chuck}, {Dave:}]</code> is a subtype of
+<code>C[{Bob:}, {Dave:}]</code>
+
+<li> <code>C[{Bob:}, {Dave:Chuck}]</code> is <b>not</b> a subtype of
+<code>C[{Bob:}, {Dave:}]</code>
+
+<li> <code>C[{Bob:}, {Dave:}]</code> is <b>not</b> a subtype of
+<code>C[{Bob:Chuck}, {Dave:}]</code>
+
+<li> <code>D[{Bob:Chuck,Dave}]</code> is a subtype of
+<code>C[{Bob:Chuck}, {Alice:}]</code>
+
+<li> <code>D[lbl]</code> is a subtype of <code>C[{Bob:Chuck},
+{Alice:}]</code> if it can be shown that <code>lbl &#8849; {Bob:Chuck}</code>.
+</ul>
+
+<p>If the class <code>C</code> has a principal parameter as
+the <i class="math">i</i>th parameter, then <code>C[<i
+class="math">..., p, ...</i>]</code> is a subtype of <code>C[<i
+class="math">..., p', ...</i>]</code> if and only if <i
+class="math">p</i> and <i class="math">p'</i> are equivalent, that is,
+if and only if <i class="math">p</i> can act for <i class="math">p'</i>, and vice
+versa.</p>
+
+
+<h2><a name="compound-stmts">Compound statements</a></h2> 
+
+<p> A block <code>{<i class="math">S</i><sub>1</sub> ... <i
+class="math">S</i><sub>n</sub>}</code> is a sequence of zero or more
+statements. The first statement in the block is label checked using
+the same program counter label as the block itself, and the program
+counter label used to label check each subsequent statement is the
+normal termination label of the previous statement. A block may throw
+any exception that its statements may throw; the label associated with
+an exception thrown by a block is the join of the labels associated
+with that exception by each constituent statement.</p>
+
+<p>A conditional statement <code>if (<i class="math">e</i>) <i
+class="math">S<sub>t</sub></i> else <i
+class="math">S<sub>f</sub></i></code> executes one of <i
+class="math">S<sub>t</sub></i> and <i class="math">S<sub>f</sub></i>
+dependent on expression <i class="math">e</i>. The expression <i
+class="math">e</i> is label checked using the same program counter
+label as for the conditional statement. The program counter label for
+label checking both <i class="math">S<sub>t</sub></i> and <i
+class="math">S<sub>f</sub></i> is the normal value label of <i
+class="math">e</i>. The label environment for label checking <i
+class="math">S<sub>t</sub></i> may be <a
+href="#dynamic-tests">extended</a> as a result of label tests and
+actsfor tests appearing in expression <i class="math">e</i>.  The
+normal termination label of the conditional statement is the join of
+the normal termination labels of <i class="math">S<sub>t</sub></i> and
+<i class="math">S<sub>f</sub></i>. The label for an exception is the
+join of the label of the exception for <i
+class="math">S<sub>t</sub></i> with the label of the exception for <i
+class="math">S<sub>f</sub></i>. Note that if neither <i
+class="math">S<sub>t</sub></i> or <i class="math">S<sub>f</sub></i>
+can throw an exception (or execute a <code>return</code> statement),
+then the <a href="#single-path-rule">single path rule</a> applies, and
+so the normal termination label of the conditional statement would be
+the initial program counter label for the statement, since no
+information can be gained by observing that the conditional statement
+terminates normally.</p>
+
+<p>To evaluate a loop <code>while(<i class="math">e</i>) <i
+class="math">S</i></code>, the expression <i class="math">e</i> is
+evaluated, and if it is <code>true</code>, then the statement <i
+class="math">S</i> is evaluated; if <i class="math">S</i> terminates
+normally, the evaluation of the loop repeats. To label check a
+<code>while</code> statement, we define a label <u>pc</u><sub><i
+class="math">loop</i></sub>, which is the program counter label
+immediately before the evaluation of the loop guard <i
+class="math">e</i>. The loop guard <i class="math">e</i> is label
+checked using <u>pc</u><sub><i class="math">loop</i></sub> as the
+program counter label. The loop body <i class="math">S</i> is label
+checked using the normal value label of <i class="math">e</i> as the
+program counter label. We require that <u>pc</u><sub><i
+class="math">loop</i></sub> is at least as restrictive as both the
+program counter label of the <code>while</code> statement, and normal
+termination label of the loop body <i class="math">S</i>. The normal
+termination label a <code>while</code> statement is the normal
+termination label of the loop guard joined with the normal termination
+label of the loop body. Note that if neither the loop guard or the
+loop body can throw an exception, then the <a
+href="#single-path-rule">single path rule</a> applies, and the normal
+termination label of the <code>while</code> statement is the same as
+the program counter label for the <code>while</code> statement (which
+may be less restrictive than <u>pc</u><sub><i
+class="math">loop</i></sub>). Thus, Jif's label checking is
+termination insensitive, since the normal termination label of the
+<code>while</code> statement may not be as restrictive as the normal
+value label of the loop guard.</p>
+
+<p>A <code>do <i class="math">S</i> while(<i
+class="math">e</i>);</code> loop is very similar to a
+<code>while</code> loop. To label check a <code>do-while</code> loop,
+we define a label <u>pc</u><sub><i class="math">loop</i></sub>, which
+is the program counter label immediately before the evaluation of the
+loop body <i class="math">S</i>. The loop body <i class="math">S</i>
+is label checked using <u>pc</u><sub><i class="math">loop</i></sub> as
+the program counter label. The loop guard <i class="math">e</i> is
+label checked using the normal termination label of <i
+class="math">S</i> as the program counter label. We require that
+<u>pc</u><sub><i class="math">loop</i></sub> is at least as
+restrictive as both the program counter label of the
+<code>do-while</code> statement, and normal value label of the loop
+guard <i class="math">e</i>. Like <code>while</code> loops, the normal
+termination label a <code>do-while</code> statement is the join of the
+normal termination labels of the loop guard and the loop body.</p>
+
+
+<p>A loop <code>for (<i
+class="math">S<sub>init</sub></i>; <i class="math">e</i>; <i
+class="math">S<sub>inc</sub></i>) <i class="math">S</i></code> is
+label checked as if it were the code <code><i
+class="math">S<sub>init</sub></i>; while(<i class="math">e</i>){<i
+class="math">S</i>; <i class="math">S<sub>inc</sub></i>;}</code>.
+
+<p>A <code>switch(<i class="math">e</i>){<i
+class="math">S<sub>1</sub></i> ... <i
+class="math">S<sub>n</sub></i>}</code> is executed by evaluating the
+expression <i class="math">e</i>, then, considering each statement <i
+class="math">S<sub>i</sub></i> in turn, if the statement is <code>case
+<i class="math">e<sub>i</sub></i>:</code> and <i
+class="math">e<sub>i</sub></i> evaluates to the switch value, then the
+statements from the point onwards are executed. A
+<code>default:</code> statement may also be included in the
+<code>switch</code> body, which matches all possible switch values.
+Label checking of a <code>switch</code> statement first label checks
+the switch expression <i class="math">e</i>; the program counter label
+used to label check <i class="math">e</i> is as the same program
+counter label for the <code>switch</code> statement. Each statement in
+the switch body is then label checked, using the join of the normal
+value label of <i class="math">e</i> and the normal termination label
+of the previous statement for the program counter label. This
+correctly tracks the information flow that may occur due to jumping to
+an appropriate <code>case</code> statement, or by &quot;falling
+through&quot; from a previous case. The normal termination label of a
+<code>switch</code> statement is the join of the normal termination
+label of the final statement in the switch body with the program
+counter labels of all the <code>break</code> statements that occur in
+the switch body. (This is just the standard label checking for branch
+statements, described below: the program counter label of the target
+of a <code>break</code> statement must be at least as restrictive as
+the program counter label of the <code>break</code> statement
+itself.)</p>
+
+
+<h2><a name="goto-stmts">Goto-like statements</a></h2>
+
+<p>Several Java statements transfer control non-locally. We discuss <a
+class"secref" href="#exceptions">Exceptions</a> in a separate section.</p>
+
+<p>The statement <code>return <i class="math">e</i>;</code> evaluates
+the expression <i class="math">e</i>, and if the evaluation terminates
+normally, returns from the current method body. The program counter
+label for the label checking of expression <i class="math">e</i> is
+the same as the program counter label for the <code>return</code>
+statement. The normal termination label of the expression <i
+class="math">e</i> must be no more restrictive than the end-label of
+the current method. Similarly, the normal value label of <i
+class="math">e</i> must be no more restrictive than the join of the
+current method's end-label and the current method's return value
+label. Since a <code>return</code> statement cannot terminate
+normally, it has no normal termination label.</p>
+
+<p>A variant of the <a href="#single-path-rule">single path rule</a>
+applies to statements which can only terminate by <code>return</code>
+statements. If the execution of a statement <code>S</code> can only
+terminate via <code>return</code> statements, then no additional
+information is gained by knowing that the statement exited by
+executing a <code>return</code>. Thus the requirement that the normal
+termination label of the expression <i class="math">e</i> must be no
+more restrictive than the end-label of the current method can be
+weakened. For example, the following code is sound, and passes label
+checking, even though the program counter label for the
+<code>return</code> statements is more restrictive than the method's end-label.</p>
+
+<div class="code"><pre>
+int{secret} m{*&lt;-*}(boolean secret):{*&lt;-*} {
+    <span class="comment">// method body can only exit by return</span>
+    <span class="comment">// statements, no exceptions possible</span>
+    if (secret) {
+        <span class="comment">// normal termination label of the return</span>
+        <span class="comment">// expression is {secret}, which is more</span>
+        <span class="comment">// restrictive than the end-label {*&lt;-*}</span>
+        return 7;
+    }
+    else {
+        return 42;
+    }
+}
+</pre></div>
+
+
+
+<p>The evaluation of the branch statement <code>continue <i
+class="math">l</i>;</code> very simply jumps to the top of the loop
+labeled <i class="math">l</i>. Similarly, the branch statement
+<code>break <i class="math">l</i>;</code> jumps to the end of the loop
+labeled <i class="math">l</i>. If no branch label <i
+class="math">l</i> is specified, the innermost loop is used. (A
+<code>break;</code> statement's target may also be the end of a
+<code>switch</code> statement.) Label checking of branch statements is
+similarly straightforward: the program counter label of the branch
+statement must be no more restrictive than the program counter label
+at the program point where control will jump to. Jif's label checking
+uses the label environment track to the program counter labels for all
+possible <code>continue</code> and <code>break</code> targets. Since
+branch statements do not terminate normally, they have no normal
+termination label.
+</p>
+
+
+<h2><a name="exceptions">Exceptions</a></h2>
+
+<p>An exception may be explicitly thrown by a <code>throw <i
+class="math">e</i>;</code> statement. A <code>throw</code> is
+evaluated by first evaluating the expression <i class="math">e</i>.
+If <i class="math">e</i> evaluated to <code>null</code>, a
+<code>NullPointerException</code> is thrown; otherwise the
+<code>Throwable</code> object that <i class="math">e</i> evaluated to
+is thrown. Whichever exception is thrown, the label associated with it
+is the normal value label of <i class="math">e</i>. Jif's not-null
+dataflow analysis can sometimes determine that the expression <i
+class="math">e</i> cannot evaluate to <code>null</code>, in which case
+the <code>NullPointerException</code> cannot be thrown. Since a
+<code>throw</code> statement never terminates normally, it does not
+have a normal termination label or normal value label.
+</p>
+
+<p>A <code>try-catch-finally</code> statement (which may contain zero
+or more <code>catch</code> blocks, and an optional
+<code>finally</code> block) is evaluated as follows. First, the
+<code>try</code> block is evaluated. If the <code>try</code> throws an
+exception, then each <code>catch</code> block is considered in turn,
+and if the class of the exception thrown is a subclass of the declared
+<code>catch</code> formal, then the <code>catch</code> block is
+evaluated. The <code>finally</code> block is then executed, regardless
+of the evaluation of the <code>try</code> or any <code>catch</code>
+blocks. The <code>finally</code> block may throw an
+exception. Otherwise, if the <code>finally</code> block terminated
+normally, the <code>try-catch-finally</code> terminates as did the
+<code>catch</code> block (if one was executed) or the <code>try</code>
+block.</p>
+
+<p>The <code>try</code> block is label checked using the program
+counter label for the <code>try-catch-finally</code> block. Label
+checking of the <code>try</code> block will determine that it may
+throw various exceptions, and will associate a label with each such
+exception.</p>
+
+<p>A <code>catch (<i class="math">C</i>{<i class="math">L</i>} x) {
+... }</code> block contains a formal variable <code>x</code>, which
+may have a declared label <i class="math">L</i>. If the formal has no
+declared label, then the label for the formal will be inferred, as
+with a local variable declaration. The label of the formal must be at
+least as restrictive as the label associated with any exception in the
+<code>try</code> block that may be caught by the <code>catch</code>
+block. That is, if the <code>try</code> block throws an exception of
+class <i class="math">C'</i> with label <i class="math">L'</i>, and
+either <i class="math">C'</i> is a subclass of <i class="math">C</i>
+or <i class="math">C</i> is a subclass of <i class="math">C'</i>, then
+the <code>catch</code> block may catch the exception, and so we must
+have <i class="math">L'</i> &#8849; <i class="math">L</i>. The
+<code>catch</code> block is label checked using the label <i
+class="math">L</i> of the formal as the initial program counter label.
+Note that the catch block's formal variable <code>x</code> will always
+be non-<code>null</code> in the body of the <code>catch</code>
+block.</p>
+
+<p>The <code>finally</code> block, if present, is label checked using
+the same initial program counter label as the <code>try</code> block
+(since the <code>finally</code> block will always be evaluated,
+regardless of the behavior of the <code>try</code> or
+<code>catch</code> blocks).</p>
+
+<p>A <code>try-catch-finally</code> statement will terminate normally
+if the <code>finally</code> block terminates normally, and either the
+<code>try</code> block terminated normally, or the <code>try</code>
+block threw an exception that was caught by a <code>catch</code> block
+that terminated normally. Thus, the normal termination label of a
+<code>try-catch-finally</code> is the join of the normal termination
+labels of each of the <code>try</code> block, <code>catch</code>
+blocks, and <code>finally</code> block. A
+<code>try-catch-finally</code> will terminate with an exception if the
+<code>finally</code> terminates exceptionally, if a <code>catch</code>
+block terminates exceptionally, or the <code>try</code> block throws
+an exception that is not caught by one of the <code>catch</code>
+blocks. The label associated with an exception for a
+<code>try-catch-finally</code> is thus the join of the labels
+associated with it in the <code>catch</code> blocks,
+<code>finally</code> block, and (if it is an exception that is not
+caught by any <code>catch</code> block) the <code>try</code>
+block.</p>
+
+<p>Note that in Jif, unlike Java, all subtypes of
+<code>Exception</code> are checked. That is, subtypes of
+<code>RuntimeException</code>s must be either caught or declared to be
+thrown, and thus information obtained by observing
+<code>RuntimeException</code>s is tracked. See the section on <a
+class="secref" href="language.html#runtime-exceptions">Runtime
+exceptions</a> for more information.</p>
+
+
+<h2><a name="dynamic-type-discrimination">Dynamic type discrimination</a></h2>
+
+<p>
+Java has two language features that allow dynamic type discrimination:
+the <code>instanceof</code> operator, and checked run-time type casts.</p>
+
+<p>Jif places some restrictions on the comparison type <code>T</code>
+that may occur in <code>e instanceof T</code> expressions , and casts
+<code>(T)e</code>. The comparison type <code>T</code> cannot be a
+labeled type, such as <code>Foo{Alice:}</code>, but may be a
+parameterized class, for example, <code>Bar[Alice,
+this.lbl]</code>. The type <code>T</code> cannot be an array
+type. (This is because Jif cannot represent at runtime the label of
+the array's base class, leading to potential unsoundness.)</p>
+
+<p>The evaluation of both <code>e instanceof T</code> and
+<code>(T)e</code> is performed by first evaluating <code>e</code>, and
+then by &quot;evaluating&quot; the type <code>T</code>, which means
+evaluating any actual parameters to the class type. For example,
+<code>this.foo instanceof Bar[pr, this.lbl]</code> is evaluated by
+first evaluating <code>this.foo</code>, then <code>pr</code> and
+<code>this.lbl</code>, and finally evaluating the
+<code>instanceof</code> operator.</p>
+
+
+<p>Both <code>e instanceof T</code> and <code>(T)e</code> may
+throw any exception that <code>e</code> throws, and any
+<code>NullPointerException</code> that the final access paths of the
+actual parameters of <code>T</code> may throw. In addition, a cast
+operator will throw a <code>ClassCastException</code> if
+<code>e</code> does not evaluate to an object of type <code>T</code>;
+the label associated with this exception is the normal value label of
+of <code>e</code> joined with the normal value label of
+<code>T</code>.</p>
+
+<p>The normal termination label of <code>e instanceof T</code> is the
+normal termination label of <code>e</code> joined with the normal
+termination label of <code>T</code>. The normal termination label of
+<code>(T)e</code> is the join of the normal value label of
+<code>e</code> and the normal value label of <code>T</code> (due to
+the possibility of a <code>ClassCastException</code>).
+</p>
+
+<p>The normal value label of <code>e instanceof T</code> and
+<code>(T)e</code> is the normal value label of <code>e</code> joined
+with the normal value label of <code>T</code>.</p>
+
+
+
+<h2><a name="dynamic-tests">Dynamic label and actsfor tests</a></h2>
+
+<p>Jif provides mechanisms for <a
+href="language.html#runtime-tests">run-time tests</a> of labels and
+principals: the <code>&lt;=</code> operator for labels, and the
+<code>actsfor</code> operator for principals. Label checking for
+expressions using these operators is exactly as for other <a
+href="#lits-ops">binary expressions</a>. </p>
+
+<p>However, label and principal tests can in addition modify the label
+environment used for label checking. If an expression <i
+class="math">e</i><sub>1</sub><code>&lt;=</code><i
+class="math">e</i><sub>2</sub> appears as a conjunct of an
+<code>if</code> statement condition, and <i
+class="math">e</i><sub>1</sub> and <i class="math">e</i><sub>2</sub>
+are both either <code>new label {...}</code> expressions, or constants
+or final access paths of type <code>label</code>, then the label
+environment of the <code>true</code> branch of the <code>if</code>
+statement will contain the fact <i class="math">e</i><sub>1</sub>
+&#8849; <i class="math">e</i><sub>2</sub>. Similarly, if an expression
+<i class="math">e</i><sub>1</sub><code> actsfor </code><i
+class="math">e</i><sub>2</sub> appears as a conjunct of an
+<code>if</code> statement condition, and <i
+class="math">e</i><sub>1</sub> and <i class="math">e</i><sub>2</sub>
+are both either constants or final access paths of type
+<code>principal</code> or a subtype of
+<code>jif.lang.Principal</code>, then the label environment of the
+<code>true</code> branch of the <code>if</code> statement will contain
+the fact <i class="math">e</i><sub>1</sub> &#8829; <i
+class="math">e</i><sub>2</sub>.
+</p>
+
+<h2><a name="label-exprs">Label expressions</a></h2>
+
+<p>Label expressions are explicit run-time representations of labels,
+such as <code>new label {Alice:Bob; *!:*}</code>. In general, a label
+expression may contain any run-time representable label, such as a
+dynamic label, a label parameter, or an integrity or confidentiality
+policy consisting of runtime representable principals. Label checking
+of label expressions consists of label checking each label component
+in turn. Dynamic labels and principals are final access path
+expressions, and may thus throw
+<code>NullPointerException</code>s. Constant principals (such as
+<code>Alice</code>, &#8868; and &perp;) are label checked like
+literals. The normal value label of a label parameter or principal
+parameter is <code>{this}</code> joined with the program counter
+label, except when the parameter occurs in a static context, in which
+case the normal value label is a polymorphic argument label whose
+upper bound is the top label
+<code>{&#8868;&rarr;&#8868;;&perp;&larr;&perp;}</code>.
+
+<h2><a name="downgrading">Downgrading</a></h2>
+
+<p>As described in the section on <a class="secref"
+href="langauge.html#downgrading">Downgrading</a>, Jif provides a
+mechanism to weaken the security policies enforced on information. Jif
+allows the declassification (downgrading of confidentiality) and
+endorsement (downgrading of integrity) of expressions and statements.</p>
+
+<p>
+Both declassifications and endorsements are required to satisfy several constraints.
+<ul>
+<li> 
+ <b>Single dimension.</b> 
+ <p> Declassifications may only downgrade
+  confidentiality, and endorsements may only downgrade integrity.</p>
+</li>
+<li> 
+ <b><a href="language.html#selective-downgrading">Selective downgrading</a>.</b>
+ <p>All declassifications and endorsements must have sufficient authority. In particular,
+ if a declassification or endorsement weakens or removes a policy owned by principal
+ <i class="math">p</i>, then the code that performs the downgrade must have the authority
+  of <i class="math">p</i> (or a principal able to act for <i class="math">p</i>).
+ </p>
+</li>
+<li> 
+ <b><a href="language.html#robustness">Robustness</a>.</b>
+ <p>
+ Robustness is a useful security
+condition, which ensures that both the decision to downgrade and the data to downgrade are
+of sufficiently high integrity that an attacker cannot abuse the downgrade
+operation to inappropriately view or modify information. The Jif
+compiler enforces label constraints for robustness, as
+described in [<a href="bibliography.html#CM06">CM06</a>], which provides details of the security
+condition, and the motivation for the constraints.
+</p>
+</li>
+</ul>
+</p>
+
+<p>
+The actual label constraints to enforce these requirements are given below,
+during the presentation of declassification and endorsement.
+</p>
+
+
+<h3><a name="declassification">Declassification</a></h3>
+
+<p>Declassification is the downgrading of confidentiality. Jif has two
+syntactic forms of declassification: a <code>declassify</code> expression, and a 
+ <code>declassify</code> statement. Declassification expressions are used 
+ to downgrade the confidentiality of an expression, whereas declassification statements
+ downgrade the confidentiality of both the program counter label, and the side-effects
+ of the statement.
+</p>
+
+<h4><a name="declass-exprs">Declassification expressions</a></h4>
+<p>The expression <code>declassify(<i class="math">e</i>,<i
+class="math">L<sub>from</sub></i> to <i
+class="math">L<sub>to</sub></i>)</code> downgrades the confidentiality
+of expression <i class="math">e</i> from the label <i
+class="math">L<sub>from</sub></i> to the label <i
+class="math">L<sub>to</sub></i>. A declassify expression is evaluated 
+just by evaluating the
+subexpression <i class="math">e</i>; that is, a declassification has 
+no run-time effect and the labels <i
+class="math">L<sub>from</sub></i> and <i
+class="math">L<sub>to</sub></i> are not evaluated at run-time. Thus, a declassification expression
+may throw any exception that <i class="math">e</i> may throw, and
+label checking for a declassification expression associates the same labels
+to exceptions that label checking <i class="math">e</i> does. The
+normal termination label of a declassification expression is the same as
+the normal termination label of <i class="math">e</i>.</p>
+
+<p>The normal value label of a declassification expression is <i
+class="math">L<sub>to</sub></i>, and the normal value label of the
+subexpression <i class="math">e</i> must be bounded above by the label
+<i class="math">L<sub>from</sub></i>. Thus, a declassification expression
+declassifies the normal value label of an expression.</p>
+
+<p><b>Single dimension.</b> A <code>declassify</code> expression may
+only downgrade the confidentiality of a label. Label checking enforces
+this by requiring that the following constraint is satisfied.</p>
+
+<div class="mathdisplay">
+<i class="math">L<sub>from</sub></i> &#8849; <i
+class="math">L<sub>to</sub></i> &#8852; {&#8868;&rarr;&#8868;;
+&#8868;&larr;&#8868;}
+</div>
+
+<p class="cont">The label {&#8868;&rarr;&#8868;;
+&#8868;&larr;&#8868;} contains the most restrictive confidentiality
+policy, and the least restrictive integrity policy, and so the
+constraint ensures that the integrity of <i
+class="math">L<sub>from</sub></i> is no more restrictive that the
+integrity of <i class="math">L<sub>to</sub></i>.</p>
+
+
+<p><b>Selective downgrading.</b> If a declassification weakens or removes
+a confidentiality policy owned by principal <i class="math">p</i>, then the code that performs the
+declassification must have the authority of <i class="math">p</i> (or a
+principal able to act for <i class="math">p</i>). If the code has the
+authority of principals <i class="math">p</i><sub>1</sub>, ..., <i
+class="math">p</i><sub>n</sub> (as described in <a class="secref"
+href="language.html#authority">Authority and access control</a>), then
+the Jif compiler requires that <code>declassify</code> expressions satisfy the following constraint.</p>
+
+<div class="mathdisplay">
+<i
+class="math">L<sub>from</sub></i> &#8849; <i
+class="math">L<sub>to</sub></i> &#8852; {<i class="math">p</i><sub>1</sub> &larr;&#8868; &#8852; ... &#8852; <i
+class="math">p</i><sub>n</sub>&larr;&#8868; ; &perp;&rarr;&perp;}
+</div>
+
+<p class="cont">This constraint represents the authority of the code
+as the confidentiality policy <i class="math">p</i><sub>1</sub>
+&larr;&#8868; &#8852; ... &#8852; <i
+class="math">p</i><sub>n</sub>&larr;&#8868;, and uses this policy to
+limit what policies may be weakened by the <code>declassify</code>
+expression. For example, suppose <i class="math">L<sub>from</sub></i>
+is {Alice&larr;Bob} and <i class="math">L<sub>to</sub></i> is
+{Alice&larr;Bob,Chuck}, and the code has the authority of Alice. This
+declassification should be allowed, and indeed, the constraint
+{Alice&larr;Bob} &#8849; {Alice&larr;Bob,Chuck} &#8852; {Alice
+&larr;&#8868;} is satisfied. By contrast, if the code had the
+authority of Bob, but not Alice (and assuming Bob cannot act for
+Alice), then the constraint {Alice&larr;Bob} &#8849;
+{Alice&larr;Bob,Chuck} &#8852; {Bob &larr;&#8868;} would not be
+satisfied: the code would have insufficient authority to perform the
+declassification.
+</p>
+
+<p><b>Robustness.</b> For <code>declassify</code> expressions, robustness requires that
+both the decision to declassify, and the information being
+declassified are high integrity. In particular, this requires the
+following two constraints to be satisfied, where <u>pc</u> is the
+program counter label for the <code>declassify</code> expression.</p>
+
+<div class="mathdisplay">
+<i
+class="math">L<sub>from</sub></i> &#8849; <i class="math">L<sub>to</sub></i> &#8852; writersToReaders(<u>pc</u>)<br>
+<i class="math">L<sub>from</sub></i> &#8849; <i class="math">L<sub>to</sub></i> &#8852; writersToReaders(<i class="math">L<sub>from</sub></i>)
+</div>
+
+<p class="cont">In these constraints the operator writersToReaders(<i
+class="math">L</i>) converts the writers of the label <i
+class="math">L</i> into readers. In particular, for all principals <i
+class="math">p</i>, we have the property that <i
+class="math">writers</i>(<i class="math">p</i>, <i class="math">L</i>)
+&sube; <i class="math">readers</i>(writersToReaders(<i
+class="math">p</i>, <i class="math">L</i>)).
+
+<p>The writersToReaders(<i class="math">L</i>) operator works by first
+finding an upper bound <i class="math">L'</i> for <i
+class="math">L</i>, such that <i class="math">L'</i> consists only of
+reader and writer policies. Then, the writer policies of the upper
+bound <i class="math">L'</i> are converted into reader policies, by
+reversing the direction of the arrow. The writersToReaders(<i
+class="math">L</i>) operator is defined more formally below.
+<div class="mathdisplay">
+writersToReaders(<i class="math">L</i><sub>1</sub> &#8852; <i class="math">L</i><sub>2</sub>) &#8796;
+                 writersToReaders(<i class="math">L</i><sub>1</sub>) &#8851; writersToReaders(<i class="math">L</i><sub>2</sub>)
+<br>
+writersToReaders(<i class="math">L</i><sub>1</sub> &#8851; <i class="math">L</i><sub>2</sub>) &#8796;
+                 writersToReaders(<i class="math">L</i><sub>1</sub>) &#8852; writersToReaders(<i class="math">L</i><sub>2</sub>)
+<br>
+writersToReaders({<i class="math">c</i>;<i class="math">d</i>}) &#8796;
+                 {wtr(<i class="math">d</i>) ; &#8868;&larr;&#8868;}
+<br>
+writersToReaders(<i class="math">L</i>) &#8796;
+                 writersToReaders(<i class="math">L'</i>) where <i
+                      class="math">L'</i> is an upper bound of <i
+                      class="math">L</i>, and <i class="math">L</i> is
+                      a dynamic label, label parameter, or polymorphic
+                      argument label. <i class="math">L'</i> is found
+                      taking the meet of all upper bounds of <i
+                      class="math">L'</i> that can be found by
+                      examining the facts in the label environment.
+<br>
+<br>
+wtr(<i class="math">c</i><sub>1</sub> &#8852; <i class="math">c</i><sub>2</sub>) &#8796;
+                 wtr(<i class="math">c</i><sub>1</sub>) &#8851; wtr(<i class="math">c</i><sub>2</sub>)
+<br>
+wtr(<i class="math">c</i><sub>1</sub> &#8851; <i class="math">c</i><sub>2</sub>) &#8796;
+                 wtr(<i class="math">c</i><sub>1</sub>) &#8852; wtr(<i class="math">c</i><sub>2</sub>)
+<br>
+wtr(<i class="math">p</i>&larr;<i class="math">q</i>) &#8796; <i class="math">p</i>&rarr;<i class="math">q</i>             
+</div>
+
+
+<h4><a name="declass-stmts">Declassification statements</a></h4>
+
+<p>The statement <code>declassify(<i class="math">L<sub>from</sub></i>
+to <i class="math">L<sub>to</sub></i>) <i class="math">S</i></code>
+downgrades the confidentiality of the program counter label from <i
+class="math">L<sub>from</sub></i> to <i
+class="math">L<sub>to</sub></i> for the label checking of the
+statement <i class="math">S</i>. Label checking of declassification statements is done
+completely static, so the labels <i
+class="math">L<sub>from</sub></i> and <i
+class="math">L<sub>to</sub></i> are not evaluated at run-time.
+</p>
+
+<p>The contained statement <i class="math">S</i> is label checked with
+the program counter label set to <i
+class="math">L<sub>to</sub></i>. In addition, label checking for <i
+class="math">S</i> assumes that <i class="math">L<sub>to</sub></i> is
+the lower bound for side-effects such as field update. (The lower
+bound for side-effects is normally equal to the start label of the
+current method.) The label environment for label checking <i
+class="math">S</i> has two new facts added to it:
+<code>{this}</code>&#8849;<i class="math">L<sub>to</sub></i> and
+<code>caller_pc</code>&#8849;<i class="math">L<sub>to</sub></i>. These
+facts state that both the label of the reference to the
+<code>this</code> object, and the program counter label at the call
+site of the current method, are no more restrictive than <i
+class="math">L<sub>to</sub></i>. Normally, both of these labels are
+bounded above by the start label of the current method.</p>
+
+<p>If <i class="math">S</i> can complete normally, then the normal
+termination label of the declassify statement is the normal termination
+label of <i class="math">S</i> joined with the program counter label for the
+declassify statement (that is, the program counter label just before it
+is declassified). Any exception that may be thrown by the statement
+<i class="math">S</i> may also be thrown by the declassify statement, with
+the same label associated with it.
+</p>
+
+<p>The restrictions on <i class="math">L<sub>from</sub></i> and <i
+class="math">L<sub>to</sub></i> that are applied to declassification
+expressions are also applied to declassification statements. In particular:
+(1) a <code>declassify</code> statement may only downgrade
+confidentiality; (2) a declassify statement must have sufficient
+authority to perform the declassification; and (3) the declassification
+must be robust. More details of these
+constraints are given <a href="#declass-exprs">above</a>.
+</p>
+
+<h3><a name="endorsement">Endorsement</a></h3>
+<p>Endorsement is the downgrading of integrity. Like declassification, Jif 
+supports different
+syntactic forms of endorsement: an <code>endorse</code> expression, an 
+ <code>endorse</code> statement, and also a checked endorse statement. 
+ Endorsement expressions are used 
+ to downgrade the integrity of expressions, whereas endorse statements
+ downgrade the integrity of both the program counter label, and the side-effects
+ of the statement.
+</p>
+
+<h4><a name="endorse-exprs">Endorse expressions</a></h4>
+<p>The expression <code>endorse(<i class="math">e</i>,<i
+class="math">L<sub>from</sub></i> to <i
+class="math">L<sub>to</sub></i>)</code> downgrades the integrity
+of expression <i class="math">e</i> from the label <i
+class="math">L<sub>from</sub></i> to the label <i
+class="math">L<sub>to</sub></i>. Endorsements are checked statically, so
+a downgrading expression is evaluated just by evaluating the
+subexpression <i class="math">e</i>; the labels <i
+class="math">L<sub>from</sub></i> and <i
+class="math">L<sub>to</sub></i> are not evaluated at run-time. Thus, an endorse expression
+may throw any exception that <i class="math">e</i> may throw, and
+label checking for an endorsement expression associates the same labels
+to exceptions that label checking <i class="math">e</i> does. The
+normal termination label of an endorse expression is the same as
+the normal termination label of <i class="math">e</i>.</p>
+
+<p>The normal value label of an endorse expression is <i
+class="math">L<sub>to</sub></i>, and the normal value label of the
+subexpression <i class="math">e</i> must be bounded above by the label
+<i class="math">L<sub>from</sub></i>. Thus, an endorse expression
+endorses the normal value label of an expression.</p>
+
+<p><b>Single dimension.</b> An <code>endorse</code> expression may
+downgrade the integrity of a label. Label checking enforces
+this by requiring that the following constraint is satisfied.</p>
+
+<div class="mathdisplay">
+{&#8868;&rarr;&#8868;; &#8868;&larr;&#8868;} &#8851; <i
+class="math">L<sub>from</sub></i> &#8849; <i
+class="math">L<sub>to</sub></i>
+</div>
+<p>The label {&#8868;&rarr;&#8868;; &#8868;&larr;&#8868;} contains the most
+ restrictive integrity policy, and the least restrictive confidentiality policy, and so 
+this constraint
+ensures that the integrity of <i
+class="math">L<sub>from</sub></i> is no more restrictive that the
+integrity of <i class="math">L<sub>to</sub></i>.<p>
+
+<p><b>Selective downgrading.</b> If an endorsement weakens or removes
+an integrity policy owned by principal <i class="math">p</i>, then the code that performs the
+endorsement must have the authority of <i class="math">p</i> (or a
+principal able to act for <i class="math">p</i>). If the code has the
+authority of principals <i class="math">p</i><sub>1</sub>, ..., <i
+class="math">p</i><sub>n</sub> (as described in <a class="secref"
+href="language.html#authority">Authority and access control</a>), then
+the Jif compiler requires that <code>endorse</code> expressions satisfy the following constraint.</p>
+
+<div class="mathdisplay">
+<i
+class="math">L<sub>from</sub></i> &#8851;
+{&perp;&larr;&perp;; <i class="math">p</i><sub>1</sub> &rarr;&#8868; &#8851; ... &#8851; <i
+class="math">p</i><sub>n</sub>&rarr;&#8868;}
+&#8849; <i
+class="math">L<sub>to</sub></i>
+</div>
+<p class="cont">
+Here, the authority of the code is represented by the integrity policy
+<i class="math">p</i><sub>1</sub> &rarr;&#8868; &#8851; ... &#8851; <i
+class="math">p</i><sub>n</sub>&rarr;&#8868;, which is used to limit
+which integrity policies may be weakened by an
+<code>endorse</code> expression.</p>
+
+
+<p><b>Robustness.</b> For <code>endorse</code> expressions, robustness requires that
+ the decision to endorse is high integrity. Unlike declassification, the information being
+endorsed is (by definition) low integrity. In particular, the following constraint must be
+satisfied.
+
+<div class="mathdisplay">
+<i
+class="math">L<sub>from</sub></i> &#8851; writersOnly(<u>pc</u>) &#8849; <i class="math">L<sub>to</sub></i><br>
+</div>
+
+<p>The writersOnly(<i class="math">L</i>) operator removes the
+confidentiality policy of <i class="math">L</i>, and is simply
+equivalent to <i class="math">L</i> &#8852;
+{&#8868;&rarr;&#8868;;&#8868;&larr;&#8868;}.</p>
+
+
+<h4><a name="endorse-stmts">Endorse statements</a></h4>
+
+<p>The statement <code>endorse(<i class="math">L<sub>from</sub></i>
+to <i class="math">L<sub>to</sub></i>) <i class="math">S</i></code>
+downgrades the integrity of the program counter label from <i
+class="math">L<sub>from</sub></i> to <i
+class="math">L<sub>to</sub></i> for the label checking of the
+statement <i class="math">S</i>. Label checking of endorse statements is done
+completely static, so the labels <i
+class="math">L<sub>from</sub></i> and <i
+class="math">L<sub>to</sub></i> are not evaluated at run-time.
+</p>
+
+<p>The contained statement <i class="math">S</i> is label checked with
+the program counter label set to <i
+class="math">L<sub>to</sub></i>. In addition, label checking for <i
+class="math">S</i> assumes that <i class="math">L<sub>to</sub></i> is
+the lower bound for side-effects such as field update. (The lower
+bound for side-effects is normally equal to the start label of the
+current method.) The label environment for label checking <i
+class="math">S</i> has two new facts added to it:
+<code>{this}</code>&#8849;<i class="math">L<sub>to</sub></i> and
+<code>caller_pc</code>&#8849;<i class="math">L<sub>to</sub></i>. These
+facts state that both the label of the reference to the
+<code>this</code> object, and the program counter label at the call
+site of the current method, are no more restrictive than <i
+class="math">L<sub>to</sub></i>. Normally, both of these labels are
+bounded above by the start label of the current method.</p>
+
+<p>If <i class="math">S</i> can complete normally, then the normal
+termination label of the endorse statement is the normal termination
+label of <i class="math">S</i> joined with the program counter label for the
+endorse statement (that is, the program counter label just before it
+is endorsed). Any exception that may be thrown by the statement
+<i class="math">S</i> may also be thrown by the endorse statement, with
+the same label associated with it.
+</p>
+
+<p>The restrictions on <i class="math">L<sub>from</sub></i> and <i
+class="math">L<sub>to</sub></i> that are applied to endorsement
+expressions are also applied to endorsement statements. In particular:
+(1) an <code>endorse</code> statement may only
+downgrade integrity; (2) an endorse statement must have sufficient
+authority to perform the endorsement; and (3) the endorsement
+must be robust. More details of these
+constraints are given <a href="#endorse-exprs">above</a>.
+</p>
+
+
+<p class="sssec"><strong>Checked endorse</strong>. 
+Many programs need to validate untrusted data and then treat it as
+trustworthy. This functionality is supported by the 
+<a href="language.html#checked-endorse">checked endorse</a> statement.
+It takes the following form: 
+</p>
+<div class="code"><pre>
+endorse (<em>x</em>, <i class="math">L<sub>from</sub></i> to <i class="math">L<sub>to</sub></i>) 
+    if (<em>e</em>) <em>S</em> else <em>S'</em>
+</pre></div>
+<p class="cont">where <code><em>x</em></code> is a local variable, and 
+<code><i class="math">L<sub>from</sub></i></code> and <code><i class="math">L<sub>to</sub></i></code> are labels.</p>
+
+<p>
+Label checking of checked endorse statements proceeds as if the checked endorse
+statement were equivalent to the statement</p>
+<div class="code"><pre>
+<em>x'</em> = endorse (<em>x</em>, <i class="math">L<sub>from</sub></i> to <i class="math">L<sub>to</sub></i>);
+if (<em>e</em>[<em>x'</em>/<em>x</em>]) <em>S</em>[<em>x'</em>/<em>x</em>] else <em>S'</em>
+</pre></div>
+<p class="cont">where <code><em>x'</em></code> is a fresh local variable of the appropriate type,
+and  <code><em>e</em>[<em>x'</em>/<em>x</em>]</code> and 
+<code><em>S</em>[<em>x'</em>/<em>x</em>]</code> denote 
+<em>e</em> and <em>S</em> respectively, with all occurrences of <code><em>x</em></code> replaced
+with <code><em>x'</em></code>. Thus, the label checking
+for a checked endorse statement is more like the label 
+checking for an endorse expression, than for a standard endorse statement.
+</p>
+
+<h2><a name="method-decls">Method declarations</a></h2>
+
+<p>Jif method declarations include a number of labels. These labels
+are described in <a class="secref"
+href="language.html#method-decls">Method declarations</a>. All Jif
+methods have these labels; if they are not specified explicitly, then
+appropriate <a class="secref"
+href="language.html#default-labels">defaults</a> are used. Every Jif
+method declaration has the following labels.</p>
+<ul>
+<li> Begin-label.
+<li> End-label.
+<li> Each argument has a label associated with it.
+<li> Every exception declared in the <code>throws</code> clause has a label associated with it.
+<li> Return value label (if the return type is not <code>void</code>).
+</ul>
+
+<p>In addition, a method may have a number of <code>where</code> clauses, which may take any of the following forms.</p>
+<ul>
+<li> Label clause: <i class="math">L</i><sub>1</sub><code> &lt;= </code><i class="math">L</i><sub>2</sub>
+<li> Actsfor clause: <i class="math">p</i><sub>1</sub><code> actsfor </code><i class="math">p</i><sub>2</sub>
+<li> Authority clause: <code>authority(<i class="math">p</i>)</code>
+<li> Caller authority clause: <code>caller(<i class="math">p</i>)</code>
+<li> Auto-endorse clause: <code>endorse(<i class="math">L<sub>en</sub></i>)</code>
+</ul>
+
+<p>The label environment used to check the method body has all of the
+label and actsfor clauses added to it. Any principal that appears in
+am <code>authority(<i class="math">p</i>)</code> clause of a method
+must also appear in the class's <code>authority(<i
+class="math">p</i>)</code> clause.
+</p>
+
+
+<p>The program counter label used to label check the method body is
+set to a special polymorphic label <code>caller_pc</code>. The label
+<code>caller_pc</code> represents the program counter label at the
+call site of the method, that is, where the method is being called
+from. The <code>caller_pc</code> is thus known to be bounded above by
+the method's begin-label. In addition, for every auto-endorse clause
+<code>endorse(<i class="math">L<sub>en</sub></i>)</code>, the label
+environment contains the constraint that
+<code>caller_pc</code> &#8849; <i class="math">L<sub>en</sub></i>. The
+label environment also contains the fact that the receiver object
+<code>{this}</code> is bounded above by <code>caller_pc</code>, which
+must be true because the method is invoked only after evaluating the
+receiver of the method call, and the normal value label of the
+receiver call is the instantiation of the label <code>{this}</code>
+for the method call.</p>
+
+<p>The normal termination label for the method body must be no more
+restrictive than the end-label of the method joined with the
+<code>caller_pc</code> label. (Joining the end-label with the
+<code>caller_pc</code> label is more permissive while remaining
+sound.) Similarly, the information that is gained by knowing the
+method terminates via a <code>return</code> statement must be no more
+restrictive than the end-label of the method joined with the
+<code>caller_pc</code> label.</p>
+
+<p>In addition, the label associated with
+any exception thrown by the method body must be no more restrictive
+than the labels for the appropriate exceptions declared in the
+<code>throws</code> clause of the method, joined with the
+<code>caller_pc</code> label. More precisely, if label checking the
+method body determines that the method body may throw an exception of
+class <code>C</code> with label <i class="math">L<sub>C</sub></i>, and
+the method declaration says that the method may throw an exception of
+class <code>D</code> with label <i class="math">L<sub>D</sub></i>,
+where <code>C</code> is a subclass of <code>D</code>, then we must
+have <i class="math">L<sub>C</sub></i> &#8849; <i
+class="math">L<sub>D</sub></i> &#8852;
+<code>caller_pc</code>. </p>
+
+<p>Any value that is returned by method body must be no more
+restrictive than the return value label of the method, joined with the
+end-label of the method, joined with <code>caller_pc</code>. That is,
+if the statement <code>return <i class="math">e</i>;</code> appears in
+the method body, and label checking determines that the normal value
+label of expression <i class="math">e</i> is <i
+class="math">L<sub>e</sub></i>, then it must be the case that <i
+class="math">L<sub>e</sub></i> is less than the join of the return
+value label, the end-label, and <code>caller_pc</code>.
+</p>
+
+
+<p>Neither the method begin-label nor any of the argument labels may
+contain a covariant label parameter. This is because the method
+begin-label and argument labels appear in contravariant positions, and
+allow covariant label parameters to appear would introduce
+unsoundness.</p>
+
+<p>Auto-endorse clauses downgrade the integrity of the begin-label. As
+such, they must satisfy the all conditions for downgrading, described
+<a href="#downgrading">above</a>, with the exception that even if
+robustness checking is enabled, auto-endorse clauses do not need to
+satisfy the robustness constraints.</p>
+
+
+<h3><a name="method-conformance">Method conformance</a></h3>
+
+<p>When a method declaration overrides or implements a method declared
+in a ancestor class or interface, the method declaration must conform
+with the previous declaration.  Method conformance in Jif extends
+method conformance in Java, due to the addition of labels and
+<code>where</code> clauses associated with method declarations.</p>
+
+<p>Any label clause <i class="math">L</i><sub>1</sub><code> &lt;=
+</code><i class="math">L</i><sub>2</sub> or actsfor clause <i
+class="math">p</i><sub>1</sub><code> actsfor </code><i
+class="math">p</i><sub>2</sub> appearing in the overriding method
+declaration must be implied by the label clauses and actsfor clauses
+of the overridden method. In the following example, the label and
+actsfor clauses of the method <code>D.m</code> are implied by the
+clauses of <code>C.m</code>, but this is not true for the method
+<code>D.m</code>.</p>
+
+<div class="code"><pre>
+abstract class C {
+    abstract void m(label lbl, principal pr) 
+        where lbl &lt;= {Alice: pr}, 
+              Bob actsfor pr, 
+              pr actsfor Chuck;
+}
+class D extends C {
+    void m(label lbl, principal pr) 
+        where lbl &lt;= {Alice: Bob}, Bob actsfor Chuck
+        <span class="comment">// These where clauses are implied by</span>
+        <span class="comment">// the where clauses for C.m</span>
+    {
+        ...
+    }
+}
+class E extends C {
+    void m(label lbl, principal pr) 
+        where lbl &lt;= {pr: }, Alice actsfor Bob
+        <span class="comment">// These where clauses are NOT implied by</span>
+        <span class="comment">// the where clauses for C.m</span>
+    {
+        ...
+    }
+}
+</pre></div>
+
+
+<p>The return value label, end-label and exception labels of a method
+are covariant. This means, for example, that if <i
+class="math">L<sub>sub</sub></i> is the return value label of the
+overriding method, and <i class="math">L<sub>sup</sub></i> is the
+return value label of the overridden method, then we must have <i
+class="math">L<sub>sub</sub></i> &#8849; <i
+class="math">L<sub>sup</sub></i>. By contrast, the begin-label and
+argument labels of a method are contravariant, meaning that if <i
+class="math">L<sub>sub</sub></i> is the begin-label of the overriding
+method, and <i class="math">L<sub>sup</sub></i> is the begin-label of
+the overridden method, then we must have <i
+class="math">L<sub>sup</sub></i> &#8849; <i
+class="math">L<sub>sub</sub></i>.</p>
+
+
+<h2><a name="method-calls">Method calls</a></h2>
+
+<p>Evaluation of a method call <code><i class="math">e</i>.m(<i
+class="math">e</i><sub>1</sub>, ..., <i
+class="math">e</i><sub>n</sub>)</code> proceeds by evaluating <i
+class="math">e</i>, and then evaluating <i
+class="math">e</i><sub>1</sub> to <i class="math">e</i><sub>n</sub> in
+turn. Then, if <i class="math">e</i> evaluated to <code>null</code>, a
+<code>NullPointerException</code> is thrown. Otherwise, the method
+<code>m</code> is invoked.</p>
+
+<p>A static method call <code><i class="math">T</i>.m(<i
+class="math">e</i><sub>1</sub>, ..., <i
+class="math">e</i><sub>n</sub>)</code> first &quot;evaluates&quot; the
+type <i class="math">T</i>, and then the arguments <i
+class="math">e</i><sub>1</sub> to <i
+class="math">e</i><sub>n</sub>. Evaluating the type <i
+class="math">T</i> means evaluating any actual parameters to the class
+type. For example, <code>Bar[pr, this.lbl].m(2+5)</code> is evaluated
+by first evaluating <code>pr</code> and <code>this.lbl</code>, then
+the argument <code>2+5</code>, and finally invoking the
+method.</p>
+
+<p>The principals and labels of a method signature may mention the
+formal arguments of the method, the formal parameters of the class, or
+the <code>this</code> object. To label check a method call, the
+principals and labels in the method signature have substitution
+performed on them: formal arguments are replaced with actual
+arguments, formal parameters are replaced with actual parameters based
+on the type of the receiver, and <code>this</code> is replaced with
+the receiver of the method call. The example below demonstrates this.</p>
+
+<div class="code"><pre>
+int{*foo.lbl; x; p&lt;-*} m{*this.bound}(C foo, 
+                                      principal p, 
+                                      int{p:} x) { ... }
+...
+a.b.m(bar, Alice, y);
+<span class="comment">// after substitution, the begin-label is {*a.b.bound}, </span>
+<span class="comment">//    the return value label is {*bar.lbl; y; Alice&lt;-*}, </span>
+<span class="comment">//    and the label of the 3rd argument is {Alice:}</span>
+</pre></div>
+
+<p class="cont">For the remainder of this section, we
+assume that the labels of the method signature have had substitution
+performed on them.</p>
+ 
+<p>The labels of the actual arguments must be no more restrictive than
+the labels of the arguments of the method signature. In particular, if
+<i class="math">L<sub>i</sub></i> is the normal value label of the <i
+class="math">i</i>th actual argument, and <i
+class="math">L'<sub>i</sub></i> is the label of the <i
+class="math">i</i>th formal argument, then we must have <i
+class="math">L<sub>i</sub></i> &#8849; <i
+class="math">L'<sub>i</sub></i>.</p>
+
+<p>Let <u>pc</u><sub>inv</sub> be the program counter label just
+before the method is invoked, that is, <u>pc</u><sub>inv</sub> is the
+normal termination label after evaluating the receiver <i
+class="math">e</i> and arguments <i class="math">e</i><sub>1</sub> to
+<i class="math">e</i><sub>n</sub> (and possibly throwing the
+<code>NullPointerException</code>). We require that
+<u>pc</u><sub>inv</sub> must be no more restrictive than the method's
+begin-label, since the method's begin-label is an upper bound on the
+program counter label at the method call.  Also, the begin-label of
+the current method must be no more restrictive than the method's
+begin-label, since the current method's begin label is a lower bound
+on side-effects of the method, and the method's begin-label is a lower
+bound on the side-effects that may occur during the invocation of the
+method.</p>
+
+
+<p>Any <code>where</code> label clauses and actsfor clauses of the
+callee method must be implied by the label environment at the call
+site.</p>
+
+<p>The normal termination label of a method call is the join of
+<u>pc</u><sub>inv</sub> and the method's end-label. The method
+invocation may throw an exception, in accordance with the method's
+<code>throws</code> clause. The label associated with an exception
+thrown by the method invocation is <u>pc</u><sub>inv</sub> joined with
+label of the exception as declared in the method's <code>throws</code>
+clause. If the method returns a value, then the normal value label of
+the method invocation is the join of <u>pc</u><sub>inv</sub> and the
+method's return value label.
+</p>
+
+
+<h2><a name="constructors">Constructors</a></h2>
+
+<p>Constructing a new object by calling <code>new <i
+class="math">T</i>(<i class="math">e</i><sub>1</sub>, ..., <i
+class="math">e</i><sub>n</sub>)</code> is label checked very much like
+a static method call. The normal value label of a <code>new</code>
+expression is the join of the end-label of the constructor with the
+program counter label just before the constructor is invoked (that is,
+the normal termination label of <i
+class="math">e</i><sub>n</sub>). </p>
+
+<p>Label checking of constructor declarations differs from label
+checking method declarations. For soundness, all final fields of a
+class must be initialized before the call to the super class
+constructor. Thus, in Jif constructor declarations, code may appear
+before the call to <code>super(...)</code>; this code is called the
+<em>constructor prologue</em>. 
+
+<p>During the constructor prologue, no references to the
+<code>this</code> object are allowed to escape. This means that the
+<code>this</code> object cannot appear as the target of any method
+call, or as the argument to any method call, or as the value of any
+assignment.  Because of these restrictions, label checking for the
+constructor prologue can be more permissive. In particular, the
+program counter label for checking the constructor prologue is
+initially the least restrictive label
+{&perp;&rarr;&perp;;&#8868;&larr;&#8868;}, and assignments to fields
+of the <code>this</code> object are not considered side effects (since
+they are not observable) and so the label of the assigned field does
+not have to be bounded below by the constructor's begin-label.</p>
+
+
+<p>Invoking a constructor via a <code>super(...)</code> call or
+<code>this(...)</code> call within a constructor declaration is label
+checked like a static method call. Code after the invocation of the
+<code>super(...)</code> constructor is label checked like normal Jif
+code.
+</p>
+
+
+
+<h2><a name="classes">Classes</a></h2>
+
+<p>Label checking a class requires label checking each class member,
+including constructor declarations, method declarations, and field
+declarations.</p>
+
+<p> Jif supports static fields, but the declared labels of static
+fields cannot contain the label <code>{this}</code> or any label or
+principal parameters. If the label of a (non-static) field contains
+the label <code>{this}</code> or a covariant label parameter, then the
+field must be declared <code>final</code>. If a field declaration
+includes an initializing expression, then the normal value label of
+the initializing expression must be no more restrictive than the
+declared label of the field.</p>
+
+<p>Jif does not currently support instance initializer blocks or static initializer blocks.</p>
+
+<p>Jif classes may optionally declare an authority set (see <a
+class="secref" href="language.html#authority">Authority and access
+control</a>). If the immediate superclass of the class being declared
+has the authority of a principal <i class="math">p</i>, then the class
+being declared must also have the authority of the principal <i
+class="math">p</i>.</p>
+
+</body>
+
+</html>

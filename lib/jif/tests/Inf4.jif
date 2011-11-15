@@ -1,0 +1,10 @@
+class C[label L] {
+    C(int{L} x) { }
+}
+
+class D { 
+    void m{Alice:}() {
+        int{Alice:} x = 3;
+        C[{Alice:}] o = new C(x);
+    }
+}

@@ -1,0 +1,24 @@
+class C {
+    void m{*<-*}(principal{*<-*} cu, principal{*<-*} EP) {
+        final label{*<-*} cuLbl = new label {cu:; cu!:};
+
+
+        int{EP:; cu:; cu!:; EP!:; *cuLbl} x= 3;
+        int{*cuLbl; EP:; EP!:} y;
+
+        y = x; // OK, but a difficult search to find this.
+
+    }
+
+      static Object{Q:;Q!: meet P!:} transfer{P:;Q:}(principal{P:;Q:} P, 
+              principal{P:;Q:} Q, 
+              Object{P:;Q:} o) 
+              where caller(P,Q), endorse({P:;Q:;P!: meet Q!:}){
+          declassify ({P!: meet Q!:}) {
+              Object o1 = endorse(o, {P:;Q:} to {P:;Q:;Q!: meet P!:});
+              Object o2 = declassify(o1, {P:;Q!: meet P!:;Q:} to {Q!: meet P!:;Q:});
+              return o2;
+          }
+          
+      }
+}

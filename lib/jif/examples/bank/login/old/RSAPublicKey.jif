@@ -1,0 +1,7 @@
+import java.lang.*;
+
+class RSAPublicKey extends Key {
+    public RSAPublicKey(double keyData) {
+	super(keyData);
+    }
+}

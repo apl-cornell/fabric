@@ -1,0 +1,15 @@
+class DynLabel5 {
+    final label{} f;
+    final DynLabel5{} g;
+
+    DynLabel5(label{} l, DynLabel5{} o) {
+	this.f = l;
+	this.g = o;
+    }
+  
+    void m(label{} q, DynLabel5 arg) {	
+	final DynLabel5 local = new DynLabel5(q, null);
+
+	int{*this.g} x2; // not ok, wrong type
+    }
+}

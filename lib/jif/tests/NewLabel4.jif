@@ -1,0 +1,6 @@
+public class NewLabel2 {
+    public label m(int a) {
+	label l = new label {this}; // illegal
+	return l;
+    }
+}

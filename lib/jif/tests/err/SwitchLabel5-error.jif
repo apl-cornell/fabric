@@ -1,0 +1,8 @@
+class SwitchLabel {
+    public int m(label L, int{*L} x):{*L} throws (Exception) {
+        switch label (x) {
+            case (int{*L} xx) return x; // x not known to have label L
+            else throw new Exception();
+        }
+    }
+}

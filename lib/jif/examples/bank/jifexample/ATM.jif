@@ -1,0 +1,150 @@
+import java.lang.*;
+import java.io.*;
+
+class ATM[principal manager]  implements Runnable {
+    final principal atm;
+    private int number; // Identifying number of this ATM
+    private Bank bank;  // Bank to which the ATM connects
+    private ATMCard{atm:} card;
+    private RSAPrivateKey{atm:} customerKey;
+    private Log{atm:} log;
+
+    //** The IO devices must be public (this makes intuitive sense)
+    private ObjectInputStream keypadInput;
+    public ObjectOutputStream keypad;
+    public ObjectInputStream terminal;
+    public ObjectOutputStream terminalOutput;
+
+    public ATM(int number, Bank bank) throws (IOException) 
+      where caller(manager) {
+	// this.atm = new principal();
+	this.bank = bank;
+	this.number = number;
+	this.log = new Log("ATM"+number);
+
+	log.logMessage("Creating keypad stream");
+	PipedInputStream pipeIn = new PipedInputStream();
+	PipedOutputStream pipeOut = new PipedOutputStream(pipeIn);
+	keypad = new ObjectOutputStream(pipeOut);
+	keypadInput = new ObjectInputStream(pipeIn);
+
+	log.logMessage("Creating terminal stream");
+	pipeIn = new PipedInputStream();
+	pipeOut = new PipedOutputStream(pipeIn);
+	terminalOutput = new ObjectOutputStream(pipeOut);
+        terminal = new ObjectInputStream(pipeIn);
+    }
+
+    public void ejectCard() 
+    where authority(atm) {
+	// close down the keypad  (?)
+	// how?
+	try{
+	    keypad.flush();
+	} catch (IOException ioe) {
+	    log.logMessage("Exception " + ioe);
+	}
+	
+	log.logMessage(card.owner + "'s card ejected.");
+	this.card = null;  // need to syncrhonize on card?
+    }
+	
+    private void logon () 
+    where authority(atm) {
+	log.logMessage("Waiting for customer");
+	while (true) {
+	    try {
+		// get the card from the customer
+		card = (ATMCard)keypadInput.readObject();
+		log.logMessage("Customer " + card.owner + " inserted card.");
+		terminalOutput.writeBoolean(true);		
+		terminalOutput.flush();
+		// get the password from the keypad
+		Password{atm:} psswd = (Password)keypadInput.readObject();
+		// get the customer's private key from the card
+		log.logMessage("Read password");
+
+		customerKey = (RSAPrivateKey)psswd.decrypt(card.encryptedKey);
+		log.logMessage("Decrypted privateKey");
+		// forget password
+		psswd = null;
+
+		log.logMessage("Getting challenge");
+		// Check validity of card, password
+		Challenge{atm:} challenge = bank.getChallenge(atm, card.accountNumber);
+		log.logMessage("Computing response");
+		Object response = customerKey.decrypt(challenge.customerPart);
+		if (challenge.confirm(response)) {
+		    log.logMessage("Challenge passed");
+		    terminalOutput.writeBoolean(true);
+		    terminalOutput.flush();
+		    break;
+		} else {
+		    log.logMessage("Challenge failed");
+		    terminalOutput.writeBoolean(false);
+		    terminalOutput.flush();
+		}
+	    } catch (Exception e) {
+		log.logMessage("Exception " + e);
+	    }
+	}
+    }
+
+    private void logoff () 
+    where authority(atm) {
+	// Stop acting for the customer
+	log.logMessage("Logoff");
+	customerKey = null;
+    }
+
+    /*
+     * 1 - balance
+     * 2 - deposit
+     * 3 - withdraw
+     * 4 - quit
+     */ 
+    private boolean transaction () 
+    where authority(atm) {
+	try {
+	    int request = keypadInput.readInt();
+	    Reply reply;
+	    switch (request) {
+	    case 1: {log.logMessage("Balance request"); reply = bank.balance(card.accountNumber); break;}
+	    case 2: {log.logMessage("Deposit request"); 
+	             reply = bank.deposit(card.accountNumber, keypadInput.readDouble()); 
+		     break;}
+	    case 3: {log.logMessage("Withdraw request"); 
+	             reply = bank.withdraw(card.accountNumber, keypadInput.readDouble()); 
+		     break;}
+	    case 4: return false;
+	    default: {log.logMessage("Bad selection"); return true;}
+	    }
+	    // may not want the atm to log this information...
+	    log.logMessage(reply.toString());
+	    terminalOutput.writeObject(reply);
+	    return true;
+	} catch (IOException e) {
+	    System.out.println(e);
+	    return false;
+	}
+    }
+	    
+    public void run() 
+    where authority(atm) {
+	while (true) {
+	    logon();
+	    log.logMessage("Logon successful");	    
+	    // Acquire the lock on the card, since it's now in the machine
+	    synchronized(card) {
+		while (transaction()) {
+			// do transactions
+		}
+		logoff();
+	    }
+	    // finally, return card to user
+	    ejectCard();
+	}
+    }
+}
+
+

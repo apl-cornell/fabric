@@ -1,0 +1,21 @@
+public class Logon authority (client, host) {
+    RSAPrivateKey clientPrivKey;
+    RSAPublicKey clientPubKey;
+    
+    public Logon() {
+	clientPrivKey = new RSAPrivateKey(3.0);
+	clientPubKey = new RSAPublicKey(3.0);
+    }
+    
+    public void run() where authority(client, host) {
+	Nonce{host:} nonce = new Nonce();
+	EncryptedObject challenge = declassify(clientPubKey.encrypt(nonce), {host:client});
+	Nonce response = declassify(clientPrivKey.decrypt(challenge), {client:host});
+	if (response.equals(nonce)) {
+	    //JifSystem.out.println("Test passed");
+	} else {
+	    //JifSystem.out.println("Test failed");
+	}
+    }
+}
+    

@@ -1,0 +1,9 @@
+class C {
+    void m(label{*lb} lb, String{*lb} s) {
+    }
+}
+
+class D extends C {
+    void m(label{*qq} qq, String{*qq} s) {
+    }
+}

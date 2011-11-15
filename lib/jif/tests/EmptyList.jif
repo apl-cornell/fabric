@@ -1,0 +1,22 @@
+//package jif.util;
+//import List;
+
+class EmptyListException extends Exception {
+  EmptyListException() {}
+}
+
+public class EmptyList[label L] implements TestList[L] {
+  EmptyList() {}
+  public Object first():{L} throws (EmptyListException) {
+    throw new EmptyListException();
+  }
+  public TestList[L] rest():{L} throws (EmptyListException) {
+    throw new EmptyListException();
+  }
+  public Object get(int i): {L; i} throws (Exception) {
+    throw new EmptyListException();
+  }
+  public int{L} size() {
+    return 0;
+  }
+}

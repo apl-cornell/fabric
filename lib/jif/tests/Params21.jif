@@ -1,0 +1,33 @@
+import jif.runtime.Runtime;
+import java.io.PrintStream;
+
+class C[label L] extends D[L] {
+    int{L} f = 6;
+}
+
+class D[covariant label L] {
+}
+
+class Params21 {
+    public static void main{}(principal{} pp, String[]{} args)
+        throws (SecurityException) {
+        Runtime[pp] runtime = Runtime[pp].getRuntime();
+	PrintStream[{pp:;_!:_}] out = null;
+        try {
+            out = runtime.out();
+ 
+	    C[{}] a = new C[{}]();
+	    D[{}] b = a; // upcast ok
+	    D[{pp:}] c = b; // upcast ok
+	    C[{pp:}] d = (C[{pp:}])c; // downcast bad (but statically ok: will fail at runtime)
+	    d.f =  34; // leak, since d aliases a.
+
+            out.println("failure! " + d.f);
+
+	}
+        catch (NullPointerException ignored) { }
+	catch (ClassCastException e) {
+            if (out != null) out.println("success! classcastexception thrown.");
+	}
+    }
+}

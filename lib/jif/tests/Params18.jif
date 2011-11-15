@@ -1,0 +1,34 @@
+import jif.runtime.Runtime;
+import java.io.PrintStream;
+
+class C[label L, label M] extends D[{L;M}] {
+    int{L} f = 6;
+    int{M} g = 6;
+
+}
+
+class D[label N] {
+}
+
+class Params18 {
+    public static void main{}(principal{} pp, String[]{} args)
+        throws (SecurityException) {
+        Runtime[pp] runtime = Runtime[pp].getRuntime();
+	PrintStream[{pp:;_!:_}] out = null;
+        try {
+            out = runtime.out();
+
+	    C[{Alice:}, {Bob:}] foo = new C[{Alice:}, {Bob:}]();
+	    D[{Alice:;Bob:}] o = foo; // upcast ok
+
+	    C[{Alice:}, {Bob:}] that = (C[{Alice:}, {Bob:}])o; // downcast ok
+
+            out.println("success! no classcast thrown");
+
+	}
+        catch (NullPointerException ignored) { }
+	catch (ClassCastException e) {
+            if (out != null) out.println("success! classcastexception thrown.");
+	}
+    }
+}

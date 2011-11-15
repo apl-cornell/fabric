@@ -1,0 +1,10 @@
+class C { 
+    void m{}() {
+        int[] a = {3,4,5};
+        int i = 0;
+        if (i < a.length) {
+            a[i] /= 4; // OK
+            a[i] |= 3; // OK
+        }
+    }
+}

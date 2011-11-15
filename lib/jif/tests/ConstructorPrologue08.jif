@@ -1,0 +1,16 @@
+class D { 
+    final principal{this} p;
+    D(principal{this} p) {
+        this.p = p;
+    }
+}
+class C extends D {
+    final E[{p←}]{this} e;
+    C(principal{this} prin, E[{prin←}]{this} e) {
+        this.e = e;
+        super(prin);
+    }
+}
+class E[label L] {
+    int{L} x;
+}

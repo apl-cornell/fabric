@@ -1,0 +1,11 @@
+class C {
+    int{} m() { return 5; }
+}
+
+class D extends C {
+    int{Alice:} secret;
+    int{} m() where {Alice:} <= {} // should be disallowed.
+    { 
+	return secret; 
+    }
+}

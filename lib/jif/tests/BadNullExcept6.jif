@@ -1,0 +1,10 @@
+import java.lang.*;
+
+public class BadNullExcept6 {
+    public static void main(String[] args) { 
+	// array index out of bounds can be thrown
+	int[] a = {1};
+	int i = a[2];
+    }    
+}
+

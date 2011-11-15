@@ -1,0 +1,12 @@
+public class Real
+{
+    double{this} value;
+
+    public Real(double v) {
+        value = v;
+    }
+
+    public double value() {
+        return value;
+    }
+}

@@ -1,0 +1,103 @@
+/*
+ * A wrapper for Java Integers, to allow them to be treated as 
+ * JifObjects
+ */
+package jif.lang;
+
+public final class JifInteger[covariant label L] implements JifObject[L] {
+    // XXX Need to make the translated class implement IsSerializable
+    public final Integer{L} s;
+    
+    public JifInteger(Integer{L} s) { this.s = s; }
+    public JifInteger(int{L} value) { this.s = new Integer(value); }
+    public JifInteger(String{L} s) throws (NumberFormatException{s}) {
+        int i = parseInt(s); 
+        this.s = new Integer(i);
+    }
+    
+    public static final int{*!:*}   MIN_VALUE = 0x80000000;
+    public static final int{*!:*}   MAX_VALUE = 0x7fffffff;
+//    public static native String{i;radix} toString(int i, int radix);
+//    public static native String{i} toHexString(int i);
+//    public static native String{i} toOctalString(int i);
+//    public static native String{i} toBinaryString(int i);
+    public static String{i} toString(int i) {
+        return Integer.toString(i);
+    }
+    public static int{s;radix} parseInt(String s, int radix) throws (NumberFormatException{s;radix}) {
+        return Integer.parseInt(s, radix);
+    }
+    
+    public static int{s} parseInt(String s) throws (NumberFormatException{s}) {
+        return Integer.parseInt(s);
+    }
+    
+    public static Integer{s;radix} valueOf(String s, int radix) throws (NumberFormatException{s;radix}) {
+        return Integer.valueOf(s, radix);
+    }
+    
+    public static Integer{s} valueOf(String s) throws (NumberFormatException{s}) {
+        return Integer.valueOf(s);
+    }
+
+
+//    public byte{L} byteValue() {
+//        return s.byteValue();
+//    }
+//    
+//    public short{L} shortValue() {
+//        return s.shortValue();
+//    }
+    
+    public int{L} intValue() {
+        if(s != null) {
+            return s.intValue();
+        } else {
+            return 0;
+        }
+    }
+    
+//    public long{L} longValue() {
+//        return s.longValue();
+//    }
+//    
+//    public float{L} floatValue() {
+//        return s.floatValue();
+//    }
+//    
+//    public double{L} doubleValue() {
+//        return s.doubleValue();
+//    }
+
+    public boolean{L; anObject} equals(Object anObject) {
+        if (anObject == null) return s == null;
+        if (anObject instanceof IDComparable[L]) {
+            return equals((IDComparable[L])anObject);
+        }
+        return false;
+    }
+    public boolean{L; other} equals(IDComparable[L] other) {
+        return equals(L, other);
+    }
+
+    public boolean{L; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
+        if (obj instanceof JifInteger[lbl]) {
+            JifInteger[lbl] that = (JifInteger[lbl])obj;
+            if (this.s == null) return that.s == null;
+            return this.s.equals(that.s);
+        }
+        return false;        
+    }
+
+    public int{L} hashCode() {
+        if (s == null) return 9473621;
+        return s.hashCode();
+    }
+    public String{L} toString() {
+        if(s != null) {
+            return s.toString();
+        } else {
+            return "";
+        }
+    }
+}

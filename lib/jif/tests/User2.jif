@@ -1,0 +1,17 @@
+class User2
+{
+    int{p:} m(principal{} p) {
+	return 0;
+    }
+
+    principal{} p() {
+	return Alice;
+    }
+
+    int{Alice:} m1() {
+	// As of release 1.1.0 the use of a method call
+	// for a dynamic principal or dynamic label as
+	// an argument is problematic.
+	return m(p());
+    }
+}

@@ -1,0 +1,18 @@
+class A {
+    int{Alice:} x;
+    int{Alice:Bob} y;
+
+    public A{Alice:Bob}(int{Alice:} xx, int{Bob:} yy):{Alice:} {
+        x = xx;
+        y = xx;
+    }
+}
+
+public class Constructor
+{
+    public void run() {
+        int{Alice:} xx = 1;
+        int{Bob:Alice} yy = 2;
+        A{Alice:Bob} a = new A(xx, yy);
+    }
+}

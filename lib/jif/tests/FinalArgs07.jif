@@ -1,0 +1,10 @@
+class C {
+    final label L = new label {};
+    int{} m(C c):{*c.L} { return 3; }
+
+    void n1{}() { 
+	C x = this;
+	m(x); // bad
+    }
+
+}

@@ -1,0 +1,12 @@
+class InvariantThis1 {
+    final int{this} g = 5; // allowed
+    final int{}[]{this} a = null; // allowed
+}
+
+//  class InvariantThis1a (invariant) {
+//      int{this} f = 5; // allowed, 
+//      final int{this} g = 5; // allowed
+
+//      final int{this}[]{} a = null; // allowed
+//      final int{}[]{this} b = null; // allowed
+//  }

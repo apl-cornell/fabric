@@ -1,0 +1,30 @@
+class Slot {
+    int data;
+
+    public int get() {
+        return data;
+    }
+
+    public void set(int{this} d) {
+        data = d;
+    }
+}
+
+public class Tester {
+    Slot{Alice:} sa;
+    Slot{Alice:Bob} sb;
+    int{Alice:} secret;
+    int{Alice:Bob} junk;
+
+    public void leak{Alice:}(Slot{Alice:Bob} sb):{Alice:} throws (NullPointerException) {
+        sa = sb;
+        sa.set(secret);
+    }
+
+/*    public void run{Alice:Bob}():{Alice:Bob} throws (NullPointerException) {
+        try {
+            leak(sb);
+        } catch (NullPointerException e) {}
+        junk = sb.get();
+    }*/
+}

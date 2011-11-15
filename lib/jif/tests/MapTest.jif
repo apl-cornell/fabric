@@ -1,0 +1,73 @@
+import jif.util.*;
+import jif.runtime.Runtime;
+import java.io.PrintStream;
+
+public class MapTest
+{
+	public static void main{Alice:}(principal pp, String[] args)
+	{
+		final label A = new label {Alice:};
+		final label B = new label {Bob:};
+		Map[A,B] map = new ArrayMap[A,B]();
+		
+		Key[A]{A} one = new Key[A](1);
+		Key[A]{A} two = new Key[A](2);
+		Key[A]{A} three = new Key[A](3);
+		Key[A]{A} four = new Key[A](4);
+		
+		Key[B]{A} oneValue = new Key[B](1);
+		Key[B]{A} twoValue = new Key[B](2);
+		Key[B]{A} threeValue = new Key[B](3);
+		Key[B]{A} fourValue = new Key[B](4);
+		
+		map.put(one, oneValue);
+		map.put(two, twoValue);
+		map.put(three, threeValue);
+		map.put(four, fourValue);
+
+		/*
+		final principal nullP = null;
+		Runtime[nullP] runtime;    
+		PrintStream[{*A;*B}] out = null;
+		try {
+			runtime = Runtime[nullP].getRuntime();
+			if (runtime == null) return;
+			out = runtime.stdout(new label {*A;*B});
+		}
+		catch (SecurityException e) { }
+		if (out == null) return;
+		
+		out.println("Hello World");
+		*/
+	}
+}
+
+class Key[label L] implements JifObject[L] {
+    private final int{this} number;
+    
+    Key(int{this} num) {
+        number = num;
+    }
+    
+    public boolean{L; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
+        if(obj == this) return true;
+        if (obj instanceof Key[lbl]) {                
+            Key[lbl] other = (Key[lbl])obj;
+            
+            return (other.number == this.number);
+        }
+        
+        return false;            
+    }
+    public boolean{L; obj} equals(IDComparable[L] obj) {
+        return equals(L, obj);
+    }
+    
+    public int{L} hashCode() {
+        return number;
+    }
+    
+    public String{L} toString() {
+        return "#number - " + Integer.toString(number) + " ";
+    }
+}

@@ -1,0 +1,20 @@
+abstract class ConstructorTestBase extends java.lang.Object {
+	private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+	private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
+
+	protected ConstructorTestBase() { }
+	protected final native void initFields(String s);
+}
+
+public class ConstructorTest01 extends ConstructorTestBase {
+	public ConstructorTest01(String m) throws NullPointerException {
+		super();
+		// Removing this block eliminates the error message
+		{
+			this.x = new String();
+		}
+		initFields(m);
+	}
+
+	final String x;
+}

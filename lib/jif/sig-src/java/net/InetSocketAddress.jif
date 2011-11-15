@@ -1,0 +1,27 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.net;
+
+public class InetSocketAddress[label L] extends SocketAddress[L] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    public InetSocketAddress(int{L} port) {
+    }
+    public InetSocketAddress(InetAddress[L]{L} addr, int{L} port) {
+    }
+
+    public InetSocketAddress(String{L} hostname, int{L} port) {
+    }
+    public final native int{L} getPort();
+
+    public final native InetAddress[L]{L} getAddress();
+
+    public final native String{L} getHostName();
+
+    public final native boolean{L} isUnresolved();
+    public final native boolean{this;obj} equals(Object obj);
+    public final native int{L} hashCode();
+}

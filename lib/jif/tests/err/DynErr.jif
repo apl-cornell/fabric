@@ -1,0 +1,5 @@
+public class DynErr {
+    public int{} m(int{*lx} x, int{*lx} y, label{} lx) {
+	return x + 1 + y;
+    }
+}

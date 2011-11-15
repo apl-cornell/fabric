@@ -1,0 +1,3 @@
+class Params1[principal p, principal q] {
+    int{p: q} contents;
+}

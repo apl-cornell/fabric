@@ -1,0 +1,11 @@
+//package polyglot.ext.jif.tests;
+
+class Dyn5 {
+    public static void g{*!:*}(label{} L) {
+	int{*L} x = 1;
+	x = f(L, x);
+	return;
+    }
+
+    public static int{*M} f(label M, int{*M} y) { return y; }
+}

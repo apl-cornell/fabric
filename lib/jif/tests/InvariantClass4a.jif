@@ -1,0 +1,6 @@
+class InvariantClass4a (invariant)  {
+    InvariantClass4a{this} m() {
+	return this; //ok
+    }
+}
+

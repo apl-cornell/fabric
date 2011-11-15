@@ -1,0 +1,8 @@
+public class Implicit2[label L] {
+    public static int{L} f(boolean{L} b) {
+	if (b) {
+		return 1;
+	}
+	return 0;
+    }
+}

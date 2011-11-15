@@ -1,0 +1,7 @@
+class C[principal P] {
+    public static void main{}(principal{} pp, String[]{} args)
+    {
+	principal q = P; // no P in scope here!
+    }
+
+}

@@ -1,0 +1,22 @@
+class C[label L, label M] extends D[M,L] {
+    int{L} f = 6;
+    int{M} g = 6;
+
+}
+
+class D[label M, label L] {
+}
+
+class E {
+    public void leak{Alice:}() {
+	C[{Alice:}, {Bob:}] foo = null;
+	D[{Bob:}, {Alice:}] o = foo; // upcast ok
+
+	try {
+	    C[{Bob:}, {Alice:}] that = (C[{Bob:}, {Alice:}])o; // ok
+	    foo.f = that.g; // bad!
+	}
+	catch (ClassCastException impossible) {}
+	catch (NullPointerException impossible) {}
+    }
+}

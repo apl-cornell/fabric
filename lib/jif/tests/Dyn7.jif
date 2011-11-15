@@ -1,0 +1,10 @@
+class Test1
+{
+    public label{} getLabel() {
+	return new label{Bob:};
+    }
+
+    public void foo() {
+	final label{} x = getLabel();
+    }
+}

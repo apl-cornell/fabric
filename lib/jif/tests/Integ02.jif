@@ -1,0 +1,7 @@
+class C[label L, principal A, principal B, principal C] {
+    void m() {
+	int{L; A!:; B!:} x = 5;
+	int{L; C!:} y = 6;
+	int{L; {A!:; B!:}; {C!:}} z = x + y;
+    }
+}

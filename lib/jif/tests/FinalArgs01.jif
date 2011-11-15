@@ -1,0 +1,9 @@
+class C {
+    int{*L} m(label L) { return 3; }
+
+    void n1() { 
+	label lbl = new label {};
+	m(lbl); // bad, lbl should be final.
+    }
+
+}

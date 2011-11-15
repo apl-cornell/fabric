@@ -1,0 +1,22 @@
+interface CovariantInt8   {
+    void setField{this}(int{this} newVal);
+}
+
+class InvariantClass8 (invariant) implements CovariantInt8 { // illegal ?
+    int{this} f;
+    public void setField{this}(int{this} newVal) {
+	f = newVal;
+    }
+}
+
+class InvariantClass8a {
+    void m() {
+	InvariantClass8{} x = new InvariantClass8();
+	CovariantInt8{} y = x;
+	CovariantInt8{Alice:} z = y;
+
+	int{Alice:} secret = 9;
+	z.setField(secret);
+	
+    }
+}

@@ -1,0 +1,14 @@
+class Exc
+{
+    public void leak() throws (NullPointerException){
+	String{Alice:} s=null;
+	String{} p;
+
+	try {
+	    throw new Exception(s);
+	}
+	catch (Exception e) {
+	    p = e.getMessage();
+	}
+    }
+}

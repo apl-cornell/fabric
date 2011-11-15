@@ -1,0 +1,18 @@
+/*
+ * This tests extending non Jif classes.
+ * this should be allowed. although i is not initialized before the super call, the super call is to a "safe" java class.
+ */
+public class Y extends RuntimeException {
+    private final int{} i;
+    public Y() {
+	super();
+	i = 7;
+    }
+    public Y(String{this} s) {
+	i = 8;
+    }
+
+    public void foo() {
+	new Y("hi");
+    }
+}

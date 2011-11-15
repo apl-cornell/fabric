@@ -1,0 +1,11 @@
+class C {
+    void m{}() {
+	int[] arr = new int[7];
+	for (int i = 0; i < arr.length; i++) {
+	    int j = i;
+	    arr[j] = 3; // no exception thrown here
+	    arr[i] = 2; // no exception thrown here
+	    int k = arr[j]; // no expcetion thrown here
+	}
+    }
+}

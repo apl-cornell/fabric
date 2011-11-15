@@ -1,0 +1,12 @@
+/*
+ * Test instantiating a covariant param with a covariant label.
+ *
+ * SHould be accepted.
+ */
+class Params11a[covariant label L] {
+    final int{L} data = 8;
+}
+
+class Params11b[covariant label M] extends Params11a[M] {
+}
+

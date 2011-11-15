@@ -1,0 +1,32 @@
+class RuntimeParams02 {
+    void m(Object o) throws (ClassCastException{o}) {
+	if (o instanceof C[{Alice:}, {Alice:; Bob:Alice}, Alice]) {
+	    Object a = (D[{Alice:; Bob:Alice}, Bob, {Bob:}])o;
+	}
+    }
+}
+
+class C[label N, covariant label M, principal P] 
+    extends D[M,P,N] 
+    implements IDComparable[N] {
+
+    int{N} data;
+    public int{N;M;P:} hashCode() { 
+	return data; 
+    }    
+    
+    public boolean{N;o} equals(IDComparable[N] o) {
+	return equals(N, o);
+    }
+    public boolean{N;*lbl;lbl;o} equals(label lbl, IDComparable[lbl] o) {
+	if (o != null && o instanceof C[lbl,M,P]) {
+	    C[lbl,M,P] that = (C[lbl,M,P])o;
+	    return this.data == that.data;
+	}
+	return false;
+    }
+}
+class D[covariant label L, principal Q, label A] implements Hashable[{Q:;A;L}] {
+    public int{Q:;A;L} hashCode() { return 231; }
+}
+

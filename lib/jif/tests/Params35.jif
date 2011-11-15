@@ -1,0 +1,5 @@
+class C[principal p] {
+    void m{*!:}() {
+	C[null] x = null; // OK, null is the bottom principal
+    }
+}

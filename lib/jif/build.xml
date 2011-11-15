@@ -1,0 +1,852 @@
+<project name="jif" default="jif" basedir=".">
+    <description>
+    Jif build file
+  </description>
+
+
+
+    <!-- ****************************************
+       set global properties for this build
+       ****************************************  -->
+
+    <!-- The OS-specific native include directory. If we can't figure it out
+       automatically, it may need to be set explicitly -->
+    <!--  <property name="jif-runtime-native.java-include-dir"
+                location="${jdk.home}/include/linux"/> -->
+
+  <!-- set the prefix for accessing environment variables,
+       BEFORE reading the properties file. -->
+  <property environment="env" />
+
+    <!-- Import properties file. -->
+    <property file="${basedir}/config.properties" />
+    <echo message="polyglot.home is ${polyglot.home}" level="verbose" />
+
+    <!-- source directory -->
+    <property name="src" location="${basedir}/src" />
+
+    <!-- directory for class file targets -->
+    <property name="classes" location="${basedir}/classes" />
+
+    <!-- directory for shared libraries -->
+    <property name="lib" location="${basedir}/lib" />
+
+    <!-- signature source directory -->
+    <property name="sig-src" location="${basedir}/sig-src" />
+
+    <!-- directory for class file targets of signature source code -->
+    <property name="sig-classes" location="${basedir}/sig-classes" />
+
+    <!-- runtime source directory -->
+    <property name="rt-src" location="${basedir}/rt-src" />
+
+    <!-- directory for class file targets of runtime source code -->
+    <property name="rt-classes" location="${basedir}/rt-classes" />
+
+    <!-- library source directory (jif library source code) -->
+    <property name="lib-src" location="${basedir}/lib-src" />
+
+    <!-- directory for class file targets of library source code -->
+    <property name="lib-classes" location="${basedir}/lib-classes" />
+
+    <!-- distribution directory -->
+    <property name="dist" location="${basedir}/dist" />
+
+    <!-- binaries directory -->
+    <property name="bin" location="${basedir}/bin" />
+
+    <!-- jifc executable -->
+    <property name="jifc" location="${bin}/jifc" />
+    <property name="jif" location="${bin}/jif" />
+
+
+    <!-- Polyglot classpath elements -->
+    <condition property="polyglot-classes"
+	       value="${polyglot.home}/classes"
+	       else="">
+	<isset property="polyglot.home" />
+    </condition>
+    <echo message="polyglot-classes is ${polyglot-classes}" level="verbose" />
+
+    <condition property="polyglot-jar"
+	       value="${polyglot.home}/lib/polyglot.jar"
+	       else="">
+	<isset property="polyglot.home" />
+    </condition>
+    <echo message="polyglot-jar is ${polyglot-jar}" level="verbose" />
+
+    <condition property="ppg-jar"
+	       value="${polyglot.home}/lib/ppg.jar"
+	       else="">
+	<isset property="polyglot.home" />
+    </condition>
+    <echo message="ppg-jar is ${ppg-jar}" level="verbose" />
+
+    <condition property="javacup-jar"
+	       value="${polyglot.home}/lib/java_cup.jar"
+	       else="">
+	<isset property="polyglot.home" />
+    </condition>
+    <echo message="javacup-jar is ${javacup-jar}" level="verbose" />
+
+    <condition property="jflex-jar"
+	       value="${polyglot.home}/lib/JFlex.jar"
+	       else="">
+	<isset property="polyglot.home" />
+    </condition>
+    <echo message="jflex-jar is ${jflex-jar}" level="verbose" />
+
+    <condition property="polyglot.home" value="">
+	<not><isset property="polyglot.home" /></not>
+    </condition>
+
+    <!-- the standard classpath -->
+    <path id="standard.classpath">
+        <pathelement location="${classes}" />
+        <pathelement path="${java.class.path}" />
+        <fileset dir="${lib}">
+            <include name="*.jar" />
+            <exclude name="jif*.jar" />
+        </fileset>
+	<pathelement path="${polyglot-classes}" />
+	<pathelement path="${polyglot-jar}" />
+	<pathelement path="${ppg-jar}" />
+	<pathelement path="${javacup-jar}" />
+	<pathelement path="${jflex-jar}" />
+    </path>
+
+    <property name="standard.classpath" refid="standard.classpath" />
+    <echo message="standard.classpath is ${standard.classpath}" level="verbose" />
+
+	<!-- establish the os -->
+    <condition property="os.isWindows">
+        <os family="windows" />
+    </condition>
+    <condition property="os.isUnix">
+        <os family="unix" />
+    </condition>
+    <condition property="os.unsupported-os">
+        <and>
+            <not>
+                <os family="windows" />
+            </not>
+            <not>
+                <os family="unix" />
+            </not>
+        </and>
+    </condition>
+
+    <!-- ****************************************
+       Clean up targets and other admin tasks
+       ****************************************  -->
+    <target name="clean" depends="dust" description="clean up">
+        <!-- Delete the ${classes} and ${dist} directory trees -->
+        <delete dir="${classes}" />
+        <delete dir="${dist}" />
+        <delete includeemptydirs="true">
+            <fileset dir="${basedir}/tests">
+                <include name="**/*.class" />
+                <include name="**/*.java" />
+                <include name="**/*~" />
+                <include name="pthOutput*/**/*" />
+            </fileset>
+            <fileset dir="${basedir}/tests">
+                <include name="pthOutput*" />
+            </fileset>
+            <fileset dir="${basedir}/examples">
+                <include name="**/*.class" />
+                <include name="battleship/**/*.java" />
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="dust" description="clean up the generated runtime, sig, and lib">
+        <!-- Delete the ${classes} and ${dist} directory trees -->
+        <delete dir="${sig-classes}" />
+        <delete dir="${rt-classes}" />
+        <delete dir="${lib-classes}" />
+        <delete includeemptydirs="true">
+            <fileset dir="${lib}">
+                <include name="jifrt.jar" />
+                <include name="jifsig.jar" />
+                <include name="jiflib.jar" />
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="clean-jars" description="Cleans up the jars">
+        <delete includeemptydirs="true">
+            <fileset dir="${lib}">
+                <include name="jifrt.jar" />
+                <include name="jifsig.jar" />
+                <include name="jiflib.jar" />
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="clobber" depends="clean" description="removes all generated files">
+        <delete includeemptydirs="true">
+            <fileset dir="${src}">
+                <include name="**/Grm.java" />
+                <include name="**/sym.java" />
+                <include name="**/Lexer_c.java" />
+                <include name="**/*_ppg.cup" />
+            </fileset>
+            <fileset dir="${rt-src}">
+                <include name="jif/native/*.o" />
+                <include name="jif/native/jif_runtime_*.h" />
+            </fileset>
+            <fileset dir="${lib}">
+                <include name="*jifrt.*" />
+                <include name="jif.jar" />
+                <include name="jifrt.jar" />
+                <include name="jifsig.jar" />
+                <include name="jiflib.jar" />
+            </fileset>
+        </delete>
+        <delete file="${jifc}" />
+        <delete file="${jifc}.bat" />
+        <delete file="${bin}/splitc" />
+    </target>
+
+    <!-- initialize the build -->
+    <target name="init">
+        <!-- Create the time stamp -->
+        <tstamp />
+        <!-- Create the build directory structures used by compile -->
+        <mkdir dir="${classes}" />
+        <mkdir dir="${sig-classes}" />
+        <mkdir dir="${rt-classes}" />
+        <mkdir dir="${lib-classes}" />
+    </target>
+
+
+
+    <!-- ****************************************
+       Configuration
+       ****************************************  -->
+    <target name="configure" description="Configure jif">
+        <antcall target="check-classpath" />
+	<antcall target="jifc-executable" />
+        <antcall target="jif-executable-bat" />
+    	<chmod file="${jif}" perm="a+x"/>
+    	<chmod file="${jifc}" perm="a+x"/>
+    </target>
+
+    <target name="check-classpath" description="Check the classpath contains the appropriate directories/jars">
+        <available classname="polyglot.main.Main"
+	           classpathref="standard.classpath"
+	           property="cp_existence.polyglot"/>
+        <available classname="java_cup.Main"
+	           classpathref="standard.classpath"
+	           property="cp_existence.java_cup"/>
+        <available classname="JFlex.Main"
+	           classpathref="standard.classpath"
+	           property="cp_existence.jflex"/>
+        <available classname="polyglot.ext.param.ExtensionInfo"
+	           classpathref="standard.classpath"
+	           property="cp_existence.polyglot.param"/>
+
+        <condition property="jdk_home.defined">
+            <isset property="jdk.home" />
+        </condition>
+        <fail unless="cp_existence.polyglot"
+	      message="The polyglot classes must be on the classpath. Try adding polyglot.jar to the classpath."/>
+        <fail unless="cp_existence.java_cup"
+	      message="The java_cup classes must be on the classpath. Try adding java_cup.jar to the classpath."/>
+        <fail unless="cp_existence.jflex"
+	      message="The JFlex classes must be on the classpath. Try adding JFlex.jar to the classpath."/>
+        <fail unless="cp_existence.polyglot.param"
+	      message="The Polyglot param extension must be compiled."/>
+        <fail unless="jdk_home.defined"
+	      message="The JDK home (usually environment variable JAVA_HOME) must be defined."/>
+    </target>
+
+    <!-- Create jifc script if needed -->
+    <target name="jifc-executable">
+	<copy file="${jifc}.in" tofile="${jifc}">
+	    <filterset>
+		<filter token="POLYGLOT" value="${polyglot.home}" />
+	    </filterset>
+	</copy>
+    </target>
+
+    <!-- Create jif.bat and jifc.bat if needed -->
+    <target name="jif-executable-bat" 
+            if="os.isWindows">
+        <concat destfile="${jifc}.bat" append="no">
+@echo off
+rem DO NOT EDIT - This file was automatically generated.
+
+set CMD_LINE_ARGS=%1
+if ""%1""=="""" goto doneStart
+shift
+:setupArgs
+if ""%1""=="""" goto doneStart
+set CMD_LINE_ARGS=%CMD_LINE_ARGS% %1
+shift
+goto setupArgs
+:doneStart
+sh ${jifc} %CMD_LINE_ARGS%
+    </concat>
+        <concat destfile="${jif}.bat" append="no">
+@echo off
+rem DO NOT EDIT - This file was automatically generated.
+
+set CMD_LINE_ARGS=%1
+if ""%1""=="""" goto doneStart
+shift
+:setupArgs
+if ""%1""=="""" goto doneStart
+set CMD_LINE_ARGS=%CMD_LINE_ARGS% %1
+shift
+goto setupArgs
+:doneStart
+sh ${jif} %CMD_LINE_ARGS%
+    </concat>
+    </target>
+
+    <!-- ****************************************
+       Jif targets
+       ****************************************  -->
+
+    <target name="jif" depends="jif-base,jif-runtime,jif-sig,jif-lib" description="Build the Jif compiler and libraries"/>
+
+    <target name="jif-base" depends="init,configure">
+        <antcall target="standard-ext">
+            <param name="ext" value="jif" />
+            <param name="ext.basedir" value="${basedir}" />
+            <param name="parser.type" value="ppg" />
+        </antcall>
+    	
+    	<!-- Copy jif.ppg to the classes dir so that it's included in the jar
+    	     for others to use. -->
+    	<copy file="${src}/jif/parse/jif.ppg" todir="${classes}/jif/parse" />
+    </target>
+
+    <!-- The Jif signatures for standard java classes, e.g. java.lang.Object -->
+    <target name="jif-sig" depends="jif-base,jif-runtime" description="compile the signature classes">
+        <mkdir dir="${sig-classes}" />
+        <apply executable="${jifc}" 
+		       parallel="false" 
+		       failonerror="true" 
+		       dest="${basedir}" 
+		       relative="true" 
+		       skipemptyfilesets="true" 
+		       vmlauncher="false">
+            <arg value="-e" />
+            <arg value="-d" />
+            <arg value="sig-classes" />
+            <arg value="-sourcepath" />
+            <arg value="sig-src" />
+	    <arg value="-classpath" />
+	    <arg value="${java.class.path}" />
+            <srcfile />
+            <fileset dir="${basedir}" includes="sig-src/**/Object.jif" />
+            <mapper type="regexp" from="^sig-src(.*)\.jif" to="sig-classes\1\.class" />
+        </apply>
+
+        <apply executable="${jifc}" 
+		       parallel="true" 
+		       failonerror="true" 
+		       dest="${basedir}"
+		       relative="true" 
+		       skipemptyfilesets="true" 
+		       vmlauncher="false">
+            <arg value="-e" />
+            <arg value="-d" />
+            <arg value="sig-classes" />
+            <arg value="-sourcepath" />
+            <arg value="sig-src" />
+	    <arg value="-classpath" />
+	    <arg value="${java.class.path}" />
+            <srcfile />
+            <fileset dir="${basedir}" includes="sig-src/**/*.jif" />
+            <mapper type="regexp" from="^sig-src(.*)\.jif" to="sig-classes\1\.class" />
+        </apply>
+    </target>
+
+
+    <!-- Jif library code, e.g. jif.util.List -->
+    <target name="jif-lib" depends="jif-base,jif-sig" description="compile the jif library code">
+        <mkdir dir="${lib-classes}" />
+        <apply executable="${jifc}" 
+		       parallel="true" 
+		       failonerror="true" 
+		       dest="${basedir}"
+		       relative="true" 
+		       skipemptyfilesets="true" 
+		       vmlauncher="false">
+            <arg value="-e" />
+            <arg value="-d" />
+            <arg value="lib-classes" />
+            <arg value="-sourcepath" />
+            <arg value="lib-src" />
+      <arg value="-e" />
+	    <arg value="-classpath" />
+	    <arg value="${java.class.path}" />
+            <!--      
+      <arg value="-report" />
+      <arg value="debug=1" />
+-->
+            <srcfile />
+            <fileset dir="${basedir}" includes="lib-src/**/*.jif" />
+            <mapper type="regexp" from="^lib-src(.*)\.jif" to="lib-classes\1\.class" />
+        </apply>
+    </target>
+
+
+    <target name="jif-runtime" depends="init,configure" description="compile the jif runtime">
+        <mkdir dir="${rt-classes}" />
+        <javac source="1.5" target="1.5" srcdir="${rt-src}" destdir="${rt-classes}" debug="on" includes="**">
+            <classpath>
+                <pathelement location="${sig-classes}" />
+                <pathelement location="${lib-classes}" />
+                <path refid="standard.classpath" />
+            </classpath>
+        </javac>
+
+        <antcall target="jif-runtime-native" />
+    </target>
+
+    <target name="jif-runtime-native" description="compile the jif runtime native code">
+        <!-- Compile the headers for jif.lang.NativePM -->
+        <mkdir dir="${rt-classes}/jif/native" />
+
+        <!-- Compile the headers for jif.runtime.FileSystem and jif.runtime.Runtime -->
+        <javah class="jif.runtime.FileSystem,jif.runtime.Runtime" destdir="${rt-src}/jif/native" force="yes">
+            <classpath>
+                <pathelement location="${rt-classes}" />
+                <path refid="standard.classpath" />
+            </classpath>
+        </javah>
+
+        <fail if="os.unsupported-os" message="Cannot compile the native runtime code. This is not a supported OS." />
+
+        <!-- Make sure we can find the appropriate OS specific native include directory -->
+        <condition property="jif-runtime-native.java-include-dir" value="${jdk.home}/include/${env.OSTYPE}">
+            <and>
+                <not>
+                    <isset property="jif-runtime-native.java-include-dir" />
+                </not>
+                <isset property="env.OSTYPE" />
+                <available file="${jdk.home}/include/${env.OSTYPE}" />
+            </and>
+        </condition>
+        <condition property="jif-runtime-native.java-include-dir" value="${jdk.home}/include/linux">
+            <and>
+                <not>
+                    <isset property="jif-runtime-native.java-include-dir" />
+                </not>
+                <available file="${jdk.home}/include/linux" />
+            </and>
+        </condition>
+        <condition property="jif-runtime-native.java-include-dir" value="${jdk.home}/include/solaris">
+            <and>
+                <not>
+                    <isset property="jif-runtime-native.java-include-dir" />
+                </not>
+                <available file="${jdk.home}/include/solaris" />
+            </and>
+        </condition>
+        <condition property="jif-runtime-native.java-include-dir" value="${jdk.home}/include/win32">
+            <and>
+                <not>
+                    <isset property="jif-runtime-native.java-include-dir" />
+                </not>
+                <available file="${jdk.home}/include/win32" />
+            </and>
+        </condition>
+        <condition property="jif-runtime-native.java-include-dir" value="${jdk.home}/include">
+            <and>
+                <not>
+                    <isset property="jif-runtime-native.java-include-dir" />
+                </not>
+                <available file="${jdk.home}/include/jni.h" />
+            </and>
+        </condition>
+        <available file="${jif-runtime-native.java-include-dir}" property="jif-runtime-native.java-include-dir.available" />
+        <fail unless="jif-runtime-native.java-include-dir.available">
+Cannot find the OS-specific directory in ${jdk.home}/include to include.
+Please try setting the property "jif-runtime-native.java-include-dir" to be the absolute path of this directory.
+    </fail>
+        <property name="jif-runtime-native.java-include-dir.location" location="${jif-runtime-native.java-include-dir}" />
+
+        <antcall target="jif-runtime-native-unix" />
+        <antcall target="jif-runtime-native-windows" />
+    </target>
+
+    <!-- compile the jif runtime native code for unix -->
+    <target name="jif-runtime-native-unix" if="os.isUnix">
+
+        <condition property="jif-native-unix.sharedflag" value="-shared">
+            <os name="linux" />
+        </condition>
+        <condition property="jif-native-unix.sharedflag" value="-G">
+            <os name="solaris" />
+        </condition>
+        <condition property="jif-native-unix.sharedflag" value="-dynamiclib">
+            <os name="Mac OS X" />
+        </condition>
+        <condition property="jif-native-unix.sharedflag" value="-shared">
+            <not>
+                <isset property="jif-native-unix.sharedflag" />
+            </not>
+        </condition>
+
+        <condition property="jif-native-unix.library" value="libjifrt.jnilib">
+            <os name="Mac OS X" />
+        </condition>
+        <condition property="jif-native-unix.library" value="libjifrt.so">
+            <not>
+                <isset property="jif-native-unix.library" />
+            </not>
+        </condition>
+
+        <apply executable="g++" 
+		       failonerror="true" 
+		       dest="${lib}" 
+		       skipemptyfilesets="true" 
+		       vmlauncher="false">
+            <arg value="${jif-native-unix.sharedflag}" />
+            <arg value="-fPIC" />
+            <arg value="-I." />
+            <arg value="-I" />
+            <arg path="${jdk.home}/include" />
+            <arg value="-I" />
+            <arg path="${jif-runtime-native.java-include-dir.location}" />
+            <srcfile />
+            <arg value="-o" />
+            <targetfile />
+            <fileset dir="${rt-src}" includes="jif/native/rt_unix.cpp" />
+            <mapper type="merge" to="${jif-native-unix.library}" />
+        </apply>
+    </target>
+
+    <!-- compile the jif runtime native code for windows -->
+    <target name="jif-runtime-native-windows" if="os.isWindows">
+        <echo>Compiling windows runtime</echo>
+        <apply executable="g++" 
+		       failonerror="true"
+		       dest="${rt-src}" 
+		       skipemptyfilesets="true" 
+		       parallel="false" 
+		       vmlauncher="false">
+            <arg value="-mno-cygwin" />
+            <arg value="-c" />
+            <arg value="-I" />
+            <arg path="${jdk.home}/include" />
+            <arg value="-I" />
+            <arg path="${jif-runtime-native.java-include-dir.location}" />
+            <srcfile />
+            <arg value="-o" />
+            <targetfile />
+            <fileset dir="${rt-src}">
+                <include name="jif/native/rt_win.cpp" />
+                <include name="jif/native/winac.cpp" />
+            </fileset>
+            <mapper type="glob" from="*.cpp" to="*.o" />
+        </apply>
+
+        <apply executable="g++" 
+		       failonerror="true" 
+		       dest="${lib}" 
+		       skipemptyfilesets="true" 
+		       parallel="true" 
+		       vmlauncher="false">
+            <arg value="-o" />
+            <targetfile />
+            <arg value="-mno-cygwin" />
+            <arg value="-shared" />
+            <arg value="-Wl,--export-all-symbols" />
+            <arg value="-Wl,--add-stdcall-alias" />
+            <srcfile />
+            <arg value="-luser32" />
+            <arg value="-ladvapi32" />
+            <arg value="-luuid" />
+            <arg value="-lnetapi32" />
+            <fileset dir="${rt-src}">
+                <include name="jif/native/*.o" />
+            </fileset>
+            <mapper type="merge" to="jifrt.dll" />
+        </apply>
+    </target>
+
+
+
+    <!-- ****************************************
+       Javadoc and distribution targets
+       ****************************************  -->
+
+    <target name="jar" depends="jif">
+        <jar jarfile="${lib}/jif.jar" basedir="${classes}" includes="jif/**" />
+        <jar jarfile="${lib}/jifrt.jar" basedir="${rt-classes}" includes="jif/**" />
+        <jar jarfile="${lib}/jifsig.jar" basedir="${sig-classes}" includes="jif/**, java/**" />
+        <jar jarfile="${lib}/jiflib.jar" basedir="${lib-classes}" includes="jif/**" />
+    </target>
+
+
+    <target name="javadoc" depends="jif-base">
+        <javadoc sourcepath="${src}" destdir="${basedir}/doc/jifc-api" defaultexcludes="yes" classpathref="standard.classpath">
+            <packageset dir="${src}" defaultexcludes="yes">
+                <include name="**" />
+            </packageset>
+        </javadoc>
+        <javadoc sourcepath="${src}" destdir="${basedir}/doc/rt-api" defaultexcludes="yes" classpathref="standard.classpath">
+            <packageset dir="${rt-src}" defaultexcludes="yes">
+                <include name="**" />
+            </packageset>
+        </javadoc>
+    </target>
+
+    <!-- generate the Jif distribution -->
+    <target name="dist" description="generate the distribution">
+        <!-- Create the distribution directory -->
+        <mkdir dir="${dist}" />
+
+        <!-- Clobber everything so we're in a clean state -->
+        <antcall target="clobber" />
+
+        <!-- Copy src files over. -->
+        <copy todir="${dist}" includeEmptyDirs="no">
+            <fileset dir="${basedir}" defaultexcludes="yes">
+                <include name="src/**" />
+                <exclude name="src/jif/todo.txt" />
+                <include name="rt-src/**" />
+                <include name="lib-src/**" />
+                <include name="sig-src/**" />
+                <include name="bin/jif" />
+                <include name="bin/jifc.in" />
+                <include name="bin/jc" />
+
+                <!-- only include the battleship example at the moment -->
+                <include name="examples/battleship/**" />
+                <include name="examples/*" />
+
+                <include name="tests/*" />
+                <include name="tests/jif/principals/**" />
+                <include name="README" />
+                <include name="LICENSE" />
+                <include name="CHANGES" />
+                <include name="build.xml" />
+            </fileset>
+        </copy>
+
+	<copy file="config.properties.in" tofile="${dist}/config.properties" />
+
+        <!-- Create the Javadoc, and copy the documentation -->
+        <antcall target="javadoc" />
+        <copy todir="${dist}" includeEmptyDirs="no">
+            <fileset dir="${basedir}" defaultexcludes="yes">
+                <include name="doc/*api/**" />
+                <include name="doc/*.html" />
+                <include name="doc/*.css" />
+            </fileset>
+        </copy>
+
+        <!-- Create jif.jar and copy all the jars over -->
+        <antcall target="jar" />
+        <copy todir="${dist}" includeEmptyDirs="no">
+            <fileset dir="${basedir}" defaultexcludes="yes">
+                <include name="lib/*.jar" />
+            </fileset>
+        </copy>
+
+    </target>
+
+    <!-- ****************************************
+       "Reusable" targets
+       ****************************************  -->
+
+    <!-- compile a single extension.
+       @param ${ext}         the name of the extension
+       @param ${ext.basedir} the base directory of the extension
+    -->
+    <target name="compile-ext">
+        <javac source="1.5" target="1.5" srcdir="${ext.basedir}/src" destdir="${classes}" debug="on" includes="${ext}/**">
+            <classpath refid="standard.classpath" />
+        </javac>
+    </target>
+
+    <!-- Build a PPG parser based on parameters supplied to the target.
+       @param parser.dir    The directory, relative to $basedir, in which
+                            the PPG file is located.
+       @param ppg.file      The name of the PPG file.
+       @param cup.file      The name of the CUP file to output.
+       @param parser.class  The name to be passed to CUP with -parser.
+       @param symbol.class  The name to be passed to CUP with -symbols.
+   -->
+    <target name="ppg-parser" depends="ppg-parser-deps" unless="ppg.parser.up-to-date">
+        <java classname="ppg.PPG" fork="true" dir="${parser.dir}" output="${parser.dir}/${cup.file}" failonerror="true">
+            <classpath refid="standard.classpath" />
+            <arg line="${ppg.file}" />
+        </java>
+        <antcall target="cup-parser" />
+    </target>
+
+    <!-- Set the property ppg.parser.up-to-date if the parser is in fact
+       up to date.  Called by the ppg-parser target.
+   -->
+    <target name="ppg-parser-deps">
+        <dependset>
+            <srcfileset dir="${parser.dir}" includes="${ppg.file}" />
+            <targetfileset dir="${parser.dir}">
+                <include name="${cup.file}" />
+                <include name="${parser.class}.java" />
+                <include name="${symbol.class}.java" />
+            </targetfileset>
+        </dependset>
+        <condition property="ppg.parser.up-to-date">
+            <and>
+                <available file="${parser.dir}/${cup.file}" />
+                <available file="${parser.dir}/${parser.class}.java" />
+                <available file="${parser.dir}/${symbol.class}.java" />
+            </and>
+        </condition>
+    </target>
+
+    <!-- Build a CUP parser based on parameters supplied to the target.
+       @param parser.dir    The directory, relative to $basedir, in which
+                            the CUP file is located.
+       @param parser.class  The name to be passed to CUP with -parser.
+       @param symbol.class  The name to be passed to CUP with -symbols.
+       @param cup.file      The name of the CUP file.
+   -->
+    <target name="cup-parser" depends="cup-parser-using-jar" unless="cup.parser.up-to-date">
+    </target>
+
+    <!-- The following target builds a cup parser using the version of
+       cup already sitting in the java_cup.jar file. This is needed to
+       allow the building of cup to be bootstrapped. -->
+    <target name="cup-parser-using-jar" depends="cup-parser-deps" unless="cup.parser.up-to-date">
+        <java classname="java_cup.Main" fork="true" dir="${parser.dir}" failonerror="true">
+            <classpath refid="standard.classpath" />
+            <arg line="-parser ${parser.class} -symbols ${symbol.class} ${cup.file}" />
+        </java>
+    </target>
+
+    <!-- Set the property cup.parser.up-to-date if the parser is in fact
+       up to date.  Called by the cup-parser-using-jar target.
+   -->
+    <target name="cup-parser-deps">
+        <dependset>
+            <srcfileset dir="${parser.dir}" includes="${cup.file}" />
+            <targetfileset dir="${parser.dir}">
+                <include name="${parser.class}.java" />
+                <include name="${symbol.class}.java" />
+            </targetfileset>
+        </dependset>
+        <condition property="cup.parser.up-to-date">
+            <and>
+                <available file="${parser.dir}/${parser.class}.java" />
+                <available file="${parser.dir}/${symbol.class}.java" />
+            </and>
+        </condition>
+    </target>
+
+    <!-- Build a JFlex lexer based on parameters supplied to the target.
+       @param lexer.dir     The directory, relative to $basedir, in which
+                            the JFlex file is located.
+       @param lexer.class   The name of the lexer as declared with %class
+                            in the JFlex file.
+       @param jflex.file    The name of the JFlex file.
+   -->
+    <target name="jflex-lexer" depends="jflex-lexer-deps" unless="jflex.lexer.up-to-date">
+        <java classname="JFlex.Main" fork="true" dir="${lexer.dir}" failonerror="true">
+            <classpath refid="standard.classpath" />
+            <arg line="${jflex.file}" />
+        </java>
+    </target>
+
+    <!-- Set the property jflex.lexer.up-to-date if the lexer is in fact
+       up to date.  Called by the jflex-lexer target.
+   -->
+    <target name="jflex-lexer-deps">
+        <dependset>
+            <srcfileset dir="${lexer.dir}" includes="${jflex.file}" />
+            <targetfileset dir="${lexer.dir}" includes="${lexer.class}.java" />
+        </dependset>
+        <available property="jflex.lexer.up-to-date" file="${lexer.dir}/${lexer.class}.java" />
+    </target>
+
+
+    <!-- Build the quasi-quote parser and lexer for an extension, assuming the
+       standard names and places.
+       @param ext    The extension name.
+   -->
+    <target name="standard-ext-qq">
+        <antcall target="jflex-lexer">
+            <param name="lexer.dir" value="${ext.basedir}/src/${ext}/qq" />
+            <param name="lexer.class" value="Lexer_c" />
+            <param name="jflex.file" value="qq.flex" />
+        </antcall>
+        <antcall target="ppg-parser">
+            <param name="parser.dir" value="${ext.basedir}/src/${ext}/qq" />
+            <param name="ppg.file" value="qq.ppg" />
+            <param name="cup.file" value="qq_ppg.cup" />
+            <param name="parser.class" value="Grm" />
+            <param name="symbol.class" value="sym" />
+        </antcall>
+    </target>
+
+    <!-- Build the PPG parser for an extension, assuming that
+       it is located in the standard place and named
+       the standard name that we usually use.
+       @param ext    The extension name.
+   -->
+    <target name="standard-ext-ppg-parser">
+        <antcall target="ppg-parser">
+            <param name="parser.dir" value="${ext.basedir}/src/${ext}/parse" />
+            <param name="ppg.file" value="${ext}.ppg" />
+            <param name="cup.file" value="${ext}_ppg.cup" />
+            <param name="parser.class" value="Grm" />
+            <param name="symbol.class" value="sym" />
+        </antcall>
+    </target>
+
+    <!-- Build the CUP parser for an extension, assuming that
+       it is located in the standard place and named
+       the standard name that we usually use.
+       @param ext    The extension name.
+   -->
+    <target name="standard-ext-cup-parser">
+        <antcall target="cup-parser">
+            <param name="parser.dir" value="${ext.basedir}/src/${ext}/parse" />
+            <param name="cup.file" value="${ext}.cup" />
+            <param name="parser.class" value="Grm" />
+            <param name="symbol.class" value="sym" />
+        </antcall>
+    </target>
+
+    <!-- Build the lexer for an extension, assuming that
+       they it is located in the standard place and named
+       the standard name that we usually use.
+       @param ext    The extension name.
+   -->
+    <target name="standard-ext-lexer">
+        <antcall target="jflex-lexer">
+            <param name="lexer.dir" value="${ext.basedir}/src/${ext}/parse" />
+            <param name="lexer.class" value="Lexer_c" />
+            <param name="jflex.file" value="${ext}.flex" />
+        </antcall>
+    </target>
+
+    <target name="standard-ext-qq-dep" if="has-qq">
+        <antcall target="standard-ext-qq" />
+    </target>
+
+    <!-- Build a standard extension
+       @param ext          The name of the extension.
+       @param ext.basedir  The base directory of the extension.
+       @param parser.type  Either "cup" or "ppg".
+       @param has-qq       Pass in iff the extension has a qq package.
+   -->
+    <target name="standard-ext">
+        <antcall target="standard-ext-lexer" />
+        <antcall target="standard-ext-${parser.type}-parser" />
+        <antcall target="standard-ext-qq-dep" />
+        <antcall target="compile-ext" />
+    </target>
+
+</project>
+

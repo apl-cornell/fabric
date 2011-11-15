@@ -1,0 +1,11 @@
+class C {
+    int[] data = new int[7];
+    void m{}() {
+	int[] data = this.data;
+	if (data != null) {
+	    int size = data.length;
+	    int[] data2 = new int[data.length*2]; // data.length * 2 guaranteed to be non-negative.
+	    int[] data3 = new int[size*2]; // size * 2 guaranteed to be non-negative.
+	}
+    }
+}

@@ -1,0 +1,118 @@
+import jif.util.List;
+import jif.util.LinkedList;
+import jif.util.Iterator;
+import jif.util.NoSuchElementException;
+
+/**
+ * This class represents a board in the BattleShip game.
+ *
+ * A Board is a collection of ships that do not intersect with each other.
+ *
+ * It is parameterized by the label L, which is the level of
+ * information that the board contains, and must be the same as the
+ * level of information the Ships contain.  
+ */
+class Board[label L] {
+    private final List[L]{this} ships;
+
+    public Board() {
+	this.ships = new LinkedList[L]();
+    }
+
+    /**
+     * @throws IllegalArgumentException if the ship to add intersects a ship
+     *   already on the board.
+     */
+    public void addShip{L}(Ship[L]{L} s) throws (IllegalArgumentException{L}) {
+	List[L] shps = this.ships;
+	if (s != null && shps != null) {
+	    try {
+		// check that we don't intersect with an existing ship.
+		for (Iterator[L] iter = shps.iterator(); iter != null && 
+                                                          iter.hasNext(); ) {
+		    Ship[L] t = (Ship[L])iter.next();
+		    if (s.intersects(t)) {
+			throw new IllegalArgumentException("Ship to add " +
+                                        "intersects an existing ship.");
+		    }
+		}
+
+		shps.add(s);
+	    }
+	    catch (ClassCastException impossible) { }
+	    catch (NoSuchElementException impossible) { }
+	}
+    }
+
+    /**
+     * Test if a ship occupies the coordinate coord
+     */
+    public boolean{*lbl;L;coord} testPosition{*lbl;L}(Coordinate[lbl] coord, 
+                                                      label lbl) 
+    {
+	// go through each ship in turn, and test if it covers coord
+
+	List[L] shps = this.ships;
+	if (shps != null) {
+	    int sz = shps.size();
+	    for (int i = 0; i < sz; i++) {
+		try {
+		    Ship[L] s = (Ship[L])shps.get(i);
+		    if (s != null && s.covers(coord, lbl)) {
+			return true;
+		    }
+		}
+		catch (IndexOutOfBoundsException impossible) { }
+		catch (ClassCastException impossible) { }
+	    }
+	}
+	return false;
+    }    
+    
+    /**
+     * Return a new board that has the endorsement of the principal o.
+     * The label L is required to be equivalent to {p->*; p<-*}.
+     */
+    public Board[{p->*; p<-* meet o<-*}]{p<-* meet o<-*} 
+                          endorseBoard{p<-* meet o<-*}
+               (principal{p<-* meet o<-*} p, principal{p<-* meet o<-*} o)
+    where {L} equiv {p->*; p<-*}, caller(p,o)
+    {
+        Board[{p->*; p<-* meet o<-*}] newBoard = new Board[{p->*; p<-* meet o<-*}]();
+
+        List[{p->*;p<-*}] shps = this.ships;
+        
+        int sz = endorse(declassify(shps==null?0:shps.size(), {p<-*}), {p<-* meet o<-*});
+        for (int i = 0; i < sz; i++) {
+            Ship[{p->*;p<-*}] s = null;
+            try {
+                s = (Ship[{p->*;p<-*}])(shps==null?null:shps.get(i));
+            }
+            catch (IndexOutOfBoundsException impossible) { }
+            catch (ClassCastException impossible) { }
+            
+            // endorse the ship
+            Ship[{p->*;p<-*}] ss = endorse(declassify(s, {p<-*}), {p<-* meet o<-*});
+            if (ss != null) {
+                Coordinate[{p->*; p<-*}] pos = ss.pos;
+                if (pos != null) {
+                    int posX = endorse(declassify(pos.x, {p<-*}), {p<-* meet o<-*});
+                    int posY = endorse(declassify(pos.y, {p<-*}), {p<-* meet o<-*});
+                    Coordinate[{p->*; p<-* meet o<-*}] c = new Coordinate[{p->*; p<-* meet o<-*}](posX, posY);
+                    
+                    int length = endorse(declassify(ss.length, {p<-*}), {p<-* meet o<-*});
+                    boolean isHoriz = endorse(declassify(ss.isHorizontal, {p<-*}), {p<-* meet o<-*});
+                    
+                    Ship[{p->*; p<-* meet o<-*}] t = new Ship[{p->*; p<-* meet o<-*}](c, length, isHoriz);
+                    try {
+                        endorse ({p<-* meet o<-*}) {
+                            newBoard.addShip(t);
+                        }
+                    }
+                    catch (IllegalArgumentException impossible) { }
+                }
+            }
+        }
+        return newBoard;
+    }
+}

@@ -1,0 +1,18 @@
+class C {
+    int[] data = new int[7];
+    int size = 0;
+    void m{}(int{} index) {
+        int[] data = this.data;
+        int size = this.size;
+        if (data != null) {
+            int i = index;
+            while (0 <= i && i < size && size <= data.length) {
+                if (i > 0) {
+                    data[i-1] = data[i];
+                }
+                i = i + 1;
+            }
+        }
+    }
+}
+

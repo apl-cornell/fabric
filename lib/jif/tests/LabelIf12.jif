@@ -1,0 +1,11 @@
+class LabelIf12[label L]
+{
+    void m{*!:}(label arg) throws (NullPointerException{Alice:}) {
+	final LabeledObject{Alice:} lo = new LabeledObject(new label {Alice:}, null);
+	Object{Alice:} x = null;
+	if (lo.L <= new label {Alice:}) {
+	    // allowed 
+	    x = lo.o;
+	}
+    }
+}

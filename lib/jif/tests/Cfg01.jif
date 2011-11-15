@@ -1,0 +1,22 @@
+class Cfg {
+    
+    int foo(int a, int b) {
+        if (a > 0) {
+            return b;
+        } else {
+            boolean c = a == b;
+        }
+        
+        while (a < 0) {
+            if (b < 0 && a < 0) {
+                break;
+            }
+        }
+        
+        try {
+            return 9;
+        } finally {
+            return 10;
+        }
+    }
+}

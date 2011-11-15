@@ -1,0 +1,15 @@
+class A[label L] {
+}
+
+class Params8 {
+    final label lb = new label{Alice:};
+
+    void m() {
+        A[{*lb}] a = new A[{*lb}]();
+        A[{*lb}] b = new A[{*lb}]();
+        b = a;
+    }
+
+    public static void main(String[] args) {
+    }
+}

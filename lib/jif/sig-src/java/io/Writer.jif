@@ -1,0 +1,28 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ * */
+package java.io;
+
+public abstract class Writer[label L] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    protected Writer() {    }
+
+//    protected Writer(Object lock) {    }
+
+    public native void write{L}(int{L} c):{L} throws IOException;
+    public native void write{L}(char{L}[]{L} cbuf):{L} throws IOException, NullPointerException;
+    abstract public void write{L}(char{L}[]{L} cbuf, int{L} off, int{L} len):{L} throws IOException, NullPointerException;
+    public native void write{L}(String{L} str):{L} throws IOException, NullPointerException;
+    public native void write{L}(String{L} str, int{L} off, int{L} len):{L} throws IOException;
+    public native Writer[L]{this} append{L}(CharSequence{L} csq):{L} throws IOException;
+    public native Writer[L]{this} append{L}(CharSequence{L} csq, int{L} start, int{L} end):{L} throws IOException;
+    public native Writer[L]{this} append{L}(char{L} c):{L} throws IOException;
+
+    abstract public void flush{L}():{L} throws IOException;
+    abstract public void close{L}():{L} throws IOException;
+
+}

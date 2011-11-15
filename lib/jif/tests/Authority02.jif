@@ -1,0 +1,23 @@
+// Test casting between principal and jif.lang.Principal is working.
+class C extends AbstractPrincipal {
+    public C(String{this} name) {
+	super(name);
+    }
+
+    public void m() {
+	final principal p = this;
+	final Principal pp = (Principal)p;
+
+	foo(p); bar((Principal)p);
+	foo(pp); bar(pp);       
+	foo(Alice); bar((Principal)Alice);       
+    }
+
+    Principal foo(principal p) {
+	return (Principal)p;
+    }
+    principal bar(Principal p) {
+	return p;       
+    }
+}
+

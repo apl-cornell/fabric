@@ -1,0 +1,15 @@
+class ActsFor6
+{
+    public void p(principal{} a, principal{} b) {
+        int{b:} x = 0;
+        int{a:} y = 0;
+
+        if (a actsFor b) {
+            y = x; // replace the owner with a principal that acts for it
+        }
+        else {
+            // y = x; // error
+            // x = y; // error
+        }
+    }
+}

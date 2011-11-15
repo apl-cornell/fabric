@@ -1,0 +1,21 @@
+/*
+ * This example shows that we need to treat params very carefully.
+ * In particular, we need to be able to distinguish the two cases
+ * below. In method foo, the return type of the method call is 
+ * parameter int{q} that has been substituted to become int{*y}. 
+ * In method bar, the return type of the method call is int{*y} (i.e.,
+ * it hasn't been substituted). 
+ */
+class  D[label L] {
+    static public int{L} foo{*!:}(label y) {
+        int{*y} answer2 = D[y].foo(new label {});  //OK
+        
+        return 7;
+    }
+
+    static public int{*y} bar{*!:}(label y) {
+        int{} answer2 = D[y].bar(new label {});  //OK
+        
+        return 9;
+    }
+}

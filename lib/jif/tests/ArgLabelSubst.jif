@@ -1,0 +1,42 @@
+/*
+ * This example is tricky for the following reason: by parameterizing
+ * What and Blazes with arguments, the arg-principal yyy and arg-label
+ * zzz are able to escape out of their method!
+ * 
+ * Thus, when working out what the return label for Blazes.getStr()
+ * is, we decide that String{lbl} should be replaced with
+ * String{<arg-label 1 zzz>}, i.e. the 2nd parameter, which happens to
+ * have the name zzz. We then think, well the return label refers to
+ * the second argument of the method Blazes.getStr(), so we'd better
+ * replace it. But of course Blazes.getStr() doesn't have a second
+ * argument, and we get an exception.
+ *
+ * This bug has been fixed as of 27 June 2003.
+ */
+class  What[principal q] {
+    public String{q:} getStr(int a, int b) {
+	return "dsf";
+    }
+}
+
+class  Blazes[label lbl] {
+    public String{lbl} getStr(int a, int b) {
+	return "dsf";
+    }
+}
+
+public class ArgLabelSubst {
+    public boolean{yyy:} foo(What[yyy]{} w, principal{} yyy):{yyy:} {
+	if (w != null) w.getStr(2, 3);
+	
+	return true;
+    }
+
+    public boolean{zzz} bar(Blazes[zzz]{} w, label{} zzz):{zzz} {
+	if (w != null) {
+	    w.getStr(1, 2);
+	}
+	
+	return true;
+    }
+}

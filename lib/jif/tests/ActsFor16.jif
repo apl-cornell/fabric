@@ -1,0 +1,9 @@
+class ActsFor16[principal P]
+{
+    
+    public void m1() {
+        if ((3+4) actsFor Bob) { // bad
+            
+        }
+    }
+}

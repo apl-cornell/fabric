@@ -1,0 +1,13 @@
+// make sure that null is not mistreated as an access path.
+class C {
+  void m() {
+    final D d = null;
+    int{Alice:Bob,Chuck; *d.lbl} x;
+    
+    x = 7; // check the conditions for both c and d.lbl
+  }
+}
+
+class D {
+    final label lbl = new label {Alice:};    
+}

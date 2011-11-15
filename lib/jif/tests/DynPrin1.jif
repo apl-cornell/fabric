@@ -1,0 +1,23 @@
+class DynPrin1 {
+    final principal{} f;
+    final DynPrin1{} g;
+
+    DynPrin1(principal{} p, DynPrin1{} o) {
+	this.f = p;
+	this.g = o;
+    }
+  
+    void m{*!:*}(principal{} q, DynPrin1{} arg) {	
+	final DynPrin1 local = new DynPrin1(q, null);
+
+	int{q:} x; // ok
+	int{this.f:} x2; // ok
+	int{this.g.f:} x3; // ok
+	int{this.g.g.f:} x4; // ok
+	int{arg.f:} x5; // ok
+	int{arg.g.f:} x6; // ok
+	int{arg.g.g.f:} x7; // ok
+	int{g.g.f:} x8; // ok
+	int{local.g.g.f:} x9; // ok
+    }
+}

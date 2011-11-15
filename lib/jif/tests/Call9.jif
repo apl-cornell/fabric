@@ -1,0 +1,11 @@
+class Call9
+{
+    void foo() {
+	new C().m();
+    }
+}
+
+class C {
+    void m() where Alice actsfor Bob {}
+}
+

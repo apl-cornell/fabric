@@ -1,0 +1,98 @@
+#!/usr/bin/perl
+
+use strict;
+
+my $envvars;
+
+if ($#ARGV == 0) {
+  $envvars=$ARGV[0];
+} else  {
+  $envvars="setup/env-vars";
+}
+
+if (! -f "$envvars") {
+  print STDERR "Environment variable file not found: $envvars\n";
+  print "Usage: captenv <file of environment variable names>\n";
+  print "\nFile may contain lines of form include <filename>\n";
+  print "to include a list of environment variables from another\n";
+  print "file. <filename> may use environment variables.\n";
+  exit 1
+}
+
+print STDERR "Reading from $envvars\n";
+
+my $fhi = 0;
+my %vars;
+my %incfiles;
+my %defaults;
+
+sub subst_env {
+    (my $expr) = @_;
+    my $v;
+    while (($v) = ($expr =~ m/\$([A-Za-z][A-Za-z0-9]*)/)) {
+	my $val = $ENV{$v};
+	if ($val eq '') {
+	    print STDERR "Undefined environment variable $v\n";
+	    if ($defaults{$v}) {
+		print STDERR "=> Using default ($defaults{$v}) instead\n";
+	    } else {
+		exit 1;
+	    }
+	}
+	$vars{$v} = 1;
+	$expr =~ s/\$$v/$val/;
+    }
+    return $expr;
+}
+
+sub expandvars {
+    local *FH;
+    (my $fname) = @_;
+    if ($incfiles{$fname}) { return; }
+    $incfiles{$fname} = 1;
+
+    if (!open (FH, $fname)) {
+	print STDERR "Could not open $fname\n";
+	return;
+    }
+    while (<FH>) {
+	chomp;
+	(my $incfile) = m/^ *include (.*)/;
+	if ($incfile ne '') {
+	    my $f = subst_env($incfile);
+	    print STDERR "Reading include file $incfile = $f\n";
+	    &expandvars($f);
+	} else {
+	    my @line = split /\s+/;
+	    my $v = $line[0];
+	    if ($#line == 0) {
+		$vars{$v} = 1;
+	    } elsif ($#line == 1) {
+		$vars{$v} = 1;
+		$defaults{$v} = $line[1];
+	    } else {
+		print STDERR "Syntax error: $_\n";
+		exit 1;
+	    }
+	}
+    }
+    close(FH);
+}
+
+&expandvars($envvars);
+
+foreach my $var (keys %vars) {
+    my $binding = $ENV{$var};
+    if ($binding eq '') {
+	if ($defaults{$var} ne '') {
+	    $binding = subst_env($defaults{$var});
+	} else {
+	    print STDERR "Warning: no definition for \$$var\n";
+	}
+    }
+    if ($ENV{'SHELL'} =~ m@/ksh$|/sh$|/bash$@) {
+	print "export $var=$binding;\n";
+    } else {
+        print "setenv $var $binding;\n";
+    }
+}

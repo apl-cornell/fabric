@@ -1,0 +1,6 @@
+public class NewLabel {
+    public label m() {
+	label l = new label {Alice : Bob, Chuck ; Bob : ; Chuck : Ethel };
+	return l;
+    }
+}

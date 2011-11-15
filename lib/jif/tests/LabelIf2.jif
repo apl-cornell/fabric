@@ -1,0 +1,11 @@
+class LabelIf2
+{
+    final label M1 =  new label {Alice:};
+    final label M2 =  new label {Bob:};
+    public void m(label{} L1, label{} L2) {
+	int{*L1} x = 4;
+	int{*L2} y = 4;
+
+	boolean b = (L1 <= L2); // OK
+    }
+}

@@ -1,0 +1,15 @@
+class DynPrin5 {
+    final principal{} f;
+    final DynPrin5{} g;
+
+    DynPrin5(principal{} p, DynPrin5{} o) {
+	this.f = p;
+	this.g = o;
+    }
+  
+    void m(principal{} q) {	
+	final DynPrin5 local = new DynPrin5(q, null);
+
+	int{this.g.g:} x1; // not ok, not of type principal
+    }
+}

@@ -1,0 +1,7 @@
+class D {
+    // test that this doesn't result in an infinite loop
+  public void bar(D{y} x, D{x} y)  {
+    }
+  public void bar(D{x} x)  {
+    }
+}

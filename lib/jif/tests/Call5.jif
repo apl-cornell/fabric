@@ -1,0 +1,10 @@
+class Call5
+{
+    void foo() {
+	new C().m(Alice);
+    }
+}
+
+class C {
+    void m(principal p) where caller(p) {}
+}

@@ -1,0 +1,15 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+// Test that short circuit evaluation is correctly
+// accounted for when static checking. Bug found 22 Mar 06 by Daniel Hedin, 
+// in Jif 2.0.1
+public class C {
+    public void g(boolean {Alice:} x)  {
+        boolean{} l = false;
+        if (x || (l = true)) { ; } // BAD: implicit flow to l
+    }
+    
+    
+}
+

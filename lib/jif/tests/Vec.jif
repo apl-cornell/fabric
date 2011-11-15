@@ -1,0 +1,34 @@
+public class Vec[label L] 
+{
+    private int{L} length;
+    private Object{L}[]{L} elements;
+
+    /* return Object{L;i} ? */
+    public Object{L} get(int i): {L; i}
+	throws (NullPointerException, ArrayIndexOutOfBoundsException)
+    {
+	if (0 <= i && i < length) {
+	return elements[i];
+	}
+
+	throw new ArrayIndexOutOfBoundsException();
+    }
+
+    public void set {L} (int{L} i, Object{L} o): {L; i; o}
+	throws (NullPointerException, ArrayIndexOutOfBoundsException)
+    {
+	if (0 <= i && i < length) {
+	elements[i] = o;
+	}
+
+	throw new ArrayIndexOutOfBoundsException();
+    }
+
+    public int{L} size() {
+	return length;
+    }
+
+    public void clear{L}(): {L} {
+	length = 0;
+    }
+}

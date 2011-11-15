@@ -1,0 +1,14 @@
+package jif.principals;
+
+public class server extends ExternalPrincipal {
+    public server() {
+	super("server");
+    }
+    static private server{*!:*} P;
+    public static Principal getInstance{*!:*}() {
+	if (P == null) {
+	    P = new server();
+	}
+	return P;
+    }
+}

@@ -1,0 +1,39 @@
+import jif.util.Date;
+
+/**
+ * A comment is an arbitrary string, entered on a particular date. The
+ * interesting feature of comments is that the security level of a comment
+ * is a dynamic label.
+ */
+public class Comment {
+    protected final String{*lbl} comment;
+    protected final Date{} date;
+    protected final label{} lbl;
+    
+    public Comment(label{} lb, String{*lb} comment, Date{} date) {
+        lbl = lb;
+        this.comment = comment;
+        this.date = date;
+    }
+    /**
+     * @return
+     */
+    public String{*lbl} getComment() {
+        return comment;
+    }
+
+    /**
+     * @return
+     */
+    public Date{} getDate() {
+        return date;
+    }
+
+    /**
+     * @return
+     */
+    public label{} getLbl() {
+        return lbl;
+    }
+
+}

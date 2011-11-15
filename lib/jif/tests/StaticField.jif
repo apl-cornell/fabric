@@ -1,0 +1,9 @@
+/**
+ * Problem with the static field checker and instantiated classes.
+ */
+class StaticField[principal p] {
+    static int{} f = 3;
+    void m() {
+	int{} j = StaticField[p].f;
+    }
+}

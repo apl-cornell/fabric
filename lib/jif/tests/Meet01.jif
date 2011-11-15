@@ -1,0 +1,17 @@
+class C {
+    // test meets of policies
+    void m() {
+	int{Alice:Bob meet Chuck:Bob} x = 7;
+	int{Alice:Bob} y = x;
+	int{Chuck:Bob} z = x;
+
+	int{Alice!:Bob meet Chuck!:Bob} a = 7;
+	int{Alice!:Bob} b = a;
+	int{Chuck!:Bob} c = a;
+    }
+    void n() {
+	int{Alice:Bob meet Chuck:Bob; Alice!:Bob meet Chuck!:Bob} x = 7;
+	int{Alice:Bob; Alice!:Bob} y = x;
+	int{Chuck:Bob; Chuck!:Bob} z = x;
+    }
+}

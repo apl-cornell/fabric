@@ -1,0 +1,20 @@
+class DynPrin7 {
+    final principal{} f;
+    DynPrin7{} g;
+    final M m = new M();
+
+    DynPrin7(principal{} p, DynPrin7{} o) {
+	this.f = p;
+	this.g = o;
+    }
+  
+    void m{*!:*}(principal{} q) {	
+	final DynPrin7 local = new DynPrin7(q, null);
+
+	int{m.p:} x1; // ok
+    }
+}
+
+class M {
+    final principal p = Alice;
+}

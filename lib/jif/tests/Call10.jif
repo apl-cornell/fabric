@@ -1,0 +1,10 @@
+class Call10
+{
+    void foo() {
+	new C[Alice, Bob]().m();
+    }
+}
+
+class C[principal P, principal Q] {
+    void m() where P actsfor Q {}
+}

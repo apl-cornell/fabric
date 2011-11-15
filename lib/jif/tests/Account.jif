@@ -1,0 +1,10 @@
+class Account {
+  final principal customer;
+
+  Account{p}(principal{} p) {
+    customer = p;
+  }
+
+  String{customer:} name;
+  float{customer:} balance;
+}

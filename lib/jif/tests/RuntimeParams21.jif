@@ -1,0 +1,29 @@
+// Test info leaked by access path params
+class C[label L] { 
+    
+}
+
+
+class D {
+    final D{Alice:} d;
+    final label{} lb;
+
+    D(D{Alice:} d, label{} lb) {
+  	this.d = d;
+  	this.lb = lb;
+    }
+
+    void m(C[{*la}]{} o, label{} la) {
+	int{} x;
+	try {
+	    C[{*this.d.lb}] m = (C[{*this.d.lb}])o;
+	    // now we know information about the contents of 
+	    // d.
+	    x = 4; // illegal, since PC is tainted with {Alice:}
+	}
+	catch (ClassCastException e) {
+	}
+	catch (NullPointerException e) {
+	}
+    }
+}

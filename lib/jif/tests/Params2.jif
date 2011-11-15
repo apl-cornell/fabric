@@ -1,0 +1,4 @@
+class Params2[principal p, principal q] {
+    int{p: q} contents;
+    int{p: q} get() { return contents; }
+}

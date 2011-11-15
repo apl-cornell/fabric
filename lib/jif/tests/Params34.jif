@@ -1,0 +1,7 @@
+class C[principal p] {
+    void m() {
+	final principal p = null; // ok, null can be cast to jif.lang.Principal
+	C[p] x = null; 
+	//C[null] x = null; // prevent or allow null to be used?
+    }
+}

@@ -1,0 +1,7 @@
+class Array7
+{
+    void m{Alice:;Alice!:}() throws (Exception{Alice:}) {
+        int{Alice:;Alice!:} x = 3;
+        int{Alice:Bob;Alice!:}[] ar = new int[] {x, x}; // bad
+    }
+}

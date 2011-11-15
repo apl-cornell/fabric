@@ -1,0 +1,47 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+class Authority03 {
+    public static void main{*!:*}(principal{*!:*} pp, String[] args) where caller (pp) {
+	final Principal{*!:*} me = new TestPrincipal("Steve");
+	
+        foo(me);
+
+        final principal nullP = null;
+        Runtime[nullP] runtime;
+	PrintStream[{}] out = null;
+	try {
+	    if (pp actsfor nullP) {
+		runtime = Runtime[nullP].getRuntime();
+		if (runtime == null) return;
+		out = declassify(runtime.stdout(new label {}), {});
+		if (out != null) out.println("Hi mum, from " + me.name());
+	    }
+	}
+	catch (SecurityException e) { }
+    }
+    
+    private static void foo{me!:}(principal{me!:} me) {
+        // try invoking a closure
+        AddBobClosure[me]{me!:} abc = new AddBobClosure[me]();
+        Capability[me, {me!:}]{me!:} cap = PrincipalUtil.authorize(me, null, abc, new label {me!:});
+        if (cap != null) {
+            cap.invoke();
+        }        
+    }
+}
+
+class AddBobClosure[principal P] extends TestClosure[P, {P!:}] {
+    AddBobClosure() {
+	super();
+    }
+    
+    public Object{P!:} invoke{P!:}() where caller (P) {
+	final Principal p = P;
+	if (p instanceof TestPrincipal) {
+	    final TestPrincipal tp = (TestPrincipal)p;
+	    tp.addDelegatesTo(Bob);
+	}
+	return null;
+    }
+}

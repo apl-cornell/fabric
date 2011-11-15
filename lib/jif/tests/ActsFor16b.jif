@@ -1,0 +1,9 @@
+class ActsFor16[principal P]
+{
+    
+    public void m2() {
+        if (Alice actsFor m2()) { // bad
+            
+        }
+    }
+}

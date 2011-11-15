@@ -1,0 +1,15 @@
+package jif.principals;
+
+public class client extends ExternalPrincipal {
+    public client() {
+	super("client");
+    }
+
+    private static client{*!:*} P;
+    public static Principal getInstance{*!:*}() {
+	if (P == null) {
+	    P = new client();
+	}
+	return P;
+    }
+}

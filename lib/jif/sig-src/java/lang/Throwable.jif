@@ -1,0 +1,22 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+public class Throwable implements java.io.Serializable {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
+
+    public Throwable() { }
+    public Throwable(String{this} message) {  }
+    public Throwable(String{this} message, Throwable{this} cause) { }
+    public Throwable(Throwable{this} cause) { }
+
+    public native String{this} getMessage();
+    public native Throwable{this} getCause();
+    public native String{this} getLocalizedMessage();
+    public native String{this} toString();
+}

@@ -1,0 +1,10 @@
+public class Array {
+    int{Alice:}[]{} a;
+
+    public int get(int{Alice:} index):{Alice:}
+        throws (NullPointerException,
+		ArrayIndexOutOfBoundsException)
+    {
+        return a[index + index];
+    }
+}

@@ -1,0 +1,10 @@
+class Call8 authority (Alice)
+{
+    void foo() where authority (Alice) {
+	new C().m(Alice);
+    }
+}
+
+class C {
+    void m(principal p) where caller(p) {}
+}

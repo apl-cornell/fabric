@@ -1,0 +1,15 @@
+class IntBounds {
+
+    public void f1() {
+        int i = 0;
+        while (i < 100) {
+            i++;
+        }
+    }
+    public void f2() {
+        int i = 0;
+        while (i < 100) {
+            i = i + 1;
+        }
+    }
+}

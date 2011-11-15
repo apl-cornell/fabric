@@ -1,0 +1,9 @@
+abstract class C {
+    abstract int{Bob:} m{}(int{} x):{Bob:} throws (Exception{Bob:});
+}
+
+abstract class D extends C {
+    int{} m{}(int{Bob:} x):{} throws (Exception{}) { return 3; }
+}
+
+class E extends D { }

@@ -1,0 +1,7 @@
+class Main5 authority (Alice) {
+    static void main(principal p, String[] args) 
+    where authority(Alice) { // OK
+
+    }
+}
+

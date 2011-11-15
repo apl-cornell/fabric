@@ -1,0 +1,37 @@
+/**
+ * Entry point classes define <code>onModuleLoad()</code>.
+ */
+public class C  
+{
+    final label{*:Alice} lb = new label{*:Alice};
+    public Foo[lb, lb]{*:Alice} foo;
+    public Foo[lb, lb]{*:Alice} getFoo() {
+        return this.foo;
+    }
+    
+    public C{*:Alice}() {
+        foo = new Foo[lb, lb]();
+    }
+}
+
+class Foo[label L, label E] {
+    public String{L} getText() { return null; }
+//    String{L} s = "gi";
+}
+
+class D 
+{
+
+    public void onClick{*:Alice} ()
+    {
+        try {
+            final C{*:Alice} guessApp = new C();
+            if (guessApp.lb equiv new label {*:Alice}) {
+                String{*:Alice} t = guessApp.foo.getText(); 
+//            String{*:Alice} s = guessApp.foo.s;
+            }
+        }
+        catch (NullPointerException e) { }
+    }
+
+}

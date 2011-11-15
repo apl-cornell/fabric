@@ -1,0 +1,19 @@
+import java.lang.*;
+import java.io.*;
+
+class SignedObject[principal signer] extends Object implements Serializable {
+    public UniqueID signature;  // should be the UniquedID of an RSAPrivateKey
+    private Object o;
+
+    public SignedObject(UniqueID{signer:} signature, Object o) 
+    // where caller{signer} {
+    {
+	this.signature = declassify(signature, {});
+	this.o = o;
+    }
+
+    public Object getObject() {
+	return o;
+    }
+}
+    

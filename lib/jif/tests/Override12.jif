@@ -1,0 +1,11 @@
+class C {
+    int{} m() where {Alice:} <= {}  { return 5; }
+}
+
+class D extends C {
+    int{Alice:} secret;
+    int{} m() where {Alice:} <= {} // ok now
+    { 
+	return secret; 
+    }
+}

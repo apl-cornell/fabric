@@ -1,0 +1,21 @@
+public class Declassify {
+    int{Alice:} a;
+    int{Alice:} b;
+    int{Alice:} c;
+
+    public int{Alice:Bob} sum{this}() where caller(Alice) {
+	// return declassify(a+b+c, {Alice:Bob});
+
+	// The above declassification does not work,
+	// since the label of the expression "a+b+c" is not
+	// {Alice:}, but actually {this; Alice: }, since the
+	// expression is really "this.a+this.b+this.c".
+	// The method does not have sufficient authority to
+	// declassify from {Alice: } to
+	// {Alice: Bob}, but then again, it doesn't need to; the
+	// int that is returned from this method needs to have 
+	// the label {Alice:Bob; this}.
+
+        return declassify(a+b+c, {Alice:Bob;this});
+    }
+}

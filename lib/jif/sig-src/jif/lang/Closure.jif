@@ -1,0 +1,24 @@
+package jif.lang;
+
+/**
+ * A <code>Closure</code> is code to be executed that needs the authority
+ * of the principal P. The label L is a lower bound on the side effects
+ * of the closure.<p>
+ * 
+ * To execute a closure, a @link{Capability Capability} must be obtained
+ * through the runtime interface. A capability can only be obtained
+ * if the principal P grants authority to invoke this closure.
+ * 
+ * A subclass of Closure should be a final class, because this allows
+ * the possible invokers of closures (typically Principal objects, via the
+ * isAuthorized() method call) to reliably inspect closure objects via
+ * instanceof.
+ */
+public interface Closure[principal P, label L] authority(P) {
+    /**
+     * The code that requires the authority of the principal P.
+     * The label {L} is a lower bound on the side-effects
+     * of the code.
+     */
+    Object{L} invoke{L}() where caller(P);
+}

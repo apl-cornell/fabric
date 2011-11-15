@@ -1,0 +1,15 @@
+package jif.principals;
+
+public class Citibank extends ExternalPrincipal {
+    public Citibank() {
+	super("Citibank");
+    }
+
+    private static Citibank{*!:*} P;
+    public static Principal getInstance{*!:*}() {
+	if (P == null) {
+	    P = new Citibank();
+	}
+	return P;
+    }
+}

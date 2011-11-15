@@ -1,0 +1,41 @@
+class ConstructorTestBase {
+    final int y;
+
+    public ConstructorTestBase{*!:*}(int{} x) {
+        super();
+        y = x; // even though y is final and is initialized after the call to super,
+               // this is ok, since the superclass is java.lang.Object.
+        m();
+    }
+
+    void m{*!:*}() { Object o;
+      		o = new ConstructorTestBase(1);
+      		o = new ConstructorTest();
+      		o = new ConstructorTest(1);
+      		o = new ConstructorTest(1,2);
+		o = new Object();
+		o = new java.io.IOException();
+    }
+}
+
+class ConstructorTest extends ConstructorTestBase
+{
+    final int x;
+
+    public ConstructorTest{*!:*}() {
+        x = 4;
+        super(5);
+        m();
+    }
+
+    public ConstructorTest{*!:*}(int{} x) {
+        this(x, 5);
+        m();
+    }
+
+    public ConstructorTest{*!:*}(int{} x, int{} y) {
+        this.x = x;
+        super(y);
+        m();
+    }
+}

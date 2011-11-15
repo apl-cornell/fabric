@@ -1,0 +1,66 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+import jif.util.Date;
+
+public class DateTest {
+    public DateTest() {}
+    public static void main{}(principal{} pp, String[]{} args):{pp:}
+        throws (SecurityException)
+    {
+        Runtime[pp] runtime = Runtime[pp].getRuntime();
+	if (runtime == null) return;
+	PrintStream[{pp:;_!:_}] out = runtime.out();
+	if (out == null) return;
+
+        try {
+	    
+	    int{pp:}[] lenientDates = new int[] {
+		2001, 1, 32, 0,0,
+		2001, 1, -1, 0,0,
+		2000, 12, 32, 0,0,
+		2001, 2, 29, 0,0,
+		2001, 3, 0, 0,0,
+		1900, 2, 29, 0,0,
+		1900, 3, 0, 0,0,
+		2004, 2, 29, 0,0,
+		2004, 3, 0, 0,0,
+		2004, 3, 1000, 0,0,
+		2004, 1000, 1000, 0,0,
+		2004, 1000, 3, 0,0,
+		2004, 3, -1000, 0,0,
+		2004, -1000, -1000, 0,0,
+		2004, -1000, 3, 0,0,
+		2005, 9, 23, 0,0,
+  		1901, 1, -1, 0,0,
+  		1901, 1, 0, 0,0,
+  		1901, 1, 1, 0,0,
+                2005, 9, 23, 0,0,
+                2005, 9, 23, 23,60,
+                2005, 9, 23, 0,-1,
+                2005, 9, 23, 24,00,
+                2005, 9, 23, -1,00,
+
+	    };
+//  	    for (int i = 1; i < 13; i++) {
+//  		out.println("days in " + Date[{pp:}].monthNames[i] + " 1901  is " + Date[{pp:}].daysInMonth(i, 1901));
+//  	    }
+	    final label lb = new label {pp:};
+	    int count = 0;
+	    for (int i = 0; i < lenientDates.length-4; i+=5) {
+		int y = lenientDates[i];
+		int m = lenientDates[i+1];
+                int d = lenientDates[i+2];
+                int h = lenientDates[i+3];
+                int min = lenientDates[i+4];
+		Date[{pp:}] dt = Date[{pp:}].lenientDate(lb,y,m,d,h,min);
+		out.print(count++ + ": "); 
+		out.println(y + " " + m + " " + d + " " + h+":"+min+" = " + dt.toString() + " " + dt.getDayOfWeekName());
+                out.println("     " + dt.toShortString() + " ; " + dt.toLongString() );
+                out.println("        and parsed in again: " + Date[{pp:}].valueOf(lb,dt.toShortString()).toShortString());
+	    }
+        }
+        catch (NullPointerException e) { out.println(e==null?"":e.getMessage());}
+	catch (ArrayIndexOutOfBoundsException e) { out.println(e==null?"":e.getMessage());}
+	catch (IllegalArgumentException e) { out.println(e==null?"":e.getMessage());}
+    }
+}

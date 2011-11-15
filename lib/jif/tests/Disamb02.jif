@@ -1,0 +1,16 @@
+abstract public class Servlet[principal servletP] {    
+    public native final void createPage{*req.L} (
+            Disamb02A[servletP]{} req, 
+            String{} title, 
+            Disamb02B[{*req.L}]{} body);
+
+    public native final void createPage{*req.L}(
+                    Disamb02A[servletP]{*childL} req, 
+                    String{*childL} title, 
+                    label{*childL} childL,
+                    Disamb02B[{*req.L}]{*childL} body) where childL <= req.L;
+
+    public native final void findStartAction(Disamb02A[servletP]{*req.L} req, String{*req.L} action_name);
+    public native final void findStartAction(Disamb02A[servletP]{*req.L} req);
+}
+

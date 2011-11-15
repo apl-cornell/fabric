@@ -1,0 +1,7 @@
+// parameters in a static context
+class C[label L] {
+    public static int{L} m() {
+	int{L} x = 4;
+	return x; 
+    }
+}

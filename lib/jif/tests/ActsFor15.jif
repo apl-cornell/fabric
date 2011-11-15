@@ -1,0 +1,18 @@
+class ActsFor15[principal P]
+{
+    public void p(principal{} a, principal{} b) {
+        int{a:} x = 0;
+        int{b:} y = 0;
+	int{Alice:} z = 0;
+	int{P:} w;
+
+	if (Alice actsfor a) {
+	    w = x;
+	}
+	else {
+	    w = x; // disallowed
+	}
+
+    }
+}
+

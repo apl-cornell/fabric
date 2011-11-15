@@ -1,0 +1,32 @@
+class A {
+    final int{this} f;
+
+    public int{this} getF() {
+        return f;
+    }
+}
+
+class ClassB {
+    A{Alice:} a;
+    ClassB{Alice:Bob} b;
+
+    public ClassB{Alice:}() {
+        a = new A();
+    }
+
+    public void run{Alice:Bob}() {
+        b = this;
+    }
+
+    public void run2{Alice:Bob}() { //throws (NullPointerException) {
+        run();
+    }
+}
+
+public class ClassC {
+   ClassB{Alice:} B;
+
+    public void run{Alice:Bob}():{Alice:} throws (NullPointerException) {
+        B.run2();
+    }
+}

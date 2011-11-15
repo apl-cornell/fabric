@@ -1,0 +1,10 @@
+class User1
+{
+    int{p:} m(principal{} p) {
+	return 0;
+    }
+
+    int{Alice:} m1{*!:*}() {
+	return m(Alice);
+    }
+}

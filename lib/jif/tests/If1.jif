@@ -1,0 +1,15 @@
+public class If1
+{
+    boolean{Alice:} secret;
+
+    public void m() {
+        int i;
+        if (secret) {
+            try {
+                i = 1 / 0;
+            } catch (ArithmeticException e) {
+                i = 0;
+            }
+        }
+    }
+}

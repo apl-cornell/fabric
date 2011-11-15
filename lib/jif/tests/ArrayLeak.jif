@@ -1,0 +1,9 @@
+class ArrayLeak
+{
+    void m() {
+        int{Alice:}[]{} a = null;
+        int{Alice:Bob}[]{} b = null;
+        a = b; // error: not subtypes!
+    }
+}
+

@@ -1,0 +1,5 @@
+class C {
+    void m{*<-*}() {
+        int const[] const[] foo = null; // should be a syntax error
+    }
+}

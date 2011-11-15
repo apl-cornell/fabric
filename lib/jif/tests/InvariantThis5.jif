@@ -1,0 +1,7 @@
+class InvariantThis5  {
+    final int{this} f = 3;
+}
+
+class InvariantThis5a[covariant label L] {
+    InvariantThis5{L} o;
+}

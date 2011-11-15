@@ -1,0 +1,7 @@
+public class MyPrincipal[label L]
+{
+    MyPrincipal[L][] principals;
+    public MyPrincipal() {
+	principals = new MyPrincipal[L][100]; // test creation of arrays of parameterized classes.
+    }
+}

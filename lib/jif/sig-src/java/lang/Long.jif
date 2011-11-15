@@ -1,0 +1,41 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+public final class Long extends Number /*implements Comparable*/ {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    public static final long{*!:*}   MIN_VALUE = 0x8000000000000000L;
+    public static final long{*!:*}   MAX_VALUE = 0x7fffffffffffffffL;
+    public static native String{i;radix} toString(long i, int radix);
+    public static native String{i} toHexString(long i);
+    public static native String{i} toOctalString(long i);
+    public static native String{i} toBinaryString(long i);
+    public static native String{i} toString(long i);
+    public static native long{s;radix} parseLong(String s, int radix) throws (NumberFormatException{s;radix});
+    public static native long{s} parseLong(String s) throws (NumberFormatException{s});
+    public static native Long{s;radix} valueOf(String s, int radix) throws (NumberFormatException{s;radix});
+    public static native Long{s} valueOf(String s) throws (NumberFormatException{s});
+
+    public Long(long{this} value) { }
+    public Long(String{this} s) throws (NumberFormatException{s}) {
+	this(parseLong(s));
+    }
+
+    public native byte{this} byteValue();
+    public native short{this} shortValue();
+    public native int{this} intValue();
+    public native long{this} longValue();
+    public native float{this} floatValue();
+    public native double{this} doubleValue();
+    public native String{this} toString();
+    public native int{this} hashCode();
+
+    public native boolean{this; anObject} equals(Object anObject);
+
+    public static native Long{nm} decode(String nm) throws (NumberFormatException{nm});
+}

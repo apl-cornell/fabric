@@ -1,0 +1,6 @@
+class C {
+    static final label{} f = new label {};
+}
+class D {
+    int{*C.f} foo; // use of a static field 
+}

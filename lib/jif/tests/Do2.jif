@@ -1,0 +1,13 @@
+class C {
+    void m{*!:}() {
+	boolean{Alice:} secret = true;
+	boolean{} leak;
+	boolean done = false;
+	if (secret) {
+	    do {
+		leak = true; // BAD: leaks value of secret to leak
+		done = true;
+	    } while (!done);
+	}
+    }
+}

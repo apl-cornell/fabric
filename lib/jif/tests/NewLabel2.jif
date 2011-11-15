@@ -1,0 +1,6 @@
+public class NewLabel2[label L] {
+    public label m() {
+	label l = new label {L}; // ok
+	return l;
+    }
+}

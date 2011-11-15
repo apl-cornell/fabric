@@ -1,0 +1,11 @@
+import jif.lang.*;
+
+public class NullExcept12 {
+    NullExcept12 f = null;
+    public void m(NullExcept12 g) {
+	if (g != null && f != null && g.f != null) {
+	    g.f.m(null); // bad, not a field of this. final
+	}
+    }    
+}
+

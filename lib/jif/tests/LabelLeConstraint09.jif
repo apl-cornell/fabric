@@ -1,0 +1,16 @@
+class C[label L] {
+    int{L} f;
+
+    int{*lbl1} n(label lbl1) where {L} <= {*lbl1}, {lbl1} <= {L} { 
+	return this.f;
+    }
+}
+
+class D {
+    void foo() {
+	final C[{Alice:}] c = new C[{Alice:}]();
+
+	c.n(new label {}); // fail
+    }
+}
+

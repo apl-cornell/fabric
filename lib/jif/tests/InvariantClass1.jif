@@ -1,0 +1,11 @@
+class InvariantClass1 (invariant)  {
+    int{this} f = 3;
+}
+
+class InvariantClass1a {
+    void m() {
+	InvariantClass1{} a = new InvariantClass1();
+	InvariantClass1{Alice:} b;
+	b = a; // illegal
+    }
+}

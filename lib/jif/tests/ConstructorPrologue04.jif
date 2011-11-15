@@ -1,0 +1,11 @@
+class D { }
+class C extends D {
+    final Object x;
+    C() {
+        x = null;
+        m(this.x); // OK, this is not appearing as an arg.
+        super();
+    }
+    
+    static void m(Object o) { }
+}

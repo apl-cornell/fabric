@@ -1,0 +1,46 @@
+package jif.util;
+/*
+ * Jif Signature for the Map interface
+ *
+ */
+public interface Map[label K, label V] extends JifObject[{K;V}] {
+    // Query Operations
+
+    int{K} size();
+
+    boolean{K} isEmpty();
+
+    boolean{K;key} containsKey(JifObject[K] key);
+    boolean{K;*lbl;lbl;key} containsKey(label lbl, JifObject[lbl] key);
+
+    // the following is removed since it can be emulated using the containsKey method
+    //boolean{K;value} containsValue(JifObject[V] value);
+
+    JifObject[V]{K; key} get(JifObject[K] key);
+    JifObject[V]{K; *lbl;lbl;key} get(label lbl, JifObject[lbl] key);
+
+    // Modifying Operations
+    JifObject[V]{K} put{K}(JifObject[K]{K} key, JifObject[V]{K} value);
+    JifObject[V]{K} remove{K}(JifObject[K]{K} key);
+    
+    // convenience methods that automatically convert key Strings to JifStrings.
+    // Note: when keys are returned, they will be returned as JifString[K]s
+    boolean{K;key} containsKey{K}(String{K} key);
+    JifObject[V]{K; key} get{K}(String{K} key);
+    JifObject[V]{K; *lbl; lbl; key} get{*lbl}(label lbl, String{*lbl} key);
+    JifObject[V]{K} put{K}(String{K} key, JifObject[V]{K} value);
+    JifObject[V]{K} remove{K}(String{K} key);
+
+    // the following is removed since it can be emulated with the put method
+    //void putAll{K}(Map[K,V]{K} t);
+    void clear{K}();
+
+    // Views
+    Set[K] keySet();
+
+    // the following is removed since it can be emulated with the keySet and get methods
+    //Collection[{K;V}] values();
+
+    // Set of MapEntry[K,V]
+    Set[K] entrySet(); 
+}

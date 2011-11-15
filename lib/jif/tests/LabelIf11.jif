@@ -1,0 +1,12 @@
+class LabelIf11
+{
+    void m(label arg) {
+	LabeledObject lo = null;
+	if (lo.L <= new label {Alice:}) {
+	    // not allowed because lo.L is not a final access path
+	}
+	if (new label {Alice:} <= lo.L) {
+	    // not allowed because lo.L is not a final access path
+	}
+    }
+}

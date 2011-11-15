@@ -1,0 +1,177 @@
+import java.lang.*;
+import java.io.*;
+
+class Bank[principal manager] {
+    final principal bank;
+    private Account{bank:}[] {bank:} accounts;  //** owned by the bank
+    private int{bank:} numAccts;         //** owned by the bank
+
+    // Should be the sum of the balances in the accounts + profit
+    // total assets should also equal liquid + high + low
+    private double{bank:} totalAssets;  //** owned by the bank, readable by the accountant?
+
+    private double{bank:} liquidAssets;   // Available for withdraw
+    private double{bank:} investedAssets; // Not available for withdraw
+    private double{bank:} dailyProfit;    // Difference between investment return and customer interest
+
+    //** how to say that these constants are readable by the customers too?  (Public information?)
+    public static final double MAX_DAILY_WITHDRAW = 300.00;
+    public static final double CUSTOMER_RATE = 0.003;     // .3% interest compounded daily (about 3% yearly)
+    public static final double INVESTMENT_RATE = 0.005;   // .5% interest compounded daily (about 6% yearly)
+
+    private BankLog{bank:} log;  //** only the bank can see the bank log, accountant must use bank's interface
+
+    //** Who can create the bank?  manager?
+    public Bank(double assets) throws (IOException) 
+      where caller(manager) {
+	// this.bank = new principal();  // What's the right syntax for this?
+	totalAssets = assets;
+	liquidAssets = assets;
+	log = new BankLog("Bank");
+
+	accounts = new Account[5];
+	numAccts = 0;
+    }
+
+    public synchronized int{accountant:} getLogSeqNumber(principal accountant) 
+    where authority(bank) {
+	return declassify(log.getSequenceNumber(), {accountant:});
+    }
+
+    public synchronized double{accountant:} getTotalAssets (principal accountant) 
+    where authority(bank) {
+	return declassify(totalAssets, {accountant:});
+    }
+
+    // returns the new account number
+    public synchronized int{bank:} addAccount(String name, RSAPublicKey key, double rate) 
+    where authority(bank), caller(manager) {
+	Account acct = new Account(name, numAccts, key, rate);
+	if (numAccts < (accounts.length - 1)) {
+	    // there's room in the current array
+	    accounts[numAccts] = acct;
+	    numAccts++;
+	} else {
+	    // need to grow the array
+	    Account [] newAccounts = new Account[numAccts + 5];
+	    for (int i=0; i<accounts.length; i++) {
+		newAccounts[i] = accounts[i];
+	    }
+	    newAccounts[numAccts] = acct;
+	    accounts = newAccounts;
+	    numAccts++;
+	}
+	log.logMessage(new LogMessage(numAccts - 1, LogMessage.CREATED, 0.0));
+	return numAccts - 1;
+    }
+
+    public synchronized Challenge{atm:} getChallenge(principal atm, int acctNumber) 
+    where authority(bank), caller(atm) {
+	log.logMessage(new LogMessage(acctNumber, LogMessage.CHALLENGE, 0.0));
+	return new Challenge[bank, atm](accounts[acctNumber].key);
+    }
+
+    //** Is this sensible at all?  what is the label of the account number
+    public synchronized Reply{customer:} balance(principal customer, principal atm, int{atm:bank} acctNumber) 
+    where authority(bank), caller(atm) {
+	log.logMessage(new LogMessage(acctNumber, LogMessage.BALANCE, 0.0));
+	return new Reply(Reply.BALANCE, accounts[acctNumber].balance());
+    }
+
+    // deposits go into liquid assets
+    public synchronized Reply{customer:} deposit(principal customer, principal atm, int{atm:bank} acctNumber, 
+    double{customer:bank} amt) 
+    where authority(bank), caller(atm, customer) {
+	log.logMessage(new LogMessage(acctNumber, LogMessage.DEPOSIT, amt));
+	accounts[acctNumber].deposit(amt);
+	liquidAssets += declassify(amt, {bank:});
+	totalAssets += declassify(amt, {bank:});
+	return new Reply(Reply.BALANCE, accounts[acctNumber].balance());
+    }
+
+    // withdrawals come from liquid assets
+    public synchronized Reply{customer:} withdraw(principal customer, principal atm, int{atm:bank} acctNumber, 
+    double{customer:bank} amt) 
+    where authority(bank), caller(atm, customer) {
+	Account acct = accounts[acctNumber];
+	//** The way things are set up, the customer can learn about the bank's assets by making ludicrously high
+	//** withdrawal requests.  Hmmm...
+	if (amt > liquidAssets) {
+	    // not enough money to issue 
+	    log.logMessage(new LogMessage(acctNumber, LogMessage.WITHDRAW_DENIED_ATM, 0.0));
+	    return new Reply(Reply.ATM_DEPLETED, acct.balance());
+	}
+	try{
+	    acct.withdraw(amt);
+	} catch (InsufficientFunds e) {
+	    log.logMessage(new LogMessage(acctNumber, LogMessage.WITHDRAW_DENIED_FUNDS, 0.0));
+	    return new Reply(Reply.INSUFFICIENT_FUNDS, acct.balance());
+	} catch (ExceededDailyLimit e) {
+	    log.logMessage(new LogMessage(acctNumber, LogMessage.WITHDRAW_DENIED_LIMIT, 0.0));
+	    return new Reply(Reply.DENIED_DAILY_LIMIT, acct.balance());
+	}
+	liquidAssets -= declassify(amt, {bank:});
+	totalAssets -= declassify(amt, {bank:});
+	log.logMessage(new LogMessage(acctNumber, LogMessage.WITHDRAW_GRANTED, -declassify(amt, {bank:})));	
+	return new Reply(Reply.BALANCE, acct.balance());
+    }
+
+    public synchronized boolean{investor:} transferLiquidToInvestment(principal investor, double{bank:} amt) 
+    where authority(bank), caller(investor) {
+	if (liquidAssets >= amt) {
+	    liquidAssets -= amt;
+	    investedAssets += amt;
+	    return declassify(true, {investor:});
+	} else {
+	    return declassify(false, {investor:});
+	}
+    }
+
+    public synchronized boolean{investor:} transferInvestmenttoLiquid(double{bank:} amt) 
+    where authority(bank), caller(investor) {
+	if (investedAssets >= amt) {
+	    investedAssets -= amt;
+	    liquidAssets += amt;
+	    return declassify(true, {investor:});
+	} else {
+	    return declassify(false, {investor:});
+	}
+    }
+	
+    public double{accountant:} logReplay(principal accountant, int seqNumber) throws (Exception) 
+    where authority(bank), caller(accountant) {
+	LogMessage msg;
+	msg = (LogMessage)log.getMessageAt(seqNumber);
+	return declassify(msg.getDelta(), {accountant:});
+    }
+
+    public boolean{accountant:} logAvailable(principal accountatn, int seqNumber) 
+    where authority(bank) {
+	return declassify(log.available(seqNumber), {accountant:});
+    }
+    
+    // called "daily"
+    public synchronized void accrue() 
+    where authority(bank) {
+	// Calculate the interest earned for the day
+	double interest = investedAssets * INVESTMENT_RATE;
+
+	// Put it into liquid assets
+	liquidAssets += interest;
+	totalAssets  += interest;
+	log.logMessage(new LogMessage(-1, LogMessage.ACCRUED, interest));
+
+	double customerInterest = 0.0;
+	
+	for (int i=0; i<numAccts; i++) {
+	    customerInterest += accounts[i].accrue();
+	}
+
+	dailyProfit = interest - customerInterest;
+    }
+}
+
+    
+
+
+

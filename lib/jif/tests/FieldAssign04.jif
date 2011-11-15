@@ -1,0 +1,6 @@
+class C {
+    final label{*l} l;
+    C(label{*m} m ) {
+	this.l = m; // should be allowed, since this.l == m
+    }
+}

@@ -1,0 +1,8 @@
+class C[label L, label M] {
+    void remove() where L <= M {  // test use of params in where clauses
+        int{L} x = 5;
+        int{M} y = 5;
+        
+        y = x;
+    }
+}

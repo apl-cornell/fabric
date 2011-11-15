@@ -1,0 +1,6 @@
+class InvariantClass4 (invariant)  {
+    InvariantClass4{} m() {
+	return this; //illegal
+    }
+}
+

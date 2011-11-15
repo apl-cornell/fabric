@@ -1,0 +1,12 @@
+/*
+ * Check that subtype checker is checking conditional expressions
+ */
+class SubtypeChecker3[label H] {
+    public void m() {
+	SubtypeChecker3[{Alice:}] o1 = null;
+	SubtypeChecker3[{}] o2 = null;
+
+	boolean b = true;
+	SubtypeChecker3[{Alice:}] o3 = (!b ? o1: o2 );
+    }
+}

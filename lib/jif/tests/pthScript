@@ -1,0 +1,598 @@
+# pth test script
+#
+# This file is a test script for pth (Polyglot Test Harness). It
+# conforms to the following grammar.
+#
+#      ScriptFile   ::= CompilerTest+
+#      CompilerTest ::= ExtClassName ["CmdLineArgs"] { FileTest [; FileTest]* }
+#      FileTest     ::= Filenames [Description] [FailureSet]
+#      Filenames    ::= Filename [Filename]*
+#      Description  ::= LitString
+#      FailureSet   ::= Failure [, Failure]*
+#      Failure      ::= ( ErrorKind )
+#                    |  ( ErrorKind, "RegExp" )
+#                    |  ( "RegExp" )
+#                    |  ( )
+#      ErrorKind    :   one of, or a unique prefix of one of the following
+#                       strings: "Warning", "Internal Error", "I/O Error",
+#                       "Lexical Error", "Syntax Error", "Semantic Error"
+#                       or "Post-compiler Error".
+#      Filename     :   the name of a file. Is interpreted from the
+#                       directory where pth is run.
+#      LitString    :   a literal string, enclosed in quotes.
+#      RegExp       :   a regular expression, as in java.util.regex;
+#                       is always enclosed in quotes.
+#      CmdLineArgs  :   additional command line args for the Polyglot
+#                       compiler; is always enclosed in quotes.
+#
+# When invoking this script, it will probably be necessary to supply
+# an appropriate class path, to make sure that pth can find the Jif compiler.
+#    $ pth pthScript -classpath "../classes:../lib-classes:../lib/jif.jar:../lib/jiflib.jar:."
+
+jif.ExtensionInfo  "-nonrobust -classpath ../classes:../lib-classes:../lib/jif.jar:../lib/jiflib.jar:../rt-classes:/../lib/jifrt.jar:.:$CLASSPATH -sigcp ../sig-classes:../lib/jifsig.jar" {
+	A.jif ;
+    labelparam/AE.jif ;
+    labelparam/A.jif labelparam/E.jif ;
+    OwnedObject.jif;
+    LabeledObject.jif;
+    TestPrincipal.jif;
+    TestClosure.jif;
+	Account.jif ;
+	ActsFor1.jif ;
+	ActsFor2.jif ;
+	ActsFor3.jif ;
+	ActsFor4.jif ;
+	ActsFor5.jif ;
+	ActsFor6.jif ;
+	ActsFor7.jif (Semantic, "not less restrictive");
+	ActsFor8.jif ;
+	ActsFor9.jif (Semantic, "not less restrictive"), (Warning);
+	ActsFor10.jif ;
+	ActsFor11.jif (Semantic, "not less restrictive");
+	ActsFor12.jif (Semantic, "not less restrictive");
+	ActsFor13.jif ;
+	ActsFor14.jif ;
+	ActsFor15.jif (Semantic, "not less restrictive");
+	ActsFor16.jif (Semantic, "requires both operands to be principals");
+	ActsFor16b.jif (Semantic, "requires both operands to be principals");
+	ActsFor16c.jif ;
+	ActsFor17.jif (Semantic, "Non-final local variable"),
+		      (Semantic, "Non-final local variable");
+	ArgLabel1.jif ;
+	ArgLabel2.jif ;
+	ArgLabelSubst.jif ;
+	ArgLabelSubst2.jif ;
+	ArgLabelSubst3.jif ;
+	ArgLabelSubst4.jif ;
+	LabelSubst01.jif ;
+	Array.jif ;
+	Array1.jif (Semantic, "not a subtype") ;
+	Array2.jif ;
+	Array3.jif ;
+	Array4.jif ;
+	Array5.jif ;
+	Array6.jif (Semantic, "not less restrictive"), ();
+	Array7.jif (Semantic, "not less restrictive");
+	Array8.jif (Semantic, "not less restrictive"), ();
+	Array9.jif (Semantic, "not less restrictive");
+	Array10.jif ;
+	Array11.jif ;
+	Array12.jif (Semantic, "not a subtype");
+	Array13.jif ;
+	Array14.jif (Semantic, "not a subtype");
+	Array15.jif ;
+	Array16.jif ;
+	Array17.jif ;
+	Array18.jif (Semantic, "NegativeArraySizeException"), (Semantic, "NegativeArraySizeException");
+	Array19.jif ;
+	Array20.jif ;
+	ArrayBaseLabel01.jif (Semantic, "base type of arrays must be equivalent"), ();
+	ArrayLeak.jif (Semantic, "not a subtype"), () ;
+#Removed the problematics String.getBytes method from the String signature
+#	ArrayLeak2.jif (Semantic, "not a subtype") ;
+	ArrayLeak3.jif (Semantic, "does not currently support") ;
+	ArrayLeak4.jif (Semantic, "does not currently support") ;
+	ArrayLeak5.jif (Semantic, "not less restrictive"), () ;
+	ArrayLength01.jif ;
+	ArrayLength02.jif (Semantic, "ArrayIndex.*Exception.*must .* be caught") ;
+	ArrayLength03.jif ;
+	ArrayLength04.jif ;
+	ArrayLength05.jif ;
+	ArrayLength06.jif ;
+	Assign01.jif ;
+	Assign02.jif ;
+	Assign03.jif ;
+	Authority01.jif ;
+	Authority02.jif ;
+	Authority03.jif ;
+	Authority04.jif (Semantic, "type of a dynamic principal must be"),
+	                (Semantic, "type of a dynamic principal must be") ;
+	Authority05.jif (Semantic, "Cannot cast the expression of type"),
+	                (Semantic, "Cannot cast the expression of type"),
+	                (Semantic, "Cannot cast the expression of type");
+	Authority06.jif ;
+	Authority07.jif ;
+	AutoEndorse01.jif (Semantic, "sufficient authority to auto-endorse");
+	AutoEndorse02.jif ;
+	CheckedEndorse01.jif ;
+	CheckedEndorse02.jif (Semantic, "Cannot assign .* in this context");
+	CheckedEndorse03.jif (Semantic, "only .* locals");
+	BadNullExcept1.jif (Semantic, "NullPointerException.*must .* be caught") ;
+	BadNullExcept2.jif (Semantic, "NullPointerException.*must .* be caught") ;
+	BadNullExcept3.jif (Semantic, "NullPointerException.*must .* be caught") ;
+	BadNullExcept4.jif (Semantic, "ArrayIndex.*Exception.*must .* be caught") ;
+	BadNullExcept5.jif (Semantic, "NullPointerException.*must .* be caught") ;
+	BadNullExcept6.jif (Semantic, "ArrayIndex.*Exception.*must .* be caught") ;
+	BadNullExcept7.jif (Semantic, "NullPointerException.*must .* be caught") ;
+	Binary.jif ;
+	Call1.jif ;
+	Call2.jif ;
+	Call3.jif (Semantic, "The caller must have the authority of the principal") ;
+	Call4.jif (Semantic, "The caller must have the authority of the principal") ;
+	Call5.jif (Semantic, "The caller must have the authority of the principal") ;
+	Call6.jif ;
+	Call7.jif ;
+	Call8.jif ;
+	Call9.jif (Semantic, "The principal .* must act for") ;
+	Call10.jif (Semantic, "The principal .* must act for") ;
+	Call11.jif (Semantic, "The principal .* must act for") ;
+	Call12.jif ;
+	Call13.jif ;
+	Call14.jif ;
+	cat.jif ;
+	Catch01.jif (Semantic, "Label of .* exceptions .* not less restrictive");
+	Catch02.jif (Semantic, "Label .* not less restrictive");
+	Catch03.jif (Semantic, "Label .* not less restrictive");
+	clientEmptyList.jif ;
+	clientList.jif ;
+	clientPairList.jif ;
+	Complex.jif ;
+	CondExpr.jif ;
+	CondExpr2.jif ; 
+	CondExpr3.jif (Semantic, "not a subtype") ; 
+	CondExpr4.jif (Semantic, "not a subtype") ; 
+	CondExpr5.jif ; 
+	CondExpr6.jif (Semantic, "not a subtype") ; 
+	ConditionalLeak.jif (Semantic, "not a subtype") ;
+	ConjunctTest01.jif ;
+	ConjunctTest02.jif (Warning);
+	ConjunctTest02a.jif (Warning), (Warning);
+	ConjunctTest03.jif ;
+	ConjunctTest04.jif ;
+	ConstArray01.jif ;
+	ConstArray02.jif (Semantic, "Cannot assign to .* const");
+	ConstArray03.jif (Semantic, "does not match");
+	ConstArray03a.jif;
+	ConstArray04.jif (Semantic, "does not match");
+	ConstArray04a.jif ;
+	ConstArray05.jif ;
+	ConstArray06.jif ;
+	ConstArray06a.jif (Semantic, "can not contain .*this");
+	ConstArray07.jif ;
+	ConstArray08.jif ;
+	ConstArray09.jif (Syntax);
+	ConstArray10.jif ;
+	ConstArray10a.jif (Semantic, "all.*dimensions");
+	ConstArray10b.jif (Semantic, "all.*dimensions");
+	ConstArray10c.jif (Semantic, "all.*dimensions");
+	ConstArray10d.jif ;
+	ConstArray11.jif (Semantic, "Cannot assign to .* const"), (Semantic, "Cannot assign to .* const");
+	ConstArray11a.jif (Syntax);
+	ConstArray12.jif ;
+	ConstArray13.jif ;
+	Constraints1.jif ;
+	Constraints3.jif ;
+	Constraints5.jif ;
+	ConstructorTest.jif ;
+	Constructor1.jif ;
+	ConstructorPrologue01.jif (Semantic, "constructor prologue");
+	ConstructorPrologue02.jif (Semantic, "constructor prologue");
+	ConstructorPrologue03.jif (Semantic, "constructor prologue");
+	ConstructorPrologue04.jif;
+	ConstructorPrologue05.jif (Semantic, "constructor prologue");
+	ConstructorPrologue06.jif (Semantic, "constructor prologue");
+	ConstructorPrologue07.jif (Semantic, "constructor prologue");
+	Covariant01.jif (Semantic, "can not be labeled with the covariant label");
+	Covariant02.jif (Semantic, "Covariant labels cannot occur on the right hand side");
+	DateTest.jif ;
+	Declassify.jif ;
+	Default1.jif ;
+	Deref.jif ;
+	Deref2.jif ;
+	Disamb01.jif Disamb01A.jif ;
+	Disamb02.jif Disamb02A.jif Disamb02B.jif ;
+	Division01.jif ;
+	Division02.jif ;
+	DuplicateClass.jif (Semantic, "Duplicate class");
+	Dyn1.jif ;
+	Dyn2.jif ;
+	Dyn4.jif ;
+	Dyn5.jif ;
+	Dyn6.jif ;
+	Dyn7.jif ;
+	DynPrin1.jif ;
+	DynPrin2.jif (Semantic, "Non-final.*access path");
+	DynPrin3.jif (Semantic, "type .*must be .*principal");
+	DynPrin4.jif (Semantic, "Cannot access field .* non-reference");
+	DynPrin5.jif (Semantic, "type .*must be .*principal");
+	DynPrin6.jif (Semantic, "Field.*is not final");
+	DynPrin7.jif ;
+	DynPrin8.jif (Syntax);
+	DynPrin9.jif ;
+	DynPrin10.jif ; 
+	DynPrin11.jif (Semantic, "actual argument is more restrictive");
+	DynPrin12.jif ;
+	DynPrin13.jif ;
+	DynPrin14.jif ;
+	DynPrin15.jif ;
+	DynLabel1.jif ;
+	DynLabel2.jif (Semantic, "Non-final.*access path"), (Semantic, "Non-final.*access path");
+	DynLabel3.jif (Semantic, "Field.*is not final"), (Semantic, "Field.*is not final");
+	DynLabel4.jif (Semantic, "type .*must be .*label");
+	DynLabel5.jif (Semantic, "type .*must be .*label");
+	DynLabel6.jif (Semantic, "Cannot access field .* non-reference type");
+	DynLabel7.jif (Syntax);
+	DynLabel8.jif ;
+	DynLabel9.jif ;
+	DynLabel10.jif ;
+	DynLabel11.jif ;
+	DynLabel12.jif ;
+	DynLabel13.jif (Semantic, "not less restrictive");
+	EmptyList.jif List.jif;
+	EmptyList2.jif ;
+	Exc.jif ;
+	Exc2.jif ;
+	Exc3.jif  (Semantic, "More information .* than is permitted");
+	FieldAssign01.jif  ;
+	FieldAssign02.jif  (Semantic, "NullPointerException.*must .* be caught"),
+                           (Semantic, "NullPointerException.*must .* be caught"),
+                           (Semantic, "NullPointerException.*must .* be caught"),
+                           (Semantic, "NullPointerException.*must .* be caught");
+	FieldAssign03.jif  (Semantic, "NullPointerException.*must .* be caught"),
+                           (Semantic, "NullPointerException.*must .* be caught"),
+                           (Semantic, "NullPointerException.*must .* be caught"),
+                           (Semantic, "NullPointerException.*must .* be caught");
+	FieldAssign04.jif  ;
+	FieldLeak.jif (Semantic) ;
+	FieldParam1.jif  ;
+	FieldParam2.jif  ;
+	FileTester.jif ;
+        FinalArgs01.jif (Semantic, "argument must be a final access path");
+        FinalArgs02.jif ;
+        FinalArgs03.jif (Semantic, "argument must be a final access path");
+        FinalArgs04.jif ;
+        FinalArgs05.jif (Semantic, "argument must be a final access path");
+        FinalArgs06.jif (Semantic, "argument must be a final access path");
+        FinalArgs07.jif (Semantic, "argument must be a final access path");
+        FinalArgs08.jif (Semantic, "argument must be a final access path");
+	Hierarchy1.jif ;
+	Heapsort.jif ;
+	Hello.jif ;
+	HiRefLowField.jif (Semantic, "Label .* not less restrictive");
+	If1.jif ;
+	Inf1.jif ;
+	Inf2.jif (Semantic, "uninstantiated") ;
+	Inf3.jif (Semantic, "uninstantiated") ;
+	Inf4.jif ;
+	Inf5.jif ;
+	Inf6.jif ;
+	Inf7.jif ;
+	Inf8.jif ;
+	Inf9.jif ;
+	Inf10.jif ;
+	Inf11.jif ;
+	Inf12.jif ;
+	Inf13.jif ;
+	Implicit.jif ;
+	Implicit2.jif ;
+	IntBounds1.jif ;
+	IntBounds2.jif ;
+	IntBounds3.jif ;
+	IntPair.jif ;
+	InterfaceTest.jif ;
+#	InvariantClass.jif (Semantic, "Invariant class .* cannot extend covariant class");
+#	InvariantClass1.jif (Semantic, "not a subtype");
+#	InvariantClass2.jif (Semantic, "Covariant class .* cannot extend invariant class");
+	InvariantClass3.jif;
+#	InvariantClass4.jif (Semantic, "not a subtype");
+#	InvariantClass4a.jif ;
+#	InvariantClass5.jif ;
+#	InvariantClass6.jif (Semantic, "not a subtype");
+#	InvariantClass7.jif (Semantic, "Invariant class .* cannot implement covariant interface");
+#	InvariantClass8.jif (Semantic, "Invariant class .* cannot implement covariant interface");
+#	InvariantClass9.jif (Semantic, "Covariant class .* cannot extend invariant class");
+	InvariantClass10.jif (Semantic, "pc bound .* can not be the covariant label");
+	InvariantClass11.jif (Semantic, "argument .* can not be labeled with the covariant label");
+	InvariantThis1.jif ;
+	InvariantThis2.jif (Semantic, "can not contain .*this");
+	InvariantThis3.jif (Semantic, "can not contain .*this");
+	InvariantThis4.jif (Semantic, "can not contain .*this");
+	JunctivePrincipals01.jif;
+	JunctivePrincipals02.jif (Semantic, "not less restrictive"), (Semantic, "not less restrictive"),
+                                 (Semantic, "not less restrictive"), (Semantic, "not less restrictive");
+	JunctivePrincipals03.jif (Semantic, "not less restrictive");
+	JunctivePrincipals04.jif;
+	JunctivePrincipals05.jif;
+	JunctivePrincipals06.jif;
+	LabelIf1.jif ;
+	LabelIf2.jif ;
+	LabelIf3.jif (Warning);
+	LabelIf4.jif ;
+	LabelIf5.jif LabeledObject.jif;
+	LabelIf6.jif (Semantic, "not less restrictive");
+	LabelIf6a.jif (Semantic, "not less restrictive");
+	LabelIf7.jif (Semantic, "not less restrictive");
+	LabelIf7a.jif (Semantic, "not less restrictive");
+	LabelIf8.jif (Semantic, "not less restrictive");
+	LabelIf9.jif (Semantic, "not less restrictive");
+	LabelIf10.jif (Semantic, "NullPointerException.*declared");
+	LabelIf11.jif  (Semantic, "must .* final access path"), (Semantic, "must .* final access path");
+	LabelIf12.jif ;
+	LabelCheckDependency01A.jif LabelCheckDependency01B.jif (Semantic, "not less restrictive");
+	LabelCheckDependency01B.jif LabelCheckDependency01A.jif (Semantic, "not less restrictive");
+	LabelCheckDependency02A.jif LabelCheckDependency02B.jif (Semantic, "not less restrictive");
+	LabelLeConstraint01.jif ;
+	LabelLeConstraint02.jif ;
+	LabelLeConstraint03.jif ;
+	LabelLeConstraint04.jif ;
+	LabelLeConstraint05.jif (Semantic, "must be less restrictive");
+	LabelLeConstraint06.jif ;
+	LabelLeConstraint07.jif ;
+	LabelLeConstraint08.jif ;
+	LabelLeConstraint08a.jif (Semantic, "must be less restrictive");
+	LabelLeConstraint09.jif (Semantic, "must be less restrictive"), ();
+	LabelLeConstraint10.jif ;
+	LabelLeConstraint11.jif (Semantic, "must be less restrictive");
+	LabelLeConstraint12.jif ;
+	LabelLeConstraint13.jif ;
+	LabelLeConstraint14.jif ;
+	LabelUtil01.jif ;
+	LabelUtil02.jif ;
+	List.jif ;
+	List2.jif ;
+    List2Test.jif ;
+	ListTest.jif ;
+	Main1.jif (Warning, "signature of.*main method.*should either be"),
+                  (Semantic, "Only one static method named \"main\" allowed per class");
+	Main2.jif ;
+	Main3.jif (Semantic, "can only have a where caller constraint");
+	Main4.jif (Semantic, "can not have .* constraint"), (Semantic, "can not have .* constraint");
+	Main5.jif ;
+	MapTest.jif ;
+	Meet01.jif ;
+	Meet02.jif ;
+	Meet03.jif (Semantic, "Incompatible .* policies") ;
+	MyInteger.jif ;
+	Names01.jif (Semantic, "can not contain .* character"), 
+	            (Semantic, "can not contain .* character"),
+	            (Semantic, "can not contain .* character"),
+	            (Semantic, "can not contain .* character"),
+	            (Semantic, "can not contain .* character"),
+	            (Semantic, "can not contain .* character");
+	NativePrincipal01.jif ;
+	NewLabel.jif ;
+	NewLabel2.jif ;
+	NewLabel3.jif (Semantic, "not representable at runtime");
+	NewLabel4.jif (Semantic, "not representable at runtime");
+	NullExcept1.jif ;
+	NullExcept2.jif ;
+	NullExcept3.jif ;
+	NullExcept4.jif ;
+	NullExcept5.jif ;
+	NullExcept6.jif ;
+	NullExcept7.jif ;
+	NullExcept8.jif ;
+	NullExcept9.jif ;
+	NullExcept10.jif ;
+	NullExcept11.jif (Semantic, "NullPointerException.*must .* be caught") ;
+	NullExcept12.jif (Semantic, "NullPointerException.*must .* be caught") ;
+	NullExcept13.jif (Semantic, "NullPointerException.*must .* be caught") ;
+	NullExcept14.jif ;
+	NullExcept15.jif (Semantic, "NullPointerException.*must .* be caught") ;
+	NullExcept16.jif ;
+	NullExcept17.jif (Semantic, "NullPointerException.*must .* be caught") ;
+	NullExcept18.jif ;
+	NullExcept19.jif ;
+	NullExcept20.jif (Semantic, "NullPointerException.*must .* be caught") ;
+	NullExcept21.jif ;
+	NullExcept22.jif ;
+	NullExcept23.jif (Semantic, "NullPointerException.*must .* be caught") ;
+	PairList.jif  List.jif;
+	Override01.jif;
+	Override02.jif;
+	Override03.jif;
+	Override04.jif;
+	Override05.jif (Semantic, "Cannot override .* label of .* argument") ;
+	Override06.jif (Semantic, "Cannot override .* program counter bound") ;
+	Override07.jif (Semantic, "Cannot override .* return label") ;
+	Override08.jif (Semantic, "Cannot override .* return value label") ;
+	Override09.jif (Semantic, "Cannot override .* label of .* exception") ;
+	Override10.jif  ;
+	Override11.jif  (Semantic, "cannot assume");
+	Override12.jif;
+	Override13.jif  (Semantic, "cannot assume"),
+	                (Semantic, "method may return a value with a more restrictive label");
+	Override14.jif;
+	Override15.jif;
+	Override16.jif;
+	Override17.jif  (Semantic, "cannot assume"),
+	                (Semantic, "method may return a value with a more restrictive label");
+	Override18.jif;
+	Override19.jif;
+	PairList2.jif ;
+	Params1.jif ;
+	Params1Test.jif ;
+	Params1TestTest.jif ;
+	Params2.jif ;
+	Params3.jif ;
+	Params4.jif ;
+	Params5.jif ;
+	Params6.jif ;
+	Params7.jif ;
+	Params8.jif ;
+	Params9.jif ;
+	Params10.jif ;
+	Params11.jif ;
+	Params12.jif ;
+	Params13.jif ;
+	Params14.jif (Semantic, "not instantiate .* invariant .* parameter with .* non-invariant");
+	Params15.jif ; 
+	Params16.jif ;
+	Params17.jif ;
+	Params18.jif ;
+	Params19.jif ; //(Semantic, "not a subtype"); // I think there is an instantiation missing in this test case!
+	Params20.jif ;
+	Params21.jif ;
+	Params22.jif (Semantic, "cannot be more restrictive"), ();
+	Params22a.jif (Semantic, "cannot be less restrictive");
+	Params23.jif ;
+	Params24.jif (Semantic, "static field cannot use .* label parameter");
+	Params25.jif (Semantic, "Cannot access .* from a static context");
+	Params26.jif (Semantic, "Could not find field");
+	Params27.jif (Semantic, "Can not instantiate .* with a non-label");
+	Params28.jif (Semantic, "Can not instantiate .* with a non-label");
+	Params29.jif (Semantic, "Can not instantiate .* with a non-principal");
+	Params30.jif (Semantic, "Can not instantiate .* with a non-principal");
+	Params31.jif (Semantic, "Cannot instantiate from a non-polymorphic type");
+	Params32.jif (Semantic, "Too many parameters");
+	Params33.jif (Semantic, "Wrong number of actual parameters");
+	Params34.jif ;
+	Params35.jif ;
+	Params36.jif ;
+	Params37.jif (Semantic, "can not have a .*main.* method");
+	Params38.jif ;
+	Params39.jif (Semantic, "not a subtype") ;
+	Params40.jif (Semantic, "not a subtype") ;
+	Params41.jif ;
+	Params42.jif ; # return a more reasonable error.
+	Params43.jif ;
+	Params44.jif (Semantic, "not less restrictive");
+	Params45.jif (Semantic, "Only final variables");
+	ParamsActsFor.jif ;
+	Password.jif ;
+	Password2.jif ;
+	PathMap01.jif ;
+	PathMap02.jif ;
+	Poly.jif ;
+	PreciseClass01.jif ;
+	PreciseClass02.jif ;
+	PreciseClass03.jif (Semantic, "ClassCastException.*declared");
+	PreciseClass04.jif ;
+	PreciseClass05.jif (Semantic, "ClassCastException.*declared");
+	PreciseClass06.jif ;
+	PreciseClass07.jif (Semantic, "ClassCastException.*declared");
+	PreciseClass08.jif (Semantic, "ClassCastException.*declared");
+	PreciseClass09.jif ;
+	PrincipalUtil01.jif ;
+	Protected.jif ;
+	Recursive.jif ;
+	RuntimeParams01.jif ;
+	RuntimeParams02.jif ;
+	RuntimeParams03.jif (Semantic, "does not .* support"), (Semantic, "does not .* support");
+	RuntimeParams04.jif (Semantic, "does not .* support");
+	RuntimeParams05.jif (Semantic, "does not .* support");
+	RuntimeParams06.jif (Semantic, "does not .* support");
+	RuntimeParams07.jif ;
+	RuntimeParams08.jif (Semantic, "Cannot override"), ();
+	RuntimeParams09.jif ;
+	RuntimeParams10.jif (Semantic, "can not be labeled with the covariant label");
+	RuntimeParams11.jif (Semantic, "Cannot override"), ();
+	RuntimeParams12.jif (Semantic, "Cannot override");
+	RuntimeParams13.jif (Semantic, "Cannot override");
+	RuntimeParams14.jif (Semantic, "Cannot cast to .* does not represent the parameters at runtime");
+	RuntimeParams15.jif (Semantic, "Cannot perform instanceof on .* does not represent the parameters at runtime");
+	RuntimeParams16.jif ;
+	RuntimeParams17.jif (Semantic, "not less restrictive");
+	RuntimeParams18.jif (Semantic, "not less restrictive");
+	RuntimeParams19.jif (Semantic, "not less restrictive");
+	RuntimeParams20.jif (Semantic, "not less restrictive");
+	RuntimeParams21.jif (Semantic, "not less restrictive");
+	RuntimeParams22.jif (Semantic, "Calling context does not have enough authority"), (), ();
+	RuntimeParams22a.jif (Semantic, "Calling context does not have enough authority"), ();
+	RuntimeParams23.jif (Semantic, "NullPointerException.*must either be caught"),
+                            (Semantic, "NullPointerException.*must either be caught"),
+                            (Semantic, "NullPointerException.*must either be caught"),
+                            (Semantic, "NullPointerException.*must either be caught"),
+                            (Semantic, "NullPointerException.*must either be caught"),
+                            (Semantic, "NullPointerException.*must either be caught"),
+                            (Semantic, "NullPointerException.*must either be caught"),
+                            (Semantic, "NullPointerException.*must either be caught");
+	RuntimeParams24.jif (Semantic, "The type of a dynamic label");
+	RuntimeParams24a.jif (Semantic, "The type of a dynamic principal");
+	RuntimeParams24b.jif (Semantic, "Can not instantiate a label parameter with a non-label");
+	RuntimeParams24c.jif (Semantic, "The type of a dynamic principal");
+	RuntimeParams24d.jif (Semantic, "Can not instantiate .* with a non-principal");
+	RuntimeParams25.jif (Syntax);
+//KNOWN BAD: needs a fix in Polyglot	RuntimeParams26.jif (Semantic, "@@@@@"); // should be an initialization error
+	RuntimeParams27.jif ;
+	RuntimeParams28.jif (Semantic, "runtime.*representable");
+	SetTest.jif ;
+	ShortCircuit01.jif (Semantic, "more restrictive");
+	ShortCircuit02.jif (Semantic, "not less restrictive");
+	ShortCircuit03.jif (Semantic, "not less restrictive");
+	Simple.jif ;
+	Simple2.jif ;
+	Simple3.jif ;
+	Simple4.jif ;
+	Solver01.jif ;
+	Solver02.jif ;
+	StaticField.jif;
+	StaticMethod.jif;
+	StaticThis1.jif (Semantic, "this.*cannot be used in a static context");
+	StaticThis2.jif (Semantic, "this.*cannot be used in a static context");
+	StaticThis3.jif (Semantic, "this.*cannot be used in a static context");
+	StaticThis4.jif (Semantic, "this.*cannot be used in a static context");
+	StaticThis5.jif (Semantic, "this.*cannot be used in a static context");
+	StaticThis6.jif ;
+	StaticThis7.jif (Semantic, "this.*cannot be used in a static context");
+	StringTester.jif ;
+	SubtypeChecker1.jif (Semantic, "not a subtype") ;
+	SubtypeChecker2.jif ;
+	SubtypeChecker3.jif (Semantic, "not a subtype") ;
+	SubtypeChecker4.jif (Semantic, "Subclasses of java.lang.Throwable can not have parameters") ;
+	Super1.jif (Semantic, "Constructor .* is inaccessible") ;
+	Super2.jif ;
+	Super3.jif (Semantic, "first statement .* must be .* constructor call") ;
+	Super4.jif (Semantic, "first statement .* must be .* constructor call") ;
+	Super5.jif ;
+	Super6.jif (Semantic, "Final field.*must be initialized") ;
+	Super7.jif (Semantic, "requires .* authority .* principal");
+	Super8.jif (Semantic, "requires .* authority .* principal"), 
+	           (Semantic, "Calling context does not have enough authority");
+	Super9.jif ;
+	SwitchLabel.jif (Semantic, "not representable at runtime");
+	SwitchLabel2.jif (Semantic, "not representable at runtime");
+	SwitchLabel3.jif (Semantic, "not representable at runtime");
+	SwitchLabel4.jif;
+	This1.jif ;
+#	This2.jif ;
+	ToString.jif (Semantic, "Cannot coerce"), (Semantic, "Cannot coerce") ;
+	User1.jif ;
+	Vec.jif ;
+	While.jif ;
+	While2.jif (Semantic, "not less restrictive");
+	While3.jif (Semantic, "not less restrictive");
+	While4.jif (Semantic, "not less restrictive");
+	Do.jif ;
+	Do2.jif (Semantic, "not less restrictive");
+	Do3.jif (Semantic, "not less restrictive");
+	Do4.jif (Semantic, "not less restrictive");
+	Do5.jif (Semantic, "not less restrictive");
+	For1.jif ;
+	For2.jif (Semantic, "not less restrictive");
+	For3.jif (Semantic, "not less restrictive");
+	For4.jif (Semantic, "not less restrictive");
+	For5.jif (Semantic, "not less restrictive");
+	Switch01.jif (Semantic, "not less restrictive");
+	Switch02.jif (Semantic, "not less restrictive");
+	Switch03.jif (Semantic, "not less restrictive");
+	Switch04.jif (Semantic, "not less restrictive");
+}
+
+# the robustness test cases. Turn robustness on.
+jif.ExtensionInfo  "-robust -cp ../classes:../lib-classes:../lib/jif.jar:../lib/jiflib.jar:../rt-classes:../lib/jifrt.jar:.:$CLASSPATH -sigcp ../sig-classes:../lib/jifsig.jar" {
+	RobustDecl01.jif ;
+	RobustDecl02.jif (Semantic, "not robust");
+	RobustDecl03.jif (Semantic, "not robust");
+	RobustDecl04.jif ;
+}

@@ -1,0 +1,23 @@
+class Wrapper
+{
+    int{Alice:Bob} f;
+
+    public void set{Alice:Bob}(int{Alice:Bob} ff) {
+        f = ff; //the label of f is not as restrictive as the begin label.
+    }
+}
+
+public class BeginLabel2
+{
+    boolean{Alice:} secret;
+    Wrapper wrapper;
+
+    public void leak() throws (java.lang.NullPointerException)
+    {
+        if (secret) {
+            //begin label of "set" should protect "secret".
+            wrapper.set(0);
+        }
+        else wrapper.set(1);
+    }
+}

@@ -1,0 +1,7 @@
+public class CondExpr {
+    int{Alice:} d;
+
+    public int{Alice:} m() {
+        return (d > 0)? 1 : -1;
+    }
+}

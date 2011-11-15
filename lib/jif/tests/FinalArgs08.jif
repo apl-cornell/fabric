@@ -1,0 +1,10 @@
+class C {
+    final label L = new label {};
+    int{} m(C c) throws (Exception{*c.L}) { return 3; }
+
+    void n1{}() throws Exception { 
+	C x = this;
+	m(x); // bad
+    }
+
+}

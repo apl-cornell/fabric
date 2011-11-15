@@ -1,0 +1,8 @@
+public class Constraints3 {
+    // dynamic recursive labels, amke sure that the constraint solver correctly
+    // solves these, and does not abort them as being non-monotonic.
+    public void foo1(label{*lb1a} lb1a) { }
+    public void foo2(label{*lb2b} lb1b, label{*lb1b} lb2b) { }
+    public void foo3(label{*lb3c} lb1c, label{*lb1c} lb2c, label{*lb2c} lb3c) { }
+    public static void foo4(label{*lb4d} lb1d, label{*lb1d} lb2d, label{*lb2d} lb3d, label{*lb3d} lb4d) { }
+}

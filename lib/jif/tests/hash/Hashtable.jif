@@ -1,0 +1,182 @@
+/**
+ * Simple Hashtable class with separate chaining
+ *
+ * the label parameter L refers to the label of
+ * the contents...
+ *
+ * since keys may be used to retrieve values, they
+ * are given the same label, although this condition
+ * could be reasonably relaxed...
+ */
+class Hashtable[label L] /* extends java.util.Dictionary (almost) */ {
+
+    private LinkedList[L]{L}[]{L} data;
+    private float{L} loadfactor;
+    private float{L} growthfactor;
+    private int{L} size;
+
+    public Hashtable{L}() {
+        data = new LinkedList[L][4];
+        size = 0;
+        loadfactor   = (float)0.75;
+        growthfactor = (float)2.00;
+    }
+
+    public boolean{L} isEmpty() {
+        return ( size == 0 );
+    }
+
+    public int{L} size() {
+        return size;
+    }
+
+
+    public Object{L} put{L}( Object{L} key, Object{L} value ) {
+
+        Object{L} toReturn = null;          // the old item with key "key"
+        Item[L] item = new Item[L]( key, value );   // the entry to insert
+
+        try { // begin blanket NullPointer/ArrayIndex... handler
+
+        int hashval = key.hashCode() & (data.length - 1);
+        LinkedList[L] chain = data[hashval];
+
+        if ( chain == null ) {
+            chain = new LinkedList[L]();
+            chain.add( item );
+            data[hashval] = chain;
+        }
+        else {
+
+            LinkedListIterator[L] it = chain.iterator();
+
+            while( it.hasNext() ) {
+                Item[L] nxt = (Item[L])it.next();
+                if ( nxt.getKey().equals( key ) ) {
+                    toReturn = nxt.getValue();
+                    nxt.setValue( value );
+                    break;
+                }
+            }
+
+            if (toReturn == null) {     // existing items have identical hashval, but different key
+                chain.add( item );
+            }
+        }
+
+        if (toReturn != null) {
+            size++;
+        }
+
+        if ( (float)size > (float)data.length * loadfactor ) {
+            expand();    // make sure table size stays within load factor
+        }
+
+        } catch ( Exception e ) {} // end blanket NullPointer/ArrayIndex... catcher
+
+        return toReturn;
+    }
+
+
+    public Object{L} get( Object{L} key ) {
+
+        try {
+
+        int hashval = key.hashCode() & (data.length - 1);
+        LinkedList[L] chain = data[hashval];
+
+        if ( chain == null ) {
+            // no value found
+        } else {
+/*            LinkedListIterator[L]{L} it = chain.iterator();
+            while( it.hasNext() ) {
+                Item[L] item = (Item[L])( it.next() );  // TODO: this cast seems to be causing troubles...
+                if ( item.getKey().equals( key ) ) {
+                    return item.getValue();
+                }
+            } */
+            int len = chain.size();
+            int i = 0;
+            while (i < len) {
+                Item[L] item = (Item[L]) chain.get(i);
+                if (item.getKey().equals(key)) {
+                    return item.getValue();
+                }
+                i++;
+            }
+
+            // no value found in list
+        }
+        }
+        catch (NullPointerException e) { }
+        catch (ArrayIndexOutOfBoundsException e) { }
+        catch (ClassCastException e) { }
+//        catch (java.util.NoSuchElementException e) { }
+
+        return null;
+    }
+
+
+    public Object{L} remove{L}( Object{L} key ) {
+
+        try {
+
+        int hashval = key.hashCode() & (data.length - 1);
+        LinkedList[L] chain = data[hashval];
+
+        if ( chain == null ) {
+            // no value found
+        } else {
+            LinkedListIterator[L] it = chain.iterator();
+            while( it.hasNext() ) {
+                Item[L] item = (Item[L])( it.next() );  // TODO: cast troubles again...
+                if ( item.getKey().equals( key ) ) {
+
+                    chain.remove(item);
+                    size--;
+                    return item.getValue();
+                }
+            }
+            // else, no value found
+        }
+
+        }
+        catch (NullPointerException e) { }
+        catch (ArrayIndexOutOfBoundsException e) { }
+        catch (ClassCastException e) { }
+        catch (java.util.NoSuchElementException e) { }
+
+        return null;
+    }
+
+    private void expand{L}() {
+        try {
+        LinkedList[L][] olddata = data;
+        int oldsize = size;
+
+        data = new LinkedList[L][ (int)((float)(data.length) * growthfactor) ];
+        size = 0;
+
+        for (int i=0; i<olddata.length; i++) {
+
+            LinkedList[L] chain = olddata[i];
+
+            if ( chain == null ) {
+                continue;
+            } else {
+
+                LinkedListIterator[L] it = chain.iterator();
+                while( it.hasNext() ) {
+                    Item[L] nxt = (Item[L])( it.next() );   // TODO: cast troubles again...
+                    put( nxt.getKey(), nxt.getValue() );
+                }
+
+            }
+        }
+        }
+        catch (NullPointerException e) { }
+        catch (ArrayIndexOutOfBoundsException e) { }
+        catch (ClassCastException e) { }
+        catch (java.util.NoSuchElementException e) { }
+    }
+}

@@ -1,0 +1,21 @@
+class This1 {
+    public final int{this} a = 0;
+}
+
+class Tester {
+    This1{Alice:} th;
+    
+    public Tester() {
+        th = new This1();
+    }
+
+
+    public int{Alice:} m() {
+        try {
+            return th.a;
+        } catch (NullPointerException x) { }
+
+        return 0;
+    }
+}
+    

@@ -1,0 +1,11 @@
+class C {
+    int{} m() where caller(Alice)  { return 5; }
+}
+
+class D extends C {
+    int{Alice:} secret;
+    int{} m() where caller(Alice), caller(Bob) // fail
+    { 
+	return secret; 
+    }
+}

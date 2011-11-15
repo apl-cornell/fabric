@@ -1,0 +1,11 @@
+class While {
+    int{Alice:} secret;
+    int{Alice:Bob} junk;
+
+    void m{Alice:Bob}() {
+        while (secret > 100) {
+            secret = secret - 1;
+        }
+        junk = 100; 
+    }
+}

@@ -1,0 +1,3 @@
+class C[label L] { }
+
+class D extends C[{this}] { }

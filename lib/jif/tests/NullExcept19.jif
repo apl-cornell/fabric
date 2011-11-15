@@ -1,0 +1,11 @@
+class C[label L] {
+ static void foo() {}
+}
+class D {
+    final label lbl = new label {};
+    void m(D d) {
+	if (d != null) 
+	    C[d.lbl].foo();
+    }
+}
+ 

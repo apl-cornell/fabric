@@ -1,0 +1,12 @@
+class C[label L, label M] {
+    C() { }
+    static void m() { }
+    static int f;
+}
+public class D { 
+    void m() {
+	int x = C.f;
+	C.m();
+	new C();
+    }
+}

@@ -1,0 +1,16 @@
+class DynLabel6 {
+    final label{} f;
+    final DynLabel6{} g;
+
+    DynLabel6(label{} l, DynLabel6{} o) {
+	this.f = l;
+	this.g = o;
+    }
+  
+    void m(label{} q, DynLabel6 arg) {	
+	final DynLabel6 local = new DynLabel6(q, null);
+
+	int{*this.f.f} x3; // not ok, bad expression
+
+    }
+}

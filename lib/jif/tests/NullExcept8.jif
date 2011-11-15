@@ -1,0 +1,11 @@
+import jif.lang.*;
+
+public class NullExcept8 {
+    public static void main{}(String{}[] args) throws (ArrayIndexOutOfBoundsException{}) { 
+	// null pointer exception  cannot be thrown
+	int{}[]{} a = {1, 2};
+	int{} i = a[2]; // OK
+	a[1] = 7; // OK
+    }    
+}
+

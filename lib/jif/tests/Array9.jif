@@ -1,0 +1,5 @@
+class Array8
+{
+    int{Alice:;Alice!:} x = 3;
+    final int{Alice:Bob;Alice!:}[]{this;Alice:;Alice!:} ar = new int[] {x, x}; // bad
+}

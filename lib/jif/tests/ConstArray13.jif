@@ -1,0 +1,7 @@
+class C {
+    final int{this} const[]{this} foo = {1,2,3}; 
+    final C{this} const[]{this} bar = null; 
+    void m{*<-*}() {
+        int{Alice:Bob} const[]{Alice:Bob} foo = {1,2,3}; 
+    }
+}

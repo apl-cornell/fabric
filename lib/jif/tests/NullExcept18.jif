@@ -1,0 +1,36 @@
+import jif.lang.*;
+
+public class C {
+    final C{*!:*} foo = null;
+    C{*!:*} bar = null;
+    public C m() {
+	C o = null;
+	if (o != null && o.foo != null && o.foo.foo != null) {
+	    o.foo.foo.m(); // ok
+	    o.foo.m(); // ok
+	    o = null;
+	    try {
+		o.foo.m(); // not ok
+	    }
+	    catch (NullPointerException mustCatch) { }
+	}
+	if (o != null && o.m() != null) {
+	    try {
+		o.m().m(); // not ok
+	    }
+	    catch (NullPointerException mustCatch) { }
+	}
+	if (this.foo != null && this.foo.foo != null) {
+	    this.foo.foo.m(); // ok
+	    this.foo.m(); // ok
+	}
+	if (this.bar != null) {
+	    try {
+		this.bar.m(); // not ok, bar not final, so not tracked
+	    }
+	    catch (NullPointerException mustCatch) { }
+	}
+	return o;
+    }    
+}
+

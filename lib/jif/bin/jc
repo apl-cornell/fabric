@@ -1,0 +1,213 @@
+#!/usr/bin/perl
+# Produce statistics on Jif code.
+# Stephen Chong
+
+# TODOs:
+#  - correctly count number literals (with decimal points) as one token?
+#  - produce annotation statistics
+#  - allow more flexible command line, e.g., use stdin if no file specified
+
+
+$show_help = 0;
+for ($index = 0; $index <= $#ARGV; $index++) {
+print $ARGV[$index]."\n";
+    if ($ARGV[$index] =~ /^(-h|--help)$/i) {
+	    print "usage: jc [file1 file2 ...]\n";
+	    print "Report statistics about Jif code.\n";
+	    print "   Files should be Jif programs.\n";
+	    print "   If no input files specified, stdin is used.\n";
+	    exit;
+    }
+}
+
+
+# the counters for stats
+$linesTotal = 0;    # total lines in file
+$commentLines = 0;  # number of lines containing nothing but comments
+$atLeastOneTokenLines = 0;     # number of non-comment lines with at least one token
+$atLeastTwoTokenLines = 0; # number of non-comment lines with more than one token
+$blankLines = 0;    # number of blank lines (doesn't include comment lines)
+$declassifies = 0;  # number of declassify statements and expressions
+$endorses = 0;      # number of endorse statements and expressions
+$semicolons = 0;    # total number of semicolons
+$totalTokens = 0;   # total number of tokens
+#UNIMPLEMENTED:
+#$annotations = 0;  # number of label annotations
+#$comments = 0;     # number of comments
+
+# two possible states, either in the middle of a multi-line comment, or not.
+$inMultilineComment = 0; 
+
+# Define the tokens
+loadTokens();
+
+# patterns to recognise annotations
+# $policy = "\w+|\*[\.\w]*|[\.\w]*:[\.\w]*(,[\.\w]*)*"; # needs some white space
+#$label = 
+
+# read in each line of the file
+while ($line = <>) {
+    $linesTotal++;
+    $strippedComment = 0; # did we strip a comment off this line?
+
+    if ($inMultilineComment) {
+        # scan forward until the comment ends, i.e., until line contains "*/"
+        while ($line && $line !~ /\*\//) { 
+            $commentLines++;
+            $line = <>;
+            $linesTotal++;            
+        }
+        $inMultilineComment = 0;
+
+        # cut off the comment, and process the rest of the line
+        $strippedComment = 1;
+        $line =~ s/^.*?\*\// /;   # leading comments " ... */" 
+    }
+    if (($line =~ /(\/\*)/) && ($line !~ /(\/\*).*\*\//)) {
+        # the line contains "/*" and doesn't contain "*/"
+        # so we are at the start of a multiline comment.
+        $inMultilineComment = 1;
+
+        # the comment will be stripped off and the start of the line processed.
+    } 
+
+    # strip off any contained and trailing comment
+    $strippedComment |= ($line =~ s/\/\*(.*?)\*\// /g);   # contained comments "/* ... */"
+    $strippedComment |= ($line =~ s/(\/[\*\/]).*$//);  # trailing comments, "/* ... " or "// ... "
+    
+
+    # -----------------------------------------------
+    # count the number of tokens
+    $tokens = 0;
+
+    # -----------------------------------------------
+    # count the number of declassify tokens.
+    while ($line =~ s/(^|\W)declassify($|\W)/$1 $2/) {
+        $declassifies++; 
+        $tokens++;            
+    }
+    
+    # -----------------------------------------------
+    # count the number of endorse tokens.
+    while ($line =~ s/(^|\W)endorse($|\W)/$1 $2/) {
+        $endorses++; 
+        $tokens++;            
+    }
+    
+    # -----------------------------------------------
+    # count the number of semicolons.
+    while ($line =~ s/;/ /) {
+        $semicolons++; 
+        $tokens++;            
+    }
+
+    # go through list of tokens, and for each one, count and remove occurances
+    # Would be way way quicker to go through the string, and remove based on what is in there...
+    foreach $toke (@TOKENS) {
+        $tok = escapeToken($toke);
+        $tokens++ while ($line =~ s/$tok/ /);
+    }
+
+#    foreach $toke (@KEYWORDS) {
+#        $tok = escapeToken($toke);
+#        $tokens++ while ($line =~ s/(^|\W)$tok($|\W)/$1 $2/);
+#    }
+
+    
+    # -----------------------------------------------
+    # now count identifiers
+    $tokens++ while ($line =~ s/(\S+)/ /);
+
+    $line =~ /^\s*$/ or die "Tokenizing didn't work, left over symbols: $copy";
+    $totalTokens += $tokens;
+    
+    # -----------------------------------------------
+    # count the number of annotations
+    # TODO
+    
+    # -----------------------------------------------
+    # increment linecounts
+    if ($tokens > 1) { $atLeastTwoTokenLines++; }
+    if ($tokens > 0) { $atLeastOneTokenLines++; }
+    if ($tokens == 0 && $strippedComment) { $commentLines++; }
+    if ($tokens == 0 && !$strippedComment) { $blankLines++; }
+}
+
+
+# print "Done!\n";
+
+(($atLeastOneTokenLines + $commentLines + $blankLines) == $linesTotal) or die "invariant broken: comment lines + blank lines + lines with at least 1 token != total lines";
+# output stats
+print<<END;
+Lines > 0 tokens : $atLeastOneTokenLines
+Comment lines    : $commentLines
+Blank lines      : $blankLines
+------------------------------
+Total lines      : $linesTotal
+
+Lines > 1 tokens : $atLeastTwoTokenLines
+
+Total tokens     : $totalTokens
+Semicolons       : $semicolons
+Declassify count : $declassifies
+Endorse count    : $endorses
+END
+
+
+sub escapeToken {
+        my $tok = shift(@_);
+
+        # escape problematic characters
+        $tok =~ s/\+/\\\+/g;
+        $tok =~ s/\(/\\\(/g;
+        $tok =~ s/\)/\\\)/g;
+        $tok =~ s/\[/\\\[/g;
+        $tok =~ s/\]/\\\]/g;
+        $tok =~ s/\./\\\./g;
+        $tok =~ s/\?/\\\?/g;
+        $tok =~ s/\*/\\\*/g;
+        $tok =~ s/\^/\\\^/g;
+        $tok =~ s/\|/\\\|/g;
+
+        return $tok;
+    }
+
+
+sub loadTokens {
+@KEYWORDS = (
+
+    # keywords
+    "abstract", "assert",   "boolean",  "break"   ,  "byte"   ,  "case",  
+    "catch",   "char",     "class",    "const"  ,  "continue",  "default",  "do",  "double",  "else",  "extends", 
+    "final",  "finally",  "float",  "for",  "goto",  "if",  "implements",  "import", 
+    "instanceof", "int",  "interface",  "long",  "native",  "new",  "package",  "private", 
+    "protected",  "public",  "return",  "short",  "static",  "strictfp",  "super", 
+    "switch",  "synchronized",  "this",  "throw",  "throws",  "transient",  "try", 
+    "void",  "volatile",  "while",  "true",  "false", "null",
+
+    # Jif specifc keywords
+    "where", "actsfor", "actsFor", "declassify", "endorse", "authority", "equiv", "label", "principal"
+
+             );
+
+@TOKENS = (
+
+    # separators
+    "("   ,    ")"   ,    "{"   ,    "}"   , 
+    "["   ,    "]"   ,    ";"   ,    ","   ,
+    "."   ,
+
+    # operators. Order is important, longer ones must go first
+    "<<=" ,    ">>=" ,    ">>>=",    
+    "=="  ,    "<="  ,    ">="  ,    "!="  ,
+    "&&"  ,    "||"  ,    "++"  ,    "--"  ,
+    "+"   ,    "-"   ,    "*"   ,    "/"   ,
+    "&"   ,    "|"   ,    "^"   ,    "%"   ,
+    "<<"  ,    ">>"  ,    ">>>" ,    "+="  ,
+    "-="  ,    "*="  ,    "/="  ,    "&="  ,
+    "|="  ,    "^="  ,    "%="  ,    "="   ,
+    ">"   ,    "<"   ,    "!"   ,    "~"   ,
+    "?"   ,    ":"   
+           
+    );
+}

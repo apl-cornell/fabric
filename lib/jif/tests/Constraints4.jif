@@ -1,0 +1,14 @@
+class Constraints4
+{
+    public int{*endlabel} m {*beginlabel} (label beginlabel, label endlabel):{endlabel} {
+        int{Alice:} a;
+        int{Alice:Bob} b;
+        int c;
+
+        b = 0;
+        c = 10 + b;
+        a = c;
+
+	return c;
+    }
+}

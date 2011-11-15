@@ -1,0 +1,32 @@
+class IntBounds {
+
+    public void f1() {
+        int i = 0;
+        int j = 1;
+
+        if (i > 0 && j > 1) {
+            i = j = 0;
+        }
+
+        j++;
+    }
+
+    public void f2() {
+        int y = -2;
+        int x = -1;
+
+        if (x > y++) {
+            String s = "x > -1";
+            x = y;
+        }
+    }
+    
+    public void f3(int j) {
+        int i = 0;
+        
+        while (j > 100) {
+            i -= 100;
+        }
+    }
+
+}

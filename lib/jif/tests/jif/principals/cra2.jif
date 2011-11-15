@@ -1,0 +1,15 @@
+package jif.principals;
+
+public class cra2 extends ExternalPrincipal {
+    public cra2() {
+	super("cra2");
+    }
+
+    private static cra2{*!:*} P;
+    public static Principal getInstance{*!:*}() {
+	if (P == null) {
+	    P = new cra2();
+	}
+	return P;
+    }
+}

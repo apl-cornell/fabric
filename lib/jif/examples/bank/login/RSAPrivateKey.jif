@@ -1,0 +1,13 @@
+class RSAPrivateKey {
+    double{client:} keyData;
+    public RSAPrivateKey(double d) {
+	keyData = d;
+    }
+    public Nonce{client:} decrypt(EncryptedObject e) {
+	if (keyData == e.getTag()) {
+	    return e.getNonce();
+	} else {
+	    return new Nonce();
+	}
+    }
+}

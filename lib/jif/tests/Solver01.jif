@@ -1,0 +1,12 @@
+class C {
+    final int{this} i = 0;
+    void m{p:}(principal p) {
+	final label lbl = new label {p:};
+
+	// we know that this <= {p:} <= {*lbl}
+	// but solver needs to use assertions recursively to achieve this.
+	n(lbl, this.i);
+    }
+
+    void n(label lb, int{*lb} x) { }
+}

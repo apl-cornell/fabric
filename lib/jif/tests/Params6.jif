@@ -1,0 +1,15 @@
+class A[label L] {
+    int{L} f;
+
+    public void set{L}(int{L} ff) {
+        f = ff;
+    }
+}
+
+public class B[label L] {
+    A[L]{L} a;
+
+    public void set{L}(int{L} fff):{L} throws (NullPointerException) {
+        a.set(fff);
+    }
+}

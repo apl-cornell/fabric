@@ -1,0 +1,6 @@
+class InvariantClass6 (invariant)  {
+    InvariantClass6{this; Alice:} m() {
+	return this; //illegal
+    }
+}
+

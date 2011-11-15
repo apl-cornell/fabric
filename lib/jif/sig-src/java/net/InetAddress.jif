@@ -1,0 +1,32 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.net;
+
+public class InetAddress[label L] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    
+    public native boolean{L} isMulticastAddress();
+    public native boolean{L} isAnyLocalAddress();
+    public native boolean{L} isLoopbackAddress();
+    public native boolean{L} isLinkLocalAddress();
+    public native boolean{L} isSiteLocalAddress();
+    public native boolean{L} isMCGlobal();
+    public native boolean{L} isMCNodeLocal();
+    public native boolean{L} isMCLinkLocal();
+    public native boolean{L} isMCSiteLocal();
+    public native boolean{L} isMCOrgLocal();
+    public native String{L} getHostName();
+    public native String{L} getCanonicalHostName();
+    public native byte{L}[]{L} getAddress();
+    public native String{L} getHostAddress();
+    
+    public native static InetAddress[L]{L} getByAddress(String{L} host, byte{L}[]{L} addr) throws (UnknownHostException{L});
+    public native static InetAddress[L]{L} getByName(String{L} host) throws (UnknownHostException{L});
+    public native static InetAddress[L]{L}[]{L} getAllByName(String{L} host) throws (UnknownHostException{L});
+    public native static InetAddress[L]{L} getByAddress(byte{L}[]{L} addr) throws (UnknownHostException{L});
+    public native static InetAddress[L]{L} getLocalHost() throws (UnknownHostException{L});
+}

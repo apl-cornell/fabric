@@ -1,0 +1,36 @@
+// test checked endorse
+class C {
+    void m{p!:}(principal p) where caller(p) {
+        int{p!:} checked = 0;
+        int{} unchecked = userInput();
+        
+        endorse(unchecked, {} to {p!:}) 
+        if (unchecked > 0) {
+            checked = unchecked;
+        }
+        else {
+            checked = -1;
+        }
+        
+    }   
+    
+    // the checked endorse should be equivalent in terms of
+    // label checking to the following method 
+    void n{p!:}(principal p) where caller(p) {
+        int{p!:} checked = 0;
+        int{} unchecked = userInput();
+        
+        final int uncheckedp = endorse(unchecked, {} to {p!:});
+        if (uncheckedp > 0) {
+            checked = uncheckedp;
+        }
+        else {
+            checked = -1;
+        }
+        
+    }
+    int{} userInput() {
+        return 3;
+    }
+}
+

@@ -1,0 +1,8 @@
+class C[principal P] authority (P) {
+    int{P!:} foo = 3;
+    int{P!:} m{}() where authority(P), 
+                       endorse({P!:}) { 
+	foo = 7; // side effect at level P!:
+        return foo;
+    }
+}

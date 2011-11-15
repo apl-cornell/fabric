@@ -1,0 +1,11 @@
+class C {
+    void m{}() {
+	int[] arr = new int[7];
+	int size = 6;
+	if (size < arr.length) {
+	    for (int i = 0; i < size; i++) {
+		arr[i] = 2; // OK, no exception possible
+	    }
+	}
+    }
+}

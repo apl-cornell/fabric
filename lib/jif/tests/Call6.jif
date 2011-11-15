@@ -1,0 +1,11 @@
+class Call6 authority (Alice)
+{
+    void foo() where authority (Alice) {
+	new C().m();
+    }
+}
+
+class C {
+    void m() where caller(Alice) {}
+}
+

@@ -1,0 +1,12 @@
+class C authority (Alice) {
+    void m{Alice:}(C{Alice:} foo) where authority (Alice) {
+        if (declassify(foo == null, {Alice:Bob})) {
+            return;
+        }
+        // foo not null here
+        foo.n();
+        
+    }
+    
+    void n() {}
+}

@@ -1,0 +1,12 @@
+package jif.lang;
+
+/**
+ * A proof that actor can act for granter, by claiming that granter delegates
+ * its authority to actor. 
+ */
+public final class DelegatesProof extends ActsForProof {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    public DelegatesProof(principal{this} actor, principal{this} granter) {
+        super(actor, granter);
+    }
+}

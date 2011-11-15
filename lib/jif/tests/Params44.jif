@@ -1,0 +1,11 @@
+class C[label L1, label L2] {
+    static int m() {
+	return 0;
+    }
+}
+class D {
+    void foo{} (label{Alice:} lbl1, label{Bob:} lbl2) {
+	C[lbl1, lbl2]{} x = new C[lbl1, lbl2]();
+	x.m();
+    }
+}

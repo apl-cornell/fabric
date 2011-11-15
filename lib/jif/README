@@ -1,0 +1,270 @@
+Jif 3.3.1
+
+			     The Jif Compiler
+			     ----------------
+
+Jif is an implementation of the JFlow language (with several
+extensions) described in the 1999 paper, Practical Mostly-Static
+Information Flow Control, published in the Proceedings of the 26th ACM
+Symposium on Principles of Programming Languages (POPL), January 1999,
+pp. 228-241, by Andrew C. Myers.
+
+Since you are reading this file, you have already downloaded and unpacked
+the Jif distribution.  Your installation directory contains the following
+sub-directories:
+
+  - src:      the complete source code of the Jif compiler
+  - doc:      Jif documentation 
+  - lib:      needed JAR files
+  - bin:      scripts to run the Jif compiler
+  - examples: Jif examples
+  - rt-src:   source code for the Jif runtime classes
+  - sig-src:  Jif signatures for standard Java classes, e.g. java.lang.Object
+  - lib-src:  Jif source code for utility classes, e.g. jif.util.List
+  - tests:    Some Jif source code to test the Jif compiler
+
+
+Requirements
+------------
+
+This Jif distribution builds on Unix and on Windows using the Cygwin
+environment. Jif is compiled with the Ant build tool
+(http://jakarta.apache.org/ant). You must ensure that java, javac, and
+g++ are in your path.
+
+Softare Versions: We recommend that you use JDK 1.4.2 or later.  Ant
+   1.6.5 is known to work with Jif 3.1.1.
+
+Jif and Cygwin: Jif can be built and used on a Windows platform running 
+   Cygwin. Several issues are worth pointing out however. 
+     - The GNU C++ compiler, g++, must be installed in order to build the 
+       Jif native runtime library.
+     - The w32api package must be installed, to ensure the appropriate 
+       Windows header files are present.
+     - Great care must be taken in specifying class paths and environment
+       variables. Any classpath used when compiling Jif programs must be
+       understandable by both the javac compiler and ant. Thus, for 
+       example, if setting the environment variable JIF to the Jif 
+       installation directory, the variable should be set to either the 
+       string "c:\data\jif", or "c:/data/jif". It should not be set to 
+       the string "/cygdrive/c/data/jif", which cannot be interpreted by
+       javac correctly.
+       In addition, note that the path separator on a Windows platform is
+       the semicolon (';'), and, class paths should be set accordingly, 
+       for example:
+          setenv CLASSPATH "$POLYGLOT/polyglot.jar;$POLYGLOT/lib/jflex.jar;$POLYGLOT/lib/java_cup.jar"
+     - We have had some reports that some versions of Cygwin are 
+       incompatible with building Jif, however, cygwin-1.5.16-1 appears to 
+       be compatible. 
+
+Jif is implemented using the Polyglot extensible compiler toolkit,
+also developed at Cornell. Polyglot can be obtained from the web site:
+
+    http://www.cs.cornell.edu/Projects/polyglot
+
+This Jif distribution contains the files polyglot.jar, JFlex.jar and
+java_cup.jar from the Polyglot 2.3.0 distribution. These files are
+required to build Jif.
+
+This Jif distribution contains some C++ code, used to produce
+platform-specific Jif runtime support. Jif requires the g++ compiler
+to be present to compile this C++ code.
+
+
+Building Jif
+------------
+
+Jif is compiled with the Ant build tool
+(http://jakarta.apache.org/ant).  Follow these steps to build the Jif
+compiler:
+
+1. Ensure javac is on your path and that you are using JDK 1.4.2 or
+   later. Set the JAVA_HOME environment variable to the Java home
+   directory.  The file $JAVA_HOME/include/jni.h should exist.
+
+2. Go to the root directory of the Jif installation (the directory
+   this README is in). We'll call this directory $JIF from now on.
+
+    $ cd $JIF
+
+3. Edit config.properties to point "polyglot.home" to your Polyglot
+   installation.
+
+  
+4. Run ant to configure the system.
+
+        $ ant configure
+   
+   This ensures that the classpath is set appropriately, and creates the
+   executable scripts $JIF/bin/jifc and $JIF/bin/jif.
+
+
+5. Run ant to build the platform-specific Jif runtime support.
+
+        $ ant jif-runtime
+
+   This compiles the $JIF/rt-src directory. Some of the code in this
+   directory is C++ code, and the compilation of this code is
+   platform-specific. Jif requires the C++ compiler g++ to be
+   available to compile this code. If you do not have g++ but do have
+   an alternative C++ compiler, you may be able to modify the file
+   build.xml file to use the other compiler.
+
+   The resulting files will be stored in $JIF/rt-classes.
+
+   The Jif distribution comes with the Jif compiler almost completely
+   pre-built (in the lib directory), and is nearly usable "out of the
+   box." If you want, you can now skip step 5, which builds the Jif
+   compiler and proceed directly to step 6.
+
+
+6. (OPTIONAL) 
+   Run ant to build the Jif compiler, Jif signatures for standard Java
+   classes and the Jif library code.
+
+        $ ant
+
+   This compiles the $JIF/src, $JIF/sig-src and $JIF/lib-src
+   directories.
+
+   The resulting .class files for the source code in $JIF/src,
+   $JIF/sig-src and $JIF/lib-src will be stored in $JIF/classes,
+   $JIF/sig-classes and $JIF/lib-classes respectively.
+
+
+7. You are now ready to try out Jif.  A suggested starting point is
+   the BattleShip example, in the directory
+   $JIF/examples/battleship. See the README file in that directory for
+   more detailed information on compiling and running the BattleShip
+   example.
+
+
+
+Running Jif
+-----------
+
+Scripts named "jifc" and "jif" are created in the $JIF/bin directory
+during the configuration process (see above, step 3). The jifc script
+runs the Jif compiler, and the jif script provides a convenient way to
+execute the compiled Jif code.
+
+The jifc script automatically ensures the directories $JIF/classes and
+$JIF/lib-classes are on the classpath, and that the directories
+containing the runtime classes and signatures classes ($JIF/rt-classes
+and $JIF/sig-classes) are specified with the "-rtcp" and "-sigcp"
+flags respectively. In addition, the appropriate jar files (jif.jar,
+jiflib.jar, jifrt.jar and jifsig.jar) are also added to the
+appropriate classpaths, which allows the Jif compiler to be used "out
+of the box."
+
+The command line options for jifc can be viewed by running jifc with the
+"-h" flag:
+    $ $JIF/bin/jifc -h
+    usage: jifc [options] <source-file>.jif ...
+    where [options] includes:
+      @<file>                  read options from <file>
+      -d <directory>           output directory
+      -assert                  recognize the assert keyword
+      -sourcepath <path>       source path
+      -bootclasspath <path>    path for bootstrap class files
+      -ext <extension>         use language extension
+      -extclass <ext-class>    use language extension
+      -commandlineonly         only compile files named on the command-line (may
+			       also require -c)
+      -preferclassfiles        prefer class files to source files even if the 
+			       source is newer
+      -fqcn                    use fully-qualified class names
+      -sx <ext>                set source extension
+      -ox <ext>                set output extension
+      -errors <num>            set the maximum number of errors
+      -w <num>                 set the maximum width of the .java output files
+      -dump <pass>             dump the ast after pass <pass>
+      -print <pass>            pretty-print the ast after pass <pass>
+      -disable <pass>          disable pass <pass>
+      -noserial                disable class serialization
+      -nooutput                delete output files after compilation
+      -c                       compile only to .java
+      -outputamb               allow generating code from ambiguous nodes
+      -post <compiler>         run javac-like compiler after translation
+      -v -verbose              print verbose debugging information
+      -report <topic>=<level>  print verbose debugging information about topic 
+			       at specified verbosity
+	    Allowed topics: imports, jl, labelEnv, serialize, types, frontend, 
+	    time, resolver, cfg, visit, labels, error, dataflow, solver, jif, 
+	    debug, errors, context, loader, verbose, qq
+      -version                 print version info
+      -h                       print this message
+      -e -explain              provide more detailed explanations of failed 
+			       label checking.
+      -robust                  enable checking of robustness conditions for
+                               downgrading
+      -debug <n>               set debug level to n. Prints more information 
+			       about labels.
+      -stop_constraint <n>     halt when the nth constraint is added
+      -globalsolve             infer label variables globally (default: per 
+			       class)
+      -sigcp <path>            path for Jif signatures (e.g. for 
+			       java.lang.Object)
+      -addsigcp <path>         additional path for Jif signatures; prepended to 
+			       sigcp
+      -rtcp <path>             path for Jif runtime classes
+      -addrtcp <path>          additional path for Jif runtime classes; 
+			       prepended to rtcp
+
+The jif script automatically ensures that the directories
+$JIF/rt-classes and $JIF/lib-classes are on the classpath, and that
+the Jif runtime native code is on the library load path.
+
+See the Jif documentation ($JIF/doc/index.html) for more information
+about writing Jif programs. See the directories $JIF/examples and
+$JIF/tests for some examples of Jif programs.
+
+Credits
+-------
+
+The Jif project is supervised by Andrew Myers at the Cornell
+University Computer Science Department. Many people have contributed
+to this software.
+
+This release of the Jif compiler was prepared by Stephen Chong. Thanks to 
+Aslan Askarov, Robert Grabowski, Doaa Hassan, Daniel Hedin, Boniface Hicks,
+Dave King, Karl Mazurak, Todd Millstein, Andrei Sabelfeld, Lilia Sfaxi, 
+and Steve Zdancewic, who provided bug reports and feedback for this and
+previous versions of Jif. Xin Zheng, Lantian Zheng, Steve Zdancewic, 
+and Nate Nystrom helped implement earlier versions.
+
+Restrictions on use
+-------------------
+
+This free release of the Jif system may be used, modified, and
+redistributed as governed by the license included in the attached file
+LICENSE.
+
+Jif: Java Information Flow
+Copyright (C) 1999-2008 Andrew C. Myers, Cornell University
+
+This software is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the file
+LICENSE for more details.
+
+More information
+----------------
+
+More information about Jif, including the latest release, can be found
+at the Jif web site at
+
+    http://www.cs.cornell.edu/jif
+
+If you use Jif, we'd appreciate your letting us know.  Send your
+comments and bug reports to Andrew Myers at andru@cs.cornell.edu.  If
+you would like to receive notification of future Jif updates, please
+join the mailing list; details are on the Jif web site.
+
+Acknowledgments
+----------------
+
+The development and maintenance of this Jif software release has been supported
+by NSF Grants 0430161 and 0627649, and by AFRL NICECAP Award FA8750-08-2-0079.
+Any opinions expressed or implied in this release are those of the software
+developers alone, and not necessarily those of these sponsors.

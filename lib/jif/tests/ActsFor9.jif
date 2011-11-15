@@ -1,0 +1,11 @@
+class ActsFor9[principal P]
+{
+    public void p(principal{} a, principal{} b) {
+        int{b:} x = 0;
+        int{P:} y = 0;
+
+        if (a actsFor b || false) { // actsfor must appear by itself
+           y = x; 
+        }
+    }
+}

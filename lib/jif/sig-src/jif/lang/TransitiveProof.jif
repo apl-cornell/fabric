@@ -1,0 +1,18 @@
+package jif.lang;
+
+/**
+ * A proof that actor can act for granter, by showing that there is a principal
+ * p such that actor can act for p, and p can act for granter. 
+ */
+public final class TransitiveProof extends ActsForProof {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private final ActsForProof{this} actorToP;
+    private final ActsForProof{this} pToGranter;
+    private final principal{this} p;
+    public TransitiveProof(ActsForProof{this} actorToP, principal{this} p, ActsForProof{this} pToGranter) {
+        super(p, p); // dummy
+        this.actorToP = actorToP;
+        this.pToGranter = pToGranter;
+        this.p = p;
+    }
+}

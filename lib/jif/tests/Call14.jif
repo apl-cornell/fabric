@@ -1,0 +1,11 @@
+class Call14
+{
+    void foo() {
+	if (Alice actsfor Bob)
+	    new C().m(Alice, Bob);
+    }
+}
+
+class C {
+    void m(principal p, principal q) where p actsfor q {}
+}

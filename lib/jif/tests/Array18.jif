@@ -1,0 +1,32 @@
+class C {
+    void m{*!:*}() { 
+        // test negative size arrays
+        int[] c = new int[-1]; // will throw
+    }
+    int n{*!:*}() { 
+        // test negative size arrays
+        int[] c = new int[0]; // won't throw
+        return 2;
+    }
+    void o{*!:*}() { 
+        // test negative size arrays
+        int[] c = new int[n()]; // may throw
+    }
+    void p{*!:*}() { 
+        // test negative size arrays
+        int d = n();
+        int[] c = new int[d<0?9:d]; // will never throw
+    }
+    void q{*!:*}() { 
+        // test negative size arrays
+        int d = n();
+        d = d < 0 ? 0 : d;
+        int[] c = new int[d]; // will never throw
+    }
+    void r{*!:*}() { 
+        // test negative size arrays
+        int d = n();
+        int e = d < 0 ? 0 : d;
+        int[] c = new int[e]; // will never throw
+    }
+}

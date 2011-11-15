@@ -1,0 +1,10 @@
+class LabelIf10
+{
+    void m() {
+	// not allowed path may throw NPE
+	final LabeledObject{} lo = null;
+	if (lo.L <= new label {Alice:}) {
+	    //
+	}
+    }
+}

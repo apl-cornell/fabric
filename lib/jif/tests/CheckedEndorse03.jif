@@ -1,0 +1,18 @@
+// test checked endorse
+class C {
+    void m{p!:}(principal p) where caller(p) {
+        int{p!:} checked = 7;
+        int{} unchecked = userInput();
+        
+        endorse(unchecked < 10, {} to {p!:}) {
+            if (unchecked < 10) {
+                checked = unchecked;
+            }
+        }
+        
+    }
+    int{} userInput() {
+        return 3;
+    }
+}
+

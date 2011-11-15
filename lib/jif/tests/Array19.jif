@@ -1,0 +1,8 @@
+class C {
+    void m{*!:*}() { 
+        // test negative size arrays
+        int[] d = new int[5];
+        int[] c = new int[d.length]; // will never throw
+    }
+    int n() { return 5; }
+}

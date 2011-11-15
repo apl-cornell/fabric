@@ -1,0 +1,9 @@
+public class OwnedObject {
+    final principal{} p;
+    Object{p:} o;
+
+    public OwnedObject(principal{} newP, Object{newP:} newO) {
+	this.p = newP;
+	this.o = newO;
+    }
+}

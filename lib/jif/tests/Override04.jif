@@ -1,0 +1,19 @@
+class E {
+    public final label lb = new label {};
+}
+
+class C {
+    int{*l; *e.lb; Alice:} m{*l; *e.lb}(E e, String{*e.lb} s, String{*e.lb} x, label{*l} l):{*l; *e.lb; Alice:}
+	throws (Exception{*l; *e.lb; Alice:})
+    {
+	return 0;
+    }
+}
+
+class D extends C {
+    int{*m; *f.lb} m{*m; *f.lb; Alice:}(E f, String{*f.lb} t, String{*f.lb; *m} y, label{*m} m):{*m; *f.lb} 
+	throws (Exception{*m; *f.lb})
+    {
+	return 1;
+    }
+}

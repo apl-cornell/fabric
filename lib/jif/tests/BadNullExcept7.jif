@@ -1,0 +1,13 @@
+import java.lang.*;
+
+public class BadNullExcept7 {
+    public static void main(String[] args) { 
+	// null pointer exception  can be thrown
+	int[] a = null;
+	try {
+	    int i = a[2]; // BAD
+	}
+	catch (ArrayIndexOutOfBoundsException e) {}
+    }    
+}
+

@@ -1,0 +1,45 @@
+package jif.util;
+
+/**
+ * A collection of JifObjects.
+ *
+ * The parameter L is the label of the elements, that is,
+ * the collection contains JifObject[L] elements. It is
+ * also the label for the amount of 
+ * information obtained by knowing what objects are 
+ * contained in this collection.
+ */
+public interface Collection2[label S, label C] extends JifObject[{S;C}] {
+    int{S} size();
+    boolean{S} isEmpty();
+    boolean{S;C;o} contains(JifObject[C] o);
+    boolean{S;C;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o);
+    Iterator2[S,C]{this} iterator();
+
+//    JifObject[C]{S}[]{S} toArray{C}();
+
+    boolean{S} add{S}(JifObject[C]{S} o):{S}
+        throws (ClassCastException{S}, IllegalArgumentException{S});
+        
+//		Seems impossible to implement removing a specific object
+//		Could implement with slightly modified semantics, i.e. "Remove this particular object reference from the list"      
+    boolean{S;C} removeByRef{S}(JifObject[C]{S} o);
+
+    public boolean{S} remove{S}(JifObject[C]{S} o) where {C} <= {S};
+    
+//    boolean{L;c} containsAll(Collection[L]{L} c)
+//        throws (NullPointerException{c});
+    boolean{S} addAll{S}(Collection2[S,C]{S} c)
+        throws (ClassCastException{S}, IllegalArgumentException{S});
+//    boolean{L} removeAll{L}(Collection[L]{L} c);
+//    boolean{L} retainAll{L}(Collection[L]{L} c);
+
+    void clear{S}();
+    
+    // all collections must provide a way of accessing elements by index.
+    // this allows clients to iterate over elements without the side-effects
+    // required by iterators.
+    JifObject[C]{S;index} get(int index):{S;index}
+       throws (IndexOutOfBoundsException{S;index});
+    
+}

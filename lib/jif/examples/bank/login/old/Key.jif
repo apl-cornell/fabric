@@ -1,0 +1,24 @@
+import java.lang.*;
+import java.io.*;
+
+class Key[label L] {
+    long{L} keyData;
+    public Key() {
+	keyData = 2.0;
+    }
+
+    public Key(double keyData) {
+	this.keyData = keyData;
+    }
+
+    public long{L;n} encrypt(Nonce n) {
+	return 0;
+    }
+    public Nonce{L;e} decrypt(long e) {
+	if (keyData == e)
+	    return new Nonce();
+	 else
+	     return new Nonce();
+	}
+    }
+}

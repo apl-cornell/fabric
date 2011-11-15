@@ -1,0 +1,10 @@
+class C authority (Alice) {
+    void m{Alice!:}() where authority (Alice) {
+	boolean{Alice!:Bob} bool = false;
+	int{Alice:Bob; Alice!:Bob} x = 7;
+	if (bool) {
+	    // pc here depends on bool
+	    int y = declassify(x, {Alice:Bob,Chuck; bool}); // OK
+	}
+    }
+}

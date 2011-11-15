@@ -1,0 +1,16 @@
+import jif.util.LinkedList;
+
+public class ListTest {
+
+    LinkedList[{Alice:}] list;
+
+
+    public Object{Alice:} head() {
+        try {
+            return list.getFirst();
+        } 
+	catch (NullPointerException ignored) { }
+	catch (IndexOutOfBoundsException ignored) { }
+        return null;
+    }
+}

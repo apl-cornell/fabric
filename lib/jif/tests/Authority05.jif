@@ -1,0 +1,21 @@
+// Test casting between principal and jif.lang.Principal is working.
+class C  {
+    public C(String{this} name) {
+	super();
+    }
+
+    public void m() throws ClassCastException {
+  	foo((principal)3);   // bad
+  	bar((Principal)3);   // bad
+  	foo((principal)this);  // bad
+	bar((Principal)this); // ok.
+    }
+
+    Principal foo(principal p) {
+	return (Principal)p;
+    }
+    principal bar(Principal p) {
+	return p;       
+    }
+}
+

@@ -1,0 +1,15 @@
+class LabelIf8
+{
+    final LabeledObject{Bob:} lo = new LabeledObject(new label {Alice:}, null);
+
+    void m(label arg) throws (NullPointerException{lo}) {
+	final LabelIf8{} obj = new LabelIf8();
+	Object{Alice:} x = null;
+	if (lo.L <= new label {Alice:}) {
+	    // not allowed because if  branch tainted due to path access
+	    x = lo.o;
+	}
+	else {
+	}
+    }
+}

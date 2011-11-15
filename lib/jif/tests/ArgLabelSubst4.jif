@@ -1,0 +1,11 @@
+class  C {
+    public int{*y} bar{*!:}(label y) {
+        return 9;
+    }
+}
+
+class  D extends C {
+    public int{*y} bar{*!:}(label y) {
+        return 7;
+    }
+}

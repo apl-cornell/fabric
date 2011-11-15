@@ -1,0 +1,24 @@
+class Wrapper {
+    boolean{Alice:} secret;
+
+    public void leak():{Alice:} throws (ArithmeticException) {
+        if (secret) {
+            int i = 1/0;
+        }
+    }
+}
+
+public class EndLabel2 {
+    int{Alice:Bob} junk;
+    Wrapper{Alice:Bob} wrapper;
+
+    public void leak{Alice:Bob}() {
+        try {
+            wrapper.leak();
+            junk = 0; //pc = {Alice:}
+        }
+        catch(ArithmeticException e) {
+            junk = 1;
+        }
+    }
+}

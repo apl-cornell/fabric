@@ -1,0 +1,8 @@
+class D { }
+class C extends D {
+    final Object x; 
+    C() {
+        x = this; // BAD: this cannot appear on RHS of assignment in constructor proglogue
+        super();
+    }
+}

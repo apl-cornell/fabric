@@ -1,0 +1,6 @@
+class C[label L, principal P] {
+    void m() {
+	C[L] x = null; // cannot instantiate a non polymorphic type.
+    }
+}
+

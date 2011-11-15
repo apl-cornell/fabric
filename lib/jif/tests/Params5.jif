@@ -1,0 +1,8 @@
+class A[label L] {
+    A[L]{L} a;
+    A[L]{L} b;
+
+    public void m{L}() {
+        a = b;
+    }
+}

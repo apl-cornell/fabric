@@ -1,0 +1,13 @@
+// test principal params
+class C[principal P] { 
+    int{P:} m{}()  {
+        return 3;
+    }
+}
+
+class D {
+    void m{}() {
+        C x = new C(); 
+        int{Bob:; Chuck:} z = x.m(); // no real constraints on the param, so it will default to _
+    }
+}

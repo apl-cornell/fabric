@@ -1,0 +1,155 @@
+<html>
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<link rel=StyleSheet href="jifdoc.css" type="text/css">
+<script src="listCollapse.js" type="text/javascript" language="javascript1.2"></script>
+<script type="text/javascript">
+
+var closedBullet = '▸ ';
+var openBullet = '▾ ';
+var leafBullet = '• ';
+
+if (navigator.appName == "Microsoft Internet Explorer") {
+    closedBullet = '+ ';
+    openBullet = '- ';
+    leafBullet = '∙ ';
+}
+
+window.onload = function () {
+  compactMenu('tocul', false, false);
+}
+</script>
+<base target="main">
+<title>Jif reference manual</title>
+</head>
+
+<body class="toc">
+<h3>Jif Reference Manual</h3>
+<div class="toc">
+<ul id="tocul">
+  <li class="sec"><a href="overview.html#introduction">Introduction</a>
+    <ul>
+      <li class="ssec"><a href="overview.html#language_overview">Language overview</a></li>
+      <li class="ssec"><a href="overview.html#new_features">New features in Jif 3</a></li>
+    </ul>
+  </li>
+  <li class="sec"><a href="dlm.html#dlm">Decentralized label model</a>
+    <ul>
+      <li class="ssec"><a href="dlm.html#dlm_principals">Principals</a></li>
+      <li class="ssec"><a href="dlm.html#dlm_conf_policies">Confidentiality policies</a></li>
+      <li class="ssec"><a href="dlm.html#dlm_int_policies">Integrity policies</a></li>
+      <li class="ssec"><a href="dlm.html#dlm_labels">Labels</a></li>
+      <li class="ssec"><a href="dlm.html#dlm_syntax">Label syntax in Jif</a></li>
+    </ul>
+  </li>
+  <li class="sec"><a href="language.html#features">Language features</a>
+    <ul>
+      <li class="ssec"><a href="language.html#lexical">Lexical considerations</a></li>
+      <li class="ssec"><a href="language.html#labeltypes">Labeled types</a>
+	<ul>
+	  <li class="sssec"><a href="language.html#inference">Label inference</a>
+	  <li class="sssec"><a href="language.html#principal-hierarchy">Principals and <code>actsfor</code></a></li>
+	  <li class="sssec"><a href="language.html#implicit-flows">Implicit flows and program-counter labels</a></li>
+	  <li class="sssec"><a href="language.html#method-decls">Method declarations</a></li>
+	  <li class="sssec"><a href="language.html#default-labels">Default labels</a></li>
+	</ul>
+      </li>
+      <li class="ssec"><a href="language.html#authority">Authority and access control</a>
+	<ul>
+	  <li class="sssec"><a href="language.html#authority-decls">Authority declarations</a></li>
+	</ul>
+      </li>
+      <li class="ssec"><a href="language.html#downgrading">Downgrading</a>
+	<ul>
+	  <li class="sssec"><a href="language.html#selective-downgrading">Selective downgrading</a></li>
+	  <li class="sssec"><a href="language.html#robustness">Robustness</a></li>
+	</ul>
+      </li>
+      <li class="ssec"<a href="language.html#label-polymorphism">Polymorphism</a></li>
+      <li class="ssec"><a href="language.html#parameterized-classes">Parameterized classes</a>
+	<ul>
+	  <li class="sssec"><a href="language.html#label-principal-params">Label and principal parameters</a></li>
+	  <li class="sssec"><a href="language.html#param-inference">Parameter inference</a></li>
+	  <li class="sssec"><a href="language.html#param-interact-object-types">Interactions with object types</a></li>
+	  <li class="sssec"><a href="language.html#params-runtime">Using parameters at run time</a></li>
+	</ul>
+      </li>
+      <li class="ssec"><a href="language.html#dynamic-labels">Dynamic labels and principals</a>
+	<ul>
+	  <li class="sssec"><a href="language.html#label-exprs">Label expressions</a></li>
+	  <li class="sssec"><a href="language.html#runtime-tests">Run-time tests of labels and principals</a></li>
+	  <li class="sssec"><a href="language.html#runtime-tests">Run-time tests of labels and principals</a></li>
+	  <li class="sssec"><a href="language.html#user-defined-principals">User-defined principals</a></li>
+	</ul>
+      </li>
+      <li class="ssec"><a href="language.html#method-constraints">Method constraints</a></li>
+      <li class="ssec"><a href="language.html#const-arrays">Constant arrays</a></li>
+      <li class="ssec"><a href="language.html#java-changes">Other differences from Java</a>
+	<ul>
+	  <li class="sssec"><a href="language.html#static-fields">Static fields</a></li>
+	  <li class="sssec"><a href="language.html#runtime-exceptions">Runtime exceptions</a></li>
+	  <li class="sssec"><a href="language.html#constructors">Final field initialization</a></li>
+	  <li class="sssec"><a href="language.html#unsupported-java">Unsupported Java features</a></li>
+	</ul>
+      </li>
+    </ul>
+  </li>
+
+  <li class="sec"><a href="label_checking.html#label-checking">Label checking</a>
+    <ul>
+      <li class="ssec"><a href="label_checking.html#key-concepts">Key concepts</a>
+        <ul>
+          <li class="sssec"><a href="label_checking.html#pc-label">Program counter labels</a></li>
+          <li class="sssec"><a href="label_checking.html#path-maps">Normal and exceptional termination</a></li>
+          <li class="sssec"><a href="label_checking.html#nv-label">Normal value label</a></li>
+          <li class="sssec"><a href="label_checking.html#label-envs">Label environments</a></li>
+        </ul>
+      </li>
+      <li class="ssec"><a href="label_checking.html#basics">Basics of label checking</a></li>
+      <li class="ssec"><a href="label_checking.html#lits-ops">Literals, binary and unary operators</a></li>
+      <li class="ssec"><a href="label_checking.html#local-vars">Local variable declarations</a></li>
+      <li class="ssec"><a href="label_checking.html#var-access">Variable access</a></li>
+      <li class="ssec"><a href="label_checking.html#var-assignment">Variable assignment</a></li>
+      <li class="ssec"><a href="label_checking.html#arrays">Arrays</a></li>
+      <li class="ssec"><a href="label_checking.html#subtyping">Subtyping</a></li>
+      <li class="ssec"><a href="label_checking.html#compound-stmts">Compound statements</a></li>
+      <li class="ssec"><a href="label_checking.html#goto-stmts">Goto-like statements</a></li>
+      <li class="ssec"><a href="label_checking.html#exceptions">Exceptions</a></li>
+      <li class="ssec"><a href="label_checking.html#dynamic-type-discrimination">Dynamic type discrimination</a></li>
+      <li class="ssec"><a href="label_checking.html#dynamic-tests">Dynamic label and actsfor tests</a></li>
+      <li class="ssec"><a href="label_checking.html#label-exprs">Label expressions</a></li>
+      <li class="ssec"><a href="label_checking.html#downgrading">Downgrading</a>
+        <ul>
+		  <li class="sssec"><a href="label_checking.html#declassification">Declassification</a></li>
+		  <li class="sssec"><a href="label_checking.html#endorsement">Endorsement</a></li>
+        </ul>
+      </li>
+      <li class="ssec"><a href="label_checking.html#method-decls">Method declarations</a>
+        <ul>
+          <li class="sssec"><a href="label_checking.html#method-conformance">Method conformance</a></li>
+        </ul>
+      </li>
+      <li class="ssec"><a href="label_checking.html#method-calls">Method calls</a></li>
+      <li class="ssec"><a href="label_checking.html#constructors">Constructors</a></li>
+      <li class="ssec"><a href="label_checking.html#classes">Classes</a></li>
+    </ul>
+  </li>
+  <li class="sec"><a href="misc.html#java">Interacting with Java</a>
+    <ul>
+      <li class="ssec"><a href="misc.html#main">The <code>main</code> method</a></li>
+      <li class="ssec"><a href="misc.html#java-classes">Interacting with Java classes</a></li>
+    </ul>
+  </li>
+  <li class="sec"><a href="misc.html#debugging">Debugging Jif programs</a>
+    <ul>
+      <li class="ssec"><a href="misc.html#explain">Constraint explanations</a></li>
+      <li class="ssec"><a href="misc.html#report">Detailed reporting</a></li>
+    </ul>
+  </li>
+  <li class="sec"><a href="misc.html#runtime-interface">Jif runtime interface</a></li>
+  <li class="sec"><a href="bibliography.html#bibliography">Bibliography</a></li>
+</ul>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+class C[label L, principal P] {
+    void m() {
+	C[L, L] x = null; // bad, label for a principal
+    }
+}
+

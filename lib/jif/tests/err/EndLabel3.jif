@@ -1,0 +1,23 @@
+class A {
+    int{Alice:} value;
+
+    public boolean{Alice:} secret() {
+        return true;
+    }
+
+    public void set{Alice:}(int{Alice:} v) {
+        value = v;
+    }
+}
+
+public class EndLabel3 {
+    A{Alice:} a;
+
+    public void run{Alice:}(int{Alice:} v)
+        throws (NullPointerException)
+    {
+        if (a.secret()) {
+            a.set(v);
+        }
+    }
+}

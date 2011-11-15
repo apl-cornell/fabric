@@ -1,0 +1,7 @@
+class C[label L] {
+    final principal p;
+    void m() {
+	C[L, this.p] x = null; // cannot instantiate a non polymorphic type.
+    }
+}
+

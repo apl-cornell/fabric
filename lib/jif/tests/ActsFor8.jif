@@ -1,0 +1,15 @@
+class ActsFor8[principal P]
+{
+    public void p(principal{} b) {
+        int{b:} x = 0;
+        int{this;P:} y = 0;
+
+        if (P actsFor b) { // ok
+           y = x;
+        }
+        else {
+            // y = x; // error
+            // x = y; // error
+        }
+    }
+}

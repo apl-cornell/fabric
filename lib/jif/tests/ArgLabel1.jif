@@ -1,0 +1,9 @@
+class C {
+    void foo{this}() { }
+}
+class D {
+    // checking this method sends the label env into an infinite loop, as of Jif 2.0.0.
+  public void bar{x}(C{x} x)  {
+      if (x != null) x.foo();
+    }
+}

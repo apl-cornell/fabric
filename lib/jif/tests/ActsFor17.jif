@@ -1,0 +1,22 @@
+class ActsFor16[principal P]
+{
+    
+    public void m1() {
+	principal p = Alice;
+        if (Alice actsFor p) { // bad            
+        }
+    }
+    public void m2() {
+	Principal pp = Alice;
+        if (Alice actsFor pp) { // bad            
+        }
+    }
+    public void m3() {
+	final principal p = Alice;
+	final Principal pp = Alice;
+        if (pp actsFor p) { // ok
+        }
+        if (pp actsFor P) { // ok
+        }
+    }
+}

@@ -1,0 +1,10 @@
+class C[label L] {
+    public boolean{L;o} m(C[L] o) {
+        if (!(o instanceof C[L])) {
+	}
+	else {
+	    C[L] that = (C[L])o;
+	}
+	return true;
+    }
+}

@@ -1,0 +1,14 @@
+/*
+ * This tests extending non Jif classes.
+ * this should not be allowed. The call to super should be first.
+ */
+public class Y extends RuntimeException {
+    private int{} i;
+    public Y() { // call to super should be first.
+	i = 7;
+	super();
+    }
+    public void foo() {
+	new Y();
+    }
+}

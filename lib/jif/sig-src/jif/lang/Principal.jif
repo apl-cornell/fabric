@@ -1,0 +1,80 @@
+package jif.lang;
+
+/**
+ * The Jif signature for the class Principal, which is the runtime representation
+ * of principals of the decentralized label model.
+ *
+ * Objects that implement this interface can be coerced to values 
+ * of the primitive type <code>principal</code>. For example,
+ * <pre>
+ jif.lang.Principal o = ...;
+ principal p = o;
+ * </pre>
+ * <p>If the object <code>o</code> is <code>null</code>, then
+ * the principal value is the special <code>NullPrincipal</code>
+ * value, a principal for whom any other principal may act.
+ *
+ * <p>Any class that implements the <code>Principal</code> interface
+ * implicitly has the authority of the principal "this", that is,
+ * the principal represented by an object of the class.
+ * 
+ * <p>Notification of any change in delegation of authority should be
+ * given to the Jif runtime system via calls to 
+ * <code>PrincipalUtil.notifyNewDelegation</code>
+ * and <code>PrincipalUtil.notifyRevokeDelegation</code>. These allow
+ * the Jif runtime system to correctly cache results for acts-for queries. 
+ */
+public interface Principal {
+    static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    /**
+     * The name of this principal. Names should be unique within an
+     * implementation class, that is, given two Principal objects, o and p, o
+     * and p are considered to represent the same principal if
+     * <code>o.getClass() == p.getClass()</code> and
+     * <code>o.name().equals(p.name())</code>.
+     */
+    String{this} name();
+    
+    /**
+     * Does this principal delegate its authority to the principal p?
+     */
+    boolean{this; p; this<-} delegatesTo(principal p);
+    
+    /**
+     * Is this principal equal to the Principal p?
+     */
+    boolean equals(Principal p);
+    
+    /**
+     * Checks whether the <code>authPrf<code> provide sufficient proof of this
+     * principal's authority to execute the closure <code>closure</code>, and
+     * if so, returns true. In addition, if <code>executeNow</code> is true,
+     * the closure will be executed immediately.
+     *   For example, <code>authPrf<code> may be a password (or a password
+     * digest, or a certificate, etc.); this method will return true
+     * if that password matches the principal's password, and the closure
+     * is one that the principal expects to be asked to authorize (typically
+     * this is decided by inspecting the class of the closure).
+     */
+    boolean{authPrf; closure; lb; *lb; executeNow; this; this<-}
+	isAuthorized{this<-}(Object authPrf,
+		     Closure[this, lb] closure,
+		     label lb,
+		     boolean executeNow)
+	where authority (this),
+	      {authPrf;closure;lb;executeNow} <= lb;
+    
+    /**
+     * Search for a proof that the principal p can act for this principal.
+     * Return null if no such proof can be found.
+     */
+    ActsForProof{this; p; this<-; p<-}
+	findProofUpto{this<-}(Principal p, Object searchState);
+    
+    /**
+     * Search for a proof that this principal can act for the principal q.
+     * Return null if no such proof can be found.
+     */
+    ActsForProof{this; q; q<-; this<-}
+	findProofDownto{this<-}(Principal q, Object searchState);    
+}

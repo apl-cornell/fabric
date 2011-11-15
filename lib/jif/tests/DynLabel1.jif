@@ -1,0 +1,30 @@
+class DynLabel1 {
+    final label{*!:*} f;
+    final DynLabel1{*!:*} g;
+
+    DynLabel1(label{*!:*} l, DynLabel1{*!:*} o) {
+	this.f = l;
+	this.g = o;
+    }
+  
+    void m{*!:*}(label{*!:*} q, DynLabel1 arg) throws NullPointerException {	
+	final DynLabel1 local = new DynLabel1(q, null);
+
+	int{*q} x; // ok
+	int{*this.f} x2; // ok
+	int{*this.g.f} x3; // ok
+	int{*this.g.g.f} x4; // ok
+	int{*g.g.f} x5; // ok
+	int{*local.g.g.f} x6; // ok
+	int{*arg.f} x7; // ok
+	int{*arg.g.f} x8; // ok
+	int{*arg.g.g.f} x9; // ok
+
+	label ll = new label {*q}; // ok
+	ll = new label {*this.f}; // ok
+	ll = new label {*this.g.f}; // ok
+	ll = new label {*this.g.g.f}; // ok
+	ll = new label {*g.g.f}; // ok
+	ll = new label {*local.g.g.f}; // ok
+    }
+}

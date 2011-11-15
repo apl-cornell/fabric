@@ -1,0 +1,10 @@
+/*
+ * This tests extending non Jif classes.
+ * this should not be allowed. Although the call to super is first, it should be to a default constructor.
+ */
+public class Y extends RuntimeException {
+    public Y() { // call should be to default super
+	super("help");
+    }
+}
+

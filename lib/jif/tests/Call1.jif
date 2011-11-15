@@ -1,0 +1,11 @@
+class Call1 
+{
+    int{a} m(int{Alice:} a) {
+	return a;
+    }
+    
+    int{Alice:Bob} m2{*!:*}() {
+	int x = 10;
+	return m(x);
+    }
+}

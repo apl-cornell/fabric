@@ -1,0 +1,15 @@
+import jif.runtime.Runtime;
+
+class AAA[principal P]
+{
+    static AAA[u] create(principal u) {
+        return null;
+    }
+}
+
+class Params9[principal PP]
+{
+    void m(principal p) throws SecurityException {
+        AAA[p] a = AAA[p].create(p);
+    }
+}

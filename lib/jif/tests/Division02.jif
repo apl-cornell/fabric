@@ -1,0 +1,13 @@
+public class Division {
+    void m(int y) {
+        // check that arithmetic exceptions are thrown
+        try {
+            int x = 7/0;
+        }
+        catch (ArithmeticException e) { }
+        try {
+            int x = 7/y;
+        }
+        catch (ArithmeticException e) { }
+    }
+}

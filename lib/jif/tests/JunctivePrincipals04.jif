@@ -1,0 +1,28 @@
+class C {
+    void m() {
+	principal p = new principal (Alice&Bob);
+
+ 	if (Bob actsfor new principal (Alice&Bob)) {
+	    // then Bob acts for Alice
+	    int{Alice:} x = 6;
+	    int{Bob:} y = x;
+	}
+
+ 	if (new principal (Alice,Bob) actsfor Alice) {
+	    // then Bob acts for Alice
+	    int{Alice:} x = 6;
+	    int{Bob:} y = x;
+	}
+
+ 	if (new principal (Alice,Bob) actsfor Chuck) {
+	    // then Bob acts for Chuck
+	    int{Chuck:} x = 6;
+	    int{Bob:} y = x;
+	}
+ 	if (Chuck actsfor new principal (Alice&Bob)) {
+	    // then Chuck acts for Bob
+	    int{Bob:} x = 6;
+	    int{Chuck:} y = x;
+	}
+    }
+}

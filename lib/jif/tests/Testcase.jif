@@ -1,0 +1,18 @@
+import jif.runtime.Runtime;
+import jif.lang.PrincipalUtil;
+import java.io.PrintStream;
+
+class BrokenParameter[principal thisShouldNotBeBottom]
+{ }
+
+public class Main {
+
+   public static void main{}(principal{} p, String[]{} args)
+      throws (SecurityException)
+      where caller(p)
+   {
+      final principal u = new ExternalPrincipal("prin");
+      BrokenParameter[u] c = new BrokenParameter();
+   }
+
+}

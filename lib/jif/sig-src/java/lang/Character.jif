@@ -1,0 +1,111 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+public final class Character implements java.io.Serializable /*,  Comparable*/ {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    public static final int{*<-*} MIN_RADIX = 2;
+    public static final int{*<-*} MAX_RADIX = 36;
+    public static final char{*<-*}   MIN_VALUE = '\u0000';
+    public static final char{*<-*}   MAX_VALUE = '\uffff';
+    /* public static final Class TYPE = Class.getPrimitiveClass("char");*/
+    public static final byte{*<-*} UNASSIGNED                  = 0;
+    public static final byte{*<-*} UPPERCASE_LETTER            = 1;
+    public static final byte{*<-*} LOWERCASE_LETTER            = 2;
+    public static final byte{*<-*} TITLECASE_LETTER            = 3;
+    public static final byte{*<-*} MODIFIER_LETTER             = 4;
+    public static final byte{*<-*} OTHER_LETTER                = 5;
+    public static final byte{*<-*} NON_SPACING_MARK            = 6;
+    public static final byte{*<-*} ENCLOSING_MARK              = 7;
+    public static final byte{*<-*} COMBINING_SPACING_MARK      = 8;
+    public static final byte{*<-*} DECIMAL_DIGIT_NUMBER        = 9;
+    public static final byte{*<-*} LETTER_NUMBER               = 10;
+    public static final byte{*<-*} OTHER_NUMBER                = 11;
+    public static final byte{*<-*} SPACE_SEPARATOR             = 12;
+    public static final byte{*<-*} LINE_SEPARATOR              = 13;
+    public static final byte{*<-*} PARAGRAPH_SEPARATOR         = 14;
+    public static final byte{*<-*} CONTROL                     = 15;
+    public static final byte{*<-*} FORMAT                      = 16;
+    public static final byte{*<-*} PRIVATE_USE                 = 18;
+    public static final byte{*<-*} SURROGATE                   = 19;
+    public static final byte{*<-*} DASH_PUNCTUATION            = 20;
+    public static final byte{*<-*} START_PUNCTUATION           = 21;
+    public static final byte{*<-*} END_PUNCTUATION             = 22;
+    public static final byte{*<-*} CONNECTOR_PUNCTUATION       = 23;
+    public static final byte{*<-*} OTHER_PUNCTUATION           = 24;
+    public static final byte{*<-*} MATH_SYMBOL                 = 25;
+    public static final byte{*<-*} CURRENCY_SYMBOL             = 26;
+    public static final byte{*<-*} MODIFIER_SYMBOL             = 27;
+    public static final byte{*<-*} OTHER_SYMBOL                = 28;
+    public static final byte{*<-*} INITIAL_QUOTE_PUNCTUATION   = 29;
+    public static final byte{*<-*} FINAL_QUOTE_PUNCTUATION     = 30;
+    
+    public static final byte{*<-*} DIRECTIONALITY_UNDEFINED = -1;
+    public static final byte{*<-*} DIRECTIONALITY_LEFT_TO_RIGHT = 0;
+    
+    public static final byte{*<-*} DIRECTIONALITY_RIGHT_TO_LEFT = 1;
+    public static final byte{*<-*} DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC = 2;
+    public static final byte{*<-*} DIRECTIONALITY_EUROPEAN_NUMBER = 3;
+    public static final byte{*<-*} DIRECTIONALITY_EUROPEAN_NUMBER_SEPARATOR = 4;
+    public static final byte{*<-*} DIRECTIONALITY_EUROPEAN_NUMBER_TERMINATOR = 5;
+    public static final byte{*<-*} DIRECTIONALITY_ARABIC_NUMBER = 6;
+    public static final byte{*<-*} DIRECTIONALITY_COMMON_NUMBER_SEPARATOR = 7;
+    public static final byte{*<-*} DIRECTIONALITY_NONSPACING_MARK = 8;
+    public static final byte{*<-*} DIRECTIONALITY_BOUNDARY_NEUTRAL = 9;
+    public static final byte{*<-*} DIRECTIONALITY_PARAGRAPH_SEPARATOR = 10;
+    public static final byte{*<-*} DIRECTIONALITY_SEGMENT_SEPARATOR = 11;
+    public static final byte{*<-*} DIRECTIONALITY_WHITESPACE = 12;
+    public static final byte{*<-*} DIRECTIONALITY_OTHER_NEUTRALS = 13;
+    public static final byte{*<-*} DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING = 14;
+    public static final byte{*<-*} DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE = 15;
+    public static final byte{*<-*} DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING = 16;
+    public static final byte{*<-*} DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE = 17;
+    public static final byte{*<-*} DIRECTIONALITY_POP_DIRECTIONAL_FORMAT = 18;
+    
+    public Character(char{this} value) {
+        
+    }
+    
+    public native char{this} charValue();
+    public native int{this} hashCode();
+    
+    
+    public native boolean{this;obj} equals(Object obj);
+    public native String{this} toString();
+    public native static String toString(char c);
+    
+    public native static boolean isLowerCase(char ch);
+    public native static boolean isUpperCase(char ch);
+    public native static boolean isTitleCase(char ch);
+    public native static boolean isDigit(char ch);
+    public native static boolean isDefined(char ch);
+    public native static boolean isLetter(char ch);
+    public native static boolean isLetterOrDigit(char ch);
+    public native static boolean isJavaLetter(char ch);
+    public native static boolean isJavaLetterOrDigit(char ch);
+    public native static boolean isJavaIdentifierStart(char ch);
+    public native static boolean isJavaIdentifierPart(char ch);
+    public native static boolean isUnicodeIdentifierStart(char ch);
+    public native static boolean isUnicodeIdentifierPart(char ch);
+    public native static boolean isIdentifierIgnorable(char ch);
+    public native static char toLowerCase(char ch);
+    public native static char toUpperCase(char ch);
+    public native static char toTitleCase(char ch);
+    public native static int digit(char ch, int radix);
+    public native static int getNumericValue(char ch);
+    public native static boolean isSpace(char ch);
+    public native static boolean isSpaceChar(char ch);
+    public native static boolean isWhitespace(char ch);
+    public native static boolean isISOControl(char ch);
+    public native static int getType(char ch);
+    public native static char forDigit(int digit, int radix);
+    public native static byte getDirectionality(char ch);
+    public native static boolean isMirrored(char ch);
+    
+    public native int{this;anotherCharacter} compareTo(Character anotherCharacter);
+    public native int{this;o} compareTo(Object o) throws (ClassCastException{o});
+}

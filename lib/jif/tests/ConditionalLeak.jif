@@ -1,0 +1,20 @@
+/*
+ * This class leaks information, due to the least common ancestor method of the type
+ * system deciding that the type of the conditional expression ((!var) ? a : b)
+ * is int{}[]. This is as a result of stripping labels from types.
+ *
+ * This is a bug with Jif as of 26 August 2003.
+ */
+class ConditionalLeak  {
+    static public void main{*!:}(principal p, String[] args) throws Exception {
+	int{}[] a = {1};
+	int{Alice:}[] b = {2};
+
+	boolean var = true;
+
+	int{}[] c = ((!var) ? a : b);
+	
+	int{} leak = c[0];
+    }
+}
+

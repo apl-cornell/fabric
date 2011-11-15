@@ -1,0 +1,5 @@
+class Array8
+{
+    int{Alice:;Alice!:} x = 3;
+    int{Alice:Bob;Alice!:}[] ar = {x, x}; // bad
+}

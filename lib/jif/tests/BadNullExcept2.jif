@@ -1,0 +1,10 @@
+import jif.lang.*;
+
+public class BadNullExcept2 {
+    JifObject[{}] field;
+    public void foo() { 
+    	this.field.toString(); // NPE thrown
+    }
+
+}
+

@@ -1,0 +1,16 @@
+class Dyn1
+{
+    final label{} f = new label{Alice:};
+    
+    int{*lb} m(label{} lb) {
+	return 10;
+    }
+
+    void test{*!:*}() {
+	int{Alice:} a = m(new label{Alice:});
+	//int{*f} b = m(f);
+	
+	//final label{} L = new label{Alice:};
+	//int{*L} c = m(L);
+    }
+}

@@ -1,0 +1,39 @@
+public class A {
+    final label{this} albl;
+    final E[this.albl]{this} e;
+    
+    public A(label{this} albl_, E[albl_]{this} e) {
+        this.albl = albl_;
+        this.e = e;
+    }
+}
+
+class B {
+    final A{this} a;
+    B(A{this} param) {
+        this.a = param;
+    }
+    public void foo{*lbl}(label{*lbl} lbl)
+        where a.albl <= lbl
+    {
+        try {
+// Workaround: Use a local x instead            
+//            final label x = this.a.e.elbl;
+//            if(x <= new label {}) {
+            if(this.a.e.elbl <= new label {}) {
+                bar(lbl); // Label Error thrown here does not make sense
+            }
+        } catch (NullPointerException whocares) {}
+    }
+    
+    void bar{*lbl}(label{*lbl} lbl) {       
+    }
+}
+
+class E[covariant label T] {
+    final label{T} elbl;
+    public E(label{T} elbl_) {
+        this.elbl = elbl_;
+    }
+}
+

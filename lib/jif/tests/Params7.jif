@@ -1,0 +1,10 @@
+class AA[principal P]
+{
+}
+
+class Params7
+{
+    AA[pp] m(principal pp) {
+	return null;
+    }
+}

@@ -1,0 +1,10 @@
+/*
+ * The following code should be rejected. Z does not have a suitable constructor for Y to call.
+ */
+
+class Z {
+    private Z() { }
+}
+class Y extends Z {
+    public Y() {    } // no valid constructor: inaccessible
+}

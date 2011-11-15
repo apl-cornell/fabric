@@ -1,0 +1,10 @@
+/*
+ * Check that subtype checker is checking array initializers
+ */
+class SubtypeChecker1 {
+    public void m{*!:}() {
+	int{Alice:}[] intar1 = {};
+	int{}[] intar2 = {};
+	int{Alice:}[][] intarrayarray = { intar1, intar2}; // fail
+    }
+}

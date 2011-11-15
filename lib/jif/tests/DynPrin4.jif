@@ -1,0 +1,15 @@
+class DynPrin4 {
+    final principal{} f;
+    DynPrin4{} g;
+
+    DynPrin4(principal{} p, DynPrin4{} o) {
+	this.f = p;
+	this.g = o;
+    }
+  
+    void m(principal{} q) {	
+	final DynPrin4 local = new DynPrin4(q, null);
+
+	int{this.f.f:} x1; // not ok, illegal expression
+    }
+}

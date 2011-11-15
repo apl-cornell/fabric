@@ -1,0 +1,22 @@
+package jif.lang;
+
+/**
+ * A proof that the principal "actor" may act for the principal "granter"
+ */
+public abstract class ActsForProof {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private final principal{this} actor;
+    private final principal{this} granter;
+    
+    ActsForProof(principal{this} actor, principal{this} granter) {
+        this.actor = actor;
+        this.granter = granter;
+    }
+
+    public principal{this} getActor() {
+        return actor;
+    }
+    public principal{this} getGranter() {
+        return granter;
+    }
+}

@@ -1,0 +1,12 @@
+class RuntimeParams01[label L, principal P] {
+    void m() {
+	int x;
+	if (L <= new label {P: P}) {
+	    if (new label {Alice: P} <= L) {
+		if (P actsfor Bob) {
+		    x = 3;
+		}
+	    }
+	}
+    }
+}

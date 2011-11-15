@@ -1,0 +1,12 @@
+/*
+ * Check that subtype checker is checking conditional expressions
+ */
+class SubtypeChecker2 {
+    public void m() {
+	
+	int{Alice:}[] intar1 = {};
+	int{Alice:}[] intar2 = {};
+	boolean b = true;
+	int{Alice:}[]intar3 = (!b ? intar1: intar2 );
+    }
+}

@@ -1,0 +1,7 @@
+class C[label L] {
+    void m(boolean{} b) {
+	C[{Alice:}] x = b?null:foo(new label {});
+    }
+    native C[{*lbl}] foo(label lbl);
+}
+

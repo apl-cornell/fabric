@@ -1,0 +1,20 @@
+class ClassA[covariant label L] {
+    public final int{L} f;
+
+    public ClassA{L}(int{L} ff) {
+        f = ff;
+    }
+}
+
+class This2 (invariant) {
+    final int{this} s;
+
+    public This2() {
+        s = 0;
+    }
+
+    public int{Alice: ; this} m{this}() {
+        ClassA[{this}] a = new ClassA[{this}](s);
+        return a.f;
+    }
+}

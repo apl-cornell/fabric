@@ -1,0 +1,9 @@
+class Recursive {
+    public void m1(label{*lbl} lbl) { }
+    public void m2(label{lbl} lbl) { }
+    public void m3(label{*L} M, label{*M} L) { }
+
+    public void m4(principal{p:} p) { }
+    public void m5(principal{Alice: p} p) { }
+    public void m6(principal{p} p) { }
+}

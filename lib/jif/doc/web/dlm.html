@@ -1,0 +1,587 @@
+<html>
+
+<head>
+<link rel=StyleSheet href="jifdoc.css" type="text/css">
+<title>Decentralized label model</title>
+</head>
+
+<body>
+
+<h1><a name="dlm">Decentralized label model</a></h1>
+
+<p>Jif allows mutually distrusting entities to express
+information-flow security policies for confidentiality and
+integrity. Security policies are expressed using the <i>decentralized
+label model</i> (DLM)&nbsp;[<a href="bibliography.html#ML00">ML00</a>].  In this section, we describe the
+core concepts of the DLM: principals, policies, and labels, and
+present the syntax used to write labels in Jif programs. 
+</p>
+
+<h2><a name="dlm_principals">Principals</a></h2>
+
+<p>A <em>principal</em> is an entity with some power to
+observe and change certain aspects of the system. The goal of Jif is
+to permit principals to express security requirements and to enforce them.
+Jif provides a flexible, 
+open-ended mechanism for defining principals, which allows applications
+to model users, processes, user groups, or application-specific entities 
+with security concerns.</p>
+
+<p>A principal <i class="math">p</i> may delegate authority to another principal
+<i class="math">q</i>, in which case
+<i class="math">q</i> is said to <em>act for</em> <i class="math">p</i>, written <i class="math">q</i>&#8829;<i class="math">p</i>.
+If the principal <i class="math">p</i> acts for the
+principal <i class="math">q</i>, any action taken by <i class="math">p</i>
+is implicitly assumed to be authorized by <i class="math">q</i>.
+Thus, the <i class="math">acts-for</i> relation expresses trust
+relationships between principals.
+The <i class="math">acts-for</i> relation is
+reflexive and transitive, and is similar to the <i class="math">speaks-for</i>
+relation&nbsp;[<a href="bibliography.html#LABW91">LABW91</a>] used in
+authentication logics.
+The hierarchy of principals is also similar to a <em>role hierarchy</em>
+[<a href="bibliography.html#San96">San96</a>].
+</p>
+
+<p>
+The acts-for relation can be used to model groups and
+roles conveniently. A group principal, such as <code>students</code>,
+is modeled by authorizing all of the principals
+representing members of the group
+to act for the group principal. That is, the group principal delegates
+its authority to all of the group members.  A
+role, a restricted form of a user's authority, is modeled by
+authorizing the user's principal to act for the role principal.
+</p>
+
+<p>
+Jif supports a <em>top
+principal</em> &#8868; able to act for all principals, and a <em>bottom
+principal</em> &perp; that allows all principals to act for it.
+</p>
+
+
+<p>Jif allows principals to be composed together to form
+<em>conjunctive</em> and <em>disjunctive</em>
+principals&nbsp;[<a href="bibliography.html#LABW91">LABW91</a>,<a href="bibliography.html#TZ05">TZ05</a>]. A conjunctive principal, written &quot;<i
+class="math">p</i>&amp;<i class="math">q</i>&quot;, is able to act for
+both the principals <i class="math">p</i> and <i class="math">q</i>. A
+disjunctive principal, written &quot;<i class="math">p,q</i>&quot; delegates its authority to <i class="math">p</i>
+and <i class="math">q</i>, that is, <i class="math">p</i> can act for
+<i class="math">p,q</i>, and <i
+class="math">q</i> can act for <i class="math">p,q</i>. Conjunctions and disjunctions are associative,
+commutative and idempotent.</p>
+
+<h2><a name="dlm_conf_policies">Confidentiality policies</a></h2>
+
+<p>Principals express their security concerns with <em>labels</em>
+containing security policies.</p>
+
+<p>A <em>reader policy</em> allows the owner of the policy to specify
+which principals the owner permits to read a given piece of
+information. A reader policy is written <i class="math">o</i>&rarr;<i class="math">r</i>, where the principal <i
+class="math">o</i> is the owner of the policy, and the principal
+<i class="math">r</i> is the specified reader. A reader policy
+<i class="math">o</i>&rarr;<i class="math">r</i> says that <i class="math">o</i> permits a principal <i class="math">q</i> to
+read information only if <i class="math">q</i> can act for either the owner of the policy or
+the specified reader <i class="math">r</i>. As a formal semantics for
+reader policies, we define the function <i class="math">readers</i>(<i class="math">p</i>, <i class="math">c</i>) to be the set
+of principals that principal <i class="math">p</i> believes should be allowed to read
+information according to reader policy <i class="math">c</i>:</p>
+
+<div class="mathdisplay">
+<i class="math">readers</i>(<i class="math">p</i>, <i
+class="math">o</i>&rarr;<i class="math">r</i>) &#8796; {<i
+class="math">q</i> &nbsp;|&nbsp; if <i class="math">o</i> &#8829; <i
+class="math">p</i> then (<i class="math">q</i> &#8829; <i
+class="math">o</i> or <i class="math">q</i> &#8829; <i
+class="math">r</i>)}
+</div>
+
+<p>
+A principal <i class="math">p</i> believes that a reader policy <i
+class="math">c</i> should restrict the readers of information only if
+the owner of the policy can act for <i class="math">p</i>. The
+parameterization on <i class="math">p</i> is important in the presence
+of mutual distrust, because it allows the significance of the policy
+to be expressed for every principal independently.  If principal <i
+class="math">o</i> owns a policy that restricts the readers of
+information, it does not necessarily mean that another principal <i
+class="math">p</i> also believes those restrictions should apply.
+Thus, if <i class="math">o</i> does not act for <i class="math">p</i>,
+then <i class="math">readers</i>(p, <i class="math">o</i>&rarr;<i
+class="math">r</i>) is the set of all principals; in other words, <i
+class="math">p</i> does not credit the policy with any significance.
+While this semantics is expressed differently, it is consistent with
+the original DLM semantics&nbsp;[<a href="bibliography.html#ML00">ML00</a>].
+</p>
+
+<p class="sssec"><strong><a name="meetjoin">Conjunction and disjunction.</a></strong>
+Greater expressiveness is achieved by allowing conjunctions and
+disjunctions of reader policies.
+We define <em>confidentiality policies</em> to be the smallest set containing
+all reader policies and closed under the binary operators &#8852; and
+&#8851;. That is, if <i class="math">c</i> and <i class="math">d</i> are confidentiality policies, then
+both <i class="math">c</i>&#8851;<i class="math">d</i> and 
+<i class="math">c</i>&#8852;<i class="math">d</i> are too.
+</p>
+
+<p>
+The operator &#8852; is conjunction for confidentiality policies: <i class="math">c</i>&#8852;<i class="math">d</i> is the policy that enforces both <i class="math">c</i> and <i class="math">d</i>. The policy <i class="math">c</i>&#8852;<i class="math">d</i> permits a principal to read information only if both <i class="math">c</i> and
+<i class="math">d</i> allow it. Thus, <i class="math">c</i>&#8852;<i class="math">d</i> is at least as restrictive
+as both <i class="math">c</i> and <i class="math">d</i>.
+The operator &#8851; is disjunction for confidentiality policies: <i class="math">c</i>&#8851;<i class="math">d</i> allows a principal to read information if either <i class="math">c</i> or <i class="math">d</i>
+allows it. Thus, <i class="math">c</i>&#8851;<i class="math">d</i> is no more restrictive than
+either <i class="math">c</i> or <i class="math">d</i>.
+</p>
+
+<p>
+We extend <i class="math">readers</i>(<i class="math">p</i>, <i class="math">c</i>) for confidentiality policies. Since <i
+class="math">c</i>&#8852;<i class="math">d</i> enforces both <i
+class="math">c</i> and <i class="math">d</i>, the reader sets for <i
+class="math">c</i> and <i class="math">d</i> are intersected; for <i
+class="math">c</i>&#8851;<i class="math">d</i> the reader sets are
+combined.
+</p>
+
+<div class="mathdisplay">
+<i class="math">readers</i>(<i class="math">p</i>, <i class="math">c</i> &#8852; <i class="math">d</i>) &#8796; 
+                       <i class="math">readers</i>(<i class="math">p</i>, <i class="math">c</i>) &cap; <i class="math">readers</i>(<i class="math">p</i>, <i class="math">d</i>)  
+<br>
+<i class="math">readers</i>(<i class="math">p</i>, <i class="math">c</i> &#8851; <i class="math">d</i>) &#8796; 
+                       <i class="math">readers</i>(<i class="math">p</i>, <i class="math">c</i>) &cup; <i class="math">readers</i>(<i class="math">p</i>, <i class="math">d</i>)  
+</div>
+
+<p class="sssec"><strong>Ordering confidentiality policies.</strong> Using the
+<i class="math">readers</i>(&#8729;, &#8729;) function, we can define a &quot;no more
+restrictive than&quot; relation &#8849;<sub>C</sub> on confidentiality
+policies. For two confidentiality policies <i class="math">c</i> and
+<i class="math">d</i>, we have <i
+class="math">c</i> &#8849;<sub>C</sub> <i class="math">d</i> if and only
+if for all principals <i class="math">p</i>, <i class="math">readers</i>(<i class="math">p</i>, <i class="math">c</i>) &supe;
+<i class="math">readers</i>(<i class="math">p</i>, <i class="math">d</i>). If <i class="math">c</i> &#8849;<sub>C</sub> <i
+class="math">d</i> then every principal <i class="math">p</i> believes
+that <i class="math">c</i> permits at least as many readers as <i
+class="math">d</i> does. The confidentiality policy <i
+class="math">c</i> is thus of lower (or equal) confidentiality than <i
+class="math">d</i>, and so information labeled <i class="math">c</i>
+can be used in at least as many places as information labeled <i
+class="math">d</i>: policy <i class="math">c</i> is no more
+restrictive than policy <i class="math">d</i>.</p>
+
+<p>The relation &#8849;<sub>C</sub> forms a pre-order over confidentiality
+policies, and its equivalence classes form a lattice. The operators
+&#8852; and &#8851; are the join and meet operators of this lattice.
+The least restrictive confidentiality policy is the reader policy
+&perp;&rarr;&perp;, where &perp; is a principal that all principals
+can act for, since all principals believe that information labeled
+&perp;&rarr;&perp; is allowed to be read by any principal.
+The most restrictive expressible confidentiality policy is
+&#8868;&rarr;&#8868;, where &#8868; is a principal that can act for all
+principals; information labeled &#8868;&rarr;&#8868; is allowed to
+be read only by principal &#8868;.</p>
+
+<h2><a name="dlm_int_policies">Integrity policies</a></h2>
+
+<p>Integrity and confidentiality are well-known duals, and we define
+integrity policies dually to confidentiality policies. The set of <em>integrity
+policies</em> is formed by closing <em>writer policies</em> under conjunction
+and disjunction.</p>
+
+<p>A <em>writer policy</em> <i class="math">o</i>&larr;<i class="math">w</i> allows the owner
+to specify which principals may
+have influenced (&quot;written&quot;) the value of a given piece of information.
+The policy
+<i class="math">o</i>&larr;<i class="math">w</i> means that
+according to the owner <i class="math">o</i>, a principal <i class="math">q</i> could have
+influenced the value of the information only if <i class="math">q</i> can act for the
+owner <i class="math">o</i> or the specified writer <i class="math">w</i>. 
+Writer policies describe the integrity of information in terms of its 
+provenance.</p>
+
+<p>We define the function <i class="math">writers</i>(<i class="math">p</i>, <i class="math">c</i>) to be the set of principals that
+principal <i class="math">p</i> believes may have influenced information according to
+writer policy <i class="math">c</i>. Like reader policies, a principal <i class="math">p</i> believes
+that writer policy <i class="math">o</i>&larr;<i class="math">w</i> describes the writers of information only if
+<i class="math">o</i> can act for <i class="math">p</i>.</p>
+
+<div class="mathdisplay">
+<i class="math">writers</i>(<i class="math">p</i>, <i
+class="math">o</i>&larr;<i class="math">w</i>) &#8796; {<i
+class="math">q</i> &nbsp;|&nbsp; if <i class="math">o</i> &#8829; <i
+class="math">p</i> then (<i class="math">q</i> &#8829; <i
+class="math">o</i> or <i class="math">q</i> &#8829; <i
+class="math">w</i>)}
+</div>
+
+
+<p>Dually to confidentiality policies, we denote disjunction for
+integrity policies with the operator &#8852;, and conjunction with
+&#8851;.  The integrity policy <i class="math">c</i>&#8851;<i
+class="math">d</i> is the conjunction of <i class="math">c</i> and <i
+class="math">d</i>, meaning that a principal <i class="math">p</i>
+could have influenced information labeled <i class="math">c</i>&#8851;<i
+class="math">d</i> only if both
+<i class="math">c</i> and <i class="math">d</i> agree that <i
+class="math">p</i> could have influenced it. The writer sets for <i
+class="math">c</i> and <i class="math">d</i> are thus intersected to
+produce the writer set for <i class="math">c</i>&#8851;<i
+class="math">d</i>.  The integrity policy <i class="math">c</i>&#8852;<i
+class="math">d</i> is the disjunction of <i class="math">c</i> and <i
+class="math">d</i>; the writer set for <i class="math">c</i>&#8852;<i
+class="math">d</i> is thus the union
+of the writer sets for <i class="math">c</i> and <i
+class="math">d</i>.</p>
+
+<div class="mathdisplay">
+<i class="math">writers</i>(<i class="math">p</i>, <i class="math">c</i> &#8851; <i class="math">d</i>) &#8796; 
+                       <i class="math">writers</i>(<i class="math">p</i>, <i class="math">c</i>) &cap; <i class="math">writers</i>(<i class="math">p</i>, <i class="math">d</i>)  
+<br>
+<i class="math">writers</i>(<i class="math">p</i>, <i class="math">c</i> &#8852; <i class="math">d</i>) &#8796; 
+                       <i class="math">writers</i>(<i class="math">p</i>, <i class="math">c</i>) &cup; <i class="math">writers</i>(<i class="math">p</i>, <i class="math">d</i>)  
+</div>
+
+<p>The &quot;no more restrictive than&quot; relation &#8849;<sub>I</sub> on integrity
+policies is defined dually to the relation &#8849;<sub>C</sub>: for two
+integrity policies <i class="math">c</i> and <i class="math">d</i>, we have <i class="math">c</i> &#8849;<sub>I</sub> <i class="math">d</i> if and only if
+for all principals <i class="math">p</i>, <i class="math">writers</i>(<i class="math">p</i>, <i class="math">c</i>) &sube;
+<i class="math">writers</i>(<i class="math">p</i>, <i class="math">d</i>). Intuitively, information with a smaller
+writer set has higher integrity than information with a larger writer set,
+since fewer principals may have influenced the value of the former;
+the higher the integrity of information, the fewer restrictions on
+where that information may be used.</p>
+
+
+<p>The relation &#8849;<sub>I</sub> forms a pre-order over integrity policies, and the
+equivalence classes form a lattice, with join and meet operators  &#8852; and &#8851;
+respectively.
+The most restrictive integrity policy is &perp;&larr;&perp;, since
+all principals believe that any principal may have influenced the
+information.
+The policy &#8868;&larr;&#8868; is the least restrictive
+expressible integrity policy, as all principals believe that only
+principal &#8868; (who can act for all other principals) has
+influenced the information.</p>
+
+
+
+<h2><a name="dlm_labels">Labels</a></h2>
+
+<p>A label is a pair of a confidentiality policy and an integrity
+policy.  We write a label {<i class="math">c</i>;<i class="math">d</i>}, where <i class="math">c</i> is a
+confidentiality policy, and <i class="math">d</i> is an integrity policy.  The
+confidentiality projection of {<i class="math">c</i>;<i class="math">d</i>}, written C({<i class="math">c</i>;<i class="math">d</i>}),
+is <i class="math">c</i>, and the integrity projection I({<i class="math">c</i>;<i class="math">d</i>}) is <i class="math">d</i>.</p>
+
+<p>We extend the <i class="math">readers</i>(&#8729;, &#8729;) and <i class="math">writers</i>(&#8729;, &#8729;)
+functions appropriately:</p>
+
+<div class="mathdisplay">
+<i class="math">readers</i>(<i class="math">p</i>, {<i class="math">c</i>;<i class="math">d</i>}) &#8796; <i class="math">readers</i>(<i class="math">p</i>, <i class="math">c</i>)
+<br>
+<i class="math">writers</i>(<i class="math">p</i>, {<i class="math">c</i>;<i class="math">d</i>}) &#8796; <i class="math">writers</i>(<i class="math">p</i>, <i class="math">d</i>)
+</div>
+
+<blockquote>
+<p class="sssec"><strong>Example.</strong>
+Consider the following label: {Alice&rarr;Bob,Chuck ; Alice&larr;Chuck &#8852; Bob&larr;Chuck,Dave}.
+The
+confidentiality policy of this label is a single reader
+policy, and the integrity policy is the disjunction of two writer
+policies. The reader policy is owned by Alice, and permits any
+principal that can act for Bob, Chuck, or Alice to
+read information. No other principal specifies a reader policy, so 
+principals for whom Alice cannot act for allow all
+principals to read the information; principals that Alice can act for
+adhere to Alice's restrictions, and permit only principals that can
+act for Bob, Chuck, or Alice to read information. Of the two writer
+policies, one is owned by Alice and the other by Bob. Alice believes
+that only Chuck or Alice could have influenced the
+information, while Bob believes only principals that can act for
+any of Chuck, Dave, or Bob could have influenced the information. Principals
+that neither Alice nor Bob can act for implicitly believe that the
+information may have been influenced by any principal at all, and is
+thus completely untrustworthy. A principal that both Alice and Bob
+can act for believes that principals that can act for Alice, Bob, Chuck,
+or Dave may have influenced the information.</p>
+</blockquote>
+
+<p class="sssec"><strong>Ordering labels.</strong> We define the &quot;no more
+restrictive than&quot; relation &#8849; on labels using the relations
+&#8849;<sub>C</sub> and &#8849;<sub>I</sub>. In particular, {<i class="math">c</i>;<i class="math">d</i>} &#8849; {<i class="math">c</i>';<i class="math">d</i>'} if
+and only if <i class="math">c</i> &#8849;<sub>C</sub> <i class="math">c</i>' and <i class="math">d</i> &#8849;<sub>I</sub> <i class="math">d</i>'.  For labels <i
+class="math">L</i><sub>1</sub> and <i class="math">L</i><sub>2</sub>,
+<i class="math">L</i><sub>1</sub> &#8849; <i class="math">L</i><sub>2</sub> holds if there
+are the same or more restrictions on uses of information labeled with
+<i class="math">L</i><sub>2</sub> as there are on information labeled
+with <i class="math">L</i><sub>1</sub>. </p>
+
+<p>The relation &#8849; forms a pre-order, whose equivalence classes form
+a lattice. We use &#8852; and &#8851; for the join and meet operations
+over this lattice,</p>
+
+<div class="mathdisplay">
+<i class="math">L</i><sub>1</sub> &#8852; <i class="math">L</i><sub>2</sub> &#8796; {C(<i class="math">L</i><sub>1</sub>) &#8852; C(<i class="math">L</i><sub>2</sub>)  ;   I(<i class="math">L</i><sub>1</sub>) &#8852; I(<i class="math">L</i><sub>2</sub>)} 
+<br>
+<i class="math">L</i><sub>1</sub> &#8851; <i class="math">L</i><sub>2</sub> &#8796; {C(<i class="math">L</i><sub>1</sub>) &#8851; C(<i class="math">L</i><sub>2</sub>)  ;   I(<i class="math">L</i><sub>1</sub>) &#8851; I(<i class="math">L</i><sub>2</sub>)}
+</div>
+
+
+<h2><a name="dlm_syntax">Label syntax in Jif</a></h2>
+
+<p>Labels are used to annotate types in Jif programs. The following
+table shows the appropriate syntax for writing principals, policies,
+and labels in Jif programs. Some non-ASCII characters may be used
+when writing Jif programs. See <a class="secref" href="language.html#lexical">Lexical considerations</a> for more information.
+</p>
+
+<TABLE border="1" class="bigtable">
+  <TR>
+    <TH></TH>
+    <TH>Symbol</TH>
+    <TH>Jif syntax</TH>
+    <TH>Example</TH>
+  </TR>
+  <TR>
+    <TD>Top principal</TD>
+    <TD>&#8868;</TD>
+    <TD><code>*</code> <i>or</i> <code>&#8868;</code></TD>
+    <TD>&nbsp;</TD>
+  </TR>
+  <TR>
+    <TD>Bottom principal</TD>
+    <TD>&perp;</TD>
+    <TD><code>_</code> <i>or</i> <code>&perp;</code></TD>
+    <TD>&nbsp;</TD>
+  </TR>
+  <TR>
+    <TD>Conjunctive principal</TD>
+    <TD><i class="math">p</i>&amp;<i class="math">q</i></TD>
+    <TD><code>p&amp;q</code></TD>
+    <TD>
+       <ul>
+       <li><code>Alice&amp;Bob</code> 
+       <li><code>Alice&amp;(Bob,Chuck)&amp;Dave</code> 
+       </ul>
+    </TD>
+  </TR>
+  <TR>
+    <TD>Disjunctive principal</TD>
+    <TD><i class="math">p</i>,<i class="math">q</i></TD>
+    <TD><code>p,q</code></TD>
+    <TD>
+       <ul>
+       <li><code>Alice, Bob, Chuck</code> 
+       <li><code>Alice, Bob&amp;Chuck, Chuck&amp;Dolores</code> 
+       </ul>
+    </TD>
+  </TR>
+  <TR>
+    <TD>Reader policy</TD>
+    <TD><span class="math"><i>o</i>&rarr;<i>r</i></span></TD>
+    <TD><code>o:r</code> <i>or</i> <code>o&rarr;r</code> <i>or</i> <code>o-&gt;r</TD>
+    <TD>
+        <ul>
+        <li><code>_:_</code> is the least restrictive reader policy.
+        <li><code>*:*</code> is the most restrictive reader policy.
+
+        <li>If no principal appears to the right of the colon, by default
+        the top principal is used. Thus <code>Alice:</code> is
+        equivalent to <code>Alice:*</code>.
+        </ul>
+    </TD>
+  </TR>
+  <TR>
+    <TD>Writer policy</TD>
+    <TD><i class="math">o</i>&larr;<i class="math">w</i></TD>
+    <TD><code>o!:w</code> <small><i>(deprecated)</i></small>  <i>or</i> <code>o&larr;r</code>  <i>or</i> <code>o&lt;-r</code></TD>
+    <TD>
+        <ul>
+        <li><code>_&larr;_</code> is the most restrictive (lowest integrity) writer policy.<br>
+        <li><code>*&larr;*</code> is the least restrictive (highest integrity) writer policy.<br>
+
+        <li>If no principal appears on the right-hand side, by default
+        the top principal is used. Thus <code>Alice&larr;</code> is
+        equivalent to <code>Alice&larr;*</code>.
+        <ul>
+    </TD>
+  </TR>
+  <TR>
+    <TD>Reader policy joins and meets</TD>
+    <TD><i class="math">o</i>&rarr;<i class="math">r</i>&nbsp;&#8852;&nbsp;<i class="math">o'</i>&rarr;<i class="math">r'</i> <br>
+        <i class="math">o</i>&rarr;<i class="math">r</i>&nbsp;&#8851;&nbsp;<i class="math">o'</i>&rarr;<i class="math">r'</i>
+   </TD>
+    <TD><code>o:r;o':r'</code><br>
+        <code>o:r&nbsp;meet&nbsp;o':r'</code>  <i>or</i> 
+        <code>o:r&nbsp;&#8851;&nbsp;o':r'</code>
+    </TD>
+    <TD>
+        <ul>
+        <li><code>Alice:; Bob:Chuck</code>
+        <li><code>Alice: meet Bob:Chuck </code>
+        <li><code>Alice: meet Bob:Chuck; Chuck:</code> is the meet
+             <code>Alice: meet Bob:Chuck</code> joined with
+             <code>Chuck:</code>. Meets of joins of policies can be
+             expressed using the label syntax below.
+        </ul>
+    </TD>
+  </TR>
+  <TR>
+    <TD>Writer policy joins and meets</TD>
+    <TD><i class="math">o</i>&rarr;<i class="math">r</i>&nbsp;&#8852;&nbsp;<i class="math">o'</i>&rarr;<i class="math">r'</i> <br>
+        <i class="math">o</i>&rarr;<i class="math">r</i>&nbsp;&#8851;&nbsp;<i class="math">o'</i>&rarr;<i class="math">r'</i>
+   </TD>
+    <TD><code>o&larr;r;o'&larr;r'</code><br>
+        <code>o&larr;r&nbsp;meet&nbsp;o'&larr;r'</code> <i>or</i> 
+        <code>o&larr;r&nbsp;&#8851;&nbsp;o'&larr;r'</code>
+    </TD>
+    <TD>
+        <ul>
+        <li><code>Alice&lt;-; Bob&lt;-Chuck</code>
+        <li><code>Alice&larr;&#8868; meet Bob&larr;Chuck </code>
+        <li><code>Alice!: meet Bob!:Chuck; Chuck!:</code> is the meet
+             <code>Alice!: meet Bob!:Chuck</code> joined with
+             <code>Chuck!:</code>. Meets of joins of policies can be
+             expressed using the label syntax below.
+        </ul>
+    </TD>
+  </TR>
+  <TR>
+    <TD>Labels</TD>
+    <TD>{<i class="math">c</i>;<i class="math">d</i>} 
+   </TD>
+    <TD><code>{c;d}</code>
+    </TD>
+    <TD>
+        <ul>
+        <li><code>{Alice:Bob; Alice&lt;-Chuck}</code>
+        <li><code>{Alice&larr;Chuck; Alice&rarr;Bob &#8851; Bob&rarr;Bob; Chuck&larr;}</code> 
+                  The order of policies appearing in the label does
+                  not matter.  This label is equivalent to
+                  <code>{Alice:Bob meet Bob:Bob; Alice!:Chuck;
+                  Chuck!:}</code>, which has confidentiality policy
+                  <code>Alice&rarr;Bob &#8851; Bob&rarr;Bob</code> and integrity
+                  policy <code>Alice&larr;Chuck; Chuck&larr;&#8868;</code>.
+ 
+        <li><code>{Alice:Bob}</code> 
+                  If no integrity policy is specified, then by default
+                  <code>&perp;&larr;&perp;</code> is
+                  assumed. <code>{Alice:Bob}</code> is equivalent
+                  to <code>{Alice&rarr;Bob; &perp;&larr;&perp;}</code>.
+
+        <li><code>{Bob&lt;-Alice&amp;Chuck}</code> 
+                  If no confidentiality policy is specified, then by default
+                  <code>&perp;&rarr;&perp;</code> is
+                  assumed. <code>{Bob&lt;-Alice&amp;Chuck}</code> is equivalent
+                  to <code>{&perp;&rarr;&perp;; Bob&lt;-Alice&amp;Chuck}</code>.
+
+        <li><code>{}</code> As neither a confidentiality policy or
+                  an integrity policy is specified, this label is
+                  equivalent to <code>{&perp;&rarr;&perp; ; &perp;&larr;&perp;}</code>.
+        </ul>
+    </TD>
+  <TR>
+    <TD>Label joins</TD>
+    <TD>{<i class="math">c</i>;<i class="math">d</i>}&#8852;{<i class="math">c'</i>;<i class="math">d'</i>}
+   </TD>
+    <TD><code>{c;c';d;d'}</code> <i>or</i> <code>{c;d}&#8852;{c':d'}</code>
+    </TD>
+    <TD>&nbsp;
+    </TD>
+  </TR>
+  <TR>
+    <TD>Label meets</TD>
+    <TD>{<i class="math">c</i>;<i class="math">d</i>}&#8851;{<i class="math">c'</i>;<i class="math">d'</i>}
+   </TD>
+    <TD>
+       <code>{c;d}&nbsp;&#8851;&nbsp;{c';d'}</code> <i>or</i>
+       <code>{c;d}&nbsp;meet&nbsp;{c';d'}</code> <i>or</i>
+       <code>{c&nbsp;&#8851;&nbsp;c';&nbsp;d&nbsp;&#8851&nbsp;d'}</code>
+    </TD>
+    <TD>
+        <ul>
+        <li><code>{Alice&rarr;Bob &#8851; Chuck&rarr;Dave; Alice&larr;&#8868; &#8851; Chuck&larr;&#8868;}</code>
+        <li><code>{Alice&rarr;Bob; Alice&larr;&#8868;} meet {Chuck&rarr;Dave; Chuck&larr;&#8868;}</code>. Braces are useful for specifying the order of label operations.
+    </TD>
+  </TR>
+  <tr>
+    <td>Grouping</td>
+    <td><span class="math">(<i>L</i>)</span></td>
+    <td><code>{L}</code></td>
+    <td>
+      <ul>
+	<li><code>{{Bob&rarr;*}&#8852;{Alice&rarr;*}}</code>.
+	   This is the same as <code>{Bob&rarr;* ; Alice&rarr;*}</code>; the extra
+	   layer of braces has no effect.
+	</li>
+	<li><code>{{Bob&rarr;&#8868;}&#8852;{Alice&rarr;&#8868;}}&#8851;{Chuck&larr;Dave}</code></li>
+	Grouping specifies the order of label operations.
+      </ul>
+    </td>
+</TABLE>
+
+
+<p>Jif extends the expressiveness of labels with several language
+mechanisms.  <a href="language.html#label-principal-params">Label
+parameters</a>, <a href="language.html#dynamic-labels">dynamic
+labels</a>, and polymorphic <a
+href="language.html#label-polymorphism">argument labels</a> can all
+appear within labels. To interpret a label in which elements other
+confidentiality and integrity policies appear, the following algorithm
+is followed: (1) all integrity and confidentiality policies are
+separated and interpreted as a normal label, {<i class="math">c</i>;<i
+class="math">d</i>}; (2) other elements in the label are joined with
+{<i class="math">c</i>;<i class="math">d</i>}.</p>
+
+<p>The following table gives examples of how to interpret Jif
+labels.  <code>L</code> is a label parameter, <code>x</code> is an
+argument label, and <code>lbl1</code> and <code>lbl2</code> are
+dynamic labels.</p>
+
+<TABLE border="1" class="bigtable">
+  <TR>
+    <TH>Jif label</TH>
+    <TH>Meaning</TH>
+  </TR>
+  <TR>
+    <TD><code>{Alice:; L; Alice!:Bob}</code></TD>
+    <TD><span class="math">{Alice&rarr;&#8868; ; Alice&larr;Bob} &#8852; L</span></TD>
+  </TR>
+  <TR>
+    <TD><code>{*lbl1; x; L meet *lbl2}</code></TD>
+    <TD><span class="math">lbl1 &#8852; x &#8852; (L &#8851; lbl2)</span> <br>
+        No integrity or confidentiality policies appear in this label.
+   </TD>
+  </TR>
+  <TR>
+    <TD><code>{*lbl1; Alice&larr;}</code></TD>
+    <TD>{&perp;&rarr;&perp; ; Alice&larr;&#8868;} &#8852; lbl1<br>
+        Since an integrity policy appears, the default confidentiality policy &perp;&rarr;&perp; is used.
+    </TD>
+  </TR>
+  <TR>
+    <TD><code>{*lbl1; Alice&larr;Bob; Chuck&larr;&perp;; *lbl2; Alice&rarr;Chuck; Chuck&rarr;Dave}</code></TD>
+    <TD>{Alice&rarr;Chuck &#8852; Chuck&rarr;Dave ; Alice&larr;Bob &#8852; Chuck&larr;&perp;} &#8852; lbl1 &#8852; lbl2<br>
+      The semicolon (<code>;</code>) is consistently interpreted as a join operation, for both confidentiality and integrity policies.
+    </TD>
+  </TR>
+  <TR>
+    <TD><code>{*lbl1}</code></TD>
+    <TD><span class="math">lbl1</span><br>
+        No integrity or confidentiality policy appears.
+    </TD>
+  </TR>
+  <TR>
+    <TD><code>{*lbl1 meet Alice:}</code></TD>
+    <TD>Error! Attempting to take the meet of a label (<code>*lbl1</code>) and a confidentiality policy (<code>Alice:</code>).</TD>
+  </TR>
+  <TR>
+    <TD><code>{*lbl1} meet {Alice:}</code></TD>
+    <TD>{Alice&rarr;&#8868; ; &perp;&larr;&perp;} &#8851; lbl1
+    </TD>
+  </TR>
+</table>
+
+</body>
+
+</html>

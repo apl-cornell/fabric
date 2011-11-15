@@ -1,0 +1,28 @@
+public class Constraints6 {
+    // This example shows that {Alice:} meet {Bob:} is a consistent
+    // solution to the following system of constraints 
+    // even though none of bottom, {Alice:} or {Bob:} is.
+    
+    // The relevant constraints are:
+    // 1. v <= {Bob:} where Alice actsfor Bob
+    // 2. {Bob:} <= v where Alice actsfor Bob
+    // 3. v <= {Alice:} where Bob actsfor Alice    
+    // 4. {Alice:} <= v where Bob actsfor Alice
+
+    public void foo()
+    {
+	int v = 0;
+
+	int{Alice:} a = 0;
+	int{Bob:} b = 0;
+
+	actsFor(Alice, Bob) { 
+	    b = v; // constraint 1
+	    v = b; // constraint 2
+	}
+	actsFor(Bob, Alice) { 
+	    a = v; // constraint 3
+	    v = a; // constraint 4
+	}
+    }
+}

@@ -1,0 +1,11 @@
+public class Switch {
+    int{Alice:} secret;
+
+    public int{Alice:Bob} leak() {
+        switch (secret) {
+        case 0: break;
+        default: return 0;
+        }
+        return 1;
+    }
+}

@@ -1,0 +1,74 @@
+/**
+ * Simple LinkedList class
+ */
+class LinkedList[label L] {
+
+    private LinkNode[L]{L} head;
+
+    public LinkedList{L}() {
+        head = null;
+    }
+
+    public boolean{L} isEmpty() {
+        return ( head == null );
+    }
+
+    public void add{L}( Object{L} obj ) {
+        LinkNode[L] n = new LinkNode[L]( obj );
+        if ( head == null ) {
+            head = n;
+        } else {
+            try {
+            n.setNext( head );
+            head = n;
+            } catch ( NullPointerException npe ) {}
+        }
+    }
+
+    public void remove{L}( Object{L} obj ) {
+        try {
+            head = head.remove( obj );
+        } catch ( NullPointerException npe ) {}
+    }
+
+    public int{L} size() {
+        if ( this.head == null ) {
+            return 0;
+        } else {
+            try {
+            return head.size();
+            } catch ( NullPointerException npe ) {
+                return 0; // to appease compiler
+            }
+        }
+    }
+
+    public Object{L} getFirst() {
+        try {
+        if ( head != null )
+            { return head.getValue(); }
+        } catch ( NullPointerException npe ) {
+        }
+        return null;
+    }
+
+    public Object{L} get(int{L} index) {
+        int i = 0;
+        if (index < 0 || index >= size()) return null;
+        LinkNode[L] pointer = head;
+        try {
+            while (i < index) {
+                pointer = pointer.getNext();
+                i++;
+            }
+            return pointer.getValue();
+        } catch (NullPointerException npe) {
+        }
+        return null;
+    }
+
+    public LinkedListIterator[L]{L} iterator{L}() {
+        return new LinkedListIterator[L]( head );
+    }
+
+}

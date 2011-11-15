@@ -1,0 +1,14 @@
+import jif.lang.JifObject;
+
+public class MyInteger implements JifObject[{}] {
+    public int{} val;
+    public MyInteger{}(int{} val) {this.val = val;}
+    public String{} toString() {return String.valueOf(val);}
+    public int{} hashCode() {return val;}
+    public boolean{o} equals(IDComparable[{}] o) {
+        return false;
+    }
+    public boolean{*lbl;lbl;o} equals(label lbl, IDComparable[lbl] o) {
+        return false;
+    }
+}

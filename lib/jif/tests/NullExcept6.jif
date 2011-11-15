@@ -1,0 +1,9 @@
+import jif.lang.*;
+
+public class NullExcept6 {
+    public void foo(JifObject[{}]{} m) { 
+  	if (m != null && m.toString() == "hah") { // OK, no NPE thrown.
+  	}
+    }    
+}
+

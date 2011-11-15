@@ -1,0 +1,10 @@
+public class For1 {
+    int{Alice:} secret;
+
+    public int{Alice:Bob} leak() {
+        int i;
+        for (i=0; i<secret; i++) {
+        }
+        return i;
+    }
+}

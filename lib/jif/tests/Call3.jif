@@ -1,0 +1,11 @@
+class Call3
+{
+    void foo() {
+	new C().m();
+    }
+}
+
+class C {
+    void m() where caller(Alice) {}
+}
+

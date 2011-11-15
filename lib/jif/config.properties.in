@@ -1,0 +1,9 @@
+# Jif configuration properties.
+
+# Base directory of Polyglot installation.
+#   Must be an absolute path.
+polyglot.home=${env.HOME}/polyglot
+jdk.home=${env.JAVA_HOME}
+
+# May need something like the following on Mac OS
+# jif-runtime-native.java-include-dir=/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/JavaVM.framework/Headers

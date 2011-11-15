@@ -1,0 +1,6 @@
+class C {
+   void m() {
+       C const [][] b = null;
+   }
+    
+}

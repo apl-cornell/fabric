@@ -1,0 +1,32 @@
+/*
+ * This example shows that it is not enough to associate arg-labels
+ * with their methods! See ArgLabelSubst.jif
+ *
+ * This bug has been fixed as of 27 June 2003.
+
+ */
+class  ArgLabelSubst2[principal q] {
+    public String{q:} foo{*!:*}(ArgLabelSubst2[y]{*!:*} x, principal y, principal z) {
+	if (x == null) return "asdf";
+
+	String{y:} answer2 = null;
+
+	answer2 = x.foo(null, z, y); // the return result should have label {y:}
+	// however, it will replace it and get {z:}, which is incorrect.
+
+	return "asdfg";
+    }
+}
+
+class  D[label q] {
+    public String{q} foo{*!:}(D[{y}]{*!:*} x, label y, label z) {
+	if (x == null) return "asdf";
+
+	String{y} answer2 = null;
+
+	answer2 = x.foo(null, z, y); // the return result should have label {y}
+	// however, it will replace it and get {z}, which is incorrect.
+
+	return "asdfg";
+    }
+}

@@ -1,0 +1,7 @@
+class C[covariant label L] {
+    void m(boolean{} b) {
+	C[{Alice:}] x = b?foo(new label {Alice:}):foo(new label {});
+    }
+    native C[{*lbl}] foo(label lbl);
+}
+

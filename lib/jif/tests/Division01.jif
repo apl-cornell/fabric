@@ -1,0 +1,8 @@
+public class Division {
+    void m() {
+        // check that no arithmetic exception thrown
+        int x = 234 / 7;
+        x = 9 %7;
+        double y = 8.9/0.0;
+    }
+}

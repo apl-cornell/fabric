@@ -1,0 +1,9 @@
+class A[covariant label L] {
+    A(int x) {
+        
+    }
+    A(String s) {
+        this(foo(s));
+    }
+    static int foo(String s) { return 3; }
+}

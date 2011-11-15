@@ -1,0 +1,12 @@
+class A {
+    public int{Alice:Bob} f;
+
+    public void clear{f}() {
+        f = 0;
+	f++;
+    }
+
+    public void leak{a}(int{Alice:Bob} a) {
+        f = a;
+    }
+}

@@ -1,0 +1,54 @@
+/**
+ * Simple class for SKEY authentication of clients
+ *
+ * NOTE: not all that exciting, since everything
+ *       can be sent in the clear ...
+ */
+package skey;
+
+import java.util.Hashmap;
+
+class LoginServer authority(root) {
+
+    private Hashmap entries;
+
+    /**
+     * Phase I: request login
+     *
+     * Given user name, returns n value, that is, the
+     * number of times to hash the secret value
+     *
+     * If n == 0, the user has to re-initialize his/her
+     * password with the administrator
+     */
+    public static int requestLogin( String username ) {
+
+        SkeyEntry ent = (SkeyEntry)entries.get( username );
+
+        if ( ent != null ) {
+            return ent.getN();
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * Phase II: authenticate user
+     *
+     * If stored secret matches user-provided token for
+     * given m-value, return true, else false
+     */
+    public static boolean login( String username, int n, String token ) {
+        // never allow m to equal zero
+        if ( n == 0 ) return false;
+
+        SkeyEntry ent = (SkeyEntry)entries.get( username );
+
+        if ( ent != null ) {
+            return ent.check( n, token );
+        } else {
+            return false;
+        }
+    }
+
+}

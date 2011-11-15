@@ -1,0 +1,9 @@
+interface HashInterface[covariant label L] {
+    int{L} hashCode();
+}
+
+class C[label L] implements HashInterface[L] {
+    private int{L} hashCode;
+    public int{L} hashCode() { return hashCode; };
+    
+}

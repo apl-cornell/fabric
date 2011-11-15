@@ -1,0 +1,39 @@
+import jif.util.*;
+
+public class List2Test {
+    public static void main{Alice:}(String[] args) {
+        List2[{Alice:},{Bob:}] goodList = new LinkedList2[{Alice:},{Bob:}]();
+
+        for(int i = 0; i < 10; i++) { 
+            JifObject[{Bob:}] bobs = getBobData();
+            try {
+                goodList.add(bobs);
+            } catch (ClassCastException impossible) {}
+            catch (IllegalArgumentException impossible) {}
+        }
+
+        int{Alice:} size = goodList.size();
+
+        JifObject[{Bob:}] obj = null;
+        try {
+            obj = goodList.get(0);
+        } catch (IndexOutOfBoundsException impossible) {}
+        
+        try {
+            goodList.remove(0);
+        } catch (IndexOutOfBoundsException impossible) {}
+        try {
+            goodList.add(obj);
+        } catch (ClassCastException impossible) {}
+        catch (IllegalArgumentException impossible) {}
+    }
+
+    public static JifObject[{Bob:}] getBobData() {
+        List2[{Bob:},{Bob:}] local = new LinkedList2[{Bob:},{Bob:}]();
+        return local;
+    }
+}
+
+
+
+

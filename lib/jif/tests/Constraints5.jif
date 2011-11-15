@@ -1,0 +1,58 @@
+public class Constraints5 {
+    // This example has the interesting property
+    // that it does have a solution, but the upper bounds
+    // on the variables will break monotonicity a finite
+    // number of times while reaching this solution.
+
+    // The problematic constraints are the following
+    // 1. w <= {Bob:}   where Alice actsfor Bob actsfor Chuck
+    // 2. v <= w        where Alice actsfor Bob actsfor Chuck
+    // 3. v <= {Alice:} where Bob actsfor Alice actsfor Chuck
+    // 4. w <= {Chuck:} where Alice actsfor Bob actsfor Chuck
+    
+    
+    // The solver changes the upper bounds as follows:
+    // Variable:    | v    w  | Comments
+    // ====================================
+    // Constraint 1 |      B  |
+    // Constraint 2 | B       |  
+    // Constraint 3 | A       | non-monotonic for Constraint 2     
+    // Constraint 4 |      C  | wakes up 2          
+    // Constraint 2 | C       | the solver currently detects that 
+    //              |         | the bound for this constraints 
+    //                          has changed non-monotonically, 
+    //                          and thus complains, even though 
+    //                          a stable solution will be found.
+    
+    // NOTE: this is only true when the meet labels are not being used
+    // in the solver.
+    public void foo()
+    {
+	int v = 0;
+	int w = 0;
+
+	int{Alice:} a = 0;
+	int{Bob:} b = 0;
+       	int{Chuck:} c = 0;
+
+
+	if (Alice actsfor Bob) {
+	    if (Bob actsfor Chuck) {
+		b = w; // constraint 1
+		w = v; // constraint 2
+	    }
+	}
+
+	if (Bob actsfor Alice) {
+	    if (Alice actsfor Chuck) {
+		a = v; // constraint 3
+	    }
+	}
+
+	if (Alice actsfor Bob) {
+	    if (Bob actsfor Chuck) {
+		c = w; // constraint 4
+	    }
+	}
+    }
+}

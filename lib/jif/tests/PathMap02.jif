@@ -1,0 +1,10 @@
+class C {
+    void m() {
+        int{Bob:} result = 3;
+        if (result > 2) {
+            return; 
+        }
+        return;
+        // OK, by single path rule.
+    }
+}

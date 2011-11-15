@@ -1,0 +1,27 @@
+class C {
+    Object{*:Alice; *!:Alice}[]{*:Alice; *!:Alice} data = new Object[0];
+    int{*:Alice; *!:Alice} size = 0;
+
+    
+    public void add{*:Alice; *!:Alice}(Object{*:Alice; *!:Alice} obj):{*:Alice; *!:Alice} {
+        int size = this.size;
+        Object{*:Alice; *!:Alice}[] data = this.data;
+        if (data != null) {
+            if (size == data.length) {
+                Object{*:Alice; *!:Alice}[] newData = new Object[size*2];
+                int i = 0;
+                while (i < size && i < newData.length) {
+                    newData[i] = data[i];
+                    i = i + 1;
+                }
+                data = newData;
+                this.data = newData;
+            }
+            
+            if (size >= 0 && size < data.length) data[size] = obj;
+            size = size + 1;
+            this.size = this.size + 1;
+        }
+
+    }
+}

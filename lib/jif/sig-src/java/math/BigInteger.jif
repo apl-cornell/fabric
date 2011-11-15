@@ -1,0 +1,64 @@
+package java.math;
+
+import java.io.*;
+
+public class BigInteger extends Number /*implements Comparable*/ {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    
+    public BigInteger(byte{this}[]{this} val) throws (NumberFormatException{val}) { }  
+    public BigInteger(int{this} signum, byte{this}[]{this} magnitude) throws (NumberFormatException{signum;magnitude}) { } 
+    public BigInteger(String{this} val, int{this} radix) throws (NumberFormatException{val;radix}) { } 
+    public BigInteger(String{this} val) throws (NumberFormatException{val}) { } 
+
+    // public native BigInteger(int numBits, Random rnd);    }
+
+    // public native BigInteger(int bitLength, int certainty, Random rnd);
+//    public native static BigInteger probablePrime(int bitLength, Random rnd);
+    public native static BigInteger{val} valueOf(long val);
+    
+    public static final BigInteger ZERO = null; // DUMMY
+    public static final BigInteger ONE = null; // DUMMY
+    
+    public native BigInteger{this;val} add(BigInteger val);
+    public native BigInteger{this;val} subtract(BigInteger val);
+    public native BigInteger{this;val} multiply(BigInteger val);
+    public native BigInteger{this;val} divide(BigInteger val) throws (ArithmeticException{val});
+    public native BigInteger{this;val}[]{this;val} divideAndRemainder(BigInteger val) throws (ArithmeticException{val});
+    public native BigInteger{this;val} remainder(BigInteger val) throws (ArithmeticException{val});
+    public native BigInteger{this;exponent} pow(int exponent) throws (ArithmeticException{exponent});
+    public native BigInteger{this;val} gcd(BigInteger val);
+    public native BigInteger{this} abs();
+    public native BigInteger{this} negate();
+    public native int{this} signum();
+    public native BigInteger{this;m} mod(BigInteger m) throws (ArithmeticException{m});
+    public native BigInteger{this;exponent;m} modPow(BigInteger exponent, BigInteger m) throws (ArithmeticException{m});
+    public native BigInteger{this;m} modInverse(BigInteger m) throws (ArithmeticException{this;m});
+    public native BigInteger{this;n} shiftLeft(int n);
+    public native BigInteger{this;n} shiftRight(int n);
+    public native BigInteger{this;val} and(BigInteger val);
+    public native BigInteger{this;val} or(BigInteger val);
+    public native BigInteger{this;val} xor(BigInteger val);
+    public native BigInteger{this} not();
+    public native BigInteger{this;val} andNot(BigInteger val);
+    public native boolean{this;n} testBit(int n)  throws (ArithmeticException{n});
+    public native BigInteger{this;n} setBit(int n)  throws (ArithmeticException{n});
+    public native BigInteger{this;n} clearBit(int n)  throws (ArithmeticException{n});
+    public native BigInteger{this;n} flipBit(int n)  throws (ArithmeticException{n});
+    public native int{this} getLowestSetBit();
+    public native int{this} bitLength();
+    public native int{this} bitCount();
+//    public native boolean isProbablePrime(int certainty)
+    public native int{this;val} compareTo(BigInteger val);
+    public native int{this;o} compareTo(Object o) throws (ClassCastException{o});
+    public native boolean{this;x} equals(Object x);
+    public native BigInteger{this;val} min(BigInteger val);
+    public native BigInteger{this;val} max(BigInteger val);
+    public native int{this} hashCode();
+    public native String{this;radix} toString(int radix);
+    public native String{this} toString();
+    public native byte{this}[]{this} toByteArray();
+    public native int{this} intValue();
+    public native long{this} longValue();
+    public native float{this} floatValue();
+    public native double{this} doubleValue();
+}

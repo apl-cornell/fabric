@@ -1,0 +1,9 @@
+import jif.lang.*;
+
+public class NullExcept14 {
+    public void m(Exception e) {
+	// e is a formal, but may be null
+	e.getMessage(); // bad
+    }    
+}
+

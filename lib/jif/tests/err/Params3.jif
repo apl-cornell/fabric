@@ -1,0 +1,17 @@
+class A[label L] {}
+
+class B[label L] {
+    A[L] ba;
+
+    public B{L} (A[L]{L} a) {
+        ba = a;
+    }
+}
+
+class C {
+    A[{Bob:Alice}] ca;
+
+    public void run{Bob:} () {
+        B[{Bob:}] b = new B[{Bob:}](ca);
+    }
+}

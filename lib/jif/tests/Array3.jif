@@ -1,0 +1,19 @@
+public class C[label L]  { 
+    public void fooString {L} () {
+        String {L}[]{L}x  = new String[1];
+        try {
+            x[0] = "a";
+        } catch (ArrayIndexOutOfBoundsException i) {
+        }
+    }
+
+    public void fooInt {L} () {
+        int {L}[]{L} x = new int[1];
+	try {
+            x[0] = 0;
+	} 
+	catch (ArrayIndexOutOfBoundsException i) {
+	} 
+	// NOTE: no array store exception thrown.
+    }   
+}

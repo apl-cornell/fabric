@@ -1,0 +1,18 @@
+class Array2 {
+    public void swap{arr}(int{arr}[] arr, int{arr} ix, int{arr} iy):{arr}
+        throws (IndexOutOfBoundsException, NullPointerException)
+    {
+        int tmpx = arr[ix];
+        int tmpy = arr[iy];
+        arr[ix] = tmpy;
+        arr[iy] = tmpx;
+    }
+    public Array2{arr}(int{arr}[] arr, int{arr} ix, int{arr} iy):{arr}
+        throws (IndexOutOfBoundsException, NullPointerException)
+    {
+        int tmpx = arr[ix];
+        int tmpy = arr[iy];
+        arr[ix] = tmpy;
+        arr[iy] = tmpx;
+    }
+}

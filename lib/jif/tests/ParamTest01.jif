@@ -1,0 +1,12 @@
+public class ParamTest01[label T] {
+
+	String{T} id;
+
+	public ParamTest01{T}(String{T} id) {
+		this.id = id;
+	}
+
+	public static ParamTest01[T]{T} createInstance{T}(String{T} id) {
+		return new ParamTest01[T](id);
+	}	
+}

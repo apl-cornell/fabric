@@ -1,0 +1,13 @@
+interface I {
+	int m();
+}
+
+class A implements I {
+	public int m() { return 0; }
+}
+
+class InterfaceTest {
+	int{} p(I a):{a} throws (Exception) {
+		return a.m();
+	}
+}

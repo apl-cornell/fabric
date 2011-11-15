@@ -1,0 +1,17 @@
+class A {
+    int{Alice:} high;
+    int{Alice:Bob} low;
+
+    public int{Alice:Bob} leak{Alice:}(int{Alice:Bob} ff) {
+        return ff;
+    }
+}
+
+public class BeginLabel3 {
+    A a;
+
+    public void run() throws (NullPointerException) {
+        int{Alice:} x = 0;
+        int{Alice:Bob} y = a.leak(x);
+    }
+}

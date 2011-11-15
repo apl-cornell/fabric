@@ -1,0 +1,32 @@
+import java.lang.*;
+
+public class Logon authority (client, host) {
+    RSAPrivateKey{client:} clientPrivKey;
+    RSAPublicKey clientPubKey;
+    
+    public Logon() where authority(client) {
+	clientPrivKey = new RSAPrivateKey();
+	clientPubKey = declassify(clientPrivKey.createPublicKey(), {});
+    }
+    
+    public void run() where authority(client, host) {
+	Nonce{host:} nonce = new Nonce();
+	EncryptedObject challenge = declassify(clientPubKey.encrypt(nonce), {host:client});
+	Nonce response = declassify(clientPrivKey.decrypt(challenge), {client:host});
+	int y;
+	if (response.equals(nonce)) {
+	    y = 4;
+	    // the test succeeded
+	    //System.out.println("Test passed");
+	    // can't use System.out because it's a static field
+	} else {
+	    y = 2;
+	    // the test failed
+	    //System.out.println("Test failed");
+	    // can't use System.out because it's a static field
+	}
+	// this part should be public
+	int x = 3 + 4;
+    }
+}
+    

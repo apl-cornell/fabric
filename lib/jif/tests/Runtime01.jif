@@ -1,0 +1,27 @@
+import jif.runtime.Runtime;
+
+class C {
+    public static void m(principal p, String args[]) throws Exception {
+	Runtime[p] rt = Runtime[p].getRuntime();
+	principal pp = Runtime[p].user();
+	pp = rt.user();
+	Runtime[p].acts_for(Alice, Bob);
+
+	/*    public native FileOutputStream[{*L}]{*L;L} openFileWrite(String{*L} name, boolean{*L} append, label L)
+	throws (IOException{*L;L}, SecurityException{*L;L});
+    public native FileInputStream[{*L}]{*L;L} openFileRead(String{*L} name, label L)
+	throws (FileNotFoundException{*L;L}, SecurityException{*L;L});
+
+    public native PrintStream[{*L}]{*L;L} stdout(label L) throws (SecurityException{*L;L});
+    public native InputStream[{*L}]{*L;L} stdin(label L) throws (SecurityException{*L;L});
+    public native PrintStream[{*L}]{*L;L} stderr(label L) throws (SecurityException{*L;L});
+
+    //the default label is {P:}
+    public native PrintStream[{P:}]{P:} err();
+    public native PrintStream[{P:}]{P:} out();
+    public native InputStream[{P:}]{P:} in();
+    public native InputStream[{*L}]{*L;L} in(label L);
+	*/
+
+    }
+}

@@ -1,0 +1,29 @@
+// bug with the default label of the base type of arrays, reported by Aslan
+// Askarov, May 11 06.
+class T {
+    private String {Alice:;*!:} [] {*!:} variants;
+    public String{Alice:;*!:} [] getV () {
+        return this.variants;
+    }
+
+
+    public T (String {Alice:;*!:}[]{*!:} v ) {
+        this.variants = v;
+    }
+
+
+    public static void main{*!:}(principal {*!:} p, String[] args) {
+        T t = new T (null);
+        String[] x = t.getV();  // <-- what's the label of x here
+	try {
+	    String{*!:} leak = x[0];
+	}
+	catch (Exception e) {}
+        foo(x);
+    }
+
+
+    public static void foo( String {Alice:Bob} [] {} vx ) {
+
+    }
+} 

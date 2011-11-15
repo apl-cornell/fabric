@@ -1,0 +1,6 @@
+class C[label L] { }
+
+class Inf2 { 
+    void m(C argv) { // BAD, method arg types need params
+    }
+}

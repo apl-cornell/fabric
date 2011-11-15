@@ -1,0 +1,21 @@
+class C[principal A, principal B, principal C] {
+    void m() {
+	int{A!: ; B!:} x = 5;
+	int{B!: ; C!:} y = 6;
+	int{B!:} z = x + y;
+    }
+
+    void n() {
+	int{A:; A!: ; B!:} x = 5;
+	int{B:; B!: ; C!:} y = 6;
+	int{A:; B:; B!:} z = x + y;
+    }
+
+    void o() {
+	final label L = new label {A:; A!: ; B!:};
+	final label M = new label {A:; B:; B!:};
+	if (L <= M) {
+	    // should be true
+	}
+    }
+}

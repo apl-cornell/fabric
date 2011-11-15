@@ -1,0 +1,179 @@
+import jif.runtime.Runtime;
+import jif.lang.PrincipalUtil;
+import java.io.*;
+
+class SetSecretClosure[principal user, label lb_external]
+     implements Closure[user, lb_external]
+{
+
+   private final User{*lb_external} user_obj;
+
+   public SetSecretClosure(int newsecret, User{this} user_obj) {
+      this.user_obj = user_obj;
+   }
+
+   public final Object{*lb_external} invoke{*lb_external}()
+        where caller(user) {
+
+     // This should never happen, but it makes the compiler happy
+     if(user_obj == null)
+        return new Integer(-1);
+
+     // This should always be true
+     if(user_obj equiv user) {
+        // This should be statically enforcable.
+        if(lb_external <= new label {user_obj<-; user_obj->}) {
+           if(new label {user_obj<-} <= lb_external) {
+              int n = declassify(user_obj.getSecret(), {user_obj->; user_obj<-} to {user_obj<-});
+              return new Integer(n);
+           }
+           UnsafeIO.print("Fail 1\n");
+        }
+        UnsafeIO.print("Fail 2\n");
+     }
+     // This should never happen
+     return new Integer(-1);
+   }
+}
+
+public class Main {
+
+   // loop reading commands from untrusted user
+   public static void main_loop{}(User{}[]{} users) {
+      // read "login" or "register" command
+
+      // avoid NullPointerExceptions
+      if(users == null)
+         return;
+
+      while(true) {
+         String username, password;
+         try {
+            UnsafeIO.print("username: ");
+            username = UnsafeIO.readLine();
+            if(username == null || username.equals("q")) {
+               UnsafeIO.print("\n");
+               return;
+            }
+            UnsafeIO.print("password: ");
+            password = UnsafeIO.readLine();
+         } catch(IOException e) {
+            UnsafeIO.print("Input error!\n");
+            return;
+         }
+
+         // Find the user matching the username
+         User activeuser = null;
+
+         try {
+            for(int i = 0; i < users.length; i++) {
+               if(username.equals(users[i].getName()))
+                  activeuser = users[i];
+            }
+         } catch(NullPointerException e) {}
+
+         // And put the active user into a final variable.
+         final User user = activeuser;
+         if(user == null) {
+            UnsafeIO.print("Unknown user: " + username + "\n");
+            continue;
+         }
+
+         // Create and invoke the closure to get the user's secret out, if the
+         // user allows it.
+         final label lb = new label {};
+         SetSecretClosure[user, lb] cl = new SetSecretClosure[user, lb](42, user);
+         Capability[user, lb] cap = jif.lang.PrincipalUtil.authorize(user, password, cl, lb);
+
+         if(cap != null) {
+            int{*lb} revealed = -1;
+            try {
+               revealed = ((Integer)cap.invoke()).intValue();
+            } catch (NullPointerException e) {
+            } catch (ClassCastException e) {}
+
+            UnsafeIO.print("Got secret: " + revealed + "\n");
+         } else
+            UnsafeIO.print("Authentication failed\n");
+      } 
+   }
+
+   public static void main{root<-}(principal{root->_;root<-} root, String[]{} args)
+      throws (SecurityException)
+      where caller(root)
+   {
+      // Initialization of users
+      User users[] = new User[2];
+      String usernames[] = {"user1", "user2"};
+      String passwords[] = {"pass1", "pass2"};
+      int secrets[] = {42, 76};
+
+      for(int i = 0; i < 2; i++) {
+         try {
+            users[i] = new User(usernames[i], passwords[i], secrets[i], root);
+         } catch(ArrayIndexOutOfBoundsException e) {}
+      }
+
+      // Drop root privileges for the main loop.
+      main_loop(users);
+   }
+
+}
+
+
+// Principal to store the secret
+class User extends AbstractPrincipal {
+   // Name is not restricted information; the other fields are.
+   private String{this<-} name;
+   private String{this->; this<-} password;
+   private int{this->;this<-} secret;
+   private principal{*<-*} root;
+
+   // Initialize with dummy password and name.
+   public User(String{this} name, String{this} pw, int{this} secret, principal{this} root) {
+      this.password = pw;
+      this.secret = secret;
+      this.name = name;
+      this.root = root;
+      super(name);
+   }
+
+   public boolean delegatesTo(principal p) {
+      return p == root;
+   }
+
+   public void setSecret{this->; this<-}(int{this->; this<-} secret) {
+      this.secret = secret;
+   }
+
+   public String{this<-} getName{_<-_}() {
+      return this.name;
+   }
+
+   public int{this->; this<-} getSecret{this->; this<-}() {
+      return this.secret;
+   }
+
+   // The interesting part: checks whether or not a closure is allowed to run.
+   public boolean{authPrf; closure; lb; this; this <-}
+   isAuthorized{this<-}(Object authPrf, 
+         Closure[this, lb] closure,
+         label lb,
+         boolean executeNow)
+      where authority (this),
+   {authPrf;closure;lb;executeNow} <= lb
+   {
+
+
+      String pw = declassify(password, {this->; this<-} to {this<-});
+
+      // allow only SetSecretClosures closures, and check the password if one exists
+      if ((pw == null || pw.equals(authPrf)) &&
+            (closure instanceof SetSecretClosure[this, lb])) {
+         return true;
+      } else {
+         return false;
+      } 
+   }
+}
+

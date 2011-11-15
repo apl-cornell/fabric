@@ -1,0 +1,9 @@
+class LabelIf4[label L]
+{
+    public void m() {
+	if (new label {Alice: Bob} <= new label {L}) { // ok
+	    if (new label {Alice: Bob} <= L) { // ok
+	    }
+	}
+    }
+}

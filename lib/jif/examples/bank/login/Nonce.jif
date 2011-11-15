@@ -1,0 +1,8 @@
+public class Nonce {
+    public Nonce() {
+    }
+
+    public boolean equals(Nonce n) {
+	return true;
+    }
+}

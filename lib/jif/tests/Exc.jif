@@ -1,0 +1,18 @@
+import java.lang.Exception;
+
+public class Exc {
+    boolean{x} m(boolean x) {
+        boolean y;
+
+        y = true;
+
+        try {
+            if (x) throw new Exception();
+            y = false;
+        }
+        catch (Exception e) {
+        }
+
+        return y;
+    }
+}

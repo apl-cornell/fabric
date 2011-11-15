@@ -1,0 +1,7 @@
+class C[principal P, principal R, principal Q] authority (P,Q,R){
+    // test authority clauses
+    void m() where authority(P&Q) { }
+    void n() where authority(P,Q) { }
+    void o() where authority(P) { }
+    void r() where authority(Q) { }
+}

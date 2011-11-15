@@ -1,0 +1,14 @@
+class LabelIf6[label L]
+{
+    void m(label arg) {
+	final label{Bob:} lbl = new label {Alice:};
+	int{Alice:} x = 0;
+	if (lbl <= new label {Alice:}) {
+	    // not allowed because if branch tainted.
+	    x = 4;
+	}
+	else {
+	}
+
+    }
+}

@@ -1,0 +1,176 @@
+class LabelIf5
+{
+     final LabeledObject{*!:*} f = new LabeledObject(new label {}, null);
+
+    void m1{*this.f.L}(label{*!:*} arg, label{*!:*} arg2):{this;arg;Alice:} where {*this.f.L} equiv {} {
+  	 final label lbl = new label {Alice:};
+  	 int{*arg} a = 0;
+  	 int{*arg2} b = 0;
+  	 int{*lbl} c = 0;
+  	 int{Alice:Bob} d = 0;
+
+	 // arg arg	
+	 if (arg <= arg2) {
+	     b = a;
+	 }
+
+	 // arg dyn
+	 if (arg <= lbl) {
+	     c = a;
+	 }
+
+	 // arg path
+	 try {
+	     if (arg <= this.f.L) {
+		 this.f.o = new Integer(a);
+	     }
+	 }
+	 catch (NullPointerException e) {}
+
+	 // arg policy
+	 if (arg <= new label {Alice:Bob}) {
+	     d = a;
+	 }
+
+	 // arg join
+	 if (arg <= new label {Alice:Bob; *lbl}) {
+	     int{Alice:; *lbl} zz = a;
+	 }
+
+ }
+     void m2{*this.f.L}(label{*!:*} arg):{this;arg;Alice:}  where {*this.f.L} equiv {} {
+	 final label lbl = new label {Alice:};
+	 int{*arg} a = 0;
+	 int{*lbl} c = 0;
+  	 int{Alice:Bob} d = 0;
+
+	 // dyn arg
+	 if (lbl <= arg) {
+	     a = c;
+	 }
+	 // dyn dyn
+	 final label lbl2 = arg;
+	 if (lbl <= lbl2) {
+	     int{*lbl2} zz = c;
+	 }
+
+	 // dyn path
+	 try {
+	     if (lbl <= this.f.L) {
+		 this.f.o = new Integer(c);
+	     }
+	 }
+	 catch (NullPointerException e) {}
+
+
+	 // dyn policy
+	 if (lbl <= new label {Alice:Bob}) {
+	     d = c;
+	 }
+
+	 // dyn join
+	 if (lbl <= new label {Bob:Alice; *arg}) {
+	     int{Bob:;*lbl2} zz = c;
+	 }
+     }
+     void m3{*this.f.L}(label{*!:*} arg):{this;arg;Alice:}  where {*this.f.L} equiv {} {
+  	 final label lbl = new label {Alice:};
+  	 int{*arg; this} g;
+  	 int{*lbl; this} h;
+  	 int{Alice:Bob; this} i;
+
+	 // path arg
+	 try {
+	     if (this.f.L <= arg) {
+		 g = (this.f.o == null? 1 : 0);
+	     }
+	 }
+	 catch (NullPointerException e) {}
+
+	 // path dyn
+	 try {
+	     if (this.f.L <= lbl) {
+		 h = (this.f.o == null? 1 : 0);
+	     }
+	 }
+	 catch (NullPointerException e) {}
+
+	 // path path
+	 final LabelIf5 that = new LabelIf5();
+	 try {
+	     if (that.f.L <= this.f.L) {
+		 this.f.o = that.f.o;
+	     }
+	 }
+	 catch (NullPointerException e) {}
+
+
+	 // path policy
+	 try {
+	     if (this.f.L <= new label {Alice:Bob,Chuck}) {
+		 i = (this.f.o == null? 1 : 0);
+	     }
+	 }
+	 catch (NullPointerException e) {}
+
+
+	 // path join
+	 try {
+	     if (this.f.L <= new label {Alice:Bob,Chuck; *that.f.L}) {
+		 Object{Alice:; *that.f.L; this} zz = this.f.o;
+	     }
+	 }
+	 catch (NullPointerException e) {}
+     }
+     void m4{*this.f.L}(label{*!:*} arg):{this;arg;Alice:}  {
+  	 final label lbl = new label {Alice:};
+  	 int{*arg} a = 0;
+  	 int{*lbl} c = 0;
+  	 int{Alice:Bob} d = 0;
+
+	 // policy arg
+	 if (new label {Alice:Bob} <= arg) {
+	     a = d;
+	 }
+
+	 // policy dyn
+	 if (new label {Alice:Bob} <= new label {*lbl}) {
+	     c = d;
+	 }
+
+	 // policy path
+	 try {
+	     if (new label {Alice:Bob} <= this.f.L) {
+		 this.f.o = new Integer(d);
+	     }
+	 }
+	 catch (NullPointerException e) {}
+
+	 // policy policy
+	 if (new label {Alice:Bob} <= new label {Alice:Bob, Chuck, Dolores} ) {
+	     int{Alice:Chuck} zz = d;
+	 }
+
+	 // policy join
+	 if (new label {Alice:Bob} <= new label {*arg; *lbl} ) {
+	     int{*arg;*lbl} zz = d;
+	 }
+     }
+     void m6(label{*!:*} arg):{this;arg;Alice:}  {
+  	 final label lbl = new label {Alice:};
+
+	 // join join
+	 try {
+	     if (new label {Alice:Bob; *this.f.L} <= new label {*arg; *lbl} ) {
+		 Object{Alice:Bob} x = null;
+		 Object y = (x == null? this.f.o : null);
+
+		 Object{*lbl; *arg} zz = x;
+		 zz = this.f.o;
+		 zz = y;
+	     }
+	 }
+	 catch (NullPointerException e) {}
+
+     }
+}

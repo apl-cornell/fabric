@@ -1,0 +1,5 @@
+class C extends D[{*this.l}]{
+    final label{} l = new label {Alice:};
+}
+
+class D[label L] { }

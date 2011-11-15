@@ -1,0 +1,14 @@
+// test equivalences of access paths.
+class C {
+    private final D{} foo;
+    int{*this.foo.c} x;
+    
+    C{*<-*}(D{} bar, int{*bar.c} y) {
+        this.foo = bar; // makes this.foo equivalent to bar in access paths.
+        this.x = y;
+    }
+}
+
+class D {
+    final label{} c = new label {};
+}

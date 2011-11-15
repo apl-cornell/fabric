@@ -1,0 +1,27 @@
+class Main {
+    public static final void main{}(principal{} pp, String args[])
+	throws (Exception)
+    {
+	int test = 123;
+  	switch label (test) {
+  	    case (int{} xx) test = 321;
+                     else throw new Exception();
+  	}
+	
+	// at this point here the pc is tainted by label-of(test),
+	// since the method may have exited as a result of the switch
+	// label command.
+
+	// thus, the label for sum is tainted with label-of(test).
+	int {} sum;
+	sum = 0;
+
+	// the following switch label does a label-of({sum; label-of(test)}).
+	// as of July 21 2004, this is an error: you cannot take a label-of a 
+	// labelOfVar.
+	switch label (sum) {
+	    case (int {} x) ;
+		else throw new Exception();
+	}
+    }
+}

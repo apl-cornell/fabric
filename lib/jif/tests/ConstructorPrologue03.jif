@@ -1,0 +1,9 @@
+class D { }
+class C extends D {
+    C() {
+        m(this); // BAD: this cannot appear on RHS of assignment in constructor proglogue
+        super();
+    }
+    
+    static void m(Object o) { }
+}

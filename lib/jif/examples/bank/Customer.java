@@ -1,0 +1,97 @@
+import java.lang.*;
+import java.io.*;
+import java.util.*;
+
+class Customer implements Runnable {
+    private static Random random;
+
+    public String name;
+
+    private ATMCard card;    
+    private Password psswd;  // Password for the card (PIN)
+    public ATM[] ATMS;       // Array of ATMS known to the customer.
+    private Log log;
+
+    public Customer(String name, Password psswd, ATMCard card, ATM[] ATMS) throws IOException {
+	this.random = new Random();
+	this.name = name;
+	this.card = card;
+	this.ATMS = ATMS;
+	this.psswd = psswd;
+	log = new Log(name);
+    }
+
+    private int chooseATM() {
+	// pick a random ATM
+	return (Math.abs(random.nextInt()) % ATMS.length);
+    }
+
+    private void doTransactions(ObjectOutputStream keypad, ObjectInputStream terminal) {
+	try {
+	    Reply reply;
+	    log.logMessage("Checking Balance");
+	    // check balance
+	    keypad.writeInt(1);
+	    keypad.flush();
+	    reply = (Reply)terminal.readObject();
+	    log.logMessage(reply.toString());
+	    log.logMessage("Depositing");
+	    // deposit money
+	    keypad.writeInt(2);
+	    keypad.flush();
+	    double amt = (new Integer(Math.abs(random.nextInt() % 100))).doubleValue();
+	    keypad.writeDouble(amt);
+	    keypad.flush();
+	    reply = (Reply)terminal.readObject();
+	    log.logMessage(reply.toString());
+	    // withdraw money
+	    log.logMessage("Withdrawing");
+	    keypad.writeInt(3);
+	    keypad.flush();
+	    amt = (new Integer(Math.abs(random.nextInt() % 100))).doubleValue();
+	    keypad.writeDouble(amt);
+	    keypad.flush();
+	    reply = (Reply)terminal.readObject();
+	    log.logMessage(reply.toString());
+	} catch (Exception e) {
+	    log.logMessage("Exception " + e);
+	}
+    }
+
+
+    public void run() {
+	while(true) {
+	    try {
+		// pick an ATM
+		int atm = chooseATM();
+		log.logMessage("Picked atm " + atm);
+		// Insert card (after waiting in line for the keypad)
+		synchronized(ATMS[atm].keypad) {
+  	        synchronized(ATMS[atm].terminal) {
+		    ObjectOutputStream keypad = ATMS[atm].keypad;
+		    ObjectInputStream terminal = ATMS[atm].terminal;
+		    keypad.writeObject(card);
+		    log.logMessage("Inserted card");
+		    if (terminal.readBoolean()) {
+			// Type in password
+			keypad.writeObject(psswd);
+			keypad.flush();
+			log.logMessage("Typed password");
+			if (terminal.readBoolean()) {
+			    // do some transactions
+			    doTransactions(keypad,terminal);
+			    // logout
+			    keypad.writeInt(4);
+			    keypad.flush();
+			    log.logMessage("Logged out");
+			}
+		    }
+		}}
+		Thread.currentThread().sleep(3000);  // Sleep a while
+	    } catch (Exception e) {
+		log.logMessage("Exception " + e);
+	    }
+	}
+    }
+    
+}

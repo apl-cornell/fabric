@@ -1,0 +1,15 @@
+//  Check whether 
+
+class C {
+  int{p->} m1(principal{p->} p, int{p->} x) {
+    return x;
+  }
+
+  int{q->} m2{}(principal{q->} q) {
+     return m1(q, 0);
+  }
+
+  void m3{}() {
+    m2(Alice);
+  }
+}

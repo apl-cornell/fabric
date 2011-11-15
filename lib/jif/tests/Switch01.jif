@@ -1,0 +1,13 @@
+class C {
+    void m{*!:}() {
+	int{Alice:} secret = 1;
+	int{} leak = 0;
+	
+	switch (secret) {
+	case 0:	       
+	    break;
+	default:
+	    leak = 1; // BAD: leak
+	}
+    }
+}

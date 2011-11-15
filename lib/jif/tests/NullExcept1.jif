@@ -1,0 +1,12 @@
+import jif.lang.*;
+
+public class NullExcept1 {
+      public void foo{}() {
+    	JifObject[{}] m, n;
+    	m = new MyInteger(7);
+    	m.toString(); // OK, no NPE thrown
+	
+    	n = m;
+    	n.toString(); // OK, no NPE thrown
+      }   
+}

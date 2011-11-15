@@ -1,0 +1,77 @@
+import java.lang.*;
+import java.io.*;
+
+class Manager {
+    final static principal manager; //  new principal();
+
+    public static void main(String [] args) 
+    where authority(manager){
+    	if (args.length != 2) {
+	    System.out.println("Usage: Manager <#CUSTOMERS> <#ATMS>");
+	    System.exit(1);
+	}
+	int numCust = Integer.parseInt(args[0]);
+	int numATMS = Integer.parseInt(args[1]);
+	
+	Bank[manager] bank; 
+       	Log[manager] log;
+	try {
+	    log = new Log[manager]("Manager");
+	    bank = new Bank[manager](1000.00);  // Start bank with 1000.00
+	} catch (IOException ioe) {
+	    System.out.println("Initialization failed.");
+	    System.exit(1);
+	    return; // so Java knows that the variables have been initialized
+	}
+
+	//** How does parameterization syntax mix with array syntax?
+	ATM[manager][] ATMS = new ATM[manager][numATMS];
+	Customer[] customers = new Customer[numCust];
+
+	// Start time
+	log.logMessage("Starting Time");
+	Time time = new Time(bank);
+	new Thread(time).start();
+
+
+	try {
+	// Start accountant
+	log.logMessage("Starting accountant");
+	Accountant[manager] accountant = new Accountant[manager](bank);
+	new Thread(accountant).start();
+
+	for (int i=0; i<numATMS; i++) {
+	    log.logMessage("Creating ATM# " + i);
+	    ATMS[i] = new ATM[manager](i, bank);
+	    new Thread(ATMS[i]).start();
+	}
+	for (int i=0; i<numCust; i++) {
+	    // create the customer and account
+	    String name = "Customer" + i;
+	    // principal customer = new principal;  //** Somehow, manager should act for customer (at least temporarily)
+	    Password[customer] psswd = new Password[customer](name);
+
+	    //** need to dynamically add the customer's authority here...
+	    actsfor(manager, customer) {
+		RSAPrivateKey[customer] privKey = new RSAPrivateKey[customer]();
+		RSAPublicKey pubKey = privKey.createPublicKey();
+		EncryptedObject ePrivKey = psswd.encrypt(privKey);
+		int acctNumber = bank.addAccount(name, pubKey, Bank.CUSTOMER_RATE);
+		ATMCard card = new ATMCard(ePrivKey, acctNumber, name);
+		customers[i] = new Customer(customer, name, psswd, card, ATMS);
+	    }
+	    log.logMessage("Creating " + name);
+	    new Thread(customers[i]).start();
+	}
+	} catch (Exception e) {
+	    log.logMessage("Exception " + e);
+	    log.logMessage("Initialization failed.");
+	    System.exit(1);
+	}
+	while (!(Input.getInt() == 0)) {
+	    // do
+	}
+	// crude way to kill all the threads
+	System.exit(0);
+    }
+}

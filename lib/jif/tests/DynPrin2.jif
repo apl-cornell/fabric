@@ -1,0 +1,15 @@
+class DynPrin2 {
+    final principal{} f;
+    DynPrin2{} g;
+
+    DynPrin2(principal{} p, DynPrin2{} o) {
+	this.f = p;
+	this.g = o;
+    }
+  
+    void m(principal{} q) {	
+	DynPrin2 local = new DynPrin2(q, null);
+
+	int{local.g.g.f:} x1; // not ok, local not final
+    }
+}

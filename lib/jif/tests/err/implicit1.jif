@@ -1,0 +1,12 @@
+public class Implicit1
+{
+    boolean{Alice:} secret;
+    boolean{Alice:Bob} junk;
+
+    public void leak() {
+        if (secret) {
+            junk = true;
+        }
+        else junk = false;
+    }
+}

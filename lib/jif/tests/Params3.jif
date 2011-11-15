@@ -1,0 +1,6 @@
+class Params3[label L]
+{
+    Params3[L]{} get() {
+        return new Params3[L]();
+    }
+}

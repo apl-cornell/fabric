@@ -1,0 +1,9 @@
+import jif.lang.*;
+
+public class NullExcept12 {
+    final NullExcept12 f = null;
+    public void m() {
+	f.m(); // bad, haven't checked its nullity
+    }    
+}
+

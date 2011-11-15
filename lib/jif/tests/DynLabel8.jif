@@ -1,0 +1,7 @@
+class C {
+    public final label l = new label {};
+}
+
+abstract class D {
+    abstract public int{*x.l} invoke{*x.l}(C{*x.l} x);
+}

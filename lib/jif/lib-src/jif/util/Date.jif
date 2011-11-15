@@ -1,0 +1,508 @@
+package jif.util;
+
+import jif.runtime.Runtime;
+
+/**
+ * This class is a simple utility class for representing and comparing dates. 
+ * It is not intended to replace or duplicate the functionality of 
+ * java.util.Date.
+ * It provides precision only to the minute.
+ * It is immutable.
+ * It provides no way to get the current time.
+ */
+public final class Date[covariant label L] implements JifObject[L] {
+    private final int{L} year;
+    private final int{L} month;
+    private final int{L} day;
+    private final int{L} hour;
+    private final int{L} minute;
+
+    public static final String{*!:*}[]{*!:*} monthNames = {
+            "NOT A VALID MONTH",
+            "January", "February", "March", "April",
+            "May", "June", "July", "August",
+            "September", "October", "November", "December",
+        };
+
+    public static final String{*!:*}[]{*!:*} daysOfWeek = {
+            "Sunday",
+            "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+            "Saturday", "Sunday",
+        };
+    public static final String{*!:*}[]{*!:*} shortDaysOfWeek = {
+            "Sun",
+            "Mon", "Tue", "Wed", "Thu", "Fri",
+            "Sat", "Sun",
+        };
+
+    public static final String{*!:*}[]{*!:*} shortMonthNames = {
+        "NOT A VALID MONTH",
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    };
+    public static final int{*!:*}[]{*!:*} maxDaysInMonth = {
+        -1,
+        31, 29, 31, 30, 31, 30, 
+        31, 31, 30, 31, 30, 31,
+    };
+
+    /**
+     * At the moment, assume that the string is in the format YYYY/MM/DD hh:mm
+     * or DD-MM-YYYY hh:mm
+     */
+    public static Date[lbl]{lbl} valueOf{*lbl}(label lbl, String{*lbl} d) throws (IllegalArgumentException{*lbl}) {
+        if (d == null) {
+            throw new IllegalArgumentException("null string");
+        }
+        int yearStart = 0;
+        int yearEnd = 4;
+        int monthStart = 5;
+        int monthEnd = 7;
+        int dayStart = 8;
+        int dayEnd = 10;
+        int hourStart = -1;
+        int hourEnd = -1;
+        int minStart = -1;
+        int minEnd = -1;
+        int i = d.indexOf('-', 0);
+        if (i > 0) { 
+            // date is of the form dd-mm-yyyy
+            dayStart=0;
+            dayEnd = i; 
+            monthStart = i + 1; 
+            int j = d.indexOf('-', monthStart);
+            if (j > 0) { 
+                monthEnd = j; 
+                yearStart = j + 1;
+                yearEnd = yearStart + 4;
+            }
+            else {
+                throw new IllegalArgumentException("invalid string: format should be DD-MM-YYYY");
+            }
+        }
+        if (yearEnd != d.length()) {
+            // the time is included
+            hourStart = yearEnd + 1;
+            hourEnd = d.indexOf(':', hourStart);
+            minStart = hourEnd+1;
+            minEnd = minStart+2;
+        }
+        else if (d.length() != 10) {
+            throw new IllegalArgumentException("invalid string: format should be DD-MM-YYYY [hh:mm]" + d.length());
+        }
+        
+        try {
+            int year = Integer.parseInt(d.substring(yearStart,yearEnd));
+            int month = Integer.parseInt(d.substring(monthStart,monthEnd));
+            int day = Integer.parseInt(d.substring(dayStart,dayEnd));
+            int hour = 0;
+            int min = 0;
+            if (hourStart > 0) {
+                hour = Integer.parseInt(d.substring(hourStart,hourEnd));
+            }
+            if (minStart > 0) {
+                min = Integer.parseInt(d.substring(minStart,minEnd));
+            }
+            return new Date[lbl](year, month, day, hour, min);
+        }
+        catch (NumberFormatException e) {
+            throw new IllegalArgumentException("invalid string: format should be DD-MM-YYYY [hh:mm]");
+        }
+        catch (StringIndexOutOfBoundsException impossible) {
+            return null;
+        }
+    }
+ 
+    /**
+     * Set the date to the current time
+     */
+    public Date() {
+        final principal p = PrincipalUtil.nullPrincipal();
+        this.year = Runtime[p].currentYear();
+        this.month = Runtime[p].currentMonth();
+        this.day = Runtime[p].currentDayOfMonth();
+        this.hour = Runtime[p].currentHour();
+        this.minute = Runtime[p].currentMinute();
+    }
+    public Date(int{L; this} pYear, int{L; this} pMonth, int{L; this} pDay) throws (IllegalArgumentException{pYear; pMonth; pDay}){
+        this(pYear, pMonth, pDay, 0, 0);
+    }
+    public Date(int{L; this} pYear, int{L; this} pMonth, int{L; this} pDay, int{L; this} pHour, int{L; this} pMinute) throws (IllegalArgumentException{pYear; pMonth; pDay; pHour; pMinute}){
+        this.year = pYear;
+        this.month = pMonth;
+        this.day = pDay;            
+        this.hour = pHour;            
+        this.minute = pMinute;            
+        checkDateValid(pYear, pMonth, pDay, pHour, pMinute);
+    }
+    public Date(int{L} pYear, String{L} pMonth, int{L} pDay) throws (IllegalArgumentException{pYear; pMonth; pDay}) {
+        this(pYear, pMonth, pDay, 0, 0);
+    }
+    public Date(int{L} pYear, String{L} pMonth, int{L} pDay, int{L} pHour, int{L} pMinute) throws (IllegalArgumentException{pYear; pMonth; pDay; pHour; pMinute}) {
+        
+        this.year = pYear;
+        this.day = pDay;
+        this.hour = pHour;
+        this.minute = pMinute;
+        int theMonth = 0;
+        for (int i = 1; i <= 12; i++) {
+            try {
+                if (monthNames[i].equalsIgnoreCase(pMonth) || shortMonthNames[i].equalsIgnoreCase(pMonth)) {
+                    theMonth = i;
+                    break;
+                }
+            }
+            catch(ArrayIndexOutOfBoundsException impossible) { }
+            catch(NullPointerException impossible) { }
+        }
+        if (theMonth == 0) {
+            throw new IllegalArgumentException("Invalid month: " + pMonth);
+        }
+        this.month = theMonth;
+        checkDateValid(pYear, theMonth, pDay, pHour, pMinute);
+    }
+    
+    public static int daysInMonth(int month, int year) {
+        if (month < 1 || month > 12) return -1;
+        try {
+            if (month == 2) {
+                return isLeapYear(year)?29:28;
+            }
+            return maxDaysInMonth[month];
+        }
+        catch (NullPointerException impossible) { }
+        catch (ArrayIndexOutOfBoundsException impossible) { }
+        return -1;
+    }
+    private static void checkDateValid(int pYear, int pMonth, int pDay, int pHour, int pMinute)  throws (IllegalArgumentException{pYear; pMonth; pDay; pHour; pMinute}) {
+        if (pMonth < 1 || pMonth > 12) {
+            throw new IllegalArgumentException("Invalid month: " + pMonth);
+        }
+        try {
+            if (pDay < 1 || pDay > daysInMonth(pMonth, pYear)) {
+                throw new IllegalArgumentException(monthNames[pMonth] + " " + 
+                      pYear + " has " + daysInMonth(pMonth, pYear) + " days.");
+            }
+        }
+        catch(ArrayIndexOutOfBoundsException impossible) { }
+        catch(NullPointerException impossible) { }
+        if (pHour < 0 || pHour > 23) {
+            throw new IllegalArgumentException("Invalid hour: " + pHour);
+        }
+        if (pMinute < 0 || pMinute > 59) {
+            throw new IllegalArgumentException("Invalid minute: " + pMinute);
+        }
+
+    }
+    
+    public static Date[lbl] lenientDate(label lbl, int{*lbl} year, 
+            int{*lbl} month, int{*lbl} day) {
+        int y = year;
+        int m = month;
+        int d = day;
+        try {
+            while (m > 12 || m < 1 || d < 1 || d > daysInMonth(m, y)) {
+                while (m > 12) {
+                    m -= 12; y++;
+                }
+                while (m < 1) {
+                    m += 12; y--;
+                }
+                // m is now between 1 and 12 inclusive
+                if (d > daysInMonth(m, y)) {
+                    d -= daysInMonth(m, y); m++;
+                }
+                if (d < 1) {
+                    d += daysInMonth((m+10)%12+1, y); m--;
+                }
+            }
+            return new Date[lbl](y, m, d);
+        }
+        catch (IllegalArgumentException impossible) { }
+        return null;
+    }
+    public static Date[lbl] lenientDate(label lbl, int{*lbl} year, 
+                                        int{*lbl} month, int{*lbl} day,
+                                        int{*lbl} hour, int{*lbl} minute) {
+        int y = year;
+        int m = month;
+        int d = day;
+        int h = hour;
+        int min = minute;
+        while (min > 59) {
+            min -= 60; h++;
+        }
+        while (min < 0) {
+            min += 60; h--;
+        }
+        while (h > 23) {
+            h -= 24; d++;
+        }
+        while (h < 0) {
+            h += 24; d--;
+        }
+    
+        try {
+            while (m > 12 || m < 1 || d < 1 || d > daysInMonth(m, y)) {
+                while (m > 12) {
+                    m -= 12; y++;
+                }
+                while (m < 1) {
+                    m += 12; y--;
+                }
+                // m is now between 1 and 12 inclusive
+                if (d > daysInMonth(m, y)) {
+                    d -= daysInMonth(m, y); m++;
+                }
+                if (d < 1) {
+                    d += daysInMonth((m+10)%12+1, y); m--;
+                }
+            }
+            return new Date[lbl](y, m, d, h, min);
+        }
+        catch (IllegalArgumentException impossible) { }
+        return null;
+    }
+
+    public int{L} getYear() { return this.year; }
+    public int{L} getMonth() { return this.month; }
+    public int{L} getDay() { return this.day; }
+    public int{L} getHour() { return this.hour; }
+    public int{L} getMinute() { return this.minute; }
+    public int{L} getDayOfWeek() { 
+        // Jan 1 1900 was a monday, so its index is 1.
+        // add the number of days since then, and take mod 7
+        // could be a negative number, so add seven to be safe...
+        int thisD = Date[L].daysAfterJan_1_1900(this.year, this.month, this.day);
+        return ((thisD % 7) + 8) % 7;
+    }
+    
+    public String{L} getMonthName() { 
+        try {
+            return monthNames[this.month];
+        }
+        catch(ArrayIndexOutOfBoundsException impossible) { }
+        catch(NullPointerException impossible) { }
+        return "impossible!";
+    }
+    public String{L} getShortMonthName() { 
+        try {
+            return monthNames[this.month];
+        }
+        catch(ArrayIndexOutOfBoundsException impossible) { }
+        catch(NullPointerException impossible) { }
+        return "impossible!";
+    }
+    public String{L} getDayOfWeekName() { 
+        try {
+            return daysOfWeek[this.getDayOfWeek()];
+        }
+        catch(ArrayIndexOutOfBoundsException impossible) { }
+        catch(NullPointerException impossible) { }
+        return "impossible!";            
+    }
+    public String{L} getShortDayOfWeekName() {
+        try {
+            return shortDaysOfWeek[this.getDayOfWeek()];
+        }
+        catch(ArrayIndexOutOfBoundsException impossible) { }
+        catch(NullPointerException impossible) { }
+        return "impossible!";
+    }
+
+    //    public String{L} getDayOfWeek() {
+//        try {
+//            return daysOfWeek[this.day];
+//        }
+//        catch(ArrayIndexOutOfBoundsException impossible) { }
+//        catch(NullPointerException impossible) { }
+//        return "impossible!";
+//    }
+
+    public boolean{L; when} before(Date[L] when) {
+        Date[L] that = when;
+        if (that == null) {
+            return false;
+        }
+        return (this.year < that.year) ||
+            (this.year == that.year && this.month < that.month) ||
+            (this.year == that.year && this.month == that.month && this.day < that.day) ||
+            (this.year == that.year && this.month == that.month && this.day == that.day && this.hour < that.hour) ||
+            (this.year == that.year && this.month == that.month && this.day == that.day && this.hour == that.hour && this.minute < that.minute);
+    }
+
+    public boolean{L; when} after(Date[L] when) {
+        Date[L] that = when;
+        if (that == null) {
+            return false;
+        }
+        return (this.year > that.year) ||
+            (this.year == that.year && this.month > that.month) ||
+            (this.year == that.year && this.month == that.month && this.day > that.day) ||
+            (this.year == that.year && this.month == that.month && this.day == that.day && this.hour > that.hour) || 
+            (this.year == that.year && this.month == that.month && this.day == that.day && this.hour == that.hour && this.minute > that.minute);
+    }
+    
+    /**
+     * Return number of days that this is before when. Will return a negative
+     * number if this is after when.
+     */
+    public int{L; when} daysBefore(Date[L] when) {
+        if (when == null) return 0;
+        int whenD = Date[L].daysAfterJan_1_1900(when.year, when.month, when.day);
+        int thisD = Date[L].daysAfterJan_1_1900(this.year, this.month, this.day);
+
+        return whenD - thisD; 
+    }
+            
+    private static int daysAfterJan_1_1900(int year, int month, int day) {        
+        int y = year;
+        int m = month;
+        int d = day;
+        int count = 0;
+
+        while (y - 400 > 1900) {
+            count += DAYS_IN_400_YEARS;
+            y -= 400;
+        }
+        while (y + 400 < 1900) {
+            count -= DAYS_IN_400_YEARS;
+            y += 400;
+        }
+
+        while (y > 1900) {
+            count += isLeapYear(--y)?366:365;
+        }
+        while (y < 1900) {
+            count -= isLeapYear(++y)?366:365;
+        }
+        // now y == 1900
+        while (m > 1) {
+            count += daysInMonth(--m, y);
+        }
+        count += d-1;
+        return count;
+    }
+    private static final int{*!:*} DAYS_IN_400_YEARS = 146097;
+
+    /**
+     * Determine if the given year is a leap years. A year is a leap year
+     * if it is divisible by 4, unless it is the first year of a century 
+     * (i.e. is divisible by 100), except for every fourth century.
+     */
+    public static boolean{pYear} isLeapYear(int pYear) {
+            return (pYear % 4 == 0 && (pYear % 100 != 0 || pYear % 400 == 0));
+    }
+
+    public String{L} toString() {
+        return toLongString();
+    }
+
+    public boolean{L;o} equals(IDComparable[L] o) {
+        return equals(L, o);
+    }
+    public boolean{L;*lbl;lbl;o} equals(label lbl, IDComparable[lbl] o) {
+        if (o == null || !(o instanceof Date[lbl])) {
+            return false;
+        }
+        Date[lbl] that = (Date[lbl])o;
+        return this.year == that.year &&
+            this.month == that.month &&
+            this.day == that.day &&
+            this.hour == that.hour&&
+            this.minute == that.minute;
+            
+    }
+
+    public int{L} hashCode() {
+        return (year) ^
+            (month * 256) ^
+            (day * 1024) ^ 
+            (hour * 13) ^
+            minute;
+    }
+    // formatting methods
+    public String{L} toLongString() {
+        String min = "" + minute;
+        if (min.length() < 2) min = "0" + min;
+        String h = "" + hour;
+        if (h.length() < 2) h = "0" + h;
+        
+        return day + " " + getMonthName() + " " + year + " " + h + ":" + min;
+    }
+    public String{L} toShortString() {
+        String min = "" + minute;
+        if (min.length() < 2) min = "0" + min;
+        String h = "" + hour;
+        if (h.length() < 2) h = "0" + h;
+        return day + "-" + month + "-" + year + " " + h + ":" + min;
+    }
+    
+    
+    // Functional style methods
+    public Date[L]{L} year(int{this} year):{L; this} throws IllegalArgumentException {
+        return new Date[L](year, this.month, this.day, this.hour, this.minute);
+    }
+    public Date[L]{L} month(int{this} month):{L; this} throws IllegalArgumentException {
+        return new Date[L](this.year, month, this.day, this.hour, this.minute);
+    }
+    public Date[L]{L} day(int{this} day):{L; this} throws IllegalArgumentException {
+        return new Date[L](this.year, this.month, day, this.hour, this.minute);
+    }
+    public Date[L]{L} hour(int{this} hour):{L; this} throws IllegalArgumentException {
+        return new Date[L](this.year, this.month, this.day, hour, this.minute);
+    }
+    public Date[L]{L} minute(int{this} minute):{L; this} throws IllegalArgumentException {
+        return new Date[L](this.year, this.month, this.day, this.hour, minute);
+    }
+//    public Date[L]{L} addYear(int{L} yearDelta):{L; this} {
+//        return lenientDate(L, this.year + yearDelta, this.month, this.day);
+//    }
+//    public Date[L]{L} addMonth(int{L} monthDelta):{L; this} {
+//        return lenientDate(L, this.year, this.month + monthDelta, this.day);
+//    }
+//    public Date[L]{L} addDay(int{L} dayDelta):{L; this} {
+//        return lenientDate(L, this.year, this.month, this.day + dayDelta);
+//    }
+    public static Date[lb]{*lb; lb; date; delta} addYear{*lb}(label lb, Date[lb]{*lb} date, int{*lb} delta) {
+        if (date == null) return null;
+        return Date[lb].lenientDate(lb, date.getYear() + delta, date.getMonth(), date.getDay(), date.getHour(), date.getMinute());
+    }
+    public static Date[lb]{*lb; lb; date; delta} addMonth{*lb}(label lb, Date[lb]{*lb} date, int{*lb} delta) {
+        if (date == null) return null;
+        return Date[lb].lenientDate(lb, date.getYear(), date.getMonth() + delta, date.getDay(), date.getHour(), date.getMinute());
+    }
+    /**
+     * Adds a positive or negative number of months to the date. If smartUpdate is true, then
+     * the returned date is guranteed to be at most one calendar month away; if smartUpdate is false, this is
+     * not guaranteed. An example where behavior is different adding one month to October 31. There is no November 31, so with
+     * smartUpdate false, the date returned would be Dec 1; with smartUpdate true, the date returned would be November 30.
+     * Another example, March 30 minus one month would be either March 1 or March 2 if smartUpdate false (depending on leap years), and
+     * either Feb 28 or Feb 29 if smartUpdate true (depending on leap years).
+     */
+    public static Date[lb]{*lb; lb; date; delta} addMonth{*lb}(label{*lb} lb, Date[lb]{*lb} date, int{*lb} delta, boolean{*lb} smartUpdate) {
+        if (date == null) return null;
+        Date[lb] d = Date[lb].lenientDate(lb, date.getYear(), date.getMonth() + delta, date.getDay(), date.getHour(), date.getMinute());
+        if (smartUpdate) {
+            int newMonth = date.getMonth() + delta;
+            newMonth = newMonth % 12; // make the new month in the correct range
+            if (newMonth <= 0) newMonth += 12;
+            while (d != null && newMonth != d.getMonth()) {
+                d = addDay(lb, d, delta<0?1:-1);
+            }
+        }
+        return d;
+    }
+    public static Date[lb]{*lb; lb; date; delta} addDay{*lb}(label lb, Date[lb]{*lb} date, int{*lb} delta) {
+        if (date == null) return null;
+        return Date[lb].lenientDate(lb, date.getYear(), date.getMonth(), date.getDay() + delta, date.getHour(), date.getMinute());
+    }
+    public static Date[lb]{*lb; lb; date; delta} addHour{*lb}(label lb, Date[lb]{*lb} date, int{*lb} delta) {
+        if (date == null) return null;
+        return Date[lb].lenientDate(lb, date.getYear(), date.getMonth(), date.getDay(), date.getHour() + delta, date.getMinute());
+    }
+    public static Date[lb]{*lb; lb; date; delta} addMinute{*lb}(label lb, Date[lb]{*lb} date, int{*lb} delta) {
+        if (date == null) return null;
+        return Date[lb].lenientDate(lb, date.getYear(), date.getMonth(), date.getDay(), date.getHour(), date.getMinute()+ delta);
+    }
+}

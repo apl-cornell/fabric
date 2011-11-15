@@ -1,0 +1,10 @@
+class DynPrin11 {
+    void m3(principal{qq} pp, principal{pp} qq) {}
+
+    void m() {
+	final principal{Alice:} a = Alice;
+	final principal{} b = Alice;
+
+	m3(b, a);
+    }
+}

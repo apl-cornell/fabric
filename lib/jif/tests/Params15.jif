@@ -1,0 +1,11 @@
+/*
+ * Test using a principal parameter at runtime
+ *
+ */
+class Params15[principal P] {
+    void m() {
+	principal{this} m = P; // ok
+    }
+}
+
+

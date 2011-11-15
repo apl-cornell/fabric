@@ -1,0 +1,21 @@
+class InvariantClass9 (invariant)   {
+    int{this} f;
+}
+
+class CovarClass9a extends InvariantClass9 {
+}
+
+class InvariantClass9a {
+    void m() {
+	CovarClass9a{} x = new CovarClass9a();
+	InvariantClass9{} y = x; // cast to super OK.
+
+	CovarClass9a{Alice:} z = x; // cast OK since x's class is covar
+	InvariantClass9{Alice:} w = z; // Cast to super OK
+
+	// wait! Now w and y alias the same invariant object, but at different labels!
+	
+    }
+}
+
+

@@ -1,0 +1,19 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.io;
+
+public class FileOutputStream[label L] extends OutputStream[L] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    private FileOutputStream() { }
+    public native void write{L}(int{L} b) throws (IOException{L});
+    private native void writeBytes{L}(byte{L}[]{L} b, int{L} off, int{L} len) throws (IOException{L});
+    public native void write{L}(byte{L}[]{L} b) throws (IOException);
+    public native void write{L}(byte{L}[]{L} b, int{L} off, int{L} len) throws (IOException{L});
+    public native void close{L}() throws (IOException{L});
+    public final native FileDescriptor{L} getFD()  throws (IOException{L});
+}

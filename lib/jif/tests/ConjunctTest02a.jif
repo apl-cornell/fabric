@@ -1,0 +1,9 @@
+class C {
+    void m(principal{} p, principal{} q, principal{} r) {
+	int{p:} x = 4;
+	int{r:} y = 4;
+	if ((p actsfor q && q actsfor r) || 4 < 5) { // produce a warning 
+	    //x = y; // compiler doesn't reason about this.
+	}
+    }
+}

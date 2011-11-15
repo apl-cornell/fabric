@@ -1,0 +1,22 @@
+class Protected {
+    Object{*lb} content;
+    final label{this} lb;
+
+    public Protected(Object{*LL} x, label{this} LL) {
+        lb = LL;      
+        content = x;  // checked assuming "lb == LL"
+    }
+
+    public Object{*L;this} get(label{this} L):{L} throws (SecurityException) {
+	Object{*L;this} retVal = null;
+        if (this.lb <= L) {
+            retVal = content;
+	}
+	else throw new SecurityException();
+	return retVal;
+    }
+
+    public label get_label() {
+        return lb;
+    }
+}

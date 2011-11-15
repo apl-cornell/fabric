@@ -1,0 +1,18 @@
+abstract class C[covariant label L] {
+    // declaration of this method should be illegal, uses a covariant label in a contravariant position!
+    abstract void m{L}(int{L} x) ; 
+}
+
+class D[label L] extends C[L] {
+    int{L} foo = 0;
+    void m{L}(int{L} x) {
+	this.foo = x;
+    }
+}
+
+class E {
+    void leak{Alice:}(int{Alice:} secret) {
+	C[{Alice:}] c = new D[{}]();
+	c.m(secret);
+    }
+}

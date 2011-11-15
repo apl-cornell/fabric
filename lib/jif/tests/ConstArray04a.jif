@@ -1,0 +1,6 @@
+class C {
+    void m{*<-*}() {
+        int{} [] foo = {1, 2, 3};
+        int{} [] bar = foo; // OK
+    }
+}

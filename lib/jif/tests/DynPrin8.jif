@@ -1,0 +1,21 @@
+class DynPrin8 {
+    final principal{} f;
+    DynPrin8{} g;
+    final M m = new M();
+
+    DynPrin8(principal{} p, DynPrin8{} o) {
+	this.f = p;
+	this.g = o;
+    }
+  
+    void m(principal{} q) {	
+	final DynPrin8 local = new DynPrin8(q, null);
+
+	int{m.foo():} x1; // not ok, method calls not allowed
+    }
+}
+
+class M {
+    final principal p = Alice;
+    int{} foo() { return 4; }
+}

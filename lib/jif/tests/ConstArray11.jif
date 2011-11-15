@@ -1,0 +1,10 @@
+class C {
+    void m{*<-*}() {
+        int const[][] foo = {{1,2,3}, {4,5,6}}; 
+        foo[0] = null; // BAD, const applies to all dimensions.
+    }
+    void n{*<-*}() {
+        int const[][] foo = {{1,2,3}, {4,5,6}}; 
+        foo[0][0] = 4; // BAD, const applies to all dimensions.
+    }
+}

@@ -1,0 +1,12 @@
+class C[label L] {
+    public boolean{} m() {
+	C[L] o = null;
+        if (o instanceof D[L]) {
+	    o = null;
+	    D[L] that = (D[L])o; // should throw a class cast exception here
+	}
+	return true;
+    }
+}
+
+class D[label L] extends C[L] { }

@@ -1,0 +1,17 @@
+class Object {
+    boolean{this;obj} equals (Object obj) {
+    return (this == obj);
+    }
+}
+
+class C extends Object {
+    int{Alice:} x;
+
+    boolean equals{this;obj} (Object obj) {
+    try {
+        return (this.x == ((C) obj).x);
+    } catch (ClassCastException exc) {
+        return false;
+    }
+    }
+}

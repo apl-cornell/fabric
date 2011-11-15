@@ -1,0 +1,12 @@
+class IntPair {
+    int pa;
+    int pb;
+
+    public int{} getFirst() {
+        return pa;
+    }
+
+    public int{} getSecond() {
+        return pb;
+    }
+}

@@ -1,0 +1,15 @@
+class DynPrin3 {
+    final principal{} f;
+    DynPrin3{} g;
+
+    DynPrin3(principal{} p, DynPrin3{} o) {
+	this.f = p;
+	this.g = o;
+    }
+  
+    void m(principal{} q) {	
+	final DynPrin3 local = new DynPrin3(q, null);
+
+	int{local:} x1; // not ok, expression of wrong type
+    }
+}

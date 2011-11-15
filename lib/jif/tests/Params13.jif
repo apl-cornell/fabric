@@ -1,0 +1,49 @@
+import jif.runtime.Runtime;
+import java.io.PrintStream;
+
+class Params13a[covariant label L] {
+}
+
+class Params13 {
+    public static void main{}(principal{} pp, String[]{} args) {
+	Runtime[pp] runtime = null;
+	try {
+	    runtime = Runtime[pp].getRuntime();
+	}
+	catch (SecurityException ignored) { }
+
+	PrintStream[{pp:}] out = null;
+	if (runtime != null) {
+	    try {
+		out = runtime.stdout(new label{pp:});
+	    }
+	    catch (SecurityException ignored) { }
+	}
+	new Params13b[{Alice:}]().leak(out, pp);
+    }
+}
+
+class Params13b[label M] extends Params13a[M] {
+    int{M} data = 7;
+
+    void leak{pp:}(PrintStream[{pp:}]{pp:} out, principal{} pp)  {
+	Params13a[{pp:;M}] a;
+	Params13a[{pp:}] b;
+	Params13b[{pp:;M}] x = null;
+	Params13b[{pp:}] y = new Params13b[{pp:}]();
+
+	b = y; // OK as it is a super class 
+	a = b; // OK as it is covariant
+	try {
+	    x = (Params13b[{pp:;M}])a; // Unsafe downcast!! will throw a class cast exception.
+	    if (out != null) out.println("failure! ");
+	}
+	catch (ClassCastException e) {
+	    if (out != null) out.println("success! ");
+	}
+	
+	if (x!=null) x.data = 11; // storing secret data.
+    }
+
+}
+

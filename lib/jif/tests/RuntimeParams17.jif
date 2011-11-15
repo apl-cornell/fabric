@@ -1,0 +1,21 @@
+// Test info leaked by params in a constructor
+class C[label L] { 
+    
+}
+
+
+class D {
+    void m(boolean{} b) {
+	final label{Alice:} la = new label {};
+	final label{Alice:} lb = new label {Bob:};
+	Object{} o;
+	if (b) {
+	    o = new C[{*la}](); // illegal, constructor is tainted by {Alice:}
+	}
+	else {
+	    o = new C[{*lb}]();
+	}
+	
+	
+    }
+}

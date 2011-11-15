@@ -1,0 +1,19 @@
+/* Test that we can only coerce an expression to a string if there
+ * is a toString method.
+ *
+ */
+public class ToString {
+
+    public void foo() {
+	String{} s = null;
+	JifObject[{}] o = null;
+	int i = 3;
+	Object bad = null;
+
+	s = s + i; // all of these should be OK
+	s = "" + o; // bad, even though there is a toString on the object
+	s = "" + o.toString(); // ok
+	s = "" + bad; // this should be ruled out: bad doesn't have a toString method.
+
+    }
+}

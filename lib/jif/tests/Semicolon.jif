@@ -1,0 +1,14 @@
+public class Semicolon {
+    public void foo(principal P, principal Q)
+    {
+        int{P→;P←⊓Q←} x = 5;
+        int{P→;P←;Q←} y = 10;
+        int{P→;P←;Q←} z = 15;
+
+        z = x;
+        z = y;
+
+
+
+    }
+}

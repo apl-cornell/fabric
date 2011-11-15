@@ -1,0 +1,28 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+class Cont {
+    public final principal p;
+    public Runtime[p] r;
+
+    Cont(principal{} pp) {
+	p = pp;
+	r = null;
+    }
+}
+
+public class ExtractPrincipal
+{
+    public ExtractPrincipal() {}
+    public static void main{}(String[] args)
+        throws (SecurityException)
+    {
+        final principal pp;
+        pp = Runtime[pp].user();
+        Runtime[pp] runtime = Runtime[pp].getRuntime(pp);
+
+        Cont c = new Cont(pp);
+	final principal q = c.p;
+	Runtime[q] r2 = c.r;
+    }
+}

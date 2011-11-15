@@ -1,0 +1,11 @@
+class C[covariant label L] {
+    void m(boolean{} b) {
+	// this will be ruled out, which is unfortunate, but OK. It
+	// uses the type of the first branch since implicit casts are 
+	// valid both ways (according to the polyglot Conditional_c, 
+	// which doesn't take parameters into account)
+	C[{Alice:}] x = b?foo(new label {}):foo(new label {Alice:}); 
+    }
+    native C[{*lbl}] foo(label lbl);
+}
+

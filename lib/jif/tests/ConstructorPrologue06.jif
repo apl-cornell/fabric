@@ -1,0 +1,11 @@
+class D { 
+    void m() { }
+}
+class C extends D {
+    C() {
+        ((D)this).m(); // BAD: this cannot appear on RHS of assignment in constructor proglogue
+        super();
+    }
+    
+    
+}

@@ -1,0 +1,12 @@
+public class Implicit3 {
+    boolean{Alice:} secret;
+
+    public void leak(int{Alice:Bob} arg):{Alice:Bob} throws (ArithmeticException) {
+        int a;
+
+        if (secret) {
+            a = 100 / arg;
+        }
+        else a = 100;
+    }
+}

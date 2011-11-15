@@ -1,0 +1,9 @@
+final class C[principal servletP, covariant label L] extends D[servletP, L] {
+    public C(int{L} size) {
+        super(size); // the label of the arg should be {size}, not {size;servletP}, and thus this call should be OK.
+    }
+}
+class D[principal servletP, covariant label L]  {
+    public D(int{L} size) {
+    }
+}

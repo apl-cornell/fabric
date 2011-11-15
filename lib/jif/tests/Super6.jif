@@ -1,0 +1,36 @@
+/*
+ * This tests extending non Jif classes.
+ * this should not be allowed. A final field is not initialized before a call to super.
+ */
+class Y extends RuntimeException {
+    private final int{} i;
+    public Y() {
+	i = 7;
+    }
+    public Y(String{this} s) {
+	i = 8;
+    }
+
+    public void foo() {
+	new Y("hi");
+    }
+}
+
+class Z extends Y {
+    private final int x;
+    public Z() {
+	x = 3;
+	super();
+    }
+    public Z(String{this} s) {
+	super(s); // final field x uninitialized
+	x = 4;
+    }
+
+    public void bar() { 
+	new Y("hi"); 
+	new Z("there"); 
+	new RuntimeException("how you doing"); 
+    }
+
+}

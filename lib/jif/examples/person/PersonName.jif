@@ -1,0 +1,143 @@
+import jif.util.Date;
+import jif.util.Iterator;
+
+/**
+ * A PersonName represents a name of a Person. A Person may have multiple 
+ * names, although exactly one of these names should be the principle name.
+ */
+public class PersonName implements DatedData[{}], JifObject[{}] {
+    protected final Date{} startDate;
+    protected Date{} endDate;
+    
+    protected final Person{} person;
+    
+    protected String[{}]{} surname;
+    protected String[{}]{} firstNames;
+    protected String[{}]{} preferedName;
+
+    protected boolean{} isPrincipleName = false;
+
+    public PersonName(Person{} person, Date{} startDate) {
+        this.person = person;
+        this.startDate = startDate;	
+    }
+
+    /**
+     * @return
+     */
+    public Date{} getEndDate() {
+        return endDate;
+    }
+
+    /**
+     * @return
+     */
+    public Date{} getStartDate() {
+        return startDate;
+    }
+
+    /**
+     * @param date
+     */
+    public void setEndDate{endDate}(Date{} date) {
+        endDate = date;
+    }
+
+    public boolean{when} isActiveAt(Date when) {
+	Date startDate = this.startDate;
+	Date endDate = this.endDate;
+        return (startDate != null && !startDate.after(when) && 
+                 (endDate == null || !endDate.before(when)));
+    }
+
+    /**
+     * @return
+     */
+    public String{} getFirstNames() {
+        return firstNames;
+    }
+
+    /**
+     * @return
+     */
+    public String{} getPreferedName() {
+        return preferedName;
+    }
+
+    /**
+     * @return
+     */
+    public String{surname} getSurname() {
+        return surname;
+    }
+
+    /**
+     * @param string
+     */
+    public void setFirstNames{firstNames}(String{} string) {
+        firstNames = string;
+    }
+
+    /**
+     * @param string
+     */
+    public void setPreferedName{preferedName}(String{} string) {
+        preferedName = string;
+    }
+
+    /**
+     * @param string
+     */
+    public void setSurname{surname}(String{} string) {
+        surname = string;
+    }
+
+    public void setPrincipleName{}(boolean{} isPrincName) {
+	this.isPrincipleName = isPrincName;
+    }
+
+    public boolean{isPrincipleName} isPrincipleName() {
+	return this.isPrincipleName;
+    }
+
+    /**
+     * @return
+     */
+    public Person{} getPerson() {
+        return person;
+    }
+
+    public boolean{o} equals(IDComparable[{}] o) {
+        if (o == null || !(o instanceof PersonName)) {
+            return false;
+        }
+        try {
+            PersonName that = (PersonName)o;
+	    String surname = this.surname;
+            return (surname == that.surname ||
+		    (surname != null && surname.equals(that.surname))) &&
+		this.isPrincipleName == that.isPrincipleName &&
+		this.startDate == that.startDate &&
+		this.endDate == that.endDate;
+        }
+        catch (ClassCastException e) {
+            return false;
+        }
+
+    }
+
+    public int{} hashCode() {
+	String surname = this.surname;
+	String firstNames = this.firstNames;
+	int hs = (surname == null) ? 0 : surname.hashCode();
+	int hf = (firstNames == null) ? 0 : firstNames.hashCode();
+        return hs ^ hf;
+    }
+
+    public String[{}] toString() {
+        return surname + 
+            (firstNames == null ? ""
+                                : ", " + firstNames);
+    }
+
+}

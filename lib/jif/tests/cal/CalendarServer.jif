@@ -1,0 +1,29 @@
+/**
+ * Simple Calendar Server
+ *
+ * Specification by NN and SRG
+ * Prototype by NN
+ * Revisions by SRG
+ */
+package calendar;
+
+import java.util.*;
+
+class CalendarServer authority(root) {
+  private HashMap schedules;
+
+  public void addUser(principal user) where authority(root) {
+    schedules.put(user, new Schedule[user]());
+  }
+
+  public void removeUser(principal user) where authority(root) {
+    schedules.remove(user);
+  }
+
+  public Schedule[user] getSchedule(principal user) {
+    return (Schedule[user]) schedules.get(user);
+  }
+}
+
+
+

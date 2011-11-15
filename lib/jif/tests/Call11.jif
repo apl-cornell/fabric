@@ -1,0 +1,10 @@
+class Call11
+{
+    void foo() {
+	new C().m(Alice, Bob);
+    }
+}
+
+class C {
+    void m(principal p, principal q) where p actsfor q {}
+}

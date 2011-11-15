@@ -1,0 +1,18 @@
+class ActsFor7
+{
+    public void p(principal a, principal b) {
+        int{b:} x = 0;
+        int{a:} y = 0;
+
+        if (a actsFor b) {
+	    // Should fail, since the actsfor test is tainted by the 
+	    // arglabels for a and b, which cannot flow to the var
+	    // y
+            y = x; 
+        }
+        else {
+            // y = x; // error
+            // x = y; // error
+        }
+    }
+}

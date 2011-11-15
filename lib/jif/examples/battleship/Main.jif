@@ -1,0 +1,40 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+/**
+ * This is the Main class for the BattleShip example. 
+ *
+ * It plays a game of BattleShip for the prinicipals Alice and Bob.
+ */
+class Main authority (Alice, Bob) {
+    
+    /*
+     * The main method has integrity {Alice<-* meet Bob<-* meet p<-*}. This means
+     * that it should only be run with the permission of both Alice and Bob.
+     * (By assumption, the invocation of the program has the permission of the
+     * current user p).
+     */
+    public static final void main{Alice<-* meet Bob<-* meet p<-*}
+                     (principal{} p, String args[]) : {Alice<-* meet Bob<-*} 
+         throws SecurityException, IllegalArgumentException
+      where authority (Alice, Bob), caller(p) 
+    {
+          PrintStream[{}] out = null;
+          try {
+              Runtime[p] runtime = Runtime[p].getRuntime();
+              out = runtime==null?null:runtime.stdout(new label {});
+          }
+          catch (SecurityException e) {
+              // just let out be null.
+          }
+
+          // the PrintStream needs to be labeled {Alice<-* meet Bob<-*}, which
+          // requires a declassification and an endorsement.
+          PrintStream[{}] out1 = endorse(out, {p->*} to {p->*;Alice<-* meet Bob<-* meet p<-*});
+          PrintStream[{}] out2 = declassify(out1, {Alice<-* meet Bob<-*});
+              
+          // instantiate an instance of the BattleShip game for Alice 
+          // and Bob, and play it.
+          new BattleShip[Alice, Bob]().play(out2);
+    }
+}

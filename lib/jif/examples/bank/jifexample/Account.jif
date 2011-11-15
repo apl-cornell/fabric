@@ -1,0 +1,71 @@
+import java.lang.*;
+
+// Probably need to synchronize these methods.
+
+public class Account[principal bank, principal manager] {
+    final principal customer;    //** The customer to whom the account belongs -- what is it's security level?
+
+    public String{bank:customer} name;    //** Could be considered restricted
+    public int{bank:customer} number;     //** Internal account number (only needed by the bank?)
+    public RSAPublicKey key;     // Used to authenticate customer
+
+    private double{bank:customer} balance;             //** The bank owns the balance, but the customer can see it
+    private double{bank:customer} interestRate;        //** The bank sets the interest rate, but the customer can see it
+    private double{bank:customer} cumulativeInterest;  //** The bank calculates the interest, but the customer can see it
+
+    private double{bank:customer} dailyWithdraw;    //** The bank tracks the customer's daily withdrawals
+
+    //** is customer and bank authority needed?
+    public Account(principal customer, String name, int{bank:customer} number, RSAPublicKey[{customer:}] key, double{bank:} rate) : {bank:}
+    where authority(customer, bank), caller(manager) {
+	this.bank = bank;
+	this.customer = customer;
+	this.name = name;
+	this.number = number;
+	this.key = key;
+	this.balance = 0.0;
+	this.interestRate = declassify(rate, {bank:customer});
+	this.cumulativeInterest = 0.0;
+	this.dailyWithdraw = 0.0;
+    }
+
+    public double{customer:} balance() 
+    where authority(customer), caller(bank) {
+	return balance;
+    }
+
+    public void deposit(double{customer:bank} amt) 
+    where authority(customer), caller(bank) {
+	balance += amt;
+    }
+
+    //** This method leaks information to the calling code by possibly raising exceptions
+    //** hopefully, since it must be called by code with the bank's authority, that's OK.
+    public void withdraw(double{customer:bank} amt) 
+	throws InsufficientFunds, ExceededDailyLimit 
+    where authority(customer), caller(bank) {
+	if (amt + dailyWithdraw > Bank.MAX_DAILY_WITHDRAW) {
+	    throw new ExceededDailyLimit();
+	}
+	if (amt > balance) {
+	    throw new InsufficientFunds();
+	} else {
+	    balance -= amt;
+	    dailyWithdraw += amt;
+	}
+    }
+
+    // the accrue method is called daily to simulate interest accumulation
+    // returns the interest earned on this account
+    public double{bank:} accrue() 
+    where caller(bank) {
+	double interest = balance * interestRate;
+	balance += interest;
+	cumulativeInterest += interest;
+
+	// Set daily withdraw to 0.0 here.
+	dailyWithdraw = 0.0;
+	return interest;
+    }
+}
+    

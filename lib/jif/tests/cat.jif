@@ -1,0 +1,46 @@
+import jif.runtime.Runtime;
+import jif.lang.*;
+import java.io.*;
+
+public class cat {
+
+    public static void main{p:}(principal{} p, String{}[]{} args):{p:} throws NullPointerException {
+	final label{} lb = new label{p:};
+
+	Runtime[p] runtime;
+	try {
+	    runtime = Runtime[p].getRuntime();
+	}
+	catch (SecurityException e) {
+	    runtime = null;
+	}
+
+	if (runtime == null) return;
+
+	PrintStream[{p:;_!:_}]{p:} out = runtime.out();
+	PrintStream[{p:;_!:_}]{p:} err = runtime.err();
+	if (err == null || out == null) { return; }
+
+	try {
+	    String{} filename = args[0];
+	    FileInputStream[{*lb}]{*lb} fis = runtime.openFileRead(filename, lb);
+
+	    InputStreamReader[{*lb}]{*lb} reader = new InputStreamReader[{*lb}](fis);
+	    BufferedReader[{*lb}]{*lb} br = new BufferedReader[{*lb}](reader);
+	    String{*lb} line = br.readLine();
+	    while (line != null) {
+		out.println(line);
+		line = br.readLine();
+	    }
+	}
+	catch (ArrayIndexOutOfBoundsException e) {
+	    err.println("usage: cat file");
+	}
+	catch (IOException e) {
+	    err.println(e.getMessage());
+	}
+	catch (SecurityException e) {
+	    err.println(e.getMessage());
+	}
+    }
+}

@@ -1,0 +1,20 @@
+import java.lang.*;
+import java.io.*;
+
+public class EncryptedObject {
+    private double{} tag;
+    private Nonce{host:} n;
+
+    public EncryptedObject(double{} tag, Nonce{host:} n) {
+	this.tag = tag;
+	this.n = n;
+    }
+
+    public double{} getTag() {
+	return tag;
+    }
+
+    public Nonce{host:} getNonce() {
+	return n;
+    }
+}

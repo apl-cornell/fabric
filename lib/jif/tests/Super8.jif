@@ -1,0 +1,5 @@
+class C extends E[Alice] {
+}
+
+class E[principal P] authority (P) {
+}

@@ -1,0 +1,11 @@
+class C {
+    final label L = new label {};
+    int{*c.L} m(C c) { return 3; }
+
+    void n1() { 
+	final C x = this;
+	m(x); // ok
+	m(this); // ok
+    }
+
+}

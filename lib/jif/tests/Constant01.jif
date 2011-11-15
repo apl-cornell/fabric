@@ -1,0 +1,12 @@
+public class Constant01 {
+    public void foo(boolean{Alice:} barg) {
+        boolean{Alice:} b = barg;
+        if(b) {
+            bar(5);
+        }
+    }
+
+    public void bar{Alice:}(int x) {
+        int{} y = x;
+    }
+}

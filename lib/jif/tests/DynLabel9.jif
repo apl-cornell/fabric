@@ -1,0 +1,21 @@
+class C[label L] { }
+
+class S {
+    public final Principal{this} pr;
+    C[{this.pr:}]{this.pr:} x = null;
+    public S() {
+	pr = null;
+    }
+}
+
+class D {
+    void m{}() {
+	final S foo = new S();
+	final principal p = Alice;
+	C[{p:}] c = null;
+	if (foo.pr equiv p) {
+	    foo.x = c;
+	    c = foo.x;
+	}
+    }
+}

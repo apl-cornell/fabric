@@ -1,0 +1,18 @@
+class B {
+    A{Alice:} a;
+    int{Alice:} s;
+    A{Alice:Bob} aa;
+
+    public void run{Alice:}(int{Alice:} data):{Alice:} throws (NullPointerException) {
+        //f = 2;
+        //a.f = data;
+        if (s < 100) {
+            a.clear();
+        }
+    }
+
+    public void run2{Alice:Bob}():{Alice:Bob} throws (NullPointerException) {
+        aa.leak(100);
+        aa.leak(110);
+    }
+}

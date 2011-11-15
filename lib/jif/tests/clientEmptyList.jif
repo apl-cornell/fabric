@@ -1,0 +1,18 @@
+class EmptyListException extends Exception {
+}
+
+public class clientEmptyList implements clientList {
+  clientEmptyList() {}
+  public Object first() throws (EmptyListException) {
+    throw new EmptyListException();
+  }
+  public clientList rest() throws (EmptyListException) {
+    throw new EmptyListException();
+  }
+  public Object get(int i) throws (Exception) {
+    throw new EmptyListException();
+  }
+  public int size() {
+    return 0;
+  }
+}

@@ -1,0 +1,8 @@
+class D implements IDComparable[{Alice:}] {
+    public boolean{Alice:;o} equals(IDComparable[{Alice:}] o) {
+	return true;
+    }
+    public boolean{Alice:;*lbl;lbl;o} equals(label lbl, IDComparable[lbl] o) {
+	return false;
+    }
+}

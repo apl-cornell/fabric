@@ -1,0 +1,13 @@
+class A[principal X] {
+    A{X<-}() { }
+}
+
+class B {
+    final principal{Y<-} Y;
+    final A[Y]{Y<-} a;
+
+    B{p<-}(principal{p<-} p) {
+	Y = p;
+	a = new A(); // works with explicit parameter: new A[Y]()
+    }
+}

@@ -1,0 +1,6 @@
+class ParamsError[principal p, principal q] {
+    int{p: q} contents;
+
+    /* error: should return int{p: q}. */
+    int{q: p} get() { return this.contents; }
+}

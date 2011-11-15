@@ -1,0 +1,70 @@
+BattleShip
+----------
+
+BattleShip is a simple game between two players. Each player has a
+secret board that contains a number of ships. Players take turns to
+ask if a coordinate on the opponent's board is contains a ship. The
+object is to locate all of the opponent's ships first.
+
+This simple game has interesting security properties. Each player has
+secret information: the location of ships on the board. Some of this
+secret information must be declassified when the opponent asks if a
+ship is occupying a given co-ordinate. A player's board must have the 
+integrity of both players. That is, the opponent needs to trust that the 
+player's board is not modified (that is, ships moved around) during the game.
+
+The BattleShip game is implemented in the classes BattleShip, Player,
+Board, Ship and Coordinate. The class Main provides code for
+instantiating the game for the principals Alice and Bob.
+
+
+To compile and run the BattleShip example:
+
+1. Ensure that the Jif compiler is working.
+  
+   See $JIF/doc for information on compiling the Jif compiler.
+
+2. Ensure that the principals Alice and Bob are present.
+
+   The code for the principals is in the $JIF/tests directory. To
+   compile the code for the principals, perform the following
+   commands.
+        $ cd $JIF/tests
+        $ $JIF/bin/jifc jif/principals/Alice.jif jif/principals/Bob.jif
+
+3. Compile the BattleShip classes
+
+        $ cd $JIF/examples/battleship
+        $ $JIF/bin/jifc -classpath $JIF/tests *.jif
+
+   The $JIF/tests directory must be included on the classpath so the
+   Jif compiler can locate the principals Alice and Bob.
+   
+4. Execute the BattleShip example
+
+        $ cd $JIF/examples/battleship
+        $ $JIF/bin/jif -classpath "$JIF/tests:." Main
+   
+   The output should resemble the following.
+
+Playing battleships, with each player having 10 covered coordinates
+  Initializing.... Done.
+  Playing rounds...
+        Alice: (0, 0)?  N   Bob: (0, 0)?  N   Score: 0 vs. 0
+        Alice: (1, 0)?  N   Bob: (1, 0)?  N   Score: 0 vs. 0
+        Alice: (0, 1)?  N   Bob: (0, 1)?  N   Score: 0 vs. 0
+        Alice: (0, 2)?  N   Bob: (0, 2)?  N   Score: 0 vs. 0
+        Alice: (1, 1)?  Y   Bob: (1, 1)?  Y   Score: 1 vs. 1
+        Alice: (2, 0)?  N   Bob: (2, 0)?  N   Score: 1 vs. 1
+[...]
+        Alice: (4, 5)?  N   Bob: (4, 5)?  N   Score: 8 vs. 8
+        Alice: (3, 6)?  Y   Bob: (3, 6)?  Y   Score: 9 vs. 9
+        Alice: (2, 7)?  N   Bob: (2, 7)?  N   Score: 9 vs. 9
+        Alice: (1, 8)?  N   Bob: (1, 8)?  N   Score: 9 vs. 9
+        Alice: (0, 9)?  N   Bob: (0, 9)?  N   Score: 9 vs. 9
+        Alice: (0, 10)?  N   Bob: (0, 10)?  N   Score: 9 vs. 9
+        Alice: (1, 9)?  N   Bob: (1, 9)?  N   Score: 9 vs. 9
+        Alice: (2, 8)?  N   Bob: (2, 8)?  N   Score: 9 vs. 9
+        Alice: (3, 7)?  Y
+
+Alice won!

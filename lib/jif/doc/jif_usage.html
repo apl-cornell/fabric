@@ -1,0 +1,97 @@
+<html>
+
+<head>
+<link rel=StyleSheet href="jifdoc.css" type="text/css">
+<title>Compiling and running Jif programs</title>
+</head>
+
+<body>
+
+<h1><u>Compiling and running Jif programs</u></h1>
+
+<p>Jif programs can be compiled through the use of the script
+<code>jifc</code>, which was created in the $JIF/bin directory during
+installation (see the <a href="../README">README</a>). Information on the usage of <code>jifc</code> can be obtained by executing <code>jifc&nbsp;--help</code>:
+
+<div class="code"><pre>
+$ $JIF/bin/jifc --help
+usage: jifc [options] &lt;source-file&gt;.jif ...
+where [options] includes:
+  @&lt;file&gt;                  read options from &lt;file&gt;
+  -d &lt;directory&gt;           output directory
+  -assert                  recognize the assert keyword
+  -sourcepath &lt;path&gt;       source path
+  -bootclasspath &lt;path&gt;    path for bootstrap class files
+  -ext &lt;extension&gt;         use language extension
+  -extclass &lt;ext-class&gt;    use language extension
+  -commandlineonly         only compile files named on the command-line (may
+                           also require -c)
+  -preferclassfiles        prefer class files to source files even if the 
+                           source is newer
+  -fqcn                    use fully-qualified class names
+  -sx &lt;ext&gt;                set source extension
+  -ox &lt;ext&gt;                set output extension
+  -errors &lt;num&gt;            set the maximum number of errors
+  -w &lt;num&gt;                 set the maximum width of the .java output files
+  -dump &lt;pass&gt;             dump the ast after pass &lt;pass&gt;
+  -print &lt;pass&gt;            pretty-print the ast after pass &lt;pass&gt;
+  -disable &lt;pass&gt;          disable pass &lt;pass&gt;
+  -noserial                disable class serialization
+  -nooutput                delete output files after compilation
+  -c                       compile only to .java
+  -outputamb               allow generating code from ambiguous nodes
+  -post &lt;compiler&gt;         run javac-like compiler after translation
+  -v -verbose              print verbose debugging information
+  -report &lt;topic&gt;=&lt;level&gt;  print verbose debugging information about topic 
+                           at specified verbosity
+        Allowed topics: imports, jl, labelEnv, serialize, types, frontend, 
+        time, resolver, cfg, visit, labels, error, dataflow, solver, jif, 
+        debug, errors, context, loader, verbose, qq
+  -version                 print version info
+  -h                       print this message
+  -e -explain              provide more detailed explanations of failed 
+                           label checking.
+  -robust                  enable checking of robustness conditions for 
+                           downgrading
+  -debug &lt;n&gt;               set debug level to n. Prints more information 
+                           about labels.
+  -stop_constraint &lt;n&gt;     halt when the nth constraint is added
+  -globalsolve             infer label variables globally (default: per 
+                           class)
+  -sigcp &lt;path&gt;            path for Jif signatures (e.g. for 
+                           java.lang.Object)
+  -addsigcp &lt;path&gt;         additional path for Jif signatures; prepended to 
+                           sigcp
+  -rtcp &lt;path&gt;             path for Jif runtime classes
+  -addrtcp &lt;path&gt;          additional path for Jif runtime classes; 
+                           prepended to rtcp
+</pre></div>
+
+
+
+<p>The script <code>jifc</code> sets a number of the class path options by default. In particular: 
+
+<ul>
+<li>the class path for signatures (the <code>-sigcp</code> flag) is set to <code>$JIF/sig-classes:$JIF/lib/jifsig.jar</code></li>
+
+<li>the class path for the runtime classes (the <code>-rtcp</code> flag) is set to <code>$JIF/rt-classes:$JIF/lib/jifrt.jar</code></li>
+
+<li>the class path  (the <code>-classpath</code> flag) is extended to include <code>$JIF/lib-classes</code> and <code>$JIF/lib/jiflib.jar</code></li>
+</ul>
+where $JIF is the installation directory of this distribution.
+
+<h2>Running jif programs</h2>
+
+<p>Jif programs can be run through the use of the script
+<code>jif</code>, which was created in the $JIF/bin directory during
+installation (see the <a href="../README">README</a>). 
+
+<p>The script <code>jif</code> automatically extends the classpath to
+include <code>$JIF/rt-classes</code>, <code>$JIF/lib/jifrt.jar</code>,
+<code>$JIF/lib-classes</code> and
+<code>$JIF/lib/jiflib.jar</code>. You will probably need to extend the
+classpath so that your compiled Jif classes will be found.
+
+</body>
+
+</html>

@@ -1,0 +1,4 @@
+class Main1 {
+    static void main(String[] a) {}
+    static int main(String[] a, principal p) {return 3;}
+}

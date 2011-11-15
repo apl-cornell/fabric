@@ -1,0 +1,12 @@
+// Test conflicting interfaces
+interface I[covariant label L] { 
+    int{L} foo();
+}
+
+class C extends D implements I[{Bob:;Alice:}] {
+    public int{Bob:;Alice:} foo() { return 3; } // bad
+}
+
+class D implements I[{Bob:}] {
+    public int{Bob:} foo() { return 3; }
+}

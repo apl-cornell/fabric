@@ -1,0 +1,9 @@
+class C {
+    void m(label{} L, label{} M) where {*L} equiv {*M} {
+        int{*L} x = 3;
+        int{*M} y = 3;
+        
+        y = x; // OK
+    }
+}
+

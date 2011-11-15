@@ -1,0 +1,31 @@
+import java.io.*;
+
+public class FileReader
+{
+    String filename;
+
+    public FileReader(String fn) {
+        this.filename = fn;
+    }
+
+    public void rewind() {
+
+    }
+
+    public String readline() {
+        return null;
+    }
+}
+
+File f = openfile("secret", {*f}); //f must have high secret labels
+File f = new File("secret", {*f}); //???
+
+public class File
+{
+    label sl;
+
+    public File() {
+        switch (sl) {
+        }
+    }
+}

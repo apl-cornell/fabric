@@ -1,0 +1,3 @@
+class InvariantThis3 {
+    final int{this}[]{} a = null; // not allowed, not final location
+}

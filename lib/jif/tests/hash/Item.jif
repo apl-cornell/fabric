@@ -1,0 +1,36 @@
+/**
+ * Simple Item class for dictionary entries
+ *
+ *     param L: security label of contents
+ *   rationale: since key retrieves contents,
+ *              key also has label L
+ */
+class Item[label L] implements Cloneable {
+
+    private Object{L} key;
+    private Object{L} val;
+
+    // Item returned has privacy label of arguments
+    public Item{L}( Object{L} key, Object{L} val ) {
+        this.key = key;
+        this.val = val;
+    }
+
+    // Key object returned has at most privacy label of
+    // class parameter L
+    public Object{L} getKey() {
+        return this.key;
+    }
+
+    // Key object returned has at most privacy label of
+    // class parameter L
+    public Object{L} getValue() {
+        return this.val;
+    }
+
+    // In order to set value, must have PC {L}
+    public void setValue{L}( Object{L} val ) {
+        this.val = val;
+    }
+
+}

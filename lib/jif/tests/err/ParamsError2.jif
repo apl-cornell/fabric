@@ -1,0 +1,14 @@
+class ParamsError2[principal p, principal q] {
+    int{p: q} contents;
+
+    /* error: should return int{p: q}. */
+    int{q: p} get() { return contents; }
+
+    static {
+	try {
+	    ParamsError2[Alice, Bob] p = new ParamsError2[Alice, Bob]();
+	    int{Bob: Alice} i = p.get();
+	}
+	catch (NullPointerException e) { }
+    }
+}

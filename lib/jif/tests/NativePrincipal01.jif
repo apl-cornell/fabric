@@ -1,0 +1,9 @@
+import jif.runtime.Runtime;
+class C {
+    static void main(principal p, String[] args) throws (Exception{*:*}) { 
+        final principal schong = Runtime[p].getUser("schong");
+        if (p equiv schong) {
+            Runtime[schong] rt = Runtime[p].getRuntime();
+        }
+    }
+}

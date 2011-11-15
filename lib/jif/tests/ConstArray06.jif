@@ -1,0 +1,10 @@
+class C {
+    final int{this}const []{this} foo;
+    C(int{this}[]{this} foo) {
+        int{this}const []{this} foo2 = null;
+        if (foo != null) {
+            foo2 = foo.clone();
+        }
+        this.foo = foo2;
+    }
+}

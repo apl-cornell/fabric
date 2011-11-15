@@ -1,0 +1,113 @@
+<html>
+
+<head>
+<link rel=StyleSheet href="jifdoc.css" type="text/css">
+<title>Overview</title>
+</head>
+
+<body>
+
+<h1><a name="introduction">Introduction</a></h1>
+
+<p>
+Jif is an extension to the Java programming language that adds static
+analysis of information flow for improved security assurance.  The
+primary goal is to prevent confidential and/or untrusted information
+from being used improperly.
+</p>
+
+<p>
+This document describes Jif 3.3.1, and is the most current
+documentation for the Jif language and compiler.
+The current release of the Jif compiler and
+run-time system are available from the
+<a href="http://www.cs.cornell.edu/jif">Jif web site</a>.
+</p>
+
+<p>
+Jif is based on the JFlow language described in the <a
+href="http://www.cs.cornell.edu/andru/papers/popl99/myers-popl99.ps.gz">Practical
+Mostly-Static Information Flow Control</a>, published in the <i>Proceedings of the
+26th ACM Symposium on Principles of Programming Languages</i> (POPL),
+pp. 228-241, January 1999, by Andrew C. Myers.
+</p>
+
+<p>
+Another source of documentation for Jif can be found in Andrew Myers'
+thesis, linked to from the <a
+href="http://www.cs.cornell.edu/jif/">Jif web site</a>. However, the
+language has developed since that time, and some features in this
+version of Jif are not documented in the thesis. 
+</p>
+
+<h2><a name="language_overview">Language overview</a></h2>
+
+<p>
+Jif extends Java by adding
+<em>labels</em> that express restrictions on how information may be used.
+For example, the following variable declaration declares not only that
+the variable <code>x</code> is an <code>int</code>, but also that the
+information in <code>x</code> is governed by a security policy:
+</p>
+
+<div class="code"><pre>
+int {Alice&rarr;Bob} x;
+</pre>
+</div>
+
+<p>In this case, the security policy says that the information in <code>x</code>
+is controlled by the principal Alice, and that Alice permits this information
+to be seen by the principal Bob.
+</p>
+
+<p>
+Using label annotations like this one, the Jif compiler analyses how
+information flows within programs and determines whether security policies
+for the confidentiality or integrity of information are enforced by the 
+program. For example, consider the following variable declaration and assignments:
+</p>
+
+<div class="code"><pre>
+int {Alice&rarr;Bob, Chuck} y;
+x = y; <span class="comment">// OK: policy on x is stronger</span>
+y = x; <span class="comment">// BAD: policy on y is not as strong as x</span>
+</pre></div>
+
+<p>The variable <code>y</code> is declared to be an <code>int</code>,
+and Alice permits the information in <code>y</code> to be seen by both Bob and Chuck.
+The first assignment is secure because it does not make the information in
+<code>y</code> visible to any additional principals. The second assignment is
+insecure because now Chuck can see the information that was in <code>x</code>,
+and the policy on <code>x</code> forbids this (unless Alice or Bob happen
+to trust Chuck, as seen later). The Jif compiler makes these determinations
+at compile time, as part of type checking.
+</p>
+
+<p>
+If a Jif program type-checks, the compiler translates it into Java code
+that can be compiled with a standard Java compiler. The program can then
+be executed with a standard Java virtual machine.
+Although enforcement is mostly done at compile time,
+Jif does also allow some enforcement to take place at run time.
+Therefore, Jif programs in general require the Jif run-time library.
+</p>
+
+<h2><A NAME="new_features">New features in Jif 3.x</A></h2>
+
+<p>
+This manual describes the latest version of Jif, Jif 3.3.1. With the introduction
+of version 3,
+the language was extended with some important new features. In particular, Jif now
+supports <a href="dlm.html#dlm_int_policies">integrity policies</a> and
+can use them to check the  <a href="language.html#robustness">robustness</a>
+of <a href="language.html#downgrading">downgrading</a> performed by the program.
+Jif now also provides a richer set of operators
+for constructing and manipulating security labels,
+including general
+<a href="dlm.html#meetjoin">meet and join</a> operators.  Jif also supports
+<a href="language.html#param-inference">automatic inference of class parameters</a>,
+including inference of both labels and principals.
+</p>
+</body>
+
+</html>

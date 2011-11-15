@@ -1,0 +1,10 @@
+import jif.lang.*;
+
+public class NullExcept5 {
+    public void foo{}(JifObject[{}]{} m, JifObject[{}]{} n, JifObject[{}]{} o) { 
+  	if (!(m == null || (n == null && o == null))) {
+	    m.toString(); // OK, no NPE thrown.
+  	}
+    }    
+}
+

@@ -1,0 +1,6 @@
+public interface TestList[label L] {
+  public Object first():{L} throws (Exception);
+  public TestList[L] rest():{L} throws (Exception);
+  public Object get(int i): {L; i} throws (Exception);
+  public int{L} size();
+}

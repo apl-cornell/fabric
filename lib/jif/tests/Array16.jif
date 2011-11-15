@@ -1,0 +1,6 @@
+class C {
+    void m{*!:*}() throws (Exception{*!:*}) {
+        int{Bob:}[]{Alice:}[] x = new int[3][4];
+        int{Bob:} const[]{Alice:}[] y = x.clone(); // test deep cloning
+    }
+}

@@ -1,0 +1,15 @@
+package jif.principals;
+
+public class bank extends ExternalPrincipal {
+    public bank() {
+	super("bank");
+    }
+
+    private static bank{*!:*} P;
+    public static Principal getInstance{*!:*}() {
+	if (P == null) {
+	    P = new bank();
+	}
+	return P;
+    }
+}

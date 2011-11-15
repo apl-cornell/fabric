@@ -1,0 +1,11 @@
+class C {
+    int{Alice:} m() where Alice actsfor Bob, Bob actsfor Chuck  { return 5; }
+}
+
+class D extends C {
+    int{Chuck:} secret;
+    int{Alice:} m() where Alice actsfor Chuck // ok
+    { 
+	return secret; 
+    }
+}

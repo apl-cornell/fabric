@@ -1,0 +1,16 @@
+class Var2 {
+    int{Alice:Bob} f;
+
+    public void m{Alice:Bob}(int x) {
+        f = x;
+    }
+}
+
+class Tester {
+    Var2{Alice:Bob} ff;
+    int{Alice:} s;
+
+    public void run{Alice:Bob}():{Alice:Bob} throws (NullPointerException) {
+        ff.m(s);
+    }
+}

@@ -1,0 +1,11 @@
+import jif.util.Date;
+
+/**
+ * The DatedData interface is for data that has a start and end date.
+ */
+public interface DatedData[label L] {
+    Date{L} getStartDate();
+    Date{L} getEndDate();
+
+    boolean{L; when} isActiveAt(Date when);
+}

@@ -1,0 +1,84 @@
+package jif.util;
+
+/**
+ * Utilities for jif.util.Collection
+ */
+public class Collections {
+    private Collections() { }
+    
+    /**
+     * Copy all objects in Collection[L] src to Collection[M] dst, 
+     * provided L &lt;= M, otherwise does nothing. 
+     * 
+     * @throws ClassCastException if the collection dst does when
+     * adding elements.
+     * @throws IllegalArgumentException if the collection dst does when
+     * adding elements.
+     */
+    public static void copyUp{*L}(label{*L} L, label{*L} M, 
+                                  Collection[L]{*L} src, 
+                                  Collection[M]{*L} dst) 
+    throws (ClassCastException{dst; src; *M}, IllegalArgumentException{dst; src; *M}) {
+        if (src == null || dst == null) return;
+        ClassCastException{*M} cce = null;
+        IllegalArgumentException{*M} iae = null;
+        if (L <= M) {
+            Iterator[L] iter = src.iterator();
+            while (iter != null && iter.hasNext()) {
+                try {
+                    JifObject[M] jo = iter.next();
+                    try {
+                        if (cce == null && iae == null)
+                            dst.add(jo);
+                    }
+                    catch (ClassCastException e) {
+                        cce = e;
+                    }
+                    catch (IllegalArgumentException e) {
+                        iae = e;
+                    }
+                }
+                catch (NoSuchElementException impossible) { }
+            }
+        }
+        if (cce != null) throw cce;
+        if (iae != null) throw iae;        
+    }
+    /**
+     * Copy all objects in List[L] src to Collection[M] dst, 
+     * provided L &lt;= M, otherwise does nothing. 
+     * 
+     * @throws ClassCastException if the collection dst does when
+     * adding elements.
+     * @throws IllegalArgumentException if the collection dst does when
+     * adding elements.
+     */
+    public static void copyListUp{*M}(label{*M} L, label{*M} M, 
+                                  List[L]{*M} src, 
+                                  Collection[M]{*M} dst):{*M} 
+    throws (ClassCastException, IllegalArgumentException) {
+        if (src == null || dst == null) return;
+        ClassCastException{*M} cce = null;
+        IllegalArgumentException{*M} iae = null;
+        if (L <= M) {
+            for (int{*M} i = 0; i < src.size(); i++) {
+                try {
+                    JifObject[M] jo = src.get(i);
+//                    try {
+//                        if (cce == null && iae == null)
+                            dst.add(jo);
+//                    }
+                }
+                catch (IndexOutOfBoundsException impossible) { }
+                catch (ClassCastException e) {
+                    cce = e;
+                }
+                catch (IllegalArgumentException e) {
+                    iae = e;
+                }
+            }
+        }
+        if (cce != null) throw cce;
+        if (iae != null) throw iae;        
+    }
+}

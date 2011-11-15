@@ -1,0 +1,11 @@
+class C {
+    void m() {
+	int{Alice: Bob; Alice: Chuck} x = 7;
+	int{Alice: Bob & Chuck} y = x; // ok
+
+    }
+    void n() {
+	int{Alice: Bob & Chuck} y = 6; 
+	int{Alice: Bob; Alice: Chuck} x = y; // not ok
+    }
+}

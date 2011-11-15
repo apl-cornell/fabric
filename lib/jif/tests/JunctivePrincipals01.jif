@@ -1,0 +1,33 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+class JunctivePrincipals01 {
+    public static void main{*!:*}(principal{*!:*} pp, String[]{*!:*} args)
+        throws (SecurityException)
+    {
+	
+        Runtime[pp] runtime = Runtime[pp].getRuntime();
+        try {
+            PrintStream[{pp:;_!:_}] out = runtime.out();
+
+	    // some simple conjunctive and disjunctive labels
+	    label{pp!:}[] lbls = new label[9];
+	    lbls[0] = new label {Alice: Bob&Chuck};
+	    lbls[1] = new label {Alice: Bob&Chuck, Chuck&Dolores};
+	    lbls[2] = new label {Alice: Bob&(Chuck,Dolores)};
+	    lbls[3] = new label {Alice: (Chuck,Bob&Dolores)};
+	    
+	    // junctive principals as owners
+	    lbls[4] = new label {Bob&Chuck: };
+	    lbls[5] = new label {Bob&Chuck, Chuck&Dolores: };
+	    lbls[6] = new label {Bob&(Chuck,Dolores):};
+	    lbls[7] = new label {Chuck,Bob&Dolores:};
+	    for (int i = 0; i < lbls.length; i++) {
+		out.println("label " + i + ": " + LabelUtil.singleton().stringValue(lbls[i]));
+	    }
+
+        }
+        catch (NullPointerException ignored) { }
+        catch (ArrayIndexOutOfBoundsException ignored) { }
+    }    
+}

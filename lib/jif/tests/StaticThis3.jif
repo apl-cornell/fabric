@@ -1,0 +1,5 @@
+class StaticThis3 {    
+    static void foo(int{this} x) { // BAD: "this" label used in static context.
+    }
+}
+

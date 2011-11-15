@@ -1,0 +1,24 @@
+class DynPrin10 {
+    void m1(principal{pp:} pp) {}
+    void m2(principal{pp} pp) {}
+    void m3(principal{qq} pp, principal{pp} qq) {}
+    void m4(principal{qq:} pp, principal{pp:} qq) {}
+
+    void m5(label{L} L) {}
+    void m6(label{*L} L) {}
+    void m7(label{*M} L, label{*L} M) {}
+    void m8(label{M} L, label{L} M) {}
+    void m9(label{*M} L, label{L} M) {}
+    void m10(label{M} L, label{*L} M) {}
+
+    void m{*!:*}() {
+	final principal{Alice:} a = Alice;
+	m1(a);
+
+	final principal{Bob:} b = Alice;
+	m2(b);
+
+	final principal{Bob:} c = Bob;
+	m3(b, c);
+    }
+}

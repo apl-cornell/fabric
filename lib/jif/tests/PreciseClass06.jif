@@ -1,0 +1,15 @@
+class C {
+    static final C foo = null;
+    public void m() throws NullPointerException {       
+        if (this instanceof D) {
+	    D x = (D)this; // ok	    
+	}
+        if (C.foo instanceof D) {
+	    D x = (D)C.foo; // ok	    
+	}
+	D y = new D();
+	D x = (D)y; // ok	    
+	C z = (C)y; // ok	    
+    }
+}
+class D extends C { }

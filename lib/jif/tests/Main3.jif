@@ -1,0 +1,6 @@
+class Main3 {
+    static void main(principal p, String[] args) 
+    where caller(Alice) { // BAD
+
+    }
+}

@@ -1,0 +1,13 @@
+class C {
+    void m(String m) {
+        String n = m==null?"":m;
+        
+        // n is not null here.
+        n.length();
+
+        n = m!=null?m:"";        
+        
+        // n is not null here too.
+        n.length();
+    }
+}

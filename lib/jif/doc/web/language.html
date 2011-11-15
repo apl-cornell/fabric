@@ -1,0 +1,1715 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=StyleSheet href="jifdoc.css" type="text/css">
+<title>Language features</title>
+</head>
+
+<body>
+
+<h1><a name="features"></a>Language features</h1> 
+<p>
+Jif provides the ability to label information manipulated by programs
+with security policies, enabling the compiler to enforce the security
+of that information. However, this core capability is not enough to
+make language-based information flow a viable approach.
+Jif has several additional features that are important for
+building interesting programs in a security-typed language:
+
+<ul class="ulpara">
+
+<li>A <strong><a href="#downgrading">downgrading</a></strong> mechanism gives the programmer an
+explicit escape hatch for downgrading the security of information when
+that is necessary. Downgrading confidentiality is called
+<strong>declassification</strong>, whereas downgrading integrity is called
+<strong>endorsement</strong>.
+
+<li><strong><a href="dlm.html#dlm_principals">Principals</a></strong>, the entities that have security requirements,
+are explicitly represented in the Jif language, 
+    both as type annotations and as values that can be manipulated at
+    run time. Jif provides the ability to create
+    <strong><a href="#user-defined-principals">user-defined principals</a></strong>, so that programs can define
+    their own authentication and authorization procedures.
+<li><strong><a href="#authority">Statically checked access control</a></strong> makes it possible
+    to write complex authorization code without
+    creating covert information leaks.
+<li>A <strong><a href="#principal-hierarchy">principal hierarchy</a></strong> allows policies to be stated
+    in a general way in terms of more abstract principals
+    such as groups or roles.
+<li><strong><a href="#label-polymorphism">Label polymorphism</a></strong> allows the expression of code 
+that is generic with respect to the security class of the data it manipulates. Classes can be
+<strong><a href="#parameterized-class">parameterized</a></strong>
+with respect to labels and principals, supporting genericity.
+<li><strong><a href="#inference">Automatic label inference</a></strong>
+and <strong><a href="#param-inference">automatic parameter inference</a></strong>
+make it unnecessary to write many type annotations.
+<li><strong><a href="#runtime-tests">Run-time label checking and first-class label values</a></strong>
+makes it possible to discover and to define new policies at run time. Run-time
+checks are statically checked to ensure that information is not leaked by
+the success or failure of the run-time check itself.  
+</ul>
+
+<p>
+Jif is not completely a superset of Java. Certain features have
+been omitted to make information flow control tractable. Also, Jif
+does not eliminate all possible information leaks
+(particularly, various kinds of <em>timing channels</em>).
+</p>
+
+<h2><a name="lexical">Lexical considerations</a></h2>
+<!-- Where does this belong in the manual? -->
+
+<p>
+Like Java programs, Jif programs are sequences of Unicode characters.  Certain
+parts of Jif syntax may be written using either ASCII characters or Unicode
+characters. The Unicode characters are the preferred presentation form. The Jif
+compiler expects files to be in <a
+href="http://en.wikipedia.org/wiki/UTF-8">UTF-8 encoding</a>, which means that
+pure ASCII input will work correctly, and that editors supporting UTF-8
+(e.g., <a href="http://www.vim.org">vim</a>) will
+display any Unicode characters correctly. Standard Java Unicode escapes
+(starting with <code>\u</code>) are also supported.
+</p>
+
+<p>The non-ASCII characters that are special lexical tokens for Jif are the
+following: &perp;, &#8868;, &rarr;, &larr;, &#8851;, &#8852;. They are used for
+writing label expressions.
+</p>
+
+<h2><a name="labeltypes">Labeled types</a></h2>
+
+<p>
+In Jif, every value has a <em>labeled type</em> that consists of two parts:
+an ordinary Java type such as <code>int</code>,
+and a <em>label</em> that describes how
+the value can be used.
+Any type expression <i class="math">t</i>
+may be labeled with any label expression <i class="math">l</i>.
+This labeled type expression is written <code><i class="math">t</i>{<i class="math">l</i>}</code>; for example, the
+labeled type <code>int{p:}</code>
+represents an integer that principal <code>p</code> owns
+and that only <code>p</code> can read.
+For example, a variable may be declared with this labeled type: 
+<div class="code"><pre>
+int{p:} x = 2;
+</pre></div>
+</p>
+
+<p>
+This labeled type may also be written as <code>{p→}</code> or
+<code>{p-&gt;}</code>. The syntax of labels is described earlier (see <a
+class="secref" href="dlm.html#dlm_syntax">Label syntax in Jif</a>).
+</p>
+
+<p>
+The compiler permits information to flow between locations
+with different labels only if that information flow does not
+lose policy restrictions.
+In particular, if information is
+able to flow from a location with label <i class="math">L</i><sub>1</sub>
+to a location with label <i class="math">L</i><sub>2</sub>, the
+label <i class="math">L</i><sub>2</sub> must be more restrictive
+than <i class="math">L</i><sub>1</sub></i>, or equally restrictive.
+In other words, the compiler checks that
+<i class="math">L</i><sub>1</sub></i> &#8849; 
+<i class="math">L</i><sub>2</sub></i>.
+</p>
+<p>
+When computation combines several input values to produce a result,
+the result may reveal information about
+any of the inputs. For example, when two variables
+<code>x</code> and <code>y</code> are added, the sum
+<code>x+y</code> may reveal information about both
+<code>x</code> and <code>y</code>.  Conservatively,
+the label of the result is the union of the policies
+in the labels of the inputs. This union is the
+<em>join</em> or <em>least upper bound</em>
+of the input labels. For example, if the label of
+<code>x</code> is <code>{p:q}</code> and the label of
+<code>y</code> is <code>{a:b; p:q,r}</code>, the
+label of the result is <code>{p:q; a:b; p:q,r}</code>,
+which is equivalent to <code>{p:q; a:b}</code>.
+</p>
+<p>
+In a program, a policy component of a label
+may take a few additional forms. One such
+form is a variable name, which denotes the set of policies
+in the label of the variable named.  For example, suppose
+that <code>a</code> is a variable and hence has a labeled type.
+The label expression <code>{a}</code> contains a single component expression;
+this label means that value it labels should be as restricted as the
+contents of <code>a</code> are. The more complex
+label expression <code>{a; o: r}</code> contains two policy components,
+indicating
+that the labeled value should be as restricted as <code>a</code> is, and also that
+the principal <code>o</code> restricts the value to be read by at most
+the principal <code>r</code>.
+Other kinds of label components are introduced later.
+</p>
+
+<p>
+The type and label parts of a labeled type act largely independently.
+The notation <i class="math">S &le; T</i> is used here to mean
+that the type <i class="math">S</i> is a subtype of the type
+<i class="math">T</i>. The intuitive
+behavior of subtyping is that it operates independently on the type
+and label: for any two types <i class="math">S</i> and <i
+class="math">T</i> and labels <i
+class="math">L</i><sub>1</sub> and <i
+class="math">L</i><sub>2</sub>,
+<i class="math">S</i> &le;
+<i class="math">T</i> and
+<i class="math">L</i><sub>1</sub> &#8849;
+<i class="math">L</i><sub>2</sub></i> iff
+<i class="math">S</i>{<i class="math">L</i><sub>1</sub>}
+&le; <i class="math">T</i>{<i class="math">L</i><sub>2</sub>} (as in
+[<a href="bibliography.html#VSI96">VSI96</a>])
+</p>
+
+<h3><a name="inference"></a>Label inference</h3>
+
+<p>
+A labeled type may occur in a Jif program almost anywhere a type may occur in a
+Java program. If the label is omitted from a type, the Jif compiler
+automatically generates a label for that type according to certain rules.  In
+particular, labels on local variables are automatically inferred by the Jif
+compiler in a way that satisfies the constraints on information flow, if
+possible.  Not all omitted labels are inferred; other labels, such as on method
+arguments, are generated automatically using defaults (see <a class="secref"
+href="#default-labels">Default labels</a>).
+</p>
+<p>For example, in the following code the label on the variable <code>y</code>
+is inferred automatically as <code>{Bob→Alice}</code>:
+
+<div class=code><pre>
+  int{Bob→Alice} x;
+  int{Bob→Alice} z;
+  int y = x;
+  z = y;
+</pre></div>
+
+<p class=cont>Usually, it is not necessary to annotate local variables
+with labels. The labels appearing in method signatures are enough to infer
+their labels.</p>
+
+<h3><a name="principal-hierarchy"></a>Principals and <code>actsfor</code></h3>
+
+ 
+<p><a name="actsfor"></a>
+Jif supports principals as defined in the DLM (see
+<a class="secref" href="dlm.html#dlm_principals">Principals</a>).
+The acts-for relationship between two principals can be tested in a Jif program
+using the built-in <code>actsfor</code> operator. The boolean expression
+<code>p actsfor q</code> evaluates to <code>true</code> if the specified
+relationship exists. Within the body of an <code>if</code> statement
+conditioned on this test (see <a class="secref" href="#runtime-tests">Run-time tests of labels and principals</a>), the compiler
+makes use of the knowledge that the relationship exists when checking
+information flows and comparing security policies.
+</p>
+
+<p>Jif also provides support for <a
+href="#user-defined-principals">user-defined principals</a> and
+user-defined authentication mechanisms.</p>
+
+<h3><a name="implicit-flows">Implicit flows and
+program-counter labels</a></h3>
+
+<p>
+The label of an expression's value varies depending
+on the evaluation context.
+This is needed to prevent leaks through
+<em>implicit flows</em>: channels created by the control flow structure
+itself.
+To prevent information leaks through implicit flows, the compiler
+associates a <em>program-counter label</em> (<u>pc</u>)
+with every statement and expression,
+representing the information that might be learned from
+the knowledge that the statement or expression was evaluated.
+
+<p>
+For example, consider the following program, which is obviously
+equivalent to the statement <code>l = h</code>, assuming
+<code>h</code> and <code>l</code> are boolean variables:
+<div class="code"><pre>
+l = false;
+if (h) {
+    l = true;
+}
+</div>
+</p>
+
+<p class="cont">
+If <code>l</code> contains public (low confidentiality) information
+and <code>h</code> contains secret (high confidentiality) information,
+this program is not secure.  The solution is that by conditioning on
+the variable <code>h</code>, the <code>if</code> statement makes the
+<u>pc</u> of the assignment to <code>l</code> at least as restrictive
+as <code>{h}</code>.  Assume no information can be learned from the
+fact that the program is executed, and that the program executes with
+the highest possible integrity (that is, initially
+<u>pc</u>&nbsp;=&nbsp;<code>{*&larr;*}</code>).  In this case, the value
+of <u>pc</u> during the consequent clause is <code>{h}</code>.  After
+the <code>if</code> statement, it is again true that <u>pc</u> =
+<code>{*&larr;*}</code>, because no information about <code>h</code> can be
+deduced from the fact that the statement after the <code>if</code>
+statement is executed. (It is not true in general that the value of
+<u>pc</u> reverts after <code>if</code> statements, but is true here
+because this <code>if</code> statement always terminates without
+throwing an exception.)  The label of a literal expression (e.g.,
+<code>true</code>) is the same as its <u>pc</u>, or <code>{h}</code>
+in this case.  So the assignment is permitted only if the label
+<code>{l}</code> is at least as restrictive as the label
+<code>{h}</code>. This would not be true if <code>l</code> were public
+and <code>h</code> secret.
+</p>
+
+<p>
+One way to think about the program-counter label is that
+there is a distinct <u>pc</u> for every basic block in the program.
+In general, the flow of control within a program depends on the values of
+certain expressions. At any given point during execution, various values
+<i class="math">v<sub>i</sub></i> have been observed in order to decide to arrive at the
+current basic block; therefore, the labels of these values affect the
+current <u>pc</u>. The Jif type system ensures that the <u>pc</u>
+label is at least as restrictive as the labels of all the variables on
+which the program counter depends.
+</p>
+
+<p>
+A related issue is the transmission of information through
+the termination or non-termination of a program.
+Consider the execution of a <code>while</code> statement
+<code>while (h != 0) { ... }</code>.
+According to the Jif type system,
+assuming that initially <u>pc</u>=<code>{*&larr;*}</code>, then
+after the statement terminates, <u>pc</u>=<code>{*&larr;*}</code>, using the
+same reasoning as for the <code>if</code> statement. This
+labeling might seem strange, because we
+know the value of <code>h</code> when we arrive at the final basic block.
+However, arriving at the final block gives no
+information about the value of <code>h</code> before the code started.
+Therefore, 
+Jif does not attempt to control information transfers through
+termination channels. It also ignores timing channels, which are
+an issue for concurrent programming languages. Jif does not support
+the Java thread model for concurrent programming.
+</p>
+
+<h3><a name="method-decls">Method declarations</a></h3>
+<p>
+Jif method
+declaration syntax extends Java syntax;
+there are a few optional annotations,
+including annotations for
+controlling information flow and for managing
+code authority.
+</p>
+
+<p>
+In a Jif method declaration, the return value, the arguments, and
+the exceptions may each be annotated with a label.
+There are additionally two optional labels in a method declaration called the
+<em>begin-label</em> and the <em>end-label</em>. 
+The begin-label specifies an upper bound
+on <u>pc</u> at the point of invocation of the method.
+The begin-label allows information about the <u>pc</u> of the caller to
+be used for statically checking the implementation, thereby
+preventing assignments within the method from creating implicit flows
+of information.
+</p>
+
+For example, a Jif version of the Java class
+<code>Vector</code> looks like the following:
+
+<div class="code"><pre>
+public class Vector[label L] extends AbstractList[L] {
+    private int{L} length;
+    private Object{L}[]{L} elements;
+
+    public Vector() ...
+    public Object elementAt(int i):{L; i}
+                    throws IndexOutOfBoundsException {
+        ...
+        return elements[i];
+    }
+    public void setElementAt{L}(Object{L} o, int{L} i) ...
+    public int{L} size() { return length; }
+    public void clear{L}() ...
+    ...
+}
+</pre></div>
+
+<p>
+This code provides several examples of Jif method
+declarations. The class is generic with respect to a label 
+parameter <code>L</code>, permitting Vectors to be used to
+store information of any one desired label. (See
+<a class="secref" href="#parameterized-classes">Parameterized classes</a>
+for information on parametric polymorphism over labels).
+</p>
+
+<p>
+The method <code>setElementAt</code> has a declared begin-label,
+<code>{L}</code>, occurring between the method name and the list of
+arguments. The begin-label ensures that the method can be called only
+if the <u>pc</u> of the caller is no more restrictive than
+<code>{L}</code>; the begin-label also ensures that the method can
+only update locations with a label at least as restrictive as
+<code>{L}</code> (such as the <code>elements</code> array). These two
+restrictions combined ensure that there will not be implicit
+information flow via invocation of the method.</p>
+
+<p>
+The labels of the formal arguments <code>o</code> and <code>i</code>
+of the method <code>setElementAt</code> are <code>{L}</code>, meaning
+that <code>{L}</code> is an upper bound on the label of any actual
+arguments.  Argument labels are discussed more fully in the following
+section.
+</p>
+<p>
+The end-label of a method specifies the <u>pc</u> at the point of termination
+of the method, and is an upper bound on the information that
+may be learned by observing whether the method terminates normally.
+Individual exceptions and the return value itself
+also may have their own distinct labels, allowing static
+label checking to track information flow at fine granularity. For
+example, the end-label of the <code>elementAt</code> method,
+<code>{L;i}</code>,
+means that the <u>pc</u> following normal termination of the
+method is at least as
+restrictive as both the label parameter <code>L</code> and the label
+of the argument <code>i</code>. This
+end-label is necessary because when the index-out-of-bounds exception is
+thrown, an observation has been made of both the instance variable
+<code>elements</code> and the argument <code>i</code>.
+Therefore, knowledge of the termination path of the method
+may give information about the contents of these two variables.
+</p>
+
+
+<h3><a name="default-labels"></a>Default labels</h3>
+
+<p>The labels on local variables are inferred automatically by the compiler.
+However, most of the time you do need to write down labels for fields and
+method signatures. These labels include the begin-label, the end-label, the
+return value label, and the labels of the arguments.  When these labels are
+omitted, default labels are assigned using some simple rules:</p> 
+
+<ul class="ulpara">
+<li>Default field label: the empty label, <code>{}</code>
+<br>
+If a field's type declaration does not include a label, then by
+default its label is <code>{}</code>. This label is the least
+confidential, and the least trusted. This conservatively ensures that
+no confidential or trusted data can be stored in the field.
+</li>
+
+<li> Default argument label: the top label, <code>{*:}</code>
+<br>
+The label on the type of a formal argument is an upper bound for
+labels of actual arguments.
+(See <a class="secref" href="#label-polymorphism">Polymorphism</a>).  
+</li>
+
+
+<li> Default method begin-label: the top label, <code>{*:}</code>
+<br>
+The method begin-label is an upper bound on the <u>pc</u> of the caller, and
+a lower bound on the side effects of the method.  The default method begin
+label is <code>{*:}</code>, the most restrictive label, meaning
+that the method has no side effects.
+</li>
+
+<li>Default method end-label: The join of the declared
+labels of any exceptions declared to be thrown.
+<br>
+The method end-label (how much information may be gained by knowing
+the method terminates normally) is by default the join of the declared
+labels of any exceptions that the method declares that it
+throws. Thus, if the method does not throw any exceptions, or if the
+declared exceptions do not have any labels, the default method
+end-label is the bottom label, <code>{*&larr;*}</code>.
+</li>
+
+<li> Default method return value label: the join of all the argument labels and the end-label. 
+<br>
+The method return value label (the label of the value returned by the
+method) is by default the method end-label joined with all of the
+argument labels (<i>not</i> the upper bounds of the argument labels 
+(see <a class="secref" href="#label-polymorphism">Polymorphism</a>).
+This is the common case, as most of the time the value
+returned by a method is the result of computation on all of its
+arguments.
+</li>
+
+<li> Default declared exception label: the method end-label.
+<br>
+A method may declare that it throws certain exceptions; if an
+exception is declared to be thrown, but no label is given for that
+exception type, then by default it is assumed to be the same as the
+method end-label.
+</li>
+
+<li> Default array base label: the empty label, <code>{}</code>
+<br>
+The base type of an array is a labeled type. If no label is provided
+for the base type of an array, then the empty label, <code>{}</code>
+is assumed. Thus, for example, the array type <code>int[]</code> is
+equivalent to the array type <code>int{}[]</code>, that is, an array of <code>int{}</code>.
+</li>
+</ul>
+
+<h2><a name="authority">Authority and access control</a></h2>
+<p>
+A method executes with some <em>authority</em> that has been granted
+to it. The authority is essentially the capability to act for some set
+of principals. The authority of a principal is required to perform
+actions that may compromise the security of a principal, such as <a
+href="#downgrading">downgrading information</a>.  This simple
+authority mechanism can be used to build more complex access control
+mechanisms.
+</p>
+
+<p>
+For any given method body, the compiler understands the method body to
+have the authority of some set of principals; the static authority of
+the code at that point. The actual authority may be greater, because
+the known principals may be able to act for other principals. The
+static authority can never exceed the actual authority unless
+revocation occurs while the program is running.
+</p>
+
+<h3><a name="authority-decls">Authority declarations</a></h3>
+
+<p>
+There are two ways for method code to acquire authority. First, the
+class containing the code may declare that it has the
+authority of some principal using an <code>authority</code>
+clause. A method of the class can then claim and use that 
+authority if its signature includes a <code>where authority</code>
+clause of its own. It is easy to identify the code to which
+principal <code>p</code> has directly granted its authority
+because of these clauses. For example, in the following code
+the class <code>Game</code> has the authority of the
+principal <code>referee</code>:
+</p>
+
+<div class="code"><pre>class Game authority(referee) {
+    void start() where authority(referee) {
+        <span class="comment">// this entire method body has the authority of referee</span>
+        ...
+    }
+
+    void halftimeShow() {
+        <span class="comment">// this method body does not have the authority of referee</span>
+        <span class="comment">// (no "where authority" clause)</span>
+        ...
+    }
+}
+</pre></div>
+ 
+<p class="cont">
+Note that if a <a href="#parameterized-classes">principal parameter</a> appears in the
+<code>authority</code> clause of a class, such as in the example
+below, then any code that calls a constructor of the class must have the authority of the instantiation principal.
+</p>
+<div class="code"><pre>
+class C[principal P] authority(P) {
+    void m() where authority(P) {
+        ...
+    }
+}
+
+...
+<span class="comment">// this code requires the authority of Alice to construct a C[Alice] object</span>
+C[Alice] foo = new C[Alice]();
+</pre>
+</div>
+
+
+<p>
+The second way for a method to acquire authority is for the method to
+receive authority passed from another method. If the receiving method
+signature contains a clause of the form <code>where caller(<i>p</i>)</code>,
+then it can be called only from code that is statically known to have
+the authority of principal <code><i>p</i></code>. For example, in the
+following code, the method <code>m</code> executes with the authority
+of <code>Alice</code>, and the principals <code>P</code>
+and <code>prin</code>, whose identities are not yet determined at
+compile time.</p>
+
+<div class="code"><pre>
+class C[principal P] {
+    void m(principal prin) 
+                 where caller(P, Alice, prin) 
+    { 
+        <span class="comment">// the method body has the authority of P, Alice, and prin</span>
+        ... 
+    }
+}
+</pre></div>
+
+<p>
+These mechanisms can be used to implement access control
+security within a program and are similar in expressiveness
+to the Java stack inspection mechanism, while avoiding the
+run-time overhead. Of course, Jif
+offers more security assurance than stack inspection because
+it also controls information flow.
+</p>
+
+<h2><a name="downgrading">Downgrading</a></h2>
+
+<p>Jif's label checking ensures that security policies are enforced on
+information as the information flows through a program. However, many
+applications need to weaken the security policies of information as
+part of their intended functionality. For example, a login program
+must declassify some information about the (confidential) password
+when it accepts or rejects the user's login attempt.
+</p>
+
+<p>Jif provides mechanisms to downgrade the confidentiality and the
+integrity of information, via explicit program annotations.  The
+expression <code>declassify(<i>e</i>, <i>L</i><sub>1</sub> to
+<i>L</i><sub>2</sub>)</code> relabels the result of an expression
+<code><i>e</i></code> from the initial label
+<code><i>L</i><sub>1</sub></code> to the label
+<code><i>L</i></code><sub>2</sub>, where the integrity specified by
+<code><i>L</i></code><sub>2</sub> must be at least as restrictive as
+the integrity specified by <code><i>L</i><sub>1</sub></code>. That
+is, a <code>declassify</code> expression can weaken only the
+confidentiality, not the integrity, of information.  Similarly, the
+expression <code>endorse(<i>e</i>, <i>L</i><sub>1</sub> to
+<i>L</i><sub>2</sub>)</code> relabels the result of an expression
+<code><i>e</i></code> from <code><i>L</i><sub>1</sub></code> to
+<code><i>L</i></code><sub>2</sub>, where the confidentiality specified
+by <code><i>L</i></code><sub>2</sub> must be at least as restrictive
+as the confidentiality specified by
+<code><i>L</i><sub>1</sub></code>. It is possible to omit the label
+<code><i>L</i><sub>1</sub></code> in the expression, though
+this form is deprecated.
+</p>
+
+
+<p>
+A program may also downgrade the program-counter label <u>pc</u>. This
+functionality is provided by the Jif statements
+<code>declassify(<i>L</i><sub>1</sub> to <i>L</i><sub>2</sub>)
+<i>S</i></code> and <code>endorse(<i>L</i><sub>1</sub> to
+<i>L</i><sub>2</sub>) <i>S</i></code>, which each execute the
+statement <code><i>S</i></code> using the program-counter label
+<code><i>L</i><sub>2</sub></code>.  A <code>declassify</code>
+statement can weaken only the confidentiality of the program-counter
+label, whereas an <code>endorse</code> statement can weaken only the
+integrity. Again, it is possible to omit the label
+<code><i>L</i><sub>1</sub></code> in the expression, though
+this form is deprecated. For example, the following is an example of
+a <code>declassify</code> statement.
+<div class="code"><pre>
+int{Alice:;Alice&larr;*} b;
+int{Alice:Bob;Alice&larr;*} y = 0;
+if (b) {
+    <span class="comment">// pc is at level {Alice:;Alice&larr;*} at this point.</span>
+    declassify ({Alice:;Alice&larr;*} to {y}) {
+        <span class="comment">// at this point, pc has been declassified to the label of the local </span>
+        <span class="comment">// variable y (that is,  {Alice:Bob;Alice&larr;*} ) permitting the </span>
+        <span class="comment">// assignment to y</span>
+        y = 1;
+    }
+}
+</pre></div>
+
+<p class="cont">This program declassifies the implicit flow
+from <code>b</code> into <code>y</code>. For the duration of
+the assignment into <code>y</code>,
+the program-counter label is relaxed until it is no more restrictive than
+<code>y</code> itself.
+</p>
+
+
+<a name="checked-endorse">
+<p class="sssec"><strong>Checked endorse</strong>. 
+Many programs need to validate untrusted data and then treat it as more
+trustworthy. Jif provides a special form of the <code>endorse</code> 
+statement to support this pattern. The <em>checked endorse</em> statement
+(added in Jif 3.1)
+endorses data only if it passes a validation check. It considerably
+reduces the awkwardness of performing input validation.
+</p>
+
+<p>
+A checked endorse has the following form: 
+</p>
+<div class="code"><pre>
+endorse (<em>x</em>, <em>L</em> to <em>L'</em>) 
+    if (<em>e</em>) <em>S</em> else <em>S'</em>
+</pre></div>
+<p class="cont">where <code><em>x</em></code> is a local variable, and 
+<code><em>L</em></code> and <code><em>L'</em></code> are labels. The
+alternate branch (<code>else <em>S'</em></code>) is optional. 
+The local variable <code><em>x</em></code> has label <code><em>L'</em></code>
+in the scope of expression <code><em>e</em></code> and statement 
+<code><em>S</em></code>, but has its standard label in the scope 
+of <code><em>S'</em></code>. The local variable <code><em>x</em></code>
+cannot be updated in <code><em>e</em></code> or <code><em>S</em></code>.
+</p>
+
+<p>
+The <code>declassify</code> and <code>endorse</code> expressions and
+statements weaken security policies, and as such are powerful and
+potentially dangerous mechanisms. To limit the misuse of these
+mechanisms, Jif imposes limitations upon their use, to enforce the
+security conditions of <em>selective downgrading</em> and
+<em>robustness</em>.</p>
+
+
+<h3><a name="selective-downgrading">Selective downgrading</a></h3>
+
+<p>Selective downgrading&nbsp;[<a href="bibliography.html#ML00">ML00</a>,<a href="bibliography.html#PC00">PC00</a>] combines access control with
+downgrading, ensuring that any downgrading performed by a program has
+appropriate authorization. For Jif, this means that any downgrading
+expression or statement that weakens a policy owned by a principal
+<code>p</code> must have the authority of <code>p</code>. The Jif
+compiler checks selective downgrading statically, using the static
+authority at the point of downgrading.</p>
+
+
+<h3><a name="robustness">Robustness</a></h3>
+
+<p>Intuitively, robustness&nbsp;[<a href="bibliography.html#ZM01">ZM01</a>,<a href="bibliography.html#MSZ04">MSZ04</a>,<a href="bibliography.html#CM06">CM06</a>] is the property that
+a principal is unable to affect the release of information to the
+principal. That is, a principal cannot influence what information is
+released to him, or when that information is released.</p>
+
+<p>The Jif compiler can statically check constraints that enforce
+robustness against all possible principals. When invoking the Jif
+compiler, if the flag <code>-robust</code> is specified, then
+additional constraints are checked at every <code>declassify</code>
+and <code>endorse</code> expression or statement. In brief, these
+additional constraints ensure the <u>pc</u> label at any
+declassification or endorsement has sufficiently high integrity, and
+moreover, the label of any information being declassified must also be
+of sufficiently high integrity. More information is provided in [CM05]
+and in the <a href="label_checking.html#robustness" class="secref">Label Checking</a>
+section.</p>
+
+<p class="sssec"><strong>Auto-Endorsement</strong>. Enforcing robustness requires that both the information to be
+downgraded and the decision to downgrade are of sufficiently high
+integrity. However, in some situations a principal may be willing to
+downgrade information regardless of the integrity of the decision to
+downgrade. For example, an application may be prepared to declassify
+the average age of all employees when requested, regardless of which
+user has requested it. Jif thus contains an <em>auto-endorsement</em>
+mechanism, whereby a principal <code>p</code> may automatically vest
+the body of a method <code>m</code> with <code>p</code>'s trust. The
+method body will execute with higher integrity, due to the addition of
+<code>p</code>'s trust.</p>
+
+<p>Auto-endorsement is specified with a clause <code>where
+endorse(<i>L</i>)</code>. A method declaration with method body
+<code>S</code> and an auto-endorsement clause <code>where
+endorse(<i>L</i>)</code> is similar to a method declaration with body
+<code>endorse(<i>L</i><sub>0</sub> to <i>L</i>) S</code>, where
+<code><i>L</i><sub>0</sub></code> is the method's begin
+label. However, robustness constraints are not enforced on an
+auto-endorsement; only selective downgrading constraints are.
+That is, the method requires the authority of any principal whose
+security policy is weakened by the auto-endorsement.
+</p>
+
+<p>Selective downgrading and robustness against all attackers are
+orthogonal: each provides separate guarantees regarding the
+downgrading of information. The access control mechanism of selective
+downgrading interacts with robustness via the auto-endorsement
+of methods, as a method can only be auto-endorsed if it has sufficient
+authority.</p>
+
+
+
+<h2><a name="label-polymorphism">Polymorphism</a></h2>
+
+<p>
+Libraries of reusable code make up the bulk of most
+program code. Jif supports various kinds of polymorphism to make
+it possible to write reusable code that is not tied to any
+specific security policy.
+</p>
+
+<p>
+The most common form of polymorphism is over the labels of
+arguments to a method.
+When an argument label is omitted, the method is generic
+with respect to the label of the argument. Consider
+implementing a cosine method <code>cos</code>:
+</p.
+
+<div class="code"><pre>
+double cos(double x);
+</pre></div>
+
+<p class="cont">
+Omitting the label on the argument <code>x</code> means that
+this method can be applied to an argument <code>x</code>
+with any label.
+</p>
+
+<p>
+Without label polymorphism, there are two strategies: reimplement it
+for every argument label ever used, or implement it using run-time labels
+(see <a class="secref" href="#dynamic-labels">Dynamic labels and principals</a>).
+The former approach is clearly infeasible.
+Implicit labels have the advantage
+over run-time labels that when they
+provide adequate power, they are easier and cheaper to use.
+</p>
+
+<p>When formal variables have declared labels, the method is
+still polymorphic with respect to the label of the argument;
+however, the declared label serves as an upper bound on the allowed
+argument labels.
+For example, in the following method
+signature, the method <code>m</code> returns a <code>String</code> whose
+label is the same as the label of the argument <code>a</code>.
+
+<div class="code"><pre>
+String{a} m(int{Alice: ; Bob:} a);
+</pre></div>
+
+<p>The label on the declaration of the argument <code>a</code> is
+<code>{Alice: ; Bob:}</code>. This means that the label of any actual
+argument given to <code>m</code> can be <i>at most</i> as restrictive
+as <code>{Alice: ; Bob:}</code>, that is, <code>{Alice: ; Bob:}</code> is an
+upper bound on the label of any actual argument to <code>m</code>. The
+following code that calls the method <code>m</code> compiles
+successfully.
+<div class="code"><pre>
+int{Alice: Chuck} i = 42;
+String{Alice: Chuck} s = m(i);
+    <span class="comment">// OK: m returns a String with the same label as i</span>
+</pre></div>
+ 
+
+<p>In the body of the method <code>m</code>, all that is known about
+the label of the formal argument <code>a</code> is that <code>{Alice:
+; Bob:}</code> is an upper bound for it. Thus, the first line of the method body below is illegal, while the second is legal.
+
+<div class="code"><pre>
+String{a} m(int{Alice: ; Bob:} a) {
+    int{Alice:} i = a; <span class="comment">// ILLEGAL!  Don't know </span>
+                       <span class="comment">//    that {a} &#8849; {Alice:}</span>
+    int{Alice: ; Bob: ; Chuck: } j = a; <span class="comment">// OK</span>
+    ...
+}
+</pre></div>
+ 
+
+<p>The labels of arguments given to a method are not represented at
+runtime. That is, within a method body, there is no runtime
+representation of labels of the arguments. The following code
+that manipulates run-time labels is thus illegal.
+
+<div class="code"><pre>
+void foo(int{Bob:} a) {
+    label lb = new label {Alice: ; a};
+        <span class="comment">// ILLEGAL! Label of a is not runtime representable.</span>
+
+    if (new label {a} &lt;= new label {Bob: Chuck})
+        <span class="comment">// ILLEGAL! Label of a is not runtime representable.</span>
+    { ... }
+}
+</pre></div>
+ 
+
+<p>If no label is specified for a formal argument, then it is assumed
+that there are no restrictions on the labels of the actual arguments
+that may be passed in. (See <a class="secref" href="#default-labels">Default labels</a>).
+
+<h2><a name="parameterized-classes"></a>Parameterized classes</h2> 
+
+<p>Parameterized types have long been known to be important for building
+reusable data structures. A parameterized class is generic with respect to
+some set of type parameters. This genericity is particularly useful for building
+collection classes such as generic sets and maps.
+It is even more important to have polymorphism in the information flow domain;
+the usual way to handle the absence of statically-checked type polymorphism
+is to perform dynamic type casts, but this approach works poorly
+when applied to information flow, because dynamic tests create
+new information channels.
+</p>
+
+<h3><a name="label-principal-params">Label and principal parameters</a></h3>
+
+<p>
+Jif allows classes and interfaces to be parameterized by explicitly declared
+label and principal parameters. The earlier example of a <code>Vector</code>
+class demonstrated the use of a label parameter:
+</p>
+
+<div class="code"><pre>
+public class Vector[label L] extends AbstractList[L] {
+    private int{L} length;
+    private Object{L}[]{L} elements;
+
+    public Vector() ...
+    public Object elementAt(int i):{L; i}
+                    throws IndexOutOfBoundsException {
+        ...
+        return elements[i];
+    }
+    public void setElementAt{L}(Object{L} o, int{L} i) ...
+    public int{L} size() { return length; }
+    public void clear{L}() ...
+    ...
+}
+</pre></div>
+
+<p class="cont">
+The <code>Vector</code> class is parameterized on a
+label <code>L</code> that represents the label of the
+contained elements. Assuming that <code>secret</code> and
+<code>public</code> are appropriately defined dynamic labels, the
+types <code>Vector[secret]</code> and <code>Vector[public]</code>
+would represent vectors of elements of differing sensitivity. These
+types are referred to as <em>instantiations</em> of the parameterized
+type <code>Vector</code>. Without the ability to instantiate
+classes on particular labels, it would be necessary to reimplement
+<code>Vector</code> for every distinct element label.
+</p>
+
+<p>
+A class may also be parameterized with respect to principals, as in this
+example:
+</p>
+
+<div class="code"><pre>
+class ParamCell[principal P, principal Q] {
+    int{P:Q; P&larr;Q} contents;
+    void m(principal x, principal y) where P actsfor x, Q actsfor y { ... }
+}
+</pre></div>
+
+<p> This class may be instantiated with any two principals
+<code>p</code> and <code>q</code>. For example, the instantiation
+<code>ParamCell[Bob,Amy]</code> has a field <code>contents</code> with
+the label <code>{Bob:Amy; Bob&larr;Amy}</code>, and method
+<code>m</code> that requires that parameter principal <code>P</code>
+can act for runtime principal <code>x</code>, and parameter principal
+<code>Q</code> can act for runtime principal <code>y</code>.
+</p>
+
+<h3><a name="param-inference">Parameter inference</a></h3>
+
+<p>
+The Jif compiler automatically infers label and principal parameters for local
+variables. This makes programming in Jif more convenient, because it is not
+necessary to explicitly instantiate parameterized classes in most places where
+these types can be mentioned.   For example, code using the <code>Vector</code>
+or <code>ParamCell</code> classes may declare variables without providing the
+parameters:
+</p>
+
+<div class="code"><pre>
+  ParamCell cell;
+  Vector v;
+
+  cell.m(Alice, Bob); <span class="comment">// cell inferred to be of type ParamCell[Alice,Bob]</span>
+
+  v.setElementAt(null, cell.contents); <span class="comment">// v inferred to be of </span>
+                                       <span class="comment">//   type Vector[{Alice:Bob}]</span>
+</pre></div>
+
+<p class="cont"> Parameters can always be supplied explicitly, which
+may make the code clearer or may help with debugging.</p> <p> Some
+parameters must still be supplied explicitly. For field declarations
+with parameterized types, parameters must be supplied. Parameters must
+be provided explicitly for classes and interfaces appearing in an
+<code>extends</code> clause, and in method and constructor signatures.
+Formal parameters must always be declared, as in the class definition
+of <code>Vector</code> and <code>ParamCell</code>. These restrictions
+exist because parameter inference in Jif is local to a single method.
+</p>
+
+<h3><a name="param-interact-object-types">Interactions with object types</a></h3>
+
+<p>
+When a parameterized or unparameterized type inherits from a superclass,
+or implements an interface, the supertype may be an instantiated class.  The
+supertype that is inherited from or implemented must be a legal type
+within the scope of the class that is inheriting from or implementing
+it. This is a specific instance of a more general rule in Jif:
+within a parameterized class or interface, the formal parameters
+of the class may be used as actual parameters to instantiations of
+parameterized types within its scope.
+</p>
+
+<p>
+The presence of label and principal parameters means
+instantiations of parameterized classes are simple <em>dependent types</em>,
+because types depend on values. To ensure that these dependent types have
+a well-defined meaning, only &ldquo;<code>final</code>&rdquo;
+expressions may be used as parameters;
+since they are immutable, their meaning cannot change. An alternative approach
+would be to allow all variables to
+be used as parameters; however, in that case two different types that
+mention the same variable would have different meanings if an assignment
+to the variable occurred between them.
+</p>
+
+<p>
+Subtyping is ordinarily invariant on class parameters. For example,
+even if <code>{*public}</code> &#8849; <code>{*secret}</code>, it is not the case
+that <code>Vector[public]</code> &le; <code>Vector[secret]</code>.
+(The label ordering is denoted here as &#8849,
+and the subtype relation is denoted by &le;.) This subtype
+relation would be unsound because <code>Vector</code> is mutable.
+</p>
+
+<p>
+When such a subtype relation is sound, the parameter may be declared
+as a <code>covariant label</code> rather than as a <code>label</code>. Covariant label parameters
+are made sound by placing additional restrictions on their use,
+as follows.
+A covariant label parameter may not be used to construct the label for
+a non-<code>final</code> instance variable.  It also may
+not be used as an actual parameter to a class whose formal parameter
+is a (non-<code>covariant</code>) <code>label</code>. However,
+immutable (<code>final</code>) instance variables and method arguments and return
+values may be labeled using a covariant parameter.
+</p>
+
+<p>
+Although Jif does not support user-defined type parameters, it does support one
+type with a type parameter: the built-in Java array type, which is used as the
+type of the instance variable <code>elements</code> in the <code>Vector</code>
+example.  Arrays are parameterized with respect to both the type of the
+contained elements and the label of those elements. In the example for
+<code>Vector</code>, the type of the instance variable <code>elements</code> is
+<code>Object{L}[]</code> which represents an array of <code>Object</code> where
+each element in the array is labeled with <code>L</code>. The array type
+behaves as though it were a type <code>array[T,L]</code> with two parameters:
+an element type and an element label; in this case <code>T</code> =
+<code>Object</code>.  The label parameter may be omitted, in which case it
+defaults to <code>{}</code>.  For example, the types <code>int[]</code> and
+<code>int{}[]</code> are equal.
+</p>
+
+<h3><A NAME="params-runtime">Using parameters at run time</A></h3>
+<p>
+All class parameters are represented and accessible
+at run time. Thus, the following code,
+which uses the parameters <code>L</code> and <code>P</code> at runtime, 
+is permitted.  
+
+<div class="code"><pre>
+class C[label L, principal P] {
+    private final label{this} lb = L;      <span class="comment">// runtime use of L</span>
+
+    private void m() {
+        label foo = new label {L; Alice:}; <span class="comment">// runtime use of L</span>
+        principal bar = P;                 <span class="comment">// runtime use of P</span>
+    }
+}
+</pre>
+</div>
+
+
+<p>When a parameter is treated as an ordinary value, its label is the label
+<code>{this}</code>. That is, the information that may be conveyed by
+knowing the run-time value of a parameter is the same as the
+information that may be conveyed by the reference to the current
+object. Thus, if the label of the final field <code>lb</code> in the
+example above was not at least as restrictive as the label
+<code>{this}</code>, the example would not compile.</p>
+
+<p>
+Class parameters may also be used in static contexts, such as a static
+method. However, in static contexts, there is no <code>this</code>
+object, and so the label of parameters cannot be the label
+<code>{this}</code>. Instead, in static contexts, class parameters are
+treated as if they were an argument to the context; thus the label of
+a class parameter in a static context is essentially unknown.
+</p>
+
+<h2><a name="dynamic-labels"></a>Dynamic labels and principals</h2>
+
+<p>
+Labels and principals can be used as first-class values, represented at
+runtime. These &ldquo;dynamic&rdquo; labels and principals can be used in the
+specification of other labels, and used as the parameters of <a
+href="#parameterized-classes">parameterized classes</a>. (Thus, Jif's
+type system has dependent types.) Consider the following example.
+</p>
+
+<div class="code"><pre>
+class C[label L] { ... }
+
+...
+
+void m() {
+    final label lb = new label {Alice: Bob; Alice&larr;*};
+
+    int{*lb; Bob:} x = 4;
+
+    C[lb] foo = null;
+    C[{*lb}] bar = foo;
+}
+</pre>
+</div>
+
+<p>Here we see a local variable <code>lb</code>, of type
+<code>label</code>. At runtime, this variable will contain a
+representation of the label <code>{Alice: Bob; Alice&larr;*}</code>. The type of the
+variable <code>x</code> is declared to be <code>int{*lb; Bob:}</code>,
+that is, an integer whose label the policy <code>{Bob:}</code> joined
+with the <i>value</i> stored in the variable <code>lb</code>. This is
+an example of a dynamic label being used in another label.
+
+<p>The variable <code>foo</code> is of type <code>C[lb]</code>, that
+is, its type is the class <code>C</code> instantiated with the label
+that is stored in the variable <code>lb</code>. This type is
+equivalent to the type <code>C[{*lb}]</code>, since the label stored
+in the variable <code>lb</code> is equivalent to the label <code>{*lb}</code>.
+
+<p>Jif allows more than just local variables of type
+<code>label</code> and <code>principal</code> to be used to construct
+new labels and types. in fact, any <i>final access path</i> expression
+may be used. A final access path expression is an expression of the
+form <i>r.f<sub>1</sub>.f<sub>2</sub>. ... .f<sub>n</sub></i>, where
+<i>r</i> is either a final local variable, or the expression
+<code>this</code>, and each <i>f<sub>i</sub></i> is an access to a
+final field. (An access path of the form
+<i>f<sub>1</sub>.f<sub>2</sub>. ... .f<sub>n</sub></i> is equivalent to
+<i>this.f<sub>1</sub>.f<sub>2</sub>. ... .f<sub>n</sub></i>.) Thus, the following are all examples of legal
+uses of dynamic labels and principals. </p>
+
+<div class="code"><pre>
+class C[label L, principal P] {
+    final label lb;    
+    final principal q;
+    final C[lb, Alice] next;
+
+    public C() { ... }
+
+    void m(principal pp) throws NullPointerException {
+        final C[next.lb, pp] foo = new C[this.next.lb, pp]();
+        C[{Alice: foo.q}, P] quux = null;
+
+        int{foo.next.q: ; *this.lb} x = 8;        
+    }
+}
+</pre>
+</div>
+<p>
+Unlike in Java, formal arguments in Jif are always implicitly
+<code>final</code>, meaning that formal arguments may always be used
+as the root of final access path expressions. This simple change does
+not remove any significant power from the language, since code that
+assigns to an argument variable always can be rewritten to use a
+non-final local variable instead.
+</p>
+
+
+<p>Final access paths appearing in labels and types may act as covert
+channels. For example, an access path may throw a null pointer
+exception, or the value stored in a particular variable may reveal
+sensitive information. The Jif type system must account for the
+information that may be revealed whenever a final access path in a label
+or type is evaluated at runtime. Final access paths occurring in a
+label may be evaluated at runtime when a <code>new label</code>
+expression is evaluated; final access paths occurring in a type may be
+evaluated at runtime during the evaluation of casts to a parameterized
+type, <code>instanceof</code> checks against a parameterized type,
+construction of a new object of parameterized type, or a call to a
+static method of a parameterized type.
+
+<p>In the following example, an <code>instanceof</code> check is
+performed against a parameterized type,
+<code>C[{this.f.p:}]</code>. The evaluation of this expression
+requires the evaluation of the access path expression
+<code>this.f.p</code>, which may throw a
+<code>NullPointerException</code> if <code>this.f</code> is
+null. Thus, whether or not a <code>NullPointerException</code> is
+thrown may reveal information at level <code>{this;
+Alice:}</code> (which is the label of the expression <code>this.f</code>). 
+Thus, if the assignment to the local variable
+<code>x</code> occurs, information with the label <code>{this;
+Alice:}</code> is flowing, and thus the label of the variable
+<code>x</code> must be at least <code>{this; Alice:}</code>.
+
+<div class="code"><pre>
+class C[label L] { ... } 
+
+class D { 
+    final D{Alice:} f; 
+    final principal{} p;
+
+    ...
+
+    void m(Object{} o) {
+        try {
+            boolean{Alice:; this} x = (o instanceof C[{this.f.p:}]);
+        }
+        catch (NullPointerException e) {
+            <span class="comment">// may be thrown by the evaluation of "this.f.p"</span>
+        } 
+    }
+}
+</pre>
+</div>
+
+<h3><a name="label-exprs">Label expressions</a></h3>
+
+<p>A label expression <code>new label {<i class="math">L</i>}</code>
+is an explicit run-time representation of the label <i
+class="math">L</i>. Several examples of valid label expressions are
+shown below, where <code>L</code> is a label parameter,
+<code>lbl</code> is a dynamic label, and and <code>pr</code> is a
+dynamic principal.</p>
+
+<div class="code"><pre>
+new label {Alice-&gt;Bob; Alice&lt;-Chuck}
+new label {*lbl; Alice→Bob}
+new label {L; pr-&gt;Alice}
+new label {*lbl meet L; Bob-&gt;Alice&amp;pr}
+new label {*:*; _!:_; *←*}
+</pre>
+</div>
+
+<p>Some labels are not run-time representable, and thus cannot appear
+in label expressions. Polymorphic argument labels, and the
+<code>this</code> label are not run-time representable.
+</p>
+
+
+<h3><a name="runtime-tests">Run-time tests of labels and principals</a></h3>
+
+<p>Jif provides a mechanism for comparing runtime labels, and also a
+mechanism for comparing runtime principals. Both mechanisms use a
+syntax similar to that of if statements.
+
+<p>An <i>if-label</i> statement allows the runtime comparison of labels. It has the following form: 
+<div class="code"><pre>
+if (L1 &lt;= L2) { 
+    ... 
+} 
+else { 
+    ... 
+}
+</pre></div>
+ 
+
+<p>If the label <code>L2</code> is at least as restrictive as
+the label <code>L1</code>, then the code in the <code>then</code>
+branch is executed; otherwise, the code in the <code>else</code>
+branch is executed. The <code>else</code> branch is
+optional. During the label checking of the  <code>then</code>
+branch, it is assumed that the label <code>L2</code> is indeed at least as restrictive as
+the label <code>L1</code>. Thus, the following code compiles correctly.
+
+<div class="code"><pre>
+void m(int{*lbl} i, label{} lbl) {
+    int{Alice:} x;
+    if (lbl &lt;= new label {Alice:}) {
+        x = i; <span class="comment">// OK, since {*lbl} &#8849; {Alice:}</span>
+    }
+    else {
+        x = 0;
+    }
+}
+</pre></div>
+
+
+<p>
+Note that this construct replaces the <code>switch-label</code> construct that existed in previous versions of Jif.
+</p>
+
+<p>An <i>actsfor</i> statement allows the runtime comparison of principals. It has the following form: 
+<div class="code"><pre>
+if (P1 actsfor P2) { 
+    ... 
+} 
+else { 
+    ... 
+}
+</pre></div>
+ 
+
+<p>If the principal <code>P1</code> can act for the principal
+<code>P2</code>, then the code in the <code>then</code> branch is
+executed; otherwise, the code in the <code>else</code> branch is
+executed. The <code>else</code> branch is optional. During the label
+checking of the <code>then</code> branch, it is assumed that the
+principal <code>P1</code> can act for the principal
+<code>P2</code>. Thus, the following code compiles correctly.
+
+<div class="code"><pre>
+void m(int{Alice: pr} i, principal{} pr) {
+    int{Alice: Bob} x;
+    if (Bob actsfor pr) {
+        x = i; <span class="comment">// OK, since {Alice: pr} &#8849; {Alice: Bob}</span>
+    }
+    else {
+        x = 0;
+    }
+}
+</pre></div>
+
+
+<p class="cont">
+Note that this construct replaces the <code>actsfor { ... } else { ... }</code> construct that existed in previous versions of Jif.
+</p>
+
+<p>
+More generally, the dynamic tests for labels and principals can be
+used as arbitrary boolean-valued expressions. However, the Jif
+compiler will only be able to reason about the additional information
+flows permitted by the dynamic tests if the tests occur as a conjunct
+of the condition of an <code>if</code> statement, and the operands are
+either constants, <code>new label {...}</code> expressions, or final
+access paths.
+
+</p>
+
+<div class="code"><pre>
+void m(int{Alice: pr} i, principal{} pr, int{*lbl} i, label{} lbl) {
+    <span class="comment">// dynamic label and actsfor tests can be used as boolean-valued</span>
+    <span class="comment">// expressions</span>
+    boolean b = (lbl &lt;= new label {Alice: pr} || Alice actsfor pr);
+
+    int{Alice: Bob} x;
+    if (8 < 4 || Bob actsfor pr) {
+        x = i; <span class="comment">// BAD: actsfor test is not a </span>
+               <span class="comment">// conjunct of the condition of an if-statement</span>
+    }
+
+    if (lbl &lt;= new label {Alice:pr} && Bob actsfor pr) {
+        x = i; <span class="comment">// OK, compiler can reason that lbl &#8849; {Alice:}</span>
+               <span class="comment">//  and Bob actsfor pr</span>
+    }
+}
+</pre></div>
+
+
+<h3><a name="user-defined-principals"></a>User-defined principals</h3>
+
+<p>Jif provides an open-ended mechanism to allow applications written in
+Jif to define their own principals. The Jif interface <a
+href="rt-api/jif/lang/Principal.html"><code>jif.lang.Principal</code></a>
+is used to represent principals, and Jif programs may implement this
+interface to define their own principals.
+
+<p>Objects of type <code>jif.lang.Principal</code> can be implicitly
+cast to the type <code>principal</code>, and vice-versa.
+
+<p>The interface <code>jif.lang.Principal</code> is defined
+as follows:
+
+<div class="code"><pre>
+public interface Principal {
+    String{this} name();
+    boolean{this;p;this&larr;*} delegatesTo(principal p);
+    boolean equals(Principal p);
+    boolean{authPrf; closure; lb; *lb; this; this&larr;*} 
+                     isAuthorized{this&larr;*}(Object authPrf, 
+                                          Closure[this, lb] closure,
+                                          label lb) where authority (this);
+    
+    ActsForProof{this;p;this&larr;*;p&larr;*} 
+                     findProofUpto{this&larr;*}(Principal p, Object searchState);
+    
+    ActsForProof{this;q;q&larr;*;this&larr;*} 
+                     findProofDownto{this&larr;*}(Principal q, Object searchState);    
+}
+</pre></div>
+
+<p>The method <code>name()</code> returns the name of the
+principal. The <code>equals(Principal p)</code> method is used to
+determine if the receiver object is the same as the principal <code>p</code>; 
+principals <code>p</code> and <code>q</code> are regarded as 
+equal only if <code>p.equals(q) &amp;&amp; q.equals(p)</code>.
+
+<p>The method <code>delegatesTo(principal p)</code> returns true if the
+principal represented by the receiver object has delegated its
+authority to the principal <code>p</code> (and thus <code>p</code> can
+act for the principal represented by the receiver object).
+
+<p>The methods <code>findProofUpto(Principal p, Object
+searchState)</code> and <code>findProofDownto(Principal p, Object
+searchState)</code> are used to search for an
+<code>ActsForProof</code> object. An <code>ActsForProof</code> is in
+essence a sequence of principals <code>p</code><sub>1</sub>, ...,
+<code>p</code><sub>n</sub>, such that each <code>p</code><sub>i</sub>
+delegates its authority to <code>p</code><sub>i+1</sub>, and is thus a
+proof that <code>p</code><sub>n</sub> can act for
+<code>p</code><sub>1</sub>. (In order to handle conjunctive and
+disjunctive principals, an <code>ActsForProof</code> has slightly more
+structure than simply a chain; however, this implementation detail is
+hidden from Jif programmers.)  </p>
+
+<p>The parameter <code>searchState</code> is used to prevent infinite
+recursion when searching for <code>ActsForProof</code>s;
+Implementations of the <code>Principal</code> interface can ignore the
+structure of the <code>searchState</code> object, and are just
+required to pass it as an additional parameter when recursively trying
+to find an <code>ActsForProof</code> (i.e., when calling the method
+<code>jif.lang.PrincipalUtil.findActsForProof(Principal p, Principal
+q, Object searchState)</code>).
+</p>
+
+<p>The authority of principals is required for certain operations,
+such as downgrading information. The authority of principals whose
+identity is known at compile time may be obtained by these principals
+examining and approving the code that requires authorization. However,
+for dynamic principals, whose identity is not known at compile time, a
+different mechanism is required. Jif provides a mechanism
+for dynamically authorizing closures.</p>
+
+<p>An <i>authorization closure</i> is an implementation of the
+interface <code>jif.lang.Closure</code>, shown below.  The
+<code>Closure</code> interface has a single method
+<code>invoke</code>, and is parameterized on a principal <code>P</code>.  Any
+code that calls the <code>invoke</code> method must have the authority of
+principal <code>P</code>, indicated by the <code>where caller(P)</code> annotation.</p>
+
+<div class="code"><pre>
+public interface Closure[principal P, label L] authority(P) {
+    Object{this} invoke{L}() where caller(P);
+}
+</pre></div>
+
+<p>The method <code>Principal.isAuthorized(Object authPrf, Closure[this, lb]
+closure, label lb)</code> is used to authorize closures,
+It takes two arguments: a <code>Closure</code> object instantiated
+with the principal represented by the <code>this</code> object, and an
+application-specific proof of authentication and/or authorization. The
+proof might be a password, or a checkable proof that
+the closure satisfies certain safety requirements. The implementation
+of the <code>isAuthorized</code> method examines the closure and the proof
+object, and returns <code>true</code> if the principal grants its
+authority to the closure.</p>
+
+<p>
+If a principal grants its authority to a closure, the Jif run-time
+library constructs a <i>capability</i>, an instance of the class
+<code>jif.lang.Capability</code> (shown below) which encapsulates the
+closure along with the authority of the appropriate principal. Code
+without the authority of the principal may invoke the capability,
+which will execute the <code>invoke</code> method of the contained
+closure. Thus, obtaining a capability for a closure corresponds to
+obtaining a principal's authority to execute the closure. A capability
+can only be obtained by calling the method
+<code>jif.lang.PrincipalUtil.authorize(principal p, Object authPrf,
+Closure[p, lb] c, label lb)</code>, which returns a Capability to
+execute the closure if the method <code>p.isAuthorized(authPrf, c,
+lb)</code> returns <code>true</code>, and <code>null</code>
+otherwise.</p>
+
+<div class="code"><pre>
+public final class Capability[principal P, label L] authority(P) {
+    private Capability(Closure[P,L]{this} closure) { this.closure = closure; }
+    
+    private final Closure[P, L]{this} closure;
+
+    public Closure[P,L]{this} getClosure() { return closure; }
+
+    public Object{closure; L} invoke{L}() where authority(P) {
+        if (closure == null) return null;
+        return closure.invoke();
+    }
+}
+</pre></div>
+
+
+<p>The class <code>jif.lang.AbstractPrincipal</code> (found in the
+$JIF/lib-src directory) is an abstract implementation of
+<code>jif.lang.Principal</code> that many principal implementations
+will find useful. The class <code>jif.lang.PrincipalUtil</code>
+contains several utility methods to help in searching for
+ActsForProof objects and also for obtaining capabilities to execute
+closures.
+
+<p>External principals (e.g., the principals Alice and
+Bob mentioned in Jif code; see $JIF/tests/jif/lang/Alice.jif) are
+implemented using the class <code>jif.lang.ExternalPrincipal</code>
+(found in the $JIF/lib-src directory). You can create your own
+external principals in a similar way. See the <code>README</code> file in $JIF/tests for more
+information about creating external principals.
+
+<p><b>NOTE:</b> implementations of the <code>Principal</code>
+interface should ensure that the Jif runtime system is notified of any
+change in the delegation of authority. In particular, when a principal
+adds a delegation, the method
+<code>PrincipalUtil.notifyNewDelegation</code> should be called, and
+when a delegation is revoked, the method
+<code>PrincipalUtil.notifyRevokeDelegation</code> should be
+called. These notifications allow the Jif runtime system to correctly
+cache acts-for relations.  The class
+<code>jif.lang.AbstractPrincipal</code> provides convenience methods
+for adding and revoking delegations; these convenience methods
+correctly notify the Jif runtime system.
+
+
+<h2><a name="method-constraints">Method constraints</a></h2>
+
+<p>Method declarations may contain <code>where</code> clauses, which
+may be assumed to hold true during the execution of the method body,
+and which the compiler guarantees are true at the method call
+sites. We have already seen several of these clauses, in particular,
+<a href="#authority-decls">authority declarations</a>
+(<code>authority(<i>p</i>)</code> and<code>caller(<i>p</i>)</code> clauses), and <a
+href="#robustness">auto-endorsements</a>. There are two additional
+method constraints that may be specified: actsfor clauses, and label
+clauses.</p>
+
+<p>An actsfor clause is of the form <code>where <i>p</i> actsfor
+<i>q</i></code>, and specifies that the principal <i>p</i> is able to
+act for the principal <i>q</i>. Code in the method body may assume
+that this relationship between <i>p</i> and <i>q</i> holds, and code
+that calls the method must prove that the relationship holds, possibly
+through a dynamic <a href="#runtime-tests"><code>actsfor</code>
+test</a>. A variant of an actsfor clause is of the form <code>where
+<i>p</i> equiv <i>q</i></code>, which is equivalent to <code>where
+<i>p</i> actsfor <i>q</i>,<i>q</i> actsfor <i>p</i></code>, that is,
+it states that <i>p</i> acts for <i>q</i> and vice versa.
+</p>
+
+<p>An label clause is of the form <code>where <i>L</i><sub>1</sub> &lt;=
+<i>L</i><sub>2</sub></code>, and specifies that the label
+<i>L</i><sub>1</sub> is the same or less restrictive than the label
+<i>L</i><sub>2</sub>.  Code in the method body may assume that this
+relationship between <i>L</i><sub>1</sub> and <i>L</i><sub>2</sub>
+holds, and code that calls the method must prove that the relationship
+holds, possibly through a dynamic <a href="#runtime-tests">label
+test</a>. The clause <code>where <i>L</i><sub>1</sub> equiv
+<i>L</i><sub>2</sub></code> is equivalent to <code>where
+<i>L</i><sub>1</sub> &lt;= <i>L</i><sub>2</sub>, <i>L</i><sub>2</sub> &lt;=
+<i>L</i><sub>1</sub></code>, that is, it states that <i>L</i><sub>1</sub> and
+<i>L</i><sub>2</sub> are equivalent labels.
+</p>
+
+<div class="code"><pre>
+int{*lbl} m{*lbl}(label{*lbl} lbl, principal{*lbl} p, int{Alice:p} i) 
+    where {Alice:Bob} &lt;= lbl, Bob actsfor p 
+{
+    <span class="comment">// since Bob actsfor p, {Alice:p} &lt;= {Alice:Bob},</span>
+    <span class="comment">// and since {Alice:Bob} &lt;= lbl, the label of the argument i</span> 
+    <span class="comment">// is &lt;= {*lbl}. Therefore, we can return i+1.</span>
+   return i+1;
+}
+</pre></div>
+
+
+<h2><a name="const-arrays">Constant arrays</a></h2>
+
+<p>Jif allows the base type of an array to be declared constant, meaning 
+that the contents of the array cannot change after initialization. The base 
+type of an array is declared constant by writing <code>const</code> before the 
+brackets. 
+</p>
+<div class="code"><pre>
+    <span class="comment">// foo is a const array</span>
+    int{Alice:} const [] foo = {1, 2, 3}; 
+
+    foo[0] = 2; <span class="comment">// BAD: cannot assign to an element of</span>
+                <span class="comment">// a constant array</span>
+</pre></div>
+
+<p>
+The <code>const</code> modifier applies to all array dimensions. That is, either all 
+the dimensions of an array are constant, or none of them are.
+</p>
+
+<div class="code"><pre>
+    int const[][] foo = {{1,2,3}, {4,5,6}}; 
+    foo[0] = null; <span class="comment">// BAD, const applies to all dimensions</span>
+    foo[0][0] = 4; <span class="comment">// BAD, const applies to all dimensions</span>
+    
+    int [] const [] bar; <span class="comment">// BAD, either all or no dimensions</span>
+                         <span class="comment">// should be const</span>
+</pre></div>
+<p>
+New arrays can be cast to either <code>const</code> or non-<code>const</code> arrays. 
+This includes new arrays created by calling the <code>clone()</code> method of arrays. Note that
+Jif ensures that calls to the <code>clone()</code> method on arrays 
+perform deep copies of the arrays. That is, if
+<code>clone()</code> is called on a multi-dimensional array, then the 
+<code>clone()</code> method is called on each sub-array.
+</p>
+<div class="code"><pre>
+    <span class="comment">// Same new array expression can be cast</span>
+    <span class="comment">// to both const and non-const arrays</span>
+    int{} [] foo = {1, 2, 3}; 
+    int{} const [] foo2 = {1, 2, 3}; 
+    
+    int{} const [] bar = foo.clone(); <span class="comment">// OK, since foo.clone()</span>
+                                      <span class="comment">// is a new array</span>
+</pre></div>
+
+<p>Constant arrays cannot be cast to non-const arrays, nor vice-versa.
+</p>
+<div class="code"><pre>
+    int{} const[] foo = {1, 2, 3};
+    int{}[] bar = foo; <span class="comment">// BAD, cannot assign from a const</span>
+                       <span class="comment">// array to a non-const array</span>
+    foo = bar; <span class="comment">// BAD, cannot assign from a non-const</span>
+               <span class="comment">// array to a const array</span>
+</pre></div>
+
+<p>
+
+<p>Constant arrays are covariant, meaning that the label of the base type
+of the array may change covariantly. This means, for example, that
+the base type of a constant array can have the label <code>{this}</code>, which
+is not allowed with a non-constant array.
+</p>
+<div class="code"><pre>
+    int{Alice:Bob} const[] foo = {1,2,3}; 
+    int{Alice:} const[] bar = foo; <span class="comment">// OK, since const arrays</span>
+                                   <span class="comment">// are covariant and </span>
+                                   <span class="comment">// {Alice:Bob} <= {Alice:}</span>
+
+    <span class="comment">// use of the {this} label for base types is ok</span>
+    final int{this} const[]{this} bar = {1,2,3}; 
+    
+    
+    final int{this}[]{this} baz = {1,2,3}; <span class="comment">// BAD, cannot use </span>
+                             <span class="comment">// the {this} label for base type</span>
+                             <span class="comment">// of non-const array</span>
+</pre></div>
+
+
+<h2><a name="java-changes">Other differences from Java</a></h2>
+
+<p>
+Jif makes several less significant changes to Java that are
+necessary in order to reason securely about information
+flow.
+</p>
+
+<h3><a name="static-fields">Static fields</a></h3>
+
+<p>Static fields of classes are supported in Jif, subject to the following restrictions.
+</p>
+
+<ol>
+<li>If a static field has an initializing
+expression, the expression must contain only constant values. Without
+this restriction, the initializing expression could be used to convey
+information about when the class is loaded (e.g., by calling a
+method), which may depend on sensitive information.</li>
+<li>The label of a static field cannot mention <code>this</code> (as <code>this</code> is not valid in a static context).</li>
+<li>The label of a static field cannot mention any class parameters (as class parameters are specific to an instance of the class).</li>
+</ol>
+</p>
+
+<h3><a name="runtime-exceptions">Runtime exceptions</a></h3>
+
+<p>In Java, subclasses of <code>RuntimeException</code> (such as
+<code>NullPointerException</code>, <code>ClassCastException</code>,
+and <code>ArrayIndexOutOfBoundsException</code>) are <i>unchecked</i>;
+they may be thrown by a method without being declared in the
+<code>throws</code> clause of the method signature. Unchecked
+exceptions can serve as covert channels. To control this covert
+channel, Jif requires subclasses of
+<code>RuntimeException</code> to be checked.</p>
+
+<p>To reduce the additional programming burden of handling runtime
+exceptions, Jif has two simple dataflow analyses: a not-null analysis,
+which tracks whether local variables and final access paths are
+definitely not-null; and a runtime class analysis, which tracks the
+precise runtime class of local variables and final access paths via
+casts and <code>instanceof</code> tests.</p>
+
+
+<p>Thus, in the following example, the method <code>m(Object,
+String)</code> cannot throw either a <code>NullPointerException</code>
+or a <code>ClassCastException</code>, and does not need to declare
+that it does.</p>
+
+<div class="code"><pre>
+class C {
+    final String{} f = "a string";
+    C another;
+    
+    void m(Object{} o, String{} s) {
+        if (s == null) {
+            return;
+        }
+        s.length(); <span class="comment">// OK, s known to be not-null</span>
+        if (o instanceof String) {
+            <span class="comment">// At this point, o is known to be a non-null String object</span>
+            ((String)o).length();  <span class="comment">// OK, o cannot be null, </span>
+                                   <span class="comment">// and the cast will always succeed</span>            
+        }
+        if (f != null) { 
+            f.length(); <span class="comment">// OK, this.f is known to be non-null here.</span>
+        }
+        if (another != null) { 
+            try {
+                String foo = another.f; 
+            }
+            catch (NullPointerException e) { 
+                <span class="comment">// need to catch the NPE, since this.another is not a </span>
+                <span class="comment">// final access path, and the analysis does not track </span>
+                <span class="comment">// if it is non-null</span>
+            }
+        }
+    }
+}
+</pre></div>
+
+<h3><a name="constructors">Final field initialization</a></h3> 
+
+<p>
+In Java, it is possible to observe final fields of an object before
+they have been initialized. This is not acceptable in Jif,
+where final fields of type <code>label</code> or
+<code>principal</code> may define the security requirements
+for other information. To ensure that final fields really
+are final, Jif constructors are required to initialize all
+final fields explicitly before the call to the superclass
+constructor. For example, a constructor might look like the
+following:
+</p>
+
+<div class="code"><pre>
+class B extends A {
+    final principal p;
+    String {p:} name;
+    B(principal{} q, String{q:} n) {
+        p = q;
+        super(n);
+        name = n;
+    }
+}
+</pre></div>
+
+<p class="cont">In Jif, the field <code>p</code> must be initialized
+before the call to <code>super</code>. In Java, no code is allowed to
+precede the call to <code>super</code>.
+</p>
+
+<p>
+Note that this example has an assignment from <code>n</code> (with label 
+<code>{q:}</code>) to the field <code>name</code> (with label 
+<code>{this.p:}</code>). The assignment is permitted because
+the Jif compiler knows from the assignment <code>p=q</code> that these
+principals are equal. It uses this fact to determine that
+the assignment from <code>n</code> to <code>name</code> is
+secure. In general, the Jif compiler can perform this kind of 
+reasoning only for final fields of type <code>label</code> or 
+<code>principal</code> that are initialized in a constructor, and 
+for final local variables of type <code>label</code> or 
+<code>principal</code> with an initializing expression.
+</p>
+
+<h3><a name="unsupported-java">Unsupported Java features</a></h3> 
+
+Jif does not currently support nested classes,
+initializer blocks, or threads.
+
+
+</body>
+
+</html>

@@ -1,0 +1,15 @@
+// check that field label resolution occurs before label checking.
+public class LabelCheckDependency01A  {
+    private static String {* -> } topstring = "top"; 
+
+    private static LabelCheckDependency01B{} m; 
+
+
+    public static void m2 {} () {
+	m = new LabelCheckDependency01B(); 
+	try {	   
+	    m.text2 = topstring; // -- BUG ? 
+	} catch (NullPointerException ignored) {
+	}
+    }
+}

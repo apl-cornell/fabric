@@ -1,0 +1,14 @@
+// check that a whole bunch of non-static uses of the "this" label are OK
+class StaticThis6 {    
+    final int{this} f = 10; 
+
+    void foo(int{this} x) {
+	int{this} f = 10;
+
+	// can't actually create a non-runtime representable label.
+	//	label l = new label {this};
+    }
+
+
+}
+

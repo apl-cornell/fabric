@@ -1,0 +1,22 @@
+class Try2 {
+    public void run() {
+        boolean{Alice:} b;
+        boolean{Alice:Bob} x;
+        x = true;
+        try {
+            try {
+                throw new E1();
+            }
+            finally {
+                if (b) throw new E2();
+            }
+        }
+        catch (E1 e) {
+            x = false;
+        }
+        catch (E2 e) { }
+    }
+}
+
+class E1 extends Throwable { }
+class E2 extends Throwable { }

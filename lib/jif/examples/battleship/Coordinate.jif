@@ -1,0 +1,44 @@
+/**
+ * This class represents an (x,y) coordinate in the space of the
+ * Battleships board. x and y should be non-negative integers.
+ * The co-ordinate (0, 0) is the lower left of the board.
+ * 
+ * It is parameterized by the label L, which is the level of information 
+ * that the coordinate contains.
+ */
+class Coordinate[label L] implements JifObject[L] {
+    /**
+     * The x coord. 
+     */
+    public final int{L} x;
+    /**
+     * The y coord.
+     */
+    public final int{L} y;
+    public Coordinate(int{L;this} x, int{L;this} y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public String{L} toString() {
+        return "(" + x + ", " + y + ")";
+    }
+
+    public int{L} hashCode() {
+        return (13 * this.x) ^ (-23 * this.y);
+    }
+
+    public boolean{lbl;*lbl;L;o} equals(label lbl, IDComparable[lbl] o) {
+        if (o == null || !(o instanceof Coordinate[lbl])) {
+            return false;
+        }
+
+        Coordinate[lbl] that = (Coordinate[lbl])o;
+        return this.x == that.x && this.y == that.y;
+    }
+    public boolean{L;o} equals(IDComparable[L] o) {
+        return equals(L, o);
+    }
+}
+
+

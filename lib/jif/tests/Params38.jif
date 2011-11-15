@@ -1,0 +1,9 @@
+class C[covariant label L] {
+    boolean foo(C[L] o) { return true; }
+}
+
+class D extends C[{Alice:}] {
+    boolean foo(C[{Alice:;Bob:}] o) {  // OK, since we have a covariant label parameter
+        return false;
+    }
+}

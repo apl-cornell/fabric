@@ -1,0 +1,10 @@
+import jif.lang.*;
+
+public class BadNullExcept3 {
+    public void foo(JifObject[{}]{} m, JifObject[{}]{} n, JifObject[{}]{} o) { 
+  	if (!(m == null || (n == null && o == null))) {
+	    n.toString(); // BAD! NPE could be thrown.
+  	}
+    }    
+}
+

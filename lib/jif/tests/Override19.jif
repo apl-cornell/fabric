@@ -1,0 +1,18 @@
+class C {
+    final principal p = Bob;
+    void m(E e) where p equiv e.pr {
+    }
+}
+
+class D extends C {
+    void m(E e) where p equiv e.pr { //OK
+    }
+}
+
+class D2 extends C {
+    void m(E foo) where p equiv foo.pr {// OK, name change doesn't matter.
+    }
+}
+class E {
+    final principal pr = Alice;
+}

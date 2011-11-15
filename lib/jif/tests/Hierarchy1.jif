@@ -1,0 +1,18 @@
+class Hierarchy1 {
+    void m(label{} L) {
+	int{*L} x = 9;
+	int{Alice:} y;
+
+	if (Alice actsfor Bob) {
+	    if (L <= new label {Bob:}) {
+		y = x; // ok
+	    }
+	}
+
+	if (L <= new label {Bob:}) {
+	    if (Alice actsfor Bob) {
+		y = x; // ok
+	    }
+	}
+    }
+}

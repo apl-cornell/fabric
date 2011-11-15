@@ -1,0 +1,15 @@
+import java.lang.*;
+
+public class NullExcept7 {
+    public void foo(JifObject[{}]{} m) { 
+	try {
+	    m.toString();
+	}
+	catch (NullPointerException e) {
+	    return;
+	}
+
+  	m.toString(); // OK, no NPE thrown.       
+    }    
+}
+

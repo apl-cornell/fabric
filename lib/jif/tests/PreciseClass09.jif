@@ -1,0 +1,7 @@
+class C {
+    void m(principal p) {
+	if (p instanceof AbstractPrincipal) {
+	    AbstractPrincipal ap = (AbstractPrincipal)p;
+	}
+    }
+}

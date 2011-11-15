@@ -1,0 +1,16 @@
+class C {
+    void m{*!:}() {
+	int{Alice:} secret = 1;
+	int{} leak = 0;
+	
+	try {
+	    switch (secret) {	    
+	    case 0:	       
+		throw new Exception();
+	    default:
+		leak = 1; // BAD: leak
+	    }
+	}
+	catch (Exception e) { }
+    }
+}

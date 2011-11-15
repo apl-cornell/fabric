@@ -1,0 +1,11 @@
+public class Do {
+    int{Alice:Bob} foo;
+
+    public void run() {
+        int{Alice:Bob} x = 0;
+
+        do {
+            x = x + 1; // OK
+        } while (x < foo);
+    }
+}

@@ -1,0 +1,57 @@
+public class Constraints2 {
+    // causes the constraint solver (as of 5/31/02) to go into 
+    // an infinite loop.
+
+    // the (problematic) constraints to be solved are:
+    // 1. v <= x where Alice actsfor Bob
+    // 2. x <= w where Bob actsfor Alice
+    // 3. w <= v where Alice actsfor Bob
+    // 4. v <= x where Bob actsfor Alice
+    // 5. x <= w where Alice actsfor Bob
+    // 6. w <= v where Bob actsfor Alice
+
+    // the loop works by moving the upper bounds of v, w and x
+    // between {Alice:} and {Bob:}, by using the actsfor constraint
+    // to change the relationship between these two labels.
+    // 
+    // Note that the constraints must be solved in this order,
+    // otherwise it is possible for all three variables to have the
+    // same upper bound at the same time, whereupon the constraint solver
+    // will stop and evaluate its candidate solution.
+
+    // The constraints solver changes the upper bounds of the 
+    // variables as follows:
+    // Variable:      v    w    x
+    //                     A    B
+    // Constraint 1   B
+    // Constraint 2             A
+    // Constraint 3        B
+    // Constraint 4   A
+    // Constraint 5             B
+    // Constraint 6        A
+    // Constraint 1   B
+    // Constraint 2             A
+    //      ...
+
+    public void foo()
+    {
+	int v = 0;
+	int w = 0;
+	int x = 0;
+
+	int{Alice:} a = 0;
+	int{Bob:} b = 0;
+
+	// make sure that the constraints are initially
+	// w = {Alice:} and x = {Bob:}
+	a = w;  b = x;
+
+	// the six bad constraints, in order.
+	actsFor(Alice, Bob) { x = v; }
+	actsFor(Bob, Alice) { w = x; }
+	actsFor(Alice, Bob) { v = w; }
+	actsFor(Bob, Alice) { x = v; }
+	actsFor(Alice, Bob) { w = x; }
+       	actsFor(Bob, Alice) { v = w; }
+    }
+}

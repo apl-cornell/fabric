@@ -1,0 +1,8 @@
+public class Implicit {
+    public static int{b} f(boolean b) {
+	if (b) {
+		return 1;
+	}
+	return 0;
+    }
+}

@@ -1,0 +1,19 @@
+class Challenge[principal bank, principal atm] extends Object {
+    public EncryptedObject{atm:} customerPart;
+    private UniqueID{bank:} uid;
+
+    public Challenge (RSAPublicKey customerKey) 
+    where caller(bank) {
+	uid = new UniqueID();
+	customerPart = customerKey.encrypt(uid);
+    }
+
+    public boolean{atm:} confirm(Object o) {
+	try {
+	    UniqueID id = (UniqueID) o;
+	    return declassify((uid.isEqual(id)), {atm:});
+	} catch (Exception e) {
+	    return declassify(false, {atm:});
+	}
+    }
+}

@@ -1,0 +1,202 @@
+import java.io.*;
+import jif.util.*;
+import jif.runtime.Runtime;
+/**
+ * This is a test harness for the Person Framework. It currently allows the 
+ * user to create, view and modify a single Person. Ideally, it should permit
+ * the persistent creation of multiple Persons, and handle different users.
+ * This is future work, which will exercise the colleciton, serialization, and
+ * dynamic security label capabilities of Jif.
+ */
+class Main {
+    private final principal{} user;
+    private final PrintStream[{user:}]{user:} out;
+    private final BufferedReader[{user:}]{user:} in;
+    private Date{user:} today = null;
+
+    // the one Person that can be created and viewed. FUTURE WORK: make this a collection
+    private Person person = null;
+    
+    public Main{}(principal{} p):{p:} throws (SecurityException, IllegalArgumentException, IOException) where caller(p) {
+	this.user = p;
+	// get hold of sec input and output channels.
+        Runtime[user] runtime = Runtime[user].getRuntime(user);
+
+        if (runtime == null) {
+	    out = null;
+	    in = null;
+	    return;
+	}
+
+        this.out = runtime.stdout(new label{user:});
+	
+        InputStream[{user:}]{user:} instream = runtime.stdin(new label{user:});
+	this.in = new BufferedReader[{user:}](new InputStreamReader[{user:}](instream));
+
+	this.start();
+    }
+    
+    public static final void main{}(principal{} p, String args[]):{p:}
+	throws (SecurityException, IllegalArgumentException, IOException)
+	where caller(p) {
+
+	new Main(p);
+    }
+
+    private void start{}():{user:} {
+	try {
+	    welcome();
+	}
+	catch (Exception{user:} e) {}
+
+	try {
+	    mainMenu();
+	}
+	catch (Exception{user:} e) {}
+    }
+
+    private void welcome{user:}():{user:} throws (NullPointerException{user:}, IOException{user:}) {
+        out.println("Welcome to the person framework test harness.");
+        out.println();
+        out.println(" The currently logged on user is " + user);
+        out.println(" It is assumed that the standard input and output is secure, that is, ");
+        out.println("the input and output has the security label " + (new label{user:}));
+        out.println(" However, some of the Person data you will be entering ");
+	out.println("is regarded as public, so some of your input will be declassified to public.");
+
+	this.today = inputDate("Please enter the current date (YYYY/MM/DD)", null);
+	out.println();
+	out.println("Today's date is " + today + ".");
+    }
+
+    private void mainMenu{}():{user:} throws (NullPointerException{user:}, IOException{user:}) {
+	while (true) {
+	    out.println();
+	    out.println("Options:");
+	    out.println("1. create person");
+	    out.println("2. view person");
+	    out.println("0. exit");
+
+	    int choice = inputInt("Enter choice", null);
+	    switch (choice) {
+	    case 1:
+		createPerson();
+		break;
+	    case 2:
+		viewPerson();
+		break;
+	    case 0:
+		return;
+	    default:
+		out.println("Unknown choice");
+	    }
+	}
+    }
+    
+    private void createPerson{}():{user:} throws (NullPointerException{user:}, IOException{user:}) {
+	this.person = new Person(this.today);
+	this.person.setDateOfBirth(inputDate("Enter date of birth", this.today));
+
+	PersonName nm = inputPersonName(this.person, null);
+	try {
+	    this.person.addName(nm);
+	    this.person.setPrincipleName(nm);
+	}
+	catch (IllegalArgumentException e) {
+	    out.println("Adding name failed: " + e.getMessage());
+	    return;
+	}
+
+	viewPerson();
+    }
+
+    private PersonName{person;deflt} inputPersonName{}(Person person, PersonName deflt):{user:} throws (NullPointerException{user:}, IOException{user:}) {
+	PersonName pn = new PersonName(person, this.today);
+	pn.setSurname(inputString("Enter surname", deflt==null?null:deflt.getSurname()));
+	pn.setFirstNames(inputString("Enter first name(s)", deflt==null?null:deflt.getFirstNames()));
+	pn.setPreferedName(inputString("Enter prefered name", deflt==null?null:deflt.getPreferedName()));
+	return pn;
+    }
+
+    private void viewPerson{user:}():{user:} throws (NullPointerException{user:}, IOException{user:}) {
+	
+    }
+
+    /* *************************************************
+     * Utility methods for inputing values
+     */
+    private Date{user:;deflt} inputDate{user:}(String{user:} prompt, Date{user:} deflt):{user:} throws (NullPointerException{user:}, IOException{user:}) {
+	Date d = null;
+	while (d == null) {
+	    out.print(prompt);
+	    if (deflt != null) {
+		out.print(" (");
+		out.print(deflt.toString());
+		out.print(")");
+	    }
+	    out.print(": ");
+
+	    String s = in.readLine();
+	    if (s == null || s.length() == 0) {
+		d = deflt;
+	    }
+	    else {
+		try {
+		    d = Date.valueOf(s);
+		}
+		catch (IllegalArgumentException e) {
+		    out.println("Sorry, that date is invalid.");
+		}
+	    }
+	}
+	return d;	
+    }
+
+    private String{user:;deflt} inputString{user:}(String{user:} prompt, String{user:} deflt):{user:} throws (NullPointerException{user:}, IOException{user:}) {
+	String s = null;
+	while (s == null) {
+	    out.print(prompt);
+	    if (deflt != null) {
+		out.print(" (");
+		out.print(deflt);
+		out.print(")");
+	    }
+	    out.print(": ");
+
+	    s = in.readLine();
+	    if (deflt != null && (s == null || s.length() == 0)) {
+		s = deflt;
+	    }
+	}
+	return s;
+    }
+    private int{user:;deflt} inputInt{user:}(String{user:} prompt, Integer{user:} deflt):{user:} throws (NullPointerException{user:}, IOException{user:}) {
+	Integer i = null;
+	while (i == null) {
+	    out.print(prompt);
+	    if (deflt != null) {
+		out.print(" (");
+		out.print(deflt);
+		out.print(")");
+	    }
+	    out.print(": ");
+
+	    String s = in.readLine();
+	    if (s == null || s.length() == 0) {
+		i = deflt;
+	    }
+	    else {
+		try {
+		    i = new Integer(s);
+		}
+		catch (IllegalArgumentException e) {
+		    out.println("Sorry, that is not a valid integer.");
+		}
+	    }
+	}
+	return i.intValue();
+    }
+}
+
+
+

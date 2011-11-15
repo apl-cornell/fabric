@@ -1,0 +1,10 @@
+class RSAPublicKey {
+    double{} keyData;
+    public RSAPublicKey(double d) {
+	this.keyData = d;
+    }
+    public EncryptedObject{} encrypt(Nonce{host:} n) {
+	return new EncryptedObject(keyData, n);
+    }
+}
+

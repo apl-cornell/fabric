@@ -1,0 +1,45 @@
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+
+// Test that short circuit evaluation is correctly
+// accounted for when static checking. Bug found 22 Mar 06 by Daniel Hedin, 
+// in Jif 2.0.1
+public class C {
+    public int {} low;
+    public boolean f {}() {
+        this.low = 1;
+        return true;
+    }
+    
+    
+    public void g {} (boolean {Alice:} x)  {
+        boolean {Alice:} h = x;        
+        h = h && f();  // BAD: f is only executed if h is false.
+    }
+    
+    
+    /*    public static final void main{}(principal{} p, String args[])
+    throws (SecurityException, IllegalArgumentException) {
+        Runtime[p] runtime = Runtime[p].getRuntime();
+        if (runtime == null) return;
+        PrintStream[{}] output = runtime.stdout(new label{});
+        if (output == null) return;
+        
+        Test t = new Test();
+        
+        
+        t.low = 0;        
+        t.g (false);
+        
+        output.println(t.low);
+    
+        t.g (true);
+        
+        output.println(t.low);
+    
+        output.println("done.");	
+    }
+    */
+    
+}
+

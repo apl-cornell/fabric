@@ -1,0 +1,13 @@
+class DuplicateClass {
+    final int{this} g = 5; 
+    int{this} h = 5; 
+    void m() { }
+    static void m() {  }
+}
+
+class DuplicateClass {
+    final int{this} g = 5; 
+    int{this} h = 5; 
+    void m() { }
+    static void m() { }
+}

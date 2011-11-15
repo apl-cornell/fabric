@@ -1,0 +1,14 @@
+class C[principal p] { }
+class D extends C[Alice] { }
+
+class E {
+    C[Alice][] f1 = new C[Alice][] { new D(), new D() }; // OK
+    C[Alice][] f2 = { new D(), new D() }; // OK
+    C[Alice][] f3 = new C[Alice][2]; // OK
+
+    void m{*!:}() {
+        C[Alice][] a1 = new C[Alice][] { new D(), new D() }; // OK
+        C[Alice][] a2 = { new D(), new D() }; // OK
+        C[Alice][] a3 = new C[Alice][2]; // OK
+    }
+}

@@ -1,0 +1,11 @@
+interface A[label L] {
+    int{L} m(int{L} a);
+}
+
+interface B[label M] {
+    int{M} m(int{M} a);
+}
+
+class C implements A[{Alice:}], B[{Bob:}] {
+    public int{} m(int{Alice:} a) {return 3; }
+}

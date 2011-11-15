@@ -1,0 +1,25 @@
+/**
+ * Schedule.jif
+ *
+ * Specification by NN and SRG
+ * Prototype by NN
+ * Revisions by SRG
+ */
+package calendar;
+
+import java.util.Date;
+
+class Schedule[principal p] {
+  private LinkedList[{}] events = new LinkedList[{}];
+
+  public void addEvent(Date start, Date end, label timeLabel,
+    String text, principal host, label textLabel)
+    where authority(p), caller(host)
+  {
+    Event[p] e = new Event[p](
+						start, end, Event.INVITED, timeLabel,
+				        text, host, textLabel);
+    events.add(e);
+  }
+
+}

@@ -1,0 +1,125 @@
+/**
+ * Event.jif
+ *
+ * Specification by NN and SRG
+ * Prototype by NN
+ * Revisions by SRG
+ */
+package calendar;
+
+import java.util.Date;
+
+public class Event[principal owner] authority(owner)
+{
+  public final /* static */ int INVITED = 0;
+  public final /* static */ int ACCEPTED = 1;
+  public final /* static */ int DECLINED = 2;
+
+  final label timeLabel;
+  final label textLabel;
+
+  private Date{*timeLabel} start;	// start time
+  private Date{*timeLabel} end;		// end time
+  private int{*timeLabel} state;	// invited/accepted/declined
+
+  private String{*textLabel} text;		// event text
+  private principal{*textLabel} host;	// the principal who invited you
+
+  public Event(Date{*timeLabel} start, Date{*timeLabel} end, int{*timeLabel} state,
+    			label timeLabel, String{*textLabel} text, principal{*textLabel} host,
+				  label textLabel)
+  {
+  	this.timeLabel = timeLabel;
+	this.textLabel = textLabel;
+
+    this.start = start;
+    this.end = end;
+    this.text = text;
+    this.host = host;
+    this.state = INVITED;
+  }
+
+  public Date{*timeLabel} getStartTime() {
+    return start;
+  }
+
+  public Date{*timeLabel} getEndTime() {
+    return end;
+  }
+
+  public int{*timeLabel} getState() {
+    return state;
+  }
+
+  public String{*textLabel} getText() {
+    return text;
+  }
+
+  public principal{*textLabel} getHost() {
+    return host;
+  }
+
+
+  public Event[owner] relabelText(label newTextLabel):{*newTextLabel}
+    throws(Exception)
+    where authority(owner) {
+
+    String{*newTextLabel} text2;
+    switch label(text) {
+	  case (String{owner: ; *newTextLabel} text1) 
+	    text2 = declassify(text1, {*newTextLabel});
+      else
+	    throw new Exception("Can't relabel text");
+	}
+
+    String{*newTextLabel} host2;
+    switch label(host) {
+	  case (String{owner: ; *newTextLabel} host1)
+	    text2 = declassify(host1, {*newTextLabel});
+      else
+	    throw new Exception("Can't relabel host");
+	}
+	    
+    return new Event[owner](
+				start, end, state, timeLabel,
+				text2,
+				host2,
+      			newTextLabel);
+  }
+
+
+  public Event[owner] relabelTime(label newTimeLabel):{*newTimeLabel}
+    throws(Exception)
+	where authority(owner) {
+
+    Date{*newTimeLabel} start2;
+    switch label(start) {
+	  case (String{owner: ; *newTimeLabel} start1)
+	    start2 = declassify(start1, {*newTimeLabel});
+      else
+	    throw new Exception("Can't relabel start");
+	}
+
+    Date{*newTimeLabel} end2;
+    switch label(end) {
+	  case (String{owner: ; *newTimeLabel} end1)
+	    end2 = declassify(end1, {*newTimeLabel});
+      else
+	    throw new Exception("Can't relabel end");
+	}
+
+    int{*newTimeLabel} state2;
+    switch label(state) {
+	  case (String{owner: ; *newTimeLabel} state1)
+	    state2 = declassify(state1, {*newTimeLabel});
+      else
+	    throw new Exception("Can't relabel state");
+	}
+
+    return new Event[owner](
+				start2, end2, state2, newTimeLabel,
+				text, host, textLabel);
+  }
+
+}
+

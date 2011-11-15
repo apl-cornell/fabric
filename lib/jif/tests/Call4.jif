@@ -1,0 +1,10 @@
+class Call4
+{
+    void foo() {
+	new C[Alice]().m();
+    }
+}
+
+class C[principal P] {
+    void m() where caller(P) {}
+}

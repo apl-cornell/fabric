@@ -1,0 +1,36 @@
+
+
+import java.io.IOException;
+
+public abstract class OutputStream[label L] {
+
+    public abstract void write(int{L} b) throws (IOException);
+
+    public void write(byte{L}[]{L} b):{L}
+        throws (IOException, NullPointerException, IndexOutOfBoundsException)
+    {
+        write(b, 0, b.length);
+    }
+
+    public void write(byte{L}[]{L} b, int{L} off, int{L} len):{L}
+        throws (IOException, NullPointerException, IndexOutOfBoundsException)
+    {
+        if (b == null) {
+            throw new NullPointerException();
+        } else if ((off < 0) || (off > b.length) || (len < 0) ||
+                   ((off + len) > b.length) || ((off + len) < 0)) {
+            throw new IndexOutOfBoundsException();
+        } else if (len == 0) {
+            return;
+        }
+        for (int i = 0 ; i < len ; i++) {
+            write(b[off + i]);
+        }
+    }
+
+    public void flush{L}() throws (IOException) {
+    }
+
+    public void close{L}() throws (IOException) {
+    }
+}

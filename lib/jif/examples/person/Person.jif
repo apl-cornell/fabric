@@ -1,0 +1,156 @@
+import jif.util.*;
+
+/**
+ * A Person represents a Person.
+ */
+public class Person implements DatedData[{}], JifObject[{}] {
+    protected final Date{} startDate;
+    protected Date{} endDate;
+    
+    protected Collection[{}]{} names;
+    protected Date{} dateOfBirth;
+    
+    public Person(Date{} startDate) {
+        this.startDate = startDate;
+        this.names = new ArrayList[{}]();
+    }
+
+    /**
+     * @return
+     */
+    public Date{} getEndDate() {
+        return endDate;
+    }
+
+    /**
+     * @return
+     */
+    public Date{} getStartDate() {
+        return startDate;
+    }
+
+    /**
+     * @param date
+     */
+    public void setEndDate{}(Date{} date) {
+        endDate = date;
+    }
+
+
+    public boolean{when} isActiveAt(Date when) {
+	Date startDate = this.startDate;
+	Date endDate = this.endDate;
+        return (startDate != null && !startDate.after(when) && 
+                 (endDate == null || !endDate.before(when)));
+    }
+    /**
+     * @return
+     */
+    public Date{} getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    /**
+     * @return
+     */
+    public Collection[{}] getNames() {
+        return names;
+    }
+
+    /**
+     *
+     */
+    public String{} getPrimaryName() {
+	return "###";
+    }
+
+    /**
+     * @return
+     */
+    public void addName{names}(PersonName{} newName) throws (IllegalArgumentException{newName}) {
+	if (newName == null) {
+            throw new IllegalArgumentException("null newName");
+	}
+        if (newName.getPerson() != this) {
+            throw new IllegalArgumentException("PersonName for a different " +
+                "Person added");
+        }
+	Collection[{}] names = this.getNames();
+	if (names == null) {
+            throw new IllegalArgumentException("names is null!");
+	}
+	try {
+	    names.add(newName);
+	}
+	catch (ClassCastException{} impossible) {}
+    }
+
+    public void setPrincipleName{names}(PersonName{} principleName) throws (IllegalArgumentException{principleName}){
+	Collection[{}] names = this.getNames();
+	if (names == null) {
+            throw new IllegalArgumentException("names is null!");
+	}
+	if (!names.contains(principleName)) {
+            throw new IllegalArgumentException(principleName + " not a name of this person.");
+	}
+	for (Iterator[{}] i = names.iterator(); i != null && i.hasNext(); ) {
+	    try {
+		PersonName n = (PersonName)i.next();
+		if (n != null) {
+		    boolean b = n.equals(principleName);
+		    n.setPrincipleName(b);
+		}
+	    }
+	    catch (NoSuchElementException impossible) {
+	    }
+	    catch (ClassCastException impossible) {
+	    }
+	}
+    }
+
+    /**
+     * @param date
+     */
+    public void setDateOfBirth{}(Date{} date) {
+        dateOfBirth = date;
+    }
+
+    public String{} toString() {
+	return getPrimaryName() + " (DOB: " + getDateOfBirth() + ")";
+    }
+
+    public boolean{o} equals(IDComparable[{}] o) {
+        if (o == null || !(o instanceof Person)) {
+            return false;
+        }
+        try {
+            Person that = (Person)o;
+	    return this.startDate == that.startDate && this.endDate == that.endDate && this.dateOfBirth == that.dateOfBirth;
+//              return  this.startDate.equals(that.startDate) &&
+//  		(this.endDate == that.endDate || (this.endDate != null && this.endDate.equals(that.endDate))) &&
+//  		this.names.equals(that.names) &&
+//  		(this.dateOfBirth == that.dateOfBirth || (this.dateOfBirth != null && this.dateOfBirth.equals(that.dateOfBirth)));
+        }
+        catch (ClassCastException e) {
+            return false;
+        }
+//          catch (NullPointerException e) {
+//  	    // impossible. startDate and names are guaranteed to be non-null
+//              return false;
+//          }
+    }
+
+    public int{} hashCode() {
+	try {
+	    return startDate.hashCode() ^ names.hashCode();
+	}
+        catch (NullPointerException e) {
+	    // impossible. startDate and names are guaranteed to be non-null
+            return 0;
+        }
+    }
+
+}
+
+
+

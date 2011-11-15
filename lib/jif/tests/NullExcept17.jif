@@ -1,0 +1,14 @@
+import jif.lang.*;
+
+public class NullExcept16 {
+    public void m() {
+	NullExcept16 x = null;
+	if (x instanceof Closure[Alice, {}]) {
+	}
+	else {
+	    // x could be  null if the instanceof failed
+	    x.m();
+	}
+    }    
+}
+
