@@ -87,16 +87,20 @@
 
   <target name="build-trusted">
     <fabc-local srcdir="${home}/src/fabric/trusted" includes="**/*.fab">
-      <!--<arg value="-trusted-providers" />-->
+      <arg value="-trusted-providers" />
     </fabc-local>
   </target>
 
-  <target name="build-local" depends="build-trusted" description="Builds the fabric version of friendmap">
-    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase">
-        <arg value="-dump"/>
-        <arg value="AmbiguityRemover"/>
+  <target name="build-sig" description="Builds signatures used by friendmap">
+    <fabc-local srcdir="${home}/src/fabric/signatures" destdir="${home}/classes/fab-sig">
+      <arg value="-sig" />
     </fabc-local>
-    <fabc-local srcdir="${home}/src/fabric/mapserv_1.0_codebase" />
+  </target>
+
+  <target name="build-local" depends="build-trusted,build-sig" description="Builds the fabric version of friendmap">
+    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase" />
+    <fabc-local srcdir="${home}/src/fabric/mapserv_1.0_codebase" >
+    </fabc-local>
     <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" />
   </target>
 
@@ -118,6 +122,7 @@
   -->
   <macrodef name="fabc-local">
     <attribute name="srcdir" />
+    <attribute name="destdir" default="${home}/classes/fabric"/>
     <attribute name="includes" default="**/*.fab" />
     <attribute name="excludes" default="" />
     <element name="extra-args" implicit="true" optional="yes"/>
@@ -134,9 +139,10 @@
         <arg value="${fabc}" />
         <arg value="-g" />
         <arg value="-e" />
-        <arg value="-d" />         <arg value="${home}/classes/fabric" />
+        <arg value="-d" />         <arg value="@{destdir}" />
         <arg value="-sourcepath"/> <arg value="@{srcdir}" />
         <arg value="-classpath" /> <arg value="${home}/classes/fabric" />
+        <arg value="-addsigcp" /> <arg value="${home}/classes/fab-sig" />
         <extra-args />
         <srcfile />
 
