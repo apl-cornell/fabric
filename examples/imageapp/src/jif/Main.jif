@@ -3,13 +3,32 @@ import jif.principals.*;
 import java.io.PrintStream;
 import jif.runtime.Runtime;
 
-public class Main authority (Alice, Bob) {   
-    public static void main{*<-} (principal{} p, String[] args) where caller (p) {
+public class Main authority (Alice, Bob)
+where provider <= {Alice←},
+provider <= {Alice→},
+provider <= {Bob←},
+provider <= {Alice,Bob←},
+provider <= Camera.provider,
+Camera.provider <= provider,
+provider <= Display.provider,
+Display.provider <= provider,
+provider <= ImageApp.provider,
+ImageApp.provider <= provider,
+provider <= Image.provider,
+Image.provider <= provider,
+provider <= CameraUser.provider,
+CameraUser.provider <= provider
+{   
+    public static void main{*<-} (principal{} p, String[] args) 
+    where caller (p), provider <= {p←} 
+    {
 	go(p) ;
     }
     
 
-    public static void go { *<- } (principal {} p) where caller (p), authority (Alice, Bob) {
+    public static void go { *<- } (principal {} p) 
+    where caller (p), authority (Alice, Bob), provider <= {p←}
+    {
 	PrintStream[{}] out = null;
 	try {
 	    Runtime[p] runtime = Runtime[p].getRuntime();
@@ -23,7 +42,7 @@ public class Main authority (Alice, Bob) {
 	Camera [Alice ] theCamera = new Camera[Alice]();
 	Display [Alice ] display = new Display [Alice](out2);
 	ImageApp [Alice, Bob ] theApp = new ImageApp[Alice, Bob] (theCamera, out2, display);
-	CameraUser [Alice, Bob] cameraUser = new CameraUser[Alice, Bob] (theCamera, theApp); 	
+	final CameraUser [Alice, Bob] cameraUser = new CameraUser[Alice, Bob] (theCamera, theApp); 	
 	
 	cameraUser.useCamera();
 

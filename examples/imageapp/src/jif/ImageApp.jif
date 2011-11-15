@@ -1,6 +1,14 @@
 import java.io.PrintStream;
 
-public class ImageApp [principal p, principal q] authority (q) { 
+public class ImageApp [principal p, principal q] authority (q)
+where provider <= {p,q←},
+provider <= {p←},
+provider <= {q←},
+provider <= Image.provider,
+Image.provider <= provider,
+provider <= Display.provider,
+Display.provider <= provider
+{ 
 
     // p is the principal providing the camera 
     // q is the principal providing the app
@@ -21,7 +29,9 @@ public class ImageApp [principal p, principal q] authority (q) {
     // We simulate generating a thumbnail by returning a 4-byte new
     // image that contains some of the original bytes
 
-    public Image[p]{p,q<-} genThumbnail{p,q<-}(Image[p] {p,q<-} img)  {
+    public Image[p]{p,q<-} genThumbnail{p,q<-}(Image[p] {p,q<-} img)
+//    where provider <= img.lb_img
+    {
 	if (img == null) return null;
 	if (camera.CAMERA_RESOLUTION <= 4) 
 	    return img; // the image is small enough to be its own thumbnail

@@ -11,7 +11,11 @@ provider <= {q←},
 provider <= Camera.provider,
 Camera.provider <= provider,
 provider <= Image.provider,
-Image.provider <= provider
+Image.provider <= provider,
+ImageApp.provider <= provider,
+provider <= ImageApp.provider,
+provider <= Display.provider,
+Display.provider <= provider
 {
     final Camera[p] {p<-} camera;
     final ImageApp[p,q] {q <-} imageapp;
@@ -25,7 +29,7 @@ Image.provider <= provider
     }
 
     public void useCamera{p<-}() 
-    where authority (p), provider <= this.camera.lb_camera
+    where authority (p), provider <= {p→;p←}
     {
 	if (new label {p<-} <= camera.lb_camera ) {
 	    try {
