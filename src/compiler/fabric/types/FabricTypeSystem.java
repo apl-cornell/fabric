@@ -1,5 +1,6 @@
 package fabric.types;
 
+import jif.types.Assertion;
 import jif.types.JifTypeSystem;
 import jif.types.label.AccessPath;
 import jif.types.label.ConfPolicy;
@@ -72,5 +73,11 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   
   fabric.lang.security.Label sourceUpdateLabel(CodebaseSource src);
   fabric.lang.security.ConfPolicy sourceAccessPolicy(CodebaseSource src);
+
+  /**
+   * @param assertion
+   * @return
+   */
+  boolean containsThisLabel(Assertion assertion);
 
 }

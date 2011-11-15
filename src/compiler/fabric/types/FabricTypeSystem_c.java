@@ -10,14 +10,22 @@ import java.util.Map;
 import java.util.Set;
 
 import jif.ast.JifUtil;
+import jif.ast.LabelActsForLabelConstraintNode;
+import jif.ast.LabelActsForPrincipalConstraintNode;
+import jif.ast.LabelNode;
 import jif.translate.ConjunctivePrincipalToJavaExpr_c;
 import jif.translate.DisjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
+import jif.types.ActsForConstraint;
+import jif.types.ActsForParam;
+import jif.types.Assertion;
+import jif.types.AutoEndorseConstraint;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
 import jif.types.JifLocalInstance;
 import jif.types.JifTypeSystem_c;
+import jif.types.LabelLeAssertion;
 import jif.types.LabeledType;
 import jif.types.Solver;
 import jif.types.label.AccessPath;
@@ -232,19 +240,20 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return new CBPackageContextResolver(this, p);
   }
 
-  //XXX: There may be a way to override the namespace-less package methods, but 
-  // createPackage is often called with prefix==null, so a full refactoring helped
+  // XXX: There may be a way to override the namespace-less package methods, but
+  // createPackage is often called with prefix==null, so a full refactoring
+  // helped
   // identify the situations it is called in.
   @Override
   public Package createPackage(URI ns, Package prefix, java.lang.String name) {
-    if (prefix!=null) {
-      ns = ((CBPackage)prefix).namespace();
+    if (prefix != null) {
+      ns = ((CBPackage) prefix).namespace();
     }
     return new CBPackage_c(this, ns, prefix, name);
   }
 
   /**
-   * @throws SemanticException  
+   * @throws SemanticException
    */
   @Override
   public Package packageForName(URI ns, Package prefix, java.lang.String name)
@@ -370,7 +379,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
 
   private JifLocalInstance workerLocalInstance = null;
 
-  
   @Override
   public ThisLabel thisLabel(Position pos, ReferenceType ct) {
     return new FabricThisLabel_c(this, ct, pos);
@@ -630,30 +638,39 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     f = f.set(FabricFlags.NONFABRIC);
     return f;
   }
-  
-  public boolean containsThisLabelOrAccessPath(Label label) {
-    if (label instanceof ThisLabel) {
-      return true;
-    } else if (label instanceof MeetLabel) {
-      MeetLabel ml = (MeetLabel) label;
-      for (Label l : ml.meetComponents()) {
-        if (containsThisLabelOrAccessPath(l)) return true;
-      }
-    } else if (label instanceof JoinLabel) {
-      JoinLabel jl = (JoinLabel) label;
-      for (Label l : jl.joinComponents()) {
-        if (containsThisLabelOrAccessPath(l)) return true;
-      }
-    } else if (label instanceof ArgLabel) {
-      ArgLabel jl = (ArgLabel) label;
-      return containsThisLabelOrAccessPath(jl.upperBound());
+
+  // TODO: determine scenarios when this labels
+  // can be used by the remote call wrapper
+  @Override
+  public boolean containsThisLabel(Assertion as) {
+    if(as instanceof LabelLeAssertion) {
+      LabelLeAssertion leq = (LabelLeAssertion) as;
+      return containsThisLabel(leq.lhs()) || containsThisLabel(leq.rhs());
     }
-    else if (label instanceof DynamicLabel) {
-      DynamicLabel dl = (DynamicLabel) label;
-      if(dl.path().root() instanceof AccessPathThis)
-        return true;
+//    else if(as instanceof AutoEndorseConstraint) {
+//      AutoEndorseConstraint aec = (AutoEndorseConstraint) as;
+//      return containsThisLabel(aec.endorseTo());
+//    }
+    else if(as instanceof ActsForConstraint) {
+      ActsForConstraint<? extends ActsForParam, ? extends ActsForParam> afc =
+          (ActsForConstraint<? extends ActsForParam, ? extends ActsForParam>) as;
+      boolean hasThis = false;
+      
+      if(afc.actor() instanceof Label) 
+        hasThis |= containsThisLabel((Label)afc.actor());
+      
+      if(!hasThis && afc.granter() instanceof Label)
+        hasThis |= containsThisLabel((Label)afc.actor());
+      
+      return hasThis;
     }
-    
+    else if(as instanceof LabelActsForPrincipalConstraintNode) {
+      LabelActsForLabelConstraintNode laflcn =
+          (LabelActsForLabelConstraintNode) as;
+      LabelNode lhs = (LabelNode) laflcn.actor();
+      return containsThisLabel(lhs.label());
+    }
+
     return false;
   }
 
@@ -789,7 +806,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     }
   }
 
-  //The default publishing label is the maximum integrity the worker can claim
+  // The default publishing label is the maximum integrity the worker can claim
   protected fabric.lang.security.Label defaultPublishingLabel() {
     Store dest = extInfo.destinationStore();
     NodePrincipal w = Worker.getWorker().getPrincipal();
@@ -819,8 +836,9 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   @Override
   public ClassFileLazyClassInitializer classFileLazyClassInitializer(
       ClassFile clazz) {
-    throw new UnsupportedOperationException("Fabric doesn't support raw classes");
-//    return new FabILLazyClassInitializer(clazz, this);
+    throw new UnsupportedOperationException(
+        "Fabric doesn't support raw classes");
+    // return new FabILLazyClassInitializer(clazz, this);
   }
 
   // / Deprecated/Unsupported methods
@@ -866,11 +884,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     throw toplevel_resolution_error();
   }
 
-//  @Override
-//  @Deprecated
-//  public CBPackageContextResolver createPackageContextResolver(Package p) {
-//    throw toplevel_resolution_error();
-//  }
+  // @Override
+  // @Deprecated
+  // public CBPackageContextResolver createPackageContextResolver(Package p) {
+  // throw toplevel_resolution_error();
+  // }
 
   @Override
   @Deprecated
@@ -892,10 +910,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   public Label tjoin(Label L1, Label L2) {
     ConfPolicy cp1 = L1 == null ? null : L1.confProjection();
     ConfPolicy cp2 = L2 == null ? null : L2.confProjection();
-    
+
     IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
     IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
-    
+
     return pairLabel(L1.position(), join(cp1, cp2), meet(ip1, ip2));
   }
 
@@ -903,10 +921,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   public Label tmeet(Label L1, Label L2) {
     ConfPolicy cp1 = L1 == null ? null : L1.confProjection();
     ConfPolicy cp2 = L2 == null ? null : L2.confProjection();
-    
+
     IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
     IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
-    
+
     return pairLabel(L1.position(), meet(cp1, cp2), join(ip1, ip2));
   }
 

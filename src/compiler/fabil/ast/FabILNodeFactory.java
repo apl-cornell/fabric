@@ -38,7 +38,7 @@ public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
   NewFabricArray NewFabricArray(Position pos, TypeNode base,
       Expr label, Expr accessPolicy, Expr location, int addDims, FabricArrayInit init);
   
-  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label, Expr accessPolicy,
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr updateLabel, Expr accessPolicy,
       Expr location, List<Expr> dims, int addDims, FabricArrayInit init);
   
 

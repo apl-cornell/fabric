@@ -57,8 +57,6 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
     FabILNodeFactory nf = (FabILNodeFactory) rw.nodeFactory();
 
     Expr loc = null;
-    // Expr labelExpr = null;
-    // Expr accessLabelExpr = null;
 
     if (ts.isFabricClass(ct)) {
       // For non-fabric classes, there cannot be location or labels.
@@ -96,12 +94,17 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
     }
 
     // use the appropriate string for the constructor invocation.
-    if (rw.jif_ts().isJifClass(ct)) {
+    if (ts.isJifClass(ct)) {
       String name = ClassDeclToFabilExt_c.jifConstructorTranslatedName(ct);
       New newExpr =
           nf.New(n.position(), n.qualifier(), n.objectType(), loc, paramargs);
-      return rw.qq().parseExpr("(%T) %E.%s(%LE).%s()", n.objectType(), newExpr, name, n.arguments(),
-          FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME);
+      if (ts.isFabricClass(ct))
+        return rw.qq().parseExpr("(%T) %E.%s(%LE).%s()", n.objectType(),
+            newExpr, name, n.arguments(),
+            FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME);
+      else
+        return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(), newExpr,
+            name, n.arguments());
     } else {
       // ct represents params at runtime, but is a Java class with a
       // Jif signature.
@@ -112,21 +115,5 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       return rw.qq().parseExpr("new %T(%LE)", n.objectType(), allArgs);
     }
   }
-
-//  private static class ThisPrincipalPlaceholderSubstitution extends
-//      LabelSubstitution {
-//    @Override
-//    public AccessPath substAccessPath(AccessPath ap) {
-//      if (ap instanceof AccessPathThis) {
-//        return new AccessPathThis((ClassType) ap.type(), ap.position()) {
-//          @Override
-//          public String exprString() {
-//            return "fabric.lang.security.Principal.thisPrincipalPlaceholder()";
-//          }
-//        };
-//      }
-//      return ap;
-//    }
-//  };
 
 }

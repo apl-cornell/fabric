@@ -145,7 +145,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     }
 
     if (accessPolicy != null) {
-      if (!ts.isImplicitCastValid(accessPolicy.type(), ts.Label())) {
+      if (!ts.isImplicitCastValid(accessPolicy.type(), ts.ConfPolicy())) {
         throw new SemanticException("Invalid access policy.", accessPolicy.position());
       }
     }
