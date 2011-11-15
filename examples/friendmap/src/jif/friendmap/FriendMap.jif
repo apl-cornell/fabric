@@ -73,13 +73,12 @@ where
     NullPointerException{user}
   )
   where
+    // the map will be output on standard out
     System.user actsfor user,
-    {user} <= {user.friends→},
-    {user} <= {*→service},
-    {*provider} <= {user.friends→},
-    {*provider} <= {*→service},
-    {*MapServer.provider} <= {user.friends→},
-    {*MapServer.provider} <= {*→service}
+
+    // these affect the fetch and resulting map
+    {user; *provider; *MapServer.provider} <= {user→},
+    {user; *provider; *MapServer.provider} <= {*→service}
   {
     printMap(user, new label {user→});
   }
@@ -105,12 +104,8 @@ where
   where
     System.user actsfor user,
     user        actsfor user.friends,
-    {user} <= {user.friends→},
-    {user} <= {*→service},
-    {*provider} <= {user.friends→},
-    {*provider} <= {*→service},
-    {*MapServer.provider} <= {user.friends→},
-    {*MapServer.provider} <= {*→service}
+    {user; *provider; *MapServer.provider} <= {user.friends→},
+    {user; *provider; *MapServer.provider} <= {*→service}
   {
     if (user == null)
       throw new NullPointerException();
@@ -142,8 +137,9 @@ where
     {service←; user←} <= lbl,            // because the service and the user influence the map.
     lbl               <= {System.user→}, // because data will be output to the system user
 
-    {user; lbl; *provider; *MapServer.provider} // these components affect the fetch and output
-                <= {{*lbl} meet {*→service}}
+    // these components affect the fetch and constructed map 
+    {user; lbl; *provider; *MapServer.provider} <= {*lbl},
+    {user; lbl; *provider; *MapServer.provider} <= {*→service}
   {
     if (user == null)
       throw new NullPointerException();
@@ -174,7 +170,7 @@ where
     {service←} <= l,                      // the result is tainted by the service
     {user←}    <= l,                      // the result is tainted by the user
     {user; l; *provider; *MapServer.provider}
-              <= {{*l} meet {*→service}}   // the arguments and code can affect the fetch and the return value
+              <= {{*l} meet {*→service}}  // the arguments and code can affect the fetch and the return value
   {
     // invariant checks
     if (user == null)
