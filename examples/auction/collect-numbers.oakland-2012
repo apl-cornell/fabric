@@ -5,6 +5,9 @@
 # It's only intended to work with Jed's setup
 # when run from the auction directory.
 
+STORE_DUMP=/tmp/store-dump-old
+MASTER_LOG=/tmp/master-log-old
+
 function waitForUser() {
   INPUT=
   while [[ "${INPUT}" != "ready" ]] ; do
@@ -38,7 +41,7 @@ END
 waitForUser
 
 # Take a dump of the broker store's database
-../../bin/dump-bdb brokerStore >/tmp/store-dump
+../../bin/dump-bdb brokerStore > "${STORE_DUMP}"
 
 # Clear logs and caches.
 rm -rf var/log var/cache
@@ -58,13 +61,13 @@ END
 waitForUser
 
 # Collect timing stats.
-cat var/log/* >/tmp/master.log
-~/work/fabric/bin/timing-oakland-2012 /tmp/master.log
+cat var/log/* > "${MASTER_LOG}"
+~/work/fabric/bin/timing-oakland-2012 "${MASTER_LOG}"
 
 # Collect stats on objects created and modified.
 echo Object stats:
 ../../bin/dump-bdb brokerStore 2>/dev/null \
-  | diff -u /tmp/store-dump - \
+  | diff -u "${STORE_DUMP}" - \
   | diffstat -bms \
   | sed 's/^ 1 file changed, /  /'
 
