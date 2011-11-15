@@ -244,21 +244,51 @@ where
 
         // add friend to the map if possible
         if (friend.locationLabel <= l) {
-          final Location loc = friend.location;
-          if (loc != null && annotated.boundary.contains(loc.x, loc.y)) {
-            try {
-
-              annotated.setAt(loc.x, loc.y, 'f');
-
-            } catch (final ArrayIndexOutOfBoundsException e) {
-              throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally");
-            }
-          }
+          try { addPin (annotated, friend, l); }
+          catch (final NullPointerException e) { throw new AssertionFailedError("annotated and friend are non-null"); }
         }
       }
     }
 
     return annotated;
+  }
+
+  /**
+   * Add a pin corresponding to friend on a map.
+   *
+   * @throws NullPonterException
+   *         if friend or map is null
+   */
+  protected
+  void
+  addPin {*l}
+  (
+    final MapImage[l] {*l} map,
+    final UserV1      {*l} friend,
+    final label       {*l} l
+  )
+  throws
+  (
+    NullPointerException{*l}
+  )
+  where
+    provider             <= l,
+    MapImage.provider    <= l,
+    friend.locationLabel <= l
+  {
+    if (friend == null || map == null)
+      throw new NullPointerException();
+
+    final Location loc = friend.location;
+    if (loc != null && map.boundary.contains(loc.x, loc.y)) {
+      try {
+
+        map.setAt(loc.x, loc.y, 'f');
+
+      } catch (final ArrayIndexOutOfBoundsException e) {
+        throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally");
+      }
+    }
   }
 }
 
