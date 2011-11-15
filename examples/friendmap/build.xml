@@ -61,7 +61,7 @@
   </target>
 
   <target name="build-jif-snapp" depends="build-jif-util">
-    <jifc srcdir="${home}/src/jif" includes="snapp/*.jif" excludes="snapp/UserV2.jif snapp/Mood.jif"/>
+    <jifc srcdir="${home}/src/jif" includes="snapp/*.jif" />
   </target>
 
   <target name="build-jif-mapserv" depends="build-jif-util">
@@ -69,9 +69,7 @@
   </target>
 
   <target name="build-jif-friendmap" depends="build-jif-sig,build-jif-java,build-jif-snapp, build-jif-mapserv">
-    <jifc srcdir="${home}/src/jif" includes="friendmap/*.jif">
-      <!--<arg value="-rdebug" />-->
-    </jifc>
+    <jifc srcdir="${home}/src/jif" includes="friendmap/*.jif"/>
   </target>
 
   <target name="build-jif"
