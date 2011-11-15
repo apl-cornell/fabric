@@ -3986,9 +3986,9 @@ public class Collections
    * @return a read-only view of the collection
    * @see Serializable
    */
-  public static Collection unmodifiableCollection(Collection c)
+  public static Collection unmodifiableCollection(Store store, Collection c)
   {
-    return new UnmodifiableCollection(c);
+    return new UnmodifiableCollection@store(c);
   }
 
   /**
@@ -4306,11 +4306,11 @@ public class Collections
    * @see Serializable
    * @see RandomAccess
    */
-  public static List unmodifiableList(List l)
+  public static List unmodifiableList(Store store, List l)
   {
     if (l instanceof RandomAccess)
-      return new UnmodifiableRandomAccessList(l);
-    return new UnmodifiableList(l);
+      return new UnmodifiableRandomAccessList@store(l);
+    return new UnmodifiableList@store(l);
   }
 
   /**
@@ -4527,7 +4527,7 @@ public class Collections
      */
     public List subList(int fromIndex, int toIndex)
     {
-      return unmodifiableList(list.subList(fromIndex, toIndex));
+      return unmodifiableList($getStore(), list.subList(fromIndex, toIndex));
     }
   } // class UnmodifiableList
 
@@ -4675,9 +4675,9 @@ public class Collections
    * @return a read-only view of the map
    * @see Serializable
    */
-  public static Map unmodifiableMap(Map m)
+  public static Map unmodifiableMap(Store store, Map m)
   {
-    return new UnmodifiableMap(m);
+    return new UnmodifiableMap@store(m);
   }
 
   /**
@@ -5120,9 +5120,9 @@ public class Collections
    * @return a read-only view of the set
    * @see Serializable
    */
-  public static Set unmodifiableSet(Set s)
+  public static Set unmodifiableSet(Store store, Set s)
   {
-    return new UnmodifiableSet(s);
+    return new UnmodifiableSet@store(s);
   }
 
   /**
@@ -5189,9 +5189,9 @@ public class Collections
    * @return a read-only view of the map
    * @see Serializable
    */
-  public static SortedMap unmodifiableSortedMap(SortedMap m)
+  public static SortedMap unmodifiableSortedMap(Store store, SortedMap m)
   {
-    return new UnmodifiableSortedMap(m);
+    return new UnmodifiableSortedMap@store(m);
   }
 
   /**
@@ -5362,9 +5362,9 @@ public class Collections
    * @return a read-only view of the set
    * @see Serializable
    */
-  public static SortedSet unmodifiableSortedSet(SortedSet s)
+  public static SortedSet unmodifiableSortedSet(Store store, SortedSet s)
   {
-    return new UnmodifiableSortedSet(s);
+    return new UnmodifiableSortedSet@store(s);
   }
 
   /**

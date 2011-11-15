@@ -3,6 +3,7 @@ package jif.types.principal;
 import java.util.*;
 
 import jif.translate.DisjunctivePrincipalToJavaExpr_c;
+import jif.translate.PrincipalToJavaExpr;
 import jif.types.JifTypeSystem;
 import jif.types.LabelSubstitution;
 import polyglot.main.Report;
@@ -14,8 +15,8 @@ import polyglot.util.Position;
 public class DisjunctivePrincipal_c extends Principal_c implements DisjunctivePrincipal {
     private final Set disjuncts;
     public DisjunctivePrincipal_c(Collection disjuncts, 
-                                  JifTypeSystem ts, Position pos) {
-        super(ts, pos, new DisjunctivePrincipalToJavaExpr_c());
+                                  JifTypeSystem ts, Position pos, PrincipalToJavaExpr toJava) {
+        super(ts, pos, toJava);
         this.disjuncts = new LinkedHashSet(disjuncts);
         if (disjuncts.size() < 2) {
             throw new InternalCompilerError("ConjunctivePrincipal should " +
@@ -89,6 +90,6 @@ public class DisjunctivePrincipal_c extends Principal_c implements DisjunctivePr
       }
       
       return new DisjunctivePrincipal_c(substDisjuncts, (JifTypeSystem) ts,
-          position());
+          position(), toJava);
     }
 }

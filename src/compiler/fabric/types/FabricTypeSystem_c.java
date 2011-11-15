@@ -1,22 +1,52 @@
 package fabric.types;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import jif.ast.JifUtil;
+import jif.translate.ConjunctivePrincipalToJavaExpr_c;
+import jif.translate.DisjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
-import jif.types.*;
-import jif.types.label.*;
+import jif.types.JifLocalInstance;
+import jif.types.JifTypeSystem_c;
+import jif.types.LabeledType;
+import jif.types.Solver;
+import jif.types.label.AccessPath;
+import jif.types.label.AccessPathConstant;
+import jif.types.label.AccessPathLocal;
+import jif.types.label.ArgLabel;
+import jif.types.label.ConfPolicy;
+import jif.types.label.IntegPolicy;
+import jif.types.label.JoinLabel;
+import jif.types.label.Label;
+import jif.types.label.MeetLabel;
+import jif.types.label.ThisLabel;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
 import polyglot.ext.param.types.Subst;
 import polyglot.frontend.Source;
-import polyglot.types.*;
+import polyglot.types.ClassType;
+import polyglot.types.Context;
+import polyglot.types.Flags;
+import polyglot.types.ImportTable;
+import polyglot.types.LazyClassInitializer;
 import polyglot.types.Package;
+import polyglot.types.ParsedClassType;
+import polyglot.types.Resolver;
+import polyglot.types.SemanticException;
+import polyglot.types.Type;
+import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import fabil.types.FabILImportTable;
 import fabric.translate.DynamicPrincipalToFabilExpr_c;
+import fabric.translate.FabricJoinLabelToFabilExpr_c;
+import fabric.translate.FabricMeetLabelToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
@@ -212,6 +242,29 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   @Override
   protected LabelToJavaExpr pairLabelTranslator() {
     return new FabricPairLabelToFabilExpr_c();
+  }
+
+  @Override
+  public LabelToJavaExpr meetLabelTranslator() {
+    return new FabricMeetLabelToFabilExpr_c();
+  }
+
+  @Override
+  public LabelToJavaExpr joinLabelTranslator() {
+    return new FabricJoinLabelToFabilExpr_c();
+  }
+
+  // XXX: we may need to override these methods with
+  // Fabric-specific translators so that *-junctive principals
+  // are created on the correct store.
+  @Override
+  public PrincipalToJavaExpr conjunctivePrincipalTranslator() {
+    return new ConjunctivePrincipalToJavaExpr_c();
+  }
+
+  @Override
+  public PrincipalToJavaExpr disjunctivePrincipalTranslator() {
+    return new DisjunctivePrincipalToJavaExpr_c();
   }
   
   @SuppressWarnings("unchecked")

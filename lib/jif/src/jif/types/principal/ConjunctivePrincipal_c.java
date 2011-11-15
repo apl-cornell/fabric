@@ -3,6 +3,7 @@ package jif.types.principal;
 import java.util.*;
 
 import jif.translate.ConjunctivePrincipalToJavaExpr_c;
+import jif.translate.PrincipalToJavaExpr;
 import jif.types.JifTypeSystem;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabelSubstitution;
@@ -17,8 +18,8 @@ import polyglot.util.Position;
 public class ConjunctivePrincipal_c extends Principal_c implements ConjunctivePrincipal {
     private final Set conjuncts;
     public ConjunctivePrincipal_c(Collection conjuncts, 
-                                  JifTypeSystem ts, Position pos) {
-        super(ts, pos, new ConjunctivePrincipalToJavaExpr_c());
+                                  JifTypeSystem ts, Position pos, PrincipalToJavaExpr toJava) {
+        super(ts, pos, toJava);
         this.conjuncts = new LinkedHashSet(conjuncts);
         if (conjuncts.size() < 2) {
             throw new InternalCompilerError("ConjunctivePrincipal should " +
@@ -137,7 +138,7 @@ public class ConjunctivePrincipal_c extends Principal_c implements ConjunctivePr
             return (Principal)needed.iterator().next();
         }
 
-        return new ConjunctivePrincipal_c(needed, (JifTypeSystem)ts, position());
+        return new ConjunctivePrincipal_c(needed, (JifTypeSystem)ts, position(), toJava);
     }
 
     @Override
@@ -150,7 +151,7 @@ public class ConjunctivePrincipal_c extends Principal_c implements ConjunctivePr
       }
       
       return new ConjunctivePrincipal_c(substConjuncts, (JifTypeSystem) ts,
-          position());
+          position(), toJava);
     }
     
 }

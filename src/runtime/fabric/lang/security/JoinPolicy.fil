@@ -15,7 +15,8 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
 
   JoinPolicy(Set policies) {
     // Copy the contents into a linked hash set so we can sign these policies.
-    components = Collections.unmodifiableSet(new LinkedHashSet(policies));
+    components =
+      Collections.unmodifiableSet($getStore(), new LinkedHashSet(policies));
   }
 
   public Set joinComponents() {

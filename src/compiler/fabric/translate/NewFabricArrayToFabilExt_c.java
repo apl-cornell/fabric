@@ -4,13 +4,12 @@ import jif.translate.JifToJavaRewriter;
 import jif.translate.NewArrayToJavaExt_c;
 import jif.types.label.Label;
 import polyglot.ast.Expr;
-import polyglot.ast.NewArray;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.visit.NodeVisitor;
-import fabil.ast.FabricArrayInit;
 import fabil.ast.FabILNodeFactory;
+import fabil.ast.FabricArrayInit;
 import fabric.ast.FabricUtil;
 import fabric.ast.NewFabricArray;
 import fabric.extension.NewFabricArrayExt_c;
@@ -42,19 +41,17 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
       base = base.toArray().base();
     }
 
+    Expr labelloc = ext.location();
+    if (labelloc == null) labelloc = nf.StoreGetter(n.position());
+    //push the new location
+    rw = ((FabricToFabilRewriter)rw).pushLocation(labelloc);
+
     Label baseLabel = null;
+    Expr labelExpr = null;
     if (base instanceof FabricClassType && ts.isFabricClass(base)) {
       baseLabel = ((FabricClassType)base).defaultFieldLabel();
-    }
-    Expr labelExpr = null;
-    if (baseLabel != null) {
-      labelExpr = rw.labelToJava(baseLabel);
-      
-      Expr loc = ext.location();
-      if (loc == null) loc = nf.StoreGetter(n.position());
-      if (loc != null) {
-        FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
-        labelExpr = ffrw.updateLabelLocation(labelExpr, loc);
+      if (baseLabel != null) {
+        labelExpr = rw.labelToJava(baseLabel);      
       }
     }
 

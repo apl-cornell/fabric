@@ -18,10 +18,6 @@ public interface Label extends Object {
 
     public native boolean relabelsTo(Label l, Set s);
 
-    public native Label join(Label l);
-
-    public native Label meet(Label l);
-
     public native ConfPolicy confPolicy();
 
     public native IntegPolicy integPolicy();
