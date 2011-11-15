@@ -60,7 +60,6 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   boolean isFabricArray(Type type);
   FabricArrayType toFabricArray(Type type);
   
-  boolean containsThisLabel(Label label);
 
   FabricArrayType fabricArrayOf(Position pos, Type t);
   FabricArrayType fabricArrayOf(Position pos, Type t, int dims);
@@ -75,9 +74,23 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   fabric.lang.security.ConfPolicy sourceAccessPolicy(CodebaseSource src);
 
   /**
-   * @param assertion
-   * @return
+   * Returns true if label contains a {this} label.
+   */
+  boolean containsThisLabel(Label label);
+
+  /**
+   * Returns true if assertion contains a {this} label.
    */
   boolean containsThisLabel(Assertion assertion);
+
+  /**
+   * Returns true if assertion contains a argument label.
+   */
+  boolean containsArgLabel(Assertion as);
+
+  /**
+   * Returns true if label contains a argument label.
+   */
+  boolean containsArgLabel(Label label);
 
 }

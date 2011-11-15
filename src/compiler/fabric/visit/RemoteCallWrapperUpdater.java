@@ -130,7 +130,8 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         //          }
         
         for (Assertion as : mi.constraints()) {
-          if (ts.containsThisLabel(as)) {
+          if (ts.containsThisLabel(as)
+              || ts.containsArgLabel(as)) {
             pct.removeMethod(mi);
             return null;
           }

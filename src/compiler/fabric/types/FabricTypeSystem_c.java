@@ -694,6 +694,54 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     }
     return false;
   }
+  
+  @Override
+  public boolean containsArgLabel(Label label) {
+    if (label instanceof ArgLabel) {
+      return true;
+    } else if (label instanceof MeetLabel) {
+      MeetLabel ml = (MeetLabel) label;
+      for (Label l : ml.meetComponents()) {
+        if (containsArgLabel(l)) return true;
+      }
+    } else if (label instanceof JoinLabel) {
+      JoinLabel jl = (JoinLabel) label;
+      for (Label l : jl.joinComponents()) {
+        if (containsArgLabel(l)) return true;
+      }
+    } 
+    return false;
+  }
+  
+  // TODO: determine scenarios when this labels
+  // can be used by the remote call wrapper
+  @Override
+  public boolean containsArgLabel(Assertion as) {
+    if(as instanceof LabelLeAssertion) {
+      LabelLeAssertion leq = (LabelLeAssertion) as;
+      return containsArgLabel(leq.lhs()) || containsArgLabel(leq.rhs());
+    }
+    else if(as instanceof ActsForConstraint) {
+      ActsForConstraint<? extends ActsForParam, ? extends ActsForParam> afc =
+          (ActsForConstraint<? extends ActsForParam, ? extends ActsForParam>) as;
+      boolean hasThis = false;
+      
+      if(afc.actor() instanceof Label) 
+        hasThis |= containsArgLabel((Label)afc.actor());
+      
+      if(!hasThis && afc.granter() instanceof Label)
+        hasThis |= containsArgLabel((Label)afc.actor());
+      
+      return hasThis;
+    }
+    else if(as instanceof LabelActsForPrincipalConstraintNode) {
+      LabelActsForLabelConstraintNode laflcn =
+          (LabelActsForLabelConstraintNode) as;
+      LabelNode lhs = (LabelNode) laflcn.actor();
+      return containsArgLabel(lhs.label());
+    }
+    return false;
+  }
 
   // array type constructors ///////////////////////////////////////////////////
 
