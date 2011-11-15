@@ -13,6 +13,7 @@ import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
+import fabric.common.Surrogate;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
@@ -363,16 +364,16 @@ public class BdbDB extends ObjectDB {
     return pending;
   }
 
-  private byte[] toBytes(boolean b) {
+  private static byte[] toBytes(boolean b) {
     byte[] result = { (byte) (b ? 1 : 0) };
     return result;
   }
 
-  private boolean toBoolean(byte[] data) {
+  private static boolean toBoolean(byte[] data) {
     return data[0] == 1;
   }
 
-  private byte[] toBytes(long i) {
+  private static byte[] toBytes(long i) {
     byte[] data = new byte[8];
 
     for (int j = 0; j < 8; j++) {
@@ -383,7 +384,7 @@ public class BdbDB extends ObjectDB {
     return data;
   }
 
-  private byte[] toBytes(long tid, Principal worker) {
+  private static byte[] toBytes(long tid, Principal worker) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       DataOutputStream dos = new DataOutputStream(bos);
@@ -399,7 +400,7 @@ public class BdbDB extends ObjectDB {
     }
   }
 
-  private long toLong(byte[] data) {
+  private static long toLong(byte[] data) {
     long i = 0;
 
     for (int j = 0; j < 8; j++) {
@@ -410,7 +411,7 @@ public class BdbDB extends ObjectDB {
     return i;
   }
 
-  private byte[] toBytes(FastSerializable obj) {
+  private static byte[] toBytes(FastSerializable obj) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       ObjectOutputStream oos = new ObjectOutputStream(bos);
@@ -422,7 +423,7 @@ public class BdbDB extends ObjectDB {
     }
   }
 
-  private PendingTransaction toPendingTransaction(byte[] data) {
+  private static PendingTransaction toPendingTransaction(byte[] data) {
     try {
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
       ObjectInputStream ois = new ObjectInputStream(bis);
@@ -432,13 +433,55 @@ public class BdbDB extends ObjectDB {
     }
   }
 
-  private SerializedObject toSerializedObject(byte[] data) {
+  private static SerializedObject toSerializedObject(byte[] data) {
     try {
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
       ObjectInputStream ois = new ObjectInputStream(bis);
       return new SerializedObject(ois);
     } catch (IOException e) {
       throw new InternalError(e);
+    }
+  }
+  
+  /**
+   * Dumps the contents of a BDB object database to stdout.
+   */
+  public static void main(String[] args) {
+    if (args.length != 1) {
+      System.err.println("Usage: fabric.store.db.BdbDB STORE_NAME");
+      System.err.println();
+      System.err.println("  Dumps a BDB object database in CSV format.");
+      return;
+    }
+
+    BdbDB db = new BdbDB(args[0]);
+    Cursor cursor = db.db.openCursor(null, null);
+    DatabaseEntry key = new DatabaseEntry();
+    DatabaseEntry value = new DatabaseEntry();
+
+    System.out.println("onum,class name,version number,update label onum,"
+        + "access label onum");
+    while (cursor.getNext(key, value, null) == OperationStatus.SUCCESS) {
+      SerializedObject obj = toSerializedObject(value.getData());
+      long onum = obj.getOnum();
+      String className = obj.getClassName();
+      int version = obj.getVersion();
+      long updateLabelOnum = obj.getLabelOnum();
+      String extraInfo = "";
+      try {
+        // Get extra information on surrogates and FClasses.
+        // This code depends on the serialization format of those classes, and
+        // is therefore rather fragile.
+        if (Surrogate.class.getName().equals(className)) {
+          ObjectInputStream ois =
+              new ObjectInputStream(obj.getSerializedDataStream());
+          extraInfo = ",ref=" + ois.readUTF() + "/" + ois.readLong();
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      System.out.println(onum + "," + className + "," + version + ","
+          + updateLabelOnum + extraInfo);
     }
   }
 
