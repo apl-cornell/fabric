@@ -21,7 +21,7 @@ where
   public final String{this} name;
 
   /** The label {this←;this→this.locationInfo}.  Cannot be set as initializer due to jif bug. */
-  public final label {this}           locationLabel;
+  public final label {this} locationLabel;
 
   /** The user's location, only readable by members of the locationInfo group. */
   public Location    {*locationLabel} location      = null;
