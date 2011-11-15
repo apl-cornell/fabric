@@ -91,30 +91,26 @@ where
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
-  /*
   public
   void
   postMap {user.friends,service→}
   (
-    final UserV1 {{user.friends→} meet {service→}} user // why??
+    final UserV1 user
   )
   throws
   (
-    NullPointerException {user; user←}
+    NullPointerException {user}
   )
   where
-    System.user actsfor user.friends,     // because the result gets output to the system user
-    provider          <= {user.friends→}, // because the provider can affect the output
-    MapImage.provider <= {user←},
-    user actsfor user.friends,
-    {user} <= {service←}
+    System.user actsfor user,
+    user        actsfor user.friends,
+    {user; *provider; *MapServer.provider} <= {user.friends,service→}
   {
     if (user == null)
       throw new NullPointerException();
 
-    printMap(user, new label {user.friends→; _←});
+    printMap(user, new label {user.friends→});
   }
-  */
 
 
   /**
@@ -125,7 +121,6 @@ where
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
-  /*
   private
   void
   printMap {{*lbl} meet {service→}}
@@ -138,13 +133,11 @@ where
     NullPointerException {user}
   )
   where
-    {service←}  <= lbl,                // because the service influences the map.
-    lbl         <= {System.user→; _←}, // because data will be output to the system user
-    {user; lbl} <= lbl,
-    provider <= {*lbl},               
-    MapImage.provider <= {*lbl},
-    {user←} <= lbl,
-    {user} <= {service→}
+    {service←; user←} <= lbl,            // because the service and the user influence the map.
+    lbl               <= {System.user→}, // because data will be output to the system user
+
+    {user; lbl; *provider; *MapServer.provider} // these components affect the fetch and output
+                <= {{*lbl} meet {service→}}
   {
     if (user == null)
       throw new NullPointerException();
@@ -155,7 +148,6 @@ where
     if (result == null)                                             { throw new AssertionFailedError("createMap() returns a non-null value."); }
     try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("System.stdout must return a non-null value"); }
   }
-  */
 
 
   /**
@@ -163,22 +155,20 @@ where
    */
   public
   MapImage[l] {*l}
-  createMap {{*l} meet {service→}}
+  createMap   {{*l} meet {service→}} // the fact that this call happens leaks to the service and the return value
   (
-    final label  {{*l} meet {service→}} l,
-    final UserV1 {{*l} meet {service→}} user
+    final label  l,
+    final UserV1 user
   )
   throws
   (
     NullPointerException{user}
   )
   where
-    {service←} <= l,
-    {user←}    <= l,
-    provider   <= l,
-    provider   <= {service→},
-    MapServer.provider <= l,
-    MapServer.provider <= {service→}
+    {service←} <= l,                      // the result is tainted by the service
+    {user←}    <= l,                      // the result is tainted by the user
+    {user; l; *provider; *MapServer.provider}
+              <= {{*l} meet {service→}}   // the arguments and code can affect the fetch and the return value
   {
     // invariant checks
     if (user == null)
