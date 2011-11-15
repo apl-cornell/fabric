@@ -1,7 +1,5 @@
 package mapserv;
 
-import util.Store;
-
 /**
  * Represents a Box in the x,y plane.  A point (x,y) is contained in the box if
  * x ∈ [xmin, xmax) and y ∈ [ymin, ymax).
