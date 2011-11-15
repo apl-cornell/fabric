@@ -20,8 +20,10 @@ where
   /** The name of this principal */
   public final String{this} name;
 
+  /** The label {this←;this→this.locationInfo}.  Cannot be set as initializer due to jif bug. */
+  public final label {this}           locationLabel;
+
   /** The user's location, only readable by members of the locationInfo group. */
-  public final label {this}           locationLabel = new label {this←;this→locationInfo};
   public Location    {*locationLabel} location      = null;
 
   /** The user's friends. non-null. */
@@ -60,8 +62,9 @@ where
 
     this.network = network;
 
-    this.locationInfo = new Group[this](name + "'s location readers");
-    this.friends      = new Group[this](name + "'s friends");
+    this.locationInfo  = new Group[this](name + "'s location readers");
+    this.friends       = new Group[this](name + "'s friends");
+    this.locationLabel = new label {this←;this→locationInfo};
 
     this.name     = name;
 
