@@ -220,14 +220,9 @@ where
       throw new AssertionFailedError("getMap returned null");
 
     // make a local copy (with label l)
-    // TODO
+    // TODO: s ≽ l
     final Store localStore = null;
-    MapImage[l] annotated;
-    if (new label {localStore←} <= l && l <= new label {localStore→})  // localStore ≽ ℓ
-      annotated = map.copy(l, localStore);
-    else
-      throw new AssertionFailedError("local store does not act for l");
-
+    MapImage[l] annotated = map.copy(l, localStore);
 
     if (annotated == null)          throw new AssertionFailedError("MapImage.copy return value should be non-null");
     if (annotated.boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");

@@ -115,8 +115,7 @@ where
   )
   where
     // see util.Util.copyArray for details about restrictions
-    {s←} <= l,
-    l <= {s→},
+    // s ≽ l
     L <= l
   {
     try {
@@ -159,6 +158,8 @@ where
 
     out.println("(" + boundary.xmin + ", " + boundary.ymin + ")");
     for (int i = 0; i < height; i++) {
+      out.print ('\t');
+
       for (int j = 0; j < width; j++) {
         try {
 
@@ -178,6 +179,7 @@ where
       out.println();
     }
 
+    out.print('\t');
     for (int j = 0; j < width; j++)
       out.print(' ');
 

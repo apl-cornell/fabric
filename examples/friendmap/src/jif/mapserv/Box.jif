@@ -95,6 +95,7 @@ public class Box {
     Store s
   )
   where
+    // TODO: s ≽ l
     provider <= l,
     {this}   <= l
   {

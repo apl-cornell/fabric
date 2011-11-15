@@ -39,7 +39,7 @@ where
     this.snapp      = endorse(new Snapp("snapp",     SnappNode), {SnappNode←} to {System.user←});
     if (SnappNode     actsfor snapp) {
 
-    this.mapServ    = endorse(new MapServer("mapserv",   MapServNode, ' '), {MapServNode←} to {System.user←});
+    this.mapServ    = endorse(new MapServer("mapserv",   MapServNode, '.'), {MapServNode←} to {System.user←});
     if (MapServNode   actsfor mapServ) {
 
     // create users
