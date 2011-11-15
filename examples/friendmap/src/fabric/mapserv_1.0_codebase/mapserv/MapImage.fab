@@ -2,7 +2,6 @@ package mapserv;
 
 import java.io.PrintStream;
 
-import util.Store;
 import util.Util;
 import util.AssertionFailedError;
 
@@ -116,7 +115,7 @@ public class MapImage[label L] where provider <= L {
   {
     try {
 
-      return new MapImage[l] (boundary.copy(l,s), width, height, Util.copyArray(data, l, l, L, L, s));
+      return new MapImage[l] (boundary.copy(l,s), width, height, Util.copyArray(data, l, L, s));
 
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("data and boundary must be non-null");

@@ -84,7 +84,7 @@ public class FabricClassDeclExt extends JifClassDeclExt {
     lc = lc.context(A);
     
     // Access label checks
-    Label singleAccessLabel = pct.getFoldedAccessLabel();
+    Label singleAccessLabel = pct.providerFoldedClassAccessLabel();
     
     if (singleAccessLabel != null) {
       // check that the access label has the top integrity label, i.e. it only
@@ -103,7 +103,7 @@ public class FabricClassDeclExt extends JifClassDeclExt {
           }
       );
 
-      Label singleFieldLabel = pct.singleFieldLabel();
+      Label singleFieldLabel = pct.classUpdateLabel();
 
 
       // TODO: Revisit this null check

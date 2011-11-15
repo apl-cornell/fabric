@@ -159,6 +159,16 @@ public class HashMap extends AbstractMap
     {
       return value;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   }
 
   /**
@@ -217,7 +227,10 @@ public class HashMap extends AbstractMap
 
     if (initialCapacity == 0)
       initialCapacity = 1;
-    buckets = new HashEntry[initialCapacity];
+    
+    // XXX This label is wrong. HashMap should be parameterized
+    Label label = LabelUtil.noComponents();
+    buckets = new HashEntry[initialCapacity]~label;
     this.loadFactor = loadFactor;
     threshold = (int) (initialCapacity * loadFactor);
   }
@@ -465,7 +478,7 @@ public class HashMap extends AbstractMap
     if (keys == null)
       // Create an AbstractSet with custom implementations of those methods
       // that can be overridden easily and efficiently.
-      keys = new AbstractSet()
+      keys = (AbstractSet) new AbstractSet()
       {
 	public int size()
 	{
@@ -497,7 +510,17 @@ public class HashMap extends AbstractMap
 	  HashMap.this.remove(o);
 	  return oldsize != size;
 	}
-      };
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
+	}
+      }.$initLabels();
     return keys;
   }
 
@@ -516,7 +539,7 @@ public class HashMap extends AbstractMap
     if (values == null)
       // We don't bother overriding many of the optional methods, as doing so
       // wouldn't provide any significant performance advantage.
-      values = new AbstractCollection()
+      values = (AbstractCollection) new AbstractCollection()
       {
 	public int size()
 	{
@@ -533,7 +556,17 @@ public class HashMap extends AbstractMap
 	{
 	  HashMap.this.clear();
 	}
-      };
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
+	}
+      }.$initLabels();
     return values;
   }
 
@@ -555,7 +588,7 @@ public class HashMap extends AbstractMap
     if (entries == null)
       // Create an AbstractSet with custom implementations of those methods
       // that can be overridden easily and efficiently.
-      entries = new AbstractSet()
+      entries = (AbstractSet) new AbstractSet()
       {
 	public int size()
 	{
@@ -588,7 +621,17 @@ public class HashMap extends AbstractMap
 	    }
 	  return false;
 	}
-      };
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
+	}
+      }.$initLabels();
     return entries;
   }
 
@@ -604,7 +647,7 @@ public class HashMap extends AbstractMap
    */
   void addEntry(Object key, Object value, int idx, boolean callRemove)
   {
-    HashEntry e = new HashEntry(key, value);
+    HashEntry e = (HashEntry) new HashEntry(key, value).$initLabels();
     e.next = buckets[idx];
     buckets[idx] = e;
   }
@@ -656,7 +699,7 @@ public class HashMap extends AbstractMap
    */
   Iterator iterator(fabric.worker.Store store, int type)
   {
-    return new HashIterator@store(type);
+    return (HashIterator) new HashIterator@store(type).$initLabels();
   }
 
   /**
@@ -865,5 +908,25 @@ public class HashMap extends AbstractMap
       last = null;
       knownMod++;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

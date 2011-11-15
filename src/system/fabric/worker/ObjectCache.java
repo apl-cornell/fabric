@@ -17,6 +17,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.lang.FClass;
 import fabric.lang.Object;
+import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 
 /**
@@ -200,7 +201,7 @@ public final class ObjectCache {
       if (isEvicted()) return null;
 
       Object._Impl impl = getImpl(false);
-      if (impl != null) return impl.get$label();
+      if (impl != null) return impl.get$$updateLabel();
 
       // We have a serialized entry.
       resolveSurrogates();
@@ -210,20 +211,20 @@ public final class ObjectCache {
     }
 
     /**
-     * Obtains a reference to the object's access label. (Returns null if this
+     * Obtains a reference to the object's access policy. (Returns null if this
      * entry has been evicted.
      */
-    public synchronized Label getAccessLabel() {
+    public synchronized ConfPolicy getAccessPolicy() {
       if (isEvicted()) return null;
 
       Object._Impl impl = getImpl(false);
-      if (impl != null) return impl.get$accesslabel();
+      if (impl != null) return impl.get$$accessPolicy();
 
       // We have a serialized entry.
       resolveSurrogates();
 
-      if (next != null) return next.getLabel();
-      return new Label._Proxy(store, serialized.getAccessLabelOnum());
+      if (next != null) return next.getAccessPolicy();
+      return new ConfPolicy._Proxy(store, serialized.getAccessPolicyOnum());
     }
 
     /**

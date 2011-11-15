@@ -326,7 +326,7 @@ public class BitSet implements Cloneable, Serializable
   {
     if (from < 0 || from > to)
       throw new IndexOutOfBoundsException();
-    BitSet bs = new BitSet(to - from);
+    BitSet bs = (BitSet) new BitSet(to - from).$initLabels();
     int lo_offset = from >>> 6;
     if (lo_offset >= bits.length || to == from)
       return bs;
@@ -703,5 +703,15 @@ public class BitSet implements Cloneable, Serializable
         System.arraycopy(bits, 0, nd, 0, bits.length);
         bits = nd;
       }
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

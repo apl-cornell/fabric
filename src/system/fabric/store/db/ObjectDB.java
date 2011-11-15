@@ -20,12 +20,8 @@ import fabric.common.util.LongSet;
 import fabric.common.util.MutableInteger;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
-import fabric.lang.security.Label;
 import fabric.lang.security.NodePrincipal;
-import fabric.lang.security.PairLabel;
 import fabric.lang.security.Principal;
-import fabric.lang.security.ReaderPolicy;
-import fabric.lang.security.WriterPolicy;
 import fabric.store.SubscriptionManager;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -56,8 +52,6 @@ import fabric.worker.Worker;
 public abstract class ObjectDB {
 
   protected final String name;
-  private Principal storePrincipal;
-  private Label publicReadonlyLabel;
   private long nextGlobID;
 
   /**
@@ -553,22 +547,15 @@ public abstract class ObjectDB {
         // supplied by the workers' local store.
         String principalName = new X500Principal("CN=" + name).getName();
         NodePrincipal._Impl principal =
-            new NodePrincipal._Impl(store, null, null, principalName);
+            (NodePrincipal._Impl) new NodePrincipal._Impl(store, principalName)
+                .$initLabels().fetch();
         principal.$forceRenumber(ONumConstants.STORE_PRINCIPAL);
 
         // Create the label {store->_; store<-_} for the root map.
-        ReaderPolicy confid =
-            (ReaderPolicy) new ReaderPolicy._Impl(store, publicReadonlyLabel(),
-                publicReadonlyLabel(), storePrincipal(), null).$getProxy();
-        WriterPolicy integ =
-            (WriterPolicy) new WriterPolicy._Impl(store, publicReadonlyLabel(),
-                publicReadonlyLabel(), storePrincipal(), null).$getProxy();
-        Label label =
-            (Label) new PairLabel._Impl(store, null, null, confid, integ)
-                .$getProxy();
-
+        // XXX above not done. HashMap needs to be parameterized on labels.
         fabric.util.HashMap._Impl map =
-            new fabric.util.HashMap._Impl(store, label, label);
+            (fabric.util.HashMap._Impl) new fabric.util.HashMap._Impl(store)
+                .$initLabels().fetch();
         map.$forceRenumber(ONumConstants.ROOT_MAP);
 
         return null;
@@ -576,26 +563,6 @@ public abstract class ObjectDB {
     });
 
     setInitialized();
-  }
-
-  private final Principal storePrincipal() {
-    if (storePrincipal == null) {
-      Store store = Worker.getWorker().getStore(name);
-      storePrincipal =
-          new Principal._Proxy(store, ONumConstants.STORE_PRINCIPAL);
-    }
-
-    return storePrincipal;
-  }
-
-  private final Label publicReadonlyLabel() {
-    if (publicReadonlyLabel == null) {
-      Store store = Worker.getWorker().getStore(name);
-      publicReadonlyLabel =
-          new Label._Proxy(store, ONumConstants.PUBLIC_READONLY_LABEL);
-    }
-
-    return publicReadonlyLabel;
   }
 
 }

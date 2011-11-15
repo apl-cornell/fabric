@@ -266,7 +266,7 @@ while (i.hasNext())
   public Iterator iterator(fabric.worker.Store store)
   {
     // Bah, Sun's implementation forbids using listIterator(0).
-    return new AnonymousIterator@store();
+    return (AnonymousIterator) new AnonymousIterator@store().$initLabels();
   }
   
   private class AnonymousIterator implements Iterator {
@@ -346,6 +346,16 @@ while (i.hasNext())
       last = -1;
       knownMod = modCount;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   }
 
   /**
@@ -402,7 +412,7 @@ while (i.hasNext())
       throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
                                           + size());
 
-    return new AbstractListIterator@store(index);
+    return (AbstractListIterator) new AbstractListIterator@store(index).$initLabels();
   }
 
   /**
@@ -527,8 +537,8 @@ while (i.hasNext())
       throw new IndexOutOfBoundsException();
 
     if (this instanceof RandomAccess)
-      return new RandomAccessSubList(this, fromIndex, toIndex);
-    return new SubList(this, fromIndex, toIndex);
+      return (RandomAccessSubList) new RandomAccessSubList(this, fromIndex, toIndex).$initLabels();
+    return (SubList) new SubList(this, fromIndex, toIndex).$initLabels();
   }
 
   /**
@@ -725,6 +735,16 @@ while (i.hasNext())
       lastReturned = -1;
       knownMod = modCount;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   }
 
   /**
@@ -900,6 +920,16 @@ while (i.hasNext())
         size++;
         position++;
         modCount = backingList.modCount;
+      }
+
+      public Object $initLabels() {
+	// XXX What should this be?  Using completely permissive values for now.
+	// update label: {_ <-}
+	// access policy: {_ ->}
+	this.$updateLabel = LabelUtil.noComponents();
+	this.$accessPolicy = LabelUtil.bottomConf();
+
+	return this;
       }
     }
 
@@ -1161,7 +1191,17 @@ while (i.hasNext())
       checkMod();
       checkBoundsInclusive(index);
 
-      return new SubListIterator@store(index);
+      return (SubListIterator) new SubListIterator@store(index).$initLabels();
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class SubList
 
@@ -1184,6 +1224,16 @@ while (i.hasNext())
     RandomAccessSubList(AbstractList backing, int fromIndex, int toIndex)
     {
       super(backing, fromIndex, toIndex);
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class RandomAccessSubList
 

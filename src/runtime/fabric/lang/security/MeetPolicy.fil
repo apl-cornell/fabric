@@ -15,7 +15,8 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
 
   MeetPolicy(Set policies) {
     // Copy the contents into a linked hash set so we can sign these policies.
-    components = Collections.unmodifiableSet($getStore(), new LinkedHashSet(policies));
+    components = Collections.unmodifiableSet($getStore(),
+	(LinkedHashSet) new LinkedHashSet(policies).$initLabels());
   }
 
   public Set meetComponents() {
@@ -87,11 +88,5 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
       if (iter.hasNext()) str += " meet ";
     }
     return str;
-  }
-  
-  public void clobberThisPlaceholders(Principal replacement) {
-    for (Iterator it = components.iterator(); it.hasNext(); ) {
-      ((Policy) it.next()).clobberThisPlaceholders(replacement);
-    }
   }
 }

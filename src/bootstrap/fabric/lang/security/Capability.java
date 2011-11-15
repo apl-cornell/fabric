@@ -60,11 +60,11 @@ public interface Capability extends fabric.lang.Object {
         
         native public java.lang.Object invoke();
         
-        _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
+        _Impl(fabric.worker.Store $location,
               final fabric.lang.security.Principal jif$P,
               final fabric.lang.security.Label jif$L,
               final fabric.lang.security.Closure closure) {
-            super($location, $label, accessLabel);
+            super($location);
         }
         
         native public static boolean jif$Instanceof(
@@ -122,10 +122,9 @@ public interface Capability extends fabric.lang.Object {
             
             native public fabric.worker.Store get$localStore();
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

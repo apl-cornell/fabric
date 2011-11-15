@@ -55,7 +55,7 @@ public class TreeSet extends AbstractSet
    */
   public TreeSet()
   {
-    map = new TreeMap();
+    map = (TreeMap) new TreeMap().$initLabels();
   }
 
   /**
@@ -67,7 +67,7 @@ public class TreeSet extends AbstractSet
    */
   public TreeSet(Comparator comparator)
   {
-    map = new TreeMap(comparator);
+    map = (TreeMap) new TreeMap(comparator).$initLabels();
   }
 
   /**
@@ -84,7 +84,7 @@ public class TreeSet extends AbstractSet
    */
   public TreeSet(Collection collection)
   {
-    map = new TreeMap();
+    map = (TreeMap) new TreeMap().$initLabels();
     addAll(collection);
   }
 
@@ -99,7 +99,7 @@ public class TreeSet extends AbstractSet
    */
   public TreeSet(SortedSet sortedSet)
   {
-    map = new TreeMap(sortedSet.comparator());
+    map = (TreeMap) new TreeMap(sortedSet.comparator()).$initLabels();
     Iterator itr = sortedSet.iterator(LOCAL_STORE);
     ((TreeMap) map).putKeysLinear(itr, sortedSet.size());
   }
@@ -206,7 +206,7 @@ public class TreeSet extends AbstractSet
    */
   public SortedSet headSet(Object to)
   {
-    return new TreeSet(map.headMap(to));
+    return (TreeSet) new TreeSet(map.headMap(to)).$initLabels();
   }
 
   /**
@@ -284,7 +284,7 @@ public class TreeSet extends AbstractSet
    */
   public SortedSet subSet(Object from, Object to)
   {
-    return new TreeSet(map.subMap(from, to));
+    return (TreeSet) new TreeSet(map.subMap(from, to)).$initLabels();
   }
 
   /**
@@ -304,6 +304,16 @@ public class TreeSet extends AbstractSet
    */
   public SortedSet tailSet(Object from)
   {
-    return new TreeSet(map.tailMap(from));
+    return (TreeSet) new TreeSet(map.tailMap(from)).$initLabels();
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

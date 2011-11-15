@@ -34,8 +34,6 @@ public interface PairLabel
     
     public fabric.lang.security.SecretKeyObject keyObject();
     
-    public void clobberThisPlaceholders(Principal replacement);
-    
     public static class _Proxy extends fabric.lang.Object._Proxy
       implements fabric.lang.security.PairLabel
     {
@@ -73,8 +71,6 @@ public interface PairLabel
         
         native public fabric.lang.security.SecretKeyObject keyObject();
         
-        native public void clobberThisPlaceholders(Principal replacement);
-        
         public _Proxy(PairLabel._Impl impl) { super(impl); }
         
         public _Proxy(fabric.worker.Store store, long onum) {
@@ -93,10 +89,9 @@ public interface PairLabel
         native public fabric.lang.security.SecretKeyObject get$keyObject();
         
         public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
                      fabric.lang.security.ConfPolicy confPol,
                      fabric.lang.security.IntegPolicy integPol) {
-            super($location, $label, accessLabel);
+            super($location);
         }
         
         native public boolean relabelsTo(fabric.lang.security.Label l,
@@ -125,8 +120,6 @@ public interface PairLabel
         native public fabric.lang.security.IntegPolicy integPolicy();
         
         native public fabric.lang.security.SecretKeyObject keyObject();
-        
-        native public void clobberThisPlaceholders(Principal replacement);
         
         native protected fabric.lang.Object._Proxy $makeProxy();
         
@@ -167,10 +160,9 @@ public interface PairLabel
           implements fabric.lang.security.PairLabel._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

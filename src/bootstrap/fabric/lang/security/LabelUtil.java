@@ -320,9 +320,8 @@ public interface LabelUtil extends fabric.lang.Object {
       implements fabric.lang.security.LabelUtil
     {
         
-        private _Impl(fabric.worker.Store $location,
-                      fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel) {
-            super($location, $label, accessLabel);
+        private _Impl(fabric.worker.Store $location) {
+            super($location);
         }
         
         native public static fabric.lang.security.Label noComponents();
@@ -677,10 +676,9 @@ public interface LabelUtil extends fabric.lang.Object {
             
             native public fabric.worker.LocalStore get$localStore();
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

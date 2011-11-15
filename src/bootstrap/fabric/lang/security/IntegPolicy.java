@@ -61,8 +61,6 @@ public interface IntegPolicy
         native public boolean relabelsTo(fabric.lang.security.Policy arg1,
                                          java.util.Set arg2);
         
-        native public void clobberThisPlaceholders(Principal replacement);
-        
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }

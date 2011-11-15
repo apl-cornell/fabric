@@ -14,8 +14,6 @@ public interface ReaderPolicy
     
     public boolean relabelsTo(fabric.lang.security.Policy p, java.util.Set s);
     
-    public void clobberThisPlaceholders(Principal replacement);
-    
     public int hashCode();
     
     public boolean equals(fabric.lang.Object o);
@@ -64,8 +62,6 @@ public interface ReaderPolicy
         native public boolean relabelsTo(fabric.lang.security.Policy arg1,
                                          java.util.Set arg2);
         
-        native public void clobberThisPlaceholders(Principal replacement);
-        
         native public java.lang.String toString();
         
         native public fabric.lang.security.ConfPolicy join(
@@ -110,10 +106,9 @@ public interface ReaderPolicy
         native public fabric.lang.security.Principal get$reader();
         
         public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
                      fabric.lang.security.Principal owner,
                      fabric.lang.security.Principal reader) {
-            super($location, $label, accessLabel);
+            super($location);
         }
         
         native public fabric.lang.security.Principal owner();
@@ -122,8 +117,6 @@ public interface ReaderPolicy
         
         native public boolean relabelsTo(fabric.lang.security.Policy p,
                                          java.util.Set s);
-        
-        native public void clobberThisPlaceholders(Principal replacement);
         
         native public int hashCode();
         
@@ -197,10 +190,9 @@ public interface ReaderPolicy
           implements fabric.lang.security.ReaderPolicy._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

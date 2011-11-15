@@ -209,7 +209,7 @@ public class HashSet extends AbstractSet
    */
   HashMap init(int capacity, float load)
   {
-    return new HashMap(capacity, load);
+    return (HashMap) new HashMap(capacity, load).$initLabels();
   }
 
   /**
@@ -256,4 +256,14 @@ public class HashSet extends AbstractSet
       map.put(s.readObject(), "");
   }
   */
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
 }

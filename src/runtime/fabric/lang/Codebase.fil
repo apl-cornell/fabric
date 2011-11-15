@@ -2,6 +2,9 @@ package fabric.lang;
 
 import java.io.IOException;
 import java.util.Properties;
+
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.Label;
 import fabric.util.Collections;
 import fabric.util.HashMap;
 import fabric.util.Map;
@@ -39,14 +42,16 @@ public class Codebase {
     codebases.put(name, codebase);
   }
   
-  public Codebase() {
-    classes = new HashMap();
-    codebases = new HashMap();
+  public Codebase(Label updateLabel, ConfPolicy accessPolicy) {
+    this(updateLabel, accessPolicy, (Map) new HashMap().$initLabels());
   }	
 	
-  public Codebase(Map/*String, FClass*/ classes) {
-    this.classes = new HashMap(classes);
-    codebases = new HashMap();
+  public Codebase(Label updateLabel, ConfPolicy accessPolicy,
+      Map/* String, FClass */classes) {
+    this.classes = (Map) new HashMap(classes).$initLabels();
+    codebases = (Map) new HashMap().$initLabels();
+    this.$updateLabel = updateLabel;
+    this.$accessPolicy = accessPolicy;
   }
   
   /* Should only be called at compile time */
@@ -56,5 +61,10 @@ public class Codebase {
 
   public Map/*String, FClass*/ getClasses() {
     return classes;
+  }
+  
+  public Object $initLabels() {
+    // Initialized in constructor.
+    return this;
   }
 }

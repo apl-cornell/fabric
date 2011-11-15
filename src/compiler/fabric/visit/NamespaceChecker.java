@@ -155,7 +155,7 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
 //        continue;
 //      
 //      Codebase depcb = depclass.getCodebase();
-//      if (!LabelUtil._Impl.relabelsTo(depclass.get$label(), depcb.get$label())) {
+//      if (!LabelUtil._Impl.relabelsTo(depclass.get$$updateLabel(), depcb.get$$updateLabel())) {
 //        Report.report(1, "WARNING: The label of class "
 //            + SysUtil.absoluteName(depclass)
 //            + " is more restrictive than the label of its codebase.");

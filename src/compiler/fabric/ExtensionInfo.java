@@ -47,7 +47,6 @@ import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
 import fabric.common.NSUtil;
-import fabric.common.SysUtil;
 import fabric.lang.FClass;
 import fabric.lang.security.LabelUtil;
 import fabric.parse.Grm;
@@ -222,8 +221,8 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
       throw new InternalCompilerError("Expected FClass.");
     
     FClass fcls = (FClass) obj;    
-    if (!LabelUtil._Impl.relabelsTo(fcls.get$label(), fcls.getCodebase()
-        .get$label())) {
+    if (!LabelUtil._Impl.relabelsTo(fcls.get$$updateLabel(), fcls.getCodebase()
+        .get$$updateLabel())) {
       // XXX: should we throw a more security-related exception here?
       throw new IOException("The label of class " + NSUtil.absoluteName(fcls)
           + " is higher than the label of its codebase ");

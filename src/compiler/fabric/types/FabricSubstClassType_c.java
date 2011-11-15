@@ -16,43 +16,33 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements Fabri
   }
   
   @Override
-  public Label singleFieldLabel() {
+  public Label classUpdateLabel() {
     FabricParsedClassType base = (FabricParsedClassType)base();
-    Label l = base.singleFieldLabel();
+    Label l = base.classUpdateLabel();
     if (l == null) return null;
     
     JifSubst subst = (JifSubst)subst();
-    return subst.substLabel(base.singleFieldLabel());
+    return subst.substLabel(base.classUpdateLabel());
   }
 
   @Override
-  public Label singleFabilFieldLabel() {
-    return singleFieldLabel();
-  }
-  
-  @Override
-  public Label singleFabilAccessLabel() {
-    return singleAccessLabel();
-  }
-
-  @Override
-  public Label singleAccessLabel() {
+  public Label classAccessLabel() {
     FabricParsedClassType base = (FabricParsedClassType)base();
-    Label l = base.singleAccessLabel();
+    Label l = base.classAccessLabel();
     if (l == null) return null;
     
     JifSubst subst = (JifSubst)subst();
-    return subst.substLabel(base.singleAccessLabel());
+    return subst.substLabel(base.classAccessLabel());
   }
 
   @Override
-  public Label getFoldedAccessLabel() {
+  public Label providerFoldedClassAccessLabel() {
     FabricParsedClassType base = (FabricParsedClassType)base();
-    Label l = base.getFoldedAccessLabel();
+    Label l = base.providerFoldedClassAccessLabel();
     if (l == null) return null;
     
     JifSubst subst = (JifSubst)subst();
-    return subst.substLabel(base.getFoldedAccessLabel());
+    return subst.substLabel(base.providerFoldedClassAccessLabel());
   }
 
   @Override

@@ -30,11 +30,11 @@ public interface FromDisjunctProof extends fabric.lang.security.ActsForProof {
         
         native public fabric.util.Map get$disjunctProofs();
         
-        _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
+        _Impl(fabric.worker.Store $location,
               fabric.lang.security.DisjunctivePrincipal actor,
               fabric.lang.security.Principal granter,
               fabric.util.Map disjunctProofs) {
-            super($location, $label, accessLabel, actor, granter);
+            super($location, actor, granter);
         }
         
         native public fabric.util.Map getDisjunctProofs();
@@ -81,10 +81,9 @@ public interface FromDisjunctProof extends fabric.lang.security.ActsForProof {
           implements fabric.lang.security.FromDisjunctProof._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

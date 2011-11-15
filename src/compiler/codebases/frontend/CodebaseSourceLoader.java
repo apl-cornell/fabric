@@ -10,7 +10,6 @@ import polyglot.frontend.FileSource;
 import polyglot.main.Report;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
-import fabric.Topics;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.lang.WrappedJavaInlineable;
@@ -19,7 +18,7 @@ import fabric.util.Map.Entry;
 import fabric.util.Set;
 
 public class CodebaseSourceLoader implements URISourceLoader {
-  protected static String[] TOPICS = new String[] {Report.loader, Topics.mobile};
+  protected static String[] TOPICS = new String[] {Report.loader, "mobile"};
 
   protected final ExtensionInfo extInfo;
   protected final URI ns;

@@ -20,6 +20,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.Pair;
 import fabric.lang.arrays.internal._InternalArrayImpl;
+import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
 import fabric.net.UnreachableNodeException;
@@ -49,11 +50,21 @@ public interface Object {
   /** @return an exact proxy for this object. */
   _Proxy $getProxy();
 
-  /** Label for this object */
-  Label get$label();
+  /** The label that protects this object at run time. */
+  Label get$$updateLabel();
+  Label set$$updateLabel(Label label);
   
-  /** Access Label for this object */
-  Label get$accesslabel();
+  /**
+   * The object's access policy, specifying the program contexts in which it is
+   * safe to use this object.
+   */
+  ConfPolicy get$$accessPolicy();
+  ConfPolicy set$$accessPolicy(ConfPolicy policy);
+  
+  /**
+   * Initializes the object's update label and access policy.
+   */
+  Object $initLabels();
 
   /** Whether this object is "equal" to another object. */
   boolean equals(Object o);
@@ -215,7 +226,7 @@ public interface Object {
     }
 
     @Override
-    public final Label get$label() {
+    public final Label get$$updateLabel() {
       // If the object hasn't been deserialized yet, avoid deserialization by
       // obtaining a reference to the object's access label directly from the
       // serialized object. We can do this without interacting with the
@@ -231,7 +242,12 @@ public interface Object {
     }
     
     @Override
-    public final Label get$accesslabel() {
+    public final Label set$$updateLabel(Label label) {
+      return fetch().set$$updateLabel(label);
+    }
+    
+    @Override
+    public final ConfPolicy get$$accessPolicy() {
       // If the object hasn't been deserialized yet, avoid deserialization by
       // obtaining a reference to the object's access label directly from the
       // serialized object. We can do this without interacting with the
@@ -241,9 +257,19 @@ public interface Object {
       // Paranoia: continually fetch in case the entry becomes evicted between
       // the fetchEntry() and the getAccessLabel().
       while (true) {
-        Label result = fetchEntry().getAccessLabel();
+        ConfPolicy result = fetchEntry().getAccessPolicy();
         if (result != null) return result;
       }
+    }
+    
+    @Override
+    public final ConfPolicy set$$accessPolicy(ConfPolicy policy) {
+      return fetch().set$$accessPolicy(policy);
+    }
+    
+    @Override
+    public Object $initLabels() {
+      return fetch().$initLabels();
     }
 
     @Override
@@ -366,9 +392,9 @@ public interface Object {
      */
     protected _Proxy $class;
 
-    protected Label $label;
+    protected Label $updateLabel;
     
-    protected Label $accessLabel;
+    protected ConfPolicy $accessPolicy;
 
     public int $version;
 
@@ -423,12 +449,16 @@ public interface Object {
      * The version number on the last update-map that was checked.
      */
     public int $updateMapVersion;
+    
+    /**
+     * A stack trace of where this object was created. Used for debugging.
+     */
+    public final StackTraceElement[] $stackTrace;
 
     /**
      * A private constructor for initializing transaction-management state.
      */
-    private _Impl(Store store, long onum, int version, long expiry,
-        Label label, Label accessLabel) {
+    private _Impl(Store store, long onum, int version, long expiry) {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
@@ -441,45 +471,28 @@ public interface Object {
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
       this.$updateMapVersion = -1;
-
-      // By default, update labels are public read-only.
-      if (label == null && this instanceof Label)
-        label = Worker.getWorker().getLocalStore().getPublicReadonlyLabel();
-
-      if (label == null) throw new InternalError("Null update label!");
-
-      // By default, access labels are public read-only.
-      if (accessLabel == null && this instanceof Label)
-        accessLabel = Worker.getWorker().getLocalStore().getPublicReadonlyLabel();
-
-      if (accessLabel == null) throw new InternalError("Null access label!");
-
-      if (!(store instanceof LocalStore)) {
-        if (label.$getStore() instanceof LocalStore
-          && !ONumConstants.isGlobalConstant(label.$getOnum()))
-          throw new InternalError("Remote object has local update label");
-
-        if (accessLabel.$getStore() instanceof LocalStore
-            && !ONumConstants.isGlobalConstant(accessLabel.$getOnum()))
-          throw new InternalError("Remote object has local access label");
-      }
-      this.$label = label;
-      this.$accessLabel = accessLabel;
+      
+      if (TRACE_OBJECTS)
+        this.$stackTrace = Thread.currentThread().getStackTrace();
+      else this.$stackTrace = null;
     }
+    
+    /**
+     * A debugging switch for storing a stack trace each time an _Impl is
+     * created. This is enabled by passing "--trace-objects" as a command-line
+     * argument to the worker.
+     */
+    public static boolean TRACE_OBJECTS = false;
 
     /**
      * Creates a new Fabric object that will reside on the given Store.
      * 
      * @param store
      *          the location for the object
-     * @param label
-     *          the security label for the object
-     * @param accessLabel
-     *          the access label for the object
      */
-    public _Impl(Store store, Label label, Label accessLabel)
+    public _Impl(Store store)
         throws UnreachableNodeException {
-      this(store, store.createOnum(), 0, 0, label, accessLabel);
+      this(store, store.createOnum(), 0, 0);
       store.cache(this);
 
       // Register the new object with the transaction manager.
@@ -496,6 +509,18 @@ public interface Object {
       } catch (Exception e) {
         throw new InternalError(e);
       }
+    }
+    
+    @Override
+    public Object $initLabels() {
+      // Update label is public, untrusted.
+      set$$updateLabel(Worker.getWorker().getLocalStore().getEmptyLabel());
+      
+      // Access policy is public.
+      set$$accessPolicy(Worker.getWorker().getLocalStore()
+          .getBottomConfidPolicy());
+      
+      return $getProxy();
     }
 
     /**
@@ -570,13 +595,31 @@ public interface Object {
     }
 
     @Override
-    public final Label get$label() {
-      return $label;
+    public final Label get$$updateLabel() {
+      return $updateLabel;
     }
     
     @Override
-    public final Label get$accesslabel() {
-      return $accessLabel;
+    public final Label set$$updateLabel(Label label) {
+      TransactionManager tm = TransactionManager.getInstance();
+      boolean transactionCreated = tm.registerWrite(this);
+      this.$updateLabel = label;
+      if (transactionCreated) tm.commitTransaction();
+      return label;
+    }
+    
+    @Override
+    public final ConfPolicy get$$accessPolicy() {
+      return $accessPolicy;
+    }
+    
+    @Override
+    public final ConfPolicy set$$accessPolicy(ConfPolicy policy) {
+      TransactionManager tm = TransactionManager.getInstance();
+      boolean transactionCreated = tm.registerWrite(this);
+      this.$accessPolicy = policy;
+      if (transactionCreated) tm.commitTransaction();
+      return policy;
     }
 
     public final int $getVersion() {
@@ -648,8 +691,10 @@ public interface Object {
      *          The object's onum.
      * @param version
      *          The object's version number.
-     * @param label
-     *          Onum of the object's label.
+     * @param updateLabel
+     *          Onum of the object's update label.
+     * @param accessPolicy
+     *          onum of the object's access policy.
      * @param serializedInput
      *          A stream of serialized primitive values and inlined objects.
      * @param refTypes
@@ -661,12 +706,13 @@ public interface Object {
      *          onum.
      */
     @SuppressWarnings("unused")
-    public _Impl(Store store, long onum, int version, long expiry, long label,
-        long accessLabel, ObjectInput serializedInput,
+    public _Impl(Store store, long onum, int version, long expiry,
+        long updateLabel, long accessPolicy, ObjectInput serializedInput,
         Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs)
         throws IOException, ClassNotFoundException {
-      this(store, onum, version, expiry, new Label._Proxy(store, label),
-          new Label._Proxy(store, accessLabel));
+      this(store, onum, version, expiry);
+      this.$updateLabel =  new Label._Proxy(store, updateLabel);
+      this.$accessPolicy = new ConfPolicy._Proxy(store, accessPolicy);
     }
     
     /**
@@ -776,7 +822,7 @@ public interface Object {
         out.writeObject(obj.$unwrap());
         return;
       }
-
+      
       _Proxy p = (_Proxy) obj;
       if (ONumConstants.isGlobalConstant(p.ref.onum) || p.ref.store.equals(store)) {
         // Intra-store reference.
@@ -870,18 +916,17 @@ public interface Object {
           @Override
           public Object run() throws Throwable {
             Constructor<? extends Object._Impl> constr =
-              c.getConstructor(Store.class, Label.class, Label.class);
-            Label emptyLabel = store.getEmptyLabel();
-            return constr.newInstance(store, emptyLabel, emptyLabel);
+              c.getConstructor(Store.class);
+            return constr.newInstance(store);
           }
         });
       }
     }
 
     public static class _Impl extends Object._Impl implements _Static {
-      public _Impl(Store store, Label label, Label accessLabel)
+      public _Impl(Store store)
           throws UnreachableNodeException {
-        super(store, label, accessLabel);
+        super(store);
       }
 
       @Override

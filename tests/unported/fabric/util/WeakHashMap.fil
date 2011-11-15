@@ -67,7 +67,7 @@ public class WeakHashMap extends AbstractMap implements Map
    * to distinguish between an null key and a removed key.
    */
   // Package visible for use by nested classes.
-  static final Object NULL_KEY = new Object()
+  static final Object NULL_KEY = (Object) new Object()
   {
     /**
      * Sets the hashCode to 0, since that's what null would map to.
@@ -88,7 +88,17 @@ public class WeakHashMap extends AbstractMap implements Map
     {
       return null == o || this == o;
     }
-  };
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
+  }.$initLabels();
 
   /**
    * The reference queue where our buckets (which are WeakReferences) are
@@ -157,7 +167,7 @@ public class WeakHashMap extends AbstractMap implements Map
      */
     public Iterator iterator(fabric.worker.Store store)
     {
-      return new Iterator@store()
+      return (Iterator) new Iterator@store()
       {
         /**
          * The entry that was returned by the last
@@ -294,7 +304,27 @@ public class WeakHashMap extends AbstractMap implements Map
           lastEntry = null;
           knownMod++;
         }
-      };
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
+	}
+      }.$initLabels();
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }
 
@@ -455,7 +485,17 @@ public class WeakHashMap extends AbstractMap implements Map
       final Object key = this.get();
       if (key == null)
         return null;
-      return new WeakEntry(key);
+      return (WeakEntry) new WeakEntry(key).$initLabels();
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }
 
@@ -507,8 +547,8 @@ public class WeakHashMap extends AbstractMap implements Map
       initialCapacity = 1;
     this.loadFactor = loadFactor;
     threshold = (int) (initialCapacity * loadFactor);
-    theEntrySet = new WeakEntrySet();
-    queue = new ReferenceQueue();
+    theEntrySet = (WeakEntrySet) new WeakEntrySet().$initLabels();
+    queue = (ReferenceQueue) new ReferenceQueue().$initLabels();
     buckets = new WeakBucket[initialCapacity];
   }
 
@@ -633,7 +673,7 @@ public class WeakHashMap extends AbstractMap implements Map
     if (key == null)
       key = NULL_KEY;
     int slot = hash(key);
-    WeakBucket bucket = new WeakBucket(key, queue, value, slot);
+    WeakBucket bucket = (WeakBucket) new WeakBucket(key, queue, value, slot).$initLabels();
     bucket.next = buckets[slot];
     buckets[slot] = bucket;
     size++;
@@ -835,5 +875,15 @@ public class WeakHashMap extends AbstractMap implements Map
   {
     cleanQueue();
     return super.values();
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 } // class WeakHashMap

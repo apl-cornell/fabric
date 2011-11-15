@@ -18,7 +18,7 @@ public final class ConjunctivePrincipal extends Principal {
   }
 
   public String name() {
-    StringBuffer sb = new StringBuffer@localStore();
+    StringBuffer sb = new StringBuffer();
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
       sb.append(PrincipalUtil.toString(p));
@@ -68,7 +68,7 @@ public final class ConjunctivePrincipal extends Principal {
   }
 
   public ActsForProof findProofUpto(Store store, Principal p, java.lang.Object searchState) {
-    Map proofs = new HashMap@store();
+    Map proofs = (HashMap) new HashMap@store().$initLabels();
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
       Principal q = (Principal) iter.next();
       ActsForProof prf = PrincipalUtil.findActsForProof(store, p, q, searchState);
@@ -78,7 +78,7 @@ public final class ConjunctivePrincipal extends Principal {
 
     // proofs contains a proof for every conjunct,
     // which is sufficent for a proof to the conjunctive principal
-    return new ToConjunctProof@store(p, this, proofs);
+    return (ToConjunctProof) new ToConjunctProof@store(p, this, proofs).$initLabels();
 
   }
 
@@ -89,10 +89,20 @@ public final class ConjunctivePrincipal extends Principal {
           PrincipalUtil.findActsForProof(store, witness, q, searchState);
       if (prf != null) {
         // have found a proof from witness to q
-        DelegatesProof step = new DelegatesProof@store(this, witness);
-        return new TransitiveProof@store(step, witness, prf);
+        DelegatesProof step = (DelegatesProof) new DelegatesProof@store(this, witness).$initLabels();
+        return (TransitiveProof) new TransitiveProof@store(step, witness, prf).$initLabels();
       }
     }
     return null;
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

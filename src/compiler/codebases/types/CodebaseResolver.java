@@ -51,6 +51,6 @@ public class CodebaseResolver extends SimpleResolver implements
   
   @Override
   public Label label() {
-    return codebase.get$label();
+    return codebase.get$$updateLabel();
   }
 }

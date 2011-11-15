@@ -56,7 +56,7 @@ public final class UUID
   /**
    * Random-number generator.
    */
-  private static transient Random r = new Random();
+  private static transient Random r = (Random) new Random().$initLabels();
 
   /**
    * Constructs a new UUID.
@@ -134,7 +134,7 @@ public final class UUID
    */
   public static UUID fromString(String name)
   {
-    StringTokenizer st = new StringTokenizer( name.trim(), "-" );
+    StringTokenizer st = (StringTokenizer) new StringTokenizer( name.trim(), "-" ).$initLabels();
     if ( st.countTokens() < 5 )
       throw new IllegalArgumentException( "Incorrect UUID string"+
 					  " representation:"+name );
@@ -146,7 +146,7 @@ public final class UUID
     long lsb = (Long.parseLong(st.nextToken(), 16) << 48); // clock
     lsb |= Long.parseLong(st.nextToken(), 16); // node
 
-    return new UUID(msb, lsb);
+    return (UUID) new UUID(msb, lsb).$initLabels();
   }
 
   /**
@@ -241,7 +241,7 @@ public final class UUID
     msb &= 0xFFFFFFFFFFFF0FFFL; 
     msb |= 0x3000; // Version 3; 
 
-    return new UUID(msb, lsb);
+    return (UUID) new UUID(msb, lsb).$initLabels();
   }
 
   /**
@@ -292,7 +292,7 @@ public final class UUID
     msb &= 0xFFFFFFFFFFFF0FFFL; 
     msb |= 0x4000; // Version 4; 
 
-    return new UUID( msb, lsb );
+    return (UUID) new UUID( msb, lsb ).$initLabels();
   }
 
   /**
@@ -341,5 +341,15 @@ public final class UUID
   public int version()
   {
     return (int)((mostSigBits & 0xF000L) >> 12);
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

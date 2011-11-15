@@ -19,8 +19,8 @@ import fabric.util.Map;
 import fabric.worker.Worker;
 
 /**
- * Rewrites <code>ProviderLabel</code> AST nodes into <code>get$label()</code>
- * calls on class object proxies.
+ * Rewrites <code>ProviderLabel</code> AST nodes into
+ * <code>get$$updateLabel()</code> calls on class object proxies.
  */
 public class ProviderRewriter extends NodeVisitor {
 
@@ -60,13 +60,13 @@ public class ProviderRewriter extends NodeVisitor {
       String storeName = fclass.$getStore().name();
       long onum = fclass.$getOnum();
       
-      // Emit a call to get$label() on an appropriate proxy object.
+      // Emit a call to get$$updateLabel() on an appropriate proxy object.
       Expr store =
           qq.parseExpr("fabric.worker.Worker.getWorker().getStore(\"" + storeName
               + "\")");
       Expr fclassProxy =
           qq.parseExpr("new fabric.lang.FClass._Proxy(%E, " + onum + ")", store);
-      return qq.parseExpr("%E.get$label()", fclassProxy);
+      return qq.parseExpr("%E.get$$updateLabel()", fclassProxy);
     }
     else {
       return qq.parseExpr("fabric.lang.security.LabelUtil._Impl.toLabel(" +

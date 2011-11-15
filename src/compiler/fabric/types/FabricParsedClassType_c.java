@@ -68,7 +68,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
    * It computes this by taking a join of all labels concerned.
    */
   @Override
-  public Label singleFieldLabel() {
+  public Label classUpdateLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
     if (!fieldLabelFound) {
@@ -79,7 +79,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
             ts.bottomConfPolicy(Position.compilerGenerated()),
             ts.topIntegPolicy(Position.compilerGenerated()));
         
-        Label superLabel = superType == null ? classLabel : superType.singleFieldLabel();
+        Label superLabel = superType == null ? classLabel : superType.classUpdateLabel();
         
         for (FieldInstance fi : fields()) {
           if (fi.flags().isStatic()) continue;
@@ -104,7 +104,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
    */
   @SuppressWarnings("unchecked")
   @Override
-  public Label singleAccessLabel() {
+  public Label classAccessLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
     if (!accessLabelFound) {
@@ -115,7 +115,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
             ts.bottomConfPolicy(Position.compilerGenerated()),
             ts.topIntegPolicy(Position.compilerGenerated()));
 
-        Label superAccessLabel = superType == null ? classAccessLabel : superType.singleAccessLabel();
+        Label superAccessLabel = superType == null ? classAccessLabel : superType.classAccessLabel();
 
         for (FieldInstance fi_ : fields()) {
           if (fi_.flags().isStatic()) continue;
@@ -148,8 +148,8 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   // TODO The provider label should actually be folded into the access labels
   // since each field of a class will be accessed from some method of the class, no?
   @Override
-  public Label getFoldedAccessLabel() {
-    return singleAccessLabel();
+  public Label providerFoldedClassAccessLabel() {
+    return classAccessLabel();
     // XXX: this code folded in the provider label to the access label. This is
     // probably the wrong thing, but it is true that accessing the class object
     // represents a read channel. We'll just use the regular access label for
@@ -168,28 +168,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     //    }
     //    providerLabelFolded = true;
     //    return singleAccessLabel;
-  }
-
-  // XXX Why do we need these fabil'ed versions?
-  @Override
-  public Label singleFabilAccessLabel() {
-    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
-    if (isSubtype(ts.DelegatingPrincipal())) {
-      singleAccessLabel = null;
-      // recompute the access label
-    }
-    return singleAccessLabel();
-  }
-  
-  
-  @Override
-  public Label singleFabilFieldLabel() {
-    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
-    if (isSubtype(ts.DelegatingPrincipal())) {
-      singleFieldLabel = null;
-      // recompute the field label
-    }
-    return singleFieldLabel();
   }
   
   @SuppressWarnings("unchecked")

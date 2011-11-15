@@ -10,11 +10,11 @@ public class PrincipalSet {
   private Set set;
 
   public PrincipalSet() {
-    set = new LinkedHashSet();
+    set = (LinkedHashSet) new LinkedHashSet().$initLabels();
   }
 
   public PrincipalSet add(Principal p) {
-    PrincipalSet ps = new PrincipalSet();
+    PrincipalSet ps = (PrincipalSet) new PrincipalSet().$initLabels();
     ps.set.addAll(set);
     ps.set.add(p);
     return ps;
@@ -22,5 +22,15 @@ public class PrincipalSet {
 
   Set getSet() {
     return set;
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

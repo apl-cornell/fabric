@@ -1,9 +1,9 @@
 package broker;
-public class Offer [label L] {
-    public final int {L}@{L;⊥←} price; // just price
-    public final int {L}@{L;⊥←} quality; // 0 = economy, 1 = business, 2 = first
+public class Offer [label Auction] where provider <= Auction {
+    public final int {Auction}@{Auction;⊥←} price; // just price
+    public final int {Auction}@{Auction;⊥←} quality; // 0 = economy, 1 = business, 2 = first
 
-    public Offer (int {L} price, int{L} quality) {
+    public Offer (int {Auction} price, int{Auction} quality) {
 		this.price = price;
 		this.quality = quality; 
     }

@@ -15,38 +15,37 @@ public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
 
   Atomic Atomic(Position pos, List<Stmt> statements);
 
-  New New(Position pos, TypeNode type, Expr label, Expr accessLabel, Expr location,
+  New New(Position pos, TypeNode type, Expr location, List<Expr> args);
+
+  New New(Position pos, TypeNode type, Expr location, List<Expr> args,
+      ClassBody body);
+
+  New New(Position pos, Expr outer, TypeNode objectType, Expr location,
       List<Expr> args);
 
-  New New(Position pos, TypeNode type, Expr label, Expr accessLabel, Expr location,
+  New New(Position pos, Expr outer, TypeNode objectType, Expr location,
       List<Expr> args, ClassBody body);
-
-  New New(Position pos, Expr outer, TypeNode objectType, Expr label, Expr accessLabel,
-      Expr location, List<Expr> args);
-
-  New New(Position pos, Expr outer, TypeNode objectType, Expr label, Expr accessLabel,
-      Expr location, List<Expr> args, ClassBody body);
 
   /**
    * Creates an AST node representing the creation of a Fabric array.
    */
   NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr accessLabel, Expr location, List<Expr> dims);
+      Expr label, Expr accessPolicy, Expr location, List<Expr> dims);
 
   NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr accessLabel, Expr location, List<Expr> dims, int addDims);
+      Expr label, Expr accessPolicy, Expr location, List<Expr> dims, int addDims);
 
   NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr accessLabel, Expr location, int addDims, FabricArrayInit init);
+      Expr label, Expr accessPolicy, Expr location, int addDims, FabricArrayInit init);
   
-  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label, Expr accessLabel,
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr updateLabel, Expr accessPolicy,
       Expr location, List<Expr> dims, int addDims, FabricArrayInit init);
   
 
   FabricArrayInit FabricArrayInit(Position position, List<Expr> elements);
 
   FabricArrayInit FabricArrayInit(Position position, Expr label,
-      Expr accessLabel, Expr location, List<Expr> elements);
+      Expr accessPolicy, Expr location, List<Expr> elements);
 
   RetryStmt RetryStmt(Position pos);
 

@@ -11,10 +11,8 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
-  // These should be final, but aren't to allow for the implementation of
-  // clobberThisPlaceholders().
-  private Principal owner;
-  private Principal reader;
+  private final Principal owner;
+  private final Principal reader;
 
   public ReaderPolicy(Principal owner, Principal reader) {
     this.owner = owner;
@@ -131,13 +129,13 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
     return LabelUtil.meetPol(store, this, p);
   }
 
-  public void clobberThisPlaceholders(Principal replacement) {
-    if (owner instanceof ThisPrincipalPlaceholder) {
-      owner = replacement;
-    }
-    
-    if (reader instanceof ThisPrincipalPlaceholder) {
-      reader = replacement;
-    }
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

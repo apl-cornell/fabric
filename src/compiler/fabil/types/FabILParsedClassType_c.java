@@ -120,13 +120,13 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
       String storeName = fclass.$getStore().name();
       long onum = fclass.$getOnum();
 
-      // Emit a call to get$label() on an appropriate proxy object.
+      // Emit a call to get$$updateLabel() on an appropriate proxy object.
       Expr store =
           qq.parseExpr("fabric.worker.Worker.getWorker().getStore(\""
               + storeName + "\")");
       Expr fclassProxy =
           qq.parseExpr("new fabric.lang.FClass._Proxy(%E, " + onum + ")", store);
-      return qq.parseExpr("%E.get$label()", fclassProxy);
+      return qq.parseExpr("%E.get$$updateLabel()", fclassProxy);
     } else {
       return qq
           .parseExpr("fabric.lang.security.LabelUtil._Impl.toLabel(fabric.worker.Worker.getWorker().getLocalStore(),fabric.lang.security.LabelUtil._Impl.topInteg())");

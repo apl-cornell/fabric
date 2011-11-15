@@ -238,9 +238,7 @@ public final class LocalStore implements Store {
 
         // Create the object representing the top principal.
         topPrincipal =
-            (Principal) new TopPrincipal._Impl(LocalStore.this,
-                publicReadonlyLabel, LocalStore.this.publicReadonlyLabel)
-                .$getProxy();
+            (Principal) new TopPrincipal._Impl(LocalStore.this).$initLabels();
         topPrincipal.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 
         // Create the object representing the bottom confidentiality policy.
@@ -282,17 +280,11 @@ public final class LocalStore implements Store {
         // Create the label {worker->_; worker<-_} for the root map.
         // No need to renumber this. References to the local store's root map
         // should not be leaking to remote stores.
-        Principal workerPrincipal = Worker.getWorker().getPrincipal();
-        ConfPolicy conf =
-            LabelUtil._Impl.readerPolicy(LocalStore.this, workerPrincipal,
-                (Principal) null);
-        IntegPolicy integ =
-            LabelUtil._Impl.writerPolicy(LocalStore.this, workerPrincipal,
-                (Principal) null);
-        Label label = LabelUtil._Impl.toLabel(LocalStore.this, conf, integ);
-
+        // XXX the above is not being done. HashMap needs to be parameterized on labels.
+        
+        // Create root map.
         rootMap =
-            (Map) new HashMap._Impl(LocalStore.this, label, label).$getProxy();
+            (Map) new HashMap._Impl(LocalStore.this).$initLabels();
         localDelegates = new HashSet<Pair<Principal, Principal>>();
 
         return null;

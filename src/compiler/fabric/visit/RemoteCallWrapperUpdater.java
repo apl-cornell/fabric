@@ -130,6 +130,10 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         //          }
         
         for (Assertion as : mi.constraints()) {
+          if (ts.containsThisLabel(as)) {
+            pct.removeMethod(mi);
+            return null;
+          }
           if (as instanceof CallerConstraint) {
             CallerConstraint cc = (CallerConstraint)as;
             for (Principal p : cc.principals()) {

@@ -84,9 +84,9 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @Override
   public FabricArrayInit FabricArrayInit(Position pos, Expr label,
-      Expr accessLabel, Expr location, List<Expr> elements) {
+      Expr accessPolicy, Expr location, List<Expr> elements) {
     FabricArrayInit ai =
-        new FabricArrayInit_c(pos, elements, label, accessLabel, location);
+        new FabricArrayInit_c(pos, elements, label, accessPolicy, location);
     ai = (FabricArrayInit) ai.ext(extFactory().extFabricArrayInit());
     ai = (FabricArrayInit) ai.del(delFactory().delFabricArrayInit());
     return ai;
@@ -137,11 +137,12 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @Override
   @SuppressWarnings("unchecked")
-  public NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label, Expr accessLabel,
-      Expr location, List<Expr> dims, int addDims, FabricArrayInit init) {
+  public NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label,
+      Expr accessPolicy, Expr location, List<Expr> dims, int addDims,
+      FabricArrayInit init) {
     NewFabricArray result =
         new NewFabricArray_c(pos, base, CollectionUtil.nonNullList(dims),
-            addDims, init, label, accessLabel, location);
+            addDims, init, label, accessPolicy, location);
     result = (NewFabricArray) result.ext(extFactory().extNewFabricArray());
     result = (NewFabricArray) result.del(delFactory().delNewArray());
     return result;
@@ -149,11 +150,11 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @Override
   @SuppressWarnings("unchecked")
-  public New New(Position pos, Expr outer, TypeNode objectType, Expr label, Expr accessLabel,
+  public New New(Position pos, Expr outer, TypeNode objectType,
       Expr location, List<Expr> args, ClassBody body) {
     New n =
         new New_c(pos, outer, objectType, CollectionUtil.nonNullList(args),
-            body, label, accessLabel, location);
+            body, location);
     n = (New) n.ext(extFactory().extNew());
     n = (New) n.del(delFactory().delNew());
 
@@ -166,44 +167,44 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   @Override
   public New New(Position pos, Expr outer, TypeNode objectType,
       @SuppressWarnings("rawtypes") List args, ClassBody body) {
-    return New(pos, outer, objectType, null, null, null, args, body);
+    return New(pos, outer, objectType, null, args, body);
   }
 
   @Override
-  public New New(Position pos, TypeNode objectType, Expr label, Expr accessLabel, Expr location,
+  public New New(Position pos, TypeNode objectType, Expr location,
       List<Expr> args) {
-    return New(pos, null, objectType, label, accessLabel, location, args);
+    return New(pos, null, objectType, location, args);
   }
 
   @Override
-  public New New(Position pos, Expr outer, TypeNode objectType, Expr label, Expr accessLabel,
+  public New New(Position pos, Expr outer, TypeNode objectType,
       Expr location, List<Expr> args) {
-    return New(pos, outer, objectType, label, accessLabel, location, args, null);
+    return New(pos, outer, objectType, location, args, null);
   }
 
   @Override
-  public New New(Position pos, TypeNode type, Expr label, Expr accessLabel, Expr location,
+  public New New(Position pos, TypeNode type, Expr location,
       List<Expr> args, polyglot.ast.ClassBody body) {
-    return New(pos, null, type, label, accessLabel, location, args, body);
+    return New(pos, null, type, location, args, body);
   }
 
   @Override
   public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr accessLabel, Expr location, List<Expr> dims) {
-    return NewFabricArray(pos, base, label, accessLabel, location, dims, 0, null);
+      Expr label, Expr accessPolicy, Expr location, List<Expr> dims) {
+    return NewFabricArray(pos, base, label, accessPolicy, location, dims, 0, null);
   }
 
   @Override
   public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr accessLabel, Expr location, List<Expr> dims, int addDims) {
-    return NewFabricArray(pos, base, label, accessLabel, location, dims, addDims, null);
+      Expr label, Expr accessPolicy, Expr location, List<Expr> dims, int addDims) {
+    return NewFabricArray(pos, base, label, accessPolicy, location, dims, addDims, null);
   }
 
   @Override
   public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr accessLabel, Expr location, int addDims, FabricArrayInit init) {
+      Expr label, Expr accessPolicy, Expr location, int addDims, FabricArrayInit init) {
     List<Expr> emptyList = Collections.emptyList();
-    return NewFabricArray(pos, base, label, accessLabel, location, emptyList, addDims, init);
+    return NewFabricArray(pos, base, label, accessPolicy, location, emptyList, addDims, init);
   }
   
   @Override

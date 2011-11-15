@@ -35,7 +35,7 @@ public class Runtime {
 //            throw new SecurityException("The current user does not act for "
 //                    + p.name() + ".");
 //        }
-        return new Runtime(p);
+        return (Runtime) new Runtime(p).$initLabels();
     }
 
     /** Get the current user  */
@@ -44,11 +44,11 @@ public class Runtime {
     }
 
     private Label defaultOutputLabel() {
-        ConfPolicy cp = LabelUtil.readerPolicy(local, dynp, new LinkedList());
+        ConfPolicy cp = LabelUtil.readerPolicy(local, dynp, (LinkedList) new LinkedList().$initLabels());
         return LabelUtil.toLabel(local, cp);
     }
     private Label defaultInputLabel() {
-        IntegPolicy ip = LabelUtil.writerPolicy(local, dynp, new LinkedList());
+        IntegPolicy ip = LabelUtil.writerPolicy(local, dynp, (LinkedList) new LinkedList().$initLabels());
         return LabelUtil.toLabel(local, ip);
     }
 
@@ -218,4 +218,14 @@ public class Runtime {
             // System.err.println(ule.getLocalizedMessage());
         }
     }   
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
 }

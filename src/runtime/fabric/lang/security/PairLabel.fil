@@ -30,7 +30,7 @@ public final class PairLabel implements Label {
     if (confPol == localStore.getBottomConfidPolicy()) {
       this.keyObject = null;
     } else {
-      this.keyObject = new SecretKeyObject~this();
+      this.keyObject = (SecretKeyObject) new SecretKeyObject().$initLabels();
     }
   }
 
@@ -95,9 +95,14 @@ public final class PairLabel implements Label {
   public SecretKeyObject keyObject() {
     return keyObject;
   }
-  
-  public void clobberThisPlaceholders(Principal replacement) {
-    confPol.clobberThisPlaceholders(replacement);
-    integPol.clobberThisPlaceholders(replacement);
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

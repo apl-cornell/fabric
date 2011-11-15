@@ -14,8 +14,6 @@ public interface MeetPolicy
     
     public boolean relabelsTo(fabric.lang.security.Policy pol, java.util.Set s);
     
-    public void clobberThisPlaceholders(Principal replacement);
-    
     public boolean equals(fabric.lang.Object o);
     
     public int hashCode();
@@ -38,8 +36,6 @@ public interface MeetPolicy
         native public boolean relabelsTo(fabric.lang.security.Policy arg1,
                                          java.util.Set arg2);
         
-        native public void clobberThisPlaceholders(Principal replacement);
-        
         final native public java.lang.String toString();
         
         public _Proxy(MeetPolicy._Impl impl) { super(impl); }
@@ -60,17 +56,15 @@ public interface MeetPolicy
         
         native public fabric.worker.Store get$localStore();
         
-        _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label, fabric.lang.security.Label accessLabel,
+        _Impl(fabric.worker.Store $location,
               fabric.util.Set policies) {
-            super($location, $label, accessLabel);
+            super($location);
         }
         
         native public fabric.util.Set meetComponents();
         
         native public boolean relabelsTo(fabric.lang.security.Policy pol,
                                          java.util.Set s);
-        
-        native public void clobberThisPlaceholders(Principal replacement);
         
         native public boolean equals(fabric.lang.Object o);
         
@@ -117,10 +111,9 @@ public interface MeetPolicy
           implements fabric.lang.security.MeetPolicy._Static
         {
             
-            public _Impl(fabric.worker.Store store,
-                         fabric.lang.security.Label label, fabric.lang.security.Label accessLabel)
+            public _Impl(fabric.worker.Store store)
                   throws fabric.net.UnreachableNodeException {
-                super(store, label, accessLabel);
+                super(store);
             }
             
             native protected fabric.lang.Object._Proxy $makeProxy();

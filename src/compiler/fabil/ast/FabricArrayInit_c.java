@@ -24,7 +24,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
 
   protected Expr location;
   protected Expr label;
-  protected Expr accessLabel;
+  protected Expr accessPolicy;
 
   public FabricArrayInit_c(Position pos, List<Expr> elements, Expr label,
       Expr accessLabel, Expr location) {
@@ -32,7 +32,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
 
     this.location = location;
     this.label = label;
-    this.accessLabel = accessLabel;
+    this.accessPolicy = accessLabel;
   }
 
   @Override
@@ -53,26 +53,26 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   }
 
   @Override
-  public Expr label() {
+  public Expr updateLabel() {
     return label;
   }
 
   @Override
-  public FabricArrayInit_c label(Expr label) {
+  public FabricArrayInit_c updateLabel(Expr label) {
     FabricArrayInit_c n = (FabricArrayInit_c) copy();
     n.label = label;
     return n;
   }
   
   @Override
-  public Expr accessLabel() {
-    return accessLabel;
+  public Expr accessPolicy() {
+    return accessPolicy;
   }
 
   @Override
-  public FabricArrayInit_c accessLabel(Expr accessLabel) {
+  public FabricArrayInit_c accessPolicy(Expr accessLabel) {
     FabricArrayInit_c n = (FabricArrayInit_c) copy();
-    n.accessLabel = accessLabel;
+    n.accessPolicy = accessLabel;
     return n;
   }
 
@@ -83,12 +83,12 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
       Expr label, Expr accessLabel) {
     if (!CollectionUtil.equals(elements, this.elements)
         || location != this.location || label != this.label
-        || accessLabel != this.accessLabel) {
+        || accessLabel != this.accessPolicy) {
       FabricArrayInit_c n = (FabricArrayInit_c) copy();
       n.elements = TypedList.copyAndCheck(elements, Expr.class, true);
       n.location = location;
       n.label = label;
-      n.accessLabel = accessLabel;
+      n.accessPolicy = accessLabel;
       return n;
     }
 
@@ -101,7 +101,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
     List<Expr> elements = visitList(this.elements, v);
     Expr location = (Expr) visitChild(this.location, v);
     Expr label = (Expr) visitChild(this.label, v);
-    Expr accessLabel = (Expr) visitChild(this.accessLabel, v);
+    Expr accessLabel = (Expr) visitChild(this.accessPolicy, v);
     return reconstruct(elements, location, label, accessLabel);
   }
 
@@ -123,9 +123,9 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
       }
     }
 
-    if (accessLabel != null) {
-      if (!ts.isImplicitCastValid(accessLabel.type(), ts.Label())) {
-        throw new SemanticException("Invalid access policy.", accessLabel.position());
+    if (accessPolicy != null) {
+      if (!ts.isImplicitCastValid(accessPolicy.type(), ts.ConfPolicy())) {
+        throw new SemanticException("Invalid access policy.", accessPolicy.position());
       }
     }
 
@@ -143,7 +143,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
     
     if (child == location) return ts.Store();
     if (child == label) return ts.Label();
-    if (child == accessLabel) return ts.Label();
+    if (child == accessPolicy) return ts.ConfPolicy();
 
     Type t = av.toType();
     Type baseType = t.toArray().base();
@@ -157,9 +157,9 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   public List acceptCFG(CFGBuilder v, List succs) {
     Term last = null;
     
-    if (accessLabel != null) {
-      v.visitCFGList(elements, accessLabel, ENTRY);
-      last = accessLabel;
+    if (accessPolicy != null) {
+      v.visitCFGList(elements, accessPolicy, ENTRY);
+      last = accessPolicy;
     }
 
     if (label != null) {
@@ -193,7 +193,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   @Override
   public Node copy(NodeFactory nf) {
     FabILNodeFactory filNf = (FabILNodeFactory) nf;
-    return filNf.FabricArrayInit(this.position, this.label, this.accessLabel,
+    return filNf.FabricArrayInit(this.position, this.label, this.accessPolicy,
         this.location, this.elements);
   }
 

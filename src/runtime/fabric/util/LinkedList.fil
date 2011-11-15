@@ -78,6 +78,16 @@ public class LinkedList extends AbstractSequentialList
     {
       this.data = data;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   } // class Entry
 
   /**
@@ -272,7 +282,7 @@ public class LinkedList extends AbstractSequentialList
    */
   public void addFirst(Object o)
   {
-    Entry e = new Entry(o);
+    Entry e = (Entry) new Entry(o).$initLabels();
 
     modCount++;
     if (size == 0)
@@ -293,7 +303,7 @@ public class LinkedList extends AbstractSequentialList
    */
   public void addLast(Object o)
   {
-    addLastEntry(new Entry(o));
+    addLastEntry((Entry) new Entry(o).$initLabels());
   }
 
   /**
@@ -352,7 +362,7 @@ public class LinkedList extends AbstractSequentialList
    */
   public boolean add(Object o)
   {
-    addLastEntry(new Entry(o));
+    addLastEntry((Entry) new Entry(o).$initLabels());
     return true;
   }
 
@@ -429,7 +439,7 @@ public class LinkedList extends AbstractSequentialList
     // to the first entry, in order to deal with the case where (c == this).
     // [Actually, we don't have to handle this case to fufill the
     // contract for addAll(), but Sun's implementation appears to.]
-    Entry e = new Entry(itr.next());
+    Entry e = (Entry) new Entry(itr.next()).$initLabels();
     e.previous = before;
     Entry prev = e;
     Entry firstNew = e;
@@ -437,7 +447,7 @@ public class LinkedList extends AbstractSequentialList
     // Create and link all the remaining entries.
     for (int pos = 1; pos < csize; pos++)
       {
-        e = new Entry(itr.next());
+        e = (Entry) new Entry(itr.next()).$initLabels();
         e.previous = prev;
         prev.next = e;
         prev = e;
@@ -513,7 +523,7 @@ public class LinkedList extends AbstractSequentialList
   public void add(int index, Object o)
   {
     checkBoundsInclusive(index);
-    Entry e = new Entry(o);
+    Entry e = (Entry) new Entry(o).$initLabels();
 
     if (index < size)
       {
@@ -599,7 +609,7 @@ public class LinkedList extends AbstractSequentialList
   public ListIterator listIterator(fabric.worker.Store store, int index)
   {
     checkBoundsInclusive(index);
-    return new LinkedListItr@store(index);
+    return (LinkedListItr) new LinkedListItr@store(index).$initLabels();
   }
 
 //  /**
@@ -704,7 +714,7 @@ public class LinkedList extends AbstractSequentialList
     s.defaultReadObject();
     int i = s.readInt();
     while (--i >= 0)
-      addLastEntry(new Entry((Object) s.readObject()));
+      addLastEntry((Entry) new Entry((Object) s.readObject()).$initLabels());
   }
 
   /**
@@ -877,7 +887,7 @@ public class LinkedList extends AbstractSequentialList
       knownMod++;
       size++;
       position++;
-      Entry e = new Entry(o);
+      Entry e = (Entry) new Entry(o).$initLabels();
       e.previous = previous;
       e.next = next;
 
@@ -909,5 +919,25 @@ public class LinkedList extends AbstractSequentialList
         throw new IllegalStateException();
       lastReturned.data = o;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   } // class LinkedListItr
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
 }

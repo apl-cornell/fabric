@@ -245,7 +245,7 @@ public abstract class AbstractMap implements Map
   public Set keySet()
   {
     if (keys == null)
-      keys = new AbstractSet()
+      keys = (AbstractSet) new AbstractSet()
       {
 	/**
 	 * Retrieves the number of keys in the backing map.
@@ -315,6 +315,16 @@ public abstract class AbstractMap implements Map
 	  {
 	    map_iterator.remove();
 	  }
+
+	  public Object $initLabels() {
+	    // XXX What should this be?  Using completely permissive values for now.
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
+	  }
 	}
 
 	/**
@@ -326,9 +336,19 @@ public abstract class AbstractMap implements Map
 	 */
         public Iterator iterator(final fabric.worker.Store store)
         {
-          return new KeysIterator@store(store);
+          return (KeysIterator) new KeysIterator@store(store).$initLabels();
         }
-      };
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
+	}
+      }.$initLabels();
     return keys;
   }
 
@@ -482,7 +502,7 @@ public abstract class AbstractMap implements Map
   public Collection values()
   {
     if (values == null)
-      values = new AbstractCollection()
+      values = (AbstractCollection) new AbstractCollection()
       {
 	/**
 	 * Returns the number of values stored in
@@ -553,6 +573,16 @@ public abstract class AbstractMap implements Map
 	  {
 	    map_iterator.remove();
 	  }
+
+	  public Object $initLabels() {
+	    // XXX What should this be?  Using completely permissive values for now.
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
+	  }
 	}
 
 	/**
@@ -564,9 +594,19 @@ public abstract class AbstractMap implements Map
 	 */
         public Iterator iterator(final fabric.worker.Store store)
         {
-          return new ValuesIterator@store(store);
+          return (ValuesIterator) new ValuesIterator@store(store).$initLabels();
         }
-      };
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
+	}
+      }.$initLabels();
     return values;
   }
 
@@ -725,6 +765,16 @@ public abstract class AbstractMap implements Map
     public final String toString()
     {
       return key + "=" + value;
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class BasicMapEntry
 }

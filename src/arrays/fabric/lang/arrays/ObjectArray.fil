@@ -72,22 +72,30 @@ public final class ObjectArray {
    * @param length
    *                The length of the array.
    */
-  public ObjectArray(Class proxyType, int length) {
+  public ObjectArray(Label updateLabel, ConfPolicy accessPolicy, Class proxyType, int length) {
     // Default chunk size is 256.
-    this(proxyType, length, 8);
+    this(updateLabel, accessPolicy, proxyType, length, 8);
   }
 
-  public ObjectArray(Class proxyType, int length, int CHUNK_SIZE_LOG2) {
+  public ObjectArray(Label updateLabel, ConfPolicy accessPolicy, Class proxyType, int length, int CHUNK_SIZE_LOG2) {
     this.CHUNK_SIZE_LOG2 = CHUNK_SIZE_LOG2;
     this.CHUNK_SIZE = (1 << CHUNK_SIZE_LOG2);
     this.proxyType = proxyType;
     this.length = length;
 
+    this.$updateLabel = updateLabel;
+    this.$accessPolicy = accessPolicy;
+
     // Compute required height (height starts at 1).
     this.height = getHeight(length);
     if (height == 1)
-      root = new _ObjectArray(proxyType, CHUNK_SIZE);
-    else root = new _ObjectArray(_ObjectArray.class, CHUNK_SIZE);
+      root = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, proxyType, CHUNK_SIZE).$initLabels();
+    else root = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
+  }
+
+  public Object $initLabels() {
+    //handled by constructor
+    return this;
   }
 
   public int getLength() {
@@ -115,7 +123,7 @@ public final class ObjectArray {
   private void setZeroLength() {
     this.length = 0;
     this.height = 1;
-    root = new _ObjectArray(proxyType, CHUNK_SIZE);
+    root = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, proxyType, CHUNK_SIZE).$initLabels();
   }
 
   public void setLength(int newSize) {
@@ -131,7 +139,7 @@ public final class ObjectArray {
     if (difference > 0) {
       // Make sure the leaves are at the right level - push down the root.
       for (int count = 0; count < difference; count++) {
-        _ObjectArray newRoot = new _ObjectArray(_ObjectArray.class, CHUNK_SIZE);
+        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
         newRoot.set(0, root);
         root = newRoot;
       }
@@ -195,8 +203,8 @@ public final class ObjectArray {
       if (nextObject == null) {
         // Writing to a node that doesn't exist yet. Time to create it.
         if (level == 2)
-          nextObject = new _ObjectArray(proxyType, CHUNK_SIZE);
-        else nextObject = new _ObjectArray(_ObjectArray.class, CHUNK_SIZE);
+          nextObject = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, proxyType, CHUNK_SIZE).$initLabels();
+        else nextObject = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
         node.set(firstDigit, nextObject);
       }
       node = (_ObjectArray) nextObject;

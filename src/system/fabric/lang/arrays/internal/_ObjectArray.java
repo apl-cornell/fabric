@@ -13,6 +13,7 @@ import fabric.common.RefTypeEnum;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
+import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -42,11 +43,14 @@ public interface _ObjectArray<T extends Object> extends Object {
      * @param length
      *                The length of the array.
      */
-    public _Impl(Store store, Label label, Label accessLabel,
+    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
         Class<? extends Object._Proxy> proxyType, int length) {
-      super(store, label, accessLabel);
+      super(store);
       this.proxyType = getProxy(proxyType);
       value = new Object[length];
+      
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
     }
 
     /**
@@ -58,11 +62,14 @@ public interface _ObjectArray<T extends Object> extends Object {
      * @param value
      *                The backing array to use.
      */
-    public _Impl(Store store, Label label, Label accessLabel,
+    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
         Class<? extends Object._Proxy> proxyType, T[] value) {
-      super(store, label, accessLabel);
+      super(store);
       this.proxyType = getProxy(proxyType);
       this.value = value;
+      
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
     }
 
     /**
@@ -173,6 +180,11 @@ public interface _ObjectArray<T extends Object> extends Object {
       for (int i = 0; i < value.length; i++)
         $writeRef($getStore(), value[i], refTypes, out, intraStoreRefs,
             interStoreRefs);
+    }
+
+    @Override
+    public Object $initLabels() {
+      return $getProxy();
     }
   }
 

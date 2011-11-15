@@ -33,7 +33,7 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     FabricParsedClassType pct = (FabricParsedClassType) jmi.container();
     
     Label startLabel = jmi.pcBound();
-    Label accessLabel = pct.getFoldedAccessLabel();
+    Label accessLabel = pct.providerFoldedClassAccessLabel();
     
     // take the meet of the start label with bottom integrity
     // so that the integrity component is ignored
