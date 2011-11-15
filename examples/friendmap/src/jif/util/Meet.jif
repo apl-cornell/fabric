@@ -50,7 +50,6 @@ public class Meet implements Principal {
   where authority(this),
         {authPrf;closure;lb;executeNow} <= lb
   {
-    // TODO
     return false;
   }
 
@@ -60,8 +59,19 @@ public class Meet implements Principal {
                (Principal p,
                 Object searchState)
   {
-    // TODO
-    return null;
+    if (left actsfor this && right actsfor this) {
+
+      ActsForProof leftProof  = PrincipalUtil.findActsForProof(p, left,  searchState);
+      ActsForProof rightProof = PrincipalUtil.findActsForProof(p, right, searchState);
+
+      if (leftProof != null)
+        return new TransitiveProof(leftProof,  left,  new DelegatesProof(left, this));
+      if (rightProof != null)
+        return new TransitiveProof(rightProof, right, new DelegatesProof(right, this));
+      else
+        return null;
+
+    } else throw new AssertionFailedError("left and right act for meet");
   }
 
   public

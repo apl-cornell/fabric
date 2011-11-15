@@ -68,7 +68,15 @@ where
     super(owner, network);
   }
 
-  public void setLocation {*locationLabel} (Location{*locationLabel} loc) where provider <= {*locationLabel} {
+  public
+  void
+  setLocation {*locationLabel}
+  (
+    Location{*locationLabel} loc
+  )
+  where
+    provider <= {*locationLabel}
+  {
     this.location = loc;
   }
 

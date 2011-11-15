@@ -59,8 +59,16 @@ public class Delegator implements Principal {
                (Principal p,
                 Object searchState)
   {
-    // TODO
-    return null;
+    if (owner actsfor this) {
+
+      ActsForProof proof = PrincipalUtil.findActsForProof(p, owner, searchState);
+      if (proof != null)
+        return new TransitiveProof(proof, owner, new DelegatesProof(owner, this));
+      else
+        return null;
+
+
+    } else throw new AssertionFailedError("owner acts for delegator");
   }
 
   public
@@ -69,7 +77,7 @@ public class Delegator implements Principal {
                  (Principal p,
                   Object searchState)
   {
-    // TODO
+    // how would we know?
     return null;
   }
 }
