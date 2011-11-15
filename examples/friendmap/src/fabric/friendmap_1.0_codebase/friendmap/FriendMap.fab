@@ -2,12 +2,12 @@ package friendmap;
 
 import java.io.PrintStream;
 
-import jif.runtime.Runtime;
+import fabric.runtime.Runtime;
 
 import mapserv.MapServer;
 import mapserv.MapImage;
 import mapserv.Box;
-import snapp.UserV1;
+import snapp.User;
 import snapp.Location;
 import util.GroupIterator;
 import util.Delegator;
@@ -21,9 +21,14 @@ import util.System;
  * mapping service, and then can be run by any User to generate private or
  * public output maps.
  */
-public class FriendMap extends Delegator {
+public class FriendMap
+where
+  MapServer.provider <= MapImage.provider, MapImage.provider <= MapServer.provider,
+  MapServer.provider <= Box.provider,      Box.provider      <= MapServer.provider
+{
+
   /** The map service that this app uses to fetch maps.  Must be non-null. */
-  public final MapServer {this←} service;
+  public final MapServer {this} service;
 
   /**
    * Create a new instance of the mapping service.
@@ -34,21 +39,18 @@ public class FriendMap extends Delegator {
   public
   FriendMap {this}
   (
-    String    {this} name,
-    MapServer {owner←} service,
-    Principal {owner←} owner
+    MapServer {this} service
   )
-  throws NullPointerException
-  where authority (this), provider <= {this}
+  throws
+    NullPointerException
+  where
+    provider <= {this}
   {
-    // these endorsements are safe, because owner ≽ this,
-    // and thus {owner←} ⊑ {this←}
-    // we just can't convince the compiler of this fact.
+    if (service == null)
+      throw new NullPointerException();
 
-    this.service = endorse(service, {owner←} to {this←});
-    super(name, owner);
+    this.service = service;
   }
-
 
 
   /**
@@ -61,20 +63,17 @@ public class FriendMap extends Delegator {
    */
   public
   void
-  viewMap {user→}
+  viewMap {user,service→}
   (
-    UserV1 {user→} user
+    User user
   )
   throws
   (
-    NullPointerException {user→}
+    NullPointerException{user}
   )
   where
-    service actsfor user.friendInfo,
-    {service←} <= {user←},
-    System.user actsfor user,
-    provider <= {user←},
-    MapImage.provider <= {user←}
+    worker$ actsfor user,
+    {user; *provider; *MapServer.provider} <= {user,service→}
   {
     printMap(user, new label {user→});
   }
@@ -89,26 +88,23 @@ public class FriendMap extends Delegator {
    */
   public
   void
-  postMap {*user.friendLabel}
+  postMap {user.friends,service→}
   (
-    final UserV1 {*user.friendLabel} user
+    final User user
   )
   throws
   (
-    NullPointerException {user; user←}
+    NullPointerException {user}
   )
   where
-    service actsfor user.friendInfo,
-    {service←}       <= user.friendLabel,    // because information comes from the service
-    user.friendLabel <= {System.user→; _←},  // because the result gets output to the system user
-    {user←}          <= user.friendLabel,    // because the user can affect the output
-    provider <= {*user.friendLabel},          // because the provider can affect the output
-    MapImage.provider <= {user←}
+    worker$ actsfor user,
+    user        actsfor user.friends,
+    {user; *provider; *MapServer.provider} <= {user.friends,service→}
   {
     if (user == null)
       throw new NullPointerException();
 
-    printMap(user, user.friendLabel);
+    printMap(user, new label {user.friends→});
   }
 
 
@@ -122,9 +118,9 @@ public class FriendMap extends Delegator {
    */
   private
   void
-  printMap {*lbl}
+  printMap {{*lbl} meet {service→}}
   (
-    final UserV1 user,
+    final User user,
     final label  lbl
   )
   throws
@@ -132,12 +128,11 @@ public class FriendMap extends Delegator {
     NullPointerException {user}
   )
   where
-    service actsfor user.friendInfo, // because the service will learn about the users friends.
-    {service←}    <= lbl,            // because the service influences the map.
-    lbl <= {System.user→; _←},       // because data will be output to the system user
-    {user; lbl} <= lbl,
-    provider <= {*lbl},               
-    MapImage.provider <= {*lbl}
+    {service←; user←} <= lbl,            // because the service and the user influence the map.
+    lbl               <= {worker$→}, // because data will be output to the system user
+
+    {user; lbl; *provider; *MapServer.provider} // these components affect the fetch and output
+                <= {{*lbl} meet {service→}}
   {
     if (user == null)
       throw new NullPointerException();
@@ -154,50 +149,54 @@ public class FriendMap extends Delegator {
    * creates a map of the user's friends, visible at label l.  Return value is non-null.
    */
   public
-  MapImage[l]
-  createMap
+  MapImage[l] {*l}
+  createMap   {{*l} meet {service→}} // the fact that this call happens leaks to the service and the return value
   (
-    label l,
-    final UserV1 user
+    final label  l,
+    final User user
   )
   throws
   (
     NullPointerException{user}
   )
   where
-    {service←} <= l,
-    service actsfor user.friendInfo
+    {service←} <= l,                      // the result is tainted by the service
+    {user←}    <= l,                      // the result is tainted by the user
+    {user; l; *provider; *MapServer.provider}
+              <= {{*l} meet {service→}}   // the arguments and code can affect the fetch and the return value
   {
-    return null;
-    /*
     // invariant checks
     if (user == null)
       throw new NullPointerException();
     if (user.friends == null)
       throw new AssertionFailedError("user.friends must be non-null");
+    if (this.service == null)
+      throw new AssertionFailedError("service must be non-null");
 
     // this is the label of the data that gets sent to the service
-    final label serviceLabel = new label {service→};
-    // TODO: does the compiler understand this is a meet?
-    final label fetchLabel   = new label {*l meet *serviceLabel};
+    final label fetchLabel   = new label {{*l} meet {service→}};
 
     // compute the bounding box
     Box boundary = new Box(0,0,0,0);
 
-    final GroupIterator i = user.friends.iterator(fetchLabel);
+    final GroupIterator[user, fetchLabel] i = user.friends.iterator(fetchLabel);
     if (i == null)
       throw new AssertionFailedError("Group.iterator() should return a non-null value");
     while (i.hasNext()) {
       Principal next;
       try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");}
 
-      if (next instanceof UserV1) {
-        final UserV1 friend = (UserV1) next;
+      if (next instanceof User) {
+        final User friend = (User) next;
 
         // if the friend doesn't mind his location leaking to the map service,
         // then we expand the bounding box to contain him
         if (friend.locationLabel <= fetchLabel) {
-          boundary = boundary.expand(friend.location.x, friend.location.y);
+          final Location loc = friend.location;
+          if (loc != null) {
+            try { boundary = boundary.expand(loc.x, loc.y); }
+            catch (final NullPointerException e) { throw new AssertionFailedError("boundary is non-null."); }
+          }
         }
 
         // TODO: declassifiers
@@ -209,24 +208,37 @@ public class FriendMap extends Delegator {
     }
 
     // get map
-    MapImage[fetchLabel] map = this.service.getMap(fetchLabel, boundary);
+    MapImage[fetchLabel] _map;
+    try {
+      _map = this.service.getMap(fetchLabel, boundary);
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("boundary is non-null.");
+    }
+    final MapImage[fetchLabel] map = _map;
+    if (map == null)
+      throw new AssertionFailedError("getMap returned null");
 
     // make a local copy (with label l)
     // TODO
     final Store localStore = null;
-    final MapImage[l] annotated = map.copy(l, localStore);
+    MapImage[l] annotated;
+    if (new label {localStore←} <= l && l <= new label {localStore→})  // localStore ≽ ℓ
+      annotated = map.copy(l, localStore);
+    else
+      throw new AssertionFailedError("local store does not act for l");
+
 
     if (annotated == null)          throw new AssertionFailedError("MapImage.copy return value should be non-null");
     if (annotated.boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
 
     // annotate map
-    final GroupIterator j = user.friends.iterator(l);
+    final GroupIterator[user, l] j = user.friends.iterator(l);
     if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
     while (j.hasNext()) {
       Principal next;
       try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("if j.hasNext() then j.next() should return normally."); }
-      if (next instanceof UserV1) {
-        final UserV1 friend = (UserV1) next;
+      if (next instanceof User) {
+        final User friend = (User) next;
 
         // add friend to the map if possible
         if (friend.locationLabel <= l) {
@@ -245,7 +257,6 @@ public class FriendMap extends Delegator {
     }
 
     return annotated;
-  */
   }
 }
 
