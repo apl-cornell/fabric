@@ -1,8 +1,15 @@
 package util;
 
 public class AssertionFailedError extends Error {
-  public AssertionFailedError(String message) {
+  private final String{this} message;
+
+  public AssertionFailedError(String{this} message) {
     super();
+    this.message = message;
+  }
+
+  public String{this} toString() {
+    return this.message;
   }
 }
 

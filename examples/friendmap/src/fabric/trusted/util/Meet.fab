@@ -1,25 +1,26 @@
 package util;
 
-/**
- * Convenience principal class the delegates to a single owner.
- */
-public class Delegator extends Principal {
-  protected final String    {this} name;
-  protected final principal {this} owner;
+public class Meet extends Principal {
+
+  protected final String {this} name;
+
+  protected final Principal{this} left;
+  protected final Principal{this} right;
 
   public
-  Delegator {this}
+  Meet
   (
-    String    {this} name,
-    principal {this} owner
+    Principal {this} left,
+    Principal {this} right
   )
   {
-    // these endorsements are safe, because owner ≽ this,
-    // and thus {owner←} ⊑ {this←}
-    // we just can't convince the compiler of this fact.
+    this.left  = left;
+    this.right = right;
 
-    this.owner = owner;
-    this.name  = name;
+    final String leftName  = (left  == null ? "_" : left.name());
+    final String rightName = (right == null ? "_" : right.name());
+
+    this.name = "(" + leftName + " meet " + rightName + ")";
     super();
   }
 
@@ -32,7 +33,7 @@ public class Delegator extends Principal {
   }
 
   public boolean{this;p;this←} delegatesTo(principal p) {
-    return p == owner;
+    return p == left || p == right;
   }
 
   public boolean equals(Principal p) {
@@ -40,6 +41,9 @@ public class Delegator extends Principal {
     return false;
   }
 
+  /**
+   * Returns true if this principal authorizes the given closure.
+   */
   public
   boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
   isAuthorized {this←}
@@ -48,26 +52,29 @@ public class Delegator extends Principal {
                label            lb,
                boolean          executeNow)
   {
-    // TODO
     return false;
   }
 
+  /**
+   * See Principal.findProofUpto.
+   */
   public
   ActsForProof{this; p; this←; p←}
   findProofUpto {this←}
-               (Store s,
-                Principal p,
+               (Store c, Principal p,
                 java.lang.Object searchState)
   {
     // TODO
     return null;
   }
 
+  /**
+   * See Principal.findProofDownto
+   */
   public
   ActsForProof{this; p; p←; this←}
   findProofDownto {this←}
-                 (Store s,
-                  Principal p,
+                 (Store c, Principal p,
                   java.lang.Object searchState)
   {
     // TODO
