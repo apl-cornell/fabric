@@ -283,8 +283,7 @@ where
   )
   where
     provider             <= l,
-    MapImage.provider    <= l,
-    friend.locationLabel <= l
+    MapImage.provider    <= l
   {
     if (map == null || friend == null || location == null)
       throw new NullPointerException();
