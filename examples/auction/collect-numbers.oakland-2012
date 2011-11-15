@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# This script is very non-portable.
+# 
+# It's only intended to work with Jed's setup
+# when run from the auction directory.
+
+function waitForUser() {
+  INPUT=
+  while [[ "${INPUT}" != "ready" ]] ; do
+    echo -n 'Type "ready" when ready: '
+    read -r INPUT
+  done
+}
+
+# Make a clean build.
+ant clobber fabil-init build-local
+
+# Start the stores.
+bin/run-all
+
+cat <<END
+
+Do the following:
+  brokerStore>   auction.InitBrokerStore
+  airlineAStore> auction.InitAStore
+  airlineBStore> auction.InitBStore
+  userStore>     auction.InitUserStore
+
+  airlineAStore> auction.InitA
+  airlineBStore> auction.InitB
+  userStore>     auction.InitUser
+
+Then quit the stores.
+
+END
+
+waitForUser
+
+# Take a dump of the broker store's database
+../../bin/dump-bdb brokerStore >/tmp/store-dump
+
+# Clear logs and caches.
+rm -rf var/log var/cache
+
+# Start the stores again.
+bin/run-all
+
+cat <<END
+
+Do the following:
+  brokerStore> auction.Main
+
+Then quit the stores.
+
+END
+
+waitForUser
+
+# Collect timing stats.
+cat var/log/* >/tmp/master.log
+~/work/fabric/bin/timing-oakland-2012 /tmp/master.log
+
+# Collect stats on objects created and modified.
+../../bin/dump-bdb brokerStore 2>/dev/null \
+  | diff -u /tmp/store-dump - \
+  | diffstat -bms \
+  | sed 's/^1 file changed, //'
+
