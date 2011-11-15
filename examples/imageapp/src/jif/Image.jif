@@ -4,14 +4,14 @@ public class Image [principal p] { // p is the camera principal
     public final label{this} lb_meta;
 
     public final byte{*lb_img}[]{*lb_img} bmp;
-    public string{*lb_img} title;
+    public String{*lb_img} title;
 
     public final int {*lb_meta} gpsX;
     public final int {*lb_meta} gpsY;
 
     public Image (final label{this} lb_i, final label{this} lb_m, 
                   byte {*lb_i}[]{*lb_i} bmp, 
-                  string{*lb_i} title,  
+                  String{*lb_i} title,  
                   int {*lb_m} x ,  
                   int {*lb_m} y) {
 	
@@ -24,7 +24,7 @@ public class Image [principal p] { // p is the camera principal
 	this.gpsY = y;
     }
 
-    public void setTitle {title} (string {title} new_title) {
+    public void setTitle {title} (String {title} new_title) {
 	this.title = new_title;
     }
 }

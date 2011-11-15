@@ -48,7 +48,7 @@ public class Camera [principal p] authority (p) {
 	    }
 	}
 	
-	string title = "Image" + n_images;
+	String title = "Image" + n_images;
 
 	Image [p] newimg = new Image [p]( lb_camera, lb_camera, bmp, title, this.gpsX, this.gpsY);
 	try {
