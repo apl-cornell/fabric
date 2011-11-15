@@ -14,7 +14,12 @@ import util.AssertionFailedError;
  * parameterize the access label, so I will just parameterize everything.
  *
  */
-public class MapImage[label L] where provider <= L {
+public class MapImage[label L]
+where
+  provider <= L,
+  Box.provider      <= provider, provider <= Box.provider,
+  MapImage.provider <= provider, provider <= MapImage.provider
+{
 
   //////////////////////////////////////////////////////////////////////////////
   // public fields                                                            //

@@ -7,10 +7,14 @@ import util.Delegator;
  * A very simple map service: given a request for a region, it returns a 10x10
  * image containing the background value, scaled to the requested region.
  */
-public class MapServer extends Delegator 
-  where MapImage.provider <= provider, provider <= MapImage.provider {
+public class MapServer
+extends Delegator 
+where
+  MapImage.provider <= provider, provider <= MapImage.provider,
+       Box.provider <= provider, provider <=      Box.provider
+{
 
-  private final char {this←} background;
+  private final char {this} background;
 
   /**
    * Create a new map server, with the given background character.
@@ -18,17 +22,14 @@ public class MapServer extends Delegator
   public
   MapServer {this}
   (
-    String{this} name,
-    Principal{owner←} owner,
-    char{owner←} background
+    String    {this} name,
+    Principal {this} owner,
+    char      {this} background
   )
-  where  authority(this), provider <= {this}
+  where
+    provider <= {this}
   {
-    // these endorsements are safe, because owner ≽ this,
-    // and thus {owner←} ⊑ {this←}
-    // we just can't convince the compiler of this fact.
-
-    this.background = endorse(background, {owner←} to {this←});
+    this.background = background;
     super(name, owner);
   }
 
