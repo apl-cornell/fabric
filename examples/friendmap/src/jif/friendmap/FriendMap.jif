@@ -154,6 +154,9 @@ where
 
   /**
    * creates a map of the user's friends, visible at label l.  Return value is non-null.
+   *
+   * @throws NullPointerException
+   *         if user is null.
    */
   public
   MapImage[l] {*l}
