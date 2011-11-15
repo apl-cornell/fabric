@@ -62,26 +62,22 @@ where
    * @throws SecurityException
    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
    */
-  /*
   public
   void
-  viewMap {{user→} meet {service→}}
+  viewMap {user,service→}
   (
-    UserV1 {{user→} meet {service→}} user
+    UserV1 user
   )
   throws
   (
-    NullPointerException {user→}
+    NullPointerException{user}
   )
   where
-    {service←} <= {user←},
     System.user actsfor user,
-    provider <= {user←},
-    MapImage.provider <= {user←}
+    {user; *provider; *MapServer.provider} <= {user,service→}
   {
     printMap(user, new label {user→});
   }
-  */
 
   /**
    * prints a map of the user's friends, visible to the user's friends
