@@ -1,5 +1,6 @@
 package fabric.worker;
 
+import static fabric.common.Logging.TIMING_LOGGER;
 import static fabric.common.Logging.WORKER_LOGGER;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
 import fabric.common.KeyMaterial;
@@ -41,6 +43,7 @@ import fabric.common.net.naming.NameService;
 import fabric.dissemination.Cache;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
+import fabric.lang.FabricClassLoader;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
@@ -69,6 +72,9 @@ import fabric.worker.transaction.TransactionRegistry;
 public final class Worker {
 
   public final ConfigProperties config;
+
+  /** The loader used by this worker for loading classes from fabric */
+  public FabricClassLoader loader;
   
   // A map from store hostnames to Store objects
   protected final Map<String, RemoteStore> stores;
@@ -156,6 +162,14 @@ public final class Worker {
     instance.localStore.initialize();
     
     System.out.println("Worker started");
+    TIMING_LOGGER.log(Level.INFO, "Worker started");
+
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        TIMING_LOGGER.log(Level.INFO, "Worker shutting down");
+      }
+    });
 
     return instance;
   }
@@ -164,6 +178,10 @@ public final class Worker {
    * The singleton Worker instance.
    */
   protected static Worker instance;
+
+  public static boolean isInitialized() {
+    return instance != null;
+  }
 
   @SuppressWarnings("unchecked")
   private Worker(ConfigProperties config, Long principalOnum, Map<String, RemoteStore> initStoreSet) throws InternalError, UsageError,
@@ -388,6 +406,12 @@ public final class Worker {
         initStoreSet);
   }
 
+  public FabricClassLoader getClassLoader() {
+    if (loader == null)
+      loader = new FabricClassLoader(Worker.class.getClassLoader());
+    return loader;
+  }
+
   public static void main(String[] args) throws Throwable {
     WORKER_LOGGER.info("Worker node");
     WORKER_LOGGER.config("Fabric version " + new Version());
@@ -464,7 +488,7 @@ public final class Worker {
    */
   public void runFabricApp(String mainClassName, final String[] args)
       throws Throwable {
-    Class<?> mainClass = Class.forName(mainClassName + "$_Impl");
+    Class<?> mainClass = getClassLoader().loadClass(mainClassName + "$_Impl");
     Method main =
         mainClass.getMethod("main", new Class[] { ObjectArray.class });
 

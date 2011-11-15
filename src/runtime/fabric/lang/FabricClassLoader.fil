@@ -1,0 +1,25 @@
+package fabric.lang;
+
+import java.util.logging.Level;
+
+import fabric.common.Logging;
+
+/**
+ * Loads Java classes from Fabric.
+ */
+public class FabricClassLoader extends ClassLoader {
+
+  public FabricClassLoader(ClassLoader parent) {
+    super(parent);
+  }
+  
+  public Class loadClass(String name, boolean resolve)
+      throws ClassNotFoundException {
+    Logging.log(Logging.TIMING_LOGGER, Level.INFO, "resolving {0}", name);
+    try {
+      return super.loadClass(name, resolve);
+    } finally {
+      Logging.log(Logging.TIMING_LOGGER, Level.INFO, "returning {0}", name);
+    }
+  }
+}

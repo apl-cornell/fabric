@@ -208,18 +208,19 @@ public final class ObjectCache {
       resolveSurrogates();
 
       if (next != null) return next.getProxy();
-      
+
       Class<? extends Object._Proxy> proxyClass = null;
       try {
         Class<? extends Object._Impl> implClass =
-            (Class<? extends _Impl>) Class.forName(serialized.getClassName());
+            (Class<? extends _Impl>) Worker.getWorker().getClassLoader()
+                .loadClass(serialized.getClassName());
         for (Class<?> c : implClass.getDeclaringClass().getClasses()) {
           if (c.getSimpleName().equals("_Proxy")) {
             proxyClass = (Class<? extends _Proxy>) c;
             break;
           }
         }
-        
+
         if (proxyClass == null) throw new InternalError();
       } catch (ClassNotFoundException e1) {
         throw new InternalError(e1);

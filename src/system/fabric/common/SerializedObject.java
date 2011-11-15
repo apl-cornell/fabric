@@ -32,6 +32,7 @@ import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.worker.LocalStore;
 import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * <code>_Impl</code> objects are stored on stores in serialized form as
@@ -827,7 +828,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       Constructor<?> constructor = constructorTable.get(className);
 
       if (constructor == null) {
-        Class<?> c = Class.forName(getClassName());
+        Class<?> c = Worker.getWorker().getClassLoader().loadClass(getClassName());
         constructor =
             c.getConstructor(Store.class, long.class, int.class, long.class,
                 long.class, ObjectInput.class, Iterator.class, Iterator.class);

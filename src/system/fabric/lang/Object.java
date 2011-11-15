@@ -6,6 +6,7 @@ import java.io.ObjectOutput;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
 import fabric.common.SerializedObject;

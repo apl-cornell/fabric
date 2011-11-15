@@ -9,6 +9,8 @@ import java.security.MessageDigest;
 import java.util.*;
 import java.util.logging.Level;
 
+import fabric.worker.Worker;
+
 public final class SysUtil {
 
   private static final Map<String, byte[]> classHashCache =
@@ -32,7 +34,12 @@ public final class SysUtil {
 
     MessageDigest digest = Crypto.digestInstance();
 
-    ClassLoader classLoader = c.getClassLoader();
+    ClassLoader classLoader;
+    if (Worker.isInitialized()) {
+      classLoader = Worker.getWorker().getClassLoader();
+    } else {
+      classLoader = c.getClassLoader();
+    }
     if (classLoader == null) {
       classLoader = ClassLoader.getSystemClassLoader();
     }
@@ -87,14 +94,19 @@ public final class SysUtil {
       CLASS_HASHING_LOGGER.finer("  Hash found in cache");
       return result;
     }
-    return hash(Class.forName(className));
+    return hash(Worker.getWorker().getClassLoader().loadClass(className));
   }
 
   public static URL locateClass(String className) throws ClassNotFoundException {
     // TODO: copied from hash(className)
-    Class<?> c = Class.forName(className);
+    Class<?> c = Worker.getWorker().getClassLoader().loadClass(className);
 
-    ClassLoader classLoader = c.getClassLoader();
+    ClassLoader classLoader;
+    if (Worker.isInitialized()) {
+      classLoader = Worker.getWorker().getClassLoader();
+    } else {
+      classLoader = c.getClassLoader();
+    }
     if (classLoader == null) {
       classLoader = ClassLoader.getSystemClassLoader();
     }

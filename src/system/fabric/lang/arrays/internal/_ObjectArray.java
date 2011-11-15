@@ -6,6 +6,7 @@ import java.io.ObjectOutput;
 import java.util.*;
 
 import fabric.worker.Store;
+import fabric.worker.Worker;
 import fabric.worker.transaction.TransactionManager;
 import fabric.common.RefTypeEnum;
 import fabric.common.exceptions.InternalError;
@@ -68,7 +69,9 @@ public interface _ObjectArray<T extends Object> extends Object {
         Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs)
         throws IOException, ClassNotFoundException {
       super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
-      proxyType = (Class<? extends Object._Proxy>) Class.forName(in.readUTF());
+      proxyType =
+          (Class<? extends Object._Proxy>) Worker.getWorker().getClassLoader()
+              .loadClass(in.readUTF());
       value = new Object[in.readInt()];
       for (int i = 0; i < value.length; i++) {
         value[i] =
