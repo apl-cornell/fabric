@@ -73,7 +73,9 @@ where
 
     try   { this.friendMap  = endorse (new FriendMap(mapServ), {FriendMapNode←} to {System.user←}); }
     catch (final NullPointerException e) { throw new AssertionFailedError("mapServ is not null"); }
-    // friendMap.viewMap(alice);
+
+    try { friendMap.viewMap(alice); }
+    catch (final NullPointerException e) { throw new AssertionFailedError("alice is not null"); }
 
     } else throw new AssertionFailedError("Delegation relationships hold");
     } else throw new AssertionFailedError("Delegation relationships hold");
