@@ -62,8 +62,9 @@ cat var/log/* >/tmp/master.log
 ~/work/fabric/bin/timing-oakland-2012 /tmp/master.log
 
 # Collect stats on objects created and modified.
+echo Object stats:
 ../../bin/dump-bdb brokerStore 2>/dev/null \
   | diff -u /tmp/store-dump - \
   | diffstat -bms \
-  | sed 's/^1 file changed, //'
+  | sed 's/^ 1 file changed, /  /'
 
