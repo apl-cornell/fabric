@@ -6,101 +6,132 @@ import util.*;
 
 import util.System;
 
-/**
- * This class contains the main method, which executes the script of the example
- * application, including initialization and execution.
- */
-public class Main {
+public class Main
+authority(System.user)
+where
+  {System.user←}   <= provider,                     provider                     <= {System.user←},
+  {SnappNode←}     <= snapp.Snapp.provider,         snapp.Snapp.provider         <= {SnappNode←},
+  {SnappNode←}     <= snapp.UserV1.provider,        snapp.UserV1.provider        <= {SnappNode←},
+  {SnappNode←}     <= snapp.Location.provider,      snapp.Location.provider      <= {SnappNode←},
+  {MapServNode←}   <= mapserv.MapServer.provider,   mapserv.MapServer.provider   <= {MapServNode←},
+  {MapServNode←}   <= mapserv.MapImage.provider,    mapserv.MapImage.provider    <= {MapServNode←},
+  {MapServNode←}   <= mapserv.Box.provider,         mapserv.Box.provider         <= {MapServNode←},
+  {FriendMapNode←} <= friendmap.FriendMap.provider, friendmap.FriendMap.provider <= {FriendMapNode←}
+{
+  final Snapp     {System.user←} snapp;
+  final MapServer {System.user←} mapServ;
+  final FriendMap {System.user←} friendMap;
+  final UserV1    {System.user←} alice;
+  final UserV1    {System.user←} bob;
 
-  public static void main {System.user←} (principal God, String[] args) {
-    // Each method here represents a step that is intended to be executed by
-    // the appropriate worker.  For example, snapp_initialize should be invoked by
-    // snapp's worker, whereas a_run_app should be invoked by alice's worker.
+  public
+  Main {System.user←}
+  ()
+  where
+    System.user actsfor SnappNode,
+    System.user actsfor MapServNode,
+    System.user actsfor FriendMapNode,
+    System.user actsfor AliceNode,
+    System.user actsfor BobNode,
+    {this} <= {System.user←},
+    authority(System.user)
+  {
+    // create service objects
+    this.snapp      = endorse(new Snapp("snapp",     SnappNode), {SnappNode←} to {System.user←});
+    if (SnappNode     actsfor snapp) {
 
-    if (System.user actsfor SnappNode     &&
-        System.user actsfor MapServNode   &&
-        System.user actsfor FriendMapNode &&
-        System.user actsfor AliceNode     &&
-        System.user actsfor BobNode)
-    {
-      snapp_initialize();
-      mapserv_initialize();
-      friendmap_initialize();
+    this.mapServ    = endorse(new MapServer("mapserv",   MapServNode, '.'), {MapServNode←} to {System.user←});
+    if (MapServNode   actsfor mapServ) {
 
-      a_initialize();
-      b_initialize();
+    // create users
+    // final UserV1{SnappNode←} _alice = snapp.createUser("Alice", AliceNode);
+    this.alice      = endorse(makeUser(snapp, "Alice", AliceNode), {SnappNode←} to {System.user←});
+    if (AliceNode     actsfor alice) {
 
-      a_add_delegations();
-      b_add_delegations();
+    this.bob        = endorse(makeUser(snapp, "Bob",   BobNode),   {SnappNode←} to {System.user←});
+    if (bob == null)              throw new AssertionFailedError("makeUser returns a non-null value");
+    if (bob.locationInfo == null) throw new AssertionFailedError("makeUser returns a non-null value");
+    if (BobNode       actsfor bob) {
+    if (SnappNode     actsfor bob) {
+    if (bob           actsfor bob.locationInfo) {
 
-      a_run_app();
+    // add delegations
+    try {
+      alice.friends.add(bob);
+      alice.locationInfo.add(mapServ);
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("UserV1.friends and .locationInfo are non-null.");
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("Alice has too many friends");
     }
-    else throw new AssertionFailedError("principals delegate to System.user");
+
+    final Location {System.user←} loc = endorse(new Location(5,8), {SnappNode←} to {System.user←});
+    try {
+      bob.friends.add(alice);
+      bob.locationInfo.add(bob.friends);
+
+      if (new label {bob→bob.locationInfo;bob←} equiv bob.locationLabel) {
+        bob.setLocation(loc);
+      }
+      else
+        throw new AssertionFailedError("bob.locationLabel == {bob→bob.locationInfo;bob←}");
+
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("UserV1.friends and .locationInfo are non-null.");
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("Alice has too many friends");
+    }
+
+    // let'er rip!
+
+    try   { this.friendMap  = endorse (new FriendMap(mapServ), {FriendMapNode←} to {System.user←}); }
+    catch (final NullPointerException e) { throw new AssertionFailedError("mapServ is not null"); }
+
+    try { friendMap.viewMap(alice); }
+    catch (final NullPointerException e) { throw new AssertionFailedError("alice is not null"); }
+
+    } else throw new AssertionFailedError("Delegation relationships hold 1");
+    } else throw new AssertionFailedError("Delegation relationships hold 2");
+    } else throw new AssertionFailedError("Delegation relationships hold 3");
+    } else throw new AssertionFailedError("Delegation relationships hold 4");
+    } else throw new AssertionFailedError("Delegation relationships hold 5");
+    } else throw new AssertionFailedError("Delegation relationships hold 6");
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // snapp's process                                                          //
-  //////////////////////////////////////////////////////////////////////////////
-
-  static void snapp_initialize {SnappNode←} () {
-    // snapp = new Snapp("snapp", SnappNode);
+  private static
+  UserV1  {SnappNode←}
+  makeUser{SnappNode←}
+  (
+    final Snapp     {SnappNode←} snapp,
+    final String    {SnappNode←} name,
+    final principal {SnappNode←} node
+  )
+  where
+    provider <= {SnappNode←}
+  {
+    if (snapp == null)
+      throw new AssertionFailedError("snapp is not null");
+    endorse ({SnappNode←} to {SnappNode←}) {
+      final UserV1{SnappNode←} result = snapp.createUser(name,  node);
+      return result;
+    }
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // mapserv's process                                                        //
-  //////////////////////////////////////////////////////////////////////////////
-
-  static void mapserv_initialize {MapServNode←} () {
-    // the world looks like a blank space :)
-    // mapServ = new MapServer("map serv", MapServNode, ' ');
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // friendmap's process                                                      //
-  //////////////////////////////////////////////////////////////////////////////
-
-  static void friendmap_initialize {FriendMapNode←} () {
-    // friendMap = new FriendMap("FriendMap", mapServ, FriendMapNode);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // alice's process                                                          //
-  //////////////////////////////////////////////////////////////////////////////
-
-  static void a_initialize {AliceNode←} () {
-    // alice = snapp.createUser("Alice", AliceNode);
-  }
-
-  static void a_add_delegations {AliceNode←} () {
-    // alice.friends.add(bob);
-    // alice.friendInfo.add(mapServ);
-    // alice.locationInfo.add(mapServ);
-  }
-
-  static void a_run_app {AliceNode←} () {
-    // final FriendMap app = friendMap;
-    // final UserV1 a   = alice;
-
-    // if (app.service actsfor a.friendInfo)
-      // app.viewMap(a);
-    // TODO:
-    // friendMap.postMap(alice);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // bob's process                                                            //
-  //////////////////////////////////////////////////////////////////////////////
-
-  static void b_initialize {BobNode←} () {
-    // bob = snapp.createUser("Bob", BobNode);
-  }
-
-  static void b_add_delegations {BobNode←} () {
-    // bob.friends.add(alice);
-    // bob.locationInfo.add(bob.friends);
+  public static
+  void
+  main {System.user←} (String[] args)
+  where
+    System.user actsfor SnappNode,
+    System.user actsfor MapServNode,
+    System.user actsfor FriendMapNode,
+    System.user actsfor AliceNode,
+    System.user actsfor BobNode
+  {
+    new Main();
+    try { System.stdout(new label{System.user→}).println("done"); }
+    catch (final NullPointerException e) { throw new AssertionFailedError("System.out is non-null"); }
   }
 }
-
 
 
 /*
