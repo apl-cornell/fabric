@@ -3,7 +3,16 @@ import java.io.PrintStream;
 // This class simulates user actionn: the user takes pictures, marks
 // some of them as shared, and may invoke a third-party app
 
-public class CameraUser [principal p, principal q] authority (p) {
+public class CameraUser [principal p, principal q] 
+authority (p)
+where
+provider <= {p←}, 
+provider <= {q←},
+provider <= Camera.provider,
+Camera.provider <= provider,
+provider <= Image.provider,
+Image.provider <= provider
+{
     final Camera[p] {p<-} camera;
     final ImageApp[p,q] {q <-} imageapp;
 
@@ -15,7 +24,9 @@ public class CameraUser [principal p, principal q] authority (p) {
                            	 // complier!!!
     }
 
-    public void useCamera{p<-}() where authority (p) {
+    public void useCamera{p<-}() 
+    where authority (p), provider <= this.camera.lb_camera
+    {
 	if (new label {p<-} <= camera.lb_camera ) {
 	    try {
 		// take 10 images
@@ -34,7 +45,9 @@ public class CameraUser [principal p, principal q] authority (p) {
     // A lot of boilerplate declassification happens here... We need
     // to grow up and automate this eventually. Method markShared
     // declassifies the bitmap of the i-th image in camera
-    public void markShared{p<-}(int {*this.camera.lb_camera} i) where caller (p) {
+    public void markShared{p<-}(int {*this.camera.lb_camera} i)
+    where caller (p), provider <= this.camera.lb_camera
+    {
 	byte{p<-} [] {p<-} bmp0 = null;
 	try {bmp0 = new byte[camera.CAMERA_RESOLUTION];} catch (Exception ignored) {}
 	if (bmp0 == null) return;

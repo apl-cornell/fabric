@@ -1,4 +1,5 @@
-public class Image [principal p] { // p is the camera principal
+public class Image [principal p]
+{ // p is the camera principal
 
     public final label{this} lb_img; 
     public final label{this} lb_meta;
@@ -13,7 +14,9 @@ public class Image [principal p] { // p is the camera principal
                   byte {*lb_i}[]{*lb_i} bmp, 
                   String{*lb_i} title,  
                   int {*lb_m} x ,  
-                  int {*lb_m} y) {
+                  int {*lb_m} y)
+    where provider <= {this}, provider <= lb_i, provider <= lb_m
+    {
 	
         this.lb_img  = lb_i; 
 	this.lb_meta = lb_m;
@@ -24,7 +27,9 @@ public class Image [principal p] { // p is the camera principal
 	this.gpsY = y;
     }
 
-    public void setTitle {title} (String {title} new_title) {
+    public void setTitle {title} (String {title} new_title)
+    where provider <= this.lb_img
+    {
 	this.title = new_title;
     }
 }

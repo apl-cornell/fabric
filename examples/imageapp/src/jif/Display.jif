@@ -5,7 +5,11 @@
 import java.io.PrintStream;
 
 // for debugging purposes
-public class Display[principal p] authority (p) {
+public class Display[principal p] 
+authority (p)
+where
+provider <= {p←}
+{
     final PrintStream[{}]{} out; 
     public Display(PrintStream[{}]{} o) {
 	this.out = o;
@@ -14,7 +18,9 @@ public class Display[principal p] authority (p) {
     // note: auto-endorsement, endorsement, and declassifications are justified, 
     // since this is a debugging-only method...
 
-    public void show {} (String {p->} str) where authority (p), endorse({p<-}) {
+    public void show {} (String {p->} str) 
+    where authority (p), endorse({p<-}) 
+    {
 	String {p->; p<-} s0 = endorse (str, {p -> ; p<-});
 	String {} s = declassify (s0, {p->} to {}) ;
 	try {
