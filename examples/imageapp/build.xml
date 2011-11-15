@@ -129,6 +129,7 @@
         <arg value="-d"          /> <arg value="${home}/classes/jif"/>
         <arg value="-sourcepath" /> <arg value="@{srcdir}"/>
         <arg value="-classpath"  /> <arg value="${home}/classes/jif"/>
+        <extra-args />
         <srcfile />
 
         <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
