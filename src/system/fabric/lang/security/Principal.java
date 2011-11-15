@@ -18,8 +18,8 @@ import fabric.worker.Worker;
 import fabric.worker.transaction.TransactionManager;
 
 /**
- * This is implemented in Java so that the constructor can provide default
- * labels so that a Principal p can be labelled with {p→_; p←p}.
+ * This is implemented in Java so that the constructor can create a key pair for
+ * the principal.
  */
 public interface Principal extends fabric.lang.Object {
   /**
@@ -114,8 +114,6 @@ public interface Principal extends fabric.lang.Object {
     private PrivateKeyObject privateKeyObject;
 
     public _Impl(Store store) {
-      // If the given label is null, temporarily create the object with an
-      // overly restrictive label.  If access label is null, default to public.
       super(store);
 
       // Generate a new key pair for this principal.
