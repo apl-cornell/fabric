@@ -22,7 +22,11 @@ import util.Store;
  * mapping service, and then can be run by any User to generate private or
  * public output maps.
  */
-public class FriendMap {
+public class FriendMap
+where
+  MapServer.provider <= MapImage.provider, MapImage.provider <= MapServer.provider,
+  MapServer.provider <= Box.provider,      Box.provider      <= MapServer.provider
+{
 
   /** The map service that this app uses to fetch maps.  Must be non-null. */
   public final MapServer {this} service;
@@ -158,7 +162,7 @@ public class FriendMap {
    * creates a map of the user's friends, visible at label l.  Return value is non-null.
    */
   public
-  MapImage[l]
+  MapImage[l] {*l}
   createMap {{*l} meet {service→}}
   (
     final label  {{*l} meet {service→}} l,
@@ -172,13 +176,17 @@ public class FriendMap {
     {service←} <= l,
     {user←}    <= l,
     provider   <= l,
-    provider   <= {service→}
+    provider   <= {service→},
+    MapServer.provider <= l,
+    MapServer.provider <= {service→}
   {
     // invariant checks
     if (user == null)
       throw new NullPointerException();
     if (user.friends == null)
       throw new AssertionFailedError("user.friends must be non-null");
+    if (this.service == null)
+      throw new AssertionFailedError("service must be non-null");
 
     // this is the label of the data that gets sent to the service
     final label fetchLabel   = new label {{*l} meet {service→}};
@@ -214,21 +222,32 @@ public class FriendMap {
       }
     }
 
-    return null;
-    /*
     // get map
-    MapImage[fetchLabel] map = this.service.getMap(fetchLabel, boundary);
+    MapImage[fetchLabel] _map;
+    try {
+      _map = this.service.getMap(fetchLabel, boundary);
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("boundary is non-null.");
+    }
+    final MapImage[fetchLabel] map = _map;
+    if (map == null)
+      throw new AssertionFailedError("getMap returned null");
 
     // make a local copy (with label l)
     // TODO
     final Store localStore = null;
-    final MapImage[l] annotated = map.copy(l, localStore);
+    MapImage[l] annotated;
+    if (new label {localStore←} <= l && l <= new label {localStore→})  // localStore ≽ ℓ
+      annotated = map.copy(l, localStore);
+    else
+      throw new AssertionFailedError("local store does not act for l");
+
 
     if (annotated == null)          throw new AssertionFailedError("MapImage.copy return value should be non-null");
     if (annotated.boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
 
     // annotate map
-    final GroupIterator j = user.friends.iterator(l);
+    final GroupIterator[user, l] j = user.friends.iterator(l);
     if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
     while (j.hasNext()) {
       Principal next;
@@ -253,7 +272,6 @@ public class FriendMap {
     }
 
     return annotated;
-    */
   }
 }
 

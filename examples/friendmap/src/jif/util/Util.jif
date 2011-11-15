@@ -12,7 +12,7 @@ where
    * Copy the contents of an array into another array with the given labels.
    *
    * @throws NullPointerException
-   *         if data is null
+   *         if data is null TODO: or store is null
    */
   public static
   char{*l}[]

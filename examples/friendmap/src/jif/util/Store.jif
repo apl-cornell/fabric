@@ -4,9 +4,12 @@ package util;
  * Placeholder for Fabric store.
  */
 public class Store extends AbstractPrincipal {
+  
+
   public Store() {
     super("dummy");
   }
+
 }
 
 
