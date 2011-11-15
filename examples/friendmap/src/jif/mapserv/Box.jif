@@ -60,8 +60,8 @@ public class Box {
     provider <= {this}
   {
     return new Box(
-        min(this.xmin, x), min(this.ymin, y),
-        min(this.xmax, x), max(this.ymax, y));
+        min(this.xmin, x - 2), min(this.ymin, y - 2),
+        max(this.xmax, x + 2), max(this.ymax, y + 2));
   }
 
   /**

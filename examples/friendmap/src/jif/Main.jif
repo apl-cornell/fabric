@@ -71,11 +71,11 @@ where
       bob.locationInfo.add(bob.friends);
       bob.locationInfo.add(mapServ);
 
-      if (new label {bob→bob.locationInfo;bob←} equiv bob.locationLabel) {
+      if (new label {bob.locationInfo→;bob←} equiv bob.locationLabel) {
         bob.setLocation(loc);
       }
       else
-        throw new AssertionFailedError("bob.locationLabel == {bob→bob.locationInfo;bob←}");
+        throw new AssertionFailedError("bob.locationLabel == {bob.locationInfo→;bob←}");
 
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("UserV1.friends and .locationInfo are non-null.");
