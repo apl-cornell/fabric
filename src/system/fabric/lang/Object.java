@@ -839,9 +839,16 @@ public interface Object {
         //  object outside transaction" errors.  You still have a remote ref
         //  error, you just can't print out the offending object outside a txn.
         //String objStr = obj.toString();
-        throw new InternalError(
+        String message =
             "Creating remote ref to local store.  Object on local store has "
-                + "class " + objClass + " and onum " + p.ref.onum + ".");
+                + "class " + objClass + " and onum " + p.ref.onum + ".";
+        if (p.fetch().$stackTrace != null) {
+          message +=
+              "  A stack trace for the creation of the local object follows.";
+          for (StackTraceElement e : p.anchor.$stackTrace)
+            message += System.getProperty("line.separator") + "  " + e;
+        }
+        throw new InternalError(message);
       }
       refType.add(RefTypeEnum.REMOTE);
       interStoreRefs.add(new Pair<String, Long>(p.ref.store.name(), p.ref.onum));

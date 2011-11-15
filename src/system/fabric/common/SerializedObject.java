@@ -681,14 +681,20 @@ public final class SerializedObject implements FastSerializable, Serializable {
     if (interStoreUpdateLabel) {
       if (updateLabelStore instanceof LocalStore) {
         Class<?> objClass = impl.getClass();
-        String objStr = impl.toString();
-        String message = "Creating remote ref to local store.  Remote "
-            + "object has class " + objClass + ".  Its string representation "
-            + "is \"" + objStr + "\", and its updateLabel is local.";
+        String message =
+            "Creating remote ref to local store.  Remote object has class "
+                + objClass + " and its update label is local with onum "
+                + updateLabelOnum + ".";
         if (impl.$stackTrace != null) {
           message +=
               "  A stack trace for the creation of the remote object follows.";
           for (StackTraceElement e : impl.$stackTrace)
+            message += System.getProperty("line.separator") + "  " + e;
+          
+          message +=
+              System.getProperty("line.separator")
+                  + "A stack trace for the creation of the local object follows.";
+          for (StackTraceElement e : ((_Impl) updateLabel.fetch()).$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
         }
         throw new InternalError(message);
@@ -709,14 +715,20 @@ public final class SerializedObject implements FastSerializable, Serializable {
     if (interStoreAccessLabel) {
       if (accessPolicyStore instanceof LocalStore) {
         Class<?> objClass = impl.getClass();
-        String objStr = impl.toString();
-        String message = "Creating remote ref to local store.  Remote "
-            + "object has class " + objClass + ".  Its string representation "
-            + "is \"" + objStr + "\", and its accessPolicy is local.";
+        String message =
+            "Creating remote ref to local store.  Remote object has class "
+                + objClass + " and its access policy is local with onum "
+                + accessPolicyOnum + ".";
         if (impl.$stackTrace != null) {
           message +=
               "  A stack trace for the creation of the remote object follows.";
           for (StackTraceElement e : impl.$stackTrace)
+            message += System.getProperty("line.separator") + "  " + e;
+          
+          message +=
+              System.getProperty("line.separator")
+                  + "A stack trace for the creation of the local object follows.";
+          for (StackTraceElement e : ((_Impl) updateLabel.fetch()).$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
         }
         throw new InternalError(message);
