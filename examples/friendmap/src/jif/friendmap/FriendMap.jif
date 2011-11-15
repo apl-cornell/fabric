@@ -244,8 +244,14 @@ where
 
         // add friend to the map if possible
         if (friend.locationLabel <= l) {
-          try { addPin (annotated, friend, l); }
-          catch (final NullPointerException e) { throw new AssertionFailedError("annotated and friend are non-null"); }
+          final Location loc = friend.location;
+          if (loc != null) {
+            if (annotated.boundary.contains(loc.x, loc.y)) {
+              try { addPin (annotated, loc, friend, l); }
+              catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
+              catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
+            }
+          }
         }
       }
     }
@@ -254,41 +260,36 @@ where
   }
 
   /**
-   * Add a pin corresponding to friend on a map.
+   * Add a pin corresponding to friend at a given location on a map.
    *
    * @throws NullPonterException
    *         if friend or map is null
+   * @throws ArrayIndexOutOfBoundsException
+   *         if location is not on the map
    */
   protected
   void
   addPin {*l}
   (
     final MapImage[l] {*l} map,
+    final Location    {*l} location,
     final UserV1      {*l} friend,
     final label       {*l} l
   )
   throws
   (
-    NullPointerException{*l}
+    NullPointerException{*l},
+    ArrayIndexOutOfBoundsException{*l}
   )
   where
     provider             <= l,
     MapImage.provider    <= l,
     friend.locationLabel <= l
   {
-    if (friend == null || map == null)
+    if (map == null || friend == null || location == null)
       throw new NullPointerException();
 
-    final Location loc = friend.location;
-    if (loc != null && map.boundary.contains(loc.x, loc.y)) {
-      try {
-
-        map.setAt(loc.x, loc.y, 'f');
-
-      } catch (final ArrayIndexOutOfBoundsException e) {
-        throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally");
-      }
-    }
+    map.setAt(location.x, location.y, 'f');
   }
 }
 
