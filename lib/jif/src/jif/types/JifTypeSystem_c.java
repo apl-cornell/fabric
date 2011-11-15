@@ -995,13 +995,23 @@ public class JifTypeSystem_c
         Principal actor,
         Principal granter,
         boolean isEquiv) {
-        return new ActsForConstraint_c(this, pos, actor, granter, isEquiv);
+        return new ActsForConstraint_c(this, pos, actor, granter, isEquiv,
+            actsForConstraintTranslator());
+    }
+
+    protected ActsForConstraintToJavaExpr actsForConstraintTranslator() {
+      return new ActsForConstraintToJavaExpr_c();
     }
 
     public LabelLeAssertion labelLeAssertion(Position pos,
                                              Label lhs,
                                              Label rhs) {
-        return new LabelLeAssertion_c(this, lhs, rhs, pos);
+        return new LabelLeAssertion_c(this, lhs, rhs, pos,
+            labelLeAssertionTranslator());
+    }
+
+    private LabelLeAssertionToJavaExpr labelLeAssertionTranslator() {
+      return new LabelLeAssertionToJavaExpr_c();
     }
 
     public AuthConstraint authConstraint(Position pos, List principals) {

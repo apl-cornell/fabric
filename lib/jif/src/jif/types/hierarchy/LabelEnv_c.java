@@ -23,7 +23,7 @@ import polyglot.util.Position;
 public class LabelEnv_c implements LabelEnv
 {
     protected final PrincipalHierarchy ph;
-    protected final List<LabelLeAssertion_c> labelAssertions; // a list of LabelLeAssertions
+    protected final List<LabelLeAssertion> labelAssertions; // a list of LabelLeAssertions
     protected final StringBuffer displayLabelAssertions; 
     protected final JifTypeSystem ts;
 
@@ -50,7 +50,7 @@ public class LabelEnv_c implements LabelEnv
     public LabelEnv_c(JifTypeSystem ts, boolean useCache) {
         this(ts, new PrincipalHierarchy(), new LinkedList(), "", false, useCache, new LinkedHashMap(), null);
     }
-    protected LabelEnv_c(JifTypeSystem ts, PrincipalHierarchy ph, List<LabelLeAssertion_c> assertions, String displayLabelAssertions, boolean hasVariables, boolean useCache, Map<AccessPath, AccessPath> accessPathEquivReps, LabelEnv_c parent) {
+    protected LabelEnv_c(JifTypeSystem ts, PrincipalHierarchy ph, List<LabelLeAssertion> assertions, String displayLabelAssertions, boolean hasVariables, boolean useCache, Map<AccessPath, AccessPath> accessPathEquivReps, LabelEnv_c parent) {
         this.ph = ph;
         this.labelAssertions = assertions;
         this.accessPathEquivReps = accessPathEquivReps;
@@ -121,7 +121,7 @@ public class LabelEnv_c implements LabelEnv
             // need to add it regardless.
             if (L1.hasVariables() || L2.hasVariables() || 
                     !(this.leq(L1, L2, freshSearchState()))) {
-                labelAssertions.add(new LabelLeAssertion_c(ts, L1, L2, Position.compilerGenerated()));
+                labelAssertions.add(ts.labelLeAssertion(Position.compilerGenerated(), L1, L2));
                 added = true;
                 if (!this.hasVariables && (L1.hasVariables() || L2.hasVariables())) {
                     // at least one assertion in this label env has a variable.
@@ -149,7 +149,7 @@ public class LabelEnv_c implements LabelEnv
     }
     
     public LabelEnv_c copy() {
-        return new LabelEnv_c(ts, ph.copy(), new LinkedList<LabelLeAssertion_c>(labelAssertions), 
+        return new LabelEnv_c(ts, ph.copy(), new LinkedList<LabelLeAssertion>(labelAssertions), 
                               displayLabelAssertions.toString(), 
                               hasVariables, useCache, 
                               new LinkedHashMap<AccessPath, AccessPath>(this.accessPathEquivReps), this);
@@ -577,7 +577,7 @@ public class LabelEnv_c implements LabelEnv
         if (Report.should_report(topics, 2))
             Report.report(2, "Applying assertions for " + L1 + " <= " + L2);
 
-        for (Iterator<LabelLeAssertion_c> i = labelAssertions.iterator(); i.hasNext();) { 
+        for (Iterator<LabelLeAssertion> i = labelAssertions.iterator(); i.hasNext();) { 
             LabelLeAssertion c = i.next();
 
             if (auc.get(c) >= ASSERTION_USE_BOUND) {
@@ -830,7 +830,7 @@ public class LabelEnv_c implements LabelEnv
         }
                 
         // check the assertions
-        for (Iterator<LabelLeAssertion_c> i = labelAssertions.iterator(); i.hasNext();) { 
+        for (Iterator<LabelLeAssertion> i = labelAssertions.iterator(); i.hasNext();) { 
             LabelLeAssertion c = i.next();
 
             Label cLHS = c.lhs();
@@ -939,7 +939,7 @@ public class LabelEnv_c implements LabelEnv
         Map<String, List<String>> defns = new LinkedHashMap<String, List<String>>();
         
         Set<Label> labelComponents = new LinkedHashSet<Label>();
-        for (Iterator<LabelLeAssertion_c> iter = labelAssertions.iterator(); iter.hasNext(); ) {
+        for (Iterator<LabelLeAssertion> iter = labelAssertions.iterator(); iter.hasNext(); ) {
             LabelLeAssertion c = iter.next();
             Label bound = bounds.applyTo(c.lhs());
             Collection<Label> components;

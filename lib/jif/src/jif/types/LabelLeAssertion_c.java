@@ -1,19 +1,26 @@
 package jif.types;
 
+import jif.translate.JifToJavaRewriter;
+import jif.translate.LabelLeAssertionToJavaExpr;
 import jif.types.label.Label;
+import polyglot.ast.Expr;
+import polyglot.types.SemanticException;
 import polyglot.types.TypeObject_c;
 import polyglot.util.Position;
 
 
 public class LabelLeAssertion_c extends TypeObject_c implements LabelLeAssertion
 {
+    LabelLeAssertionToJavaExpr toJava;
     Label lhs;
     Label rhs;
     
-    public LabelLeAssertion_c(JifTypeSystem ts, Label lhs, Label rhs, Position pos) {
+    public LabelLeAssertion_c(JifTypeSystem ts, Label lhs, Label rhs,
+            Position pos, LabelLeAssertionToJavaExpr toJava) {
         super(ts, pos);
 	this.lhs = lhs;
 	this.rhs = rhs;
+	this.toJava = toJava;
     }
 
     public Label lhs() {
@@ -42,5 +49,10 @@ public class LabelLeAssertion_c extends TypeObject_c implements LabelLeAssertion
     
     public String toString() {
         return lhs + " assert<= " + rhs;
+    }
+
+    @Override
+    public Expr toJava(JifToJavaRewriter rw) throws SemanticException {
+      return toJava.toJava(this, rw);
     }
 }
