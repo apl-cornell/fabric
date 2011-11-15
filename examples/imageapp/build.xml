@@ -1,4 +1,4 @@
-<project name="imageapp" default="build-all" basedir=".">
+<project name="imageapp" default="build-jif" basedir=".">
   <description>
     ImageApp build file
   </description>
@@ -36,8 +36,14 @@
 
   <target name="build-jif"
           description="Builds the Jif version of imageapp">
-    <jifc srcdir="${home}/src/jif" includes="jif/principals/*.jif"/>
-    <jifc srcdir="${home}/src/jif" excludes="jif/principals/*.jif"/>
+    
+  	<jifc srcdir="${home}/src/jif" includes="jif/principals/*.jif">
+      <arg value="-trusted-providers" />
+		</jifc>
+  	
+    <jifc srcdir="${home}/src/jif" excludes="jif/principals/*.jif">
+    	<arg value="-untrusted-providers" />
+    </jifc>
   </target>
 
   <target name="build-local" depends="build-trusted" description="Builds the fabric version of imageapp">
@@ -106,6 +112,7 @@
     <attribute name="srcdir" />
     <attribute name="includes" default="**/*.jif" />
     <attribute name="excludes" default="" />
+    <element name="extra-args" implicit="true" optional="yes"/>
     <sequential>
       <mkdir dir="${home}/classes/jif" />
       <apply executable="bash"
@@ -117,7 +124,8 @@
              vmlauncher="false">
         <arg value="${jifc}"/>
         <arg value="-fail-on-exception"/>
-	<arg value="-e"/>
+        <!--arg value="-untrusted-providers" /-->
+				<arg value="-e"/>
         <arg value="-d"          /> <arg value="${home}/classes/jif"/>
         <arg value="-sourcepath" /> <arg value="@{srcdir}"/>
         <arg value="-classpath"  /> <arg value="${home}/classes/jif"/>
