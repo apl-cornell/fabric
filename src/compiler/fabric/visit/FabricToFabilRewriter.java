@@ -17,6 +17,8 @@ import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
+import fabric.types.FabricContext;
+import fabric.types.FabricContext_c;
 import fabric.types.FabricTypeSystem;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
@@ -25,6 +27,22 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
   public FabricToFabilRewriter(Job job, FabricTypeSystem fab_ts,
       FabricNodeFactory fab_nf, fabil.ExtensionInfo fabil_ext) {
     super(job, fab_ts, fab_nf, fabil_ext);
+  }
+  
+  public FabricToFabilRewriter pushLocation(Expr location) {
+    FabricContext context = (FabricContext) context();
+    return (FabricToFabilRewriter) context(context.pushLocation(location));
+  }
+
+  public Expr currentLocation() {
+    Expr loc = ((FabricContext) context()).location();
+    if (loc == null) {
+      // XXX: this should only happen for runtime checks that need
+      // to create labels. They should *never* flow into persistent
+      // objects. How to check this?
+      loc = qq().parseExpr("Worker.getWorker().getLocalStore()");
+    }
+    return loc;
   }
 
   @Override

@@ -608,10 +608,23 @@ public final class SerializedObject implements FastSerializable, Serializable {
     if (interStoreLabel) {
       if (labelStore instanceof LocalStore) {
         Class<?> objClass = impl.getClass();
-        String objStr = impl.toString();
-        throw new InternalError("Creating remote ref to local store.  Remote "
-            + "object has class " + objClass + ".  Its string representation "
-            + "is \"" + objStr + "\", and its label is local.");
+        String message =
+            "Creating remote ref to local store.  Remote object has class "
+                + objClass + " and its update label is local with onum "
+                + labelOnum + ".";
+        if (impl.$stackTrace != null) {
+          message +=
+              "  A stack trace for the creation of the remote object follows.";
+          for (StackTraceElement e : impl.$stackTrace)
+            message += System.getProperty("line.separator") + "  " + e;
+          
+          message +=
+              System.getProperty("line.separator")
+                  + "A stack trace for the creation of the local object follows.";
+          for (StackTraceElement e : ((_Impl) label.fetch()).$stackTrace)
+            message += System.getProperty("line.separator") + "  " + e;
+        }
+        throw new InternalError(message);
       }
       out.writeUTF(labelStore.name());
     }

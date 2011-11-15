@@ -377,6 +377,11 @@ public interface Object {
      * The version number on the last update-map that was checked.
      */
     public int $updateMapVersion;
+    
+    /**
+     * A stack trace of where this object was created. Used for debugging.
+     */
+    public final StackTraceElement[] $stackTrace;
 
     /**
      * A private constructor for initializing transaction-management state.
@@ -407,7 +412,18 @@ public interface Object {
         throw new InternalError("Remote object has local label");
 
       this.$label = label;
+
+      if (TRACE_OBJECTS)
+        this.$stackTrace = Thread.currentThread().getStackTrace();
+      else this.$stackTrace = null;
     }
+    
+    /**
+     * A debugging switch for storing a stack trace each time an _Impl is
+     * created. This is enabled by passing "--trace-objects" as a command-line
+     * argument to the worker.
+     */
+    public static boolean TRACE_OBJECTS = false;
 
     /**
      * Creates a new Fabric object that will reside on the given Store.
@@ -713,11 +729,16 @@ public interface Object {
       // Remote reference.
       if (p.ref.store instanceof LocalStore) {
         Class<?> objClass = obj.getClass();
-        String objStr = obj.toString();
-        throw new InternalError(
+        String message =
             "Creating remote ref to local store.  Object on local store has "
-                + "class " + objClass + ".  Its string representation is \""
-                + objStr + "\".");
+                + "class " + objClass + " and onum " + p.ref.onum + ".";
+        if (p.fetch().$stackTrace != null) {
+          message +=
+              "  A stack trace for the creation of the local object follows.";
+          for (StackTraceElement e : p.anchor.$stackTrace)
+            message += System.getProperty("line.separator") + "  " + e;
+        }
+        throw new InternalError(message);
       }
       refType.add(RefTypeEnum.REMOTE);
       interStoreRefs.add(new Pair<String, Long>(p.ref.store.name(), p.ref.onum));
