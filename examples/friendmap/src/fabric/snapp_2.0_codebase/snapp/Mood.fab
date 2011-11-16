@@ -1,9 +1,16 @@
 package snapp;
 
-public class Mood [label THIS] {
-  public final String {THIS} description;
+public class Mood {
+  public final String {this} description;
 
-  public Mood(String{THIS} description) {
+  public
+  Mood
+  (
+    String{this} description
+  )
+  where
+    provider <= {this}
+  {
     this.description = description;
   }
 }

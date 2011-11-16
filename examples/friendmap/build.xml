@@ -13,6 +13,10 @@
 
   <dirname property="home" file="${ant.file.friendmap}" />
 
+  <target name="build-all" depends="build-local, build-jif"/>
+  <target name="all"       depends="build-local"/>
+
+
   <!--
   ****************************************************************************
     Targets for cleaning up the directory tree.
@@ -103,12 +107,6 @@
     </fabc-local>
     <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" />
   </target>
-
-
-
-
-  <target name="build-all" depends="build-jif"/>
-  <target name="all"       depends="build-all"/>
 
 
   <!--

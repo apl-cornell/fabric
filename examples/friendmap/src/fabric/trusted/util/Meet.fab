@@ -61,11 +61,22 @@ public class Meet extends Principal {
   public
   ActsForProof{this; p; this←; p←}
   findProofUpto {this←}
-               (Store c, Principal p,
+               (Store s, Principal p,
                 java.lang.Object searchState)
   {
-    // TODO
-    return null;
+    if (left actsfor this && right actsfor this) {
+
+      ActsForProof leftProof  = PrincipalUtil.findActsForProof(s, p, left,  searchState);
+      ActsForProof rightProof = PrincipalUtil.findActsForProof(s, p, right, searchState);
+
+      if (leftProof != null)
+        return new TransitiveProof@s(leftProof,  left,  new DelegatesProof@s(left, this));
+      if (rightProof != null)
+        return new TransitiveProof@s(rightProof, right, new DelegatesProof@s(right, this));
+      else
+        return null;
+
+    } else throw new AssertionFailedError("left and right act for meet");
   }
 
   /**
@@ -77,7 +88,7 @@ public class Meet extends Principal {
                  (Store c, Principal p,
                   java.lang.Object searchState)
   {
-    // TODO
+    // how would we know?
     return null;
   }
 }
