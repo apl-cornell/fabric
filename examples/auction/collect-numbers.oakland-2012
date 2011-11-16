@@ -60,6 +60,9 @@ END
 
 waitForUser
 
+echo
+echo '################### STATS FOR NON-MOBILE RUN ####################'
+
 # Collect timing stats.
 cat var/log/* > "${MASTER_LOG}"
 ~/work/fabric/bin/timing-oakland-2012 "${MASTER_LOG}"
