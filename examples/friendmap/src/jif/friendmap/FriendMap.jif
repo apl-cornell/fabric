@@ -50,7 +50,7 @@ where
     if (service == null)
       throw new NullPointerException();
 
-    this.service      = service;
+    this.service = service;
   }
 
 
@@ -173,7 +173,7 @@ where
     {service←} <= l,                      // the result is tainted by the service
     {user←}    <= l,                      // the result is tainted by the user
     {user; l; *provider; *MapServer.provider}
-              <= {{*l} meet {service→}}  // the arguments and code can affect the fetch and the return value
+              <= {{*l} meet {service→}}   // the arguments and code can affect the fetch and the return value
   {
     // invariant checks
     if (user == null)
