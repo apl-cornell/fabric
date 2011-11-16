@@ -9,7 +9,6 @@ Display.provider <= {p←},
 Camera.provider <= {p→;p←},
 Camera.provider <= Image.provider,
 Image.provider <= Camera.provider,
-provider <= {p←},
 provider <= {q←},
 provider <= Image.provider,
 provider <= Display.provider
