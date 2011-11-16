@@ -78,7 +78,14 @@ categories['Auction example (FabIL)'] = ['examples/auction/src/fabil']
 categories['Auction example (Fabric)'] = ['examples/auction/src/fabric']
 
 categories['FriendMap example (Jif)'] = ['examples/friendmap/src/jif']
-categories['FriendMap example (Fabric)'] = ['examples/friendmap/src/fabric']
+categories['FriendMap v1 example (Fabric)'] = \
+  [ 'examples/friendmap/src/fabric/friendmap_1.0_codebase',
+    'examples/friendmap/src/fabric/mapserv_1.0_codebase',
+    'examples/friendmap/src/fabric/snapp_1.0_codebase',
+    'examples/friendmap/src/fabric/trusted']
+categories['FriendMap v2 example (Fabric)'] = \
+  [ 'examples/friendmap/src/fabric/friendmap_2.0_codebase',
+    'examples/friendmap/src/fabric/snapp_2.0_codebase']
 
 categories['ImageApp example (Jif)'] = ['examples/imageapp/src/jif']
 categories['ImageApp example (Fabric)'] = ['examples/imageapp/src/fabric']
