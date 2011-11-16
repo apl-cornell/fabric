@@ -60,7 +60,6 @@ public class Delegator extends Principal {
     Principal p,
     java.lang.Object searchState
   )
-  where s
   {
     if (owner actsfor this) {
 
