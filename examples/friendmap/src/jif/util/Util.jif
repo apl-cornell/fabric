@@ -3,10 +3,7 @@ package util;
 import java.io.PrintStream;
 import jif.runtime.Runtime;
 
-public class Util
-where
-  provider <= {*←}
-{
+public class Util {
 
   /**
    * Copy the contents of an array into another array with the given labels.
