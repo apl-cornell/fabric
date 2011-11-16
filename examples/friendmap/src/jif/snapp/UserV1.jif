@@ -64,7 +64,7 @@ where
 
     this.locationInfo  = new Group[this](name + "'s location readers");
     this.friends       = new Group[this](name + "'s friends");
-    this.locationLabel = new label {this←;this→locationInfo};
+    this.locationLabel = new label {this←;locationInfo→};
 
     this.name     = name;
 

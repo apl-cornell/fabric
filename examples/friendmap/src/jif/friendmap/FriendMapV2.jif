@@ -1,0 +1,71 @@
+package friendmap;
+
+import mapserv.MapServer;
+import mapserv.MapImage;
+import mapserv.Box;
+
+import snapp.UserV1;
+import snapp.UserV2;
+import snapp.Location;
+
+public class FriendMapV2
+extends FriendMap
+where
+  FriendMap.provider <= provider,          provider <= FriendMap.provider,
+  MapServer.provider <= MapImage.provider, MapImage.provider <= MapServer.provider,
+  MapServer.provider <= Box.provider,      Box.provider      <= MapServer.provider
+{
+  public
+  FriendMapV2 {this}
+  (
+    MapServer {this} service
+  )
+  throws NullPointerException
+  where  provider <= {this}
+  {
+    super(service);
+  }
+
+
+  protected
+  void
+  addPin {*l}
+  (
+    final MapImage[l] {*l} map,
+    final Location    {*l} location,
+    final UserV1      {*l} friend,
+    final label       {*l} l
+  )
+  throws
+  (
+    NullPointerException{*l},
+    ArrayIndexOutOfBoundsException{*l}
+  )
+  where
+    FriendMap.provider <= l,
+    MapImage.provider  <= l
+  {
+    if (map == null || friend == null || location == null)
+      throw new NullPointerException();
+
+    char {*l} annotation = 'f';
+
+    if (friend instanceof UserV2)
+    {
+      final UserV2 friendV2 = (UserV2) friend;
+      if (friendV2.moodLabel <= l) {
+        try { annotation = friendV2.mood.description.charAt(0); }
+        catch (final NullPointerException e)            { /* Do nothing */ }
+        catch (final StringIndexOutOfBoundsException e) { /* Do nothing */ }
+      }
+    }
+
+    map.setAt(location.x, location.y, annotation);
+  }
+
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

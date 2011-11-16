@@ -20,25 +20,29 @@ import jif.translate.PrincipalToJavaExpr;
 import jif.types.ActsForConstraint;
 import jif.types.ActsForParam;
 import jif.types.Assertion;
-import jif.types.AutoEndorseConstraint;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
 import jif.types.JifLocalInstance;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabelLeAssertion;
+import jif.types.LabelSubstitution;
 import jif.types.LabeledType;
 import jif.types.Solver;
+import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
 import jif.types.label.AccessPathConstant;
 import jif.types.label.AccessPathLocal;
-import jif.types.label.AccessPathThis;
 import jif.types.label.ArgLabel;
 import jif.types.label.ConfPolicy;
-import jif.types.label.DynamicLabel;
+import jif.types.label.ConfProjectionPolicy_c;
 import jif.types.label.IntegPolicy;
+import jif.types.label.IntegProjectionPolicy_c;
+import jif.types.label.JoinConfPolicy_c;
 import jif.types.label.JoinLabel;
+import jif.types.label.JoinPolicy_c;
 import jif.types.label.Label;
 import jif.types.label.MeetLabel;
+import jif.types.label.PairLabel;
 import jif.types.label.ProviderLabel;
 import jif.types.label.ThisLabel;
 import jif.types.principal.DynamicPrincipal;
@@ -713,7 +717,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return false;
   }
   
-  // TODO: determine scenarios when this labels
+  // TODO: determine scenarios when arg labels
   // can be used by the remote call wrapper
   @Override
   public boolean containsArgLabel(Assertion as) {
@@ -962,7 +966,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
     IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
 
-    return pairLabel(L1.position(), join(cp1, cp2), meet(ip1, ip2));
+    return replaceProjections(pairLabel(L1.position(), join(cp1, cp2), meet(ip1, ip2)));
   }
 
   @Override
@@ -973,7 +977,88 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
     IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
 
-    return pairLabel(L1.position(), meet(cp1, cp2), join(ip1, ip2));
+    return replaceProjections(pairLabel(L1.position(), meet(cp1, cp2), join(ip1, ip2)));
   }
 
+  @Override
+  public boolean tleq(LabelEnv env, Label L1, Label L2) {
+    ConfPolicy cp1 = L1 == null ? null : L1.confProjection();
+    ConfPolicy cp2 = L2 == null ? null : L2.confProjection();
+
+    IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
+    IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
+    
+    return env.leq(cp1, cp2) && env.leq(ip2, ip1);
+  }
+  
+  @Override
+  public Label toLabel(ConfPolicy c) {
+    if(c instanceof ConfProjectionPolicy_c) {
+      ConfProjectionPolicy_c p = (ConfProjectionPolicy_c) c;
+      return join(p.label(), noComponentsLabel()); 
+    }
+    return replaceProjections(pairLabel(c.position(), c,
+        topIntegPolicy(c.position())));
+  }
+  
+  @Override
+  public Label replaceProjections(Label label) {
+    LabelSubstitution ls = new LabelSubstitution() {
+
+      @Override
+      public Label substLabel(Label L) throws SemanticException {
+        if (L instanceof PairLabel) {
+          PairLabel pair = (PairLabel) L;
+          ConfPolicy c = pair.confPolicy();
+          IntegPolicy i = pair.integPolicy();
+          
+          Label conf = null, integ = null;
+          if (c instanceof ConfProjectionPolicy_c) {
+            ConfProjectionPolicy_c proj = (ConfProjectionPolicy_c) c;
+            conf = join(proj.label().subst(this), noComponentsLabel());
+          }
+          else if (c instanceof JoinConfPolicy_c) {
+            JoinConfPolicy_c jp = (JoinConfPolicy_c) c;
+            Set<Label> lifted = new HashSet<Label>();
+            Set<ConfPolicy> confpols = new HashSet<ConfPolicy>();
+            
+            for(ConfPolicy cp : jp.joinComponents()) {
+              if(cp instanceof ConfProjectionPolicy_c) {
+                ConfProjectionPolicy_c cpproj = (ConfProjectionPolicy_c) cp;
+                lifted.add(join(cpproj.label().subst(this),
+                    noComponentsLabel()));
+              }
+              else
+                confpols.add(cp);
+            }
+            ConfPolicy new_jp = joinConfPolicy(jp.position(), confpols);
+            Label jplabel = pairLabel(jp.position(), new_jp, topIntegPolicy(jp.position()));
+            lifted.add(jplabel);
+            conf = joinLabel(L.position(), lifted);
+          }
+          
+          //XXX: TODO: the dual replacements for integrity.
+          if(i instanceof IntegProjectionPolicy_c) {
+            IntegProjectionPolicy_c proj = (IntegProjectionPolicy_c) i;
+            integ = meet(proj.label().subst(this), noComponentsLabel());
+          }      
+          
+          if(conf == null && integ == null)
+            return L;
+          else if(conf == null)
+            conf = pairLabel(L.position(), c, topIntegPolicy(L.position()));
+          else if(integ == null)
+            integ = pairLabel(L.position(), bottomConfPolicy(L.position()), i);
+
+          return join(conf, integ);
+        }
+        return L;
+      }
+    };
+    try {
+      return label.subst(ls);
+    } catch (SemanticException e) {
+      throw new InternalCompilerError("Unexpected semantic exception", e);
+    }
+  }
 }

@@ -40,6 +40,9 @@ public class Meet implements Principal {
     return false;
   }
 
+  /**
+   * Returns true if this principal authorizes the given closure.
+   */
   public
   boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
   isAuthorized {this←}
@@ -80,7 +83,7 @@ public class Meet implements Principal {
                  (Principal p,
                   Object searchState)
   {
-    // TODO
+    // how would we know?
     return null;
   }
 }

@@ -30,8 +30,15 @@ where
   /**
    * Create a new group with the given name and the default maximum size.
    */
-  public Group {this} (String{this} name) {
-    this.members = new Principal[SIZE];
+  public Group {this}
+  (
+    final Store  {this} store,
+    final String {this} name
+  )
+  where
+    store actsfor groupOwner
+  {
+    this.members = new Principal[SIZE]@store;
     super(name, groupOwner);
   }
 
@@ -42,15 +49,18 @@ where
   public
   Group {this}
   (
-    String {this} name,
-    int    {this} maxSize
+    final Store  {this} store,
+    final String {this} name,
+    final int    {this} maxSize
   )
   throws
   (
     NegativeArraySizeException{maxSize}
   )
+  where
+    store actsfor groupOwner
   {
-    this.members = new Principal[maxSize];
+    this.members = new Principal[maxSize]@store;
     super(name, groupOwner);
   }
 
@@ -113,10 +123,19 @@ where
   /**
    * Iterate over the members of the group.
    */
-  public GroupIterator[groupOwner, l] iterator {*l} (label l) where {groupOwner←} <= {*l} {
+  public
+  GroupIterator[groupOwner, l]
+  iterator {*l}
+  (
+    final Store s,
+    final label l
+  )
+  where
+    {groupOwner←} <= {*l}
+  {
     if (groupOwner actsfor this) {
       final Group[groupOwner]{*l} g = this;
-      return new GroupIterator[groupOwner, l](g);
+      return new GroupIterator[groupOwner, l]@s(g);
     }
     else
       throw new AssertionFailedError("groupOwner must act for group");
@@ -158,9 +177,9 @@ where
    * See Principal.findProofUpto.
    */
   public
-  ActsForProof{this; p; this←; p←}
+  ActsForProof[{s→}]{this; p; this←; p←}
   findProofUpto {this←}
-               (Store c, Principal p,
+               (Store s, Principal p,
                 java.lang.Object searchState)
   {
     if (groupOwner actsfor this) {
@@ -169,13 +188,13 @@ where
 
         // search for a proof from any of our delegatees
         for (int i = 0; i < size; i++) {
-          final principal s = members[i];
+          final principal m = members[i];
 
-          if (s actsfor this) {
+          if (m actsfor this) {
             // find a proof and extend it to include the group
-            ActsForProof{this;s;this←} proof = PrincipalUtil.findActsForProof(c, p, s, searchState);
+            ActsForProof{this;m;this←} proof = PrincipalUtil.findActsForProof(s, p, m, searchState);
             if (proof != null)
-                return new TransitiveProof(proof, s, new DelegatesProof(s, this));
+                return new TransitiveProof@s(proof, m, new DelegatesProof@s(m, this));
           }
           else
             throw new AssertionFailedError("this must delegate to all entries in the members array.");

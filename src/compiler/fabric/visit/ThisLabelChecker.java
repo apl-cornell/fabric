@@ -180,7 +180,9 @@ public class ThisLabelChecker extends ErrorHandlingVisitor {
 
           if (newPol != null) {
             FabricTypeSystem ts = (FabricTypeSystem) fieldLabel.typeSystem();
-            Label newLabel = ts.pairLabel(fieldLabel.position(), cp, newPol);
+            Label newLabel =
+                ts.replaceProjections(ts.pairLabel(fieldLabel.position(), cp,
+                    newPol));
             LabeledType newType = ltype.labelPart(newLabel);
             FieldDecl newDecl = fd.type(fd.type().type(newType));
             fi.setType(newType);

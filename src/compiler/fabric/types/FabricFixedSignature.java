@@ -26,11 +26,7 @@ public class FabricFixedSignature extends FixedSignature implements FabricDefaul
       FabricFieldInstance fi = (FabricFieldInstance) ffd.fieldInstance();
       Type t = fi.type();
       Label updateLabel = fts.labelOfType(t);
-      ConfPolicy cp = updateLabel.confProjection();
-      Label defaultAccessLabel = fts.pairLabel(Position.compilerGenerated(), 
-          cp, 
-          fts.topIntegPolicy(Position.compilerGenerated()));
-      return defaultAccessLabel;
+      return fts.toLabel(updateLabel.confProjection());
     } else {
       return ln.label();
     }

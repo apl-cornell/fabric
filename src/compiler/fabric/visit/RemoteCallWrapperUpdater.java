@@ -121,13 +121,6 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         LabelExpr rightExpr = nf.LabelExpr(right.position(), right);
 
         Expr labelComp = nf.Binary(Position.compilerGenerated(), leftExpr, Binary.LE, rightExpr);
-
-        //          List<Expr> args = new ArrayList<Expr>(md.formals().size());
-        //          for (Formal formal : (List<Formal>)md.formals()) {
-        //            Local l = nf.Local(Position.compilerGenerated(), formal.id());
-        //            l = l.localInstance(formal.localInstance());
-        //            args.add(l);
-        //          }
         
         for (Assertion as : mi.constraints()) {
           if (ts.containsThisLabel(as)

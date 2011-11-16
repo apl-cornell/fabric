@@ -21,9 +21,9 @@ public class Util {
   copyArray {*l} meet {*m;_→;_←}
   (
     final char{*m}[] data,
-    label l,
-    label m,
-    Store s
+    final label l,
+    final label m,
+    final Store s
   )
   throws (
     NullPointerException{data}
@@ -40,7 +40,7 @@ public class Util {
     {data} <= {*l}
 
   {
-    final char{*l}[] result = new char[data.length];
+    final char{*l}[] result = new char[data.length]@s;
 
     try {
 
@@ -50,30 +50,6 @@ public class Util {
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError("result and data have the same length.");
     }
-
-    return result;
-  }
-
-  // TODO: replace with worker$
-  public static final principal user = null;
-
-  public static
-  PrintStream[lbl] {user←; user→; lbl; *lbl}  // TODO: *lbl should not be here, but needs to be due to overly restrictive jif sig
-  stdout
-  (
-    label lbl
-  )
-  where
-    lbl <= {user→; _←_}
-  {
-    Runtime[user] runtime;
-    try { runtime = Runtime[user].getRuntime(); }
-    catch (final SecurityException e) { throw new AssertionFailedError("Runtime[user()].getRuntime() should not fail."); }
-
-    PrintStream[lbl] result;
-    try { result  = runtime.stdout(lbl); }
-    catch (final SecurityException    e) { throw new AssertionFailedError("runtime[user].stdout(lbl) should not fail if label ⊑ {user←}."); }
-    catch (final NullPointerException e) { throw new AssertionFailedError("Runtime.getRuntime() should return a non-null value"); }
 
     return result;
   }

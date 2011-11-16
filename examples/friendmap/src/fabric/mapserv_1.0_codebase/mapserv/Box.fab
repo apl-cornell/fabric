@@ -57,9 +57,10 @@ public class Box {
   where
     provider <= {this}
   {
-    return new Box(
-        min(this.xmin, x), min(this.ymin, y),
-        min(this.xmax, x), max(this.ymax, y));
+    final Store s = getStore();
+    return new Box@s(
+        min(this.xmin, x - 2), min(this.ymin, y - 2),
+        max(this.xmax, x + 2), max(this.ymax, y + 2));
   }
 
   /**
@@ -93,10 +94,12 @@ public class Box {
     Store s
   )
   where
+    {s←} <= l,
+    l <= {s→}
     provider <= l,
     {this}   <= l
   {
-    return new Box(this.xmin, this.ymin, this.xmax, this.ymax);
+    return new Box@s(this.xmin, this.ymin, this.xmax, this.ymax);
   }
 
   //////////////////////////////////////////////////////////////////////////////

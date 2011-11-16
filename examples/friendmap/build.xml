@@ -13,6 +13,10 @@
 
   <dirname property="home" file="${ant.file.friendmap}" />
 
+  <target name="build-all" depends="build-local, build-jif"/>
+  <target name="all"       depends="build-local"/>
+
+
   <!--
   ****************************************************************************
     Targets for cleaning up the directory tree.
@@ -61,7 +65,7 @@
   </target>
 
   <target name="build-jif-snapp" depends="build-jif-util">
-    <jifc srcdir="${home}/src/jif" includes="snapp/*.jif" excludes="snapp/UserV2.jif snapp/Mood.jif"/>
+    <jifc srcdir="${home}/src/jif" includes="snapp/*.jif" />
   </target>
 
   <target name="build-jif-mapserv" depends="build-jif-util">
@@ -69,7 +73,7 @@
   </target>
 
   <target name="build-jif-friendmap" depends="build-jif-sig,build-jif-java,build-jif-snapp, build-jif-mapserv">
-    <jifc srcdir="${home}/src/jif" includes="friendmap/*.jif" />
+    <jifc srcdir="${home}/src/jif" includes="friendmap/*.jif"/>
   </target>
 
   <target name="build-jif"
@@ -88,6 +92,7 @@
   <target name="build-trusted">
     <fabc-local srcdir="${home}/src/fabric/trusted" includes="**/*.fab">
       <arg value="-trusted-providers" />
+      <!--<arg value="-rdebug" />-->
     </fabc-local>
   </target>
 
@@ -103,12 +108,6 @@
     </fabc-local>
     <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" />
   </target>
-
-
-
-
-  <target name="build-all" depends="build-jif"/>
-  <target name="all"       depends="build-all"/>
 
 
   <!--

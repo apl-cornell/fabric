@@ -63,7 +63,7 @@ where
    */
   public
   void
-  viewMap {user,service→}
+  viewMap {{user→} meet {service→}}
   (
     User user
   )
@@ -72,8 +72,12 @@ where
     NullPointerException{user}
   )
   where
+    // the map will be output on standard out
     worker$ actsfor user,
-    {user; *provider; *MapServer.provider} <= {user,service→}
+
+    // these affect the fetch and resulting map
+    {user; *provider; *MapServer.provider} <= {user→},
+    {user; *provider; *MapServer.provider} <= {service→}
   {
     printMap(user, new label {user→});
   }
@@ -88,7 +92,7 @@ where
    */
   public
   void
-  postMap {user.friends,service→}
+  postMap {{user.friends→} meet {service→}}
   (
     final User user
   )
@@ -99,7 +103,8 @@ where
   where
     worker$ actsfor user,
     user        actsfor user.friends,
-    {user; *provider; *MapServer.provider} <= {user.friends,service→}
+    {user; *provider; *MapServer.provider} <= {user.friends→},
+    {user; *provider; *MapServer.provider} <= {service→}
   {
     if (user == null)
       throw new NullPointerException();
@@ -128,11 +133,12 @@ where
     NullPointerException {user}
   )
   where
-    {service←; user←} <= lbl,            // because the service and the user influence the map.
+    {service←; user←} <= lbl,        // because the service and the user influence the map.
     lbl               <= {worker$→}, // because data will be output to the system user
 
-    {user; lbl; *provider; *MapServer.provider} // these components affect the fetch and output
-                <= {{*lbl} meet {service→}}
+    // these components affect the fetch and constructed map 
+    {user; lbl; *provider; *MapServer.provider} <= {*lbl},
+    {user; lbl; *provider; *MapServer.provider} <= {service→}
   {
     if (user == null)
       throw new NullPointerException();
@@ -147,6 +153,9 @@ where
 
   /**
    * creates a map of the user's friends, visible at label l.  Return value is non-null.
+   *
+   * @throws NullPointerException
+   *         if user is null.
    */
   public
   MapImage[l] {*l}
@@ -173,11 +182,14 @@ where
     if (this.service == null)
       throw new AssertionFailedError("service must be non-null");
 
+    final Store fetchStore = service.getStore();
+    final Store localStore = worker$.getLocalStore();
+
     // this is the label of the data that gets sent to the service
     final label fetchLabel   = new label {{*l} meet {service→}};
 
     // compute the bounding box
-    Box boundary = new Box(0,0,0,0);
+    Box boundary = new Box@fetchStore(0,0,0,0);
 
     final GroupIterator[user, fetchLabel] i = user.friends.iterator(fetchLabel);
     if (i == null)
@@ -219,8 +231,6 @@ where
       throw new AssertionFailedError("getMap returned null");
 
     // make a local copy (with label l)
-    // TODO
-    final Store localStore = null;
     MapImage[l] annotated;
     if (new label {localStore←} <= l && l <= new label {localStore→})  // localStore ≽ ℓ
       annotated = map.copy(l, localStore);
@@ -243,13 +253,11 @@ where
         // add friend to the map if possible
         if (friend.locationLabel <= l) {
           final Location loc = friend.location;
-          if (loc != null && annotated.boundary.contains(loc.x, loc.y)) {
-            try {
-
-              annotated.setAt(loc.x, loc.y, 'f');
-
-            } catch (final ArrayIndexOutOfBoundsException e) {
-              throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally");
+          if (loc != null) {
+            if (annotated.boundary.contains(loc.x, loc.y)) {
+              try { addPin (annotated, loc, friend, l); }
+              catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
+              catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
             }
           }
         }
@@ -257,6 +265,38 @@ where
     }
 
     return annotated;
+  }
+
+  /**
+   * Add a pin corresponding to friend at a given location on a map.
+   *
+   * @throws NullPonterException
+   *         if friend or map is null
+   * @throws ArrayIndexOutOfBoundsException
+   *         if location is not on the map
+   */
+  protected
+  void
+  addPin {*l}
+  (
+    final MapImage[l] {*l} map,
+    final Location    {*l} location,
+    final UserV1      {*l} friend,
+    final label       {*l} l
+  )
+  throws
+  (
+    NullPointerException{*l},
+    ArrayIndexOutOfBoundsException{*l}
+  )
+  where
+    provider             <= l,
+    MapImage.provider    <= l
+  {
+    if (map == null || friend == null || location == null)
+      throw new NullPointerException();
+
+    map.setAt(location.x, location.y, 'f');
   }
 }
 

@@ -16,7 +16,8 @@ public final class System {
     label lbl
   )
   where
-    lbl <= {user→; _←_};
+    lbl <= {user→; _←_}
+  ;
 }
 
 

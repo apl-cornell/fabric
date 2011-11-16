@@ -48,29 +48,37 @@ public class Delegator extends Principal {
                label            lb,
                boolean          executeNow)
   {
-    // TODO
+    // we authorize nothing.
     return false;
   }
 
   public
-  ActsForProof{this; p; this←; p←}
-  findProofUpto {this←}
+  ActsForProof[{*→s}]{this; p; this←; p←}
+  findProofUpto {*->s;this←}
                (Store s,
                 Principal p,
                 java.lang.Object searchState)
   {
-    // TODO
-    return null;
+    if (owner actsfor this) {
+
+      ActsForProof proof = PrincipalUtil.findActsForProof(s, p, owner, searchState);
+      if (proof != null)
+        return new TransitiveProof[{*→s}]@s(proof, owner, new DelegatesProof[{*→s}]@s(owner, this));
+      else
+        return null;
+
+
+    } else throw new AssertionFailedError("owner acts for delegator");
   }
 
   public
-  ActsForProof{this; p; p←; this←}
+  ActsForProof[{s→}]{this; p; p←; this←}
   findProofDownto {this←}
                  (Store s,
                   Principal p,
                   java.lang.Object searchState)
   {
-    // TODO
+    // how would we know?
     return null;
   }
 }

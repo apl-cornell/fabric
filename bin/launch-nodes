@@ -10,21 +10,21 @@ cleanup()
 # shutdown nodes
 {
   exit $?
-#  for s in ${stores//,/ }; do
-#    echo "Shutting down $s"
-#    screen -S $s -X stuff "exit 
-#"
-#    screen -S $s -X quit
-#  done
-#
-#  for w in ${workers//,/ }; do
-#    echo "Shutting down $w"
-#    screen -S $w -X stuff "exit 
-#"
-#    screen -S $w -X quit
-#  done
-#
-#  exit $?
+  for s in ${stores//,/ }; do
+    echo "Shutting down $s"
+    screen -S $s -X stuff "exit 
+"
+    screen -S $s -X quit
+  done
+
+  for w in ${workers//,/ }; do
+    echo "Shutting down $w"
+    screen -S $w -X stuff "exit 
+"
+    screen -S $w -X quit
+  done
+
+  exit $?
 }
 
 control_c()
@@ -84,7 +84,7 @@ for s in ${stores//,/ }; do
   screen -S $s -X exec fab-store -v ${jvmcp} ${app_home_arg} --name $s || {
     screen -d -m -S $s -c /dev/null
     screenbug $s
-    screen -S $s -X logfile $s.log
+    screen -S $s -X logfile "${app_home}/var/$s.log"
     screen -S $s -X log on
     screen -S $s -X exec fab-store -v ${jvmcp} ${app_home_arg} --name $s
   }
@@ -104,7 +104,7 @@ for s in ${workers//,/ }; do
   screen -S $s -X exec fab -v ${jvmcp} ${app_home_arg} --name $s || {
     screen -d -m -S $s -c /dev/null
     screenbug $s
-    screen -S $s -X logfile $s.log
+    screen -S $s -X logfile "${app_home}/var/$s.log"
     screen -S $s -X log on
     screen -S $s -X exec fab -v ${jvmcp} ${app_home_arg} --name $s
   }

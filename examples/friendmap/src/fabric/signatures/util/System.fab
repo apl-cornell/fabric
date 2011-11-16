@@ -7,14 +7,16 @@ import java.io.PrintStream;
  */
 
 public final class System {
-  //public static final principal {*←} user = worker$;
 
   public static native
   PrintStream[lbl]
   stdout
   (
-    label{worker$→; _←_} lbl
-  );
+    label lbl
+  )
+  where
+    lbl <= {worker$→; _←}
+  ;
 }
 
 /*

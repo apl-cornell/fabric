@@ -1,27 +1,47 @@
 package snapp;
 
+codebase snapp1;
+codebase snapp2;
+
 import util.Group;
+import util.AssertionFailedError;
 
 /**
  * Version 2 of the User class.  Adds moods.
  */
-public class UserV2 extends UserV1 
-  where provider <= UserV1.provider, UserV1.provider <= provider,
-  provider <= Snapp.provider, Snapp.provider <= provider
+public class User extends snapp1.User
+where
+  provider <= snapp1.User.provider, snapp1.User.provider <= provider,
+  provider <= Snapp.provider,             Snapp.provider <= provider,
+  provider <= Mood.provider,               Mood.provider <= provider
 {
-  public Mood [{this←;this→moodInfo}] {this←;this→moodInfo} mood;
+  public Mood {*moodLabel} mood;
 
-  public final Group [this] {this←} moodInfo;
+  public final Group [this] {this} moodInfo;
+
+  public final label {this} moodLabel;
 
   public
-  UserV2{this} (
-    String    {this}   name,
-    principal {owner←} owner,
-    Snapp     {owner←} network
-  ) throws NullPointerException where provider <= {this} {
-    this.moodInfo = new Group[this] (name + "'s mood readers");
-    this.mood     = new Mood("indecisive");
+  UserV2 {this}
+  (
+    String    {this} name,
+    principal {this} owner,
+    Snapp     {this} network
+  )
+  throws NullPointerException
+  where
+    provider <= {this},
+    {this}   <= {owner,network←; owner&network→}
+  {
+    this.moodInfo   = new Group[this] (name + "'s mood readers");
+    this.moodLabel  = new label {this←; this.moodInfo→};
+
     super(name, owner, network);
+
+    if (new label {owner,network←; owner&network→} <= this.moodLabel)
+      this.mood       = new Mood("indecisive");
+    else
+      throw new AssertionFailedError("owner and network can update the mood");
   }
 }
 
