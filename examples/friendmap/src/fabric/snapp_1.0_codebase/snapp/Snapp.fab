@@ -10,6 +10,8 @@ public class Snapp extends Delegator
   where provider <= User.provider, User.provider <= provider
 {
 
+  protected final Store {this} store;
+
   /**
    * Create a new Snapp, operated by owner.
    */
@@ -17,11 +19,13 @@ public class Snapp extends Delegator
   Snapp {this}
   (
     String    {this} name,
-    principal {this} owner
+    principal {this} owner,
+    Store     {this} store
   )
   where
     provider <= {this}
   {
+    this.store = store;
     super(name, owner);
   }
 
@@ -35,8 +39,7 @@ public class Snapp extends Delegator
   where
     provider <= {this}
   {
-    final Store store = getStore();
-    try { return new User@store(name, owner, this); }
+    try { return new User@store(name, owner, this, store); }
     catch (final NullPointerException e) { throw new AssertionFailedError("User constructor succeeds unless network is null"); }
   }
 }

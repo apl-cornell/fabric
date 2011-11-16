@@ -47,7 +47,8 @@ where
   (
     String    {this} name,
     principal {this} owner,
-    Snapp     {this} network
+    Snapp     {this} network,
+    Store     {this} store
   )
   throws
   (
@@ -59,8 +60,6 @@ where
     // these endorsements are safe, because owner ≽ this,
     // and thus {owner←;network←} ⊑ {this←}
     // this just isn't true until after the superclass constructor is called.
-
-    final Store store = network.getStore();
 
     this.network = network;
 
