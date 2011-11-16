@@ -146,37 +146,6 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
         }        
       });
 
-      //      lc.constrain(new NamedLabel("{C(L);*<-store}", 
-      //                                  ts.pairLabel(Position.compilerGenerated(), 
-      //                                               ts.confProjection(objectLabel), 
-      //                                               ts.writerPolicy(Position.compilerGenerated(), 
-      //                                                               ts.topPrincipal(Position.compilerGenerated()), 
-      //                                                               storePrincipal()))), 
-      //                   LabelConstraint.LEQ, 
-      //                   new NamedLabel("{*->store;I(L)}",
-      //                                  ts.pairLabel(Position.compilerGenerated(), 
-      //                                               ts.readerPolicy(Position.compilerGenerated(), 
-      //                                                               ts.topPrincipal(Position.compilerGenerated()), 
-      //                                                               storePrincipal()), 
-      //                                               ts.integProjection(objectLabel))),
-      //                   A.labelEnv(), 
-      //                   n.position(),
-      //                   new ConstraintMessage() {
-      //        @Override
-      //        public String msg() {
-      //          return "C(L) <= {*->store} and {*<-store} <= I(L) for new C@store() where the field label of C is L.";
-      //        }
-      //        
-      //        @Override
-      //        public String detailMsg() {
-      //          return "C(L) <= {*->store} and {*<-store} <= I(L) for new C@store() where the field label of C is L.";
-      //        }
-      //        
-      //        @Override
-      //        public String technicalMsg() {
-      //          return "C(L) <= {*->store} and {*<-store} <= I(L) for new C@store() where the field label of C is L.";
-      //        }
-      //      });
     }
   }
 }
