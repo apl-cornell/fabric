@@ -88,6 +88,14 @@ public class FabricClassDeclExt extends JifClassDeclExt {
     // Access label checks
     Label classAccessLabel = ((FabricTypeSystem)jts).toLabel(pct.classAccessPolicy());
     
+    // ({this} <= access label) holds true at all access sites 
+    A.addAssertionLE(
+        jts.pairLabel(Position.compilerGenerated(),
+            jts.thisLabel(ct).confProjection(),
+          jts.topIntegPolicy(Position.compilerGenerated())),
+        singleAccessLabel);
+    
+    if (singleAccessLabel != null) {
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     if (ts.isFabricClass(pct)) {
       // check that the access label has the top integrity label, i.e. it only
