@@ -6,9 +6,9 @@ package fabric.lang.security;
  */
 public final class TransitiveProof[label A] extends ActsForProof[A] {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
-    private final ActsForProof[A]{this} actorToP;
-    private final ActsForProof[A]{this} pToGranter;
-    private final principal{this} p;
+    private final ActsForProof[A]{this}@{A} actorToP;
+    private final ActsForProof[A]{this}@{A} pToGranter;
+    private final principal{this}@{A} p;
     public TransitiveProof(ActsForProof[A]{this} actorToP, principal{this} p, ActsForProof[A]{this} pToGranter) {
         super(p, p); // dummy
         this.actorToP = actorToP;

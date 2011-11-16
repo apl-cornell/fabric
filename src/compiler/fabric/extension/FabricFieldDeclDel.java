@@ -24,6 +24,9 @@ public class FabricFieldDeclDel extends JifFieldDeclDel {
     } else {
       Li = n.accessLabel().label();
     }
+    if(fts.containsThisLabel(Li)) {
+      throw new SemanticException("Access label cannot contain \"this\" label.", n.position());
+    }
     ffi.setAccessLabel(Li);
     return n.fieldInstance(ffi);
   }

@@ -2,11 +2,9 @@ package fabric.types;
 
 import jif.ast.LabelNode;
 import jif.types.FixedSignature;
-import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import polyglot.ast.FieldDecl;
 import polyglot.types.Type;
-import polyglot.util.Position;
 import fabric.ast.FabricFieldDecl;
 
 public class FabricFixedSignature extends FixedSignature implements FabricDefaultSignature {

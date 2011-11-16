@@ -25,6 +25,7 @@ import jif.types.label.AccessPathLocal;
 import jif.types.label.AccessPathRoot;
 import jif.types.label.ArgLabel;
 import jif.types.label.ConfPolicy;
+import jif.types.label.ConfProjectionPolicy_c;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
 import polyglot.ast.Expr;
@@ -234,13 +235,17 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
         LabelEnv classEnv = classEnv();
         for (FieldInstance fi : fields()) {
           if (fi.flags().isStatic()) continue;
+          FabricFieldInstance ffi = (FabricFieldInstance) fi;
           Type t = fi.type();
           if (ts.isLabeled(t)) {
-            ConfPolicy tslabel = ts.labelOfType(t).confProjection();
-            classAccessPolicy = upperBound(classEnv, classAccessPolicy, tslabel);
+            Label tslabel = ffi.accessLabel();
+
+            classAccessPolicy = upperBound(classEnv, classAccessPolicy, tslabel.confProjection());
           }
         }
-        
+        if(ts.containsThisLabel(ts.toLabel(classAccessPolicy)))
+          throw new InternalError("Access label contains \"this\" in " + this + ":" + classAccessPolicy);
+
         try {
           int i = 0;
           
@@ -276,6 +281,8 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
         accessPolicy = ts.topConfPolicy(Position.compilerGenerated());
       }
       accessLabelFound = true;
+      if(ts.containsThisLabel(ts.toLabel(accessPolicy)))
+        throw new InternalError("2. ACCESS LABEL CONTAINS THIS:" + this + ":" + accessPolicy);
     }
     return accessPolicy;
   }
