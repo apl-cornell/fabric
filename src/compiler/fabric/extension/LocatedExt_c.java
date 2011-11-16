@@ -86,7 +86,8 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
       final Label accessLabel) throws SemanticException {
     Node n = node();
 
-    // XXX: Why should these be null? What does it mean?
+    // TODO if storePrincipal() returns null, then the store principal of the
+    // containing class should be used. 
     if (location() != null && objectLabel != null) {
       FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
       JifContext A = lc.jifContext();

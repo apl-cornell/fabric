@@ -111,9 +111,55 @@
 
   <!--
   ******************************************************************************
+    Fabric deployment targets
+  ******************************************************************************
+  -->
+
+  <target name="publish-snapp-1.0" />
+
+  <target name="publish-snapp-2.0"
+          depends="publish-snapp-1.0" />
+
+  <target name="publish-mapserv-1.0" />
+
+  <target name="publish-friendmap-1.0"
+          depends="publish-snapp-1.0, publish-mapserv-1.0" />
+
+  <target name="publish-friendmap-2.0"
+          depends="publish-friendmap-1.0, publish-snapp-2.0" />
+
+  <target name="publish-scripts-snapp"
+          depends="publish-snapp-1.0" />
+
+  <target name="publish-scripts-mapserv"
+          depends="publish-mapserv-1.0" />
+
+  <target name="publish-scripts-friendmap"
+          depends="publish-friendmap-1.0" />
+
+  <target name="publish-scripts-users"
+          depends="publish-friendmap-1.0" />
+
+  <target name="publish-all"
+          depends="publish-scripts-users,
+                   publish-scripts-friendmap,
+                   publish-scripts-snapp,
+                   publish-scripts-mapserv" />
+
+  <!--
+  ******************************************************************************
     Macros
   ******************************************************************************
   -->
+
+  <!-- fabc-publish
+       verify and publish fabric code
+  -->
+  <macrodef name="fabc-publish">
+    <attribute name="worker" />
+    <attribute name="store"  />
+    <sequential />
+  </macrodef>
 
   <!-- fabc-local
        compile fabric code locally

@@ -20,7 +20,7 @@ public class ComplexAssembly extends Assembly {
     super(db);
     db.complexAssembliesById.put(new Integer(id()), this);
 
-    subAssemblies = new LinkedList();
+    subAssemblies = (LinkedList) new LinkedList().$initLabels();
   }
 
   public void addSubAssembly(Assembly x) {

@@ -29,7 +29,7 @@ Image.provider <= provider
     public void resetCamera{*lb_camera}()
     { // reset the counter and throw away the old array...
 	this.n_images = 0;
-	this.images = new Image [p][MAX_IMAGE_CAPACITY];;
+	this.images = new Image[p] [MAX_IMAGE_CAPACITY];
     }
     
     public void updateCoords {*lb_camera}(int {*lb_camera} x, int {*lb_camera} y)

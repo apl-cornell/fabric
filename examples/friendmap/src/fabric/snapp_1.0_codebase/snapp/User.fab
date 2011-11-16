@@ -47,7 +47,8 @@ where
   (
     String    {this} name,
     principal {this} owner,
-    Snapp     {this} network
+    Snapp     {this} network,
+    Store     {this} store
   )
   throws
   (

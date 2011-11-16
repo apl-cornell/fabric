@@ -1,0 +1,14 @@
+
+public class Init
+{
+  public static void main(String[] args) {
+    final Store store = worker$.getRemoteStore("snapp");
+    final Snapp snapp = new Snapp@store("Snapp Principal Object", store);
+
+    store.getRootMap().put("snapp", snapp);
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et syntax=java
+*/

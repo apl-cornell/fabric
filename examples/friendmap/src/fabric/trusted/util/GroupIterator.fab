@@ -25,10 +25,13 @@ where
   boolean {L}
   hasNext()
   {
+    /*
     if (this.g == null)
       throw new AssertionFailedError("g must be non-null");
 
     return this.i < this.g.size;
+    */
+    return false;
   }
 
   public
@@ -37,6 +40,8 @@ where
   ():{L}
   throws NoSuchElementException
   {
+    return null;
+    /*
     if (!this.hasNext())
       throw new NoSuchElementException();
 
@@ -50,6 +55,7 @@ where
     } catch (ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError("this.hasNext() but index is off-the-end");
     }
+    */
   }
 }
 

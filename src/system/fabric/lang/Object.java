@@ -924,7 +924,7 @@ public interface Object {
           public Object run() throws Throwable {
             Constructor<? extends Object._Impl> constr =
               c.getConstructor(Store.class);
-            return constr.newInstance(store);
+            return constr.newInstance(store).$initLabels().fetch();
           }
         });
       }

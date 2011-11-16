@@ -29,8 +29,8 @@ public class AtomicPart extends DesignObject {
     
     db.atomicPartsById.put(new Integer(id()), this);
     
-    to   = new LinkedList();
-    from = new LinkedList();
+    to   = (LinkedList) new LinkedList().$initLabels();
+    from = (LinkedList) new LinkedList().$initLabels();
   }
   
   public void setBuildDate(long buildDate) {

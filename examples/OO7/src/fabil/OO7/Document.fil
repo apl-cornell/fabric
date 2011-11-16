@@ -21,7 +21,8 @@ public class Document {
     db.documentsById.put(new Integer(id()), this);
 
     // TODO: generate different strings, and index
-    this.text = new char[size];
+    Label label = Worker.getWorker().getLocalStore().getEmptyLabel();
+    this.text = new char[size]~label;
   }
 
   public void setTitle(String title) {

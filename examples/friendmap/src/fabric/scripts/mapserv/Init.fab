@@ -1,0 +1,12 @@
+public class Init {
+  public static void main(String[] args) {
+    final Store     store  = worker$.getRemoteStore("mapserv");
+    final MapServer server = new MapServer@store(store, "Map Server Object", '.');
+
+    store.getRootMap().put("mapserv", server);
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

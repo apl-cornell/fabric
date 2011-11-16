@@ -1,0 +1,13 @@
+public class AddFriends {
+  public static main(String[] args) {
+    final User alice = (User) worker$.getRemoteStore("snapp").getRootMap().get("alice");
+    final User bob   = (User) worker$.getRemoteStore("snapp").getRootMap().get("bob");
+
+    bob.friends.add(alice);
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

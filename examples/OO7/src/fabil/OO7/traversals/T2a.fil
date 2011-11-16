@@ -18,7 +18,7 @@ public class T2a extends PrivatePartTraversal {
     Store local = Worker.getWorker().getLocalStore();
     T2a t2 = null;
     atomic {
-      t2 = new T2a@local();
+      t2 = (T2a) new T2a@local().$initLabels();
     }
     t2.mainImpl(args);
   }

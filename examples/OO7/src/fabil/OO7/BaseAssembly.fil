@@ -21,8 +21,8 @@ public class BaseAssembly extends Assembly {
     super(db);
     db.baseAssembliesById.put(new Integer(id()), this);
 
-    componentsPriv = new LinkedList();
-    componentsShar = new LinkedList();
+    componentsPriv = (LinkedList) new LinkedList().$initLabels();
+    componentsShar = (LinkedList) new LinkedList().$initLabels();
   }
 
   public void addComponentsPriv(CompositePart x) {

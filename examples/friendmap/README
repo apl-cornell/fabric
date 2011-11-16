@@ -1,6 +1,49 @@
-This is the Social Network / Map Mashup Application.  For current
-documentation, see
 
-https://apl.cs.cornell.edu/wiki/Fabric:Oakland:Examples#Social_Network_App_Example
+Execution steps:
+
+ - start stores / workers (any order is fine):
+   - alice
+   - bob
+   - friendmap
+   - mapserv
+   - snapp
+
+ - publish application code
+   - snapp
+        snapp_1.0_codebase
+        snapp_2.0_codebase linked against snapp_1.0_codebase
+   - mapserv
+        mapserv_1.0_codebase
+   - friendmap
+        friendmap_1.0_codebase linked against mapserv_1.0_codebase, snapp_1.0_codebase
+        friendmap_2.0_codebase linked against mapserv_1.0_codebase, snapp_1.0_codebase, snapp_2.0_codebase
+   - scripts
+        fabric/scripts/foo published to foo
+        linking against snapp, mapserv, friendmap
+
+ - initialize objects
+   - Init@snapp:
+        create snapp
+   - Init@mapserv:
+        create mapserv
+   - Init@friendmap <mapserv_uri>:
+        create friendmap
+        friendmap.service -> mapserv
+   - Init@alice <snapp_uri> <mapserv_uri>:
+        create alice on snapp,
+        add mapserv to alice.locationInfo
+   - Init@bob <snapp_uri> <mapserv_uri>
+        create bob on snapp
+        add bob.friends to bob.locationInfo
+        add mapserv to bob.locationInfo
+   - AddFriends@alice <bob_uri>:
+        add bob to alice.friends
+   - AddFriends@bob <alice_uri>:
+        add alice to bob.friends
+
+ - run example
+   - RunApp@alice:
+        invoke friendmap application
+        expected output: 10x10 map with bob's location on it.
 
 

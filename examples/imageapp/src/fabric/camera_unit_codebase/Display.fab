@@ -1,0 +1,30 @@
+// Display is trusted debugging class that is supposed to emulate 
+// The user's display
+
+
+import java.io.PrintStream;
+
+// for debugging purposes
+public class Display[principal p] 
+authority (p)
+where
+provider <= {p←}
+{
+    final PrintStream[{}]{} out; 
+    public Display(PrintStream[{}]{} o) {
+	this.out = o;
+    }
+
+    // note: auto-endorsement, endorsement, and declassifications are justified, 
+    // since this is a debugging-only method...
+
+    public void show {} (String {p->} str) 
+    where authority (p), endorse({p<-}) 
+    {
+	String {p->; p<-} s0 = endorse (str, {p -> ; p<-});
+	String {} s = declassify (s0, {p->} to {}) ;
+	try {
+	    out.println(" ||| " + s +  " ||| ");
+	} catch (Exception ignored) {}
+    }
+}

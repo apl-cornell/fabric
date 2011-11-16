@@ -1,20 +1,20 @@
 package fabric.extension;
 
-import polyglot.ast.Node;
-import polyglot.types.SemanticException;
-import polyglot.util.Position;
-import fabric.types.FabricParsedClassType;
-import fabric.types.FabricTypeSystem;
 import jif.ast.JifMethodDecl;
 import jif.extension.JifMethodDeclExt;
 import jif.translate.ToJavaExt;
 import jif.types.ConstraintMessage;
 import jif.types.JifContext;
 import jif.types.JifMethodInstance;
+import jif.types.JifProcedureInstance;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
+import polyglot.types.SemanticException;
+import polyglot.util.Position;
+import fabric.types.FabricParsedClassType;
+import fabric.types.FabricTypeSystem;
 
 public class MethodDeclJifExt extends JifMethodDeclExt {
 
@@ -25,7 +25,8 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
   }
   
   @Override
-  public Node labelCheck(LabelChecker lc) throws SemanticException {
+  public void checkBeginLabel(JifProcedureInstance jpi, LabelChecker lc)
+      throws SemanticException {
     JifMethodDecl n = (JifMethodDecl)node();
     JifMethodInstance jmi = (JifMethodInstance) n.methodInstance();
     JifContext A = lc.context();
@@ -64,7 +65,8 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
       }
       );
     }
-    return super.labelCheck(lc);
+    
+    super.checkBeginLabel(jpi, lc);
   }
   
   
