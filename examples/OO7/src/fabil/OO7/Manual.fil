@@ -16,7 +16,8 @@ public class Manual {
   Module mod;
 
   public Manual(int size) {
-    text = new char[size];
+    Label label = Worker.getWorker().getLocalStore().getEmptyLabel();
+    text = new char[size]~label;
   }
 
   public void setTitle(String title) {
