@@ -6,7 +6,7 @@ package fabric.lang.security;
 public abstract class ActsForProof[label A] {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     
-    ActsForProof(principal{this} actor, principal{this} granter) {
+    ActsForProof(principal{this} actor, principal{this} granter): {A} {
     }
 
     public native principal{this} getActor{A}();

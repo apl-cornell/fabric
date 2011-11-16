@@ -177,7 +177,7 @@ where
    * See Principal.findProofUpto.
    */
   public
-  ActsForProof[{s→}]{this; p; this←; p←}
+  ActsForProof[{s→}]{this; p; this←; p←;s}
   findProofUpto {this←}
                (Store s, Principal p,
                 java.lang.Object searchState)
