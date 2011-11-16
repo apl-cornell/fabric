@@ -18,7 +18,7 @@ where
   provider               <= {groupOwner←},
   GroupIterator.provider <= {groupOwner←}
 {
-  final Principal{groupOwner←}[] {this} members;
+  final Principal{groupOwner←}[] {this} @ {this->} members;
   int            {groupOwner←}          size = 0;
 
   private final static int  {*←}     SIZE = 100;

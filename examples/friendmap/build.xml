@@ -92,7 +92,6 @@
   <target name="build-trusted">
     <fabc-local srcdir="${home}/src/fabric/trusted" includes="**/*.fab">
       <arg value="-trusted-providers" />
-      <!--<arg value="-rdebug" />-->
     </fabc-local>
   </target>
 

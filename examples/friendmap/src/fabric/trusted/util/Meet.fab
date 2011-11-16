@@ -2,10 +2,10 @@ package util;
 
 public class Meet extends Principal {
 
-  protected final String {this} name;
+  protected final String {this}@{this->} name;
 
-  protected final Principal{this} left;
-  protected final Principal{this} right;
+  protected final Principal{this}@{this->} left;
+  protected final Principal{this}@{this->} right;
 
   public
   Meet

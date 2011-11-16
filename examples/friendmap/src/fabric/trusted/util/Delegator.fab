@@ -4,8 +4,8 @@ package util;
  * Convenience principal class the delegates to a single owner.
  */
 public class Delegator extends Principal {
-  protected final String    {this} name;
-  protected final principal {this} owner;
+  protected final String    {this}@{this->} name;
+  protected final principal {this}@{this->} owner;
 
   public
   Delegator {this}
