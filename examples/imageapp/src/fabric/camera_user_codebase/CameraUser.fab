@@ -1,0 +1,105 @@
+import java.io.PrintStream;
+
+// This class simulates user actionn: the user takes pictures, marks
+// some of them as shared, and may invoke a third-party app
+
+public class CameraUser [principal p, principal q] 
+authority (p)
+where
+provider <= {p←}, 
+provider <= {q←},
+provider <= Camera.provider,
+Camera.provider <= provider,
+provider <= Image.provider,
+Image.provider <= provider,
+ImageApp.provider <= provider,
+provider <= Display.provider,
+Display.provider <= provider
+{
+    final Camera[p] {p<-} camera;
+    final ImageApp[p,q] {q <-} imageapp;
+
+    public CameraUser (Camera[p] {p<-} camera, ImageApp[p,q ] {q<-} imgeapp) {
+	this.camera = camera;
+	this.imageapp = imgeapp; // todo: bug alert!!! renaming the
+                           	 // argument to "imageapp" results in
+                           	 // a translation bug in the
+                           	 // complier!!!
+    }
+
+    public void useCamera{p<-}() 
+    where authority (p), provider <= {p→;p←}
+    {
+	if (new label {p<-} <= camera.lb_camera ) {
+	    try {
+		// take 10 images
+		for (int i = 0; i < 10; i++) {
+		    this.camera.takeNewImage() ;
+		}
+		// mark every second image as shared...
+		for (int i = 0; i < 5; i ++) {
+		    markShared (2*i);
+		}
+	    } catch (Exception ignored) {
+	    }
+	}
+    }
+
+    // A lot of boilerplate declassification happens here... We need
+    // to grow up and automate this eventually. Method markShared
+    // declassifies the bitmap of the i-th image in camera
+    public void markShared{p<-}(int {*this.camera.lb_camera} i)
+    where caller (p), provider <= this.camera.lb_camera
+    {
+	byte{p<-} [] {p<-} bmp0 = null;
+	try {bmp0 = new byte[camera.CAMERA_RESOLUTION];} catch (Exception ignored) {}
+	if (bmp0 == null) return;
+	final Camera[p] {p<-} camera = this.camera; if (camera == null) return;
+	if (new label {p<-;p ->} equiv camera.lb_camera) {
+	    Image[p]{p<-; p->} [] imgs0 = camera.images;
+	    Image[p]{p<-; p->} [] {p<-} imgs = declassify (imgs0, {p<-});
+	    Image[p]{p<-; p->} theImage0 = null;
+	    try {
+		theImage0 = imgs[i];
+	    } catch (Exception ignored) {
+	    }
+	    final Image[p]{p<-} theImage = declassify (theImage0, {p<-});
+	    if (theImage == null) return;
+
+ 
+	    if (theImage.lb_img equiv camera.lb_camera &&  // these always hold
+                theImage.lb_meta equiv camera.lb_camera) { // todo: generalize the constraints...
+		                             
+		byte{p->; p<-}[]{p<-; p->} bmp1 = theImage.bmp;
+		byte{p->; p<-}[]{p<-} bmp = declassify (bmp1, {p<-});
+
+		for (int j = 0; j < camera.CAMERA_RESOLUTION; j++) {
+		    try {
+			byte {p<-} t = declassify (bmp[j], {p<-; p->} to {p<-});
+			bmp0[j] = t;
+		    } catch (Exception ignored) {}
+		} 
+
+		String title0  = declassify (theImage.title, {p<-});
+
+		// By now we have declassified the bitmap, so next we
+		// construct a new Image object. Note that metadata is
+		// still confidential
+
+		Image[p] {p<-} sharedImage = new Image (
+			new label {p <-},  // use public label for the bitmap
+				theImage.lb_meta, bmp0, title0, 
+				      theImage.gpsX, theImage.gpsY);
+
+		// Update the image array with the shared image
+		camera.images[i] = sharedImage;
+	    }
+	}
+    }
+
+    public void useApp{q<-}(PrintStream[{}]{} out) { 
+	final ImageApp[p,q]{q<-} theapp = this.imageapp; 
+	if (theapp == null) return;
+	theapp.firstRunAction();
+    }
+}

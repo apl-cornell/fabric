@@ -1,0 +1,102 @@
+import java.io.PrintStream;
+
+// principal p runs the camera
+
+public class Camera [principal p] authority (p)
+where provider <= {p→;p←},
+provider <= Image.provider,
+Image.provider <= provider
+{ 
+    public final int {p<-} CAMERA_RESOLUTION  = 16; // whatever are our units of resolution
+    public final int {p<-} MAX_IMAGE_CAPACITY = 36; // this is public information 
+    public final label{p<-} lb_camera  = new label { p <-; p -> };
+
+    /*** Camera State ***/
+
+    // Camera state consists of the image counter, array of the
+    // images, and the coordinaets, all labeled with {*lb_camera}
+
+    public int {*lb_camera} n_images;
+    public Image[p] {*lb_camera} [] {*lb_camera} images;
+    public int {*lb_camera} gpsX, gpsY;
+
+    public Camera {p<-; p->} () {
+	this.gpsX = 0; 
+	this.gpsY = 0;
+	resetCamera();
+    }
+
+    public void resetCamera{*lb_camera}()
+    { // reset the counter and throw away the old array...
+	this.n_images = 0;
+	this.images = new Image[p] [MAX_IMAGE_CAPACITY];
+    }
+    
+    public void updateCoords {*lb_camera}(int {*lb_camera} x, int {*lb_camera} y)
+    {
+	this.gpsX = x;
+	this.gpsY = y;
+    }
+
+    public int {*lb_camera} takeNewImage{*lb_camera} () {
+	if (n_images >= MAX_IMAGE_CAPACITY) 
+	    return -1;
+
+	// When camera is full we return -1; an alternative
+        // implementation would throw a special exception, but we do
+        // not do that just yet.
+					
+	byte{*lb_camera}[]{*lb_camera} bmp = new byte[CAMERA_RESOLUTION];
+	for (int i= 0; i <= CAMERA_RESOLUTION; i++) {
+	    try { 
+		bmp [i] = read_raw_source_of_data();
+	    } catch (Exception ignored) {
+	    }
+	}
+	
+	String title = "Image" + n_images;
+
+	Image [p] newimg = new Image [p]( lb_camera, lb_camera, bmp, title, this.gpsX, this.gpsY);
+	try {
+	    this.images [n_images] = newimg;
+	} catch (Exception ignored) {} 
+	int r = n_images;
+	this.n_images ++;  
+	return r;
+    }
+
+    public byte{*lb_camera} read_raw_source_of_data{*lb_camera}() {
+	return 0; // we pretend to return something meaningful... 
+                  // note the begin_label is {lb_camera}, but it could be higher
+    }
+
+    // debugging method
+    public void printImageLabels{p<-}(PrintStream[{}]{} out) where authority (p) {
+	int{} n = declassify (n_images, {});
+	declassify ({p←}) {
+	    out.println("There are total " + n +" images");
+	}
+    }
+
+
+    // todo: justify auto-endorse
+    public int {p<-} getNImages {} () where authority (p), endorse({*provider;p<-}) {
+	return declassify (n_images, {p<-});
+    }
+    
+    // for the lack of label-heterogenous data structures in Jif we add this helper method
+    // todo: justify auto-endorse
+    public Image[p]{p<-} getImage{}(int {} i0) where authority (p), endorse({*provider;p<-}) {
+	// Justification - it is (is it?) okay to declassify the individual element of the images array
+	// because nothing about the image is public otherwise
+	declassify ({p←}) {
+	int i = endorse (i0, {p<-});
+	Image [p] {p -> ; p<-} img = null;
+	try {
+	    img = images [i];
+	} catch (Exception ignored) {}
+	Image[p] {p<-} ret = declassify (img, {p ->; p<-} to {p <-});
+	return ret;
+	}
+    }
+}

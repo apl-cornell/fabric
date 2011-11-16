@@ -1,4 +1,4 @@
-<project name="imageapp" default="build-jif" basedir=".">
+<project name="imageapp" default="build-local" basedir=".">
   <description>
     ImageApp build file
   </description>
@@ -46,27 +46,20 @@
     </jifc>
   </target>
 
-  <target name="build-local" depends="build-trusted" description="Builds the fabric version of imageapp">
-    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase" />
-    <fabc-local srcdir="${home}/src/fabric/mapserv_1.0_codebase" />
-    <fabc-local srcdir="${home}/src/fabric/imageapp_1.0_codebase" />
+  <target name="build-local" description="Builds the fabric version of imageapp">
+    <fabc-local srcdir="${home}/src/fabric/camera_unit_codebase">
+      <arg value="-untrusted-providers" />
+		</fabc-local>
+    <fabc-local srcdir="${home}/src/fabric/camera_user_codebase">
+    	<arg value="-untrusted-providers" />
+  	</fabc-local>
+    <fabc-local srcdir="${home}/src/fabric/image_app_codebase">
+    	<arg value="-untrusted-providers" />
+  	</fabc-local>
   </target>
 
   <target name="build-all" depends="build-local"/>
   <target name="all"       depends="build-all"/>
-
-  <!--
-  ******************************************************************************
-    Auxiliary builds
-  ******************************************************************************
-  -->
-
-  <target name="build-trusted">
-    <fabc-local srcdir="${home}/src/fabric/trusted">
-      <arg value="-trusted-providers" />
-    </fabc-local>
-  </target>
-
 
   <!--
   ******************************************************************************
@@ -96,6 +89,10 @@
         <arg value="${fabc}" />
         <arg value="-g" />
         <arg value="-e" />
+        <arg value="-rdebug" />
+        <!--
+        -->
+        <arg value="-untrusted-providers"/>
         <arg value="-d" />         <arg value="${home}/classes/fabric" />
         <arg value="-sourcepath"/> <arg value="@{srcdir}" />
         <arg value="-classpath" /> <arg value="${home}/classes/fabric" />
