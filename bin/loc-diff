@@ -131,7 +131,7 @@ try:
 except OSError:
   sys.exit('Run from the top directory of Fabric')
 
-if (not os.path.isdir('src') or not os.path.isfile('bin/loc-diff')):
+if not os.path.isdir('src') or not os.path.isfile('bin/loc-diff'):
   sys.exit('Run from the top directory of Fabric')
 
 # Make sure we're in a clean FABRIC/tmp.
@@ -154,6 +154,12 @@ if subprocess.call(['svn', 'export',
       '/examples', 'fab-branch/examples'], stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
+# Export fab-branch/lib.
+if subprocess.call(['svn', 'export',
+      'https://forge.cornell.edu/svn/repos/fabric/branches/' + branchName +
+      '/lib', 'fab-branch/lib'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
 # Export fab-trunk/src.
 print('Exporting Fabric trunk from svn...')
 if subprocess.call(['svn', 'export',
@@ -167,12 +173,21 @@ if subprocess.call(['svn', 'export',
       'fab-trunk/examples'], stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# Export jif-branch.
-print('Exporting Jif ("%s") from cvs...' % date)
-if subprocess.call(['cvs', '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/jif',
-      'export', '-D', date, '-d', 'jif-branch', 'jif/src'],
-      stdout=open(os.devnull, 'w')) != 0:
-  sys.exit(1)
+# For jif-branch, use fab-branch/lib/jif, if it exists.
+if os.path.isdir('fab-branch/lib/jif/src'):
+  print('Using fab-branch/lib/jif for jif-branch')
+  shutil.move('fab-branch/lib/jif/src', 'jif-branch')
+else:
+  # Export jif-branch.
+  print('Exporting Jif ("%s") from cvs...' % date)
+  if subprocess.call(['cvs', '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/jif',
+        'export', '-D', date, '-d', 'jif-branch', 'jif/src'],
+        stdout=open(os.devnull, 'w')) != 0:
+    sys.exit(1)
+
+# Remove fab-branch/lib.
+try: shutil.rmtree('fab-branch/lib')
+except OSError: pass
 
 # Export jif-trunk.
 print('Exporting Jif HEAD from cvs...')
