@@ -2,6 +2,7 @@ package fabric.extension;
 
 import jif.extension.JifNewExt;
 import jif.translate.ToJavaExt;
+import jif.types.label.Label;
 import jif.visit.LabelChecker;
 import polyglot.ast.New;
 import polyglot.ast.Node;
@@ -28,7 +29,9 @@ public class NewJifExt_c extends JifNewExt {
         && !newType.isSubtype(((FabricTypeSystem) lc.typeSystem())
             .DelegatingPrincipal())) {
       FabricClassType ct = (FabricClassType) newType;
-      ext.labelCheck(lc, ct.classUpdateLabel(), ct.providerFoldedClassAccessLabel());
+      FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+      Label accessLabel = ts.toLabel(ct.classAccessPolicy());
+      ext.labelCheck(lc, ct.classUpdateLabel(), accessLabel);
     }
 
     return super.labelCheck(lc);

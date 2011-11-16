@@ -2,6 +2,7 @@ package fabric.types;
 
 import codebases.types.CodebaseClassType;
 import jif.types.JifClassType;
+import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 
 public interface FabricClassType extends JifClassType, CodebaseClassType {
@@ -19,9 +20,7 @@ public interface FabricClassType extends JifClassType, CodebaseClassType {
    * label is the join in the trust ordering of the access labels of every
    * field and the confidentiality projection of every method's begin label.
    */
-  Label classAccessLabel();
+  ConfPolicy classAccessPolicy();
   
-  // Use this method if you want the provider label folded in
-  Label providerFoldedClassAccessLabel();
-  
+
 }

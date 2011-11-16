@@ -11,6 +11,7 @@ import jif.types.JifTypeSystem;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.PrincipalConstraint;
+import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import jif.types.label.ProviderLabel;
 import jif.types.principal.Principal;
@@ -20,6 +21,7 @@ import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import fabric.types.FabricParsedClassType;
+import fabric.types.FabricTypeSystem;
 
 public class FabricClassDeclExt extends JifClassDeclExt {
 
@@ -84,9 +86,10 @@ public class FabricClassDeclExt extends JifClassDeclExt {
     lc = lc.context(A);
     
     // Access label checks
-    Label singleAccessLabel = pct.providerFoldedClassAccessLabel();
+    Label classAccessLabel = ((FabricTypeSystem)jts).toLabel(pct.classAccessPolicy());
     
-    if (singleAccessLabel != null) {
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+    if (ts.isFabricClass(pct)) {
       // check that the access label has the top integrity label, i.e. it only
       // has a meaningful confidentiality component
       lc.constrain(
@@ -94,33 +97,28 @@ public class FabricClassDeclExt extends JifClassDeclExt {
               jts.pairLabel(Position.compilerGenerated(),
                   jts.bottomConfPolicy(Position.compilerGenerated()), 
                   jts.topIntegPolicy(Position.compilerGenerated()))),
-          LabelConstraint.LEQ, new NamedLabel("access label", singleAccessLabel), A.labelEnv(), n.position(),
+          LabelConstraint.LEQ, new NamedLabel("access policy", classAccessLabel), A.labelEnv(), n.position(),
           new ConstraintMessage() {
             @Override
             public String msg() {
-              return "The access label should have no integrity component";
+              return "The access policy should have no integrity component";
             }
           }
       );
 
-      Label singleFieldLabel = pct.classUpdateLabel();
+      Label updateLabel = pct.classUpdateLabel();
 
-
-      // TODO: Revisit this null check
-      if (singleFieldLabel != null) {
-        lc.constrain(new NamedLabel("object label", singleFieldLabel),
-            LabelConstraint.LEQ, 
-            new NamedLabel("access label", singleAccessLabel),
-            A.labelEnv(), n.position(),
-            new ConstraintMessage() {
-          @Override
-          public String msg() {
-            return "The access label of a class should be at least as restrictive" +
-            " as its object label";
-          }
-        }
-        );
-      }
+      lc.constrain(new NamedLabel("object label", updateLabel),
+          LabelConstraint.LEQ,
+          new NamedLabel("access policy", classAccessLabel), A.labelEnv(),
+          n.position(), new ConstraintMessage() {
+            @Override
+            public String msg() {
+              return "The access policy of a class should be at least as restrictive"
+                  + " as its object label";
+            }
+          });
+    
     }
 
     // Provider label checks

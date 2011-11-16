@@ -5,6 +5,7 @@ import java.net.URI;
 import jif.types.JifSubst;
 import jif.types.JifSubstClassType_c;
 import jif.types.JifTypeSystem;
+import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import polyglot.types.ClassType;
 import polyglot.util.Position;
@@ -26,23 +27,14 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements Fabri
   }
 
   @Override
-  public Label classAccessLabel() {
+  public ConfPolicy classAccessPolicy() {
     FabricParsedClassType base = (FabricParsedClassType)base();
-    Label l = base.classAccessLabel();
-    if (l == null) return null;
-    
+    ConfPolicy c = base.classAccessPolicy();
+    if (c == null) return null;
+    FabricTypeSystem fts = (FabricTypeSystem) ts;
+    Label l = fts.toLabel(c);
     JifSubst subst = (JifSubst)subst();
-    return subst.substLabel(base.classAccessLabel());
-  }
-
-  @Override
-  public Label providerFoldedClassAccessLabel() {
-    FabricParsedClassType base = (FabricParsedClassType)base();
-    Label l = base.providerFoldedClassAccessLabel();
-    if (l == null) return null;
-    
-    JifSubst subst = (JifSubst)subst();
-    return subst.substLabel(base.providerFoldedClassAccessLabel());
+    return subst.substLabel(l).confProjection();
   }
 
   @Override

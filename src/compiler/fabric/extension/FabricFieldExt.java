@@ -77,9 +77,9 @@ public class FabricFieldExt extends JifFieldExt {
         if (fts.isFabricClass(fct)) {
           // We do not need access label checking for non fabric classes
           // since their instances will always be read only locally
-          Label rhs = fct.providerFoldedClassAccessLabel();
-          lc.constrain(new NamedLabel("pc ⊔ object label", lhs), LabelConstraint.LEQ,
-              new NamedLabel("access label", rhs), A.labelEnv(), n.position(),
+          Label rhs = fts.toLabel(fct.classAccessPolicy());
+          lc.constrain(new NamedLabel("pc ⊔ object policy", lhs), LabelConstraint.LEQ,
+              new NamedLabel("access policy", rhs), A.labelEnv(), n.position(),
               new ConstraintMessage() {
 
             @Override

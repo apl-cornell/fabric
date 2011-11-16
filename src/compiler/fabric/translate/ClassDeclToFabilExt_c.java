@@ -25,6 +25,7 @@ import jif.ast.JifClassDecl;
 import jif.translate.ClassDeclToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
 import jif.types.JifPolyType;
+import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 
 public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
@@ -88,16 +89,20 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
       // translate the labels to FabIL
       Label updateLabel = ct.classUpdateLabel();
-      Label accessLabel = ct.classAccessLabel();
+      ConfPolicy accessPolicy = ct.classAccessPolicy();
 
-      if (updateLabel == null || accessLabel == null) {
-        throw new InternalCompilerError("Null field or access label");
+      if (updateLabel == null || accessPolicy == null) {
+        throw new InternalCompilerError("Null update label or access policy");
       }
 
       // locate labels at the same store as the object
       rw = ((FabricToFabilRewriter) rw).pushLocation(rw.qq().parseExpr("this.$getStore()"));
 
       Expr updateLabelExpr = rw.labelToJava(updateLabel);
+
+      Label accessLabel = ts.pairLabel(accessPolicy.position(), accessPolicy, 
+          ts.topIntegPolicy(accessPolicy.position()));
+
       Expr accessLabelExpr = rw.labelToJava(accessLabel);
 
       return cb.addMember(rw.qq().parseMember(

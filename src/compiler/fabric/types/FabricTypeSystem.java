@@ -2,6 +2,7 @@ package fabric.types;
 
 import jif.types.Assertion;
 import jif.types.JifTypeSystem;
+import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
 import jif.types.label.ConfPolicy;
 import jif.types.label.IntegPolicy;
@@ -69,7 +70,10 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
 
   /** Returns the meet of L1 and L2 as per the trust ordering */
   Label tmeet(Label L1, Label L2);
-  
+
+  /** Compares L1 and L2 as per the trust ordering */
+  boolean tleq(LabelEnv env, Label L1, Label L2);
+
   fabric.lang.security.Label sourceUpdateLabel(CodebaseSource src);
   fabric.lang.security.ConfPolicy sourceAccessPolicy(CodebaseSource src);
 
@@ -92,5 +96,16 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    * Returns true if label contains a argument label.
    */
   boolean containsArgLabel(Label label);
+
+  /**
+   * Returns a label with c joined with a top integrity component.    
+   */
+  Label toLabel(ConfPolicy c);
+
+  /**
+   * @param label
+   * @return
+   */
+  Label replaceProjections(Label label);
 
 }

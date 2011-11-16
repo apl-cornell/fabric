@@ -2,6 +2,7 @@ package fabric.translate;
 
 import jif.translate.JifToJavaRewriter;
 import jif.translate.NewArrayToJavaExt_c;
+import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
@@ -46,16 +47,17 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
     //push the new location
     rw = ((FabricToFabilRewriter)rw).pushLocation(labelloc);
 
-    Label baseLabel = null;
     Expr updateLabelExpr = null;
-    Label accessLabel = null;
     Expr accessPolicyExpr = null;
     
     if (ts.isFabricClass(base)) {
-      baseLabel = ((FabricClassType)base).classUpdateLabel();
+     
+      Label baseLabel = ((FabricClassType)base).classUpdateLabel();
       updateLabelExpr = rw.labelToJava(baseLabel);      
 
-      accessLabel = ((FabricClassType)base).classAccessLabel();
+      ConfPolicy accessPolicy = ((FabricClassType)base).classAccessPolicy();
+      Label accessLabel = ts.toLabel(accessPolicy);
+
       accessPolicyExpr = rw.qq().parseExpr("%E.confPolicy()", rw.labelToJava(accessLabel));
     }
 
