@@ -53,11 +53,14 @@ public class Delegator extends Principal {
   }
 
   public
-  ActsForProof{this; p; this←; p←}
+  ActsForProof  {this; p; this←; p←}
   findProofUpto {this←}
-               (Store s,
-                Principal p,
-                java.lang.Object searchState)
+  (
+    Store s,
+    Principal p,
+    java.lang.Object searchState
+  )
+  where s
   {
     if (owner actsfor this) {
 
