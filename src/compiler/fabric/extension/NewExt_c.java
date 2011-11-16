@@ -1,14 +1,15 @@
 package fabric.extension;
 
-import jif.types.LabelSubstitution;
-import jif.types.label.Label;
-import jif.types.label.ThisLabel;
 import polyglot.ast.New;
 import polyglot.types.ClassType;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import fabric.types.FabricContext;
 import fabric.types.FabricTypeSystem;
+import jif.types.JifConstructorInstance;
+import jif.types.LabelSubstitution;
+import jif.types.label.Label;
+import jif.types.label.ThisLabel;
 
 public class NewExt_c extends LocatedExt_c implements FabricExt {
 
@@ -16,12 +17,11 @@ public class NewExt_c extends LocatedExt_c implements FabricExt {
   protected Label referenceLabel(FabricContext ctx) {
     New n = (New) node();
     FabricTypeSystem ts = (FabricTypeSystem) ctx.typeSystem();
+    JifConstructorInstance ci = (JifConstructorInstance) n.constructorInstance();
     ///XXX: what is correct?
-    Label ctorRL = ctx.constructorReturnLabel();
-    Label pc = ctx.pc();
-    if(ctorRL == null)
-      ctorRL = ts.bottomLabel();
-    return ts.join(ctx.pc(), ctx.constructorReturnLabel());
+    //return ctx.pc();
+    //eturn ci.returnLabel();
+    return ts.join(ctx.pc(), ci.returnLabel());
   }
  
   /**
