@@ -5,9 +5,9 @@ import jif.runtime.Runtime;
 
 public class Main authority (Alice, Bob)
 where provider <= {Alice←},
+provider <= {Alice&Bob←},
 provider <= {Alice→},
 provider <= {Bob←},
-provider <= {Alice,Bob←},
 provider <= Camera.provider,
 Camera.provider <= provider,
 provider <= Display.provider,

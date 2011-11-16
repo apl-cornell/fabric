@@ -2,7 +2,11 @@ import java.io.PrintStream;
 
 // principal p runs the camera
 
-public class Camera [principal p] authority (p) { 
+public class Camera [principal p] authority (p)
+where provider <= {p→;p←},
+provider <= Image.provider,
+Image.provider <= provider
+{ 
     public final int {p<-} CAMERA_RESOLUTION  = 16; // whatever are our units of resolution
     public final int {p<-} MAX_IMAGE_CAPACITY = 36; // this is public information 
     public final label{p<-} lb_camera  = new label { p <-; p -> };
@@ -22,12 +26,14 @@ public class Camera [principal p] authority (p) {
 	resetCamera();
     }
 
-    public void resetCamera{*lb_camera}() { // reset the counter and throw away the old array...
+    public void resetCamera{*lb_camera}()
+    { // reset the counter and throw away the old array...
 	this.n_images = 0;
 	this.images = new Image [p][MAX_IMAGE_CAPACITY];;
     }
     
-    public void updateCoords {*lb_camera}(int {*lb_camera} x, int {*lb_camera} y) {
+    public void updateCoords {*lb_camera}(int {*lb_camera} x, int {*lb_camera} y)
+    {
 	this.gpsX = x;
 	this.gpsY = y;
     }
@@ -67,21 +73,23 @@ public class Camera [principal p] authority (p) {
     // debugging method
     public void printImageLabels{p<-}(PrintStream[{}]{} out) where authority (p) {
 	int{} n = declassify (n_images, {});
-	out.println("There are total " + n +" images");
+	declassify ({p←}) {
+	    out.println("There are total " + n +" images");
+	}
     }
 
 
     // todo: justify auto-endorse
-    public int {p<-} getNImages {} () where authority (p), endorse({p<-}) {
+    public int {p<-} getNImages {} () where authority (p), endorse({*provider;p<-}) {
 	return declassify (n_images, {p<-});
     }
     
     // for the lack of label-heterogenous data structures in Jif we add this helper method
     // todo: justify auto-endorse
-    public Image[p]{p<-} getImage{}(int {} i0) where authority (p), endorse({p<-}) {
+    public Image[p]{p<-} getImage{}(int {} i0) where authority (p), endorse({*provider;p<-}) {
 	// Justification - it is (is it?) okay to declassify the individual element of the images array
 	// because nothing about the image is public otherwise
-	
+	declassify ({p←}) {
 	int i = endorse (i0, {p<-});
 	Image [p] {p -> ; p<-} img = null;
 	try {
@@ -89,5 +97,6 @@ public class Camera [principal p] authority (p) {
 	} catch (Exception ignored) {}
 	Image[p] {p<-} ret = declassify (img, {p ->; p<-} to {p <-});
 	return ret;
+	}
     }
 }

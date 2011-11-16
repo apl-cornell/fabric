@@ -13,7 +13,6 @@ Camera.provider <= provider,
 provider <= Image.provider,
 Image.provider <= provider,
 ImageApp.provider <= provider,
-provider <= ImageApp.provider,
 provider <= Display.provider,
 Display.provider <= provider
 {
