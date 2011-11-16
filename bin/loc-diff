@@ -25,7 +25,7 @@ ignoreFilesRE = re.compile("""^.*/(
 
 # Regexp for examples to include. All other examples will be ignored.
 includeExamplesRE = re.compile("""^\./fab-(trunk|branch)/examples/
-      (auction|mapapp)
+      (auction|friendmap|imageapp)
     /src/.*$""", re.X)
 
 # Regexp for source files.
@@ -77,8 +77,11 @@ categories['Bootstrap support'] = ['src/bootstrap']
 categories['Auction example (FabIL)'] = ['examples/auction/src/fabil']
 categories['Auction example (Fabric)'] = ['examples/auction/src/fabric']
 
-categories['MapApp example (Jif)'] = ['examples/mapapp/src/jif']
-categories['MapApp example (Fabric)'] = ['examples/mapapp/src/fabric']
+categories['FriendMap example (Jif)'] = ['examples/friendmap/src/jif']
+categories['FriendMap example (Fabric)'] = ['examples/friendmap/src/fabric']
+
+categories['ImageApp example (Jif)'] = ['examples/imageapp/src/jif']
+categories['ImageApp example (Fabric)'] = ['examples/imageapp/src/fabric']
 
 ########################################################################
 
