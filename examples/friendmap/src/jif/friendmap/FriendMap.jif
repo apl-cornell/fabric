@@ -64,7 +64,7 @@ where
    */
   public
   void
-  viewMap {{user→} meet {*→service}}
+  viewMap {{user→} meet {service→}}
   (
     UserV1 user
   )
@@ -78,7 +78,7 @@ where
 
     // these affect the fetch and resulting map
     {user; *provider; *MapServer.provider} <= {user→},
-    {user; *provider; *MapServer.provider} <= {*→service}
+    {user; *provider; *MapServer.provider} <= {service→}
   {
     printMap(user, new label {user→});
   }
@@ -93,7 +93,7 @@ where
    */
   public
   void
-  postMap {{user.friends→} meet {*→service}}
+  postMap {{user.friends→} meet {service→}}
   (
     final UserV1 user
   )
@@ -105,7 +105,7 @@ where
     System.user actsfor user,
     user        actsfor user.friends,
     {user; *provider; *MapServer.provider} <= {user.friends→},
-    {user; *provider; *MapServer.provider} <= {*→service}
+    {user; *provider; *MapServer.provider} <= {service→}
   {
     if (user == null)
       throw new NullPointerException();
@@ -124,7 +124,7 @@ where
    */
   private
   void
-  printMap {{*lbl} meet {*→service}}
+  printMap {{*lbl} meet {service→}}
   (
     final UserV1 user,
     final label  lbl
@@ -139,7 +139,7 @@ where
 
     // these components affect the fetch and constructed map 
     {user; lbl; *provider; *MapServer.provider} <= {*lbl},
-    {user; lbl; *provider; *MapServer.provider} <= {*→service}
+    {user; lbl; *provider; *MapServer.provider} <= {service→}
   {
     if (user == null)
       throw new NullPointerException();
@@ -160,7 +160,7 @@ where
    */
   public
   MapImage[l] {*l}
-  createMap   {{*l} meet {*→service}} // the fact that this call happens leaks to the service and the return value
+  createMap   {{*l} meet {service→}} // the fact that this call happens leaks to the service and the return value
   (
     final label  l,
     final UserV1 user
@@ -173,7 +173,7 @@ where
     {service←} <= l,                      // the result is tainted by the service
     {user←}    <= l,                      // the result is tainted by the user
     {user; l; *provider; *MapServer.provider}
-              <= {{*l} meet {*→service}}  // the arguments and code can affect the fetch and the return value
+              <= {{*l} meet {service→}}  // the arguments and code can affect the fetch and the return value
   {
     // invariant checks
     if (user == null)
@@ -184,7 +184,7 @@ where
       throw new AssertionFailedError("service must be non-null");
 
     // this is the label of the data that gets sent to the service
-    final label fetchLabel   = new label {{*l} meet {*→service}};
+    final label fetchLabel   = new label {{*l} meet {service→}};
 
     // compute the bounding box
     Box boundary = new Box(0,0,0,0);
