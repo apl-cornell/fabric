@@ -2,7 +2,7 @@ public class Image [principal p]
 { // p is the camera principal
 
     // we don't need to check that this <= {p→} since it will be 
-    // true at all callsites via enforcement of other constraints
+    // true at all call sites via enforcement of other constraints
     public final label{this}@{p→} lb_img;  
     public final label{this}@{p→} lb_meta;
 
