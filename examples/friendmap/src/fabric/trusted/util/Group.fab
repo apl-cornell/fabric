@@ -30,8 +30,15 @@ where
   /**
    * Create a new group with the given name and the default maximum size.
    */
-  public Group {this} (String{this} name) {
-    this.members = new Principal[SIZE];
+  public Group {this}
+  (
+    final Store  {this} store,
+    final String {this} name
+  )
+  where
+    store actsfor groupOwner
+  {
+    this.members = new Principal[SIZE]@store;
     super(name, groupOwner);
   }
 
@@ -42,15 +49,18 @@ where
   public
   Group {this}
   (
-    String {this} name,
-    int    {this} maxSize
+    final Store  {this} store,
+    final String {this} name,
+    final int    {this} maxSize
   )
   throws
   (
     NegativeArraySizeException{maxSize}
   )
+  where
+    store actsfor groupOwner
   {
-    this.members = new Principal[maxSize];
+    this.members = new Principal[maxSize]@store;
     super(name, groupOwner);
   }
 
@@ -117,8 +127,8 @@ where
   GroupIterator[groupOwner, l]
   iterator {*l}
   (
-    Store s,
-    label l
+    final Store s,
+    final label l
   )
   where
     {groupOwner←} <= {*l}

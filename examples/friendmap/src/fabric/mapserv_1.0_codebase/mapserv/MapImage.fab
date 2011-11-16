@@ -120,7 +120,7 @@ where
   {
     try {
 
-      return new MapImage[l] (boundary.copy(l,s), width, height, Util.copyArray(data, l, L, s));
+      return new MapImage[l]@s (boundary.copy(l,s), width, height, Util.copyArray(data, l, L, s));
 
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("data and boundary must be non-null");

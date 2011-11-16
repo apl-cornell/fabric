@@ -35,7 +35,8 @@ public class Snapp extends Delegator
   where
     provider <= {this}
   {
-    try { return new User(name, owner, this); }
+    final Store store = getStore();
+    try { return new User@store(name, owner, this); }
     catch (final NullPointerException e) { throw new AssertionFailedError("User constructor succeeds unless network is null"); }
   }
 }

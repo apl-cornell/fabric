@@ -60,11 +60,13 @@ where
     // and thus {owner←;network←} ⊑ {this←}
     // this just isn't true until after the superclass constructor is called.
 
+    final Store store = network.getStore();
+
     this.network = network;
 
-    this.locationInfo  = new Group[this](name + "'s location readers");
-    this.friends       = new Group[this](name + "'s friends");
-    this.locationLabel = new label {this←;locationInfo→};
+    this.locationInfo  = new Group[this]@store(store, name + "'s location readers");
+    this.friends       = new Group[this]@store(store, name + "'s friends");
+    this.locationLabel = new label {this←;locationInfo→}@store;
 
     this.name     = name;
 

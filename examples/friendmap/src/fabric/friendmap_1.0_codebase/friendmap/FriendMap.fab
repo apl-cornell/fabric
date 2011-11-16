@@ -182,11 +182,14 @@ where
     if (this.service == null)
       throw new AssertionFailedError("service must be non-null");
 
+    final Store fetchStore = service.getStore();
+    final Store localStore = worker$.getLocalStore();
+
     // this is the label of the data that gets sent to the service
     final label fetchLabel   = new label {{*l} meet {service→}};
 
     // compute the bounding box
-    Box boundary = new Box(0,0,0,0);
+    Box boundary = new Box@fetchStore(0,0,0,0);
 
     final GroupIterator[user, fetchLabel] i = user.friends.iterator(fetchLabel);
     if (i == null)
@@ -228,7 +231,6 @@ where
       throw new AssertionFailedError("getMap returned null");
 
     // make a local copy (with label l)
-    final Store localStore = worker$.getLocalStore();
     MapImage[l] annotated;
     if (new label {localStore←} <= l && l <= new label {localStore→})  // localStore ≽ ℓ
       annotated = map.copy(l, localStore);

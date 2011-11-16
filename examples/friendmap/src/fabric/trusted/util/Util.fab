@@ -21,9 +21,9 @@ public class Util {
   copyArray {*l} meet {*m;_→;_←}
   (
     final char{*m}[] data,
-    label l,
-    label m,
-    Store s
+    final label l,
+    final label m,
+    final Store s
   )
   throws (
     NullPointerException{data}
