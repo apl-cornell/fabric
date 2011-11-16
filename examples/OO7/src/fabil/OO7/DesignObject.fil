@@ -44,7 +44,7 @@ public abstract class DesignObject {
   
   public Statistics createStatistics() {
   	if (promise)
-  	  return new OO7Statistics();
+  	  return (OO7Statistics) new OO7Statistics().$initLabels();
   	else
   	  return super.createStatistics();
   }

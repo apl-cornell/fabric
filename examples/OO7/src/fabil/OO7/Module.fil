@@ -23,7 +23,7 @@ public class Module extends DesignObject {
     super(db);
     db.modulesById.put(new Integer(id()), this);
     
-    assemblies = new LinkedList();
+    assemblies = (LinkedList) new LinkedList().$initLabels();
   }
 
   public void setManual(Manual x) {

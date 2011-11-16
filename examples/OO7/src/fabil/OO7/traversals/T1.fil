@@ -19,7 +19,7 @@ public class T1 extends PrivatePartTraversal {
     Store local = Worker.getWorker().getLocalStore();
     T1 t1 = null;
     atomic {
-      t1 = new T1@local();
+      t1 = (T1) new T1@local().$initLabels();
     }
     t1.mainImpl(args);
   }
@@ -37,7 +37,7 @@ public class T1 extends PrivatePartTraversal {
 
   public void visitCompositePart (CompositePart p) {
     Store local = Worker.getWorker().getLocalStore();
-    visited = new HashMap@local();
+    visited = (HashMap) new HashMap@local().$initLabels();
     p.rootPart().accept(this);
     result += visited.size();
     visited = null;

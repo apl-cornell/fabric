@@ -27,9 +27,9 @@ public class CompositePart extends DesignObject {
     super(db);
     db.compositePartsById.put(new Integer(id()), this);
 
-    usedInPriv = new LinkedList();
-    usedInShar = new LinkedList();
-    parts      = new LinkedList();
+    usedInPriv = (LinkedList) new LinkedList().$initLabels();
+    usedInShar = (LinkedList) new LinkedList().$initLabels();
+    parts      = (LinkedList) new LinkedList().$initLabels();
   }
 
   public void setDocumentation(Document d) {
