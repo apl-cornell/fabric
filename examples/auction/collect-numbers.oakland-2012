@@ -71,3 +71,13 @@ echo Object stats:
   | diffstat -bms \
   | sed 's/^ 1 file changed, /  /'
 
+# Report stats on objects created and modified by class.
+echo
+echo Objects created or modified by class:
+../../bin/dump-bdb brokerStore 2>/dev/null \
+  | diff -u "${STORE_DUMP}" - \
+  | grep '^+[1-9]' \
+  | sed 's/^[^,]*,\([^,]*\),.*$/\1/' \
+  | sort \
+  | uniq -c
+
