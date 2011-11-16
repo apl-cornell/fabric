@@ -259,7 +259,7 @@ regexps = [
   re.compile(', (\d+) deletions'),
   re.compile(', (\d+) modifications')
 ]
-fieldLen = [0, 0, 0, 0]
+fieldLen = [3, 3, 3, 3, 3]
 for base, cats in {
     'fab': categories,
     'jif':
@@ -267,7 +267,7 @@ for base, cats in {
     'polyglot':
       {'Polyglot compiler': ['.']}}.items():
   for cat, paths in cats.items():
-    stats = [0, 0, 0, 0]
+    stats = [0, 0, 0, 0, 0]
     for path in paths:
       # Get diff counts.
       output = subprocess.check_output(
@@ -278,9 +278,9 @@ for base, cats in {
       for i in [0, 1, 2]:
         match = regexps[i].search(output)
         if match != None:
-          if fieldLen[i] < len(match.group(1)):
-            fieldLen[i] = len(match.group(1))
           stats[i] += int(match.group(1))
+          if fieldLen[i] < len(str(stats[i])):
+            fieldLen[i] = len(str(stats[i]))
 
       # Get line count.
       output = subprocess.check_output(
@@ -289,40 +289,55 @@ for base, cats in {
         shell=True).decode('utf-8')
       match = re.match('(\d+) total', output)
       if match != None:
-        if fieldLen[3] < len(match.group(1)):
-          fieldLen[3] = len(match.group(1))
-        stats[3] += int(match.group(1))
+        stats[4] += int(match.group(1))
+        if fieldLen[4] < len(str(stats[4])):
+          fieldLen[4] = len(str(stats[4]))
+
+    # Get change total.
+    stats[3] = stats[0] + stats[1] + stats[2]
+    if fieldLen[3] < len(str(stats[3])):
+      fieldLen[3] = len(str(stats[3]))
 
     categories[cat] = stats
 
 # Output.
-categoryFormatter = '{:.<' + str(maxCatNameLen+3) + '}'
-insFormatter = '{:>' + str(fieldLen[0]) + '}'
-delFormatter = '{:>' + str(fieldLen[1]) + '}'
-modFormatter = '{:>' + str(fieldLen[2]) + '}'
-noChanges = ('{:-^' + str(fieldLen[0] + fieldLen[1] + fieldLen[2] + 16)
-    + '}  ').format('(no changes)')
-locFormatter = '| {:>' + str(fieldLen[3]) + '}'
-for cat, (ins, dels, mods, totalLOC) in categories.items():
-  output = categoryFormatter.format(cat + ' ') + ' '
+categoryFormatter = '{:.<' + str(maxCatNameLen+3) + '} '
+insFormatter = '{:>' + str(fieldLen[0]) + '} + '
+delFormatter = '{:>' + str(fieldLen[1]) + '} + '
+modFormatter = '{:>' + str(fieldLen[2]) + '} = '
+deltaFormatter = '{:>' + str(fieldLen[3]) + '} | '
+noChanges = \
+  ('{:-^' + str(fieldLen[0] + fieldLen[1] + fieldLen[2] + fieldLen[3] + 9)
+    + '} | ').format('(no changes)')
+locFormatter = '{:>' + str(fieldLen[4]) + '}'
+
+# Print header.
+output = ('{:<' + str(maxCatNameLen+3) + '}').format('') + ' '
+output += ('{:^' + str(fieldLen[0]) + '}').format('ins') + ' + '
+output += ('{:^' + str(fieldLen[1]) + '}').format('del') + ' + '
+output += ('{:^' + str(fieldLen[2]) + '}').format('mod') + ' = '
+output += ('{:^' + str(fieldLen[3]) + '}').format('Δ') + ' | '
+output += ('{:^' + str(fieldLen[4]) + '}').format('LOC')
+print(output)
+
+# Print data.
+for cat, (ins, dels, mods, deltas, totalLOC) in categories.items():
+  output = categoryFormatter.format(cat + ' ')
   if ins + dels + mods == 0:
     output += noChanges
   else:
     if ins == 0: ins = ''
     output += insFormatter.format(ins)
-    if ins != '': output += ' ins  '
-    else: output += '      '
 
     if dels == 0: dels = ''
     output += delFormatter.format(dels)
-    if dels != '': output += ' del  '
-    else: output += '      '
 
     if mods == 0: mods = ''
     output += modFormatter.format(mods)
-    if mods != '': output += ' mod  '
-    else: output += '      '
-  output += locFormatter.format(totalLOC) + ' loc'
+
+    if deltas == 0: deltas = ''
+    output += deltaFormatter.format(deltas)
+  output += locFormatter.format(totalLOC)
   print(output)
 
 # vim: ts=2 sw=2 ai et
