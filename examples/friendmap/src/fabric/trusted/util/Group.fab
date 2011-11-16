@@ -18,10 +18,12 @@ where
   provider               <= {groupOwner←},
   GroupIterator.provider <= {groupOwner←}
 {
+  /*
   final Principal{groupOwner←}[] {this} members;
   int            {groupOwner←}          size = 0;
 
   private final static int  {*←}     SIZE = 100;
+  */
 
   //////////////////////////////////////////////////////////////////////////////
   // Group constructors                                                       //
@@ -38,7 +40,9 @@ where
   where
     store actsfor groupOwner
   {
+    /*
     this.members = new Principal[SIZE]@store;
+    */
     super(name, groupOwner);
   }
 
@@ -60,7 +64,9 @@ where
   where
     store actsfor groupOwner
   {
+    /*
     this.members = new Principal[maxSize]@store;
+    */
     super(name, groupOwner);
   }
 
@@ -79,6 +85,7 @@ where
   ):{groupOwner←}
   throws ArrayIndexOutOfBoundsException
   {
+    /*
     // invariant check
     if (this.members == null)
       throw new AssertionFailedError("this.members should always be non-null.");
@@ -90,6 +97,7 @@ where
     this.members[this.size++] = p;
 
     PrincipalUtil.notifyNewDelegation(this,p);
+    */
   }
 
 
@@ -97,6 +105,7 @@ where
    * Remove a member of the group.
    */
   public void remove {groupOwner←} (Principal{groupOwner←} p) {
+    /*
     try
     {
 
@@ -117,6 +126,7 @@ where
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("this.members should always be non-null.");
     }
+    */
   }
 
 
@@ -133,12 +143,15 @@ where
   where
     {groupOwner←} <= {*l}
   {
+    /*
     if (groupOwner actsfor this) {
       final Group[groupOwner]{*l} g = this;
       return new GroupIterator[groupOwner, l]@s(g);
     }
     else
       throw new AssertionFailedError("groupOwner must act for group");
+    */
+    return null;
   }
 
 
@@ -150,6 +163,7 @@ where
    * Return true if p is either groupOwner or is a member of the group.
    */
   public boolean{this;p;this←} delegatesTo(principal p) {
+    /*
     if (p == groupOwner)
       return true;
 
@@ -171,6 +185,8 @@ where
     }
     else
       throw new AssertionFailedError("this.groupOwner actsfor this");
+    */
+    return false;
   }
 
   /**
@@ -182,6 +198,7 @@ where
                (Store s, Principal p,
                 java.lang.Object searchState)
   {
+    /*
     if (groupOwner actsfor this) {
       try
       {
@@ -213,6 +230,8 @@ where
     } else {
       throw new AssertionFailedError("this must delegate to groupOwner");
     }
+    */
+    return null;
   }
 }
 

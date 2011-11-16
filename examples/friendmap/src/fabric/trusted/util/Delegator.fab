@@ -61,6 +61,7 @@ public class Delegator extends Principal {
     java.lang.Object searchState
   )
   {
+    /*
     if (owner actsfor this) {
 
       ActsForProof proof = PrincipalUtil.findActsForProof(s, p, owner, searchState);
@@ -71,6 +72,8 @@ public class Delegator extends Principal {
 
 
     } else throw new AssertionFailedError("owner acts for delegator");
+    */
+    return null;
   }
 
   public
