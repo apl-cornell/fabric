@@ -126,7 +126,7 @@ where
   printMap {{*lbl} meet {service→}}
   (
     final User user,
-    final label  lbl
+    final label{worker$→}  lbl // because data will be output to the system user
   )
   throws
   (
@@ -134,8 +134,6 @@ where
   )
   where
     {service←; user←} <= lbl,        // because the service and the user influence the map.
-    lbl               <= {worker$→}, // because data will be output to the system user
-
     // these components affect the fetch and constructed map 
     {user; lbl; *provider; *MapServer.provider} <= {*lbl},
     {user; lbl; *provider; *MapServer.provider} <= {service→}

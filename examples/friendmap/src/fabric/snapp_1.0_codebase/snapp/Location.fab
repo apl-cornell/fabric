@@ -3,13 +3,14 @@ package snapp;
 /**
  * A point on the plane.
  */
-public class Location[label AccessLabel] {
-  public final float{this}@{AccessLabel} x;
-  public final float{this}@{AccessLabel} y;
+public class Location[label A]
+where provider <= A
+{
+  public final float{A}@{A} x;
+  public final float{A}@{A} y;
 
   public
-  Location(int{this} x, int{this} y)
-  where provider <= {this}
+  Location{A}(int{A} x, int{A} y)
   {
     this.x = x;
     this.y = y;
