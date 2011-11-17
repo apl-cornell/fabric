@@ -14,7 +14,9 @@ where
        Box.provider <= provider, provider <=      Box.provider
 {
 
-  private final char {this} background;
+  private final char {this}@{this→} background;
+  final public Store{this}@{this→} store;
+
 
   /**
    * Create a new map server, with the given background character.
@@ -24,12 +26,14 @@ where
   (
     String    {this} name,
     Principal {this} owner,
-    char      {this} background
+    char      {this} background,
+    Store     {this} store
   )
   where
     provider <= {this}
   {
     this.background = background;
+    this.store = store;
     super(name, owner);
   }
 
@@ -49,9 +53,11 @@ where
   :{*lbl}
   throws NullPointerException
   where
-    {this←} <= lbl, provider <= {*lbl}
+    {this←} <= lbl, provider <= {*lbl},
+    provider <= {⊤→store},
+    lbl <= {⊤→store},
+    {⊤←store} <= lbl
   {
-    final Store store = getStore();
     final char{*lbl}[]{*lbl} data = new char[100]@store;
     for (int i = 0; i < data.length; i++)
       data[i] = background;

@@ -217,35 +217,35 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
             }
           });
 
-      lc.constrain(
-          new NamedLabel("{*<-store}", ts.pairLabel(Position
-              .compilerGenerated(), ts.bottomConfPolicy(Position
-              .compilerGenerated()), ts.writerPolicy(
-              Position.compilerGenerated(),
-              ts.topPrincipal(Position.compilerGenerated()), storePrincipal()))),
-          LabelConstraint.LEQ, new NamedLabel("label on new allocation",
-              instantiatedReferenceLabel), A.labelEnv(), n.position(),
-          new ConstraintMessage() {
-            @Override
-            public String msg() {
-              return "{*<-store} <= L for new C@store() where L is the label of " +
-              		"the reference to the newly allocated object.";
-            }
-
-            @Override
-            public String detailMsg() {
-              return "The reference to the object being created on the store "
-                  + storePrincipal().toString()
-                  + " should be writeable by the store's principal";
-            }
-
-            @Override
-            public String technicalMsg() {
-              return "The integrity label of the store's principal joined with the bottom " +
-              		"confidentiality label should not be more restrictive than the label "
-                  + instantiatedReferenceLabel.toString();
-            }
-          });
+//      lc.constrain(
+//          new NamedLabel("{*<-store}", ts.pairLabel(Position
+//              .compilerGenerated(), ts.bottomConfPolicy(Position
+//              .compilerGenerated()), ts.writerPolicy(
+//              Position.compilerGenerated(),
+//              ts.topPrincipal(Position.compilerGenerated()), storePrincipal()))),
+//          LabelConstraint.LEQ, new NamedLabel("label on new allocation",
+//              instantiatedReferenceLabel), A.labelEnv(), n.position(),
+//          new ConstraintMessage() {
+//            @Override
+//            public String msg() {
+//              return "{*<-store} <= L for new C@store() where L is the label of " +
+//              		"the reference to the newly allocated object.";
+//            }
+//
+//            @Override
+//            public String detailMsg() {
+//              return "The reference to the object being created on the store "
+//                  + storePrincipal().toString()
+//                  + " should be writeable by the store's principal";
+//            }
+//
+//            @Override
+//            public String technicalMsg() {
+//              return "The integrity label of the store's principal joined with the bottom " +
+//              		"confidentiality label should not be more restrictive than the label "
+//                  + instantiatedReferenceLabel.toString();
+//            }
+//          });
 
     }
   }

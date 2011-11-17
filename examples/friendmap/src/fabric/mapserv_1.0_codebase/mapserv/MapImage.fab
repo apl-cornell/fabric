@@ -26,7 +26,7 @@ where
   //////////////////////////////////////////////////////////////////////////////
 
   /* coordinates of map.  non-null. */
-  public final Box {L} boundary;
+  public final Box[L] {L} boundary;
 
   //////////////////////////////////////////////////////////////////////////////
   // internal state                                                           //
@@ -52,7 +52,7 @@ where
   public
   MapImage {L}
   (
-    Box{L} boundary,
+    Box[L]{L} boundary,
     int{L} width, int{L} height, char{L}[]{L} data
   )
   :{L}
@@ -116,7 +116,11 @@ where
     // see util.Util.copyArray for details about restrictions
     {s←} <= l,
     l <= {s→},
-    L <= l
+    L <= l,
+    L <= {⊤→s},
+    Box.provider <= {⊤→s},
+    {⊤←s} <= L,
+    {⊤←s} <= Box.provider
   {
     try {
 
@@ -139,14 +143,12 @@ where
   void
   print {L}
   (
-    final PrintStream[L] out
+    final PrintStream[L]{L} out
   )
   throws
   (
     NullPointerException{out}
   )
-  where
-    {out} <= L
   {
     // check assertions
     if (out == null)
@@ -192,7 +194,7 @@ where
    *  Note that if (x,y) is outside the boundary, the result will be outside the bounds
    *  of the data array.
    */
-  private int{L} index (float {L} x, float {L} y) {
+  private int{L} index {L} (float {L} x, float {L} y) {
     // claim: if boundary.contains(x,y) then 0 <= index < data.length
     // proof: since boundary.contains(x,y), boundary.scale_x(x) and
     //        boundary.scale_y(y) ∈ [0,1).
