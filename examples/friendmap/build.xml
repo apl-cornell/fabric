@@ -92,9 +92,6 @@
   <target name="build-trusted">
     <fabc-local srcdir="${home}/src/fabric/trusted" includes="**/*.fab">
       <arg value="-trusted-providers" />
-      <!--
-      <arg value="-rdebug" />
-      -->
     </fabc-local>
   </target>
 
@@ -105,7 +102,12 @@
   </target>
 
   <target name="build-local" depends="build-trusted,build-sig" description="Builds the fabric version of friendmap">
-    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase" />
+    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase">
+      <!--
+      <arg value="-report" /> <arg value="debug=1" />
+      <arg value="-rdebug" />
+      -->
+    </fabc-local>
     <fabc-local srcdir="${home}/src/fabric/mapserv_1.0_codebase" >
     </fabc-local>
     <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" />
