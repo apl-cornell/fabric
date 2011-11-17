@@ -61,16 +61,21 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
 
   /**
    * Returns a precise bound on the label of the reference of the allocated
-   * object
+   * object.
+   * 
+   * Can only be called during label checking of a constructor call.
    */
   protected abstract Label referenceLabel(FabricContext ctx);
 
   /**
-   * Returns a new label where this is replaced by a tighter bound on the
-   * reference of the allocated object
+   * Returns a new label where all occurrences of 'this' in label are replaced by
+   * its most accurate upper bound available.
    * 
    * @param label
    *          to instantiate occurrences of this within
+   * @param ctx
+   *          the context where the current label environment with currently valid
+   *          
    */
   protected abstract Label instantiateThisLabel(final FabricContext ctx, Label label);
 
@@ -111,7 +116,7 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
 
       // ////////////////////////////////////////////////////////////////
       // Update label should be enforcable by store.
-      // For added precision, substitute the for {this}
+      // For added precision, substitute for {this}
       // ////////////////////////////////////////////////////////////////
       final Label instantiatedObjectLabel =
           instantiateThisLabel((FabricContext) A, objectLabel);
