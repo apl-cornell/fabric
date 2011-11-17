@@ -44,7 +44,7 @@ where
   getMap {*lbl}
   (
     label {*lbl} lbl,
-    Box   {*lbl} boundary
+    Box[lbl] {*lbl} boundary
   )
   :{*lbl}
   throws NullPointerException

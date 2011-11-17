@@ -28,7 +28,7 @@ public class Snapp extends Delegator
 
   public User{this; *<-owner; *provider} createUser{_->;*<-owner}(String {this} name, principal {this} owner)
   {
-    return new User@store(name, owner, this, store);
+      return new User@store(name, owner, this, store);
   }
 }
 
