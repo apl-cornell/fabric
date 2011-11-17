@@ -65,7 +65,8 @@ where
   void
   viewMap {{user→} meet {service→}}
   (
-    User user
+    User{*l} user,
+    label{*l} l
   )
   throws
   (
@@ -76,8 +77,8 @@ where
     worker$ actsfor user,
 
     // these affect the fetch and resulting map
-    {user; *provider; *MapServer.provider} <= {user→},
-    {user; *provider; *MapServer.provider} <= {service→}
+    {*l; *provider; *MapServer.provider} <= {user→},
+    {*l; *provider; *MapServer.provider} <= {service→}
   {
     printMap(user, new label {user→});
   }
@@ -94,7 +95,8 @@ where
   void
   postMap {{user.friends→} meet {service→}}
   (
-    final User user
+    final User{*l} user,
+    label{*l} l
   )
   throws
   (
@@ -103,8 +105,8 @@ where
   where
     worker$ actsfor user,
     user        actsfor user.friends,
-    {user; *provider; *MapServer.provider} <= {user.friends→},
-    {user; *provider; *MapServer.provider} <= {service→}
+    {*l; *provider; *MapServer.provider} <= {user.friends→},
+    {*l; *provider; *MapServer.provider} <= {service→}
   {
     if (user == null)
       throw new NullPointerException();
