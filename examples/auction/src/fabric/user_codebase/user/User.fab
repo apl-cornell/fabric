@@ -12,7 +12,8 @@ public class User [principal TheUser] implements broker.User[TheUser]
     	    UserAgent ua = null;
     	    if (auctionLbl <= new label {⊤→store} &&
     	            user.UserAgent.provider <= new label {⊤→store} &&
-    	            store actsfor TheUser) {
+    	            store actsfor TheUser &&
+    	            provider <= new label {⊤→store}) {
     	        ua = new UserAgent[auctionLbl]@store();
     	    }
     	    return ua;
