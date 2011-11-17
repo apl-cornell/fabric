@@ -3,12 +3,12 @@ package util;
 /**
  * Convenience principal class the delegates to a single owner.
  */
-public class Delegator extends Principal {
+public class Delegator extends AbstractPrincipal {
 //  protected final String    {this}@{this->} name;
 //  protected final principal {this}@{this->} owner;
 
   public
-  Delegator {this}
+  Delegator
   (
     String    {this} name,
     principal {this} owner
@@ -20,44 +20,21 @@ public class Delegator extends Principal {
 
 //    this.owner = owner;
 //    this.name  = name;
-    super();
+    super(name);
   }
 
   //////////////////////////////////////////////////////////////////////////////
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
-  public native String{this} name();
-//  {
-//    return this.name;
-//  }
-
   public native boolean{this;p;this←} delegatesTo(principal p);
 //  {
 //    return p == owner;
 //  }
 
-  public native boolean equals(Principal p);
-//  {
-//    // TODO
-//    return false;
-//  }
-
   public native
-  boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
-  isAuthorized {this←}
-              (java.lang.Object authPrf,
-               Closure[this,lb] closure,
-               label            lb,
-               boolean          executeNow);
-//  {
-//    // we authorize nothing.
-//    return false;
-//  }
-
-  public native
-  ActsForProof[{*→s;*←s}]{this; p; this←; p←;s}
-  findProofUpto {*→s;this←}
+  ActsForProof[{s→}]{this; p; this←; p←;s}
+  findProofUpto {_->;this←}
                (Store s,
                 Principal p,
                 java.lang.Object searchState);
@@ -74,16 +51,15 @@ public class Delegator extends Principal {
 //    } else throw new AssertionFailedError("owner acts for delegator");
 //  }
 
-  public native
-  ActsForProof[{*→s;*←s}]{this; p; p←; this←;s}
-  findProofDownto {this←}
-                 (Store s,
-                  Principal p,
-                  java.lang.Object searchState);
-//  {
-//    // how would we know?
-//    return null;
-//  }
+               
+               public void addDelegatesTo{this:;this!:}(principal{this:;this!:} p)
+                   where caller (this) {
+                 
+               }
+               public void removeDelegatesTo{this:;this!:}(principal{this:;this!:} p)
+                   where caller (this) {
+                 
+               }
 }
 
 
