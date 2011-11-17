@@ -1,0 +1,80 @@
+package util;
+
+/**
+ * Convenience principal class the delegates to a single owner.
+ */
+public class Delegator extends AbstractPrincipal {
+  protected String     name;
+  protected Principal  owner;
+
+  public Delegator util$Delegator$(
+    String     name,
+    Principal  owner
+  )
+  {
+    // these endorsements are safe, because owner ≽ this,
+    // and thus {owner←} ⊑ {this←}
+    // we just can't convince the compiler of this fact.
+
+    this.fabric$lang$security$AbstractPrincipal$(name);
+    this.owner = owner;
+    this.name  = name;
+
+    return this;
+  }
+
+  public Delegator() {
+    super();
+  }
+
+  private void jif$init$() {}
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public boolean delegatesTo(Principal p)
+  {
+    return p == owner;
+  }
+
+  public ActsForProof findProofUpto(Store s, Principal p, java.lang.Object
+      searchState) {
+    if (PrincipalUtil.actsFor(owner, this)) {
+
+      ActsForProof proof =
+        PrincipalUtil.findActsForProof(s, p, owner, searchState);
+      if (proof != null) {
+        // Create proofParam: {*→s;*←s}
+        Principal storeP = s.getPrincipal();
+        ConfPolicy conf =
+          LabelUtil.readerPolicy(s, PrincipalUtil.topPrincipal(), storeP);
+        IntegPolicy integ =
+          LabelUtil.writerPolicy(s, PrincipalUtil.topPrincipal(), storeP);
+        Label proofParam = LabelUtil.toLabel(s, conf, integ);
+
+        DelegatesProof dp =
+          (DelegatesProof) new DelegatesProof@s(owner, this).$initLabels();
+        return
+          (TransitiveProof)
+            new TransitiveProof@s(proof, owner, dp).$initLabels();
+      } else
+        return null;
+
+    } else throw new AssertionFailedError().util$AssertionFailedError$("owner acts for delegator");
+  }
+
+               
+  public void addDelegatesTo(Principal p) {
+    throw new Error("delegation not supported");
+  }
+
+  public void removeDelegatesTo(Principal p) {
+    throw new Error("delegation not supported");
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

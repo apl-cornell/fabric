@@ -1,0 +1,36 @@
+package util;
+
+import java.io.PrintStream;
+import fabric.runtime.Runtime;
+
+public class Util {
+
+  /**
+   * Copy the contents of an array into another array with the given labels.
+   *
+   * @throws NullPointerException
+   *         if data is null
+   */
+  public static char[] copyArray(
+    final char[] data,
+    final Label l,
+    final Label m,
+    final Store s
+  ) throws NullPointerException {
+    final char[] result = new char[data.length]@s;
+
+    try {
+      for (int i = 0; i < data.length; i++)
+        result[i] = data[i];
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError().util$AssertionFailedError$("result and data have the same length.");
+    }
+
+    return result;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
