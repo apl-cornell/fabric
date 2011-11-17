@@ -1,17 +1,17 @@
 package util;
 
 public class AssertionFailedError extends Error {
-//  private final String{this}@{*->} message;
+  private final String{this}@{*->} message;
 
   public AssertionFailedError(String{this} message) {
     super();
-//    this.message = message;
+    this.message = message;
   }
 
-  public native String{this} toString();
-//  {
-//    return this.message;
-//  }
+  public String{this} toString()
+  {
+    return this.message;
+  }
 }
 
 
