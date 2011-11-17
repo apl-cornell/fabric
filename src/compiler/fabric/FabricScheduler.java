@@ -43,7 +43,6 @@ import fabric.visit.NamespaceChecker;
 import fabric.visit.PrincipalCastAdder;
 import fabric.visit.RemoteCallWrapperAdder;
 import fabric.visit.RemoteCallWrapperUpdater;
-import fabric.visit.ThisLabelChecker;
 import fabric.worker.Worker;
 
 public class FabricScheduler extends JifScheduler implements CBScheduler {
@@ -173,23 +172,6 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     return g;
   }
   
-  public Goal ThisLabelChecked(Job job) {
-    FabricTypeSystem  ts = fabext.typeSystem();   
-    FabricNodeFactory nf = fabext.nodeFactory();    
-    Goal g = internGoal(new VisitorGoal(job, new ThisLabelChecker(job, ts, nf)) {
-      @Override
-      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
-        l.add(scheduler.TypeChecked(job));
-        l.add(scheduler.ExceptionsChecked(job));
-        return l;
-      }
-    });
-    return g;
-  }
-  
-  
-  
   @Override
   public Goal Serialized(Job job) {
     FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
@@ -202,7 +184,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
         if (Worker.isInitialized())
           addPrerequisiteDependency(g, this.ConsistentNamespace());
         
-        g.addPrerequisiteGoal(ThisLabelChecked(job), this);
+        g.addPrerequisiteGoal(TypeChecked(job), this);
+        g.addPrerequisiteGoal(ExceptionsChecked(job), this);
       } catch (CyclicDependencyException e) {
         throw new InternalCompilerError(e);
       }
@@ -212,7 +195,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
         @Override
         public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
           List<Goal> l = new ArrayList<Goal>();
-          l.add(ThisLabelChecked(job));
+          l.add(TypeChecked(job));
+          l.add(ExceptionsChecked(job));
           return l;
         }
       });
@@ -242,7 +226,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
       Goal g = internGoal(new EmptyGoal(job));
 
       try {
-        addPrerequisiteDependency(g, ThisLabelChecked(job));
+        addPrerequisiteDependency(g, TypeChecked(job));
+        addPrerequisiteDependency(g, ExceptionsChecked(job));
       } catch (CyclicDependencyException e) {
         // Cannot happen.
         throw new InternalCompilerError(e);
