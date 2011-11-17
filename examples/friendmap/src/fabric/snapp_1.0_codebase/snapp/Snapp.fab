@@ -10,7 +10,7 @@ public class Snapp extends Delegator
   where provider <= User.provider, User.provider <= provider
 {
 
-  protected final Store {this} store;
+  protected final Store {this}@{*->this} store;
 
   /**
    * Create a new Snapp, operated by owner.
