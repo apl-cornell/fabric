@@ -3,24 +3,24 @@ package fabric.lang.security;
 public abstract class Principal {
     static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     
-    public abstract String{this} name();
+    public abstract String{this} name{⊥->}();
     
-    public abstract boolean{this; p; this←} delegatesTo(principal p);
+    public abstract boolean{this; p; this←} delegatesTo{⊥->}(principal p);
     
-    public abstract boolean equals(Principal p);
+    public abstract boolean equals{⊥->}(Principal p);
 
     // XXX Can we label this method anywhich way we want, since it won't
     // be invoked from Fabric code??
     // XXX Where will the declassification w.r.t. password happen?
     public abstract boolean{authPrf; closure; lb; *lb; executeNow; this; this→; this←}
-	isAuthorized{this←}(java.lang.Object authPrf, 
+	isAuthorized{⊥->;this←}(java.lang.Object authPrf, 
 			    Closure[this, lb] closure,
 			    label lb,
 			    boolean executeNow) where authority (this);
     
     public abstract ActsForProof[{c→;c←}]{this; p; this←; p←; c}
-	findProofUpto{this←}(Store c, Principal p, java.lang.Object searchState);
+	findProofUpto{⊥->;this←}(Store c, Principal p, java.lang.Object searchState);
     
     public abstract ActsForProof[{c→;c←}]{this; q; q←; this←; c}
-	findProofDownto{this←}(Store c, Principal q, java.lang.Object searchState);    
+	findProofDownto{⊥->;this←}(Store c, Principal q, java.lang.Object searchState);    
 }

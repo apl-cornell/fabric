@@ -196,6 +196,9 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     return classContext().labelEnv();
   }
   
+  /**
+   * Adds method constraints to environment.
+   */
   private LabelEnv methodEnv(JifProcedureInstance mi) {
     FabricContext methodctx = classContext();
     try {
@@ -416,6 +419,10 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     }        
   }
   
+  /**
+   * Produces a <code>CallHelper</code> for constraining the label environment
+   * for the given method.
+   */
   @SuppressWarnings("unchecked")
   private CallHelper classLabelHelper(
           JifProcedureInstance method) {

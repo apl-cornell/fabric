@@ -1,6 +1,6 @@
 package util;
 
-public class Meet extends Principal {
+public class Meet extends AbstractPrincipal {
 
 //  protected final String {this}@{this->} name;
 //
@@ -10,6 +10,7 @@ public class Meet extends Principal {
   public
   Meet
   (
+    String    {this} name,
     Principal {this} left,
     Principal {this} right
   )
@@ -21,49 +22,19 @@ public class Meet extends Principal {
 //    final String rightName = (right == null ? "_" : right.name());
 //
 //    this.name = "(" + leftName + " meet " + rightName + ")";
-    super();
+    super(name);
   }
 
   //////////////////////////////////////////////////////////////////////////////
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
-  public native String{this} name();
-//  {
-//    return this.name;
-//  }
-
-  public native boolean{this;p;this←} delegatesTo(principal p);
-//  {
-//    return p == left || p == right;
-//  }
-
-  public native boolean equals(Principal p);
-//  {
-//    // TODO
-//    return false;
-//  }
-
-  /**
-   * Returns true if this principal authorizes the given closure.
-   */
-  public native
-  boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
-  isAuthorized {this←}
-              (java.lang.Object authPrf,
-               Closure[this,lb] closure,
-               label            lb,
-               boolean          executeNow);
-//  {
-//    return false;
-//  }
-
   /**
    * See Principal.findProofUpto.
    */
   public native
   ActsForProof[{s→}]{this; p; this←; p←; s}
-  findProofUpto {this←}
+  findProofUpto {this←; ⊥->}
                (Store s, Principal p,
                 java.lang.Object searchState);
 //  {
@@ -82,18 +53,15 @@ public class Meet extends Principal {
 //    } else throw new AssertionFailedError("left and right act for meet");
 //  }
 
-  /**
-   * See Principal.findProofDownto
-   */
-  public native
-  ActsForProof[{s→}]{this; p; this←; p←; s}
-  findProofDownto {this←}
-                 (Store s, Principal p,
-                  java.lang.Object searchState);
-//  {
-//    // how would we know?
-//    return null;
-//  }
+                 
+  public void addDelegatesTo{this:;this!:}(principal{this:;this!:} p)
+      where caller (this) {
+    
+  }
+  public void removeDelegatesTo{this:;this!:}(principal{this:;this!:} p)
+      where caller (this) {
+    
+  }
 }
 
 

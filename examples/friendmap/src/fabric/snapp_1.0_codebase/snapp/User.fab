@@ -12,13 +12,11 @@ import util.AssertionFailedError;
  * The V1 stands for version 1.  In Fabric, V1 and V2 will both be named User,
  * but will reside in different codebases.
  */
-public class User extends Meet 
+public class User extends Meet
 where
   Snapp.provider <= provider, provider <= Snapp.provider,
   Group.provider <= provider
 {
-  /** The name of this principal */
-  public final String{this}@{*->this} name;
 
   /** The label {this←;this→this.locationInfo}.  Cannot be set as initializer due to jif bug. */
   public final label {this}@{*->this} locationLabel;
@@ -43,19 +41,14 @@ where
    * @throws NullPointerException
    *         if network is null
    */
-  User {this}
+  User{this}
   (
     String    {this} name,
     principal {this} owner,
     Snapp     {this} network,
     Store     {this} store
   )
-  throws
-  (
-    NullPointerException{network}
-  )
-  where
-    provider  <= {this}
+  where provider <= {this}
   {
     // these endorsements are safe, because owner ≽ this,
     // and thus {owner←;network←} ⊑ {this←}
@@ -67,9 +60,7 @@ where
     this.friends       = new Group[this]@store(store, name + "'s friends");
     this.locationLabel = new label {this←;locationInfo→}@store;
 
-    this.name     = name;
-
-    super(owner, network);
+    super(name, owner, network);
   }
 
   public
@@ -83,8 +74,6 @@ where
   {
     this.location = loc;
   }
-
-  public String{this} name() { return this.name; }
 }
 
 /*
