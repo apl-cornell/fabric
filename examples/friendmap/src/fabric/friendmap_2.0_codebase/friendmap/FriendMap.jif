@@ -1,7 +1,7 @@
 package friendmap;
 
 codebase snapp1;
-codebase snapp2;
+codebase fm1;
 
 import mapserv.MapServer;
 import mapserv.MapImage;
@@ -11,11 +11,11 @@ import snapp.User;
 import snapp.Location;
 
 public class FriendMap
-extends FriendMap
+extends fm1.FriendMap
 where
-  FriendMap.provider <= provider,          provider <= FriendMap.provider,
-  MapServer.provider <= MapImage.provider, MapImage.provider <= MapServer.provider,
-  MapServer.provider <= Box.provider,      Box.provider      <= MapServer.provider
+  fm1.FriendMap.provider <= provider,          provider          <= fm1.FriendMap.provider,
+  MapServer.provider     <= MapImage.provider, MapImage.provider <= MapServer.provider,
+  MapServer.provider     <= Box.provider,      Box.provider      <= MapServer.provider
 {
   public
   FriendMap {this}

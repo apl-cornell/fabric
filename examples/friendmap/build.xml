@@ -1,4 +1,4 @@
-<project name="friendmap" default="build-all" basedir=".">
+<project name="friendmap" default="all" basedir=".">
   <description>
     FriendMap build file
   </description>
@@ -14,7 +14,7 @@
   <dirname property="home" file="${ant.file.friendmap}" />
 
   <target name="build-all" depends="build-local, build-jif"/>
-  <target name="all"       depends="build-local"/>
+  <target name="all"       depends="publish-all"/>
 
 
   <!--
@@ -115,36 +115,105 @@
   ******************************************************************************
   -->
 
-  <target name="publish-snapp-1.0" />
+  <target name="publish-snapp-1.0" depends="build-trusted" >
+    <fabc-publish srcdir="src/fabric/snapp_1.0_codebase"
+                  store="snapp"
+                  property="snapp.codebase" />
+  </target>
+
 
   <target name="publish-snapp-2.0"
-          depends="publish-snapp-1.0" />
+          depends="publish-snapp-1.0">
+    <fabc-publish srcdir="src/fabric/snapp_2.0_codebase"
+                  store="snapp"
+                  property="snapp2.codebase">
+      <arg value="-codebase-alias" /> <arg value="snapp1=${snapp.codebase}" />
+    </fabc-publish>
+  </target>
 
-  <target name="publish-mapserv-1.0" />
+
+  <target name="publish-mapserv-1.0" depends="build-trusted">
+    <fabc-publish srcdir="src/fabric/snapp_2.0_codebase"
+                  store="mapserv"
+                  property="mapserv.codebase" />
+  </target>
+
 
   <target name="publish-friendmap-1.0"
-          depends="publish-snapp-1.0, publish-mapserv-1.0" />
+          depends="publish-snapp-1.0, publish-mapserv-1.0">
+    <fabc-publish srcdir="src/fabric/friendmap_1.0_codebase"
+                  store="friendmap"
+                  property="friendmap.codebase">
+      <arg value="-classpath" /> <arg value="${snapp.codebase}:${mapserv.codebase}" />
+    </fabc-publish>
+  </target>
+
 
   <target name="publish-friendmap-2.0"
-          depends="publish-friendmap-1.0, publish-snapp-2.0" />
+          depends="publish-friendmap-1.0, publish-snapp-2.0">
+    <fabc-publish srcdir="src/fabric/friendmap_2.0_codebase"
+                  store="friendmap"
+                  property="friendmap2.codebase">
+      <arg value="-codebase-alias" /> <arg value="snapp1=${snapp.codebase}"     />
+      <arg value="-codebase-alias" /> <arg value="   fm1=${friendmap.codebase}" />
+      <arg value="-classpath"      /> <arg value="${snapp2.codebase}:${mapserv.codebase}" />
+    </fabc-publish>
+  </target>
+
 
   <target name="publish-scripts-snapp"
-          depends="publish-snapp-1.0" />
+          depends="publish-snapp-1.0">
+    <fabc-publish srcdir="src/fabric/scripts/snapp" store="snapp" property="snapp-scripts.codebase">
+      <arg value="-classpath" /> <arg value="${snapp.codebase}" />
+    </fabc-publish>
+  </target>
+
 
   <target name="publish-scripts-mapserv"
-          depends="publish-mapserv-1.0" />
+          depends="publish-mapserv-1.0">
+    <fabc-publish srcdir="src/fabric/scripts/mapserv" store="mapserv" property="mapserv-scripts.codebase">
+      <arg value="-classpath" /> <arg value="${mapserv.codebase}" />
+    </fabc-publish>
+  </target>
+
 
   <target name="publish-scripts-friendmap"
-          depends="publish-friendmap-1.0" />
+          depends="publish-friendmap-1.0">
+    <fabc-publish srcdir="src/fabric/scripts/friendmap" store="friendmap" property="friendmap-scripts.codebase">
+      <arg value="-classpath" /> <arg value="${friendmap.codebase}:${snapp.codebase}:${mapserv.codebase}" />
+    </fabc-publish>
+  </target>
+
 
   <target name="publish-scripts-users"
-          depends="publish-friendmap-1.0" />
+          depends="publish-friendmap-1.0">
+    <fabc-publish srcdir="src/fabric/scripts/alice" store="alice" property="alice-scripts.codebase">
+      <arg value="-classpath" /> <arg value="${friendmap.codebase}:${snapp.codebase}:${mapserv.codebase}" />
+    </fabc-publish>
+    <fabc-publish srcdir="src/fabric/scripts/bob" store="bob" property="bob-scripts.codebase">
+      <arg value="-classpath" /> <arg value="${friendmap.codebase}:${snapp.codebase}:${mapserv.codebase}" />
+    </fabc-publish>
+  </target>
+
 
   <target name="publish-all"
           depends="publish-scripts-users,
                    publish-scripts-friendmap,
                    publish-scripts-snapp,
-                   publish-scripts-mapserv" />
+                   publish-scripts-mapserv">
+    <echo message=" ***********************************************************"  />
+    <echo message=" * Oh Snapp!!  you're so close.  All that's left:"             />
+    <echo message=" *     on snapp:     run ${snapp-scripts.codebase}/Init"       />
+    <echo message=" *     on mapserv:   run ${mapserv-scripts.codebase}/Init"     />
+    <echo message=" *     on friendmap: run ${friendmap-scripts.codebase}/Init"   />
+    <echo message=" *     on alice:     run ${alice-scripts.codebase}/Init"       />
+    <echo message=" *     on bob:       run ${bob-scripts.codebase}/Init"         />
+    <echo message=" *     on alice:     run ${alice-scripts.codebase}/AddFriends" />
+    <echo message=" *     on bob:       run ${bob-scripts.codebase}/AddFriends"   />
+    <echo message=" * And finally:"                                               />
+    <echo message=" *     on alice:     run ${alice-scripts.codebase}/Run"        />
+    <echo message=" ***********************************************************"  />
+  </target>
 
   <!--
   ******************************************************************************
@@ -156,9 +225,36 @@
        verify and publish fabric code
   -->
   <macrodef name="fabc-publish">
-    <attribute name="worker" />
-    <attribute name="store"  />
-    <sequential />
+    <attribute name="srcdir"   />
+    <attribute name="store"    />
+    <attribute name="worker"   default="@{store}" />
+    <attribute name="includes" default="**/*.fab" />
+    <attribute name="excludes" default=""         />
+    <attribute name="property" default="_no_prop" />
+
+    <element name="extra-args" optional="true" implicit="true" />
+
+    <sequential>
+      <apply executable  = "bash"
+             parallel    = "true"
+             failonerror = "true"
+             dir         = "${home}">
+        <arg value="${fabric.home}/bin/fabc" />
+        <arg value="-publish-only"           />
+        <arg value="-e"                      />
+        <arg value="-codebase-output-file"   /> <arg value="${home}/classes/codebase.uri" />
+        <arg value="-sourcepath"             /> <arg value="@{srcdir}" />
+        <arg value="-classpath"              /> <arg value="${home}/classes/fabric" />
+
+        <extra-args />
+        <srcfile />
+        <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
+      </apply>
+      <loadfile property="codebase.uri" srcFile="${home}/classes/codebase.uri" />
+      <property name="@{property}" value="${codebase.uri}" />
+      <echo>Published @{srcdir} to ${codebase.uri}</echo>
+      <rm file="${home}/classes/codebase.uri" />
+    </sequential>
   </macrodef>
 
   <!-- fabc-local
