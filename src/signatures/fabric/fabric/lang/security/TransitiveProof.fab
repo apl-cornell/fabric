@@ -9,7 +9,7 @@ public final class TransitiveProof[label A] extends ActsForProof[A] {
     private final ActsForProof[A]{A}@{A} actorToP;
     private final ActsForProof[A]{A}@{A} pToGranter;
     private final principal{A}@{A} p;
-    public TransitiveProof(ActsForProof[A]{this} actorToP, principal{this} p, ActsForProof[A]{this} pToGranter): {A} {
+    public TransitiveProof(ActsForProof[A]{this} actorToP, principal{this} p, ActsForProof[A]{this} pToGranter) {
         super(p, p); // dummy
         this.actorToP = actorToP;
         this.pToGranter = pToGranter;
