@@ -4,7 +4,7 @@ import fabric.runtime.Runtime;
 import util.Delegator;
 
 public class PrincipalTest authority(*) {
-  public static
+  public static native
   void
   main {p←}
   (
@@ -14,17 +14,17 @@ public class PrincipalTest authority(*) {
   throws
     Exception
   where
-    authority(p)
-  {
-    final principal{p→} q = new Delegator("foo", p);
-
-    if (q actsfor p) {
-      Runtime[p].getRuntime().stdout(new label {p→}).println("delegation successful");
-    }
-    else {
-      Runtime[p].getRuntime().stdout(new label {p→}).println("delegation failed");
-    }
-  }
+    authority(p);
+//  {
+//    final principal{p→} q = new Delegator("foo", p);
+//
+//    if (q actsfor p) {
+//      Runtime[p].getRuntime().stdout(new label {p→}).println("delegation successful");
+//    }
+//    else {
+//      Runtime[p].getRuntime().stdout(new label {p→}).println("delegation failed");
+//    }
+//  }
 }
 
 

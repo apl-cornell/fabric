@@ -4,8 +4,8 @@ package util;
  * Convenience principal class the delegates to a single owner.
  */
 public class Delegator extends Principal {
-  protected final String    {this}@{this->} name;
-  protected final principal {this}@{this->} owner;
+//  protected final String    {this}@{this->} name;
+//  protected final principal {this}@{this->} owner;
 
   public
   Delegator {this}
@@ -18,8 +18,8 @@ public class Delegator extends Principal {
     // and thus {owner←} ⊑ {this←}
     // we just can't convince the compiler of this fact.
 
-    this.owner = owner;
-    this.name  = name;
+//    this.owner = owner;
+//    this.name  = name;
     super();
   }
 
@@ -27,60 +27,63 @@ public class Delegator extends Principal {
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
-  public String{this} name() {
-    return this.name;
-  }
+  public native String{this} name();
+//  {
+//    return this.name;
+//  }
 
-  public boolean{this;p;this←} delegatesTo(principal p) {
-    return p == owner;
-  }
+  public native boolean{this;p;this←} delegatesTo(principal p);
+//  {
+//    return p == owner;
+//  }
 
-  public boolean equals(Principal p) {
-    // TODO
-    return false;
-  }
+  public native boolean equals(Principal p);
+//  {
+//    // TODO
+//    return false;
+//  }
 
-  public
+  public native
   boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
   isAuthorized {this←}
               (java.lang.Object authPrf,
                Closure[this,lb] closure,
                label            lb,
-               boolean          executeNow)
-  {
-    // we authorize nothing.
-    return false;
-  }
+               boolean          executeNow);
+//  {
+//    // we authorize nothing.
+//    return false;
+//  }
 
-  public
+  public native
   ActsForProof[{*→s;*←s}]{this; p; this←; p←;s}
   findProofUpto {*→s;this←}
-               (Store{this} s,
-                Principal{this} p,
-                java.lang.Object searchState)
-  {
-    if (owner actsfor this) {
+               (Store s,
+                Principal p,
+                java.lang.Object searchState);
+//  {
+//    if (owner actsfor this) {
+//
+//      ActsForProof[{*→s;*←s}] proof = PrincipalUtil.findActsForProof(s, p, owner, searchState);
+//      if (proof != null) {
+//        DelegatesProof dp = new DelegatesProof[{*→s;*←s}]@s(owner, this);
+//        return new TransitiveProof[{*→s;*←s}]@s(proof, owner, dp);
+//      } else
+//        return null;
+//
+//    } else throw new AssertionFailedError("owner acts for delegator");
+//  }
 
-      ActsForProof[{*→s;*←s}] proof = PrincipalUtil.findActsForProof(s, p, owner, searchState);
-      if (proof != null) {
-        DelegatesProof dp = new DelegatesProof[{*→s;*←s}]@s(owner, this);
-        return new TransitiveProof[{*→s;*←s}]@s(proof, owner, dp);
-      } else
-        return null;
-
-    } else throw new AssertionFailedError("owner acts for delegator");
-  }
-
-  public
+  public native
   ActsForProof[{*→s;*←s}]{this; p; p←; this←;s}
   findProofDownto {this←}
                  (Store s,
                   Principal p,
-                  java.lang.Object searchState)
-  {
-    // how would we know?
-    return null;
-  }
+                  java.lang.Object searchState);
+//  {
+//    // how would we know?
+//    return null;
+//  }
 }
 
 

@@ -2,10 +2,10 @@ package util;
 
 public class Meet extends Principal {
 
-  protected final String {this}@{this->} name;
-
-  protected final Principal{this}@{this->} left;
-  protected final Principal{this}@{this->} right;
+//  protected final String {this}@{this->} name;
+//
+//  protected final Principal{this}@{this->} left;
+//  protected final Principal{this}@{this->} right;
 
   public
   Meet
@@ -14,13 +14,13 @@ public class Meet extends Principal {
     Principal {this} right
   )
   {
-    this.left  = left;
-    this.right = right;
-
-    final String leftName  = (left  == null ? "_" : left.name());
-    final String rightName = (right == null ? "_" : right.name());
-
-    this.name = "(" + leftName + " meet " + rightName + ")";
+//    this.left  = left;
+//    this.right = right;
+//
+//    final String leftName  = (left  == null ? "_" : left.name());
+//    final String rightName = (right == null ? "_" : right.name());
+//
+//    this.name = "(" + leftName + " meet " + rightName + ")";
     super();
   }
 
@@ -28,69 +28,72 @@ public class Meet extends Principal {
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
-  public String{this} name() {
-    return this.name;
-  }
+  public native String{this} name();
+//  {
+//    return this.name;
+//  }
 
-  public boolean{this;p;this←} delegatesTo(principal p) {
-    return p == left || p == right;
-  }
+  public native boolean{this;p;this←} delegatesTo(principal p);
+//  {
+//    return p == left || p == right;
+//  }
 
-  public boolean equals(Principal p) {
-    // TODO
-    return false;
-  }
+  public native boolean equals(Principal p);
+//  {
+//    // TODO
+//    return false;
+//  }
 
   /**
    * Returns true if this principal authorizes the given closure.
    */
-  public
+  public native
   boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
   isAuthorized {this←}
               (java.lang.Object authPrf,
                Closure[this,lb] closure,
                label            lb,
-               boolean          executeNow)
-  {
-    return false;
-  }
+               boolean          executeNow);
+//  {
+//    return false;
+//  }
 
   /**
    * See Principal.findProofUpto.
    */
-  public
+  public native
   ActsForProof[{s→}]{this; p; this←; p←; s}
   findProofUpto {this←}
                (Store s, Principal p,
-                java.lang.Object searchState)
-  {
-    if (left actsfor this && right actsfor this) {
-
-      ActsForProof leftProof  = PrincipalUtil.findActsForProof(s, p, left,  searchState);
-      ActsForProof rightProof = PrincipalUtil.findActsForProof(s, p, right, searchState);
-
-      if (leftProof != null)
-        return new TransitiveProof@s(leftProof,  left,  new DelegatesProof@s(left, this));
-      if (rightProof != null)
-        return new TransitiveProof@s(rightProof, right, new DelegatesProof@s(right, this));
-      else
-        return null;
-
-    } else throw new AssertionFailedError("left and right act for meet");
-  }
+                java.lang.Object searchState);
+//  {
+//    if (left actsfor this && right actsfor this) {
+//
+//      ActsForProof leftProof  = PrincipalUtil.findActsForProof(s, p, left,  searchState);
+//      ActsForProof rightProof = PrincipalUtil.findActsForProof(s, p, right, searchState);
+//
+//      if (leftProof != null)
+//        return new TransitiveProof@s(leftProof,  left,  new DelegatesProof@s(left, this));
+//      if (rightProof != null)
+//        return new TransitiveProof@s(rightProof, right, new DelegatesProof@s(right, this));
+//      else
+//        return null;
+//
+//    } else throw new AssertionFailedError("left and right act for meet");
+//  }
 
   /**
    * See Principal.findProofDownto
    */
-  public
+  public native
   ActsForProof[{s→}]{this; p; this←; p←; s}
   findProofDownto {this←}
                  (Store s, Principal p,
-                  java.lang.Object searchState)
-  {
-    // how would we know?
-    return null;
-  }
+                  java.lang.Object searchState);
+//  {
+//    // how would we know?
+//    return null;
+//  }
 }
 
 

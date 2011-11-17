@@ -11,7 +11,7 @@ public class Util {
    * @throws NullPointerException
    *         if data is null
    */
-  public static
+  public static native
   char{*l}[]
   // caller_pc ⊑ C(m) because the fetch on data reflects information
   //       about the data reference and the calling context
@@ -37,22 +37,22 @@ public class Util {
     // data ⊑ C(m) because the fetch on data reflects information about the reference to data
     {data} <= {*m;_→;_←},
     // data ⊑ {*l} because the output is affected by the reference to the input
-    {data} <= {*l}
-
-  {
-    final char{*l}[] result = new char[data.length]@s;
-
-    try {
-
-      for (int i = 0; i < data.length; i++)
-        result[i] = data[i];
-
-    } catch (final ArrayIndexOutOfBoundsException e) {
-      throw new AssertionFailedError("result and data have the same length.");
-    }
-
-    return result;
-  }
+    {data} <= {*l};
+//
+//  {
+//    final char{*l}[] result = new char[data.length]@s;
+//
+//    try {
+//
+//      for (int i = 0; i < data.length; i++)
+//        result[i] = data[i];
+//
+//    } catch (final ArrayIndexOutOfBoundsException e) {
+//      throw new AssertionFailedError("result and data have the same length.");
+//    }
+//
+//    return result;
+//  }
 }
 
 
