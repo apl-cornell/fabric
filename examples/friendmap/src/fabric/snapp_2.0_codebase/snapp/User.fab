@@ -1,7 +1,6 @@
 package snapp;
 
 codebase snapp1;
-codebase snapp2;
 
 import util.Group;
 import util.AssertionFailedError;
