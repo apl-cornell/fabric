@@ -21,9 +21,6 @@ public class ConfigProperties {
   public final int    workerPort;
   public final String dissemClass;
 
-  public final int    maxConnections;
-  public final int    retries;
-  public final int    timeout;
   public final boolean useSSL;
   public final String hostname;
 
@@ -80,10 +77,6 @@ public class ConfigProperties {
     //
 
     /************************** Node   Properties *****************************/
-    this.maxConnections  = Integer.parseInt(     removeProperty(p, "fabric.node.maxConnections",       "50"));
-    this.timeout         = 1000* Integer.parseInt(
-                                                 removeProperty(p, "fabric.node.timeout",              "2"));
-    this.retries         = Integer.parseInt(     removeProperty(p, "fabric.node.retries",              "6"));
     this.useSSL          = Boolean.parseBoolean( removeProperty(p, "fabric.node.useSSL",               "true"));
     this.hostname        =                       removeProperty(p, "fabric.node.hostname",             name);
     

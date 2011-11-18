@@ -166,9 +166,6 @@ public final class Worker {
           "The Fabric worker has already been initialized");
 
     WORKER_LOGGER.info("Initializing Fabric worker");
-    WORKER_LOGGER.config("maximum connections: " + config.maxConnections);
-    WORKER_LOGGER.config("timeout:             " + config.timeout);
-    WORKER_LOGGER.config("retries:             " + config.retries);
     WORKER_LOGGER.config("use ssl:             " + config.useSSL);
 
     instance = new Worker(config, principalOnum, initStoreSet);
