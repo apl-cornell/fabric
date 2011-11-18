@@ -58,26 +58,24 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
     w.write(")");
   }
 
-
   /**
    * Returns a precise bound on the label of the reference of the allocated
-   * object.
-   * 
-   * Can only be called during label checking of a constructor call.
+   * object. Can only be called during label checking of a constructor call.
    */
   protected abstract Label referenceLabel(FabricContext ctx);
 
   /**
-   * Returns a new label where all occurrences of 'this' in label are replaced by
-   * its most accurate upper bound available.
+   * Returns a new label where all occurrences of 'this' in label are replaced
+   * by its most accurate upper bound available.
    * 
    * @param label
    *          to instantiate occurrences of this within
    * @param ctx
-   *          the context where the current label environment with currently valid
-   *          
+   *          the context where the current label environment with currently
+   *          valid
    */
-  protected abstract Label instantiateThisLabel(final FabricContext ctx, Label label);
+  protected abstract Label instantiateThisLabel(final FabricContext ctx,
+      Label label);
 
   /**
    * Checks that the location is compatible with the <code>objectLabel</code>
@@ -92,7 +90,7 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
     Node n = node();
 
     // TODO if storePrincipal() returns null, then the store principal of the
-    // containing class should be used. 
+    // containing class should be used.
     if (location() != null && objectLabel != null) {
       FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
       JifContext A = lc.jifContext();
@@ -197,8 +195,8 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
           n.position(), new ConstraintMessage() {
             @Override
             public String msg() {
-              return "L <= {*->store} for new C@store() where L is the label of " +
-              		"the reference to the newly allocated object";
+              return "L <= {*->store} for new C@store() where L is the label of "
+                  + "the reference to the newly allocated object";
             }
 
             @Override
@@ -212,40 +210,42 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
             public String technicalMsg() {
               return "The label "
                   + instantiatedReferenceLabel.toString()
-                  + " should not be more restrictive than the confidentiality label of " +
-                  "the store's principal joined with the top integrity label";
+                  + " should not be more restrictive than the confidentiality label of "
+                  + "the store's principal joined with the top integrity label";
             }
           });
 
-//      lc.constrain(
-//          new NamedLabel("{*<-store}", ts.pairLabel(Position
-//              .compilerGenerated(), ts.bottomConfPolicy(Position
-//              .compilerGenerated()), ts.writerPolicy(
-//              Position.compilerGenerated(),
-//              ts.topPrincipal(Position.compilerGenerated()), storePrincipal()))),
-//          LabelConstraint.LEQ, new NamedLabel("label on new allocation",
-//              instantiatedReferenceLabel), A.labelEnv(), n.position(),
-//          new ConstraintMessage() {
-//            @Override
-//            public String msg() {
-//              return "{*<-store} <= L for new C@store() where L is the label of " +
-//              		"the reference to the newly allocated object.";
-//            }
-//
-//            @Override
-//            public String detailMsg() {
-//              return "The reference to the object being created on the store "
-//                  + storePrincipal().toString()
-//                  + " should be writeable by the store's principal";
-//            }
-//
-//            @Override
-//            public String technicalMsg() {
-//              return "The integrity label of the store's principal joined with the bottom " +
-//              		"confidentiality label should not be more restrictive than the label "
-//                  + instantiatedReferenceLabel.toString();
-//            }
-//          });
+      // lc.constrain(
+      // new NamedLabel("{*<-store}", ts.pairLabel(Position
+      // .compilerGenerated(), ts.bottomConfPolicy(Position
+      // .compilerGenerated()), ts.writerPolicy(
+      // Position.compilerGenerated(),
+      // ts.topPrincipal(Position.compilerGenerated()), storePrincipal()))),
+      // LabelConstraint.LEQ, new NamedLabel("label on new allocation",
+      // instantiatedReferenceLabel), A.labelEnv(), n.position(),
+      // new ConstraintMessage() {
+      // @Override
+      // public String msg() {
+      // return "{*<-store} <= L for new C@store() where L is the label of " +
+      // "the reference to the newly allocated object.";
+      // }
+      //
+      // @Override
+      // public String detailMsg() {
+      // return "The reference to the object being created on the store "
+      // + storePrincipal().toString()
+      // + " should be writeable by the store's principal";
+      // }
+      //
+      // @Override
+      // public String technicalMsg() {
+      // return
+      // "The integrity label of the store's principal joined with the bottom "
+      // +
+      // "confidentiality label should not be more restrictive than the label "
+      // + instantiatedReferenceLabel.toString();
+      // }
+      // });
 
     }
   }
