@@ -1,6 +1,5 @@
 package fabric.extension;
 
-import fabric.types.FabricTypeSystem;
 import jif.types.ConstraintMessage;
 import jif.types.JifContext;
 import jif.types.LabelConstraint;
@@ -13,6 +12,8 @@ import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.util.CodeWriter;
 import polyglot.util.Position;
+import fabric.types.FabricContext;
+import fabric.types.FabricTypeSystem;
 
 /**
  * This class provides common functionality to the New and NewArray for managing
@@ -55,6 +56,12 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
   }
 
   /**
+   * Returns a precise bound on the label of the reference of the allocated
+   * object. Can only be called during label checking of a constructor call.
+   */
+  protected abstract Label referenceLabel(FabricContext ctx);
+
+  /**
    * Checks that the location is compatible with the <code>objectLabel</code>
    * and <code>accessLabel</code>
    * 
@@ -89,8 +96,12 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
             }
           });
 
+      // ////////////////////////////////////////////////////////////////
+      // Update label should be enforcable by store.
+      // For added precision, substitute for {this}
+      // ////////////////////////////////////////////////////////////////
       lc.constrain(
-          new NamedLabel("L", objectLabel),
+          new NamedLabel("object update label", objectLabel),
           LabelConstraint.LEQ,
           new NamedLabel("{*->store}", ts.pairLabel(Position
               .compilerGenerated(), ts.readerPolicy(
@@ -100,7 +111,7 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
           n.position(), new ConstraintMessage() {
             @Override
             public String msg() {
-              return "L <= {*->store} for new C@store() where the field label of C is L.";
+              return "L <= {*->store} for new C@store() where the update label of C is L.";
             }
 
             @Override
@@ -124,11 +135,12 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
               .compilerGenerated()), ts.writerPolicy(
               Position.compilerGenerated(),
               ts.topPrincipal(Position.compilerGenerated()), storePrincipal()))),
-          LabelConstraint.LEQ, new NamedLabel("L", objectLabel), A.labelEnv(),
-          n.position(), new ConstraintMessage() {
+          LabelConstraint.LEQ, new NamedLabel("object update label",
+              objectLabel), A.labelEnv(), n.position(),
+          new ConstraintMessage() {
             @Override
             public String msg() {
-              return "{*<-store} <= L for new C@store() where the field label of C is L.";
+              return "{*<-store} <= L for new C@store() where the update label of C is L.";
             }
 
             @Override
@@ -142,6 +154,43 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
             public String technicalMsg() {
               return "The integrity label of the store's principal joined with the bottom confidentiality label should not be more restrictive than the label "
                   + objectLabel.toString();
+            }
+          });
+
+      // ////////////////////////////////////////////////////////////////////////
+      // Label on the reference to the new object should be enforceable by
+      // store.
+      // ////////////////////////////////////////////////////////////////////////
+      final Label referenceLabel = referenceLabel((FabricContext) A);
+
+      lc.constrain(
+          new NamedLabel("label on new allocation", referenceLabel),
+          LabelConstraint.LEQ,
+          new NamedLabel("{*->store}", ts.pairLabel(Position
+              .compilerGenerated(), ts.readerPolicy(
+              Position.compilerGenerated(),
+              ts.topPrincipal(Position.compilerGenerated()), storePrincipal()),
+              ts.topIntegPolicy(Position.compilerGenerated()))), A.labelEnv(),
+          n.position(), new ConstraintMessage() {
+            @Override
+            public String msg() {
+              return "L <= {*->store} for new C@store() where L is the label of "
+                  + "the reference to the newly allocated object";
+            }
+
+            @Override
+            public String detailMsg() {
+              return "The reference to the object being created on the store "
+                  + storePrincipal().toString()
+                  + " should be readable by the store's principal";
+            }
+
+            @Override
+            public String technicalMsg() {
+              return "The label "
+                  + referenceLabel.toString()
+                  + " should not be more restrictive than the confidentiality label of "
+                  + "the store's principal joined with the top integrity label";
             }
           });
 

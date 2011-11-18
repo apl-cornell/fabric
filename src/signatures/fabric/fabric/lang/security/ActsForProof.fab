@@ -1,15 +1,16 @@
 package fabric.lang.security;
 
 /**
- * A proof that the principal "actor" may act for the principal "granter"
+ * A proof that the principal "actor" may act for the principal "granter".  AccessBound is an upper bound on
+ * the class's access label. 
  */
-public abstract class ActsForProof {
+public abstract class ActsForProof[label AccessBound] {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     
-    ActsForProof(principal{this} actor, principal{this} granter) {
+    ActsForProof(principal{this} actor, principal{this} granter): {AccessBound} {
     }
 
-    public native principal{this} getActor();
+    public native principal{this} getActor{AccessBound}();
 
-    public native principal{this} getGranter();
+    public native principal{this} getGranter{AccessBound}();
 }

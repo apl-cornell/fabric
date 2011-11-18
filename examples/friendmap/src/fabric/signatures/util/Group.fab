@@ -35,6 +35,8 @@ where
     final Store  {this} store,
     final String {this} name
   )
+  where
+    store actsfor groupOwner
   {
 //    this.members = new Principal[SIZE]@store;
     super(name, groupOwner);

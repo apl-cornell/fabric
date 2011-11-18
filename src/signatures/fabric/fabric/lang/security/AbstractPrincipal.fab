@@ -26,9 +26,9 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
                 boolean executeNow) where authority (this);
     
     
-    public native ActsForProof{this;q;this!:;q!:} findProofDownto(Store c, Principal q, java.lang.Object searchState);
+    public native ActsForProof[{c→}]{this;q;this!:;q!:;c} findProofDownto(Store c, Principal q, java.lang.Object searchState);
     
-    public native ActsForProof{this;p;this!:;p!:} findProofUpto{this!:}(Store c, Principal p, java.lang.Object searchState) where authority (this);
+    public native ActsForProof[{c→}]{this;p;this!:;p!:;c} findProofUpto{this!:}(Store c, Principal p, java.lang.Object searchState) where authority (this);
     
     public native boolean equals(Object o);
     

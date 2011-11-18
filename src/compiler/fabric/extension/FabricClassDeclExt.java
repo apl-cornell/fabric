@@ -11,7 +11,6 @@ import jif.types.JifTypeSystem;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.PrincipalConstraint;
-import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import jif.types.label.ProviderLabel;
 import jif.types.principal.Principal;
@@ -89,11 +88,7 @@ public class FabricClassDeclExt extends JifClassDeclExt {
     Label classAccessLabel = ((FabricTypeSystem)jts).toLabel(pct.classAccessPolicy());
     
     // ({this} <= access label) holds true at all access sites 
-    A.addAssertionLE(
-        jts.pairLabel(Position.compilerGenerated(),
-            jts.thisLabel(ct).confProjection(),
-          jts.topIntegPolicy(Position.compilerGenerated())),
-        classAccessLabel);
+    A.addAssertionLE(jts.thisLabel(ct), classAccessLabel);
     
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     if (ts.isFabricClass(pct)) {

@@ -1,7 +1,7 @@
 package fabric.lang.security;
 
 public final class Capability[principal P, label L] authority(P) {
-    private final Closure[P, L]{this} closure = null;
+    private final Closure[P, L]{this}@{L} closure = null;
     
     public native Closure[P,L]{this} getClosure();
 

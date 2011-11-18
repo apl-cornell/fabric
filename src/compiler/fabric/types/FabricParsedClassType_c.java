@@ -4,7 +4,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import jif.types.JifMethodInstance;
 
 import jif.ast.JifNodeFactory;
 import jif.extension.CallHelper;
@@ -13,6 +12,7 @@ import jif.types.ActsForConstraint;
 import jif.types.ActsForParam;
 import jif.types.Assertion;
 import jif.types.JifClassType;
+import jif.types.JifMethodInstance;
 import jif.types.JifParsedPolyType_c;
 import jif.types.JifProcedureInstance;
 import jif.types.JifTypeSystem;
@@ -195,6 +195,9 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     return classContext().labelEnv();
   }
   
+  /**
+   * Adds method constraints to environment.
+   */
   private LabelEnv methodEnv(JifProcedureInstance mi) {
     FabricContext methodctx = classContext();
     try {
@@ -234,13 +237,17 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
         LabelEnv classEnv = classEnv();
         for (FieldInstance fi : fields()) {
           if (fi.flags().isStatic()) continue;
+          FabricFieldInstance ffi = (FabricFieldInstance) fi;
           Type t = fi.type();
           if (ts.isLabeled(t)) {
-            ConfPolicy tslabel = ts.labelOfType(t).confProjection();
-            classAccessPolicy = upperBound(classEnv, classAccessPolicy, tslabel);
+            Label tslabel = ffi.accessLabel();
+
+            classAccessPolicy = upperBound(classEnv, classAccessPolicy, tslabel.confProjection());
           }
         }
-        
+        if(ts.containsThisLabel(ts.toLabel(classAccessPolicy)))
+          throw new InternalError("Access label contains \"this\" in " + this + ":" + classAccessPolicy);
+
         try {
           int i = 0;
           
@@ -409,6 +416,10 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     }        
   }
   
+  /**
+   * Produces a <code>CallHelper</code> for constraining the label environment
+   * for the given method.
+   */
   @SuppressWarnings("unchecked")
   private CallHelper classLabelHelper(
           JifProcedureInstance method) {

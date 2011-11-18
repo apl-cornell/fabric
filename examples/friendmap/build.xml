@@ -95,17 +95,43 @@
     </fabc-local>
   </target>
 
-  <target name="build-sig" description="Builds signatures used by friendmap">
+  <target name="build-sig">
     <fabc-local srcdir="${home}/src/fabric/signatures" destdir="${home}/classes/fab-sig">
       <arg value="-sig" />
     </fabc-local>
   </target>
 
-  <target name="build-local" depends="build-trusted,build-sig" description="Builds the fabric version of friendmap">
-    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase" />
-    <fabc-local srcdir="${home}/src/fabric/mapserv_1.0_codebase" >
+  <target name="build-local-snapp" depends="build-trusted">
+    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase">
+      <!--
+      <arg value="-report" /> <arg value="debug=1" />
+      <arg value="-rdebug" />
+      -->
     </fabc-local>
-    <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" />
+  </target>
+
+  <target name="build-local-mapserv" depends="build-trusted">
+    <fabc-local srcdir="${home}/src/fabric/mapserv_1.0_codebase" >
+        <!--
+        <arg value="-rdebug" />
+        -->
+    </fabc-local>
+  </target>
+
+  <target name="build-local-friendmap" depends="build-local-snapp, build-local-mapserv, build-sig">
+    <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" >
+        <!--
+        <arg value="-rdebug" />
+        -->
+    </fabc-local>
+  </target>
+
+  <target name="build-local"
+          depends="build-local-friendmap"
+          description="Builds the fabric version of friendmap">
+    <echo message="Boo-yah, the example builds in Mobile Fabric!" />
+    <echo message="Now go for the mother load: ant publish-all."  />
+    <echo message="You know you want to."                         />
   </target>
 
 
