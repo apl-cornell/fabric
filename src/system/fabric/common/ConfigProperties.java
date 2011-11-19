@@ -20,6 +20,11 @@ public class ConfigProperties {
 
   public final int    workerPort;
   public final String dissemClass;
+  
+  /**
+   * Port on which to listen for shell commands.
+   */
+  public final int    workerAdminPort;
 
   public final boolean useSSL;
   public final String hostname;
@@ -90,6 +95,7 @@ public class ConfigProperties {
     this.workerPort      = Integer.parseInt(     removeProperty(p, "fabric.worker.port",               "3372"));
     this.dissemClass     =                       removeProperty(p, "fabric.worker.fetchmanager.class", "fabric.dissemination.pastry.PastryFetchManager");
     this.homeStore       =                       removeProperty(p, "fabric.worker.homeStore",          null);
+    this.workerAdminPort = Integer.parseInt(     removeProperty(p, "fabric.worker.adminPort",          "3572"));
 
     /************************** Store  Properties *****************************/
     this.storePort       = Integer.parseInt(     removeProperty(p, "fabric.store.port",                "3472"));

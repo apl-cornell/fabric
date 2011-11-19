@@ -53,6 +53,8 @@ import fabric.lang.security.IntegPolicy;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
+import fabric.worker.admin.WorkerAdmin;
+import fabric.worker.admin.WorkerNotRunningException;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.shell.ChainedCommandSource;
@@ -446,16 +448,6 @@ public final class Worker {
       final Options opts = new Options(args);
       final ConfigProperties config = new ConfigProperties(opts.name);
 
-      // TODO If an instance of the worker is already running, connect to it and
-      // TODO act as a remote terminal.
-
-      initialize(config);
-      worker = getWorker();
-      worker.sigcp = opts.sigcp;
-      worker.filsigcp = opts.filsigcp;
-      worker.codeCache = opts.codeCache;
-      worker.bootcp = opts.bootcp;
-
       // log the command line
       StringBuilder cmd = new StringBuilder("Command Line: Worker");
       for (String s : args) {
@@ -463,6 +455,22 @@ public final class Worker {
         cmd.append(s);
       }
       WORKER_LOGGER.config(cmd.toString());
+      
+      try {
+        // If an instance of the worker is already running, connect to it and
+        // act as a remote terminal.
+        WorkerAdmin.connect(config.workerAdminPort, opts.cmd);
+        return;
+      } catch (WorkerNotRunningException e) {
+        // Fall through and initialize the worker.
+      }
+
+      initialize(config);
+      worker = getWorker();
+      worker.sigcp = opts.sigcp;
+      worker.filsigcp = opts.filsigcp;
+      worker.codeCache = opts.codeCache;
+      worker.bootcp = opts.bootcp;
 
       // Attempt to read the principal object to ensure that it exists.
       final NodePrincipal workerPrincipal = worker.getPrincipal();
@@ -473,7 +481,11 @@ public final class Worker {
           return null;
         }
       });
+      
+      // Start listening on the admin port.
+      WorkerAdmin.listen(config.workerAdminPort, worker);
 
+      // Construct the source of commands for the worker shell.
       CommandSource commandSource;
       if (opts.cmd != null) {
         commandSource = new TokenizedCommandSource(opts.cmd);

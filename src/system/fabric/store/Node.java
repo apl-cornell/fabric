@@ -15,6 +15,7 @@ import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
+import fabric.worker.admin.WorkerAdmin;
 import fabric.worker.shell.*;
 
 /**
@@ -144,6 +145,9 @@ public class Node {
     Thread t = new Thread(store, "Fabric network connection acceptor");
     t.setDaemon(true);
     t.start();
+    
+    // Start listening on the worker admin port.
+    WorkerAdmin.listen(store.config.workerAdminPort, Worker.getWorker());
     
     // Drop into a worker shell.
     try {
