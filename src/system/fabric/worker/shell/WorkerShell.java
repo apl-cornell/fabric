@@ -266,7 +266,10 @@ public class WorkerShell {
 
         String command = commandLine.get(0);
         List<String> args = commandLine.subList(1, commandLine.size());
-        if (command.equals("exit")) return;
+        if (command.equals("exit")) {
+          DummyCommandSource.signalToQuit();
+          return;
+        }
 
         CommandHandler handler = handlers.get(command);
         if (handler == null) {
