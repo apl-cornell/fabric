@@ -59,6 +59,7 @@ import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.shell.ChainedCommandSource;
 import fabric.worker.shell.CommandSource;
+import fabric.worker.shell.DummyCommandSource;
 import fabric.worker.shell.InteractiveCommandSource;
 import fabric.worker.shell.TokenizedCommandSource;
 import fabric.worker.shell.WorkerShell;
@@ -490,12 +491,20 @@ public final class Worker {
       if (opts.cmd != null) {
         commandSource = new TokenizedCommandSource(opts.cmd);
         if (opts.keepOpen) {
+          CommandSource nextSource;
+          if (opts.interactiveShell) {
+            nextSource = new InteractiveCommandSource(worker);
+          } else {
+            nextSource = new DummyCommandSource();
+          }
           commandSource =
               new ChainedCommandSource(commandSource,
-                  new InteractiveCommandSource(worker));
+                  nextSource);
         }
-      } else {
+      } else if (opts.interactiveShell) {
         commandSource = new InteractiveCommandSource(worker);
+      } else {
+        commandSource = new DummyCommandSource();
       }
 
       // Drop into the worker shell.

@@ -154,7 +154,12 @@ public class Node {
       Worker worker = Worker.getWorker();
       try {
         try {
-          CommandSource commandSource = new InteractiveCommandSource(worker);
+          CommandSource commandSource;
+          if (opts.interactiveShell) {
+            commandSource = new InteractiveCommandSource(worker);
+          } else {
+            commandSource = new DummyCommandSource();
+          }
           if (opts.cmd != null) {
             commandSource =
                 new ChainedCommandSource(new TokenizedCommandSource(opts.cmd),

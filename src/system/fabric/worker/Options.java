@@ -24,14 +24,20 @@ public class Options extends fabric.common.Options {
    * specified on the command line.
    */
   protected boolean keepOpen;
-  
+
+  /**
+   * Whether to have an interactive shell. A non-interactive shell this is
+   * useful when the worker is started with a disconnected stdin.
+   */
+  protected boolean interactiveShell;
+
   private Options() {
   }
 
   public Options(String[] args) throws UsageError {
     super(args);
   }
-  
+
   static void printUsage(PrintStream out, boolean showSecretMenu) {
     new Options().usage(out, showSecretMenu);
   }
@@ -50,6 +56,15 @@ public class Options extends fabric.common.Options {
       @Override
       public int handle(String[] args, int index) {
         Options.this.keepOpen = true;
+        return index;
+      }
+    });
+    
+    flags.add(new Flag("--no-shell", null, "disable the worker shell. This is "
+        + "useful when the worker is started with a disconnected stdin.") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.interactiveShell = false;
         return index;
       }
     });
@@ -95,13 +110,14 @@ public class Options extends fabric.common.Options {
     this.name = System.getenv("HOSTNAME");
     this.cmd = null;
     this.keepOpen = false;
+    this.interactiveShell = true;
     // Default codeCache is set in validateOptions because it depends on name.
   }
 
   @Override
   public void validateOptions() throws UsageError {
     if (null == this.name) throw new UsageError("No worker name specified");
-    
+
     // Default codeCache is set here because it depends on name.
     if (null == this.codeCache) {
       this.codeCache = Resources.relpathRewrite("var", "cache", name);

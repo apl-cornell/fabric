@@ -24,6 +24,12 @@ public class Options extends fabric.common.Options {
    */
   public String[] cmd;
 
+  /**
+   * Whether to have an interactive shell. A non-interactive shell this is
+   * useful when the worker is started with a disconnected stdin.
+   */
+  protected boolean interactiveShell;
+
   private Options() {
   }
 
@@ -70,6 +76,15 @@ public class Options extends fabric.common.Options {
         return index + 1;
       }
     });
+    
+    flags.add(new Flag("--no-shell", null, "disable the worker shell. This is "
+        + "useful when the store is started with a disconnected stdin.") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.interactiveShell = false;
+        return index;
+      }
+    });
 
     flags.add(new Flag(Kind.DEBUG, "--nossl", null,
         "disables SSL for debugging purposes") {
@@ -96,6 +111,7 @@ public class Options extends fabric.common.Options {
     this.threadPool = DEFAULT_THREAD_POOL_SIZE;
     this.timeout = DEFAULT_TIMEOUT;
     this.cmd = null;
+    this.interactiveShell = true;
     // Default codeCache is set in validateOptions because it depends on
     // storeName.
   }
