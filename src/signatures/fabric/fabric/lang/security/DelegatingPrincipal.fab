@@ -8,7 +8,8 @@ package fabric.lang.security;
  * <p/>
  * This class is separate from Principal because some built-in principals (e.g.,
  * TopPrincipal, ConjunctivePrincipal, DisjunctivePrincipal) do not support the
- * delegation functions below.
+ * delegation functions <code>addDelegatesTo()</code> and
+ * <code>removeDelegatesTo</code>.
  */
 public abstract class DelegatingPrincipal extends Principal {
   
