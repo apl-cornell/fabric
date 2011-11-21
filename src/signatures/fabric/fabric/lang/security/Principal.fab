@@ -1,5 +1,10 @@
 package fabric.lang.security;
 
+/**
+ * This represents the abstract notion of a principal in Fabric. All principals
+ * in Fabric must inherit from this class. Applications that wish to define
+ * their own Principal classes must extend DelegatingPrincipal.
+ */
 public abstract class Principal {
     static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     
