@@ -6,16 +6,20 @@ import util.*;
 
 import util.System;
 
+/**
+ * This is a script that sets up the FriendMap example end runs it.
+ *
+ */
 public class Main
 authority(System.user)
 where
-  {System.user←}   <= provider,                     provider                     <= {System.user←},
-  {SnappNode←}     <= snapp.Snapp.provider,         snapp.Snapp.provider         <= {SnappNode←},
-  {SnappNode←}     <= snapp.UserV1.provider,        snapp.UserV1.provider        <= {SnappNode←},
-  {SnappNode←}     <= snapp.Location.provider,      snapp.Location.provider      <= {SnappNode←},
-  {MapServNode←}   <= mapserv.MapServer.provider,   mapserv.MapServer.provider   <= {MapServNode←},
-  {MapServNode←}   <= mapserv.MapImage.provider,    mapserv.MapImage.provider    <= {MapServNode←},
-  {MapServNode←}   <= mapserv.Box.provider,         mapserv.Box.provider         <= {MapServNode←},
+  {System.user←}   <= provider,                                         provider <= {System.user←},
+  {SnappNode←}     <= snapp.Snapp.provider,                 snapp.Snapp.provider <= {SnappNode←},
+  {SnappNode←}     <= snapp.UserV1.provider,               snapp.UserV1.provider <= {SnappNode←},
+  {SnappNode←}     <= snapp.Location.provider,           snapp.Location.provider <= {SnappNode←},
+  {MapServNode←}   <= mapserv.MapServer.provider,     mapserv.MapServer.provider <= {MapServNode←},
+  {MapServNode←}   <= mapserv.MapImage.provider,       mapserv.MapImage.provider <= {MapServNode←},
+  {MapServNode←}   <= mapserv.Box.provider,                 mapserv.Box.provider <= {MapServNode←},
   {FriendMapNode←} <= friendmap.FriendMap.provider, friendmap.FriendMap.provider <= {FriendMapNode←}
 {
   final Snapp     {System.user←} snapp;
@@ -24,6 +28,10 @@ where
   final UserV1    {System.user←} alice;
   final UserV1    {System.user←} bob;
 
+  /**
+   * Main example script.  Creates various service objects, creates users, adds
+   * friend delegations, and then invokes friendmap (version 1).
+   */
   public
   Main {System.user←}
   ()
@@ -99,9 +107,12 @@ where
     } else throw new AssertionFailedError("Delegation relationships hold 6");
   }
 
+  /**
+   * helper method for creating a user.
+   */
   private static
-  UserV1  {SnappNode←}
-  makeUser{SnappNode←}
+  UserV1   {SnappNode←}
+  makeUser {SnappNode←}
   (
     final Snapp     {SnappNode←} snapp,
     final String    {SnappNode←} name,
@@ -118,6 +129,9 @@ where
     }
   }
 
+  /**
+   * main method.
+   */
   public static
   void
   main {System.user←} (String[] args)

@@ -81,7 +81,15 @@ where
    * @throws ArrayIndexOutOfBoundsException
    *         if (x,y) lies outside the bounding box of the image (subject to accuracy errors).
    */
-  public char{L} getAt {L} (float {L} x, float {L} y):{L} throws ArrayIndexOutOfBoundsException {
+  public
+  char  {L}
+  getAt {L}
+  (
+    float {L} x, float {L} y
+  )
+  :{L}
+  throws ArrayIndexOutOfBoundsException
+  {
     if (this.data == null)
       throw new AssertionFailedError("data must be non-null");
 
@@ -95,7 +103,16 @@ where
    * @throws ArrayIndexOutOfBoundsException
    *         if (x,y) lies outside the bounding box of the image (subject to accuracy errors).
    */
-  public void setAt{L} (float {L} x, float {L} y, char {L} value):{L} throws ArrayIndexOutOfBoundsException {
+  public
+  void
+  setAt {L}
+  (
+    float {L} x, float {L} y,
+    char  {L} value
+  )
+  :{L}
+  throws ArrayIndexOutOfBoundsException
+  {
     if (this.data == null)
       throw new AssertionFailedError("data must be non-null");
 
@@ -108,7 +125,7 @@ where
    */
   public
   MapImage[l] {*l}
-  copy {L}
+  copy        {*l}
   (
     label{*l} l,
     Store{*l} s
@@ -155,6 +172,13 @@ where
       throw new AssertionFailedError("boundary is non-null");
     if (this.data == null)
       throw new AssertionFailedError("data is non-null");
+
+    // print map as follows:
+    // (top left)
+    //     xxxxxxxx
+    //     xxxxxxxx
+    //     xxxxxxxx
+    //             (bottom right)
 
     out.println("(" + boundary.xmin + ", " + boundary.ymin + ")");
     for (int i = 0; i < height; i++) {
