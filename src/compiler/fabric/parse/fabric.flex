@@ -106,7 +106,7 @@ import java.math.BigInteger;
 
         /* Jif-specific keywords */    
         keywords.put("actsFor",       new Integer(sym.ACTSFOR));
-        keywords.put("actsfor",       new Integer(sym.ACTSFOR_LOWER));
+        keywords.put("actsfor",       new Integer(sym.ACTSFOR));
         keywords.put("equiv",         new Integer(sym.EQUIV));
         keywords.put("authority",     new Integer(sym.AUTHORITY));
         keywords.put("caller",        new Integer(sym.CALLER));
