@@ -70,7 +70,7 @@ public class WorkerAdmin {
     ServerSocket server;
     try {
       server =
-          new ServerSocket(adminPort, 50, InetAddress.getLoopbackAddress());
+          new ServerSocket(adminPort, 50, InetAddress.getByName(null));
     } catch (IOException e) {
       throw new InternalError(e);
     }
