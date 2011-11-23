@@ -22,33 +22,18 @@ function waitForUser() {
 # Make a clean build.
 ant clobber fabil-init build-local
 
-# Start the stores.
-bin/run-all
+# Start the stores and wait a bit for them to start up.
+bin/start-all --no-shell
+sleep 3
 
-cat <<END
+# Initialize application state.
+bin/initialize
 
-Do the following:
-  brokerStore>   auction.InitBrokerStore
-  airlineAStore> auction.InitAStore
-  airlineBStore> auction.InitBStore
-  userStore>     auction.InitUserStore
-
-And leave the stores running.
-
-END
-
-waitForUser
-
-# Publish and initialize.
-ant publish-all init-remote
-
-cat <<END
-
-Quit the stores.
-
-END
-
-waitForUser
+# Exit the stores.
+bin/start-worker brokerStore exit
+bin/start-worker airlineAStore exit
+bin/start-worker airlineBStore exit
+bin/start-worker userStore exit
 
 # Take a dump of the broker store's database
 ../../bin/dump-bdb brokerStore > "${STORE_DUMP_CLEAN}"
@@ -57,20 +42,17 @@ waitForUser
 rm -rf var/log var/cache
 
 # Start the stores again.
-bin/run-all
+bin/start-all --no-shell
+sleep 3
 
-CB=$(cat var/codebases/brokerStore.codebase | sed -e 's/^<//' -e 's/>$//')
+# Run the application.
+bin/auction
 
-cat <<END
-
-Do the following:
-  brokerStore> ${CB}auction.Main
-
-Then quit the stores.
-
-END
-
-waitForUser
+# Exit the stores.
+bin/start-worker brokerStore exit
+bin/start-worker airlineAStore exit
+bin/start-worker airlineBStore exit
+bin/start-worker userStore exit
 
 # Collect timing stats.
 cat var/log/* > "${MASTER_LOG_CLEAN}"
@@ -82,20 +64,17 @@ cat var/log/* > "${MASTER_LOG_CLEAN}"
 rm -rf var/log
 
 # Start the stores again.
-bin/run-all
+bin/start-all --no-shell
+sleep 3
 
-CB=$(cat var/codebases/brokerStore.codebase | sed -e 's/^<//' -e 's/>$//')
+# Run the application.
+bin/auction
 
-cat <<END
-
-Do the following:
-  brokerStore> ${CB}auction.Main
-
-Then quit the stores.
-
-END
-
-waitForUser
+# Exit the stores.
+bin/start-worker brokerStore exit
+bin/start-worker airlineAStore exit
+bin/start-worker airlineBStore exit
+bin/start-worker userStore exit
 
 # Report for clean run.
 echo '############### STATS FOR DYNAMIC COMPILATION RUN ###############'

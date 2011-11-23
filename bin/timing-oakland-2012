@@ -131,7 +131,7 @@ class State:
 
   def appEndHandler(self, logEvent):
     if self.appStart == None: return
-    if self.appName != '':
+    if self.appName != '' and self.appName != 'exit':
       self.appTimes.append((self.appName, int(logEvent.time) - self.appStart))
     self.appStart = None
 
