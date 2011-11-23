@@ -59,7 +59,7 @@ rm -rf var/log var/cache
 # Start the stores again.
 bin/run-all
 
-CB=$(cat codebases/brokerStore.codebase | sed -e 's/^<//' -e 's/>$//')
+CB=$(cat var/codebases/brokerStore.codebase | sed -e 's/^<//' -e 's/>$//')
 
 cat <<END
 
@@ -84,7 +84,7 @@ rm -rf var/log
 # Start the stores again.
 bin/run-all
 
-CB=$(cat codebases/brokerStore.codebase | sed -e 's/^<//' -e 's/>$//')
+CB=$(cat var/codebases/brokerStore.codebase | sed -e 's/^<//' -e 's/>$//')
 
 cat <<END
 

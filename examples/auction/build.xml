@@ -13,7 +13,7 @@
   <import file="../../common.xml" />
 
   <dirname property="home" file="${ant.file}"/>
-  <property name="home.codebases" value="${home}/codebases"/>
+  <property name="home.codebases" value="${home}/var/codebases"/>
 
   <property name="broker.fab.src"
       value="${home}/src/fabric/broker_codebase/"/>
@@ -37,28 +37,22 @@
   <property name="airlineA2.fil.src"
       value="${home}/src/fabil/airlineA2_codebase/"/>
 
-  <property name="broker.worker" value="brokerStore"/>
-  <property name="airlineA.worker" value="airlineAStore"/>
-  <property name="airlineB.worker" value="airlineBStore"/>
-  <property name="user.worker" value="userStore"/>
-  <property name="airlineA2.worker" value="airlineAWorker"/>
+  <property name="broker" value="brokerStore"/>
+  <property name="airlineA" value="airlineAStore"/>
+  <property name="airlineB" value="airlineBStore"/>
+  <property name="user" value="userStore"/>
+  <property name="airlineA2" value="airlineAStore"/>
 
   <property name="broker.codebase.file"
-      value="${home.codebases}/${broker.worker}.codebase"/>
+      value="${home.codebases}/${broker}.codebase"/>
   <property name="airlineA.codebase.file"
-      value="${home.codebases}/${airlineA.worker}.codebase"/>
+      value="${home.codebases}/${airlineA}.codebase"/>
   <property name="airlineB.codebase.file"
-      value="${home.codebases}/${airlineB.worker}.codebase"/>
+      value="${home.codebases}/${airlineB}.codebase"/>
   <property name="user.codebase.file"
-      value="${home.codebases}/${user.worker}.codebase"/>
+      value="${home.codebases}/${user}.codebase"/>
   <property name="airlineA2.codebase.file"
-      value="${home.codebases}/${airlineA2.worker}.codebase"/>
-
-  <property name="broker.store" value="brokerStore"/>
-  <property name="airlineA.store" value="airlineAStore"/>
-  <property name="airlineB.store" value="airlineBStore"/>
-  <property name="user.store" value="userStore"/>
-  <property name="airlineA2.store" value="airlineAStore"/>
+      value="${home.codebases}/${airlineA2}.codebase"/>
 
   <!--
   ****************************************************************************
@@ -67,7 +61,7 @@
   -->
   <target name="clean" description="Removes generated files">
     <delete dir="${home}/classes"/>
-    <delete dir="${home}/codebases"/>
+    <delete dir="${home.codebases}"/>
   </target>
 
   <target name="clobber" depends="clean"
@@ -182,8 +176,8 @@
   <target name="publish-broker" description="Publish broker source"
       depends="check-broker" unless="broker.up-to-date">
     <antcall target="publish">
-      <param name="provider" value="${broker.worker}"/>
-      <param name="dest.store" value="${broker.store}"/>
+      <param name="provider" value="${broker}"/>
+      <param name="dest" value="${broker}"/>
       <param name="codebase.dir" value="${broker.fab.src}"/>
       <param name="target.codebasefile" value="${broker.codebase.file}"/>
       <param name="publish.args" value=""/>
@@ -196,8 +190,8 @@
   <target name="publish-airlineA2" description="Publish Airline A source"
       depends="check-airlineA" unless="airlineA.up-to-date">
     <antcall target="publish">
-      <param name="provider" value="${airlineA2.worker}"/>
-      <param name="dest.store" value="${airlineA2.store}"/>
+      <param name="provider" value="${airlineA2}"/>
+      <param name="dest" value="${airlineA2}"/>
       <param name="codebase.dir" value="${airlineA2.fab.src}"/>
       <param name="target.codebasefile" value="${airlineA2.codebase.file}"/>
       <param name="publish.args" value="-codebase-alias cb=fab://brokerStore/48/"/>
@@ -210,8 +204,8 @@
   <target name="publish-airlineA" description="Publish Airline A source"
       depends="check-airlineA" unless="airlineA.up-to-date">
     <antcall target="publish">
-      <param name="provider" value="${airlineA.worker}"/>
-      <param name="dest.store" value="${airlineA.store}"/>
+      <param name="provider" value="${airlineA}"/>
+      <param name="dest" value="${airlineA}"/>
       <param name="codebase.dir" value="${airlineA.fab.src}"/>
       <param name="target.codebasefile" value="${airlineA.codebase.file}"/>
       <param name="publish.args" value="-classpath @${broker.codebase.file}"/>
@@ -226,8 +220,8 @@
   <target name="publish-airlineB" description="Publish Airline B source"
       depends="check-airlineB"  unless="airlineB.up-to-date">
     <antcall target="publish">
-      <param name="provider" value="${airlineB.worker}"/>
-      <param name="dest.store" value="${airlineB.store}"/>
+      <param name="provider" value="${airlineB}"/>
+      <param name="dest" value="${airlineB}"/>
       <param name="codebase.dir" value="${airlineB.fab.src}"/>
       <param name="target.codebasefile" value="${airlineB.codebase.file}"/>
       <param name="publish.args" value="-classpath @${broker.codebase.file}"/>
@@ -242,8 +236,8 @@
   <target name="publish-user" description="Publish user source"
       depends="check-user" unless="user.up-to-date">
     <antcall target="publish">
-      <param name="provider" value="${user.worker}"/>
-      <param name="dest.store" value="${user.store}"/>
+      <param name="provider" value="${user}"/>
+      <param name="dest" value="${user}"/>
       <param name="codebase.dir" value="${user.fab.src}"/>
       <param name="target.codebasefile" value="${user.codebase.file}"/>
       <param name="publish.args" value="-classpath @${broker.codebase.file}"/>
@@ -273,7 +267,7 @@
       <arg value="-codebase-output-file"/> <arg value="${target.codebasefile}"/>
       <arg value="-sourcepath" /> <arg value="${codebase.dir}" />
       <arg value="-worker" /> <arg value="${provider}" />
-      <arg value="-deststore" /> <arg value="${dest.store}" />
+      <arg value="-deststore" /> <arg value="${dest}" />
       <arg line="${publish.args}"/>
       <srcfile />
       <fileset dir="${codebase.dir}" includes="**/*.fab" />
@@ -358,51 +352,51 @@
   <target name="init-local" description="" depends="build-local">
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${airlineA.worker} auction.InitA"/>
+      <arg line="--name ${airlineA} auction.InitA"/>
     </exec>
 
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${airlineB.worker} auction.InitB"/>
+      <arg line="--name ${airlineB} auction.InitB"/>
     </exec>
 
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${user.worker} auction.InitUser"/>
+      <arg line="--name ${user} auction.InitUser"/>
     </exec>
   </target>
 
   <target name="init-remote" depends="load-codebases">
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${airlineA.worker} ${airlineA.codebase}auction.InitA"/>
+      <arg line="--name ${airlineA} ${airlineA.codebase}auction.InitA"/>
     </exec>
 
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${airlineB.worker} ${airlineB.codebase}auction.InitB"/>
+      <arg line="--name ${airlineB} ${airlineB.codebase}auction.InitB"/>
     </exec>
 
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${user.worker} ${user.codebase}auction.InitUser"/>
+      <arg line="--name ${user} ${user.codebase}auction.InitUser"/>
     </exec>
   </target>
 
   <target name="init-remote2" depends="load-codebases-cb">
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${airlineA.worker} ${airlineA.codebase}auction.InitA"/>
+      <arg line="--name ${airlineA} ${airlineA.codebase}auction.InitA"/>
     </exec>
 
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${airlineB.worker} ${airlineB.codebase}auction.InitB"/>
+      <arg line="--name ${airlineB} ${airlineB.codebase}auction.InitB"/>
     </exec>
 
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${user.worker} ${user.codebase}auction.InitUser"/>
+      <arg line="--name ${user} ${user.codebase}auction.InitUser"/>
     </exec>
   </target>
 

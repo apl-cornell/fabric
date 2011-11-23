@@ -44,7 +44,7 @@ user's store.
 
 Now we are ready to run the example.  Examine the broker worker's generated 
 codebase file.
-	$ cat codebases/brokerStore.codebase
+	$ cat var/codebases/brokerStore.codebase
 	fab://brokerStore/29
 
 Run the mobile code example by specifying auction.Main in the generated
