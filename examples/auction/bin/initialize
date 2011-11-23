@@ -1,0 +1,27 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+CB_DIR="${BIN_DIR}/../var/codebases"
+
+# Set up the principal hierarchy.
+"${BIN_DIR}/start-worker" brokerStore auction.InitBrokerStore
+"${BIN_DIR}/start-worker" airlineAStore auction.InitAStore
+"${BIN_DIR}/start-worker" airlineBStore auction.InitBStore
+"${BIN_DIR}/start-worker" userStore auction.InitUserStore
+
+# Publish the application code to the stores.
+cd "${BIN_DIR}/.."
+ant publish-all
+cd - &>/dev/null
+
+# Figure out codebase OIDs.
+BROKER_CB="$(cat "${CB_DIR}/brokerStore.codebase" | sed 's/[<>]//g')"
+AIRLINE_A_CB="$(cat "${CB_DIR}/airlineAStore.codebase" | sed 's/[<>]//g')"
+AIRLINE_B_CB="$(cat "${CB_DIR}/airlineBStore.codebase" | sed 's/[<>]//g')"
+USER_CB="$(cat "${CB_DIR}/userStore.codebase" | sed 's/[<>]//g')"
+
+# Initialize application state.
+"${BIN_DIR}/start-worker" airlineAStore "${AIRLINE_A_CB}"auction.InitA
+"${BIN_DIR}/start-worker" airlineBStore "${AIRLINE_B_CB}"auction.InitB
+"${BIN_DIR}/start-worker" userStore "${USER_CB}"auction.InitUser
+

@@ -2,7 +2,7 @@
   This is the Apache Ant build file for the Auction exampl
 -->
 
-<project name="auction" default="publish-all" basedir=".">
+<project name="auction" default="fabil-init" basedir=".">
 
   <!--
   ****************************************************************************
@@ -61,7 +61,6 @@
   -->
   <target name="clean" description="Removes generated files">
     <delete dir="${home}/classes"/>
-    <delete dir="${home.codebases}"/>
   </target>
 
   <target name="clobber" depends="clean"
@@ -99,37 +98,6 @@
       <srcfiles dir="${user.fab.src}" includes="**/*.fab" />
       <srcfiles file="${broker.codebase.file}"/>
     </uptodate>
-  </target>
-
-  <target name="load-codebases" depends="publish-all">
-    <loadfile property="broker.codebase" srcFile="${broker.codebase.file}"
-        failonerror="false">
-      <filterchain>
-        <deletecharacters chars="&lt;&gt;"/>
-        <trim/>
-      </filterchain>
-    </loadfile>
-    <loadfile property="airlineA.codebase" srcFile="${airlineA.codebase.file}"
-        failonerror="false">
-      <filterchain>
-        <deletecharacters chars="&lt;&gt;"/>
-        <trim/>
-      </filterchain>
-    </loadfile>
-    <loadfile property="airlineB.codebase" srcFile="${airlineB.codebase.file}"
-        failonerror="false">
-      <filterchain>
-        <deletecharacters chars="&lt;&gt;"/>
-        <trim/>
-      </filterchain>
-    </loadfile>
-    <loadfile property="user.codebase" srcFile="${user.codebase.file}"
-        failonerror="false">
-      <filterchain>
-        <deletecharacters chars="&lt;&gt;"/>
-        <trim/>
-      </filterchain>
-    </loadfile>
   </target>
 
   <target name="load-codebases-cb" depends="publish-cb">
@@ -363,23 +331,6 @@
     <exec executable="bash" failonerror="true" >
       <arg value="${home}/bin/start-worker"/>
       <arg line="--name ${user} auction.InitUser"/>
-    </exec>
-  </target>
-
-  <target name="init-remote" depends="load-codebases">
-    <exec executable="bash" failonerror="true" >
-      <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${airlineA} ${airlineA.codebase}auction.InitA"/>
-    </exec>
-
-    <exec executable="bash" failonerror="true" >
-      <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${airlineB} ${airlineB.codebase}auction.InitB"/>
-    </exec>
-
-    <exec executable="bash" failonerror="true" >
-      <arg value="${home}/bin/start-worker"/>
-      <arg line="--name ${user} ${user.codebase}auction.InitUser"/>
     </exec>
   </target>
 

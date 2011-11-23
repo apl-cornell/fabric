@@ -1,55 +1,73 @@
+Bidding Agent Mobile Code Example
+=================================
+
 This is the auction example program.  It is intended to model a complex auction
 in which sellers submit confidential sales strategies, and a buyer submits a
 confidential purchasing strategy.  Each seller may make an offer based on the
 buyer, and the buyer may then choose among these options.  At the end of the
 auction, the identity of the winner is revealed to all participants.
 
-First, compile the initialization code that will set up the principal hierarchy.
+This directory contains the following sub-directories:
 
-	$ ant fabil-init
+  - src: source code for the auction example
+  - bin: a collection of scripts for running the example
+  - etc: configuration files for the example's Fabric nodes
+
+Compiling
+---------
+To build the initialization code that will set up the principal hierarchy,
+run 'ant' in the auction example directory:
+
+  $ ant
 
 You can expect messages warning that certain exceptions will be treated as
 fatal errors during this and subsequent steps.
 TODO: remove and/or fix spurious error messages.
 
-Next, start the stores and workers, each in a separate terminal window
-(if you have gnome-terminal, bin/run-all will do this for you).
-TODO: make run-all more portable
 
-	term1$ bin/start-store --name brokerStore
-	term2$ bin/start-store --name airlineAStore
-	term3$ bin/start-store --name airlineBStore
-	term4$ bin/start-store --name userStore
-	
-It is reasonable to expect Pastry-related exception messages during these steps.
-TODO: remove and/or fix spurious error messages.
+Using
+-----
+This example uses four stores ("brokerStore", "airlineAStore", "airlineBStore",
+and "userStore").
 
-Now run the initialization program for each store.
-	
-	brokerStore> run auction.InitBrokerStore
-	airlineAStore> run auction.InitAStore
-	airlineBStore> run auction.InitBStore
-	userStore> run auction.InitUserStore
+  0. Start in the auction example directory:
 
-Next, publish each entity's mobile code...
+      $ cd $FABRIC/examples/auction
 
-	$ ant publish-all
+  1. Start up instances of the broker, airline, and user stores. The
+     'start-all' script will start each store in a separate xterm window:
 
-It is reasonable to get BindException messages during this process.
+      $ bin/start-all
 
-And create a Server object on each airline store, and a User object on the
-user's store. 
+     You can also use an xterm replacement (e.g., gnome-terminal or konsole):
 
-	$ ant init-remote
+      $ XTERM=gnome-terminal bin/start-all
 
-Now we are ready to run the example.  Examine the broker worker's generated 
-codebase file.
-	$ cat var/codebases/brokerStore.codebase
-	fab://brokerStore/29
+     Or, if you prefer, you can start each store individually in your favourite
+     terminal emulator:
 
-Run the mobile code example by specifying auction.Main in the generated
-codebase.
+      $ bin/start-store brokerStore
+      $ bin/start-store airlineAStore
+      $ bin/start-store airlineBStore
+      $ bin/start-store userStore
 
-	brokerStore> run fab://brokerStore/29/auction.Main 
+     If you are starting from fresh stores, you will need to initialize the
+     application state by following the next step.  Otherwise, skip to step 3
+     below.
 
-TODO: reduce the steps, if possible.
+  2. Run the 'initialize' script to initialize the stores' state.  This will
+     initialize the principal hierarchy, publish the example's code to the
+     stores, and initialize the application's state.
+
+      $ bin/initialize
+
+  3. The 'auction' script will run the example.  You should see the output in
+     the broker store's console.
+
+      $ bin/auction
+
+  4. You can clean up the stores' persistent state by removing 'var' from the
+     auction example directory:
+
+      $ rm -rf var
+
