@@ -1,7 +1,5 @@
 package util;
 
-import jif.util.Set;
-
 /**
  * A group is a principal object that delegates to each of its members.  It
  * also serves as a collection, so it can be iterated over, etc..
@@ -32,7 +30,11 @@ where
   /**
    * Create a new group with the given name and the default maximum size.
    */
-  public Group {this} (String{this} name) {
+  public Group {this}
+  (
+    final String {this} name
+  )
+  {
     this.members = new Principal[SIZE];
     super(name, groupOwner);
   }
