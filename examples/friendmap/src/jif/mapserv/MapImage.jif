@@ -70,8 +70,7 @@ where
   )
   where
     L <= {s→}, {s←} <= L, // TODO: s ≽ L
-    A <= {s→},            // TODO: s ≽ C(A)
-    {boundary;width;height;data} <= {A meet L}
+    A <= {s→}             // TODO: s ≽ C(A)
   {
     if (data == null || boundary == null)
       throw new NullPointerException();
@@ -96,14 +95,20 @@ where
    */
   public
   Box[l,a]    {L}       // result is tainted by this.boundary
-  getBoundary {*l;*a;A} // fields of result are updated, fields of this accessed
+  getBoundary
+  {        // side effects:
+    {*l} ⊓ // fields of result are updated
+    {s→} ⊓ // objects are created at s
+    {A}    // this is accessed
+  }
   (
     label l,
     label a,
     Store s
   )
   where
-    L <= l
+    L <= l,   // result fields are affected by this
+    a <= {s→} // TODO: s ≽ C(A)
   {
     if (boundary == null)
       throw new AssertionFailedError("boundary is non-null.");
@@ -144,7 +149,11 @@ where
    */
   public
   void
-  setAt {L;A} // L because data is updated; A because fields are accessed
+  setAt
+  {     // side effects:
+    L ⊓ // fields are updated
+    A   // fields are read
+  }
   (
     float {L} x, float {L} y,
     char  {L} value
@@ -164,7 +173,12 @@ where
    */
   public
   MapImage[l,a] {L}       // result tainted by this
-  copy          {*l;*a;A} // fields are accessed, result is updated
+  copy
+  {        // side effects:
+    {*l} ⊓ // result is updated
+    {s→} ⊓ // object is created at s
+    {A}    // fields are read
+  }
   (
     final label l,
     final label a,
@@ -194,7 +208,11 @@ where
    */
   public
   void
-  print {L;A} // fields are accessed, output is generated
+  print
+  {     // side effects:
+    L ⊓ // output is generated
+    A   // fields are accessed
+  }
   (
     final PrintStream[L] out
   )
