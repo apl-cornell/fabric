@@ -13,6 +13,7 @@ import util.System;
 public class Main
 authority(System.user)
 where
+  // TODO: figure out how to remove/reduce these constraints
   {System.user←}   <= provider,                                         provider <= {System.user←},
   {SnappNode←}     <= snapp.Snapp.provider,                 snapp.Snapp.provider <= {SnappNode←},
   {SnappNode←}     <= snapp.UserV1.provider,               snapp.UserV1.provider <= {SnappNode←},

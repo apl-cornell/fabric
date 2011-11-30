@@ -2,6 +2,7 @@ package mapserv;
 
 import util.AssertionFailedError;
 import util.Delegator;
+import util.Store;
 
 /**
  * A very simple map service: given a request for a region, it returns a 10x10
@@ -13,50 +14,69 @@ where
   MapImage.provider <= provider, provider <= MapImage.provider,
        Box.provider <= provider, provider <=      Box.provider
 {
-
-  private final char {this} background;
+  // access label: owner→
+  private char {_→;this←} background;
 
   /**
    * Create a new map server, with the given background character.
+   *
+   * @param store
+   *        the store on which to create maps
    */
   public
-  MapServer {this}
+  MapServer {{this} meet {_→;store←}}
   (
-    String    {this} name,
-    Principal {this} owner,
-    char      {this} background
+    String {this} name,
+    Store  {this} store,
+    char   {_→; store←} background
   )
   where
-    provider <= {this}
+    provider <= {this},
+    provider <= {_→;store←}
   {
-    this.background = background;
-    super(name, owner);
+    super(name, store);
+
+    if (store actsfor this)
+      this.background = background;
+    else
+      throw new AssertionFailedError("Delegation failed");
   }
 
   /**
    * create a new map with the given bounds, containing the background character.
    *
+   * @return
+   *     a reference to a public image stored at this service
+   *
    * @throws NullPointerException
    *     if boundary is null.
    */
   public
-  MapImage[lbl]
-  getMap {*lbl}
+  MapImage[l,{owner→}] {this←}
+                       // resulting map will be protected at l,
+                       // stored at owner, and tainted by background
+  createMap            {{*l} meet {*a} meet {owner→}}
+                       // result is updated, boundary is accessed,
+                       // map is created
   (
-    label {*lbl} lbl,
-    Box   {*lbl} boundary
+    label l,
+    label a,
+    Box[l,a] boundary
   )
-  :{*lbl}
-  throws NullPointerException
-  where
-    {this←} <= lbl, provider <= {*lbl}
+  throws
+  (
+    NullPointerException
+  )
   {
-    final char{*lbl}[]{*lbl} data = new char[100];
+    final char{*l}[]{*l} data = new char/* @this.owner */[100];
     for (int i = 0; i < data.length; i++)
       data[i] = background;
 
+    if (!(owner instanceof Store)) throw new AssertionFailedError("MapServer's owner is a store");
+    final Store store = (Store) owner;
+
     try {
-      return new MapImage[lbl](boundary, 10, 10, data);
+      return new MapImage[l,{owner→}]/* @this.owner */(boundary, 10, 10, data, store);
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError("10 * 10 = 100");
     }

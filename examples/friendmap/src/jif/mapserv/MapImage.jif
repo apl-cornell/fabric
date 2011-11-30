@@ -15,31 +15,29 @@ import util.AssertionFailedError;
  * parameterize the access label, so I will just parameterize everything.
  *
  */
-public class MapImage[label L]
+public class MapImage[label L, label A]
 where
-  provider <= L,
+  provider <= L, provider <= A,
   Box.provider      <= provider, provider <= Box.provider,
   MapImage.provider <= provider, provider <= MapImage.provider
 {
 
   //////////////////////////////////////////////////////////////////////////////
-  // public fields                                                            //
-  //////////////////////////////////////////////////////////////////////////////
-
-  /* coordinates of map.  non-null. */
-  public final Box {L} boundary;
-
-  //////////////////////////////////////////////////////////////////////////////
   // internal state                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  /* packed data */
-  protected final int{L}       width;
-  protected final int{L}       height;
-  protected final char{L}[]{L} data;
+  /** coordinates of map.  non-null. contents fixed at construction time */
+  protected final Box[L,A] {L} boundary;
+
+  /** dimensions of image. */
+  protected final int  {L} width;
+  protected final int  {L} height;
+
+  /** packed data. non-null. data.length = this.width * this.height. */
+  protected final char {L}[]{L} data;
 
   //////////////////////////////////////////////////////////////////////////////
-  // public methods                                                           //
+  // public constructor                                                       //
   //////////////////////////////////////////////////////////////////////////////
 
   /**
@@ -51,15 +49,29 @@ where
    *         if either data or boundary is null
    */
   public
-  MapImage {L}
+  MapImage
+  {        // side effects:
+    {L}  ⊓ // fields are updated
+    {A}  ⊓ // boundary is read
+    {s→}   // boundary is created at s
+  }
   (
-    Box{L} boundary,
-    int{L} width, int{L} height, char{L}[]{L} data
+    final Box[L,A]  boundary,
+    final int       width,
+    final int       height,
+    final char{L}[] data,
+    final Store     s
   )
-  :{L}
+  : {*provider;data;width;height;boundary}
   throws
+  (
     ArrayIndexOutOfBoundsException,
     NullPointerException
+  )
+  where
+    L <= {s→}, {s←} <= L, // TODO: s ≽ L
+    A <= {s→},            // TODO: s ≽ C(A)
+    {boundary;width;height;data} <= {A meet L}
   {
     if (data == null || boundary == null)
       throw new NullPointerException();
@@ -71,24 +83,51 @@ where
     this.height = height;
     this.data   = data;
 
-    this.boundary = boundary;
+    this.boundary = boundary.copy(L,A,s);
   }
 
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public methods                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Get a copy of the boundary
+   */
+  public
+  Box[l,a]    {L}       // result is tainted by this.boundary
+  getBoundary {*l;*a;A} // fields of result are updated, fields of this accessed
+  (
+    label l,
+    label a,
+    Store s
+  )
+  where
+    L <= l
+  {
+    if (boundary == null)
+      throw new AssertionFailedError("boundary is non-null.");
+
+    return boundary.copy(l,a,s);
+  }
 
   /**
    * Get the pixel corresponding to the global location (x,y).
    *
    * @throws ArrayIndexOutOfBoundsException
-   *         if (x,y) lies outside the bounding box of the image (subject to accuracy errors).
+   *         if (x,y) lies outside the bounding box of the image (subject to
+   *         accuracy errors).
    */
   public
-  char  {L}
-  getAt {L}
+  char  {L;x;y} // result is tainted by map and coordinates
+  getAt {A}     // fields are accessed
   (
-    float {L} x, float {L} y
+    float x, float y
   )
-  :{L}
-  throws ArrayIndexOutOfBoundsException
+  throws
+  (
+    ArrayIndexOutOfBoundsException{L;x;y}
+  )
   {
     if (this.data == null)
       throw new AssertionFailedError("data must be non-null");
@@ -105,7 +144,7 @@ where
    */
   public
   void
-  setAt {L}
+  setAt {L;A} // L because data is updated; A because fields are accessed
   (
     float {L} x, float {L} y,
     char  {L} value
@@ -124,11 +163,12 @@ where
    * Create a deep copy of this image on store s with label l.
    */
   public
-  MapImage[l] {*l}
-  copy        {*l}
+  MapImage[l,a] {L}       // result tainted by this
+  copy          {*l;*a;A} // fields are accessed, result is updated
   (
-    label{*l} l,
-    Store{*l} s
+    final label l,
+    final label a,
+    final Store s
   )
   where
     // see util.Util.copyArray for details about restrictions
@@ -137,7 +177,7 @@ where
   {
     try {
 
-      return new MapImage[l] (boundary.copy(l,s), width, height, Util.copyArray(data, l, L, s));
+      return new MapImage[l,a] (boundary, width, height, Util.copyArray(data, l, L, s), s);
 
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("data and boundary must be non-null");
@@ -154,7 +194,7 @@ where
    */
   public
   void
-  print {L}
+  print {L;A} // fields are accessed, output is generated
   (
     final PrintStream[L] out
   )
@@ -210,7 +250,6 @@ where
     out.println("(" + boundary.xmax + ", " + boundary.ymax + ")");
   }
 
-
   //////////////////////////////////////////////////////////////////////////////
   // private helper methods                                                   //
   //////////////////////////////////////////////////////////////////////////////
@@ -219,7 +258,14 @@ where
    *  Note that if (x,y) is outside the boundary, the result will be outside the bounds
    *  of the data array.
    */
-  private int{L} index (float {L} x, float {L} y) {
+  private
+  int     {L;x;y} // result is influenced by width and height, x and y
+  index   {A}     // fields are accessed
+  (
+    float x,
+    float y
+  )
+  {
     // claim: if boundary.contains(x,y) then 0 <= index < data.length
     // proof: since boundary.contains(x,y), boundary.scale_x(x) and
     //        boundary.scale_y(y) ∈ [0,1).
