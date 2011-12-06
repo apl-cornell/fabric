@@ -55,9 +55,12 @@ where
   MapImage[l,{owner→}] {this←}
                        // resulting map will be protected at l,
                        // stored at owner, and tainted by background
-  createMap            {{*l} meet {*a} meet {owner→}}
-                       // result is updated, boundary is accessed,
-                       // map is created
+  createMap
+  {            // side effects:
+    {*l}     ⊓ // result is updated
+    {*a}     ⊓ // boundary is accessed
+    {owner→}   // map is created
+  }
   (
     label l,
     label a,
@@ -67,6 +70,8 @@ where
   (
     NullPointerException
   )
+  where
+    {this←} <= l // background affects created map
   {
     final char{*l}[]{*l} data = new char/* @this.owner */[100];
     for (int i = 0; i < data.length; i++)
@@ -76,7 +81,9 @@ where
     final Store store = (Store) owner;
 
     try {
-      return new MapImage[l,{owner→}]/* @this.owner */(boundary, 10, 10, data, store);
+      return new MapImage[l,{owner→}]/* @this.owner */(boundary, l, new label {owner→},
+                                                       10, 10, data,
+                                                       store);
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError("10 * 10 = 100");
     }

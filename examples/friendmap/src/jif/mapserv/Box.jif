@@ -10,7 +10,6 @@ import util.Store;
  * @param A the access label of the object
  */
 public class Box [label L, label A]
-       where provider <= L
 {
 
   //////////////////////////////////////////////////////////////////////////////
@@ -33,6 +32,8 @@ public class Box [label L, label A]
     float {L} xmin, float {L} ymin,
     float {L} xmax, float {L} ymax
   )
+  where
+    provider <= L // code affects fields
   {
     this.xmin = xmin;
     this.ymin = ymin;
@@ -45,8 +46,8 @@ public class Box [label L, label A]
    * Return true if this box contains (x,y).
    */
   public
-  boolean  {L;x;y} // L because fields affect result, x; y; because params affect result
-  contains {A}     // because fields are accessed
+  boolean  {L;x;y;*provider} // fields, args, code affect result
+  contains {A}              // because fields are accessed
   (
     float x,
     float y
@@ -69,6 +70,8 @@ public class Box [label L, label A]
   (
     float {L} x, float {L} y
   )
+  where
+    provider <= L  // code affects fields
   {
     this.xmin = min(this.xmin, x);
     this.ymin = min(this.ymin, y);
@@ -82,7 +85,7 @@ public class Box [label L, label A]
    * between 0 and 1.
    */
   public
-  float   {L;x} // result affected by fields, x
+  float   {L;x;*provider} // fields, arg, code affect result
   scale_x {A}   // fields are accessed
   (
     float x
@@ -98,7 +101,7 @@ public class Box [label L, label A]
    * between 0 and 1.
    */
   public
-  float   {L;y} // result affected by fields, y
+  float   {L;y;*provider} // result affected by code, fields, y
   scale_y {A}   // fields are accessed
   (
     float y
@@ -112,7 +115,7 @@ public class Box [label L, label A]
    * Create a deep copy of this on store s with label l.
    */
   public
-  Box[l,a] {L} // result affected by fields
+  Box[l,a] {L;*provider} // result affected by fields, code
   copy
   {        // side effects:
     {*l} ⊓ // fields of result are updated
@@ -125,9 +128,10 @@ public class Box [label L, label A]
     Store s
   )
   where
-    l <= {s→}, {s←} <= l, // TODO: s ≽ l    because s can see/update result fields
-    a <= {s→},            // TODO: s ≽ C(a) because s can see accesses to fields
-    L <= l                // because this object affects result fields
+    l <= {s→}, {s←} <= l, a <= {s→}, // TODO: s ≽ l@a
+
+    L        <= l, // because this object affects result fields
+    provider <= l  // code affects result fields
   {
     return new Box[l,a](this.xmin, this.ymin, this.xmax, this.ymax);
   }

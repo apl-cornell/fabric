@@ -9,17 +9,13 @@ import util.AssertionFailedError;
 /**
  * A simple image class.  The image is indexed by floating point numbers, and
  * stores its own boundary... puts and gets are done relative to the boundary.
- *
- * The labels on this class could be relaxed to {this}, which would make the
- * copy method unnecessary.  However, once we port to fabric, we will need to
- * parameterize the access label, so I will just parameterize everything.
- *
  */
 public class MapImage[label L, label A]
 where
-  provider <= L, provider <= A,
-  Box.provider      <= provider, provider <= Box.provider,
-  MapImage.provider <= provider, provider <= MapImage.provider
+  {_←} <= A, // A is a confidentiality label
+  L    <= A, // if L is not ⊑ C(A), then no fields can be read.
+
+  Box.provider <= provider, provider <= Box.provider
 {
 
   //////////////////////////////////////////////////////////////////////////////
@@ -50,13 +46,15 @@ where
    */
   public
   MapImage
-  {        // side effects:
-    {L}  ⊓ // fields are updated
-    {A}  ⊓ // boundary is read
-    {s→}   // boundary is created at s
+  {                   // side effects:
+    {L}             ⊓ // fields are updated
+    {*bdry_access}  ⊓ // boundary is read
+    {s→}              // boundary copy is created at s
   }
   (
-    final Box[L,A]  boundary,
+    final Box[bdry_update,bdry_access] boundary,
+    final label bdry_update, final label bdry_access,
+
     final int       width,
     final int       height,
     final char{L}[] data,
@@ -69,10 +67,19 @@ where
     NullPointerException
   )
   where
-    L <= {s→}, {s←} <= L, // TODO: s ≽ L
-    A <= {s→}             // TODO: s ≽ C(A)
+    L <= {s→}, {s←} <= L, A <= {s→},    // TODO: s ≽ L@A
+
+    {boundary;width;height;data} <= L, // fields are affected by args
+    provider                     <= L, // fields are affected by code
+    bdry_update                  <= L, // fields are affected by boundary contents
+
+    {boundary} <= bdry_access,         // fetch to boundary is affected by boundary
+    provider   <= bdry_access          // fetch to boundary is affected by code
   {
-    if (data == null || boundary == null)
+    this.boundary = (boundary == null) ? null : boundary.copy(L,A,s);
+    this.data     = (data     == null) ? null : Util.copyArray(data, L, L, s);
+
+    if (boundary == null || data == null)
       throw new NullPointerException();
 
     if (width * height != data.length)
@@ -80,9 +87,6 @@ where
 
     this.width  = width;
     this.height = height;
-    this.data   = data;
-
-    this.boundary = boundary.copy(L,A,s);
   }
 
 
@@ -94,7 +98,7 @@ where
    * Get a copy of the boundary
    */
   public
-  Box[l,a]    {L}       // result is tainted by this.boundary
+  Box[l,a] {L;*provider} // result is tainted by this.boundary, code
   getBoundary
   {        // side effects:
     {*l} ⊓ // fields of result are updated
@@ -107,8 +111,10 @@ where
     Store s
   )
   where
-    L <= l,   // result fields are affected by this
-    a <= {s→} // TODO: s ≽ C(A)
+    l <= {s→}, {s←} <= l, a <= {s→}, // TODO: s ≽ l@a
+
+    {L;*provider} <= l,    // result fields are affected by fields
+    {L;*provider} <= {s→}  // information leaks from fields to object creation.
   {
     if (boundary == null)
       throw new AssertionFailedError("boundary is non-null.");
@@ -124,14 +130,14 @@ where
    *         accuracy errors).
    */
   public
-  char  {L;x;y} // result is tainted by map and coordinates
+  char  {L;x;y;*provider} // result is tainted by map, coordinates, code
   getAt {A}     // fields are accessed
   (
     float x, float y
   )
   throws
   (
-    ArrayIndexOutOfBoundsException{L;x;y}
+    ArrayIndexOutOfBoundsException{L;x;y;*provider}
   )
   {
     if (this.data == null)
@@ -160,6 +166,8 @@ where
   )
   :{L}
   throws ArrayIndexOutOfBoundsException
+  where
+    provider <= L // code affects contents
   {
     if (this.data == null)
       throw new AssertionFailedError("data must be non-null");
@@ -172,12 +180,13 @@ where
    * Create a deep copy of this image on store s with label l.
    */
   public
-  MapImage[l,a] {L}       // result tainted by this
+  MapImage[l,a] {this;L;*provider;l;a} // result tainted by fields, code, labels
   copy
-  {        // side effects:
-    {*l} ⊓ // result is updated
-    {s→} ⊓ // object is created at s
-    {A}    // fields are read
+  {          // side effects:
+    {*l}   ⊓ // result is updated
+    {s→}   ⊓ // object is created at s
+    {A;_←} ⊓ // fields are read
+    {L;_←}   // data is accessed - access label of an array is same as update label
   }
   (
     final label l,
@@ -185,13 +194,23 @@ where
     final Store s
   )
   where
-    // see util.Util.copyArray for details about restrictions
-    // s ≽ l
-    L <= l
+    // return object invariants
+    {_←} <= a, // a must be a confidentiality policy
+    l    <= a, // resulting access label must be bounded by resulting update label
+
+    // general constraints on object creation
+    l <= {s→}, {s←} <= l, a <= {s→}, // TODO: s ≽ l@a
+
+    // information flow within method
+    {this;L;*provider} <= l, // resulting map image fields are affected by fields, code
+    provider           <= A  // code affects fetches
   {
     try {
 
-      return new MapImage[l,a] (boundary, width, height, Util.copyArray(data, l, L, s), s);
+      return new MapImage[l,a] (boundary, L, A,
+                                width, height,
+                                Util.copyArray(data, L, l, s),
+                                s);
 
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("data and boundary must be non-null");
@@ -221,7 +240,7 @@ where
     NullPointerException{out}
   )
   where
-    {out} <= L
+    {out;*provider} <= L  // output affected by arg, code
   {
     // check assertions
     if (out == null)
@@ -277,8 +296,8 @@ where
    *  of the data array.
    */
   private
-  int     {L;x;y} // result is influenced by width and height, x and y
-  index   {A}     // fields are accessed
+  int     {L;x;y;*provider} // fields, args, code affect result
+  index   {A}               // fields are accessed
   (
     float x,
     float y
