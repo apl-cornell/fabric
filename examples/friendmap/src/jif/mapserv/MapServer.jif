@@ -43,11 +43,12 @@ where
   }
 
   /**
-   * create a new map with the given bounds, containing the background character.
+   * create a new map with the given bounds, containing the
+   * background character.
    *
    * @return
    *     a reference to a public image stored at this service
-   *
+   ^
    * @throws NullPointerException
    *     if boundary is null.
    */
@@ -71,8 +72,15 @@ where
     NullPointerException
   )
   where
-    {this←} <= l // background affects created map
+    // TODO; owner enforces l@owner; map is created at owner
+    {owner←}   <= l, l <= {owner→}, {owner→} <= {owner→},
+    provider   <= l, // code taints result
+
+    {boundary} <= a, // reference taints access to boundary
+    provider   <= a  // code      taints access
   {
+    if (owner actsfor this) {
+
     final char{*l}[]{*l} data = new char/* @this.owner */[100];
     for (int i = 0; i < data.length; i++)
       data[i] = background;
@@ -81,12 +89,14 @@ where
     final Store store = (Store) owner;
 
     try {
-      return new MapImage[l,{owner→}]/* @this.owner */(boundary, l, new label {owner→},
+      return new MapImage[l,{owner→}]/* @this.owner */(boundary, l, a,
                                                        10, 10, data,
                                                        store);
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError("10 * 10 = 100");
     }
+
+    } else throw new AssertionFailedError("delegators's owner actsfor delegatee");
   }
 }
 
