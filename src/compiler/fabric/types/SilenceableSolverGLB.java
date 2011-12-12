@@ -1,16 +1,17 @@
 package fabric.types;
 
-import java.util.Collection;
-
-import jif.types.Constraint;
+import jif.types.Equation;
 import jif.types.JifTypeSystem;
 import jif.types.SolverGLB;
 import jif.types.VarMap;
-import jif.types.label.Variable;
+import jif.types.UnsatisfiableConstraintException;
 import polyglot.types.SemanticException;
 
 /**
  * <code>SilenceableSolverGLB</code> can be muted, that is, not reporting any error.
+ * 
+ * TODO: this class seems totally broken, as it causes the solver to swallow
+ * some but not all constraint solution failures.
  * 
  * @author qixin
  */
@@ -55,9 +56,10 @@ public class SilenceableSolverGLB extends SolverGLB {
         else {        
           setStatus(STATUS_NO_SOLUTION);
   
-          for (Constraint cons : staticFailedConstraints) {
-            System.err.println("Runtime check does not type-check, due to\n" + cons.technicalMsg() + 
-                               "\nin the constraint\n" + cons + "\nat " + cons.position());
+          for (Equation eqn : staticFailedConstraints) {
+            UnsatisfiableConstraintException e = reportError(eqn);
+            
+            System.err.println("Runtime check does not type-check, due to the folloiwing:\n" + e.getMessage());
           }
           
           staticFailedConstraints.clear();
@@ -68,16 +70,4 @@ public class SilenceableSolverGLB extends SolverGLB {
     return super.solve();
   }
   
-  @Override
-  protected void reportError(Constraint c, Collection<Variable> variables)
-      throws SemanticException {
-    if (muted()) {
-      setStatus(STATUS_NO_SOLUTION);
-      System.err.println("Runtime check does not type-check, due to\n" + errorMsg(c) + 
-          "\nin the constraint\n" + c + "\nat " + c.position());
-    }
-    else {
-      super.reportError(c, variables);
-    }
-  }
 }

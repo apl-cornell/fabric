@@ -159,10 +159,11 @@ where
    *         if user is null.
    */
   public
-  MapImage[l] {*l}
-  createMap   {{*l} meet {service→}} // the fact that this call happens leaks to the service and the return value
+  MapImage[l,a] {*l}
+  createMap     {{*l} meet {service→}} // the fact that this call happens leaks to the service and the return value
   (
     final label  l,
+    final label  a,
     final UserV1 user
   )
   throws
@@ -172,7 +173,7 @@ where
   where
     {service←} <= l,                      // the result is tainted by the service
     {user←}    <= l,                      // the result is tainted by the user
-    {user; l; *provider; *MapServer.provider}
+    {user; l; a; *provider; *MapServer.provider}
               <= {{*l} meet {service→}}   // the arguments and code can affect the fetch and the return value
   {
     // invariant checks
@@ -231,7 +232,7 @@ where
     // make a local copy (with label l)
     // TODO: s ≽ l
     final Store localStore = null;
-    MapImage[l] annotated = map.copy(l, localStore);
+    MapImage[l,a] annotated = map.copy(l, localStore);
 
     if (annotated == null)          throw new AssertionFailedError("MapImage.copy return value should be non-null");
     if (annotated.boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
@@ -272,17 +273,22 @@ where
    */
   protected
   void
-  addPin {*l}
+  addPin
+  {               // side effects:
+    *map_update ⊓ // map contents are updated
+    *map_access   // map contents are fetched
+  }
   (
-    final MapImage[l] {*l} map,
-    final Location    {*l} location,
-    final UserV1      {*l} friend,
-    final label       {*l} l
+    final MapImage[map_update,map_access] map,
+    final label    map_update,
+    final label    map_access,
+    final Location location,
+    final UserV1   friend
   )
   throws
   (
-    NullPointerException{*l},
-    ArrayIndexOutOfBoundsException{*l}
+    NullPointerException           {*provider;map;friend},
+    ArrayIndexOutOfBoundsException {location}
   )
   where
     provider             <= l,
