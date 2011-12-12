@@ -98,7 +98,7 @@ where
    * Get a copy of the boundary
    */
   public
-  Box[l,a] {L;*provider} // result is tainted by this.boundary, code
+  Box[l,a] {L;l;a;*provider} // result is tainted by this.boundary, code
   getBoundary
   {        // side effects:
     {*l} ⊓ // fields of result are updated

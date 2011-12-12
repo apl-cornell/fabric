@@ -115,7 +115,7 @@ public class Box [label L, label A]
    * Create a deep copy of this on store s with label l.
    */
   public
-  Box[l,a] {L;*provider} // result affected by fields, code
+  Box[l,a] {L;l;a;*provider} // result affected by fields, arguments, code
   copy
   {        // side effects:
     {*l} ⊓ // fields of result are updated

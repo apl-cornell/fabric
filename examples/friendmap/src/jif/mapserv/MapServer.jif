@@ -53,9 +53,9 @@ where
    *     if boundary is null.
    */
   public
-  MapImage[l,{owner→}] {this←}
-                       // resulting map will be protected at l,
-                       // stored at owner, and tainted by background
+  MapImage[l,{owner→}] {*l}
+                       // resulting map will be protected at l
+                       // and stored at owner
   createMap
   {            // side effects:
     {*l}     ⊓ // result is updated
@@ -69,16 +69,20 @@ where
   )
   throws
   (
-    NullPointerException
+    NullPointerException{*provider;boundary}
   )
   where
     // TODO; owner enforces l@owner; map is created at owner
     {owner←}   <= l, l <= {owner→}, {owner→} <= {owner→},
-    provider   <= l, // code taints result
 
-    {boundary} <= a, // reference taints access to boundary
-    provider   <= a  // code      taints access
+    // result taints
+    {*provider;this←;boundary;l} <= l,
+
+    // boundary lookup taints
+    {*provider;boundary} <= a
   {
+    if (boundary == null) throw new NullPointerException();
+
     if (owner actsfor this) {
 
     final char{*l}[]{*l} data = new char/* @this.owner */[100];
@@ -94,6 +98,8 @@ where
                                                        store);
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError("10 * 10 = 100");
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("boundary and data are non-null");
     }
 
     } else throw new AssertionFailedError("delegators's owner actsfor delegatee");
