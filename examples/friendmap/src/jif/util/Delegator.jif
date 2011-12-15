@@ -16,10 +16,6 @@ public class Delegator implements Principal {
     principal {this} owner
   )
   {
-    // these endorsements are safe, because owner ≽ this,
-    // and thus {owner←} ⊑ {this←}
-    // we just can't convince the compiler of this fact.
-
     this.owner = owner;
     this.name  = name;
   }
