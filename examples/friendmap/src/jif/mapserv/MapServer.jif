@@ -14,8 +14,8 @@ where
   MapImage.provider <= provider, provider <= MapImage.provider,
        Box.provider <= provider, provider <=      Box.provider
 {
-  // access label: owner→
-  private char {_→;this←} background;
+  // access label: *→owner
+  private char {_→;*←this} background;
 
   /**
    * Create a new map server, with the given background character.
@@ -24,15 +24,15 @@ where
    *        the store on which to create maps
    */
   public
-  MapServer {{this} meet {_→;store←}}
+  MapServer {{this} meet {_→;*←store}}
   (
     String {this} name,
     Store  {this} store,
-    char   {_→; store←} background
+    char   {_→; *←store} background
   )
   where
     provider <= {this},
-    provider <= {_→;store←}
+    provider <= {_→;*←store}
   {
     super(name, store);
 
@@ -53,14 +53,14 @@ where
    *     if boundary is null.
    */
   public
-  MapImage[l,{owner→}] {*l}
+  MapImage[l,{*→owner}] {*l}
                        // resulting map will be protected at l
                        // and stored at owner
   createMap
   {            // side effects:
     {*l}     ⊓ // result is updated
     {*a}     ⊓ // boundary is accessed
-    {owner→}   // map is created
+    {*→owner}   // map is created
   }
   (
     label l,
@@ -72,11 +72,11 @@ where
     NullPointerException{*provider;boundary}
   )
   where
-    // TODO; owner enforces l@owner; map is created at owner
-    {owner←}   <= l, l <= {owner→}, {owner→} <= {owner→},
+    // TODO; owner ≽ l@owner; map is created at owner
+    {*←owner} <= l, l <= {*→owner}, {*→owner} <= {*→owner},
 
     // result taints
-    {*provider;this←;boundary;l} <= l,
+    {*provider;*←this;boundary;l} <= l,
 
     // boundary lookup taints
     {*provider;boundary} <= a
@@ -93,7 +93,7 @@ where
     final Store store = (Store) owner;
 
     try {
-      return new MapImage[l,{owner→}]/* @this.owner */(boundary, l, a,
+      return new MapImage[l,{*→owner}]/* @this.owner */(boundary, l, a,
                                                        10, 10, data,
                                                        store);
     } catch (final ArrayIndexOutOfBoundsException e) {

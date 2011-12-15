@@ -46,10 +46,10 @@ where
    */
   public
   MapImage
-  {                   // side effects:
-    {L}             ⊓ // fields are updated
-    {*bdry_access}  ⊓ // boundary is read
-    {s→}              // boundary copy is created at s
+  {                    // side effects:
+    {L}              ⊓ // fields are updated
+    {*bdry_access}   ⊓ // boundary is read
+    {*→s}              // boundary copy is created at s
   }
   (
     final Box[bdry_update,bdry_access] boundary,
@@ -67,7 +67,7 @@ where
     NullPointerException
   )
   where
-    L <= {s→}, {s←} <= L, A <= {s→},    // TODO: s ≽ L@A
+    L <= {*→s}, {*←s} <= L, A <= {*→s},    // TODO: s ≽ L@A
 
     {boundary;width;height;data} <= L, // fields are affected by args
     provider                     <= L, // fields are affected by code
@@ -100,10 +100,10 @@ where
   public
   Box[l,a] {L;l;a;*provider} // result is tainted by this.boundary, code
   getBoundary
-  {        // side effects:
-    {*l} ⊓ // fields of result are updated
-    {s→} ⊓ // objects are created at s
-    {A}    // this is accessed
+  {         // side effects:
+    {*l}  ⊓ // fields of result are updated
+    {*→s} ⊓ // objects are created at s
+    {A}     // this is accessed
   }
   (
     label l,
@@ -111,10 +111,10 @@ where
     Store s
   )
   where
-    l <= {s→}, {s←} <= l, a <= {s→}, // TODO: s ≽ l@a
+    l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
 
-    {L;*provider} <= l,    // result fields are affected by fields
-    {L;*provider} <= {s→}  // information leaks from fields to object creation.
+    {L;*provider} <= l,     // result fields are affected by fields
+    {L;*provider} <= {*→s}  // information leaks from fields to object creation.
   {
     if (boundary == null)
       throw new AssertionFailedError("boundary is non-null.");
@@ -184,7 +184,7 @@ where
   copy
   {          // side effects:
     {*l}   ⊓ // result is updated
-    {s→}   ⊓ // object is created at s
+    {*→s}  ⊓ // object is created at s
     {A;_←} ⊓ // fields are read
     {L;_←}   // data is accessed - access label of an array is same as update label
   }
@@ -199,7 +199,7 @@ where
     l    <= a, // resulting access label must be bounded by resulting update label
 
     // general constraints on object creation
-    l <= {s→}, {s←} <= l, a <= {s→}, // TODO: s ≽ l@a
+    l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
 
     // information flow within method
     {this;L;*provider} <= l, // resulting map image fields are affected by fields, code

@@ -47,7 +47,7 @@ public class Box [label L, label A]
    */
   public
   boolean  {L;x;y;*provider} // fields, args, code affect result
-  contains {A}              // because fields are accessed
+  contains {A}               // because fields are accessed
   (
     float x,
     float y
@@ -117,10 +117,10 @@ public class Box [label L, label A]
   public
   Box[l,a] {L;l;a;*provider} // result affected by fields, arguments, code
   copy
-  {        // side effects:
-    {*l} ⊓ // fields of result are updated
-    {s→} ⊓ // object is created at s
-    {A}    // fields are read
+  {         // side effects:
+    {*l}  ⊓ // fields of result are updated
+    {*→s} ⊓ // object is created at s
+    {A}     // fields are read
   }
   (
     label l,
@@ -128,7 +128,7 @@ public class Box [label L, label A]
     Store s
   )
   where
-    l <= {s→}, {s←} <= l, a <= {s→}, // TODO: s ≽ l@a
+    l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
 
     L        <= l, // because this object affects result fields
     provider <= l  // code affects result fields

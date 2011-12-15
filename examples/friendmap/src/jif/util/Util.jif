@@ -31,7 +31,7 @@ public class Util {
     // object creation constraints
     // TODO: s ≽ res_label@res_label
     // (arrays can only be created with same update and access label)
-    res_label <= {s→}, {s←} <= res_label, res_label <= {s→},
+    res_label <= {*→s}, {*←s} <= res_label, res_label <= {*→s},
 
     // information flows from argument contents to result contents:
     arg_label <= res_label,
