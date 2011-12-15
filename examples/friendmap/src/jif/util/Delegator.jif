@@ -2,8 +2,6 @@ package util;
 
 /**
  * Convenience principal class the delegates to a single owner.
- *
- * Intended access label: {this→}
  */
 public class Delegator implements Principal {
   protected final String    {this} name;
@@ -24,38 +22,28 @@ public class Delegator implements Principal {
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
-  // side effect: this is fetched
-  public String{this} name {this→} () {
+  public String{this} name() {
     return this.name;
   }
 
-  // side effect: this is fetched
-  public boolean{this;p;this←} delegatesTo {this→} (principal p) {
+  public boolean{this;p;this←} delegatesTo(principal p) {
     return p == owner;
   }
 
-  // side effects: this and p may be fetched
-  public boolean equals {this→;p→} (Principal p) {
+  public boolean equals(Principal p) {
     // TODO
     return false;
   }
 
   public
   boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
-  isAuthorized
-  {           // side effects:
-    {this←} ⊓ // TODO: ?
-    {_→}      // authPrf, closure may be accessed
-  }
-  (
-    Object           authPrf,
-    Closure[this,lb] closure,
-    label            lb,
-    boolean          executeNow
-  )
-  where
-    authority(this),
-    {authPrf;closure;lb;executeNow} <= lb
+  isAuthorized {this←}
+              (Object           authPrf,
+               Closure[this,lb] closure,
+               label            lb,
+               boolean          executeNow)
+  where authority(this),
+        {authPrf;closure;lb;executeNow} <= lb
   {
     // we authorize nothing.
     return false;
@@ -63,16 +51,9 @@ public class Delegator implements Principal {
 
   public
   ActsForProof{this; p; this←; p←}
-  findProofUpto
-  {           // side effects:
-    {this←} ⊓ // TODO: ?
-    {this→} ⊓ // this may be dereferenced
-    {_→}      // TODO: searchState may be dereferenced
-  }
-  (
-    Principal p,
-    Object searchState
-  )
+  findProofUpto {this←}
+               (Principal p,
+                Object searchState)
   {
     if (owner actsfor this) {
 
@@ -88,15 +69,9 @@ public class Delegator implements Principal {
 
   public
   ActsForProof{this; p; p←; this←}
-  findProofDownto
-  {           // side effects:
-    {this←} ⊓ // TODO: ?
-    {this→}   // this is fetched
-  }
-  (
-    Principal p,
-    Object searchState
-  )
+  findProofDownto {this←}
+                 (Principal p,
+                  Object searchState)
   {
     // how would we know?
     return null;
