@@ -29,6 +29,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
+import javax.security.auth.x500.X500Principal;
 
 import fabric.common.Crypto;
 import fabric.common.KeyMaterial;
@@ -98,13 +99,21 @@ public class HandshakeAuthenticated implements Protocol {
     sock.setNeedClientAuth(true);
     sock.startHandshake();
     
+    // Check that the name in the peer's certificate matches the node we're
+    // supposed to be talking to.
+    Certificate[] peerChain = sock.getSession().getPeerCertificates();
+    X500Principal peerX500Principal = ((X509Certificate) peerChain[0]).getSubjectX500Principal();
+    if (!name.equals(Crypto.getCN(peerX500Principal.getName()))) {
+      throw new IOException("Peer used a certificate for the wrong X.500 principal");
+    }
+    
     DataInputStream in = new DataInputStream(sock.getInputStream());
-    X509Certificate[] peerChain = readCertificateChain(in);
+    X509Certificate[] peerPrincipalChain = readCertificateChain(in);
 
-    // validate peerChain
-    validate(peerChain, sock.getSession().getPeerCertificates());
+    // validate peerPrincipalChain
+    validate(peerPrincipalChain, peerChain);
 
-    NodePrincipal peer = getPrincipal(peerChain); 
+    NodePrincipal peer = getPrincipal(peerPrincipalChain); 
     return new ShakenSocket(name, peer, sock);
   }
 
