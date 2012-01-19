@@ -61,7 +61,8 @@ Configuring Fabric
 ------------------
 Before using Fabric, you must tell Fabric where to find the
 Polyglot and Jif distributions. Copy config.properties.in to
-config.properties, and edit appropriately.
+config.properties, and edit appropriately. On Mac OS you may
+also need to tell Fabric where to find the Java installation.
 
 Then configure the scripts in the 'bin' directory by running
 
