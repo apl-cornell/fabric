@@ -20,8 +20,10 @@ where
   (
     MapServer {this} service
   )
-  throws NullPointerException
-  where  provider <= {this}
+  throws
+    NullPointerException
+  where
+    provider <= {this}
   {
     super(service);
   }
@@ -29,31 +31,37 @@ where
 
   protected
   void
-  addPin {*l}
+  addPin
+  {               // side effects:
+    *map_update ⊓ // map contents are updated
+    *map_access   // map contents are fetched
+  }
   (
-    final MapImage[l] {*l} map,
-    final Location    {*l} location,
-    final UserV1      {*l} friend,
-    final label       {*l} l
+    final MapImage[map_update,map_access] map,
+    final label    map_update,
+    final label    map_access,
+    final Location location,
+    final UserV1   friend
   )
   throws
   (
-    NullPointerException{*l},
-    ArrayIndexOutOfBoundsException{*l}
+    NullPointerException           {*provider; map; friend},
+    ArrayIndexOutOfBoundsException {location}
   )
   where
-    FriendMap.provider <= l,
-    MapImage.provider  <= l
+    // map contents fetched and updated based on code, arguments
+    {*provider;*MapImage.provider;location;friend;map} <= map_update,
+    {*provider;*MapImage.provider;location;friend;map} <= map_access
   {
     if (map == null || friend == null || location == null)
       throw new NullPointerException();
 
-    char {*l} annotation = 'f';
+    char annotation = 'f';
 
     if (friend instanceof UserV2)
     {
       final UserV2 friendV2 = (UserV2) friend;
-      if (friendV2.moodLabel <= l) {
+      if (friendV2.moodLabel <= map_update) {
         try { annotation = friendV2.mood.description.charAt(0); }
         catch (final NullPointerException e)            { /* Do nothing */ }
         catch (final StringIndexOutOfBoundsException e) { /* Do nothing */ }

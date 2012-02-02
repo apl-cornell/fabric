@@ -60,7 +60,7 @@ where
   {            // side effects:
     {*l}     ⊓ // result is updated
     {*a}     ⊓ // boundary is accessed
-    {*→owner}   // map is created
+    {*→owner}  // map is created
   }
   (
     label l,
