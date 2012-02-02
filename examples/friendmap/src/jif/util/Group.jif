@@ -15,11 +15,11 @@ package util;
 public class Group[principal groupOwner]
 extends Delegator
 where
-  provider               <= {groupOwner←},
-  GroupIterator.provider <= {groupOwner←}
+  provider               <= {*←groupOwner},
+  GroupIterator.provider <= {*←groupOwner}
 {
-  final Principal{groupOwner←}[] {this} members;
-  int            {groupOwner←}          size = 0;
+  final Principal{*←groupOwner}[] {this} members;
+  int            {*←groupOwner}          size = 0;
 
   private final static int  {*←}     SIZE = 100;
 
@@ -67,10 +67,10 @@ where
    */
   public
   void
-  add {groupOwner←}
+  add {*←groupOwner}
   (
-    Principal{groupOwner←} p
-  ):{groupOwner←}
+    Principal{*←groupOwner} p
+  ):{*←groupOwner}
   throws ArrayIndexOutOfBoundsException
   {
     // invariant check
@@ -90,7 +90,7 @@ where
   /**
    * Remove a member of the group.
    */
-  public void remove {groupOwner←} (Principal{groupOwner←} p) {
+  public void remove {*←groupOwner} (Principal{*←groupOwner} p) {
     try
     {
 
@@ -117,7 +117,7 @@ where
   /**
    * Iterate over the members of the group.
    */
-  public GroupIterator[groupOwner, l] iterator {*l} (label l) where {groupOwner←} <= {*l} {
+  public GroupIterator[groupOwner, l] iterator {*l} (label l) where {*←groupOwner} <= {*l} {
     if (groupOwner actsfor this) {
       final Group[groupOwner]{*l} g = this;
       return new GroupIterator[groupOwner, l](g);

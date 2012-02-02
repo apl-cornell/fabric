@@ -73,7 +73,7 @@
   </target>
 
   <target name="build-jif-friendmap" depends="build-jif-sig,build-jif-java,build-jif-snapp, build-jif-mapserv">
-    <jifc srcdir="${home}/src/jif" includes="friendmap/*.jif"/>
+    <jifc srcdir="${home}/src/jif" includes="friendmap/*.jif" excludes="friendmap/FriendMapV2.jif" />
   </target>
 
   <target name="build-jif"
