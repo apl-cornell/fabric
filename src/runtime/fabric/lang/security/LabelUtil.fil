@@ -590,11 +590,11 @@ public final class LabelUtil {
 
   }
 
-  public static boolean equivalentTo(Label l1, Label l2) {
+  public static boolean _equivalentTo(Label l1, Label l2) {
 //    try {
 //      enterTiming();
       if (l1 == l2 || (l1 != null && l1.equals(l2))) return true;
-      return relabelsTo(l1, l2) && relabelsTo(l2, l1);
+      return _relabelsTo(l1, l2) && _relabelsTo(l2, l1);
 //    } finally {
 //      exitTiming();
 //    }
@@ -604,7 +604,7 @@ public final class LabelUtil {
 //    try {
 //      enterTiming();
       Label L = toLabel(localStore, PrincipalUtil.readableByPrinPolicy(localStore, p));
-      return relabelsTo(lbl, L);
+      return _relabelsTo(lbl, L);
 //    } finally {
 //      exitTiming();
 //    }
@@ -614,7 +614,7 @@ public final class LabelUtil {
 //    try {
 //      enterTiming();
       Label L = toLabel(localStore, PrincipalUtil.writableByPrinPolicy(localStore, p));
-      return relabelsTo(L, lbl);
+      return _relabelsTo(L, lbl);
 //    } finally {
 //      exitTiming();
 //    }
@@ -623,7 +623,7 @@ public final class LabelUtil {
   /**
    * @return true iff from <= to in the information-flow ordering.
    */
-  public static boolean relabelsTo(Label from, Label to) {
+  public static boolean _relabelsTo(Label from, Label to) {
 //    try {
 //      enterTiming();
       if (from == null || to == null) return false;
@@ -654,7 +654,7 @@ public final class LabelUtil {
 //    }
   }
   
-  public static boolean acts_for(Label actor, Principal granter) {
+  public static boolean _actsFor(Label actor, Principal granter) {
 //      try {
 //          enterTiming();
           return actsFor(actor, granter);
@@ -667,7 +667,7 @@ public final class LabelUtil {
 //    try {
 //      enterTiming();
       Label L = toLabel(localStore, topConf(), writerPolicy(localStore, granter, granter));
-      return relabelsTo(actor, L);
+      return _relabelsTo(actor, L);
 //    } finally {
 //      exitTiming();
 //    }

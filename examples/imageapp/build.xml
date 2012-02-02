@@ -89,8 +89,8 @@
         <arg value="${fabc}" />
         <arg value="-g" />
         <arg value="-e" />
-        <arg value="-rdebug" />
         <!--
+        <arg value="-rdebug" />
         -->
         <arg value="-untrusted-providers"/>
         <arg value="-d" />         <arg value="${home}/classes/fabric" />

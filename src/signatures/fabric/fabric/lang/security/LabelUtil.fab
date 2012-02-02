@@ -36,9 +36,9 @@ public class LabelUtil {
     public static native IntegPolicy join(IntegPolicy p1, IntegPolicy p2);
     public static native IntegPolicy meetPol(IntegPolicy p1, IntegPolicy p2);
 
-    public static native boolean equivalentTo(label l1, label l2);
-    public static native boolean relabelsTo(label fromLbl, label toLbl); 
-    public static native boolean acts_for(label actor, principal granter);
+    public static native boolean _equivalentTo(label l1, label l2);
+    public static native boolean _relabelsTo(label fromLbl, label toLbl); 
+    public static native boolean _actsFor(label actor, principal granter);
 
     public static native boolean isReadableBy(label lbl, principal p); 
     

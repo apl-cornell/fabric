@@ -3,9 +3,9 @@ package fabric.lang.security;
 public class PrincipalUtil {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 
-    public static native boolean{p;q;q←} acts_for(Principal p, Principal q);
+    public static native boolean{p;q;q←} _actsFor(Principal p, Principal q);
 
-    public static native boolean{p;q;p←;q←} equivalentTo(Principal p, Principal q);
+    public static native boolean{p;q;p←;q←} _equivalentTo(Principal p, Principal q);
 
     public static native ActsForProof[{*→s;*←s}]{p;q;q←;s}
 	findActsForProof(Store s, Principal p, Principal q, java.lang.Object searchState);

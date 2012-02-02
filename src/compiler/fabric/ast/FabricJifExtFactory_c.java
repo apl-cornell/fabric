@@ -8,6 +8,7 @@ import jif.extension.JifConstructorDeclExt;
 import jif.extension.JifFieldDeclExt_c;
 import jif.extension.JifLabelExprExt;
 import jif.extension.JifSourceFileExt;
+import jif.translate.BinaryToJavaExt_c;
 import jif.translate.FieldToJavaExt_c;
 import polyglot.ast.Ext;
 import fabric.extension.AbortJifExt_c;
@@ -23,7 +24,6 @@ import fabric.extension.RetryJifExt_c;
 import fabric.extension.WorkerJifExt_c;
 import fabric.translate.AbortToFabilExt_c;
 import fabric.translate.AtomicToFabilExt_c;
-import fabric.translate.BinaryToFabilExt_c;
 import fabric.translate.CallToFabilExt_c;
 import fabric.translate.CastToFabilExt_c;
 import fabric.translate.ClassBodyToFabilExt_c;
@@ -61,7 +61,7 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
 
   @Override
   public Ext extBinaryImpl() {
-    return new JifBinaryExt(new BinaryToFabilExt_c());
+    return new JifBinaryExt(new BinaryToJavaExt_c());
   }
   
   @Override

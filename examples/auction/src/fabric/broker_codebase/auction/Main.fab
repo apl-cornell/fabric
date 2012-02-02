@@ -57,7 +57,7 @@ class Main  {
 	  final principal broker = broker_worker.getPrincipal();
 
       if (broker actsfor airlineA && broker actsfor airlineB && broker actsfor user
-	    	&& p equiv broker && provider actsfor broker && broker equiv broker_store) 
+	    	&& p equiv broker && provider ≽ broker && broker equiv broker_store) 
 	  	new AirlineExample[airlineA, airlineB, user, broker](a_serv,b_serv,user_serv).go(out2);
     }
 }
