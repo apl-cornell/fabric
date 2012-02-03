@@ -88,7 +88,6 @@ import codebases.types.NamespaceResolver;
 import fabric.lang.Codebase;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
-import fabric.translate.DynamicPrincipalToFabilExpr_c;
 import fabric.translate.FabricJoinLabelToFabilExpr_c;
 import fabric.translate.FabricMeetLabelToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
@@ -458,11 +457,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     }
 
     return super.isImplicitCastValid(fromType, toType);
-  }
-
-  @Override
-  protected PrincipalToJavaExpr dynamicPrincipalTranslator() {
-    return new DynamicPrincipalToFabilExpr_c();
   }
 
   @Override

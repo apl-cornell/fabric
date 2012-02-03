@@ -25,7 +25,6 @@ import fabric.extension.WorkerJifExt_c;
 import fabric.translate.AbortToFabilExt_c;
 import fabric.translate.AtomicToFabilExt_c;
 import fabric.translate.CallToFabilExt_c;
-import fabric.translate.CastToFabilExt_c;
 import fabric.translate.ClassBodyToFabilExt_c;
 import fabric.translate.ClassDeclToFabilExt_c;
 import fabric.translate.CodebaseDeclToFabilExt_c;
@@ -67,11 +66,6 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   @Override
   public Ext extCallImpl() {
     return new CallJifExt_c(new CallToFabilExt_c());
-  }
-  
-  @Override
-  public Ext extCastImpl() {
-    return new JifCastExt(new CastToFabilExt_c());
   }
   
   @Override

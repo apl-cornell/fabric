@@ -253,6 +253,7 @@
            vmlauncher="false">
       <arg value="${fabric.home}/bin/fabc"/>
       <arg value="-report"/> <arg value="errors=1" />
+      <arg value="-rdebug"/>
       <arg value="-g"/>
       <arg value="-d"/> <arg value="${home}/classes"/>
       <srcfile />
