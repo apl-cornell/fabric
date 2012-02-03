@@ -221,7 +221,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
       throw new InternalCompilerError("Expected FClass.");
     
     FClass fcls = (FClass) obj;    
-    if (!LabelUtil._Impl.relabelsTo(fcls.get$$updateLabel(), fcls.getCodebase()
+    if (!LabelUtil._Impl._relabelsTo(fcls.get$$updateLabel(), fcls.getCodebase()
         .get$$updateLabel())) {
       // XXX: should we throw a more security-related exception here?
       throw new IOException("The label of class " + NSUtil.absoluteName(fcls)
