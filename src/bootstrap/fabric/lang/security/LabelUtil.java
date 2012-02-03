@@ -2,7 +2,7 @@ package fabric.lang.security;
 
 public interface LabelUtil extends fabric.lang.Object {
     
-    public boolean acts_for(fabric.lang.security.Label actor,
+    public boolean _actsFor(fabric.lang.security.Label actor,
                             fabric.lang.security.Principal granter);
     
     public boolean actsFor(fabric.lang.security.Label actor,
@@ -268,7 +268,7 @@ public interface LabelUtil extends fabric.lang.Object {
           fabric.lang.security.IntegPolicy arg1,
           fabric.lang.security.IntegPolicy arg2, java.util.Set arg3);
         
-        native public static boolean equivalentTo(
+        native public static boolean _equivalentTo(
           fabric.lang.security.Label arg1, fabric.lang.security.Label arg2);
         
         native public static boolean isReadableBy(
@@ -277,10 +277,10 @@ public interface LabelUtil extends fabric.lang.Object {
         native public static boolean isWritableBy(
           fabric.lang.security.Label arg1, fabric.lang.security.Principal arg2);
         
-        native public static boolean relabelsTo(
+        native public static boolean _relabelsTo(
           fabric.lang.security.Label arg1, fabric.lang.security.Label arg2);
         
-        native public boolean acts_for(fabric.lang.security.Label arg1,
+        native public boolean _actsFor(fabric.lang.security.Label arg1,
                                        fabric.lang.security.Principal arg2);
         
         native public boolean actsFor(fabric.lang.security.Label arg1,
@@ -583,7 +583,7 @@ public interface LabelUtil extends fabric.lang.Object {
           fabric.lang.security.IntegPolicy p1,
           fabric.lang.security.IntegPolicy p2, java.util.Set s);
         
-        native public static boolean equivalentTo(
+        native public static boolean _equivalentTo(
           fabric.lang.security.Label l1, fabric.lang.security.Label l2);
         
         native public static boolean isReadableBy(
@@ -592,10 +592,10 @@ public interface LabelUtil extends fabric.lang.Object {
         native public static boolean isWritableBy(
           fabric.lang.security.Label lbl, fabric.lang.security.Principal p);
         
-        native public static boolean relabelsTo(fabric.lang.security.Label from,
+        native public static boolean _relabelsTo(fabric.lang.security.Label from,
                                                 fabric.lang.security.Label to);
         
-        native public boolean acts_for(fabric.lang.security.Label actor,
+        native public boolean _actsFor(fabric.lang.security.Label actor,
                                        fabric.lang.security.Principal granter);
         
         native public boolean actsFor(fabric.lang.security.Label actor,

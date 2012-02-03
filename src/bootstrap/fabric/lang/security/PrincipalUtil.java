@@ -481,7 +481,7 @@ public interface PrincipalUtil
     {
         
         native public static boolean
-          acts_for(
+          _actsFor(
           fabric.lang.security.Principal arg1,
           fabric.lang.security.Principal arg2);
         
@@ -525,7 +525,7 @@ public interface PrincipalUtil
           fabric.lang.security.Principal arg2);
         
         native public static boolean
-          equivalentTo(
+          _equivalentTo(
           fabric.lang.security.Principal arg1,
           fabric.lang.security.Principal arg2);
         
@@ -669,7 +669,7 @@ public interface PrincipalUtil
     {
         
         native public static boolean
-          acts_for(
+          _actsFor(
           fabric.lang.security.Principal p,
           fabric.lang.security.Principal q);
         
@@ -718,7 +718,7 @@ public interface PrincipalUtil
           fabric.lang.security.Principal superior);
         
         native public static boolean
-          equivalentTo(
+          _equivalentTo(
           fabric.lang.security.Principal p,
           fabric.lang.security.Principal q);
         
