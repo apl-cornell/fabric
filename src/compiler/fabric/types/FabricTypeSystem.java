@@ -1,6 +1,7 @@
 package fabric.types;
 
 import jif.types.Assertion;
+import jif.types.JifMethodInstance;
 import jif.types.JifTypeSystem;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
@@ -18,15 +19,26 @@ import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseTypeSystem;
 
 public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
+
+  //////////////////////////////////////////////////////////////////////////////
+  // constants                                                                //
+  //////////////////////////////////////////////////////////////////////////////
+  
   ClassType FObject();
   
   ClassType RemoteWorker();
+  JifMethodInstance RemoteWorkerGetPrincipalMethod();
   
   ClassType Worker();
+  JifMethodInstance WorkerGetPrincipalMethod();
   
   ClassType Store();
+  JifMethodInstance StoreGetPrincipalMethod();
 
   ClassType DelegatingPrincipal();
+  
+  
+  
   /**
    * Constructs a principal for the local worker. 
    * 

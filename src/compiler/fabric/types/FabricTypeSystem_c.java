@@ -23,6 +23,7 @@ import jif.types.Assertion;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
 import jif.types.JifLocalInstance;
+import jif.types.JifMethodInstance;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabelLeAssertion;
 import jif.types.LabelSubstitution;
@@ -39,7 +40,6 @@ import jif.types.label.IntegPolicy;
 import jif.types.label.IntegProjectionPolicy_c;
 import jif.types.label.JoinConfPolicy_c;
 import jif.types.label.JoinLabel;
-import jif.types.label.JoinPolicy_c;
 import jif.types.label.Label;
 import jif.types.label.MeetLabel;
 import jif.types.label.PairLabel;
@@ -117,6 +117,109 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
    */
   protected Codebase new_codebase = null;
 
+  //////////////////////////////////////////////////////////////////////////////
+  // constants                                                                //
+  //////////////////////////////////////////////////////////////////////////////
+
+  private FabricClassType REMOTE_WORKER_;
+  private FabricClassType WORKER_;
+  private FabricClassType STORE_;
+  private FabricClassType DELEGATING_PRINCIPAL_;
+  private FabricClassType FOBJECT_;
+
+  private JifMethodInstance RW_GET_PRINCIPAL_;
+  private JifMethodInstance W_GET_PRINCIPAL_;
+  private JifMethodInstance S_GET_PRINCIPAL_;
+
+  /* Overridden (jif) constants */
+  
+  @Override
+  public String PrincipalClassName() {
+    return "fabric.lang.security.Principal";
+  }
+
+  @Override
+  public String RuntimePackageName() {
+    return "fabric.runtime";
+  }
+
+  @Override
+  public String PrincipalUtilClassName() {
+    return "fabric.lang.security.PrincipalUtil";
+  }
+
+  @Override
+  public String LabelClassName() {
+    return "fabric.lang.security.Label";
+  }
+
+  @Override
+  public String LabelUtilClassName() {
+    return "fabric.lang.security.LabelUtil";
+  }
+  
+  /* New constants */
+
+  // Object
+  
+  @Override
+  public ClassType FObject() {
+    return FOBJECT_ = getConstClass("fabric.lang.Object", FOBJECT_);
+  }
+  
+  // Remote Worker
+  
+  @Override
+  public FabricClassType RemoteWorker() {
+    return REMOTE_WORKER_ = getConstClass("fabric.worker.remote.RemoteWorker", REMOTE_WORKER_);
+  }
+  
+  @Override
+  public JifMethodInstance RemoteWorkerGetPrincipalMethod() {
+    return RW_GET_PRINCIPAL_ = getConstMethod(RemoteWorker(), "getPrincipal", CollectionUtil.list(), RW_GET_PRINCIPAL_);
+  }
+  
+  // Worker
+  
+  @Override
+  public FabricClassType Worker() {
+    return WORKER_ = getConstClass("fabric.worker.Worker", WORKER_);
+  }
+
+  @Override
+  public JifMethodInstance WorkerGetPrincipalMethod() {
+    return W_GET_PRINCIPAL_ = getConstMethod(Worker(), "getPrincipal", CollectionUtil.list(), W_GET_PRINCIPAL_);
+  }
+  
+  // Store
+  
+  @Override
+  public FabricClassType Store() {
+    return STORE_ = getConstClass("fabric.worker.Store", STORE_);
+  }
+
+  @Override
+  public JifMethodInstance StoreGetPrincipalMethod() {
+    return S_GET_PRINCIPAL_ = getConstMethod(Store(), "getPrincipal", CollectionUtil.list(), S_GET_PRINCIPAL_);
+  }
+
+  // DelegatingPrincipal
+  
+  @Override
+  public FabricClassType DelegatingPrincipal() {
+    return DELEGATING_PRINCIPAL_ = getConstClass("fabric.lang.security.DelegatingPrincipal", DELEGATING_PRINCIPAL_);
+  }
+  
+  // Type-refined helper method
+
+  protected FabricClassType getConstClass(String name, FabricClassType instance) {
+    return (FabricClassType) super.getConstClass(name, instance);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+  
   public FabricTypeSystem_c(TypeSystem jlts) {
     super(jlts);
     this.ds = new FabricFixedSignature(this);
@@ -309,36 +412,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public ClassType FObject() {
-    return load("fabric.lang.Object");
-  }
-
-  @Override
-  public String PrincipalClassName() {
-    return "fabric.lang.security.Principal";
-  }
-
-  @Override
-  public String RuntimePackageName() {
-    return "fabric.runtime";
-  }
-
-  @Override
-  public String PrincipalUtilClassName() {
-    return "fabric.lang.security.PrincipalUtil";
-  }
-
-  @Override
-  public String LabelClassName() {
-    return "fabric.lang.security.Label";
-  }
-
-  @Override
-  public String LabelUtilClassName() {
-    return "fabric.lang.security.LabelUtil";
-  }
-
-  @Override
   public List<String> defaultPackageImports() {
     // Include fabric.lang and fabric.worker as default imports.
     List<String> result = new ArrayList<String>(5);
@@ -358,26 +431,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   public ParsedClassType createClassType(LazyClassInitializer init,
       Source fromSource) {
     return new FabricParsedClassType_c(this, init, fromSource);
-  }
-
-  @Override
-  public ClassType RemoteWorker() {
-    return load("fabric.worker.RemoteWorker");
-  }
-
-  @Override
-  public ClassType Worker() {
-    return load("fabric.worker.FabricWorker");
-  }
-
-  @Override
-  public ClassType Store() {
-    return load("fabric.worker.Store");
-  }
-
-  @Override
-  public ClassType DelegatingPrincipal() {
-    return load("fabric.lang.security.DelegatingPrincipal");
   }
 
   private JifLocalInstance workerLocalInstance = null;
