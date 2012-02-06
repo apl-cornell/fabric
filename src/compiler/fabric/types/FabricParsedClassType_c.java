@@ -447,12 +447,37 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
       }
 
 
-      CallHelper ch = new CallHelper(receiverLabel, 
+      CallHelper ch = new ClassAccessPolicyHelper(receiverLabel, 
                                      receiver, 
                                      calleeContainer,
                                      method, 
                                      actualArgs,
                                      method.position());
       return ch;
+  }
+  private static class ClassAccessPolicyHelper extends CallHelper {
+
+    /**
+     * @param receiverLabel
+     * @param receiver
+     * @param calleeContainer
+     * @param pi
+     * @param actualArgs
+     * @param position
+     */
+    public ClassAccessPolicyHelper(Label receiverLabel, Receiver receiver,
+        ReferenceType calleeContainer, JifProcedureInstance pi,
+        List<Expr> actualArgs, Position position) {
+      super(receiverLabel, receiver, calleeContainer, pi, actualArgs, position);
+      FabricTypeSystem ts = (FabricTypeSystem) pi.typeSystem();
+      actualArgLabels = new ArrayList<Label>(pi.formalTypes().size());
+
+      for (Type t : (List<Type>) pi.formalTypes()) {
+          ArgLabel al = (ArgLabel)ts.labelOfType(t);
+          actualArgLabels.add(al);
+      }
+
+    }
+    
   }
 }
