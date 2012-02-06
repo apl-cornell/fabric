@@ -13,8 +13,8 @@
 
   <dirname property="home" file="${ant.file.friendmap}" />
 
-  <target name="build-all" depends="build-local, build-jif"/>
-  <target name="all"       depends="publish-all"/>
+  <target name="build-all" depends="build-jif, build-local"/>
+  <target name="all"       depends="build-all"/>
 
 
   <!--
@@ -340,11 +340,12 @@
         <!--<arg value="-fail-on-exception"/>-->
         <arg value="-untrusted-providers"/>
         <arg value="-e"/>
+        <arg value="-report"     /> <arg value="labelFlow=1"            />
         <arg value="-sourcepath" /> <arg value="@{srcdir}"              />
         <arg value="-d"          /> <arg value="${home}/classes/jif"    />
         <arg value="-classpath"  /> <arg value="${home}/classes/jif"    />
         <arg value="-classpath"  /> <arg value="${home}/classes/jif-sig-impl"    />
-        <arg value="-addsigcp"  /> <arg value="${home}/classes/jif-sig" />
+        <arg value="-addsigcp"   /> <arg value="${home}/classes/jif-sig" />
         <extra-args />
         <srcfile />
 
