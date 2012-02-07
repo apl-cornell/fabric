@@ -28,7 +28,9 @@ CODEBASE=$(codebases | grep $ARG | cut -f1 -d" ")
 
 FILE=$(basename $ARG)
 
+NOVERSION=$(echo $FILE | sed "s/V[1-9]//" )
+
 DIR=$(echo $ARG | cut -d/ -f1)
 
-gvimdiff "jif/$DIR/$FILE.jif" "fabric/$CODEBASE/$DIR/$FILE.fab"
+gvimdiff "jif/$DIR/$FILE.jif" "fabric/$CODEBASE/$DIR/$NOVERSION.fab"
 

@@ -9,8 +9,6 @@ import util.AssertionFailedError;
  * in the social network.  Users are principals, and delegate to the social
  * network as well as the user who created them.
  *
- * The V1 stands for version 1.  In Fabric, V1 and V2 will both be named User,
- * but will reside in different codebases.
  */
 public class User extends Meet
 where

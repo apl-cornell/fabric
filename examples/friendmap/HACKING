@@ -1,0 +1,147 @@
+Requirements
+============
+
+ - labels documented
+ - access labels
+ - compiles
+
+
+Code layout
+===========
+
+Util
+	Delegator
+		- implements Principal
+		- delegates to single "owner"
+
+		- constructor
+		- name
+		- delegatesTo
+
+		- equals
+		- isAuthorized
+		- findProof(Up/Down)To
+
+	Meet
+		- implements Principal
+		- delegates to two delegatees
+
+		- constructor
+		- name
+		- delegatesTo
+
+		- equals
+		- isAuthorized
+		- findProof(Up/Down)To
+
+
+	Group[principal owner]
+		- extends Delegator
+		- contains a collection of delegatees, with integrity {owner←}
+
+		- constructor(s)
+		- name
+		- add
+		- remove
+		- delegatesTo
+		- iterator
+
+		- equals
+		- isAuthorized
+		- findProof(Up/Down)To
+
+	GroupIterator
+		- iterates over Group
+
+		- hasNext
+		- next
+
+	Util
+		Jif status:    done
+		Fabric status: done (but different style from Jif)
+		- copyArray method
+
+Snapp
+	Snapp
+		Jif status:    access labels, comments
+		Fabric status: comments
+
+		- extends Delegator
+
+		- constructor
+		- createUser
+
+	User
+		- extends Meet
+		- delegates to network, user
+
+		- constructor
+			Jif status:    access labels
+			Fabric status: done
+		- setLocation
+			Jif status:    access labels
+			Fabric status: access labels
+		- name
+			Jif status:    access labels
+			Fabric status: unimplemented
+
+	Location
+		- constructor
+			Jif status: access labels
+			Fabric status: done
+
+MapServ
+	Box
+		Jif status: done
+		Fabric status: uses access label for update label, needs docs
+
+		- constructor
+		- contains
+		- expand, scale_(x/y)
+		- copy
+		- min/max
+
+	MapImage
+		Jif status: done
+		Fabric status: needs docs, access labels
+
+		- constructor
+		- getBoundary
+		- getAt
+		- setAt
+		- copy
+		- print
+
+	MapServer
+		Jif status: done
+		Fabric status: make background mutable, document labels
+		- extends Delegator
+		- delegates to service
+
+		- constructor
+		- createMap
+
+FriendMap
+	FriendMap
+		Jif status:    not compiling
+		Fabric status: not compiling
+
+		- constructor
+		- viewMap
+		- postMap
+		- printMap
+
+		- createMap
+
+		- addPin
+
+Snapp 2.0
+	Snapp
+	Mood
+
+FriendMap 2.0
+	FriendMap
+		- TODO
+
+
+vim: foldmethod=indent ts=4 sw=4 ai
