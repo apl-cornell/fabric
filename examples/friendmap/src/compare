@@ -1,0 +1,34 @@
+#!/bin/sh
+
+codebases() {
+cat <<-EOF
+	mapserv_1.0_codebase   mapserv/Box.jif
+	mapserv_1.0_codebase   mapserv/MapImage.jif
+	mapserv_1.0_codebase   mapserv/MapServer.jif
+	trusted                util/GroupIterator.jif
+	trusted                util/Group.jif
+	trusted                util/Delegator.jif
+	trusted                util/AssertionFailedError.jif
+	trusted                util/NoSuchElementException.jif
+	trusted                util/Meet.jif
+	trusted                util/Util.jif
+	snapp_2.0_codebase     snapp/UserV2.jif
+	snapp_1.0_codebase     snapp/UserV1.jif
+	snapp_2.0_codebase     snapp/Mood.jif
+	snapp_1.0_codebase     snapp/Location.jif
+	snapp_1.0_codebase     snapp/Snapp.jif
+	friendmap_2.0_codebase friendmap/FriendMapV2.jif
+	friendmap_1.0_codebase friendmap/FriendMap.jif
+EOF
+} 
+
+ARG=$(echo $1 | sed "s#^jif/##" | sed "s#.jif\$##" )
+
+CODEBASE=$(codebases | grep $ARG | cut -f1 -d" ")
+
+FILE=$(basename $ARG)
+
+DIR=$(echo $ARG | cut -d/ -f1)
+
+gvimdiff "jif/$DIR/$FILE.jif" "fabric/$CODEBASE/$DIR/$FILE.fab"
+
