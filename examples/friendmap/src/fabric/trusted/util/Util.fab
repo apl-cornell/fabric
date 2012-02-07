@@ -9,38 +9,38 @@ public class Util {
    * Copy the contents of an array into another array with the given labels.
    *
    * @throws NullPointerException
-   *         if data is null
+   *         if data is null TODO: or store is null
    */
   public static
-  char{*l}[]
-  // caller_pc ⊑ C(m) because the fetch on data reflects information
-  //       about the data reference and the calling context
-  // caller_pc ⊑ l because the calling context flows because external state
-  //       (the contents of the result) with label l are updated.
-  // thus caller_pc ⊑ l meet C(m) = l meet (m join {_→;_←})
-  copyArray {*l} meet {*m;_→;_←}
+  char{*res_label}[] {data;*arg_label}
+  copyArray
+  {                      // side effects:
+    {*res_label}       ⊓ // contents of result   are updated
+    {*arg_label;_←;*→}   // contents of argument are fetched
+  }
   (
-    final char{*m}[] data,
-    final label l,
-    final label m,
+    final char{*arg_label}[] data,
+    final label arg_label,
+    final label res_label,
     final Store s
   )
   throws (
     NullPointerException{data}
   )
   where
-    // s ≽ l because s will store the result, labelled l
-    {s←} <= l,
-    l <= {s→},
-    // m ⊑ l because the contents of the array flow to the result
-    m <= l,
-    // data ⊑ C(m) because the fetch on data reflects information about the reference to data
-    {data} <= {*m;_→;_←},
-    // data ⊑ {*l} because the output is affected by the reference to the input
-    {data} <= {*l}
+    // object creation constraints
+    // TODO: s ≽ res_label@res_label
+    // (arrays can only be created with same update and access label)
+    res_label <= {*→s}, {*←s} <= res_label, res_label <= {*→s},
 
+    // information flows from argument contents to result contents:
+    arg_label <= res_label,
+    // fetch on data reveals information about the reference to data:
+    {data} <= {*arg_label;_←;*→},
+    // the output is affected by the reference to the input
+    {data} <= {*res_label}
   {
-    final char{*l}[] result = new char[data.length]@s;
+    final char{*res_label}[] result = new char[data.length]@s;
 
     try {
 
