@@ -3,16 +3,19 @@ package mapserv;
 /**
  * Represents a Box in the x,y plane.  A point (x,y) is contained in the box if
  * x ∈ [xmin, xmax) and y ∈ [ymin, ymax).
+ *
+ * @param L the update label of the object
+ * @param A the access label of the object
  */
-public class Box[label A]
-where provider <= A
+public class Box [label L, label A]
 {
+
   //////////////////////////////////////////////////////////////////////////////
   // public fields                                                            //
   //////////////////////////////////////////////////////////////////////////////
 
-  public final float{A}@{A} xmin, ymin;
-  public final float{A}@{A} xmax, ymax;
+  public float{L}@{A} xmin, ymin;
+  public float{L}@{A} xmax, ymax;
 
   //////////////////////////////////////////////////////////////////////////////
   // public methods                                                           //
@@ -21,13 +24,14 @@ where provider <= A
   /**
    * Create a new box
    */
-  public Box {A}
+  public
+  Box {L} // L because the fields are updated
   (
-    float {A} xmin,
-    float {A} ymin,
-    float {A} xmax,
-    float {A} ymax
+    float {L} xmin, float {L} ymin,
+    float {L} xmax, float {L} ymax
   )
+  where
+    provider <= L // code affects fields
   {
     this.xmin = xmin;
     this.ymin = ymin;
@@ -39,7 +43,14 @@ where provider <= A
   /**
    * Return true if this box contains (x,y).
    */
-  public boolean{A} contains{A}(float{A} x, float{A} y) {
+  public
+  boolean  {L;x;y;*provider} // fields, args, code affect result
+  contains {A}               // because fields are accessed
+  (
+    float x,
+    float y
+  )
+  {
     return xmin < x && x < xmax
         && ymin < y && y < ymax;
   }
@@ -48,18 +59,22 @@ where provider <= A
    * Expand the bounding box so that it contains the given point.
    */
   public
-  Box[A] {A} 
-  expand{A}
+  void
+  expand
+  {       // side effects
+    {L} ⊓ // fields are updated
+    {A}   // fields are accessed
+  }
   (
-    float {A} x, float {A} y, Store {A} s
+    float {L} x, float {L} y
   )
   where
-    A <= {⊤→s}, provider <= {⊤→s},
-    {⊤←s} <= A, {⊤←s} <= provider 
+    provider <= L  // code affects fields
   {
-    return new Box[A]@s(
-        min(this.xmin, x - 2), min(this.ymin, y - 2),
-        max(this.xmax, x + 2), max(this.ymax, y + 2));
+    this.xmin = min(this.xmin, x);
+    this.ymin = min(this.ymin, y);
+    this.xmax = max(this.xmax, x);
+    this.ymax = max(this.ymax, y);
   }
 
   /**
@@ -67,7 +82,13 @@ where provider <= A
    * If x is within the x boundaries of the box, then the result will be
    * between 0 and 1.
    */
-  public float{A} scale_x{A}(float{A} x) {
+  public
+  float   {L;x;*provider} // fields, arg, code affect result
+  scale_x {A}   // fields are accessed
+  (
+    float x
+  )
+  {
     return (x - xmin) / (xmax - xmin);
   }
 
@@ -77,7 +98,13 @@ where provider <= A
    * If y is within the y boundaries of the box, then the result will be
    * between 0 and 1.
    */
-  public float{A} scale_y{A}(float{A} y) {
+  public
+  float   {L;y;*provider} // result affected by code, fields, y
+  scale_y {A}   // fields are accessed
+  (
+    float y
+  )
+  {
     return (y - ymin) / (ymax - ymin);
   }
 
@@ -86,21 +113,25 @@ where provider <= A
    * Create a deep copy of this on store s with label l.
    */
   public
-  Box[l] 
-  copy {A}
+  Box[l,a] {L;l;a;*provider} // result affected by fields, arguments, code
+  copy
+  {         // side effects:
+    {*l}  ⊓ // fields of result are updated
+    {*→s} ⊓ // object is created at s
+    {A}     // fields are read
+  }
   (
     label l,
+    label a,
     Store s
   )
   where
-    {s←} <= l,
-    l <= {s→},
-    A <= l,
-    provider <= l,
-    l <= {⊤→s},
-    {⊤←s} <= l
+    l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
+
+    L        <= l, // because this object affects result fields
+    provider <= l  // code affects result fields
   {
-    return new Box[l]@s(this.xmin, this.ymin, this.xmax, this.ymax);
+    return new Box[l,a]@s(this.xmin, this.ymin, this.xmax, this.ymax);
   }
 
   //////////////////////////////////////////////////////////////////////////////
