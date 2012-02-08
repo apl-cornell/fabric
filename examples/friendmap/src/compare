@@ -24,7 +24,7 @@ EOF
 
 ARG=$(echo $1 | sed "s#^jif/##" | sed "s#.jif\$##" )
 
-CODEBASE=$(codebases | grep $ARG | cut -f1 -d" ")
+CODEBASE=$(codebases | grep $ARG.jif | cut -f1 -d" ")
 
 FILE=$(basename $ARG)
 
