@@ -9,6 +9,9 @@ import util.AssertionFailedError;
 /**
  * A simple image class.  The image is indexed by floating point numbers, and
  * stores its own boundary... puts and gets are done relative to the boundary.
+ *
+ * @param L the update label of the image and its contents
+ * @param A the access label of the image and its contents
  */
 public class MapImage[label L, label A]
 where
