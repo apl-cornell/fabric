@@ -3,6 +3,9 @@ package mapserv;
 import util.AssertionFailedError;
 import util.Delegator;
 
+// TODO: comments
+// TODO: explicit @store
+
 /**
  * A very simple map service: given a request for a region, it returns a 10x10
  * image containing the background value, scaled to the requested region.
@@ -14,59 +17,97 @@ where
        Box.provider <= provider, provider <=      Box.provider
 {
 
-  private final char {this}@{this→} background;
-  final public Store{this}@{this→} store;
+  private char {_→;*←this}@{*→this.owner} background;
+  final public Store{this}@{*→this.owner} store;
 
 
   /**
    * Create a new map server, with the given background character.
    */
   public
-  MapServer {this}
+  MapServer
+  {               // side effects:
+    this ⊓        // TODO
+    {_→; *←store} // TODO
+  }
   (
-    String    {this} name,
-    Principal {this} owner,
-    char      {this} background,
-    Store     {this} store
+    String {this} name,
+    Store  {this} store,
+    char   {_→; *←store} background
   )
   where
-    provider <= {this}
+    provider <= {this},
+    provider <= {_→;*←store}
   {
-    this.background = background;
-    this.store = store;
-    super(name, owner);
+    super(name, store);
+
+    if (store actsfor this)
+      this.background = background;
+    else
+      throw new AssertionFailedError("Delegation failed");
   }
 
   /**
-   * create a new map with the given bounds, containing the background character.
+   * create a new map with the given bounds, containing the background
+   * character.
+   *
+   * @return
+   *     a reference to a public image stored at this service
    *
    * @throws NullPointerException
    *     if boundary is null.
    */
   public
-  MapImage[lbl]
-  getMap {*lbl}
+  MapImage[l,{*→owner}] {*l}
+                       // resulting map will be protected at l
+                       // and stored at owner
+  createMap
+  {            // side effects:
+    {*l}     ⊓ // result is updated
+    {*a}     ⊓ // boundary is accessed
+    {*→owner}  // map is created
+  }
   (
-    label {*lbl} lbl,
-    Box[lbl] {*lbl} boundary
+    label l,
+    label a,
+    Box[l,a] boundary
   )
-  :{*lbl}
-  throws NullPointerException
+  throws
+  (
+    NullPointerException{*provider;boundary}
+  )
   where
-    {this←} <= lbl, provider <= {*lbl},
-    provider <= {⊤→store},
-    lbl <= {⊤→store},
-    {⊤←store} <= lbl
+    // TODO; owner ≽ l@owner; map is created at owner
+    {*←owner} <= l, l <= {*→owner}, {*→owner} <= {*→owner},
+
+    // result taints
+    {*provider;*←this;boundary;l} <= l,
+
+    // boundary lookup taints
+    {*provider;boundary} <= a
   {
-    final char{*lbl}[]{*lbl} data = new char[100]@store;
+    if (boundary == null) throw new NullPointerException();
+
+    if (owner actsfor this) {
+
+    final char{*l}[]{*l} data = new char/* @this.owner */[100];
     for (int i = 0; i < data.length; i++)
       data[i] = background;
 
+    if (!(owner instanceof Store)) throw new AssertionFailedError("MapServer's owner is a store");
+    final Store store = (Store) owner;
+
     try {
-      return new MapImage[lbl]@store(boundary, 10, 10, data);
+      return new MapImage[l,{*→owner}]/* @this.owner */(boundary, l, a,
+                                                       10, 10, data,
+                                                       store);
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError("10 * 10 = 100");
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("boundary and data are non-null");
     }
+
+    } else throw new AssertionFailedError("delegators's owner actsfor delegatee");
   }
 }
 
