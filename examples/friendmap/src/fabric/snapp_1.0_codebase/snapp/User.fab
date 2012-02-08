@@ -4,6 +4,9 @@ import util.Group;
 import util.Meet;
 import util.AssertionFailedError;
 
+
+// TODO: comment labels
+
 /**
  * A User object contains all of the data associated with a given user account
  * in the social network.  Users are principals, and delegate to the social
@@ -20,7 +23,7 @@ where
   public final label {this}@{*->this} locationLabel;
 
   /** The user's location, only readable by members of the locationInfo group. */
-  public Location[{this->}]{*locationLabel} location      = null;
+  public Location[{*→this}]{*locationLabel}@{*→this} location      = null;
 
   /** The user's friends. non-null. */
   public final Group[this] {this}@{*->this} friends;
@@ -39,19 +42,16 @@ where
    * @throws NullPointerException
    *         if network is null
    */
-  User{this}
+  User {this}
   (
     String    {this} name,
     principal {this} owner,
     Snapp     {this} network,
     Store     {this} store
   )
-  where provider <= {this}
+  where
+    provider <= {this}
   {
-    // these endorsements are safe, because owner ≽ this,
-    // and thus {owner←;network←} ⊑ {this←}
-    // this just isn't true until after the superclass constructor is called.
-
     this.network = network;
 
     this.locationInfo  = new Group[this]@store(store, name + "'s location readers");
@@ -65,7 +65,7 @@ where
   void
   setLocation {*locationLabel}
   (
-    Location[{this->}]{*locationLabel} loc
+    Location[{*→this}]{*locationLabel} loc
   )
   where
     provider <= {*locationLabel}
