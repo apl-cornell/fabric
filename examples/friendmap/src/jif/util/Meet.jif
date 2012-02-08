@@ -23,6 +23,19 @@ public class Meet implements Principal {
     this.name = "(" + leftName + " meet " + rightName + ")";
   }
 
+  public
+  Meet
+  (
+    String    {this} name,
+    Principal {this} left,
+    Principal {this} right
+  )
+  {
+    this.left  = left;
+    this.right = right;
+    this.name  = name;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////

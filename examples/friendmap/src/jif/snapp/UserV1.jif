@@ -18,8 +18,6 @@ where
   Snapp.provider <= provider, provider <= Snapp.provider,
   Group.provider <= provider
 {
-  /** The name of this principal */
-  public final String{this} name;
 
   /** The label {this←;this→this.locationInfo}.  Cannot be set as initializer due to jif bug. */
   public final label {this} locationLabel;
@@ -50,10 +48,6 @@ where
     principal {this} owner,
     Snapp     {this} network
   )
-  throws
-  (
-    NullPointerException{network}
-  )
   where
     provider  <= {this}
   {
@@ -67,9 +61,7 @@ where
     this.friends       = new Group[this](name + "'s friends");
     this.locationLabel = new label {this←;locationInfo→};
 
-    this.name     = name;
-
-    super(owner, network);
+    super(name, owner, network);
   }
 
   public
@@ -83,8 +75,6 @@ where
   {
     this.location = loc;
   }
-
-  public String{this} name() { return this.name; }
 }
 
 /*
