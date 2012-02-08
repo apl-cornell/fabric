@@ -1,16 +1,24 @@
 package snapp;
 
+// TODO: document labels
+
 /**
  * A point on the plane.
  */
 public class Location[label A]
 where provider <= A
 {
-  public final float{A}@{A} x;
-  public final float{A}@{A} y;
+  public final float{this}@{A} x;
+  public final float{this}@{A} y;
 
   public
-  Location{A}(int{A} x, int{A} y)
+  Location
+  {      // side effects:
+    this // fields are updated
+  }
+  (
+    int{this} x, int{this} y
+  )
   {
     this.x = x;
     this.y = y;
