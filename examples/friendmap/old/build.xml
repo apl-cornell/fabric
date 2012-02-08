@@ -1,0 +1,186 @@
+<project name="friendmap" default="all" basedir=".">
+  <description>
+    FriendMap Jif build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../../common.xml" />
+
+  <dirname property="home" file="${ant.file.friendmap}" />
+
+  <target name="build-all" depends="build-jif"/>
+  <target name="all"       depends="build-all"/>
+
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Jif compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build-jif-sig">
+    <jifc     srcdir="${home}/src/jif-sig" includes="jif/principals/Worker.jif">
+      <arg value="-trusted-providers" />
+    </jifc>
+
+    <jifsigc  srcdir="${home}/src/jif-sig" excludes="jif/principals/Worker,jif">
+      <arg value="-trusted-providers" />
+    </jifsigc>
+  </target>
+
+  <target name="build-jif-java">
+    <jifjavac srcdir="${home}/src/jif-sig" />
+  </target>
+
+  <target name="build-jif-principals" depends="build-jif-sig">
+    <jifc srcdir="${home}/src/jif" includes="jif/principals/*.jif">
+      <arg value="-trusted-providers" />
+    </jifc>
+  </target>
+    
+  <target name="build-jif-util" depends="build-jif-sig">
+    <jifc srcdir="${home}/src/jif" includes="util/*.jif">
+      <arg value="-trusted-providers"/>
+    </jifc>
+  </target>
+
+  <target name="build-jif-snapp" depends="build-jif-util">
+    <jifc srcdir="${home}/src/jif" includes="snapp/*.jif" />
+  </target>
+
+  <target name="build-jif-mapserv" depends="build-jif-util">
+    <jifc srcdir="${home}/src/jif" includes="mapserv/*.jif" />
+  </target>
+
+  <target name="build-jif-friendmap" depends="build-jif-sig,build-jif-java,build-jif-snapp, build-jif-mapserv">
+    <jifc srcdir="${home}/src/jif" includes="friendmap/*.jif" excludes="friendmap/FriendMapV2.jif" />
+  </target>
+
+  <target name="build-jif"
+          description="Builds the Jif version of friendmap"
+          depends="build-jif-friendmap,build-jif-principals">
+    <jifc srcdir="${home}/src/jif" includes="Main.jif"/>
+  </target>
+
+
+  <!--
+  ******************************************************************************
+    Macros
+  ******************************************************************************
+  -->
+
+  <!-- jifc
+       compile jif code
+  -->
+
+  <macrodef name="jifc">
+    <attribute name="srcdir" />
+    <attribute name="includes" default="**/*.jif" />
+    <attribute name="excludes" default="" />
+    <element name="extra-args" implicit="true" optional="yes"/>
+    <sequential>
+      <mkdir dir="${home}/classes/jif" />
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dir="${home}"
+             skipemptyfilesets="true"
+             dest="${home}/classes/jif/"
+             vmlauncher="false">
+        <arg value="${jifc}"/>
+        <!--<arg value="-fail-on-exception"/>-->
+        <arg value="-untrusted-providers"/>
+        <arg value="-e"/>
+        <arg value="-report"     /> <arg value="labelFlow=1"            />
+        <arg value="-sourcepath" /> <arg value="@{srcdir}"              />
+        <arg value="-d"          /> <arg value="${home}/classes/jif"    />
+        <arg value="-classpath"  /> <arg value="${home}/classes/jif"    />
+        <arg value="-classpath"  /> <arg value="${home}/classes/jif-sig-impl"    />
+        <arg value="-addsigcp"   /> <arg value="${home}/classes/jif-sig" />
+        <extra-args />
+        <srcfile />
+
+        <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
+        <globmapper from="*.jif" to="*.class" />
+      </apply>
+    </sequential>
+  </macrodef>
+
+
+  <!-- jifsigc
+       compile jif signatures
+  -->
+  <macrodef name="jifsigc">
+    <attribute name="srcdir" />
+    <attribute name="includes" default="**/*.jif" />
+    <attribute name="excludes" default="" />
+    <element name="extra-args" implicit="true" optional="yes"/>
+    <sequential>
+      <mkdir dir="${home}/classes/jif" />
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dir="${home}"
+             skipemptyfilesets="true"
+             dest="${home}/classes/jif/"
+             vmlauncher="false">
+        <arg value="${jifc}"/>
+        <!--<arg value="-fail-on-exception"/>-->
+        <arg value="-e"/>
+        <arg value="-sourcepath" /> <arg value="@{srcdir}"                />
+        <arg value="-d"          /> <arg value="${home}/classes/jif-sig"  />
+        <arg value="-classpath"  /> <arg value="${home}/classes/jif"      />
+        <extra-args />
+        <srcfile />
+
+        <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
+        <globmapper from="*.jif" to="*.class" />
+      </apply>
+    </sequential>
+  </macrodef>
+
+  <!-- jifjavac
+       compile java implementations of jif signatures
+  -->
+  <macrodef name="jifjavac">
+    <attribute name="srcdir" />
+    <attribute name="includes" default="**/*.java" />
+    <attribute name="excludes" default="" />
+    <element name="extra-args" implicit="true" optional="yes"/>
+    <sequential>
+      <mkdir dir="${home}/classes/jif-sig-impl" />
+      <javac srcdir="@{srcdir}"
+             destdir="${home}/classes/jif-sig-impl"
+             includes="@{includes}"
+             excludes="@{excludes}"
+             classpath="${jif.home}/rt-classes">
+        <extra-args />
+      </javac>
+    </sequential>
+  </macrodef>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->
