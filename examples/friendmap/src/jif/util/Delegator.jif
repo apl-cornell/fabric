@@ -26,7 +26,16 @@ public class Delegator implements Principal {
     return this.name;
   }
 
-  public boolean{this;p;this←} delegatesTo(principal p) {
+  public
+  boolean {this;p;this←}
+  delegatesTo
+  { // side effects:
+    // TODO
+  }
+  (
+    principal p
+  )
+  {
     return p == owner;
   }
 

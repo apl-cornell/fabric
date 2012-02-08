@@ -1,65 +1,86 @@
 package util;
 
+// TODO: comments
+
 /**
  * Convenience principal class the delegates to a single owner.
  */
 public class Delegator extends AbstractPrincipal {
-//  protected final String    {this}@{this->} name;
-//  protected final principal {this}@{this->} owner;
 
-  public
+  public native
   Delegator
+  {      // side effects
+    this // TODO
+  }
   (
     String    {this} name,
     principal {this} owner
-  )
-  {
-    // these endorsements are safe, because owner ≽ this,
-    // and thus {owner←} ⊑ {this←}
-    // we just can't convince the compiler of this fact.
-
-//    this.owner = owner;
-//    this.name  = name;
-    super(name);
-  }
+  );
 
   //////////////////////////////////////////////////////////////////////////////
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
-  public native boolean{this;p;this←} delegatesTo(principal p);
-//  {
-//    return p == owner;
-//  }
+  public
+  String {this}
+  name
+  { // side effects:
+    // TODO
+  }
+  (
+  );
+
 
   public native
-  ActsForProof[{s→}]{this; p; this←; p←;s}
-  findProofUpto {_->;this←}
-               (Store s,
-                Principal p,
-                java.lang.Object searchState);
-//  {
-//    if (owner actsfor this) {
-//
-//      ActsForProof[{*→s;*←s}] proof = PrincipalUtil.findActsForProof(s, p, owner, searchState);
-//      if (proof != null) {
-//        DelegatesProof dp = new DelegatesProof[{*→s;*←s}]@s(owner, this);
-//        return new TransitiveProof[{*→s;*←s}]@s(proof, owner, dp);
-//      } else
-//        return null;
-//
-//    } else throw new AssertionFailedError("owner acts for delegator");
-//  }
+  boolean {this;p;this←}
+  delegatesTo
+  { // side effects:
+    // TODO
+  }
+  (
+    principal p
+  );
 
-               
-               public void addDelegatesTo{this:;this!:}(principal{this:;this!:} p)
-                   where caller (this) {
-                 
-               }
-               public void removeDelegatesTo{this:;this!:}(principal{this:;this!:} p)
-                   where caller (this) {
-                 
-               }
+
+  public native
+  ActsForProof[{s→}] {this; p; this←; p←;s}
+  findProofUpto
+  {          // side effects:
+    _→;this← // TODO
+  }
+  (
+    Store s,
+    Principal p,
+    java.lang.Object searchState
+  );
+
+
+  public native
+  void
+  addDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this:;this!:} p
+  )
+  where
+    caller (this);
+
+
+
+
+  public native
+  void
+  removeDelegatesTo
+  {              // side effects:
+    this→; this← // TODO
+  }
+  (
+    principal {this→;this←} p
+  )
+  where
+    caller (this);
 }
 
 
