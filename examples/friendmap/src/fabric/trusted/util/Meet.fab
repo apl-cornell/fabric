@@ -8,6 +8,20 @@ public class Meet extends AbstractPrincipal {
   public
   Meet
   (
+    Principal {this} left,
+    Principal {this} right
+  )
+  {
+    final String leftName  = (left  == null ? "_" : left.name());
+    final String rightName = (right == null ? "_" : right.name());
+    final String fullName  = "(" + leftName + " meet " + rightName + ")";
+
+    this(name, left, right);
+  }
+
+  public
+  Meet
+  (
     String    {this} name,
     Principal {this} left,
     Principal {this} right
@@ -23,38 +37,76 @@ public class Meet extends AbstractPrincipal {
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
-  /**
-   * See Principal.findProofUpto.
-   */
-  public native
-  ActsForProof[{s→}]{this; p; this←; p←; s}
-  findProofUpto {this←; ⊥->}
-               (Store s, Principal p,
-                java.lang.Object searchState);
-//  {
-//    if (left actsfor this && right actsfor this) {
-//
-//      ActsForProof leftProof  = PrincipalUtil.findActsForProof(s, p, left,  searchState);
-//      ActsForProof rightProof = PrincipalUtil.findActsForProof(s, p, right, searchState);
-//
-//      if (leftProof != null)
-//        return new TransitiveProof@s(leftProof,  left,  new DelegatesProof@s(left, this));
-//      if (rightProof != null)
-//        return new TransitiveProof@s(rightProof, right, new DelegatesProof@s(right, this));
-//      else
-//        return null;
-//
-//    } else throw new AssertionFailedError("left and right act for meet");
-//  }
-
-                 
-  public void addDelegatesTo{this:;this!:}(principal{this:;this!:} p)
-      where caller (this) {
-    
+  public
+  boolean {this;p;this←}
+  delegatesTo
+  { // side effects:
+    // TODO
   }
-  public void removeDelegatesTo{this:;this!:}(principal{this:;this!:} p)
-      where caller (this) {
-    
+  (
+    principal p
+  )
+  {
+    return p == left || p == right;
+  }
+
+  public
+  ActsForProof[{s→}] {this; p; this←; p←;s}
+  findProofUpto
+  {          // side effects:
+    _→;this← // TODO
+  }
+  (
+    Store s,
+    Principal p,
+    java.lang.Object searchState
+  )
+  {
+    if (left actsfor this && right actsfor this) {
+
+      ActsForProof leftProof  = PrincipalUtil.findActsForProof(p, left,  searchState);
+      ActsForProof rightProof = PrincipalUtil.findActsForProof(p, right, searchState);
+
+      if (leftProof != null)
+        return new TransitiveProof(leftProof,  left,  new DelegatesProof(left, this));
+      if (rightProof != null)
+        return new TransitiveProof(rightProof, right, new DelegatesProof(right, this));
+      else
+        return null;
+
+    } else throw new AssertionFailedError("left and right act for meet");
+  }
+
+
+  public
+  void
+  addDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this→;this←} p
+  )
+  where
+    caller (this)
+  {
+    // TODO need to wipe out super.addDelegatesTo
+  }
+
+
+  public
+  void
+  removeDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this→;this←} p
+  )
+  where
+    caller (this)
+  {
+    // TODO need to wipe out super.addDelegatesTo
   }
 }
 

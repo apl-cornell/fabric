@@ -27,18 +27,6 @@ public class Delegator extends AbstractPrincipal {
   //////////////////////////////////////////////////////////////////////////////
 
   public
-  String {this}
-  name
-  { // side effects:
-    // TODO
-  }
-  (
-  )
-  {
-    return this.name;
-  }
-
-  public
   boolean {this;p;this←}
   delegatesTo
   { // side effects:
