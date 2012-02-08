@@ -33,24 +33,39 @@
   </target>
 
   <!--
+  ******************************************************************************
+    Fabric signatures and implementations
+  ******************************************************************************
+  -->
+
+  <target name="build-sig">
+    <fabsigc srcdir="${home}/src/fabric/signatures" />
+  </target>
+
+  <target name="build-fabil">
+    <fabfilc srcdir="${home}/src/fabil/" />
+  </target>
+
+  <target name="build-trusted">
+    <fabc-local srcdir="${home}/src/fabric/trusted">
+      <arg value="-trusted-providers" />
+    </fabc-local>
+  </target>
+
+  <!--
+  build-util provides the util classes.  Currently it does this by building the signatures
+  and the fabil implementations, but ultimately it should do so by building the trusted
+  implementations.
+  -->
+  <target name="build-util" depends="build-sig, build-fabil" />
+
+  <!--
   ****************************************************************************
     Fabric local compilation targets
   ****************************************************************************
   -->
 
-  <target name="build-trusted">
-    <fabc-local srcdir="${home}/src/fabric/trusted" includes="**/*.fab">
-      <arg value="-trusted-providers" />
-    </fabc-local>
-  </target>
-
-  <target name="build-sig">
-    <fabc-local srcdir="${home}/src/fabric/signatures" destdir="${home}/classes/fab-sig">
-      <arg value="-sig" />
-    </fabc-local>
-  </target>
-
-  <target name="build-local-snapp" depends="build-trusted">
+  <target name="build-local-snapp" depends="build-util">
     <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase">
       <!--
       <arg value="-report" /> <arg value="debug=1" />
@@ -59,7 +74,7 @@
     </fabc-local>
   </target>
 
-  <target name="build-local-mapserv" depends="build-trusted">
+  <target name="build-local-mapserv" depends="build-util">
     <fabc-local srcdir="${home}/src/fabric/mapserv_1.0_codebase" >
         <!--
         <arg value="-rdebug" />
@@ -67,7 +82,7 @@
     </fabc-local>
   </target>
 
-  <target name="build-local-friendmap" depends="build-local-snapp, build-local-mapserv, build-sig">
+  <target name="build-local-friendmap" depends="build-local-snapp, build-local-mapserv, build-util">
     <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" >
         <!--
         <arg value="-rdebug" />
@@ -90,7 +105,7 @@
   ******************************************************************************
   -->
 
-  <target name="publish-snapp-1.0" depends="build-trusted" >
+  <target name="publish-snapp-1.0" depends="build-util" >
     <fabc-publish srcdir="src/fabric/snapp_1.0_codebase"
                   store="snapp"
                   property="snapp.codebase" />
@@ -107,7 +122,7 @@
   </target>
 
 
-  <target name="publish-mapserv-1.0" depends="build-trusted">
+  <target name="publish-mapserv-1.0" depends="build-util">
     <fabc-publish srcdir="src/fabric/snapp_2.0_codebase"
                   store="mapserv"
                   property="mapserv.codebase" />
@@ -115,7 +130,7 @@
 
 
   <target name="publish-friendmap-1.0"
-          depends="publish-snapp-1.0, publish-mapserv-1.0">
+          depends="build-util, publish-snapp-1.0, publish-mapserv-1.0">
     <fabc-publish srcdir="src/fabric/friendmap_1.0_codebase"
                   store="friendmap"
                   property="friendmap.codebase">
@@ -237,7 +252,6 @@
   -->
   <macrodef name="fabc-local">
     <attribute name="srcdir" />
-    <attribute name="destdir" default="${home}/classes/fabric"/>
     <attribute name="includes" default="**/*.fab" />
     <attribute name="excludes" default="" />
     <element name="extra-args" implicit="true" optional="yes"/>
@@ -254,15 +268,79 @@
         <arg value="${fabc}" />
         <arg value="-g" />
         <arg value="-e" />
-        <arg value="-d" />         <arg value="@{destdir}" />
+        <arg value="-d" />         <arg value="${home}/classes/fabric" />
         <arg value="-sourcepath"/> <arg value="@{srcdir}" />
         <arg value="-classpath" /> <arg value="${home}/classes/fabric" />
-        <arg value="-addsigcp" /> <arg value="${home}/classes/fab-sig" />
+        <arg value="-addsigcp" />  <arg value="${home}/classes/fab-sig" />
         <extra-args />
         <srcfile />
 
         <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
         <globmapper from="*.fab" to="*.class" />
+      </apply>
+    </sequential>
+  </macrodef>
+
+  <!-- fabsigc
+       compile the fabric signatures
+  -->
+  <macrodef name="fabsigc">
+    <attribute name="srcdir" />
+    <attribute name="includes" default="**/*.fab" />
+    <attribute name="excludes" default="" />
+    <element name="extra-args" implicit="true" optional="yes"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dir="@{srcdir}"
+             dest="${home}/classes/fab-sig"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${fabc}" />
+        <arg value="-sig" />
+        <arg value="-g" />
+        <arg value="-e" />
+        <arg value="-sourcepath"/> <arg value="@{srcdir}" />
+        <arg value="-d" />         <arg value="${home}/classes/fab-sig" />
+        <extra-args />
+        <srcfile />
+
+        <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
+        <globmapper from="*.fab" to="*.class" />
+      </apply>
+    </sequential>
+  </macrodef>
+
+  <!-- fabfilc
+       compile the fabil implementations of the fabric signatures
+  -->
+  <macrodef name="fabfilc">
+    <attribute name="srcdir" />
+    <attribute name="includes" default="**/*.fil" />
+    <attribute name="excludes" default="" />
+    <element name="extra-args" implicit="true" optional="yes"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dir="@{srcdir}"
+             dest="${home}/classes/fab-sig-impl"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${filc}" />
+        <arg value="-sig" />
+        <arg value="-g" />
+        <arg value="-e" />
+        <arg value="-sourcepath"/> <arg value="@{srcdir}" />
+        <arg value="-d" />         <arg value="${home}/classes/fab-sig" />
+        <extra-args />
+        <srcfile />
+
+        <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
+        <globmapper from="*.fil" to="*.class" />
       </apply>
     </sequential>
   </macrodef>
