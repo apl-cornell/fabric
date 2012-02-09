@@ -260,7 +260,6 @@
     <attribute name="excludes" default="" />
     <element name="extra-args" implicit="true" optional="yes"/>
     <sequential>
-      <mkdir dir="${home}/classes/fabric" />
       <apply executable="bash"
              parallel="true"
              failonerror="true"
@@ -275,7 +274,7 @@
         <arg value="-d" />         <arg value="${home}/classes/fabric" />
         <arg value="-sourcepath"/> <arg value="@{srcdir}" />
         <arg value="-classpath" /> <arg value="${home}/classes/fabric" />
-        <arg value="-addsigcp" />  <arg value="${home}/classes/fab-sig" />
+        <arg value="-sigcp" />     <arg value="${home}/classes/fab-sig" />
         <extra-args />
         <srcfile />
 
@@ -338,7 +337,7 @@
         <arg value="-sig" />
         <arg value="-g" />
         <arg value="-sourcepath"/> <arg value="@{srcdir}" />
-        <arg value="-d" />         <arg value="${home}/classes/fab-sig" />
+        <arg value="-d" />         <arg value="${home}/classes/fab-sig-impl" />
         <extra-args />
         <srcfile />
 

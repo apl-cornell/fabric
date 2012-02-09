@@ -30,7 +30,7 @@ public class Snapp extends Delegator
   User       {this; *<-owner; *provider} // 
   createUser
   {            // side effects:
-    {this}     //
+    {this} ⊓   //
     {*<-owner} //
   }
   (
