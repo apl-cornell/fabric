@@ -21,7 +21,7 @@ public class Delegator extends AbstractPrincipal {
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
-  public
+  public native
   String {this}
   name
   { // side effects:

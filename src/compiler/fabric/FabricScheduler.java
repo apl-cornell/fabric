@@ -197,6 +197,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
           List<Goal> l = new ArrayList<Goal>();
           l.add(TypeChecked(job));
           l.add(ExceptionsChecked(job));
+          l.add(NativeConstructorsAdded(job));
           return l;
         }
       });

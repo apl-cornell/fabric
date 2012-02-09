@@ -39,7 +39,11 @@
   -->
 
   <target name="build-sig">
-    <fabsigc srcdir="${home}/src/fabric/signatures" />
+    <fabsigc srcdir="${home}/src/fabric/signatures">
+      <!--
+      <arg value="-rdebug" />
+      -->
+    </fabsigc>
   </target>
 
   <target name="build-fabil">
