@@ -274,7 +274,8 @@
         <arg value="-d" />         <arg value="${home}/classes/fabric" />
         <arg value="-sourcepath"/> <arg value="@{srcdir}" />
         <arg value="-classpath" /> <arg value="${home}/classes/fabric" />
-        <arg value="-sigcp" />     <arg value="${home}/classes/fab-sig" />
+        <arg value="-addsigcp" />     <arg value="${home}/classes/fab-sig" />
+        <arg value="-addfilsigcp" />     <arg value="${home}/classes/fab-sig-impl" />
         <extra-args />
         <srcfile />
 
