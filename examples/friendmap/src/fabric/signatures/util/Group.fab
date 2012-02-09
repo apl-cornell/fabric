@@ -30,7 +30,11 @@ where
    * Create a new group with the given name and the default maximum size.
    */
   public native
-  Group {this}
+  Group
+  {           // side effects:
+    {this} ⊓  // fields are updated
+    {*→store} // objects are created at store
+  }
   (
     final Store  {this} store,
     final String {this} name
@@ -43,7 +47,11 @@ where
    * Create a new group with the given name and maximum size.
    */
   public native
-  Group {this}
+  Group
+  {           // side effects:
+    {this} ⊓  // fields are updated
+    {*→store} // objects are created at store
+  }
   (
     final Store  {this} store,
     final String {this} name,
@@ -65,7 +73,11 @@ where
    */
   public native
   void
-  add {*←groupOwner}
+  add
+  {                  // side effects:
+    {*←groupOwner} ⊓ // members set is updated
+    {*→}             // TODO: this is fetched
+  }
   (
     Principal{*←groupOwner} p
   )
@@ -79,7 +91,11 @@ where
    */
   public native
   void
-  remove {*←groupOwner}
+  remove
+  {                  // side effects:
+    {*←groupOwner} ⊓ // members set is updated
+    {*→}             // TODO: this is fetched
+  }
   (
     Principal{*←groupOwner} p
   );

@@ -2,23 +2,26 @@ package util;
 
 public class Meet extends AbstractPrincipal {
 
-  protected final Principal{this}@{this->} left;
-  protected final Principal{this}@{this->} right;
-
   public native
   Meet
   (
+    Store     {this} store,
     Principal {this} left,
     Principal {this} right
-  );
+  )
+  where
+    store actsfor (left,right);
 
   public native
   Meet
   (
+    Store     {this} store,
     String    {this} name,
     Principal {this} left,
     Principal {this} right
-  );
+  )
+  where
+    store actsfor (left,right);
 
   //////////////////////////////////////////////////////////////////////////////
   // Principal methods                                                        //
