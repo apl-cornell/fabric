@@ -337,7 +337,6 @@
         <arg value="${filc}" />
         <arg value="-sig" />
         <arg value="-g" />
-        <arg value="-e" />
         <arg value="-sourcepath"/> <arg value="@{srcdir}" />
         <arg value="-d" />         <arg value="${home}/classes/fab-sig" />
         <extra-args />
