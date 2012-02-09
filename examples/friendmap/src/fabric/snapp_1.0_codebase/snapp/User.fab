@@ -13,27 +13,29 @@ import util.AssertionFailedError;
  * network as well as the user who created them.
  *
  */
-public class User extends Meet
+public class User
 where
   Snapp.provider <= provider, provider <= Snapp.provider,
   Group.provider <= provider
 {
+  /** The principal corresponding to this user */
+  public final principal   {this}           @{*→p} p;
 
-  /** The label {this←;this→this.locationInfo}.  Cannot be set as initializer due to jif bug. */
-  public final label {this}@{*->this} locationLabel;
-
-  /** The user's location, only readable by members of the locationInfo group. */
-  public Location[{*→this}]{*locationLabel}@{*→this} location      = null;
+  /** The label {p←;p→locationInfo} */
+  // Cannot be set as initializer due to jif bug.
+  public final label       {this}           @{*→p} locationLabel;
 
   /** The user's friends. non-null. */
-  public final Group[this] {this}@{*->this} friends;
+  public final Group[p]    {this}           @{*→p} friends;
 
   /** The social network that can act for this account. non-null. */
-  public final Snapp {this}@{*->this} network;
+  public final Snapp       {this}           @{*→p} network;
 
   /** The group containing anyone who can see the user's location. non-null. */
-  public final Group[this] {this}@{*->this} locationInfo;
+  public final Group[p]    {this}           @{*→p} locationInfo;
 
+  /** The user's location, only readable by members of the locationInfo group. */
+  public Location[{*→p}]   {*locationLabel} @{*→p} location = null;
 
 
   /**
@@ -49,23 +51,29 @@ where
     Snapp     {this} network,
     Store     {this} store
   )
+  throws
+  (
+    NullPointerException {network}
+  )
   where
     provider <= {this}
   {
+    if (network == null)
+      throw new NullPointerException();
+
+    this.p       = new Meet@store(store, name, network, owner);
     this.network = network;
 
-    this.locationInfo  = new Group[this]@store(store, name + "'s location readers");
-    this.friends       = new Group[this]@store(store, name + "'s friends");
-    this.locationLabel = new label {this←;locationInfo→}@store;
-
-    super(name, owner, network);
+    this.locationInfo  = new Group[p]@store(store, name + "'s location readers");
+    this.friends       = new Group[p]@store(store, name + "'s friends");
+    this.locationLabel = new label {p←;locationInfo→}@store;
   }
 
   public
   void
   setLocation {*locationLabel}
   (
-    Location[{*→this}]{*locationLabel} loc
+    Location[{*→p}]{*locationLabel} loc
   )
   where
     provider <= {*locationLabel}
