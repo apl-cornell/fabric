@@ -14,9 +14,16 @@ Util
 		- implements Principal
 		- delegates to single "owner"
 
-		- constructor
-		- name
-		- delegatesTo
+		- constructor(owner)
+			owner  → fields
+			fields → store
+
+		- name()
+			fields    → result
+
+		- delegatesTo(other)
+			fields ⇝ result
+			other  ⇝ result
 
 		- equals
 		- isAuthorized
@@ -26,25 +33,50 @@ Util
 		- implements Principal
 		- delegates to two delegatees
 
-		- constructor
-		- name
-		- delegatesTo
+		- constructor (name, p,q)
+			p      → fields
+			q      → fields
+			name   → fields
+			fields → store
+
+		- name()
+			fields → result
+
+		- delegatesTo(other)
+			fields → result
+			other  → result
 
 		- equals
 		- isAuthorized
 		- findProof(Up/Down)To
 
-
 	Group[principal owner]
 		- extends Delegator
 		- contains a collection of delegatees, with integrity {owner←}
 
-		- constructor(s)
-		- name
-		- add
-		- remove
-		- delegatesTo
+		- constructor(name, owner)
+			pc      → members
+			name    → fields
+			owner   → fields
+			members → store
+			fields  → store
+
+		- name()
+			fields → result
+
+		- add(p)
+			p → members
+
+		- remove(p)
+			p → members
+
+		- delegatesTo(p)
+			fields  → result
+			members → result
+			p       ⇝ result
+
 		- iterator
+			pc      ⇝ result
 
 		- equals
 		- isAuthorized
@@ -54,12 +86,23 @@ Util
 		- iterates over Group
 
 		- hasNext
+			group members ⇝ result
+			fields        → result
+			fields        ⇝ fields
+
 		- next
+			group members → result
+			fields        ⇝ result
+			fields        ⇝ fields
 
 	Util
 		Jif status:    done
 		Fabric status: done (but different style from Jif)
-		- copyArray method
+		- copyArray(array, store)
+			array           ⇝ result
+			array contents  ⇝ result contents
+			result          ⇝ store
+			result contents ⇝ store
 
 Snapp
 	Snapp
