@@ -7,8 +7,13 @@ import util.AssertionFailedError;
  * An instance of Snapp corresponds to an instance of the Snapp social network.
  */
 public class Snapp extends Delegator 
-  where provider <= User.provider, User.provider <= provider
+where
+  provider <= User.provider, User.provider <= provider,
+  util.Group.provider <= provider // goes without saying, since Group.provider is bottom
 {
+
+  /* The store this object is stored on.  Used for allocating Users. */
+  protected final Store {this}@{*->this} store;
 
   /**
    * Create a new Snapp, operated by owner.
@@ -17,12 +22,14 @@ public class Snapp extends Delegator
   Snapp {this}
   (
     String    {this} name,
-    principal {this} owner
+    principal {this} owner,
+    Store     {this} store
   )
   where
     provider <= {this}
   {
-    super(name, owner);
+  	this.store = store;
+    super(store, name, owner);
   }
 
   // TODO: document/fix labels
@@ -43,9 +50,8 @@ public class Snapp extends Delegator
       // Note: this should always be equal to this.store; it is only here so that
       // we can explicitly annotate object creations (since the checks for implicit
       // store parameters are not implemented in the compiler).
-      final Store store = $getStore();
       try { return new User@store(name, owner, this, store); }
-      catch (final NullPointerException e) { throw new AssertionFailedError("UserV1 constructor succeeds unless network is null"); }
+      catch (final NullPointerException e) { throw new AssertionFailedError("User constructor succeeds unless network is null"); }
   }
 }
 
