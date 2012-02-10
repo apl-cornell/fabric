@@ -25,14 +25,14 @@ where
   //////////////////////////////////////////////////////////////////////////////
 
   /** coordinates of map.  non-null. contents fixed at construction time */
-  protected final Box[L,A] {L}@A boundary;
+  protected final Box[L,A] {L}@{A} boundary;
 
   /** dimensions of image. */
-  protected final int  {L}@A width;
-  protected final int  {L}@A height;
+  protected final int  {L}@{A} width;
+  protected final int  {L}@{A} height;
 
   /** packed data. non-null. data.length = this.width * this.height. */
-  protected final char {L}[]{L}@A data;
+  protected final char {L}[]{L}@{A} data;
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructor                                                       //

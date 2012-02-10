@@ -17,8 +17,8 @@ where
        Box.provider <= provider, provider <=      Box.provider
 {
 
-  private char {_→;*←this}@{*→this.owner} background;
-  final public Store{this}@{*→this.owner} store;
+  private char {_→;*←this}@{*→this.store} background;
+  final public Store{this}@{*→this.store} store;
 
 
   /**
@@ -27,7 +27,7 @@ where
   public
   MapServer
   {               // side effects:
-    this ⊓        // TODO
+    {this} ⊓      // TODO
     {_→; *←store} // TODO
   }
   (
@@ -39,7 +39,9 @@ where
     provider <= {this},
     provider <= {_→;*←store}
   {
-    super(name, store);
+    super(store, name, store);
+
+    this.store = store;
 
     if (store actsfor this)
       this.background = background;
@@ -58,14 +60,14 @@ where
    *     if boundary is null.
    */
   public
-  MapImage[l,{*→owner}] {*l}
+  MapImage[l,{*→store}] {*l}
                        // resulting map will be protected at l
-                       // and stored at owner
+                       // and stored at store
   createMap
   {            // side effects:
     {*l}     ⊓ // result is updated
     {*a}     ⊓ // boundary is accessed
-    {*→owner}  // map is created
+    {*→store}  // map is created
   }
   (
     label l,
@@ -77,8 +79,8 @@ where
     NullPointerException{*provider;boundary}
   )
   where
-    // TODO; owner ≽ l@owner; map is created at owner
-    {*←owner} <= l, l <= {*→owner}, {*→owner} <= {*→owner},
+    // TODO; store ≽ l@store; map is created at store
+    {*←store} <= l, l <= {*→store}, {*→store} <= {*→store},
 
     // result taints
     {*provider;*←this;boundary;l} <= l,
@@ -88,17 +90,17 @@ where
   {
     if (boundary == null) throw new NullPointerException();
 
-    if (owner actsfor this) {
+    if (store actsfor this) {
 
-    final char{*l}[]{*l} data = new char/* @this.owner */[100];
+    final char{*l}[]{*l} data = new char/* @this.store */[100];
     for (int i = 0; i < data.length; i++)
       data[i] = background;
 
-    if (!(owner instanceof Store)) throw new AssertionFailedError("MapServer's owner is a store");
-    final Store store = (Store) owner;
+    if (!(store instanceof Store)) throw new AssertionFailedError("MapServer's store is a store");
+    final Store store = (Store) store;
 
     try {
-      return new MapImage[l,{*→owner}]/* @this.owner */(boundary, l, a,
+      return new MapImage[l,{*→store}]/* @this.store */(boundary, l, a,
                                                        10, 10, data,
                                                        store);
     } catch (final ArrayIndexOutOfBoundsException e) {
@@ -107,7 +109,7 @@ where
       throw new AssertionFailedError("boundary and data are non-null");
     }
 
-    } else throw new AssertionFailedError("delegators's owner actsfor delegatee");
+    } else throw new AssertionFailedError("delegators's store actsfor delegatee");
   }
 }
 
