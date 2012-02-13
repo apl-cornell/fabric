@@ -8,16 +8,16 @@ package snapp;
 public class Location[label A]
 where provider <= A
 {
-  public final float{this}@{A} x;
-  public final float{this}@{A} y;
+  public final float{A}@{A} x;
+  public final float{A}@{A} y;
 
   public
   Location
   {      // side effects:
-    this // fields are updated
+    A // fields are updated
   }
   (
-    int{this} x, int{this} y
+    int{A} x, int{A} y
   )
   {
     this.x = x;

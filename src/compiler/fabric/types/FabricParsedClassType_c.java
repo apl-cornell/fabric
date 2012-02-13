@@ -251,6 +251,11 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
         try {
           int i = 0;
           
+          // Join the access policy with the begin labels of all methods
+          // we need this because the object needs to be fetched for each method call
+          // and requiring that the begin label of a method is bounded above by
+          // the access label ensures that there are no read channels
+          
           for (JifMethodInstance pi_ : (List<JifMethodInstance>) methods()) {
             if (pi_.flags().isStatic()) continue;
             JifMethodInstance mi = (JifMethodInstance) pi_.copy();

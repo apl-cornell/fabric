@@ -1,7 +1,6 @@
 package snapp;
 
 import util.Group;
-import util.Meet;
 import util.AssertionFailedError;
 
 
@@ -13,13 +12,13 @@ import util.AssertionFailedError;
  * network as well as the user who created them.
  *
  */
-public class User
+public class User[principal p]
 where
   Snapp.provider <= provider, provider <= Snapp.provider,
   Group.provider <= provider
 {
   /** The principal corresponding to this user */
-  public final principal   {this}           @{*→p} p;
+//  public final principal   {this}           @{*→p} p;
 
   /** The label {p←;p→locationInfo} */
   // Cannot be set as initializer due to jif bug.
@@ -49,7 +48,9 @@ where
     String    {this} name,
     principal {this} owner,
     Snapp     {this} network,
-    Store     {this} store
+    Store     {this} store,
+    Group[p]  {this} locationInfo,
+    label	  {this} locationLabel
   )
   throws
   (
@@ -57,21 +58,14 @@ where
   )
   where
     provider <= {this},
-    store actsfor (network,owner)
+    store actsfor (network,owner),
+    network actsfor p
   {
-    if (network == null)
-      throw new NullPointerException();
-
-    this.p       = new Meet@store(store, name, network, owner);
+//    this.p = p;
     this.network = network;
-
-    if (network actsfor p) {
-      this.locationInfo  = new Group[p]@store(store, name + "'s location readers");
-      this.friends       = new Group[p]@store(store, name + "'s friends");
-      this.locationLabel = new label {p←;locationInfo→}@store;
-    }
-    else
-      throw new AssertionFailedError("network ≽ Meet(..., network, owner)");
+    this.locationInfo  = locationInfo;
+    this.friends       = new Group[p]@store(store, name + "'s friends");
+    this.locationLabel = locationLabel;
   }
 
   public
