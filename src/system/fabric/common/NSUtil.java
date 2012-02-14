@@ -331,7 +331,8 @@ public final class NSUtil {
             uris.add(u);
           else {
             File f = new File(dir);
-            uris.add(file.resolve(f.getAbsolutePath() + "/"));
+            String suf = f.isDirectory() ? "/" : "";
+            uris.add(file.resolve(f.getAbsolutePath() + suf));
           }
         }
       }
