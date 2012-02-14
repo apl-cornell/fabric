@@ -8,6 +8,8 @@ package mapserv;
  * @param A the access label of the object
  */
 public class Box [label L, label A]
+where
+  L <= A
 {
 
   //////////////////////////////////////////////////////////////////////////////
@@ -127,6 +129,7 @@ public class Box [label L, label A]
   )
   where
     l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
+    l <= a,                             // access labels must bound update labels
 
     L        <= l, // because this object affects result fields
     provider <= l  // code affects result fields

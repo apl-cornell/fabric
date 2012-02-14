@@ -81,6 +81,7 @@ where
   where
     // TODO; store ≽ l@store; map is created at store
     {*←store} <= l, l <= {*→store}, {*→store} <= {*→store},
+    l <= a, // access label for result must bound update label
 
     // result taints
     {*provider;*←this;boundary;l} <= l,

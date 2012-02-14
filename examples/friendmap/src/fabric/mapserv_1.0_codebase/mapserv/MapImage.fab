@@ -70,6 +70,7 @@ where
   )
   where
     L <= {*→s}, {*←s} <= L, A <= {*→s},    // TODO: s ≽ L@A
+    bdry_update <= bdry_access,            // access labels must bound update labels
 
     {boundary;width;height;data} <= L, // fields are affected by args
     provider                     <= L, // fields are affected by code
@@ -114,6 +115,7 @@ where
   )
   where
     l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
+    l <= a,                             // access labels must bound update labels
 
     {L;*provider} <= l,     // result fields are affected by fields
     {L;*provider} <= {*→s}  // information leaks from fields to object creation.
