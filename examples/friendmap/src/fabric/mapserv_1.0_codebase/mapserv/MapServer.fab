@@ -39,9 +39,9 @@ where
     provider <= {this},
     provider <= {_→;*←store}
   {
-    super(store, name, store);
-
     this.store = store;
+
+    super(store, name, store);
 
     if (store actsfor this)
       this.background = background;
@@ -100,9 +100,9 @@ where
     final Store store = (Store) store;
 
     try {
-      return new MapImage[l,{*→store}]/* @this.store */(boundary, l, a,
+      return new MapImage[l,{*→this.store}]/* @this.store */(boundary, l, a,
                                                        10, 10, data,
-                                                       store);
+                                                       this.store);
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError("10 * 10 = 100");
     } catch (final NullPointerException e) {
