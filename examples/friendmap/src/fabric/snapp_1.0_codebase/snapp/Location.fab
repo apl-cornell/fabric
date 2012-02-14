@@ -9,18 +9,19 @@ package snapp;
  * @param A the access label
  */
 public class Location[label L, label A]
-where provider <= A
+where
+  L <= A // general constraint
 {
-  public final float{A}@{A} x;
-  public final float{A}@{A} y;
+  public float{L}@{A} x;
+  public float{L}@{A} y;
 
   public
   Location
-  {      // side effects:
-    A // fields are updated
+  {   // side effects:
+    L // fields are updated
   }
   (
-    int{A} x, int{A} y
+    int{L} x, int{L} y
   )
   {
     this.x = x;
