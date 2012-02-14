@@ -7,9 +7,9 @@ package mapserv;
  * @param L the update label of the object
  * @param A the access label of the object
  */
-public class Box [label L, label A]
-where
-  L <= A
+public class Box [label L, label A] 
+where 
+	L <= A
 {
 
   //////////////////////////////////////////////////////////////////////////////
@@ -49,8 +49,8 @@ where
   boolean  {L;x;y;*provider} // fields, args, code affect result
   contains {A}               // because fields are accessed
   (
-    float x,
-    float y
+    float{A} x,
+    float{A} y
   )
   {
     return xmin < x && x < xmax
