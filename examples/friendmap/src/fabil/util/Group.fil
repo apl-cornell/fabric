@@ -32,7 +32,7 @@ public class Group extends Delegator
     final String  name
   )
   {
-    util$Delegator$(name, jif$util_Group_groupOwner);
+    util$Delegator$(store, name, jif$util_Group_groupOwner);
     this.members = new Principal[SIZE]@store;
     return this;
   }
@@ -46,7 +46,7 @@ public class Group extends Delegator
     final int     maxSize
   ) throws NegativeArraySizeException
   {
-    util$Delegator$(name, jif$util_Group_groupOwner);
+    util$Delegator$(store, name, jif$util_Group_groupOwner);
     this.members = new Principal[maxSize]@store;
     return this;
   }

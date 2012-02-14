@@ -4,10 +4,12 @@ package util;
  * Convenience principal class the delegates to a single owner.
  */
 public class Delegator extends AbstractPrincipal {
+  protected Store      store;
   protected String     name;
   protected Principal  owner;
 
   public Delegator util$Delegator$(
+    Store      store,
     String     name,
     Principal  owner
   )
@@ -19,6 +21,7 @@ public class Delegator extends AbstractPrincipal {
     this.fabric$lang$security$AbstractPrincipal$(name);
     this.owner = owner;
     this.name  = name;
+    this.store = store;
 
     return this;
   }
