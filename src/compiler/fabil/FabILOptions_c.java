@@ -146,6 +146,9 @@ public class FabILOptions_c extends polyglot.main.Options implements
     } else if (args[index].equals("-addsigcp")) {
       index++;
       addSigcp(args[index++]);
+    } else if (args[index].equals("-addbootcp")) {
+      index++;
+      this.needWorker = NSUtil.processPathString(bootclasspath, args[index++]);
     } else if (args[index].startsWith("-O")) {
       if (args[index].length() == 2) {
         this.optLevel = Integer.MAX_VALUE;
