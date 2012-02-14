@@ -224,6 +224,16 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     return delegate.needWorker() || needWorker;
   }
 
+  @Override
+  public String constructPostCompilerClasspath() {
+    StringBuilder sb = new StringBuilder(super.constructPostCompilerClasspath());
+    for (URI u : bootclasspath()) {
+      sb.append(File.pathSeparator);
+      sb.append(u.getPath());
+    }
+    return sb.toString();
+  }
+
   /**
    * Should source be published to Fabric? Always false in signature or
    * platform modes.
