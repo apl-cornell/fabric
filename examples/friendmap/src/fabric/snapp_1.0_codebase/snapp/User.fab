@@ -11,30 +11,33 @@ import util.AssertionFailedError;
  * in the social network.  Users are principals, and delegate to the social
  * network as well as the user who created them.
  *
+ * Access label: {*→network}
+ * Update label: {_→; p←}
  */
-public class User[principal p]
+public class User[principal owner, principal network]
 where
   Snapp.provider <= provider, provider <= Snapp.provider,
   Group.provider <= provider
 {
   /** The principal corresponding to this user */
-//  public final principal   {this}           @{*→p} p;
+  public final principal   {_→; p←}@{*→network} p;
 
   /** The label {p←;p→locationInfo} */
   // Cannot be set as initializer due to jif bug.
-  public final label       {this}           @{*→p} locationLabel;
+  public final label       {_→; p←}@{*→network} locationLabel;
 
   /** The user's friends. non-null. */
-  public final Group[p]    {this}           @{*→p} friends;
+  public final Group[p]    {_→; p←}@{*→network} friends;
 
   /** The social network that can act for this account. non-null. */
-  public final Snapp       {this}           @{*→p} network;
+  public final Snapp       {_→; p←}@{*→network} network;
 
   /** The group containing anyone who can see the user's location. non-null. */
-  public final Group[p]    {this}           @{*→p} locationInfo;
+  public final Group[p]    {_→; p←}@{*→network} locationInfo;
 
   /** The user's location, only readable by members of the locationInfo group. */
-  public Location[{*→p}]   {*locationLabel} @{*→p} location = null;
+  public Location[locationLabel, {*→network}]
+                           {_→; p←}@{*→network} location = null;
 
 
   /**
@@ -43,11 +46,12 @@ where
    * @throws NullPointerException
    *         if network is null
    */
-  User {this}
+  User
+  {                        // side effects
+    {_→; (network,owner)←} // fields are set
+  }
   (
     String    {this} name,
-    principal {this} owner,
-    Snapp     {this} network,
     Store     {this} store,
     Group[p]  {this} locationInfo,
     label	  {this} locationLabel
@@ -66,18 +70,6 @@ where
     this.locationInfo  = locationInfo;
     this.friends       = new Group[p]@store(store, name + "'s friends");
     this.locationLabel = locationLabel;
-  }
-
-  public
-  void
-  setLocation {*locationLabel}
-  (
-    Location[{*→p}]{*locationLabel} loc
-  )
-  where
-    provider <= {*locationLabel}
-  {
-    this.location = loc;
   }
 }
 

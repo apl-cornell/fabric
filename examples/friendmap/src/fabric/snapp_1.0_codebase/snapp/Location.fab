@@ -4,8 +4,11 @@ package snapp;
 
 /**
  * A point on the plane.
+ *
+ * @param L the update label
+ * @param A the access label
  */
-public class Location[label A]
+public class Location[label L, label A]
 where provider <= A
 {
   public final float{A}@{A} x;
