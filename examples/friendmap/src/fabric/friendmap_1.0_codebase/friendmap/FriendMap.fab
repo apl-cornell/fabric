@@ -73,27 +73,24 @@ where
   void
   viewMap
   {                    // side effects:
-    {*→user}         ⊓ // information is output to user
+    {*→owner}        ⊓ // information is output to owner
     {*→service}      ⊓ // map service is contacted
     {*→user.friends}   // user's friends are fetched
   }
   (
-    User  {*l} user,
-    label {*l} l
-  )
-  throws
-  (
-    NullPointerException{user}
+    User[owner,n] user,
+    principal     owner,
+    principal     n
   )
   where
     // the map will be output on standard out
-    worker$ actsfor user,
+    worker$ actsfor owner,
 
     // these affect the fetch and resulting map
-    {*l; *provider; *MapServer.provider} <= {*→user},
-    {*l; *provider; *MapServer.provider} <= {*→service}
+    {*provider; *MapServer.provider} <= {*→owner},
+    {*provider; *MapServer.provider} <= {*→service}
   {
-    printMap(user, new label {*→user});
+    printMap(user, owner, n, new label {*→owner});
   }
 
   /**
@@ -112,24 +109,26 @@ where
     {*→service}        // map is fetched
   }
   (
-    final User {*l} user,
-    label      {*l} l
+    final User[owner,n] user,
+    final principal     owner,
+    final principal     n
   )
   throws
   (
     NullPointerException {user}
   )
   where
-    // TODO: comments
-    worker$ actsfor user,
-    user        actsfor user.friends,
-    {*l; *provider; *MapServer.provider} <= {*→user.friends},
-    {*l; *provider; *MapServer.provider} <= {*→service}
+    worker$ actsfor owner,
+    owner   actsfor user.friends,
+
+    // these affect the fetch and resulting map.
+    {*provider; *MapServer.provider} <= {*→user.friends},
+    {*provider; *MapServer.provider} <= {*→service}
   {
     if (user == null)
       throw new NullPointerException();
 
-    printMap(user, new label {*→user.friends});
+    printMap(user, owner, n, new label {*→user.friends});
   }
 
 
@@ -150,16 +149,18 @@ where
     {*→user.friends}   // user's friends are fetched
   }
   (
-    final User   user,
-    final label  lbl
+    final User[owner,n] user,
+    final principal     owner,
+    final principal     n,
+    final label         lbl
   )
   throws
   (
     NullPointerException {user}
   )
   where
-    {*←service; *←user} <= lbl,         // because the service and the user influence the map.
-    lbl                 <= {*→worker$}, // because data will be output to the system user
+    {*←service; *←owner} <= lbl,         // because the service and the user influence the map.
+    lbl                  <= {*→worker$}, // because data will be output to the system user
 
     // these components affect the fetches and constructed map 
     {user; lbl; *provider; *MapServer.provider} <= {*lbl},
@@ -171,7 +172,7 @@ where
 
     final Store localStore = worker$.getLocalStore();
 
-    MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user);
+    MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n);
     PrintStream[lbl] out = System.stdout(lbl);
 
     if (result == null)                                             { throw new AssertionFailedError("createMap() returns a non-null value."); }
@@ -197,7 +198,9 @@ where
   (
     final label  l,
     final Store  s,
-    final User   user
+    final User[o,n] user,
+    final principal o,
+    final principal n
   )
   throws
   (
@@ -206,7 +209,7 @@ where
   where
     {*←s} <= l, l <= {*→s}, {*→s} <= {*→s}, // TODO: s ≽ l@{s→}: result created at s
     {*←service} <= l, // the result is tainted by the service
-    {*←user}    <= l, // the result is tainted by the user
+    {*←user.p}  <= l, // the result is tainted by the user
 
     // the arguments and code can affect the fetches and the return value
     {user; l; s; *provider; *MapServer.provider} <= {*l},
@@ -237,12 +240,12 @@ where
       Principal next;
       try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");}
 
-      if (next instanceof UserWrapper) {
-        final UserWrapper w = (UserWrapper) next;
-        final principal   o = w.userOwner;
-        final principal   n = w.userNetwork;
+      if (next instanceof UserWrapper[{*→user.friends}]) {
+        final UserWrapper[{*→user.friends}] fw = (UserWrapper[{*→user.friends}]) next;
+        final principal                     fo = fw.userOwner;
+        final principal                     fn = fw.userNetwork;
 
-        final User[o,n] friend = w.user;
+        final User[fo,fn] friend = fw.user;
 
         // if the friend doesn't mind his location leaking to the map service,
         // then we expand the bounding box to contain him
@@ -301,19 +304,19 @@ where
     while (j.hasNext()) {
       Principal next;
       try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("if j.hasNext() then j.next() should return normally."); }
-      if (next instanceof UserWrapper) {
-        final UserWrapper w = (UserWrapper) next;
-        final principal   o = w.userOwner;
-        final principal   n = w.userNetwork;
+      if (next instanceof UserWrapper[{*→user.friends}]) {
+        final UserWrapper[{*→user.friends}] fw = (UserWrapper[{*→user.friends}]) next;
+        final principal                     fo = fw.userOwner;
+        final principal                     fn = fw.userNetwork;
 
-        final User[o,n]   friend = w.user;
+        final User[fo,fn]   friend = fw.user;
 
         // add friend to the map if possible
         if (friend.locationLabel <= l) {
-          final Location loc = friend.location;
+          final Location[friend.locationLabel, {*→fn}] loc = friend.location;
           if (loc != null) {
             if (annotated_boundary.contains(loc.x, loc.y)) {
-              try { addPin (annotated, l, new label {*→s}, loc, friend); }
+              try { addPin (annotated, l, new label {*→s}, loc, friend.locationLabel, new label {*→fn}, friend, fo, fn); }
               catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
               catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
             }
@@ -344,8 +347,12 @@ where
     final MapImage[map_update,map_access] map,
     final label    map_update,
     final label    map_access,
-    final Location location,
-    final User     friend
+    final Location[loc_update,loc_access] location,
+    final label    loc_update,
+    final label    loc_access,
+    final User[o,n] friend,
+    final principal o,
+    final principal n
   )
   :{*provider;*MapImage.provider;map;*map_update;friend;location}
   throws

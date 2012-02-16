@@ -20,7 +20,7 @@ where
   provider               <= {*←groupOwner},
   GroupIterator.provider <= {*←groupOwner}
 {
-  // TODO: access label
+  // TODO: access label: {*→this}
 
   //////////////////////////////////////////////////////////////////////////////
   // Group constructors                                                       //
