@@ -34,6 +34,12 @@ extends Meet
     final principal userNetwork,
     final User[userOwner, userNetwork] user
   )
+  where
+    // code and params affect fields and accesses
+    {*provider; store; userOwner; userNetwork; user} <= {this ⊓ A},
+
+    // establish dynamic invariant
+    store actsfor (userOwner, userNetwork)
   {
     this.userOwner   = userOwner;
     this.userNetwork = userNetwork;

@@ -4,8 +4,10 @@ public class Meet extends AbstractPrincipal {
 
   protected Principal left;
   protected Principal right;
+  protected Store     store;
 
-  public Meet Meet$(
+  public Meet util$Meet$(
+    Store     store,
     String    name,
     Principal left,
     Principal right
@@ -14,7 +16,17 @@ public class Meet extends AbstractPrincipal {
     fabric$lang$security$AbstractPrincipal$(name);
     this.left  = left;
     this.right = right;
+    this.store = store;
     return this;
+  }
+
+  public Meet util$Meet$(
+    Store store,
+    Principal left,
+    Principal right
+  )
+  {
+    return util$Meet$(store, "(" + left.name() + ") meet (" + right.name() + ")", left, right);
   }
 
   public Meet() { super(); }

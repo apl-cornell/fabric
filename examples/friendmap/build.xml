@@ -70,11 +70,11 @@
   -->
 
   <target name="build-local-snapp" depends="build-util">
-    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase" includes="**/UserWrapper.fab">
+    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase">
       <!--
       <arg value="-report" /> <arg value="debug=1" />
-      -->
       <arg value="-rdebug" />
+      -->
     </fabc-local>
   </target>
 
