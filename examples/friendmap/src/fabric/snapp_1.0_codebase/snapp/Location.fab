@@ -10,15 +10,21 @@ package snapp;
  */
 public class Location[label L, label A]
 where
-  L <= A // general constraint
+  // general constraint: update label ⊑ access label
+  L <= A,
+
+  // code can affect fields and field accesses
+  provider <= L,
+  provider <= A
 {
   public float{L}@{A} x;
   public float{L}@{A} y;
 
   public
   Location
-  {   // side effects:
-    L // fields are updated
+  {     // side effects:
+    L ⊓ // fields are updated
+    A   // this is accessed
   }
   (
     int{L} x, int{L} y

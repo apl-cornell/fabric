@@ -1,8 +1,12 @@
+package snapp;
+
+import util.Meet;
+
 
 /**
  * This class is a wrapper for Users, allowing them to be stored in collections
  * of Principals.  It contains references to the parameters of the User.
- * Principal methods are delegated to user.p.  Usage:
+ * Principal methods are delegated to (network,owner).  Usage:
  *
  * <pre>
  * Wrapper w = ...
@@ -12,7 +16,7 @@
  */
 
 public class UserWrapper[label A]
-  implements Principal
+extends Meet
 {
   public final principal                    {this}@{A} userOwner;
   public final principal                    {this}@{A} userNetwork;
@@ -25,6 +29,7 @@ public class UserWrapper[label A]
     {A}      // object is accessed
   }
   (
+    final Store     store,
     final principal userOwner,
     final principal userNetwork,
     final User[userOwner, userNetwork] user
@@ -33,67 +38,9 @@ public class UserWrapper[label A]
     this.userOwner   = userOwner;
     this.userNetwork = userNetwork;
     this.user        = user;
-  }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Principal methods : delegate to this.user.p                              //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public
-  String {this}
-  name
-  { // side effects:
-    // TODO
+    super(store, userOwner, userNetwork);
   }
-  (
-  )
-  {
-    return this.user.p.name();
-  }
-
-
-  public
-  boolean {this;p;this←}
-  delegatesTo
-  { // side effects:
-    // TODO
-  }
-  (
-    principal p
-  )
-  {
-    return this.user.p.delegatesTo(p);
-  }
-
-
-  public
-  boolean
-  equals
-  {
-    _→
-  }
-  (
-    principal p
-  )
-  {
-    return this.user.p.equals(p);
-  }
-
-  public
-  ActsForProof[{s→}] {this; p; this←; p←;s}
-  findProofUpto
-  {          // side effects:
-    _→;this← // TODO
-  }
-  (
-    Store s,
-    Principal p,
-    java.lang.Object searchState
-  )
-  {
-    return this.user.p.findProofUpto(s,p,searchState);
-  }
-
 }
 
 
