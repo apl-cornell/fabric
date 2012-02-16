@@ -7,8 +7,11 @@ import fabric.runtime.Runtime;
 import mapserv.MapServer;
 import mapserv.MapImage;
 import mapserv.Box;
+
 import snapp.User;
 import snapp.Location;
+import snapp.UserWrapper;
+
 import util.GroupIterator;
 import util.Delegator;
 import util.AssertionFailedError;
@@ -75,8 +78,8 @@ where
     {*→user.friends}   // user's friends are fetched
   }
   (
-    User{*l} user,
-    label{*l} l
+    User  {*l} user,
+    label {*l} l
   )
   throws
   (
@@ -155,8 +158,8 @@ where
     NullPointerException {user}
   )
   where
-    {*←service; *←user} <= lbl,            // because the service and the user influence the map.
-    lbl                 <= {*→System.user}, // because data will be output to the system user
+    {*←service; *←user} <= lbl,         // because the service and the user influence the map.
+    lbl                 <= {*→worker$}, // because data will be output to the system user
 
     // these components affect the fetches and constructed map 
     {user; lbl; *provider; *MapServer.provider} <= {*lbl},
@@ -227,15 +230,19 @@ where
     // compute the bounding box
     Box[fetchLabel, {*→s}] boundary = new Box[fetchLabel, {*→s}]@fetchStore(0,0,0,0);
 
-    final GroupIterator[user, fetchLabel] i = user.friends.iterator(localStore, fetchLabel);
+    final GroupIterator[user.p, fetchLabel] i = user.friends.iterator(localStore, fetchLabel);
     if (i == null)
       throw new AssertionFailedError("Group.iterator() should return a non-null value");
     while (i.hasNext()) {
       Principal next;
       try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");}
 
-      if (next instanceof User) {
-        final User friend = (User) next;
+      if (next instanceof UserWrapper) {
+        final UserWrapper w = (UserWrapper) next;
+        final principal   o = w.userOwner;
+        final principal   n = w.userNetwork;
+
+        final User[o,n] friend = w.user;
 
         // if the friend doesn't mind his location leaking to the map service,
         // then we expand the bounding box to contain him
@@ -289,13 +296,17 @@ where
     if (annotated_boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
 
     // annotate map
-    final GroupIterator[user, l] j = user.friends.iterator(localStore, l);
+    final GroupIterator[user.p, l] j = user.friends.iterator(localStore, l);
     if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
     while (j.hasNext()) {
       Principal next;
       try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("if j.hasNext() then j.next() should return normally."); }
-      if (next instanceof User) {
-        final User friend = (User) next;
+      if (next instanceof UserWrapper) {
+        final UserWrapper w = (UserWrapper) next;
+        final principal   o = w.userOwner;
+        final principal   n = w.userNetwork;
+
+        final User[o,n]   friend = w.user;
 
         // add friend to the map if possible
         if (friend.locationLabel <= l) {
@@ -334,7 +345,7 @@ where
     final label    map_update,
     final label    map_access,
     final Location location,
-    final UserV1   friend
+    final User     friend
   )
   :{*provider;*MapImage.provider;map;*map_update;friend;location}
   throws
