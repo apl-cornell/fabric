@@ -31,6 +31,9 @@ where
   MapServer.provider <= MapImage.provider, MapImage.provider <= MapServer.provider,
   MapServer.provider <= Box.provider,      Box.provider      <= MapServer.provider,
 
+  // code is public
+  provider <= {_→},
+
   util.Group.provider         <= {*←}, {_→} <= util.Group.provider,
   util.GroupIterator.provider <= {*←}, {_→} <= util.GroupIterator.provider
 {
@@ -311,14 +314,14 @@ where
    *              the store to create the result on
    */
   protected
-  Box[l,{*→s}]
+  Box[l,{*→s}] {*l}
   createBoundingBox
   {         // side effects:
     {A}   ⊓ // this is fetched
     {*l}  ⊓ // box is updated
     {*→s} ⊓ // box is created
-    {*→n}   // user is fetched
-            // TODO: user's friends?
+    {*→n} ⊓ // user is fetched
+    {_→_}   // user's friends are fetched (and they are principals)
   }
   (
     final User[o,n] user,
@@ -338,15 +341,21 @@ where
     {_→; *←user.p} <= l, // user.friends.members
 
     // result box affected by code
-    {*Box.provider; *provider} <= l
+    {*Box.provider; *provider} <= l,
 
-    // accesses to user's friends...?
+    // result box affected by label and store
+    {l; s} <= l,
+
+    // accesses to user's friends affected by the code and the user
+    {*provider; user} <= {*→n},
+    {*provider; user} <= {_→_}
   {
     // compute the bounding box
     Box[l, {*→s}] boundary = new Box[l, {*→s}]@s(0,0,0,0);
 
     final Store localStore = worker$.getLocalStore();
-    final GroupIterator[user.p, l] i = user.friends.iterator(localStore, l);
+    final label pub = new label {_→};
+    final GroupIterator[user.p, pub] i = user.friends.iterator(localStore, pub);
     if (i == null)
       throw new AssertionFailedError("Group.iterator() should return a non-null value");
     while (i.hasNext()) {
@@ -360,13 +369,16 @@ where
 
         final User[fo,fn] friend = fw.user;
 
+        // if we don't mind leaking information to the friend's network, and
         // if the friend doesn't mind his location leaking to the map service,
         // then we expand the bounding box to contain him
-        if (friend.locationLabel <= l) {
-          final Location loc = friend.location;
-          if (loc != null) {
-            try { boundary.expand(loc.x, loc.y); }
-            catch (final NullPointerException e) { throw new AssertionFailedError("boundary is non-null."); }
+        if (l <= new label {*→fn}) {
+          if (new label {_→; *←fo,fn} <= l && friend.locationLabel <= l) {
+            final Location loc = friend.location;
+            if (loc != null) {
+              try { boundary.expand(loc.x, loc.y); }
+              catch (final NullPointerException e) { throw new AssertionFailedError("boundary is non-null."); }
+            }
           }
         }
 
