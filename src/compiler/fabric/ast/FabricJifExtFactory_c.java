@@ -6,16 +6,20 @@ import jif.extension.JifBinaryExt;
 import jif.extension.JifCastExt;
 import jif.extension.JifConstructorDeclExt;
 import jif.extension.JifFieldDeclExt_c;
+import jif.extension.JifInstanceofExt;
 import jif.extension.JifLabelExprExt;
 import jif.extension.JifSourceFileExt;
 import jif.translate.FieldToJavaExt_c;
+import jif.translate.InstanceOfToJavaExt_c;
 import polyglot.ast.Ext;
 import fabric.extension.AbortJifExt_c;
 import fabric.extension.AtomicJifExt_c;
 import fabric.extension.CallJifExt_c;
 import fabric.extension.ClassBodyJifExt_c;
+import fabric.extension.FabricCastExt;
 import fabric.extension.FabricClassDeclExt;
 import fabric.extension.FabricFieldExt;
+import fabric.extension.FabricInstanceofExt;
 import fabric.extension.MethodDeclJifExt;
 import fabric.extension.NewJifExt_c;
 import fabric.extension.RemoteWorkerGetterJifExt_c;
@@ -70,8 +74,8 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   }
   
   @Override
-  public Ext extCastImpl() {
-    return new JifCastExt(new CastToFabilExt_c());
+  protected Ext extCastImpl() {
+    return new FabricCastExt(new CastToFabilExt_c());
   }
   
   @Override
@@ -181,5 +185,11 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   public Ext extCodebaseDecl() {
     return new Jif_c(new CodebaseDeclToFabilExt_c());
   }
+  
+  @Override
+  protected Ext extInstanceofImpl() {
+    return new FabricInstanceofExt(new InstanceOfToJavaExt_c());
+}
+  
   
 }

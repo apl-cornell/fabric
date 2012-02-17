@@ -1,0 +1,14 @@
+public class Access06 {
+    final Store{this}@{⊤→this.store} store;
+
+    Access06(Store store) {
+        this.store = store;
+    }
+    
+    public void foo() {
+        int x = 0;
+        if (store instanceof Store) {
+            x = 1;
+        }
+    }
+}
