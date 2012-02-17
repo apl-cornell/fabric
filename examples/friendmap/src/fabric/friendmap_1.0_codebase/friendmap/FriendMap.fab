@@ -60,126 +60,125 @@ where
     this.service = service;
   }
 
-
-  /**
-   * prints a map of the user's friends, visible to the user
-   *
-   * @throws NullPointerException
-   *         if user is null.
-   * @throws SecurityException
-   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
-   */
-  public
-  void
-  viewMap
-  {                    // side effects:
-    {*→owner}        ⊓ // information is output to owner
-    {*→service}      ⊓ // map service is contacted
-    {*→user.friends}   // user's friends are fetched
-  }
-  (
-    User[owner,n] user,
-    principal     owner,
-    principal     n
-  )
-  where
-    // the map will be output on standard out
-    worker$ actsfor owner,
-
-    // these affect the fetch and resulting map
-    {*provider; *MapServer.provider} <= {*→owner},
-    {*provider; *MapServer.provider} <= {*→service}
-  {
-    printMap(user, owner, n, new label {*→owner});
-  }
-
-  /**
-   * prints a map of the user's friends, visible to the user's friends
-   *
-   * @throws NullPointerException
-   *         if user is null.
-   * @throws SecurityException
-   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
-   */
-  public
-  void
-  postMap
-  {                    // side effects:
-    {*→user.friends} ⊓ // user's wall is updated; user's friends are fetched
-    {*→service}        // map is fetched
-  }
-  (
-    final User[owner,n] user,
-    final principal     owner,
-    final principal     n
-  )
-  throws
-  (
-    NullPointerException {user}
-  )
-  where
-    worker$ actsfor owner,
-    owner   actsfor user.friends,
-
-    // these affect the fetch and resulting map.
-    {*provider; *MapServer.provider} <= {*→user.friends},
-    {*provider; *MapServer.provider} <= {*→service}
-  {
-    if (user == null)
-      throw new NullPointerException();
-
-    printMap(user, owner, n, new label {*→user.friends});
-  }
-
-
-  /**
-   * Helper method that gets the map and prints it out.
-   *
-   * @throws NullPointerException
-   *         if user is null.
-   * @throws SecurityException
-   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
-   */
-  private
-  void
-  printMap
-  {                    // side effects
-    {*lbl}           ⊓ // output on lbl channel
-    {*→service}      ⊓ // map service is contacted
-    {*→user.friends}   // user's friends are fetched
-  }
-  (
-    final User[owner,n] user,
-    final principal     owner,
-    final principal     n,
-    final label         lbl
-  )
-  throws
-  (
-    NullPointerException {user}
-  )
-  where
-    {*←service; *←owner} <= lbl,         // because the service and the user influence the map.
-    lbl                  <= {*→worker$}, // because data will be output to the system user
-
-    // these components affect the fetches and constructed map 
-    {user; lbl; *provider; *MapServer.provider} <= {*lbl},
-    {user; lbl; *provider; *MapServer.provider} <= {*→service},
-    {user; lbl; *provider; *MapServer.provider} <= {*→user.friends} // TODO: this seems wrong.
-  {
-    if (user == null)
-      throw new NullPointerException();
-
-    final Store localStore = worker$.getLocalStore();
-
-    MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n);
-    PrintStream[lbl] out = System.stdout(lbl);
-
-    if (result == null)                                             { throw new AssertionFailedError("createMap() returns a non-null value."); }
-    try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("System.stdout must return a non-null value"); }
-  }
-
-
+//   /**
+//    * prints a map of the user's friends, visible to the user
+//    *
+//    * @throws NullPointerException
+//    *         if user is null.
+//    * @throws SecurityException
+//    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+//    */
+//   public
+//   void
+//   viewMap
+//   {                    // side effects:
+//     {*→owner}        ⊓ // information is output to owner
+//     {*→service}      ⊓ // map service is contacted
+//     {*→user.friends}   // user's friends are fetched
+//   }
+//   (
+//     User[owner,n] user,
+//     principal     owner,
+//     principal     n
+//   )
+//   where
+//     // the map will be output on standard out
+//     worker$ actsfor owner,
+// 
+//     // these affect the fetch and resulting map
+//     {*provider; *MapServer.provider} <= {*→owner},
+//     {*provider; *MapServer.provider} <= {*→service}
+//   {
+//     printMap(user, owner, n, new label {*→owner});
+//   }
+// 
+//   /**
+//    * prints a map of the user's friends, visible to the user's friends
+//    *
+//    * @throws NullPointerException
+//    *         if user is null.
+//    * @throws SecurityException
+//    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+//    */
+//   public
+//   void
+//   postMap
+//   {                    // side effects:
+//     {*→user.friends} ⊓ // user's wall is updated; user's friends are fetched
+//     {*→service}        // map is fetched
+//   }
+//   (
+//     final User[owner,n] user,
+//     final principal     owner,
+//     final principal     n
+//   )
+//   throws
+//   (
+//     NullPointerException {user}
+//   )
+//   where
+//     worker$ actsfor owner,
+//     owner   actsfor user.friends,
+// 
+//     // these affect the fetch and resulting map.
+//     {*provider; *MapServer.provider} <= {*→user.friends},
+//     {*provider; *MapServer.provider} <= {*→service}
+//   {
+//     if (user == null)
+//       throw new NullPointerException();
+// 
+//     printMap(user, owner, n, new label {*→user.friends});
+//   }
+// 
+// 
+//   /**
+//    * Helper method that gets the map and prints it out.
+//    *
+//    * @throws NullPointerException
+//    *         if user is null.
+//    * @throws SecurityException
+//    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+//    */
+//   private
+//   void
+//   printMap
+//   {                    // side effects
+//     {*lbl}           ⊓ // output on lbl channel
+//     {*→service}      ⊓ // map service is contacted
+//     {*→user.friends}   // user's friends are fetched
+//   }
+//   (
+//     final User[owner,n] user,
+//     final principal     owner,
+//     final principal     n,
+//     final label         lbl
+//   )
+//   throws
+//   (
+//     NullPointerException {user}
+//   )
+//   where
+//     {*←service; *←owner} <= lbl,         // because the service and the user influence the map.
+//     lbl                  <= {*→worker$}, // because data will be output to the system user
+// 
+//     // these components affect the fetches and constructed map 
+//     {user; lbl; *provider; *MapServer.provider} <= {*lbl},
+//     {user; lbl; *provider; *MapServer.provider} <= {*→service},
+//     {user; lbl; *provider; *MapServer.provider} <= {*→user.friends} // TODO: this seems wrong.
+//   {
+//     if (user == null)
+//       throw new NullPointerException();
+// 
+//     final Store localStore = worker$.getLocalStore();
+// 
+//     MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n);
+//     PrintStream[lbl] out = System.stdout(lbl);
+// 
+//     if (result == null)                                             { throw new AssertionFailedError("createMap() returns a non-null value."); }
+//     try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("System.stdout must return a non-null value"); }
+//   }
+// 
+// 
   /**
    * creates a map of the user's friends, visible at label l.  Return value is non-null.
    *
@@ -190,6 +189,7 @@ where
   MapImage[l,{*→s}] {*l}
   createMap
   {                    // side effects:
+    {A}              ⊓ // this is fetched
     {*l}             ⊓ // result map is updated
     {*→service}      ⊓ // initial map is fetched
     {*→user.friends} ⊓ // user's friends are fetched
@@ -331,6 +331,10 @@ where
   /**
    * Add a pin corresponding to friend at a given location on a map.
    *
+   * @param map      the map to annotate
+   * @param location the location on the map to update.  Assumed to be on the map
+   * @param friend   the friend located at that location
+   *
    * @throws NullPonterException
    *         if friend or map is null
    * @throws ArrayIndexOutOfBoundsException
@@ -340,16 +344,20 @@ where
   void
   addPin
   {               // side effects:
+    A           ⊓ // this is fetched
     *map_update ⊓ // map contents are updated
-    *map_access   // map contents are fetched
+    *map_access ⊓ // map contents are fetched
+    *loc_access   // location is fetched
   }
   (
     final MapImage[map_update,map_access] map,
     final label    map_update,
     final label    map_access,
+
     final Location[loc_update,loc_access] location,
     final label    loc_update,
     final label    loc_access,
+
     final User[o,n] friend,
     final principal o,
     final principal n
@@ -361,11 +369,18 @@ where
     ArrayIndexOutOfBoundsException
   )
   where
-    // map contents fetched and updated based on code, arguments
-    {*provider;*MapImage.provider;location;friend;map} <= map_update,
-    {*provider;*MapImage.provider;location;friend;map} <= map_access,
+    // these affect whether the map can be updated
+    {*provider; *MapImage.provider; map; friend; location} <= {*map_update ⊓ *map_access ⊓ *loc_access},
 
-    // general constraint for map images
+//     // map contents fetched and updated based on code, arguments
+//     {*provider;*MapImage.provider;location;friend;map; *loc_update} <= map_update,
+//     {*provider;*MapImage.provider;location;friend;map; *loc_update} <= map_access,
+
+    // when we get to the update, location and friend affect map
+    {location; *loc_update}  <= map_update,
+    {friend;   _→; *←(n,o)}  <= map_update,
+
+    // general invariants for map images
     map_update <= map_access,
     {_←}       <= map_access
   {

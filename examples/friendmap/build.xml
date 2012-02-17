@@ -91,6 +91,7 @@
         <!--
         <arg value="-rdebug" />
         -->
+        <arg value="-report" /> <arg value="debug=1" />
     </fabc-local>
   </target>
 
