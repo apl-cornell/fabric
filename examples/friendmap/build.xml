@@ -91,7 +91,7 @@
         <!--
         <arg value="-rdebug" />
         -->
-        <arg value="-report" /> <arg value="debug=1" />
+        <arg value="-report" /> <arg value="labelFlow=1" />
     </fabc-local>
   </target>
 

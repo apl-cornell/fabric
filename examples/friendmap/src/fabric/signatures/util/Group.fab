@@ -114,7 +114,7 @@ where
     final label l
   )
   where
-    {groupOwner←} <= {*l};
+    {*←groupOwner} <= {*l};
 
   //////////////////////////////////////////////////////////////////////////////
   // Principal methods                                                        //
