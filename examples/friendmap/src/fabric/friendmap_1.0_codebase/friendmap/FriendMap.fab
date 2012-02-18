@@ -351,7 +351,7 @@ where
     {*provider; user} <= {_→_}
   {
     // compute the bounding box
-    Box[l, {*→s}] boundary = new Box[l, {*→s}]@s(0,0,0,0);
+    final Box[l, {*→s}] boundary = new Box[l, {*→s}]@s(0,0,0,0);
 
     final Store localStore = worker$.getLocalStore();
     final label pub = new label {_→};
@@ -368,6 +368,7 @@ where
         final principal                     fn = fw.userNetwork;
 
         final User[fo,fn] friend = fw.user;
+        if (friend == null) throw new AssertionFailedError("UserWrapper only wraps non-null users.");
 
         // if we don't mind leaking information to the friend's network, and
         // if the friend doesn't mind his location leaking to the map service,

@@ -90,6 +90,7 @@
     <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" >
         <!--
         <arg value="-rdebug" />
+        <arg value="-report" /> <arg value="pc=1" />
         -->
         <arg value="-report" /> <arg value="labelFlow=1" />
     </fabc-local>
