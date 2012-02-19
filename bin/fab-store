@@ -23,6 +23,10 @@ while true; do
       jvmcp=$2
       shift 2
       ;;
+    --add-jvm-cp)
+      jvmcp="${jvmcp}:$2"
+      shift 2
+      ;;
     -j)
       vmargs="${vmargs} '$2'"
       shift 2
