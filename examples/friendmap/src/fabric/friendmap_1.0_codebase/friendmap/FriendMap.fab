@@ -383,6 +383,7 @@ where
   void
   annotateMap
   {                 // side effects:
+    {A}           ⊓ // this is fetched
     {*→n}         ⊓ // user is fetched
     {_→_}         ⊓ // user's friends are fetched
     {*map_access} ⊓ // map is fetched
@@ -406,6 +407,7 @@ where
     {*provider;user; _→_; *←user.p} <= {*map_access},
     // map update
     {*provider;user} <= {*map_update},
+    // TODO: objects created on local store (currently done with dynamic checks)
 
     // general access policy invariants
     {_←}          <= {*map_access},
@@ -416,6 +418,7 @@ where
     final Store local = worker$.getLocalStore();
     final label box_u = map_update;
     final label box_a = new label {*→local};
+    if (box_u <= box_a) {
 
     final Box[box_u,box_a] boundary = map.getBoundary(box_u, box_a, local);
     if (boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
@@ -447,6 +450,8 @@ where
         }
       }
     }
+
+    } else throw new AssertionFailedError("worker$ enforces $map_update");
   }
 
 
