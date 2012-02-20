@@ -418,8 +418,13 @@ where
     final Store local = worker$.getLocalStore();
     final label box_u = map_update;
     final label box_a = new label {*→local};
-    if (box_u <= box_a) {             // TODO: this should be a where constraint.
-    if (MapImage.provider <= box_u) { // TODO: I think this is required since the local store is executing MapImage code.
+
+    // TODO: check that the local store is sufficiently trusted.  I think this
+    // should be turned into where constraints, but Fabric will require better
+    // handling of worker$ for that.
+    if (box_u <= box_a) {
+    if (MapImage.provider <= box_u) {
+    if (new label {*←local} <= new label {*box_u}) {
 
 
     final Box[box_u,box_a] boundary = map.getBoundary(box_u, box_a, local);
@@ -453,7 +458,8 @@ where
       }
     }
 
-    } else throw new AssertionFailedError("worker$ enforces $map_update");
+    } else throw new AssertionFailedError("worker$ enforces *map_update");
+    } else throw new AssertionFailedError("worker$ enforces *map_update");
     } else throw new AssertionFailedError("MapImage code is public");
   }
 
