@@ -185,122 +185,93 @@ where
 //   }
 // 
 // 
-  /**
-   * creates a map of the user's friends, visible at label l.  Return value is non-null.
-   *
-   * @throws NullPointerException
-   *         if user is null.
-   */
-  public
-  MapImage[l,{*→s}] {*l}
-  createMap
-  {                    // side effects:
-    {A}              ⊓ // this is fetched
-    {*l}             ⊓ // result map is updated
-    {*→service}      ⊓ // initial map is fetched
-    {*→user.friends} ⊓ // user's friends are fetched
-    {*→s}              // result is created at s
-  }
-  (
-    final label  l,
-    final Store  s,
-    final User[o,n] user,
-    final principal o,
-    final principal n
-  )
-  throws
-  (
-    NullPointerException{user}
-  )
-  where
-    {*←s} <= l, l <= {*→s}, {*→s} <= {*→s}, // TODO: s ≽ l@{s→}: result created at s
-    {*←service} <= l, // the result is tainted by the service
-    {*←user.p}  <= l, // the result is tainted by the user
+//   /**
+//    * creates a map of the user's friends, visible at label l.  Return value is non-null.
+//    *
+//    * @throws NullPointerException
+//    *         if user is null.
+//    */
+//   public
+//   MapImage[l,{*→s}] {*l}
+//   createMap
+//   {                    // side effects:
+//     {A}              ⊓ // this is fetched
+//     {*l}             ⊓ // result map is updated
+//     {*→service}      ⊓ // initial map is fetched
+//     {*→user.friends} ⊓ // user's friends are fetched
+//     {*→s}              // result is created at s
+//   }
+//   (
+//     final label  l,
+//     final Store  s,
+//     final User[o,n] user,
+//     final principal o,
+//     final principal n
+//   )
+//   throws
+//   (
+//     NullPointerException{user}
+//   )
+//   where
+//     {*←s} <= l, l <= {*→s}, {*→s} <= {*→s}, // TODO: s ≽ l@{s→}: result created at s
+//     {*←service} <= l, // the result is tainted by the service
+//     {*←user.p}  <= l, // the result is tainted by the user
+// 
+//     // the arguments and code can affect the fetches and the return value
+//     {user; l; s; *provider; *MapServer.provider} <= {*l},
+//     {user; l; s; *provider; *MapServer.provider} <= {*→service},
+//     {user; l; s; *provider; *MapServer.provider} <= {*→user.friends}
+//   {
+//     // invariant checks
+//     if (user == null)
+//       throw new NullPointerException();
+//     if (user.friends == null)
+//       throw new AssertionFailedError("user.friends must be non-null");
+//     if (this.service == null)
+//       throw new AssertionFailedError("service must be non-null");
+// 
+//     final Store fetchStore = service.store;
+//     final Store localStore = s;
+// 
+//     // this is the label of the data that gets sent to the service
+//     final label fetchLabel   = new label {{*l} meet {*→service}}; // TODO @store
+// 
+//     // compute bounding box
+//     final Box boundary = createBoundingBox(user, o, n, fetchLabel, fetchStore);
+// 
+//     // get map
+//     MapImage[fetchLabel,{*→service}] _map;
+//     try {
+//       _map = this.service.createMap(fetchLabel, new label {*→service}, boundary);
+//     } catch (final NullPointerException e) {
+//       throw new AssertionFailedError("boundary is non-null.");
+//     }
+//     final MapImage[fetchLabel,{*→service}] map = _map;
+//     if (map == null)
+//       throw new AssertionFailedError("getMap returned null");
+// 
+//     // make a local copy (with label l)
+//     // TODO: s ≽ l
+//     MapImage[l,{*→s}] annotated = map.copy(l, new label{*→s}, s);
+//     /*
+//     TODO
+//     if (new label {localStore←} <= l &&
+//             l <= new label {localStore→} &&
+//             l <= new label {⊤→localStore} &&
+//             Box.provider <= new label {⊤→localStore} &&
+//             new label {⊤←localStore} <= l &&
+//             new label {⊤←localStore} <= Box.provider
+//             )  // localStore ≽ ℓ
+//       annotated = map.copy(l, localStore);
+//     else
+//       throw new AssertionFailedError("local store does not act for l");
+//     */
+// 
+//     return annotated;
+//   }
 
-    // the arguments and code can affect the fetches and the return value
-    {user; l; s; *provider; *MapServer.provider} <= {*l},
-    {user; l; s; *provider; *MapServer.provider} <= {*→service},
-    {user; l; s; *provider; *MapServer.provider} <= {*→user.friends}
-  {
-    // invariant checks
-    if (user == null)
-      throw new NullPointerException();
-    if (user.friends == null)
-      throw new AssertionFailedError("user.friends must be non-null");
-    if (this.service == null)
-      throw new AssertionFailedError("service must be non-null");
 
-    final Store fetchStore = service.store;
-    final Store localStore = s;
 
-    // this is the label of the data that gets sent to the service
-    final label fetchLabel   = new label {{*l} meet {*→service}}; // TODO @store
-
-    // compute bounding box
-    final Box boundary = createBoundingBox(user, o, n, fetchLabel, fetchStore);
-
-    // get map
-    MapImage[fetchLabel,{*→service}] _map;
-    try {
-      _map = this.service.createMap(fetchLabel, new label {*→service}, boundary);
-    } catch (final NullPointerException e) {
-      throw new AssertionFailedError("boundary is non-null.");
-    }
-    final MapImage[fetchLabel,{*→service}] map = _map;
-    if (map == null)
-      throw new AssertionFailedError("getMap returned null");
-
-    // make a local copy (with label l)
-    // TODO: s ≽ l
-    MapImage[l,{*→s}] annotated = map.copy(l, new label{*→s}, s);
-    /*
-    TODO
-    if (new label {localStore←} <= l &&
-            l <= new label {localStore→} &&
-            l <= new label {⊤→localStore} &&
-            Box.provider <= new label {⊤→localStore} &&
-            new label {⊤←localStore} <= l &&
-            new label {⊤←localStore} <= Box.provider
-            )  // localStore ≽ ℓ
-      annotated = map.copy(l, localStore);
-    else
-      throw new AssertionFailedError("local store does not act for l");
-    */
-
-    if (annotated == null)          throw new AssertionFailedError("MapImage.copy return value should be non-null");
-
-    final Box annotated_boundary = annotated.getBoundary(l, new label {*→s}, s);
-    if (annotated_boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
-
-    // annotate map
-    final GroupIterator[user.p, l] j = user.friends.iterator(localStore, l);
-    if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
-    while (j.hasNext()) {
-      Principal next;
-      try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("if j.hasNext() then j.next() should return normally."); }
-      if (next instanceof UserWrapper[{*→user.friends}]) {
-        final UserWrapper[{*→user.friends}] fw = (UserWrapper[{*→user.friends}]) next;
-        final principal                     fo = fw.userOwner;
-        final principal                     fn = fw.userNetwork;
-
-        final User[fo,fn]   friend = fw.user;
-
-        // add friend to the map if possible
-        if (friend.locationLabel <= l) {
-          final Location[friend.locationLabel, {*→fn}] loc = friend.location;
-          if (loc != null) {
-            if (annotated_boundary.contains(loc.x, loc.y)) {
-              try { addPin (annotated, l, new label {*→s}, loc, friend.locationLabel, new label {*→fn}, friend, fo, fn); }
-              catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
-              catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
-            }
-          }
-        }
-      }
-    }
-
-    return annotated;
-  }
 
   /**
    * compute the bounding box containing the locations of all of the user's
@@ -350,8 +321,7 @@ where
     {*provider; user} <= {*→n},
     {*provider; user} <= {_→_}
   {
-    // compute the bounding box
-    // TODO: remove
+    // TODO: remove local variable annotations.
     final Box[l, {*→s}] {*l} boundary = new Box[l, {*→s}]@s(0,0,0,0);
 
     final Store localStore = worker$.getLocalStore();
@@ -395,6 +365,88 @@ where
 
     return boundary;
   }
+
+
+
+
+  /**
+   * Add a pin corresponding to each of the user's friend to the given map,
+   * provided that doing so would not violate information flow constraints.
+   *
+   * @param user
+   *             the user whose friends should be added to the map.  Assumed to be non-null.
+   *
+   * @param map
+   *             the map to be updated.  Assumed to be non-null.
+   */
+  protected
+  void
+  annotateMap
+  {                 // side effects:
+    {*→n}         ⊓ // user is fetched
+    {_→_}         ⊓ // user's friends are fetched
+    {*map_access} ⊓ // map is fetched
+    {*map_update}   // map is updated
+  }
+  (
+    final User[o,n] user,
+    final principal o,
+    final principal n,
+
+    final MapImage[map_update, map_access] map,
+    final label map_update,
+    final label map_access
+  )
+  where
+    // user fetch
+    {*provider;user} <= {*→n},
+    // friend fetch
+    {*provider;user} <= {_→_},
+    // map access
+    {*provider;user; _→_; *←user.p} <= {*map_access},
+    // map update
+    {*provider;user} <= {*map_update}
+  {
+    if (map == null) throw new AssertionFailedError("MapImage.copy return value should be non-null");
+
+    final Store local = worker$.getLocalStore();
+    final label box_u = map_update;
+    final label box_a = new label {*→local};
+
+    final Box[box_u,box_a] boundary = map.getBoundary(box_u, box_a, local);
+    if (boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
+
+    final GroupIterator[user.p, map_update] j = user.friends.iterator(worker$.getLocalStore(), map_update);
+    if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
+
+    while (j.hasNext()) {
+      Principal next;
+      try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("if j.hasNext() then j.next() should return normally."); }
+      if (next instanceof UserWrapper[{*→user.friends}]) {
+        final UserWrapper[{*→user.friends}] fw = (UserWrapper[{*→user.friends}]) next;
+        final principal                     fo = fw.userOwner;
+        final principal                     fn = fw.userNetwork;
+
+        final User[fo,fn]   friend = fw.user;
+        if (friend == null) throw new AssertionFailedError("UserWrapper only wraps non-null users.");
+
+        // add friend to the map if possible
+        if (friend.locationLabel <= map_update) {
+          final Location[friend.locationLabel, {*→fn}] loc = friend.location;
+          if (loc != null) {
+            if (boundary.contains(loc.x, loc.y)) {
+              try { addPin (map, map_update, map_access, loc, friend.locationLabel, new label {*→fn}, friend, fo, fn); }
+              catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
+              catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+
 
   /**
    * Add a pin corresponding to friend at a given location on a map.
