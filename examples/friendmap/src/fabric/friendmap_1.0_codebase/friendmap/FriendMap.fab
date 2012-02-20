@@ -406,7 +406,7 @@ where
     // map access
     {*provider;user; _→_; *←user.p} <= {*map_access},
     // map update
-    {*provider;user} <= {*map_update},
+    {*provider;user; _→_; *←user.p} <= {*map_update},
     // TODO: objects created on local store (currently done with dynamic checks)
 
     // general access policy invariants
@@ -418,7 +418,7 @@ where
     final Store local = worker$.getLocalStore();
     final label box_u = map_update;
     final label box_a = new label {*→local};
-    if (box_u <= box_a) {
+    if (box_u <= box_a) { // TODO: this should be a where constraint.
 
     final Box[box_u,box_a] boundary = map.getBoundary(box_u, box_a, local);
     if (boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
