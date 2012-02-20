@@ -405,7 +405,11 @@ where
     // map access
     {*provider;user; _→_; *←user.p} <= {*map_access},
     // map update
-    {*provider;user} <= {*map_update}
+    {*provider;user} <= {*map_update},
+
+    // general access policy invariants
+    {_←}          <= {*map_access},
+    {*map_update} <= {*map_access}
   {
     if (map == null) throw new AssertionFailedError("MapImage.copy return value should be non-null");
 
