@@ -418,7 +418,9 @@ where
     final Store local = worker$.getLocalStore();
     final label box_u = map_update;
     final label box_a = new label {*→local};
-    if (box_u <= box_a) { // TODO: this should be a where constraint.
+    if (box_u <= box_a) {             // TODO: this should be a where constraint.
+    if (MapImage.provider <= box_u) { // TODO: I think this is required since the local store is executing MapImage code.
+
 
     final Box[box_u,box_a] boundary = map.getBoundary(box_u, box_a, local);
     if (boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
@@ -452,6 +454,7 @@ where
     }
 
     } else throw new AssertionFailedError("worker$ enforces $map_update");
+    } else throw new AssertionFailedError("MapImage code is public");
   }
 
 
