@@ -400,14 +400,15 @@ where
   )
   where
     // user fetch
-    {*provider;user} <= {*→n},
+    {*provider;user; map_update} <= {*→n},
     // friend fetch
-    {*provider;user} <= {_→_},
+    {*provider;user; map_update} <= {_→_},
     // map access
-    {*provider;user; _→_; *←user.p; map; map_update} <= {*map_access},
+    {*provider;user; map_update; _→_; *←user.p; map} <= {*map_access},
     // map update
-    {*provider;user; _→_; *←user.p; map; map_update} <= {*map_update},
-    // TODO: objects created on local store (currently done with dynamic checks)
+    {*provider;user; map_update; _→_; *←user.p; map} <= {*map_update},
+
+    // TODO: objects are created on local store (currently done with dynamic checks)
 
     // general access policy invariants
     {_←}          <= {*map_access},
