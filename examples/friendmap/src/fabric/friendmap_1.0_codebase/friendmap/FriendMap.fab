@@ -404,9 +404,9 @@ where
     // friend fetch
     {*provider;user} <= {_→_},
     // map access
-    {*provider;user; _→_; *←user.p} <= {*map_access},
+    {*provider;user; _→_; *←user.p; map} <= {*map_access},
     // map update
-    {*provider;user; _→_; *←user.p} <= {*map_update},
+    {*provider;user; _→_; *←user.p; map} <= {*map_update},
     // TODO: objects created on local store (currently done with dynamic checks)
 
     // general access policy invariants
