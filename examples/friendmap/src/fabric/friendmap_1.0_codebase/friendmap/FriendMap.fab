@@ -431,7 +431,8 @@ where
     final Box[box_u,box_a] boundary = map.getBoundary(box_u, box_a, local);
     if (boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
 
-    final GroupIterator[user.p, map_update] j = user.friends.iterator(worker$.getLocalStore(), map_update);
+    final label friendsLabel = new label {_→; *←user.p};
+    final GroupIterator[user.p, friendsLabel] j = user.friends.iterator(worker$.getLocalStore(), friendsLabel);
     if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
 
     while (j.hasNext()) {
@@ -446,10 +447,10 @@ where
         if (friend == null) throw new AssertionFailedError("UserWrapper only wraps non-null users.");
 
         // add friend to the map if possible
-        if (friend.locationLabel <= map_update) {
-          final Location[friend.locationLabel, {*→fn}] loc = friend.location;
-          if (loc != null) {
-            if (boundary.contains(loc.x, loc.y)) {
+        final Location[friend.locationLabel, {*→fn}] loc = friend.location;
+        if (loc != null) {
+          if (boundary.contains(loc.x, loc.y)) {
+            if (friend.locationLabel <= map_update) {
               try { addPin (map, map_update, map_access, loc, friend.locationLabel, new label {*→fn}, friend, fo, fn); }
               catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
               catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
