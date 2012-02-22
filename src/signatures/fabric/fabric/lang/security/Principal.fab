@@ -7,11 +7,11 @@ package fabric.lang.security;
  */
 public abstract class Principal {
     static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
-    
+
     public abstract String{this} name{⊥->}();
-    
+
     public abstract boolean{this; p; this←} delegatesTo{⊥->}(principal p);
-    
+
     public abstract boolean equals{⊥->}(Principal p);
 
     // XXX Can we label this method anywhich way we want, since it won't

@@ -30,8 +30,8 @@ public class NewJifExt_c extends JifNewExt {
             .DelegatingPrincipal())) {
       FabricClassType ct = (FabricClassType) newType;
       FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
-      Label accessLabel = ts.toLabel(ct.classAccessPolicy());
-      ext.labelCheck(lc, ct.classUpdateLabel(), accessLabel);
+      Label accessLabel = ts.toLabel(ct.accessPolicy());
+      ext.labelCheck(lc, ct.updateLabel(), accessLabel);
     }
 
     return super.labelCheck(lc);

@@ -11,7 +11,7 @@ import jif.types.ConstArrayType;
  * 
  * @author mdgeorge
  */
-public interface FabricArrayType extends ConstArrayType {
+public interface FabricArrayType extends ConstArrayType, FabricReferenceType {
   /** Type is a native (java) array type */
   boolean isNative();
 }

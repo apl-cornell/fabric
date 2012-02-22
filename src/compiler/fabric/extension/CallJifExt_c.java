@@ -76,6 +76,8 @@ public class CallJifExt_c extends JifCallExt {
     Node n = super.labelCheck(lc);
     FabricCall c = (FabricCall)n;
     
+    DereferenceHelper.checkDereference(c.target(), lc, c.position());
+    
     if (c.remoteWorker() != null) {
       FabricTypeSystem ts = (FabricTypeSystem)lc.typeSystem();
       JifContext A = lc.jifContext(); 

@@ -85,7 +85,7 @@ public class FabricClassDeclExt extends JifClassDeclExt {
     lc = lc.context(A);
     
     // Access label checks
-    Label classAccessLabel = ((FabricTypeSystem)jts).toLabel(pct.classAccessPolicy());
+    Label classAccessLabel = ((FabricTypeSystem)jts).toLabel(pct.accessPolicy());
     
     // ({this} <= access label) holds true at all access sites 
     A.addAssertionLE(jts.thisLabel(ct), classAccessLabel);
@@ -108,7 +108,7 @@ public class FabricClassDeclExt extends JifClassDeclExt {
           }
       );
 
-      Label updateLabel = pct.classUpdateLabel();
+      Label updateLabel = pct.updateLabel();
 
       lc.constrain(new NamedLabel("object label", updateLabel),
           LabelConstraint.LEQ,

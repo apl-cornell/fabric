@@ -3,6 +3,8 @@ package fabric.types;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import jif.types.ConstArrayType_c;
+import jif.types.label.ConfPolicy;
+import jif.types.label.Label;
 
 /** The only ArrayType class created by the FabricTypeSystem.
  * @see FabricTypeSystem for further description
@@ -26,5 +28,20 @@ public class FabricArrayType_c
   public boolean isNative() {
     return isNative;
   }
+
+  @Override
+  public Label updateLabel() {
+    return ts().labelOfType(base);
+  }
+
+  @Override
+  public ConfPolicy accessPolicy() {
+    // TODO: access policy of an array is just the confidentiality component of
+    // the update label.
+    return ts().confProjection(updateLabel());
+  }
   
+  private FabricTypeSystem ts() {
+    return (FabricTypeSystem) ts;
+  }
 }

@@ -52,10 +52,10 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
     
     if (ts.isFabricClass(base)) {
      
-      Label baseLabel = ((FabricClassType)base).classUpdateLabel();
+      Label baseLabel = ((FabricClassType)base).updateLabel();
       updateLabelExpr = rw.labelToJava(baseLabel);      
 
-      ConfPolicy accessPolicy = ((FabricClassType)base).classAccessPolicy();
+      ConfPolicy accessPolicy = ((FabricClassType)base).accessPolicy();
       Label accessLabel = ts.toLabel(accessPolicy);
 
       accessPolicyExpr = rw.qq().parseExpr("%E.confPolicy()", rw.labelToJava(accessLabel));

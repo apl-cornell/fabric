@@ -17,19 +17,19 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements Fabri
   }
   
   @Override
-  public Label classUpdateLabel() {
+  public Label updateLabel() {
     FabricParsedClassType base = (FabricParsedClassType)base();
-    Label l = base.classUpdateLabel();
+    Label l = base.updateLabel();
     if (l == null) return null;
     
     JifSubst subst = (JifSubst)subst();
-    return subst.substLabel(base.classUpdateLabel());
+    return subst.substLabel(base.updateLabel());
   }
 
   @Override
-  public ConfPolicy classAccessPolicy() {
+  public ConfPolicy accessPolicy() {
     FabricParsedClassType base = (FabricParsedClassType)base();
-    ConfPolicy c = base.classAccessPolicy();
+    ConfPolicy c = base.accessPolicy();
     if (c == null) return null;
     FabricTypeSystem fts = (FabricTypeSystem) ts;
     Label l = fts.toLabel(c);

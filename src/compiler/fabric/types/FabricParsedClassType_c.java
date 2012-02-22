@@ -96,7 +96,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
    */
   @Override
   //XXX: These methods should be revisited post Oakland.
-  public Label classUpdateLabel() {
+  public Label updateLabel() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
     if (!fieldLabelFound) {
@@ -107,7 +107,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
             ts.bottomConfPolicy(Position.compilerGenerated()),
             ts.topIntegPolicy(Position.compilerGenerated()));
         
-        Label superLabel = superType == null ? classLabel : superType.classUpdateLabel();
+        Label superLabel = superType == null ? classLabel : superType.updateLabel();
         
         LabelEnv classEnv = classEnv();
         for (FieldInstance fi : fields()) {
@@ -220,7 +220,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   //XXX: These methods should be revisited post Oakland.
   @SuppressWarnings("unchecked")
   @Override
-  public ConfPolicy classAccessPolicy() {
+  public ConfPolicy accessPolicy() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
     if (!accessLabelFound) {
@@ -232,7 +232,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
         
         ConfPolicy classAccessPolicy = ts.bottomConfPolicy(Position.compilerGenerated());
 
-        ConfPolicy superAccessPolicy = superType == null ? classAccessPolicy : superType.classAccessPolicy();
+        ConfPolicy superAccessPolicy = superType == null ? classAccessPolicy : superType.accessPolicy();
 
         LabelEnv classEnv = classEnv();
         for (FieldInstance fi : fields()) {
