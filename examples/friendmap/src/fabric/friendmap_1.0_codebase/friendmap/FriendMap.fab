@@ -446,9 +446,9 @@ where
 
         // we can access the location without leaking our set of friends or those friends' locations
         if (new label {*map_update; *friendsLabel} <= new label {*→fn}) {
-        // TODO: this is interesting: you can only be put on the map if your
-        // network is allowed to see all of the friends' locations.  We could
-        // avoid this constraint by copying.
+        // TODO: the above requirement is interesting: you can only be put on
+        // the map if your network is allowed to see all of the friends'
+        // locations.  We could potentially avoid this constraint by copying.
 
         // the location can flow to the map
         if (friend.locationLabel <= map_update) {

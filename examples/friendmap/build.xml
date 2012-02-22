@@ -273,11 +273,11 @@
         <arg value="${fabc}" />
         <arg value="-g" />
         <arg value="-e" />
-        <arg value="-d" />            <arg value="${home}/classes/fabric" />
-        <arg value="-sourcepath"/>    <arg value="@{srcdir}" />
-        <arg value="-classpath" />    <arg value="${home}/classes/fabric" />
-        <arg value="-addsigcp" />     <arg value="${home}/classes/fab-sig" />
-        <arg value="-addbootcp" />     <arg value="${home}/classes/fab-sig-impl" />
+        <arg value="-d" />         <arg value="${home}/classes/fabric" />
+        <arg value="-sourcepath"/> <arg value="@{srcdir}" />
+        <arg value="-classpath" /> <arg value="${home}/classes/fabric" />
+        <arg value="-addsigcp"  /> <arg value="${home}/classes/fab-sig" />
+        <arg value="-addbootcp" /> <arg value="${home}/classes/fab-sig-impl" />
         <extra-args />
         <srcfile />
 
