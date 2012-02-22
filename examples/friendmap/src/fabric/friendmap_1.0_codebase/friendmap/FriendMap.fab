@@ -488,7 +488,6 @@ where
   void
   addPin
   {               // side effects:
-    A           ⊓ // this is fetched
     *map_update ⊓ // map contents are updated
     *map_access ⊓ // map contents are fetched
     *loc_access   // location is fetched
