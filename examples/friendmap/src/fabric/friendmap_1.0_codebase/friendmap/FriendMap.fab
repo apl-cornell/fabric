@@ -404,11 +404,12 @@ where
     // friend fetch
     {*provider;user; map_update} <= {_→_},
     // map access
-    {*provider;user; map_update; _→_; *←user.p; map} <= {*map_access},
+    {*provider;*MapImage.provider; user; map_update; _→_; *←user.p; map} <= {*map_access},
     // map update
-    {*provider;user; map_update; _→_; *←user.p; map} <= {*map_update},
+    {*provider;*MapImage.provider; user; map_update; _→_; *←user.p; map} <= {*map_update},
 
-    // TODO: objects are created on local store (currently done with dynamic checks)
+    // objects are created on the local store.
+    {*←worker$} <= map_update, map_update <= {*→worker$}, // TODO: worker$ ≽ map_update
 
     // general access policy invariants
     {_←}          <= {*map_access},
@@ -417,19 +418,12 @@ where
     if (map == null) throw new AssertionFailedError("MapImage.copy return value should be non-null");
 
     final Store local = worker$.getLocalStore();
+    if (local equiv worker$) {
+
     final label box_u = map_update;
     final label box_a = new label {*→local};
 
-    // TODO: check that the local store is sufficiently trusted.  I think this
-    // should be turned into where constraints, but Fabric will require better
-    // handling of worker$ for that.
-    if (box_u <= box_a) {
-    if (MapImage.provider <= box_u) {
-    if (new label {*←local} <= new label {*box_u}) {
-
-
     final Box[box_u,box_a] boundary = map.getBoundary(box_u, box_a, local);
-    if (boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
 
     final label friendsLabel = new label {_→; *←user.p};
     final GroupIterator[user.p, friendsLabel] j = user.friends.iterator(worker$.getLocalStore(), friendsLabel);
@@ -439,6 +433,8 @@ where
       Principal next;
       try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("if j.hasNext() then j.next() should return normally."); }
       if (next instanceof UserWrapper[{*→user.friends}]) {
+        // add friend to the map if possible
+
         final UserWrapper[{*→user.friends}] fw = (UserWrapper[{*→user.friends}]) next;
         final principal                     fo = fw.userOwner;
         final principal                     fn = fw.userNetwork;
@@ -446,23 +442,31 @@ where
         final User[fo,fn]   friend = fw.user;
         if (friend == null) throw new AssertionFailedError("UserWrapper only wraps non-null users.");
 
-        // add friend to the map if possible
         final Location[friend.locationLabel, {*→fn}] loc = friend.location;
-        if (loc != null) {
-          if (boundary.contains(loc.x, loc.y)) {
-            if (friend.locationLabel <= map_update) {
-              try { addPin (map, map_update, map_access, loc, friend.locationLabel, new label {*→fn}, friend, fo, fn); }
-              catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
-              catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
-            }
-          }
+
+        // we can access the location without leaking our set of friends or those friends' locations
+        if (new label {*map_update; *friendsLabel} <= new label {*→fn}) {
+        // TODO: this is interesting: you can only be put on the map if your
+        // network is allowed to see all of the friends' locations.  We could
+        // avoid this constraint by copying.
+
+        // the location can flow to the map
+        if (friend.locationLabel <= map_update) {
+
+        // the friend has a valid location
+        if (loc != null && boundary != null && boundary.contains(loc.x,loc.y)) {
+
+        try { addPin (map, map_update, map_access, loc, friend.locationLabel, new label {*→fn}, friend, fo, fn); }
+        catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
+        catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
+
+        }
+        }
         }
       }
     }
 
-    } else throw new AssertionFailedError("worker$ enforces *map_update");
-    } else throw new AssertionFailedError("worker$ enforces *map_update");
-    } else throw new AssertionFailedError("MapImage code is public");
+    } //else throw new AssertionFailedError("worker$ equiv worker$.getLocalStore()");
   }
 
 
