@@ -102,6 +102,9 @@ public class FabricOptions extends JifOptions implements FabILOptions {
         "Write Fabric reference of published codebase to file.");
     usageForFlag(out, "-generate-native-skeletons",
         "generate FabIL and Java bootstrap skeletons for each class");
+    usageForFlag(out, "-no-fail-on-exception",
+        "Force runtime exceptions to be caught or declared.");
+
     usageForFlag(out, "-O", "turn optimizations on");
 
     out.println("Most <path> arguments accept local directory paths as well as");
@@ -144,7 +147,11 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       index++;
       this.needWorker = NSUtil.processPathString(sigcp,args[index++]);
     }
- 
+    else if (args[index].equals("-no-fail-on-exception")) {
+      index++;
+      fatalExceptions = false;
+    }
+
     // parse fabil options before jif's, otherwise some options
     //  will get gobbled by jif's superclass, BUT-- don't call 
     //  FabILOption_c superclass.
