@@ -210,12 +210,11 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     
     return methodctx.labelEnv();
   }
-
+  
   /**
    * This method returns the upper bound of the labels of 
-   * all the fields and begin labels of methods of this class and
-   * its superclasses. It computes this by taking a join of all labels
-   * concerned.
+   * all the fields of this class and its superclasses.
+   * It computes this by taking a join of all labels concerned.
    */
   //XXX: These methods should be revisited post Oakland.
   @SuppressWarnings("unchecked")
@@ -248,37 +247,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
         if(ts.containsThisLabel(ts.toLabel(classAccessPolicy)))
           throw new InternalError("Access label contains \"this\" in " + this + ":" + classAccessPolicy);
 
-        try {
-          int i = 0;
-          
-          // Join the access policy with the begin labels of all methods
-          // we need this because the object needs to be fetched for each method call
-          // and requiring that the begin label of a method is bounded above by
-          // the access label ensures that there are no read channels
-          
-          for (JifMethodInstance pi_ : (List<JifMethodInstance>) methods()) {
-            if (pi_.flags().isStatic()) continue;
-            JifMethodInstance mi = (JifMethodInstance) pi_.copy();
-            renameArgs(mi, new TypeSubstitutor(new ArgRenamer("$" + i)));
-            Label bl = mi.pcBound();
-            if(bl == null) {
-              bl = ts.noComponentsLabel();
-            }
-            // a tjoin is not necessary since access labels only have a conf
-            // component
-
-            LabelEnv methodEnv = methodEnv(mi);
-            ConfPolicy begin_policy =
-                upperBound(methodEnv, provider().confProjection(),
-                    bl.confProjection());
-
-            classAccessPolicy =
-                upperBound(methodEnv, classAccessPolicy, begin_policy);
-          }
-        } catch (SemanticException e) {
-          throw new InternalCompilerError("Unexpected semantic exception",e);
-        }
-        // a tjoin is not necessary since access labels only have a conf component
+//        // a tjoin is not necessary since access labels only have a conf component
         accessPolicy =
             superAccessPolicy == null ? classAccessPolicy : upperBound(
                 classEnv, classAccessPolicy, superAccessPolicy);
@@ -287,7 +256,9 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
         // There is no access channel since it is not a persistent object
         accessPolicy = ts.topConfPolicy(Position.compilerGenerated());
       }
+      
       accessLabelFound = true;
+      
     }
     return accessPolicy;
   }
