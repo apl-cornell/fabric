@@ -97,8 +97,6 @@ where
     for (int i = 0; i < data.length; i++)
       data[i] = background;
 
-    if (!(store instanceof Store)) throw new AssertionFailedError("MapServer's store is a store");
-
     try {
       return new MapImage[l,{*→this.store}]/* @this.store */(boundary, l, a,
                                                        10, 10, data,
