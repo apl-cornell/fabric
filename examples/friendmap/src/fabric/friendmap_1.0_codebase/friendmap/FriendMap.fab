@@ -417,7 +417,10 @@ where
     // user invariants
     user.p equiv (n,o)
   {
-    if (map == null) throw new AssertionFailedError("MapImage.copy return value should be non-null");
+    if (map == null) {
+      String {*→} s = "MapImage.copy return value should be non-null";
+      throw new AssertionFailedError(s);
+    }
 
     final Store local = worker$.getLocalStore();
     if (local equiv worker$) {

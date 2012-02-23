@@ -89,8 +89,10 @@
   <target name="build-local-friendmap" depends="build-local-mapserv, build-local-snapp, build-util">
     <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" >
         <!--
-        <arg value="-rdebug" />
         <arg value="-report" /> <arg value="pc=1" />
+        <arg value="-report" /> <arg value="solver=5" />
+        <arg value="-debugpositions" />
+        <arg value="-rdebug" />
         -->
         <arg value="-report" /> <arg value="labelFlow=1" />
     </fabc-local>
