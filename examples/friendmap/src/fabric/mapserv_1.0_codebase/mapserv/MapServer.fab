@@ -93,12 +93,12 @@ where
 
     if (store actsfor this) {
 
-    final char{*l}[]{*l} data = new char/* @this.store */[100];
+    final char{*l}[]{*l} data = new char[100]/* TODO: @store */;
     for (int i = 0; i < data.length; i++)
       data[i] = background;
 
     try {
-      return new MapImage[l,{*→this.store}]/* @this.store */(boundary, l, a,
+      return new MapImage[l,{*→this.store}]/* @store */(boundary, l, a,
                                                        10, 10, data,
                                                        this.store);
     } catch (final ArrayIndexOutOfBoundsException e) {

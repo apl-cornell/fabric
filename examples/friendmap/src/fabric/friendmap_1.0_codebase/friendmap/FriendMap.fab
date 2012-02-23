@@ -383,7 +383,6 @@ where
   void
   annotateMap
   {                 // side effects:
-    {A}           ⊓ // this is fetched
     {*→n}         ⊓ // user is fetched
     {_→_}         ⊓ // user's friends are fetched
     {*map_access} ⊓ // map is fetched
