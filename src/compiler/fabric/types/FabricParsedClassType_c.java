@@ -470,6 +470,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
      * @param actualArgs
      * @param position
      */
+    @SuppressWarnings("unchecked")
     public ClassAccessPolicyHelper(Label receiverLabel, Receiver receiver,
         ReferenceType calleeContainer, JifProcedureInstance pi,
         List<Expr> actualArgs, Position position) {

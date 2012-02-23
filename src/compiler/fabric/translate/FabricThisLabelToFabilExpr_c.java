@@ -5,7 +5,6 @@ import jif.translate.LabelToJavaExpr;
 import jif.translate.LabelToJavaExpr_c;
 import jif.types.label.Label;
 import polyglot.ast.Expr;
-import polyglot.types.SemanticException;
 import fabric.visit.FabricToFabilRewriter;
 
 /**
@@ -13,8 +12,8 @@ import fabric.visit.FabricToFabilRewriter;
  */
 public class FabricThisLabelToFabilExpr_c extends LabelToJavaExpr_c implements
     LabelToJavaExpr {
-  public Expr toJava(Label label, JifToJavaRewriter rw)
-      throws SemanticException {
+  @Override
+  public Expr toJava(Label label, JifToJavaRewriter rw) {
 
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     Expr loc = ffrw.currentLocation();

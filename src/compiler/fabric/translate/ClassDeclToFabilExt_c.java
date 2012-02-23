@@ -21,10 +21,8 @@ import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import jif.ast.JifClassDecl;
 import jif.translate.ClassDeclToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
-import jif.types.JifPolyType;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 

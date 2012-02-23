@@ -39,7 +39,6 @@ import jif.types.label.IntegPolicy;
 import jif.types.label.IntegProjectionPolicy_c;
 import jif.types.label.JoinConfPolicy_c;
 import jif.types.label.JoinLabel;
-import jif.types.label.JoinPolicy_c;
 import jif.types.label.Label;
 import jif.types.label.MeetLabel;
 import jif.types.label.PairLabel;
