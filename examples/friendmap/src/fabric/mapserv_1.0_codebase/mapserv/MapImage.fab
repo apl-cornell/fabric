@@ -118,7 +118,8 @@ where
     l <= a,                             // access labels must bound update labels
 
     {L;*provider} <= l,     // result fields are affected by fields
-    {L;*provider} <= {*→s}  // information leaks from fields to object creation.
+    {L;*provider} <= {*→s}, // information leaks from fields to object creation.
+    provider <= A           // code affects access to the boundary 
   {
     if (boundary == null)
       throw new AssertionFailedError("boundary is non-null.");
@@ -146,6 +147,8 @@ where
   (
     ArrayIndexOutOfBoundsException{L;x;y;*provider}
   )
+  where 
+    provider           <= A  // code affects fetches
   {
     if (this.data == null)
       throw new AssertionFailedError("data must be non-null");
@@ -309,6 +312,8 @@ where
     float x,
     float y
   )
+  where     
+    provider           <= A  // code affects fetches
   {
     // claim: if boundary.contains(x,y) then 0 <= index < data.length
     // proof: since boundary.contains(x,y), boundary.scale_x(x) and
