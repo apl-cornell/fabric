@@ -119,7 +119,7 @@ where
 
     {L;*provider} <= l,     // result fields are affected by fields
     {L;*provider} <= {*→s}, // information leaks from fields to object creation.
-    provider <= A           // code affects access to the boundary 
+    provider      <= A      // code affects access to the boundary 
   {
     if (boundary == null)
       throw new AssertionFailedError("boundary is non-null.");
