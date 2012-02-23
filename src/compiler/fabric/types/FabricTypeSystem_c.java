@@ -18,7 +18,6 @@ import jif.translate.DisjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
 import jif.types.ActsForConstraint;
-import jif.types.ActsForParam;
 import jif.types.Assertion;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
@@ -655,8 +654,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
 //      return containsThisLabel(aec.endorseTo());
 //    }
     else if(as instanceof ActsForConstraint) {
-      ActsForConstraint<? extends ActsForParam, ? extends ActsForParam> afc =
-          (ActsForConstraint<? extends ActsForParam, ? extends ActsForParam>) as;
+      ActsForConstraint<?, ?> afc = (ActsForConstraint<?,?>) as;
       boolean hasThis = false;
       
       if(afc.actor() instanceof Label) 
@@ -725,8 +723,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       return containsArgLabel(leq.lhs()) || containsArgLabel(leq.rhs());
     }
     else if(as instanceof ActsForConstraint) {
-      ActsForConstraint<? extends ActsForParam, ? extends ActsForParam> afc =
-          (ActsForConstraint<? extends ActsForParam, ? extends ActsForParam>) as;
+      ActsForConstraint<?, ?> afc = (ActsForConstraint<?,?>) as;
       boolean hasThis = false;
       
       if(afc.actor() instanceof Label) 
