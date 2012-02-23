@@ -49,14 +49,14 @@ public class DereferenceHelper {
     // get the access label of the type
     final ConfPolicy accessLabel = targetType.accessPolicy();
     
-    // check that the pc and object label can flow to the access label
+    // check that the pc and ref label can flow to the access label
     JifContext       A  = lc.context();
     
     Label objLabel = Jif_c.getPathMap(target).NV();
     Label pc       = A.pc();
     Label lhs      = ts.join(objLabel, pc);
     
-    lc.constrain(new NamedLabel("object label ⊔ pc", lhs),
+    lc.constrain(new NamedLabel("reference label ⊔ pc", lhs),
                  LabelConstraint.LEQ,
                  new NamedLabel("access label", ts.toLabel(accessLabel)),
                  A.labelEnv(), pos,new ConstraintMessage() {
