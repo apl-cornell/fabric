@@ -8,14 +8,9 @@ import jif.translate.NewToJavaExt_c;
 import jif.types.JifPolyType;
 import jif.types.JifSubst;
 import jif.types.JifSubstType;
-import jif.types.LabelSubstitution;
 import jif.types.ParamInstance;
-import jif.types.label.AccessPath;
-import jif.types.label.AccessPathThis;
-import jif.types.label.Label;
 import polyglot.ast.Expr;
 import polyglot.ast.New;
-import polyglot.types.ClassType;
 import polyglot.types.SemanticException;
 import polyglot.visit.NodeVisitor;
 import fabil.ast.FabILNodeFactory;
@@ -49,7 +44,6 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
    * This method needs more comments, particularly explaining how the location arguments are handled.
    */
   public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {
-    boolean sigMode = ((FabricToFabilRewriter) rw).inSignatureMode();
     New n = (New) node();
     FabricClassType ct = (FabricClassType) objectType.toClass();
 

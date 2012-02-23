@@ -64,7 +64,8 @@ public class CBTypeEncoder extends TypeEncoder {
       depth++;
       
       try {
-          if (zip && !base64) {
+          boolean gzip = zip && !base64;
+          if (gzip) {
               // The base64 decoder automatically unzips byte streams, so
               // we only need an explicit GZIPInputStream if we are not
               // using base64 encoding.
