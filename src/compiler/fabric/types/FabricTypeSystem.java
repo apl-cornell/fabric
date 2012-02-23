@@ -43,7 +43,7 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   
   FabricFieldInstance fabricFieldInstance(Position pos,
       ReferenceType container, Flags flags, Type type,
-      Label accessLabel, String name);
+      ConfPolicy accessLabel, String name);
   
   Type strip(Type type);
   

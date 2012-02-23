@@ -426,7 +426,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
 
   @Override
   public FabricFieldInstance fabricFieldInstance(Position pos,
-      ReferenceType container, Flags flags, Type type, Label accessLabel,
+      ReferenceType container, Flags flags, Type type, ConfPolicy accessLabel,
       String name) {
     return new FabricFieldInstance_c(this, pos, container, flags, type,
         accessLabel, name);
