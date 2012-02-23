@@ -404,16 +404,19 @@ where
     // friend fetch
     {*provider;user; map_update} <= {_→_},
     // map access
-    {*provider;*MapImage.provider; user; map_update; _→_; *←user.p; map} <= {*map_access},
+    {*provider;*MapImage.provider; user; map_update; _→_; *←n,o; map} <= {*map_access},
     // map update
-    {*provider;*MapImage.provider; user; map_update; _→_; *←user.p; map} <= {*map_update},
+    {*provider;*MapImage.provider; user; map_update; _→_; *←n,o; map} <= {*map_update},
 
     // objects are created on the local store.
     {*←worker$} <= map_update, map_update <= {*→worker$}, // TODO: worker$ ≽ map_update
 
     // general access policy invariants
     {_←}          <= {*map_access},
-    {*map_update} <= {*map_access}
+    {*map_update} <= {*map_access},
+
+    // user invariants
+    user.p equiv (n,o)
   {
     if (map == null) throw new AssertionFailedError("MapImage.copy return value should be non-null");
 
@@ -425,7 +428,7 @@ where
 
     final Box[box_u,box_a] boundary = map.getBoundary(box_u, box_a, local);
 
-    final label friendsLabel = new label {_→; *←user.p};
+    final label friendsLabel = new label {_→; *←n,o};
     final GroupIterator[user.p, friendsLabel] j = user.friends.iterator(worker$.getLocalStore(), friendsLabel);
     if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
 
@@ -451,7 +454,7 @@ where
         // locations.  We could potentially avoid this constraint by copying.
 
         // the location can flow to the map
-        if (friend.locationLabel <= map_update) {
+        if (new label {*friend.locationLabel; *←fo,fn} <= map_update) {
 
         // the friend has a valid location
         if (loc != null && boundary != null && boundary.contains(loc.x,loc.y)) {
