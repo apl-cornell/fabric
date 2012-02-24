@@ -9,6 +9,9 @@ where
   provider <= {*←owner}
 {
 
+  // TODO: this is wrong, should be a parameter.
+  private int {_→; _←} @ {*→} accessLabelKludge;
+
   /**
    * Create a new iterator over g, which must be non-null.
    */
