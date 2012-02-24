@@ -113,6 +113,7 @@ where
     label a,
     Store s
   )
+  : {*provider}
   where
     l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
     l <= a,                             // access labels must bound update labels
@@ -203,6 +204,7 @@ where
     final label a,
     final Store s
   )
+  : {*provider}
   where
     // return object invariants
     {_←} <= a, // a must be a confidentiality policy
@@ -247,7 +249,7 @@ where
   )
   throws
   (
-    NullPointerException{out}
+    NullPointerException{*provider; out}
   )
   where
     {out;*provider} <= L  // output affected by arg, code
@@ -312,6 +314,7 @@ where
     float x,
     float y
   )
+  : {*provider}
   where     
     provider           <= A  // code affects fetches
   {

@@ -36,6 +36,7 @@ where
     final principal owner,
     final Store     store
   )
+  : {*provider}
   where
     // the parameters and code affect the assignment to the fields
     {*provider; name; owner; store} <= {_→; *←this},
@@ -60,6 +61,7 @@ where
     final String    name,
     final principal owner
   )
+  : {*provider}
   where
     // TODO: store ≽ {_→; *←this,owner}@{*→this}
     {_→; *←this,owner} <= {*→store}, {*←store} <= {_→; *←this,owner}, {*→this} <= {*→store},

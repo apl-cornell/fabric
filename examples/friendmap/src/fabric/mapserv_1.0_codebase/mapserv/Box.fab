@@ -32,6 +32,7 @@ where
     float {L} xmin, float {L} ymin,
     float {L} xmax, float {L} ymax
   )
+  : {*provider}
   where
     provider <= L // code affects fields
   {
@@ -52,6 +53,7 @@ where
     float{A} x,
     float{A} y
   )
+  : {*provider}
   {
     return xmin < x && x < xmax
         && ymin < y && y < ymax;
@@ -70,6 +72,7 @@ where
   (
     float {L} x, float {L} y
   )
+  : {*provider}
   where
     provider <= L  // code affects fields
   {
@@ -90,6 +93,7 @@ where
   (
     float x
   )
+  : {*provider}
   {
     return (x - xmin) / (xmax - xmin);
   }
@@ -106,6 +110,7 @@ where
   (
     float y
   )
+  : {*provider}
   {
     return (y - ymin) / (ymax - ymin);
   }
@@ -127,6 +132,7 @@ where
     label a,
     Store s
   )
+  : {*provider}
   where
     l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
     l <= a,                             // access labels must bound update labels
@@ -141,14 +147,14 @@ where
   // private helper methods                                                   //
   //////////////////////////////////////////////////////////////////////////////
 
-  private static float min (float a, float b) {
+  private static float min (float a, float b): {*provider} {
     if (a < b)
       return a;
     else
       return b;
   }
 
-  private static float max (float a, float b) {
+  private static float max (float a, float b): {*provider} {
     if (a > b)
       return a;
     else
