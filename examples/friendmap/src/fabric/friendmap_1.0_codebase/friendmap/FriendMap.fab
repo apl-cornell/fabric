@@ -403,9 +403,12 @@ where
     // friend fetch
     {*provider;user; map_update} <= {_→_},
     // map access
-    {*provider;*MapImage.provider; user; map_update; _→_; *←n,o; map} <= {*map_access},
+    {*provider;*MapImage.provider; user; map_update; map} <= {*map_access},
+    {_→_; *←n,o} <= {*map_access},  // TODO: syntax for joins and pairs is overloaded
     // map update
-    {*provider;*MapImage.provider; user; map_update; _→_; *←n,o; map} <= {*map_update},
+    {*provider;*MapImage.provider; user; map_update; map} <= {*map_update},
+    {_→_; *←n,o} <= {*map_update},  // TODO: syntax for joins and pairs is overloaded
+
 
     // objects are created on the local store.
     {*←worker$} <= map_update, map_update <= {*→worker$}, // TODO: worker$ ≽ map_update
@@ -430,8 +433,16 @@ where
 
     final Box[box_u,box_a] boundary = map.getBoundary(box_u, box_a, local);
 
-    final label friendsLabel = new label {_→; *←n,o};
-    final GroupIterator[user.p, friendsLabel] j = user.friends.iterator(worker$.getLocalStore(), friendsLabel);
+    // need to choose label L for the iterator such that
+    //
+    // 0. caller_pc   <= L              because the method call affects the iterator
+    // 1. {_→; *←n,o} <= L              because friends list affects iterator
+    // 2. L <= map_update ⊓ map_access  because iterator affects map and access
+    //
+    // Since map_update <= map_access, we can choose map_update
+    //
+
+    final GroupIterator[user.p, map_update] j = user.friends.iterator(worker$.getLocalStore(), map_update);
     if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
 
     while (j.hasNext()) {
@@ -450,7 +461,7 @@ where
         final Location[friend.locationLabel, {*→fn}] loc = friend.location;
 
         // we can access the location without leaking our set of friends or those friends' locations
-        if (new label {*map_update; *friendsLabel} <= new label {*→fn}) {
+        if (map_update <= new label {*→fn}) {
         // TODO: the above requirement is interesting: you can only be put on
         // the map if your network is allowed to see all of the friends'
         // locations.  We could potentially avoid this constraint by copying.
