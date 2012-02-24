@@ -1,8 +1,10 @@
 package fabric.extension;
 
+import fabric.types.FabricReferenceType;
 import polyglot.ast.Cast;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
+import polyglot.ast.TypeNode;
 import polyglot.types.SemanticException;
 import jif.extension.JifCastExt;
 import jif.translate.ToJavaExt;
@@ -16,13 +18,23 @@ public class FabricCastExt extends JifCastExt {
   
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    Cast cast = (Cast) node();
-    Expr ref  = (Expr) lc.labelCheck(cast.expr());
     
-    if (ref.type().isReference())
-      DereferenceHelper.checkDereference(ref, lc, cast.position());
+    // TODO: this causes ref and n to be label checked twice, but it seems
+    // there's no way around it.
+    
+    Expr     ref  = (Expr)     lc.labelCheck(node().expr());
+    TypeNode n    = (TypeNode) lc.labelCheck(node().castType());
+    
+    if (n.type().isReference())
+      DereferenceHelper.checkAccess(ref,
+                                    (FabricReferenceType) n.type(),
+                                    lc, node().position());
     
     return super.labelCheck(lc);
   }
 
+  @Override
+  public Cast node() {
+    return (Cast) super.node();
+  }
 }

@@ -25,26 +25,47 @@ public class DereferenceHelper {
   /**
    * Adds constraints to lc reflecting the fetch side effects of a dereference
    */
-  public static void checkDereference(final Receiver target, LabelChecker lc, Position pos)
+  public static void checkDereference(final Receiver ref, LabelChecker lc, Position pos)
   throws SemanticException
   {
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
 
     // All classes referred to in executing code have already been fetched
     // during typechecking.  Thus static dispatches do not cause fetches
-    if (target instanceof TypeNode)
+    if (ref instanceof TypeNode)
       return;
     
     // this and super are known to be resident when a method is executing.  Thus
     // they do not cause side effects when dereferenced.
-    if (target == null || target instanceof Special)
+    if (ref == null || ref instanceof Special)
       return;
     
-    if (!(target instanceof Expr))
+    if (!(ref instanceof Expr))
       throw new InternalCompilerError("unexpected receiver type");
 
     // get the type of the target
-    FabricReferenceType targetType = (FabricReferenceType) ts.unlabel(target.type()); 
+    FabricReferenceType refType = (FabricReferenceType) ts.unlabel(ref.type()); 
+    
+    checkAccess((Expr) ref, refType, lc, pos);
+  }
+  
+  
+  /**
+   * Adds constraints to lc to reflect that ref influences a fetch
+   * of something of targetType.  For example, the code
+   * <pre>
+   * C1 x;
+   * (C2) x;
+   * </pre>
+   * will cause a flow from the label of x to the access label of C2;
+   * checkAccess(x, C2, ...) will add constraints reflecting that.
+   */
+  public static void checkAccess (final Expr ref,
+                                  final FabricReferenceType targetType,
+                                  LabelChecker lc, Position pos)
+  throws SemanticException
+  {
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     
     // get the access label of the type
     final ConfPolicy accessLabel = targetType.accessPolicy();
@@ -52,7 +73,7 @@ public class DereferenceHelper {
     // check that the pc and ref label can flow to the access label
     JifContext       A  = lc.context();
     
-    Label objLabel = Jif_c.getPathMap(target).NV();
+    Label objLabel = Jif_c.getPathMap(ref).NV();
     Label pc       = A.pc();
     Label lhs      = ts.join(objLabel, pc);
     
@@ -62,7 +83,7 @@ public class DereferenceHelper {
                  A.labelEnv(), pos,new ConstraintMessage() {
                     @Override
                     public String msg() {
-                      return "Dereferencing " + target + " may cause it to be "
+                      return "Dereferencing " + ref + " may cause it to be "
                            + "fetched, revealing too much information to its "
                            + "store";
           }
