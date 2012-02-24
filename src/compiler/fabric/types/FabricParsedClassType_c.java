@@ -164,7 +164,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   public ConfPolicy accessPolicy() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
     
-    if (accessPolicy != null) {
+    if (accessPolicy == null) {
       if (ts.FObject().equals(this))
         accessPolicy = ts.bottomConfPolicy(Position.compilerGenerated());
       else if (!ts.isFabricClass(this))
