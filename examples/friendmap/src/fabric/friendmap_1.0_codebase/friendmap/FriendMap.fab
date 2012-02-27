@@ -384,7 +384,9 @@ where
    *             the map to be updated.  Assumed to be non-null.
    *
    * @param friend_access_bound
-   *             
+   *             a label constraining the fetches of friends during annotation.
+   *             Friends will only be added to the map if their access labels
+   *             are bounded below by friend_access_bound.
    */
   protected
   void
@@ -447,7 +449,10 @@ where
     {*map_update} <= {*map_access},
 
     // user invariants
-    user.p equiv (n,o)
+    user.p equiv (n,o),
+
+    // jif bug workaround: label expressions modify the pc (see 2/27 email titled "another jif bug")
+    {map_update; n; friend_access_bound} <= {{*→n} ⊓ {*map_update} ⊓ {*map_access} ⊓ {*friend_access_bound}}
   {
     if (map == null) {
       String {*→} s = "MapImage.copy return value should be non-null";
@@ -493,8 +498,6 @@ where
         final User[fo,fn]   friend = fw.user;
         if (friend == null) throw new AssertionFailedError("UserWrapper only wraps non-null users.");
 
-        final Location[friend.locationLabel, {*→fn}] loc = friend.location;
-
         // check whether we can access the location without leaking:
         //  - code and caller_pc          dyn: (*provider and caller_pc)
         //  - user's set of valid friends dyn: (user, n, user's stuff)
@@ -503,6 +506,8 @@ where
         // are not runtime representable.  Therefore we perform the following
         // check, which implies the requirements:
         if (friend_access_bound <= new label {*→fn}) {
+
+        final Location[friend.locationLabel, {*→fn}] loc = friend.location;
 
         if (loc != null) {
         final float x = loc.x;
