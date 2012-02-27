@@ -60,7 +60,7 @@ where
   )
   where
     // establish invariants
-    store actsfor (network,owner),
+    store actsfor network,
 
     // fields updates and accesses are affected by arguments.
     {*provider; store; name} <= {_→; *←network,owner}
