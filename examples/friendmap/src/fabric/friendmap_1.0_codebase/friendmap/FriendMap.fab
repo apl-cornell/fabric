@@ -382,14 +382,18 @@ where
    *
    * @param map
    *             the map to be updated.  Assumed to be non-null.
+   *
+   * @param friend_access_bound
+   *             
    */
   protected
   void
   annotateMap
-  {                    // side effects:
-    {*→n}            ⊓ // user is fetched
-    {*map_access}    ⊓ // map is fetched
-    {*map_update}      // map is updated
+  {                          // side effects:
+    {*→n}                  ⊓ // user is fetched
+    {*map_access}          ⊓ // map is fetched
+    {*friend_access_bound} ⊓ // friends are fetched
+    {*map_update}            // map is updated
   }
   (
     final User[o,n] user,
@@ -398,7 +402,9 @@ where
 
     final MapImage[map_update, map_access] map,
     final label map_update,
-    final label map_access
+    final label map_access,
+
+    final label friend_access_bound
   )
   where
     // user fetch based on
@@ -408,8 +414,12 @@ where
     {*provider; user; map} <= {*→n},
 
     // friend fetch based on
-    //  - code and caller_pc          dyn: (*provider and caller_pc)
-    //  - user's set of valid friends dyn: (user, n, user's stuff)
+    //  - code and caller_pc          (*provider and caller_pc)
+    //  - non-nullness of map         (map)
+    //  - user's set of valid friends (user, n, user's stuff)
+    {*provider} <= {*friend_access_bound},
+    {map}       <= {*friend_access_bound},
+    {user; n}   <= {*friend_access_bound},
 
     // map and boundary access based on
     //  - code and caller_pc          (*provider and caller_pc)
@@ -421,11 +431,13 @@ where
     //  - code and caller_pc          (*provider and caller_pc)
     //  - whether map is non-null     (map)
     //  - user's set of valid friends (user, n, user's stuff)
-    //  - user's friends' policies    dyn: (friends' stuff, map_update)
+    //  - policies                    (map_update, friend_access_bound)
+    //  - user's friends' policies    dyn: (friends' stuff)
     //  - user's friends' locations   dyn: (friend.locationInfo)
-    {*provider;*MapImage.provider} <= {*map_update},
-    {map}                          <= {*map_update},
-    {user; n}                      <= {*map_update}, {_→; *←n,o} <= {*map_update},
+    {*provider;*MapImage.provider}    <= {*map_update},
+    {map}                             <= {*map_update},
+    {user; n}                         <= {*map_update}, {_→; *←n,o} <= {*map_update},
+    {map_update; friend_access_bound} <= {*map_update},
 
     // objects are created on the local store.
     {*←worker$} <= map_update, map_update <= {*→worker$}, // TODO: worker$ ≽ map_update
@@ -486,7 +498,11 @@ where
         // check whether we can access the location without leaking:
         //  - code and caller_pc          dyn: (*provider and caller_pc)
         //  - user's set of valid friends dyn: (user, n, user's stuff)
-        if (new label {user; n; *←(n,o)} <= new label {*→fn}) {
+        //
+        // we cannot check this directly because {user}, {n} and {caller_pc}
+        // are not runtime representable.  Therefore we perform the following
+        // check, which implies the requirements:
+        if (friend_access_bound <= new label {*→fn}) {
 
         if (loc != null) {
         final float x = loc.x;
