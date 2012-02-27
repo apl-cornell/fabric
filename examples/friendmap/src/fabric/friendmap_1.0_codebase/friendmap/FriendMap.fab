@@ -388,7 +388,6 @@ where
   annotateMap
   {                    // side effects:
     {*→n}            ⊓ // user is fetched
-    {*→user.p}       ⊓ // user's group of friends is fetched
     {*map_access}    ⊓ // map is fetched
     {*map_update}      // map is updated
   }
@@ -402,17 +401,31 @@ where
     final label map_access
   )
   where
-    // user fetch
-    {*provider;user; map_update} <= {*→n},
-    // group fetch
-    {*provider;user; map_update} <= {*→n},
-    // map access
-    {*provider;*MapImage.provider; user; map_update; map} <= {*map_access},
-    {_→_; *←n,o} <= {*map_access},  // TODO: syntax for joins and pairs is overloaded
-    // map update
-    {*provider;*MapImage.provider; user; map_update; map} <= {*map_update},
-    {_→_; *←n,o} <= {*map_update},  // TODO: syntax for joins and pairs is overloaded
+    // user fetch based on
+    //  - code and caller_pc     (*provider and caller_pc)
+    //  - user pointer           (user)
+    //  - non-nullness of map    (map)
+    {*provider; user; map} <= {*→n},
 
+    // friend fetch based on
+    //  - code and caller_pc          dyn: (*provider and caller_pc)
+    //  - user's set of valid friends dyn: (user, n, user's stuff)
+
+    // map and boundary access based on
+    //  - code and caller_pc          (*provider and caller_pc)
+    //  - map is non-null             (map)
+    {*provider;*MapImage.provider} <= {*map_access},
+    {map}                          <= {*map_access},
+
+    // map update based on
+    //  - code and caller_pc          (*provider and caller_pc)
+    //  - whether map is non-null     (map)
+    //  - user's set of valid friends (user, n, user's stuff)
+    //  - user's friends' policies    dyn: (friends' stuff, map_update)
+    //  - user's friends' locations   dyn: (friend.locationInfo)
+    {*provider;*MapImage.provider} <= {*map_update},
+    {map}                          <= {*map_update},
+    {user; n}                      <= {*map_update}, {_→; *←n,o} <= {*map_update},
 
     // objects are created on the local store.
     {*←worker$} <= map_update, map_update <= {*→worker$}, // TODO: worker$ ≽ map_update
@@ -439,17 +452,18 @@ where
 
     // need to choose label L for the iterator such that
     //
-    // - caller_pc   <= L              because the method call affects the iterator
-    // - {_→; *←n,o} <= L              because friends list affects iterator
+    // - caller_pc   <= L   because the method call affects the iterator
+    // - {_→; *←n,o} <= L   because friends list affects iterator
+    // - user        <= L   because user affects iterator
     //
-    // - L <= map_update ⊓ map_access  because iterator affects map and access
-    // - L <= {*→user.p}               because iterator affects fetches of group members
-    // - L <= {*→n}                    because iterator affects fetch of friend wrappers
+    // - L <= map_update    because iterator affects map and access
+    // - L <= {*→n}         because iterator affects fetch of friend wrappers
+    // - L <= {*→fn}        (dyn) because iterator affects fetch of friends
     //
-    // - worker$ ≽ L                   because the iterator will be stored locally
+    // - worker$ ≽ L        because the iterator will be stored locally
     //
     // We'll take the highest such label:
-    final label iterLabel = new label {{*map_update} ⊓ {*map_access} ⊓ {*→n} ⊓ {*→user.p}};
+    final label iterLabel = new label {{*map_update} ⊓ {*→n}};
 
     final GroupIterator[user.p, iterLabel, {*→n}] j = user.friends.iterator(worker$.getLocalStore(), iterLabel);
     if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
@@ -469,22 +483,28 @@ where
 
         final Location[friend.locationLabel, {*→fn}] loc = friend.location;
 
-        // we can access the location without leaking our set of friends or those friends' locations
-        if (map_update <= new label {*→fn}) {
-        // TODO: the above requirement is interesting: you can only be put on
-        // the map if your network is allowed to see all of the friends'
-        // locations.  We could potentially avoid this constraint by copying.
+        // check whether we can access the location without leaking:
+        //  - code and caller_pc          dyn: (*provider and caller_pc)
+        //  - user's set of valid friends dyn: (user, n, user's stuff)
+        if (new label {user; n; *←(n,o)} <= new label {*→fn}) {
 
-        // the location can flow to the map
+        if (loc != null) {
+        final float x = loc.x;
+        final float y = loc.y;
+
+        // check whether the location can flow to the map:
+        //  - user's friends' policies    dyn: (friends' stuff, map_update)
+        //  - user's friends' locations   dyn: (friend.locationInfo)
         if (new label {*friend.locationLabel; *←fo,fn} <= map_update) {
 
         // the friend has a valid location
-        if (loc != null && boundary != null && boundary.contains(loc.x,loc.y)) {
+        if (boundary != null && boundary.contains(x,y)) {
 
-        try { addPin (map, map_update, map_access, loc, friend.locationLabel, new label {*→fn}, friend, fo, fn); }
+        try { addPin (map, map_update, map_access, x, y, friend, fo, fn); }
         catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
         catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
 
+        }
         }
         }
         }
@@ -501,7 +521,7 @@ where
    * Add a pin corresponding to friend at a given location on a map.
    *
    * @param map      the map to annotate
-   * @param location the location on the map to update.  Assumed to be on the map
+   * @param x,y      the location on the map to update.  Assumed to be on the map
    * @param friend   the friend located at that location
    *
    * @throws NullPonterException
@@ -514,23 +534,21 @@ where
   addPin
   {               // side effects:
     *map_update ⊓ // map contents are updated
-    *map_access ⊓ // map contents are fetched
-    *loc_access   // location is fetched
+    *map_access   // map contents are fetched
   }
   (
     final MapImage[map_update,map_access] map,
     final label    map_update,
     final label    map_access,
 
-    final Location[loc_update,loc_access] location,
-    final label    loc_update,
-    final label    loc_access,
+    final float x,
+    final float y,
 
     final User[o,n] friend,
     final principal o,
     final principal n
   )
-  :{*provider;*MapImage.provider;map;*map_update;friend;location}
+  :{*provider;*MapImage.provider;map;*map_update;friend}
   throws
   (
     NullPointerException,
@@ -538,20 +556,20 @@ where
   )
   where
     // these (in addition to the caller_pc) affect whether the map can be updated
-    {*provider; *MapImage.provider; map; friend; location} <= {*map_update ⊓ *map_access ⊓ *loc_access},
+    {*provider; *MapImage.provider; map; friend} <= {*map_update ⊓ *map_access},
 
     // when we get to the update, location and friend affect map
-    {location; *loc_update}  <= map_update,
-    {friend;   _→; *←(n,o)}  <= map_update,
+    {x; y}                 <= map_update,
+    {friend; _→; *←(n,o)}  <= map_update,
 
     // general invariants for map images
     map_update <= map_access,
     {_←}       <= map_access
   {
-    if (map == null || friend == null || location == null)
+    if (map == null || friend == null)
       throw new NullPointerException();
 
-    map.setAt(location.x, location.y, 'f');
+    map.setAt(x, y, 'f');
   }
 }
 
