@@ -482,7 +482,10 @@ where
     // We'll take the highest such label:
     final label iterLabel = new label {{*map_update} ⊓ {*→n} ⊓ {*friend_access_bound}};
 
-    final GroupIterator[user.p, iterLabel, {*→n}] j = user.friends.iterator(worker$.getLocalStore(), iterLabel);
+    // TODO: solver is failing, so we need to specify a label
+    final GroupIterator[user.p, iterLabel, {*→n}]
+        {*<-n,o ; user ; friend_access_bound ; n ; map_update}
+        j = user.friends.iterator(worker$.getLocalStore(), iterLabel);
     if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
 
     while (j.hasNext()) {
@@ -507,7 +510,12 @@ where
         // check, which implies the requirements:
         if (friend_access_bound <= new label {*→fn}) {
 
-        final Location[friend.locationLabel, {*→fn}] loc = friend.location;
+        // check general User invariants
+        if (friend.locationLabel equiv new label {_→; *←fn,fo}) {
+        if (friend.locationLabel <=    new label {*→fn}) {
+
+        // TODO: the solver is failing, so we need to specify a label.
+        final Location[friend.locationLabel, {*→fn}] {*friend.locationLabel} loc = friend.location;
 
         if (loc != null) {
         final float x = loc.x;
@@ -525,10 +533,12 @@ where
         catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
         catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
 
-        }
-        }
-        }
-        }
+        } // OK:        friend isn't on the map
+        } // OK:        friend's location is too secret
+        } // OK:        friend has no location
+        } // Assertion: friend.locLabel <= friend.accessLabel
+        } // Assertion: friend.locationLabel = *←fo,fn
+        } // OK:        it's just not safe to access user
       }
     }
 
