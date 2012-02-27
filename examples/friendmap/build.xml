@@ -93,8 +93,8 @@
         <arg value="-report" /> <arg value="solver=5" />
         <arg value="-debugpositions" />
         <arg value="-rdebug" />
-        -->
         <arg value="-report" /> <arg value="labelFlow=1" />
+        -->
     </fabc-local>
   </target>
 

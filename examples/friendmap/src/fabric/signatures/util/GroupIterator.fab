@@ -6,7 +6,7 @@ package util;
 public class GroupIterator[principal owner, label L]
 where
   {*←owner} <= L,
-  provider <= {*←owner}
+  provider  <= {*←owner}
 {
 
   // TODO: this is wrong, should be a parameter.
@@ -23,15 +23,20 @@ where
 
   public native
   boolean {L}
-  hasNext();
+  hasNext
+  {           // side effects:
+    {*→owner} // group is accessed
+  }
+  ();
 
 
 
   public native
   Principal {L}
   next
-  {   // side effects:
-    L // TODO
+  {           // side effects:
+    {L} ⊓     // this is updated
+    {*→owner} // group is accessed
   }
   ():{L}
   throws
