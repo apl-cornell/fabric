@@ -75,18 +75,28 @@ public class DereferenceHelper {
     
     Label objLabel = Jif_c.getPathMap(ref).NV();
     Label pc       = A.pc();
-    Label lhs      = ts.join(objLabel, pc);
-    
-    lc.constrain(new NamedLabel("reference label ⊔ pc", lhs),
-                 LabelConstraint.LEQ,
-                 new NamedLabel("access label", ts.toLabel(accessLabel)),
-                 A.labelEnv(), pos,new ConstraintMessage() {
-                    @Override
-                    public String msg() {
-                      return "Dereferencing " + ref + " may cause it to be "
-                           + "fetched, revealing too much information to its "
-                           + "store";
-          }
-        });
+
+    lc.constrain(new NamedLabel("reference label", objLabel),
+        LabelConstraint.LEQ,
+        new NamedLabel("access label", ts.toLabel(accessLabel)),
+        A.labelEnv(), pos,new ConstraintMessage() {
+      @Override
+      public String msg() {
+        return "Dereferencing " + ref + " may cause it to be "
+            + "fetched, revealing too much information to its "
+            + "store";
+      }
+    });
+    lc.constrain(new NamedLabel("pc", pc),
+        LabelConstraint.LEQ,
+        new NamedLabel("access label", ts.toLabel(accessLabel)),
+        A.labelEnv(), pos, new ConstraintMessage() {
+      @Override
+      public String msg() {
+        return "Dereferencing " + ref + " may cause it to be "
+            + "fetched, revealing too much information to its "
+            + "store";
+      }
+    });
   }
 }
