@@ -317,6 +317,10 @@ where
     // result box affected by label and store
     {l; s} <= l,
 
+    // network affects who is considered a friend, because type of friend's
+    // friend wrappers depends on n.  This affects accesses and updates.
+    {n} <= {{*→n} ⊓ {*l}},
+
     // accesses to user's friends affected by the code and the user
     {*provider; user} <= {*→n},
     {*provider; user} <= {_→_}
@@ -334,7 +338,7 @@ where
       try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");}
 
       if (next instanceof UserWrapper[{*→n}]) {
-        final UserWrapper[{*→n}] fw = (UserWrapper[{*→user.friends}]) next;
+        final UserWrapper[{*→n}] fw = (UserWrapper[{*→n}]) next;
         final principal          fo = fw.userOwner;
         final principal          fn = fw.userNetwork;
 
@@ -401,7 +405,7 @@ where
     // user fetch
     {*provider;user; map_update} <= {*→n},
     // group fetch
-    {*provider;user; map_update} <= {*→user.p},
+    {*provider;user; map_update} <= {*→n},
     // map access
     {*provider;*MapImage.provider; user; map_update; map} <= {*map_access},
     {_→_; *←n,o} <= {*map_access},  // TODO: syntax for joins and pairs is overloaded

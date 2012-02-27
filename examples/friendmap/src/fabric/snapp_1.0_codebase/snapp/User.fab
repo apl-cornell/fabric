@@ -31,11 +31,13 @@ where
   /** The label {p←;p→locationInfo} */
   public final label       {_→; *←(network,owner)}@{*→network} locationLabel; // Cannot be set as initializer due to jif bug.
 
-  /** The user's friends. non-null. */
+  /** The user's friends. non-null.
+   *  Contains UserWrapper[*→network] objects */
   public final Group[p,{*→network}]
                            {_→; *←(network,owner)}@{*→network} friends;
 
-  /** The group containing anyone who can see the user's location. non-null. */
+  /** The group containing anyone who can see the user's location. non-null.
+   *  Contains UserWrapper[*→network] objects */
   public final Group[p,{*→network}]
                            {_→; *←(network,owner)}@{*→network} locationInfo;
 
