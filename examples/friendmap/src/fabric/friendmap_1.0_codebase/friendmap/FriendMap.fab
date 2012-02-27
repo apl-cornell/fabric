@@ -240,32 +240,21 @@ where
     final Box boundary = createBoundingBox(user, o, n, fetchLabel, fetchStore);
 
     // get map
-    MapImage[fetchLabel,{*→service}] _map;
+    MapImage[fetchLabel,{*→service}] map;
     try {
-      _map = this.service.createMap(fetchLabel, new label {*→service}, boundary);
+      map = this.service.createMap(fetchLabel, new label {*→service}, boundary);
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("boundary is non-null.");
     }
-    final MapImage[fetchLabel,{*→service}] map = _map;
-    if (map == null)
-      throw new AssertionFailedError("getMap returned null");
 
     // make a local copy (with label l)
     // TODO: s ≽ l
     MapImage[l,{*→s}] annotated = map.copy(l, new label{*→s}, s);
-    /*
-    TODO
-    if (new label {localStore←} <= l &&
-            l <= new label {localStore→} &&
-            l <= new label {⊤→localStore} &&
-            Box.provider <= new label {⊤→localStore} &&
-            new label {⊤←localStore} <= l &&
-            new label {⊤←localStore} <= Box.provider
-            )  // localStore ≽ ℓ
-      annotated = map.copy(l, localStore);
-    else
-      throw new AssertionFailedError("local store does not act for l");
-    */
+
+    // add annotations
+    annotateMap(user,      o, n,
+                annotated, l, new label {*→s},
+                new label {/*TODO: ?*/});
 
     return annotated;
   }
