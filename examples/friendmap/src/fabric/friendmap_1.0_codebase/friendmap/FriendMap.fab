@@ -333,10 +333,10 @@ where
       Principal next;
       try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");}
 
-      if (next instanceof UserWrapper[{*→user.friends}]) {
-        final UserWrapper[{*→user.friends}] fw = (UserWrapper[{*→user.friends}]) next;
-        final principal                     fo = fw.userOwner;
-        final principal                     fn = fw.userNetwork;
+      if (next instanceof UserWrapper[{*→n}]) {
+        final UserWrapper[{*→n}] fw = (UserWrapper[{*→user.friends}]) next;
+        final principal          fo = fw.userOwner;
+        final principal          fn = fw.userNetwork;
 
         final User[fo,fn] friend = fw.user;
         if (friend == null) throw new AssertionFailedError("UserWrapper only wraps non-null users.");
