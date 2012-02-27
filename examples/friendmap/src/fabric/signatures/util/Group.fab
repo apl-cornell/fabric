@@ -14,14 +14,14 @@ package util;
  * fixed-size array to hold the members, and the add() method throws an
  * ArrayIndexOutOfBoundsException if the array is full.
  */
-public class Group[principal groupOwner]
+public class Group[principal groupOwner, label A]
 extends Delegator
 where
   provider               <= {*←groupOwner},
   GroupIterator.provider <= {*←groupOwner}
 {
 
-  private int {}@{*→groupOwner} accessLabelKludge; 
+  private int {}@{A} accessLabelKludge; 
 
   //////////////////////////////////////////////////////////////////////////////
   // Group constructors                                                       //
@@ -75,9 +75,8 @@ where
   public native
   void
   add
-  {                  // side effects:
-    {*←groupOwner} ⊓ // members set is updated
-    {*→}             // TODO: this is fetched
+  {                // side effects:
+    {*←groupOwner} // members set is updated
   }
   (
     Principal{*←groupOwner} p
@@ -93,9 +92,8 @@ where
   public native
   void
   remove
-  {                  // side effects:
-    {*←groupOwner} ⊓ // members set is updated
-    {*→}             // TODO: this is fetched
+  {                // side effects:
+    {*←groupOwner} // members set is updated
   }
   (
     Principal{*←groupOwner} p
@@ -105,7 +103,7 @@ where
    * Iterate over the members of the group.
    */
   public native
-  GroupIterator[groupOwner, l]
+  GroupIterator[groupOwner, l, A]
   iterator
   {    // side effects:
     *l // TODO

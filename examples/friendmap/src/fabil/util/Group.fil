@@ -17,6 +17,7 @@ public class Group extends Delegator
   Principal[] members;
   int   size = 0;
   final private Principal jif$util_Group_groupOwner;
+  final private Label     jif$util_Group_A;
 
   private final static int       SIZE = 100;
 
@@ -51,9 +52,10 @@ public class Group extends Delegator
     return this;
   }
 
-  public Group(final Principal p) {
+  public Group(final Principal p, final Label A) {
     super();
     this.jif$util_Group_groupOwner = p;
+    this.jif$util_Group_A          = A;
   }
 
   private void jif$init() { }

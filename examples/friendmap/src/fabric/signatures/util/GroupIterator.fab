@@ -3,29 +3,28 @@ package util;
 // TODO: access labels
 // TODO: comments
 
-public class GroupIterator[principal owner, label L]
+public class GroupIterator[principal owner, label L, label A]
 where
   {*←owner} <= L,
   provider  <= {*←owner}
 {
 
-  // TODO: this is wrong, should be a parameter.
-  private int {_→; _←} @ {*→} accessLabelKludge;
+  private int {} @ {A} accessLabelKludge;
 
   /**
    * Create a new iterator over g, which must be non-null.
    */
   native GroupIterator
   (
-    Group[owner] {L} g
+    Group[owner, A] {L} g
   );
 
 
   public native
   boolean {L}
   hasNext
-  {           // side effects:
-    {*→owner} // group is accessed
+  {     // side effects:
+    {A} // group is accessed
   }
   ();
 
@@ -34,9 +33,9 @@ where
   public native
   Principal {L}
   next
-  {           // side effects:
-    {L} ⊓     // this is updated
-    {*→owner} // group is accessed
+  {       // side effects:
+    {L} ⊓ // this is updated
+    {A}   // group is accessed
   }
   ():{L}
   throws

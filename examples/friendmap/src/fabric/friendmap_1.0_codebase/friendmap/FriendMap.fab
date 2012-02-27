@@ -326,7 +326,7 @@ where
 
     final Store localStore = worker$.getLocalStore();
     final label pub = new label {_→};
-    final GroupIterator[user.p, pub] i = user.friends.iterator(localStore, pub);
+    final GroupIterator[user.p, pub, {*→n}] i = user.friends.iterator(localStore, pub);
     if (i == null)
       throw new AssertionFailedError("Group.iterator() should return a non-null value");
     while (i.hasNext()) {
@@ -447,7 +447,7 @@ where
     // We'll take the highest such label:
     final label iterLabel = new label {{*map_update} ⊓ {*map_access} ⊓ {*→n} ⊓ {*→user.p}};
 
-    final GroupIterator[user.p, iterLabel] j = user.friends.iterator(worker$.getLocalStore(), iterLabel);
+    final GroupIterator[user.p, iterLabel, {*→n}] j = user.friends.iterator(worker$.getLocalStore(), iterLabel);
     if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
 
     while (j.hasNext()) {

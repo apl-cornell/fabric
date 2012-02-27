@@ -32,11 +32,11 @@ where
   public final label       {_→; *←(network,owner)}@{*→network} locationLabel; // Cannot be set as initializer due to jif bug.
 
   /** The user's friends. non-null. */
-  public final Group[p]
+  public final Group[p,{*→network}]
                            {_→; *←(network,owner)}@{*→network} friends;
 
   /** The group containing anyone who can see the user's location. non-null. */
-  public final Group[p]
+  public final Group[p,{*→network}]
                            {_→; *←(network,owner)}@{*→network} locationInfo;
 
   /** The user's location, only readable by members of the locationInfo group. */
@@ -66,8 +66,8 @@ where
     // assert p equiv p
     if (p equiv new principal(owner,network)) {
 
-    this.friends       = new Group[p]@store(store, name + "'s friends");
-    this.locationInfo  = new Group[p]@store(store, name + "'s location viewers");
+    this.friends       = new Group[p,{*→network}]@store(store, name + "'s friends");
+    this.locationInfo  = new Group[p,{*→network}]@store(store, name + "'s location viewers");
     this.locationLabel = new label {p←;p→locationInfo};
 
     } else throw new AssertionFailedError("(p,q) equiv (p,q)");
