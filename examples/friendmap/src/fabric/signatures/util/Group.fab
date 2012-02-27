@@ -18,7 +18,10 @@ public class Group[principal groupOwner, label A]
 extends Delegator
 where
   provider               <= {*←groupOwner},
-  GroupIterator.provider <= {*←groupOwner}
+  GroupIterator.provider <= {*←groupOwner},
+
+  // general access label invariants:
+  {*←groupOwner} <= A
 {
 
   private int {}@{A} accessLabelKludge; 
@@ -41,6 +44,7 @@ where
     final String {this} name
   )
   where
+    {_→} <= {*→store}, {*←store} <= {*←groupOwner}, A <= {*→store}, // TODO: store ≽ {*←groupOwner}@A
     store actsfor groupOwner;
 
 
@@ -63,6 +67,7 @@ where
     NegativeArraySizeException{maxSize}
   )
   where
+    {_→} <= {*→store}, {*←store} <= {*←groupOwner}, A <= {*→store}, // TODO: store ≽ {*←groupOwner}@A
     store actsfor groupOwner;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -111,9 +116,7 @@ where
   (
     final Store s,
     final label l
-  )
-  where
-    {*←groupOwner} <= {*l};
+  );
 
   //////////////////////////////////////////////////////////////////////////////
   // Principal methods                                                        //

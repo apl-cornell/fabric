@@ -475,7 +475,7 @@ where
     // - worker$ ≽ L        because the iterator will be stored locally
     //
     // We'll take the highest such label:
-    final label iterLabel = new label {{*map_update} ⊓ {*→n}};
+    final label iterLabel = new label {{*map_update} ⊓ {*→n} ⊓ {*friend_access_bound}};
 
     final GroupIterator[user.p, iterLabel, {*→n}] j = user.friends.iterator(worker$.getLocalStore(), iterLabel);
     if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
