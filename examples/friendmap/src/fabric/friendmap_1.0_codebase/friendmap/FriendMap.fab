@@ -195,15 +195,14 @@ where
   MapImage[l,{*→s}] {*l}
   createMap
   {                    // side effects:
-    {A}              ⊓ // this is fetched
-    {*l}             ⊓ // result map is updated
+    {*l}             ⊓ // result  map is updated
     {*→service}      ⊓ // initial map is fetched
-    {*→user.friends} ⊓ // user's friends are fetched
     {*→s}              // result is created at s
   }
   (
     final label  l,
     final Store  s,
+
     final User[o,n] user,
     final principal o,
     final principal n
