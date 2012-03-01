@@ -223,11 +223,11 @@ where
 // 
 //     // information that flows to the map service:
 //     //  - code and caller pc            (*provider and caller_pc)
-//     //  - user and user's contents      (user, {_→; (n,o)←})
+//     //  - user and user's contents      (user, {_→; *←n,o})
 //     //  - fetch policy                  (friend_access_bound)
 //     //  - friends' policies and locations (checked dynamically)
 //     {*provider}           <= {*→service},
-//     {user}                <= {*→service}, {_→; (n,o)←} <= {*→service},
+//     {user}                <= {*→service}, {_→; *←n,o} <= {*→service},
 //     {friend_access_bound} <= {*→service},
 // 
 //     // information that flows to the resulting map:
@@ -238,7 +238,7 @@ where
 //     //  - some friend locations
 //     //  - fetched map
 //     {*provider}           <= {*l},
-//     {user}                <= {*l}, {_→; (n,o)←} <= {*l},
+//     {user}                <= {*l}, {_→; *←n,o} <= {*l},
 //     {s; l}                <= {*l},
 //     {friend_access_bound} <= {*l},
 // 
@@ -246,7 +246,7 @@ where
 //     //  - code and caller pc
 //     //  - user and user's contents
 //     {*provider} <= {*friend_access_bound},
-//     {user}      <= {*friend_access_bound}, {_→; (n,o)←} <= {*friend_access_bound},
+//     {user}      <= {*friend_access_bound}, {_→; *←n,o} <= {*friend_access_bound},
 // 
 // 
 // 
@@ -344,44 +344,25 @@ where
     //  - policy
     //  - result parameters (l and s)
     //  - (dyn) user's friends' locations
-    {*provider}           <= l,
-    {*MapServer.provider} <= l,
-    {user}                <= l, {_→; (n,o)←} <= l,
-    {friend_access_bound} <= l,
-    {l;s}                 <= l,
+    {*provider}                 <= l,
+    {*MapServer.provider}       <= l,
+    {user}                      <= l, {_→; *←n,o} <= l,
+    {friend_access_bound; n; l} <= l,
+    {l;s}                       <= l,
 
     // fetch friends
     //  - code anc caller pc
     //  - user and user's contents
     //  - policy
-    {*provider}           <= friend_access_bound,
-    {user}                <= friend_access_bound, {_→; (n,o)←} <= friend_access_bound,
-    {friend_access_bound} <= friend_access_bound,
+    {*provider}                 <= friend_access_bound,
+    {user}                      <= friend_access_bound, {_→; *←n,o} <= friend_access_bound,
+    {friend_access_bound; n; l} <= friend_access_bound,
 
     // fetch user
     //  - code and caller pc
     //  - user pointer
-    {*provider; user} <= {*→n},
-
-    // // result box is affected by user's friends list
-    // {user}         <= l,
-    // {_→; *←(n,o)}  <= l, // user.friends
-    // {_→; *←user.p} <= l, // user.friends.members
-
-    // // result box affected by code
-    // {*Box.provider; *provider} <= l,
-
-    // // result box affected by label and store
-    // {l; s} <= l,
-
-    // // network affects who is considered a friend, because type of friend's
-    // // friend wrappers depends on n.  This affects accesses and updates.
-    // {n} <= {{*→n} ⊓ {*l}},
-
-    // {*provider; user} <= {*→n},
-
-    // // accesses to user's friends affected by the code and the user
-    // {*provider; user} <= {*friend_access_bound}
+    //  - policy
+    {*provider; user; n; l} <= {*→n},
 
     // result is created at s.
     l <= {*→s}, {*←s} <= l, // TODO: s ≽ l
@@ -493,7 +474,7 @@ where
     //  - user's set of valid friends (user, n, user's stuff)
     {*provider} <= {*friend_access_bound},
     {map}       <= {*friend_access_bound},
-    {user; n}   <= {*friend_access_bound}, {_→; (n,o)←} <= {*friend_access_bound},
+    {user; n}   <= {*friend_access_bound}, {_→; *←n,o} <= {*friend_access_bound},
 
     // map and boundary access based on
     //  - code and caller_pc          (*provider and caller_pc)
@@ -663,7 +644,7 @@ where
 
     // when we get to the update, location and friend affect map
     {x; y}                 <= map_update,
-    {friend; _→; *←(n,o)}  <= map_update,
+    {friend; _→; *←n,o}  <= map_update,
 
     // general invariants for map images
     map_update <= map_access,
