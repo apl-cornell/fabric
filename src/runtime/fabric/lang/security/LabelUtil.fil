@@ -196,6 +196,10 @@ public final class LabelUtil {
 //    }
   }
 
+  public static Label readerPolicyLabel(Principal owner, Principal reader) {
+      return toLabel(localStore, readerPolicy(localStore, owner, reader));
+  }
+  
   public static Label readerPolicyLabel(Store store, Principal owner,
       Principal reader) {
 //    try {
