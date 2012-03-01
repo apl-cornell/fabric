@@ -194,10 +194,12 @@ where
   public
   MapImage[l,{*→s}] {*l}
   createMap
-  {                    // side effects:
-    {*l}             ⊓ // result  map is updated
-    {*→service}      ⊓ // initial map is fetched
-    {*→s}              // result is created at s
+  {                          // side effects:
+    {*→n}                  ⊓ // user is fetched
+    {*l}                   ⊓ // result  map is updated
+    {*→service}            ⊓ // initial map is fetched
+    {*→s}                  ⊓ // result is created at s
+    {*friend_access_bound}   // friends are fetched
   }
   (
     final label  l,
@@ -205,21 +207,63 @@ where
 
     final User[o,n] user,
     final principal o,
-    final principal n
+    final principal n,
+
+    final label friend_access_bound
   )
   throws
   (
     NullPointerException{user}
   )
   where
-    {*←s} <= l, l <= {*→s}, {*→s} <= {*→s}, // TODO: s ≽ l@{s→}: result created at s
+    // user fetch is based on
+    //  - code and caller pc
+    //  - user pointer
+    {*provider; user} <= {*→n},
+
+    // information that flows to the map service:
+    //  - code and caller pc            (*provider and caller_pc)
+    //  - user and user's contents      (user, {_→; (n,o)←})
+    //  - fetch policy                  (friend_access_bound)
+    //  - friends' policies and locations (checked dynamically)
+    {*provider}           <= {*→service},
+    {user}                <= {*→service}, {_→; (n,o)←} <= {*→service},
+    {friend_access_bound} <= {*→service},
+
+    // information that flows to the resulting map:
+    //  - code and caller pc
+    //  - user and user's contents
+    //  - store and label of result
+    //  - friends policies
+    //  - some friend locations
+    //  - fetched map
+    {*provider}           <= {*l},
+    {user}                <= {*l}, {_→; (n,o)←} <= {*l},
+    {s; l}                <= {*l},
+    {friend_access_bound} <= {*l},
+
+    // fetch of user's friends:
+    //  - code and caller pc
+    //  - user and user's contents
+    {*provider} <= {*friend_access_bound},
+    {user}      <= {*friend_access_bound}, {_→; (n,o)←} <= {*friend_access_bound},
+
+
+
+
     {*←service} <= l, // the result is tainted by the service
     {*←user.p}  <= l, // the result is tainted by the user
 
     // the arguments and code can affect the fetches and the return value
     {user; l; s; *provider; *MapServer.provider} <= {*l},
     {user; l; s; *provider; *MapServer.provider} <= {*→service},
-    {user; l; s; *provider; *MapServer.provider} <= {*→user.friends}
+    {user; l; s; *provider; *MapServer.provider} <= {*→user.friends},
+
+    // l objects created at s
+    {*←s} <= l, l <= {*→s}, {*→s} <= {*→s}, // TODO: s ≽ l@{s→}: result created at s
+
+    // invariants
+    user.p equiv (n,o)
   {
     // invariant checks
     if (user == null)
@@ -253,7 +297,7 @@ where
     // add annotations
     annotateMap(user,      o, n,
                 annotated, l, new label {*→s},
-                new label {/*TODO: ?*/});
+                friend_access_bound);
 
     return annotated;
   }
@@ -276,7 +320,6 @@ where
   Box[l,{*→s}] {*l}
   createBoundingBox
   {         // side effects:
-    {A}   ⊓ // this is fetched
     {*l}  ⊓ // box is updated
     {*→s} ⊓ // box is created
     {*→n} ⊓ // user is fetched
