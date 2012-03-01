@@ -362,7 +362,7 @@ where
     //  - code and caller pc
     //  - user pointer
     //  - policy
-    {*provider; user; n; l} <= {*→n},
+    {*provider; user; n; l; friend_access_bound} <= {*→n},
 
     // result is created at s.
     l <= {*→s}, {*←s} <= l, // TODO: s ≽ l
@@ -384,7 +384,6 @@ where
     final GroupIterator[user.p, iterLabel, {*→n}] i = user.friends.iterator(localStore, iterLabel);
     if (i == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
     while (i.hasNext()) {
-      /*
       Principal next;
       try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");}
 
@@ -396,28 +395,36 @@ where
         final User[fo,fn] friend = fw.user;
         if (friend == null) throw new AssertionFailedError("UserWrapper only wraps non-null users.");
 
+        // check general User invariants
+        if (friend.locationLabel equiv new label {_→; *←fn,fo}) {
+        if (friend.locationLabel <=    new label {*→fn}) {
+
         // if we can fetch the user without leaking:
         if (friend_access_bound <= new label {*→fn}) {
+
+        // TODO: solver is failing, so we need to specify a label.
+        final Location[friend.locationLabel, {*→fn}] {*friend.locationLabel} loc = friend.location;
+
+        final float x = loc.x;
+        final float y = loc.y;
 
         // if the friend's location can affect the map
         if (new label {_→; *←fo,fn} <= l && friend.locationLabel <= l) {
 
-        final Location {_→; *←n,o; *←fn,fo} loc = friend.location;
         if (loc != null) {
-          try { boundary.expand(loc.x, loc.y); }
+          try { boundary.expand(x, y); }
           catch (final NullPointerException e) { throw new AssertionFailedError("boundary is non-null."); }
-        }
-
-        }
-
+        } // ok: friend has no location
+        } // ok: friend won't show us his location
         // TODO: declassifiers
         else {
         }
-        }
+        } // ok: friend is inaccessible
+        } // bad: friend invariant fails
+        } // bad: friend invariant fails
 
         // otherwise we leave him off the map.
       }
-      */
     }
 
     return boundary;
