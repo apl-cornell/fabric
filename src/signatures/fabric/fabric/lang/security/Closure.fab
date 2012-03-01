@@ -1,0 +1,5 @@
+package fabric.lang.security;
+
+public interface Closure[principal P, label L] authority(P) {
+    java.lang.Object{L} invoke{L}() where caller(P);
+}

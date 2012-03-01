@@ -1,0 +1,32 @@
+public class RemoteCall extends fabric.lang.Object {
+    final static fabric.worker.Worker worker$ =
+      fabric.worker.Worker.getWorker();
+    
+    public static void main(final java.lang.String[] args) {
+        atomic {
+            fabric.worker.Worker local = fabric.worker.Worker.getWorker();
+            if (local == null) return;
+            final fabric.worker.remote.RemoteWorker w = local.getWorker("bob");
+            if (w == null) return;
+            final fabric.worker.Store gaia =
+              local.getStore("gaia.systems.cs.cornell.edu");
+            final fabric.lang.security.Principal alice = local.getPrincipal();
+            final fabric.lang.security.Principal bob = w.getPrincipal();
+            RemoteCallImpl call =
+              new RemoteCallImpl@gaia(alice, bob).RemoteCallImpl$();
+            call.m2();
+        }
+    }
+    
+    public RemoteCall RemoteCall$() {
+        this.jif$init();
+        {  }
+        return this;
+    }
+        
+    public RemoteCall() { super(); }
+    
+    public void jif$invokeDefConstructor() { this.RemoteCall$(); }
+    
+    private void jif$init() {  }
+}

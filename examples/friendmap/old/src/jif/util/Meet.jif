@@ -1,0 +1,105 @@
+package util;
+
+public class Meet implements Principal {
+
+  protected final String {this} name;
+
+  protected final Principal{this} left;
+  protected final Principal{this} right;
+
+  public
+  Meet
+  (
+    Principal {this} left,
+    Principal {this} right
+  )
+  {
+    final String leftName  = (left  == null ? "_" : left.name());
+    final String rightName = (right == null ? "_" : right.name());
+    final String fullName  = "(" + leftName + " meet " + rightName + ")";
+
+    this(name, left, right);
+  }
+
+  public
+  Meet
+  (
+    String    {this} name,
+    Principal {this} left,
+    Principal {this} right
+  )
+  {
+    this.left  = left;
+    this.right = right;
+    this.name  = name;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public String{this} name() {
+    return this.name;
+  }
+
+  public boolean{this;p;this←} delegatesTo(principal p) {
+    return p == left || p == right;
+  }
+
+  public boolean equals(Principal p) {
+    // TODO
+    return false;
+  }
+
+  /**
+   * Returns true if this principal authorizes the given closure.
+   */
+  public
+  boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+  isAuthorized {this←}
+              (Object           authPrf,
+               Closure[this,lb] closure,
+               label            lb,
+               boolean          executeNow)
+  where authority(this),
+        {authPrf;closure;lb;executeNow} <= lb
+  {
+    return false;
+  }
+
+  public
+  ActsForProof{this; p; this←; p←}
+  findProofUpto {this←}
+               (Principal p,
+                Object searchState)
+  {
+    if (left actsfor this && right actsfor this) {
+
+      ActsForProof leftProof  = PrincipalUtil.findActsForProof(p, left,  searchState);
+      ActsForProof rightProof = PrincipalUtil.findActsForProof(p, right, searchState);
+
+      if (leftProof != null)
+        return new TransitiveProof(leftProof,  left,  new DelegatesProof(left, this));
+      if (rightProof != null)
+        return new TransitiveProof(rightProof, right, new DelegatesProof(right, this));
+      else
+        return null;
+
+    } else throw new AssertionFailedError("left and right act for meet");
+  }
+
+  public
+  ActsForProof{this; p; p←; this←}
+  findProofDownto {this←}
+                 (Principal p,
+                  Object searchState)
+  {
+    // how would we know?
+    return null;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

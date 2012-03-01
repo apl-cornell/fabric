@@ -1,0 +1,24 @@
+package util;
+
+public class AssertionFailedError extends Error {
+  private String message;
+
+  public AssertionFailedError util$AssertionFailedError$(String message) {
+    this.message = message;
+    return this;
+  }
+
+  public AssertionFailedError() {
+    super();
+  }
+
+  public String toString()
+  {
+    return this.message;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

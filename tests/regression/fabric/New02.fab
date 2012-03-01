@@ -1,0 +1,11 @@
+public final class New02[label L] {
+    int{L} year;
+    
+    void foo{}() {
+        final label l = new label {};
+        new New02[l](0);
+    }
+
+    New02(int{L} pYear) {
+    }
+}

@@ -1,0 +1,35 @@
+package jif.lang;
+
+/**
+ * This is a wrapper for ordinary Objects. It provides only pointer-equality on
+ * the wrapped object, a constant hash value of 0, and a null to-String value. 
+ */
+public final class JifObjectWrapper[covariant label L] implements JifObject[L] {
+  
+  public final Object{L} obj;
+  
+  public JifObjectWrapper(Object{L} obj) {
+    this.obj = obj;
+  }
+  
+  public Object{L} getObject() {
+    return obj;
+  }
+  
+  public boolean{L; obj} equals(IDComparable[L] obj) {
+    return equals(L, obj);
+  }
+  
+  public boolean{L; *lbl; lbl; other} equals(label lbl, IDComparable[lbl] other) {
+    if (!(other instanceof JifObjectWrapper[lbl])) return false;
+    return this.obj == ((JifObjectWrapper[lbl]) other).obj;
+  }
+  
+  public int{L} hashCode() {
+    return 0;
+  }
+  
+  public String{L} toString() {
+    return null;
+  }
+}

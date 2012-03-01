@@ -1,0 +1,333 @@
+// You can redistribute this software and/or modify it under the terms of
+// the Ozone Core License version 1 published by ozone-db.org.
+//
+// The original code and portions created by Thorsten Fiebig are
+// Copyright (C) 2000-@year@ by Thorsten Fiebig. All rights reserved.
+// Code portions created by SMB are
+// Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
+//
+
+package OO7;
+
+import fabric.util.*;
+import java.util.Random;
+import java.net.URI;
+import fabric.util.HashMap;
+
+import fabric.worker.Store;
+import fabric.worker.Worker;
+
+import fabric.common.Timing;
+
+public class Benchmark {
+  // database parameters
+  private final static int LARGE  = 3;
+  private final static int MEDIUM = 2;
+  private final static int SMALL  = 1;
+  private final static int TINY   = 0;
+
+  private final static Store local = Worker.getWorker().getLocalStore();
+
+  // TODO: these shouldn't be @local, they should be @static (whatever that
+  // means) but our implementation of static stuff makes it not matter yet
+
+  //                            Database parameters                     TINY  SMALL  MEDIUM LARGE
+  private final static int[]    numAtomicPerComp = new int[]@local    { 20,   20,    200,   200    };
+  private final        int      numConnPerAtomic;                     
+  private final static int[]    documentSize     = new int[]@local    { 20,   2000,  20000, 20000  };
+  private final static double[] manualSize       = new double[]@local { 1e3,  1e5,   1e6,   1e6    };
+  private final static int[]    numCompPerModule = new int[]@local    { 5,    500,   500,   500    };
+  private final static int[]    numAssmPerAssm   = new int[]@local    { 3,    3,     3,     3      };
+  private final static int[]    numAssmLevels    = new int[]@local    { 3,    7,     7,     7      };
+  private final static int[]    numCompPerAssm   = new int[]@local    { 3,    3,     3,     3      };
+  private final static int[]    numModules       = new int[]@local    { 1,    1,     1,     10     };
+
+  private static final Random rand = new Random();
+
+  int scale = 0;
+  int maxId = 10;
+  
+  protected Store moduleStore;
+  protected Store assemblyStore;
+  protected Store partStore;
+  protected Store documentStore;
+  
+  //////////////////////////////////////////////////////////////////////////////
+  // Extents                                                                  //
+  //////////////////////////////////////////////////////////////////////////////
+
+  // Note: each class is responsible for maintaining its own extents.
+  Map/*Integer,AtomicPart*/      atomicPartsById;
+  //Map/*Date,AtomicPart*/         atomicPartsByBuildDate;
+  Map/*Integer,CompositePart*/   compositePartsById;
+  //Map/*String,Document*/         documentsByTitle;
+  Map/*Integer,Document*/        documentsById;
+  Map/*Integer,BaseAssembly*/    baseAssembliesById;
+  Map/*Integer,ComplexAssembly*/ complexAssembliesById;
+  Map/*Integer,Module*/          modulesById;
+
+  public Map atomicPartsById() {
+    return atomicPartsById;
+    // TODO: return Collections.unmodifiableMap(atomicPartsById);
+  }
+
+  /* This index isn't implemented because it requires multimaps
+  public Map atomicPartsByBuildDate() {
+    return atomicPartsByBuildDate;
+    // TODO: return Collections.unmodifiableMap(atomicPartsByBuildDate);
+  }*/
+
+  public Map compositePartsById() {
+    return compositePartsById;
+    // TODO: return Collections.unmodifiableMap(compositePartsById);
+  }
+
+  /* This index isn't implemented because it requires multimaps
+  public Map documentsByTitle() {
+    return documentsByTitle;
+    //TODO: return Collections.unmodifiableMap(documentsByTitle);
+  }
+  */
+
+  public Map documentsById() {
+    return documentsById;
+    // TODO: return Collections.unmodifiableMap(documentsById);
+  }
+
+  public Map baseAssembliesById() {
+    return baseAssembliesById;
+    // TODO: return Collections.unmodifiableMap(baseAssembliesById);
+  }
+
+  public Map complexAssembliesById() {
+    return complexAssembliesById;
+    // TODO: return Collections.unmodifiableMap(complexAssembliesById);
+  }
+
+  public Map modulesById() {
+    return modulesById;
+    // TODO: return Collections.unmodifiableMap(modulesById);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////
+  // Database creation                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /** Return an unused identifier.
+   */
+  int newId() {
+    return maxId++;
+  }
+  
+  /** Create a benchmark of the corresponding size.
+    *
+    * @param scale either TINY, SMALL, MEDIUM or LARGE
+    * @param numConnPerAtomic the fan-out value (either 3, 6 or 9)
+    */
+  
+  public Benchmark(int scale,       int numConnPerAtomic,
+                   Store moduleStore, Store assemblyStore,
+                   Store partStore,   Store documentStore)
+         throws Exception {
+    this.moduleStore    = moduleStore;
+    this.assemblyStore  = assemblyStore;
+    this.partStore      = partStore;
+    this.documentStore = documentStore;
+
+    this.scale = scale;
+    this.numConnPerAtomic = numConnPerAtomic;
+    
+    // Initialize extents
+    this.atomicPartsById        = (HashMap) new HashMap@partStore().$initLabels();
+    //this.atomicPartsByBuildDate = (HashMap) new HashMap@partStore().$initLabels();
+    this.compositePartsById     = (HashMap) new HashMap@partStore().$initLabels();
+    //this.documentsByTitle       = (HashMap) new HashMap@documentStore().$initLabels();
+    this.documentsById          = (HashMap) new HashMap@documentStore().$initLabels();
+    this.baseAssembliesById     = (HashMap) new HashMap@assemblyStore().$initLabels();
+    this.complexAssembliesById  = (HashMap) new HashMap@assemblyStore().$initLabels();
+    this.modulesById            = (HashMap) new HashMap@moduleStore().$initLabels();
+  }
+
+  protected Module createModule() throws Exception {
+    Store local = Worker.getWorker().getLocalStore();
+    CompositePart[] compositeParts = null;
+    atomic { compositeParts = new CompositePart[numCompPerModule[scale]]@local; }
+    for (int i = 0; i < numCompPerModule[scale]; ++i)
+      atomic {
+        compositeParts[i] = createCompositePart();
+        if (i % 20 == 0)
+          System.err.println("Composite part " + i + " created");
+      }
+
+    atomic {
+      Module module = (Module) new Module@moduleStore(this).$initLabels();
+      ComplexAssembly designRoot =
+        (ComplexAssembly) createAssembly(module, numAssmLevels[scale],
+            compositeParts);
+
+      module.setDesignRoot(designRoot);
+      module.setManual((Manual) new Manual@documentStore((int) manualSize[scale]).$initLabels());
+
+      return module;
+    }
+  }
+
+  protected CompositePart createCompositePart() throws Exception {
+    Store local = Worker.getWorker().getLocalStore();
+    CompositePart compositePart = (CompositePart) new CompositePart@partStore(this).$initLabels();
+    compositePart.setDocumentation((Document) new Document@documentStore(this, documentSize[scale]).$initLabels());
+
+    AtomicPart[] parts = new AtomicPart[numAtomicPerComp[scale]]@local;
+    for (int i = 0; i < parts.length; ++i) {
+      parts[i] = createAtomicPart(compositePart);
+      compositePart.addPart(parts[i]);
+    }
+    compositePart.setRootPart(parts[0]);
+
+    for (int i = 0; i < parts.length; ++i) {
+      // Add a connection to i's neighbor
+      Connection c =
+          (Connection) new Connection@partStore(parts[i], parts[(i + 1) % parts.length]).$initLabels();
+
+      // add random connections
+      for (int j = 0; j < (numConnPerAtomic - 1); ++j) {
+        c = (Connection) new Connection@partStore(parts[i], parts[rand.nextInt(parts.length)]).$initLabels();
+      }
+    }
+
+    return compositePart;
+  }
+
+  protected AtomicPart createAtomicPart(CompositePart parent) throws Exception {
+    AtomicPart result = (AtomicPart) new AtomicPart@partStore(this).$initLabels();
+    result.setPartOf(parent);
+
+    return result;
+  }
+
+  protected Assembly createAssembly(Module parent, int level,
+      CompositePart[] available) throws Exception {
+    if (level == 1) {
+      // create base assembly
+      BaseAssembly result = (BaseAssembly) new BaseAssembly@assemblyStore(this).$initLabels();
+      parent.addAssembly(result);
+
+      for (int j = 0; j < numCompPerAssm[scale]; ++j) {
+        int k = rand.nextInt(available.length);
+        result.addComponentsShar(available[k]);
+      }
+
+      return result;
+    } else {
+      // create complex assembly
+      ComplexAssembly result = (ComplexAssembly) new ComplexAssembly@assemblyStore(this).$initLabels();
+      parent.addAssembly(result);
+
+      for (int i = 0; i < numAssmPerAssm[scale]; ++i)
+        result.addSubAssembly(createAssembly(parent, level - 1, available));
+      return result;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // main                                                                     //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static void main(String[] args) {
+    if (args.length < 3 || args.length % 2 == 0) {
+      printUsage();
+      System.exit(1);
+    }
+
+    try {
+      Timing.reset();
+      
+      URI  path = new URI(args[0]);
+      Store store = fabric.worker.Worker.getWorker().getStore(path.getHost());
+      Map  root = (Map) store.getRoot();
+
+      int scale = -1;
+      if (args[1].equalsIgnoreCase("TINY")) {
+        scale = TINY;
+      } else if (args[1].equalsIgnoreCase("SMALL")) {
+        scale = SMALL;
+      } else if (args[1].equalsIgnoreCase("MEDIUM")) {
+        scale = MEDIUM;
+      } else if (args[1].equalsIgnoreCase("LARGE")) {
+        scale = LARGE;
+      } else {
+        printUsage();
+        System.out.println("Invalid scale");
+        System.exit(1);
+      }
+
+      int fanout = Integer.parseInt(args[2]);
+
+      Store moduleStore    = store;
+      Store assemblyStore  = store;
+      Store partStore      = store;
+      Store documentStore = store;
+
+      for (int i = 3; i < args.length; i++) {
+        if (args[i].equals("--assemblies"))
+          assemblyStore = Worker.getWorker().getStore(args[++i]);
+        else if (args[i].equals("--modules"))
+          moduleStore = Worker.getWorker().getStore(args[++i]);
+        else if (args[i].equals("--parts"))
+          partStore = Worker.getWorker().getStore(args[++i]);
+        else if (args[i].equals("--documents"))
+          documentStore = Worker.getWorker().getStore(args[++i]);
+        else {
+          printUsage();
+          System.out.println("invalid argument[" + i + "]: " + args[i]);
+          System.exit(1);
+        }
+      }
+
+
+      Benchmark b = null;
+      atomic { b = (Benchmark) new Benchmark@store(scale, fanout, moduleStore, assemblyStore, partStore, documentStore).$initLabels(); }
+      
+      // Create content
+      for (int i = 0; i < numModules[scale]; i++)
+        b.createModule();
+
+      System.err.println( "Benchmarks:      1" );
+      System.err.println( "Modules:         " + b.modulesById().size() );
+      System.err.println( "Base Assemblies: " + b.baseAssembliesById().size() );
+      System.err.println( "Cplx Assemblies: " + b.complexAssembliesById().size() );
+      System.err.println( "Composite Parts: " + b.compositePartsById().size() );
+      System.err.println( "Atomic Parts:    " + b.atomicPartsById().size() );
+      System.err.println( "Documents:       " + b.documentsById().size() );
+
+      atomic {
+        root.put(path.getPath(), b);
+      }
+
+      Timing.printStats();
+    } catch (Exception e) {
+      System.out.println(e);
+      e.printStackTrace();
+    }
+  }
+
+  static void printUsage() {
+    System.out.println("usage: fab Benchmark <path> <size> <fanout> [options]");
+    System.out.println("  creates a OO7 database and places it at the given path.");
+    System.out.println("");
+    System.out.println("  <path>    should be a fabric URI, eg. \"fab://localhost/OO7\"");
+    System.out.println("  <size>    should be one of \"tiny\", \"small\", \"medium\", or \"large\"");
+    System.out.println("  <fanout>  can be any number, but the standard values are 3, 6 and 9");
+    System.out.println(" [options] may include any of the following:");
+    System.out.println("  --assemblies <host>   place the assemblies at the given store.");
+    System.out.println("  --modules    <host>   place the modules at the given store.");
+    System.out.println("  --parts      <host>   place the parts at the given store.");
+    System.out.println("  --documents  <host>   place the documents at the given store.");
+  }
+
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+

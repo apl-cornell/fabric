@@ -1,0 +1,93 @@
+package util;
+
+// TODO: comments
+
+/**
+ * Convenience principal class the delegates to a single owner.
+ */
+public class Delegator extends AbstractPrincipal {
+
+  public native
+  Delegator
+  {           // side effects
+    {this} ⊓  // fields are updated
+    {*→store} // TODO: object is created
+  }
+  (
+    Store     {this} store,
+    String    {this} name,
+    principal {this} owner
+  )
+  where
+    store actsfor owner;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public native
+  String {this}
+  name
+  { // side effects:
+    // TODO
+  }
+  (
+  );
+
+
+  public native
+  boolean {this;p;this←}
+  delegatesTo
+  { // side effects:
+    // TODO
+  }
+  (
+    principal p
+  );
+
+
+  public native
+  ActsForProof[{s→}] {this; p; this←; p←;s}
+  findProofUpto
+  {          // side effects:
+    _→;this← // TODO
+  }
+  (
+    Store s,
+    Principal p,
+    java.lang.Object searchState
+  );
+
+
+  public native
+  void
+  addDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this:;this!:} p
+  )
+  where
+    caller (this);
+
+
+
+
+  public native
+  void
+  removeDelegatesTo
+  {              // side effects:
+    this→; this← // TODO
+  }
+  (
+    principal {this→;this←} p
+  )
+  where
+    caller (this);
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

@@ -1,0 +1,14 @@
+package util;
+
+import java.io.PrintStream;
+
+public class System {
+  public static PrintStream stdout(Label l) {
+    return null;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

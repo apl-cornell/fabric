@@ -1,0 +1,155 @@
+import snapp.*;
+import friendmap.*;
+import mapserv.*;
+import jif.principals.*;
+import util.*;
+
+import util.System;
+
+/**
+ * This is a script that sets up the FriendMap example end runs it.
+ *
+ */
+public class Main
+authority(System.user)
+where
+  // TODO: figure out how to remove/reduce these constraints
+  {System.user←}   <= provider,                                         provider <= {System.user←},
+  {SnappNode←}     <= snapp.Snapp.provider,                 snapp.Snapp.provider <= {SnappNode←},
+  {SnappNode←}     <= snapp.UserV1.provider,               snapp.UserV1.provider <= {SnappNode←},
+  {SnappNode←}     <= snapp.Location.provider,           snapp.Location.provider <= {SnappNode←},
+  {MapServNode←}   <= mapserv.MapServer.provider,     mapserv.MapServer.provider <= {MapServNode←},
+  {MapServNode←}   <= mapserv.MapImage.provider,       mapserv.MapImage.provider <= {MapServNode←},
+  {MapServNode←}   <= mapserv.Box.provider,                 mapserv.Box.provider <= {MapServNode←},
+  {FriendMapNode←} <= friendmap.FriendMap.provider, friendmap.FriendMap.provider <= {FriendMapNode←}
+{
+  final Snapp     {System.user←} snapp;
+  final MapServer {System.user←} mapServ;
+  final FriendMap {System.user←} friendMap;
+  final UserV1    {System.user←} alice;
+  final UserV1    {System.user←} bob;
+
+  /**
+   * Main example script.  Creates various service objects, creates users, adds
+   * friend delegations, and then invokes friendmap (version 1).
+   */
+  public
+  Main {System.user←}
+  ()
+  where
+    System.user actsfor SnappNode,
+    System.user actsfor MapServNode,
+    System.user actsfor FriendMapNode,
+    System.user actsfor AliceNode,
+    System.user actsfor BobNode,
+    {this} <= {System.user←},
+    authority(System.user)
+  {
+    // create service objects
+    this.snapp      = endorse(new Snapp("snapp",     SnappNode), {SnappNode←} to {System.user←});
+    if (SnappNode     actsfor snapp) {
+
+    this.mapServ    = endorse(new MapServer("mapserv",   MapServNode, '.'), {MapServNode←} to {System.user←});
+    if (MapServNode   actsfor mapServ) {
+
+    // create users
+    // final UserV1{SnappNode←} _alice = snapp.createUser("Alice", AliceNode);
+    this.alice      = endorse(makeUser(snapp, "Alice", AliceNode), {SnappNode←} to {System.user←});
+    if (AliceNode     actsfor alice) {
+
+    this.bob        = endorse(makeUser(snapp, "Bob",   BobNode),   {SnappNode←} to {System.user←});
+    if (bob == null)              throw new AssertionFailedError("makeUser returns a non-null value");
+    if (bob.locationInfo == null) throw new AssertionFailedError("makeUser returns a non-null value");
+    if (BobNode       actsfor bob) {
+    if (SnappNode     actsfor bob) {
+    if (bob           actsfor bob.locationInfo) {
+
+    // add delegations
+    try {
+      alice.friends.add(bob);
+      alice.locationInfo.add(mapServ);
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("UserV1.friends and .locationInfo are non-null.");
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("Alice has too many friends");
+    }
+
+    final Location {System.user←} loc = endorse(new Location(5,8), {SnappNode←} to {System.user←});
+    try {
+      bob.friends.add(alice);
+      bob.locationInfo.add(bob.friends);
+      bob.locationInfo.add(mapServ);
+
+      if (new label {bob.locationInfo→;bob←} equiv bob.locationLabel) {
+        bob.setLocation(loc);
+      }
+      else
+        throw new AssertionFailedError("bob.locationLabel == {bob.locationInfo→;bob←}");
+
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("UserV1.friends and .locationInfo are non-null.");
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("Alice has too many friends");
+    }
+
+    // let'er rip!
+
+    try   { this.friendMap  = endorse (new FriendMap(mapServ), {FriendMapNode←} to {System.user←}); }
+    catch (final NullPointerException e) { throw new AssertionFailedError("mapServ is not null"); }
+
+    try { friendMap.viewMap(alice); }
+    catch (final NullPointerException e) { throw new AssertionFailedError("alice is not null"); }
+
+    } else throw new AssertionFailedError("Delegation relationships hold 1");
+    } else throw new AssertionFailedError("Delegation relationships hold 2");
+    } else throw new AssertionFailedError("Delegation relationships hold 3");
+    } else throw new AssertionFailedError("Delegation relationships hold 4");
+    } else throw new AssertionFailedError("Delegation relationships hold 5");
+    } else throw new AssertionFailedError("Delegation relationships hold 6");
+  }
+
+  /**
+   * helper method for creating a user.
+   */
+  private static
+  UserV1   {SnappNode←}
+  makeUser {SnappNode←}
+  (
+    final Snapp     {SnappNode←} snapp,
+    final String    {SnappNode←} name,
+    final principal {SnappNode←} node
+  )
+  where
+    provider <= {SnappNode←}
+  {
+    if (snapp == null)
+      throw new AssertionFailedError("snapp is not null");
+    endorse ({SnappNode←} to {SnappNode←}) {
+      final UserV1{SnappNode←} result = snapp.createUser(name,  node);
+      return result;
+    }
+  }
+
+  /**
+   * main method.
+   */
+  public static
+  void
+  main {System.user←} (String[] args)
+  where
+    System.user actsfor SnappNode,
+    System.user actsfor MapServNode,
+    System.user actsfor FriendMapNode,
+    System.user actsfor AliceNode,
+    System.user actsfor BobNode
+  {
+    new Main();
+    try { System.stdout(new label{System.user→}).println("done"); }
+    catch (final NullPointerException e) { throw new AssertionFailedError("System.out is non-null"); }
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

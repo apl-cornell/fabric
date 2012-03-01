@@ -1,0 +1,21 @@
+package snapp;
+
+public class Mood {
+  public final String {this} description;
+
+  public
+  Mood
+  (
+    String{this} description
+  )
+  where
+    provider <= {this}
+  {
+    this.description = description;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

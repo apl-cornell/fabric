@@ -1,0 +1,39 @@
+package fabric.lang.security;
+
+import fabric.util.*;
+
+/**
+ * Represents the meet of confidentiality policies. This code is mostly copied
+ * from Jif.
+ */
+public final class MeetConfPolicy extends MeetPolicy implements ConfPolicy {
+  MeetConfPolicy(Set policies) {
+    super(policies);
+  }
+
+  public ConfPolicy join(Store store, ConfPolicy p, java.util.Set s) {
+    return LabelUtil.join(store, this, p, s);
+  }
+
+  public ConfPolicy meet(Store store, ConfPolicy p, java.util.Set s) {
+    return LabelUtil.meet(store, this, p, s);
+  }
+
+  public ConfPolicy join(Store store, ConfPolicy p) {
+    return LabelUtil.join(store, this, p);
+  }
+
+  public ConfPolicy meet(Store store, ConfPolicy p) {
+    return LabelUtil.meetPol(store, this, p);
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
+}

@@ -1,0 +1,10 @@
+This directory contains an implementation of the air-travel example.
+
+src/travel/*:
+  Andrew's jif implementation, ported to fabric+fabil
+  
+src/travel/servlet:
+  Fabric-SIF code for the web interfaces.  There are three main classes:
+    travel.servlet.Airline
+    travel.servlet.Bank
+    travel.servlet.Customer

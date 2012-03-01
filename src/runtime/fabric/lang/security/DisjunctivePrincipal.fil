@@ -1,0 +1,108 @@
+package fabric.lang.security;
+
+import fabric.worker.Worker;
+import fabric.worker.Store;
+import fabric.util.*;
+
+/**
+ * A disjunction of two (non-null) principals. This code is mostly copied from
+ * Jif.
+ */
+public final class DisjunctivePrincipal extends Principal {
+  final Set disjuncts;
+  private Integer hashCode = null;
+  public static final Store localStore = Worker.getWorker().getLocalStore();
+
+  DisjunctivePrincipal(Set disjuncts) {
+    this.disjuncts = disjuncts;
+  }
+
+  public String name() {
+    StringBuffer sb = new StringBuffer();
+    for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
+      Principal p = (Principal) iter.next();
+      sb.append(PrincipalUtil.toString(p));
+      if (iter.hasNext()) sb.append(",");
+    }
+    return sb.toString();
+  }
+
+  public boolean delegatesTo(Principal p) {
+    if (p instanceof DisjunctivePrincipal) {
+      DisjunctivePrincipal dp = (DisjunctivePrincipal) p;
+      return this.disjuncts.containsAll(dp.disjuncts);
+    }
+    for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
+      Principal q = (Principal) iter.next();
+      if (PrincipalUtil.equals(q, p)) return true;
+    }
+    return false;
+  }
+
+  public int hashCode() {
+    if (hashCode == null) {
+      hashCode = new Integer(disjuncts.hashCode());
+    }
+    return hashCode.intValue();
+  }
+
+  public boolean equals(Principal p) {
+    if (p instanceof DisjunctivePrincipal) {
+      DisjunctivePrincipal that = (DisjunctivePrincipal) p;
+      return this.hashCode() == that.hashCode()
+          && this.disjuncts.equals(that.disjuncts)
+          && that.disjuncts.equals(this.disjuncts);
+    }
+    return false;
+  }
+
+  public boolean isAuthorized(java.lang.Object authPrf, Closure closure, Label lb,
+      boolean executeNow) {
+    for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
+      Principal p = (Principal) iter.next();
+      if (p.isAuthorized(authPrf, closure, lb, executeNow)) return true;
+    }
+    return false;
+  }
+
+  public ActsForProof findProofUpto(Store store, Principal p, java.lang.Object searchState) {
+    if (delegatesTo(p)) {
+      return (DelegatesProof) new DelegatesProof@store(p, this).$initLabels();
+    }
+    for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
+      Principal witness = (Principal) iter.next();
+      ActsForProof prf =
+          PrincipalUtil.findActsForProof(store, p, witness, searchState);
+      if (prf != null) {
+        // have found a proof from p to witness.
+        DelegatesProof step = (DelegatesProof) new DelegatesProof@store(witness, this).$initLabels();
+        return (TransitiveProof) new TransitiveProof@store(prf, witness, step).$initLabels();
+      }
+    }
+    return null;
+  }
+
+  public ActsForProof findProofDownto(Store store, Principal q, java.lang.Object searchState) {
+    Map proofs = (HashMap) new HashMap@store().$initLabels();
+    for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
+      Principal p = (Principal) iter.next();
+      ActsForProof prf = PrincipalUtil.findActsForProof(store, p, q, searchState);
+      if (prf == null) return null;
+      proofs.put(p, prf);
+    }
+
+    // proofs contains a proof for every disjunct,
+    // which is sufficent for a proof for the disjunctive principal
+    return (FromDisjunctProof) new FromDisjunctProof@store(this, q, proofs).$initLabels();
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
+}

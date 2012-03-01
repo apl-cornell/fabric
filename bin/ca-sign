@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# Signs a certificate for a Fabric node.
+
+source "$(dirname "$0")/defs"
+
+DEFAULT_DIR="${TOP}/etc/ca"
+DEFAULT_DAYS=730
+
+function usage() {
+  cat >&2 <<EOF
+Usage: $(basename "$0") [options] CSR CERT
+
+  Signs a certificate for a Fabric node. Reads a certificate-signing request
+  from CSR and writes a signed certificate to CERT.
+
+Options:
+  --dir directory
+      the directory storing the CA's data.
+      Default: ${DEFAULT_DIR}
+
+  --days n
+      number of days to certify the certificate for. Default: ${DEFAULT_DAYS}
+EOF
+  exit 1
+}
+
+function error() {
+  echo "$(basename "$0")": "$@" >&2
+  echo "Try \`$(basename "$0") --help' for more information" >&2
+  exit 1
+}
+
+function noArg() {
+  error "Missing argument to --$1 option."
+}
+
+DIR="${DEFAULT_DIR}"
+DAYS="${DEFAULT_DAYS}"
+
+[[ $# == 0 ]] && usage
+
+while true; do
+  case "$1" in
+    "") break ;;
+    --dir)
+      shift
+      DIR="$1"
+      shift || noArg dir
+      ;;
+    --days)
+      shift
+      DAYS="$1"
+      shift || noArg days
+      ;;
+    -h|--help|-\?)
+      usage
+      ;;
+    -*)
+      error "Invalid option: $1"
+      ;;
+    *)
+      [[ -n "${CERT}" ]] && error "Too many arguments."
+
+      [[ -z "${CSR}" ]] && CSR="$1" || CERT="$1"
+      shift
+  esac
+done
+
+[[ -z "${CSR}" ]] && error Must specify a CSR input file.
+[[ -z "${CERT}" ]] && error Must specify a CERT output file.
+[[ "${CSR}" == "${CERT}" ]] && \
+  error CSR input file and CERT output file must be different.
+
+openssl x509 -req -in "${CSR}" -CA "${DIR}/ca.crt" -CAkey "${DIR}/ca.key" \
+  -CAcreateserial -days "${DAYS}" -extfile ${DIR}/extensions.cnf > "${CERT}" || exit 1
+
+cat <<EOF
+
+===============================================================================
+
+Signed certificate saved in ${CERT}
+
+Copy this file to that node and run the \`import-cert' script there.
+EOF
+

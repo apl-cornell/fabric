@@ -1,0 +1,95 @@
+public class RemoteCallImpl extends fabric.lang.Object {
+    final static fabric.worker.Worker worker$ =
+      fabric.worker.Worker.getWorker();
+    
+    public int m1(final int x) { return x + 1; }
+    
+    public int m1_remote(final fabric.lang.security.Principal worker$principal,
+                         final int x) {
+        if (LabelUtil.relabelsTo(
+              LabelUtil.toLabel(
+                LabelUtil.bottomConf(),
+                LabelUtil.writerPolicy(
+                  PrincipalUtil.topPrincipal(), worker$principal)),
+              LabelUtil.toLabel(
+                LabelUtil.readerPolicy(
+                  PrincipalUtil.topPrincipal(), worker$principal),
+                LabelUtil.writerPolicy(
+                  this.jif$RemoteCallImpl_alice,
+                  PrincipalUtil.topPrincipal()))))
+            return this.m1(x);
+        else throw new fabric.common.exceptions.InternalError();
+    }
+    
+    public void m2() {
+        fabric.worker.Worker local = fabric.worker.Worker.getWorker();
+        if (local == null) return;
+        final fabric.worker.remote.RemoteWorker w = local.getWorker("bob");
+        if (PrincipalUtil.actsFor(w.getPrincipal(),
+                                           this.jif$RemoteCallImpl_bob)) {
+            int y = this.m1_remote@w(worker$.getPrincipal(), 1);
+        }
+    }
+    
+    public void m2_remote(final fabric.lang.security.Principal worker$principal) {
+        if (LabelUtil.relabelsTo(
+              LabelUtil.toLabel(
+                LabelUtil.bottomConf(),
+                LabelUtil.writerPolicy(
+                  PrincipalUtil.topPrincipal(), worker$principal)),
+              LabelUtil.toLabel(
+                LabelUtil.readerPolicy(
+                  PrincipalUtil.topPrincipal(), worker$principal),
+                LabelUtil.writerPolicy(
+                  this.jif$RemoteCallImpl_alice,
+                  PrincipalUtil.topPrincipal()))))
+            this.m2();
+        else throw new fabric.common.exceptions.InternalError();
+    }
+    
+    public RemoteCallImpl RemoteCallImpl$() {
+        this.jif$init();
+        {  }
+        return this;
+    }
+        
+    public RemoteCallImpl(final fabric.lang.security.Principal jif$alice,
+                          final fabric.lang.security.Principal jif$bob) {
+        super();
+        this.jif$RemoteCallImpl_alice = jif$alice;
+        this.jif$RemoteCallImpl_bob = jif$bob;
+    }
+    
+    public void jif$invokeDefConstructor() { this.RemoteCallImpl$(); }
+    
+    private void jif$init() {  }
+    
+    public static boolean jif$Instanceof(final fabric.lang.security.Principal jif$alice,
+                                         final fabric.lang.security.Principal jif$bob,
+                                         final java.lang.Object o) {
+        if (o instanceof RemoteCallImpl) {
+            RemoteCallImpl c = (RemoteCallImpl) o;
+            boolean ok = true;
+            ok =
+              ok &&
+                PrincipalUtil.equivalentTo(c.jif$RemoteCallImpl_alice,
+                                                    jif$alice);
+            ok = ok &&
+                   PrincipalUtil.equivalentTo(c.jif$RemoteCallImpl_bob,
+                                                       jif$bob);
+            return ok;
+        }
+        return false;
+    }
+    
+    public static RemoteCallImpl jif$cast$RemoteCallImpl(
+      final fabric.lang.security.Principal jif$alice,
+      final fabric.lang.security.Principal jif$bob, final java.lang.Object o) {
+        if (o == null) return null;
+        if (jif$Instanceof(jif$alice, jif$bob, o)) return (RemoteCallImpl) o;
+        throw new ClassCastException();
+    }
+    
+    final private fabric.lang.security.Principal jif$RemoteCallImpl_alice;
+    final private fabric.lang.security.Principal jif$RemoteCallImpl_bob;
+}

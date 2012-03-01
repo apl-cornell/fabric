@@ -1,0 +1,133 @@
+package tree;
+
+//import java.util.Random;
+import fabric.runtime.Runtime;
+import fabric.worker.AbortException;
+import fabric.worker.Store;
+import fabric.util.Map;
+import java.io.PrintStream;
+
+public class Main {
+  public final Store{*bot} treeStore;
+  public final Store{*bot} nodeStore;
+  public final principal{*bot} pp;
+  public final label{*bot} lbl;
+  public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
+  private final String{*bot} storeName = "store0";
+
+  public Main() {
+//    if (worker$ != null) {
+      treeStore = worker$.getStore(storeName);
+      nodeStore = treeStore; //worker$.getStore("store1");
+//    }
+    atomic {
+      final Store{*bot} tc = treeStore;
+      pp = new ExternalPrincipal@tc("localhost");
+      lbl = new label {pp→;pp←}@treeStore;
+    }
+  }
+
+  public static void main{*bot}(String{*bot}[]{*bot} args) {
+    if (args == null) return;
+    Main m_ = null;
+    atomic {
+      m_ = new Main();
+    }
+    final Main m = m_;
+    String{*m.lbl}[]{*m.lbl} argsCopy = null;
+    atomic {
+      argsCopy = new String[args.length];
+    }
+
+    try {
+      for (int i = 0; i < args.length; i++) {
+        argsCopy[i] = args[i];
+      }
+      atomic {
+        if (m.lbl <= new label {m.pp→;m.pp←} && new label {m.pp→;m.pp←} <= m.lbl) {
+          m.begin(argsCopy);
+        }
+      }
+    } catch (ArrayIndexOutOfBoundsException imposs) {}
+    catch (AbortException e) { /* do nothing for now */ }
+    catch (SecurityException e) { /* do nothing for now */ }
+  }
+
+  public void begin{*lbl}(String{*lbl}[]{*lbl} args)
+  throws (AbortException{*lbl}, SecurityException{*lbl}) 
+  where lbl <= {pp→;pp←}, {pp→;pp←} <= lbl {
+    Runtime[pp] runtime = null;
+    atomic {
+      runtime = Runtime[pp].getRuntime();
+    }
+    if (runtime == null || args == null) return;
+
+    String arg = null;
+    PrintStream[{pp→;⊥←⊥}] out = null;
+    out = runtime.out();
+    
+
+    try {
+      out.println("Console handle created");
+      if (args.length != 1 || !args[0].equals("create") && !args[0].equals("read")) {
+        out.println("Usage: tree.Main [create|read]");
+        return;
+      } else {
+        arg = args[0];
+      }
+    } catch (ArrayIndexOutOfBoundsException imposs) {}
+    catch (NullPointerException imposs) {}
+
+    if (out == null || arg == null) return;
+    try {
+      Map root = (Map) worker$.getStore(storeName).getRoot();
+      //    Random random = new Random();
+      if (arg.equals("create")) {
+        atomic {
+          //          final label plbl = new label {*lbl}@treeStore;
+          Tree[lbl] treeVar = null;
+          if (treeStore actsfor pp) {
+            treeVar = new Tree[lbl]@treeStore(nodeStore);
+          }
+          root.put("theTree", treeVar);
+          // insert 10 nodes to the tree
+          for (int i = 0; i < 10; i++) {
+            atomic {
+              //            int toInsert = random.nextInt();
+              //            tree.insertIterative(toInsert);
+              treeVar.insertIterative(i);
+            }
+            out.println("Added element " + i);
+          }
+        }
+        return;
+      } else {
+        Tree[lbl] treeVar;
+
+        treeVar = (Tree[lbl]) root.get("theTree");
+
+        int cycle = 0;
+        while (cycle<1000) {
+          atomic {
+            //        int toFind = random.nextInt();
+            //        tree.lookup(toFind);
+
+            treeVar.lookup(cycle);
+//            if (treeVar.lookup(cycle)!=null) {
+//              out.println(" found tree node with id: "+cycle);
+//            }
+          }
+
+          if (++cycle % 10 == 0)
+            out.println(cycle + " lookups done.");
+        }
+      }
+    } catch (NullPointerException unlikely) {}
+    catch (ClassCastException unlikely) {}
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+

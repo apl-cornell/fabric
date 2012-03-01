@@ -1,0 +1,11 @@
+package fabil;
+
+public class Equals02 {
+  String s = "moo";
+  void m() {
+    Object o = s;
+    "moo".equals(o);
+    o.equals("moo");
+  }
+}
+

@@ -1,0 +1,357 @@
+<project name="friendmap" default="all" basedir=".">
+  <description>
+    FriendMap build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="home" file="${ant.file.friendmap}" />
+
+  <target name="build-all" depends="build-local"/>
+  <target name="all"       depends="build-all"/>
+
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${home}/var"/>
+  </target>
+
+  <!--
+  ******************************************************************************
+    Fabric signatures and implementations
+  ******************************************************************************
+  -->
+
+  <target name="build-sig">
+    <fabsigc srcdir="${home}/src/fabric/signatures">
+      <!--
+      <arg value="-rdebug" />
+      -->
+    </fabsigc>
+  </target>
+
+  <target name="build-fabil">
+    <fabfilc srcdir="${home}/src/fabil/" />
+  </target>
+
+  <target name="build-trusted">
+    <fabc-local srcdir="${home}/src/fabric/trusted">
+      <arg value="-trusted-providers" />
+    </fabc-local>
+  </target>
+
+  <!--
+  build-util provides the util classes.  Currently it does this by building the signatures
+  and the fabil implementations, but ultimately it should do so by building the trusted
+  implementations.
+  -->
+  <target name="build-util" depends="build-sig, build-fabil" />
+
+  <!--
+  ****************************************************************************
+    Fabric local compilation targets
+  ****************************************************************************
+  -->
+
+  <target name="build-local-snapp" depends="build-util">
+    <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase">
+      <!--
+      <arg value="-report" /> <arg value="debug=1" />
+      <arg value="-rdebug" />
+      -->
+    </fabc-local>
+  </target>
+
+  <target name="build-local-mapserv" depends="build-util">
+    <fabc-local srcdir="${home}/src/fabric/mapserv_1.0_codebase" >
+        <!--
+        <arg value="-rdebug" />
+        -->
+    </fabc-local>
+  </target>
+
+  <target name="build-local-friendmap" depends="build-local-mapserv, build-local-snapp, build-util">
+    <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" >
+        <!--
+        <arg value="-rdebug" />
+        <arg value="-report" /> <arg value="pc=1" />
+        -->
+        <arg value="-report" /> <arg value="labelFlow=1" />
+    </fabc-local>
+  </target>
+
+  <target name="build-local"
+          depends="build-local-friendmap"
+          description="Builds the fabric version of friendmap">
+    <echo message="Boo-yah, the example builds in Mobile Fabric!" />
+    <echo message="Now go for the mother load: ant publish-all."  />
+    <echo message="You know you want to."                         />
+  </target>
+
+
+  <!--
+  ******************************************************************************
+    Fabric deployment targets
+  ******************************************************************************
+  -->
+
+  <target name="publish-snapp-1.0" depends="build-util" >
+    <fabc-publish srcdir="src/fabric/snapp_1.0_codebase"
+                  store="snapp"
+                  property="snapp.codebase" />
+  </target>
+
+
+  <target name="publish-snapp-2.0"
+          depends="publish-snapp-1.0">
+    <fabc-publish srcdir="src/fabric/snapp_2.0_codebase"
+                  store="snapp"
+                  property="snapp2.codebase">
+      <arg value="-codebase-alias" /> <arg value="snapp1=${snapp.codebase}" />
+    </fabc-publish>
+  </target>
+
+
+  <target name="publish-mapserv-1.0" depends="build-util">
+    <fabc-publish srcdir="src/fabric/snapp_2.0_codebase"
+                  store="mapserv"
+                  property="mapserv.codebase" />
+  </target>
+
+
+  <target name="publish-friendmap-1.0"
+          depends="build-util, publish-snapp-1.0, publish-mapserv-1.0">
+    <fabc-publish srcdir="src/fabric/friendmap_1.0_codebase"
+                  store="friendmap"
+                  property="friendmap.codebase">
+      <arg value="-classpath" /> <arg value="${snapp.codebase}:${mapserv.codebase}" />
+    </fabc-publish>
+  </target>
+
+
+  <target name="publish-friendmap-2.0"
+          depends="publish-friendmap-1.0, publish-snapp-2.0">
+    <fabc-publish srcdir="src/fabric/friendmap_2.0_codebase"
+                  store="friendmap"
+                  property="friendmap2.codebase">
+      <arg value="-codebase-alias" /> <arg value="snapp1=${snapp.codebase}"     />
+      <arg value="-codebase-alias" /> <arg value="   fm1=${friendmap.codebase}" />
+      <arg value="-classpath"      /> <arg value="${snapp2.codebase}:${mapserv.codebase}" />
+    </fabc-publish>
+  </target>
+
+
+  <target name="publish-scripts-snapp"
+          depends="publish-snapp-1.0">
+    <fabc-publish srcdir="src/fabric/scripts/snapp" store="snapp" property="snapp-scripts.codebase">
+      <arg value="-classpath" /> <arg value="${snapp.codebase}" />
+    </fabc-publish>
+  </target>
+
+
+  <target name="publish-scripts-mapserv"
+          depends="publish-mapserv-1.0">
+    <fabc-publish srcdir="src/fabric/scripts/mapserv" store="mapserv" property="mapserv-scripts.codebase">
+      <arg value="-classpath" /> <arg value="${mapserv.codebase}" />
+    </fabc-publish>
+  </target>
+
+
+  <target name="publish-scripts-friendmap"
+          depends="publish-friendmap-1.0">
+    <fabc-publish srcdir="src/fabric/scripts/friendmap" store="friendmap" property="friendmap-scripts.codebase">
+      <arg value="-classpath" /> <arg value="${friendmap.codebase}:${snapp.codebase}:${mapserv.codebase}" />
+    </fabc-publish>
+  </target>
+
+
+  <target name="publish-scripts-users"
+          depends="publish-friendmap-1.0">
+    <fabc-publish srcdir="src/fabric/scripts/alice" store="alice" property="alice-scripts.codebase">
+      <arg value="-classpath" /> <arg value="${friendmap.codebase}:${snapp.codebase}:${mapserv.codebase}" />
+    </fabc-publish>
+    <fabc-publish srcdir="src/fabric/scripts/bob" store="bob" property="bob-scripts.codebase">
+      <arg value="-classpath" /> <arg value="${friendmap.codebase}:${snapp.codebase}:${mapserv.codebase}" />
+    </fabc-publish>
+  </target>
+
+
+  <target name="publish-all"
+          depends="publish-scripts-users,
+                   publish-scripts-friendmap,
+                   publish-scripts-snapp,
+                   publish-scripts-mapserv">
+    <echo message=" ***********************************************************"  />
+    <echo message=" * Oh Snapp!!  you're so close.  All that's left:"             />
+    <echo message=" *     on snapp:     run ${snapp-scripts.codebase}/Init"       />
+    <echo message=" *     on mapserv:   run ${mapserv-scripts.codebase}/Init"     />
+    <echo message=" *     on friendmap: run ${friendmap-scripts.codebase}/Init"   />
+    <echo message=" *     on alice:     run ${alice-scripts.codebase}/Init"       />
+    <echo message=" *     on bob:       run ${bob-scripts.codebase}/Init"         />
+    <echo message=" *     on alice:     run ${alice-scripts.codebase}/AddFriends" />
+    <echo message=" *     on bob:       run ${bob-scripts.codebase}/AddFriends"   />
+    <echo message=" * And finally:"                                               />
+    <echo message=" *     on alice:     run ${alice-scripts.codebase}/Run"        />
+    <echo message=" ***********************************************************"  />
+  </target>
+
+  <!--
+  ******************************************************************************
+    Macros
+  ******************************************************************************
+  -->
+
+  <!-- fabc-publish
+       verify and publish fabric code
+  -->
+  <macrodef name="fabc-publish">
+    <attribute name="srcdir"   />
+    <attribute name="store"    />
+    <attribute name="worker"   default="@{store}" />
+    <attribute name="includes" default="**/*.fab" />
+    <attribute name="excludes" default=""         />
+    <attribute name="property" default="_no_prop" />
+
+    <element name="extra-args" optional="true" implicit="true" />
+
+    <sequential>
+      <apply executable  = "bash"
+             parallel    = "true"
+             failonerror = "true"
+             dir         = "${home}">
+        <arg value="${fabric.home}/bin/fabc" />
+        <arg value="-publish-only"           />
+        <arg value="-e"                      />
+        <arg value="-codebase-output-file"   /> <arg value="${home}/classes/codebase.uri" />
+        <arg value="-sourcepath"             /> <arg value="@{srcdir}" />
+        <arg value="-classpath"              /> <arg value="${home}/classes/fabric" />
+
+        <extra-args />
+        <srcfile />
+        <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
+      </apply>
+      <loadfile property="codebase.uri" srcFile="${home}/classes/codebase.uri" />
+      <property name="@{property}" value="${codebase.uri}" />
+      <echo>Published @{srcdir} to ${codebase.uri}</echo>
+      <rm file="${home}/classes/codebase.uri" />
+    </sequential>
+  </macrodef>
+
+  <!-- fabc-local
+       compile fabric code locally
+  -->
+  <macrodef name="fabc-local">
+    <attribute name="srcdir" />
+    <attribute name="includes" default="**/*.fab" />
+    <attribute name="excludes" default="" />
+    <element name="extra-args" implicit="true" optional="yes"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dir="@{srcdir}"
+             dest="${home}/classes/fabric"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${fabc}" />
+        <arg value="-g" />
+        <arg value="-e" />
+        <arg value="-d" />         <arg value="${home}/classes/fabric" />
+        <arg value="-sourcepath"/> <arg value="@{srcdir}" />
+        <arg value="-classpath" /> <arg value="${home}/classes/fabric" />
+        <arg value="-addsigcp"  /> <arg value="${home}/classes/fab-sig" />
+        <arg value="-addbootcp" /> <arg value="${home}/classes/fab-sig-impl" />
+        <extra-args />
+        <srcfile />
+
+        <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
+        <globmapper from="*.fab" to="*.class" />
+      </apply>
+    </sequential>
+  </macrodef>
+
+  <!-- fabsigc
+       compile the fabric signatures
+  -->
+  <macrodef name="fabsigc">
+    <attribute name="srcdir" />
+    <attribute name="includes" default="**/*.fab" />
+    <attribute name="excludes" default="" />
+    <element name="extra-args" implicit="true" optional="yes"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dir="@{srcdir}"
+             dest="${home}/classes/fab-sig"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${fabc}" />
+        <arg value="-sig" />
+        <arg value="-g" />
+        <arg value="-e" />
+        <arg value="-addsigcp" />  <arg value="${home}/src/fabric/signatures" />
+        <arg value="-sourcepath"/> <arg value="@{srcdir}" />
+        <arg value="-d" />         <arg value="${home}/classes/fab-sig" />
+        <extra-args />
+        <srcfile />
+
+        <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
+        <globmapper from="*.fab" to="*.class" />
+      </apply>
+    </sequential>
+  </macrodef>
+
+  <!-- fabfilc
+       compile the fabil implementations of the fabric signatures
+  -->
+  <macrodef name="fabfilc">
+    <attribute name="srcdir" />
+    <attribute name="includes" default="**/*.fil" />
+    <attribute name="excludes" default="" />
+    <element name="extra-args" implicit="true" optional="yes"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dir="@{srcdir}"
+             dest="${home}/classes/fab-sig-impl"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${filc}" />
+        <arg value="-g" />
+        <arg value="-sourcepath"/> <arg value="@{srcdir}" />
+        <arg value="-d" />         <arg value="${home}/classes/fab-sig-impl" />
+        <extra-args />
+        <srcfile />
+
+        <fileset dir="@{srcdir}" includes="@{includes}" excludes="@{excludes}" />
+        <globmapper from="*.fil" to="*.class" />
+      </apply>
+    </sequential>
+  </macrodef>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

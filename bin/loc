@@ -1,0 +1,112 @@
+#!/usr/bin/perl
+
+# Counts lines of code in the Fabric project and categorizes them.
+
+my $width=40;
+
+if ($ENV{'FABRIC_HOME'} ne '') {
+    chdir($ENV{'FABRIC_HOME'});
+} else {
+    my $bindir = `dirname $0`; chomp $bindir;
+    my $fabric = $bindir . '/..';
+    if (chdir($fabric)) {} else {print "error\n";}
+}
+
+if (! -d 'src' || ! -f 'bin/loc') {
+    print STDERR 'Run from the top directory of Fabric', "\n";
+    exit 1;
+}
+open (SVNFILES, "bin/svnfiles src |");
+
+my %pattern, %lines;
+
+$pattern{'Common compiler'} = '^src/compiler/codebases';
+$pattern{'FabIL compiler'} = '^src/compiler/fabil';
+$pattern{'Fabric compiler'} = '^src/compiler/fabric';
+$pattern{'Worker'} = '^src/system/fabric/worker';
+$pattern{'Common functionality'} = '^src/system/fabric/common';
+$pattern{'Fabric runtime support (Java)'} = '^src/system/fabric/lang';
+$pattern{'Dissemination layer'} = '^src/system/fabric/dissemination';
+$pattern{'Message protocols'} = '^src/system/fabric/messages';
+$pattern{'Store'} = '^src/system/fabric/store';
+$pattern{'Arrays (FabIL)'} = '^src/arrays/fabric/lang/arrays';
+$pattern{'Arrays (Java)'} = '^src/system/fabric/lang/arrays';
+$pattern{'Fabric runtime support (FabIL)'} = '^src/runtime/fabric/lang';
+$pattern{'FabIL port of GNU classpath'} = '^src/runtime/fabric/util';
+$pattern{'FabIL port of Jif runtime'} = '^src/runtime/jif';
+$pattern{'Fabric signatures for jif.*'} = '^src/signatures/fabric/jif';
+$pattern{'Fabric signatures for java.*'} = '^src/signatures/fabric/java';
+$pattern{'Fabric signatures for fabric.*'} = '^src/signatures/fabric/fabric';
+$pattern{'FabIL signatures for fabric.*'} = '^src/signatures/fabil/fabric';
+$pattern{'FabIL signatures for java.*'} = '^src/signatures/fabil/java';
+$pattern{'FabIL signatures for javax.*'} = '^src/signatures/fabil/javax';
+$pattern{'SIF (java)'} = '^src/lib/sif/src';
+$pattern{'SIF (fabric)'} = '^src/lib/sif/fab-src';
+$pattern{'SIF (signatures)'} = '^src/lib/sif/sig-src';
+$pattern{'Transient collections'} = '^src/lib/transient/';
+$pattern{'bootstrap support'} = '^src/bootstrap';
+
+my $other = 0;
+my $total = 0;
+
+sub pad {
+    (my $str, my $len) = @_;
+    while (length($str) < $len) { $str = $str . ' '; }
+    return $str;
+}
+
+while (<SVNFILES>) {
+    chomp;
+    if ($_ =~ m/README/ ||
+	$_ =~ m/\.png/ ||
+	$_ =~ m/\.html/ ||
+	$_ =~ m/\.xml/ ||
+	$_ =~ m/\.dia/) {
+# 	ignore
+	next;
+    }
+    if (!($_ =~ m/\.java$/) &&
+        !($_ =~ m/\.jif$/) &&
+        !($_ =~ m/\.fil$/) &&
+        !($_ =~ m/\.flex$/) &&
+        !($_ =~ m/\.ppg$/) &&
+        !($_ =~ m/\.fab$/)) {
+	print STDERR "Warning: unrecognized source file $_\n";
+    }
+
+    my $out = `bin/count-tokens $_`;
+    $out =~ s/^\s*//;
+    $out =~ s/\s*$//;
+    (my $lines, my $tokens, my $chars) = split /\s\s*/, $out;
+    # print "$_: lines $lines, tokens $tokens, chars $chars\n";
+    my $matched = 0;
+    $total += $lines;
+    foreach $key (keys %pattern) {
+	my $pat = $pattern{$key};
+	if ($_ =~ m#$pat#) {
+	    # print STDERR 'matched ', $pat, " with ", $lines, "\n";
+	    $lines{$key} += $lines;
+	    $matched = 1;
+	    last;
+	}
+    }
+    if (!$matched) {
+	$other += $lines;
+	push @others, $_;
+    }
+}
+
+@keys = sort(keys %pattern);
+
+foreach $key (@keys) {
+    print &pad($key, $width), "\t", $lines{$key}, "\n";
+}
+print &pad("Other", $width), "\t$other\n";
+print &pad("Total", $width), "\t$total\n";
+
+my $missed_files;
+foreach $other (@others) {
+    if (!$missed_files) { print "\nFiles classified as Other:\n"; }
+    $missed_files = 1;
+    print $other, "\n";
+}

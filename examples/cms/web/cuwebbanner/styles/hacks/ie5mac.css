@@ -1,0 +1,35 @@
+/****************************************
+ * Cornell University
+ * Web Template with 75px Banner
+ * IE5/Mac Hacks
+ ****************************************/
+
+/* 
+	The purpose of this stylesheet is to provide style rules to 
+	Internet Explorer v5.x on Macintosh only. This browser's support 
+	for CSS is somewhat limited, and it is often necessary to provide
+	it with alternate rules to acheive the same results as other 
+	browsers.
+*/
+
+/* hub sections need more bottom margin */
+.hub-section .thumbnail {
+	margin-bottom: -8px;
+	}
+	
+/* UL in hub more information box are not floating correctly */
+#hub-more ul {
+	width: 120px;
+	}
+	
+/* Main navigations links are offset in IE5/OS9 */
+#navigation li {
+	float: none;
+	}
+	
+/* Thumbnails are invisible */ 
+.thumbnail {
+	position: static;
+	padding: 6px 9px 9px 6px;
+	margin: -6px 0 -15px -5px;
+	}

@@ -1,0 +1,41 @@
+package fabric.lang.security;
+
+import fabric.util.Iterator;
+import fabric.util.Map;
+import java.util.Set;
+
+/**
+ * This code is mostly copied from Jif.
+ */
+public final class FromDisjunctProof extends ActsForProof {
+  private final Map disjunctProofs; // map from disjuncts to proofs to Granter
+
+  FromDisjunctProof(DisjunctivePrincipal actor, Principal granter,
+      Map disjunctProofs) {
+    super(actor, granter);
+    this.disjunctProofs = disjunctProofs;
+  }
+
+  Map getDisjunctProofs() {
+    return disjunctProofs;
+  }
+
+  public void gatherDelegationDependencies(Set s) {
+    DisjunctivePrincipal dp = (DisjunctivePrincipal) getActor();
+    for (Iterator iter = dp.disjuncts.iterator(); iter.hasNext();) {
+      Principal disjunct = (Principal) iter.next();
+      ActsForProof pr = (ActsForProof) this.getDisjunctProofs().get(disjunct);
+      pr.gatherDelegationDependencies(s);
+    }
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
+}

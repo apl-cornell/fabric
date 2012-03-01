@@ -1,0 +1,24 @@
+package util;
+
+import java.io.PrintStream;
+
+/**
+ * This class is here as a hack to work around shortcomings in the Fabric runtime.
+ */
+
+public final class System {
+
+  public static native
+  PrintStream[lbl]
+  stdout
+  (
+    label lbl
+  )
+  where
+    lbl <= {worker$→; _←}
+  ;
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

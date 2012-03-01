@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Updates the project image on Emulab.
+
+source "$(dirname $0)/defs"
+
+# Transfer files.
+rsync -arzvP --rsh=ssh --delete \
+  "${TOP}"/bin \
+  "${TOP}"/classes \
+  "${TOP}"/etc \
+  "${TOP}"/rt-classes \
+  users.emulab.net:/proj/Fabric/fabric/
+
+rsync -arzvP --rsh=ssh --delete "${TOP}"/lib/*.jar \
+  users.emulab.net:/proj/Fabric/fabric/lib/
+
+# Fix up scripts.
+ssh users.emulab.net \
+  mv /proj/Fabric/fabric/bin/emulab-defs /proj/Fabric/fabric/bin/defs
+
+# Fix up permissions.
+ssh users.emulab.net 'chmod -R g+rw,o-rwx /proj/Fabric/fabric'
+

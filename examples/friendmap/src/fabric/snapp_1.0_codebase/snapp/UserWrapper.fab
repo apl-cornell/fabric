@@ -1,0 +1,55 @@
+package snapp;
+
+import util.Meet;
+
+
+/**
+ * This class is a wrapper for Users, allowing them to be stored in collections
+ * of Principals.  It contains references to the parameters of the User.
+ * Principal methods are delegated to (network,owner).  Usage:
+ *
+ * <pre>
+ * Wrapper w = ...
+ * User[w.owner, w.network] u = w.user;
+ * </pre>
+ *
+ */
+
+public class UserWrapper[label A]
+extends Meet
+{
+  public final principal                    {this}@{A} userOwner;
+  public final principal                    {this}@{A} userNetwork;
+  public final User[userOwner, userNetwork] {this}@{A} user;
+
+  public
+  UserWrapper
+  {          // side effects:
+    {this} ⊓ // fields are set
+    {A}      // object is accessed
+  }
+  (
+    final Store     store,
+    final principal userOwner,
+    final principal userNetwork,
+    final User[userOwner, userNetwork] user
+  )
+  where
+    // code and params affect fields and accesses
+    {*provider; store; userOwner; userNetwork; user} <= {this ⊓ A},
+
+    // establish dynamic invariant
+    store actsfor (userOwner, userNetwork)
+  {
+    this.userOwner   = userOwner;
+    this.userNetwork = userNetwork;
+    this.user        = user;
+
+    super(store, userOwner, userNetwork);
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

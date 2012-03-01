@@ -1,0 +1,354 @@
+#!/usr/bin/python
+####
+# Counts and categorizes lines of code in the Fabric project that have changed
+# between trunk and a given branch.
+
+import collections, os, re, shutil, subprocess, sys
+
+###
+# Configuration
+###
+
+# Location of normalize-code script, relative to Fabric home.
+normalizeCode = 'tools/code-normalizer/bin/normalize-code'
+
+# Regexp for full paths of files to ignore.
+ignoreFilesRE = re.compile("""^.*/(
+                              bin/[^/]*  # bin scripts
+                            | etc/.*     # etc directories
+                            | \.cvsignore
+                            | README
+                            | build.xml
+                            | package-info.java
+                            | .*\.(png|dia|xml|html|flex)
+                            )$""", re.X)
+
+# Regexp for examples to include. All other examples will be ignored.
+includeExamplesRE = re.compile("""^\./fab-(trunk|branch)/examples/
+      (auction|friendmap|imageapp)
+    /src/.*$""", re.X)
+
+# Regexp for source files.
+sourceFilesRE = re.compile('^.*\.(java|jif|fil|flex|ppg|fab|cpp|h|cup)$')
+
+categories = collections.OrderedDict()
+
+# Stuff in src/compiler.
+categories['Common compiler'] = ['src/compiler/codebases']
+categories['FabIL compiler'] = ['src/compiler/fabil']
+categories['Fabric compiler'] = ['src/compiler/fabric']
+
+# Stuff in src/system.
+categories['Common system functionality'] = \
+  [ 'src/system/fabric/common',
+    'src/system/fabric/net' ]
+categories['Dissemination layer'] = ['src/system/fabric/dissemination']
+categories['Fabric runtime support (Java)'] = ['src/system/fabric/lang']
+categories['Message protocols'] = ['src/system/fabric/messages']
+categories['Store'] = ['src/system/fabric/store']
+categories['Worker'] = ['src/system/fabric/worker']
+
+# Stuff in src/arrays and src/runtime.
+categories['Fabric runtime support (FabIL)'] = \
+  [ 'src/runtime/fabric/applet',
+    'src/runtime/fabric/lang',
+    'src/runtime/fabric/runtime',
+    'src/arrays' ]
+categories['FabIL port of GNU classpath'] = ['src/runtime/fabric/util']
+
+# Stuff in src/signatures.
+categories['Fabric signatures for java.*'] = ['src/signatures/fabric/java']
+categories['Fabric signatures for fabric.*'] = \
+  ['src/signatures/fabric/fabric']
+categories['FabIL signatures for java.*'] = ['src/signatures/fabil/java/']
+categories['Fabric signatures for javax.*'] = ['src/signatures/fabil/javax']
+categories['FabIL signatures for fabric.*'] = ['src/signatures/fabil/fabric']
+
+# Stuff in src/lib.
+categories['SIF (Java)'] = ['src/lib/sif/src']
+categories['SIF (Fabric)'] = ['src/lib/sif/fab-src']
+categories['SIF (signatures)'] = ['src/lib/sif/sig-src']
+categories['Transient collections'] = ['src/lib/transient']
+
+# Other.
+categories['Bootstrap support'] = ['src/bootstrap']
+
+# Examples.
+categories['Auction example (FabIL)'] = ['examples/auction/src/fabil']
+categories['Auction example (Fabric)'] = ['examples/auction/src/fabric']
+
+categories['FriendMap example (Jif)'] = ['examples/friendmap/src/jif']
+categories['FriendMap runtime extensions (Fabric)'] = \
+  ['examples/friendmap/src/fabric/trusted']
+categories['FriendMap v1 example (Fabric)'] = \
+  [ 'examples/friendmap/src/fabric/friendmap_1.0_codebase',
+    'examples/friendmap/src/fabric/mapserv_1.0_codebase',
+    'examples/friendmap/src/fabric/snapp_1.0_codebase' ]
+categories['FriendMap v2 example (Fabric)'] = \
+  [ 'examples/friendmap/src/fabric/friendmap_2.0_codebase',
+    'examples/friendmap/src/fabric/snapp_2.0_codebase']
+
+categories['ImageApp example (Jif)'] = ['examples/imageapp/src/jif']
+categories['ImageApp example (Fabric)'] = ['examples/imageapp/src/fabric']
+
+########################################################################
+
+if len(sys.argv) != 3:
+  # Print usage info.
+  scriptName = re.match('^(?:.*/)?([^/]+)$', sys.argv[0]).group(1)
+  print("""\
+Usage: %s BRANCH DATE
+  Determines the number of lines of code that have been added, modified and
+  deleted in Fabric trunk (relative to BRANCH), and in Jif HEAD (relative to
+  DATE).
+
+  This script exports fresh working copies into a temporary directory. The only
+  prerequisites for running this script are:
+
+    - have config.properties point to a Polyglot installation,
+    - have tools/code-normalizer built (done automatically by
+        the default Ant target in the top-level build file), and
+    - have diffstat installed.""" % scriptName)
+  sys.exit(1)
+
+# Sanity check: make sure categories are non-overlapping.
+# Also compute max category name length for pretty output later.
+maxCatNameLen = 0
+catKey = list(categories.keys())
+for i in range(len(catKey)):
+  if maxCatNameLen < len(catKey[i]):
+    maxCatNameLen = len(catKey[i])
+
+  for j in range(i+1, len(catKey)):
+    for path1 in categories[catKey[i]]:
+        for path2 in categories[catKey[j]]:
+          if path1.startswith(path2) or path2.startswith(path1):
+            sys.stderr.write(
+              ('Warning: Path "%s" in category "%s" is redundant with '
+                + 'path "%s" in category "%s"' + '\n')
+                % (path1, catKey[i], path2, catKey[j]))
+
+branchName = sys.argv[1]
+date = sys.argv[2]
+
+try:
+  if 'FABRIC_HOME' in os.environ:
+    os.chdir(os.environ['FABRIC_HOME'])
+  else:
+    bindir = re.match('(.*/)(?:[^/]+)?$', sys.argv[0]).group(1)
+    if bindir == '': bindir = '.'
+    fabric = bindir + '/..'
+    os.chdir(fabric)
+except OSError:
+  sys.exit('Run from the top directory of Fabric')
+
+if not os.path.isdir('src') or not os.path.isfile('bin/loc-diff'):
+  sys.exit('Run from the top directory of Fabric')
+
+# Make sure we're in a clean FABRIC/tmp.
+try: shutil.rmtree('tmp')
+except OSError: pass
+os.mkdir('tmp')
+try: os.chdir('tmp')
+except OSError: sys.exit('error changing to FABRIC/tmp directory')
+
+# Export fab-branch/src.
+print('Exporting Fabric branch "%s" from svn...' % branchName)
+if subprocess.call(['svn', 'export',
+      'https://forge.cornell.edu/svn/repos/fabric/branches/' + branchName +
+      '/src', 'fab-branch/src'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Export fab-branch/examples.
+if subprocess.call(['svn', 'export',
+      'https://forge.cornell.edu/svn/repos/fabric/branches/' + branchName +
+      '/examples', 'fab-branch/examples'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Export fab-branch/lib.
+if subprocess.call(['svn', 'export',
+      'https://forge.cornell.edu/svn/repos/fabric/branches/' + branchName +
+      '/lib', 'fab-branch/lib'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Export fab-trunk/src.
+print('Exporting Fabric trunk from svn...')
+if subprocess.call(['svn', 'export',
+      'https://forge.cornell.edu/svn/repos/fabric/trunk/src',
+      'fab-trunk/src'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Export fab-trunk/examples.
+if subprocess.call(['svn', 'export',
+      'https://forge.cornell.edu/svn/repos/fabric/trunk/examples',
+      'fab-trunk/examples'], stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# For jif-branch, use fab-branch/lib/jif, if it exists.
+if os.path.isdir('fab-branch/lib/jif/src'):
+  print('Using fab-branch/lib/jif for jif-branch')
+  shutil.move('fab-branch/lib/jif/src', 'jif-branch')
+else:
+  # Export jif-branch.
+  print('Exporting Jif ("%s") from cvs...' % date)
+  if subprocess.call(['cvs', '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/jif',
+        'export', '-D', date, '-d', 'jif-branch', 'jif/src'],
+        stdout=open(os.devnull, 'w')) != 0:
+    sys.exit(1)
+
+# Remove fab-branch/lib.
+try: shutil.rmtree('fab-branch/lib')
+except OSError: pass
+
+# Export jif-trunk.
+print('Exporting Jif HEAD from cvs...')
+if subprocess.call(['cvs', '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/jif',
+      'export', '-r', 'HEAD', '-d', 'jif-trunk', 'jif/src'],
+      stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Export polyglot-branch.
+print('Exporting Polyglot ("%s") from cvs...' % date)
+if subprocess.call(['cvs',
+      '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/polyglot',
+      'export', '-D', date, '-d', 'polyglot-branch', 'polyglot/src'],
+      stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Export polyglot-trunk.
+print('Exporting Polyglot HEAD from cvs...')
+if subprocess.call(['cvs',
+      '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/polyglot',
+      'export', '-r', 'HEAD', '-d', 'polyglot-trunk', 'polyglot/src'],
+      stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Construct the command to normalize sources.  While we do this, delete all
+# non-source files, and make sure the categories are exhaustive.
+normalizeCmd = ['../' + normalizeCode]
+examplesRE = re.compile('^\./fab-(trunk|branch)/examples/.*$')
+baseCompilersRE = re.compile('^\./(jif|polyglot)-(trunk|branch)/.*$')
+for root, dirs, files in os.walk('.'):
+  for filename in files:
+    fullPath = os.path.join(root, filename)
+
+    ignored = ignoreFilesRE.match(fullPath) != None
+    isExample = examplesRE.match(fullPath) != None
+    isIncludedExample = includeExamplesRE.match(fullPath) != None
+
+    if ignored or (isExample and not isIncludedExample):
+      os.remove(fullPath)
+      continue
+
+    if sourceFilesRE.match(filename) == None:
+      sys.stderr.write('Warning: unrecognized source file: %s\n' % fullPath)
+      continue
+
+    normalizeCmd.append(fullPath)
+
+    if baseCompilersRE.match(fullPath) != None: continue
+
+    matched = False
+    for cat, paths in categories.items():
+      for path in paths:
+        matched = re.match('^\./fab-(branch|trunk)/' + path, fullPath) != None
+        if matched: break
+      if matched: break
+
+    if not matched:
+      sys.stderr.write('Warning: file not counted: "%s"\n' % fullPath)
+
+# Normalize sources.
+print('Normalizing source files...')
+if subprocess.call(normalizeCmd) != 0:
+  sys.exit('Error while normalizing code')
+
+# Collect stats.
+print('Diffing...')
+regexps = [
+  re.compile(', (\d+) insertions'),
+  re.compile(', (\d+) deletions'),
+  re.compile(', (\d+) modifications')
+]
+fieldLen = [3, 3, 3, 3, 3]
+for base, cats in {
+    'fab': categories,
+    'jif':
+      {'Jif compiler': ['.']},
+    'polyglot':
+      {'Polyglot compiler': ['.']}}.items():
+  for cat, paths in cats.items():
+    stats = [0, 0, 0, 0, 0]
+    for path in paths:
+      # Get diff counts.
+      output = subprocess.check_output(
+          'diff -urN %s-branch/"%s" %s-trunk/"%s" | diffstat -bms'
+            % (base, path, base, path),
+          shell=True).decode('utf-8')
+
+      for i in [0, 1, 2]:
+        match = regexps[i].search(output)
+        if match != None:
+          stats[i] += int(match.group(1))
+          if fieldLen[i] < len(str(stats[i])):
+            fieldLen[i] = len(str(stats[i]))
+
+      # Get line count.
+      output = subprocess.check_output(
+        'find %s-trunk/"%s" -type f -print0 | wc -l --files0-from=- | tail -n 1'
+          % (base, path),
+        shell=True).decode('utf-8')
+      match = re.match('(\d+) total', output)
+      if match != None:
+        stats[4] += int(match.group(1))
+        if fieldLen[4] < len(str(stats[4])):
+          fieldLen[4] = len(str(stats[4]))
+
+    # Get change total.
+    stats[3] = stats[0] + stats[1] + stats[2]
+    if fieldLen[3] < len(str(stats[3])):
+      fieldLen[3] = len(str(stats[3]))
+
+    categories[cat] = stats
+
+# Output.
+categoryFormatter = '{:.<' + str(maxCatNameLen+3) + '} '
+insFormatter = '{:>' + str(fieldLen[0]) + '} + '
+delFormatter = '{:>' + str(fieldLen[1]) + '} + '
+modFormatter = '{:>' + str(fieldLen[2]) + '} = '
+deltaFormatter = '{:>' + str(fieldLen[3]) + '} | '
+noChanges = \
+  ('{:-^' + str(fieldLen[0] + fieldLen[1] + fieldLen[2] + fieldLen[3] + 9)
+    + '} | ').format('(no changes)')
+locFormatter = '{:>' + str(fieldLen[4]) + '}'
+
+# Print header.
+output = ('{:<' + str(maxCatNameLen+3) + '}').format('') + ' '
+output += ('{:^' + str(fieldLen[0]) + '}').format('ins') + ' + '
+output += ('{:^' + str(fieldLen[1]) + '}').format('del') + ' + '
+output += ('{:^' + str(fieldLen[2]) + '}').format('mod') + ' = '
+output += ('{:^' + str(fieldLen[3]) + '}').format('Δ') + ' | '
+output += ('{:^' + str(fieldLen[4]) + '}').format('LOC')
+print(output)
+
+# Print data.
+for cat, (ins, dels, mods, deltas, totalLOC) in categories.items():
+  output = categoryFormatter.format(cat + ' ')
+  if ins + dels + mods == 0:
+    output += noChanges
+  else:
+    if ins == 0: ins = ''
+    output += insFormatter.format(ins)
+
+    if dels == 0: dels = ''
+    output += delFormatter.format(dels)
+
+    if mods == 0: mods = ''
+    output += modFormatter.format(mods)
+
+    if deltas == 0: deltas = ''
+    output += deltaFormatter.format(deltas)
+  output += locFormatter.format(totalLOC)
+  print(output)
+
+# vim: ts=2 sw=2 ai et

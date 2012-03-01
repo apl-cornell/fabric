@@ -1,0 +1,62 @@
+package arrays;
+
+import fabric.worker.Store;
+import fabric.lang.arrays.byteArray;
+import fabric.util.HashMap;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.FileNotFoundException;
+
+
+public class ByteArrayTest01 {
+    public static void main(String[] args) {
+        Store store = fabric.worker.Worker.getWorker().getStore("store0");
+
+        if (args.length != 2) {
+            System.out.println("I need an input filename and output filename as arguments");
+            return;
+        }
+        File fil = new File(args[0]);
+        int length = (int)fil.length();
+        FileInputStream file = null;
+        FileOutputStream outFile = null;
+        try {
+            file = new FileInputStream(fil);
+            outFile = new FileOutputStream(args[1]);
+        } catch (FileNotFoundException e) {
+            System.out.println("Input file not found: " + args[0]);
+            return;
+        }
+
+        System.out.println("Starting test");
+        atomic {
+            try {
+                byteArray byteArray = new byteArray@store(length);
+                System.out.println("Array created");
+
+                int counter = 0;
+                int b;
+                for (int j = 0; j < length; j++) {System.out.print(".");
+                    b = file.read();
+                    if (b == -1) break;
+                    byteArray.set(counter++, (byte)b);
+                }
+
+                for (int j = 0; j < counter; j++) {
+                    outFile.write(byteArray.get(j));
+                }
+
+                outFile.close();
+                file.close();
+            } catch (IOException e) {
+                System.out.println("Error in reading/writing file");
+                return;
+            }
+        }
+
+    }
+}

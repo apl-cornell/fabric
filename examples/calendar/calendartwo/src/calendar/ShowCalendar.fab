@@ -1,0 +1,126 @@
+package calendar;
+
+import jif.util.*;
+import userserv.*;
+import sif.servlet.*;
+import sif.html.*;
+
+import javax.servlet.ServletException;
+
+public class ShowCalendar extends UAction[CalServEP] {
+    public ShowCalendar(Main{this} m) throws ServletException {
+        super("show", m);
+        
+    }
+    public void invokeImpl{*lbl}(label{*lbl} lbl,
+            Request[CalServEP]{*lbl} req,
+            UServlet[CalServEP]{*lbl} uservlet,
+            USessState[CalServEP, lbl]{*lbl} ustate) 
+    throws (ServletException{*lbl;req.session!:})
+            where caller(req.session),
+            lbl <= {*:req.session},
+            req.session equiv ustate.sessionPrincipal
+    {
+        if (req == null || uservlet == null || ustate == null || 
+                !(uservlet instanceof Main) || 
+                !(ustate instanceof CalendarSessionState[{req.session←}])) 
+            throw new ServletException("invalid args");
+
+        final Main servlet = (Main)uservlet;
+        final CalendarSessionState[{req.session←}] state = (CalendarSessionState[{req.session←}])ustate;
+        if (state.css == null) throw new ServletException("invalid args");
+        
+        // Direct the user to a session-specific show calendar action.
+        // We store this session-specific action in the state, so that we
+        // can reuse it.
+        if (state.sessionPrincipal equiv req.session) {
+            if (state.css.state == null) {
+                // create a new state
+                if (lbl <= new label {req.session!:}) {
+                    final User currentUser = state.currentUser();
+                    if (req.session actsfor currentUser) {
+                        if (servlet != null && servlet.localStore != null && servlet.localStore actsfor req.session) {
+                        State[{req.session←}] s = new State[{req.session←}]@servlet.localStore(currentUser, 
+                                            new fabricated.util.Date[{currentUser!:}]@servlet.localStore(), 
+                                            ShowCalendarSessAction$1.DISPLAY_KIND_MONTH, 
+                                            currentUser);
+                        state.css.state = s;
+                        }
+                    }
+                }
+            }
+
+            final State{*lbl;req.session!:} s = state.css.state;
+            if (s == null) {                
+                throw new ServletException("no state");
+            }
+            
+            if (lbl <= new label {s.currentUser!:} && req.session actsfor s.currentUser) {
+                if (state.css.scsa == null) {
+                    // hasn't yet been created.
+                    ShowCalendarSessAction scsa = new ShowCalendarSessAction(servlet, req.session, s.currentUser);
+                    updateState(state, scsa, s.currentUser);
+                }
+                
+                ServletException{*lbl;req.session!:} ex = null;
+                
+                final ShowCalendarSessAction scsa = state.css.scsa;
+                if (scsa != null && s != null && req.session equiv scsa.session) {       
+                    try {
+                        final User currentUser = s.currentUser;
+                        scsa.invokeSessImpl(lbl, req, servlet, ustate, currentUser);
+                    }
+                    catch (ServletException e) {
+                        ex = e;
+                    }
+                }
+                if (ex != null) throw ex;
+            }
+        }
+        
+    }
+    
+    /*
+     * Update sessState.css.scsa = scsa;
+     */
+    private void updateState{p!:}(CalendarSessionState[{p!:}]{p!:} sessState, 
+            ShowCalendarSessAction{p!:} scsa, 
+            principal{p!:} p)
+        where caller(sessState.sessionPrincipal),
+        sessState.sessionPrincipal actsfor p,
+        endorse({sessState.sessionPrincipal←}) 
+    {
+        if (endorse(sessState, {sessState.sessionPrincipal!:}) == null) return;
+        final CalendarSessionState[{sessState.sessionPrincipal←}] ss = CalendarSessionState.endorseState(p, sessState.sessionPrincipal, sessState);
+        
+        if (ss == null) return;
+        if (ss.sessionPrincipal equiv sessState.sessionPrincipal) {
+            updateStateHelper(ss.css, ss.sessionPrincipal, p, scsa);
+        }
+            
+//        final principal sess = endorse(sessState.sessionPrincipal, {p!:} to {sessState.sessionPrincipal←});
+//        if (ss == null || sess == null) return;
+//        final principal sp = ss.sessionPrincipal; 
+//        if (sp equiv sess) {
+//            int a,b,c,d;
+//            CSS[{p←}, {sp←}] css = endorse(ss.css, {a} to {b});
+//            if (css == null) return;
+//            css.scsa = endorse(scsa, {c} to {d});
+//        }
+    }
+    
+    private void updateStateHelper{prin←}(CSS[{sp←}, {sp←}]{prin←} css,
+            principal{prin←} sp,
+            principal{prin←} prin,
+            ShowCalendarSessAction{prin←} scsa)
+        where caller(sp),
+        sp actsfor prin,
+        endorse({sp←})
+    {
+        CSS[{sp←}, {sp←}] css_ = endorse(css, {prin←} to {sp←}); 
+        if (css_ == null) return;
+        css_.scsa = endorse(scsa, {prin←} to {sp←});
+    }
+        
+}
+

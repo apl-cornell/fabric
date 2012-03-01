@@ -1,0 +1,11 @@
+public class Error01[principal p] {
+    int{} y;
+    public void foo{}(Error01[p]{p→} x) {
+        if (x==null) throw new Error();
+        x.bar();
+    }
+
+    void bar{}() {
+        y = 10;
+    }
+}

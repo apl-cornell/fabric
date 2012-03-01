@@ -1,0 +1,408 @@
+  body {padding: 0; margin:0; font-family: sans-serif; background-color: #fff; color: #000}
+  
+  /* These lines deal with the table at the top of all pages with the logo */
+  #title_table {margin: 1em auto;}
+  #cms_title {font-variant: small-caps; color: #ab1a2a; font-size: 22px }
+  #cms_title a {text-decoration: none; color: #ab1a2a}
+  #cms_title a:hover {text-decoration: none}
+ 
+  #header_links {font-size: 12px; text-align: center }
+  #header_links a {color: #585a7c; font-variant: small-caps; text-decoration: none}
+  #header_links a:hover {text-decoration: underline; font-variant: small-caps}
+  #header_title_small {font-size:12px; color: #666666; text-align: left; vertical-align: middle; white-space: nowrap; clear: both}
+  #header_title_small a {color: #666666; text-decoration: none}
+  #header_title_small a:hover {text-decoration: underline}
+  #header_authuser {font-size:12px; color: #666666; text-align: right; vertical-align: middle; white-space: nowrap; clear: both}
+  #header_authuser a {color: #ab1a2a; text-decoration: none}
+  #header_authuser a:hover {text-decoration: underline}
+  
+  .course_title {color: #585a7c; font-size: 20px; font-family: serif; font-style: italic; font-weight: bold; padding-bottom: 10px; margin-bottom: 0px}
+  .viewas {color: #585a7c; font-size: 10px; font-family: serif; font-style: italic; padding-top:15px; padding-bottom: 10px}
+  #welcome_cms {color: #666666; font-size: 16px; font-family: arial,sans-serif; padding-top:20px; padding-bottom: 10px}
+  #ct_frozen.course_title {color: #ab1a2a}
+    
+  div.noticebox {background-color: #DDDDCC; border: 1px solid #666666; margin: 0.5em; padding: 0.5em}
+  
+  #seal {margin-left: 20px; margin-right: 20px}
+
+  #perspective {color: #FFFFFF; font-family: Arial, Helvetica, Sans-Serif; font-size: 12px; color: #ffffff}
+  #perspective a {color: #FFFFFF }
+  #perspective a:visited {color: #FFFFFF }
+  #perspective .currentpage {font-weight: bold; color: #FFFF66;} 
+   
+  #course_page_container {background-color: #efefe5; margin: 0px; padding: 0px; vertical-align: top}
+  #course_page {background-color: #efefe5; color: #666; font-size: 9pt; margin: 0px; padding: 20px; text-align: left}
+  #course_page a {text-decoration: underline; color: #ab1a2a}
+  #course_page a:hover {text-decoration: underline}
+  #course_page td {color: #666; font-size: 12px}
+  #course_page .assignment_title {color: #585a7c; font-size: 14px; padding-bottom: 5px; margin-bottom: 1em; font-weight:  bold}
+  #course_page h2 {color: #666; font-size: 12px;  padding:0px; margin:0px;  border-bottom: 1px solid #ccc; margin-bottom: 3px}
+  #course_page h3 {color: #666; font-size: 11px;  padding:0px; margin:0px;  margin-top: 10px; margin-bottom: 3px}
+  #course_background { margin: 0em; padding: 0em; background-image: url(images/hz_shadow_bottom.gif); background-repeat: repeat-x; background-position: top left}
+
+
+  #course_wrapper {margin: 0em auto; padding: 0em}
+  #course_wrapper_withnav { margin: 0em auto; padding: 0em}
+  
+  #course_wrapper_table { margin: 0em; padding: 0em}
+  
+  /* display xml tree for debug */
+  #xmltreeheader {font-size: 16px; text-align: left}
+  #xmltree {border: 1px dashed #000000; padding-right: 5px}
+
+  #course_page p {margin: 0; padding:0; padding-bottom: .5em}
+  #course_page_footer_1 {background-color: #efefe5; color: #666; height: 51px}
+  #course_page_footer_2 {padding-bottom: 10px}
+  #course_page_footer_2 table {}
+  #course_page_footer_2_left {background-image: url(images/hz_shadow_bottom_left.gif); background-repeat: no-repeat; padding-bottom: 50px; padding-left: 60px;}
+  #course_page_footer_2_right {background-image: url(images/hz_shadow_bottom.gif); background-repeat: repeat-x; padding-bottom: 50px}
+
+  #course_menu_container {background-image: url(images/vt_shadow_nonav.gif); background-repeat: repeat-y; background-color: #ffffff; width: 14px; vertical-align: top}
+  #course_menu_top {background-image: url(images/vt_shadow.gif); background-repeat: no-repeat; background-color: #ffffff; height: 61px}
+  #course_menu {background-color: #ffffff; color: #c1c2ca; font-size: 12px; padding: 10px; background-image: url(images/vt_shadow_nonav.gif); background-repeat: repeat-y}
+  #course_menu td {color: #c1c2ca; font-size: 12px}
+  #course_menu a {text-decoration: none;  color: #c1c2ca}
+  #course_menu a:hover  {text-decoration: underline}
+  #course_menu h2 {color: #fff; font-size: 12px; margin:0; padding-bottom: 1px}
+  #course_menu_footer_1 {background-image: url(images/vt_shadow_bottom.gif); background-repeat: no-repeat; background-position: top left}
+
+  #hidelinks {color: #dadad0;}
+  #hidelinks a {color: #dadad0; text-decoration: none}
+  #hidelinks a:hover {color: #ab1a2a}
+  
+  #whatsthis {font-size: 10px; float: right; width: 6em}
+  
+  #navlink_course_overview {padding: 0px 0px}
+  #navbar_header { height: 101px; text-align: right; vertical-align: middle; margin: 0px auto; white-space: nowrap}
+  #navbar_course {background: #ab1a2a; padding: .1em 0em; text-align: center; clear: both; margin: 0em}
+  #header_links {float: right; text-align: left; margin-top: 10px; margin-left: 0px; list-style: none inside}
+  
+  #anchors {float:right; text-align: right; margin:1em; padding-left: 1em; list-style: none inside; background: url(images/divider.gif) repeat-y left; white-space: nowrap; width: 15em}
+  #anchors a {text-decoration: none}
+  #anchors a:hover {text-decoration: underline}
+  #topblock {margin-right: 18em}
+
+  #solblock {margin: 0em 2em; border: 1px solid #ddd; padding: 1em}
+  #solblock h3 {margin: 0em; padding: 0em}
+
+  #course_wrapper_table dl {margin: 0em; padding: 0em}
+  #course_wrapper_table dl dt {float: left}
+  #course_wrapper_table dl dd {padding-left: 10em}
+
+  input, select, textarea {border: 1px solid #aaa}
+   .link {color:white;}
+  .replace {font-size: smaller; color: #444; padding: 1em; text-align: left; margin-top: 1em}
+  .replacebody {display: none; margin-left: 2em}
+  .replacebody th {font-weight: bolder; padding: 0em 1em}
+  .replacebody th.remove {text-align: center}
+  .replacebody td {padding: 0em 1em}
+  .replacebody td.remove {text-align: center}
+  .replacenewfile {margin: 0em 10%}z
+
+  .cal {position: absolute; visibility: hidden; background-color: white}
+  .dateblock {white-space: nowrap}
+
+  .showhide {display: block}
+  .advanced {display: none; margin: 20px}
+  .advanceddue {display: block; margin: 20px}
+  
+  .example {font-size: 9px; display: block}
+  
+  .calicon {border-width: 0px; margin-bottom: -2px}
+  
+  .file {padding: 5px}
+  .netid {font-size: 9px}
+  .joke {font-size: 10px; text-align: center}
+  .new {font-weight: bolder}
+  .assignment_table, .sortable {border: 1px solid #ddd; border-bottom: 0px; border-right: 0px; width: 100%}
+  .category_table {border: 1px solid #ddd; border-bottom: 0px; border-right: 0px; width: 100%}
+  .assignment_right {padding-left: 10px}
+  .assignment_left {padding-right: 10px; padding-bottom: 20px; margin-right: auto}
+  .assignment_table td, .category_table td, .category_table th, .assignment_table th, .sortable td, .sortable th {border-bottom: 1px solid #ddd; padding: 2px; border-right: 1px solid #ddd; nowrap /* nowrap is for IE; deprecated in HTML 4.0 */}
+  ul.assignment_table {display: block; list-style-type: none; padding-left: 0em; margin-left: 0em;}
+  .result_table { border: none; }
+  .result_table td, .result_table th { border-right: none; }
+  .result_table td.last { border-bottom: none; }
+  .assignment_blurb {font-size: 10px}
+  .sidebar_item {padding-bottom: 20px}
+  .gradeall_table {border: 2px solid  #646686; color: white; font-size: 14px; width: 100%}
+  .gradeall_table td {border-bottom: 1px solid #ddd; padding: 2px; border-right: 1px solid #ddd; nowrap /* nowrap is for IE; deprecated in HTML 4.0 */}
+  .gradeall_table td a {color: #fff}
+  .gradeall_table th {border-bottom: 1px solid #ddd; padding: 2px; border-right: 1px solid #ddd; nowrap /* nowrap is for IE; deprecated in HTML 4.0 */; background-color: #646686}
+  .gradeall_table th.link {color: #fff}
+
+  .no_borders {border-width: 0px; border-style: none; width: 100%}
+  .no_borders td tr {border-width: 0px; border-style: none}
+
+  /* Sortable tables */
+  #course_page table.sortable {margin: 0em auto; border-right: 1px solid #ddd; border-bottom: 1px solid #ddd}
+  #course_page table.sortable a.sortheader {font-size: 12px; color: #ab1a2a; text-decoration: none}
+  #course_page table.sortable span.sortarrow {color: black; text-decoration: none}
+  #course_page table.sortable td {background-color: #f7f7f0; border: 1px solid #efefe5}
+  
+  /* hide bullets in category file lists */
+  ul.ctg_file_list {list-style: none}
+
+  .hide {font-weight: normal}
+  #course_page a.hide, #course_page a.button {text-decoration: none}
+  #course_page a.hide:hover, #course_page a.button:hover {text-decoration: underline}
+  .warn {font-weight: bold}
+  .filename {font-style: italic}
+  .personname {font-style: italic}
+  .md5 {font-size: 10px}
+  .link {color: #ab1a2a; text-decoration: none}
+  .indented {margin: 0; padding: 0; padding-left: 20px; display: block}
+
+  .spanner50 {padding-top: 50px}
+  .spacer30 {padding-right: 30px}
+  .spacer300 {padding-right: 300px}
+  .spacer60 {padding-right: 60px}
+
+  .divider {width: 1px; background-image: url(images/divider.gif); background-repeat: repeat}
+  .separator {padding-bottom: 25px}
+  
+  .row_even {background-color: #f7f7f0}
+  .row_odd {background-color: #fff}
+  .regrade_person {}
+  .regrade_text {}
+
+  .navlink_course {color: #FFFFFF; font-size: 9pt; font-weight: bold}
+  .navlink_course a {text-decoration: none; color: #FFFFFF; padding: 0px 0px}
+  .navlink_course a:hover {background: #8d0b19}
+
+  .navlink_course_cmsadmin {color: #FFFFFF; font-size: 9pt; font-weight: bold}
+  .navlink_course_cmsadmin a {text-decoration: none; color: #66CCFF; padding: 0px 0px}
+  .navlink_course_cmsadmin a:hover {background: #8d0b19}
+
+  
+  .navlink_staff_course{color: #FFFF66; font-size: 9pt; font-weight: bold}
+  .navlink_staff_course a {text-decoration: none; color: #FFFF66; padding: 0px 10px}
+  .navlink_staff_course a:hover {background: #8d0b19}
+  .navlink_general{color: #3399FF; font-size: 9pt; font-weight: bold}
+  .navlink_general a {text-decoration: none; color: #3399FF; padding: 0px 10px}
+  .navlink_general a:hover {background: #8d0b19}
+
+  
+  
+  		.suggestion_list
+		{
+		background: #646686;
+		border: 1px solid;
+		padding: 4px;
+		text-align: left;
+		}
+		
+		.suggestion_list ul
+		{
+		padding: 0;
+		margin: 0;
+		list-style-type: none;
+		text-align: left;
+		}
+		
+		.suggestion_list a
+		{
+		text-decoration: none;
+		color: #FFFFFF;
+		text-align: left;
+		}
+		
+		.suggestion_list .selected
+		{
+		background: navy;
+		color: #FFFF66;
+		font-weight: bold;
+		}
+		
+		.suggestion_list .selected a
+		{
+		color: #FFFF66;
+		}
+
+/* START POPUP MENU STYLES */
+
+#popitmenu{
+position: absolute;
+background-color: #545676;
+border: 1px solid #dddddd;
+font-size: 14px;
+color: #dddddd;
+z-index: 100;
+visibility: hidden;
+}
+
+#popitmenu a {
+text-decoration: none;
+padding-left: 6px;
+color: #dddddd;
+display: block;
+}
+
+#popitmenu a:hover { /*hover background color*/
+background-color: #747696;
+}
+
+		#autosuggest
+		{
+		display: none;
+		}
+		
+		#dhtmltooltip	{
+		position: absolute;
+		border: 1px solid #000000;
+		padding: 2px;
+		background-color: #FFFFEE;
+		visibility: hidden;
+		font-family: sans-serif;
+		font-size: 8px;
+		z-index: 100;
+		/*Remove below line to remove shadow. Below line should always appear last within this CSS*/
+			filter: progid:DXImageTransform.Microsoft.Shadow(color=gray,direction=135);
+	}	
+			#dhtmltooltip	{
+		position: absolute;
+		border: 1px solid #000000;
+		padding: 2px;
+		background-color: #FFFFEE;
+		visibility: hidden;
+		font-family: sans-serif;
+		font-size: 8px;
+		z-index: 100;
+		/*Remove below line to remove shadow. Below line should always appear last within this CSS*/
+			filter: progid:DXImageTransform.Microsoft.Shadow(color=gray,direction=135);
+	}
+
+/* minimum menu requirements for functionality */
+
+.topmenu{
+    list-style-type:none;
+    margin:0;
+    padding:0;
+}
+
+.topmenuli{
+    list-style-type:none;
+    float:left;
+}
+
+.topmenutitle{
+    display:block;
+    
+}
+
+.submenuul{
+    list-style-type:none;
+    position:absolute;
+    margin: 0;
+    padding:0;
+    display:none;
+}
+
+.submenuli a{
+    display:block;
+    width:150px;
+}
+
+.topmenu li:hover ul , .topmenu li.over ul{ /* lists nested under hovered list items */
+    display: block;
+}
+
+#dmenu li>ul { 
+    top: auto;
+    left: auto;
+}
+
+#content {
+    clear: left;
+
+}
+
+    /* menu design */
+
+#dmenu {
+    font-family: Arial, Helvetica, Sans-Serif;
+    font-size:12px;
+
+}
+
+.topmenuul {
+    
+}
+
+.topmenutitle {
+    text-indent: 3px;
+    text-decoration: none;
+    border: 0px solid #000000;
+    padding: 0px;
+    background-color: #ab1a2a;
+      color: #FFFFFF;
+        font-weight: bold;
+       
+}
+
+.topmenutitle_active {
+    text-indent: 3px;
+    text-decoration: none;
+    border: 0px solid #000000;
+    padding: 0px;
+    background-color: #ab1a2a;
+      color: #FFFF66;
+        font-weight: bold;
+       
+}
+
+.submenuul {
+    margin-top: -1px;
+    background-color: #9b0a1a;
+    background-position: top left;
+    background-repeat: repeat-x;
+    border: 1px solid #dddddd;
+}
+
+.submenuli a{
+    padding: 3px;
+    text-decoration: none;
+    color: #FFFFFF;
+}
+
+.submenuli a:hover{
+    text-decoration: none;
+    background-color: #bb2a3a;
+    color: #FFFFFF;
+}	
+.status { background-color: #f7f7f0; padding: 10px; border: 1px solid #646686; margin: 10px 0px }
+.status_ok { color: #558840; }
+.status_warn { color: #646686; }
+.status_err {color: #ab1a2a; }
+
+dl#general_asgn_info dt {font-weight:bold; margin-right: 0px}
+dl#general_asgn_info dd {margin-left: 5px}
+
+dl#legend {clear: both; text-align: left; padding: 1em 0em}
+  dl#legend dt { margin: 0em; width: 12px; height: 12px}
+  dl#legend dd {margin: 0em; padding: 0em; float: none}
+  
+  div#control {}
+  div#buttons a {}
+  #control div {margin: .5em 0em}
+  
+  #control ul#selectors 
+  {
+    list-style-type: none; 
+    margin: 0em; 
+    padding: 0em;
+    float: left;
+    
+  }
+  ul#selectors li {margin: 0em; padding: 0em}
+  #control div#subgrades {float: left; text-align: center}
+  #control div#assign {float: left}
+  #control div#buttons {float: left;}
+  
+  label#sub, label#to{float: left; width: 50%}
+  input#submit {clear: left}
+  input#grade, input#files {width: 50%}
+  
+  form#creategroups {float:left; width: 30%}
+  div#export {display: block; float: left; width: 23%; padding-top: 0.2em}
+  form#uploadgrades {float: left; text-align: right; width: 47%}

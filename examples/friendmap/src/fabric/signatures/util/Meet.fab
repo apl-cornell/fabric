@@ -1,0 +1,81 @@
+package util;
+
+public class Meet extends AbstractPrincipal {
+
+  public native
+  Meet
+  (
+    Store     {this} store,
+    Principal {this} left,
+    Principal {this} right
+  )
+  where
+    store actsfor (left,right);
+
+  public native
+  Meet
+  (
+    Store     {this} store,
+    String    {this} name,
+    Principal {this} left,
+    Principal {this} right
+  )
+  where
+    store actsfor (left,right);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public native
+  boolean {this;p;this←}
+  delegatesTo
+  { // side effects:
+    // TODO
+  }
+  (
+    principal p
+  );
+
+  public native
+  ActsForProof[{s→}] {this; p; this←; p←;s}
+  findProofUpto
+  {          // side effects:
+    _→;this← // TODO
+  }
+  (
+    Store s,
+    Principal p,
+    java.lang.Object searchState
+  );
+
+  public native
+  void
+  addDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this→;this←} p
+  )
+  where
+    caller (this);
+
+
+  public native
+  void
+  removeDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this→;this←} p
+  )
+  where
+    caller (this);
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

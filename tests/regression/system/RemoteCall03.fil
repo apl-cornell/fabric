@@ -1,0 +1,33 @@
+package system;
+
+public class RemoteCall03 {
+  int i;
+
+  public void m() {
+    i++;
+  }
+
+  public void m_remote(fabric.lang.security.Principal p) {
+    i++;
+  }
+
+  public static void main(String[] args) {
+    RemoteCall03 t = null;
+    Store store = Worker.getWorker().getStore("store0");
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker("store0");
+    atomic {
+      t = new RemoteCall03@store();
+      t.i = 10;
+      t.m_remote@remoteWorker(Worker.getWorker().getPrincipal());
+    }
+
+    int curI = 0;
+    atomic {
+      curI = t.i;
+    }
+
+    if (curI == 11) System.out.println("TEST PASSED.");
+    else System.out.println("TEST FAILED: expected t.i == 11 but got " + curI);
+  }
+}
+

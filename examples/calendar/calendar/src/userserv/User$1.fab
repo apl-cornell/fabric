@@ -1,0 +1,11 @@
+package userserv;
+
+public class User$1[principal servP] {
+	
+	public User$1(String{servP:;servP!:} firstName, String{servP:;servP!:} lastName) {
+		this.firstName = firstName;
+		this.lastName = lastName;
+	}
+    final String{servP:;servP!:} firstName;
+    final String{servP:;servP!:} lastName;	
+}

@@ -1,0 +1,35 @@
+package fabric.lang;
+
+public class Object extends java.lang.Object {
+  /**
+   * The label that protects the object at run time.
+   */
+  protected Label $updateLabel;
+  
+  /**
+   * The object's access policy, specifying the program contexts in which it is
+   * safe to use this object.
+   */
+  protected ConfPolicy $accessPolicy;
+  
+  /**
+   * Initializes the object's update label and access policy.
+   */
+  public native Object $initLabels();
+  
+  public native boolean equals(Object o);
+  
+  public native Statistics createStatistics();
+  
+  /**
+   * The store where this object resides.
+   */
+  public native Store $getStore();
+  
+  /**
+   * A dummy method. This is a hack for working around reachability problems in
+   * generated code.
+   */
+  public static native void _npe(Label lbl) throws NullPointerException;
+}
+

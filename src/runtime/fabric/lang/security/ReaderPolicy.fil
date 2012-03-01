@@ -1,0 +1,141 @@
+package fabric.lang.security;
+
+import fabric.worker.Worker;
+import fabric.worker.Store;
+import fabric.lang.security.Principal;
+import fabric.util.Iterator;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * This code is mostly copied from Jif.
+ */
+public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
+  private final Principal owner;
+  private final Principal reader;
+
+  public ReaderPolicy(Principal owner, Principal reader) {
+    this.owner = owner;
+    this.reader = reader;
+  }
+
+  public Principal owner() {
+    return owner;
+  }
+
+  public Principal reader() {
+    return reader;
+  }
+
+  public boolean relabelsTo(Policy p, Set s) {
+    if (this == p || this.equals(p)) return true;
+
+    final Store localStore = Worker.getWorker().getLocalStore();
+    if (p instanceof JoinConfPolicy) {
+      JoinPolicy jp = (JoinPolicy) p;
+      // this <= p1 join ... join p2 if there exists a pi such that
+      // this <= pi
+      for (Iterator iter = jp.joinComponents().iterator(); iter.hasNext();) {
+        Policy pi = (Policy) iter.next();
+        if (LabelUtil.relabelsTo(this, pi, s)) return true;
+      }
+      return false;
+    } else if (p instanceof MeetConfPolicy) {
+      MeetPolicy mp = (MeetPolicy) p;
+      // this <= p1 meet ... meet p2 if for all pi
+      // this <= pi
+      Set temp = new HashSet();
+      for (Iterator iter = mp.meetComponents().iterator(); iter.hasNext();) {
+        Policy pi = (Policy) iter.next();
+        if (!LabelUtil.relabelsTo(this, pi, temp)) return false;
+      }
+      s.addAll(temp);
+      return true;
+    } else if (!(p instanceof ReaderPolicy)) return false;
+
+    ReaderPolicy pp = (ReaderPolicy) p;
+
+    // this = { o : .. ri .. }
+    // p = { o' : .. rj' .. }
+
+    // o' >= o?
+
+    ActsForProof ownersProof =
+      PrincipalUtil.actsForProof(localStore, pp.owner, owner);
+    if (ownersProof == null) {
+      return false;
+    }
+    ActsForProof readerReaderProof =
+        PrincipalUtil.actsForProof(localStore, pp.reader, this.reader);
+    if (readerReaderProof != null) {
+      ownersProof.gatherDelegationDependencies(s);
+      readerReaderProof.gatherDelegationDependencies(s);
+      return true;
+    }
+    ActsForProof readerOwnerProof =
+        PrincipalUtil.actsForProof(localStore, pp.reader, this.owner);
+    if (readerOwnerProof != null) {
+      ownersProof.gatherDelegationDependencies(s);
+      readerOwnerProof.gatherDelegationDependencies(s);
+      return true;
+    }
+    return false;
+  }
+
+  public int hashCode() {
+    return (owner == null ? 0 : owner.hashCode())
+        ^ (reader == null ? 0 : reader.hashCode()) ^ 4238;
+  }
+
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof ReaderPolicy)) {
+      return false;
+    }
+
+    ReaderPolicy policy = (ReaderPolicy) o;
+
+    if (owner == policy.owner
+        || (owner != null && owner.equals(policy.owner) && policy.owner != null && policy.owner
+            .equals(owner))) {
+      return (reader == policy.reader || (reader != null
+          && reader.equals(policy.reader) && policy.reader != null && policy.reader
+          .equals(reader)));
+    }
+
+    return false;
+  }
+
+  public String toString() {
+    String str = PrincipalUtil.toString(owner) + ": ";
+    if (!PrincipalUtil.isTopPrincipal(reader))
+      str += PrincipalUtil.toString(reader);
+    return str;
+  }
+
+  public ConfPolicy join(Store store, ConfPolicy p, Set s) {
+    return LabelUtil.join(store, this, p, s);
+  }
+
+  public ConfPolicy join(Store store, ConfPolicy p) {
+    return LabelUtil.join(store, this, p);
+  }
+
+  public ConfPolicy meet(Store store, ConfPolicy p, Set s) {
+    return LabelUtil.meet(store, this, p, s);
+  }
+
+  public ConfPolicy meet(Store store, ConfPolicy p) {
+    return LabelUtil.meetPol(store, this, p);
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
+}

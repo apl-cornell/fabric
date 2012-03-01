@@ -1,0 +1,1188 @@
+/****************************************
+ * Cornell University
+ * Web Template with 75px Banner
+ * Main CSS Rules
+ ****************************************/
+ 
+/*
+	The purpose of this stylesheet is to control the layout and formatting
+	of pages throughout the website. Place rules that apply to all pages and 
+	all web browsers in this stylesheet. To provide Internet Explorer v5.x 
+	on Windows with special rules, see hacks/ie5win.css. To provide Internet 
+	Explorer v5.x on Macintosh with special rules, see hacks/ie5mac.css.
+*/
+ 
+/****************************************
+ * General Formatting
+ ****************************************/
+/* 
+	The following rule sets up default global properties, such as
+	font family and color, page margin and padding, and the 
+	background color of the footer.
+	
+	Note the font-size declaration. Its purpose is to reset the 
+	default font size to 10px instead of 16px, allowing font sizes to 
+	be specified in ems throughout the stylesheet (1.0em = 10px, 
+	1.3em = 13px, etc.). It is important to specify font sizes in ems 
+	instead of pixels, because IE/Win does not allow text to be resized
+	by the user if it is specified in pixels.	
+*/ 
+
+body {
+ 	margin: 0;
+	padding: 0;
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 63.125%;		/* translate 1.0em to 10px, 1.5em to 15px, etc. */
+	color: #222;
+	background: #d7d6d1;	/* footer background color */
+ 	}
+
+/****************************************
+ * Cornell Identity
+ ****************************************/
+/* 
+	The following set of rules controls the appearance of the topmost 
+	banner on the page, including height, background color, and text color.
+	The Cornell identity banner should appear on every page of the site.
+	
+	The version of the logo that appears in the XHTML code is hidden from 
+	browsers that can read this stylesheet, and it is replaced by a version
+	of the logo that corresponds to the background color of the banner. 
+	This logo is placed in the background of two elements below (rather than
+	one) to prevent flickering when moused over by IE/Win users who have 
+	disabled the browser cache.
+	
+	The "Search Cornell" link is aligned with the right edge of the page.
+*/
+#cu-identity {
+	height: 75px;
+	background: #fff;
+	/*
+	Comment out the following line to remove the Ezra Cornell background image from the header.
+	Change 1.jpg to any number up to 8.jpg to use other header background images.
+	*/
+	background: #fff url(../images/layout/header_bg/1.jpg) no-repeat top center;
+	}
+
+#cu-logo {
+	margin: 0 auto;
+	width: 740px;
+	background: url(../images/layout/cu_logo.gif) no-repeat top left;
+	}
+	
+#cu-logo a {
+	border: none;
+	display: block;
+	width: 240px;
+	height: 75px;
+	background: url(../images/layout/cu_logo.gif) no-repeat top left;
+	}
+	
+#cu-logo img {
+	display: none;
+	}
+	
+#cu-search {
+	position: absolute;
+	top: 26px; 
+	right: 50%;
+	width: 200px;
+	margin-right: -385px;
+	}
+	
+#cu-search a {
+	float: right;
+	padding: 5px 15px;
+	font-size: 1.1em;
+	color: #b31b1b;
+	text-decoration: none;
+	border: none;
+	}
+	
+#cu-search a:hover {
+	color: #f00;
+	background: #eee;
+	}
+ 
+/*	
+	Search Form
+	-------------------------
+	The following rules control the appearance of the search form interface. 
+	The form is displayed in the Cornell banner, and it is aligned with the 
+	right edge of the page. The search form should appear on every page 
+	of a site. 
+*/
+
+#search-form {
+	position: absolute;
+	top: 18px;
+	right: 50%;
+	margin-right: -385px;
+	}
+	
+#search-form form {
+	margin: 0;
+	padding: 0;
+	text-align: right;
+	}
+	
+#search-form label {
+	color: #333;
+	}
+	
+#search-form-query {
+	padding: 3px;
+	width: 145px;
+	border: none;
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 1.1em;
+	font-weight: bold;
+	color: #333;
+	background: #f3f3f3 url(../images/layout/header_search.gif) no-repeat top left;
+	vertical-align: middle;
+	}
+	
+#search-form-submit {
+	padding: 0px 2px 3px 2px;;
+	border-top: 1px solid #e5e5e5;
+	border-left: 1px solid #e5e5e5;
+	border-right: 1px solid #b3b3b3;
+	border-bottom: 1px solid #b3b3b3;
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 1.0em;
+	font-weight: bold;
+	color: #333;
+	background: #f2f2f2;
+	vertical-align: middle;
+	}
+	
+#search-filters {
+	margin: 5px 0 0 0;
+	}
+
+#search-filters input {
+	vertical-align: middle;
+	margin: 0;
+	}
+
+#search-filters label {
+	vertical-align: middle;
+	margin: 0 10px 0 0;
+	}
+ 
+/****************************************
+ * Header
+ ****************************************/
+ 
+/* 
+	Main Identity 
+	-------------------------
+	The following rules control the formatting of the unit name, including
+	padding, font family, size, weight, color. The unit name should appear on
+	every page of the site.
+*/
+ 
+#identity {
+	padding: 25px 0;
+	background: #fff;
+	}
+ 
+#identity h1 {
+	margin: 0 auto;
+	width: 740px;
+	font-family: georgia, "times new roman", times, serif;
+	font-size: 2.4em;
+	font-weight: normal;
+	color: #73736c;
+	} 
+	
+/*
+	Main Navigation 
+	-------------------------
+	The following rules control the appearance of the main navigation links.
+	These links are displayed in a horizontal band with a gray background. 
+	Main navigation should appear on every page of a site.
+*/
+
+#header {
+	float: left;
+	width: 100%;
+	background: #b3b3aa;
+	border-top: 2px solid #b3b3aa;
+	}
+	
+#navigation {
+	margin: 0 auto;
+	width: 740px;
+	}
+	
+#navigation ul {
+	float: left;
+	margin: 0;
+	padding: 0;
+	border-left: 1px solid #a6a69d;
+	width: 739px;
+	font-size: 1em;
+	}
+	
+#navigation li {
+	margin: 0;
+	padding: 0;
+	float: left;
+	background: none;
+	}
+	
+#navigation a {
+	float: left;
+	padding: 7px 20px;
+	border: none;
+	border-right: 1px solid #a6a69d;
+	font-size: 1.2em;
+	font-weight: bold;
+	color: #fff;
+	text-decoration: none;
+	}
+	
+#navigation a:hover {
+	background: #a6a69d;
+	}
+ 
+/****************************************
+ * Content Sections
+ ****************************************/
+/*
+	The following set of rules controls the most general layout elements 
+	used throughout the templates. Every page must have these elements, 
+	with the exception of #section-navigation and #secondary, which are 
+	only required on two-column pages.
+	
+	The #wrap element is used to apply the beige background color to the
+	main body of the page. #content is used to specify that the page is 
+	740px wide and centered. #main and #secondary are the right and left
+	vertical columns of content, respectively (one-column pages only use
+	#main, which occupies the entire width).
+*/
+#wrap {
+	float: left;
+	width: 100%;
+	background: #f0eee4;
+	}
+ 
+#content {
+	margin: 0 auto;
+	width: 740px;
+	}
+	
+#main {
+	float: right;
+	padding: 20px 0;
+	width: 100%;
+	}
+	
+/* two-column pages */
+
+.twocolumn #wrap {
+	/* see IE6/Win hack at bottom */
+	background: #f0eee4 url(../images/layout/twocolumn_bg.gif) repeat-y top center;
+	}
+	
+.twocolumn #main {
+	float: right;
+	width: 510px;
+	}
+	
+#section-navigation, #secondary {
+	float: left;
+	clear: left;
+	width: 200px;
+	}
+ 
+/****************************************
+ * Section Navigation
+ ****************************************/
+/*
+	The following set of rules controls the appearance of section navigation,
+	which is used on two-column pages. Section navigation is displayed as a 
+	vertical stack of links at the top of the left sidebar of a two-column page.
+	
+	For a detailed example of section navigation, see the two-column template.
+*/
+#section-navigation {
+	margin-bottom: 50px;
+	}
+ 
+#section-navigation ul {
+	margin: 0;
+	padding: 0;
+	font-size: 1.2em;
+	font-weight: bold;
+	}
+	
+#section-navigation li {
+	float: left;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	background: none;
+	}
+	
+#section-navigation a {
+	display: block;
+	padding: 10px;
+	border: none;	
+	width: 180px;
+	border-bottom: 2px solid #f4f4ef;
+	}
+	
+#section-navigation a:visited {
+	color: #b31b1b;
+	}
+		
+#section-navigation a:hover {
+	background: #f2f7fa;
+	color: #f00;
+	}
+	
+#section-navigation a:active {
+	color: #b31b1b;
+	background: none;
+	}
+ 
+/****************************************
+ * Text Styles
+ ****************************************/
+/*
+	The following rules control the appearance of the various textual elements
+	that constitute the contents of a page, including font sizes, colors, and weights, 
+	line spacing, margins, bullets, and borders. 
+	
+	For detailed examples, see the one-column and two-column templates.	
+*/
+
+/* first item on the page gets no top margin */
+.first {
+	margin-top: 0;
+	}
+ 
+/* 
+	Headlines 
+	-------------------------
+	Headlines introduce sections of text, and they should be used in a 
+	way that consistently represents the heirarchy of information on a page.
+*/
+ 
+h2 {
+	margin: 0 0 15px 0;
+	font-size: 1.8em;
+	font-weight: normal;
+	}
+	
+h3 {
+	clear: both;
+	margin: 0 0 15px 0;
+	font-size: 1.3em;
+	line-height: 1.4em;
+	font-weight: bold;
+	}
+	
+h4 {
+	margin: 15px 0 3px 0;
+	font-size: 1.2em;
+	font-weight: bold;
+	}
+	
+/* 
+	Text
+	-------------------------
+	Paragraphs of text, extended quotations, and captions
+*/
+
+p {
+	margin: 0 0 15px 0;
+	font-size: 1.3em;
+	line-height: 1.4em;
+	}
+	
+blockquote {
+	margin: 0 30px;
+	}
+	
+/* captions */
+	
+.caption {
+	font-size: 1.1em;
+	line-height: 1.5em;
+	color: #666;
+	}
+	
+/* 
+	Lists 
+	-------------------------
+	Unordered lists (ul) represent a sequence of items in no particular
+	order. They are displayed with a square bullet to the left of each 
+	list item (li).
+	
+	Ordered lists (ol) represent an ordered sequence of items. They are 
+	displayed with a number to the left of each list item (li).
+	
+	Definition lists (dl) represent a set of terms (dt) and definitions (dd).
+	Each term should be followed by one or more definitions. Definition lists
+	are very useful for marking up a series of links, each of which has an
+	explanatory passage of text.
+
+*/
+	
+ul, ol {
+	margin: 0 0 15px 0;
+	padding: 0;
+	font-size: 1.3em;
+	line-height: 1.4em;
+	}
+	
+ul li {
+	margin: 5px 0;
+	padding: 0 0 0 30px;
+	list-style: none;
+	background: url(../images/layout/bullet.gif) no-repeat 18px 0.65em;
+	}
+ 
+ol li {
+	margin: 5px 0 5px 30px;
+	}
+ 
+dl {
+	margin: 0 0 15px 0;
+	line-height: 1.4em;
+	}
+	
+dt {
+	margin: 0 0 3px 0;
+	font-size: 1.2em;
+	font-weight: bold;
+	}
+	
+dd {
+	margin: 0 0 15px 0;
+	font-size: 1.3em;
+	line-height: 1.4em;
+	}
+	
+/* 
+	Links 
+	-------------------------
+	Links are displayed as dark red text. The underline is replaced by a 
+	lighter bottom border. Visited links have less contrast than unvisited 
+	links. Both visited and unvisited links turn bright red when moused over,
+	and they return to their normal state when selected.
+*/
+
+a {
+	border-bottom: 1px solid #e5cfcf;
+	color: #b31b1b;
+	text-decoration: none;
+	}
+	
+a:visited {
+	color: #b31b1b;
+	}
+	
+a:hover {
+	color: #f00;
+	border-color: #f00;
+	}
+	
+a:active {
+	color: #b31b1b;
+	border-color: #e5cfcf;	
+	}
+	
+/* 
+	Secondary text 
+	-------------------------
+	The following rules control the ways in which secondary content 
+	(displayed in the left sidebar of a two-column page) appears different
+	from main content. Font sizes and margins are slightly smaller, and 
+	colors have slightly less contrast.
+	
+	The .secondary-section class provides sections of secondary content
+	with padding from the edges of the sidebar. Secondary content should be
+	organized and grouped into .secondary-section divs.
+	
+	If the two-column page is used without a section navigation, the first
+	.secondary-section div should have its ID attribute set to 
+	secondary-section-first; i.e.
+	<div class="secondary-section" id="secondary-section-first">. This 
+	creates a margin between the top edge of the sidebar and the first section.
+	
+	For detailed examples of secondary text, see the two-column template.
+*/
+
+#secondary {
+	color: #666;
+	}
+
+.secondary-section {
+	margin: 0 0 50px 0;
+	padding: 0 15px;
+	}
+	
+#secondary-section-first {
+	margin-top: 25px;
+	}
+	
+#secondary h2 {
+	margin: 0 0 10px 0;
+	font-size: 1.1em;
+	font-weight: bold;
+	}
+	
+#secondary p {
+	margin: 0 0 10px 0;
+	font-size: 1.1em;
+	line-height: 1.5em;
+	}
+	
+#secondary ul {
+	margin: 0 0 10px 0;
+	font-size: 1.1em;
+	}
+	
+#secondary ul li {
+	padding-left: 12px;
+	background-position: 0 0.65em;
+	}
+ 
+/****************************************
+ * Images
+ ****************************************/
+/*
+	The following set of rules controls the appearance of images.
+	
+	Examples of large photos, small photos, photo captions, and secondary
+	photos can all be found in the two-column template. Examples of 
+	thumbnails can be found in the hub and photo gallery templates.
+*/
+img {
+	border: 0;
+	}
+ 
+/* 
+	Large photos 
+	-------------------------
+	Large photos occupy the entire width of the main column of a two-column
+	page. Text does not wrap around a large photo.
+*/
+ 
+.main-photo-large {
+	margin: 20px 0;
+	width: 510px;
+	}
+	
+/* 
+	Small photos 
+	-------------------------
+	Small photos are aligned with the right edge of the page, and text wraps 
+	around them to the left.
+*/
+
+.main-photo-small {
+	margin: 5px 0 15px 25px;
+	width: 210px;
+	float: right;
+	}
+	
+/* 
+	Photo captions 
+	-------------------------
+	Both large photos and small photos can have captions, which are displayed
+	with a white background.
+*/
+	
+.main-photo-large .caption, .main-photo-small .caption {
+	margin: 0;
+	padding: 5px 10px 8px 10px;
+	background: #fff;
+	}
+	
+/* 
+	Secondary photos 
+	-------------------------
+	Secondary photos occupy the entire width of the secondary column (left sidebar) 
+	of a two-column page. Secondary photos should not be placed within 
+	.secondary-section divs.
+*/
+
+.secondary-photo {
+	margin: 0 0 50px 0;
+	}
+
+#secondary .secondary-photo .caption {
+	margin: 10px 15px 0 15px;
+	}
+	
+/* 
+	Thumbnails (dropshadows) 
+	-------------------------
+	Thumbnails, which are required on the hub template and the photo gallery template
+	(and can be used anywhere throughout the site) are square (100x100px) images that
+	have a soft shadow. The shadow subtly lifts the thumbnail to the foreground.
+	
+	Thumbnails are given some padding to make room for the shadow background image.
+	They are then repositioned to where they would have been displayed without the 
+
+	shadow and padding. This allows the thumbnail class to be used without concern 
+	for accomodating the dimensions of the shadow image.
+*/
+ 
+.thumbnail {
+	position: relative;
+	
+	/* padding makes room for the dropshadow, but offsets the image */
+	padding: 6px 9px 9px 6px;
+	background: url(../images/layout/shadow_tn.gif) no-repeat top left;
+	
+	/* position and margin fix the offset */
+	top: -6px;
+	left: -6px;
+	margin: 0 0 -15px 0;
+	}
+ 
+/****************************************
+ * Tables
+ ****************************************/
+/*
+	The following rules control the appearance of tables, which are used only
+	for tabular data. To create the appearance of alternating stripes of 
+	background colors on rows of data, use the .row1 and .row2 classes on 
+	<tr> elements.
+	
+	For a detailed example of how to mark up a table, see the 
+	one-column or two-column template.
+*/
+table, tr, th, td {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 1em;
+	}
+	
+table {
+	margin: 15px 0;
+/*	border-bottom: 1px solid #e7e7e7; */
+	caption-side: bottom;
+	}
+	
+th {
+	padding: 0 15px 5px 15px;
+	font-weight: normal;
+	text-align: left;
+	color: #888;
+	}
+	
+td, tbody th {
+	padding: 10px 15px;
+	border-top: 1px solid #e7e7e7;
+	font-size: 1.1em;
+	line-height: 1.5em;
+	vertical-align: top;
+	}
+	
+tbody th {
+	font-weight: bold;
+	color: #222;
+	text-align: right;
+	}
+	
+.row1, .row1 td, .row1 th {
+	background: #fff;
+	} 
+	
+.row2, .row2 td, .row2 th {
+	background: #fafaf7;
+	}
+	
+tfoot td {
+	font-weight: bold;
+	}
+
+caption {
+	margin: 0 0 15px 0;
+	text-align: left;
+	color: #888;
+	font-size: 1.1em;
+	}
+	 
+/****************************************
+ * Forms
+ ****************************************/
+/*
+	The following rules control the appearance of forms.
+	
+	Related sections of form inputs should be organized in fieldsets. 
+	Each fieldset should contain a series of .form-pair divs. Each
+	.form-pair should contain a .form-item div and a .form-value div. The 
+	.form-item should contain a <label> for the <input> or <select> 
+	found in the .form-value.
+	
+	For a detailed example of how to mark up a form, see the 
+	one-column or two-column template.
+*/
+form {
+	float: left;
+	margin: 5px 0 15px 0;
+	padding: 0;
+	width: 510px;
+	}
+	
+fieldset {
+	float: left;
+	margin: 0;
+	padding: 10px 0 15px 0;
+	width: 510px;
+	border: none;
+	border-top: 1px solid #e7e7e7;
+	}
+		
+form h3 {
+	margin: 0 15px 5px 15px;
+	}		
+	
+.form-pair {
+	display: inline;	/* prevent ie6/win from doubling margins */
+	float: left;
+	margin: 5px 15px 0 15px;
+	width: 480px;
+	}
+	
+.form-item {
+	float: left;
+	margin-top: 5px;
+	width: 165px;
+	font-size: 1.1em;
+	line-height: 1.5em;
+	text-align: right;
+	}	
+	
+.form-value {
+	float: right;
+	margin-top: 5px;
+	width: 300px;
+	font-size: 1.1em;
+	line-height: 1.5em;
+	}
+
+.checklist {
+	margin: 0;
+	font-size: 1em;
+	}
+
+.checklist li {
+	margin: 0 0 5px 0;
+	padding: 0;
+	background: none;
+	}
+	
+.input-text, select, textarea {
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 1em;
+	}
+
+.form-submit {
+	border-top: none;
+	background: #dbdbd2;
+	}
+	
+.form-submit-buttons {
+	text-align: right;
+	padding-right: 15px;
+	}
+	
+.form-submit-buttons .input-reset {
+	margin-right: 5px;
+	}
+	
+.input-submit, .input-reset {
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 1.3em;
+	}
+	
+.input-submit {
+	font-weight: bold;
+	}
+ 
+/****************************************
+ * Hub Page Elements
+ ****************************************/
+/* 
+	The following rules control the appearance of the elements found
+	on a hub page. For more information about these elements, see the
+	hub template.
+*/
+
+/* 
+	Description, intro text 
+	-------------------------
+	The #hub-description div is displayed as the left column of textual
+	content on the hub page. 
+*/
+ 
+#hub-description {
+	float: left;
+	width: 350px;
+	}
+ 
+/* 
+	Section thumbnails, links, and descriptions 
+	-------------------------
+	The #hub-sections div is displayed as the right column of thumbnails, 
+	links, and descriptions on the hub page.
+*/
+ 
+#hub-sections {
+	float: right;
+	margin: 0 0 15px 0;
+	width: 355px;
+	}
+	
+.hub-section {
+	float: right;
+	margin-top: 15px;
+	padding-top: 15px;
+	border-top: 1px solid #ddd;
+	width: 355px;
+	}
+	
+#hub-section-first {
+	margin: 0;
+	padding: 0;
+	border: none;
+	}
+ 
+.hub-section h3 {
+	float: right;
+	margin: 0 0 5px 0;
+	width: 235px;
+	}
+ 
+.hub-section img {
+	float: left;
+	}
+	
+.hub-section p {
+	float: right; 
+	margin: 0;
+	width: 235px;
+	line-height: 1.5em;
+	}
+	
+/* 
+	More information links 
+	-------------------------
+	The #hub-more div is displayed as the white box of links at the bottom
+	of the hub page.
+*/
+
+#hub-more {
+	float: left;
+	margin: 15px 0 0 0;
+	width: 100%;
+	border: 1px solid #ddd;
+	background: #fff;
+	}
+	
+#hub-more h3 {
+	display: inline;	/* prevent IE6/Win from doubling margins */
+	float: left;
+	margin: 15px 0 15px 15px;
+	}
+	
+#hub-more ul {
+	float: left;
+	margin: 0;
+	padding: 10px 0 10px 25px;
+	font-size: 1.1em;
+	}
+ 
+/****************************************
+ * Bridge Page Elements
+ ****************************************/
+/* 
+	The following rules control the appearance of the elements found
+	on a bridge page. For more information about these elements, see the
+	bridge template.
+*/
+ 
+/* 
+	Introductory pullquote 
+	-------------------------
+	The pullquote is a prominent piece of introductory text that appears
+	on the bridge page at the top right. The text is bold, with generous 
+	line spacing.
+*/
+ 
+.pullquote {
+	float: right;
+	margin: 0 0 15px 25px;
+	width: 180px;
+	}
+	
+.pullquote p {
+	margin: 0 0 10px 0;
+	font-weight: bold;
+	line-height: 1.9em;
+	}
+	
+/* 
+	Sections (rows)
+	-------------------------
+	Bridge sections (.bridge-section divs) span the entire width of the 
+	page and clear any columns that may have been established. 
+*/
+
+.bridge-section {
+	float: left;
+	width: 100%;
+	}
+	
+/* 
+	Groups (columns) 
+	-------------------------
+	Bridge groups are displayed as left and right columns on the bridge page. 
+	Groups may be used within sections.
+*/
+
+.bridge-group1 {
+	clear: left;
+	float: left;
+	width: 355px;
+	}
+	
+.bridge-group2 {
+	float: right;
+	clear: right;
+	width: 355px;
+	}
+	
+/* 
+	Headings 
+	-------------------------
+	Headings (h2) on bridge pages are displayed as gray banners with large, 
+	dark text in the Georgia typeface.
+*/
+
+.bridge-group1 h2, .bridge-group2 h2, .bridge-section h2 {
+	margin: 25px 0 20px 0;
+	padding: 8px 12px;
+	font-family: georgia, "times new roman", times, serif;
+	font-size: 2.1em;
+	line-height: 1.5em;
+	background: #d9d9ce;
+	}
+	
+/* 
+	Text and images 
+	-------------------------
+	.bridge-photo and .bridge-links are specially formatted for use on 
+	bridge pages (see the bridge template for examples).
+*/
+
+.bridge-photo {
+	margin: 0 0 20px 0;
+	}
+	
+.bridge-links {
+	font-size: 1.1em;
+	}
+	
+.bridge-links li {
+	padding: 0;
+	background: none;
+	}
+ 
+/****************************************
+ * Photo Gallery
+ ****************************************/
+/* 
+	The following rules control the appearance of the elements found
+	on the photo gallery and photo pages. For more information about 
+	these elements, see the photo gallery and photo templates.
+*/
+ 
+/* 
+	Thumbnail index
+	-------------------------
+	The photo gallery page contains a #gallery div, which is an index 
+	of the photos in the gallery. The index consists of thumbnails and 
+	descriptive text linked to the photos. See the photo gallery template.
+*/
+ 
+#gallery {
+	float: left;
+	margin-top: 10px;
+	font-size: 1.1em;
+	line-height: 1.4em;
+	}
+ 
+.gallery-thumbnail {
+	float: left;
+	margin: 0 20px 30px 0;
+	width: 235px;
+	}
+	
+.gallery-thumbnail .thumbnail {
+	float: left;
+	}
+	
+/* 
+	Photo 
+	-------------------------
+	The photo page consists of a large photo in the left column and
+	a webring, caption, and photo credit in the right column. See the 
+	photo template.
+*/
+
+#photo {
+	float: left;
+	}
+
+#photo-meta {
+	float: right;
+	width: 200px;
+	}	
+	
+#photo-meta .caption {
+	margin: 10px 0;
+	}
+	
+#photo-credit {
+	color: #999;
+	}
+	
+/* webring */
+	
+#webring {
+	font-size: 1.1em;
+	line-height: 1.4em;
+	}
+	
+#webring .prev  {
+	padding-left: 11px;
+	background: url(../images/layout/arrows/left_red.gif) no-repeat 0 0.4em;
+	}
+	
+#webring .sep {
+	padding: 0 3px;
+	color: #ccc;
+	}
+	
+#webring .next  {
+	padding-right: 11px;
+	background: url(../images/layout/arrows/right_red.gif) no-repeat 100% 0.4em;
+	}
+ 
+/****************************************
+ * Footer
+ ****************************************/
+/* 
+	The following rules control the appearance of the footer found at the 
+	bottom of every page. The footer contains the Cornell University copyright,
+	which is displayed in a small font size. The color of the bottom border
+	of the link in the footer is darker than most links to provide adequate 
+	contrast with the background color of the footer.
+*/
+ 
+#footer {
+	float: left;
+	width: 100%;
+	}
+	
+#footer-content {
+	margin: 0 auto;
+	padding: 15px 0 25px 0;
+	width: 740px;
+	font-size: 1.0em;
+	color: #333;
+	}
+	
+/* links */
+
+#footer a {
+	border-bottom: 1px solid #ccadad;
+	}
+	
+#footer a:active {
+	border-color: #ccadad;	
+	}
+ 
+/****************************************
+ * Miscellaneous
+ ****************************************/
+
+/* 
+	Hide "skip to content" link from general users. 
+	Do not use display: none, as that will also hide it from some screen readers.
+*/
+#skipnav {
+	position: absolute;
+	top: -1000em;
+	left: -1000em;
+	}
+	
+/* 
+	To display the "skip to content" link to general users, uncomment
+	the following rules (this usually is not necessary).
+#skipnav {
+	position: static;
+	height: 25px;
+	line-height: 25px;
+	background: #fff;
+	border-bottom: 1px solid #b3b3aa;
+	}
+#skipnav a {
+	display: block;
+	margin: 0 auto;
+	width: 740px;
+	border: none;
+	}
+#search-navigation {
+	top: 62px;
+	}
+#search-form {
+	top: 43px;
+	}
+*/
+	
+/* 
+	Hide horizontal rules (hr) that are found throughout the site.
+	The rules are semantic separations of content, and they are useful for 
+	browsers that cannot utilize the stylesheet.
+*/	
+
+hr {
+	display: none;
+	}
+
+/****************************************
+ * IE6/Windows Hacks
+ ****************************************/
+ 
+/*
+	Shifting Background Bug:
+	IE/Windows calculates "center" (for a background image position) differently
+	than it does "50%" or "margin: 0 auto" (for foreground content) when the 
+	page is an odd number of pixels wide.
+*/
+ 
+.twocolumn #content {
+	background: #f0eee4 url(../images/layout/twocolumn_bg.gif) repeat-y top center;
+	}
+ 
+.twocolumn #wrap {
+	background: #f0eee4;
+	}
+	
+/* unhack for other browsers */
+.twocolumn>#wrap {
+	background: #f0eee4 url(../images/layout/twocolumn_bg.gif) repeat-y top center;
+	}
+	

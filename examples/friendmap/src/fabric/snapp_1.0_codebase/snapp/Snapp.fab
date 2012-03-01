@@ -1,0 +1,79 @@
+package snapp;
+
+import util.Delegator;
+import util.AssertionFailedError;
+
+/**
+ * An instance of Snapp corresponds to an instance of the Snapp social network.
+ */
+public class Snapp extends Delegator
+where
+  provider <= User.provider, User.provider <= provider,
+
+  // trusted classes are trusted
+  util.Delegator.provider     <= {*←},
+  util.GroupIterator.provider <= {*←},
+  util.Group.provider         <= {*←}
+{
+
+  /* The store this object is stored on.  Used for allocating Users.
+   * this.store ≽ this
+   */
+  protected final Store {_→; *←this}@{*→this} store;
+
+  /**
+   * Create a new Snapp, operated by owner.
+   */
+  public
+  Snapp
+  {                // side effects:
+    {this}       ⊓ // supertype fields are set
+    {_→; *←this} ⊓ // fields are set
+    {*→store}      // store is contacted
+  }
+  (
+    final String    name,
+    final principal owner,
+    final Store     store
+  )
+  where
+    // the parameters and code affect the assignment to the fields
+    {*provider; name; owner; store} <= {_→; *←this},
+    // the parameters and code affect the assignment to the superclass fields
+    {*provider; name; owner; store} <= {this},
+
+    // establish invariants
+    store actsfor owner
+  {
+    this.store = store;
+    super(store, name, owner);
+  }
+
+  public
+  User[owner,this] {*provider; _→; *←this; owner; this} // result is affected by code, fields, and args
+  createUser
+  {                      // side effects:
+    {_→; *←this,owner} ⊓ // new user object fields are updated
+    {*→this}             // this is accessed
+  }
+  (
+    final String    name,
+    final principal owner
+  )
+  where
+    // TODO: store ≽ {_→; *←this,owner}@{*→this}
+    {_→; *←this,owner} <= {*→store}, {*←store} <= {_→; *←this,owner}, {*→this} <= {*→store},
+
+    // code and args affect resulting User object
+    {*provider; name; owner} <= {_→; *←this,owner}
+  {
+    if (this.store actsfor this)
+      return new User[owner,this]@store(name, store);
+    else
+      throw new AssertionFailedError("Snapp.store should act for Snapp");
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

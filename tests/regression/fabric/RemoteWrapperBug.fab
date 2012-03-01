@@ -1,0 +1,9 @@
+//XXX: BUG: During serialization of today_remote() we get a stack overflow.
+// Strangely, only when sourcepath is specified.
+public class RemoteWrapperBug {
+  public void t() {}
+
+  final principal A = new principal(*);
+
+  public void m{o.p->} (RemoteWrapperBugHelper[A] o) {}
+}

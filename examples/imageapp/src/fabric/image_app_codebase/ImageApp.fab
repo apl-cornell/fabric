@@ -1,0 +1,90 @@
+import java.io.PrintStream;
+
+// This is a third party app and is untrusted
+
+
+public class ImageApp [principal p, principal q] authority (q)
+where Image.provider <= {q,p←},
+Display.provider <= {p←},
+Camera.provider <= {p→;p←},
+Camera.provider <= Image.provider,
+Image.provider <= Camera.provider,
+provider <= {q←},
+provider <= Image.provider,
+provider <= Display.provider
+{ 
+
+    // p is the principal providing the camera 
+    // q is the principal providing the app
+
+    final PrintStream[{}]{} out;
+    final public Camera [p]{p<-} camera;
+    final Display[p]{p<-} display; 
+
+    public ImageApp (Camera [p]{p<-} camera, 
+		     PrintStream[{}]{} out, 
+		     Display[p]{p<-} display ) {
+	this.out = out;
+	this.camera = camera;
+	this.display = display;
+    }
+    
+
+    // We simulate generating a thumbnail by returning a 4-byte new
+    // image that contains some of the original bytes
+
+    public Image[p]{p,q<-} genThumbnail{p,q<-}(Image[p] {p,q<-} img)
+//    where provider <= img.lb_img
+    {
+	if (img == null) return null;
+	if (camera.CAMERA_RESOLUTION <= 4) 
+	    return img; // the image is small enough to be its own thumbnail
+
+	byte{*img.lb_img; p,q <-} []{*img.lb_img; p,q <-} b  = new byte [4];
+	int k = 1;
+	try { 
+	     k= camera.CAMERA_RESOLUTION/4;
+	} catch (Exception ignored){}
+	for (int j = 0; j < 4; j++) {
+	    b[j] = img.bmp[j*k];
+	}
+
+	// note that the labels are tainted with {p, q <-}
+	Image thb = new Image(new label {*img.lb_img;p,q<-}, 
+			        new label{*img.lb_meta; p,q <-},  
+			         b, img.title, img.gpsX, img.gpsY);
+	return thb;
+    }
+    
+    // Example action that is run by the app on the first run
+  
+    public void firstRunAction{p,q<-}() { // todo: justify the begin-label
+	display.show("First run");
+	for (int i = 0; i < camera.getNImages(); i++) {
+	    final Image[p]{p<-} img = camera.getImage(i);
+	    if (new label {p<-} <= img.lb_img &&    // these comparisons 
+                new label {p<-} <= img.lb_meta  ) { // should always hold...
+
+		final Image[p] {p<-} thb = genThumbnail(img);
+		if (thb.lb_img <= new label { p->; p,q <-} && 
+		    thb.lb_meta <= new label { p->; p,q <-} ) {	
+
+		    // We display thumbnails of each image on trused display
+		    display.show (Integer.toString(thb.bmp[0]));
+		    
+		    // todo: substitute by a method that is supposed 
+		    // to display a thumbnail on the user's display
+		}
+
+		// We publish shared images
+		if (img.lb_img <= new label {} ) {  // only holds for shared images
+
+		    out.print ("outputing the first byte of the image on {}:  ");
+		    out.println (Integer.toString(img.bmp[0]));
+
+		}   
+	    }
+	}
+	display.show("End of first run");
+    }
+}

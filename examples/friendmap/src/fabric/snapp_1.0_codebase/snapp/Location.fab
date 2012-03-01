@@ -1,0 +1,40 @@
+package snapp;
+
+// TODO: document labels
+
+/**
+ * A point on the plane.
+ *
+ * @param L the update label
+ * @param A the access label
+ */
+public class Location[label L, label A]
+where
+  // general constraint: update label ⊑ access label
+  L <= A,
+
+  // code can affect fields and field accesses
+  provider <= L,
+  provider <= A
+{
+  public float{L}@{A} x;
+  public float{L}@{A} y;
+
+  public
+  Location
+  {     // side effects:
+    L ⊓ // fields are updated
+    A   // this is accessed
+  }
+  (
+    int{L} x, int{L} y
+  )
+  {
+    this.x = x;
+    this.y = y;
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

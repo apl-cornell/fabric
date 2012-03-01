@@ -1,0 +1,33 @@
+package agent;
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+
+public class Init where {*provider} equiv {*Agent.provider},
+						{*social.Agent.provider} <= {*Agent.provider}
+{
+  public static final void main{* <- } (principal{*provider} p, String[] args):{p<-;p->}   
+	throws SecurityException, IllegalArgumentException  
+		where caller(p), provider actsfor p, {*provider} <= {p<-}
+  {
+	  //already in transaction due to method constraints
+      final Store store = worker$.getStore("socialStore");
+	  if (store actsfor p
+			&& store actsfor worker$
+			&& Agent.provider <= new label {store<-worker$}) {
+        Map root = store.getRoot();
+      	root.put("bdayAgent", new Agent[worker$, store]@store());
+      }
+	  else {
+		if (store actsfor p)
+			if (store actsfor worker$)
+				if (store actsfor worker$)
+					;
+				else 
+        			throw new Error("User.provider must be <= {store<-worker}.");
+			else
+        		throw new Error("store must act for worker .");
+		else		
+        	throw new Error("store must act for principal p");
+	  }
+  }
+}

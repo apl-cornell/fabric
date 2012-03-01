@@ -1,0 +1,31 @@
+package sif.html;
+
+import sif.servlet.Servlet;
+
+/** An input that allows typing in a single line of text. Appropriate
+ * for most textual input. */
+public class TextInput[principal servletP, label L, label E] extends InputNode[servletP, L, E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    private final int{L} size;
+    private final String{L} initialText;
+    public TextInput(Input[servletP]{L} input, int{L} size, String{L} initial) 
+    where {L;E} <= {*input.inputLbl} {
+        super(input);
+        this.size = size;
+        initialText = initial;
+    }
+    public TextInput{L}(Servlet[servletP]{L} s, label{L} inputLabel, int{L} size, String{L} initial) 
+        where {L;E} <= {*inputLabel} {
+        super(s, inputLabel);
+        this.size = size;
+        initialText = initial;
+    }
+    public final int{L} getSize() {
+        return size;
+    }
+    public final String{L} getInitialText() {
+        return initialText;
+    }
+}

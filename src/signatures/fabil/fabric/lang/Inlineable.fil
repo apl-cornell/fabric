@@ -1,0 +1,10 @@
+package fabric.lang;
+
+import java.io.Serializable;
+
+/**
+ * A marker interface for inlineable objects.
+ */
+public interface Inlineable extends Serializable {
+
+}

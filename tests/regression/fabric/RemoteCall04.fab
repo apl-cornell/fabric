@@ -1,0 +1,14 @@
+public class RemoteCall04[principal alice] {
+    public int{p←;p→} m1{p←;p→} (int{p←;p→} x, principal{p←;p→} p) {
+        return x+1;
+    }
+    public void m2{alice←;alice→} () { 
+        FabricWorker local = FabricWorker.getWorker();
+        if (local == null) return;
+        final RemoteWorker w = local.getWorker("store");
+        final principal pq = alice;
+        if (w actsfor pq && pq equiv alice) {
+            int y = m1@w(1, pq);
+        }
+    }
+}

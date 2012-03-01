@@ -1,0 +1,27 @@
+==Running this example==
+
+Step 1. Compile BankPrincipal.fab
+
+$cd authexample
+$fabc jif/principals/BankPrincipal.fab
+
+Step 2. Compile AuthExample.fab
+
+$cd authexample
+$fabc -classpath . AuthExample.fab
+
+Step 3. Start a fresh Broker Store
+
+$cd $FABRIC
+$rm -rf var
+$fab-store --name broker
+
+Step 4. Clean the cache of the broker store's colocated worker
+
+Ctrl-C on the broker store's console. Restart the broker store using
+the same command as above.
+
+Step 5. Run the AuthExample program in a Fabric worker
+
+$cd authexample
+$fab --name customer AuthExample

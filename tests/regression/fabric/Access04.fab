@@ -1,0 +1,11 @@
+public class Access04[principal p, principal q] {
+    // heterogeneous labels
+    int{p→;p←}@{p→} x;
+    int{p→;p←}@{p→;q→} y;
+    final int{this} z;
+    
+    public static void foo() {
+        FabricWorker local = FabricWorker.getWorker();
+        final RemoteWorker w1 = local.getWorker("alice");
+    }
+}

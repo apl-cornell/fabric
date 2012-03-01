@@ -1,0 +1,22 @@
+package jif.principals;
+
+import jif.runtime.Runtime;
+
+/**
+ * This is cruftacular!  Replace with worker$ in fabric.
+ */
+public class Worker extends AbstractPrincipal {
+
+  public Worker() {
+    super("Worker");
+  }
+
+  public static Principal getInstance{*!:*}() {
+    return Runtime[null].user();
+  }
+
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

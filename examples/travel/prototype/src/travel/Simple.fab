@@ -1,0 +1,109 @@
+package travel;
+
+import fabric.util.Map;
+
+class Balance[principal bank, principal user]
+{ // on bank store and worker
+    int{bank←; bank→user} value = 100000;
+
+    boolean{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
+        if (amt <= value & value > 0 & amt > 0) {
+            value = value - amt;
+            return true;
+        }
+        return false;
+    }
+    boolean{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
+        if (amt > 0) {
+            value = value + amt;
+            return true;
+        }
+        return false;
+    }
+}
+
+class Account[principal bank]
+{ // on bank store and worker
+    final principal{bank←} user;
+    final Balance[bank,user] {bank←} balance;
+
+    Account(principal{bank←} user_) {
+        user = user_;
+        balance = new Balance(); // @ bank store
+    }
+    public boolean{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
+        try { return balance.debit(amt); }
+        catch (NullPointerException e) { return false; }
+    }
+    public boolean{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
+        try { return balance.credit(amt); }
+        catch (NullPointerException e) { return false; }
+    }
+
+}
+
+class Tickets[principal bank, principal airline, principal user]
+{ // on airline store and worker
+    int {airline←bank; airline→user} num_tickets;
+    Tickets{airline←}() {
+        num_tickets = 0;
+    }
+}
+
+class Broker[principal bank, principal customer] extends AbstractPrincipal
+{ // on broker worker (and store)
+    final Account[bank]{this←} customerAcct;
+    final Account[bank]{this←} airlineAcct;
+    final principal{this←} airline;
+    final Tickets[bank, airline, customer]{this←} custTickets;
+
+    void coordinatePurchase{}() : {bank->airlineAcct.user; bank->customerAcct.user; this←; bank<-; airline<-} throws PurchasingError
+        where authority(this), endorse({this←}), this actsfor bank, this actsfor airline {
+      try {
+        final principal cust1 = customerAcct.user; // bank←
+        final principal cust2 = customer;
+        final principal airline_ = airlineAcct.user;
+
+	FabricWorker cl = FabricWorker.getWorker();
+	final RemoteWorker bankWorker = cl.getWorker(Config.bankStoreName);
+	final RemoteWorker airlineWorker = cl.getWorker(Config.airlineStoreName);
+	boolean success = false;
+	if (bankWorker actsfor bank && airlineWorker actsfor airline) {
+	  success = true;
+	  success = customerAcct.debit@bankWorker(100) && success;   // @wBank
+	  success = airlineAcct.credit@bankWorker(100) && success;   // @wBank
+	  success = incTickets@airlineWorker() && success;  // @wAirline
+	}
+	
+	if (!success) throw new PurchasingError();
+      } catch (NullPointerException e) {
+        throw new PurchasingError();
+      }
+    }
+    
+    public boolean{this←} incTickets{this←}() :{airline←} {
+        if (custTickets != null && this actsfor airline) {
+            custTickets.num_tickets++;
+            return true;
+        }
+        return false;
+    }
+
+    Broker{this←}(Account[bank]{this←} ca,
+                  Account[bank]{this←} aa,
+                  Tickets[bank, airline_, customer]{this←} tick,
+                  principal{this←} airline_) {
+        customerAcct = ca;
+        airlineAcct = aa;
+        custTickets = tick;
+        airline = airline_;
+        super("broker");
+    }
+}
+
+class SimplePrincipal extends AbstractPrincipal {
+    SimplePrincipal(String{*<-} name) { super(name); }
+}
+
+class PurchasingError extends Exception {
+}

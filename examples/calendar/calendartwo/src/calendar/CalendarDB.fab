@@ -1,0 +1,306 @@
+package calendar;
+
+import userserv.*;
+
+import fabricated.util.HashSet;
+import fabricated.util.Set;
+import fabricated.util.Date;
+import fabricated.util.Iterator;
+import fabricated.util.NoSuchElementException;
+import fabricated.util.List;
+import fabricated.util.LinkedList;
+
+
+/**
+ * A Calendar holds the persistent state of the entire calendar system.
+ */
+public class CalendarDB authority(CalServEP, CalRootEP) {
+    // TODO The authority of CalRootEP should not be here
+    // maybe calrootep here can be replaced with backend as it can
+    // act for all users on this store
+
+	// TODO: This should be replaced with a map (ConcurrentHashMap?)
+	private User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:}[]{CalServEP:;CalServEP!:} users;
+
+	// counter for unique ids for events
+	private int{CalServEP:;CalServEP!:} uidCounter = 0;
+
+	// central repository of events.
+	private Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} events;
+
+	// TODO XXX : Establish relations between storeWorker, worker and CalServEP
+	final Store{CalServEP:;CalServEP!:} backend;
+	private final RemoteWorker{CalServEP:;CalServEP!:} storeWorker;
+
+	public CalendarDB{CalServEP:;CalServEP!:}(Store{CalServEP:;CalServEP!:} remoteStore)
+	   where authority (CalServEP)
+	{
+		backend = remoteStore;
+		FabricWorker local = FabricWorker.getWorker();
+		if (local != null && backend != null) {
+		    storeWorker = local.getWorker(backend.name());
+		} else {
+		    storeWorker = null;
+		}
+	}
+
+	public void initialize{CalServEP:;CalServEP!:}() {
+	    // There's a bug here, I can't put the new statements directly in the array initializer.
+	    atomic {
+	        if (backend != null && backend actsfor CalServEP) {
+	            Principal owner = backend.getPrincipal();
+	            String name = backend.name();
+	            
+                User[CalServEP, {CalServEP→;CalServEP←}] a;
+                User[CalServEP, {CalServEP→;CalServEP←}] b;
+                User[CalServEP, {CalServEP→;CalServEP←}] c;
+                User[CalServEP, {CalServEP→;CalServEP←}] d;
+                User[CalServEP, {CalServEP→;CalServEP←}] e;
+                User[CalServEP, {CalServEP→;CalServEP←}] f;
+
+                // TODO Ideally these users should be created outside CalendarDB
+                // or CalUser could be paramterized with backend
+                // maybe there could be a CalGoogleUser and CalYahooUser
+                try {
+                if (name != null && name.equals("gaia.systems.cs.cornell.edu")) {
+                    // google users
+                    a = new CalUser[{CalServEP→;CalServEP←}]@backend(owner, "liujed", "password", "Jed", "Liu");
+                    b = new CalUser[{CalServEP→;CalServEP←}]@backend(owner, "kvikram", "password", "Krishnaprasad", "Vikram");
+                    c = new CalUser[{CalServEP→;CalServEP←}]@backend(owner, "andru", "password", "Andrew", "Myers");
+                    d = new CalUser[{CalServEP→;CalServEP←}]@backend(owner, "schong", "password", "Steve", "Chong");
+                    e = new CalUser[{CalServEP→;CalServEP←}]@backend(owner, "michael", "password", "Michael", "Clarkson");
+                    f = new CalUser[{CalServEP→;CalServEP←}]@backend(owner, "nate", "password", "Nathaniel", "Nystrom");
+                } else {
+                    // yahoo users
+                    a = new CalUser[{CalServEP→;CalServEP←}]@backend(owner, "xin", "password", "Xin", "Qi");
+                    b = new CalUser[{CalServEP→;CalServEP←}]@backend(owner, "mdgeorge", "password", "Michael", "George");
+                    c = new CalUser[{CalServEP→;CalServEP←}]@backend(owner, "lantian", "password", "Lantian", "Zheng");
+                    d = new CalUser[{CalServEP→;CalServEP←}]@backend(owner, "maksim", "password", "Maksim", "Orlovich");
+                    e = new CalUser[{CalServEP→;CalServEP←}]@backend(owner, "siggi", "password", "Sigmund", "Cherem");
+                    f = new CalUser[{CalServEP→;CalServEP←}]@backend(owner, "radu", "password", "Radu", "Rugina");
+                }
+
+	            // users = new User[CalServEP]@backend[] { a,b,c,d,e,f,g,h,i,j,k,l };
+	            users = new User[CalServEP, {CalServEP→;CalServEP←}][12]@backend;
+	                users[0] = a;
+	                users[1] = b;
+	                users[2] = c;
+	                users[3] = d;
+	                users[4] = e;
+	                users[5] = f;
+	            } catch (ArrayIndexOutOfBoundsException imposs) {}
+	            catch (NullPointerException imposs) {}
+	            events = new HashSet[{CalServEP:;CalServEP!:}]@backend();
+	        }
+
+	    }
+	}
+
+	public int{CalServEP:;CalServEP!:}
+	getFreshUid{CalServEP:;CalServEP!:}()
+	where authority(CalServEP) {
+		atomic {
+			return uidCounter++;
+		}
+	}
+	
+	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP→;CalServEP←}
+	    lookupUserID{CalServEP→;CalServEP←}(String{CalServEP→;CalServEP←} userID)
+	{
+        final principal servp = CalServEP;
+	    if (storeWorker actsfor servp && servp equiv CalServEP) {
+	        return lookupUserIDRemote@storeWorker(userID, servp);
+	    }
+	    return null;
+	}
+
+	public User[calservp, {calservp→;calservp←}]{calservp→;calservp←} 
+	    lookupUserIDRemote{calservp→;calservp←}(String{calservp→;calservp←} userID_,
+	            principal{calservp→;calservp←} calservp)
+	    where calservp equiv CalServEP
+	{
+	        atomic {
+	            User[calservp, {calservp→;calservp←}]{calservp→;calservp←}[] users = this.users;
+	            if (users == null || userID_ == null) return null;
+	            for (int i = 0; i < users.length; i++) {
+	                try {
+	                    User[calservp, {calservp→;calservp←}] u = users[i];
+	                    if (u != null && userID_.equals(u.getUserID())) {
+	                        return u;
+	                    }
+	                }
+	                catch (ArrayIndexOutOfBoundsException imposs) { }
+	            }
+	        }
+		return null;
+	}
+	
+	public Event[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} 
+	retrieveEvent{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
+	where caller(CalServEP) {
+	    if (storeWorker actsfor worker$ && CalServEP equiv worker$) {
+	        return retrieveEventRemote@storeWorker(eventID);
+	    } else {
+	        return null;
+	    }
+	    
+	}
+	
+
+	public Event[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} 
+	retrieveEventRemote{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) : {worker$→;worker$←}
+	    where caller(CalServEP)
+	{
+		Set[{CalServEP:;CalServEP!:}] es = this.events;
+		if (es != null) {
+			for (Iterator[{CalServEP:;CalServEP!:}] iter = es.iterator();
+			iter!=null && iter.hasNext(); ) {
+				Event e = null;
+				try {
+					e = (Event)iter.next();
+				}
+				catch (NoSuchElementException impossible) { }
+				catch (ClassCastException impossible) { }
+				final Event event = e;
+
+				if (event != null && event.uid != null) {
+					if (event.uid.uid == eventID) return event;
+				}
+			}
+		}
+		return null;
+	}
+
+	public boolean updateEvent{CalServEP:;CalServEP!:}(
+	    Event[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} newEvent)
+	    where caller(CalServEP)
+	{
+		Set[{CalServEP:;CalServEP!:}] es = this.events;
+		if (es != null) {
+			try {
+				atomic {
+					// remove any old copies...
+					es.remove(newEvent);
+
+					// add the new/modified event
+					es.add(newEvent);
+				}
+			}
+			catch (ClassCastException impossible) { }
+			catch (IllegalArgumentException impossible) { }
+		}
+		return true;
+	}
+	
+	public List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
+	eventSubset{CalServEP:;CalServEP!:}(
+			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
+			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
+			User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:} displayUser)
+			where authority(CalRootEP), authority(CalServEP) {
+	    if (storeWorker actsfor worker$ && CalServEP equiv worker$) {
+	        return eventSubsetRemote@storeWorker(start, end, displayUser);
+	    } else {
+	        return null;
+	    }
+	}
+	
+	
+	/**
+	 * Get the subset of events that start on or after dt, and before end, 
+	 * for which user is either an attendee, or created the event. (i.e.,
+	 * if the info label is readable by user).
+	 */
+	public List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
+	eventSubsetRemote{CalServEP:;CalServEP!:}(
+			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
+			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
+			User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:} displayUser) : {worker$→;worker$←}
+			where authority(CalRootEP), authority(CalServEP) {
+
+		Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} es = this.events;
+		final List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} sub = new LinkedList[{CalServEP:;CalServEP!:}]();
+		if (es != null) {
+
+			for (Iterator[{CalServEP:;CalServEP!:}] iter = es.iterator();
+			iter!=null && iter.hasNext(); ) {
+				Event{CalServEP:;CalServEP!:} e = null;
+				try {
+					e = (Event)iter.next();
+				}
+				catch (NoSuchElementException impossible) { }
+				catch (ClassCastException impossible) { }
+				final Event{CalServEP:;CalServEP!:} event = e;
+
+				atomic {
+					if (event != null) {
+						if (event.timeLbl <= new label {CalRootEP:; CalServEP!:}) {
+							// should always be true!
+							Date[{CalRootEP:; CalServEP!:}]{CalServEP:;CalServEP!:} eventStartR = event.startTime;
+							Date[{CalServEP:; CalServEP!:}]{CalServEP:;CalServEP!:;CalRootEP:} eventStart = null;
+
+							if (eventStartR != null) {
+								try {
+									eventStart = new Date[{CalServEP:;CalServEP!:}](
+											eventStartR.getYear(),
+											eventStartR.getMonth(),
+											eventStartR.getDay());
+								}
+								catch (IllegalArgumentException impossible) {}
+							}
+							if ((start == null || !start.after(eventStart)) && 
+									(end == null || end.after(eventStart))) {
+								// is the event on user's calendar?
+								boolean{CalServEP:;CalServEP!:} readable = false;
+								try {
+									readable = LabelUtil.isReadableBy(
+											event.infoLbl, displayUser);
+								} catch (NullPointerException imposs) {}
+								if (readable) {
+									// add event to the return subset.
+									transferEvent(sub, event);
+								}
+							}                    
+						}
+					}
+				}
+			}
+		}
+		return sub;
+	}
+
+	private void 
+	transferEvent{CalServEP:;CalRootEP:}(
+			List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:;CalRootEP:} c, 
+			Event[{CalServEP:;CalRootEP:}]{CalServEP:;CalRootEP:} e_) 
+			where caller(CalServEP,CalRootEP),
+			endorse({CalServEP:;CalRootEP:; CalServEP!: meet CalRootEP!:}) {
+
+		declassify({CalServEP:;CalRootEP:; CalServEP!: meet CalRootEP!:} to {CalServEP:;CalServEP!: meet CalRootEP!:}) {
+			Event e = CalServDeclassifier.transferEvent(CalRootEP, CalServEP, e_);
+			List[{CalServEP:;CalServEP!:}] c1 = endorse(c, {CalServEP:;CalRootEP:} to {CalServEP:;CalRootEP:;CalServEP!: meet CalRootEP!:});
+			List[{CalServEP:;CalServEP!:}] c2 = declassify(c1, {CalServEP:;CalRootEP:;CalServEP!: meet CalRootEP!:} to {CalServEP:;CalServEP!: meet CalRootEP!:});
+			try {
+				c2.add(e);
+			}
+			catch (ClassCastException impossible) { }
+			catch (IllegalArgumentException impossible) { }
+			catch (NullPointerException ignore) { }
+		}
+	}
+	
+    boolean{p:; p!:} compareDates{p:; p!:}(
+            principal{p:; p!:} p,
+            Date[{CalRootEP:; p!:}]{p:; p!:} c,
+            Date[{CalRootEP:; p!:}]{p:; p!:} d) 
+            where caller(p),
+            authority(CalRootEP),
+            endorse({p:; CalRootEP!:}),
+            CalRootEP actsfor p {
+        boolean ret0 =  (c != null && c.before(d));
+        boolean ret1 = endorse(ret0, {CalRootEP:; p!:} to {CalRootEP:; CalRootEP!:});
+        boolean ret = declassify(ret1, {CalRootEP:; CalRootEP!:} to {p:; CalRootEP!:});
+        return ret;
+    }
+	
+}

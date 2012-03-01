@@ -1,0 +1,27 @@
+package jif.principals;
+
+import util.System;
+
+public class SnappNode extends ExternalPrincipal {
+  public
+  SnappNode{*←}
+  ()
+  where authority(this)
+  {
+    super("SnappNode");
+    addDelegatesTo(System.user);
+  }
+
+  private static SnappNode{*!:*} P;
+  public static Principal getInstance{*!:*}() {
+    if (P == null) {
+      P = new SnappNode();
+    }
+    return P;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

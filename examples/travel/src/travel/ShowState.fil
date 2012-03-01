@@ -1,0 +1,18 @@
+package travel;
+
+public class ShowState {
+  public static void main(String[] args) {
+    atomic {
+      Store store = Worker.getWorker().getStore(Config.brokerStoreName);
+
+      Broker broker = (Broker) store.getRoot().get(Config.brokerMapKey);
+      System.out.println("customer account balance: "
+	  + broker.customerAcct.balance.value);
+      System.out.println(" airline account balance: "
+	  + broker.airlineAcct.balance.value);
+      System.out.println("customer has " + broker.custTickets.num_tickets
+          + " tickets");
+    }
+  }
+}
+

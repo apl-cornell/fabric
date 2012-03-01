@@ -1,0 +1,24 @@
+package fabnfs;
+
+import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.util.HashMap;
+import fabnfs.util.FabDirectory;
+
+public class InitializeFS {
+  public static void main(String[] args) {
+    atomic {
+      if (args.length < 1) {
+	System.out.println("Usage: fabnfs.InitializeFS <store>");
+	return;
+      }
+
+      Store store = Worker.getWorker().getStore(args[0]);
+      FabDirectory rootDir = new FabDirectory@store();
+
+      HashMap map = (HashMap) store.getRoot();
+
+      map.put("fileSystem", rootDir);
+    }
+  }
+}

@@ -1,0 +1,60 @@
+#!/usr/bin/perl
+# undef $/;
+$java = 1;
+$in_comment=0;
+$total_tokens = 0;
+$total_lines = 0;
+$total_chars = 0;
+$files = 0;
+if ($#ARGV < 0) {
+    print STDERR "Usage: count-tokens <file> ...\n";
+    print STDERR "(Produces wc-like output but counts Java tokens, ignores comments)\n";
+    exit 1;
+}
+foreach $f (@ARGV) {
+    open(IN,$f);
+    $files++;
+    $tokens = 0;
+    $lines = 0;
+    $chars = 0;
+    while (<IN>) {
+	# print "$ARGV\n";
+	chomp;
+	# print "$lines $_\r\n";
+	if (m@/\*@) {
+	    s@/\*([^*]+\*[^/])*@@;
+	    $in_comment = 1;
+	}
+	if (!$in_comment) {
+	    $lines++;
+	}
+	if ($in_comment) {
+	    if (m@\*/@) {
+		s@^.*\*/@@;
+		$in_comment=0;
+	    } else {
+		$_='';
+	    }
+	}
+	if ($java) {
+	    s@//.*@@;
+	    s@/\*([^*]|\*+[^*/])*\*+/@@g;
+	}
+	s/\s+$//;
+	#print "$_\n";
+	$chars += length($_) + 1;
+	while ($_ ne '') {
+	    # print "$_\n";
+	    $tokens++;
+	    s/^(\s)*.(\B.)*(\b|$)//;
+	}
+    }
+    printf " %7d %7d %7d %s\n", $lines, $tokens, $chars, $f;
+    $total_tokens += $tokens;
+    $total_lines += $lines;
+    $total_chars += $chars;
+    close(IN);
+}
+if ($files > 1) {
+    printf " %7d %7d %7d total\n", $total_lines, $total_tokens, $total_chars;
+}

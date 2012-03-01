@@ -1,0 +1,9 @@
+package fabil;
+
+public class Array02 {
+  void m() {
+    java.lang.Object native[] a = new java.lang.Object native[2];
+    a[0] = new java.util.HashMap();
+  }
+}
+

@@ -1,0 +1,21 @@
+Image App example for Mobile Fabric paper. 
+
+We have a smartphone device with a camera, that allows its user take
+take images. By default images are private, but the user can mark
+certain images as shared. Shared images have bitmap component of them
+set to public.
+
+As for the third-party app, I have programmed the action that
+simulates "the first run of the app". During this run, the app
+accesses all images stored on the device, generates thumbnails for
+*all images*, and displays the thumbnails to the user. The app also
+publishes (currently implemented by printing to {}) the images that
+are marked as shared.
+
+We can easily add a small an extra feature in which together with the
+thumbnails, the app displays to the user whether the image has been
+taken "close to home", for a given a of private coordinates
+corresponding to the user home, stored on the device. No
+declassifications currently happen in the image app, but there are
+some auto-endorsements needed in the camera implementation.
+

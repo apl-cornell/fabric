@@ -1,0 +1,17 @@
+public class Field01[principal servP] extends X[servP] {
+    public final int{this} x;
+    public final X[servP]{this} t;
+
+    public Field01(X[servP]{this} targ, int{this} xarg) {
+        this.x = xarg;
+        this.t = targ;
+        super();
+    }
+}
+
+class X[principal p] {
+    int y;
+    public X() {
+        y = 10;
+    }
+}

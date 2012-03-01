@@ -1,0 +1,76 @@
+<!--
+  This is the Apache Ant build file for the Fabric OO7 implementation.
+-->
+
+<project name="OO7" default="build-all" basedir=".">
+  <description>
+    Fabric OO7 build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="OO7.home" file="${ant.file.OO7}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${OO7.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${OO7.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+      description="Builds the Fabric OO7 implementation">
+    <mkdir dir="${OO7.home}/classes" />
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${OO7.home}"
+        dest="${OO7.home}/classes"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${filc}" />
+      <arg line="${debug.flag}" />
+      <arg value="-d" />
+      <arg value="classes" />
+      <arg value="-sourcepath" />
+      <arg value="src/fabil" />
+      <arg value="-cp" />
+      <arg value="classes" />
+      <srcfile />
+      <fileset dir="src/fabil">
+        <include name="OO7/*.fil" />
+        <include name="OO7/traversals/*.fil" />
+      </fileset>
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

@@ -1,0 +1,101 @@
+package fabnfs.util;
+
+import fabric.util.HashMap;
+import fabric.util.Collection;
+import fabric.util.Iterator;
+
+public class FabDirectory extends FileSystemObject {
+
+    /**
+     * Elements of this directory. Could be files or other directories
+     */
+    private HashMap dirElements;
+
+    public FabDirectory(String name, FabDirectory parent, String fullPath) {
+        super(name, parent, fullPath);
+        dirElements = new HashMap();
+    }
+
+    /* This returns the root directory */
+    public FabDirectory() {
+        super("");
+        dirElements = new HashMap();
+    }
+
+    public FileSystemObject getFile(String name) {
+//        System.out.println(this.toString() + ": Looking up " + name + " in " + fileName + "(" + fullPath + ")" + ": " + listString());
+        FileSystemObject fso = (FileSystemObject)dirElements.get(name);
+        if (fso == null) {
+//            System.err.println("Found nothing!");
+        }
+        return fso;
+    }
+
+    public FileSystemObject deleteFile(String name) {
+        atomic {
+//            System.out.println(this.toString() + ": Removing " + name + " from " + fileName + "(" + fullPath + ")" + ": " + listString());
+            FileSystemObject fso = (FileSystemObject)dirElements.remove(name);
+            if (fso == null) {
+                throw new NullPointerException();
+            }
+//            System.out.println(this.toString() + ": Removed " + name + " from " + fileName + "(" + fullPath + ")" + ": " + listString());
+            return fso;
+        }
+    }
+
+    public FileSystemObject addFile(String name, FileSystemObject file) {
+        atomic {
+            FileSystemObject fso = (FileSystemObject)dirElements.put(name, file);
+//            System.out.println(this.toString() + ": Adding foreign file " + name + " to " + fileName + "(" + fullPath + ")" + ": " + listString());
+            return fso;
+        }
+    }
+
+    public FabDirectory mkdir(String name, String path) {
+        atomic {
+            FabDirectory subdir = new FabDirectory(name, this, path);
+            dirElements.put(name, subdir);
+//            System.out.println(this.toString() + ": Created Directory " + name + " and added it to " + fileName + "(" + fullPath + ")" + ": " + listString());
+            return subdir;
+        }
+    }
+
+    public FabFile mkfile(String name, String path) {
+        atomic {
+            FabFile file = new FabFile(name, this, path);
+            dirElements.put(name, file);
+//            System.out.println(this.toString() + ": Created " + name + " and added it to " + fileName + "(" + fullPath + ")" + ": " + listString());
+            return file;
+        }
+    }
+
+    public StringArray list() {
+        atomic {
+            Collection coll = dirElements.values();
+            int size = coll.size();
+//          System.out.println(this.toString() + ": Directory " + fileName + " has #elements = " + size + " out of " + dirElements.size());
+            StringArray toReturn = new StringArray(size);
+            int i = 0;
+            for (Iterator it = coll.iterator(); it.hasNext(); ) {
+                toReturn.set(i++, ((FileSystemObject)it.next()).fileName);
+            }
+            return toReturn;
+        }
+    }
+
+    String listString() {
+        atomic {
+            String toReturn = "";
+//            Collection coll = dirElements.values();
+//            int size = coll.size();
+////          System.out.println("Directory " + fileName + " has #elements = " + size + " out of " + dirElements.size());
+//            int i = 0;
+//            for (Iterator it = coll.iterator(); it.hasNext(); ) {
+//                toReturn = toReturn + ((FileSystemObject)it.next()).fileName + ", ";
+//            }
+            toReturn = dirElements.toString();
+            return toReturn + "(size="+dirElements.size()+")";
+        }
+    }
+
+}

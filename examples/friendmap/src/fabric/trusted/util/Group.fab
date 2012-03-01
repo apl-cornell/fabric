@@ -1,0 +1,285 @@
+package util;
+
+/**
+ * A group is a principal object that delegates to each of its members.  It
+ * also serves as a collection, so it can be iterated over, etc..
+ *
+ * A group is parameterized by an owner; only the owner may change the group
+ * membership.  The owner acts for the group, but is not listed as a member
+ * (unless explicitly added).
+ *
+ * TODO: Because of the absence of Fabric collections, this class uses a
+ * fixed-size array to hold the members, and the add() method throws an
+ * ArrayIndexOutOfBoundsException if the array is full.
+ */
+public class Group[principal groupOwner]
+extends Delegator
+where
+  provider               <= {*←groupOwner},
+  GroupIterator.provider <= {*←groupOwner}
+{
+  final Principal{*←groupOwner}[] {this} @ {*→this} members;
+  int            {*←groupOwner}          @ {*→this} size = 0;
+
+  private final static int  {*←}         @ {*→this} SIZE = 100;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Group constructors                                                       //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Create a new group with the given name and the default maximum size.
+   */
+  public Group {this}
+  (
+    final Store  {this} store,
+    final String {this} name
+  )
+  {
+    this.members = new Principal[SIZE]@store;
+    super(name, groupOwner);
+  }
+
+
+  /**
+   * Create a new group with the given name and maximum size.
+   */
+  public
+  Group {this}
+  (
+    final Store  {this} store,
+    final String {this} name,
+    final int    {this} maxSize
+  )
+  throws
+  (
+    NegativeArraySizeException{maxSize}
+  )
+  where
+    store actsfor groupOwner
+  {
+    this.members = new Principal[maxSize]@store;
+    super(name, groupOwner);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Group membership operations                                              //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Add a new member to the group.
+   */
+  public
+  void
+  add
+  {              // side effects:
+    *←groupOwner // TODO
+  }
+  (
+    Principal{groupOwner←} p
+  )
+  :{groupOwner←}
+  throws
+    ArrayIndexOutOfBoundsException;
+  {
+    // invariant check
+    if (this.members == null)
+      throw new AssertionFailedError("this.members should always be non-null.");
+
+    // method implementation
+    if (size >= this.members.length)
+      throw new ArrayIndexOutOfBoundsException();
+
+    this.members[this.size++] = p;
+
+    PrincipalUtil.notifyNewDelegation(this,p);
+  }
+
+
+  /**
+   * Remove a member of the group.  If the principal is not a member of the
+   * group, there is no effect.
+   */
+  public
+  void
+  remove
+  {              // side effects:
+    *←groupOwner // TODO
+  }
+  (
+    Principal{*←groupOwner} p
+  )
+  {
+    try
+    {
+
+      // method implementation
+      for (int i = 0; i < size; i++)
+        if (p == this.members[i])
+        {
+          // put last member into current slot and then resize
+          this.members[i]    = this.members[--size];
+          this.members[size] = null;
+        }
+
+      PrincipalUtil.notifyRevokeDelegation(this,p);
+
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("this.size <= this.members.length");
+
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("this.members should always be non-null.");
+    }
+  }
+
+
+  /**
+   * Iterate over the members of the group.
+   */
+  public native
+  GroupIterator[groupOwner, l]
+  iterator
+  {    // side effects:
+    *l // TODO
+  }
+  (
+    final Store s,
+    final label l
+  )
+  where
+    // TODO
+    {groupOwner←} <= {*l}
+  {
+    if (groupOwner actsfor this) {
+      final Group[groupOwner]{*l} g = this;
+      return new GroupIterator[groupOwner, l]@s(g);
+    }
+    else
+      throw new AssertionFailedError("groupOwner must act for group");
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Return true if p is either groupOwner or is a member of the group.
+   */
+  public native
+  boolean {this;p;this←} // TODO
+  delegatesTo
+  { //side effects:
+    // TODO
+  }
+  (
+    principal p
+  )
+  {
+    if (p == groupOwner)
+      return true;
+
+    if (groupOwner actsfor this) {
+      try {
+
+        for (int i = 0; i < this.size; i++)
+          if (p == this.members[i])
+            return true;
+
+        return false;
+
+      } catch (final ArrayIndexOutOfBoundsException e) {
+        throw new AssertionFailedError("this.size <= this.members.length");
+
+      } catch (final NullPointerException e) {
+        throw new AssertionFailedError("this.members should always be non-null.");
+      }
+    }
+    else
+      throw new AssertionFailedError("this.groupOwner actsfor this");
+  }
+
+  /**
+   * See Principal.findProofUpto.
+   */
+  public
+  ActsForProof[{*→s;*←s}] {this; p; this←; p←;s} // TODO
+  findProofUpto
+  {            // side effects:
+    *→s;*←this // TODO
+  }
+  (
+    Store s,
+    Principal p,
+    java.lang.Object searchState
+  )
+  {
+    if (groupOwner actsfor this) {
+      try
+      {
+
+        // search for a proof from any of our delegatees
+        for (int i = 0; i < size; i++) {
+          final principal m = members[i];
+
+          if (m actsfor this) {
+            // find a proof and extend it to include the group
+            ActsForProof{this;m;this←} proof = PrincipalUtil.findActsForProof(s, p, m, searchState);
+            if (proof != null)
+                return new TransitiveProof@s(proof, m, new DelegatesProof@s(m, this));
+          }
+          else
+            throw new AssertionFailedError("this must delegate to all entries in the members array.");
+        }
+
+        // no proof could be found.
+        return null;
+
+      } catch (final ArrayIndexOutOfBoundsException e) {
+        throw new AssertionFailedError("this.size <= this.members.length");
+
+      } catch (final NullPointerException e) {
+        throw new AssertionFailedError("this.members should always be non-null.");
+      }
+
+    } else {
+      throw new AssertionFailedError("this must delegate to groupOwner");
+    }
+  }
+
+  public
+  void
+  addDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this→;this←} p
+  )
+  where
+    caller (this)
+  {
+    // TODO need to wipe out super.addDelegatesTo
+  }
+
+
+  public
+  void
+  removeDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this:;this!:} p
+  )
+  where
+    caller (this)
+  {
+    // TODO need to wipe out super.addDelegatesTo
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+

@@ -1,0 +1,117 @@
+<!--
+  This is the Apache Ant build file for the Fabric tree example
+-->
+
+<project name="tree" default="build-all" basedir=".">
+  <description>
+    Build a simple binary tree application
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+  <import file="${fabric.home}/src/lib/sif/common.xml" />
+  <import file="${fabric.home}/src/lib/transient/common.xml" />
+
+  <dirname property="tree.home" file="${ant.file.tree}" />
+
+  <path id="standard.classpath">
+    <path refid="transient.classpath" />
+    <path refid="sif.classpath" />
+    <path refid="lib.classpath" />
+    <pathelement path="${tree.home}/classes" />
+  </path>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${tree.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${tree.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build-all" depends="build-tree" />
+  <target name="all" depends="build-all" />
+
+  <target name="build-tree" depends=""
+          description="Builds the tree example">
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${tree.home}"
+           dest="${tree.home}/classes"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabric.home}/bin/fabc"/>
+      <arg value="-g"/>
+      <arg value="-d"          /> <arg value="${tree.home}/classes"/>
+      <arg value="-sourcepath" /> <arg value="${tree.home}" />
+      <arg value="-cp"         /> <arg pathref="standard.classpath" />
+      <arg value="-cp"         /> <arg value="${tree.home}/classes" />
+      <arg value="-sigcp"      /> <arg pathref="sif.sigcp"/>
+      <arg value="-e"/>
+      <arg value="-trusted-providers"/>
+<!--
+        <arg value="-report" /> <arg value="solver=5" />
+        <arg value="-debugpositions"/>
+        <arg value="-dump"   /> <arg value="FabricToFabilRewriter"/>
+        <arg value="-dump"   /> <arg value="PrincipalCastAdder"/>
+        <arg value="-report" /> <arg value="frontend=1"/>
+        <arg value="-report" /> <arg value="visit=2"/>
+        <arg value="-report" /> <arg value="labelEnv=5" />
+        <arg value="-print"  /> <arg value="RemoteCallWrapperUpdater"/>
+        <arg value="-print"  /> <arg value="FieldLabelResolver"/>
+        <arg value="-report" /> <arg value="error=5"/>
+        <arg value="-report" /> <arg value="errors=5"/>
+        <arg value="-report" /> <arg value="debug=5" />
+-->
+      <srcfile />
+      <fileset dir="${tree.home}" includes="*.fab"/>
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+
+    <!-- Uncomment this part to compile from the fabil code
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${tree.home}"
+           dest="${tree.home}/classes"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabric.home}/bin/filc"/>
+      <arg value="-g"/>
+      <arg value="-d"          /> <arg value="${tree.home}/classes"/>
+      <arg value="-sourcepath" /> <arg value="${tree.home}" />
+      <arg value="-cp"         /> <arg pathref="standard.classpath" />
+      <arg value="-cp"         /> <arg value="${tree.home}/classes" />
+      <srcfile />
+      <fileset dir="${tree.home}" includes="*.fil" />
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+    -->
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

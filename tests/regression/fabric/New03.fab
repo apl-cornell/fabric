@@ -1,0 +1,11 @@
+public final class Date {
+    private final int{} year;
+    
+    public Date valueOf{}() {
+        return new Date(0);
+    }
+
+    public Date(int{} pYear) {
+        this.year = pYear;
+    }
+}

@@ -1,0 +1,26 @@
+package fabric.lang.security;
+
+import fabric.worker.Worker;
+import fabric.worker.Store;
+import fabric.util.Iterator;
+import fabric.util.LinkedHashSet;
+import fabric.util.Set;
+import fabric.util.HashMap;
+import fabric.util.Map;
+
+public final class NodePrincipal extends AbstractPrincipal {
+
+  public NodePrincipal(String name) {
+    super(name);
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
+}

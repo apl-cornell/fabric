@@ -1,0 +1,39 @@
+package fabric.util;
+
+/**
+ * This exception is part of the java event model.  It is thrown if an
+ * event listener is added via the addXyzEventListener method, but the
+ * object doesn't support any more listeners, e.g. it only supports a
+ * single event listener.
+ *
+ * @author Jochen Hoenicke
+ * @author Warren Levy (warrenl@cygnus.com)
+ * @see EventListener
+ * @see EventObject
+ * @since 1.1
+ * @status updated to 1.4
+ */
+public class TooManyListenersException extends Exception
+{
+  /**
+   * Compatible with JDK 1.1+.
+   */
+  private static final long serialVersionUID = 5074640544770687831L;
+
+  /**
+   * Constructs a TooManyListenersException with no detail message.
+   */
+  public TooManyListenersException()
+  {
+  }
+
+  /**
+   * Constructs a TooManyListenersException with a detail message.
+   *
+   * @param detail the detail message
+   */
+  public TooManyListenersException(String detail)
+  {
+    super(detail);
+  }
+}

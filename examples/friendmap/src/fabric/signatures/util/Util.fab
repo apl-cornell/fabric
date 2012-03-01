@@ -1,0 +1,47 @@
+package util;
+
+import java.io.PrintStream;
+import fabric.runtime.Runtime;
+
+public class Util {
+
+  /**
+   * Copy the contents of an array into another array with the given labels.
+   *
+   * @throws NullPointerException
+   *         if data is null TODO: or store is null
+   */
+  public static native
+  char{*res_label}[] {data;*arg_label}
+  copyArray
+  {                      // side effects:
+    {*res_label}       ⊓ // contents of result   are updated
+    {*arg_label;_←;*→}   // contents of argument are fetched
+  }
+  (
+    final char{*arg_label}[] data,
+    final label arg_label,
+    final label res_label,
+    final Store s
+  )
+  throws (
+    NullPointerException{data}
+  )
+  where
+    // object creation constraints
+    // TODO: s ≽ res_label@res_label
+    // (arrays can only be created with same update and access label)
+    res_label <= {*→s}, {*←s} <= res_label, res_label <= {*→s},
+
+    // information flows from argument contents to result contents:
+    arg_label <= res_label,
+    // fetch on data reveals information about the reference to data:
+    {data} <= {*arg_label;_←;*→},
+    // the output is affected by the reference to the input
+    {data} <= {*res_label};
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

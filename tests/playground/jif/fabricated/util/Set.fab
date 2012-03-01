@@ -1,0 +1,15 @@
+package fabricated.util;
+
+import fabricated.lang.JifObject;
+import fabricated.lang.JifString;
+import fabricated.lang.Hashable;
+import fabricated.lang.IDComparable;
+import fabricated.lang.ToStringable;
+
+/**
+ * A set of JifObjects.
+ *
+ * @see jif.util.Collection
+ */
+public interface Set[label L] extends Collection[L] {
+}

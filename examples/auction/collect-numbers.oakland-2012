@@ -1,0 +1,124 @@
+#!/bin/bash
+
+# This script is very non-portable.
+# 
+# It's only intended to work with Jed's setup
+# when run from the auction directory.
+
+STORE_DUMP_CLEAN=/tmp/store-dump-clean
+MASTER_LOG_CLEAN=/tmp/master-log-clean
+
+STORE_DUMP_CACHED=/tmp/store-dump-cached
+MASTER_LOG_CACHED=/tmp/master-log-cached
+
+function waitForUser() {
+  INPUT=
+  while [[ "${INPUT}" != "ready" ]] ; do
+    echo -n 'Type "ready" when ready: '
+    read -r INPUT
+  done
+}
+
+# Make a clean build.
+ant clobber fabil-init build-local
+
+# Start the stores and wait a bit for them to start up.
+bin/start-all --no-shell
+sleep 3
+
+# Initialize application state.
+bin/initialize
+
+# Exit the stores.
+bin/start-worker brokerStore exit
+bin/start-worker airlineAStore exit
+bin/start-worker airlineBStore exit
+bin/start-worker userStore exit
+
+# Take a dump of the broker store's database
+../../bin/dump-bdb brokerStore > "${STORE_DUMP_CLEAN}"
+
+# Clear logs and caches.
+rm -rf var/log var/cache
+
+# Start the stores again.
+bin/start-all --no-shell
+sleep 3
+
+# Run the application.
+bin/auction
+
+# Exit the stores.
+bin/start-worker brokerStore exit
+bin/start-worker airlineAStore exit
+bin/start-worker airlineBStore exit
+bin/start-worker userStore exit
+
+# Collect timing stats.
+cat var/log/* > "${MASTER_LOG_CLEAN}"
+
+# Take a dump of the broker store's database
+../../bin/dump-bdb brokerStore > "${STORE_DUMP_CACHED}"
+
+# Clear logs, but keep caches.
+rm -rf var/log
+
+# Start the stores again.
+bin/start-all --no-shell
+sleep 3
+
+# Run the application.
+bin/auction
+
+# Exit the stores.
+bin/start-worker brokerStore exit
+bin/start-worker airlineAStore exit
+bin/start-worker airlineBStore exit
+bin/start-worker userStore exit
+
+# Report for clean run.
+echo '############### STATS FOR DYNAMIC COMPILATION RUN ###############'
+
+# Report timings.
+~/work/fabric/bin/timing-oakland-2012 "${MASTER_LOG_CLEAN}"
+
+# Report stats on objects created and modified.
+echo Object stats:
+diff -u "${STORE_DUMP_CLEAN}" "${STORE_DUMP_CACHED}" \
+  | diffstat -bms \
+  | sed 's/^ 1 file changed, /  /'
+
+# Report stats on objects created and modified by class.
+echo
+echo Objects created or modified by class:
+diff -u "${STORE_DUMP_CLEAN}" "${STORE_DUMP_CACHED}" \
+  | grep '^+[1-9]' \
+  | sed 's/^[^,]*,\([^,]*\),.*$/\1/' \
+  | sort \
+  | uniq -c
+
+# Report for cached run.
+echo
+echo '################# STATS FOR LOCALLY CACHED RUN ##################'
+
+# Report timings.
+cat var/log/* > "${MASTER_LOG_CACHED}"
+~/work/fabric/bin/timing-oakland-2012 "${MASTER_LOG_CACHED}"
+
+# Report stats on objects created and modified.
+echo Object stats:
+../../bin/dump-bdb brokerStore 2>/dev/null \
+  | diff -u "${STORE_DUMP_CACHED}" - \
+  | diffstat -bms \
+  | sed 's/^ 1 file changed, /  /'
+
+# Report stats on objects created and modified by class.
+echo
+echo Objects created or modified by class:
+../../bin/dump-bdb brokerStore 2>/dev/null \
+  | diff -u "${STORE_DUMP_CACHED}" - \
+  | grep '^+[1-9]' \
+  | sed 's/^[^,]*,\([^,]*\),.*$/\1/' \
+  | sort \
+  | uniq -c
+

@@ -1,0 +1,21 @@
+package snapp;
+
+/**
+ * A point on the plane.
+ */
+public class Location {
+  public final float{this} x;
+  public final float{this} y;
+
+  public
+  Location(int{this} x, int{this} y)
+  where provider <= {this}
+  {
+    this.x = x;
+    this.y = y;
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

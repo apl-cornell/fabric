@@ -1,0 +1,76 @@
+<!--
+  This is the Apache Ant build file for the Fabric NFS server implementation.
+-->
+
+<project name="fabnfs" default="build-all" basedir=".">
+  <description>
+    Fabric NFS build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="fabnfs.home" file="${ant.file.fabnfs}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${fabnfs.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean" />
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+      description="Builds the Fabric NFS server implementation">
+    <mkdir dir="${fabnfs.home}/classes" />
+    <javac source="1.6" target="1.6" srcdir="${fabnfs.home}/src"
+        destdir="${fabnfs.home}/classes" includeAntRuntime="false" debug="on">
+      <include name="fabnfs/**" />
+      <classpath refid="fabric.classpath" />
+    </javac>
+
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${fabnfs.home}"
+        dest="${fabnfs.home}/classes"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${filc}" />
+      <arg line="${debug.flag}" />
+      <arg value="-d" />
+      <arg value="classes" />
+      <arg value="-sourcepath" />
+      <arg value="src" />
+      <arg value="-cp" />
+      <arg value="classes" />
+      <srcfile />
+      <fileset dir="src" includes="fabnfs/*.fil" />
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

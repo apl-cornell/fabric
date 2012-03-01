@@ -1,0 +1,328 @@
+package mapserv;
+
+import java.io.PrintStream;
+
+import util.Store;
+import util.Util;
+import util.AssertionFailedError;
+
+/**
+ * A simple image class.  The image is indexed by floating point numbers, and
+ * stores its own boundary... puts and gets are done relative to the boundary.
+ *
+ * @param L the update label of the image and its contents
+ * @param A the access label of the image and its contents
+ */
+public class MapImage[label L, label A]
+where
+  {_←} <= A, // A is a confidentiality label
+  L    <= A, // if L is not ⊑ C(A), then no fields can be read.
+
+  Box.provider <= provider, provider <= Box.provider
+{
+
+  //////////////////////////////////////////////////////////////////////////////
+  // internal state                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /** coordinates of map.  non-null. contents fixed at construction time */
+  protected final Box[L,A] {L} boundary;
+
+  /** dimensions of image. */
+  protected final int  {L} width;
+  protected final int  {L} height;
+
+  /** packed data. non-null. data.length = this.width * this.height. */
+  protected final char {L}[]{L} data;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public constructor                                                       //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Create a new image with the given boundary and data.
+   *
+   * @throws ArrayIndexOutOfBoundsException
+   *         if the given width and height do not match the size of the data.
+   * @throws NullPointerException
+   *         if either data or boundary is null
+   */
+  public
+  MapImage
+  {                    // side effects:
+    {L}              ⊓ // fields are updated
+    {*bdry_access}   ⊓ // boundary is read
+    {*→s}              // boundary copy is created at s
+  }
+  (
+    final Box[bdry_update,bdry_access] boundary,
+    final label bdry_update, final label bdry_access,
+
+    final int       width,
+    final int       height,
+    final char{L}[] data,
+    final Store     s
+  )
+  : {*provider;data;width;height;boundary}
+  throws
+  (
+    ArrayIndexOutOfBoundsException,
+    NullPointerException
+  )
+  where
+    L <= {*→s}, {*←s} <= L, A <= {*→s},    // TODO: s ≽ L@A
+
+    {boundary;width;height;data} <= L, // fields are affected by args
+    provider                     <= L, // fields are affected by code
+    bdry_update                  <= L, // fields are affected by boundary contents
+
+    {boundary} <= bdry_access,         // fetch to boundary is affected by boundary
+    provider   <= bdry_access          // fetch to boundary is affected by code
+  {
+    this.boundary = (boundary == null) ? null : boundary.copy(L,A,s);
+    this.data     = (data     == null) ? null : Util.copyArray(data, L, L, s);
+
+    if (boundary == null || data == null)
+      throw new NullPointerException();
+
+    if (width * height != data.length)
+      throw new ArrayIndexOutOfBoundsException();
+
+    this.width  = width;
+    this.height = height;
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public methods                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Get a copy of the boundary
+   */
+  public
+  Box[l,a] {L;l;a;*provider} // result is tainted by this.boundary, code
+  getBoundary
+  {         // side effects:
+    {*l}  ⊓ // fields of result are updated
+    {*→s} ⊓ // objects are created at s
+    {A}     // this is accessed
+  }
+  (
+    label l,
+    label a,
+    Store s
+  )
+  where
+    l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
+
+    {L;*provider} <= l,     // result fields are affected by fields
+    {L;*provider} <= {*→s}  // information leaks from fields to object creation.
+  {
+    if (boundary == null)
+      throw new AssertionFailedError("boundary is non-null.");
+
+    return boundary.copy(l,a,s);
+  }
+
+  /**
+   * Get the pixel corresponding to the global location (x,y).
+   *
+   * @throws ArrayIndexOutOfBoundsException
+   *         if (x,y) lies outside the bounding box of the image (subject to
+   *         accuracy errors).
+   */
+  public
+  char  {L;x;y;*provider} // result is tainted by map, coordinates, code
+  getAt {A}     // fields are accessed
+  (
+    float x, float y
+  )
+  throws
+  (
+    ArrayIndexOutOfBoundsException{L;x;y;*provider}
+  )
+  {
+    if (this.data == null)
+      throw new AssertionFailedError("data must be non-null");
+
+    return data[index(x,y)];
+  }
+
+
+  /**
+   * Set the pixel corresponding to the global location (x,y).
+   *
+   * @throws ArrayIndexOutOfBoundsException
+   *         if (x,y) lies outside the bounding box of the image (subject to accuracy errors).
+   */
+  public
+  void
+  setAt
+  {     // side effects:
+    L ⊓ // fields are updated
+    A   // fields are read
+  }
+  (
+    float {L} x, float {L} y,
+    char  {L} value
+  )
+  :{L}
+  throws ArrayIndexOutOfBoundsException
+  where
+    provider <= L // code affects contents
+  {
+    if (this.data == null)
+      throw new AssertionFailedError("data must be non-null");
+
+    data[index(x,y)] = value;
+  }
+
+
+  /**
+   * Create a deep copy of this image on store s with label l.
+   */
+  public
+  MapImage[l,a] {this;L;*provider;l;a} // result tainted by fields, code, labels
+  copy
+  {          // side effects:
+    {*l}   ⊓ // result is updated
+    {*→s}  ⊓ // object is created at s
+    {A;_←} ⊓ // fields are read
+    {L;_←}   // data is accessed - access label of an array is same as update label
+  }
+  (
+    final label l,
+    final label a,
+    final Store s
+  )
+  where
+    // return object invariants
+    {_←} <= a, // a must be a confidentiality policy
+    l    <= a, // resulting access label must be bounded by resulting update label
+
+    // general constraints on object creation
+    l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
+
+    // information flow within method
+    {this;L;*provider} <= l, // resulting map image fields are affected by fields, code
+    provider           <= A  // code affects fetches
+  {
+    try {
+
+      return new MapImage[l,a] (boundary, L, A,
+                                width, height,
+                                Util.copyArray(data, L, l, s),
+                                s);
+
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("data and boundary must be non-null");
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("width * height = data.length = Util.copyArray(data, ...).length");
+    }
+  }
+
+
+  /**
+   * Print image to the given output stream.
+   *
+   * @throws NullPointerException if out is null
+   */
+  public
+  void
+  print
+  {     // side effects:
+    L ⊓ // output is generated
+    A   // fields are accessed
+  }
+  (
+    final PrintStream[L] out
+  )
+  throws
+  (
+    NullPointerException{out}
+  )
+  where
+    {out;*provider} <= L  // output affected by arg, code
+  {
+    // check assertions
+    if (out == null)
+      throw new NullPointerException();
+    if (this.boundary == null)
+      throw new AssertionFailedError("boundary is non-null");
+    if (this.data == null)
+      throw new AssertionFailedError("data is non-null");
+
+    // print map as follows:
+    // (top left)
+    //     xxxxxxxx
+    //     xxxxxxxx
+    //     xxxxxxxx
+    //             (bottom right)
+
+    out.println("(" + boundary.xmin + ", " + boundary.ymin + ")");
+    for (int i = 0; i < height; i++) {
+      out.print ('\t');
+
+      for (int j = 0; j < width; j++) {
+        try {
+
+          out.print(data[i*width + j]);
+
+        } catch (final ArrayIndexOutOfBoundsException e) {
+          // claim: i*width + j < data.length
+          // proof:
+          //  0 <= i <= height - 1
+          //  0 <= j <= width  - 1
+          //  i*width + j <= (height - 1) * width + width - 1
+          //               = height * width - 1
+          //               < data.length
+          throw new AssertionFailedError ("width * height = data.length");
+        }
+      }
+      out.println();
+    }
+
+    out.print('\t');
+    for (int j = 0; j < width; j++)
+      out.print(' ');
+
+    out.println("(" + boundary.xmax + ", " + boundary.ymax + ")");
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // private helper methods                                                   //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /** Return the index into data corresponding to the global coordinates (x,y).
+   *  Note that if (x,y) is outside the boundary, the result will be outside the bounds
+   *  of the data array.
+   */
+  private
+  int     {L;x;y;*provider} // fields, args, code affect result
+  index   {A}               // fields are accessed
+  (
+    float x,
+    float y
+  )
+  {
+    // claim: if boundary.contains(x,y) then 0 <= index < data.length
+    // proof: since boundary.contains(x,y), boundary.scale_x(x) and
+    //        boundary.scale_y(y) ∈ [0,1).
+    //        Thus xoff ∈ [0, width) and yoff ∈ [0,height)
+    //        TODO: this step could have accuracy problems.
+    //        thus yoff * width + xoff ∈ [0, height * width) = [0, data.length)
+    if (this.boundary == null)
+      throw new AssertionFailedError("boundary must be non-null");
+
+    int xoff = (int) (width  * boundary.scale_x(x));
+    int yoff = (int) (height * boundary.scale_y(y));
+
+    return yoff * width + xoff;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

@@ -1,0 +1,27 @@
+package jif.principals;
+
+import util.System;
+
+public class MapServNode extends ExternalPrincipal {
+  public
+  MapServNode{*←}
+  ()
+  where authority(this)
+  {
+    super("MapServNode");
+    addDelegatesTo(System.user);
+  }
+
+  private static MapServNode{*!:*} P;
+  public static Principal getInstance{*!:*}() {
+    if (P == null) {
+      P = new MapServNode();
+    }
+    return P;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

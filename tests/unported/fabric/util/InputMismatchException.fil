@@ -1,0 +1,35 @@
+package fabric.util;
+
+/** 
+ * Thrown when a {@link Scanner} instance encounters a mismatch
+ * between the input data and the pattern it is trying to match it
+ * against.  This could be because the input data represents an
+ * out-of-range value for the type the pattern represents, or simply
+ * because the data does not fit that particular type.
+ *
+ * @author Tom Tromey (tromey@redhat.com)
+ * @author Andrew John Hughes (gnu_andrew@member.fsf.org)
+ * @since 1.5 
+ */
+public class InputMismatchException 
+  extends NoSuchElementException
+{
+  /**
+   * Constructs a new <code>InputMismatchException</code>
+   * with a <code>null</code> message.
+   */
+  public InputMismatchException()
+  {
+  }
+
+  /**
+   * Constructs a new <code>InputMismatchException</code>
+   * with the supplied error message.
+   *
+   * @param s the error message to report back to the user.
+   */
+  public InputMismatchException(String s)
+  {
+    super(s);
+  }
+}

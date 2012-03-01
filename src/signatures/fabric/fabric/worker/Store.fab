@@ -1,0 +1,13 @@
+package fabric.worker;
+
+public class Store {
+  private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+  private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
+  
+  public native static Principal getPrincipal(); 
+  
+  // XXX TODO Add necessary labels here so that access to the root map is not abused
+  public native fabric.util.Map getRoot();
+  public native String name();  
+  
+}

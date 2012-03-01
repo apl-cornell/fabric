@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# Wrapper script for fabric.worker.Worker, the Fabric worker.
+source "$(dirname $0)/defs"
+
+debug_opts="-Xdebug -Xrunjdwp:transport=dt_socket,server=y"
+debug_port=3371
+debug_suspend=
+
+# default app home is Fabric root
+app_home="$(dirname $0)/.."
+
+# default cache name is hostname
+cache_name="${HOSTNAME}"
+
+while true; do
+  case "$1" in
+    "") break;;
+    -v)
+      verbose="1"
+      shift
+      ;;
+    --jvm-cp)
+      jvmcp=$2
+      shift 2
+      ;;
+    --add-jvm-cp)
+      jvmcp="${jvmcp}:$2"
+      shift 2
+      ;;
+    -j)
+      vmargs="${vmargs} '$2'"
+      shift 2
+      ;;
+    --app-home)
+      app_home=$2
+      shift 2
+      ;;
+    --code-cache)
+      code_cache=$2
+      args="${args} --code-cache '$2'"
+      shift 2
+      ;;
+    --name)
+      cache_name="$2"
+      args="${args} --name '$2'"
+      shift 2
+      ;;
+    --debug-port)
+      debug_port="$2"
+      shift 2
+      ;;
+    --debug)
+      debug_suspend=n
+      shift
+      ;;
+    --suspend)
+      debug_suspend=y
+      shift
+      ;;
+    *) args="${args} '$1'"; shift;;
+  esac
+done
+
+if [[ -n "${debug_suspend}" ]]; then
+  vmargs="${vmargs} ${debug_opts},address=${debug_port},suspend=${debug_suspend}"
+fi
+
+# Export location of config, etc, and var 
+export FABRIC_HOME="${app_home}"
+
+if [ -z "${code_cache}" ]; then
+  code_cache="${FABRIC_HOME}/var/cache/${cache_name}"
+fi
+mkdir -p ${code_cache}
+
+classpath="${FABRIC_WORKER_CP}:${jvmcp}:${classpath}:${code_cache}"
+
+sigcp="${TOP}/sig-classes/fabric:${TOP}/lib/fabric-sig.jar"
+filsigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar"
+command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" \
+          fabric.worker.Worker --bootclasspath \"$(fixpath ${FABRIC_BOOTCP})\" \
+                               --sigcp \"$(fixpath ${sigcp})\" \
+                               --filsigcp \"$(fixpath ${filsigcp})\" ${args}"
+
+if [ -n "${verbose}" ]; then
+  echo "${command}"
+fi
+
+eval "${command}"
+
+# vim: ts=2 sw=2 ai et

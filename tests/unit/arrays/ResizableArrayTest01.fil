@@ -1,0 +1,166 @@
+package arrays;
+
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.lang.InterruptedException;
+
+import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.lang.arrays.ObjectArray;
+
+public class ResizableArrayTest01 {
+    char c;
+    public ResizableArrayTest01(char c) {
+        this.c = c;
+    }
+    public static void main(String[] args) {
+        /** Parameters:
+         * 1. chunk size
+         * 2. size 1 of array
+         * 3. size 2 of array (for measure resize time)
+         * 4. number of outer reps
+         * 5. number of inner reps
+         * 6. "true" if batch output format is desired
+         */
+        int chunkSize;
+        int SIZE1;
+        int SIZE2;
+        int MAX_COUNT;
+        int ITER_REPS;
+        boolean isBatchOutput;
+
+        if (args.length < 6) {
+            System.out.println("I need 6 arguments - " +
+            "chunkSize, size1, size2, maxCount, iterReps, isBatchOutput");
+            return;
+        }
+
+        chunkSize = Integer.parseInt(args[0]);
+        SIZE1 = Integer.parseInt(args[1]);
+        SIZE2 = Integer.parseInt(args[2]);
+        MAX_COUNT = Integer.parseInt(args[3]);
+        ITER_REPS = Integer.parseInt(args[4]);
+        isBatchOutput = args[5].equals("true")?true:false;
+
+        Store store = fabric.worker.Worker.getWorker().getStore("store0");
+        long startTime, startInitialize, startReadIteration,
+        startWriteIteration, startResize, endTime;
+        float creation=0, initialization=0, reading=0, replacing=0, resizing=0;
+
+        ResizableArrayTest01 element1;
+        ResizableArrayTest01 element2;
+        
+        atomic {
+            element1 = new ResizableArrayTest01@store('f');
+            element2 = new ResizableArrayTest01@store('o');
+        }
+
+        int percentage = 0;
+        int step = 5;
+
+        if (args.length > 6) {
+            System.out.println("Starting test in 3 seconds");
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                System.out.println("Don't mess with me, buddy!");
+                return;
+            }
+        }
+        long startTest = System.currentTimeMillis();
+        atomic {
+            for (int count = 0; count < MAX_COUNT; count++) {
+
+                // create array
+                startTime = System.currentTimeMillis();
+                ObjectArray testArray;
+                testArray = new ObjectArray@store(ResizableArrayTest01.class,
+                    SIZE1, chunkSize);
+
+                // initialize array with element 1
+                startInitialize = System.currentTimeMillis();
+                for (int i = 0; i < SIZE1; i++) {
+                    testArray.set(i, element1);
+                }
+
+
+                // read entire array multiple times
+                startReadIteration = System.currentTimeMillis();
+                for (int j = 0; j < ITER_REPS; j++)
+                    for (int i = 0; i < SIZE1; i++) {
+//                      ResizableArrayTest01 element = (ResizableArrayTest01)testArray.get(i);
+                        testArray.get(i);
+                    }
+
+                // replace all elements of the array multiple times
+                startWriteIteration = System.currentTimeMillis();
+                for (int j = 0; j < ITER_REPS; j++)
+                    for (int i = 0; i < SIZE1; i++) {
+                        testArray.set(i, element2);
+                    }
+
+                // resize array
+                startResize = System.currentTimeMillis();
+                testArray.setLength(SIZE2);
+
+                // end time
+                endTime = System.currentTimeMillis();
+
+                // bookkeeping
+                creation += startInitialize - startTime;
+                initialization += startReadIteration - startInitialize;
+                reading += startWriteIteration - startReadIteration;
+                replacing += startResize - startWriteIteration;
+                resizing += endTime - startResize;
+
+                // show progress
+                if (!isBatchOutput && count == (percentage * MAX_COUNT)/100) {
+                    System.out.print(percentage + "%");
+                    long timeNow = System.currentTimeMillis() - startTest;
+                    if (percentage > 0) {
+                        long estimatedEnd = (timeNow*100)/percentage;
+                        System.out.println("(" + timeNow + "ms/"
+                            + estimatedEnd + "ms)");
+                    } else {
+                        System.out.println();
+                    }
+                    percentage += step;
+                }
+
+            }
+        }
+        if (!isBatchOutput) System.out.println("100%Completed");
+
+
+        creation = creation * 1000 / MAX_COUNT;
+        initialization = initialization * 1000 / MAX_COUNT;
+        float initializationPer = initialization/SIZE1;
+        reading = reading * 1000 / (MAX_COUNT*ITER_REPS);
+        float readingPer = reading/SIZE1;
+        replacing = replacing * 1000 / (MAX_COUNT*ITER_REPS);
+        float replacingPer = replacing/SIZE1;
+        resizing = resizing * 1000 / MAX_COUNT;
+
+        NumberFormat formatter = new DecimalFormat("#0.00");
+
+        if (!isBatchOutput) {
+            System.out.println("\nArray Creation: " + formatter.format(creation)
+                + "us\nArray Initialization: " + formatter.format(initialization)
+                + "us (" + formatter.format(initializationPer) 
+                + "us)\nReading Elements: " + formatter.format(reading)
+                + "us (" + formatter.format(readingPer) 
+                + "us)\nReplacing Elements: " + formatter.format(replacing)
+                + "us (" + formatter.format(replacingPer)
+                + "us)\nResizing Array: " + formatter.format(resizing) + "us"); 
+        } else {
+            System.out.println(args[0] + " " + args[1] + " " + args[2] +
+                " " + args[3] + " " + args[4] + " " + args[5] +
+                " resizablearray " + creation + " " + formatter.format(initialization)
+                + " " + formatter.format(initializationPer) 
+                + " " + formatter.format(reading)
+                + " " + formatter.format(readingPer) 
+                + " " + formatter.format(replacing) + " " + formatter.format(replacingPer)
+                + " " + formatter.format(resizing));
+        }
+    }
+}

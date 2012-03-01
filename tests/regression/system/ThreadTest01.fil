@@ -1,0 +1,62 @@
+package system;
+
+import fabric.worker.Worker;
+import fabric.worker.Store;
+
+/**
+ * Tests two top-level transactions with conflicting accesses.
+ */
+public class ThreadTest01 {
+  int i = 0;
+
+  public static void main(String[] args) {
+    Store store = Worker.getWorker().getStore("store0");
+    ThreadTest01 state;
+
+    atomic {
+      state = new ThreadTest01@store();
+    }
+
+    new T(state).start();
+
+    atomic {
+      System.out.println("Thread 1: writing shared state.");
+      state.i++;
+      System.out.println("Thread 1: waiting 2 seconds.");
+      sleep(2);
+      System.out.println("Thread 1: committing.");
+    }
+  }
+
+  public static class T extends Thread {
+    protected ThreadTest01 state;
+
+    T(ThreadTest01 state) {
+      this.state = state;
+    }
+
+    public void run() {
+      int i = 0;
+      atomic {
+	System.out.println("Thread 2: waiting for 1 second.");
+	ThreadTest01.sleep(1);
+	System.out.println("Thread 2: attempting to read shared state.");
+	i = state.i;
+      }
+      
+      if (i == 1)
+        System.out.println("TEST PASSED.");
+      else
+        System.out.println("TEST FAILED: Expected value of 1, got " + i
+            + " instead.");
+    }
+  }
+
+  public static void sleep(int secs) {
+    try {
+      Thread.sleep(1000*secs);
+    } catch (InterruptedException e) {
+    }
+  }
+}
+

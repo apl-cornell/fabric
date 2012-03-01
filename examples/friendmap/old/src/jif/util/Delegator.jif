@@ -1,0 +1,93 @@
+package util;
+
+/**
+ * Convenience principal class the delegates to a single owner.
+ */
+public class Delegator implements Principal {
+  protected final String    {this} name;
+  protected final principal {this} owner;
+
+  public
+  Delegator {this}
+  (
+    String    {this} name,
+    principal {this} owner
+  )
+  {
+    this.owner = owner;
+    this.name  = name;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public String{this} name() {
+    return this.name;
+  }
+
+  public
+  boolean {this;p;this←}
+  delegatesTo
+  { // side effects:
+    // TODO
+  }
+  (
+    principal p
+  )
+  {
+    return p == owner;
+  }
+
+  public boolean equals(Principal p) {
+    // TODO
+    return false;
+  }
+
+  public
+  boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+  isAuthorized {this←}
+              (Object           authPrf,
+               Closure[this,lb] closure,
+               label            lb,
+               boolean          executeNow)
+  where authority(this),
+        {authPrf;closure;lb;executeNow} <= lb
+  {
+    // we authorize nothing.
+    return false;
+  }
+
+  public
+  ActsForProof{this; p; this←; p←}
+  findProofUpto {this←}
+               (Principal p,
+                Object searchState)
+  {
+    if (owner actsfor this) {
+
+      ActsForProof proof = PrincipalUtil.findActsForProof(p, owner, searchState);
+      if (proof != null)
+        return new TransitiveProof(proof, owner, new DelegatesProof(owner, this));
+      else
+        return null;
+
+
+    } else throw new AssertionFailedError("owner acts for delegator");
+  }
+
+  public
+  ActsForProof{this; p; p←; this←}
+  findProofDownto {this←}
+                 (Principal p,
+                  Object searchState)
+  {
+    // how would we know?
+    return null;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

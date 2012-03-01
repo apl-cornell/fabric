@@ -1,0 +1,36 @@
+package hello;
+
+import javax.servlet.ServletException;
+
+import sif.html.*;
+import sif.servlet.Action;
+import sif.servlet.Request;
+import sif.servlet.Servlet;
+
+/**
+ * The StartAction is a servlet-wide action, that creates a session-specific 
+ * HelloAction.
+ */
+public class StartAction extends Action[HelloServEP] {
+	public StartAction(Main m) throws ServletException {
+		super();
+		initFields("greet", m);
+	}
+
+	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
+	throws (ServletException{*:req.session;req.session:})
+	where caller(req.session),
+	{*lbl} <= {*:req.session} 
+	{
+		// create a session-specific HelloAction, and hand off control...
+		try {
+			atomic {
+				HelloAction ha = new HelloAction[lbl]((Main)this.getServlet());
+				ha.invoke(lbl, req);
+			}
+		}
+		catch (ClassCastException impossible) { }
+		catch (NullPointerException impossible) { }
+	}
+}
+

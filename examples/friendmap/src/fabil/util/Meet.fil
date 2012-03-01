@@ -1,0 +1,87 @@
+package util;
+
+public class Meet extends AbstractPrincipal {
+
+  protected Principal left;
+  protected Principal right;
+  protected Store     store;
+
+  public Meet util$Meet$(
+    Store     store,
+    String    name,
+    Principal left,
+    Principal right
+  )
+  {
+    fabric$lang$security$AbstractPrincipal$(name);
+    this.left  = left;
+    this.right = right;
+    this.store = store;
+    return this;
+  }
+
+  public Meet util$Meet$(
+    Store store,
+    Principal left,
+    Principal right
+  )
+  {
+    return util$Meet$(store, "(" + left.name() + ") meet (" + right.name() + ")", left, right);
+  }
+
+  public Meet() { super(); }
+
+  private void jif$init() { }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * See Principal.findProofUpto.
+   */
+  public ActsForProof findProofUpto
+               (Store s, Principal p,
+                java.lang.Object searchState)
+  {
+    if (PrincipalUtil.actsFor(left, this)
+        && PrincipalUtil.actsFor(right, this)) {
+      ActsForProof leftProof =
+        PrincipalUtil.findActsForProof(s, p, left,  searchState);
+      ActsForProof rightProof =
+        PrincipalUtil.findActsForProof(s, p, right, searchState);
+
+      if (leftProof != null) {
+        DelegatesProof delProof =
+         (DelegatesProof) new DelegatesProof@s(left, this).$initLabels();
+        return
+          (TransitiveProof)
+            new TransitiveProof@s(leftProof,  left,  delProof).$initLabels();
+      }
+
+      if (rightProof != null) {
+        DelegatesProof delProof =
+          (DelegatesProof) new DelegatesProof@s(right, this).$initLabels();
+        return
+          (TransitiveProof)
+            new TransitiveProof@s(rightProof, right, delProof).$initLabels();
+      }
+      else
+        return null;
+
+    } else throw new AssertionFailedError().util$AssertionFailedError$("left and right act for meet");
+  }
+
+                 
+  public void addDelegatesTo(Principal p) {
+    throw new Error("delegation not supported");
+  }
+  public void removeDelegatesTo(Principal p) {
+    throw new Error("delegation not supported");
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

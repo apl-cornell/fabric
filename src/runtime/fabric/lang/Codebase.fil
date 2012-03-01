@@ -1,0 +1,70 @@
+package fabric.lang;
+
+import java.io.IOException;
+import java.util.Properties;
+
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.Label;
+import fabric.util.Collections;
+import fabric.util.HashMap;
+import fabric.util.Map;
+import fabric.util.Iterator;
+
+/**
+ * A codebase is a Fabric object that provides a mapping from fully qualified 
+ * fabric class names to Fabric FClass objects. 
+ * 
+ * @author Lucas Waye <lrw48@cornell.edu>
+ */
+public class Codebase {	
+	
+  /** All of the classes in the codebase **/
+  private Map/*String, FClass*/ classes;
+  
+  /** All of the explicit codebases referred to in this codebase **/
+  private Map/*String, Codebase*/ codebases;
+
+  /**
+   * @param  name
+   *    a fabric name
+   * @return
+   *    the associated FClass, or null if there is none
+   */
+  FClass resolveClassName(String name) {
+    return (FClass)classes.get(name);
+  }
+  
+  Codebase resolveCodebaseName(String name) {
+    return (Codebase)codebases.get(name);
+  }
+  
+  void addCodebaseName(String name, Codebase codebase) {
+    codebases.put(name, codebase);
+  }
+  
+  public Codebase(Label updateLabel, ConfPolicy accessPolicy) {
+    this(updateLabel, accessPolicy, (Map) new HashMap().$initLabels());
+  }	
+	
+  public Codebase(Label updateLabel, ConfPolicy accessPolicy,
+      Map/* String, FClass */classes) {
+    this.classes = (Map) new HashMap(classes).$initLabels();
+    codebases = (Map) new HashMap().$initLabels();
+    this.$updateLabel = updateLabel;
+    this.$accessPolicy = accessPolicy;
+  }
+  
+  /* Should only be called at compile time */
+  public void insertClass(String name, FClass fcls) {
+    classes.put(name, fcls);
+  }
+
+  public Map/*String, FClass*/ getClasses() {
+    return classes;
+  }
+  
+  public Object $initLabels() {
+    // Initialized in constructor.
+    return this;
+  }
+}

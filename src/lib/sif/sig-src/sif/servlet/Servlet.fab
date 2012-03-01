@@ -1,0 +1,115 @@
+package sif.servlet;
+
+import java.io.*;
+import javax.servlet.ServletException;
+import sif.html.*;
+import jif.util.Map;
+
+/** A servlet contains the information that is shared across users and sessions.
+ * It converts between the Java HttpServlet request processing style and this one. */
+
+abstract public class Servlet[principal servletP] extends java.lang.Object {    
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;        
+    private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+//    public native int{servletP:} concurrentRequests();
+
+    public abstract void initialize{servletP:; servletP!:}() throws ServletException;
+    
+    public native final void createPage{*:req.session}(
+            Request[servletP]{*:req.session} req, 
+            String{*:req.session} title, 
+            label cL,
+            label cE,
+            Node[cL,cE] body) where {*cL;*cE} <= {⊤→req.session}, {body} <= {*cE};
+
+    public native final void createPage{*:req.session}(
+            Request[servletP]{*dynL;*preL} req, 
+            String{*dynL;*preL} title, 
+            label{*preL} preL,
+            label{*preL} preE,
+            PrecomputedPage[preL, preE] pp,
+            label{*dynL} dynL,
+            label{*dynL} dynE,
+            NodeList[dynL, dynE] args) where {*preL;*preE;*dynL;*dynE} <= {*:req.session}, {pp} <= {*preE}, {args} <= {*dynE};
+
+    public native final Node[L, E]{L;E;action;body} 
+                             createForm(label L, label E,  
+                                        Action[servletP]{*L} action, 
+                                        label cL, label cE,
+                                        Node[cL,cE]{*L} body)  where {*cL} <= {*L}, {*E;body} <= {*cE};
+
+    /** Construct a node that contains an invocation of this servlet with the
+     * named request and the inputs provided.
+     * @param inputs : InputName -> String
+     * @param req : the request that initiated this
+     * @return a new node.
+     */
+    public native final Node[L, E]{L;E;a; body} 
+                      createRequest(label L, label E, 
+                                    Action[servletP]{*L} a, 
+                                    Map[{servletP:;servletP!:;*L},{servletP:;servletP!:;*L}]{*L} inputs, 
+                                    label cL, label cE,
+                                    Node[cL,cE]{*L} body)  where {*cL} <= {*L}, {*E;body} <= {*cE};
+    
+    /*
+    Let's leave load optimizations til later...
+    protected Node{this;req} checkLoad(Request[servletP] req) throws (ServletException{this}) {
+    	return null;
+    }
+    */
+    
+//      public final native void doGet(HttpServletRequest request, HttpServletResponse response)
+//      throws (IOException{request;response}, ServletException{request;response}); 
+    
+
+    /**
+     * @return
+     * @throws ServletException
+     */
+    //    protected native Node{req;action_name} invalidActionRequested(Request[servletP] req, String action_name) throws (ServletException{req;action_name});
+    
+    /**
+     * If the request does not specify an action name, and there is no default
+     * action name, this method is called to get a default action to invoke. May return
+     * null if there is no default action to invoke.
+     * 
+     * @param req
+     * @return the default action, used if the request does not specify an
+     *         action.
+     */
+    protected native Action[servletP]{servletP:;req} defaultAction(Request[servletP] req);
+    
+    /**
+     * If the request does not specify an action name, 
+     * this method is called to get a default action name. May return
+     * null if there is no default action name.
+     * 
+     * @param req
+     * @return the default action name, used if the request does not specify an
+     *         action.
+     */
+    protected native String{servletP:;req} defaultActionName(Request[servletP] req);
+
+//    protected native Page[lbl] reportError(label{*lbl} lbl, Request[servletP]{*lbl} req, String{*lbl} title, String{*lbl} header, String{*lbl} explanation) 
+//    throws (ServletException{title;header;explanation;req});
+    
+    public native final String{servletP:;p} initParameter(String p);
+    
+    /** These servlets currently do not distinguish between GET and POST requests. */
+    //    public native  void doPost(HttpServletRequest req, HttpServletResponse res)
+    //    throws (IOException{request;response}, ServletException{request;response});
+    
+    public abstract String getPrivateHostID() throws ServletException;
+    
+    public native  void addStartAction{servletP:;servletP!:}(Action[servletP]{servletP:;servletP!:} a); 
+    
+    public native final Action[servletP]{servletP:;servletP!:;action_name} findStartAction(String action_name);
+    public native final Action[servletP]{req;action_name} findStartAction(Request[servletP]{*:req.session} req, String{*:req.session} action_name);
+
+    public native final String{*!:*} generateNonce();       
+//    protected native SessionState[{servletP:;servletP!:}]{servletP:;servletP!:} createSessionState(String id);
+    protected native SessionState[lbl, lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id);
+    
+}

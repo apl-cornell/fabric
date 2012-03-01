@@ -1,0 +1,9 @@
+public class New01[label L] {
+    public New01(int x) {
+    }
+    public void foo() {
+        final label l = new label {};
+        int x = 5;
+        New01 n = new New01[l](x);
+    }
+}

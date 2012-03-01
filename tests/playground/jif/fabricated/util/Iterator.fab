@@ -1,0 +1,17 @@
+package fabricated.util;
+
+import fabricated.lang.JifObject;
+import fabricated.lang.JifString;
+import fabricated.lang.Hashable;
+import fabricated.lang.IDComparable;
+import fabricated.lang.ToStringable;
+
+/**
+ * An iterator interface for the Jif collection framework.
+ */
+public interface Iterator[label L] {
+    boolean{L} hasNext();
+    JifObject[L]{L} next{L}() throws (NoSuchElementException{L});
+    //? Object{L} next{L}() throws (NoSuchElementException{L});
+    void remove{L}() throws (IllegalStateException{L});
+}

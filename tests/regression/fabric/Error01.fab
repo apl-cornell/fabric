@@ -1,0 +1,11 @@
+public class Error01[principal p] {
+    int{} y;
+    public void foo{}(boolean{p→} x) {
+        if (x) throw new Error();
+        bar();
+    }
+
+    void bar{}() {
+        y = 10;
+    }
+}

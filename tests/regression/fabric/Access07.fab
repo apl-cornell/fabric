@@ -1,0 +1,7 @@
+public class Access05[principal p, principal q] {
+    int{}@{q→} z;
+    
+    public void foo{⊤→}() {
+        int y = this.z; 
+    }
+}

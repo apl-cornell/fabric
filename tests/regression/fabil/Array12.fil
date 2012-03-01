@@ -1,0 +1,12 @@
+package fabil;
+
+public class Array12 {
+
+    void m() {
+        byte native[] a = n();
+    }
+    
+    byte native[] n() {
+    	return new byte native[0];
+    }
+}

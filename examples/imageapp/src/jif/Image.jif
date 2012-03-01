@@ -1,0 +1,35 @@
+public class Image [principal p]
+{ // p is the camera principal
+
+    public final label{this} lb_img; 
+    public final label{this} lb_meta;
+
+    public final byte{*lb_img}[]{*lb_img} bmp;
+    public String{*lb_img} title;
+
+    public final int {*lb_meta} gpsX;
+    public final int {*lb_meta} gpsY;
+
+    public Image (final label{this} lb_i, final label{this} lb_m, 
+                  byte {*lb_i}[]{*lb_i} bmp, 
+                  String{*lb_i} title,  
+                  int {*lb_m} x ,  
+                  int {*lb_m} y)
+    where provider <= {this}, provider <= lb_i, provider <= lb_m
+    {
+	
+        this.lb_img  = lb_i; 
+	this.lb_meta = lb_m;
+
+       	this.bmp  = bmp;
+	this.title = title;
+	this.gpsX = x;
+	this.gpsY = y;
+    }
+
+    public void setTitle {title} (String {title} new_title)
+    where provider <= this.lb_img
+    {
+	this.title = new_title;
+    }
+}

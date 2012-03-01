@@ -1,0 +1,35 @@
+Scribble is an example of an applet whose class and instances are stored in
+Fabric.  Scribble.html uses FabricAppletPanel to load the applet class and
+instantiate a new Scribble object on store0.  Scribble2.html loads the instance 
+from Fabric. Currently, Scribble2.html must be loaded in a different browser
+(i.e. Firefox and Safari) or on a different system since the applets share a VM
+and therefore a worker.
+
+0.0  Copy or symlink the Fabric directory to ~/.fabric (or just fabric/etc to
+.fabric/etc). This allows the applet to find configuration files and keys
+without environment variables, which don't seem to be set in the browser's VM.
+
+0.1. Run 'ant jar' to build the applet jar and create signed jars of the Fabric
+libraries.
+
+0.2. Start some stores: 
+	fab-store --name store0
+	fab-store --name database
+
+1. Compile Scribble.fil
+	filc -dumpdeps Scribble.fil
+
+2. Push Scribble classes to store0.
+codebasetool export worker0 . store0 Scribble
+(note OID of Scribble class)
+
+3. Edit classOid parameter in Scribble.html if necessary.
+
+4. Browse to Scribble.html
+(note OID of Scribble instance in Java Console).
+
+5. Edit objectOid parameter in Scribble2.html if necessary.
+
+6. Browse to Scribble2.html from another browser.
+	note that changes to the scribble canvas are shared between browsers, but
+	only on repaint. 

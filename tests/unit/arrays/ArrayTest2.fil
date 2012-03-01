@@ -1,0 +1,20 @@
+package arrays;
+
+import fabric.worker.Store;
+
+public class ArrayTest2 {
+    public static String[] names;
+    
+    public ArrayTest2() {
+        Store store = fabric.worker.Worker.getWorker().getStore("store0");        
+        names = new String[10000]@store;
+    }
+    
+    public static void main(String args[]) {
+        for (int i = 0; i < 100; i++) {
+            names[i*i] = Integer.toString(i);
+        }
+        
+        // now modify the length and try again
+    }
+}

@@ -1,0 +1,344 @@
+package friendmap;
+
+import java.io.PrintStream;
+
+import jif.runtime.Runtime;
+
+import mapserv.MapServer;
+import mapserv.MapImage;
+import mapserv.Box;
+import snapp.UserV1;
+import snapp.Location;
+import util.GroupIterator;
+import util.Delegator;
+import util.AssertionFailedError;
+import util.NoSuchElementException;
+import util.Util;
+import util.System;
+import util.Store;
+
+/**
+ * This is the mapping application.  A FriendMap is instantiated with a particular
+ * mapping service, and then can be run by any User to generate private or
+ * public output maps.
+ */
+public class FriendMap
+where
+  MapServer.provider <= MapImage.provider, MapImage.provider <= MapServer.provider,
+  MapServer.provider <= Box.provider,      Box.provider      <= MapServer.provider
+{
+
+  /** The map service that this app uses to fetch maps.  Must be non-null. */
+  public final MapServer {this} service;
+
+  /**
+   * Create a new instance of the mapping service.
+   *
+   * @throws NullPointerException
+   *         if service is null.
+   */
+  public
+  FriendMap
+  {      // side effects:
+    this // fields are updated
+  }
+  (
+    MapServer {this} service
+  )
+  throws
+    NullPointerException
+  where
+    provider <= {this}
+  {
+    if (service == null)
+      throw new NullPointerException();
+
+    this.service = service;
+  }
+
+
+  /**
+   * prints a map of the user's friends, visible to the user
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   * @throws SecurityException
+   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+   */
+  public
+  void
+  viewMap
+  {                    // side effects:
+    {*→user}         ⊓ // information is output to user
+    {*→service}      ⊓ // map service is contacted
+    {*→user.friends}   // user's friends are fetched
+  }
+  (
+    UserV1 user
+  )
+  throws
+  (
+    NullPointerException{user}
+  )
+  where
+    // the map will be output on standard out
+    System.user actsfor user,
+
+    // these affect the fetch and resulting map
+    {user; *provider; *MapServer.provider} <= {*→user},
+    {user; *provider; *MapServer.provider} <= {*→service}
+  {
+    printMap(user, new label {*→user});
+  }
+
+  /**
+   * prints a map of the user's friends, visible to the user's friends
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   * @throws SecurityException
+   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+   */
+  public
+  void
+  postMap
+  {                    // side effects:
+    {*→user.friends} ⊓ // user's wall is updated; user's friends are fetched
+    {*→service}        // map is fetched
+  }
+  (
+    final UserV1 user
+  )
+  throws
+  (
+    NullPointerException {user}
+  )
+  where
+    System.user actsfor user,
+    user        actsfor user.friends,
+    {user; *provider; *MapServer.provider} <= {*→user.friends},
+    {user; *provider; *MapServer.provider} <= {*→service}
+  {
+    if (user == null)
+      throw new NullPointerException();
+
+    printMap(user, new label {*→user.friends});
+  }
+
+
+  /**
+   * Helper method that gets the map and prints it out.
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   * @throws SecurityException
+   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+   */
+  private
+  void
+  printMap
+  {                    // side effects
+    {*lbl}           ⊓ // output on lbl channel
+    {*→service}      ⊓ // map service is contacted
+    {*→user.friends}   // user's friends are fetched
+  }
+  (
+    final UserV1 user,
+    final label  lbl
+  )
+  throws
+  (
+    NullPointerException {user}
+  )
+  where
+    {*←service; *←user} <= lbl,            // because the service and the user influence the map.
+    lbl                 <= {*→System.user}, // because data will be output to the system user
+
+    // these components affect the fetches and constructed map 
+    {user; lbl; *provider; *MapServer.provider} <= {*lbl},
+    {user; lbl; *provider; *MapServer.provider} <= {*→service},
+    {user; lbl; *provider; *MapServer.provider} <= {*→user.friends}
+  {
+    if (user == null)
+      throw new NullPointerException();
+
+    final Store localStore = null; // TODO
+
+    MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user);
+    PrintStream[lbl] out = System.stdout(lbl);
+
+    if (result == null)                                             { throw new AssertionFailedError("createMap() returns a non-null value."); }
+    try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("System.stdout must return a non-null value"); }
+  }
+
+
+  /**
+   * creates a map of the user's friends, visible at label l.  Return value is non-null.
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   */
+  public
+  MapImage[l,{*→s}] {*l}
+  createMap
+  {                    // side effects:
+    {*l}             ⊓ // result map is updated
+    {*→service}      ⊓ // initial map is fetched
+    {*→user.friends} ⊓ // user's friends are fetched
+    {*→s}              // result is created at s
+  }
+  (
+    final label  l,
+    final Store  s,
+    final UserV1 user
+  )
+  throws
+  (
+    NullPointerException{user}
+  )
+  where
+    {*←s} <= l, l <= {*→s}, {*→s} <= {*→s}, // TODO: s ≽ l@{s→}: result created at s
+    {*←service} <= l, // the result is tainted by the service
+    {*←user}    <= l, // the result is tainted by the user
+
+    // the arguments and code can affect the fetches and the return value
+    {user; l; s; *provider; *MapServer.provider} <= {*l},
+    {user; l; s; *provider; *MapServer.provider} <= {*→service},
+    {user; l; s; *provider; *MapServer.provider} <= {*→user.friends}
+  {
+    // invariant checks
+    if (user == null)
+      throw new NullPointerException();
+    if (user.friends == null)
+      throw new AssertionFailedError("user.friends must be non-null");
+    if (this.service == null)
+      throw new AssertionFailedError("service must be non-null");
+
+    // this is the label of the data that gets sent to the service
+    final label fetchLabel   = new label {{*l} meet {*→service}};
+
+    // compute the bounding box
+    Box[fetchLabel, {*→s}] boundary = new Box(0,0,0,0);
+
+    final GroupIterator[user, fetchLabel] i = user.friends.iterator(fetchLabel);
+    if (i == null)
+      throw new AssertionFailedError("Group.iterator() should return a non-null value");
+    while (i.hasNext()) {
+      Principal next;
+      try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");}
+
+      if (next instanceof UserV1) {
+        final UserV1 friend = (UserV1) next;
+
+        // if the friend doesn't mind his location leaking to the map service,
+        // then we expand the bounding box to contain him
+        if (friend.locationLabel <= fetchLabel) {
+          final Location loc = friend.location;
+          if (loc != null) {
+            try { boundary.expand(loc.x, loc.y); }
+            catch (final NullPointerException e) { throw new AssertionFailedError("boundary is non-null."); }
+          }
+        }
+
+        // TODO: declassifiers
+        else {
+        }
+
+        // otherwise we leave him off the map.
+      }
+    }
+
+    // get map
+    MapImage[fetchLabel,{*→service}] _map;
+    try {
+      _map = this.service.createMap(fetchLabel, new label {*→service}, boundary);
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("boundary is non-null.");
+    }
+    final MapImage[fetchLabel,{*→service}] map = _map;
+    if (map == null)
+      throw new AssertionFailedError("getMap returned null");
+
+    // make a local copy (with label l)
+    // TODO: s ≽ l
+    MapImage[l,{*→s}] annotated = map.copy(l, new label{*→s}, s);
+
+    if (annotated == null)          throw new AssertionFailedError("MapImage.copy return value should be non-null");
+
+    final Box annotated_boundary = annotated.getBoundary(l, new label {*→s}, s);
+    if (annotated_boundary == null) throw new AssertionFailedError("Images should all have non-null boundaries");
+
+    // annotate map
+    final GroupIterator[user, l] j = user.friends.iterator(l);
+    if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
+    while (j.hasNext()) {
+      Principal next;
+      try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("if j.hasNext() then j.next() should return normally."); }
+      if (next instanceof UserV1) {
+        final UserV1 friend = (UserV1) next;
+
+        // add friend to the map if possible
+        if (friend.locationLabel <= l) {
+          final Location loc = friend.location;
+          if (loc != null) {
+            if (annotated_boundary.contains(loc.x, loc.y)) {
+              try { addPin (annotated, l, new label {*→s}, loc, friend); }
+              catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
+              catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
+            }
+          }
+        }
+      }
+    }
+
+    return annotated;
+  }
+
+  /**
+   * Add a pin corresponding to friend at a given location on a map.
+   *
+   * @throws NullPonterException
+   *         if friend or map is null
+   * @throws ArrayIndexOutOfBoundsException
+   *         if location is not on the map
+   */
+  protected
+  void
+  addPin
+  {               // side effects:
+    *map_update ⊓ // map contents are updated
+    *map_access   // map contents are fetched
+  }
+  (
+    final MapImage[map_update,map_access] map,
+    final label    map_update,
+    final label    map_access,
+    final Location location,
+    final UserV1   friend
+  )
+  :{*provider;*MapImage.provider;map;*map_update;friend;location}
+  throws
+  (
+    NullPointerException,
+    ArrayIndexOutOfBoundsException
+  )
+  where
+    // map contents fetched and updated based on code, arguments
+    {*provider;*MapImage.provider;location;friend;map} <= map_update,
+    {*provider;*MapImage.provider;location;friend;map} <= map_access,
+
+    // general constraint for map images
+    map_update <= map_access,
+    {_←}       <= map_access
+  {
+    if (map == null || friend == null || location == null)
+      throw new NullPointerException();
+
+    map.setAt(location.x, location.y, 'f');
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

@@ -1,0 +1,13 @@
+public class Run {
+  public static void main{}(String[] args) {
+    final User      alice = (User) worker$.getRemoteStore("snapp"    ).getRootMap().get("alice");
+    final FriendMap app   = (User) worker$.getRemoteStore("friendmap").getRootMap().get("friendmap");
+
+    app.viewMap(alice, new label {});
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

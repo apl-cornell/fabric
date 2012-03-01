@@ -1,0 +1,9 @@
+package fabil;
+
+public class Array09 {
+  void m() {
+	  byte native[] a = "test".getBytes();
+
+	  String native[] splits = "test test".split(" ");
+  }
+}

@@ -1,0 +1,28 @@
+package sif.html;
+
+/**
+ * @author andru
+ *
+ * A span is a way of attaching a CSS class to a
+ * bunch of text. This is useful for applying formatting.
+ * The assumption is that all formatting will be done
+ * through style sheets rather than explicit <b>, <i>, etc.
+ */
+public final class Span[label L, label E] extends Container[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    public Span(String{L} class_, 
+            label cL, label cE, 
+            Node[cL,cE]{L} n) where {*cL} <= L, {E; n} <= {*cE} {
+        super("span", class_, cL, cE, n);
+    }
+    /** A useful version of the constructor that
+     *  automatically constructs a text node.
+     * @param class_
+     * @param text
+     */
+      public Span(String{L} class_, String{L} text) {
+          this(class_, L, E, new Text[L,E](text));
+      }
+}

@@ -1,0 +1,41 @@
+package util;
+
+// TODO: access labels
+// TODO: comments
+
+public class GroupIterator[principal owner, label L]
+where
+  {*←owner} <= L,
+  provider <= {*←owner}
+{
+
+  /**
+   * Create a new iterator over g, which must be non-null.
+   */
+  native GroupIterator
+  (
+    Group[owner] {L} g
+  );
+
+
+  public native
+  boolean {L}
+  hasNext();
+
+
+
+  public native
+  Principal {L}
+  next
+  {   // side effects:
+    L // TODO
+  }
+  ():{L}
+  throws
+    NoSuchElementException;
+
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

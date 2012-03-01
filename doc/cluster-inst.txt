@@ -1,0 +1,15 @@
+build fabric
+download tomcat 5.5 from tomcat.apache.org
+ln -s fabric/tests/cms/web webapps/
+
+preparing the store
+==================
+in one terminal, log into cfscluster.cs.cornell.edu and execute bin/fab-store
+
+in another terminal:
+log into cfscluster...
+cluster-fork tmp/apache-tomcat-5.5.27/bin/startup.sh
+
+tomcat should be running on all nodes now.
+
+

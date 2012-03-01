@@ -1,0 +1,13 @@
+package userserv;
+
+
+public class UserWrapper[principal servP, label L] {
+    
+    public UserWrapper() {}
+
+    User[servP,{L}]{L} currentUser = null;
+    void currentUser{L}(User[servP,{L}]{L} cu) { 
+        currentUser = cu; 
+    }
+    
+}

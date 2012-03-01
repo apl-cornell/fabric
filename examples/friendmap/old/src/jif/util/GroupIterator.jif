@@ -1,0 +1,58 @@
+package util;
+
+public class GroupIterator[principal owner, label L]
+where
+  {*←owner} <= L,
+  provider <= {*←owner}
+{
+
+  private final Group[owner] {L} g;
+  private       int          {L} i;
+
+  /**
+   * Create a new iterator over g, which must be non-null.
+   */
+  GroupIterator (Group[owner]{L} g) {
+    if (g == null)
+      throw new AssertionFailedError("g must be non-null");
+
+    this.g = g;
+    this.i = 0;
+  }
+
+
+  public
+  boolean {L}
+  hasNext()
+  {
+    if (this.g == null)
+      throw new AssertionFailedError("g must be non-null");
+
+    return this.i < this.g.size;
+  }
+
+  public
+  Principal {L}
+  next {L}
+  ():{L}
+  throws NoSuchElementException
+  {
+    if (!this.hasNext())
+      throw new NoSuchElementException();
+
+    try {
+
+      return this.g.members[this.i++];
+
+    } catch (NullPointerException e) {
+      throw new AssertionFailedError("g must be non-null");
+
+    } catch (ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("this.hasNext() but index is off-the-end");
+    }
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

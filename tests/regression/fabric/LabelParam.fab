@@ -1,0 +1,5 @@
+public class LabelParam {
+	public void foo{*lbl}(label lbl) {
+		int{*lbl} x = 5;
+	}
+}

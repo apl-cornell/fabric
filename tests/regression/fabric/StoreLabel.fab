@@ -1,0 +1,16 @@
+public class StoreLabel[principal P, label L] 
+	where {P->;P<-} <= L , {*StoreLabel.provider} equiv {P->;P<-} {
+
+	final Store{P->;P<-;L} store;
+
+	public StoreLabel(Store{P->;P<-;L} store) {
+		this.store = store;
+	}
+
+    public StoreLabel[P,L] {L} makeFirstOffer {P->;P<-} () {
+		if (L <= new label {store->} &&  new label {store<-} <= L) {
+			return new StoreLabel[P,L]@store(store);
+		} else
+			throw new Error("Invalid store");
+    }
+}

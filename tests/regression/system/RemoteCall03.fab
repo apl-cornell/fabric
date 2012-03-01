@@ -1,0 +1,17 @@
+package system;
+
+public class RemoteCall03 {
+  final int{this} data = 0;
+
+  public int{*<-worker$} m1{} () {
+    return data + 1;
+  }
+  
+  public void m2{} () {
+    final RemoteWorker w = worker$.getWorker("store0");
+    if (w actsfor worker$) {
+      int x = m1@w();
+    }
+  }
+}
+

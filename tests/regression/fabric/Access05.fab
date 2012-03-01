@@ -1,0 +1,11 @@
+public class Access05[principal p, principal q] {
+    Temp[{p→}]{}@{q→} t;
+    
+    public void foo() {
+        int y = this.t.x;
+    }
+}
+
+class Temp[label A] {
+    int{}@{A} x;
+}

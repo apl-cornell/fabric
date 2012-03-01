@@ -1,0 +1,178 @@
+#!/usr/bin/env python
+
+# Runs the OO7 test.
+#
+# Usage:   runOO7 <store>
+# Example: runOO7  store0
+#
+# - creates a principal
+# - creates a OO7 database
+# - runs T1, T2, and T6 against it, hot and cold
+# - computes and reports timing information
+
+from subprocess import Popen, PIPE
+import sys
+import re
+
+def main():
+	global categories, store, worker, size, overhead
+
+	store   = sys.argv[1]
+	worker = "worker"
+	size   = "tiny"
+
+	print "===== Finding categories ======"
+	result     = sh( "bin/fab --time", PIPE )
+	categories = result.split("\n")[1].split(", ")
+	categories.remove("all")
+	print categories
+
+	print "===== Computing timing overhead ====="
+	result     = sh( "bin/calibrate" )
+	overhead   = float(result)
+	print overhead, " ms"
+
+	for size,hot in (("small", True), ("medium", False)):
+		print "===== Creating database  ====="
+		result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=fabric.dissemination.DummyFetchManager --name %s --time all OO7.Benchmark     fab://%s/OO7 %s 3" % (worker, store, size) )
+
+		for traversal in ("T1", "T6"):
+			print "===== Executing %3s ===========" % traversal
+			runTraversal(traversal,False, hot, True)
+			runTraversal(traversal, True, hot, True)
+
+		
+		print "===== Executing T2b ==========="
+		runTraversal("T2b", True, False, False)
+
+	print "===== Raw Data ================"
+	for test in names:
+		print test, "no timing"
+		total = sum(untimed[test]) / len(untimed[test])
+		print "    %s" % ', '.join([str(t) for t in untimed[test]])
+		print "    %d" % total
+
+		print test, "timing enabled"
+		for cat in categories:
+			for run in timed[test]:
+				alpha, catNoTiming = computeCatTime(run.time, run.categories[cat], run.count, total)
+				print "    %-7s %6d / %6d with %8d measurements ==> %5d (%5.4f)" % (cat + ":", run.categories[cat], run.time, run.count, catNoTiming, alpha)
+
+
+	print "===== Report =================="
+	out =    "%15s & Total time (ms)" % ''
+	for cat in categories:
+		out += " & \multicolumn{2}{c}{%6s}" % cat
+
+	for test in names:
+		runs    = timed[test]
+		num     = len(runs)
+		average = sum([run.time for run in runs]) / num
+		out += "\n%-15s & %15d" % (test, average)
+		for cat in categories:
+			time = sum([run.categories[cat] for run in runs]) / num
+			out += " & %8d           & %3d\\%%" % (time, time * 100 / average)
+
+	print out
+
+# name -> [time]
+untimed = {}
+# name -> [TimedRun]
+timed   = {}
+# [name]
+names   = []
+
+# cat->time, count, time
+class TimedRun():
+	def __init__(self, lines):
+		self.categories = {}
+		for line in lines[:-1]:
+			match = catExpr.match(line)
+			self.categories[match.group("cat")] = int(match.group("time"))
+
+		match = totExpr.match(lines[-1])
+		self.count = int(match.group("count"))
+		self.time  = int(match.group("time"))
+
+
+catExpr = re.compile(r" *(?P<cat>.+):\s*(?P<time>\d+) ms\Z")
+totExpr = re.compile(r" Total: +(?P<time>\d+) ms \((?P<count>\d+) +measurements\)\Z")
+
+def runTraversal(traversal, dissem, hot, repeat):
+	if dissem:
+		dissemStr = "w/ dissem"
+		dissemCls = "fabric.dissemination.pastry.PastryFetchManager"
+	else:
+		dissemStr = "no dissem"
+		dissemCls = "fabric.dissemination.DummyFetchManager"
+
+	if hot:
+		hotStr = "--hot 1"
+	else:
+		hotStr = ""
+
+	coldname  = traversal + " " + size + " cold" + dissemStr
+	hotname   = traversal + " " + size + " hot " + dissemStr
+
+	names.append(coldname)
+	names.append(hotname)
+
+	timed[coldname] = []
+	timed[hotname]  = []
+
+	untimed[coldname] = []
+	untimed[hotname]  = []
+
+	if repeat:
+		# run 3 times with timing on.
+		for i in range(3):
+			result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=%s --name %s --time all OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, worker, traversal, store, hotStr) )
+			lines  = result.split("\n")
+
+			timed[coldname].append(TimedRun(lines[2:10]))
+
+			if hot:
+				timed[ hotname].append(TimedRun(lines[13:21]))
+
+
+		# run 3 times with timing off, collect total time
+		for i in range(3):
+			result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=%s --name %s            OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, worker, traversal, store, hotStr) )
+			lines  = result.split("\n")
+
+			match  = totExpr.match(lines[2])
+			untimed[coldname].append(int(match.group("time")))
+
+			if hot:
+				match  = totExpr.match(lines[6])
+				untimed[hotname ].append(int(match.group("time")))
+	else:
+		# run T2* only once
+		result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=%s --name %s --time all OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, worker, traversal, store, hotStr) )
+		lines  = result.split("\n")
+
+		timed[coldname].append(TimedRun(lines[2:10]))
+		if hot:
+			timed[ hotname].append(TimedRun(lines[13:21]))
+
+		untimed[coldname].append(1000)
+		if hot:
+			untimed[coldname].append(1000)
+
+
+def computeCatTime(totalWithTiming, catWithTiming, count, totalWithoutTiming):
+	global overhead, categories
+	alpha = (totalWithTiming - count * overhead) / totalWithoutTiming - 1
+	catWithoutTiming = (catWithTiming - count * overhead / len(categories)) / (1 + alpha)
+
+	return alpha, catWithoutTiming
+
+def sh(cmd, stderr = None):
+	print ">> ", cmd
+	result = Popen(cmd, stdout=PIPE, stderr=stderr, shell=True).communicate()[0]
+	print  result
+	return result
+
+if __name__ == '__main__':
+	main()
+

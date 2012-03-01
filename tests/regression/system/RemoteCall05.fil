@@ -1,0 +1,59 @@
+package system;
+
+public class RemoteCall05 {
+  int i = 0;
+
+  public void f_store0(int n) {
+    if (n <= 0) return;
+
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker("store0");
+    f_worker0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
+    f_worker0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
+    i = i + n;
+  }
+
+  public void f_store0_remote(fabric.lang.security.Principal p, int n) {
+    f_store0(n);
+  }
+
+  public void f_worker0(int n) {
+    if (n <= 0) return;
+
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker("worker0");
+    i = i + n;
+    f_store0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
+    f_store0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
+  }
+
+  public void f_worker0_remote(fabric.lang.security.Principal p, int n) {
+    f_worker0(n);
+  }
+
+  public static void main(String[] args) {
+    Store store = Worker.getWorker().getStore("store0");
+    RemoteCall05 t = null;
+    int result1 = 0;
+    atomic {
+      t = new RemoteCall05@store();
+      t.f_store0(5);
+      result1 = t.i;
+    }
+
+    int result2 = 0;
+    atomic {
+      result2 = t.i;
+    }
+
+    if (result1 == 57 && result2 == 57)
+      System.out.println("TEST PASSED.");
+    else {
+      if (result1 != 57)
+	System.out.println("TEST FAILED: expected result1 == 57 but got "
+	  + result1);
+      if (result2 != 57)
+	System.out.println("TEST FAILED: expected result2 == 57 but got "
+	  + result2);
+    }
+  }
+}
+

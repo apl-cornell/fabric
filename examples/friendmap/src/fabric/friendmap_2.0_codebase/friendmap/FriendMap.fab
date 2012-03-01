@@ -1,0 +1,81 @@
+package friendmap;
+
+codebase snapp1;
+codebase fm1;
+
+import mapserv.MapServer;
+import mapserv.MapImage;
+import mapserv.Box;
+
+import snapp.User;
+import snapp.Location;
+
+public class FriendMap
+extends fm1.FriendMap
+where
+  fm1.FriendMap.provider <= provider,          provider          <= fm1.FriendMap.provider,
+  MapServer.provider     <= MapImage.provider, MapImage.provider <= MapServer.provider,
+  MapServer.provider     <= Box.provider,      Box.provider      <= MapServer.provider
+{
+  public
+  FriendMap {this}
+  (
+    MapServer {this} service
+  )
+  throws
+    NullPointerException
+  where
+    provider <= {this}
+  {
+    super(service);
+  }
+
+
+  protected
+  void
+  addPin
+  {               // side effects:
+    *map_update ⊓ // map contents are updated
+    *map_access   // map contents are fetched
+  }
+  (
+    final MapImage[map_update,map_access] map,
+    final label    map_update,
+    final label    map_access,
+    final Location location,
+    final UserV1   friend
+  )
+  throws
+  (
+    NullPointerException           {*provider; map; friend},
+    ArrayIndexOutOfBoundsException {location}
+  )
+  where
+    // map contents fetched and updated based on code, arguments
+    {*provider;*MapImage.provider;location;friend;map} <= map_update,
+    {*provider;*MapImage.provider;location;friend;map} <= map_access
+  {
+    if (map == null || friend == null || location == null)
+      throw new NullPointerException();
+
+    char annotation = 'f';
+
+    if (friend instanceof snapp2.User)
+    {
+      final snapp2.User friend2 = (snapp2.User) friend;
+      if (friendV2.moodLabel <= map_update) {
+        try { annotation = friendV2.mood.description.charAt(0); }
+        catch (final NullPointerException e)            { /* Do nothing */ }
+        catch (final StringIndexOutOfBoundsException e) { /* Do nothing */ }
+      }
+    }
+
+    map.setAt(location.x, location.y, annotation);
+  }
+
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

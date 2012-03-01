@@ -1,0 +1,39 @@
+package fabric.lang.security;
+
+import java.util.Set;
+
+/**
+ * This code is mostly copied from Jif.
+ */
+public final class DelegatesProof extends ActsForProof {
+  public DelegatesProof(Principal actor, Principal granter) {
+    super(actor, granter);
+  }
+
+  public void gatherDelegationDependencies(Set s) {
+    // don't count delegations from "p" to "p and ..." or delegations from
+    // con/dis-junctive principals
+
+    if (getGranter() instanceof DisjunctivePrincipal
+        || getGranter() instanceof ConjunctivePrincipal) {
+      return;
+    }
+
+    if (getActor() instanceof ConjunctivePrincipal
+        && ((ConjunctivePrincipal) getActor()).conjuncts.contains(getGranter())) {
+      return;
+    }
+
+    s.add(new SecurityCache.DelegationPair(getActor(), getGranter()));
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
+}

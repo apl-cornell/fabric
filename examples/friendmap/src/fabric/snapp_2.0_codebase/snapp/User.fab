@@ -1,0 +1,50 @@
+package snapp;
+
+codebase snapp1;
+
+import util.Group;
+import util.AssertionFailedError;
+
+/**
+ * Version 2 of the User class.  Adds moods.
+ */
+public class User extends snapp1.User
+where
+  provider <= snapp1.User.provider, snapp1.User.provider <= provider,
+  provider <= Snapp.provider,             Snapp.provider <= provider,
+  provider <= Mood.provider,               Mood.provider <= provider
+{
+  public Mood {*moodLabel} mood;
+
+  public final Group [this] {this} moodInfo;
+
+  public final label {this} moodLabel;
+
+  public
+  UserV2 {this}
+  (
+    String    {this} name,
+    principal {this} owner,
+    Snapp     {this} network
+  )
+  throws NullPointerException
+  where
+    provider <= {this},
+    {this}   <= {owner,network←; owner&network→}
+  {
+    this.moodInfo   = new Group[this] (name + "'s mood readers");
+    this.moodLabel  = new label {this←; this.moodInfo→};
+
+    super(name, owner, network);
+
+    if (new label {owner,network←; owner&network→} <= this.moodLabel)
+      this.mood       = new Mood("indecisive");
+    else
+      throw new AssertionFailedError("owner and network can update the mood");
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

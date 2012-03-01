@@ -1,0 +1,1 @@
+mount -t nfs -o mountvers=1 -o udp -o nfsvers=2 -o mountport=2049 host:/ /mount/point

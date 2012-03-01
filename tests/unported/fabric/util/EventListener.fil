@@ -1,0 +1,16 @@
+package fabric.util;
+
+/**
+ * Empty interface that is implemented by classes that need to receive
+ * events. Subinterfaces define methods that can be called to fire an
+ * event notification. Normally the name of these subinterfaces end in
+ * <code>Listener</code> and all method described by the subinterface
+ * take as argument an subclass of <code>EventObject</code>.
+ *
+ * @author Tom Tromey (tromey@cygnus.com)
+ * @see EventObject
+ * @status updated to 1.4
+ */
+public interface EventListener
+{
+}

@@ -1,0 +1,200 @@
+#!/bin/bash
+
+# Creates a key pair and certificate-signing request for a Fabric node.
+
+source "$(dirname "$0")/defs"
+
+DEFAULT_KEYSIZE=2048
+
+function usage() {
+  cat >&2 <<EOF
+Usage: $(basename "$0") [options]
+
+  Creates a key pair and certificate-signing request for a Fabric node.
+
+Options:
+  --hostname name
+      the DNS hostname of the node for which the key pair is to be made.
+      Default: ${HOSTNAME:-\$HOSTNAME}
+
+  --keysize bits
+      the length of the node's private key. Default: ${DEFAULT_KEYSIZE}
+
+  --keystore filename
+      the keystore to which the new key pair is to be added. The keystore will
+      be created if it does not exist.
+      Default: ${TOP}/etc/keys/HOSTNAME.keystore
+
+  --pass password
+      the password for the keystore. This must be at least six characters long.
+      If this is not provided on the command line, the user will be prompted
+      for the password.
+
+  --csr filename
+      the filename to which the certificate-signing request will be written.
+      Default: ${TOP}/etc/csr/HOSTNAME.csr
+
+  The following are optional. If not specified, they will be left blank.
+
+  --c country
+      the C component of the node's Distinguished Name. This is usually your
+      country's two-letter code.
+
+  --st state_or_province
+      the ST component of the node's Distinguished Name. This is usually the
+      full name of your state or province.
+
+  --l locality_or_city
+      the L component of the node's Distinguished Name. This is usually the
+      name of your city.
+
+  --o organization
+      the O component of the node's Distinguised Name. This is usually the name
+      of your organization or company.
+
+  --ou organizational_unit_name
+      the OU component of the node's Distinguished Name. This is usually the
+      name of your organizational unit within your organization or company.
+EOF
+  exit 1
+}
+
+function error() {
+  echo "$(basename "$0")": "$@" >&2
+  echo "Try \`$(basename "$0") --help' for more information" >&2
+  exit 1
+}
+
+function noArg() {
+  error "Missing argument to --$1 option."
+}
+
+KEYSIZE="${DEFAULT_KEYSIZE}"
+
+while true; do
+  case "$1" in
+    "") break ;;
+    --hostname)
+      shift
+      HOSTNAME="$1"
+      shift || noArg hostname
+      ;;
+    --keysize)
+      shift
+      KEYSIZE="$1"
+      shift || noArg keysize
+      ;;
+    --keystore)
+      shift
+      KEYSTORE="$1"
+      shift || noArg keystore
+      ;;
+    --pass)
+      shift
+      PASSWD="$1"
+      shift || noArg pass
+      ;;
+    --csr)
+      shift
+      CSR="$1"
+      shift || noArg csr
+      ;;
+    --c)
+      shift
+      C="$1"
+      shift || noArg c
+      ;;
+    --st)
+      shift
+      ST="$1"
+      shift || noArg st
+      ;;
+    --l)
+      shift
+      L="$1"
+      shift || noArg l
+      ;;
+    --o)
+      shift
+      O="$1"
+      shift || noArg o
+      ;;
+    --ou)
+      shift
+      OU="$1"
+      shift || noArg ou
+      ;;
+    -h|--help|-\?)
+      usage
+      ;;
+    -*)
+      error "Invalid option: $1"
+      ;;
+    *)
+      error "Invalid argument: $1"
+  esac
+done
+
+[[ -z "${HOSTNAME}" ]] && error Must specify a hostname.
+
+# Assign default values to unspecified options.
+[[ -z "${KEYSTORE}" ]] && KEYSTORE="${TOP}/etc/keys/${HOSTNAME}.keystore"
+
+if [[ -z "${CSR}" ]] ; then
+  CSR="${TOP}/etc/csr/${HOSTNAME}.csr"
+  mkdir -p "${TOP}/etc/csr"
+fi
+
+# Construct the DN.
+DN="CN=${HOSTNAME}"
+[[ -n "${OU}" ]] && DN="${DN}, OU=${OU}"
+[[ -n "${O}" ]] && DN="${DN}, O=${O}"
+[[ -n "${L}" ]] && DN="${DN}, L=${L}"
+[[ -n "${ST}" ]] && DN="${DN}, ST=${ST}"
+[[ -n "${C}" ]] && DN="${DN}, C=${C}"
+
+# If necessary, ask for the keystore password.
+while [[ -z "${PASSWD}" ]] ; do
+  while true ; do
+    echo -n "Enter keystore password: "
+    stty -echo
+    read -r PASSWD
+    stty echo
+    echo
+
+    [[ $(echo -n "${PASSWD}" | wc -c) -ge 6 ]] && break
+    echo Keystore password is too short - must be at least 6 characters
+  done
+
+  if [[ ! -f "${KEYSTORE}" ]] ; then
+    # Creating a new keystore. Verify the password.
+    echo -n "Verify new keystore password: "
+    stty -echo
+    read -r PASSWD_CONFIRM
+    stty echo
+    echo
+
+    if [[ "${PASSWD}" != "${PASSWD_CONFIRM}" ]] ; then
+      echo "Passwords do not match."
+      PASSWD=
+    fi
+  fi
+
+  echo
+done
+
+# Generate the key pair.
+keytool -genkeypair -alias "${HOSTNAME}" -keyalg rsa -keysize "${KEYSIZE}" \
+  -keypass "${PASSWD}" -dname "${DN}" -keystore "${KEYSTORE}" \
+  -storepass "${PASSWD}" || exit 1
+
+# Generate the CSR.
+keytool -certreq -alias "${HOSTNAME}" -file "${CSR}" -keystore "${KEYSTORE}" \
+  -storepass "${PASSWD}" || exit 1
+
+cat <<EOF
+CSR saved in ${CSR}
+
+Copy this file to your CA and run the \`ca-sign' script there.
+EOF
+

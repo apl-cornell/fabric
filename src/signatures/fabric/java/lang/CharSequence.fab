@@ -1,0 +1,16 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+public interface CharSequence {
+    static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    int{this} length();
+    char{this;index} charAt(int index) throws (IndexOutOfBoundsException{this;index});
+    CharSequence{this;start;end} subSequence(int start, int end)  throws (IndexOutOfBoundsException{this;start;end});
+    public String{this} toString();
+
+}

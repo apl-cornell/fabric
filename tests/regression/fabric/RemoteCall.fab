@@ -1,0 +1,15 @@
+public class RemoteCall {
+    public static void main{⊤←}(String[] args) {
+        atomic {
+            FabricWorker local = FabricWorker.getWorker();
+            if (local == null) return;
+            final RemoteWorker w = local.getWorker("bob");
+            if (w == null) return;
+            final Store gaia = local.getStore("gaia.systems.cs.cornell.edu");
+            final principal alice = local.getPrincipal();
+            final principal bob = w.getPrincipal();
+            RemoteCallImpl[alice, bob] call = new RemoteCallImpl[alice, bob]@gaia();
+            call.m2();
+        }
+    }
+}

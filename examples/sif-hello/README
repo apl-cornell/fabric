@@ -1,0 +1,54 @@
+Hello World Webapp Example
+==========================
+
+This is a simple web service example, built using Fabric and the
+Fabric port of the Servlets with Information Flow (SIF) library [1].
+This webapp is standalone, so it can be started without any extra
+programs.
+
+This directory contains the following sub-directories:
+
+  - src: source code for the example, written in Fabric
+  - bin: a collection of scripts for running the example
+  - etc: configuration files for the example's store and worker
+  - web: web server configuration information
+
+
+Compiling
+---------
+To build the example, run 'ant' in the OO7 example directory:
+
+  $ ant
+
+
+Using
+-----
+This example comes with a store named "backend" for storing
+persistent data, and a worker named "webserver" that provides the
+web-based user interface.
+
+  0. Begin in the sif-hello example directory:
+
+        $ cd $FABRIC/examples/sif-hello
+
+  1. Start the "backend" store:
+
+        $ bin/start-store
+
+  2. Start the web-server:
+
+        $ bin/start-webapp
+
+  3. Point your favorite web browser to http://localhost:8080/hello
+
+  4. You can clean up the store's persistent state by removing the
+     'var' directory:
+
+        $ rm -rf var
+
+
+References
+----------
+[1] Stephen Chong, K. Vikram, Andrew C. Myers.  SIF: Enforcing
+    Confidentiality and Integrity in Web Applications.  Proc. USENIX
+    Security Symposium 2007, pages 1–16, August 2007.

@@ -1,0 +1,16 @@
+public class Init {
+  public static void main(String[] args) {
+    final Store     store   = worker$.getRemoteStore("friendmap");
+    final MapServer mapserv = (MapServer) worker$.getRemoteStore("mapserv").getRootMap().get("mapserv");
+
+    final FriendMap app = new FriendMap(mapserv);
+    store.getRootMap().put("friendmap", app);
+  }
+}
+
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+

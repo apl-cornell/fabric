@@ -1,0 +1,7 @@
+package fabil;
+
+class Wrap02 {
+	void f() {
+		Object o = "foo";
+	}
+}

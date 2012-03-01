@@ -1,0 +1,12 @@
+ package sif.html;
+
+public final class Body[label L, label E] extends BlockContainer[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    public Body(label cL, label cE, 
+                Node[cL,cE]{L} contents) 
+    where {*cL} <= L, {E; contents} <= {*cE}  {
+        super("body", cL, cE, contents);
+    }
+}

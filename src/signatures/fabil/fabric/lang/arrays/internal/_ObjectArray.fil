@@ -1,0 +1,13 @@
+package fabric.lang.arrays.internal;
+
+public class _ObjectArray {
+  public native Object set(int i, Object value);
+
+  public native Object get(int i);
+
+  public _ObjectArray(Label updateLabel, ConfPolicy accessPolicy, Class proxyType, int length) {
+  }
+
+  public _ObjectArray(Label updateLabel, ConfPolicy accessPolicy, Class proxyType, Object native[] value) {
+  }
+}

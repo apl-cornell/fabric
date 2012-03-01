@@ -1,0 +1,27 @@
+package fabric.lang.security;
+
+/**
+ * This code is mostly copied from Jif. See the documentation for the Jif source
+ * file, $JIF/sig-src/jif/lang/Principal.jif.
+ */
+public abstract class Principal {
+  /**
+   * Jif initializer.
+   */
+  public native Principal fabric$lang$security$Principal$();
+
+  public abstract String name();
+
+  public abstract boolean delegatesTo(final Principal p);
+
+  public abstract boolean equals(final Principal p);
+
+  public abstract boolean isAuthorized(final java.lang.Object authPrf,
+      final Closure closure, final Label lb, final boolean executeNow);
+
+  public abstract ActsForProof findProofUpto(final Store store,
+      final Principal p, final java.lang.Object searchState);
+
+  public abstract ActsForProof findProofDownto(final Store store,
+      final Principal q, final java.lang.Object searchState);
+}

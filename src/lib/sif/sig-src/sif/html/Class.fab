@@ -1,0 +1,18 @@
+package sif.html;
+
+/**
+ * 
+ */
+public final class Class[label L, label E] extends Node[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    private final String{L} class_;
+    
+    public Class(String{L} c, 
+                label cL, label cE,
+                    Node[cL,cE]{L} n) where {*cL} <= L, {E; n} <= {*cE} {
+        super();
+        class_ = c;
+    }        
+}

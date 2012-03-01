@@ -1,0 +1,18 @@
+public class Init {
+  public static void main(String[] args) {
+    final Store store = worker$.getRemoteStore("snapp");
+    final Snapp snapp = (Snapp) store.getRootMap().get("snapp");
+    final User  alice = snapp.createUser("Alice", worker$);
+
+    store.getRootMap().put("alice", alice);
+
+    final MapService mapserv = worker$.getRemoteStore("mapserv").getRootMap().get("mapserv");
+    alice.locationInfo.add(mapserv);
+  }
+
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

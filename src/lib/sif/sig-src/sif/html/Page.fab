@@ -1,0 +1,19 @@
+package sif.html;
+
+/**
+ * A Page is an entire HTML page.
+ * @author andru
+ */
+public final class Page[label L, label E] extends Node[L,E] {
+	private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+	private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+	// No constructor visible! Must use Servlet.createPage
+	private Page(label hL, label hE, label bL, label bE,
+			Head[hL, hE]{L} h, 
+			Body[bL, bE]{L} b) 
+	where {*hL;*bL} <= L, {E; h} <= {*hE}, {E; b} <= {*bE} {
+		super();
+	}
+
+}

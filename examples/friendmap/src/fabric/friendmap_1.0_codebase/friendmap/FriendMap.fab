@@ -1,0 +1,538 @@
+package friendmap;
+
+import java.io.PrintStream;
+
+import fabric.runtime.Runtime;
+
+import mapserv.MapServer;
+import mapserv.MapImage;
+import mapserv.Box;
+
+import snapp.User;
+import snapp.Location;
+import snapp.UserWrapper;
+
+import util.GroupIterator;
+import util.Delegator;
+import util.AssertionFailedError;
+import util.NoSuchElementException;
+import util.Util;
+import util.System;
+
+// TODO: label documentation
+
+/**
+ * This is the mapping application.  A FriendMap is instantiated with a particular
+ * mapping service, and then can be run by any User to generate private or
+ * public output maps.
+ */
+public class FriendMap[label A]
+where
+  MapServer.provider <= MapImage.provider, MapImage.provider <= MapServer.provider,
+  MapServer.provider <= Box.provider,      Box.provider      <= MapServer.provider,
+
+  // code is public
+  provider <= {_→},
+
+  util.Group.provider         <= {*←}, {_→} <= util.Group.provider,
+  util.GroupIterator.provider <= {*←}, {_→} <= util.GroupIterator.provider
+{
+
+  /** The map service that this app uses to fetch maps.  Must be non-null. */
+  public final MapServer {this}@{A} service;
+
+  /**
+   * Create a new instance of the mapping service.
+   *
+   * @throws NullPointerException
+   *         if service is null.
+   */
+  public
+  FriendMap
+  {      // side effects:
+    this // TODO
+  }
+  (
+    MapServer {this} service
+  )
+  throws
+    NullPointerException
+  where
+    provider <= {this}
+  {
+    if (service == null)
+      throw new NullPointerException();
+
+    this.service = service;
+  }
+
+//   /**
+//    * prints a map of the user's friends, visible to the user
+//    *
+//    * @throws NullPointerException
+//    *         if user is null.
+//    * @throws SecurityException
+//    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+//    */
+//   public
+//   void
+//   viewMap
+//   {                    // side effects:
+//     {*→owner}        ⊓ // information is output to owner
+//     {*→service}      ⊓ // map service is contacted
+//     {*→user.friends}   // user's friends are fetched
+//   }
+//   (
+//     User[owner,n] user,
+//     principal     owner,
+//     principal     n
+//   )
+//   where
+//     // the map will be output on standard out
+//     worker$ actsfor owner,
+// 
+//     // these affect the fetch and resulting map
+//     {*provider; *MapServer.provider} <= {*→owner},
+//     {*provider; *MapServer.provider} <= {*→service}
+//   {
+//     printMap(user, owner, n, new label {*→owner});
+//   }
+// 
+//   /**
+//    * prints a map of the user's friends, visible to the user's friends
+//    *
+//    * @throws NullPointerException
+//    *         if user is null.
+//    * @throws SecurityException
+//    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+//    */
+//   public
+//   void
+//   postMap
+//   {                    // side effects:
+//     {*→user.friends} ⊓ // user's wall is updated; user's friends are fetched
+//     {*→service}        // map is fetched
+//   }
+//   (
+//     final User[owner,n] user,
+//     final principal     owner,
+//     final principal     n
+//   )
+//   throws
+//   (
+//     NullPointerException {user}
+//   )
+//   where
+//     worker$ actsfor owner,
+//     owner   actsfor user.friends,
+// 
+//     // these affect the fetch and resulting map.
+//     {*provider; *MapServer.provider} <= {*→user.friends},
+//     {*provider; *MapServer.provider} <= {*→service}
+//   {
+//     if (user == null)
+//       throw new NullPointerException();
+// 
+//     printMap(user, owner, n, new label {*→user.friends});
+//   }
+// 
+// 
+//   /**
+//    * Helper method that gets the map and prints it out.
+//    *
+//    * @throws NullPointerException
+//    *         if user is null.
+//    * @throws SecurityException
+//    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+//    */
+//   private
+//   void
+//   printMap
+//   {                    // side effects
+//     {*lbl}           ⊓ // output on lbl channel
+//     {*→service}      ⊓ // map service is contacted
+//     {*→user.friends}   // user's friends are fetched
+//   }
+//   (
+//     final User[owner,n] user,
+//     final principal     owner,
+//     final principal     n,
+//     final label         lbl
+//   )
+//   throws
+//   (
+//     NullPointerException {user}
+//   )
+//   where
+//     {*←service; *←owner} <= lbl,         // because the service and the user influence the map.
+//     lbl                  <= {*→worker$}, // because data will be output to the system user
+// 
+//     // these components affect the fetches and constructed map 
+//     {user; lbl; *provider; *MapServer.provider} <= {*lbl},
+//     {user; lbl; *provider; *MapServer.provider} <= {*→service},
+//     {user; lbl; *provider; *MapServer.provider} <= {*→user.friends} // TODO: this seems wrong.
+//   {
+//     if (user == null)
+//       throw new NullPointerException();
+// 
+//     final Store localStore = worker$.getLocalStore();
+// 
+//     MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n);
+//     PrintStream[lbl] out = System.stdout(lbl);
+// 
+//     if (result == null)                                             { throw new AssertionFailedError("createMap() returns a non-null value."); }
+//     try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("System.stdout must return a non-null value"); }
+//   }
+// 
+// 
+//   /**
+//    * creates a map of the user's friends, visible at label l.  Return value is non-null.
+//    *
+//    * @throws NullPointerException
+//    *         if user is null.
+//    */
+//   public
+//   MapImage[l,{*→s}] {*l}
+//   createMap
+//   {                    // side effects:
+//     {A}              ⊓ // this is fetched
+//     {*l}             ⊓ // result map is updated
+//     {*→service}      ⊓ // initial map is fetched
+//     {*→user.friends} ⊓ // user's friends are fetched
+//     {*→s}              // result is created at s
+//   }
+//   (
+//     final label  l,
+//     final Store  s,
+//     final User[o,n] user,
+//     final principal o,
+//     final principal n
+//   )
+//   throws
+//   (
+//     NullPointerException{user}
+//   )
+//   where
+//     {*←s} <= l, l <= {*→s}, {*→s} <= {*→s}, // TODO: s ≽ l@{s→}: result created at s
+//     {*←service} <= l, // the result is tainted by the service
+//     {*←user.p}  <= l, // the result is tainted by the user
+// 
+//     // the arguments and code can affect the fetches and the return value
+//     {user; l; s; *provider; *MapServer.provider} <= {*l},
+//     {user; l; s; *provider; *MapServer.provider} <= {*→service},
+//     {user; l; s; *provider; *MapServer.provider} <= {*→user.friends}
+//   {
+//     // invariant checks
+//     if (user == null)
+//       throw new NullPointerException();
+//     if (user.friends == null)
+//       throw new AssertionFailedError("user.friends must be non-null");
+//     if (this.service == null)
+//       throw new AssertionFailedError("service must be non-null");
+// 
+//     final Store fetchStore = service.store;
+//     final Store localStore = s;
+// 
+//     // this is the label of the data that gets sent to the service
+//     final label fetchLabel   = new label {{*l} meet {*→service}}; // TODO @store
+// 
+//     // compute bounding box
+//     final Box boundary = createBoundingBox(user, o, n, fetchLabel, fetchStore);
+// 
+//     // get map
+//     MapImage[fetchLabel,{*→service}] _map;
+//     try {
+//       _map = this.service.createMap(fetchLabel, new label {*→service}, boundary);
+//     } catch (final NullPointerException e) {
+//       throw new AssertionFailedError("boundary is non-null.");
+//     }
+//     final MapImage[fetchLabel,{*→service}] map = _map;
+//     if (map == null)
+//       throw new AssertionFailedError("getMap returned null");
+// 
+//     // make a local copy (with label l)
+//     // TODO: s ≽ l
+//     MapImage[l,{*→s}] annotated = map.copy(l, new label{*→s}, s);
+//     /*
+//     TODO
+//     if (new label {localStore←} <= l &&
+//             l <= new label {localStore→} &&
+//             l <= new label {⊤→localStore} &&
+//             Box.provider <= new label {⊤→localStore} &&
+//             new label {⊤←localStore} <= l &&
+//             new label {⊤←localStore} <= Box.provider
+//             )  // localStore ≽ ℓ
+//       annotated = map.copy(l, localStore);
+//     else
+//       throw new AssertionFailedError("local store does not act for l");
+//     */
+// 
+//     return annotated;
+//   }
+
+
+
+
+  /**
+   * compute the bounding box containing the locations of all of the user's
+   * friends whose locations are visible at label l.
+   *
+   * @param user
+   *              the user whose friends should be bounded
+   * @param l
+   *              the label of the result, and the bound on the friends included
+   * @param s
+   *              the store to create the result on
+   */
+  protected
+  Box[l,{*→s}] {*l}
+  createBoundingBox
+  {         // side effects:
+    {A}   ⊓ // this is fetched
+    {*l}  ⊓ // box is updated
+    {*→s} ⊓ // box is created
+    {*→n} ⊓ // user is fetched
+    {_→_}   // user's friends are fetched (and they are principals)
+  }
+  (
+    final User[o,n] user,
+    final principal o,
+    final principal n,
+
+    final label l,
+    final Store s
+  )
+  where
+    // result is created at s.
+    l <= {*→s}, {*←s} <= l, // TODO: s ≽ l
+
+    // result box is affected by user's friends list
+    {user}         <= l,
+    {_→; *←(n,o)}  <= l, // user.friends
+    {_→; *←user.p} <= l, // user.friends.members
+
+    // result box affected by code
+    {*Box.provider; *provider} <= l,
+
+    // result box affected by label and store
+    {l; s} <= l,
+
+    // accesses to user's friends affected by the code and the user
+    {*provider; user} <= {*→n},
+    {*provider; user} <= {_→_}
+  {
+    // TODO: remove local variable annotations.
+    final Box[l, {*→s}] {*l} boundary = new Box[l, {*→s}]@s(0,0,0,0);
+
+    final Store localStore = worker$.getLocalStore();
+    final label pub = new label {_→};
+    final GroupIterator[user.p, pub] i = user.friends.iterator(localStore, pub);
+    if (i == null)
+      throw new AssertionFailedError("Group.iterator() should return a non-null value");
+    while (i.hasNext()) {
+      Principal next;
+      try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");}
+
+      if (next instanceof UserWrapper[{*→user.friends}]) {
+        final UserWrapper[{*→user.friends}] fw = (UserWrapper[{*→user.friends}]) next;
+        final principal                     fo = fw.userOwner;
+        final principal                     fn = fw.userNetwork;
+
+        final User[fo,fn] friend = fw.user;
+        if (friend == null) throw new AssertionFailedError("UserWrapper only wraps non-null users.");
+
+
+        // if we don't mind leaking information to the friend's network, and
+        // if the friend doesn't mind his location leaking to the map service,
+        // then we expand the bounding box to contain him
+        if (l <= new label {*→fn}) {                                       // access label
+          if (new label {_→; *←fo,fn} <= l && friend.locationLabel <= l) { // update labels
+            final Location {_→; *←n,o; *←fn,fo} loc = friend.location;
+            if (loc != null) {
+              try { boundary.expand(loc.x, loc.y); }
+              catch (final NullPointerException e) { throw new AssertionFailedError("boundary is non-null."); }
+            }
+          }
+        }
+
+        // TODO: declassifiers
+        else {
+        }
+
+        // otherwise we leave him off the map.
+      }
+    }
+
+    return boundary;
+  }
+
+
+
+
+  /**
+   * Add a pin corresponding to each of the user's friend to the given map,
+   * provided that doing so would not violate information flow constraints.
+   *
+   * @param user
+   *             the user whose friends should be added to the map.  Assumed to be non-null.
+   *
+   * @param map
+   *             the map to be updated.  Assumed to be non-null.
+   */
+  protected
+  void
+  annotateMap
+  {                 // side effects:
+    {*→n}         ⊓ // user is fetched
+    {_→_}         ⊓ // user's friends are fetched
+    {*map_access} ⊓ // map is fetched
+    {*map_update}   // map is updated
+  }
+  (
+    final User[o,n] user,
+    final principal o,
+    final principal n,
+
+    final MapImage[map_update, map_access] map,
+    final label map_update,
+    final label map_access
+  )
+  where
+    // user fetch
+    {*provider;user; map_update} <= {*→n},
+    // friend fetch
+    {*provider;user; map_update} <= {_→_},
+    // map access
+    {*provider;*MapImage.provider; user; map_update; _→_; *←n,o; map} <= {*map_access},
+    // map update
+    {*provider;*MapImage.provider; user; map_update; _→_; *←n,o; map} <= {*map_update},
+
+    // objects are created on the local store.
+    {*←worker$} <= map_update, map_update <= {*→worker$}, // TODO: worker$ ≽ map_update
+
+    // general access policy invariants
+    {_←}          <= {*map_access},
+    {*map_update} <= {*map_access},
+
+    // user invariants
+    user.p equiv (n,o)
+  {
+    if (map == null) throw new AssertionFailedError("MapImage.copy return value should be non-null");
+
+    final Store local = worker$.getLocalStore();
+    if (local equiv worker$) {
+
+    final label box_u = map_update;
+    final label box_a = new label {*→local};
+
+    final Box[box_u,box_a] boundary = map.getBoundary(box_u, box_a, local);
+
+    final label friendsLabel = new label {_→; *←n,o};
+    final GroupIterator[user.p, friendsLabel] j = user.friends.iterator(worker$.getLocalStore(), friendsLabel);
+    if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
+
+    while (j.hasNext()) {
+      Principal next;
+      try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("if j.hasNext() then j.next() should return normally."); }
+      if (next instanceof UserWrapper[{*→user.friends}]) {
+        // add friend to the map if possible
+
+        final UserWrapper[{*→user.friends}] fw = (UserWrapper[{*→user.friends}]) next;
+        final principal                     fo = fw.userOwner;
+        final principal                     fn = fw.userNetwork;
+
+        final User[fo,fn]   friend = fw.user;
+        if (friend == null) throw new AssertionFailedError("UserWrapper only wraps non-null users.");
+
+        final Location[friend.locationLabel, {*→fn}] loc = friend.location;
+
+        // we can access the location without leaking our set of friends or those friends' locations
+        if (new label {*map_update; *friendsLabel} <= new label {*→fn}) {
+        // TODO: the above requirement is interesting: you can only be put on
+        // the map if your network is allowed to see all of the friends'
+        // locations.  We could potentially avoid this constraint by copying.
+
+        // the location can flow to the map
+        if (new label {*friend.locationLabel; *←fo,fn} <= map_update) {
+
+        // the friend has a valid location
+        if (loc != null && boundary != null && boundary.contains(loc.x,loc.y)) {
+
+        try { addPin (map, map_update, map_access, loc, friend.locationLabel, new label {*→fn}, friend, fo, fn); }
+        catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
+        catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
+
+        }
+        }
+        }
+      }
+    }
+
+    } //else throw new AssertionFailedError("worker$ equiv worker$.getLocalStore()");
+  }
+
+
+
+
+  /**
+   * Add a pin corresponding to friend at a given location on a map.
+   *
+   * @param map      the map to annotate
+   * @param location the location on the map to update.  Assumed to be on the map
+   * @param friend   the friend located at that location
+   *
+   * @throws NullPonterException
+   *         if friend or map is null
+   * @throws ArrayIndexOutOfBoundsException
+   *         if location is not on the map
+   */
+  protected
+  void
+  addPin
+  {               // side effects:
+    *map_update ⊓ // map contents are updated
+    *map_access ⊓ // map contents are fetched
+    *loc_access   // location is fetched
+  }
+  (
+    final MapImage[map_update,map_access] map,
+    final label    map_update,
+    final label    map_access,
+
+    final Location[loc_update,loc_access] location,
+    final label    loc_update,
+    final label    loc_access,
+
+    final User[o,n] friend,
+    final principal o,
+    final principal n
+  )
+  :{*provider;*MapImage.provider;map;*map_update;friend;location}
+  throws
+  (
+    NullPointerException,
+    ArrayIndexOutOfBoundsException
+  )
+  where
+    // these (in addition to the caller_pc) affect whether the map can be updated
+    {*provider; *MapImage.provider; map; friend; location} <= {*map_update ⊓ *map_access ⊓ *loc_access},
+
+    // when we get to the update, location and friend affect map
+    {location; *loc_update}  <= map_update,
+    {friend;   _→; *←(n,o)}  <= map_update,
+
+    // general invariants for map images
+    map_update <= map_access,
+    {_←}       <= map_access
+  {
+    if (map == null || friend == null || location == null)
+      throw new NullPointerException();
+
+    map.setAt(location.x, location.y, 'f');
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

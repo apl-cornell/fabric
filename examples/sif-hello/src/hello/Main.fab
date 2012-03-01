@@ -1,0 +1,65 @@
+package hello;
+
+import java.util.*;
+import sif.servlet.Servlet;
+import sif.servlet.Request;
+import sif.servlet.SessionState;
+import sif.servlet.SessionPrincipal;
+
+import javax.servlet.ServletException;
+
+public final class Main extends Servlet[HelloServEP] {
+    final Store{this} localStore;
+    public Main() throws ServletException {
+        FabricWorker cl = FabricWorker.getWorker();
+        Store lStore = null;        
+        if (cl != null) {
+            lStore = cl.getLocalStore();
+        }
+        localStore = lStore;
+    }
+    
+    public void initialize{HelloServEP:;HelloServEP!:}() throws ServletException {
+        addStartAction(new StartAction(this));
+//        HelloAction2 ha = new HelloAction2(this);
+//        addStartAction(ha);
+//        HelloAction2.precomputePage(this, ha);
+    }
+    
+    
+    public String getPrivateHostID() throws ServletException {
+        return "";
+    }
+
+    protected String defaultActionName(Request[HelloServEP] req) {
+        return "greet";
+    }
+    
+    // This method will only be called by the runtime
+    protected SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+            String{*lbl} id, SessionPrincipal{*lbl} session) {
+        SessionState[lbl] toReturn = null;
+        atomic {
+            if (localStore != null && localStore equiv worker$ &&
+                    lbl <= new label {⊤→worker$} && 
+                    new label {⊤←worker$} <= lbl) {
+                toReturn = new SessionState[lbl]@localStore(id, session);
+            }
+        }
+        return toReturn;
+    }
+    
+    // This method will only be called by the runtime
+    protected SessionPrincipal createSessionPrincipal(String{worker$→;worker$←} id) {
+        SessionPrincipal toReturn = null;
+        atomic {
+            if (localStore != null && localStore equiv worker$) {
+                toReturn = new SessionPrincipal@localStore(id);
+            }
+        }
+        return toReturn;
+    }
+    
+    
+}
+
