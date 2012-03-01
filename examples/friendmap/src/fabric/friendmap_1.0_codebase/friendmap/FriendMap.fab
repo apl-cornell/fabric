@@ -307,7 +307,8 @@ where
 
   /**
    * compute the bounding box containing the locations of all of the user's
-   * friends whose locations are visible at label l.
+   * friends whose locations are visible at label l and whose stores can learn
+   * information at level friend_access_bound.
    *
    * @param user
    *              the user whose friends should be bounded
@@ -315,6 +316,12 @@ where
    *              the label of the result, and the bound on the friends included
    * @param s
    *              the store to create the result on
+   *
+   * @param friend_access_bound
+   *             a label constraining the fetches of friends during execution.
+   *             Friends will only be added to the bounding box are bounded
+   *             below by friend_access_bound.
+   *
    */
   protected
   Box[l,{*→s}] {*l}
