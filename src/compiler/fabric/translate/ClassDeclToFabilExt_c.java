@@ -53,10 +53,10 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     FabILTypeSystem ts = (FabILTypeSystem) rw.java_ts();
 
     TypeNode worker =
-        nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Worker());
+      nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Worker());
 
     List<ClassMember> members =
-        new ArrayList<ClassMember>(cd.body().members().size() + 1);
+      new ArrayList<ClassMember>(cd.body().members().size() + 1);
     members.add(nf.FieldDecl(
         Position.compilerGenerated(),
         Flags.FINAL.Static(),
@@ -68,7 +68,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
     return cd.body(cd.body().members(members));
   }
-  
+
   @Override
   protected ClassMember produceInstanceOfMethod(JifPolyType jpt, JifToJavaRewriter rw, boolean useGetters) throws SemanticException {
     Context A = rw.context();
@@ -78,20 +78,21 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     List formals = produceFormals(jpt, rw, true);
 
     String name = jpt.name();
-    
-    if (!jifts.isJifClass(jpt)) {
-        // just produce a header
-        return rw.qq().parseMember("static public native boolean %s(%LF);", INSTANCEOF_METHOD_NAME, formals);            
+
+    boolean sigMode = ((FabricToFabilRewriter) rw).inSignatureMode();
+
+    if (!jifts.isJifClass(jpt) || sigMode) {
+      // just produce a header
+      return rw.qq().parseMember("static public native boolean %s(%LF);", INSTANCEOF_METHOD_NAME, formals);            
     }
-    
+
     StringBuffer sb = new StringBuffer();
     sb.append("static public boolean %s(%LF) {");
-    
     // Add code that checks that the access label of jpt flows to o.store
     // proceed normally if it does, otherwise throw an InternalError
     if (!(jpt instanceof FabricParsedClassType_c)) 
       throw new InternalCompilerError("Trying to produce an instanceof method for a non-fabric class");
-      
+
     FabricParsedClassType_c fpct = (FabricParsedClassType_c) jpt;
     ConfPolicy cp = fpct.accessPolicy();
     Label accessLabel = jifts.pairLabel(cp.position(), cp, jifts.topIntegPolicy(cp.position()));
@@ -101,90 +102,88 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
         ".topPrincipal()"+", o.$getStore().getPrincipal())");
     sb.append("if (!" + rw.runtimeLabelUtil() + ".relabelsTo(%E, %E)) " +
     "throw new InternalError(\"Illegal Access to \" + o.getStore());");
-    
+
     if (jpt.params().isEmpty()) {
-        sb.append("return (o instanceof %s);");
+      sb.append("return (o instanceof %s);");
     }
     else {
-        sb.append("if (o instanceof %s) { ");
-        sb.append("%s c = (%s)o; ");
+      sb.append("if (o instanceof %s) { ");
+      sb.append("%s c = (%s)o; ");
 
-        // now test each of the params
-        boolean moreThanOneParam = (jpt.params().size() > 1);
-        sb.append(moreThanOneParam?"boolean ok = true;":"");
-        for (Iterator iter = jpt.params().iterator(); iter.hasNext(); ) {
-            ParamInstance pi = (ParamInstance)iter.next();
-            String paramFieldName = ParamToJavaExpr_c.paramFieldName(pi);
-            String paramArgName = ParamToJavaExpr_c.paramArgName(pi);
-            String comparison = "equivalentTo";
-            if (pi.isCovariantLabel()) {
-                comparison = "relabelsTo";
-            }
-
-            sb.append(moreThanOneParam?"ok = ok && ":"return ");
-
-            String paramExpr = paramFieldName;
-            if (useGetters) {
-                paramExpr = ParamToJavaExpr_c.paramFieldNameGetter(pi) + "()";
-            }
-            if (pi.isPrincipal()) {  
-                // e.g., PrincipalUtil.equivTo(c.expr, paramArgName)
-                sb.append(jifts.PrincipalUtilClassName() + "."+comparison+
-                                     "(c."+paramExpr+","+paramArgName+");");
-            }
-            else {
-                // e.g., LabelUtil.equivTo(paramArgName)
-                sb.append(rw.runtimeLabelUtil() + "."+comparison+ 
-                          "(c."+paramExpr+","+paramArgName+");");
-            }
+      // now test each of the params
+      boolean moreThanOneParam = (jpt.params().size() > 1);
+      sb.append(moreThanOneParam?"boolean ok = true;":"");
+      for (Iterator iter = jpt.params().iterator(); iter.hasNext(); ) {
+        ParamInstance pi = (ParamInstance)iter.next();
+        String paramFieldName = ParamToJavaExpr_c.paramFieldName(pi);
+        String paramArgName = ParamToJavaExpr_c.paramArgName(pi);
+        String comparison = "equivalentTo";
+        if (pi.isCovariantLabel()) {
+          comparison = "relabelsTo";
         }
-        if (moreThanOneParam) sb.append("return ok;");
-        sb.append("}");
-        sb.append("return false;");
+
+        sb.append(moreThanOneParam?"ok = ok && ":"return ");
+
+        String paramExpr = paramFieldName;
+        if (useGetters) {
+          paramExpr = ParamToJavaExpr_c.paramFieldNameGetter(pi) + "()";
+        }
+        if (pi.isPrincipal()) {  
+          // e.g., PrincipalUtil.equivTo(c.expr, paramArgName)
+          sb.append(jifts.PrincipalUtilClassName() + "."+comparison+
+              "(c."+paramExpr+","+paramArgName+");");
+        }
+        else {
+          // e.g., LabelUtil.equivTo(paramArgName)
+          sb.append(rw.runtimeLabelUtil() + "."+comparison+ 
+              "(c."+paramExpr+","+paramArgName+");");
+        }
+      }
+      if (moreThanOneParam) sb.append("return ok;");
+      sb.append("}");
+      sb.append("return false;");
     }
-
-
     sb.append("}");
     return rw.qq().parseMember(sb.toString(), INSTANCEOF_METHOD_NAME, 
         formals, accessLabelExpr, storeLabelExpr, name, name, name);
-}
-  
-  
+  }
+
+
   @Override
   @SuppressWarnings("unchecked")
   protected List produceFormals(JifPolyType jpt, JifToJavaRewriter rw, boolean addObjectFormal) throws SemanticException {
     List formals = super.produceFormals(jpt, rw, false);
-    
+
     if (addObjectFormal) {
       // add the object argument too.
       TypeNode tn = rw.qq().parseType("fabric.lang.Object");
       formals.add(rw.java_nf().Formal(Position.compilerGenerated(), Flags.FINAL, tn, "o"));
-  }
+    }
 
     // add access policy formal
-    
+
     Formal al = rw.nodeFactory().Formal(Position.compilerGenerated(),
         Flags.FINAL, 
         rw.typeToJava(rw.jif_ts().Label(), Position.compilerGenerated()), 
-        "jif$accessPolicy");
-    
+    "jif$accessPolicy");
+
     formals.add(al);
-    
+
     return formals;
   }
-  
+
   @Override
   @SuppressWarnings("unchecked")
   protected List produceParamArgs(JifPolyType jpt, JifToJavaRewriter rw) {
     List args = super.produceParamArgs(jpt, rw);
-    
+
     // add access policy arg
     args.add(rw.qq().parseExpr("jif$accessPolicy"));
-    
+
     return args;
   }
-  
-  
+
+
 
   @Override
   protected ClassBody addInitializer(ClassBody cb, JifToJavaRewriter rw) {
@@ -201,10 +200,10 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
    *           if the field or access label cannot be translated
    */
   protected ClassBody addLabelInitializer(ClassBody cb, JifToJavaRewriter rw)
-      throws SemanticException {
+  throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();
     boolean sigMode = ((FabricToFabilRewriter) rw).inSignatureMode();
-    
+
     //FIXME: why is rw.currentClass() null?
     ClassDecl n = (ClassDecl) node();
     FabricClassType ct = (FabricClassType)n.type();
@@ -231,7 +230,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
       return cb.addMember(rw.qq().parseMember(
           "public Object %s() { " + "this.$updateLabel = %E;  "
-              + "this.$accessPolicy = %E.confPolicy();" + "return this;" + "}",
+          + "this.$accessPolicy = %E.confPolicy();" + "return this;" + "}",
           FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr, accessLabelExpr));
     }
 

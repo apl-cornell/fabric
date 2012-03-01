@@ -274,6 +274,12 @@
       <arg value="-bootclasspath" />
       <arg value="${runtime.classes}:${classes}"/>
       <arg value="-nooutput"/>
+      <!--
+      <arg value="-rdebug"/>
+      -->
+      <!--
+      <arg value="-print"/> <arg value="FabricToFabilRewriter"/>
+      -->
       <arg value="-trusted-providers" />
       <arg value="-sigcp"/>
       <arg value="${signatures.fabric.src}" />

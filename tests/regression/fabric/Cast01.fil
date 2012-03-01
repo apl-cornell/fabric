@@ -1,0 +1,335 @@
+----------------------------------------------------------------
+Pretty-printing AST for /home/kvikram/Academics/Research/fabric/tests/regression/fabric/Cast01.fab after FabricToFabilRewriter
+<<<< /home/kvikram/Academics/Research/fabric/tests/regression/fabric/Cast01.fab >>>>
+public class Cast01 extends fabric.lang.Object {
+    final static fabric.worker.Worker worker$ = fabric.worker.Worker.getWorker();
+    
+    public Cast01 Cast01$() { this.jif$init();
+                              {  }
+                              return this; }
+    
+    public static void foo(final fabric.lang.security.Principal p) { final fabric.
+                                                                       worker.Store store =
+                                                                       worker$.getStore(
+                                                                                 "bar");
+                                                                     if (fabric.lang.security.PrincipalUtil.
+                                                                           actsFor(
+                                                                             store.
+                                                                               getPrincipal(),
+                                                                             p)) {
+                                                                         Cast01 x =
+                                                                           (Cast01Sub)
+                                                                             new Cast01Sub(
+                                                                             fabric.lang.security.LabelUtil.
+                                                                               toLabel(
+                                                                                 store,
+                                                                                 fabric.lang.security.LabelUtil.
+                                                                                   readerPolicy(
+                                                                                     store,
+                                                                                     p,
+                                                                                     fabric.lang.security.PrincipalUtil.
+                                                                                       topPrincipal()),
+                                                                                 fabric.lang.security.LabelUtil.
+                                                                                   topInteg())).
+                                                                             Cast01Sub$(
+                                                                               5).
+                                                                             $initLabels();
+                                                                         if (Cast01Sub.
+                                                                               jif$Instanceof(
+                                                                                 fabric.lang.security.LabelUtil.
+                                                                                   toLabel(
+                                                                                     Worker.
+                                                                                       getWorker().
+                                                                                       getLocalStore(),
+                                                                                     fabric.lang.security.LabelUtil.
+                                                                                       readerPolicy(
+                                                                                         Worker.
+                                                                                           getWorker().
+                                                                                           getLocalStore(),
+                                                                                         p,
+                                                                                         fabric.lang.security.PrincipalUtil.
+                                                                                           topPrincipal()),
+                                                                                     fabric.lang.security.LabelUtil.
+                                                                                       topInteg()),
+                                                                                 x)) {
+                                                                             Cast01Sub y =
+                                                                               Cast01Sub.
+                                                                               jif$cast$Cast01Sub(
+                                                                                 fabric.lang.security.LabelUtil.
+                                                                                   toLabel(
+                                                                                     Worker.
+                                                                                       getWorker().
+                                                                                       getLocalStore(),
+                                                                                     fabric.lang.security.LabelUtil.
+                                                                                       readerPolicy(
+                                                                                         Worker.
+                                                                                           getWorker().
+                                                                                           getLocalStore(),
+                                                                                         p,
+                                                                                         fabric.lang.security.PrincipalUtil.
+                                                                                           topPrincipal()),
+                                                                                     fabric.lang.security.LabelUtil.
+                                                                                       topInteg()),
+                                                                                 x,
+                                                                                 fabric.lang.security.LabelUtil.
+                                                                                   toLabel(
+                                                                                     Worker.
+                                                                                       getWorker().
+                                                                                       getLocalStore(),
+                                                                                     fabric.lang.security.LabelUtil.
+                                                                                       readerPolicy(
+                                                                                         Worker.
+                                                                                           getWorker().
+                                                                                           getLocalStore(),
+                                                                                         p,
+                                                                                         fabric.lang.security.PrincipalUtil.
+                                                                                           topPrincipal()),
+                                                                                     fabric.lang.security.LabelUtil.
+                                                                                       topInteg()));
+                                                                         } } }
+    
+    final public static java.lang.String jlc$CompilerVersion$fabric = "0.1.0";
+    final public static long jlc$SourceLastModified$fabric = 1330551351000L;
+    final public static java.lang.String jlc$ClassType$fabric = ("H4sIAAAAAAAAAK1ZCXBURRrumclhQtgcBLmSMCTcRwbl8IilJIFIwlDEQFDC" +
+                                                                 "wuzLm57kmTfvPd/r\nSYaIFFuoqFUL663rETx28WB1WUqlWGUpRNcVtRRKZH" +
+                                                                 "GBdXVXd9eDPSgodcv9u/vdM4SUtamafu91\n9//33//x9f93dnyBcg0dTUwI" +
+                                                                 "nbok1pJ1GjZqm9hHq6AbON4oC4axArpj4qkGdGbV7H3lQRSIoiJR\nUFRFEg" +
+                                                                 "U5phgE/SB6vdArRBRMIu1tzXVpHVVeLyVMfi1SgjNrVeV1nNf+0NqH80ID3w" +
+                                                                 "RRbhQVCCnS\nreoSWUdQCWeUIpIciUoGqYuiYaIKS+iCpBDjBrQBhaKoRIIe" +
+                                                                 "QSGSQHC8SVeTBE2IasC9S1ZJBKdJ\nRBN0IRlh60da2SaAUx7rtZhcoOlqrx" +
+                                                                 "THOkHjoyCtOVsWOrEcaTXHovSL7idssTc3laGey2u+7Xtr\nc8u4ECruQMWS" +
+                                                                 "spwIRBIbVYWAPB2oKImTnVg36uNxHO9ApQrG8eVYlwRZ6oeJqtKBygypSxFI" +
+                                                                 "SsdG\nGzZUuZdOLDNSGohI17Q6qfaZSlIiUXVrO3kJCctx6ys3IQtdYJgLHb" +
+                                                                 "Xw7TXRftBFIagT6wlBxBZJ\nTo+kxKkufBT2HicugQlAmp/EYC97qRxFgA5U" +
+                                                                 "xi0nC0pXZDnRJaULpuaqKUIVPPacTOuoIQSxR+jC\nMYJG++e18iGYVcAUQU" +
+                                                                 "kIGumfxjiBlcb6rOSyz7K8ov/e0XomzNw3J45FmcpfCERVPqI2nMA6VkTM\n" +
+                                                                 "Cc+mau9pXpWqCCIEk0f6JvM59ZNeao9+9tvxfM64LHOWdV6PRRITv51fUXmo" +
+                                                                 "/pOCEBXjAk01JGp8\nz86Z87eaI3VpDQL0QpsjHay1Bve1vb5q4zP4H0FU0I" +
+                                                                 "zyRFVOJZVmVICVeKP5ng/vUUnBvHdZImFg\n0oxyZNaVp7JvUEdCkjFVRwG8" +
+                                                                 "S0pCtd41gXSz97SGEMqH3wj4BRD/Y0+CChsFg8y+qBZARCOoJdKt\nJnGkp1" +
+                                                                 "fqoSFYLwpxnJREIwLuiwVd7I5wsIkQbBAjouMu8HcDNmP1O9zSdOmyvkAAND" +
+                                                                 "BeVOO4UzBA\nnaZpG1pl8N7FqgxhGhPlLa80oxGvPMjMW0Bd0gC3YpsKgEkq" +
+                                                                 "/OHrpt3+8ZvrFy25/TbuGpTW3DNB\neVwaEKCIunctIFwtINyOQLq28dHmZ5" +
+                                                                 "kV8wzm7jZNAYh+uawCNqZRIMCkH+W1H3WIOIW3z39dV7Jl\nlvFiEIU6UIGU" +
+                                                                 "TKaI0CljiHBBltU+HI8R5vClruCy0KyoE2ID1o3JwIjFIhipV0fV/hhwsKKZ" +
+                                                                 "waaI\nD2347t0vY327qLtS9ypne2OigbP0cNmKpi1f0/Kj26pDdFJfDrU3TK" +
+                                                                 "324HoW3jHx6Zvff3P+5nE9\nAO4dANXGQpwQUjJpbWxQUwpAWrnd1YYB7RSG" +
+                                                                 "sVlxPl8TGQ1BozIQmiMzkOkOE0o2Gaw98fwqiIlf\n3rF015GDx6c6gEDQxA" +
+                                                                 "ycyqSkOOPXMRwXIo4Dcjvs7/968am7cy97IYhywCFhbwR2RrGwyr+GB2/q\n" +
+                                                                 "LOyme8mH7SVUPSnIdMjSSiHp1tU+p4eFSQl7p9E5DH4j4ZdrRil70sGRGm0v" +
+                                                                 "5FFFre7bBDsazm7K\nm/3By8NeY1qxTpFi16m8HBOOSaWO06zQMYb+4w+03n" +
+                                                                 "3vF5tXM48xXQZCSEt1ypKYZgJWBcBDR2TB\nx9rR5ffcN+3hDyyXHOFwr9d1" +
+                                                                 "YR31yPSPD1U++DvhEYg6wDBD6scMlhBbCVkL0HYee5/vGqTfM8CD\n/f2w1D" +
+                                                                 "jHpZlr1baoEvenmKh+t23C/sviG4IoCIoX1aSmKth00FroUZh1QJK45Xuj/N" +
+                                                                 "xMTj/dceR0\nwaV/a2L+MCyODVGXNAriJtYWGlJSkyU4xTkrwBWitoAS7PRE" +
+                                                                 "FxRDhoyHu/4KNrgoren0cOwVIJUA\n5OCCpal1bDFaadYTE/+9X1g9ZdlwJW" +
+                                                                 "hqw/GYUhPXz+kx7HEVqGqWlShaspjJoq2xFSp0SDIVKybu\nWjP35aKGYd38" +
+                                                                 "VKxhEtmELhJrIzHx4Ptb3/ni7J5NnGK8lyJj9oTnKk9N3LF2kuUzo/wwtlgw" +
+                                                                 "usEv\nj8ofdNx7fHoV5+ryW3N8z8Jb7r1v90tzOdIVweZLrlrAVUH9Y5JDAM" +
+                                                                 "eqDMc4WM2Y2K4k1TjYi6od\nmGysvOu9rQ9tbOeLzDw/jdM/pgFtPLj2TBWL" +
+                                                                 "uYBIszYn3pxpNOyoIRZ5RAxm8+BWQdJNv5u5frp8\n+rlqYnmwkoA0XBIh16" +
+                                                                 "7IwNRGe5QCK80Qu6zJlRmTm53hOuZQV9BmAXeW1kGcxRbO4ywNe7cFjn14\n" +
+                                                                 "4nBWZ3GROOaft/Gz/+x6/8UplkM3ZtEOM2CVXz1tGJISncseE7deJ9VcM3XM" +
+                                                                 "1UxDuWqf4i8JNDje\nRUkTaFlgvtFqQmdc6JorQeLRGTYw2U+N5u3+5Xenrm" +
+                                                                 "TWdUU5zfkyyg6XOku4Omm7inmhzd+Wp7ZB\nJURN2lLFxIvfmD2q/qmlO90B" +
+                                                                 "5KNxzdYX5l29c9nP32I7t+Gmxgc3NsGgkEPbK7nIIO00r/18crqt\neFHR43" +
+                                                                 "v/8szT27LbPRvFE8+eebJ/yi+6WNjzkOgwF6aPtVo2k18L9aVjcvXOr+bcs6" +
+                                                                 "lpwGVyZkfQ\nQh+byK1K22sdM8SzrZV1+epsBbW7pIyJY1qrQ6kFowcyLGV6" +
+                                                                 "j3e2duDrJVvbNt8MAtNE0VihpwxC\nS8EC0SpxvP5EkzO7xuLhqfHQlEG+GR" +
+                                                                 "mh6VnPE5gjf7i95eTAVaO5oFP8BvKQOUZasqWq7xXj7erB\ng5OdMmVpfrzQ" +
+                                                                 "dqkp5A3s65rsEU072zVGxU/iDs1rDu+nyKeu82avTkCsUDVXTCz+aP/JW+4f" +
+                                                                 "fdAS\nfLVG/Xmyd9tuEveuj/547IkZM7e+YRHHuAT9pkDrzWcVzdP9JUkTrd" +
+                                                                 "+t/DHZeePpVx8tDPOjjdLU\nuBKZiMnFSXVqnHSm8lw1MKvfN1/3z6JbhQNr" +
+                                                                 "uDXLvHXJIiWVnDdwFE9bUCRmKYYKiKrNknEvlp1d\n+Fdbyu4GrG0UXzv+o6" +
+                                                                 "b522/yb4NWEt4bIi9dTHxs9id7DyDtj/+/IsLMqrLVC+MH3URMLO0dd02o\n" +
+                                                                 "WwKzhuxSIeOexEtU51Ye4D5flZqB9hQxM06zM7Ay+I01K2xkPTNzdtrOYu1s" +
+                                                                 "nl4H6fvFhJag9LYp\newocsFXuyk3Z/nGcX1+8N2zObeF5iXIGhwUMgCBpJK" +
+                                                                 "bGLqAU1jeXvNiWvBJ+UweTHJYd6we3er3L\nxLX2u8S9t4ZL81lWHBQlmmhk" +
+                                                                 "lGBxfC6tpjQN627rBnslmtj4WKwUXNUbw0Jb/snnk5+gFsotqepa\ntySG2Q" +
+                                                                 "bCaiLM67KwoHelklARhDXayW/GYEwNT+2kYuF4WOhUe3G4c134xpumafZBbk" +
+                                                                 "NJo6AoKsnA\nz78v+3Jfv4ZtJGnk4bOFNndxd6DN3YNanH4/QJufcc94iDYD" +
+                                                                 "jHob297j34drJnS1Kz0KHKLcmS4+\n8vZbhxemn7MkL9bS5y/N7iQoBFqjrz" +
+                                                                 "sQylalZZzo5qKmI4VqvlqwZuRPmqxVr+BbMvODx/hjp6+T\noAB/XTp0f2CP" +
+                                                                 "l857PNFmN5PkN06KsDsza/B2iQ7ZviGSgTU8QBqlF08OdJXf1HDJ9uN4J6/n" +
+                                                                 "ZTfq\n+e89fZSv39c1d+D553P5SeE3uSukYuKlR3pL8341kAyifABrBsGCQl" +
+                                                                 "YKcopWRh2oUDIazc4oGu4Z\n914c81vSOtcF7SO++xB3+OcQD5yWeEBp+mBG" +
+                                                                 "DCD28vtMRA0QWE9SBDltO4cZQdzumWqDRCApEanX\nvC6+s+rJv+76uI3/m8" +
+                                                                 "S8U6/JuNZ20/B7dStWYIUJg63AZh+YMWHHhrYTnZa3b4bD2U5oMkKdNkdY\n" +
+                                                                 "uGd1WNr3BG3eYVtkiqHNoSGELW2eZ0PvmrnNYYJyelUpnu2uxRtq9MCrOG+o" +
+                                                                 "nRhSqJ1k4vzZCZCT\nmTFzMjPUONmnQyOj7Q0EBbUp31NPtDmWRS9sm4x72r" +
+                                                                 "5xNjFqFMSHmavTAKnlAcKGxhFURG+aNThG\n6GGUduWWlYMWfhvXpw5/pVzy" +
+                                                                 "iJOV+bB28vlvL+h93LfFky564fMtJdzVnWto2jZnOzZ86UcU1xsG\nFNvAPC" +
+                                                                 "a+NmfT/DFNH+9jOVZI7mb0cKKHdPvVrlCnZ7sQc3FzFao+ZMgxfS5k+lwoI1" +
+                                                                 "2hD8kzf/hg\n8+kjwA+sZPYSx7JjATfs8lQn7ag4RzAMvlDeUIIhkE83HSi0" +
+                                                                 "XRg6/F7t6xIdsuIhkuloepbruaxG\niInzVm87NfPgnE+ZxzGTfONNR2kFkO" +
+                                                                 "L/qI2Jn2trr/6w7eQz5pWAjYY4TWrZv3CtNN2m2PPqpNuP\nHftDDa/noSTu" +
+                                                                 "76eLFEL2z/M086bcja1+bhYv6U9HEnds+qTYvielTbkrA2cRVnVuPvR95fC6" +
+                                                                 "o0v2\n7Hkqs35zWLi2z2is83Tu1NP5Z9/+14Ls4Um/2clY8T/M5n00vR8AAA" +
+                                                                 "==");
+    
+    public Cast01() { super(); }
+    
+    public void jif$invokeDefConstructor() { this.Cast01$(); }
+    
+    private void jif$init() {  }
+    
+    public Object $initLabels() { this.$updateLabel = fabric.lang.security.LabelUtil.
+                                                        noComponents();
+                                  this.$accessPolicy = fabric.lang.security.LabelUtil.
+                                                         noComponents().confPolicy();
+                                  return this; }
+}
+class Cast01Sub extends Cast01 {
+    final static fabric.worker.Worker worker$ = fabric.worker.Worker.getWorker();
+    int f;
+    
+    public Cast01Sub Cast01Sub$(final int f) { this.jif$init();
+                                               { this.Cast01$();
+                                                 this.f = f; }
+                                               return this; }
+    
+    final public static java.lang.String jlc$CompilerVersion$fabric = "0.1.0";
+    final public static long jlc$SourceLastModified$fabric = 1330551351000L;
+    final public static java.lang.String jlc$ClassType$fabric = ("H4sIAAAAAAAAAI1ZC3BU1Rk+eRsSTAiB8EjCQng/dlEePjJVkkggydKkIaCE" +
+                                                                 "wvbu3bPJhbv33t57\nNllQGBhQ0M6A78dUgakPFKmPUtGhgBTROqJtxREpDl" +
+                                                                 "BH22qrQlszMFbH/uec+94lITO5j3PP/5//\n/I/v//+ze79CeYaOxseFqC6J" +
+                                                                 "QbJGw0awkb20CbqBYw2yYBgdMBwRL9Sji8tmHinPRllhVCwKiqpI\noiBHFI" +
+                                                                 "Ogq8OrhB4hpGASWtLeVJvSUdUqKW7ya5binFmbKq/hvI7mrHw8P2fn/7JRXh" +
+                                                                 "gVCknSreoS\nWUNQKWeUJJIcCksGqQ2jIlGFJXRBUojxc7Qe5YRRqQQjgkIk" +
+                                                                 "geBYo64mCBob1oB7l6ySEE6RkCbo\nQiLE1g+1sU0Ap3w2ajG5StPVHimGdY" +
+                                                                 "LGhEFac7YsRLEcajO/hekb3U/AYm9uKk09N9Z81/vulubR\nOaikE5VIymIi" +
+                                                                 "EElsUBUC8nSi4gRORLFu1MViONaJhigYxxZjXRJkaS1MVJVOVGZIXYpAkjo2" +
+                                                                 "2rGh\nyj10YpmR1EBEuqY1SLXPVJIUiapb28mPS1iOWW95cVnoAsMMd9TCt9" +
+                                                                 "dIx0EXg0CdWI8LIrZIcldL\nSozqwkdh73F8C0wA0oIEBnvZS+UqAgygMm45" +
+                                                                 "WVC6QouJLildMDVPTRKq4FGXZVpLDSGIq4UuHCFo\nhH9eG/8EswqZIigJQc" +
+                                                                 "P80xgnsNIon5Vc9mnNL/7+nraLAea+uTEsylT+QUBU7SNqx3GsY0XEnPBS\n" +
+                                                                 "Mvhg07JkZTZCMHmYbzKfUzfh1SXhz18fw+eMzjCnNboKiyQifje3supE3WeF" +
+                                                                 "OVSMqzTVkKjxPTtn\nzt9mfqlNaRCgw22O9GPQ+nik/a1lG/bgf2WjwiaUL6" +
+                                                                 "pyMqE0oUKsxBrM5wJ4DksK5qOt8biBSRPK\nldlQvsreQR1xScZUHYXwLClx" +
+                                                                 "1XrWBNLNnlMa4n8l8F9mPrM7QYMaBIPMvCYIIKIR1BzqVhM4tLpH\nWk1DsE" +
+                                                                 "4UYjghiUYI3BcLutgd4mATItggRkjHXeDvBmzGGne4pejSZb1ZWaCBMaIaw1" +
+                                                                 "HBAHWapq1v\nk8F7F6oyhGlElLcdakJDDz3GzFtIXdIAt2KbygKTVPrD1027" +
+                                                                 "+9N37pjfcvdW7hqU1twzQYVcmsXJ\nKMhQTD08CCAXBJDbm5UKNuxoep4ZMt" +
+                                                                 "9gHu+QgfQ3yirAYwplZbENVHhNSH0iRhHuy9/Ulm6bYezP\nRjmdqFBKJJJE" +
+                                                                 "iMoYglyQZbUXxyKE+fwQV3xZgFYchfCAdSMyMGLhCHbq0dE4fxg4cNHEkFPE" +
+                                                                 "J9b/\n8OevI737qMdSDytne2Oigb+s5rIVT1m8ovlnW8fl0Em9uWBtupNxHm" +
+                                                                 "jPwDsiPrf5w3fmbhm9GvC9\nE9DauAXHhaRM2hrq1aQCqFZuD7VjADyFwWxG" +
+                                                                 "qC/QREZDUEUaSHNwBjLdYULJJoLBxw+sgoj49T2L\n9p08fmaygwkEjU+Dqn" +
+                                                                 "RKCjV+HUPGEHEMwNth/8i3Cy88kHfDK9koF3wS9kZgZxQOq/1reCCn1oJv\n" +
+                                                                 "upcC2F5c1ROCTD9ZWhlEunW11xlhkVLKnoeClYrgfwz8V5iByu704zCNXofz" +
+                                                                 "wKJW922CZYdLm/Jn\nfnSw6E2mFSuRlLgS82JMOCwNcZymQ8cYxs882vbAQ1" +
+                                                                 "9tWc48xnQZAok3GZUlMcUErM4CDx2aASKD\nI8offHjK4x9ZLjnU4V6n68Ia" +
+                                                                 "6pGpjSeqHvuD8AREHcCYIa3FDJmybOescJyT+QOOcYR+v2jW1sCc\nOFQv2W" +
+                                                                 "AL5j+QwlnQTAQgphTWezFTT4mtTaq9yv60CcuOcpZlvEHiLrZ+RFxyv3j4rs" +
+                                                                 "CQAuYF2aJE\nUFW6i8Vst6l1QxBYOqlB2mMhYMqa3QMsKv0slgoe76zwy2MK" +
+                                                                 "c+/ek32F13/RyIQpimFD1CWNphJr\nOUNKaLIEtYS1XD5Rm8EOdpGkC4ohQ9" +
+                                                                 "3Fo6+DfZyf0nSaonsEKGgAvJjqginqILYYbbT2ioj/PSos\nn9Q6WKFG9jrt" +
+                                                                 "qIHUTFAL3XRC1bVuSQywfQXUeICHR0DQu5IJrJBAnA66KqTA5ChVH44FhKja" +
+                                                                 "gwPR\nNYHb102hPOvAchOYiNaugg2CoqjEt7eI+M/Wr4+s1fDbPMGP8dKkzR" +
+                                                                 "77QtWF8XtXTrA8ucIPrgsF\noxui5ZT8UedDZ6ZWc66uaDK/H7jlzocefu3V" +
+                                                                 "2Rx/i0EfpTfP49phyptGUFYc+I/2W7tNkHTT4tPv\nmCr3vTCOMMcfBGqJQx" +
+                                                                 "kuiWuoD/kBtcH+SlGVVohd1uSqtMlNzudaJs1NV25KdvsxSD7D6jxsZVrd\n" +
+                                                                 "h7mBDhUGJJnrtf7wrqzTH5/9gOurxmsFF4ljiTkbPv9m34f7J1nuNp/JuMCn" +
+                                                                 "SxCk2q/CdgyFi873\nFxG33ybV/GTyyAVMi3lqr+JvGzTI/6KkCbR1MJ9ox6" +
+                                                                 "EzLnTNJSDxiDQ7mewnh/Nf+/UPF25ikOuK\nQVoXprUmLpWX0ksre7zN9mXG" +
+                                                                 "35YnWK8SoiZsqSLitW/PrKh7dtHLbl/20bhm67fkL3i59el32c5t\nMKjxgY" +
+                                                                 "FN0C8g0Os8LjJIO8VrP5+cbiteU/yrw3/b89yuzHbPRPHk8xefWjvpmS4WgR" +
+                                                                 "pbfpm5ML2t\n0DKZ/FboQR2Tq/edn/XgpsadLpMzO4IWetlEblV6XeqYQcy0" +
+                                                                 "VsblKz1lVJgWi07pUL6u/rrdZ/DL\nPAfL7srG3674KN96uGv2zhdfzOO68t" +
+                                                                 "e9rjQREa8/2TMk/6WdiWxUAFUaQ0xoqpcKcpKm8k7oEY0G\nczCMBnu+e/s9" +
+                                                                 "3tzUuvqqH/lqGHdKy6WiOIm21JNoq/uDjSzEHmRGMYNdZ9pFRl5cUqDepoPN" +
+                                                                 "7NP1\n9HJjyoIav97AbxLQRfWYbd591U/9fd+n7fx4w+yFa9LaUTcN74d5sa" +
+                                                                 "BRhx7b3wps9rFpY/eubz8b\n5cYp87YE85VkYs7OU3jKvGIxQyuSA3jMkha9" +
+                                                                 "EKuWotc57Hku1RZThpkcoB7yj2fKFc2qpJi5Qv1h\n19ijN8TWW7kioakKNm" +
+                                                                 "vxIIwoLNNC0cWLAx/ql8P/8AFRf10/qG+L4kH9fStmHyyuL+rOGP0uEif6\n" +
+                                                                 "j3+4/Y9fXTqwaUDUn+CkXOiYZXBiKIWM8UuUhBoDAKbQBZGwoer+97f/csMS" +
+                                                                 "LsD0gWmc8ZH1aMPx\nlRermT2zRHog49TRzjRaTqeLmM3GWuhlPVfeVjbSln" +
+                                                                 "k7dLCDT6bXXziwsz4dibxDUYfs3iskgw4o\n06mh+9wsIo5sG5eTnDdiZ1qq" +
+                                                                 "MdOfd7Z27NuW7e1bNoP70VbY6NCTBqHnXYWidY7jTYi0/bQPkrg3\nalxRj4" +
+                                                                 "J809K8zLOex8eG/XR387mdN4/ggk7yZxgPmeNnLduqew8Z743r389YDJSluP" +
+                                                                 "Mzi5pCPjGg\nNTVGtYvrX/Oaw/sa5VOf9vbnTkbvUDVXUl/4ydFzdz4y4rgl" +
+                                                                 "eCfDr4nebbtJ3Ls+tXHU2WnTt79t\nEa/kEjxjCvSsea+mJxH+/NNIDymtDJ" +
+                                                                 "SI3t73xo5BAV4mU5oa55Ahg3N5iCNiwa67ZrwVPDKHxVaR\nIIrYMDxnAN4M" +
+                                                                 "66NWWw99c35z6Uvs3OXqbsFoUgCrGbrprPi139jZi+1zrI+pHSgp+xZbe3jJ" +
+                                                                 "jkvv\nkbP8dMo+CaDUU5kOV9koShVQaiIpsu4ZkuBv05MgSrF+gOU+D7/C/v" +
+                                                                 "hxl7TnFww0n91+d0VAdJDt\n7XUHPg6mI8rBdCDiZMeujIxlQxZhyJTMY3ir" +
+                                                                 "HwKjmShzYv+KJ/+0QNvObDGY/SRgGYqgkX5LO021\nN9nRI5bi/tRE0Hjeob" +
+                                                                 "IVMNSLgTrWmFLACtjHinTycSOtpWRru4Nu49NdF7///Z4+s6DV0Uhfa+2q\n" +
+                                                                 "AE+dK018seMxftThcbZH7NKm+nIbdVU1jlOWmuncc/Lr3i3iyj+R7pQ59Jl9" +
+                                                                 "vJbQc1L6qwj10zo2\nSTfBIklcAVXmNWG6eHLXgdN7n1++kMVuKa1SWaOh8L" +
+                                                                 "6dDTUp3qEiybDBjG2uh15OoyyOYftNyHLK\nqRqnZKq63K8KTJgtt/27+C7h" +
+                                                                 "2AoLDnsIKiSqNkPGPVh2kNDPZBH7EcXaVsmtYz5pnLt7nR8KaUg7\nZ9BmJ1" +
+                                                                 "MBiuRj9K3SBbdV/TZzG+5IfnBeue4JZxFfbThx4NKGHsJ9VzLhmle+3FbKi1" +
+                                                                 "Tn7JleN9t8\nnTM5ly35QS+uMwzAVWAeEd+ctWnuyMZPj2TTc80cuZvRT4RH" +
+                                                                 "3X60u86pmY6gXNxczaevtcg1nbbc\ndOByvwPzosELhaUDEbHbN1cEhX1shU" +
+                                                                 "sOgPWlY1pfOhRysu+vkExHUzOcTGVUUEScs3zXhenHZ/2D\neQNb5rz3/BRy" +
+                                                                 "5qIk//E0In6prVzwcfu5PWYRbjszTpEgQzjLrW2KA29MuPv06b/U8P4ZYG/t" +
+                                                                 "WrrI\noDAq4Cd25tG1u2/yc7N4SX89Gb9n02cl9qkhvZSbx9i291dfng99Xj" +
+                                                                 "q49lTLgQPPpseYw6LiMrAz\ne3JfwaX3/jPPGzqmizPk4x7EAvL/NKhaq1Yf" +
+                                                                 "AAA=");
+    
+    public Cast01Sub(final fabric.lang.security.Label jif$A) { super();
+                                                               this.jif$Cast01Sub_A =
+                                                                 jif$A; }
+    
+    private void jif$init() {  }
+    
+    public static boolean jif$Instanceof(final fabric.lang.security.Label jif$A,
+                                         final java.lang.Object o, final fabric.
+                                           lang.security.Label jif$accessPolicy) {
+        if (o instanceof Cast01Sub) { Cast01Sub c = (Cast01Sub) o;
+                                      return fabric.lang.security.LabelUtil.equivalentTo(
+                                                                              c.
+                                                                                jif$Cast01Sub_A,
+                                                                              jif$A);
+        }
+        return false; }
+    
+    public static Cast01Sub jif$cast$Cast01Sub(final fabric.lang.security.Label jif$A,
+                                               final java.lang.Object o, final fabric.
+                                                 lang.security.Label jif$accessPolicy) {
+        if (o == null) return null;
+        if (jif$Instanceof(jif$A, o, jif$accessPolicy)) return (Cast01Sub) o;
+        throw new ClassCastException(); }
+    
+    final private fabric.lang.security.Label jif$Cast01Sub_A;
+    
+    public Object $initLabels() { this.$updateLabel = fabric.lang.security.LabelUtil.
+                                                        noComponents();
+                                  this.$accessPolicy = fabric.lang.security.LabelUtil.
+                                                         join(this.$getStore(), this.
+                                                                                  jif$Cast01Sub_A.
+                                                                meet(this.$getStore(),
+                                                                     fabric.lang.security.LabelUtil.
+                                                                       toLabel(this.
+                                                                                 $getStore(),
+                                                                               fabric.lang.security.LabelUtil.
+                                                                                 readerPolicy(
+                                                                                   this.
+                                                                                     $getStore(),
+                                                                                   fabric.lang.security.PrincipalUtil.
+                                                                                     topPrincipal(),
+                                                                                   fabric.lang.security.PrincipalUtil.
+                                                                                     topPrincipal()),
+                                                                               fabric.lang.security.LabelUtil.
+                                                                                 writerPolicy(
+                                                                                   this.
+                                                                                     $getStore(),
+                                                                                   fabric.lang.security.PrincipalUtil.
+                                                                                     topPrincipal(),
+                                                                                   fabric.lang.security.PrincipalUtil.
+                                                                                     topPrincipal()))),
+                                                              fabric.lang.security.LabelUtil.
+                                                                liftToLabel(this.
+                                                                              $getStore(),
+                                                                            fabric.lang.security.LabelUtil.
+                                                                              topInteg())).
+                                                         confPolicy();
+                                  return this; }
+}
+Compiler Generated (p->:/home/kvikram/Academics/Research/fabric/tests/regression/fabric/Cast01.fab:11,40-42): quasiquote(Cast01Sub.jif$Instanceof([fabric{amb}.lang{amb}.security{amb}.LabelUtil{amb}.toLabel(Worker{amb}.getWorker().getLocalStore(), fabric{amb}.lang{amb}.security{amb}.LabelUtil{amb}.readerPolicy(Worker{amb}.getWorker().getLocalStore(), p{amb}, fabric{amb}.lang{amb}.security{amb}.PrincipalUtil{amb}.topPrincipal()), fabric{amb}.lang{amb}.security{amb}.LabelUtil{amb}.topInteg()), x]E)):1:
+    Method jif$Instanceof(fabric.lang.security.Label, java.lang.Object,
+    fabric.lang.security.Label) in Cast01Sub cannot be called with arguments
+    (fabric.lang.security.Label, Cast01).
+1 error.
+null

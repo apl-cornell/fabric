@@ -1,0 +1,26 @@
+public class Cast01
+where 
+    Cast01Sub.provider <= {}
+{
+    public Cast01{}() {
+    }
+    public static void foo{}(principal{} p) {
+        final Store store = worker$.getStore("bar");
+        if (store actsfor p) {
+            Cast01 x = new Cast01Sub[{p→}]@store(5);
+            if (x instanceof Cast01Sub[{p→}]) {
+                Cast01Sub[{p→}] y = (Cast01Sub[{p→}])x;
+            }
+        }
+    }
+}
+
+class Cast01Sub[label A] extends Cast01
+where
+    provider <= {}
+{
+    int{}@{A} f;
+    public Cast01Sub{}(int{} f) {
+        this.f = f;
+    }
+}
