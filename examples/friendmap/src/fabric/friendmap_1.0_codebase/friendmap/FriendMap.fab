@@ -259,6 +259,9 @@ where
     {user; l; s; *provider; *MapServer.provider} <= {*→service},
     {user; l; s; *provider; *MapServer.provider} <= {*→user.friends},
 
+    // intermediate objects created at local store
+    l <= {*→worker$}, {*←worker$} <= l, // TODO: worker$ ≽ l
+
     // l objects created at s
     {*←s} <= l, l <= {*→s}, {*→s} <= {*→s}, // TODO: s ≽ l@{s→}: result created at s
 
@@ -280,10 +283,11 @@ where
     final label fetchLabel   = new label {{*l} meet {*→service}}; // TODO @store
 
     // compute bounding box
-    final Box boundary = createBoundingBox(user, o, n, fetchLabel, fetchStore);
+    final Box boundary = createBoundingBox(user, o, n, fetchLabel, fetchStore, friend_access_bound);
 
+    /* TODO
     // get map
-    MapImage[fetchLabel,{*→service}] map;
+    MapImage[fetchLabel,{*→service.store}] map;
     try {
       map = this.service.createMap(fetchLabel, new label {*→service}, boundary);
     } catch (final NullPointerException e) {
@@ -300,6 +304,8 @@ where
                 friend_access_bound);
 
     return annotated;
+    */
+    return null;
   }
 
 
