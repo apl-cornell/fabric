@@ -181,7 +181,12 @@ where
     {*provider; *MapServer.provider} <= {*→service.store},
 
     // map output depends on
+    //  - code
+    //  - user and user's contents
+    //  - map service results
     {*provider; *MapServer.provider} <= {*lbl},
+    {user}                           <= {*lbl}, {_→; *←(n,owner)} <= {*lbl},
+    {*←service}                      <= {*lbl},
 
     // invariants
     user.p equiv (n,owner),
