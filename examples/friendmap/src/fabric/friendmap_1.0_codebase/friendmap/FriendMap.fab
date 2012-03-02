@@ -220,9 +220,10 @@ where
     //  - code and caller pc
     //  - user pointer
     //  - policies
-    {*provider}                 <= {*→n},
-    {user}                      <= {*→n},
-    {friend_access_bound; n; l} <= {*→n},
+    //  - 
+    {*provider; *MapServer.provider} <= {*→n},
+    {user}                           <= {*→n},
+    {friend_access_bound; n; l}      <= {*→n},
 
     // information that flows to the map service:
     //  - code and caller pc            (*provider and caller_pc)
@@ -250,9 +251,9 @@ where
     //  - code and caller pc
     //  - user and user's contents
     //  - policies
-    {*provider}                 <= {*friend_access_bound},
-    {user}                      <= {*friend_access_bound}, {_→; *←n,o} <= {*friend_access_bound},
-    {friend_access_bound; n; l} <= {*friend_access_bound},
+    {*provider; *MapServer.provider} <= {*friend_access_bound},
+    {user}                           <= {*friend_access_bound}, {_→; *←n,o} <= {*friend_access_bound},
+    {friend_access_bound; n; l}      <= {*friend_access_bound},
 
     // intermediate objects created at local store
     l <= {*→worker$}, {*←worker$} <= l, // TODO: worker$ ≽ l
