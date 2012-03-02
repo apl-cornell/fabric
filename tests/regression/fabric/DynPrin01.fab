@@ -1,18 +1,15 @@
-package friendmap;
 
-import mapserv.MapServer;
-import snapp.User;
 
-public class Fail[label A]
+public class DynPrin01[label A]
 {
   public final MapServer {this}@{A} service;
 
   public
   void
   createMap
-  {                          // side effects:
-    {*→n}                  ⊓ // user is fetched
-    {*→service.store}        // initial map is fetched
+  {                     // side effects:
+    {*→n}             ⊓ // user is fetched
+    {*→service.store}   // initial map is fetched
   }
   (
     final User[o,n] user,
@@ -36,15 +33,29 @@ public class Fail[label A]
   }
 
 
-
-
   /** Constructor just here because it's necessary */
-  public Fail (MapServer service)
+  public DynPrin01 (MapServer service)
   where {service; *provider} <= {this}
   {
     this.service = service;
   }
 
+}
+
+
+
+class User[principal p, principal o] {
+}
+
+class MapServer {
+  public final Store {this}@{*→store} store;
+
+  public MapServer()
+  where
+    {*provider} <= {this}
+  {
+    this.store = null;
+  }
 }
 
 
