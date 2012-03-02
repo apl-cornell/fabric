@@ -98,8 +98,13 @@
     </fabc-local>
   </target>
 
+  <target name="build-local-scripts" depends="build-local-friendmap">
+    <fabc-local srcdir="${home}/src/fabric/scripts">
+    </fabc-local>
+  </target>
+
   <target name="build-local"
-          depends="build-local-friendmap"
+          depends="build-local-scripts"
           description="Builds the fabric version of friendmap">
     <echo message="Boo-yah, the example builds in Mobile Fabric!" />
     <echo message="Now go for the mother load: ant publish-all."  />
