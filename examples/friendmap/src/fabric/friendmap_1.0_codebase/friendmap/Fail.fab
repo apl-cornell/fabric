@@ -1,0 +1,122 @@
+package friendmap;
+
+import java.io.PrintStream;
+
+import fabric.runtime.Runtime;
+
+import mapserv.MapServer;
+import mapserv.MapImage;
+import mapserv.Box;
+
+import snapp.User;
+import snapp.Location;
+import snapp.UserWrapper;
+
+import util.GroupIterator;
+import util.Delegator;
+import util.AssertionFailedError;
+import util.NoSuchElementException;
+import util.Util;
+import util.System;
+
+// TODO: label documentation
+
+/**
+ * This is the mapping application.  A FriendMap is instantiated with a particular
+ * mapping service, and then can be run by any User to generate private or
+ * public output maps.
+ */
+public class Fail[label A]
+where
+  MapServer.provider <= MapImage.provider, MapImage.provider <= MapServer.provider,
+  MapServer.provider <= Box.provider,      Box.provider      <= MapServer.provider,
+
+  // code is public
+  provider <= {_→},
+
+  util.Group.provider         <= {*←}, {_→} <= util.Group.provider,
+  util.GroupIterator.provider <= {*←}, {_→} <= util.GroupIterator.provider
+{
+
+  /** The map service that this app uses to fetch maps.  Must be non-null. */
+  public final MapServer {this}@{A} service;
+
+  /**
+   * Create a new instance of the mapping service.
+   *
+   * @throws NullPointerException
+   *         if service is null.
+   */
+  public
+  Fail
+  {      // side effects:
+    this // TODO
+  }
+  (
+    MapServer {this} service
+  )
+  throws
+    NullPointerException
+  where
+    provider <= {this}
+  {
+    if (service == null)
+      throw new NullPointerException();
+
+    this.service = service;
+  }
+
+  /**
+   * creates a map of the user's friends, visible at label l.  Return value is non-null.
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   */
+  public
+  MapImage[l,{*→s}] {*l}
+  createMap
+  {                          // side effects:
+    {*→n}                  ⊓ // user is fetched
+    {*l}                   ⊓ // result  map is updated
+    {*→service.store}      ⊓ // initial map is fetched
+    {*→s}                  ⊓ // result is created at s
+    {*friend_access_bound}   // friends are fetched
+  }
+  (
+    final label  l,
+    final Store  s,
+
+    final User[o,n] user,
+    final principal o,
+    final principal n,
+
+    final label friend_access_bound
+  )
+  throws
+  (
+    NullPointerException{user}
+  )
+  where
+    {*provider; user} <= {*→n},
+
+    {*provider; *MapServer.provider} <= {*→service.store},
+    {user}                           <= {*→service.store}
+  {
+    // invariant checks
+    if (user == null)
+      throw new NullPointerException();
+    if (user.friends == null)
+      throw new AssertionFailedError("user.friends must be non-null");
+    if (this.service == null)
+      throw new AssertionFailedError("service must be non-null");
+
+    final Store fetchStore = service.store;
+    return null;
+  }
+
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
