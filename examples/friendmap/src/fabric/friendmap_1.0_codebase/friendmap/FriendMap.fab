@@ -280,7 +280,6 @@ where
     // compute bounding box
     final Box[fetchLabel, {*→fetchStore}] boundary = createBoundingBox(user, o, n, fetchLabel, fetchStore, friend_access_bound);
 
-    /* TODO
     // get map
     MapImage[fetchLabel,{*→service.store}] map;
     try {
@@ -289,6 +288,7 @@ where
       throw new AssertionFailedError("boundary is non-null.");
     }
 
+    /*
     // make a local copy (with label l)
     // TODO: s ≽ l
     MapImage[l,{*→s}] annotated = map.copy(l, new label{*→s}, s);
