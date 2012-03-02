@@ -253,6 +253,7 @@
            vmlauncher="false">
       <arg value="${fabric.home}/bin/fabc"/>
       <arg value="-g"/>
+      <arg value="-e"/>
       <arg value="-d"/> <arg value="${home}/classes"/>
       <srcfile />
       <fileset dir="${broker.fab.src}" includes="**/*.fab"/>
