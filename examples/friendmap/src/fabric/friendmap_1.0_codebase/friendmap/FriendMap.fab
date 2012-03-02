@@ -135,56 +135,56 @@ where
 // 
 //     printMap(user, owner, n, new label {*→user.friends});
 //   }
-// 
-// 
-//   /**
-//    * Helper method that gets the map and prints it out.
-//    *
-//    * @throws NullPointerException
-//    *         if user is null.
-//    * @throws SecurityException
-//    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
-//    */
-//   private
-//   void
-//   printMap
-//   {                    // side effects
-//     {*lbl}           ⊓ // output on lbl channel
-//     {*→service}      ⊓ // map service is contacted
-//     {*→user.friends}   // user's friends are fetched
-//   }
-//   (
-//     final User[owner,n] user,
-//     final principal     owner,
-//     final principal     n,
-//     final label         lbl
-//   )
-//   throws
-//   (
-//     NullPointerException {user}
-//   )
-//   where
-//     {*←service; *←owner} <= lbl,         // because the service and the user influence the map.
-//     lbl                  <= {*→worker$}, // because data will be output to the system user
-// 
-//     // these components affect the fetches and constructed map 
-//     {user; lbl; *provider; *MapServer.provider} <= {*lbl},
-//     {user; lbl; *provider; *MapServer.provider} <= {*→service},
-//     {user; lbl; *provider; *MapServer.provider} <= {*→user.friends} // TODO: this seems wrong.
-//   {
-//     if (user == null)
-//       throw new NullPointerException();
-// 
-//     final Store localStore = worker$.getLocalStore();
-// 
-//     MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n);
-//     PrintStream[lbl] out = System.stdout(lbl);
-// 
-//     if (result == null)                                             { throw new AssertionFailedError("createMap() returns a non-null value."); }
-//     try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("System.stdout must return a non-null value"); }
-//   }
-// 
-// 
+
+
+  /**
+   * Helper method that gets the map and prints it out.
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   * @throws SecurityException
+   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+   */
+  private
+  void
+  printMap
+  {                    // side effects
+    {*lbl}           ⊓ // output on lbl channel
+    {*→service}      ⊓ // map service is contacted
+    {*→user.friends}   // user's friends are fetched
+  }
+  (
+    final User[owner,n] user,
+    final principal     owner,
+    final principal     n,
+    final label         lbl
+  )
+  throws
+  (
+    NullPointerException {user}
+  )
+  where
+    {*←service; *←owner} <= lbl,         // because the service and the user influence the map.
+    lbl                  <= {*→worker$}, // because data will be output to the system user
+
+    // these components affect the fetches and constructed map 
+    {user; lbl; *provider; *MapServer.provider} <= {*lbl},
+    {user; lbl; *provider; *MapServer.provider} <= {*→service},
+    {user; lbl; *provider; *MapServer.provider} <= {*→user.friends} // TODO: this seems wrong.
+  {
+    if (user == null)
+      throw new NullPointerException();
+
+    final Store localStore = worker$.getLocalStore();
+
+    MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n);
+    PrintStream[lbl] out = System.stdout(lbl);
+
+    if (result == null)                                             { throw new AssertionFailedError("createMap() returns a non-null value."); }
+    try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("System.stdout must return a non-null value"); }
+  }
+
+
   /**
    * creates a map of the user's friends, visible at label l.  Return value is non-null.
    *
