@@ -148,10 +148,11 @@ where
   private
   void
   printMap
-  {                    // side effects
-    {*lbl}           ⊓ // output on lbl channel
-    {*→service}      ⊓ // map service is contacted
-    {*→user.friends}   // user's friends are fetched
+  {                     // side effects
+    {*→n}             ⊓ // fetches of user's information
+    {*→user.friends}  ⊓ // user's friends are fetched
+    {*→service.store} ⊓ // map service is contacted
+    {*lbl}              // output on lbl channel
   }
   (
     final User[owner,n] user,
@@ -164,24 +165,45 @@ where
     NullPointerException {user}
   )
   where
-    {*←service; *←owner} <= lbl,         // because the service and the user influence the map.
-    lbl                  <= {*→worker$}, // because data will be output to the system user
+    // user fetch depends on
+    //  - code and caller_pc
+    //  - user pointer
+    {*provider} <= {*→n},
+    {user}      <= {*→n},
 
-    // these components affect the fetches and constructed map 
-    {user; lbl; *provider; *MapServer.provider} <= {*lbl},
-    {user; lbl; *provider; *MapServer.provider} <= {*→service},
-    {user; lbl; *provider; *MapServer.provider} <= {*→user.friends} // TODO: this seems wrong.
+    // user's friends fetch depends on
+    //  - code and caller_pc
+    //  - user and user's contents
+    {*provider} <= {*→user.friends},
+    {user}      <= {*→user.friends}, {_→; *←(n,owner)} <= {*→user.friends},
+
+    // initial map fetch depends on
+    {*provider} <= {*→service.store},
+
+    // map output depends on
+    {*provider} <= {*lbl},
+
+    // invariants
+    user.p equiv (n,owner),
+
+    // worker$ must enforce lbl
+    {*←worker$} <= lbl, lbl <= {*→worker$}
   {
     if (user == null)
       throw new NullPointerException();
 
     final Store localStore = worker$.getLocalStore();
 
-    MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n);
+    if (localStore equiv worker$)
+    {
+
+    MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n, new label {*→user.friends});
     PrintStream[lbl] out = System.stdout(lbl);
 
     if (result == null)                                             { throw new AssertionFailedError("createMap() returns a non-null value."); }
     try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("System.stdout must return a non-null value"); }
+
+    } else throw new AssertionFailedError("worker$ equiv worker$.getLocalStore");
   }
 
 
