@@ -30,7 +30,7 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 		this.user = user;
     }
 
-    public void go {*provider} (PrintStream[{}] {} output) where authority (Broker)
+    public void go {Broker←} (PrintStream[{}] {} output) where authority (Broker)
     {
 		output.println ("Starting Airline example");
 
