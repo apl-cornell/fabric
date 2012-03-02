@@ -1,12 +1,7 @@
 public class DynamicL01[principal p] {
-    int{} y;
-    public void foo{}(label{p→} l) {
-        final label m = new label {{*l} ⊓ {⊤←}};
-        boolean{} b = false;
-        bar(b);
-    }
 
-    void bar{}(boolean{} b) {
-        y = 10;
+    public int{} foo (DynamicL01[q] x, principal q) {
+        label l = new label {q→};
+        return 0;
     }
 }
