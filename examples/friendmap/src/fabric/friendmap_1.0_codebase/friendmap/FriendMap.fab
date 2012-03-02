@@ -220,11 +220,15 @@ where
     //  - code and caller pc
     //  - user pointer
     //  - policies
-    //  - the store at which the result is created (because this affects execution of annotation)
+    // second fetch dependent on copied map, which depends on
+    //  - the map service
+    //  - the store at which the result is created
     {*provider; *MapServer.provider} <= {*→n},
     {user}                           <= {*→n},
     {friend_access_bound; n; l}      <= {*→n},
+
     {s}                              <= {*→n},
+    {*←service}                      <= {*→n},
 
     // information that flows to the map service:
     //  - code and caller pc            (*provider and caller_pc)
@@ -257,6 +261,7 @@ where
     {user}                           <= {*friend_access_bound}, {_→; *←n,o} <= {*friend_access_bound},
     {friend_access_bound; n; l}      <= {*friend_access_bound},
     {s}                              <= {*friend_access_bound},
+    {*←service}                      <= {*friend_access_bound},
 
     // intermediate objects created at local store
     l <= {*→worker$}, {*←worker$} <= l, // TODO: worker$ ≽ l
