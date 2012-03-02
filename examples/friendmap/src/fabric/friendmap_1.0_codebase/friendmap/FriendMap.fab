@@ -238,13 +238,13 @@ where
     //  - user and user's contents
     //  - store and label of result
     //  - friends policies
-    //  - some friend locations
+    //  - (dyn) some friend locations
     //  - fetched map
     {*provider; *MapServer.provider} <= {*l},
     {user}                           <= {*l}, {_→; *←n,o} <= {*l},
     {s; l}                           <= {*l},
     {friend_access_bound; n; l}      <= {*l},
-    {*←service.store}                <= {*l},
+    {*←service}                      <= {*l},
 
     // fetch of user's friends:
     //  - code and caller pc
@@ -274,6 +274,8 @@ where
     final Store fetchStore = service.store;
     final Store localStore = s;
 
+    if (fetchStore actsfor service) {
+
     // this is the label of the data that gets sent to the service
     final label fetchLabel = new label {{*l} meet {*→fetchStore}}; // TODO @store
 
@@ -281,9 +283,9 @@ where
     final Box[fetchLabel, {*→fetchStore}] boundary = createBoundingBox(user, o, n, fetchLabel, fetchStore, friend_access_bound);
 
     // get map
-    MapImage[fetchLabel,{*→service.store}] map;
+    MapImage[fetchLabel,{*→fetchStore}] map;
     try {
-      map = this.service.createMap(fetchLabel, new label {*→service}, boundary);
+      map = this.service.createMap(fetchLabel, new label {*→service.store}, boundary);
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("boundary is non-null.");
     }
@@ -300,6 +302,9 @@ where
 
     return annotated;
     */
+
+    }
+
     return null;
   }
 
