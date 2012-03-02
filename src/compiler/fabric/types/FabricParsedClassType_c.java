@@ -2,17 +2,23 @@ package fabric.types;
 
 import java.net.URI;
 import java.util.Iterator;
+import java.util.List;
 
 import jif.types.ActsForConstraint;
 import jif.types.ActsForParam;
 import jif.types.Assertion;
+import jif.types.JifConstructorInstance;
+import jif.types.JifMethodInstance;
 import jif.types.JifParsedPolyType_c;
 import jif.types.LabelLeAssertion;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
+import polyglot.ast.ClassMember;
 import polyglot.frontend.Source;
+import polyglot.types.ClassType;
+import polyglot.types.ConstructorInstance;
 import polyglot.types.DeserializedClassInitializer;
 import polyglot.types.FieldInstance;
 import polyglot.types.LazyClassInitializer;
@@ -167,7 +173,23 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     if (accessPolicy == null) {
       if (ts.FObject().equals(this))
         accessPolicy = ts.bottomConfPolicy(Position.compilerGenerated());
-      else if (!ts.isFabricClass(this))
+      else if (ts.isFabricInterface(this)) {
+        accessPolicy = ((FabricClassType) superType()).accessPolicy();
+
+        for (ConstructorInstance ci  : (List<ConstructorInstance>) constructors()) {
+          JifConstructorInstance jci = (JifConstructorInstance) ci;
+          ConfPolicy beginConf = ts.confProjection(jci.pcBound());
+          if (beginConf == null) continue;
+          accessPolicy = ts.join(accessPolicy, beginConf);
+        }
+        for (MethodInstance mi  : (List<MethodInstance>) methods()) {
+          if (mi.flags().isStatic()) continue;
+          JifMethodInstance jmi = (JifMethodInstance) mi;
+          ConfPolicy beginConf = ts.confProjection(jmi.pcBound());
+          if (beginConf == null) continue;
+          accessPolicy = ts.join(accessPolicy, beginConf);
+        }
+      } else if (!ts.isFabricClass(this))
         // There is no access channel since it is not a persistent object
         accessPolicy = ts.topConfPolicy(Position.compilerGenerated());
       else {

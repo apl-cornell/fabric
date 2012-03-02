@@ -611,6 +611,23 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
+  public boolean isFabricInterface(Type type) {
+    if (type instanceof ClassType) {
+      ClassType ct = (ClassType) type;
+
+      if (!ct.flags().isInterface()) return false;
+
+      while (ct != null) {
+        if (typeEquals(ct, FObject())) {
+          return true;
+        }
+        ct = (ClassType) ct.superType();
+      }
+    }
+    return false;
+  }
+
+  @Override
   public boolean isFabricArray(Type t) {
     // unwrap label
     if (t instanceof LabeledType) t = ((LabeledType) t).typePart();
