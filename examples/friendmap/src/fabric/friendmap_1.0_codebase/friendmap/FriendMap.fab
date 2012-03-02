@@ -220,10 +220,11 @@ where
     //  - code and caller pc
     //  - user pointer
     //  - policies
-    //  - 
+    //  - the store at which the result is created (because this affects execution of annotation)
     {*provider; *MapServer.provider} <= {*→n},
     {user}                           <= {*→n},
     {friend_access_bound; n; l}      <= {*→n},
+    {s}                              <= {*→n},
 
     // information that flows to the map service:
     //  - code and caller pc            (*provider and caller_pc)
@@ -251,9 +252,11 @@ where
     //  - code and caller pc
     //  - user and user's contents
     //  - policies
+    //  - the store at which the result is created (because this affects execution of annotation)
     {*provider; *MapServer.provider} <= {*friend_access_bound},
     {user}                           <= {*friend_access_bound}, {_→; *←n,o} <= {*friend_access_bound},
     {friend_access_bound; n; l}      <= {*friend_access_bound},
+    {s}                              <= {*friend_access_bound},
 
     // intermediate objects created at local store
     l <= {*→worker$}, {*←worker$} <= l, // TODO: worker$ ≽ l
@@ -278,7 +281,7 @@ where
     if (fetchStore actsfor service) {
 
     // this is the label of the data that gets sent to the service
-    final label fetchLabel = new label {{*l} meet {*→fetchStore}}; // TODO @store
+    final label fetchLabel = new label {{*l} meet {*→fetchStore} meet {*→n} meet {*friend_access_bound}}; // TODO @store
 
     // compute bounding box
     final Box[fetchLabel, {*→fetchStore}] boundary = createBoundingBox(user, o, n, fetchLabel, fetchStore, friend_access_bound);
@@ -290,6 +293,9 @@ where
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("boundary is non-null.");
     }
+
+    if (map == null)
+      throw new AssertionFailedError("MapServer.createMap return is non-null.");
 
     // make a local copy (with label l)
     // TODO: s ≽ l
