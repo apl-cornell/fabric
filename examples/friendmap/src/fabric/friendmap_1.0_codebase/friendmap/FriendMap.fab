@@ -168,20 +168,20 @@ where
     // user fetch depends on
     //  - code and caller_pc
     //  - user pointer
-    {*provider} <= {*→n},
-    {user}      <= {*→n},
+    {*provider; *MapServer.provider} <= {*→n},
+    {user}                           <= {*→n},
 
     // user's friends fetch depends on
     //  - code and caller_pc
     //  - user and user's contents
-    {*provider} <= {*→user.friends},
-    {user}      <= {*→user.friends}, {_→; *←(n,owner)} <= {*→user.friends},
+    {*provider; *MapServer.provider} <= {*→user.friends},
+    {user}                           <= {*→user.friends}, {_→; *←(n,owner)} <= {*→user.friends},
 
     // initial map fetch depends on
-    {*provider} <= {*→service.store},
+    {*provider; *MapServer.provider} <= {*→service.store},
 
     // map output depends on
-    {*provider} <= {*lbl},
+    {*provider; *MapServer.provider} <= {*lbl},
 
     // invariants
     user.p equiv (n,owner),
