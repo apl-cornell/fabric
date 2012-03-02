@@ -99,7 +99,7 @@
   </target>
 
   <target name="build-local-scripts" depends="build-local-friendmap">
-    <fabc-local srcdir="${home}/src/fabric/scripts">
+    <fabc-local srcdir="${home}/src/fabric/scripts/alice" dstdir="${home}/classes/alice" >
     </fabc-local>
   </target>
 
@@ -265,6 +265,7 @@
   -->
   <macrodef name="fabc-local">
     <attribute name="srcdir" />
+    <attribute name="dstdir"   default="${home}/classes/fabric" />
     <attribute name="includes" default="**/*.fab" />
     <attribute name="excludes" default="" />
     <element name="extra-args" implicit="true" optional="yes"/>
@@ -280,7 +281,7 @@
         <arg value="${fabc}" />
         <arg value="-g" />
         <arg value="-e" />
-        <arg value="-d" />         <arg value="${home}/classes/fabric" />
+        <arg value="-d" />         <arg value="@{dstdir}" />
         <arg value="-sourcepath"/> <arg value="@{srcdir}" />
         <arg value="-classpath" /> <arg value="${home}/classes/fabric" />
         <arg value="-addsigcp"  /> <arg value="${home}/classes/fab-sig" />
