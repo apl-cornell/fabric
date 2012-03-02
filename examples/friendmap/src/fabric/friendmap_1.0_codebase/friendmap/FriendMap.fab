@@ -290,7 +290,6 @@ where
       throw new AssertionFailedError("boundary is non-null.");
     }
 
-    /*
     // make a local copy (with label l)
     // TODO: s ≽ l
     MapImage[l,{*→s}] annotated = map.copy(l, new label{*→s}, s);
@@ -301,11 +300,8 @@ where
                 friend_access_bound);
 
     return annotated;
-    */
 
-    }
-
-    return null;
+    } else throw new AssertionFailedError("service's store acts for the service");
   }
 
 
