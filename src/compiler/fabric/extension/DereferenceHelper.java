@@ -9,6 +9,7 @@ import polyglot.ast.TypeNode;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
+import jif.ast.JifInstantiator;
 import jif.ast.Jif_c;
 import jif.types.ConstraintMessage;
 import jif.types.JifContext;
@@ -59,6 +60,8 @@ public class DereferenceHelper {
    * </pre>
    * will cause a flow from the label of x to the access label of C2;
    * checkAccess(x, C2, ...) will add constraints reflecting that.
+   * 
+   * Assumes that ref has already been label checked.
    */
   public static void checkAccess (final Expr ref,
                                   final FabricReferenceType targetType,
@@ -67,18 +70,23 @@ public class DereferenceHelper {
   {
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     
-    // get the access label of the type
-    final ConfPolicy accessLabel = targetType.accessPolicy();
-    
     // check that the pc and ref label can flow to the access label
     JifContext       A  = lc.context();
-    
     Label objLabel = Jif_c.getPathMap(ref).NV();
     Label pc       = A.pc();
 
+    // get the access label of the type
+    final ConfPolicy accessPolicy = targetType.accessPolicy();
+    final Label      accessLabel  = ts.toLabel(accessPolicy);
+    final Label      instantiated = JifInstantiator.instantiate(accessLabel,
+                                                                A,
+                                                                ref,
+                                                                targetType,
+                                                                objLabel);
+    
     lc.constrain(new NamedLabel("reference label", objLabel),
         LabelConstraint.LEQ,
-        new NamedLabel("access label", ts.toLabel(accessLabel)),
+        new NamedLabel("access label", instantiated),
         A.labelEnv(), pos,new ConstraintMessage() {
       @Override
       public String msg() {
@@ -89,7 +97,7 @@ public class DereferenceHelper {
     });
     lc.constrain(new NamedLabel("pc", pc),
         LabelConstraint.LEQ,
-        new NamedLabel("access label", ts.toLabel(accessLabel)),
+        new NamedLabel("access label", instantiated),
         A.labelEnv(), pos, new ConstraintMessage() {
       @Override
       public String msg() {
