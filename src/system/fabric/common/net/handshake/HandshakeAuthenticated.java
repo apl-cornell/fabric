@@ -305,7 +305,7 @@ public class HandshakeAuthenticated implements Protocol {
     try {
       int length = in.readInt();
       byte[] encoded = new byte[length];
-      in.read(encoded);
+      in.readFully(encoded);
       
       ByteArrayInputStream bytes = new ByteArrayInputStream(encoded);
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
