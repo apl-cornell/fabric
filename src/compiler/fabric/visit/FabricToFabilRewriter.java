@@ -94,6 +94,13 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     }
     return loc;
   }
+  
+  /**
+   * The full class path of the runtime principal utility.
+   */
+  public String runtimePrincipalUtil() {
+      return jif_ts().PrincipalUtilClassName();
+  }    
 
   @Override
   public String runtimeLabelUtil() {

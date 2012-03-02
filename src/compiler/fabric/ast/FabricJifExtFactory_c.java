@@ -34,6 +34,7 @@ import fabric.translate.CodebaseDeclToFabilExt_c;
 import fabric.translate.CodebaseNodeToFabilExt_c;
 import fabric.translate.ConstructorDeclToFabilExt_c;
 import fabric.translate.FieldDeclToFabilExt_c;
+import fabric.translate.InstanceOfToFabilExt_c;
 import fabric.translate.MethodDeclToFabilExt_c;
 import fabric.translate.NewFabricArrayToFabilExt_c;
 import fabric.translate.NewLabelToFabilExt_c;
@@ -186,7 +187,7 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   
   @Override
   protected Ext extInstanceofImpl() {
-    return new FabricInstanceofExt(new InstanceOfToJavaExt_c());
+    return new FabricInstanceofExt(new InstanceOfToFabilExt_c());
 }
   
   
