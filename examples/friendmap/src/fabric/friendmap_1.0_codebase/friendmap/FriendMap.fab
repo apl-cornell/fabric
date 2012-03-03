@@ -168,8 +168,11 @@ where
     // user fetch depends on
     //  - code and caller_pc
     //  - user pointer
+    //  - user's principal pointer
     {*provider; *MapServer.provider} <= {*→n},
     {user}                           <= {*→n},
+    {n}                              <= {*→n},
+    {lbl}                            <= {*→n},
 
     // user's friends fetch depends on
     //  - code and caller_pc
@@ -178,15 +181,30 @@ where
     {user}                           <= {*→user.friends}, {_→; *←(n,owner)} <= {*→user.friends},
 
     // initial map fetch depends on
+    //  - confidentiality of code
+    //  - user pointer
+    //  - user's principal pointer
+    //  - output lbl pointer
     {*provider; *MapServer.provider} <= {*→service.store},
+    {user}                           <= {*→service.store},
+    {n}                              <= {*→service.store},
+    {lbl}                            <= {*→service.store},
 
     // map output depends on
     //  - code
     //  - user and user's contents
     //  - map service results
+    //  - lbl pointer
     {*provider; *MapServer.provider} <= {*lbl},
     {user}                           <= {*lbl}, {_→; *←(n,owner)} <= {*lbl},
     {*←service}                      <= {*lbl},
+    {lbl}                            <= {*lbl},
+    {n}                              <= {*lbl},
+
+    // references to n and lbl must flow 
+    // to user's friends
+    {n}                              <= {*->user.friends},
+    {lbl}                            <= {*->user.friends},
 
     // invariants
     user.p equiv (n,owner),
