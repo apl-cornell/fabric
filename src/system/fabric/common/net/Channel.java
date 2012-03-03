@@ -137,7 +137,7 @@ abstract class Channel extends Thread {
         }
 
         byte[] buf = new byte[len];
-        in.read(buf);
+        in.readFully(buf);
         
         NETWORK_CHANNEL_LOGGER.log(Level.FINE, "received " + len
             + " bytes on {0}", this);
