@@ -73,7 +73,7 @@ public class DereferenceHelper {
     // check that the pc and ref label can flow to the access label
     JifContext       A  = lc.context();
     Label objLabel = Jif_c.getPathMap(ref).NV();
-    Label pc       = A.pc();
+    Label pc       = ts.join(Jif_c.getPathMap(ref).N(), A.currentCodePCBound());
 
     // get the access label of the type
     final ConfPolicy accessPolicy = targetType.accessPolicy();
