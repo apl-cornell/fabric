@@ -10,7 +10,7 @@ public class Server[principal Airline] implements broker.Server[Airline]
     int {Airline->;Airline<-} seats; 
     int {Airline->;Airline<-} lowestprice; 
 
-	public Server (int {Airline->;Airline<-} cost, int {Airline->;Airline<-} seats) {
+	public Server{Airline→;Airline←} (int {Airline->;Airline<-} cost, int {Airline->;Airline<-} seats) {
 		this.cost = cost;
 		this.seats = seats; 
 		this.lowestprice = cost;

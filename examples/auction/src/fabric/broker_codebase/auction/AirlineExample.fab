@@ -24,7 +24,7 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 	final Server[AirlineB]{Broker<-} b;
 	final User[TheUser]{Broker<-} user;
 
-    public AirlineExample (Server[AirlineA]{Broker<-} a, Server[AirlineB]{Broker<-} b, User[TheUser]{Broker<-} user) {
+    public AirlineExample {Broker←} (Server[AirlineA]{Broker<-} a, Server[AirlineB]{Broker<-} b, User[TheUser]{Broker<-} user) {
 		this.a = a;
 		this.b = b;
 		this.user = user;
