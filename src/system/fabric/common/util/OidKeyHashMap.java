@@ -9,7 +9,7 @@ import fabric.lang.Object;
 import fabric.worker.Store;
 
 /**
- * A map keyed on OIDs.
+ * A map keyed on OIDs.  Supports null keys.
  */
 public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   Map<Store, LongKeyMap<V>> map;
