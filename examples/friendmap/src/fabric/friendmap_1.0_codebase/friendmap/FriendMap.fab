@@ -19,8 +19,6 @@ import util.NoSuchElementException;
 import util.Util;
 import util.System;
 
-// TODO: label documentation
-
 /**
  * This is the mapping application.  A FriendMap is instantiated with a particular
  * mapping service, and then can be run by any User to generate private or
@@ -30,9 +28,6 @@ public class FriendMap[label A]
 where
   MapServer.provider <= MapImage.provider, MapImage.provider <= MapServer.provider,
   MapServer.provider <= Box.provider,      Box.provider      <= MapServer.provider,
-
-  // code is public
-  provider <= {_→},
 
   util.Group.provider         <= {*←}, {_→} <= util.Group.provider,
   util.GroupIterator.provider <= {*←}, {_→} <= util.GroupIterator.provider
@@ -50,7 +45,7 @@ where
   public
   FriendMap
   {      // side effects:
-    this // TODO
+    this // fields are updated
   }
   (
     MapServer {this} service
@@ -66,37 +61,43 @@ where
     this.service = service;
   }
 
-//   /**
-//    * prints a map of the user's friends, visible to the user
-//    *
-//    * @throws NullPointerException
-//    *         if user is null.
-//    * @throws SecurityException
-//    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
-//    */
-//   public
-//   void
-//   viewMap
-//   {                    // side effects:
-//     {*→owner}        ⊓ // information is output to owner
-//     {*→service}      ⊓ // map service is contacted
-//     {*→user.friends}   // user's friends are fetched
-//   }
-//   (
-//     User[owner,n] user,
-//     principal     owner,
-//     principal     n
-//   )
-//   where
-//     // the map will be output on standard out
-//     worker$ actsfor owner,
-// 
-//     // these affect the fetch and resulting map
-//     {*provider; *MapServer.provider} <= {*→owner},
-//     {*provider; *MapServer.provider} <= {*→service}
-//   {
-//     printMap(user, owner, n, new label {*→owner});
-//   }
+  /**
+   * prints a map of the user's friends, visible to the user
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   */
+  public
+  void
+  viewMap
+  {                     // side effects:
+    {*→n}             ⊓ // user is fetched
+    {*→user.friends}  ⊓ // user's friends are fetched
+    {*→service.store} ⊓ // map is fetched
+    {*→owner}           // map is output to the owner
+  }
+  (
+    User[owner,n] user,
+    principal     owner,
+    principal     n
+  )
+  throws
+  (
+    NullPointerException {user}
+  )
+  where
+    {*provider; *MapServer.provider; user; n; owner} <= {{*→n} ⊓ {*→user.friends} ⊓ {*→service.store} ⊓ {*→owner}},
+    {_→; *←(n,owner)} <= {{*→user.friends} ⊓ {*→owner}},
+    {*←service}       <= {*→owner},
+
+    user.p equiv (n,owner),
+    worker$ actsfor owner, worker$ actsfor user.friends
+  {
+    if (user == null)
+      throw new NullPointerException();
+
+    printMap(user, owner, n, new label {*→owner});
+  }
 
   /**
    * prints a map of the user's friends, visible to the user's friends
