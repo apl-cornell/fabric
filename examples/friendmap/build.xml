@@ -295,7 +295,7 @@
              parallel="true"
              failonerror="true"
              dir="@{srcdir}"
-             dest="${home}/classes/fabric"
+             dest="@{dstdir}"
              relative="false"
              skipemptyfilesets="true"
              vmlauncher="false">
