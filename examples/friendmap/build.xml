@@ -312,6 +312,7 @@
              skipemptyfilesets="true"
              vmlauncher="false">
         <arg value="${fabc}" />
+        <arg value="-trusted-providers" />
         <arg value="-sig" />
         <arg value="-g" />
         <arg value="-e" />
