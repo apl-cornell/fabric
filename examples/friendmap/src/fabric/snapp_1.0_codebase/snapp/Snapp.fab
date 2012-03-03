@@ -19,7 +19,7 @@ where
   /* The store this object is stored on.  Used for allocating Users.
    * this.store ≽ this
    */
-  protected final Store {_→; *←this}@{*→this} store;
+  protected final Store {this}@{*→this} store;
 
   /**
    * Create a new Snapp, operated by owner.
@@ -39,12 +39,10 @@ where
   : {*provider}
   where
     // the parameters and code affect the assignment to the fields
-    {*provider; name; owner; store} <= {_→; *←this},
-    // the parameters and code affect the assignment to the superclass fields
     {*provider; name; owner; store} <= {this},
-
     // establish invariants
-    store actsfor owner
+    store actsfor owner,
+    provider <= {⊤→store}
   {
     this.store = store;
     super(store, name, owner);

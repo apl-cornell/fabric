@@ -1,11 +1,22 @@
+import snapp.*;
 
 public class Init
+where
+    Snapp.provider <= User.provider,
+    User.provider <= Snapp.provider,
+    provider <= Snapp.provider,
+    
+    // trusted classes are trusted
+    util.Delegator.provider     <= {*←},
+    util.GroupIterator.provider <= {*←},
+    util.Group.provider         <= {*←},
+    Snapp.provider              <= {*←}    
 {
-  public static void main(String[] args) {
-    final Store store = worker$.getRemoteStore("snapp");
-    final Snapp snapp = new Snapp@store("Snapp Principal Object", store);
+  public static void main{⊤←}(String[] args) {
+    final Store store = worker$.getWorker().getStore("snapp");
+    final Snapp snapp = new Snapp@store("Snapp Principal Object", store, store);
 
-    store.getRootMap().put("snapp", snapp);
+    store.getRoot().put("snapp", snapp);
   }
 }
 
