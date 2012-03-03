@@ -97,44 +97,46 @@ where
 //   {
 //     printMap(user, owner, n, new label {*→owner});
 //   }
-// 
-//   /**
-//    * prints a map of the user's friends, visible to the user's friends
-//    *
-//    * @throws NullPointerException
-//    *         if user is null.
-//    * @throws SecurityException
-//    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
-//    */
-//   public
-//   void
-//   postMap
-//   {                    // side effects:
-//     {*→user.friends} ⊓ // user's wall is updated; user's friends are fetched
-//     {*→service}        // map is fetched
-//   }
-//   (
-//     final User[owner,n] user,
-//     final principal     owner,
-//     final principal     n
-//   )
-//   throws
-//   (
-//     NullPointerException {user}
-//   )
-//   where
-//     worker$ actsfor owner,
-//     owner   actsfor user.friends,
-// 
-//     // these affect the fetch and resulting map.
-//     {*provider; *MapServer.provider} <= {*→user.friends},
-//     {*provider; *MapServer.provider} <= {*→service}
-//   {
-//     if (user == null)
-//       throw new NullPointerException();
-// 
-//     printMap(user, owner, n, new label {*→user.friends});
-//   }
+
+  /**
+   * prints a map of the user's friends, visible to the user's friends
+   *
+   * @throws NullPointerException
+   *         if user is null.
+   * @throws SecurityException
+   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+   */
+  public
+  void
+  postMap
+  {                     // side effects:
+    {*→n}             ⊓ // user is fetched
+    {*→user.friends}  ⊓ // user's wall is updated; user's friends are fetched
+    {*→service.store}   // map is fetched
+  }
+  (
+    final User[owner,n] user,
+    final principal     owner,
+    final principal     n
+  )
+  throws
+  (
+    NullPointerException {user}
+  )
+  where
+    // see printMap constraints
+    {*provider; *MapServer.provider; user; n} <= {{*→n} ⊓ {*→service.store} ⊓ {*→user.friends} ⊓ {*→service.store}},
+    {*←service}     <= {*→user.friends},
+    {_→; *←owner,n} <= {*→user.friends},
+
+    user.p equiv (owner,n),
+    worker$ actsfor user.friends
+  {
+    if (user == null)
+      throw new NullPointerException();
+
+    printMap(user, owner, n, new label {*→user.friends});
+  }
 
 
   /**
@@ -168,49 +170,42 @@ where
     // user fetch depends on
     //  - code and caller_pc
     //  - user pointer
-    //  - user's principal pointer
+    //  - policies
     {*provider; *MapServer.provider} <= {*→n},
     {user}                           <= {*→n},
-    {n}                              <= {*→n},
-    {lbl}                            <= {*→n},
+    {n; lbl}                         <= {*→n},
 
     // user's friends fetch depends on
     //  - code and caller_pc
     //  - user and user's contents
+    //  - policy
     {*provider; *MapServer.provider} <= {*→user.friends},
     {user}                           <= {*→user.friends}, {_→; *←(n,owner)} <= {*→user.friends},
+    {n; lbl}                         <= {*→user.friends},
 
     // initial map fetch depends on
     //  - confidentiality of code
     //  - user pointer
-    //  - user's principal pointer
-    //  - output lbl pointer
+    //  - policies
     {*provider; *MapServer.provider} <= {*→service.store},
     {user}                           <= {*→service.store},
-    {n}                              <= {*→service.store},
-    {lbl}                            <= {*→service.store},
+    {n; lbl}                         <= {*→service.store},
 
     // map output depends on
     //  - code
     //  - user and user's contents
     //  - map service results
-    //  - lbl pointer
+    //  - policies
     {*provider; *MapServer.provider} <= {*lbl},
     {user}                           <= {*lbl}, {_→; *←(n,owner)} <= {*lbl},
     {*←service}                      <= {*lbl},
-    {lbl}                            <= {*lbl},
-    {n}                              <= {*lbl},
-
-    // references to n and lbl must flow 
-    // to user's friends
-    {n}                              <= {*->user.friends},
-    {lbl}                            <= {*->user.friends},
+    {lbl; n}                         <= {*lbl},
 
     // invariants
     user.p equiv (n,owner),
 
-    // worker$ must enforce lbl
-    {*←worker$} <= lbl, lbl <= {*→worker$}
+    // lbl objects created on worker$
+    {*←worker$} <= lbl, lbl <= {*→worker$} // TODO: worker$ ≽ lbl
   {
     if (user == null)
       throw new NullPointerException();
