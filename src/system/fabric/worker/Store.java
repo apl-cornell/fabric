@@ -27,13 +27,19 @@ public interface Store {
   public boolean isLocalStore();
 
   /**
+   * @return a cache for interning labels and policies that are constructed at
+   *         this store.
+   */
+  LabelCache labelCache();
+
+  /**
    * Notifies the store that the transaction is entering the Prepare phase.
    * 
    * @return whether a subtransaction was created on the store as a result of
    *         the prepare.
    */
-  boolean prepareTransaction(long tid,
-      long commitTime, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+  boolean prepareTransaction(long tid, long commitTime,
+      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws UnreachableNodeException,
       TransactionPrepareFailedException;
 
@@ -72,7 +78,7 @@ public interface Store {
    * @param tid
    *          the ID of the aborting transaction. This is assumed to specify a
    *          top-level transaction.
-   * @throws AccessException 
+   * @throws AccessException
    */
   void abortTransaction(TransactionID tid) throws AccessException;
 
@@ -84,8 +90,8 @@ public interface Store {
    * @throws UnreachableNodeException
    * @throws TransactionCommitFailedException
    */
-  void commitTransaction(long transactionID)
-      throws UnreachableNodeException, TransactionCommitFailedException;
+  void commitTransaction(long transactionID) throws UnreachableNodeException,
+      TransactionCommitFailedException;
 
   /**
    * Determines whether the given set of objects are stale.

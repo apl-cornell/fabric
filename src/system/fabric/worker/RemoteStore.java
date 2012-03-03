@@ -59,6 +59,11 @@ public class RemoteStore extends RemoteNode implements Store {
    * The object table: locally resident objects.
    */
   private transient final ObjectCache cache;
+  
+  /**
+   * Cache for interning labels and policies.
+   */
+  private transient final LabelCache labelCache;
 
   /**
    * The set of fetch locks. Used to prevent threads from concurrently
@@ -84,6 +89,7 @@ public class RemoteStore extends RemoteNode implements Store {
     super(name);
     
     this.cache = new ObjectCache(name);
+    this.labelCache = new LabelCache();
     this.fetchLocks = new LongKeyHashMap<FetchLock>();
     this.fresh_ids = new LinkedList<Long>();
     this.publicKey = null;
@@ -95,6 +101,11 @@ public class RemoteStore extends RemoteNode implements Store {
   protected RemoteStore(String name, PublicKey key) {
     this(name);
     this.publicKey = key;
+  }
+
+  @Override
+  public LabelCache labelCache() {
+    return labelCache;
   }
 
   @Override

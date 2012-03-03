@@ -43,6 +43,11 @@ public final class LocalStore implements Store {
    */
   private final ObjectCache cache;
 
+  /**
+   * Cache for interning labels and policies.
+   */
+  private final LabelCache labelCache;
+
   private Set<Pair<Principal, Principal>> localDelegates;
 
   @Override
@@ -63,6 +68,11 @@ public final class LocalStore implements Store {
   @Override
   public void commitTransaction(long transactionID) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction committing");
+  }
+
+  @Override
+  public LabelCache labelCache() {
+    return labelCache;
   }
 
   @Override
@@ -129,6 +139,7 @@ public final class LocalStore implements Store {
    */
   protected LocalStore() {
     this.cache = new ObjectCache(name());
+    this.labelCache = new LabelCache();
   }
 
   @Override

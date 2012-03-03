@@ -1,5 +1,6 @@
 package fabric.lang.security;
 
+import fabric.worker.LabelCache;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
@@ -153,8 +154,13 @@ public final class LabelUtil {
       Principal reader) {
 //    try {
 //      enterTiming();
-      Label label = localStore.getPublicReadonlyLabel();
-      return (ReaderPolicy) new ReaderPolicy@store(owner, reader).$initLabels();
+      LabelCache labelCache = store.labelCache();
+      ConfPolicy result = labelCache.readerPolicy(owner, reader);
+      if (result != null) return result;
+      
+      result = (ReaderPolicy) new ReaderPolicy@store(owner, reader).$initLabels();
+      labelCache.addReaderPolicy(owner, reader, result);
+      return result;
 //    } finally {
 //      exitTiming();
 //    }
@@ -252,8 +258,13 @@ public final class LabelUtil {
   public static IntegPolicy writerPolicy(Store store, Principal owner, Principal writer) {
 //    try {
 //      enterTiming();
-      Label label = localStore.getPublicReadonlyLabel();
-      return (WriterPolicy) new WriterPolicy@store(owner, writer).$initLabels();
+      LabelCache labelCache = store.labelCache();
+      IntegPolicy result = labelCache.writerPolicy(owner, writer);
+      if (result != null) return result;
+      
+      result = (WriterPolicy) new WriterPolicy@store(owner, writer).$initLabels();
+      labelCache.addWriterPolicy(owner, writer, result);
+      return result;
 //    } finally {
 //      exitTiming();
 //    }
@@ -334,7 +345,13 @@ public final class LabelUtil {
 //      enterTiming();
       if (cPolicy == null || iPolicy == null)
         throw new NullPointerException@localStore();
-      return (PairLabel) new PairLabel@store(cPolicy, iPolicy).$initLabels();
+      LabelCache cache = store.labelCache();
+      Label result = cache.toLabel(cPolicy, iPolicy);
+      if (result != null) return result;
+      
+      result = (Label) new PairLabel@store(cPolicy, iPolicy).$initLabels();
+      cache.addToLabel(cPolicy, iPolicy, result);
+      return result;
 //    } finally {
 //      exitTiming();
 //    }
@@ -343,7 +360,7 @@ public final class LabelUtil {
   public static Label toLabel(Store store, ConfPolicy policy) {
 //    try {
 //      enterTiming();
-      return (PairLabel) new PairLabel@store(policy, topInteg()).$initLabels();
+      return toLabel(store, policy, topInteg());
 //    } finally {
 //      exitTiming();
 //    }
@@ -352,7 +369,7 @@ public final class LabelUtil {
   public static Label toLabel(Store store, IntegPolicy policy) {
 //    try {
 //      enterTiming();
-      return (PairLabel) new PairLabel@store(bottomConf(), policy).$initLabels();
+      return toLabel(store, bottomConf(), policy);
 //    } finally {
 //      exitTiming();
 //    }
@@ -360,14 +377,11 @@ public final class LabelUtil {
   
   // lift takes a policy and creates a pair label with the other
   // component being bottom
-//  public static Label liftToLabel(ConfPolicy policy) {
-//      return liftToLabel(localStore, policy);
-//  }
   public static Label liftToLabel(Store store, ConfPolicy policy) {
-      return (PairLabel) new PairLabel@store(policy, bottomInteg()).$initLabels();
+      return toLabel(store, policy, bottomInteg());
   }
   public static Label liftToLabel(Store store, IntegPolicy policy) {
-      return (PairLabel) new PairLabel@store(topConf(), policy).$initLabels();
+      return toLabel(store, topConf(), policy);
   }
   
   public static Label join(Store store, Label l1, Label l2) {
@@ -382,20 +396,25 @@ public final class LabelUtil {
         Label result = cache.getLabelJoin(pair);
 
         if (result == null) {
-          PairLabel pl1 = (PairLabel) l1;
-          PairLabel pl2 = (PairLabel) l2;
-          java.util.Set dependencies = new java.util.HashSet();
-          result =
-              (PairLabel) new PairLabel@store(pl1.confPolicy().join(store, pl2.confPolicy(), dependencies),
-                  pl1.integPolicy().join(store, pl2.integPolicy(), dependencies)).$initLabels();
-          // add dependencies from delegations to the cache result
-          // i.e., what dependencies does this result rely on?
-          for (java.util.Iterator iter = dependencies.iterator(); iter.hasNext();) {
-            SecurityCache.DelegationPair del =
-              (SecurityCache.DelegationPair) iter.next();
-            cache.addLabelJoinDependency(del, pair);
+          LabelCache labelCache = store.labelCache();
+          result = labelCache.join(l1, l2);
+          if (result == null) {
+            PairLabel pl1 = (PairLabel) l1;
+            PairLabel pl2 = (PairLabel) l2;
+            java.util.Set dependencies = new java.util.HashSet();
+            result =
+                (PairLabel) new PairLabel@store(pl1.confPolicy().join(store, pl2.confPolicy(), dependencies),
+                    pl1.integPolicy().join(store, pl2.integPolicy(), dependencies)).$initLabels();
+            // add dependencies from delegations to the cache result
+            // i.e., what dependencies does this result rely on?
+            for (java.util.Iterator iter = dependencies.iterator(); iter.hasNext();) {
+              SecurityCache.DelegationPair del =
+                (SecurityCache.DelegationPair) iter.next();
+              cache.addLabelJoinDependency(del, pair);
+            }
+            cache.putLabelJoin(pair, result);
+            labelCache.addJoin(l1, l2, result);
           }
-          cache.putLabelJoin(pair, result);
         }
         return result;
 
@@ -428,20 +447,25 @@ public final class LabelUtil {
         Label result = cache.getLabelMeet(pair);
 
         if (result == null) {
-          PairLabel pl1 = (PairLabel) l1;
-          PairLabel pl2 = (PairLabel) l2;
-          java.util.Set dependencies = new java.util.HashSet();
-          result =
-              (PairLabel) new PairLabel@store(pl1.confPolicy().meet(store, pl2.confPolicy(), dependencies),
-                  pl1.integPolicy().meet(store, pl2.integPolicy(), dependencies)).$initLabels();
-          // add dependencies from delegations to the cache result
-          // i.e., what dependencies does this result rely on?
-          for (java.util.Iterator iter = dependencies.iterator(); iter.hasNext();) {
-            SecurityCache.DelegationPair del =
-              (SecurityCache.DelegationPair) iter.next();
-            cache.addLabelMeetDependency(del, pair);
+          LabelCache labelCache = store.labelCache();
+          result = labelCache.meet(l1, l2);
+          if (result == null) {
+            PairLabel pl1 = (PairLabel) l1;
+            PairLabel pl2 = (PairLabel) l2;
+            java.util.Set dependencies = new java.util.HashSet();
+            result =
+                (PairLabel) new PairLabel@store(pl1.confPolicy().meet(store, pl2.confPolicy(), dependencies),
+                    pl1.integPolicy().meet(store, pl2.integPolicy(), dependencies)).$initLabels();
+            // add dependencies from delegations to the cache result
+            // i.e., what dependencies does this result rely on?
+            for (java.util.Iterator iter = dependencies.iterator(); iter.hasNext();) {
+              SecurityCache.DelegationPair del =
+                (SecurityCache.DelegationPair) iter.next();
+              cache.addLabelMeetDependency(del, pair);
+            }
+            cache.putLabelMeet(pair, result);
+            labelCache.addMeet(l1, l2, result);
           }
-          cache.putLabelMeet(pair, result);
         }
         return result;
       }
@@ -456,7 +480,13 @@ public final class LabelUtil {
   public static ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2) {
 //    try {
 //      enterTiming();
-      return join(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
+      LabelCache labelCache = store.labelCache();
+      ConfPolicy result = labelCache.join(p1, p2);
+      if (result != null) return result;
+      
+      result = join(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
+      labelCache.addJoin(p1, p2, result);
+      return result;
 //    } finally {
 //      exitTiming();
 //    }
@@ -492,7 +522,13 @@ public final class LabelUtil {
   public static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2) {
 //    try {
 //      enterTiming();
-      return join(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
+      LabelCache labelCache = store.labelCache();
+      IntegPolicy result = labelCache.join(p1, p2);
+      if (result != null) return result;
+      
+      result = join(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
+      labelCache.addJoin(p1, p2, result);
+      return result;
 //    } finally {
 //      exitTiming();
 //    }
@@ -527,7 +563,13 @@ public final class LabelUtil {
   public static ConfPolicy meetPol(Store store, ConfPolicy p1, ConfPolicy p2) {
 //    try {
 //      enterTiming();
-      return meet(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
+      LabelCache labelCache = store.labelCache();
+      ConfPolicy result = labelCache.meet(p1, p2);
+      if (result != null) return result;
+      
+      result = meet(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
+      labelCache.addMeet(p1, p2, result);
+      return result;
 //    } finally {
 //      exitTiming();
 //    }
@@ -562,7 +604,13 @@ public final class LabelUtil {
   public static IntegPolicy meetPol(Store store, IntegPolicy p1, IntegPolicy p2) {
 //    try {
 //      enterTiming();
-      return meet(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
+      LabelCache labelCache = store.labelCache();
+      IntegPolicy result = labelCache.meet(p1, p2);
+      if (result != null) return result;
+      
+      result = meet(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
+      labelCache.addMeet(p1, p2, result);
+      return result;
 //    } finally {
 //      exitTiming();
 //    }
