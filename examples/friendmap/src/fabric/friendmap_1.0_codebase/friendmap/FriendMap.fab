@@ -51,7 +51,9 @@ where
     MapServer {this} service
   )
   throws
-    NullPointerException
+  (
+    NullPointerException{*provider; service}
+  )
   where
     provider <= {this}
   {
@@ -83,7 +85,7 @@ where
   )
   throws
   (
-    NullPointerException {user}
+    NullPointerException {*provider; user}
   )
   where
     {*provider; *MapServer.provider; user; n; owner} <= {{*→n} ⊓ {*→user.friends} ⊓ {*→service.store} ⊓ {*→owner}},
@@ -122,7 +124,7 @@ where
   )
   throws
   (
-    NullPointerException {user}
+    NullPointerException {*provider; user}
   )
   where
     // see printMap constraints
@@ -165,7 +167,7 @@ where
   )
   throws
   (
-    NullPointerException {user}
+    NullPointerException {*provider; user}
   )
   where
     // user fetch depends on
@@ -254,7 +256,7 @@ where
   )
   throws
   (
-    NullPointerException{user}
+    NullPointerException{*provider; user}
   )
   where
     // user fetch is based on
