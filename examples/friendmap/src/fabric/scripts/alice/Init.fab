@@ -4,17 +4,21 @@ import snapp.UserWrapper;
 import mapserv.MapServer;
 
 public class Init {
-  public static void main {*→} (String[] args) {
+  public static void main {*←} (String[] args) {
     final Store store = worker$.getStore("snapp");
     final Snapp snapp = (Snapp) store.getRoot().get("snapp");
 
     final User[worker$,snapp]  alice = snapp.createUser("Alice", worker$);
 
-    final UserWrapper[{*→store}] aw = new UserWrapper[{*→store}] (store, worker$, snapp, alice);
-    store.getRoot().put("alice", aw);
+    if (store actsfor snapp) {
 
-    final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
-    alice.locationInfo.add(mapserv);
+      final UserWrapper[{*→store}] aw = new UserWrapper[{*→store}] (store, worker$, snapp, alice);
+      store.getRoot().put("alice", aw);
+
+      final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
+      alice.locationInfo.add(mapserv);
+
+    }
   }
 
 }
