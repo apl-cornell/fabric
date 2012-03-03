@@ -2,23 +2,37 @@ import snapp.Snapp;
 import snapp.User;
 import snapp.UserWrapper;
 import mapserv.MapServer;
+import util.AssertionFailedError;
 
-public class Init {
+public class Init
+where
+  provider <= {*←},
+
+  snapp.User.provider        <= snapp.Snapp.provider, snapp.Snapp.provider <= snapp.User.provider,
+  snapp.UserWrapper.provider <= snapp.Snapp.provider, snapp.Snapp.provider <= snapp.UserWrapper.provider
+{
   public static void main {*←} (String[] args) {
     final Store store = worker$.getStore("snapp");
     final Snapp snapp = (Snapp) store.getRoot().get("snapp");
 
-    final User[worker$,snapp]  alice = snapp.createUser("Alice", worker$);
+    if (store actsfor snapp
+    &&  snapp.store equiv store
+    &&  snapp.Snapp.provider <= new label {*←snapp}
+    ) {
 
-    if (store actsfor snapp) {
+      final User[worker$,snapp]  alice = snapp.createUser("Alice", worker$);
 
-      final UserWrapper[{*→store}] aw = new UserWrapper[{*→store}] (store, worker$, snapp, alice);
-      store.getRoot().put("alice", aw);
+      if (alice.p equiv new principal (worker$,snapp)
+      ) {
 
-      final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
-      alice.locationInfo.add(mapserv);
+        final UserWrapper[{*→store}] aw = new UserWrapper[{*→store}] (store, worker$, snapp, alice);
+        store.getRoot().put("alice", aw);
 
-    }
+        final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
+        alice.locationInfo.add(mapserv);
+ 
+      } else throw new AssertionFailedError("alice.p equiv (alice worker, snapp)");
+    } else throw new AssertionFailedError("store actsfor snapp");
   }
 
 }

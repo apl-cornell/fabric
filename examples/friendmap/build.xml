@@ -99,7 +99,7 @@
   </target>
 
   <target name="build-local-scripts" depends="build-local-friendmap">
-    <fabc-local srcdir="${home}/src/fabric/scripts/alice" dstdir="${home}/classes/alice" />
+    <fabc-local srcdir="${home}/src/fabric/scripts/alice" dstdir="${home}/classes/alice" includes="Init.fab"/>
   </target>
 
   <target name="build-local"
