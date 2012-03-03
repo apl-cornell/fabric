@@ -1,9 +1,22 @@
-public class Run {
-  public static void main{}(String[] args) {
-    final User      alice = (User) worker$.getRemoteStore("snapp"    ).getRootMap().get("alice");
-    final FriendMap app   = (User) worker$.getRemoteStore("friendmap").getRootMap().get("friendmap");
+import fabric.util.Map;
 
-    app.viewMap(alice, new label {});
+import friendmap.FriendMap;
+import snapp.User;
+import snapp.UserWrapper;
+
+
+public class Run {
+  public static void main{}(String[] args)
+  {
+    final Store snappStore = worker$.getStore("snapp");
+    final Map   rootMap    = snappStore.getRoot();
+
+    final UserWrapper[{*→snappStore}] aw  = (UserWrapper[{*→snappStore}]) rootMap.get("alice");
+    final FriendMap                   app = (FriendMap)                   rootMap.get("friendmap");
+
+    final User[aw.userOwner,aw.userNetwork] alice = aw.user;
+
+    // app.viewMap(alice, new label {});
   }
 }
 
