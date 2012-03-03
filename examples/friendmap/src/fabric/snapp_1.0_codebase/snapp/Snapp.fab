@@ -19,7 +19,7 @@ where
   /* The store this object is stored on.  Used for allocating Users.
    * this.store ≽ this
    */
-  protected final Store {this}@{*→this} store;
+  public final Store {this}@{*→this} store;
 
   /**
    * Create a new Snapp, operated by owner.
