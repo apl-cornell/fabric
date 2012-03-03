@@ -238,6 +238,10 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       sb.append(File.pathSeparator);
       sb.append(u.getPath());
     }
+    for (URI u : classpath()) {
+      sb.append(File.pathSeparator);
+      sb.append(u.getPath());
+    }
     return sb.toString();
   }
 
