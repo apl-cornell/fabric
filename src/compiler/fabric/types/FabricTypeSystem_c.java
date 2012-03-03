@@ -392,9 +392,9 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       // Always use the same local instance, because jif now use pointer
       // identity to compare local instances
       // for the purpose of label checking.
-      workerLocalInstance =
-          (JifLocalInstance) localInstance(Position.compilerGenerated(),
-              Flags.FINAL, Worker(), "worker$");
+      workerLocalInstance = new WorkerLocalInstance_c(this, Position.compilerGenerated(),
+          Flags.FINAL, Worker(), "worker$");
+
       // workerLocalInstance.setLabel(freshLabelVariable(workerLocalInstance.position(),
       // "worker$", "worker$"));
     }

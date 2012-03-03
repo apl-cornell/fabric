@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import jif.types.JifContext_c;
 import jif.types.JifTypeSystem;
+import jif.types.label.Label;
 import polyglot.ast.Expr;
 import polyglot.main.Report;
 import polyglot.types.Context;
@@ -95,4 +96,5 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   public URI resolveCodebaseName(String name) {
     return ((CBImportTable)it).resolveCodebaseName(name);
   }
+
 }
