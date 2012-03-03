@@ -1,28 +1,20 @@
 import snapp.Snapp;
 import snapp.User;
 import mapserv.MapServer;
+
 public class Init {
-  public static final void main{*provider} (principal{*provider} p, String[] args)  throws SecurityException, IllegalArgumentException 
-		where caller(p), worker$ equiv p, provider <= {*<-worker$},
-			{*Snapp.provider} equiv {*User.provider}
-  { 
-    final RemoteWorker worker = worker$("snapp");
+  public static void main(String[] args) {
     final Store store = worker$.getStore("snapp");
-    final Object o = store.getRoot().get("snapp");
-    final Snapp snapp = (Snapp) o;
-    final principal snappDel = new principal (snapp, worker$);
-    if (snapp.store actsfor snapp 
-        && snapp.store actsfor snappDel
-        && Snapp.provider <= new label {*<-snapp}
-        && Snapp.provider actsfor snapp) {
-      final User  alice = snapp.createUser("Alice", worker$);
-      if (worker$ equiv alice.p) {
-        store.getRoot().put("alice", alice);
-        MapServer mapserv = (MapServer) worker$.getStore("mapserv").getRoot().get("mapserv");
-        alice.locationInfo.add(mapserv);
-      }
-    }
+    final Snapp snapp = (Snapp) store.getRoot().get("snapp");
+
+    final User[worker$,snapp]  alice = snapp.createUser("Alice", worker$);
+    final UserWrapper[*→store] aw    = new UserWrapper(alice, worker$, snapp);
+    store.getRoot().put("alice", aw);
+
+    final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
+    alice.locationInfo.add(mapserv);
   }
+
 }
 
 

@@ -1,3 +1,22 @@
+This file is kind of a garbage dump of notes about the example.  Someday maybe it will be rewritten.
+
+Store map contents established by scripts
+=========================================
+
+Everything is in the snapp root map (which is a reasonable assumption)
+
+store = getStore("snapp")
+
+key        type of store.getRoot().get(key)
+---------- --------------------------------
+alice:     UserWrapper[*→store]
+bob:       UserWrapper[*→store]
+snapp:     Snapp
+mapserv:   MapServer
+friendmap: FriendMap
+
+
+
 Requirements
 ============
 
