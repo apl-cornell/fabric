@@ -23,11 +23,11 @@ where
     String[] args
   )
   {
-    final Store  snapp   = worker$.getStore("snapp");
-    final Map    rootMap = snapp.getRoot();
+    final Store  snappStore = worker$.getStore("snapp");
+    final Map    rootMap    = snappStore.getRoot();
 
-    final UserWrapper[{*→snapp}] aw = (UserWrapper[{*→snapp}]) rootMap.get("alice");
-    final UserWrapper[{*→snapp}] bw = (UserWrapper[{*→snapp}]) rootMap.get("bob");
+    final UserWrapper[{*→snappStore}] aw = (UserWrapper[{*→snappStore}]) rootMap.get("alice");
+    final UserWrapper[{*→snappStore}] bw = (UserWrapper[{*→snappStore}]) rootMap.get("bob");
 
     final User[aw.userOwner,aw.userNetwork] alice = aw.user;
     final User[bw.userOwner,bw.userNetwork] bob   = bw.user;
