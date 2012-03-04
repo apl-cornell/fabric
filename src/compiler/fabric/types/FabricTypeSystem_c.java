@@ -877,11 +877,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     NodePrincipal w = Worker.getWorker().getPrincipal();
     NodePrincipal st = dest.getPrincipal();
     if (w != null && st != null) {
-      fabric.util.ArrayList writers = new fabric.util.ArrayList._Impl(dest);
-      writers.add(w);
-      writers.add(st);
+      //FIXME: default label should be *<-w,st
+//      fabric.util.ArrayList writers = new fabric.util.ArrayList._Impl(dest);
+//      writers.add(w);
+//      writers.add(st);
       return LabelUtil._Impl.writerPolicyLabel(dest, Worker.getWorker()
-          .getLocalStore().getTopPrincipal(), writers);
+          .getLocalStore().getTopPrincipal(), st);
     }
     throw new InternalCompilerError("Whatt?!? W: " + w + " ST: " + st);
   }

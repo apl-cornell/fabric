@@ -27,11 +27,7 @@ public class CodebaseTranslator extends Translator {
     URI ns = ((CodebaseSource) sfn.source()).canonicalNamespace();
     if (sfn.package_() != null) {
       w.write("package ");
-      String pre = extInfo.namespaceToJavaPackagePrefix(ns);
-      if (!pre.isEmpty()) {
-        w.write(pre);
-        w.write(".");
-      }
+      w.write(extInfo.namespaceToJavaPackagePrefix(ns));
       sfn.package_().del().translate(w, this);
       w.write(";");
       w.newline(0);

@@ -86,8 +86,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
       ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();
 
       if (package_() == null) {
-          String pre = extInfo.namespaceToJavaPackagePrefix(canonical_ns);
-          return  pre + (pre.isEmpty() ? "" : ".") + name();
+        return extInfo.namespaceToJavaPackagePrefix(canonical_ns) + name();
       }
 
       // XXX: Never use short name
