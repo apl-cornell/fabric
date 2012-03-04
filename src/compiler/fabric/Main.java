@@ -62,6 +62,9 @@ public class Main extends polyglot.main.Main {
     args.add("1000");
     args.add("-mergestrings");
     args.add("-simpleoutput");
+    
+    // For debugging.
+    args.add("-g");
 
     /* print time to complete Fabric and FabIL passes */
 //    args.add("-report");
