@@ -193,7 +193,7 @@ public class Main extends polyglot.main.Main {
   public void start(String[] argv, ExtensionInfo ext, ErrorQueue eq)
       throws TerminationException {
     Set<String> source = new LinkedHashSet<String>();
-    List<String> args = explodeOptions(argv);
+    List<String> args = argsToList(argv);
     if (ext == null) {
       ext = getExtensionInfo(args);
     }
@@ -323,6 +323,16 @@ public class Main extends polyglot.main.Main {
       }
       throw new TerminationException(e.getMessage());
     }
+  }
+  private List<String> argsToList(String[] args) throws TerminationException {
+    LinkedList<String> ll = new LinkedList<String>();
+
+    for (int i = 0; i < args.length; i++) {
+      // special case for the @ command-line parameter
+      ll.add(args[i]);
+    }
+
+    return ll;
   }
 
   private List<String> explodeOptions(String[] args) throws TerminationException {

@@ -284,56 +284,58 @@ public final class NSUtil {
    */
   public static boolean processPathString(List<URI> uris, String path) {
     boolean needWorker = false;
-    if (path.startsWith("@")) {
-      try {
-        int idx = path.indexOf(":");
-        BufferedReader lr =
-            new BufferedReader(new FileReader(path.substring(1,idx)));
-        path = lr.readLine();
-      } catch (FileNotFoundException e) {
-        throw new InternalCompilerError(e);
-      } catch (IOException e) {
-        throw new InternalCompilerError(e);
-      }
-    }
-    int idx = 0;
-    while (idx < path.length()) {
-      if (path.charAt(idx) == '<') {
-        int end = path.indexOf('>', idx);
-        if (end < 0) throw new InternalCompilerError("Invalid path");
-        String cb = path.substring(idx + 1, end);
-        if (!cb.endsWith("/")) cb += "/";
-
-        URI u = URI.create(cb);
-        uris.add(u);
-
-        if (u.getScheme().equals("fab")) needWorker = true;
-        idx = end + 1;
-
-      } else if (path.charAt(idx) == File.pathSeparatorChar) {
-        idx++;
-      } else {
-        int end = path.indexOf(File.pathSeparatorChar, idx);
-
-        String dir = "";
-        if (end < 0) {
-          dir = path.substring(idx);
-          idx = path.length();
-        } else {
-          dir = path.substring(idx, end);
-          idx = end;
+    while (!path.isEmpty()) {
+      if (path.startsWith("@")) {
+        try {
+          int next_idx = path.indexOf(":");
+          BufferedReader lr =
+              new BufferedReader(new FileReader(path.substring(1,next_idx)));
+          path = lr.readLine() +":"+ path.substring(next_idx+1);
+        } catch (FileNotFoundException e) {
+          throw new InternalCompilerError(e);
+        } catch (IOException e) {
+          throw new InternalCompilerError(e);
         }
-        if (!"".equals(dir)) {
-          if (!dir.endsWith("/")) dir += "/";
-
-          URI u = URI.create(dir);
-
-          if (u.isAbsolute())
-            uris.add(u);
-          else {
-            File f = new File(dir);
-            String suf = f.isDirectory() ? "/" : "";
-            uris.add(file.resolve(f.getAbsolutePath() + suf));
+      }
+      int idx = 0;
+      while (idx < path.length()) {
+        if (path.charAt(idx) == '<') {
+          int end = path.indexOf('>', idx);
+          if (end < 0) throw new InternalCompilerError("Invalid path");
+          String cb = path.substring(idx + 1, end);
+          if (!cb.endsWith("/")) cb += "/";
+  
+          URI u = URI.create(cb);
+          uris.add(u);
+  
+          if (u.getScheme().equals("fab")) needWorker = true;
+          idx = end + 1;
+  
+        } else if (path.charAt(idx) == File.pathSeparatorChar) {
+          idx++;
+        } else {
+          int end = path.indexOf(File.pathSeparatorChar, idx);
+  
+          String dir = "";
+          if (end < 0) {
+            dir = path.substring(idx);
+            idx = path.length();
+          } else {
+            dir = path.substring(idx, end);
+            idx = end;
+          }
+          if (!"".equals(dir)) {
+            if (!dir.endsWith("/")) dir += "/";
+  
+            URI u = URI.create(dir);
+  
+            if (u.isAbsolute())
+              uris.add(u);
+            else {
+              File f = new File(dir);
+              String suf = f.isDirectory() ? "/" : "";
+              uris.add(file.resolve(f.getAbsolutePath() + suf));
+            }
           }
         }
       }
