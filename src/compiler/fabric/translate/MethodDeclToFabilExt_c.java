@@ -41,7 +41,7 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
   @Override
   protected Block guardWithConstraints(JifToJavaRewriter rw, Block b)
       throws SemanticException {
-    boolean shouldGuard = true;
+    boolean shouldGuard = false;
     if (shouldGuard) {
       @SuppressWarnings("unchecked")
       Block newBody =
