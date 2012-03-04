@@ -18,7 +18,6 @@ public class CBTargetFactory extends TargetFactory {
   public File outputFile(String packageName, String className, Source source) {
     // Prefix java package name to create a unique class for this namespace.
     URI ns = ((CodebaseSource) source).canonicalNamespace();
-    packageName = packageName.isEmpty() ? packageName : ("." + packageName);
     return super.outputFile(extInfo.namespaceToJavaPackagePrefix(ns)
         + packageName, className, source);
   }

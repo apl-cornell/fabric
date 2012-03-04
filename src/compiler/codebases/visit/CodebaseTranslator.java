@@ -28,7 +28,6 @@ public class CodebaseTranslator extends Translator {
     if (sfn.package_() != null) {
       w.write("package ");
       w.write(extInfo.namespaceToJavaPackagePrefix(ns));
-      w.write(".");
       sfn.package_().del().translate(w, this);
       w.write(";");
       w.newline(0);

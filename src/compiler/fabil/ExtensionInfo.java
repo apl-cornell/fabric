@@ -297,7 +297,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
     if (ns.equals(localNamespace()) || ns.equals(platformNamespace()))
       return "";
     else if (ns.getScheme().equals("fab")) {
-      return NSUtil.javaPackageName(ns);
+      return NSUtil.javaPackageName(ns) + ".";
     }
     else {
       throw new InternalCompilerError("Cannot create Java package prefix for " + ns);
