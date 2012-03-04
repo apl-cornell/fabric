@@ -1,10 +1,26 @@
-public class Init {
-  public static void main(String[] args) {
-    final Store     store   = worker$.getRemoteStore("friendmap");
-    final MapServer mapserv = (MapServer) worker$.getRemoteStore("mapserv").getRootMap().get("mapserv");
 
+import mapserv.MapServer;
+import friendmap.FriendMap;
+import util.AssertionFailedError;
+
+public class Init
+where
+  provider <= {*←},
+
+  util.Group.provider         <= {*←},
+  util.GroupIterator.provider <= {*←},
+
+  mapserv.MapServer.provider <= mapserv.Box.provider,           mapserv.Box.provider <= mapserv.MapServer.provider,
+  mapserv.MapServer.provider <= mapserv.MapImage.provider, mapserv.MapImage.provider <= mapserv.MapServer.provider
+{
+  public static void main {*←} (String[] args) {
+    final Store     fmStore = worker$.getStore("friendmap");
+    final Store     store   = worker$.getStore("snapp");
+
+    final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
     final FriendMap app = new FriendMap(mapserv);
-    store.getRootMap().put("friendmap", app);
+
+    store.getRoot().put("friendmap", app);
   }
 }
 
