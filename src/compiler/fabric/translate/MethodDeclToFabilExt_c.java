@@ -5,6 +5,8 @@ import java.util.List;
 
 import jif.translate.JifToJavaRewriter;
 import jif.translate.MethodDeclToJavaExt_c;
+import jif.types.JifParsedPolyType;
+import jif.types.JifPolyType;
 import jif.types.JifTypeSystem;
 import polyglot.ast.Block;
 import polyglot.ast.Expr;
@@ -18,6 +20,7 @@ import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import fabil.ast.FabILNodeFactory;
+import fabric.types.FabricParsedClassType;
 
 public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
   @Override
@@ -69,7 +72,8 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     // Translate the constraints and use them to guard the body.
     Block newBody = guardWithConstraints(rw, origBody);
     // Wrap with a transaction if there are constraints
-    if (!mi.constraints().isEmpty())
+    FabricParsedClassType ct = (FabricParsedClassType) rw.currentClass();
+    if (!mi.constraints().isEmpty() || !ct.constraints().isEmpty())
       newBody =
           ((FabILNodeFactory) rw.java_nf()).Atomic(origBody.position(), newBody
               .statements());
