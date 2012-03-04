@@ -1,3 +1,4 @@
+package friendmap;
 
 import mapserv.MapServer;
 import friendmap.FriendMap;
@@ -14,14 +15,16 @@ where
   mapserv.MapServer.provider <= mapserv.MapImage.provider, mapserv.MapImage.provider <= mapserv.MapServer.provider
 {
   public static void main {*←} (String[] args) {
-    final Store     fmStore = worker$.getStore("friendmap");
-    final Store     store   = worker$.getStore("snapp");
+    atomic {
+      final Store     fmStore = worker$.getStore("friendmap");
+      final Store     store   = worker$.getStore("snapp");
 
-    final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
+      final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
 
-    final FriendMap[{*→fmStore}] app = new FriendMap[{*→fmStore}] (mapserv);
+      final FriendMap[{*→fmStore}] app = new FriendMap[{*→fmStore}] (mapserv);
 
-    store.getRoot().put("friendmap", app);
+      store.getRoot().put("friendmap", app);
+    }
   }
 }
 

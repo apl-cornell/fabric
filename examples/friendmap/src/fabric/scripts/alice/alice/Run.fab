@@ -1,3 +1,5 @@
+package alice;
+
 import fabric.util.Map;
 
 import friendmap.FriendMap;
@@ -29,13 +31,13 @@ where
     final UserWrapper[{*→snappStore}] aw  = (UserWrapper[{*→snappStore}]) rootMap.get("alice");
     final FriendMap  [{*→fmStore}]    app = (FriendMap[{*→fmStore}])      rootMap.get("friendmap");
 
-    final User[aw.userOwner,aw.userNetwork] alice = aw.user;
+    final User[aw.userOwner,aw.userNetwork] userAlice = aw.user;
 
-    if (alice.p equiv new principal (aw.userOwner, aw.userNetwork)
+    if (userAlice.p equiv new principal (aw.userOwner, aw.userNetwork)
     &&  worker$ actsfor aw.userOwner
-    &&  worker$ actsfor alice.friends
+    &&  worker$ actsfor userAlice.friends
     ) {
-      app.viewMap(alice, aw.userOwner, aw.userNetwork);
+      app.viewMap(userAlice, aw.userOwner, aw.userNetwork);
     } else throw new AssertionFailedError("invariants");
   }
 }

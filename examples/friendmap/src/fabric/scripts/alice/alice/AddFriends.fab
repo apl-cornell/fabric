@@ -1,3 +1,5 @@
+package alice;
+
 import fabric.util.Map;
 
 import util.AssertionFailedError;
@@ -28,11 +30,11 @@ where
     final UserWrapper[{*→snappStore}] aw = (UserWrapper[{*→snappStore}]) rootMap.get("alice");
     final UserWrapper[{*→snappStore}] bw = (UserWrapper[{*→snappStore}]) rootMap.get("bob");
 
-    final User[aw.userOwner,aw.userNetwork] alice = aw.user;
+    final User[aw.userOwner,aw.userNetwork] userAlice = aw.user;
     final User[bw.userOwner,bw.userNetwork] bob   = bw.user;
 
-    if (bw.user.p equiv new principal (bw.userNetwork, bw.userOwner))
-      bob.friends.add(aw);
+    if (aw.user.p equiv new principal (aw.userNetwork, aw.userOwner))
+      userAlice.friends.add(bw);
     else
       throw new AssertionFailedError("User[n,o].p = (n, o)");
   }

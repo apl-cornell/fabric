@@ -1,3 +1,4 @@
+package bob;
 
 import fabric.util.Map;
 
@@ -30,10 +31,10 @@ where
     final UserWrapper[{*→snappStore}] bw = (UserWrapper[{*→snappStore}]) rootMap.get("bob");
 
     final User[aw.userOwner,aw.userNetwork] alice = aw.user;
-    final User[bw.userOwner,bw.userNetwork] bob   = bw.user;
+    final User[bw.userOwner,bw.userNetwork] userBob   = bw.user;
 
-    if (aw.user.p equiv new principal (aw.userNetwork, aw.userOwner))
-      alice.friends.add(bw);
+    if (bw.user.p equiv new principal (bw.userNetwork, bw.userOwner))
+      userBob.friends.add(aw);
     else
       throw new AssertionFailedError("User[n,o].p = (n, o)");
   }
