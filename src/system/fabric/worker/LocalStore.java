@@ -2,6 +2,9 @@ package fabric.worker;
 
 import static fabric.common.Logging.WORKER_LOCAL_STORE_LOGGER;
 
+import java.io.NotSerializableException;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,7 +27,7 @@ import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.util.HashMap;
 import fabric.util.Map;
 
-public final class LocalStore implements Store {
+public final class LocalStore implements Store, Serializable {
 
   private long freshOID = ONumConstants.FIRST_UNRESERVED;
 
@@ -310,5 +313,13 @@ public final class LocalStore implements Store {
     this.cache.put((_Impl) bottomIntegPolicy.fetch());
     this.cache.put((_Impl) emptyLabel.fetch());
     this.cache.put((_Impl) publicReadonlyLabel.fetch());
+  }
+
+  //////////////////////////////////
+  // Java custom-serialization gunk
+  //////////////////////////////////
+  
+  private java.lang.Object writeReplace() throws ObjectStreamException {
+    throw new NotSerializableException();
   }
 }

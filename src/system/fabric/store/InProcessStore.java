@@ -102,5 +102,10 @@ public class InProcessStore extends RemoteStore {
       throw new InternalError(e);
     }
   }
+  
+  @Override
+  public java.lang.Object writeReplace() {
+    return new SerializationProxy(name);
+  }
 
 }

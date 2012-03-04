@@ -1,5 +1,6 @@
 package fabric.worker;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import fabric.common.SerializedObject;
@@ -10,7 +11,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
 
-public interface Store {
+public interface Store extends Serializable {
   /**
    * Returns this store's host name.
    */

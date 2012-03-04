@@ -1,6 +1,7 @@
 package fabric.worker;
 
 import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.Principal;
 import java.security.PublicKey;
@@ -49,7 +50,7 @@ import fabric.util.Map;
  * <code>Worker.getStore()</code> interface. For each remote store, there should
  * be at most one <code>RemoteStore</code> object representing that store.
  */
-public class RemoteStore extends RemoteNode implements Store {
+public class RemoteStore extends RemoteNode implements Store, Serializable {
   /**
    * A queue of fresh object identifiers.
    */
@@ -457,5 +458,25 @@ public class RemoteStore extends RemoteNode implements Store {
     }
     
     return result;
+  }
+
+  //////////////////////////////////
+  // Java custom-serialization gunk
+  //////////////////////////////////
+  
+  public java.lang.Object writeReplace() {
+    return new SerializationProxy(name);
+  }
+  
+  public static final class SerializationProxy implements Serializable {
+    private final String storeName;
+    
+    public SerializationProxy(String storeName) {
+      this.storeName = storeName;
+    }
+    
+    java.lang.Object readResolve() {
+      return Worker.getWorker().getStore(storeName);
+    }
   }
 }
