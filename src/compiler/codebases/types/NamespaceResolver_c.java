@@ -234,7 +234,6 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
    */
   @Override
   public Importable check(String name) {
-    System.err.println("CHECKING: " +name);
     return cache.get(name);
   }
 
@@ -264,7 +263,6 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     } else throw new InternalCompilerError(q + " is not a ParsedTypeObject: "
         + q.getClass());
     
-    System.err.println("ADDING: " +name);
     replace(name, q);
 
     // If we are loading a class from another namespace, 
@@ -339,7 +337,6 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
       if (!scheduler.reached(g)) {
         
-        System.err.println("UNREACHED:" + g + ": for "+ name + " in "  + source );
         throw new MissingDependencyException(g);
       }
     }
