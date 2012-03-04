@@ -80,12 +80,16 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
                 (CodebaseClassType) resolver.check(new_ct.fullName());
             if (ct != null && ct.equals(new_ct))
               continue;
-            else if (ct == null && src_ns.equals(extInfo.localNamespace())) {
+            else if (ct == null) {
               // if local namespace resolve dep.
               ct = (CodebaseClassType) resolver.find(new_ct.fullName());
               if (ct != null && ct.equals(new_ct))
                 continue;
-              else {
+              else if (ct == null) {
+                throw new SemanticException(
+                    "Could not resolve namespace dependency " + new_ct.fullName() + " in " + source + "."
+                        );
+              } else {
                 throw new SemanticException(
                     "Detected namespace inconsistency for source " + source + "."
                         + "The source's codebase resolves " + ct.fullName()
