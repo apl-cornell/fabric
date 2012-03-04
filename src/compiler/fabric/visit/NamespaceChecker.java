@@ -38,105 +38,109 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
   protected Node leaveCall(Node old, Node n, NodeVisitor v)
       throws SemanticException {
     if (n instanceof SourceFile) {
-      CBJobExt jobExt = (CBJobExt) job.ext();
-      CodebaseSource source = (CodebaseSource) job.source();
-      FabricTypeSystem ts = (FabricTypeSystem) this.ts;
-      ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
-      URI src_ns = source.canonicalNamespace();
-      NamespaceResolver resolver = ts.namespaceResolver(src_ns);
-      if (Report.should_report(Topics.mobile, 3)) {
-        Report.report(3, "RESOLVER: " + resolver +"::"+ resolver.getClass());
-      }
-
-      if (Report.should_report(Topics.mobile, 3)) {
-        Report.report(3, "Checking namespace consistency of " + source);
-      }
-
-      Set<String> closure = new HashSet<String>();
-      Set<CodebaseClassType> seen = new HashSet<CodebaseClassType>(jobExt.dependencies());      
-      for(CodebaseClassType dep : jobExt.dependencies()) {
-        if (!(dep instanceof ParsedClassType)) {
-          throw new InternalCompilerError("Expected ParsedClassType for " + dep
-              + ", but got: " + dep.getClass());
-        }
-        //add direct dependency to closure
-        if (closure.contains(dep.fullName())) {
-          //sanity check
-          CodebaseClassType ct = (CodebaseClassType) resolver.check(dep.fullName());
-          if (!(ct != null && ct.equals(dep)))
-            //Should never happen
-            throw new InternalCompilerError("Namespace inconsistency for direct dependency.");          
-        
-        } else closure.add(dep.fullName());
-        
-        Stack<CodebaseClassType> new_deps = new Stack<CodebaseClassType>();
-        new_deps.addAll(directDependencies(dep));
-        new_deps.removeAll(seen);
-        
-        while (!new_deps.isEmpty()) {
-          CodebaseClassType new_ct = new_deps.pop();
-          if (closure.contains(new_ct.fullName())) {
-            CodebaseClassType ct =
-                (CodebaseClassType) resolver.check(new_ct.fullName());
-            if (ct != null && ct.equals(new_ct))
-              continue;
-            else if (ct == null) {
-              // if local namespace resolve dep.
-              ct = (CodebaseClassType) resolver.find(new_ct.fullName());
-              if (ct != null && ct.equals(new_ct))
-                continue;
-              else if (ct == null) {
-                throw new SemanticException(
-                    "Could not resolve namespace dependency " + new_ct.fullName() + " in " + source + "."
-                        );
-              } else {
-                throw new SemanticException(
-                    "Detected namespace inconsistency for source " + source + "."
-                        + "The source's codebase resolves " + ct.fullName()
-                        + " to a class object in " + ct.canonicalNamespace() + ","
-                        + " but a dependency, reached through " + dep.fullName()
-                        + ", resolves " + new_ct.fullName()
-                        + " to a class object in " + new_ct.canonicalNamespace() + "."
-                        + "  If this is intentional, consider using an explicit codebase"         
-                        + " to link with " + dep.fullName() + "."                     
-                        );
-              }
-            }
-            else {
-              if (Report.should_report(Topics.mobile, 3)) {
-                Report.report(3, "Detected namespace inconsistency for source " + source + "."
-                    + "The source's codebase resolves " + ct.fullName()
-                    + " to a class object in " + ct.canonicalNamespace() + ","
-                    + " but a dependency, reached through " + dep.fullName()
-                    + ", resolves " + new_ct.fullName()
-                    + " to a class object in " + new_ct.canonicalNamespace() + "."
-                    + "  If this is intentional, consider using an explicit codebase"         
-                    + " to link with " + dep.fullName() + "."                     
-                    );
-
-              }
-              throw new SemanticException(
-                  "Detected namespace inconsistency for source " + source + "."
-                      + "The source's codebase resolves " + ct.fullName()
-                      + " to a class object in " + ct.canonicalNamespace() + ","
-                      + " but a dependency, reached through " + dep.fullName()
-                      + ", resolves " + new_ct.fullName()
-                      + " to a class object in " + new_ct.canonicalNamespace() + "."
-                      + "  If this is intentional, consider using an explicit codebase"         
-                      + " to link with " + dep.fullName() + "."                     
-                      );
-            }
-          }
-          else closure.add(new_ct.fullName());
-          
-          new_deps.addAll(directDependencies(new_ct));
-          new_deps.removeAll(seen);
-        }
-      }
-      if (Report.should_report(Topics.mobile, 3)) {
-        Report.report(3, "Consistent namespace for " + source);
-      }
+    if (Report.should_report(Topics.mobile, 3)) {
+      Report.report(3, "SKIPPING : Consistent namespace for " + n);
     }
+    }
+//      CBJobExt jobExt = (CBJobExt) job.ext();
+//      CodebaseSource source = (CodebaseSource) job.source();
+//      FabricTypeSystem ts = (FabricTypeSystem) this.ts;
+//      ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
+//      URI src_ns = source.canonicalNamespace();
+//      NamespaceResolver resolver = ts.namespaceResolver(src_ns);
+//      if (Report.should_report(Topics.mobile, 3)) {
+//        Report.report(3, "RESOLVER: " + resolver +"::"+ resolver.getClass());
+//      }
+//
+//      if (Report.should_report(Topics.mobile, 3)) {
+//        Report.report(3, "Checking namespace consistency of " + source);
+//      }
+//
+//      Set<String> closure = new HashSet<String>();
+//      Set<CodebaseClassType> seen = new HashSet<CodebaseClassType>(jobExt.dependencies());      
+//      for(CodebaseClassType dep : jobExt.dependencies()) {
+//        if (!(dep instanceof ParsedClassType)) {
+//          throw new InternalCompilerError("Expected ParsedClassType for " + dep
+//              + ", but got: " + dep.getClass());
+//        }
+//        //add direct dependency to closure
+//        if (closure.contains(dep.fullName())) {
+//          //sanity check
+//          CodebaseClassType ct = (CodebaseClassType) resolver.check(dep.fullName());
+//          if (!(ct != null && ct.equals(dep)))
+//            //Should never happen
+//            throw new InternalCompilerError("Namespace inconsistency for direct dependency.");          
+//        
+//        } else closure.add(dep.fullName());
+//        
+//        Stack<CodebaseClassType> new_deps = new Stack<CodebaseClassType>();
+//        new_deps.addAll(directDependencies(dep));
+//        new_deps.removeAll(seen);
+//        
+//        while (!new_deps.isEmpty()) {
+//          CodebaseClassType new_ct = new_deps.pop();
+//          if (closure.contains(new_ct.fullName())) {
+//            CodebaseClassType ct =
+//                (CodebaseClassType) resolver.check(new_ct.fullName());
+//            if (ct != null && ct.equals(new_ct))
+//              continue;
+//            else if (ct == null) {
+//              // if local namespace resolve dep.
+//              ct = (CodebaseClassType) resolver.find(new_ct.fullName());
+//              if (ct != null && ct.equals(new_ct))
+//                continue;
+//              else if (ct == null) {
+//                throw new SemanticException(
+//                    "Could not resolve namespace dependency " + new_ct.fullName() + " in " + source + "."
+//                        );
+//              } else {
+//                throw new SemanticException(
+//                    "Detected namespace inconsistency for source " + source + "."
+//                        + "The source's codebase resolves " + ct.fullName()
+//                        + " to a class object in " + ct.canonicalNamespace() + ","
+//                        + " but a dependency, reached through " + dep.fullName()
+//                        + ", resolves " + new_ct.fullName()
+//                        + " to a class object in " + new_ct.canonicalNamespace() + "."
+//                        + "  If this is intentional, consider using an explicit codebase"         
+//                        + " to link with " + dep.fullName() + "."                     
+//                        );
+//              }
+//            }
+//            else {
+//              if (Report.should_report(Topics.mobile, 3)) {
+//                Report.report(3, "Detected namespace inconsistency for source " + source + "."
+//                    + "The source's codebase resolves " + ct.fullName()
+//                    + " to a class object in " + ct.canonicalNamespace() + ","
+//                    + " but a dependency, reached through " + dep.fullName()
+//                    + ", resolves " + new_ct.fullName()
+//                    + " to a class object in " + new_ct.canonicalNamespace() + "."
+//                    + "  If this is intentional, consider using an explicit codebase"         
+//                    + " to link with " + dep.fullName() + "."                     
+//                    );
+//
+//              }
+//              throw new SemanticException(
+//                  "Detected namespace inconsistency for source " + source + "."
+//                      + "The source's codebase resolves " + ct.fullName()
+//                      + " to a class object in " + ct.canonicalNamespace() + ","
+//                      + " but a dependency, reached through " + dep.fullName()
+//                      + ", resolves " + new_ct.fullName()
+//                      + " to a class object in " + new_ct.canonicalNamespace() + "."
+//                      + "  If this is intentional, consider using an explicit codebase"         
+//                      + " to link with " + dep.fullName() + "."                     
+//                      );
+//            }
+//          }
+//          else closure.add(new_ct.fullName());
+//          
+//          new_deps.addAll(directDependencies(new_ct));
+//          new_deps.removeAll(seen);
+//        }
+//      }
+//      if (Report.should_report(Topics.mobile, 3)) {
+//        Report.report(3, "Consistent namespace for " + source);
+//      }
+//    }
     return n;
   }
 
