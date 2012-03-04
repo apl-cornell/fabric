@@ -25,6 +25,14 @@
       value="${home.codebases}/friendmap.codebase" />
   <property name="snapp-scripts.codebase.file"
       value="${home.codebases}/snapp-scripts.codebase" />
+  <property name="mapserv-scripts.codebase.file"
+      value="${home.codebases}/mapserv-scripts.codebase" />
+  <property name="friendmap-scripts.codebase.file"
+      value="${home.codebases}/friendmap-scripts.codebase" />
+  <property name="alice-scripts.codebase.file"
+      value="${home.codebases}/alice-scripts.codebase" />
+  <property name="bob-scripts.codebase.file"
+      value="${home.codebases}/bob-scripts.codebase" />
 
   <!--
   ****************************************************************************
@@ -152,10 +160,14 @@
     <uptodate property="snapp.up-to-date" targetfile="${snapp.codebase.file}">
       <srcfiles dir="src/fabric/snapp_1.0_codebase" includes="**/*.fab" />
     </uptodate>
-    <uptodate property="mapserv.up-to-date" targetfile="${mapserv.codebase.file}">
+    <uptodate
+        property="mapserv.up-to-date"
+        targetfile="${mapserv.codebase.file}">
       <srcfiles dir="src/fabric/mapserv_1.0_codebase" includes="**/*.fab" />
     </uptodate>
-    <uptodate property="friendmap.up-to-date" targetfile="${friendmap.codebase.file}">
+    <uptodate
+        property="friendmap.up-to-date"
+        targetfile="${friendmap.codebase.file}">
       <srcfiles dir="src/fabric/friendmap_1.0_codebase" includes="**/*.fab" />
       <srcfiles file="${snapp.codebase.file}"/>
       <srcfiles file="${mapserv.codebase.file}"/>
@@ -165,6 +177,36 @@
         targetfile="${snapp-scripts.codebase.file}">
       <srcfiles dir="src/fabric/scripts/snapp" includes="**/*.fab" />
       <srcfiles file="${snapp.codebase.file}"/>
+    </uptodate>
+    <uptodate
+        property="mapserv-scripts.up-to-date"
+        targetfile="${mapserv-scripts.codebase.file}">
+      <srcfiles dir="src/fabric/scripts/mapserv" includes="**/*.fab" />
+      <srcfiles file="${mapserv.codebase.file}"/>
+    </uptodate>
+    <uptodate
+        property="friendmap-scripts.up-to-date"
+        targetfile="${friendmap-scripts.codebase.file}">
+      <srcfiles dir="src/fabric/scripts/friendmap" includes="**/*.fab" />
+      <srcfiles file="${friendmap.codebase.file}"/>
+      <srcfiles file="${snapp.codebase.file}"/>
+      <srcfiles file="${mapserv.codebase.file}"/>
+    </uptodate>
+    <uptodate
+        property="alice-scripts.up-to-date"
+        targetfile="${alice-scripts.codebase.file}">
+      <srcfiles dir="src/fabric/scripts/alice" includes="**/*.fab" />
+      <srcfiles file="${friendmap.codebase.file}"/>
+      <srcfiles file="${snapp.codebase.file}"/>
+      <srcfiles file="${mapserv.codebase.file}"/>
+    </uptodate>
+    <uptodate
+        property="bob-scripts.up-to-date"
+        targetfile="${bob-scripts.codebase.file}">
+      <srcfiles dir="src/fabric/scripts/bob" includes="**/*.fab" />
+      <srcfiles file="${friendmap.codebase.file}"/>
+      <srcfiles file="${snapp.codebase.file}"/>
+      <srcfiles file="${mapserv.codebase.file}"/>
     </uptodate>
   </target>
 
@@ -231,15 +273,13 @@
 
 
   <target name="publish-scripts-snapp"
-          depends="publish-snapp-1.0"
+          depends="check-uptodate,publish-snapp-1.0"
           unless="snapp-scripts.up-to-date">
     <fabc-publish
         srcdir="src/fabric/scripts/snapp"
         codebasefile="${snapp-scripts.codebase.file}"
         deststore="snapp"
-        classpath="@${snapp.codebase.file}">
-      <arg line="-report frontend=2"/>
-    </fabc-publish>
+        classpath="@${snapp.codebase.file}"/>
     <uptodate
         property="snapp-scripts.up-to-date"
         targetfile="${snapp-scripts.codebase.file}">
@@ -250,31 +290,78 @@
 
 
   <target name="publish-scripts-mapserv"
-          depends="publish-mapserv-1.0">
-    <fabc-publish srcdir="src/fabric/scripts/mapserv" deststore="mapserv" property="mapserv-scripts.codebase">
-      <arg value="-classpath" /> <arg value="${mapserv.codebase}" />
-    </fabc-publish>
+          depends="check-uptodate,publish-mapserv-1.0"
+          unless="mapserv-scripts.up-to-date">
+    <fabc-publish
+        srcdir="src/fabric/scripts/mapserv"
+        codebasefile="${mapserv-scripts.codebase.file}"
+        deststore="mapserv"
+        classpath="@${mapserv.codebase.file}"/>
+    <uptodate
+        property="mapserv-scripts.up-to-date"
+        targetfile="${mapserv-scripts.codebase.file}">
+      <srcfiles dir="src/fabric/scripts/mapserv" includes="**/*.fab" />
+      <srcfiles file="${mapserv.codebase.file"/>
+    </uptodate>
   </target>
 
 
   <target name="publish-scripts-friendmap"
-          depends="publish-friendmap-1.0">
-    <fabc-publish srcdir="src/fabric/scripts/friendmap" deststore="friendmap" property="friendmap-scripts.codebase">
-      <arg value="-classpath" /> <arg value="${friendmap.codebase}:${snapp.codebase}:${mapserv.codebase}" />
-    </fabc-publish>
+          depends="check-uptodate,publish-friendmap-1.0"
+          unless="friendmap-scripts.up-to-date">
+    <fabc-publish
+        srcdir="src/fabric/scripts/friendmap"
+        codebasefile="${friendmap-scripts.codebase.file}"
+        deststore="friendmap"
+        classpath="@${friendmap.codebase.file}:@${snapp.codebase.file}:@${mapserv.codebase.file}" />
+    <uptodate
+        property="friendmap-scripts.up-to-date"
+        targetfile="${friendmap-scripts.codebase.file}">
+      <srcfiles dir="src/fabric/scripts/friendmap" includes="**/*.fab" />
+      <srcfiles file="${friendmap.codebase.file"/>
+      <srcfiles file="${snapp.codebase.file"/>
+      <srcfiles file="${mapserv.codebase.file"/>
+    </uptodate>
   </target>
 
+  <target name="publish-scripts-alice"
+          depends="check-uptodate,publish-friendmap-1.0"
+          unless="alice-scripts.up-to-date">
+    <fabc-publish
+        srcdir="src/fabric/scripts/alice"
+        codebasefile="${alice.codebase.file}"
+        deststore="alice"
+        classpath="@${friendmap.codebase.file}:@${snapp.codebase.file}:@${mapserv.codebase.file}" />
+    <uptodate
+        property="alice-scripts.up-to-date"
+        targetfile="${alice-scripts.codebase.file}">
+      <srcfiles dir="src/fabric/scripts/alice" includes="**/*.fab" />
+      <srcfiles file="${friendmap.codebase.file"/>
+      <srcfiles file="${snapp.codebase.file"/>
+      <srcfiles file="${mapserv.codebase.file"/>
+    </uptodate>
+  </target>
+
+  <target name="publish-scripts-bob"
+          depends="check-uptodate,publish-friendmap-1.0"
+          unless="bob-scripts.up-to-date">
+    <fabc-publish
+        srcdir="src/fabric/scripts/bob"
+        codebasefile="${bob.codebase.file}"
+        deststore="bob"
+        classpath="@${friendmap.codebase.file}:@${snapp.codebase.file}:@${mapserv.codebase.file}" />
+    <uptodate
+        property="bob-scripts.up-to-date"
+        targetfile="${bob-scripts.codebase.file}">
+      <srcfiles dir="src/fabric/scripts/bob" includes="**/*.fab" />
+      <srcfiles file="${friendmap.codebase.file"/>
+      <srcfiles file="${snapp.codebase.file"/>
+      <srcfiles file="${mapserv.codebase.file"/>
+    </uptodate>
+  </target>
 
   <target name="publish-scripts-users"
-          depends="publish-friendmap-1.0">
-    <fabc-publish srcdir="src/fabric/scripts/alice" deststore="alice" property="alice-scripts.codebase">
-      <arg value="-classpath" /> <arg value="${friendmap.codebase}:${snapp.codebase}:${mapserv.codebase}" />
-    </fabc-publish>
-    <fabc-publish srcdir="src/fabric/scripts/bob" deststore="bob" property="bob-scripts.codebase">
-      <arg value="-classpath" /> <arg value="${friendmap.codebase}:${snapp.codebase}:${mapserv.codebase}" />
-    </fabc-publish>
-  </target>
-
+          depends="publish-scripts-alice,publish-scripts-bob"/>
 
   <target name="publish-all"
           depends="publish-scripts-users,
