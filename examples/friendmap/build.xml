@@ -331,7 +331,7 @@
           unless="alice-scripts.up-to-date">
     <fabc-publish
         srcdir="src/fabric/scripts/alice"
-        codebasefile="${alice.codebase.file}"
+        codebasefile="${alice-scripts.codebase.file}"
         deststore="alice"
         classpath="@${friendmap.codebase.file}:@${snapp.codebase.file}:@${mapserv.codebase.file}" >
     </fabc-publish>
@@ -350,7 +350,7 @@
           unless="bob-scripts.up-to-date">
     <fabc-publish
         srcdir="src/fabric/scripts/bob"
-        codebasefile="${bob.codebase.file}"
+        codebasefile="${bob-scripts.codebase.file}"
         deststore="bob"
         classpath="@${friendmap.codebase.file}:@${snapp.codebase.file}:@${mapserv.codebase.file}" />
     <uptodate
