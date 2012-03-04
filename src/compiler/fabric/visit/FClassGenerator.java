@@ -41,7 +41,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
   public FClassGenerator(Job job, TypeSystem ts, NodeFactory nf) {
     super(job, ts, nf);
     CodebaseSource src = (CodebaseSource) job.source();
-    this.namespace = src.namespace();
+    this.namespace = src.canonicalNamespace();
     FabricTypeSystem fts = (FabricTypeSystem) ts;
     this.codebase = fts.codebaseFromNS(namespace);
     //Sanity check 

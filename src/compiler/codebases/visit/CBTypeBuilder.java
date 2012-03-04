@@ -22,7 +22,7 @@ public class CBTypeBuilder extends TypeBuilder {
   public CBTypeBuilder(Job job, CodebaseTypeSystem ts, NodeFactory nf) {
     super(job, ts, nf);
     this.ts = ts;
-    this.ns = ((CodebaseSource) job.source()).namespace();
+    this.ns = ((CodebaseSource) job.source()).canonicalNamespace();
   }
 
   @Override

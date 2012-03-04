@@ -56,11 +56,11 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     FabricTypeSystem fab_ts = (FabricTypeSystem) jif_ts();
     Source derived;
     if (src.shouldPublish() && 
-        extInfo.localNamespace().equals(src.namespace())) {
+        extInfo.localNamespace().equals(src.canonicalNamespace())) {
       //If the source we are deriving source is being published, 
       // we should use the published namespace.
 
-      Codebase cb = fab_ts.codebaseFromNS(src.namespace());
+      Codebase cb = fab_ts.codebaseFromNS(src.canonicalNamespace());
       URI published_ns = NSUtil.namespace(cb);
       derived = src.publishedSource(published_ns, newName);
     }

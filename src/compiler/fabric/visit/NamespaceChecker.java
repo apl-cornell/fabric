@@ -42,7 +42,7 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
       CodebaseSource source = (CodebaseSource) job.source();
       FabricTypeSystem ts = (FabricTypeSystem) this.ts;
       ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
-      URI src_ns = source.namespace();
+      URI src_ns = source.canonicalNamespace();
       NamespaceResolver resolver = ts.namespaceResolver(src_ns);
       if (Report.should_report(Topics.mobile, 3)) {
         Report.report(3, "RESOLVER: " + resolver +"::"+ resolver.getClass());

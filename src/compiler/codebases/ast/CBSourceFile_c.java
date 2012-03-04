@@ -48,7 +48,7 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
       if (package_ != null) {
               pkg = package_.package_();
       }
-      URI ns = ((CodebaseSource) source).namespace();
+      URI ns = ((CodebaseSource) source).canonicalNamespace();
       ImportTable it = ts.importTable(source, ns, pkg);
       tb = tb.pushPackage(pkg);
       tb.setImportTable(it);

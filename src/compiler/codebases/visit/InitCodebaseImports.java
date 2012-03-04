@@ -25,7 +25,7 @@ public class InitCodebaseImports extends InitImportsVisitor {
 
   public InitCodebaseImports(Job job, CodebaseTypeSystem ts, NodeFactory nf) {
     super(job, ts, nf);
-    this.ns = ((CodebaseSource)job.source()).namespace();
+    this.ns = ((CodebaseSource)job.source()).canonicalNamespace();
     this.ts = ts;
   }
 

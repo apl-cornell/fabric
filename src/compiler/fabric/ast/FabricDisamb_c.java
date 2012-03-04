@@ -9,6 +9,7 @@ import polyglot.ast.Id;
 import polyglot.ast.Node;
 import polyglot.ast.PackageNode;
 import polyglot.ast.Prefix;
+import polyglot.types.FieldInstance;
 import polyglot.types.Importable;
 import polyglot.types.Named;
 import polyglot.types.NoClassException;
@@ -157,7 +158,6 @@ public class FabricDisamb_c extends JifDisamb_c implements Disamb {
     if (exprOK()) {
       // First try local variables and fields.
       VarInstance vi = c.findVariableSilent(name.id());
-
       if (vi != null) {
         Node n = disambiguateVarInstance(vi);
         if (n != null) return n;
