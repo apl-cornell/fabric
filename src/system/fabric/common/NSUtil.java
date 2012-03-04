@@ -286,8 +286,9 @@ public final class NSUtil {
     boolean needWorker = false;
     if (path.startsWith("@")) {
       try {
+        int idx = path.indexOf(":");
         BufferedReader lr =
-            new BufferedReader(new FileReader(path.substring(1)));
+            new BufferedReader(new FileReader(path.substring(1,idx)));
         path = lr.readLine();
       } catch (FileNotFoundException e) {
         throw new InternalCompilerError(e);
