@@ -1,9 +1,40 @@
-public class AddFriends {
-  public static main(String[] args) {
-    final User alice = (User) worker$.getRemoteStore("snapp").getRootMap().get("alice");
-    final User bob   = (User) worker$.getRemoteStore("snapp").getRootMap().get("bob");
+import fabric.util.Map;
 
-    bob.friends.add(alice);
+import util.AssertionFailedError;
+
+import snapp.User;
+import snapp.UserWrapper;
+
+public class AddFriends
+where
+  // trusted classes are trusted
+  util.Group.provider         <= {*←},
+  util.GroupIterator.provider <= {*←},
+  provider                    <= {*←}
+{
+  public static
+  void
+  main
+  {
+    {*←}
+  }
+  (
+    String[] args
+  )
+  {
+    final Store  snappStore = worker$.getStore("snapp");
+    final Map    rootMap    = snappStore.getRoot();
+
+    final UserWrapper[{*→snappStore}] aw = (UserWrapper[{*→snappStore}]) rootMap.get("alice");
+    final UserWrapper[{*→snappStore}] bw = (UserWrapper[{*→snappStore}]) rootMap.get("bob");
+
+    final User[aw.userOwner,aw.userNetwork] alice = aw.user;
+    final User[bw.userOwner,bw.userNetwork] bob   = bw.user;
+
+    if (bw.user.p equiv new principal (bw.userNetwork, bw.userOwner))
+      bob.friends.add(aw);
+    else
+      throw new AssertionFailedError("User[n,o].p = (n, o)");
   }
 }
 
