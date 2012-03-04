@@ -41,8 +41,12 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
       CBJobExt jobExt = (CBJobExt) job.ext();
       CodebaseSource source = (CodebaseSource) job.source();
       FabricTypeSystem ts = (FabricTypeSystem) this.ts;
+      ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
       URI src_ns = source.namespace();
       NamespaceResolver resolver = ts.namespaceResolver(src_ns);
+      if (Report.should_report(Topics.mobile, 3)) {
+        Report.report(3, "RESOLVER: " + resolver +"::"+ resolver.getClass());
+      }
 
       if (Report.should_report(Topics.mobile, 3)) {
         Report.report(3, "Checking namespace consistency of " + source);
@@ -76,7 +80,37 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
                 (CodebaseClassType) resolver.check(new_ct.fullName());
             if (ct != null && ct.equals(new_ct))
               continue;
+            else if (ct == null && src_ns.equals(extInfo.localNamespace())) {
+              // if local namespace resolve dep.
+              ct = (CodebaseClassType) resolver.find(new_ct.fullName());
+              if (ct != null && ct.equals(new_ct))
+                continue;
+              else {
+                throw new SemanticException(
+                    "Detected namespace inconsistency for source " + source + "."
+                        + "The source's codebase resolves " + ct.fullName()
+                        + " to a class object in " + ct.canonicalNamespace() + ","
+                        + " but a dependency, reached through " + dep.fullName()
+                        + ", resolves " + new_ct.fullName()
+                        + " to a class object in " + new_ct.canonicalNamespace() + "."
+                        + "  If this is intentional, consider using an explicit codebase"         
+                        + " to link with " + dep.fullName() + "."                     
+                        );
+              }
+            }
             else {
+              if (Report.should_report(Topics.mobile, 3)) {
+                Report.report(3, "Detected namespace inconsistency for source " + source + "."
+                    + "The source's codebase resolves " + ct.fullName()
+                    + " to a class object in " + ct.canonicalNamespace() + ","
+                    + " but a dependency, reached through " + dep.fullName()
+                    + ", resolves " + new_ct.fullName()
+                    + " to a class object in " + new_ct.canonicalNamespace() + "."
+                    + "  If this is intentional, consider using an explicit codebase"         
+                    + " to link with " + dep.fullName() + "."                     
+                    );
+
+              }
               throw new SemanticException(
                   "Detected namespace inconsistency for source " + source + "."
                       + "The source's codebase resolves " + ct.fullName()
@@ -94,6 +128,9 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
           new_deps.addAll(directDependencies(new_ct));
           new_deps.removeAll(seen);
         }
+      }
+      if (Report.should_report(Topics.mobile, 3)) {
+        Report.report(3, "Consistent namespace for " + source);
       }
     }
     return n;
@@ -119,6 +156,10 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
     if (!scheduler.sourceHasJob( ct.fromSource()))
       throw new InternalCompilerError("No job for " + ct);
     
+    if (Report.should_report(Topics.mobile, 3)) {
+      Report.report(3, "Loading job for " + cct + ":" + ct.fromSource());
+    }
+
     Job dep_job = scheduler.loadSource((FileSource) ct.fromSource(), true);
 
     if (dep_job == null)
