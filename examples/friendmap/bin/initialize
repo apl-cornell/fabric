@@ -5,6 +5,11 @@ CB_DIR="${BIN_DIR}/../var/codebases"
 
 # Publish the application code to the stores.
 cd "${BIN_DIR}/.."
+
+# XXX - copy util classes to main rt-classes because...yeah.
+ant build-fabil
+cp -r classes/fab-sig-impl/util/ ../../rt-classes/util/
+
 ant publish-all
 cd - &>/dev/null
 
@@ -12,13 +17,15 @@ cd - &>/dev/null
 SNAPP_SCRIPTS_CB="$(cat "${CB_DIR}/snapp-scripts.codebase" | sed 's/[<>]//g')"
 MAPSERV_SCRIPTS_CB="$(cat "${CB_DIR}/mapserv-scripts.codebase" | sed 's/[<>]//g')"
 FRIENDMAP_SCRIPTS_CB="$(cat "${CB_DIR}/friendmap-scripts.codebase" | sed 's/[<>]//g')"
+ALICE_SCRIPTS_CB="$(cat "${CB_DIR}/alice-scripts.codebase" | sed 's/[<>]//g')"
+BOB_SCRIPTS_CB="$(cat "${CB_DIR}/bob-scripts.codebase" | sed 's/[<>]//g')"
 
 # Initialize application state.
-"${BIN_DIR}/start-worker" snapp "${SNAPP_SCRIPTS_CB}"Init
-"${BIN_DIR}/start-worker" mapserv "${MAPSERV_SCRIPTS_CB}"Init
-"${BIN_DIR}/start-worker" friendmap "${FRIENDMAP_SCRIPTS_CB}"Init
-"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"Init
-"${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"Init
-"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"AddFriends
-"${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"AddFriends
+"${BIN_DIR}/start-worker" snapp "${SNAPP_SCRIPTS_CB}"snapp.Init
+"${BIN_DIR}/start-worker" mapserv "${MAPSERV_SCRIPTS_CB}"mapserv.Init
+"${BIN_DIR}/start-worker" friendmap "${FRIENDMAP_SCRIPTS_CB}"friendmap.Init
+"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.Init
+"${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.Init
+#"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.AddFriends
+#"${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.AddFriends
 
