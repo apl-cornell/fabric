@@ -101,8 +101,8 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
       // } catch (SemanticException e) {
       // }
       // }
-
-      return extInfo.namespaceToJavaPackagePrefix(canonical_ns) + "." 
+      String pre = extInfo.namespaceToJavaPackagePrefix(canonical_ns);
+      return  pre + (pre.isEmpty() ? "" : ".") 
           + package_().translate(c) + "." + name();
     } else {
       return super.translate(c);
