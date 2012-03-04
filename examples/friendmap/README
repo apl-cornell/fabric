@@ -1,49 +1,68 @@
+This is the FriendMap example program.  It is intended to model a social
+network.
 
-Execution steps:
+This directory contains the following sub-directories:
 
- - start stores / workers (any order is fine):
-   - alice
-   - bob
-   - friendmap
-   - mapserv
-   - snapp
+  - src: source code for the FriendMap example
+  - bin: a collection of scripts for running the example
+  - etc: configuration files for the example's Fabric nodes
 
- - publish application code
-   - snapp
-        snapp_1.0_codebase
-        snapp_2.0_codebase linked against snapp_1.0_codebase
-   - mapserv
-        mapserv_1.0_codebase
-   - friendmap
-        friendmap_1.0_codebase linked against mapserv_1.0_codebase, snapp_1.0_codebase
-        friendmap_2.0_codebase linked against mapserv_1.0_codebase, snapp_1.0_codebase, snapp_2.0_codebase
-   - scripts
-        fabric/scripts/foo published to foo
-        linking against snapp, mapserv, friendmap
+Compiling
+---------
+To build the initialization code that will set up the principal hierarchy,
+run 'ant' in the FriendMap example directory:
 
- - initialize objects
-   - Init@snapp:
-        create snapp
-   - Init@mapserv:
-        create mapserv
-   - Init@friendmap <mapserv_uri>:
-        create friendmap
-        friendmap.service -> mapserv
-   - Init@alice <snapp_uri> <mapserv_uri>:
-        create alice on snapp,
-        add mapserv to alice.locationInfo
-   - Init@bob <snapp_uri> <mapserv_uri>
-        create bob on snapp
-        add bob.friends to bob.locationInfo
-        add mapserv to bob.locationInfo
-   - AddFriends@alice <bob_uri>:
-        add bob to alice.friends
-   - AddFriends@bob <alice_uri>:
-        add alice to bob.friends
+  $ ant
 
- - run example
-   - RunApp@alice:
-        invoke friendmap application
-        expected output: 10x10 map with bob's location on it.
+You can expect messages warning that certain exceptions will be treated as
+fatal errors during this and subsequent steps.
+TODO: remove and/or fix spurious error messages.
 
+
+Using
+-----
+This example uses five stores ("friendmap", "mapserv", "snapp", "alice", and
+"bob").
+
+  0. Start in the FriendMap example directory:
+
+      $ cd $FABRIC/examples/friendmap
+
+  1. Start up instances of the five stores. The 'start-all' script will start
+     each store in a separate xterm window:
+
+      $ bin/start-all
+
+     You can also use an xterm replacement (e.g., gnome-terminal or konsole):
+
+      $ XTERM=gnome-terminal bin/start-all
+
+     Or, if you prefer, you can start each store individually in your favourite
+     terminal emulator:
+
+      $ bin/start-store snapp
+      $ bin/start-store mapserv
+      $ bin/start-store friendmap
+      $ bin/start-store alice
+      $ bin/start-store bob
+
+     If you are starting from fresh stores, you will need to initialize the
+     application state by following the next step.  Otherwise, skip to step 3
+     below.
+
+  2. Run the 'initialize' script to initialize the stores' state.  This will
+     publish the example's code to the stores, and initialize the application's
+     state.
+
+      $ bin/initialize
+
+  3. The 'friendmap' script will run the example.  You should in alice's
+     console a 10x10 map showing Bob's location.
+
+      $ bin/friendmap
+
+  4. You can clean up the stores' persistent state by removing 'var' from the
+     FriendMap example directory:
+
+      $ rm -rf var
 
