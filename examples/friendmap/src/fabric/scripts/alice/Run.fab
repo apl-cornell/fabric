@@ -4,19 +4,39 @@ import friendmap.FriendMap;
 import snapp.User;
 import snapp.UserWrapper;
 
+import util.AssertionFailedError;
 
-public class Run {
+
+public class Run
+where
+  provider <= {*←},
+
+  util.Group.provider         <= {*←},
+  util.GroupIterator.provider <= {*←},
+
+  mapserv.MapServer.provider <= mapserv.Box.provider,           mapserv.Box.provider <= mapserv.MapServer.provider,
+  mapserv.MapServer.provider <= mapserv.MapImage.provider, mapserv.MapImage.provider <= mapserv.MapServer.provider,
+
+  friendmap.FriendMap.provider <= {_→},
+    mapserv.MapServer.provider <= {_→}
+{
   public static void main{}(String[] args)
   {
     final Store snappStore = worker$.getStore("snapp");
+    final Store fmStore    = worker$.getStore("friendmap");
     final Map   rootMap    = snappStore.getRoot();
 
     final UserWrapper[{*→snappStore}] aw  = (UserWrapper[{*→snappStore}]) rootMap.get("alice");
-    final FriendMap                   app = (FriendMap)                   rootMap.get("friendmap");
+    final FriendMap  [{*→fmStore}]    app = (FriendMap[{*→fmStore}])      rootMap.get("friendmap");
 
     final User[aw.userOwner,aw.userNetwork] alice = aw.user;
 
-    // app.viewMap(alice, new label {});
+    if (alice.p equiv new principal (aw.userOwner, aw.userNetwork)
+    &&  worker$ actsfor aw.userOwner
+    &&  worker$ actsfor alice.friends
+    ) {
+      app.viewMap(alice, aw.userOwner, aw.userNetwork);
+    } else throw new AssertionFailedError("invariants");
   }
 }
 

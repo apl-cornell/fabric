@@ -18,7 +18,8 @@ where
     final Store     store   = worker$.getStore("snapp");
 
     final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
-    final FriendMap app = new FriendMap(mapserv);
+
+    final FriendMap[{*→fmStore}] app = new FriendMap[{*→fmStore}] (mapserv);
 
     store.getRoot().put("friendmap", app);
   }
