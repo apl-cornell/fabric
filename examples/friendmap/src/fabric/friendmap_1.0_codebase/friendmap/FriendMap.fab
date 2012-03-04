@@ -29,8 +29,8 @@ where
   MapServer.provider <= MapImage.provider, MapImage.provider <= MapServer.provider,
   MapServer.provider <= Box.provider,      Box.provider      <= MapServer.provider,
 
-  util.Group.provider         <= {*←}, {_→} <= util.Group.provider,
-  util.GroupIterator.provider <= {*←}, {_→} <= util.GroupIterator.provider
+  util.Group.provider         <= {*←},
+  util.GroupIterator.provider <= {*←}
 {
 
   /** The map service that this app uses to fetch maps.  Must be non-null. */
