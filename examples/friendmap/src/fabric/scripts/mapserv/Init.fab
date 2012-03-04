@@ -1,9 +1,21 @@
-public class Init {
-  public static void main(String[] args) {
-    final Store     store  = worker$.getRemoteStore("mapserv");
-    final MapServer server = new MapServer@store(store, "Map Server Object", '.');
 
-    store.getRootMap().put("mapserv", server);
+import mapserv.MapServer;
+import util.AssertionFailedError;
+
+public class Init
+where
+  provider <= {*←},
+  mapserv.MapServer.provider <= mapserv.Box.provider,           mapserv.Box.provider <= mapserv.MapServer.provider,
+  mapserv.MapServer.provider <= mapserv.MapImage.provider, mapserv.MapImage.provider <= mapserv.MapServer.provider
+{
+  public static void main {*←} (String[] args) {
+    final Store     store  = worker$.getStore("mapserv");
+    if (MapServer.provider <= new label {*←store}) {
+
+      final MapServer server = new MapServer@store("Map Server Object", store, '.');
+      worker$.getStore("snapp").getRoot().put("mapserv", server);
+
+    } else throw new AssertionFailedError("mapserv ≽ MapServer.provider");
   }
 }
 
