@@ -7,5 +7,5 @@ CB_DIR="${BIN_DIR}/../var/codebases"
 ALICE_SCRIPTS_CB="$(cat "${CB_DIR}/alice-scripts.codebase" | sed 's/[<>]//g')"
 
 # Run the program.
-"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"Run
+"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.Run
 
