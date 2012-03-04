@@ -130,14 +130,17 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     } else if (args[index].equals("-publish")) {
       index++;
       publish = true;
+      needWorker = true;
     } else if (args[index].equals("-publish-only")) {
       index++;
       publish = true;
       post_compiler = null;
       publishOnly = true;
+      needWorker = true;
     } else if (args[index].equals("-codebase-output-file")) {
       index++;
       this.codebaseFilename = args[index++];
+      needWorker = true;
       return index;
     } else if (args[index].equals("-sigcp")) {
       index++;
