@@ -289,7 +289,6 @@ public final class NSUtil {
       if (path.startsWith("@")) {
         try {
           int next_idx = path.indexOf(":");
-          System.err.println("NEXT:"+ next_idx );
           String pathFile;
           if (next_idx > 0) 
             pathFile = path.substring(1, next_idx);
