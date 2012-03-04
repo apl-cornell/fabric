@@ -1,4 +1,5 @@
-import snapp.*;
+import snapp.Snapp;
+import snapp.User;
 
 public class Init
 where
