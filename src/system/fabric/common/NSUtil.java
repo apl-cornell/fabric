@@ -285,12 +285,24 @@ public final class NSUtil {
   public static boolean processPathString(List<URI> uris, String path) {
     boolean needWorker = false;
     while (!path.isEmpty()) {
+      String remaining = "";
       if (path.startsWith("@")) {
         try {
           int next_idx = path.indexOf(":");
+          System.err.println("NEXT:"+ next_idx );
+          String pathFile;
+          if (next_idx > 0) 
+            pathFile = path.substring(1, next_idx);
+          else 
+            pathFile = path.substring(1);
+          
+          if (next_idx > 0)
+            remaining = path.substring(next_idx+1);
+
           BufferedReader lr =
-              new BufferedReader(new FileReader(path.substring(1,next_idx)));
-          path = lr.readLine() +":"+ path.substring(next_idx+1);
+              new BufferedReader(new FileReader(pathFile));
+          path = lr.readLine();
+          
         } catch (FileNotFoundException e) {
           throw new InternalCompilerError(e);
         } catch (IOException e) {
@@ -339,6 +351,7 @@ public final class NSUtil {
           }
         }
       }
+      path = remaining;
     }
     return needWorker;
   }
