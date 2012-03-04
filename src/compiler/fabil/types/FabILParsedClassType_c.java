@@ -86,7 +86,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
       ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();
 
       if (package_() == null) {
-        return extInfo.namespaceToJavaPackagePrefix(canonical_ns) + name();
+        return extInfo.namespaceToJavaPackagePrefix(canonical_ns) + "." + name();
       }
 
       // XXX: Never use short name
@@ -102,7 +102,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
       // }
       // }
 
-      return extInfo.namespaceToJavaPackagePrefix(canonical_ns)
+      return extInfo.namespaceToJavaPackagePrefix(canonical_ns) + "." 
           + package_().translate(c) + "." + name();
     } else {
       return super.translate(c);
