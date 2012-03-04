@@ -876,8 +876,13 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     Store dest = extInfo.destinationStore();
     NodePrincipal w = Worker.getWorker().getPrincipal();
     NodePrincipal st = dest.getPrincipal();
-    if (w != null && st != null)
-      return LabelUtil._Impl.writerPolicyLabel(dest, w, st);
+    if (w != null && st != null) {
+      fabric.util.ArrayList writers = new fabric.util.ArrayList._Impl(dest);
+      writers.add(w);
+      writers.add(st);
+      return LabelUtil._Impl.writerPolicyLabel(dest, Worker.getWorker()
+          .getLocalStore().getTopPrincipal(), writers);
+    }
     throw new InternalCompilerError("Whatt?!? W: " + w + " ST: " + st);
   }
 
