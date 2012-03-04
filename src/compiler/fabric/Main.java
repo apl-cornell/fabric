@@ -64,10 +64,14 @@ public class Main extends polyglot.main.Main {
     args.add("-simpleoutput");
 
     /* print time to complete Fabric and FabIL passes */
-    args.add("-report");
-    args.add("-profile=1");
-    args.add("-report");
-    args.add("-resolve=3");
+//    args.add("-report");
+//    args.add("frontend=2");
+//    args.add("-report");
+//    args.add("profile=1");
+//    args.add("-report");
+//    args.add("resolver=3");
+//    args.add("-report");
+//    args.add("mobile=3");
 
     if (worker.sigcp != null) {
       args.add("-sigcp");
