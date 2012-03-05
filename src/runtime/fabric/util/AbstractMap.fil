@@ -52,9 +52,9 @@ public abstract class AbstractMap implements Map
   /**
    * The main constructor, for use by subclasses.
    */
-  protected AbstractMap AbstractMap$()
+  protected AbstractMap fabric$util$AbstractMap$()
   {
-    Object$();
+    fabric$lang$Object$();
     //Initialize caches to permit read-only iteration
     entrySet();
     keySet();
@@ -273,8 +273,8 @@ public abstract class AbstractMap implements Map
 
 	class KeysIterator implements Iterator
 	{
-	  KeysIterator KeysIterator$(fabric.worker.Store store) {
-	    Object$();
+	  KeysIterator fabric$util$AbstractMap$KeysIterator$(fabric.worker.Store store) {
+	    fabric$lang$Object$();
 	    map_iterator = entrySet().iterator(store);
 	    return this;
 	  }
@@ -340,7 +340,7 @@ public abstract class AbstractMap implements Map
 	 */
         public Iterator iterator(final fabric.worker.Store store)
         {
-          return (KeysIterator) new KeysIterator@store().KeysIterator$(store);
+          return (KeysIterator) new KeysIterator@store().fabric$util$AbstractMap$KeysIterator$(store);
         }
 
 	public Object $initLabels() {
@@ -352,7 +352,7 @@ public abstract class AbstractMap implements Map
 
 	  return this;
 	}
-      }.AbstractSet$();
+      }.fabric$util$AbstractSet$();
     return keys;
   }
 
@@ -533,8 +533,8 @@ public abstract class AbstractMap implements Map
 
 	class ValuesIterator implements Iterator
 	{
-	  ValuesIterator ValuesIterator$(fabric.worker.Store store) {
-	    Object$();
+	  ValuesIterator fabric$util$AbstractMap$ValuesIterator$(fabric.worker.Store store) {
+	    fabric$lang$Object$();
 	    map_iterator = entrySet().iterator(store);
 	    return this;
 	  }
@@ -600,7 +600,7 @@ public abstract class AbstractMap implements Map
 	 */
         public Iterator iterator(final fabric.worker.Store store)
         {
-          return (ValuesIterator) new ValuesIterator@store().ValuesIterator$(store);
+          return (ValuesIterator) new ValuesIterator@store().fabric$util$AbstractMap$ValuesIterator$(store);
         }
 
 	public Object $initLabels() {
@@ -612,7 +612,7 @@ public abstract class AbstractMap implements Map
 
 	  return this;
 	}
-      }.AbstractCollection$();
+      }.fabric$util$AbstractCollection$();
     return values;
   }
 
@@ -670,9 +670,9 @@ public abstract class AbstractMap implements Map
      * @param newKey the key
      * @param newValue the value
      */
-    BasicMapEntry BasicMapEntry$(Object newKey, Object newValue)
+    BasicMapEntry fabric$util$AbstractMap$BasicMapEntry$(Object newKey, Object newValue)
     {
-      Entry$();
+      fabric$util$AbstractMap$Entry$();
       key = newKey;
       value = newValue;
       return this;
