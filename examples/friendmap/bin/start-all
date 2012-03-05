@@ -14,3 +14,6 @@ BIN_DIR="$(dirname $0)"
 "${BIN_DIR}/run-in-xterm" "Alice" \
   "${BIN_DIR}/start-store alice --debug --debug-port 6666 $@" &
 
+"${BIN_DIR}/run-in-xterm" "Bob" \
+  "${BIN_DIR}/start-store bob $@" &
+
