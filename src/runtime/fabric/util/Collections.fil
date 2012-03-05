@@ -1602,7 +1602,7 @@ public class Collections
    */
   public static List singletonList(Object o)
   {
-    return (SingletonList) new SingletonList(o).$initLabels();
+    return (SingletonList) new SingletonList().SingletonList$(o);
   }
 
   /**
@@ -2534,8 +2534,8 @@ public class Collections
 //  public static List synchronizedList(List l)
 //  {
 //    if (l instanceof RandomAccess)
-//      return (SynchronizedRandomAccessList) new SynchronizedRandomAccessList(l).$initLabels();
-//    return (SynchronizedList) new SynchronizedList(l).$initLabels();
+//      return (SynchronizedRandomAccessList) new SynchronizedRandomAccessList().SynchronizedRandomAccessList$(l);
+//    return (SynchronizedList) new SynchronizedList().SynchronizedList$(l);
 //  }
 //
 //  /**
@@ -2745,7 +2745,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return (SynchronizedListIterator) new SynchronizedListIterator@store(mutex, list.listIterator(store)).$initLabels();
+//          return (SynchronizedListIterator) new SynchronizedListIterator@store().SynchronizedListIterator$(mutex, list.listIterator(store));
 //        }
 //    }
 //
@@ -2770,7 +2770,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return (SynchronizedListIterator) new SynchronizedListIterator@store(mutex, list.listIterator(store, index)).$initLabels();
+//          return (SynchronizedListIterator) new SynchronizedListIterator@store().SynchronizedListIterator$(mutex, list.listIterator(store, index));
 //        }
 //    }
 //
@@ -2841,7 +2841,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return (SynchronizedList) new SynchronizedList(mutex, list.subList(fromIndex, toIndex)).$initLabels();
+//          return (SynchronizedList) new SynchronizedList().SynchronizedList$(mutex, list.subList(fromIndex, toIndex));
 //        }
 //    }
 //  } // class SynchronizedList
@@ -5555,7 +5555,7 @@ public class Collections
      */
     public SortedMap subMap(Object fromKey, Object toKey)
     {
-      return (UnmodifiableSortedMap) new UnmodifiableSortedMap(sm.subMap(fromKey, toKey)).$initLabels();
+      return (UnmodifiableSortedMap) new UnmodifiableSortedMap().UnmodifiableSortedMap$(sm.subMap(fromKey, toKey));
     }
 
     /**
@@ -5582,7 +5582,7 @@ public class Collections
      */
     public SortedMap tailMap(Object fromKey)
     {
-      return (UnmodifiableSortedMap) new UnmodifiableSortedMap(sm.tailMap(fromKey)).$initLabels();
+      return (UnmodifiableSortedMap) new UnmodifiableSortedMap().UnmodifiableSortedMap$(sm.tailMap(fromKey));
     }
 
     public Object $initLabels() {
@@ -5615,7 +5615,7 @@ public class Collections
    */
   public static SortedSet unmodifiableSortedSet(Store store, SortedSet s)
   {
-    return (UnmodifiableSortedSet) new UnmodifiableSortedSet@store(s).$initLabels();
+    return (UnmodifiableSortedSet) new UnmodifiableSortedSet@store().UnmodifiableSortedSet$(s);
   }
 
   /**
@@ -5698,7 +5698,7 @@ public class Collections
      */
     public SortedSet headSet(Object toElement)
     {
-      return (UnmodifiableSortedSet) new UnmodifiableSortedSet(ss.headSet(toElement)).$initLabels();
+      return (UnmodifiableSortedSet) new UnmodifiableSortedSet().UnmodifiableSortedSet$(ss.headSet(toElement));
     }
 
     /**
@@ -5741,7 +5741,7 @@ public class Collections
      */
     public SortedSet subSet(Object fromElement, Object toElement)
     {
-      return (UnmodifiableSortedSet) new UnmodifiableSortedSet(ss.subSet(fromElement, toElement)).$initLabels();
+      return (UnmodifiableSortedSet) new UnmodifiableSortedSet().UnmodifiableSortedSet$(ss.subSet(fromElement, toElement));
     }
 
     /**
@@ -5767,7 +5767,7 @@ public class Collections
      */
     public SortedSet tailSet(Object fromElement)
     {
-      return (UnmodifiableSortedSet) new UnmodifiableSortedSet(ss.tailSet(fromElement)).$initLabels();
+      return (UnmodifiableSortedSet) new UnmodifiableSortedSet().UnmodifiableSortedSet$(ss.tailSet(fromElement));
     }
 
     public Object $initLabels() {
