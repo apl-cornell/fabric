@@ -18,8 +18,8 @@ public class Runtime {
     private Principal dynp;
     private Store local;
 
-    private Runtime Runtime$(Principal p) {
-	Object$();
+    private Runtime fabric$runtime$Runtime$(Principal p) {
+	fabric$lang$Object$();
         this.dynp = p;
         this.local = Worker.getWorker().getLocalStore();
         return this;
@@ -37,7 +37,7 @@ public class Runtime {
 //            throw new SecurityException("The current user does not act for "
 //                    + p.name() + ".");
 //        }
-        return (Runtime) new Runtime().Runtime$(p);
+        return (Runtime) new Runtime().fabric$runtime$Runtime$(p);
     }
 
     /** Get the current user  */
@@ -46,11 +46,11 @@ public class Runtime {
     }
 
     private Label defaultOutputLabel() {
-        ConfPolicy cp = LabelUtil.readerPolicy(local, dynp, (LinkedList) new LinkedList().LinkedList$());
+        ConfPolicy cp = LabelUtil.readerPolicy(local, dynp, (LinkedList) new LinkedList().fabric$util$LinkedList$());
         return LabelUtil.toLabel(local, cp);
     }
     private Label defaultInputLabel() {
-        IntegPolicy ip = LabelUtil.writerPolicy(local, dynp, (LinkedList) new LinkedList().LinkedList$());
+        IntegPolicy ip = LabelUtil.writerPolicy(local, dynp, (LinkedList) new LinkedList().fabric$util$LinkedList$());
         return LabelUtil.toLabel(local, ip);
     }
 

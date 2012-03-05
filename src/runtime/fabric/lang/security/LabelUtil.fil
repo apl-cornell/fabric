@@ -13,7 +13,7 @@ import fabric.util.*;
  * is mostly copied from Jif.
  */
 public final class LabelUtil {
-  private LabelUtil LabelUtil$() {
+  private LabelUtil fabric$lang$security$LabelUtil$() {
     Object$();
     return this;
   }
@@ -35,7 +35,7 @@ public final class LabelUtil {
 //  private static ThreadLocal statsPerThread = new ThreadLocal() {
 //    protected Object initialValue() {
 //      Store store = Worker.getWorker().getLocalStore();
-//      return (Stats) new Stats@store().Stats$();
+//      return (Stats) new Stats@store().fabric$lang$security$LabelUtil$Stats$();
 //    }
 //  };
 //  public static final boolean COUNT_TIME = false;
@@ -160,7 +160,7 @@ public final class LabelUtil {
       ConfPolicy result = labelCache.readerPolicy(owner, reader);
       if (result != null) return result;
       
-      result = (ReaderPolicy) new ReaderPolicy@store().ReaderPolicy$(owner, reader);
+      result = (ReaderPolicy) new ReaderPolicy@store().fabric$lang$security$ReaderPolicy$(owner, reader);
       labelCache.addReaderPolicy(owner, reader, result);
       return result;
 //    } finally {
@@ -264,7 +264,7 @@ public final class LabelUtil {
       IntegPolicy result = labelCache.writerPolicy(owner, writer);
       if (result != null) return result;
       
-      result = (WriterPolicy) new WriterPolicy@store().WriterPolicy$(owner, writer);
+      result = (WriterPolicy) new WriterPolicy@store().fabric$lang$security$WriterPolicy$(owner, writer);
       labelCache.addWriterPolicy(owner, writer, result);
       return result;
 //    } finally {
@@ -351,7 +351,7 @@ public final class LabelUtil {
       Label result = cache.toLabel(cPolicy, iPolicy);
       if (result != null) return result;
       
-      result = (Label) new PairLabel@store().PairLabel$(cPolicy, iPolicy);
+      result = (Label) new PairLabel@store().fabric$lang$security$PairLabel$(cPolicy, iPolicy);
       cache.addToLabel(cPolicy, iPolicy, result);
       return result;
 //    } finally {
@@ -405,7 +405,7 @@ public final class LabelUtil {
             PairLabel pl2 = (PairLabel) l2;
             java.util.Set dependencies = new java.util.HashSet();
             result =
-                (PairLabel) new PairLabel@store().PairLabel$(pl1.confPolicy().join(store, pl2.confPolicy(), dependencies),
+                (PairLabel) new PairLabel@store().fabric$lang$security$PairLabel$(pl1.confPolicy().join(store, pl2.confPolicy(), dependencies),
                     pl1.integPolicy().join(store, pl2.integPolicy(), dependencies));
             // add dependencies from delegations to the cache result
             // i.e., what dependencies does this result rely on?
@@ -456,7 +456,7 @@ public final class LabelUtil {
             PairLabel pl2 = (PairLabel) l2;
             java.util.Set dependencies = new java.util.HashSet();
             result =
-                (PairLabel) new PairLabel@store().PairLabel$(pl1.confPolicy().meet(store, pl2.confPolicy(), dependencies),
+                (PairLabel) new PairLabel@store().fabric$lang$security$PairLabel$(pl1.confPolicy().meet(store, pl2.confPolicy(), dependencies),
                     pl1.integPolicy().meet(store, pl2.integPolicy(), dependencies));
             // add dependencies from delegations to the cache result
             // i.e., what dependencies does this result rely on?
@@ -498,7 +498,7 @@ public final class LabelUtil {
       java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
-      Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().LinkedHashSet$();
+      Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().fabric$util$LinkedHashSet$();
       if (p1 instanceof JoinConfPolicy) {
         comps.addAll(((JoinConfPolicy) p1).joinComponents());
       } else {
@@ -514,7 +514,7 @@ public final class LabelUtil {
       if (comps.size() == 1) {
         return (ConfPolicy) comps.iterator().next();
       }
-      return (JoinConfPolicy) new JoinConfPolicy@store().JoinConfPolicy$(comps);
+      return (JoinConfPolicy) new JoinConfPolicy@store().fabric$lang$security$JoinConfPolicy$(comps);
 //    } finally {
 //      exitTiming();
 //    }
@@ -539,7 +539,7 @@ public final class LabelUtil {
   static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
-      Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().LinkedHashSet$();
+      Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().fabric$util$LinkedHashSet$();
       if (p1 instanceof JoinIntegPolicy) {
         comps.addAll(((JoinIntegPolicy) p1).joinComponents());
       } else {
@@ -555,7 +555,7 @@ public final class LabelUtil {
       if (comps.size() == 1) {
         return (IntegPolicy) comps.iterator().next();
       }
-      return (JoinIntegPolicy) new JoinIntegPolicy@store().JoinIntegPolicy$(comps);
+      return (JoinIntegPolicy) new JoinIntegPolicy@store().fabric$lang$security$JoinIntegPolicy$(comps);
 //    } finally {
 //      exitTiming();
 //    }
@@ -581,7 +581,7 @@ public final class LabelUtil {
       java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
-      Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().LinkedHashSet$();
+      Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().fabric$util$LinkedHashSet$();
       if (p1 instanceof MeetConfPolicy) {
         comps.addAll(((MeetConfPolicy) p1).meetComponents());
       } else {
@@ -597,7 +597,7 @@ public final class LabelUtil {
       if (comps.size() == 1) {
         return (ConfPolicy) comps.iterator().next();
       }
-      return (MeetConfPolicy) new MeetConfPolicy@store().MeetConfPolicy$(comps);
+      return (MeetConfPolicy) new MeetConfPolicy@store().fabric$lang$security$MeetConfPolicy$(comps);
 //    } finally {
 //      exitTiming();
 //    }
@@ -621,7 +621,7 @@ public final class LabelUtil {
   static IntegPolicy meet(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
-      Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().LinkedHashSet$();
+      Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().fabric$util$LinkedHashSet$();
       if (p1 instanceof MeetIntegPolicy) {
         comps.addAll(((MeetIntegPolicy) p1).meetComponents());
       } else {
@@ -637,7 +637,7 @@ public final class LabelUtil {
       if (comps.size() == 1) {
         return (IntegPolicy) comps.iterator().next();
       }
-      return (MeetIntegPolicy) new MeetIntegPolicy@store().MeetIntegPolicy$(comps);
+      return (MeetIntegPolicy) new MeetIntegPolicy@store().fabric$lang$security$MeetIntegPolicy$(comps);
 //    } finally {
 //      exitTiming();
 //    }
@@ -802,7 +802,7 @@ public final class LabelUtil {
 
   private static Set/* <Policy> */simplifyJoin(Store store, Set/* <Policy> */policies,
       java.util.Set/* <DelegationPair> */dependencies) {
-    Set/* <Policy> */needed = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().LinkedHashSet$();
+    Set/* <Policy> */needed = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().fabric$util$LinkedHashSet$();
     for (Iterator/* <Policy> */i = policies.iterator(); i.hasNext();) {
       Policy ci = (Policy) i.next();
 
@@ -828,7 +828,7 @@ public final class LabelUtil {
 
   private static Set/* <Policy> */simplifyMeet(Store store, Set/* <Policy> */policies,
       java.util.Set/* <DelegationPair> */dependencies) {
-    Set/* <Policy> */needed = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().LinkedHashSet$();
+    Set/* <Policy> */needed = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().fabric$util$LinkedHashSet$();
     for (Iterator/* <Policy> */i = policies.iterator(); i.hasNext();) {
       Policy ci = (Policy) i.next();
 

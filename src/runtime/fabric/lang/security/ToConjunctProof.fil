@@ -10,9 +10,9 @@ import java.util.Set;
 public final class ToConjunctProof extends ActsForProof {
   private /*final*/ Map conjunctProofs;
 
-  ToConjunctProof ToConjunctProof$(Principal actor, ConjunctivePrincipal granter,
+  ToConjunctProof fabric$lang$security$ToConjunctProof$(Principal actor, ConjunctivePrincipal granter,
       Map conjunctProofs) {
-    ActsForProof$(actor, granter);
+    fabric$lang$security$ActsForProof$(actor, granter);
     this.conjunctProofs = conjunctProofs;
     return this;
   }

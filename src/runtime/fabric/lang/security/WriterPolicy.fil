@@ -14,10 +14,10 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
   private /*final*/ Principal owner;
   private /*final*/ Principal writer;
 
-  public WriterPolicy WriterPolicy$(Principal owner, Principal writer) {
+  public WriterPolicy fabric$lang$security$WriterPolicy$(Principal owner, Principal writer) {
     this.owner = owner;
     this.writer = writer;
-    AbstractPolicy$();
+    fabric$lang$security$AbstractPolicy$();
     return this;
   }
 
