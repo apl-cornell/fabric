@@ -92,7 +92,7 @@ public class Collections
      */
     EmptySet EmptySet$()
     {
-      AbstractSet$();
+      return AbstractSet$();
     }
 
     /**
@@ -257,7 +257,7 @@ public class Collections
      */
     EmptyList EmptyList$()
     {
-      AbstractList$();
+      return AbstractList$();
     }
 
     /**
@@ -446,7 +446,7 @@ public class Collections
      */
     EmptyMap EmptyMap$()
     {
-      AbstractMap$();
+      return AbstractMap$();
     }
 
     /**
@@ -997,7 +997,7 @@ public class Collections
      */
     CopiesList CopiesList$(int n, Object o)
     {
-      AbstractList$();
+      return AbstractList$();
       if (n < 0)
         throw new IllegalArgumentException();
       this.n = n;
@@ -1203,7 +1203,7 @@ public class Collections
      */
     ReverseComparator ReverseComparator$()
     {
-      Object$();
+      return Object$();
     }
 
     /**
@@ -1437,7 +1437,7 @@ public class Collections
      */
     SingletonSet SingletonSet$(Object o)
     {
-      AbstractSet$();
+      return AbstractSet$();
       element = o;
     }
 
@@ -1631,7 +1631,7 @@ public class Collections
      */
     SingletonList SingletonList$(Object o)
     {
-      AbstractList$();
+      return AbstractList$();
       element = o;
     }
 
@@ -1833,6 +1833,7 @@ public class Collections
       AbstractMap$();
       k = key;
       v = value;
+      return this;
     }
 
     /**
@@ -4160,6 +4161,7 @@ public class Collections
       this.c = c;
       if (c == null)
         throw new NullPointerException();
+      return this;
     }
 
     /**
@@ -4398,6 +4400,7 @@ public class Collections
     {
       Object$();
       this.i = i;
+      return this;
     }
 
     /**
@@ -4505,6 +4508,7 @@ public class Collections
     {
       UnmodifiableCollection$(l);
       list = l;
+      return this;
     }
 
     /**
@@ -4723,7 +4727,7 @@ public class Collections
      */
     UnmodifiableRandomAccessList UnmodifiableRandomAccessList$(List l)
     {
-      UnmodifiableList$(l);
+      return UnmodifiableList$(l);
     }
 
     public Object $initLabels() {
@@ -4759,6 +4763,7 @@ public class Collections
     {
       UnmodifiableIterator$(li);
       this.li = li;
+      return this;
     }
 
     /**
@@ -4915,6 +4920,7 @@ public class Collections
       this.m = m;
       if (m == null)
         throw new NullPointerException();
+      return this;
     }
 
     /**
@@ -5000,6 +5006,7 @@ public class Collections
         {
           Object$();
           this.e = e;
+          return this;
         }
 
         /**
@@ -5091,7 +5098,7 @@ public class Collections
        */
       UnmodifiableEntrySet UnmodifiableEntrySet$(Set s)
       {
-        UnmodifiableSet$(s);
+        return UnmodifiableSet$(s);
       }
 
       // The iterator must return unmodifiable map entries.
@@ -5378,6 +5385,7 @@ public class Collections
     UnmodifiableSet UnmodifiableSet$(Set s)
     {
       UnmodifiableCollection$(s);
+      return this;
     }
 
     /**
@@ -5465,6 +5473,7 @@ public class Collections
     {
       UnmodifiableMap$(sm);
       this.sm = sm;
+      return this;
     }
 
     /**
@@ -5648,6 +5657,7 @@ public class Collections
     {
       UnmodifiableSet$(ss);
       this.ss = ss;
+      return this;
     }
 
     /**
