@@ -26,7 +26,7 @@ where
   provider <= {*→network}
 {
   /** The principal (network,owner) */
-  public final principal   {_→; *←(network,owner)}@{*→network} p = new principal(owner,network);
+  public final principal   {_→; *←(network,owner)}@{*→network} p;
 
   /** The label {p←;p→locationInfo} */
   public final label       {_→; *←(network,owner)}@{*→network} locationLabel; // Cannot be set as initializer due to jif bug.
@@ -68,6 +68,7 @@ where
     Group[p,{*→network}] friends_;
     Group[p,{*→network}] locationInfo_;
     label locationLabel_;
+    p = new principal@store(owner,network);
 
     if (p equiv new principal(owner,network)) {
       friends_       = new Group[p,{*→network}]@store(store, name + "'s friends");

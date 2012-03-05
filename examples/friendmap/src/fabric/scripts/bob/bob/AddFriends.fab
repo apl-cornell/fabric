@@ -33,7 +33,7 @@ where
     final User[aw.userOwner,aw.userNetwork] alice = aw.user;
     final User[bw.userOwner,bw.userNetwork] userBob   = bw.user;
 
-    if (bw.user.p equiv new principal (bw.userNetwork, bw.userOwner))
+    if (userBob.p equiv new principal (bw.userNetwork, bw.userOwner))
       userBob.friends.add(aw);
     else
       throw new AssertionFailedError("User[n,o].p = (n, o)");

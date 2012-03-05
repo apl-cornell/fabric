@@ -20,12 +20,12 @@ where
 
       if (store actsfor snapp
       &&  snapp.store equiv store
-      &&  snapp.Snapp.provider <= new label {*←snapp}
+      &&  snapp.Snapp.provider <= new label {*←snapp}@store
       ) {
 
         final User[worker$,snapp]  userBob = snapp.createUser("Bob", worker$);
 
-        if (userBob.p equiv new principal (worker$,snapp)
+        if (userBob.p equiv new principal@store (worker$,snapp)
         ) {
 
           final UserWrapper[{*→store}] aw = new UserWrapper[{*→store}] (store, worker$, snapp, userBob);
