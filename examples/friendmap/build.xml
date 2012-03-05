@@ -125,7 +125,15 @@
   </target>
 
   <target name="build-local-scripts-friendmap" depends="build-local-friendmap">
-    <fabc-local srcdir="${home}/src/fabric/scripts/friendmap"     dstdir="${home}/classes"     />
+    <fabc-local srcdir="${home}/src/fabric/scripts/friendmap"     dstdir="${home}/classes">
+      <!--
+      <arg value="-report" /> <arg value="pc=1" />
+      <arg value="-report" /> <arg value="solver=5" />
+      <arg value="-debugpositions" />
+      <arg value="-report" /> <arg value="labelFlow=1" />
+      <arg value="-rdebug" />
+      -->
+    </fabc-local>
   </target>
 
   <target name="build-local-scripts-alice" depends="build-local-friendmap">
