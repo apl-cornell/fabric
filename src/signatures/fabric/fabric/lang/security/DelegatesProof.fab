@@ -5,7 +5,7 @@ package fabric.lang.security;
  * its authority to actor. 
  */
 public final class DelegatesProof[label AccessBound] extends ActsForProof[AccessBound] {
-    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+//    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     public DelegatesProof(principal{this} actor, principal{this} granter):{AccessBound} {
         super(actor, granter);
     }

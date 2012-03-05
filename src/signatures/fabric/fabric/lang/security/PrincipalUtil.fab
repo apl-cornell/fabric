@@ -1,7 +1,7 @@
 package fabric.lang.security;
 
 public class PrincipalUtil {
-    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+//    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 
     public static native boolean{p;q;q←} acts_for(Principal p, Principal q);
 

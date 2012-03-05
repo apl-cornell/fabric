@@ -5,7 +5,7 @@ package fabric.lang.security;
  * the class's access label. 
  */
 public abstract class ActsForProof[label AccessBound] {
-    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+//    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     
     ActsForProof(principal{this} actor, principal{this} granter): {AccessBound} {
     }

@@ -6,7 +6,7 @@ package fabric.lang.security;
  * their own Principal classes must extend DelegatingPrincipal.
  */
 public abstract class Principal {
-    static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+//    static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 
     public abstract String{this} name{⊥->}();
 
