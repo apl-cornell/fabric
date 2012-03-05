@@ -78,6 +78,7 @@ public class LinkedList extends AbstractSequentialList
     {
       Object$();
       this.data = data;
+      return this;
     }
 
     public Object $initLabels() {
@@ -189,6 +190,7 @@ public class LinkedList extends AbstractSequentialList
   public LinkedList LinkedList$()
   {
     AbstractSequentialList$();
+    return this;
   }
 
   /**
@@ -202,6 +204,7 @@ public class LinkedList extends AbstractSequentialList
   {
     AbstractSequentialList$();
     addAll(c);
+    return this;
   }
 
   /**
