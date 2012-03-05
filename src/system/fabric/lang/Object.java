@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -939,11 +938,8 @@ public interface Object {
           @Override
           public Object run() throws Throwable {
             Constructor<? extends Object._Impl> constr =
-              c.getConstructor();
-            Method typemeth = c.getDeclaredMethod(c.getName().replace('.', '$')+"$",
-                Store.class);
-            Object ret = (Object) typemeth.invoke(constr.newInstance(), store);
-            return ret.fetch();
+              c.getConstructor(Store.class);
+            return constr.newInstance(store).$initLabels().fetch();
           }
         });
       }

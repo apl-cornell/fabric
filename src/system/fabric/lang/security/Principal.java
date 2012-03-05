@@ -146,6 +146,7 @@ public interface Principal extends fabric.lang.Object {
 
     @Override
     public Principal fabric$lang$security$Principal$() {
+      fabric$lang$Object$();
       return (Principal) this.$getProxy();
     }
 

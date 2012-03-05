@@ -77,6 +77,7 @@ public interface DelegatingPrincipal extends Principal {
     
     @Override
     public DelegatingPrincipal fabric$lang$security$DelegatingPrincipal$() {
+      fabric$lang$security$Principal$();
       return (DelegatingPrincipal) this.$getProxy();
     }
 
