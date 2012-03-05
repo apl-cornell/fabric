@@ -61,6 +61,7 @@ where
       throw new NullPointerException("61 service is null");
 
     this.service = service;
+    super();
   }
 
   /**
