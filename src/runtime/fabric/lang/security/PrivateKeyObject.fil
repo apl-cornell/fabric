@@ -20,16 +20,18 @@ public class PrivateKeyObject {
   /**
    * The principal to which this key belongs.
    */
-  private final Principal principal;
+  private /*final*/ Principal principal;
   
   private PrivateKey key;
   
   /**
    * @param p the principal to which this key belongs.
    */
-  public PrivateKeyObject(Principal p, PrivateKey key) {
+  public PrivateKeyObject PrivateKeyObject$(Principal p, PrivateKey key) {
+    Object$();
     this.principal = p;
     this.key = key;
+    return this;
   }
   
   public Object $initLabels() {

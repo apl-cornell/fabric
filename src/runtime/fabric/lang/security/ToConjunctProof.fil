@@ -8,12 +8,13 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public final class ToConjunctProof extends ActsForProof {
-  private final Map conjunctProofs;
+  private /*final*/ Map conjunctProofs;
 
-  ToConjunctProof(Principal actor, ConjunctivePrincipal granter,
+  ToConjunctProof ToConjunctProof$(Principal actor, ConjunctivePrincipal granter,
       Map conjunctProofs) {
-    super(actor, granter);
+    ActsForProof$(actor, granter);
     this.conjunctProofs = conjunctProofs;
+    return this;
   }
 
   Map getConjunctProofs() {

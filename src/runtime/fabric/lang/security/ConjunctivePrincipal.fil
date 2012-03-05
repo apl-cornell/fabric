@@ -9,12 +9,14 @@ import fabric.util.*;
  * copied from Jif.
  */
 public final class ConjunctivePrincipal extends Principal {
-  final Set conjuncts;
+  /*final*/ Set conjuncts;
   private Integer hashCode;
   public static final Store localStore = Worker.getWorker().getLocalStore();
 
-  ConjunctivePrincipal(Set conjuncts) {
+  ConjunctivePrincipal ConjunctivePrincipal$(Set conjuncts) {
     this.conjuncts = conjuncts;
+    Principal$();
+    return this;
   }
 
   public String name() {
@@ -68,7 +70,7 @@ public final class ConjunctivePrincipal extends Principal {
   }
 
   public ActsForProof findProofUpto(Store store, Principal p, java.lang.Object searchState) {
-    Map proofs = (HashMap) new HashMap@store().$initLabels();
+    Map proofs = (HashMap) new HashMap@store().HashMap$();
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
       Principal q = (Principal) iter.next();
       ActsForProof prf = PrincipalUtil.findActsForProof(store, p, q, searchState);
@@ -78,7 +80,7 @@ public final class ConjunctivePrincipal extends Principal {
 
     // proofs contains a proof for every conjunct,
     // which is sufficent for a proof to the conjunctive principal
-    return (ToConjunctProof) new ToConjunctProof@store(p, this, proofs).$initLabels();
+    return (ToConjunctProof) new ToConjunctProof@store().ToConjuctProof$(p, this, proofs);
 
   }
 
@@ -89,8 +91,8 @@ public final class ConjunctivePrincipal extends Principal {
           PrincipalUtil.findActsForProof(store, witness, q, searchState);
       if (prf != null) {
         // have found a proof from witness to q
-        DelegatesProof step = (DelegatesProof) new DelegatesProof@store(this, witness).$initLabels();
-        return (TransitiveProof) new TransitiveProof@store(step, witness, prf).$initLabels();
+        DelegatesProof step = (DelegatesProof) new DelegatesProof@store().DelegatesProof$(this, witness);
+        return (TransitiveProof) new TransitiveProof@store().TransitiveProof$(step, witness, prf);
       }
     }
     return null;

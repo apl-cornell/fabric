@@ -7,8 +7,9 @@ import fabric.util.*;
  * Jif.
  */
 public final class JoinIntegPolicy extends JoinPolicy implements IntegPolicy {
-  JoinIntegPolicy(Set policies) {
-    super(policies);
+  JoinIntegPolicy JoinIntegPolicy$(Set policies) {
+    JoinPolicy$(policies);
+    return this;
   }
 
   public IntegPolicy join(Store store, IntegPolicy p, java.util.Set s) {

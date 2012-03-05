@@ -72,20 +72,23 @@ public class ArrayList extends AbstractList
    * @param capacity initial capacity of this ArrayList
    * @throws IllegalArgumentException if capacity is negative
    */
-  public ArrayList(int capacity)
+  public ArrayList ArrayList$(int capacity)
   {
+    AbstractList$();
     // Must explicitly check, to get correct exception.
     if (capacity < 0)
       throw new IllegalArgumentException();
     data = new Object[capacity];
+    return this;
   }
 
   /**
    * Construct a new ArrayList with the default capacity (16).
    */
-  public ArrayList()
+  public ArrayList ArrayList$()
   {
-    this(DEFAULT_CAPACITY);
+    ArrayList$(DEFAULT_CAPACITY);
+    return this;
   }
 
   /**
@@ -96,10 +99,11 @@ public class ArrayList extends AbstractList
    * @param c the collection whose elements will initialize this list
    * @throws NullPointerException if c is null
    */
-  public ArrayList(Collection c)
+  public ArrayList ArrayList$(Collection c)
   {
-    this((int) (c.size() * 1.1f));
+    ArrayList$((int) (c.size() * 1.1f));
     addAll(c);
+    return this;
   }
 
   /**

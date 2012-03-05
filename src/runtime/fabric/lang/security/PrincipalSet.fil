@@ -9,12 +9,14 @@ import fabric.util.Set;
 public class PrincipalSet {
   private Set set;
 
-  public PrincipalSet() {
-    set = (LinkedHashSet) new LinkedHashSet().$initLabels();
+  public PrincipalSet PrincipalSet$() {
+    Object$();
+    set = (LinkedHashSet) new LinkedHashSet().LinkedHashSet$();
+    return this;
   }
 
   public PrincipalSet add(Principal p) {
-    PrincipalSet ps = (PrincipalSet) new PrincipalSet().$initLabels();
+    PrincipalSet ps = (PrincipalSet) new PrincipalSet().PrincipalSet$();
     ps.set.addAll(set);
     ps.set.add(p);
     return ps;

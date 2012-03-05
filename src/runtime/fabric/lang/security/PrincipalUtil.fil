@@ -52,13 +52,13 @@ public class PrincipalUtil {
     
     if (cache.containsNotActsFor(pair)) return null;
 
-    if (delegatesTo(q, p)) return (DelegatesProof) new DelegatesProof@store(p, q).$initLabels();
+    if (delegatesTo(q, p)) return (DelegatesProof) new DelegatesProof@store().DelegatesProof$(p, q);
 
     // if the two principals are ==-equal, or if they
     // both agree that they are equal to each other, then
     // we return true (since the acts-for relation is
     // reflexive).
-    if (eq(p, q)) return (ReflexiveProof) new ReflexiveProof@store(p, q).$initLabels();
+    if (eq(p, q)) return (ReflexiveProof) new ReflexiveProof@store().ReflexiveProof$(p, q);
 
     // try searching
     ActsForProof prf = findActsForProof(store, p, q, null);
@@ -135,10 +135,10 @@ public class PrincipalUtil {
 //      LabelUtil.enterTiming();
       // try the dumb things first.
       if (q == null) {
-        return (DelegatesProof) new DelegatesProof@store(p, q).$initLabels();
+        return (DelegatesProof) new DelegatesProof@store().DelegatesProof$(p, q);
       }
       if (eq(p, q)) {
-        return (ReflexiveProof) new ReflexiveProof@store(p, q).$initLabels();
+        return (ReflexiveProof) new ReflexiveProof@store().ReflexiveProof$(p, q);
       }
 
       // check the search state
@@ -149,9 +149,9 @@ public class PrincipalUtil {
           // p and q are already on the goal stack. Prevent an infinite recursion.
           return null;
         }
-        newss = (ProofSearchState) new ProofSearchState@localStore(ss, p, q).$initLabels();                                        
+        newss = (ProofSearchState) new ProofSearchState@localStore().ProofSearchState$(ss, p, q);                                        
       } else {
-        newss = (ProofSearchState) new ProofSearchState@localStore(p, q).$initLabels();
+        newss = (ProofSearchState) new ProofSearchState@localStore().ProofSearchState$(p, q);
       }
 
       // if we're going from a dis/conjunctive principal, try finding a
@@ -187,17 +187,19 @@ public class PrincipalUtil {
   private static class ProofSearchState {
     private SecurityCache.ActsForPair native[] goalstack;
 
-    public ProofSearchState(Principal p, Principal q) {
+    public ProofSearchState ProofSearchState$(Principal p, Principal q) {
       goalstack = new SecurityCache.ActsForPair native[1];
       goalstack[0] = new SecurityCache.ActsForPair(p, q);
+      return this;
     }
 
-    private ProofSearchState(ProofSearchState ss, Principal p, Principal q) {
+    private ProofSearchState ProofSearchState$(ProofSearchState ss, Principal p, Principal q) {
       int len = ss.goalstack.length + 1;
       goalstack = new SecurityCache.ActsForPair native[len];
       for (int i = 0; i < len - 1; i++)
         goalstack[i] = ss.goalstack[i];
       goalstack[len - 1] = new SecurityCache.ActsForPair(p, q);
+      return this;
     }
 
     public boolean contains(Principal p, Principal q) {
@@ -379,7 +381,7 @@ public class PrincipalUtil {
             // either p is null (and the "null" principal always
             // gives authority!) or p grants authority to execute the
             // closure.
-            return (Capability) new Capability@store(closureP, closureL, c).$initLabels();
+            return (Capability) new Capability@store().Capability$(closureP, closureL, c);
           }
         }
       }
@@ -434,7 +436,7 @@ public class PrincipalUtil {
   public static ConfPolicy readableByPrinPolicy(Store store, Principal p) {
 //    try {
 //      LabelUtil.enterTiming();
-      return (ReaderPolicy) new ReaderPolicy@store(topPrincipal(), p).$initLabels();
+      return (ReaderPolicy) new ReaderPolicy@store().ReaderPolicy$(topPrincipal(), p);
 //    } finally {
 //      LabelUtil.exitTiming();
 //    }
@@ -449,7 +451,7 @@ public class PrincipalUtil {
   public static IntegPolicy writableByPrinPolicy(Store store, Principal p) {
 //    try {
 //      LabelUtil.enterTiming();
-      return (WriterPolicy) new WriterPolicy@store(topPrincipal(), p).$initLabels();
+      return (WriterPolicy) new WriterPolicy@store().WriterPolicy$(topPrincipal(), p);
 //    } finally {
 //      LabelUtil.exitTiming();
 //    }
@@ -466,7 +468,7 @@ public class PrincipalUtil {
       if (left == null || right == null) return null;
       if (actsFor(left, right)) return right;
       if (actsFor(right, left)) return left;
-      Collection/* <Principal> */c = (ArrayList) new ArrayList/* <Principal> */@store(2).$initLabels();
+      Collection/* <Principal> */c = (ArrayList) new ArrayList/* <Principal> */@store().ArrayList$(2);
       c.add(left);
       c.add(right);
       return disjunction(store, c);
@@ -488,7 +490,7 @@ public class PrincipalUtil {
       if (right == null) return left;
       if (actsFor(left, right)) return left;
       if (actsFor(right, left)) return right;
-      Collection/* <Principal> */c = (ArrayList) new ArrayList/* <Principal> */@store(2).$initLabels();
+      Collection/* <Principal> */c = (ArrayList) new ArrayList/* <Principal> */@store().ArrayList$(2);
       c.add(left);
       c.add(right);
       return conjunction(store, c);
@@ -517,7 +519,7 @@ public class PrincipalUtil {
       }
 
       // go through the collection of principals, and flatten them
-      Set/* <Principal> */needed = (LinkedHashSet) new LinkedHashSet/* <Principal> */@store().$initLabels();
+      Set/* <Principal> */needed = (LinkedHashSet) new LinkedHashSet/* <Principal> */@store().LinkedHashSet$();
       for (Iterator/* <Principal> */iter = principals.iterator(localStore); iter
       .hasNext();) {
         Object o = iter.next();
@@ -531,7 +533,7 @@ public class PrincipalUtil {
           needed.add(p);
         }
       }
-      return (DisjunctivePrincipal) new DisjunctivePrincipal@store(needed).$initLabels();
+      return (DisjunctivePrincipal) new DisjunctivePrincipal@store().DisjunctivePrincipal$(needed);
 //    } finally {
 //      LabelUtil.exitTiming();
 //    }
@@ -557,7 +559,7 @@ public class PrincipalUtil {
       }
 
       // go through the collection of principals, and flatten them
-      Set/* <Principal> */needed = (LinkedHashSet) new LinkedHashSet/* <Principal> */@store().$initLabels();
+      Set/* <Principal> */needed = (LinkedHashSet) new LinkedHashSet/* <Principal> */@store().LinkedHashSet$();
       for (Iterator/* <Principal> */iter = principals.iterator(localStore); iter
       .hasNext();) {
         Object o = iter.next();
@@ -572,7 +574,7 @@ public class PrincipalUtil {
           needed.add(p);
         }
       }
-      return (ConjunctivePrincipal) new ConjunctivePrincipal@store(needed).$initLabels();
+      return (ConjunctivePrincipal) new ConjunctivePrincipal@store().ConjunctivePrincipal$(needed);
 //    } finally {
 //      LabelUtil.exitTiming();
 //    }
@@ -600,7 +602,9 @@ public class PrincipalUtil {
   }
 
   public static final class TopPrincipal extends Principal {
-    public TopPrincipal() {
+    public TopPrincipal TopPrincipal$() {
+      Principal$();
+      return this;
     }
 
     public String name() {

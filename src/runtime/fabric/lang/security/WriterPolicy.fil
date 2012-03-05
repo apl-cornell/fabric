@@ -11,12 +11,14 @@ import java.util.HashSet;
  * This code is mostly copied from Jif.
  */
 public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
-  private final Principal owner;
-  private final Principal writer;
+  private /*final*/ Principal owner;
+  private /*final*/ Principal writer;
 
-  public WriterPolicy(Principal owner, Principal writer) {
+  public WriterPolicy WriterPolicy$(Principal owner, Principal writer) {
     this.owner = owner;
     this.writer = writer;
+    AbstractPolicy$();
+    return this;
   }
 
   public Principal owner() {

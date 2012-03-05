@@ -9,9 +9,11 @@ public abstract class ActsForProof {
   private final Principal actor;
   private final Principal granter;
 
-  ActsForProof(Principal actor, Principal granter) {
+  ActsForProof ActsForProof$(Principal actor, Principal granter) {
     this.actor = actor;
     this.granter = granter;
+    Object$();
+    return this;
   }
 
   public Principal getActor() {

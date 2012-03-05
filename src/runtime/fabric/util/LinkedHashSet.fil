@@ -61,9 +61,10 @@ public class LinkedHashSet extends HashSet
    * Construct a new, empty HashSet whose backing HashMap has the default
    * capacity (11) and loadFacor (0.75).
    */
-  public LinkedHashSet()
+  public LinkedHashSet LinkedHashSet$()
   {
-    super();
+    HashSet$();
+    return this;
   }
 
   /**
@@ -73,9 +74,10 @@ public class LinkedHashSet extends HashSet
    * @param initialCapacity the initial capacity of the backing HashMap
    * @throws IllegalArgumentException if the capacity is negative
    */
-  public LinkedHashSet(int initialCapacity)
+  public LinkedHashSet LinkedHashSet$(int initialCapacity)
   {
-    super(initialCapacity);
+    HashSet$(initialCapacity);
+    return this;
   }
 
   /**
@@ -87,9 +89,10 @@ public class LinkedHashSet extends HashSet
    * @throws IllegalArgumentException if either argument is negative, or
    *         if loadFactor is POSITIVE_INFINITY or NaN
    */
-  public LinkedHashSet(int initialCapacity, float loadFactor)
+  public LinkedHashSet LinkedHashSet$(int initialCapacity, float loadFactor)
   {
-    super(initialCapacity, loadFactor);
+    HashSet$(initialCapacity, loadFactor);
+    return this;
   }
 
   /**
@@ -101,9 +104,10 @@ public class LinkedHashSet extends HashSet
    * @param c a collection of initial set elements
    * @throws NullPointerException if c is null
    */
-  public LinkedHashSet(Collection c)
+  public LinkedHashSet LinkedHashSet$(Collection c)
   {
-    super(c);
+    HashSet$(c);
+    return this;
   }
 
   /**
@@ -115,7 +119,7 @@ public class LinkedHashSet extends HashSet
    */
   HashMap init(int capacity, float load)
   {
-    return (LinkedHashMap) new LinkedHashMap(capacity, load).$initLabels();
+    return (LinkedHashMap) new LinkedHashMap().LinkedHashMap$(capacity, load);
   }
 
   public Object $initLabels() {

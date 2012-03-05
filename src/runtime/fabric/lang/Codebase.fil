@@ -42,16 +42,18 @@ public class Codebase {
     codebases.put(name, codebase);
   }
   
-  public Codebase(Label updateLabel, ConfPolicy accessPolicy) {
-    this(updateLabel, accessPolicy, (Map) new HashMap().$initLabels());
+  public Codebase Codebase$(Label updateLabel, ConfPolicy accessPolicy) {
+    return Codebase$(updateLabel, accessPolicy, (Map) new HashMap().HashMap$());
   }	
 	
-  public Codebase(Label updateLabel, ConfPolicy accessPolicy,
+  public Codebase Codebase$(Label updateLabel, ConfPolicy accessPolicy,
       Map/* String, FClass */classes) {
-    this.classes = (Map) new HashMap(classes).$initLabels();
-    codebases = (Map) new HashMap().$initLabels();
+    Object$();
+    this.classes = (Map) new HashMap().HashMap$(classes);
+    codebases = (Map) new HashMap().HashMap$();
     this.$updateLabel = updateLabel;
     this.$accessPolicy = accessPolicy;
+    return this;
   }
   
   /* Should only be called at compile time */
