@@ -17,7 +17,7 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
 	fabric$lang$security$AbstractPolicy$();
     // Copy the contents into a linked hash set so we can sign these policies.
     components = Collections.unmodifiableSet($getStore(),
-	(LinkedHashSet) new LinkedHashSet(policies).fabric$util$LinkedHashSet$());
+	(LinkedHashSet) new LinkedHashSet().fabric$util$LinkedHashSet$(policies));
 	return this;
   }
 

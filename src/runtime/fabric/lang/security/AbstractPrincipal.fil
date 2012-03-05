@@ -89,7 +89,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
             ActsForProof prf = PrincipalUtil.findActsForProof(store, p, s, searchState);            
             if (prf != null) {
                 if (PrincipalUtil.actsFor(s, this)) {
-                    return (TransitiveProof) new TransitiveProof@localStore().fabric$lang$security$DelegatesProof$(prf, s, (DelegatesProof) new DelegatesProof@localStore(s, this).fabric$lang$security$DelegatesProof$());
+                    return (TransitiveProof) new TransitiveProof@localStore().fabric$lang$security$TransitiveProof$(prf, s, (DelegatesProof) new DelegatesProof@localStore().fabric$lang$security$DelegatesProof$(s, this));
                 }
             }
         }

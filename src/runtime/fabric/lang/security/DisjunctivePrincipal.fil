@@ -13,8 +13,8 @@ public final class DisjunctivePrincipal extends Principal {
   private Integer hashCode = null;
   public static final Store localStore = Worker.getWorker().getLocalStore();
 
-  DisjunctivePrincipal DisjunctivePrincipal$(Set disjuncts) {
-	Principal$();
+  DisjunctivePrincipal fabric$lang$security$DisjunctivePrincipal$(Set disjuncts) {
+	fabric$lang$security$Principal$();
     this.disjuncts = disjuncts;
 	return this;
   }
@@ -69,7 +69,7 @@ public final class DisjunctivePrincipal extends Principal {
 
   public ActsForProof findProofUpto(Store store, Principal p, java.lang.Object searchState) {
     if (delegatesTo(p)) {
-      return (DelegatesProof) new DelegatesProof@store(p, this).DelegatesProof$();
+      return (DelegatesProof) new DelegatesProof@store().fabric$lang$security$DelegatesProof$(p, this);
     }
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal witness = (Principal) iter.next();
@@ -77,15 +77,15 @@ public final class DisjunctivePrincipal extends Principal {
           PrincipalUtil.findActsForProof(store, p, witness, searchState);
       if (prf != null) {
         // have found a proof from p to witness.
-        DelegatesProof step = (DelegatesProof) new DelegatesProof@store(witness, this).DelegatesProof$();
-        return (TransitiveProof) new TransitiveProof@store(prf, witness, step).DelegatesProof$();
+        DelegatesProof step = (DelegatesProof) new DelegatesProof@store().fabric$lang$security$DelegatesProof$(witness, this);
+        return (TransitiveProof) new TransitiveProof@store().fabric$lang$security$TransitiveProof$(prf, witness, step);
       }
     }
     return null;
   }
 
   public ActsForProof findProofDownto(Store store, Principal q, java.lang.Object searchState) {
-    Map proofs = (HashMap) new HashMap@store().HashMap$();
+    Map proofs = (HashMap) new HashMap@store().fabric$util$HashMap$();
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
       ActsForProof prf = PrincipalUtil.findActsForProof(store, p, q, searchState);
@@ -95,7 +95,7 @@ public final class DisjunctivePrincipal extends Principal {
 
     // proofs contains a proof for every disjunct,
     // which is sufficent for a proof for the disjunctive principal
-    return (FromDisjunctProof) new FromDisjunctProof@store(this, q, proofs).FromDisjunctProof$();
+    return (FromDisjunctProof) new FromDisjunctProof@store().fabric$lang$security$FromDisjunctProof$(this, q, proofs);
   }
 
   public Object $initLabels() {

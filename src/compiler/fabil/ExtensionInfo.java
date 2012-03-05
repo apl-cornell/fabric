@@ -51,7 +51,6 @@ import fabil.parse.Lexer_c;
 import fabil.types.ClassFile;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILTypeSystem_c;
-import fabric.FabricOptions;
 import fabric.common.NSUtil;
 import fabric.lang.FClass;
 import fabric.lang.security.LabelUtil;

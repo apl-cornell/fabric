@@ -14,7 +14,7 @@ import fabric.util.*;
  */
 public final class LabelUtil {
   private LabelUtil fabric$lang$security$LabelUtil$() {
-    Object$();
+    fabric$lang$Object$();
     return this;
   }
 

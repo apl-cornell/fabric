@@ -80,7 +80,7 @@ public final class ConjunctivePrincipal extends Principal {
 
     // proofs contains a proof for every conjunct,
     // which is sufficent for a proof to the conjunctive principal
-    return (ToConjunctProof) new ToConjunctProof@store().fabric$lang$security$ToConjuctProof$(p, this, proofs);
+    return (ToConjunctProof) new ToConjunctProof@store().fabric$lang$security$ToConjunctProof$(p, this, proofs);
 
   }
 

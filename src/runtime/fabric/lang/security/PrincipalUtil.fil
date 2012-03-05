@@ -184,7 +184,7 @@ public class PrincipalUtil {
 
   }
 
-  private static class fabric$lang$security$PrincipalUtil$ProofSearchState {
+  private static class ProofSearchState {
     private SecurityCache.ActsForPair native[] goalstack;
 
     public ProofSearchState fabric$lang$security$PrincipalUtil$ProofSearchState$(Principal p, Principal q) {
