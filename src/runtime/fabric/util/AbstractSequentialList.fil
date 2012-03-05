@@ -42,8 +42,9 @@ public abstract class AbstractSequentialList extends AbstractList
   /**
    * The main constructor, for use by subclasses.
    */
-  protected AbstractSequentialList()
+  protected AbstractSequentialList AbstractSequentialList$()
   {
+    AbstractList$();
   }
 
   /**

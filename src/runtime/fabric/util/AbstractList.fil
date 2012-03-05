@@ -56,8 +56,9 @@ public abstract class AbstractList extends AbstractCollection implements List
   /**
    * The main constructor, for use by subclasses.
    */
-  protected AbstractList()
+  protected AbstractList AbstractList$()
   {
+    AbstractCollection$();
   }
 
   /**
@@ -266,20 +267,20 @@ while (i.hasNext())
   public Iterator iterator(fabric.worker.Store store)
   {
     // Bah, Sun's implementation forbids using listIterator(0).
-    return (AnonymousIterator) new AnonymousIterator@store().$initLabels();
+    return (AnonymousIterator) new AnonymousIterator@store().AnonymousIterator$();
   }
   
   private class AnonymousIterator implements Iterator {
-    
-    
-    final int initSize;
-    final int initModCount;
+
+
+    /*final*/ int initSize;
+    /*final*/ int initModCount;
     private int pos;
     private int size;
     private int last;
     private int knownMod;
-    
-    AnonymousIterator() {
+
+    AnonymousIterator AnonymousIterator$() {
       this.initSize = size();
       this.initModCount = modCount;
       this.pos = 0;
@@ -412,7 +413,7 @@ while (i.hasNext())
       throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
                                           + size());
 
-    return (AbstractListIterator) new AbstractListIterator@store(index).$initLabels();
+    return (AbstractListIterator) new AbstractListIterator@store().AbstractListIterator$(index);
   }
 
   /**
@@ -537,8 +538,8 @@ while (i.hasNext())
       throw new IndexOutOfBoundsException();
 
     if (this instanceof RandomAccess)
-      return (RandomAccessSubList) new RandomAccessSubList(this, fromIndex, toIndex).$initLabels();
-    return (SubList) new SubList(this, fromIndex, toIndex).$initLabels();
+      return (RandomAccessSubList) new RandomAccessSubList().RandomAccessSubList$(this, fromIndex, toIndex);
+    return (SubList) new SubList().SubList$(this, fromIndex, toIndex);
   }
 
   /**
@@ -561,9 +562,10 @@ while (i.hasNext())
     /**
      * @param index
      */
-    private AbstractListIterator(int index) {
+    private AbstractListIterator AbstractListIterator$(int index) {
       this.index = index;
       position = index;
+      Object$();
     }
 
     // This will get inlined, since it is private.
@@ -757,6 +759,10 @@ while (i.hasNext())
    */
   private static class SubList extends AbstractList
   {
+    public SubList$() {
+      AbstractList$();
+    }
+
     /**
      * 
      */
@@ -773,7 +779,8 @@ while (i.hasNext())
       /**
        * @param index
        */
-      private SubListIterator(int index) {
+      private SubListIterator SubListIterator$(int index) {
+        Object$();
         this.index = index;
         i = backingList.listIterator(LOCAL_STORE, index + offset);
         position = index;
@@ -948,8 +955,9 @@ while (i.hasNext())
      * @param fromIndex the lower bound, inclusive
      * @param toIndex the upper bound, exclusive
      */
-    SubList(AbstractList backing, int fromIndex, int toIndex)
+    SubList SubList$(AbstractList backing, int fromIndex, int toIndex)
     {
+      Object$();
       backingList = backing;
       modCount = backing.modCount;
       offset = fromIndex;
@@ -1191,7 +1199,7 @@ while (i.hasNext())
       checkMod();
       checkBoundsInclusive(index);
 
-      return (SubListIterator) new SubListIterator@store(index).$initLabels();
+      return (SubListIterator) new SubListIterator@store().SubListIterator$(index);
     }
 
     public Object $initLabels() {
@@ -1221,9 +1229,9 @@ while (i.hasNext())
      * @param fromIndex the lower bound, inclusive
      * @param toIndex the upper bound, exclusive
      */
-    RandomAccessSubList(AbstractList backing, int fromIndex, int toIndex)
+    RandomAccessSubList RandomAccessSubList$(AbstractList backing, int fromIndex, int toIndex)
     {
-      super(backing, fromIndex, toIndex);
+      SubList$(backing, fromIndex, toIndex);
     }
 
     public Object $initLabels() {

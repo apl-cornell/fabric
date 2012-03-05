@@ -108,9 +108,9 @@ public class LinkedHashMap extends HashMap
      * @param key the key
      * @param value the value
      */
-    LinkedHashEntry(Object key, Object value)
+    LinkedHashEntry LinkedHashEntry$(Object key, Object value)
     {
-      super(key, value);
+      HashEntry$(key, value);
       if (root == null)
         {
           root = this;
@@ -194,9 +194,9 @@ public class LinkedHashMap extends HashMap
    * Construct a new insertion-ordered LinkedHashMap with the default
    * capacity (11) and the default load factor (0.75).
    */
-  public LinkedHashMap()
+  public LinkedHashMap LinkedHashMap$()
   {
-    super();
+    HashMap$();
     accessOrder = false;
   }
 
@@ -214,9 +214,9 @@ public class LinkedHashMap extends HashMap
    *          are not cloned in this constructor.</b>
    * @throws NullPointerException if m is null
    */
-  public LinkedHashMap(Map m)
+  public LinkedHashMap LinkedHashMap$(Map m)
   {
-    super(m);
+    HashMap$(m);
     accessOrder = false;
   }
 
@@ -227,9 +227,9 @@ public class LinkedHashMap extends HashMap
    * @param initialCapacity the initial capacity of this HashMap (&gt;= 0)
    * @throws IllegalArgumentException if (initialCapacity &lt; 0)
    */
-  public LinkedHashMap(int initialCapacity)
+  public LinkedHashMap LinkedHashMap$(int initialCapacity)
   {
-    super(initialCapacity);
+    HasMap$(initialCapacity);
     accessOrder = false;
   }
 
@@ -242,9 +242,9 @@ public class LinkedHashMap extends HashMap
    * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
    *                                     ! (loadFactor &gt; 0.0)
    */
-  public LinkedHashMap(int initialCapacity, float loadFactor)
+  public LinkedHashMap LinkedHashMap$(int initialCapacity, float loadFactor)
   {
-    super(initialCapacity, loadFactor);
+    HashMap$(initialCapacity, loadFactor);
     accessOrder = false;
   }
 
@@ -258,10 +258,10 @@ public class LinkedHashMap extends HashMap
    * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
    *                                     ! (loadFactor &gt; 0.0)
    */
-  public LinkedHashMap(int initialCapacity, float loadFactor,
+  public LinkedHashMap LinkedHashMap$(int initialCapacity, float loadFactor,
                        boolean accessOrder)
   {
-    super(initialCapacity, loadFactor);
+    HashMap$(initialCapacity, loadFactor);
     this.accessOrder = accessOrder;
   }
 
@@ -380,7 +380,7 @@ public class LinkedHashMap extends HashMap
    */
   void addEntry(Object key, Object value, int idx, boolean callRemove)
   {
-    LinkedHashEntry e = (LinkedHashEntry) new LinkedHashEntry(key, value).$initLabels();
+    LinkedHashEntry e = (LinkedHashEntry) new LinkedHashEntry().LinkedHashEntry$(key, value);
     e.next = buckets[idx];
     buckets[idx] = e;
     if (callRemove && removeEldestEntry(root))
@@ -408,7 +408,7 @@ public class LinkedHashMap extends HashMap
    */
   Iterator iterator(fabric.worker.Store store, final int type)
   {
-    return (LinkedHashIterator) new LinkedHashIterator@store(type).$initLabels();
+    return (LinkedHashIterator) new LinkedHashIterator().LinkedHashIterator$@store(type);
   }
   
   private final class LinkedHashIterator implements Iterator
@@ -424,7 +424,8 @@ public class LinkedHashMap extends HashMap
     
     final int type;
     
-    LinkedHashIterator(int type) {
+    LinkedHashIterator LinkedHashIterator$(int type) {
+      Object$();
       this.type = type;
       this.current = root;
       this.knownMod = modCount;

@@ -124,9 +124,9 @@ public class TreeMap extends AbstractMap
      * @param key the key
      * @param value the value
      */
-    Node(Object key, Object value, int color)
+    Node Node$(Object key, Object value, int color)
     {
-      super(key, value);
+      BasicMapEntry$(key, value);
       this.color = color;
     }
 
@@ -150,9 +150,9 @@ public class TreeMap extends AbstractMap
    *
    * @see Comparable
    */
-  public TreeMap()
+  public TreeMap TreeMap$()
   {
-    this((Comparator) null);
+    TreeMap$((Comparator) null);
   }
 
   /**
@@ -164,13 +164,14 @@ public class TreeMap extends AbstractMap
    * @param c the sort order for the keys of this map, or null
    *        for the natural order
    */
-  public TreeMap(Comparator c)
+  public TreeMap TreeMap$(Comparator c)
   {
-	// Nil is self-referential, so we must initialize it after creation.
-	nil = (Node) new Node(null, null, BLACK).$initLabels();
-	nil.parent = nil;
-	nil.left = nil;
-	nil.right = nil;
+    AbstractMap$();
+    // Nil is self-referential, so we must initialize it after creation.
+    nil = (Node) new Node().Node$(null, null, BLACK);
+    nil.parent = nil;
+    nil.left = nil;
+    nil.right = nil;
     comparator = c;
     fabricateTree(0);
   }
@@ -189,9 +190,9 @@ public class TreeMap extends AbstractMap
    * @throws NullPointerException if map is null
    * @see Comparable
    */
-  public TreeMap(Map map)
+  public TreeMap TreeMap$(Map map)
   {
-    this((Comparator) null);
+    TreeMap$((Comparator) null);
     putAll(map);
   }
 
@@ -203,9 +204,9 @@ public class TreeMap extends AbstractMap
    * @param sm a SortedMap, whose entries will be put into this TreeMap
    * @throws NullPointerException if sm is null
    */
-  public TreeMap(SortedMap sm)
+  public TreeMap TreeMap$(SortedMap sm)
   {
-    this(sm.comparator());
+    TreeMap$(sm.comparator());
     int pos = sm.size();
     Iterator itr = sm.entrySet().iterator(LOCAL_STORE);
 
@@ -305,7 +306,7 @@ public class TreeMap extends AbstractMap
 
         public Iterator iterator(fabric.worker.Store store)
         {
-          return (TreeIterator) new TreeIterator@store(ENTRIES).$initLabels();
+          return (TreeIterator) new TreeIterator().TreeIterator$@store(ENTRIES);
         }
 
         public void clear()
@@ -336,16 +337,17 @@ public class TreeMap extends AbstractMap
           return false;
         }
 
-	public Object $initLabels() {
-	  // XXX What should this be?  Using completely permissive values for now.
-	  // update label: {_ <-}
-	  // access policy: {_ ->}
-	  this.$updateLabel = LabelUtil.noComponents();
-	  this.$accessPolicy = LabelUtil.bottomConf();
+        public Object $initLabels() {
+          // XXX What should this be?  Using completely permissive values for now.
+          // update label: {_ <-}
+          // access policy: {_ ->}
+          this.$updateLabel = LabelUtil.noComponents();
+          this.$accessPolicy = LabelUtil.bottomConf();
 
-	  return this;
-	}
-      }.$initLabels();
+          return this;
+        }
+
+      }.AbstractSet$();
     return entries;
   }
 
@@ -399,7 +401,7 @@ public class TreeMap extends AbstractMap
    */
   public SortedMap headMap(Object toKey)
   {
-    return (SubMap) new SubMap(nil, toKey).$initLabels();
+    return (SubMap) new SubMap().SubMap$(nil, toKey);
   }
 
   /**
@@ -425,7 +427,7 @@ public class TreeMap extends AbstractMap
 
         public Iterator iterator(fabric.worker.Store store)
         {
-          return (TreeIterator) new TreeIterator@store(KEYS).$initLabels();
+          return (TreeIterator) new TreeIterator@store().TreeIterator$(KEYS);
         }
 
         public void clear()
@@ -447,16 +449,16 @@ public class TreeMap extends AbstractMap
           return true;
         }
 
-	public Object $initLabels() {
-	  // XXX What should this be?  Using completely permissive values for now.
-	  // update label: {_ <-}
-	  // access policy: {_ ->}
-	  this.$updateLabel = LabelUtil.noComponents();
-	  this.$accessPolicy = LabelUtil.bottomConf();
+        public Object $initLabels() {
+          // XXX What should this be?  Using completely permissive values for now.
+          // update label: {_ <-}
+          // access policy: {_ ->}
+          this.$updateLabel = LabelUtil.noComponents();
+          this.$accessPolicy = LabelUtil.bottomConf();
 
-	  return this;
-	}
-      }.$initLabels();
+          return this;
+        }
+      }.AbstractSet$();
     return keys;
   }
 
@@ -509,7 +511,7 @@ public class TreeMap extends AbstractMap
       }
 
     // Set up new node.
-    Node n = (Node) new Node(key, value, RED).$initLabels();
+    Node n = (Node) new Node().Node$(key, value, RED);
     n.left = nil;
     n.right = nil;
     n.parent = nil;
@@ -611,7 +613,7 @@ public class TreeMap extends AbstractMap
    */
   public SortedMap subMap(Object fromKey, Object toKey)
   {
-    return (SubMap) new SubMap(fromKey, toKey).$initLabels();
+    return (SubMap) new SubMap().SubMap$(fromKey, toKey);
   }
 
   /**
@@ -631,7 +633,7 @@ public class TreeMap extends AbstractMap
    */
   public SortedMap tailMap(Object fromKey)
   {
-    return (SubMap) new SubMap(fromKey, nil).$initLabels();
+    return (SubMap) new SubMap().SubMap$(fromKey, nil);
   }
 
   /**
@@ -658,7 +660,7 @@ public class TreeMap extends AbstractMap
 
         public Iterator iterator(fabric.worker.Store store)
         {
-          return (TreeIterator) new TreeIterator@store(VALUES).$initLabels();
+          return (TreeIterator) new TreeIterator().TreeIterator$@store(VALUES);
         }
 
         public void clear()
@@ -666,16 +668,16 @@ public class TreeMap extends AbstractMap
           TreeMap.this.clear();
         }
 
-	public Object $initLabels() {
-	  // XXX What should this be?  Using completely permissive values for now.
-	  // update label: {_ <-}
-	  // access policy: {_ ->}
-	  this.$updateLabel = LabelUtil.noComponents();
-	  this.$accessPolicy = LabelUtil.bottomConf();
+        public Object $initLabels() {
+          // XXX What should this be?  Using completely permissive values for now.
+          // update label: {_ <-}
+          // access policy: {_ ->}
+          this.$updateLabel = LabelUtil.noComponents();
+          this.$accessPolicy = LabelUtil.bottomConf();
 
-	  return this;
-	}
-      }.$initLabels();
+          return this;
+        }
+      }.Collection$();
     return values;
   }
 
@@ -824,7 +826,7 @@ public class TreeMap extends AbstractMap
     // then updating those links to the children when working on the next row.
 
     // Make the root node.
-    root = (Node) new Node(null, null, BLACK).$initLabels();
+    root = (Node) new Node().Node$(null, null, BLACK);
     root.left = nil;
     root.right = nil;
     root.parent = nil;
@@ -839,8 +841,8 @@ public class TreeMap extends AbstractMap
         Node last = null;
         for (int i = 0; i < rowsize; i += 2)
           {
-            Node left = (Node) new Node(null, null, BLACK).$initLabels();
-            Node right = (Node) new Node(null, null, BLACK).$initLabels();
+            Node left = (Node) new Node().Node$(null, null, BLACK);
+            Node right = (Node) new Node().Node$(null, null, BLACK);
             left.left = nil;
             right.left = nil;
             right.right = nil;
@@ -864,8 +866,8 @@ public class TreeMap extends AbstractMap
     int i;
     for (i = 0; i < overflow; i += 2)
       {
-        Node left = (Node) new Node(null, null, RED).$initLabels();
-        Node right = (Node) new Node(null, null, RED).$initLabels();
+        Node left = (Node) new Node().Node$(null, null, RED);
+        Node right = (Node) new Node().Node$(null, null, RED);
         left.left = nil;
         left.right = nil;
         left.parent = nil;
@@ -882,7 +884,7 @@ public class TreeMap extends AbstractMap
     // Add a lone left node if necessary.
     if (i - overflow == 0)
       {
-        Node left = (Node) new Node(null, null, RED).$initLabels();
+        Node left = (Node) new Node().Node$(null, null, RED);
         left.left = nil;
         left.right = nil;
         left.parent = parent;
@@ -1315,8 +1317,9 @@ public class TreeMap extends AbstractMap
      * Construct a new TreeIterator with the supplied type.
      * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
      */
-    TreeIterator(int type)
+    TreeIterator TreeIterator$(int type)
     {
+      Object$();
       // FIXME gcj cannot handle this. Bug java/4695
       // this(type, firstNode(), nil);
       this.type = type;
@@ -1333,8 +1336,9 @@ public class TreeMap extends AbstractMap
      * @param first where to start iteration, nil for empty iterator
      * @param max the cutoff for iteration, nil for all remaining nodes
      */
-    TreeIterator(int type, Node first, Node max)
+    TreeIterator TreeIterator$(int type, Node first, Node max)
     {
+      Object$();
       this.type = type;
       this.next = first;
       this.max = max;
@@ -1437,8 +1441,9 @@ public class TreeMap extends AbstractMap
      * @param maxKey the upper bound
      * @throws IllegalArgumentException if minKey &gt; maxKey
      */
-    SubMap(Object minKey, Object maxKey)
+    SubMap SubMap$(Object minKey, Object maxKey)
     {
+      Object$();
       if (minKey != nil && maxKey != nil && compare(minKey, maxKey) > 0)
         throw new IllegalArgumentException("fromKey > toKey");
       this.minKey = minKey;
@@ -1510,7 +1515,7 @@ public class TreeMap extends AbstractMap
           {
             Node first = lowestGreaterThan(minKey, true);
             Node max = lowestGreaterThan(maxKey, false);
-            return (TreeIterator) new TreeIterator@store(ENTRIES, first, max).$initLabels();
+            return (TreeIterator) new TreeIterator@store().TreeIterator$(ENTRIES, first, max);
           }
 
           public void clear()
@@ -1547,16 +1552,16 @@ public class TreeMap extends AbstractMap
             return false;
           }
 
-	  public Object $initLabels() {
-	    // XXX What should this be?  Using completely permissive values for now.
-	    // update label: {_ <-}
-	    // access policy: {_ ->}
-	    this.$updateLabel = LabelUtil.noComponents();
-	    this.$accessPolicy = LabelUtil.bottomConf();
+          public Object $initLabels() {
+            // XXX What should this be?  Using completely permissive values for now.
+            // update label: {_ <-}
+            // access policy: {_ ->}
+            this.$updateLabel = LabelUtil.noComponents();
+            this.$accessPolicy = LabelUtil.bottomConf();
 
-	    return this;
-	  }
-        }.$initLabels();
+            return this;
+          }
+        }.Set$();
       return entries;
     }
 
@@ -1579,7 +1584,7 @@ public class TreeMap extends AbstractMap
     {
       if (! keyInRange(toKey))
         throw new IllegalArgumentException("key outside range");
-      return (SubMap) new SubMap(minKey, toKey).$initLabels();
+      return (SubMap) new SubMap().SubMap$(minKey, toKey);
     }
 
     public Set keySet()
@@ -1598,7 +1603,7 @@ public class TreeMap extends AbstractMap
           {
             Node first = lowestGreaterThan(minKey, true);
             Node max = lowestGreaterThan(maxKey, false);
-            return (TreeIterator) new TreeIterator@store(KEYS, first, max).$initLabels();
+            return (TreeIterator) new TreeIterator@store().TreeIterator$(KEYS, first, max);
           }
 
           public void clear()
@@ -1626,16 +1631,16 @@ public class TreeMap extends AbstractMap
             return false;
           }
 
-	  public Object $initLabels() {
-	    // XXX What should this be?  Using completely permissive values for now.
-	    // update label: {_ <-}
-	    // access policy: {_ ->}
-	    this.$updateLabel = LabelUtil.noComponents();
-	    this.$accessPolicy = LabelUtil.bottomConf();
+          public Object $initLabels() {
+            // XXX What should this be?  Using completely permissive values for now.
+            // update label: {_ <-}
+            // access policy: {_ ->}
+            this.$updateLabel = LabelUtil.noComponents();
+            this.$accessPolicy = LabelUtil.bottomConf();
 
-	    return this;
-	  }
-        }.$initLabels();
+            return this;
+          }
+        }.Set$();
       return this.keys;
     }
 
@@ -1678,14 +1683,14 @@ public class TreeMap extends AbstractMap
     {
       if (! keyInRange(fromKey) || ! keyInRange(toKey))
         throw new IllegalArgumentException("key outside range");
-      return (SubMap) new SubMap(fromKey, toKey).$initLabels();
+      return (SubMap) new SubMap().SubMap$(fromKey, toKey);
     }
 
     public SortedMap tailMap(Object fromKey)
     {
       if (! keyInRange(fromKey))
         throw new IllegalArgumentException("key outside range");
-      return (SubMap) new SubMap(fromKey, maxKey).$initLabels();
+      return (SubMap) new SubMap().SubMap$(fromKey, maxKey);
     }
 
     public Collection values()
@@ -1704,7 +1709,7 @@ public class TreeMap extends AbstractMap
           {
             Node first = lowestGreaterThan(minKey, true);
             Node max = lowestGreaterThan(maxKey, false);
-            return (TreeIterator) new TreeIterator@store(VALUES, first, max).$initLabels();
+            return (TreeIterator) new TreeIterator@store().TreeIterator$(VALUES, first, max);
           }
 
           public void clear()
@@ -1712,16 +1717,16 @@ public class TreeMap extends AbstractMap
             SubMap.this.clear();
           }
 
-	  public Object $initLabels() {
-	    // XXX What should this be?  Using completely permissive values for now.
-	    // update label: {_ <-}
-	    // access policy: {_ ->}
-	    this.$updateLabel = LabelUtil.noComponents();
-	    this.$accessPolicy = LabelUtil.bottomConf();
+          public Object $initLabels() {
+            // XXX What should this be?  Using completely permissive values for now.
+            // update label: {_ <-}
+            // access policy: {_ ->}
+            this.$updateLabel = LabelUtil.noComponents();
+            this.$accessPolicy = LabelUtil.bottomConf();
 
-	    return this;
-	  }
-        }.$initLabels();
+            return this;
+          }
+        }.Collection$();
       return this.values;
     }
 

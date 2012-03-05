@@ -55,9 +55,9 @@ public class HashSet extends AbstractSet
    * Construct a new, empty HashSet whose backing HashMap has the default
    * capacity (11) and loadFacor (0.75).
    */
-  public HashSet()
+  public HashSet HashSet$()
   {
-    this(HashMap.DEFAULT_CAPACITY, HashMap.DEFAULT_LOAD_FACTOR);
+    HashSet$(HashMap.DEFAULT_CAPACITY, HashMap.DEFAULT_LOAD_FACTOR);
   }
 
   /**
@@ -67,9 +67,9 @@ public class HashSet extends AbstractSet
    * @param initialCapacity the initial capacity of the backing HashMap
    * @throws IllegalArgumentException if the capacity is negative
    */
-  public HashSet(int initialCapacity)
+  public HashSet HashSet$(int initialCapacity)
   {
-    this(initialCapacity, HashMap.DEFAULT_LOAD_FACTOR);
+    HashSet$(initialCapacity, HashMap.DEFAULT_LOAD_FACTOR);
   }
 
   /**
@@ -81,8 +81,9 @@ public class HashSet extends AbstractSet
    * @throws IllegalArgumentException if either argument is negative, or
    *         if loadFactor is POSITIVE_INFINITY or NaN
    */
-  public HashSet(int initialCapacity, float loadFactor)
+  public HashSet HashSet$(int initialCapacity, float loadFactor)
   {
+    Object$();
     map = init(initialCapacity, loadFactor);
   }
 
@@ -95,9 +96,9 @@ public class HashSet extends AbstractSet
    * @param c a collection of initial set elements
    * @throws NullPointerException if c is null
    */
-  public HashSet(Collection c)
+  public HashSet HashSet$(Collection c)
   {
-    this(Math.max(2 * c.size(), HashMap.DEFAULT_CAPACITY));
+    HashSet$(Math.max(2 * c.size(), HashMap.DEFAULT_CAPACITY));
     addAll(c);
   }
 
@@ -209,7 +210,7 @@ public class HashSet extends AbstractSet
    */
   HashMap init(int capacity, float load)
   {
-    return (HashMap) new HashMap(capacity, load).$initLabels();
+    return (HashMap) new HashMap().HashMap$(capacity, load);
   }
 
   /**

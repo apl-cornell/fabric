@@ -74,8 +74,9 @@ public class LinkedList extends AbstractSequentialList
      * Construct an entry.
      * @param data the list element
      */
-    Entry(Object data)
+    Entry Entry$(Object data)
     {
+      Object$();
       this.data = data;
     }
 
@@ -185,8 +186,9 @@ public class LinkedList extends AbstractSequentialList
   /**
    * Create an empty linked list.
    */
-  public LinkedList()
+  public LinkedList LinkedList$()
   {
+    AbstractSequentialList$();
   }
 
   /**
@@ -196,8 +198,9 @@ public class LinkedList extends AbstractSequentialList
    * @param c the collection to populate this list from
    * @throws NullPointerException if c is null
    */
-  public LinkedList(Collection c)
+  public LinkedList LinkedList$(Collection c)
   {
+    AbstractSequentialList$();
     addAll(c);
   }
 
@@ -282,7 +285,7 @@ public class LinkedList extends AbstractSequentialList
    */
   public void addFirst(Object o)
   {
-    Entry e = (Entry) new Entry(o).$initLabels();
+    Entry e = (Entry) new Entry().Entry$(o);
 
     modCount++;
     if (size == 0)
@@ -303,7 +306,7 @@ public class LinkedList extends AbstractSequentialList
    */
   public void addLast(Object o)
   {
-    addLastEntry((Entry) new Entry(o).$initLabels());
+    addLastEntry((Entry) new Entry().Entry$(o));
   }
 
   /**
@@ -362,7 +365,7 @@ public class LinkedList extends AbstractSequentialList
    */
   public boolean add(Object o)
   {
-    addLastEntry((Entry) new Entry(o).$initLabels());
+    addLastEntry((Entry) new Entry().Entry$(o));
     return true;
   }
 
@@ -439,7 +442,7 @@ public class LinkedList extends AbstractSequentialList
     // to the first entry, in order to deal with the case where (c == this).
     // [Actually, we don't have to handle this case to fufill the
     // contract for addAll(), but Sun's implementation appears to.]
-    Entry e = (Entry) new Entry(itr.next()).$initLabels();
+    Entry e = (Entry) new Entry().Entry$(itr.next();
     e.previous = before;
     Entry prev = e;
     Entry firstNew = e;
@@ -447,7 +450,7 @@ public class LinkedList extends AbstractSequentialList
     // Create and link all the remaining entries.
     for (int pos = 1; pos < csize; pos++)
       {
-        e = (Entry) new Entry(itr.next()).$initLabels();
+        e = (Entry) new Entry().Entry$(itr.next();
         e.previous = prev;
         prev.next = e;
         prev = e;
@@ -523,7 +526,7 @@ public class LinkedList extends AbstractSequentialList
   public void add(int index, Object o)
   {
     checkBoundsInclusive(index);
-    Entry e = (Entry) new Entry(o).$initLabels();
+    Entry e = (Entry) new Entry().Entry$(o);
 
     if (index < size)
       {
@@ -609,7 +612,7 @@ public class LinkedList extends AbstractSequentialList
   public ListIterator listIterator(fabric.worker.Store store, int index)
   {
     checkBoundsInclusive(index);
-    return (LinkedListItr) new LinkedListItr@store(index).$initLabels();
+    return (LinkedListItr) new LinkedListItr().LinkedListItr$@store(index);
   }
 
 //  /**
@@ -714,7 +717,7 @@ public class LinkedList extends AbstractSequentialList
     s.defaultReadObject();
     int i = s.readInt();
     while (--i >= 0)
-      addLastEntry((Entry) new Entry((Object) s.readObject()).$initLabels());
+      addLastEntry((Entry) new Entry().Entry$((Object) s.readObject()));
   }
 
   /**
@@ -746,8 +749,9 @@ public class LinkedList extends AbstractSequentialList
      *
      * @param index the initial index
      */
-    LinkedListItr(int index)
+    LinkedListItr LinkedListItr$(int index)
     {
+      Object$();
       knownMod = modCount;
       if (index == size)
         {
@@ -887,7 +891,7 @@ public class LinkedList extends AbstractSequentialList
       knownMod++;
       size++;
       position++;
-      Entry e = (Entry) new Entry(o).$initLabels();
+      Entry e = (Entry) new Entry().Entry$(o);
       e.previous = previous;
       e.next = next;
 

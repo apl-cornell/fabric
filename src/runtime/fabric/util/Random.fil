@@ -80,9 +80,9 @@ public class Random implements Serializable
    *
    * @see System#currentTimeMillis()
    */
-  public Random()
+  public Random Random$()
   {
-    this(System.currentTimeMillis());
+    Random$(System.currentTimeMillis());
   }
 
   /**
@@ -91,8 +91,9 @@ public class Random implements Serializable
    *
    * @param seed the initial seed
    */
-  public Random(long seed)
+  public Random Random$(long seed)
   {
+    Object$();
     setSeed(seed);
   }
 
