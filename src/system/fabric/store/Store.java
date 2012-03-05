@@ -272,7 +272,7 @@ class Store extends MessageToStoreHandler {
       @Override
       public Long run() {
         NodePrincipal principal =
-            (NodePrincipal) new NodePrincipal._Impl().NodePrincipal$(store, null);
+            (NodePrincipal) new NodePrincipal._Impl().fabric$lang$security$NodePrincipal$(store, null);
         principal.addDelegatesTo(store.getPrincipal());
         return principal.$getOnum();
       }
