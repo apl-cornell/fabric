@@ -121,8 +121,8 @@ public interface Principal extends fabric.lang.Object {
       this.publicKey = keyPair.getPublic();
 
       this.privateKeyObject =
-          (PrivateKeyObject) new PrivateKeyObject._Impl(store,
-              (Principal) $getProxy(), keyPair.getPrivate()).$initLabels();
+          (PrivateKeyObject) new PrivateKeyObject._Impl().PrivateKeyObject$(store,
+              (Principal) $getProxy(), keyPair.getPrivate());
     }
     
     @Override

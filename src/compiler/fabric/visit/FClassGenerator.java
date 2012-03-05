@@ -100,9 +100,8 @@ public class FClassGenerator extends ErrorHandlingVisitor {
       
       try {
         FClass fcls =
-            (FClass) new FClass._Impl(store, update_lbl, access_lbl, codebase,
-                className, ClassHashGenerator.toSourceString(src), null)
-                .$initLabels();
+            (FClass) new FClass._Impl().FClass$(store, update_lbl, access_lbl, codebase,
+                className, ClassHashGenerator.toSourceString(src), null);
         
         if (Report.should_report(Topics.mobile, 3)) {
           Report.report(3, "Inserting " + className + " with label " + update_lbl + " into codebase "

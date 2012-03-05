@@ -252,7 +252,7 @@ public final class LocalStore implements Store, Serializable {
 
         // Create the object representing the top principal.
         topPrincipal =
-            (Principal) new TopPrincipal._Impl(LocalStore.this).$initLabels();
+            (Principal) new TopPrincipal._Impl().TopPrincipal$(LocalStore.this);
         topPrincipal.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 
         // Create the object representing the bottom confidentiality policy.
@@ -298,7 +298,7 @@ public final class LocalStore implements Store, Serializable {
         
         // Create root map.
         rootMap =
-            (Map) new HashMap._Impl(LocalStore.this).$initLabels();
+            (Map) new HashMap._Impl().HashMap$(LocalStore.this);
         localDelegates = new HashSet<Pair<Principal, Principal>>();
 
         return null;
