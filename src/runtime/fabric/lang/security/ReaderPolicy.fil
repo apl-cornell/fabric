@@ -14,8 +14,8 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
   private /*final*/ Principal owner;
   private /*final*/ Principal reader;
 
-  public ReaderPolicy ReaderPolicy$(Principal owner, Principal reader) {
-	AbstractPolicy$(); 
+  public ReaderPolicy fabric$lang$security$ReaderPolicy$(Principal owner, Principal reader) {
+	fabric$lang$security$AbstractPolicy$(); 
     this.owner = owner;
     this.reader = reader;
 	return this;

@@ -10,12 +10,12 @@ public final class TransitiveProof extends ActsForProof {
   private /*final*/ ActsForProof pToGranter;
   private /*final*/ Principal p;
 
-  public TransitiveProof TransitiveProof$(ActsForProof actorToP, Principal p,
+  public TransitiveProof fabric$lang$security$TransitiveProof$(ActsForProof actorToP, Principal p,
       ActsForProof pToGranter) {
     this.actorToP = actorToP;
     this.pToGranter = pToGranter;
     this.p = p;
-    ActsForProof$(actorToP != null ? actorToP.getActor() : null,
+    fabric$lang$security$ActsForProof$(actorToP != null ? actorToP.getActor() : null,
         pToGranter != null ? pToGranter.getGranter() : null);
 	return this;
   }

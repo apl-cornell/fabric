@@ -25,9 +25,9 @@ public class FClass {
   protected /*final*/ String   source;
   protected /*final*/ byte[]   bytecode;
   
-  public FClass FClass$(Label updateLabel, ConfPolicy accessPolicy, Codebase codebase,
+  public FClass fabric$lang$FClass$(Label updateLabel, ConfPolicy accessPolicy, Codebase codebase,
       String name, String source, byte[] bytecode) {
-	Object$();
+	fabric$lang$Object$();
     this.codebase = codebase;
     this.name = name;
     this.source = source;

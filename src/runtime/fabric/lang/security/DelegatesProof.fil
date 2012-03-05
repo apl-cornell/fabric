@@ -6,8 +6,8 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public final class DelegatesProof extends ActsForProof {
-  public DelegatesProof DelegatesProof$(Principal actor, Principal granter) {
-    ActsForProof$(actor, granter);
+  public DelegatesProof fabric$lang$security$DelegatesProof$(Principal actor, Principal granter) {
+    fabric$lang$security$ActsForProof$(actor, granter);
 	return this;
   }
 

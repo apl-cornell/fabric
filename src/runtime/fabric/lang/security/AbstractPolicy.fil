@@ -6,8 +6,8 @@ package fabric.lang.security;
  * This code is mostly copied from Jif.
  */
 public abstract class AbstractPolicy implements Policy {
-  protected AbstractPolicy AbstractPolicy$() {
-	Object$();
+  protected AbstractPolicy fabric$lang$security$AbstractPolicy$() {
+	fabric$lang$Object$();
 	return this;
   }
 

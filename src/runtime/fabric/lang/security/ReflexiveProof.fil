@@ -12,8 +12,8 @@ public final class ReflexiveProof extends ActsForProof {
    * @param p
    * @param q
    */
-  ReflexiveProof ReflexiveProof$(Principal p, Principal q) {
-    ActsForProof$(p, q);
+  ReflexiveProof fabric$lang$security$ReflexiveProof$(Principal p, Principal q) {
+    fabric$lang$security$ActsForProof$(p, q);
 	return this;
   }
 

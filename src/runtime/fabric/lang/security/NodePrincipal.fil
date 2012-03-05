@@ -10,8 +10,8 @@ import fabric.util.Map;
 
 public final class NodePrincipal extends AbstractPrincipal {
 
-  public NodePrincipal NodePrincipal$(String name) {
-    AbstractPrincipal$(name);
+  public NodePrincipal fabric$lang$security$NodePrincipal$(String name) {
+    fabric$lang$security$AbstractPrincipal$(name);
 	return this;
   }
 

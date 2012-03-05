@@ -10,9 +10,9 @@ import java.util.Set;
 public final class FromDisjunctProof extends ActsForProof {
   private /*final*/ Map disjunctProofs; // map from disjuncts to proofs to Granter
 
-  FromDisjunctProof FromDisjunctProof$(DisjunctivePrincipal actor, Principal granter,
+  FromDisjunctProof fabric$lang$security$FromDisjunctProof$(DisjunctivePrincipal actor, Principal granter,
       Map disjunctProofs) {
-    ActsForProof$(actor, granter);
+    fabric$lang$security$ActsForProof$(actor, granter);
     this.disjunctProofs = disjunctProofs;
 	return this;
   }

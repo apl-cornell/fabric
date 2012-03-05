@@ -7,8 +7,8 @@ import fabric.util.*;
  * Jif.
  */
 public final class MeetIntegPolicy extends MeetPolicy implements IntegPolicy {
- MeetIntegPolicy MeetIntegPolicy$(Set policies) {
-    MeetPolicy$(policies);
+ MeetIntegPolicy fabric$lang$security$MeetIntegPolicy$(Set policies) {
+    fabric$lang$security$MeetPolicy$(policies);
 	return this;
   }
 
