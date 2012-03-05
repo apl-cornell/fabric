@@ -33,7 +33,7 @@ where
 
     final User[aw.userOwner,aw.userNetwork] userAlice = aw.user;
 
-    if (userAlice.p equiv new principal (aw.userOwner, aw.userNetwork)
+    if (userAlice.p equiv new principal (aw.userOwner, aw.userNetwork) && userAlice.p actsfor userAlice.friends
     &&  worker$ actsfor aw.userOwner
     &&  worker$ actsfor userAlice.friends
     ) {
