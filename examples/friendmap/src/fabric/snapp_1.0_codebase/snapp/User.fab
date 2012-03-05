@@ -26,7 +26,7 @@ where
   provider <= {*→network}
 {
   /** The principal (network,owner) */
-  public final principal   {_→; *←(network,owner)}@{*→network} p = new principal(owner,network);
+  public final principal   {_→; *←(network,owner)}@{*→network} p = new principal(owner,network)/*TODO: @this.store*/;
 
   /** The label {p←;p→locationInfo} */
   public final label       {_→; *←(network,owner)}@{*→network} locationLabel; // Cannot be set as initializer due to jif bug.
@@ -65,14 +65,21 @@ where
     // fields updates and accesses are affected by arguments.
     {*provider; store; name} <= {_→; *←network,owner}
   {
-    // assert p equiv p
-    if (p equiv new principal(owner,network)) {
+    Group[p,{*→network}] friends_;
+    Group[p,{*→network}] locationInfo_;
+    label locationLabel_;
 
-    this.friends       = new Group[p,{*→network}]@store(store, name + "'s friends");
-    this.locationInfo  = new Group[p,{*→network}]@store(store, name + "'s location viewers");
-    this.locationLabel = new label {p←;p→locationInfo};
-
+    if (p equiv new principal(owner,network)/* TODO: @? */) {
+      friends_       = new Group[p,{*→network}]@store(store, name + "'s friends");
+      locationInfo_  = new Group[p,{*→network}]@store(store, name + "'s location viewers");
+      locationLabel_ = new label@store {p←;p→locationInfo};
     } else throw new AssertionFailedError("75 (p,q) equiv (p,q)");
+
+    this.friends       = friends_;
+    this.locationInfo  = locationInfo_;
+    this.locationLabel = locationLabel_;
+
+    super();
   }
 }
 

@@ -90,6 +90,7 @@ where
 
     this.width  = width;
     this.height = height;
+    super();
   }
 
 
@@ -219,10 +220,10 @@ where
   {
     try {
 
-      return new MapImage[l,a] (boundary, L, A,
-                                width, height,
-                                Util.copyArray(data, L, l, s),
-                                s);
+      return new MapImage[l,a]@s (boundary, L, A,
+                                  width, height,
+                                  Util.copyArray(data, L, l, s),
+                                  s);
 
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("228 data and boundary must be non-null");

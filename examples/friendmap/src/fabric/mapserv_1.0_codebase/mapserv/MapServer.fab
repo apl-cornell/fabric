@@ -93,14 +93,15 @@ where
 
     if (store actsfor this) {
 
-    final char{*l}[]{*l} data = new char[100]/* TODO: @store */;
+    final char{*l}[]{*l} data = new char[100]@store;
     for (int i = 0; i < data.length; i++)
       data[i] = background;
 
     try {
-      return new MapImage[l,{*→this.store}]/* @store */(boundary, l, a,
-                                                       10, 10, data,
-                                                       this.store);
+      return new MapImage[l,{*→this.store}]@store(boundary, l, a,
+                                                  10, 10, data,
+                                                  this.store);
+
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError("105 10 * 10 = 100");
     } catch (final NullPointerException e) {

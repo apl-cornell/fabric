@@ -61,6 +61,7 @@ where
       throw new NullPointerException("61 service is null");
 
     this.service = service;
+    super();
   }
 
   /**
@@ -98,7 +99,9 @@ where
     if (user == null)
       throw new NullPointerException("99 user is null");
 
-    printMap(user, owner, n, new label {*→owner});
+    final Store local = worker$.getLocalStore();
+
+    printMap(user, owner, n, new label {*→owner}@local);
   }
 
   /**
@@ -138,7 +141,9 @@ where
     if (user == null)
       throw new NullPointerException("139 user is null");
 
-    printMap(user, owner, n, new label {*→user.friends});
+    final Store local = worker$.getLocalStore();
+
+    printMap(user, owner, n, new label {*→user.friends}@local);
   }
 
 
@@ -218,7 +223,7 @@ where
     if (localStore equiv worker$)
     {
 
-    MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n, new label {*→user.friends});
+    MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n, new label {*→user.friends}@localStore);
     PrintStream[lbl] out = System.stdout(lbl);
 
     if (result == null)                                             { throw new AssertionFailedError("224 createMap() returns a non-null value."); }
@@ -329,7 +334,7 @@ where
     if (fetchStore actsfor service) {
 
     // this is the label of the data that gets sent to the service
-    final label fetchLabel = new label {{*l} meet {*→fetchStore} meet {*→n} meet {*friend_access_bound}}; // TODO @store
+    final label fetchLabel = new label {{*l} meet {*→fetchStore} meet {*→n} meet {*friend_access_bound}}@mapServ;
 
     // compute bounding box
     final Box[fetchLabel, {*→fetchStore}] boundary = createBoundingBox(user, o, n, fetchLabel, fetchStore, friend_access_bound);
@@ -337,7 +342,7 @@ where
     // get map
     MapImage[fetchLabel,{*→fetchStore}] map;
     try {
-      map = this.service.createMap(fetchLabel, new label {*→service.store}, boundary);
+      map = this.service.createMap(fetchLabel, new label {*→service.store}@mapServ, boundary);
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("342 boundary is non-null.");
     }
@@ -347,11 +352,11 @@ where
 
     // make a local copy (with label l)
     // TODO: s ≽ l
-    MapImage[l,{*→s}] annotated = map.copy(l, new label{*→s}, s);
+    MapImage[l,{*→s}] annotated = map.copy(l, new label{*→s}@s, s);
 
     // add annotations
     annotateMap(user,      o, n,
-                annotated, l, new label {*→s},
+                annotated, l, new label {*→s}@s,
                 friend_access_bound);
 
     return annotated;
@@ -443,7 +448,7 @@ where
     //  - the resulting map
     //  - a fetch of the user
     //  - a fetch of a qualifying friend
-    final label iterLabel = new label {{*l} ⊓ {*→n} ⊓ {*friend_access_bound}};
+    final label iterLabel = new label {{*l} ⊓ {*→n} ⊓ {*friend_access_bound}}@localStore;
 
     final GroupIterator[user.p, iterLabel, {*→n}] i = user.friends.iterator(localStore, iterLabel);
     if (i == null) throw new AssertionFailedError("449 Group.iterator() should return a non-null value");
@@ -511,6 +516,9 @@ where
    *             a label constraining the fetches of friends during annotation.
    *             Friends will only be added to the map if their access labels
    *             are bounded below by friend_access_bound.
+   *
+   * @param map_update, map_access, n, o
+   *             type params for map, user.  not persisted.
    */
   protected
   void
@@ -587,7 +595,7 @@ where
     if (local equiv worker$) {
 
     final label box_u = map_update;
-    final label box_a = new label {*→local};
+    final label box_a = new label {*→local}@local;
 
     final Box[box_u,box_a] boundary = map.getBoundary(box_u, box_a, local);
 
@@ -604,12 +612,12 @@ where
     // - worker$ ≽ L        because the iterator will be stored locally
     //
     // We'll take the highest such label:
-    final label iterLabel = new label {{*map_update} ⊓ {*→n} ⊓ {*friend_access_bound}};
+    final label iterLabel = new label {{*map_update} ⊓ {*→n} ⊓ {*friend_access_bound}}@local;
 
     // TODO: solver is failing, so we need to specify a label
     final GroupIterator[user.p, iterLabel, {*→n}]
         {*<-n,o ; user ; friend_access_bound ; n ; map_update}
-        j = user.friends.iterator(worker$.getLocalStore(), iterLabel);
+        j = user.friends.iterator(local, iterLabel);
     if (j == null) throw new AssertionFailedError("613 Group.iterator() should return a non-null value");
 
     while (j.hasNext()) {
@@ -679,6 +687,9 @@ where
    * @param x,y      the location on the map to update.  Assumed to be on the map
    * @param friend   the friend located at that location
    *
+   * @param map_update, map_access, n, o
+   *                 type args for map and friend, not leaked persistently.
+   *
    * @throws NullPonterException
    *         if friend or map is null
    * @throws ArrayIndexOutOfBoundsException
@@ -714,7 +725,7 @@ where
     {*provider; *MapImage.provider; map; friend} <= {*map_update ⊓ *map_access},
 
     // when we get to the update, location and friend affect map
-    {x; y}                 <= map_update,
+    {x; y}               <= map_update,
     {friend; _→; *←n,o}  <= map_update,
 
     // general invariants for map images
