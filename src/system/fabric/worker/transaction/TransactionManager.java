@@ -1175,6 +1175,9 @@ public final class TransactionManager {
   }
 
   public SecurityCache getSecurityCache() {
+    if (current == null)
+      throw new InternalError(
+          "Application attempting to perform label operations outside of a transaction");
     return (SecurityCache) current.securityCache;
   }
 
