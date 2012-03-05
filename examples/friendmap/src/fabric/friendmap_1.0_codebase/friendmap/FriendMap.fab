@@ -334,7 +334,7 @@ where
     if (fetchStore actsfor service) {
 
     // this is the label of the data that gets sent to the service
-    final label fetchLabel = new label {{*l} meet {*→fetchStore} meet {*→n} meet {*friend_access_bound}}@mapServ;
+    final label fetchLabel = new label {{*l} meet {*→fetchStore} meet {*→n} meet {*friend_access_bound}}@service.store;
 
     // compute bounding box
     final Box[fetchLabel, {*→fetchStore}] boundary = createBoundingBox(user, o, n, fetchLabel, fetchStore, friend_access_bound);
@@ -342,7 +342,7 @@ where
     // get map
     MapImage[fetchLabel,{*→fetchStore}] map;
     try {
-      map = this.service.createMap(fetchLabel, new label {*→service.store}@mapServ, boundary);
+      map = this.service.createMap(fetchLabel, new label {*→service.store}@service.store, boundary);
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("342 boundary is non-null.");
     }
