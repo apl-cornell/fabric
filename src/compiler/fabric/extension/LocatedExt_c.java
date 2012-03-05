@@ -75,6 +75,8 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
 
     // TODO if storePrincipal() returns null, then the store principal of the
     // containing class should be used.
+    
+    // TODO: if location == null, then we need to do something fancy.
     if (location() != null && objectLabel != null) {
       FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
       JifContext A = lc.jifContext();
