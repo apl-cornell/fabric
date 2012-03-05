@@ -28,6 +28,7 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 		this.a = a;
 		this.b = b;
 		this.user = user;
+		super();
     }
 
     public void go {Broker←} (PrintStream[{}] {} output) where authority (Broker)

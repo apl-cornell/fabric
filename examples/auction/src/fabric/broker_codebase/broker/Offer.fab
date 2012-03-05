@@ -5,6 +5,7 @@ public class Offer [label Auction] where provider <= Auction {
 
     public Offer {Auction} (int {Auction} price, int{Auction} quality) {
 		this.price = price;
-		this.quality = quality; 
+		this.quality = quality;
+		super();
     }
 }
