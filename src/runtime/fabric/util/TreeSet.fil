@@ -106,6 +106,7 @@ public class TreeSet extends AbstractSet
     map = (TreeMap) new TreeMap().TreeMap$(sortedSet.comparator());
     Iterator itr = sortedSet.iterator(LOCAL_STORE);
     ((TreeMap) map).putKeysLinear(itr, sortedSet.size());
+	return this;
   }
 
   /**
