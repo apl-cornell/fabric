@@ -2,9 +2,20 @@ package fabric.lang.security;
 
 public interface PrivateKeyObject extends fabric.lang.Object {
     
+    public fabric.lang.security.Principal get$principal();
+    
+    public fabric.lang.security.Principal set$principal(
+      fabric.lang.security.Principal val);
+    
     public java.security.PrivateKey get$key();
     
     public java.security.PrivateKey set$key(java.security.PrivateKey val);
+    
+    public fabric.lang.security.PrivateKeyObject
+      fabric$lang$security$PrivateKeyObject$(fabric.lang.security.Principal p,
+                                             java.security.PrivateKey key);
+    
+    public fabric.lang.Object $initLabels();
     
     public java.security.PrivateKey getKey();
     
@@ -12,10 +23,21 @@ public interface PrivateKeyObject extends fabric.lang.Object {
       implements fabric.lang.security.PrivateKeyObject
     {
         
+        native public fabric.lang.security.Principal get$principal();
+        
+        native public fabric.lang.security.Principal set$principal(
+          fabric.lang.security.Principal val);
+        
         native public java.security.PrivateKey get$key();
         
         native public java.security.PrivateKey set$key(
           java.security.PrivateKey val);
+        
+        native public fabric.lang.security.PrivateKeyObject
+          fabric$lang$security$PrivateKeyObject$(
+          fabric.lang.security.Principal arg1, java.security.PrivateKey arg2);
+        
+        native public fabric.lang.Object $initLabels();
         
         native public java.security.PrivateKey getKey();
         
@@ -30,17 +52,25 @@ public interface PrivateKeyObject extends fabric.lang.Object {
       implements fabric.lang.security.PrivateKeyObject
     {
         
+        native public fabric.lang.security.Principal get$principal();
+        
+        native public fabric.lang.security.Principal set$principal(
+          fabric.lang.security.Principal val);
+        
         native public java.security.PrivateKey get$key();
         
         native public java.security.PrivateKey set$key(
           java.security.PrivateKey val);
         
-        public _Impl(fabric.worker.Store $location, fabric.lang.security.Principal p,
-                     java.security.PrivateKey key) {
-            super($location);
-        }
+        native public fabric.lang.security.PrivateKeyObject
+          fabric$lang$security$PrivateKeyObject$(
+          fabric.lang.security.Principal p, java.security.PrivateKey key);
+        
+        native public fabric.lang.Object $initLabels();
         
         native public java.security.PrivateKey getKey();
+        
+        public _Impl(fabric.worker.Store $location) { super($location); }
         
         native protected fabric.lang.Object._Proxy $makeProxy();
         
@@ -51,13 +81,13 @@ public interface PrivateKeyObject extends fabric.lang.Object {
               throws java.io.IOException;
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, long label, long accessLabel, java.io.ObjectInput in,
-                     java.util.Iterator refTypes,
+                     long expiry, long label, long accessLabel,
+                     java.io.ObjectInput in, java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-                  intraStoreRefs);
+            super(store, onum, version, expiry, label, accessLabel, in,
+                  refTypes, intraStoreRefs);
         }
         
         native public void $copyAppStateFrom(fabric.lang.Object._Impl other);
