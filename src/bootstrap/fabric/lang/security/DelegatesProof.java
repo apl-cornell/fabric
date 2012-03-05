@@ -20,10 +20,8 @@ public interface DelegatesProof extends fabric.lang.security.ActsForProof {
       implements fabric.lang.security.DelegatesProof
     {
         
-        public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Principal actor,
-                     fabric.lang.security.Principal granter) {
-            super($location, actor, granter);
+        public _Impl(fabric.worker.Store $location) {
+            super($location);
         }
         
         native public void gatherDelegationDependencies(java.util.Set s);

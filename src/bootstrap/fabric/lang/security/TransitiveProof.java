@@ -50,17 +50,8 @@ public interface TransitiveProof extends fabric.lang.security.ActsForProof {
         
         native public fabric.lang.security.Principal get$p();
         
-        public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.ActsForProof actorToP,
-                     fabric.lang.security.Principal p,
-                     fabric.lang.security.ActsForProof pToGranter) {
-            super($location,
-                  !fabric.lang.Object._Proxy.idEquals(actorToP, null)
-                    ? actorToP.getActor()
-                    : null,
-                  !fabric.lang.Object._Proxy.idEquals(pToGranter, null)
-                    ? pToGranter.getGranter()
-                    : null);
+        public _Impl(fabric.worker.Store $location) {
+            super($location);
         }
         
         native public fabric.lang.security.ActsForProof getActorToP();

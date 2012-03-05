@@ -547,13 +547,13 @@ public abstract class ObjectDB {
         // supplied by the workers' local store.
         String principalName = new X500Principal("CN=" + name).getName();
         NodePrincipal._Impl principal =
-            (NodePrincipal._Impl) new NodePrincipal._Impl().fabric$lang$security$NodePrincipal$(store, principalName);
+            (NodePrincipal._Impl) new NodePrincipal._Impl(store).fabric$lang$security$NodePrincipal$(principalName);
         principal.$forceRenumber(ONumConstants.STORE_PRINCIPAL);
 
         // Create the label {store->_; store<-_} for the root map.
         // XXX above not done. HashMap needs to be parameterized on labels.
         fabric.util.HashMap._Impl map =
-            (fabric.util.HashMap._Impl) new fabric.util.HashMap._Impl().fabric$util$HashMap$(store).fetch();
+            (fabric.util.HashMap._Impl) new fabric.util.HashMap._Impl(store).fabric$util$HashMap$().fetch();
         map.$forceRenumber(ONumConstants.ROOT_MAP);
 
         return null;

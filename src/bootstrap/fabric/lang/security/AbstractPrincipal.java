@@ -127,11 +127,6 @@ public interface AbstractPrincipal
           fabric$lang$security$AbstractPrincipal$(
           final java.lang.String name, final fabric.lang.security.Principal p);
         
-        protected _Impl(fabric.worker.Store $location,
-                        java.lang.String name) {
-            this($location);
-        }
-        
         native public java.lang.String name();
         
         native public boolean delegatesTo(fabric.lang.security.Principal p);

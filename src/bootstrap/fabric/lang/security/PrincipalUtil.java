@@ -306,6 +306,8 @@ public interface PrincipalUtil
                            Store $location) {
                 super($location);
             }
+
+	    native public TopPrincipal fabric$lang$security$PrincipalUtil$TopPrincipal$();
             
             native public java.lang.String
               name(

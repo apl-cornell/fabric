@@ -20,10 +20,8 @@ public interface ReflexiveProof extends fabric.lang.security.ActsForProof {
       implements fabric.lang.security.ReflexiveProof
     {
         
-        _Impl(fabric.worker.Store $location,
-              fabric.lang.security.Principal p,
-              fabric.lang.security.Principal q) {
-            super($location, p, q);
+        _Impl(fabric.worker.Store $location) {
+            super($location);
         }
         
         native public void gatherDelegationDependencies(java.util.Set s);

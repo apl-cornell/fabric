@@ -30,11 +30,8 @@ public interface FromDisjunctProof extends fabric.lang.security.ActsForProof {
         
         native public fabric.util.Map get$disjunctProofs();
         
-        _Impl(fabric.worker.Store $location,
-              fabric.lang.security.DisjunctivePrincipal actor,
-              fabric.lang.security.Principal granter,
-              fabric.util.Map disjunctProofs) {
-            super($location, actor, granter);
+        _Impl(fabric.worker.Store $location) {
+            super($location);
         }
         
         native public fabric.util.Map getDisjunctProofs();

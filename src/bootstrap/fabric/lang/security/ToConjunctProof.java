@@ -30,11 +30,8 @@ public interface ToConjunctProof extends fabric.lang.security.ActsForProof {
         
         native public fabric.util.Map get$conjunctProofs();
         
-        _Impl(fabric.worker.Store $location,
-              fabric.lang.security.Principal actor,
-              fabric.lang.security.ConjunctivePrincipal granter,
-              fabric.util.Map conjunctProofs) {
-            super($location, actor, granter);
+        _Impl(fabric.worker.Store $location) {
+            super($location);
         }
         
         native public fabric.util.Map getConjunctProofs();

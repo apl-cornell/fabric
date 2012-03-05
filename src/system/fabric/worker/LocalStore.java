@@ -252,7 +252,7 @@ public final class LocalStore implements Store, Serializable {
 
         // Create the object representing the top principal.
         topPrincipal =
-            (Principal) new TopPrincipal._Impl().fabric$lang$security$PrincipalUtil$TopPrincipal$(LocalStore.this);
+            (Principal) new TopPrincipal._Impl(LocalStore.this).fabric$lang$security$PrincipalUtil$TopPrincipal$();
         topPrincipal.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 
         // Create the object representing the bottom confidentiality policy.
@@ -298,7 +298,7 @@ public final class LocalStore implements Store, Serializable {
         
         // Create root map.
         rootMap =
-            (Map) new HashMap._Impl().fabric$util$HashMap$(LocalStore.this);
+            (Map) new HashMap._Impl(LocalStore.this).fabric$util$HashMap$();
         localDelegates = new HashSet<Pair<Principal, Principal>>();
 
         return null;
