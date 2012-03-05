@@ -1,5 +1,7 @@
 package fabric.extension;
 
+import jif.ast.JifInstantiator;
+import jif.ast.Jif_c;
 import jif.extension.JifNewExt;
 import jif.translate.ToJavaExt;
 import jif.types.label.Label;
@@ -19,9 +21,9 @@ public class NewJifExt_c extends JifNewExt {
 
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    New n = (New) node();
+    New      n   = (New) super.labelCheck(lc);
     NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(n);
-
+    
     Type newType = n.objectType().type();
     // Bypass check if this is a principal object. This condition will be
     // enforced with the $addDefaultDelegates method
@@ -30,10 +32,31 @@ public class NewJifExt_c extends JifNewExt {
             .DelegatingPrincipal())) {
       FabricClassType ct = (FabricClassType) newType;
       FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+
+
       Label accessLabel = ts.toLabel(ct.accessPolicy());
-      ext.labelCheck(lc, ct.updateLabel(), accessLabel);
+      if (accessLabel != null) {
+        accessLabel = JifInstantiator.instantiate(
+            accessLabel,
+            lc.jifContext(),
+            n,
+            newType.toReference(),
+            Jif_c.getPathMap(n).NV());
+      }
+
+      Label objectLabel = ct.updateLabel();
+      if (objectLabel != null) {
+        objectLabel = JifInstantiator.instantiate(
+            objectLabel,
+            lc.jifContext(),
+            n,
+            newType.toReference(),
+            Jif_c.getPathMap(n).NV());
+      }
+      
+      ext.labelCheck(lc, objectLabel, accessLabel);
     }
 
-    return super.labelCheck(lc);
+    return n;
   }
 }
