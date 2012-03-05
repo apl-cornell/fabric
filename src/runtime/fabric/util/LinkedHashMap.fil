@@ -85,7 +85,7 @@ public class LinkedHashMap extends HashMap
    *
    * @serial true for access order traversal
    */
-  final boolean accessOrder;
+  /*final*/ boolean accessOrder;
 
   /**
    * Class to represent an entry in the hash table. Holds a single key-value
@@ -122,6 +122,7 @@ public class LinkedHashMap extends HashMap
           pred.succ = this;
           root.pred = this;
         }
+		return this;
     }
 
     /**
@@ -198,6 +199,7 @@ public class LinkedHashMap extends HashMap
   {
     HashMap$();
     accessOrder = false;
+	return this;
   }
 
   /**
@@ -218,6 +220,7 @@ public class LinkedHashMap extends HashMap
   {
     HashMap$(m);
     accessOrder = false;
+	return this;
   }
 
   /**
@@ -229,8 +232,9 @@ public class LinkedHashMap extends HashMap
    */
   public LinkedHashMap LinkedHashMap$(int initialCapacity)
   {
-    HasMap$(initialCapacity);
+    HashMap$(initialCapacity);
     accessOrder = false;
+	return this;
   }
 
   /**
@@ -246,6 +250,7 @@ public class LinkedHashMap extends HashMap
   {
     HashMap$(initialCapacity, loadFactor);
     accessOrder = false;
+	return this;
   }
 
   /**
@@ -263,6 +268,7 @@ public class LinkedHashMap extends HashMap
   {
     HashMap$(initialCapacity, loadFactor);
     this.accessOrder = accessOrder;
+	return this;
   }
 
   /**
@@ -429,6 +435,7 @@ public class LinkedHashMap extends HashMap
       this.type = type;
       this.current = root;
       this.knownMod = modCount;
+	  return this;
     }
 
     /**
