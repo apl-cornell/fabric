@@ -38,17 +38,15 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     return md;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   protected Block guardWithConstraints(JifToJavaRewriter rw, Block b)
       throws SemanticException {
     boolean shouldGuard = false;
     if (shouldGuard) {
-      @SuppressWarnings("unchecked")
-      Block newBody =
-          ((FabILNodeFactory) rw.java_nf()).Atomic(b.position(), super
-              .guardWithConstraints(rw, b).statements());
-      return newBody;
+      b = super.guardWithConstraints(rw, b);
     }
-    return b;
+    return ((FabILNodeFactory) rw.java_nf()).Atomic(b.position(),
+        b.statements());
   }
 }
