@@ -98,9 +98,10 @@ where
       data[i] = background;
 
     try {
-      return new MapImage[l,{*→this.store}]@store(boundary, l, a,
-                                                  10, 10, data,
-                                                  this.store);
+      // TODO: solver failing, had to add annotation
+      return new MapImage[l,{*→this.store}]{*l}@store(boundary, l, a,
+                                                      10, 10, data,
+                                                      this.store);
 
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError("105 10 * 10 = 100");
