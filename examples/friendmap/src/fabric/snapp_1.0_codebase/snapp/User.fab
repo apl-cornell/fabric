@@ -72,7 +72,7 @@ where
     if (p equiv new principal(owner,network)/* TODO: @? */) {
       friends_       = new Group[p,{*→network}]@store(store, name + "'s friends");
       locationInfo_  = new Group[p,{*→network}]@store(store, name + "'s location viewers");
-      locationLabel_ = new label@store {p←;p→locationInfo};
+      locationLabel_ = new label {p←;p→locationInfo}@store;
     } else throw new AssertionFailedError("75 (p,q) equiv (p,q)");
 
     this.friends       = friends_;
