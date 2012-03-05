@@ -12,10 +12,12 @@ import fabric.util.*;
 public abstract class JoinPolicy extends AbstractPolicy implements Policy {
   private Set components; // Set of Policies
 
-  JoinPolicy(Set policies) {
+ JoinPolicy JoinPolicy$(Set policies) {
+	AbstractPolicy$();
     // Copy the contents into a linked hash set so we can sign these policies.
     components = Collections.unmodifiableSet($getStore(),
-	(LinkedHashSet) new LinkedHashSet(policies).$initLabels());
+	(LinkedHashSet) new LinkedHashSet(policies).LinkedHashSet$());
+	return this;
   }
 
   public Set joinComponents() {

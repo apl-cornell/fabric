@@ -91,7 +91,7 @@ public class HashMap extends AbstractMap
    * Package visible for use by HashSet.
    * @serial the load factor
    */
-  final float loadFactor;
+  /*final*/ float loadFactor;
 
   /**
    * Array containing the actual key-value mappings.
@@ -135,9 +135,10 @@ public class HashMap extends AbstractMap
      * @param key the key
      * @param value the value
      */
-    HashEntry(Object key, Object value)
+    HashEntry HashEntry$(Object key, Object value)
     {
-      super(key, value);
+      BasicMapEntry$(key, value);
+	  return this;
     }
 
     /**
@@ -175,9 +176,10 @@ public class HashMap extends AbstractMap
    * Construct a new HashMap with the default capacity (11) and the default
    * load factor (0.75).
    */
-  public HashMap()
+  public HashMap HashMap$()
   {
-    this(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR);
+    HashMap$(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR);
+	return this;
   }
 
   /**
@@ -191,10 +193,11 @@ public class HashMap extends AbstractMap
    *        <b>NOTE: key / value pairs are not cloned in this constructor.</b>
    * @throws NullPointerException if m is null
    */
-  public HashMap(Map m)
+  public HashMap HashMap$(Map m)
   {
-    this(Math.max(m.size() * 2, DEFAULT_CAPACITY), DEFAULT_LOAD_FACTOR);
+    HashMap$(Math.max(m.size() * 2, DEFAULT_CAPACITY), DEFAULT_LOAD_FACTOR);
     putAll(m);
+	return this;
   }
 
   /**
@@ -204,9 +207,10 @@ public class HashMap extends AbstractMap
    * @param initialCapacity the initial capacity of this HashMap (&gt;=0)
    * @throws IllegalArgumentException if (initialCapacity &lt; 0)
    */
-  public HashMap(int initialCapacity)
+  public HashMap HashMap$(int initialCapacity)
   {
-    this(initialCapacity, DEFAULT_LOAD_FACTOR);
+    HashMap$(initialCapacity, DEFAULT_LOAD_FACTOR);
+	return this;
   }
 
   /**
@@ -217,8 +221,9 @@ public class HashMap extends AbstractMap
    * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
    *                                     ! (loadFactor &gt; 0.0)
    */
-  public HashMap(int initialCapacity, float loadFactor)
+  public HashMap HashMap$(int initialCapacity, float loadFactor)
   {
+	AbstractMap$();	
     if (initialCapacity < 0)
       throw new IllegalArgumentException("Illegal Capacity: "
                                          + initialCapacity);
@@ -520,7 +525,7 @@ public class HashMap extends AbstractMap
 
 	  return this;
 	}
-      }.$initLabels();
+      }.AbstractSet$();
     return keys;
   }
 
@@ -566,7 +571,7 @@ public class HashMap extends AbstractMap
 
 	  return this;
 	}
-      }.$initLabels();
+      }.AbstractCollection$();
     return values;
   }
 
@@ -631,7 +636,7 @@ public class HashMap extends AbstractMap
 
 	  return this;
 	}
-      }.$initLabels();
+      }.AbstractSet$();
     return entries;
   }
 
@@ -647,7 +652,7 @@ public class HashMap extends AbstractMap
    */
   void addEntry(Object key, Object value, int idx, boolean callRemove)
   {
-    HashEntry e = (HashEntry) new HashEntry(key, value).$initLabels();
+    HashEntry e = (HashEntry) new HashEntry(key, value).HashEntry$();
     e.next = buckets[idx];
     buckets[idx] = e;
   }
@@ -699,7 +704,7 @@ public class HashMap extends AbstractMap
    */
   Iterator iterator(fabric.worker.Store store, int type)
   {
-    return (HashIterator) new HashIterator@store(type).$initLabels();
+    return (HashIterator) new HashIterator@store(type).HashIterator$();
   }
 
   /**
@@ -825,7 +830,7 @@ public class HashMap extends AbstractMap
      * The type of this Iterator: {@link #KEYS}, {@link #VALUES},
      * or {@link #ENTRIES}.
      */
-    private final int type;
+    private /*final*/ int type;
     /**
      * The number of modifications to the backing HashMap that we know about.
      */
@@ -847,8 +852,9 @@ public class HashMap extends AbstractMap
      * Construct a new HashIterator with the supplied type.
      * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
      */
-    HashIterator(int type)
+    HashIterator HashIterator$(int type)
     {
+	  Object$();
       this.type = type;
       this.knownMod = modCount;
       this.count = size;

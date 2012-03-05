@@ -15,13 +15,14 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
 
     private Map superiors; // treat this like a set
 
-    public AbstractPrincipal() {
-      super();
+    public AbstractPrincipal AbstractPrincipal$() {
       this.jif$init();
+      DelegatingPrincipal$();
+	  return this;
     }
     
     private void jif$init() {
-      superiors = (HashMap) new HashMap().$initLabels();
+      superiors = (HashMap) new HashMap().$HashMap();
       
     // XXX HACK Make read-only operations on principals really read-only. This
     // creates the set view of the map's keys so that future calls to keySet()
@@ -91,7 +92,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
             ActsForProof prf = PrincipalUtil.findActsForProof(store, p, s, searchState);            
             if (prf != null) {
                 if (PrincipalUtil.actsFor(s, this)) {
-                    return (TransitiveProof) new TransitiveProof@localStore(prf, s, (DelegatesProof) new DelegatesProof@localStore(s, this).$initLabels()).$initLabels();
+                    return (TransitiveProof) new TransitiveProof@localStore(prf, s, (DelegatesProof) new DelegatesProof@localStore(s, this).$DelegatesProof()).$DelegatesProof();
                 }
             }
         }

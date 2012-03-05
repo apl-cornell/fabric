@@ -6,17 +6,18 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public final class TransitiveProof extends ActsForProof {
-  private final ActsForProof actorToP;
-  private final ActsForProof pToGranter;
-  private final Principal p;
+  private /*final*/ ActsForProof actorToP;
+  private /*final*/ ActsForProof pToGranter;
+  private /*final*/ Principal p;
 
-  public TransitiveProof(ActsForProof actorToP, Principal p,
+  public TransitiveProof TransitiveProof$(ActsForProof actorToP, Principal p,
       ActsForProof pToGranter) {
-    super(actorToP != null ? actorToP.getActor() : null,
-        pToGranter != null ? pToGranter.getGranter() : null);
     this.actorToP = actorToP;
     this.pToGranter = pToGranter;
     this.p = p;
+    ActsForProof$(actorToP != null ? actorToP.getActor() : null,
+        pToGranter != null ? pToGranter.getGranter() : null);
+	return this;
   }
 
   ActsForProof getActorToP() {

@@ -13,10 +13,12 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
   private Set components; // Set of Policies
   public final Store localStore = Worker.getWorker().getLocalStore();
 
-  MeetPolicy(Set policies) {
+  MeetPolicy MeetPolicy$(Set policies) {
+	AbstractPolicy$();
     // Copy the contents into a linked hash set so we can sign these policies.
     components = Collections.unmodifiableSet($getStore(),
-	(LinkedHashSet) new LinkedHashSet(policies).$initLabels());
+	(LinkedHashSet) new LinkedHashSet(policies).LinkedHashSet$());
+	return this;
   }
 
   public Set meetComponents() {

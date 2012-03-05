@@ -7,8 +7,9 @@ import fabric.util.*;
  * from Jif.
  */
 public final class MeetConfPolicy extends MeetPolicy implements ConfPolicy {
-  MeetConfPolicy(Set policies) {
-    super(policies);
+ MeetConfPolicy MeetConfPolicy$(Set policies) {
+    MeetPolicy$(policies);
+	return this;
   }
 
   public ConfPolicy join(Store store, ConfPolicy p, java.util.Set s) {

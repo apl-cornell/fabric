@@ -12,8 +12,9 @@ public final class ReflexiveProof extends ActsForProof {
    * @param p
    * @param q
    */
-  ReflexiveProof(Principal p, Principal q) {
-    super(p, q);
+  ReflexiveProof ReflexiveProof$(Principal p, Principal q) {
+    ActsForProof$(p, q);
+	return this;
   }
 
   public void gatherDelegationDependencies(Set s) {

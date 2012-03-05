@@ -6,7 +6,9 @@ package fabric.lang.security;
  * This code is mostly copied from Jif.
  */
 public abstract class AbstractPolicy implements Policy {
-  protected AbstractPolicy() {
+  protected AbstractPolicy AbstractPolicy$() {
+	Object$();
+	return this;
   }
 
   abstract public boolean equals(Object that);

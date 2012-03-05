@@ -10,8 +10,9 @@ import fabric.util.Map;
 
 public final class NodePrincipal extends AbstractPrincipal {
 
-  public NodePrincipal(String name) {
-    super(name);
+  public NodePrincipal NodePrincipal$(String name) {
+    AbstractPrincipal$(name);
+	return this;
   }
 
   public Object $initLabels() {

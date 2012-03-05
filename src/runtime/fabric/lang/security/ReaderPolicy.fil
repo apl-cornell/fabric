@@ -11,12 +11,14 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
-  private final Principal owner;
-  private final Principal reader;
+  private /*final*/ Principal owner;
+  private /*final*/ Principal reader;
 
-  public ReaderPolicy(Principal owner, Principal reader) {
+  public ReaderPolicy ReaderPolicy$(Principal owner, Principal reader) {
+	AbstractPolicy$(); 
     this.owner = owner;
     this.reader = reader;
+	return this;
   }
 
   public Principal owner() {
