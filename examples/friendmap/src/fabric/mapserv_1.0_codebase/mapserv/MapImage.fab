@@ -90,6 +90,7 @@ where
 
     this.width  = width;
     this.height = height;
+    super();
   }
 
 

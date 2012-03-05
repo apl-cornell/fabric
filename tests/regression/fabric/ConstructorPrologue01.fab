@@ -1,0 +1,23 @@
+class D { 
+    static int{} n{}() { return 0; }
+}
+
+
+class C[label L] extends D {
+    final int{} x;
+    final int{} y;
+    
+    final int{} z;
+    
+    C{}(C[L]{} c) {
+        this.x = (c == null) ? 0 : c.m(L);  
+        this.y = (c == null) ? 0 : D.n();
+        
+        z = 9;
+        super();
+    }
+    
+    int{} m{}(label l) { return 0; }
+    
+    
+}

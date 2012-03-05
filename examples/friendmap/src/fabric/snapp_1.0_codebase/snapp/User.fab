@@ -66,13 +66,20 @@ where
     {*provider; store; name} <= {_→; *←network,owner}
   {
     // assert p equiv p
-    if (p equiv new principal(owner,network)) {
+        Group[p,{*→network}] friends_;
+        Group[p,{*→network}] locationInfo_;
+        label locationLabel_;
+        if (p equiv new principal(owner,network)) {
 
-    this.friends       = new Group[p,{*→network}]@store(store, name + "'s friends");
-    this.locationInfo  = new Group[p,{*→network}]@store(store, name + "'s location viewers");
-    this.locationLabel = new label {p←;p→locationInfo};
+            friends_       = new Group[p,{*→network}]@store(store, name + "'s friends");
+            locationInfo_  = new Group[p,{*→network}]@store(store, name + "'s location viewers");
+            locationLabel_ = new label {p←;p→locationInfo};
 
-    } else throw new AssertionFailedError("75 (p,q) equiv (p,q)");
+        } else throw new AssertionFailedError("75 (p,q) equiv (p,q)");
+        this.friends       = friends_;
+        this.locationInfo  = locationInfo_;
+        this.locationLabel = locationLabel_;
+        super();
   }
 }
 
