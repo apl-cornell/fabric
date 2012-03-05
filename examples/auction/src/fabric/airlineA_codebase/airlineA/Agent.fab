@@ -15,6 +15,7 @@ public class Agent[principal Airline, label Auction] implements broker.Agent[Air
 
     public Agent{Airline->;Airline<-}(Server[Airline]{Airline->;Airline<-} server) {
 		this.server = server;
+		super();
     }
 
 	// asking the "remote" server for the current lowest price
