@@ -192,7 +192,7 @@ where
    * Create a deep copy of this image on store s with label l.
    */
   public
-  MapImage[l,a] {this;L;*provider;l;a} // result tainted by fields, code, labels
+  MapImage[l,a] {*l}
   copy
   {          // side effects:
     {*l}   ⊓ // result is updated
@@ -215,15 +215,16 @@ where
     l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
 
     // information flow within method
-    {this;L;*provider} <= l, // resulting map image fields are affected by fields, code
-    provider           <= A  // code affects fetches
+    {this;*L;*provider;l;a;s} <= l, // resulting map image fields are affected by fields, args, code
+    provider                 <= A  // code affects fetches
   {
     try {
 
-      return new MapImage[l,a] (boundary, L, A,
-                                width, height,
-                                Util.copyArray(data, L, l, s),
-                                s);
+      // TODO: solver failing, had to add *l
+      return new MapImage[l,a]{*l}@s (boundary, L, A,
+                                      width, height,
+                                      Util.copyArray(data, L, l, s),
+                                      s);
 
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("228 data and boundary must be non-null");
