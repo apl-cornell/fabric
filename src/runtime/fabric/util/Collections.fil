@@ -71,7 +71,7 @@ public class Collections
    * An immutable, serializable, empty Set.
    * @see Serializable
    */
-  public static final Set EMPTY_SET = (EmptySet) new EmptySet().EmptySet$();
+  public static final Set EMPTY_SET = (EmptySet) new EmptySet().fabric$util$Collections$EmptySet$();
 
   /**
    * The implementation of {@link #EMPTY_SET}. This class name is required
@@ -90,9 +90,9 @@ public class Collections
     /**
      * A private constructor adds overhead.
      */
-    EmptySet EmptySet$()
+    EmptySet fabric$util$Collections$EmptySet$()
     {
-      return AbstractSet$();
+      return fabric$util$AbstractSet$();
     }
 
     /**
@@ -236,7 +236,7 @@ public class Collections
    * @see Serializable
    * @see RandomAccess
    */
-  public static final List EMPTY_LIST = (EmptyList) new EmptyList().EmptyList$();
+  public static final List EMPTY_LIST = (EmptyList) new EmptyList().fabric$util$Collections$EmptyList$();
 
   /**
    * The implementation of {@link #EMPTY_LIST}. This class name is required
@@ -255,9 +255,9 @@ public class Collections
     /**
      * A private constructor adds overhead.
      */
-    EmptyList EmptyList$()
+    EmptyList fabric$util$Collections$EmptyList$()
     {
-      return AbstractList$();
+      return fabric$util$AbstractList$();
     }
 
     /**
@@ -425,7 +425,7 @@ public class Collections
    * An immutable, serializable, empty Map.
    * @see Serializable
    */
-  public static final Map EMPTY_MAP = (EmptyMap) new EmptyMap().EmptyMap$();
+  public static final Map EMPTY_MAP = (EmptyMap) new EmptyMap().fabric$util$Collections$EmptyMap$();
 
   /**
    * The implementation of {@link #EMPTY_MAP}. This class name is required
@@ -444,9 +444,9 @@ public class Collections
     /**
      * A private constructor adds overhead.
      */
-    EmptyMap EmptyMap$()
+    EmptyMap fabric$util$Collections$EmptyMap$()
     {
-      return AbstractMap$();
+      return fabric$util$AbstractMap$();
     }
 
     /**
@@ -848,7 +848,7 @@ public class Collections
    */
   public static ArrayList list(Enumeration e)
   {
-    ArrayList l = (ArrayList) new ArrayList().ArrayList$();
+    ArrayList l = (ArrayList) new ArrayList().fabric$util$ArrayList$();
     while (e.hasMoreElements())
       l.add(e.nextElement());
     return l;
@@ -959,7 +959,7 @@ public class Collections
    */
   public static List nCopies(final int n, final Object o)
   {
-    return (CopiesList) new CopiesList().CopiesList$(n, o);
+    return (CopiesList) new CopiesList().fabric$util$Collections$CopiesList$(n, o);
   }
 
   /**
@@ -995,9 +995,9 @@ public class Collections
      * @param o the object
      * @throws IllegalArgumentException if n &lt; 0
      */
-    CopiesList CopiesList$(int n, Object o)
+    CopiesList fabric$util$Collections$CopiesList$(int n, Object o)
     {
-      return AbstractList$();
+      return fabric$util$AbstractList$();
       if (n < 0)
         throw new IllegalArgumentException();
       this.n = n;
@@ -1071,7 +1071,7 @@ public class Collections
     {
       if (from < 0 || to > n)
         throw new IndexOutOfBoundsException();
-      return (CopiesList) new CopiesList().CopiesList$(to - from, element);
+      return (CopiesList) new CopiesList().fabric$util$Collections$CopiesList$(to - from, element);
     }
 
     /**
@@ -1182,7 +1182,7 @@ public class Collections
   /**
    * The object for {@link #reverseOrder()}.
    */
-  private static final ReverseComparator rcInstance = (ReverseComparator) new ReverseComparator().ReverseComparator$();
+  private static final ReverseComparator rcInstance = (ReverseComparator) new ReverseComparator().fabric$util$Collections$ReverseComparator$();
 
   /**
    * The implementation of {@link #reverseOrder()}. This class name
@@ -1201,9 +1201,9 @@ public class Collections
     /**
      * A private constructor adds overhead.
      */
-    ReverseComparator ReverseComparator$()
+    ReverseComparator fabric$util$Collections$ReverseComparator$()
     {
-      return Object$();
+      return fabric$lang$fabric$lang$Object$();
     }
 
     /**
@@ -1330,7 +1330,7 @@ public class Collections
         synchronized (Collections.class)
         {
           if (defaultRandom == null)
-            defaultRandom = (Random) new Random().Random$();
+            defaultRandom = (Random) new Random().fabric$util$Random$();
         }
       }
     shuffle(l, defaultRandom);
@@ -1407,7 +1407,7 @@ public class Collections
    */
   public static Set singleton(Object o)
   {
-    return (SingletonSet) new SingletonSet().SingletonSet$(o);
+    return (SingletonSet) new SingletonSet().fabric$util$Collections$SingletonSet$(o);
   }
 
   /**
@@ -1435,9 +1435,9 @@ public class Collections
      * Construct a singleton.
      * @param o the element
      */
-    SingletonSet SingletonSet$(Object o)
+    SingletonSet fabric$util$Collections$SingletonSet$(Object o)
     {
-      return AbstractSet$();
+      return fabric$util$AbstractSet$();
       element = o;
     }
 
@@ -1515,7 +1515,7 @@ public class Collections
 
           return this;
         }
-      }.Object$();
+      }.fabric$lang$Object$();
     }
 
     // The remaining methods are optional, but provide a performance
@@ -1602,7 +1602,7 @@ public class Collections
    */
   public static List singletonList(Object o)
   {
-    return (SingletonList) new SingletonList().SingletonList$(o);
+    return (SingletonList) new SingletonList().fabric$util$Collections$SingletonList$(o);
   }
 
   /**
@@ -1629,9 +1629,9 @@ public class Collections
      * Construct a singleton.
      * @param o the element
      */
-    SingletonList SingletonList$(Object o)
+    SingletonList fabric$util$Collections$SingletonList$(Object o)
     {
-      return AbstractList$();
+      return fabric$util$AbstractList$();
       element = o;
     }
 
@@ -1789,7 +1789,7 @@ public class Collections
    */
   public static Map singletonMap(Object key, Object value)
   {
-    return (SingletonMap) new SingletonMap().SingletonMap$(key, value);
+    return (SingletonMap) new SingletonMap().fabric$util$Collections$SingletonMap$(key, value);
   }
 
   /**
@@ -1828,9 +1828,9 @@ public class Collections
      * @param key the key
      * @param value the value
      */
-    SingletonMap SingletonMap$(Object key, Object value)
+    SingletonMap fabric$util$Collections$SingletonMap$(Object key, Object value)
     {
-      AbstractMap$();
+      fabric$util$AbstractMap$();
       k = key;
       v = value;
       return this;
@@ -1869,7 +1869,7 @@ public class Collections
 
             return this;
           }
-        }.Set$());
+        }.fabric$util$Set$());
       return entries;
     }
 
@@ -4127,7 +4127,7 @@ public class Collections
    */
   public static Collection unmodifiableCollection(Store store, Collection c)
   {
-    return (UnmodifiableCollection) new UnmodifiableCollection().UnmodifiableCollection$(c);
+    return (UnmodifiableCollection) new UnmodifiableCollection().fabric$util$Collections$UnmodifiableCollection$(c);
   }
 
   /**
@@ -4155,9 +4155,9 @@ public class Collections
      * @param c the collection to wrap
      * @throws NullPointerException if c is null
      */
-    UnmodifiableCollection UnmodifiableCollection$(Collection c)
+    UnmodifiableCollection fabric$util$Collections$UnmodifiableCollection$(Collection c)
     {
-      Object$();
+      fabric$lang$Object$();
       this.c = c;
       if (c == null)
         throw new NullPointerException();
@@ -4396,9 +4396,9 @@ public class Collections
      * Only trusted code creates a wrapper.
      * @param i the wrapped iterator
      */
-    UnmodifiableIterator UnmodifiableIterator$(Iterator i)
+    UnmodifiableIterator fabric$util$Collections$UnmodifiableIterator$(Iterator i)
     {
-      Object$();
+      fabric$lang$Object$();
       this.i = i;
       return this;
     }
@@ -4472,8 +4472,8 @@ public class Collections
   public static List unmodifiableList(Store store, List l)
   {
     if (l instanceof RandomAccess)
-      return (UnmodifiableRandomAccessList) new UnmodifiableRandomAccessList@store().UnmodifiableRandomAccessList$(l);
-    return (UnmodifiableList) new UnmodifiableList@store().UnmodifiableList$(l);
+      return (UnmodifiableRandomAccessList) new UnmodifiableRandomAccessList@store().fabric$util$Collections$UnmodifiableRandomAccessList$(l);
+    return (UnmodifiableList) new UnmodifiableList@store().fabric$util$Collections$UnmodifiableList$(l);
   }
 
   /**
@@ -4504,9 +4504,9 @@ public class Collections
      * @param l the list to wrap
      * @throws NullPointerException if l is null
      */
-    UnmodifiableList UnmodifiableList$(List l)
+    UnmodifiableList fabric$util$Collections$UnmodifiableList$(List l)
     {
-      UnmodifiableCollection$(l);
+      fabric$util$Collections$UnmodifiableCollection$(l);
       list = l;
       return this;
     }
@@ -4621,7 +4621,7 @@ public class Collections
    */
     public ListIterator listIterator(fabric.worker.Store store)
     {
-      return (UnmodifiableListIterator) new UnmodifiableListIterator@store().UnmodifiableListIterator$(list.listIterator(store));
+      return (UnmodifiableListIterator) new UnmodifiableListIterator@store().fabric$util$Collections$UnmodifiableListIterator$(list.listIterator(store));
     }
 
   /**
@@ -4640,7 +4640,7 @@ public class Collections
    */
     public ListIterator listIterator(fabric.worker.Store store, int index)
     {
-      return (UnmodifiableListIterator) new UnmodifiableListIterator@store().UnmodifiableListIterator$(list.listIterator(store, index));
+      return (UnmodifiableListIterator) new UnmodifiableListIterator@store().fabric$util$Collections$UnmodifiableListIterator$(list.listIterator(store, index));
     }
 
     /**
@@ -4725,9 +4725,9 @@ public class Collections
      * @param l the list to wrap
      * @throws NullPointerException if l is null
      */
-    UnmodifiableRandomAccessList UnmodifiableRandomAccessList$(List l)
+    UnmodifiableRandomAccessList fabric$util$Collections$UnmodifiableRandomAccessList$(List l)
     {
-      return UnmodifiableList$(l);
+      return fabric$util$Collections$UnmodifiableList$(l);
     }
 
     public Object $initLabels() {
@@ -4759,9 +4759,9 @@ public class Collections
      * Only trusted code creates a wrapper.
      * @param li the wrapped iterator
      */
-    UnmodifiableListIterator UnmodifiableListIterator$(ListIterator li)
+    UnmodifiableListIterator fabric$util$Collections$UnmodifiableListIterator$(ListIterator li)
     {
-      UnmodifiableIterator$(li);
+      fabric$util$Collections$UnmodifiableIterator$(li);
       this.li = li;
       return this;
     }
@@ -4872,7 +4872,7 @@ public class Collections
    */
   public static Map unmodifiableMap(Store store, Map m)
   {
-    return (UnmodifiableMap) new UnmodifiableMap@store().UnmodifiableMap$(m);
+    return (UnmodifiableMap) new UnmodifiableMap@store().fabric$util$Collections$UnmodifiableMap$(m);
   }
 
   /**
@@ -4914,9 +4914,9 @@ public class Collections
      * @param m the map to wrap
      * @throws NullPointerException if m is null
      */
-    UnmodifiableMap UnmodifiableMap$(Map m)
+    UnmodifiableMap fabric$util$Collections$UnmodifiableMap$(Map m)
     {
-      Object$();
+      fabric$lang$Object$();
       this.m = m;
       if (m == null)
         throw new NullPointerException();
@@ -4982,7 +4982,7 @@ public class Collections
     public Set entrySet()
     {
       if (entries == null)
-        entries = (UnmodifiableEntrySet) new UnmodifiableEntrySet().UnmodifiableEntrySet$(m.entrySet());
+        entries = (UnmodifiableEntrySet) new UnmodifiableEntrySet().fabric$util$Collections$UnmodifiableEntrySet$(m.entrySet());
       return entries;
     }
 
@@ -5002,9 +5002,9 @@ public class Collections
       {
         private final Map.Entry e;
 
-        private UnmodifiableMapEntry UnmodifiableMapEntry$(Map.Entry e)
+        private UnmodifiableMapEntry fabric$util$Collections$UnmodifiableMapEntry$(Map.Entry e)
         {
-          Object$();
+          fabric$lang$Object$();
           this.e = e;
           return this;
         }
@@ -5096,9 +5096,9 @@ public class Collections
        * Wrap a given set.
        * @param s the set to wrap
        */
-      UnmodifiableEntrySet UnmodifiableEntrySet$(Set s)
+      UnmodifiableEntrySet fabric$util$Collections$UnmodifiableEntrySet$(Set s)
       {
-        return UnmodifiableSet$(s);
+        return fabric$util$Collections$UnmodifiableSet$(s);
       }
 
       // The iterator must return unmodifiable map entries.
@@ -5116,7 +5116,7 @@ public class Collections
           public Object next()
           {
             final Map.Entry e = (Map.Entry) super.next();
-            return (UnmodifiableMapEntry) new UnmodifiableMapEntry().UnmodifiableMapEntry$(e);
+            return (UnmodifiableMapEntry) new UnmodifiableMapEntry().fabric$util$Collections$UnmodifiableMapEntry$(e);
           }
 
           public Object $initLabels() {
@@ -5128,7 +5128,7 @@ public class Collections
 
             return this;
           }
-        }.UnmodifiableIterator$();
+        }.fabric$util$Collections$UnmodifiableIterator$();
       }
 
       // The array returned is an array of UnmodifiableMapEntry instead of
@@ -5144,7 +5144,7 @@ public class Collections
             for (int i = 0; i < mapEntryResult.length; i++)
               {
                 Map.Entry r = (Map.Entry) mapEntryResult[i];
-                result[i] = (UnmodifiableMapEntry) new UnmodifiableMapEntry().UnmodifiableMapEntry$(r);
+                result[i] = (UnmodifiableMapEntry) new UnmodifiableMapEntry().fabric$util$Collections$UnmodifiableMapEntry$(r);
               }
           }
         return result;
@@ -5160,7 +5160,7 @@ public class Collections
           {
             for (int i = 0; i < array.length; i++)
               {
-                array[i] = (UnmodifiableMapEntry) new UnmodifiableMapEntry().UnmodifiableMapEntry$((Map.Entry) array[i]);
+                array[i] = (UnmodifiableMapEntry) new UnmodifiableMapEntry().fabric$util$Collections$UnmodifiableMapEntry$((Map.Entry) array[i]);
               }
           }
         return array;
@@ -5257,7 +5257,7 @@ public class Collections
     public Set keySet()
     {
       if (keys == null)
-        keys = (UnmodifiableSet) new UnmodifiableSet().UnmodifiableSet$(m.keySet());
+        keys = (UnmodifiableSet) new UnmodifiableSet().fabric$util$Collections$UnmodifiableSet$(m.keySet());
       return keys;
     }
 
@@ -5326,7 +5326,7 @@ public class Collections
     public Collection values()
     {
       if (values == null)
-        values = (UnmodifiableCollection) new UnmodifiableCollection().UnmodifiableCollection$(m.values());
+        values = (UnmodifiableCollection) new UnmodifiableCollection().fabric$util$Collections$UnmodifiableCollection$(m.values());
       return values;
     }
 
@@ -5360,7 +5360,7 @@ public class Collections
    */
   public static Set unmodifiableSet(Store store, Set s)
   {
-    return (UnmodifiableSet) new UnmodifiableSet@store().UnmodifiableSet$(s);
+    return (UnmodifiableSet) new UnmodifiableSet@store().fabric$util$Collections$UnmodifiableSet$(s);
   }
 
   /**
@@ -5382,9 +5382,9 @@ public class Collections
      * @param s the set to wrap
      * @throws NullPointerException if s is null
      */
-    UnmodifiableSet UnmodifiableSet$(Set s)
+    UnmodifiableSet fabric$util$Collections$UnmodifiableSet$(Set s)
     {
-      UnmodifiableCollection$(s);
+      fabric$util$Collections$UnmodifiableCollection$(s);
       return this;
     }
 
@@ -5440,7 +5440,7 @@ public class Collections
    */
   public static SortedMap unmodifiableSortedMap(Store store, SortedMap m)
   {
-    return (UnmodifiableSortedMap) new UnmodifiableSortedMap().UnmodifiableSortedMap$@store(m);
+    return (UnmodifiableSortedMap) new UnmodifiableSortedMap().fabric$util$Collections$UnmodifiableSortedMap$@store(m);
   }
 
   /**
@@ -5469,9 +5469,9 @@ public class Collections
      * @param sm the map to wrap
      * @throws NullPointerException if sm is null
      */
-    UnmodifiableSortedMap UnmodifiableSortedMap$(SortedMap sm)
+    UnmodifiableSortedMap fabric$util$Collections$UnmodifiableSortedMap$(SortedMap sm)
     {
-      UnmodifiableMap$(sm);
+      fabric$util$Collections$UnmodifiableMap$(sm);
       this.sm = sm;
       return this;
     }
@@ -5522,7 +5522,7 @@ public class Collections
      */
     public SortedMap headMap(Object toKey)
     {
-      return (UnmodifiableSortedMap) new UnmodifiableSortedMap().UnmodifiableSortedMap$(sm.headMap(toKey));
+      return (UnmodifiableSortedMap) new UnmodifiableSortedMap().fabric$util$Collections$UnmodifiableSortedMap$(sm.headMap(toKey));
     }
 
     /**
@@ -5564,7 +5564,7 @@ public class Collections
      */
     public SortedMap subMap(Object fromKey, Object toKey)
     {
-      return (UnmodifiableSortedMap) new UnmodifiableSortedMap().UnmodifiableSortedMap$(sm.subMap(fromKey, toKey));
+      return (UnmodifiableSortedMap) new UnmodifiableSortedMap().fabric$util$Collections$UnmodifiableSortedMap$(sm.subMap(fromKey, toKey));
     }
 
     /**
@@ -5591,7 +5591,7 @@ public class Collections
      */
     public SortedMap tailMap(Object fromKey)
     {
-      return (UnmodifiableSortedMap) new UnmodifiableSortedMap().UnmodifiableSortedMap$(sm.tailMap(fromKey));
+      return (UnmodifiableSortedMap) new UnmodifiableSortedMap().fabric$util$Collections$UnmodifiableSortedMap$(sm.tailMap(fromKey));
     }
 
     public Object $initLabels() {
@@ -5624,7 +5624,7 @@ public class Collections
    */
   public static SortedSet unmodifiableSortedSet(Store store, SortedSet s)
   {
-    return (UnmodifiableSortedSet) new UnmodifiableSortedSet@store().UnmodifiableSortedSet$(s);
+    return (UnmodifiableSortedSet) new UnmodifiableSortedSet@store().fabric$util$Collections$UnmodifiableSortedSet$(s);
   }
 
   /**
@@ -5653,9 +5653,9 @@ public class Collections
      * @param ss the set to wrap
      * @throws NullPointerException if ss is null
      */
-    UnmodifiableSortedSet UnmodifiableSortedSet$(SortedSet ss)
+    UnmodifiableSortedSet fabric$util$Collections$UnmodifiableSortedSet$(SortedSet ss)
     {
-      UnmodifiableSet$(ss);
+      fabric$util$Collections$UnmodifiableSet$(ss);
       this.ss = ss;
       return this;
     }
@@ -5708,7 +5708,7 @@ public class Collections
      */
     public SortedSet headSet(Object toElement)
     {
-      return (UnmodifiableSortedSet) new UnmodifiableSortedSet().UnmodifiableSortedSet$(ss.headSet(toElement));
+      return (UnmodifiableSortedSet) new UnmodifiableSortedSet().fabric$util$Collections$UnmodifiableSortedSet$(ss.headSet(toElement));
     }
 
     /**
@@ -5751,7 +5751,7 @@ public class Collections
      */
     public SortedSet subSet(Object fromElement, Object toElement)
     {
-      return (UnmodifiableSortedSet) new UnmodifiableSortedSet().UnmodifiableSortedSet$(ss.subSet(fromElement, toElement));
+      return (UnmodifiableSortedSet) new UnmodifiableSortedSet().fabric$util$Collections$UnmodifiableSortedSet$(ss.subSet(fromElement, toElement));
     }
 
     /**
@@ -5777,7 +5777,7 @@ public class Collections
      */
     public SortedSet tailSet(Object fromElement)
     {
-      return (UnmodifiableSortedSet) new UnmodifiableSortedSet().UnmodifiableSortedSet$(ss.tailSet(fromElement));
+      return (UnmodifiableSortedSet) new UnmodifiableSortedSet().fabric$util$Collections$UnmodifiableSortedSet$(ss.tailSet(fromElement));
     }
 
     public Object $initLabels() {
