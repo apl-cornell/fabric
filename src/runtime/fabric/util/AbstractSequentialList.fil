@@ -45,6 +45,7 @@ public abstract class AbstractSequentialList extends AbstractList
   protected AbstractSequentialList fabric$util$AbstractSequentialList$()
   {
     fabric$util$AbstractList$();
+	return this;
   }
 
   /**

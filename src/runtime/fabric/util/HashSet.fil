@@ -58,6 +58,7 @@ public class HashSet extends AbstractSet
   public HashSet fabric$util$HashSet$()
   {
     fabric$util$HashSet$(HashMap.DEFAULT_CAPACITY, HashMap.DEFAULT_LOAD_FACTOR);
+	return this;
   }
 
   /**
@@ -70,6 +71,7 @@ public class HashSet extends AbstractSet
   public HashSet fabric$util$HashSet$(int initialCapacity)
   {
     fabric$util$HashSet$(initialCapacity, HashMap.DEFAULT_LOAD_FACTOR);
+	return this;
   }
 
   /**
@@ -83,8 +85,9 @@ public class HashSet extends AbstractSet
    */
   public HashSet fabric$util$HashSet$(int initialCapacity, float loadFactor)
   {
-    fabric$util$Object$();
+    fabric$lang$Object$();
     map = init(initialCapacity, loadFactor);
+	return this;
   }
 
   /**
@@ -100,6 +103,7 @@ public class HashSet extends AbstractSet
   {
     fabric$util$HashSet$(Math.max(2 * c.size(), HashMap.DEFAULT_CAPACITY));
     addAll(c);
+	return this;
   }
 
   /**

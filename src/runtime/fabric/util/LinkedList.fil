@@ -445,7 +445,7 @@ public class LinkedList extends AbstractSequentialList
     // to the first entry, in order to deal with the case where (c == this).
     // [Actually, we don't have to handle this case to fufill the
     // contract for addAll(), but Sun's implementation appears to.]
-    Entry e = (Entry) new Entry().fabric$util$LinkedList$Entry$(itr.next();
+    Entry e = (Entry) new Entry().fabric$util$LinkedList$Entry$(itr.next());
     e.previous = before;
     Entry prev = e;
     Entry firstNew = e;
@@ -453,7 +453,7 @@ public class LinkedList extends AbstractSequentialList
     // Create and link all the remaining entries.
     for (int pos = 1; pos < csize; pos++)
       {
-        e = (Entry) new Entry().fabric$util$LinkedList$Entry$(itr.next();
+        e = (Entry) new Entry().fabric$util$LinkedList$Entry$(itr.next());
         e.previous = prev;
         prev.next = e;
         prev = e;
@@ -754,7 +754,7 @@ public class LinkedList extends AbstractSequentialList
      */
     LinkedListItr fabric$util$LinkedList$LinkedListItr$(int index)
     {
-      Object$();
+      fabric$lang$Object$();
       knownMod = modCount;
       if (index == size)
         {
@@ -767,6 +767,7 @@ public class LinkedList extends AbstractSequentialList
           previous = next.previous;
         }
       position = index;
+	  return this;
     }
 
     /**

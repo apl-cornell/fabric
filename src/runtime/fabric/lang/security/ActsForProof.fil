@@ -6,13 +6,13 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public abstract class ActsForProof {
-  private final Principal actor;
-  private final Principal granter;
+  private /*final*/ Principal actor;
+  private /*final*/ Principal granter;
 
   ActsForProof fabric$lang$security$ActsForProof$(Principal actor, Principal granter) {
     this.actor = actor;
     this.granter = granter;
-    Object$();
+    fabric$lang$Object$();
     return this;
   }
 

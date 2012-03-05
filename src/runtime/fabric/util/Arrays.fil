@@ -2311,7 +2311,7 @@ public class Arrays
    */
   public static List asList(final Object[] a)
   {
-    return (Arrays.ArrayList) new Arrays.ArrayList().fabric$util$ArrayList$(a);
+    return (Arrays.ArrayList) new Arrays.ArrayList().fabric$util$Arrays$ArrayList$(a);
   }
 
   /** 
@@ -2904,19 +2904,21 @@ public class Arrays
      * The array we are viewing.
      * @serial the array
      */
-    private final Object[] a;
+    private /*final*/ Object[] a;
 
     /**
      * Construct a list view of the array.
      * @param a the array to view
      * @throws NullPointerException if a is null
      */
-    ArrayList(Object[] a)
+    ArrayList fabric$util$Arrays$ArrayList$(Object[] a)
     {
+	  fabric$util$AbstractList$();
       // We have to explicitly check.
       if (a == null)
         throw new NullPointerException();
       this.a = a;
+	  return this;
     }
 
     /**

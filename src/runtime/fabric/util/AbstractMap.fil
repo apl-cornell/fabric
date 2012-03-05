@@ -282,7 +282,7 @@ public abstract class AbstractMap implements Map
 	  /**
 	   * The iterator returned by <code>entrySet()</code>.
 	   */
-	  private final Iterator map_iterator;
+	  private /*final*/ Iterator map_iterator;
 
 	  /**
 	   * Returns true if a call to <code>next()</code> will
@@ -542,7 +542,7 @@ public abstract class AbstractMap implements Map
 	  /**
 	   * The iterator returned by <code>entrySet()</code>.
 	   */
-	  private final Iterator map_iterator;
+	  private /*final*/ Iterator map_iterator;
 
 	  /**
 	   * Returns true if a call to <code>next()</call> will
@@ -672,7 +672,7 @@ public abstract class AbstractMap implements Map
      */
     BasicMapEntry fabric$util$AbstractMap$BasicMapEntry$(Object newKey, Object newValue)
     {
-      fabric$util$AbstractMap$Entry$();
+      fabric$lang$Object$();
       key = newKey;
       value = newValue;
       return this;

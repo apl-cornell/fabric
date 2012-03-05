@@ -29,6 +29,7 @@ public abstract class AbstractSet extends AbstractCollection implements Set
   protected AbstractSet fabric$util$AbstractSet$()
   {
     fabric$util$AbstractCollection$();
+	return this;
   }
 
   /**

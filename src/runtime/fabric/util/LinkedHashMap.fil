@@ -110,7 +110,7 @@ public class LinkedHashMap extends HashMap
      */
     LinkedHashEntry fabric$util$LinkedHashMap$LinkedHashEntry$(Object key, Object value)
     {
-      fabric$util$HashEntry$(key, value);
+      fabric$util$HashMap$HashEntry$(key, value);
       if (root == null)
         {
           root = this;
@@ -414,7 +414,7 @@ public class LinkedHashMap extends HashMap
    */
   Iterator iterator(fabric.worker.Store store, final int type)
   {
-    return (LinkedHashIterator) new LinkedHashIterator().fabric$util$LinkedHashMap$LinkedHashIterator$@store(type);
+    return (LinkedHashIterator) new LinkedHashIterator@store().fabric$util$LinkedHashMap$LinkedHashIterator$(type);
   }
   
   private final class LinkedHashIterator implements Iterator
@@ -428,7 +428,7 @@ public class LinkedHashMap extends HashMap
     /** The number of known modifications to the backing Map. */
     int knownMod;
     
-    final int type;
+    /*final*/ int type;
     
     LinkedHashIterator fabric$util$LinkedHashMap$LinkedHashIterator$(int type) {
       fabric$lang$Object$();

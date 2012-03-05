@@ -238,6 +238,7 @@ public class HashMap extends AbstractMap
     buckets = new HashEntry[initialCapacity]~label;
     this.loadFactor = loadFactor;
     threshold = (int) (initialCapacity * loadFactor);
+	return this;
   }
 
   /**
@@ -652,7 +653,7 @@ public class HashMap extends AbstractMap
    */
   void addEntry(Object key, Object value, int idx, boolean callRemove)
   {
-    HashEntry e = (HashEntry) new HashEntry(key, value).fabric$util$HashMap$HashEntry$();
+    HashEntry e = (HashEntry) new HashEntry().fabric$util$HashMap$HashEntry$(key, value);
     e.next = buckets[idx];
     buckets[idx] = e;
   }
@@ -704,7 +705,7 @@ public class HashMap extends AbstractMap
    */
   Iterator iterator(fabric.worker.Store store, int type)
   {
-    return (HashIterator) new HashIterator@store(type).fabric$util$HashMap$HashIterator$();
+    return (HashIterator) new HashIterator@store().fabric$util$HashMap$HashIterator$(type);
   }
 
   /**
@@ -859,6 +860,7 @@ public class HashMap extends AbstractMap
       this.knownMod = modCount;
       this.count = size;
       this.idx = buckets.length;
+	  return this;
     }
 
     /**

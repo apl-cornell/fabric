@@ -92,7 +92,8 @@ public class Collections
      */
     EmptySet fabric$util$Collections$EmptySet$()
     {
-      return fabric$util$AbstractSet$();
+      fabric$util$AbstractSet$();
+	  return this;
     }
 
     /**
@@ -257,7 +258,8 @@ public class Collections
      */
     EmptyList fabric$util$Collections$EmptyList$()
     {
-      return fabric$util$AbstractList$();
+      fabric$util$AbstractList$();
+	  return this;
     }
 
     /**
@@ -446,7 +448,8 @@ public class Collections
      */
     EmptyMap fabric$util$Collections$EmptyMap$()
     {
-      return fabric$util$AbstractMap$();
+      fabric$util$AbstractMap$();
+	  return this;
     }
 
     /**
@@ -980,13 +983,13 @@ public class Collections
      * The count of elements in this list.
      * @serial the list size
      */
-    private final int n;
+    private /*final*/ int n;
 
     /**
      * The repeated list element.
      * @serial the list contents
      */
-    private final Object element;
+    private /*final*/ Object element;
 
     /**
      * Constructs the list.
@@ -997,11 +1000,12 @@ public class Collections
      */
     CopiesList fabric$util$Collections$CopiesList$(int n, Object o)
     {
-      return fabric$util$AbstractList$();
+      fabric$util$AbstractList$();
       if (n < 0)
         throw new IllegalArgumentException();
       this.n = n;
       element = o;
+	  return this;
     }
 
     /**
@@ -1203,7 +1207,8 @@ public class Collections
      */
     ReverseComparator fabric$util$Collections$ReverseComparator$()
     {
-      return fabric$lang$fabric$lang$Object$();
+      fabric$lang$Object$();
+	  return this;
     }
 
     /**
@@ -1429,7 +1434,7 @@ public class Collections
      * The single element; package visible for use in nested class.
      * @serial the singleton
      */
-    final Object element;
+    /*final*/ Object element;
 
     /**
      * Construct a singleton.
@@ -1437,8 +1442,9 @@ public class Collections
      */
     SingletonSet fabric$util$Collections$SingletonSet$(Object o)
     {
-      return fabric$util$AbstractSet$();
+      fabric$util$AbstractSet$();
       element = o;
+	  return this;
     }
 
     /**
@@ -1623,7 +1629,7 @@ public class Collections
      * The single element.
      * @serial the singleton
      */
-    private final Object element;
+    private /*final*/ Object element;
 
     /**
      * Construct a singleton.
@@ -1631,8 +1637,9 @@ public class Collections
      */
     SingletonList fabric$util$Collections$SingletonList$(Object o)
     {
-      return fabric$util$AbstractList$();
+      fabric$util$AbstractList$();
       element = o;
+	  return this;
     }
 
     /**
@@ -1810,13 +1817,13 @@ public class Collections
      * The single key.
      * @serial the singleton key
      */
-    private final Object k;
+    private /*final*/ Object k;
 
     /**
      * The corresponding value.
      * @serial the singleton value
      */
-    private final Object v;
+    private /*final*/ Object v;
 
     /**
      * Cache the entry set.
@@ -1844,7 +1851,7 @@ public class Collections
     public Set entrySet()
     {
       if (entries == null)
-        entries = singleton((AbstractMap.BasicMapEntry) new AbstractMap.BasicMapEntry(k, v)
+        entries = singleton((AbstractMap.BasicMapEntry) new AbstractMap.BasicMapEntry()
         {
           /**
            * Sets the value of the map entry to the supplied value.
@@ -1869,7 +1876,7 @@ public class Collections
 
             return this;
           }
-        }.fabric$util$Set$());
+        }.fabric$util$AbstractMap$BasicMapEntry$(k,v));
       return entries;
     }
 
@@ -4148,7 +4155,7 @@ public class Collections
      * The wrapped collection. Package visible for use by subclasses.
      * @serial the real collection
      */
-    final Collection c;
+    /*final*/ Collection c;
 
     /**
      * Wrap a given collection.
@@ -4260,7 +4267,7 @@ public class Collections
      */
     public Iterator iterator(fabric.worker.Store store)
     {
-      return new UnmodifiableIterator@store(c.iterator(store));
+      return new UnmodifiableIterator@store().fabric$util$Collections$UnmodifiableIterator$(c.iterator(store));
     }
 
     public Iterator iterator()
@@ -4390,7 +4397,7 @@ public class Collections
     /**
      * The wrapped iterator.
      */
-    private final Iterator i;
+    private /*final*/ Iterator i;
 
     /**
      * Only trusted code creates a wrapper.
@@ -4497,7 +4504,7 @@ public class Collections
      * excessive casting. Package visible for use by subclass.
      * @serial the wrapped list
      */
-    final List list;
+    /*final*/ List list;
 
     /**
      * Wrap a given list.
@@ -4727,7 +4734,8 @@ public class Collections
      */
     UnmodifiableRandomAccessList fabric$util$Collections$UnmodifiableRandomAccessList$(List l)
     {
-      return fabric$util$Collections$UnmodifiableList$(l);
+      fabric$util$Collections$UnmodifiableList$(l);
+	  return this;
     }
 
     public Object $initLabels() {
@@ -4753,7 +4761,7 @@ public class Collections
      * The wrapped iterator, stored both here and in the superclass to
      * avoid excessive casting.
      */
-    private final ListIterator li;
+    private /*final*/ ListIterator li;
 
     /**
      * Only trusted code creates a wrapper.
@@ -4892,7 +4900,7 @@ public class Collections
      * The wrapped map.
      * @serial the real map
      */
-    private final Map m;
+    private /*final*/ Map m;
 
     /**
      * Cache the entry set.
@@ -5000,7 +5008,7 @@ public class Collections
       private static final class UnmodifiableMapEntry
           implements Map.Entry
       {
-        private final Map.Entry e;
+        private /*final*/ Map.Entry e;
 
         private UnmodifiableMapEntry fabric$util$Collections$UnmodifiableMapEntry$(Map.Entry e)
         {
@@ -5098,13 +5106,14 @@ public class Collections
        */
       UnmodifiableEntrySet fabric$util$Collections$UnmodifiableEntrySet$(Set s)
       {
-        return fabric$util$Collections$UnmodifiableSet$(s);
+        fabric$util$Collections$UnmodifiableSet$(s);
+		return this;
       }
 
       // The iterator must return unmodifiable map entries.
       public Iterator iterator(fabric.worker.Store store)
       {
-        return (UnmodifiableIterator) new UnmodifiableIterator@store(c.iterator(store))
+        return (UnmodifiableIterator) new UnmodifiableIterator@store()
         {
           /**
            * Obtains the next element from the underlying set of
@@ -5128,7 +5137,7 @@ public class Collections
 
             return this;
           }
-        }.fabric$util$Collections$UnmodifiableIterator$();
+        }.fabric$util$Collections$UnmodifiableIterator$(c.iterator(store));
       }
 
       // The array returned is an array of UnmodifiableMapEntry instead of
@@ -5440,7 +5449,7 @@ public class Collections
    */
   public static SortedMap unmodifiableSortedMap(Store store, SortedMap m)
   {
-    return (UnmodifiableSortedMap) new UnmodifiableSortedMap().fabric$util$Collections$UnmodifiableSortedMap$@store(m);
+    return (UnmodifiableSortedMap) new UnmodifiableSortedMap@store().fabric$util$Collections$UnmodifiableSortedMap$(m);
   }
 
   /**
@@ -5462,7 +5471,7 @@ public class Collections
      * excessive casting.
      * @serial the wrapped map
      */
-    private final SortedMap sm;
+    private /*final*/ SortedMap sm;
 
     /**
      * Wrap a given map.

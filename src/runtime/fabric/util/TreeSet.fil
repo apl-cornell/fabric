@@ -53,10 +53,11 @@ public class TreeSet extends AbstractSet
    *
    * @see Comparable
    */
-  public TreeSet TreeSet$()
+  public TreeSet fabric$util$TreeSet$()
   {
     fabric$util$AbstractSet$();
     map = (TreeMap) new TreeMap().fabric$util$TreeMap$();
+	return this;
   }
 
   /**
@@ -66,10 +67,11 @@ public class TreeSet extends AbstractSet
    *
    * @param comparator the Comparator this Set will use
    */
-  public TreeSet TreeSet$(Comparator comparator)
+  public TreeSet fabric$util$TreeSet$(Comparator comparator)
   {
     fabric$util$AbstractSet$();
     map = (TreeMap) new TreeMap().fabric$util$TreeMap$(comparator);
+	return this;
   }
 
   /**
@@ -89,6 +91,7 @@ public class TreeSet extends AbstractSet
     fabric$util$AbstractSet$();
     map = (TreeMap) new TreeMap().fabric$util$TreeMap$();
     addAll(collection);
+	return this;
   }
 
   /**
@@ -119,6 +122,7 @@ public class TreeSet extends AbstractSet
   {
     fabric$util$AbstractSet$();
     map = backingMap;
+	return this;
   }
 
   /**

@@ -59,6 +59,7 @@ public abstract class AbstractList extends AbstractCollection implements List
   protected AbstractList fabric$util$AbstractList$()
   {
     fabric$util$AbstractCollection$();
+	return this;
   }
 
   /**
@@ -287,6 +288,7 @@ while (i.hasNext())
       this.size = initSize;
       this.last = -1;
       this.knownMod = initModCount;
+	  return this;
     }
 
     // This will get inlined, since it is private.
@@ -549,7 +551,7 @@ while (i.hasNext())
     /**
      * 
      */
-    private final int index;
+    private /*final*/ int index;
 
     private int knownMod = modCount;
 
@@ -566,6 +568,7 @@ while (i.hasNext())
       this.index = index;
       position = index;
       fabric$lang$Object$();
+      return this;
     }
 
     // This will get inlined, since it is private.
@@ -759,8 +762,9 @@ while (i.hasNext())
    */
   private static class SubList extends AbstractList
   {
-    public fabric$util$AbstractList$SubList$() {
-      fabric$util$AbstractList$AbstractList$();
+    public SubList fabric$util$AbstractList$SubList$() {
+      fabric$util$AbstractList$();
+	  return this;
     }
 
     /**
@@ -770,9 +774,9 @@ while (i.hasNext())
       /**
        * 
        */
-      private final int index;
+      private /*final*/ int index;
 
-      private final ListIterator i;
+      private /*final*/ ListIterator i;
 
       private int position;
 
@@ -784,6 +788,7 @@ while (i.hasNext())
         this.index = index;
         i = backingList.listIterator(LOCAL_STORE, index + offset);
         position = index;
+		return this;
       }
 
       /**
@@ -942,9 +947,9 @@ while (i.hasNext())
 
     // Package visible, for use by iterator.
     /** The original list. */
-    final AbstractList backingList;
+    /*final*/ AbstractList backingList;
     /** The index of the first element of the sublist. */
-    final int offset;
+    /*final*/ int offset;
     /** The size of the sublist. */
     int size;
 
@@ -962,6 +967,7 @@ while (i.hasNext())
       modCount = backing.modCount;
       offset = fromIndex;
       size = toIndex - fromIndex;
+	  return this;
     }
 
     /**
@@ -1232,6 +1238,7 @@ while (i.hasNext())
     RandomAccessSubList fabric$util$AbstractList$RandomAccessSubList$(AbstractList backing, int fromIndex, int toIndex)
     {
       fabric$util$AbstractList$SubList$(backing, fromIndex, toIndex);
+	  return this;
     }
 
     public Object $initLabels() {

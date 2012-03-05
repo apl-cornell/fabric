@@ -39,8 +39,10 @@ public abstract class AbstractCollection implements Collection
   /**
    * The main constructor, for use by subclasses.
    */
-  protected AbstractCollection()
+  public AbstractCollection fabric$util$AbstractCollection$()
   {
+	fabric$lang$Object$();
+	return this;
   }
 
   /**

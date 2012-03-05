@@ -83,6 +83,7 @@ public class Random implements Serializable
   public Random fabric$util$Random$()
   {
     fabric$util$Random$(System.currentTimeMillis());
+	return this;
   }
 
   /**
@@ -95,6 +96,7 @@ public class Random implements Serializable
   {
     fabric$lang$Object$();
     setSeed(seed);
+	return this;
   }
 
   /**
