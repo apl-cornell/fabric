@@ -11,6 +11,8 @@ where
   util.Group.provider         <= {*←},
   util.GroupIterator.provider <= {*←},
 
+  FriendMap.provider <= {_→},
+
   mapserv.MapServer.provider <= mapserv.Box.provider,           mapserv.Box.provider <= mapserv.MapServer.provider,
   mapserv.MapServer.provider <= mapserv.MapImage.provider, mapserv.MapImage.provider <= mapserv.MapServer.provider
 {
@@ -21,7 +23,7 @@ where
 
       final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
 
-      final FriendMap[{*→fmStore}]{} app = new FriendMap[{*→fmStore}]@fmStore (mapserv);
+      final FriendMap[{*→fmStore}] app = new FriendMap[{*→fmStore}]{}@fmStore (mapserv);
 
       store.getRoot().put("friendmap", app);
     }
