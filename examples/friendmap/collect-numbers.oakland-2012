@@ -1,0 +1,195 @@
+#!/bin/bash
+
+# This script is very non-portable.
+# 
+# It's only intended to work with Jed's setup
+# when run from the friendmap directory.
+
+FRIENDMAP_STORE_DUMP_CLEAN=/tmp/friendmap-store-dump-clean
+SNAPP_STORE_DUMP_CLEAN=/tmp/snapp-store-dump-clean
+MAPSERV_STORE_DUMP_CLEAN=/tmp/mapserv-store-dump-clean
+ALICE_STORE_DUMP_CLEAN=/tmp/alice-store-dump-clean
+BOB_STORE_DUMP_CLEAN=/tmp/bob-store-dump-clean
+MASTER_LOG_CLEAN=/tmp/master-log-clean
+
+FRIENDMAP_STORE_DUMP_CACHED=/tmp/friendmap-store-dump-cached
+SNAPP_STORE_DUMP_CACHED=/tmp/snapp-store-dump-cached
+MAPSERV_STORE_DUMP_CACHED=/tmp/mapserv-store-dump-cached
+ALICE_STORE_DUMP_CACHED=/tmp/alice-store-dump-cached
+BOB_STORE_DUMP_CACHED=/tmp/bob-store-dump-cached
+MASTER_LOG_CACHED=/tmp/master-log-cached
+
+function waitForUser() {
+  INPUT=
+  while [[ "${INPUT}" != "ready" ]] ; do
+    echo -n 'Type "ready" when ready: '
+    read -r INPUT
+  done
+}
+
+# Make a clean build.
+ant clobber
+
+# Start the stores and wait a bit for them to start up.
+bin/start-all --no-shell
+sleep 3
+
+# Initialize application state.
+bin/initialize
+
+# Exit the stores.
+bin/start-worker friendmap exit
+bin/start-worker snapp exit
+bin/start-worker mapserv exit
+bin/start-worker alice exit
+bin/start-worker bob exit
+
+# Take a dump of the stores' databases
+../../bin/dump-bdb friendmap > "${FRIENDMAP_STORE_DUMP_CLEAN}"
+../../bin/dump-bdb snapp > "${SNAPP_STORE_DUMP_CLEAN}"
+../../bin/dump-bdb mapserv > "${MAPSERV_STORE_DUMP_CLEAN}"
+../../bin/dump-bdb alice > "${ALICE_STORE_DUMP_CLEAN}"
+../../bin/dump-bdb bob > "${BOB_STORE_DUMP_CLEAN}"
+
+# Clear logs and caches.
+rm -rf var/log var/cache
+
+# Start the stores again.
+bin/start-all --no-shell
+sleep 3
+
+# Run the application.
+bin/friendmap
+
+# Exit the stores.
+bin/start-worker friendmap exit
+bin/start-worker snapp exit
+bin/start-worker mapserv exit
+bin/start-worker alice exit
+bin/start-worker bob exit
+
+# Collect timing stats.
+cat var/log/* > "${MASTER_LOG_CLEAN}"
+
+# Take a dump of the stores' databases
+../../bin/dump-bdb friendmap > "${FRIENDMAP_STORE_DUMP_CACHED}"
+../../bin/dump-bdb snapp > "${SNAPP_STORE_DUMP_CACHED}"
+../../bin/dump-bdb mapserv > "${MAPSERV_STORE_DUMP_CACHED}"
+../../bin/dump-bdb alice > "${ALICE_STORE_DUMP_CACHED}"
+../../bin/dump-bdb bob > "${BOB_STORE_DUMP_CACHED}"
+
+# Clear logs, but keep caches.
+rm -rf var/log
+
+# Start the stores again.
+bin/start-all --no-shell
+sleep 3
+
+# Run the application.
+bin/friendmap
+
+# Exit the stores.
+bin/start-worker friendmap exit
+bin/start-worker snapp exit
+bin/start-worker mapserv exit
+bin/start-worker alice exit
+bin/start-worker bob exit
+
+# Report for clean run.
+echo '############### STATS FOR DYNAMIC COMPILATION RUN ###############'
+
+# Report timings.
+~/work/fabric/bin/timing-oakland-2012 "${MASTER_LOG_CLEAN}"
+
+# Report stats on objects created and modified.
+echo Object stats:
+echo -n '  friendmap: '
+diff -u "${FRIENDMAP_STORE_DUMP_CLEAN}" "${FRIENDMAP_STORE_DUMP_CACHED}" \
+  | diffstat -bms \
+  | sed 's/^ 1 file changed, /  /'
+echo -n '      snapp: '
+diff -u "${SNAPP_STORE_DUMP_CLEAN}" "${SNAPP_STORE_DUMP_CACHED}" \
+  | diffstat -bms \
+  | sed 's/^ 1 file changed, /  /'
+echo -n '    mapserv: '
+diff -u "${MAPSERV_STORE_DUMP_CLEAN}" "${MAPSERV_STORE_DUMP_CACHED}" \
+  | diffstat -bms \
+  | sed 's/^ 1 file changed, /  /'
+echo -n '      alice: '
+diff -u "${ALICE_STORE_DUMP_CLEAN}" "${ALICE_STORE_DUMP_CACHED}" \
+  | diffstat -bms \
+  | sed 's/^ 1 file changed, /  /'
+echo -n '        bob: '
+diff -u "${BOB_STORE_DUMP_CLEAN}" "${BOB_STORE_DUMP_CACHED}" \
+  | diffstat -bms \
+  | sed 's/^ 1 file changed, /  /'
+
+# Report stats on objects created and modified by class.
+echo
+echo Objects created or modified by class:
+(
+  diff -u "${FRIENDMAP_STORE_DUMP_CLEAN}" "${FRIENDMAP_STORE_DUMP_CACHED}"
+  diff -u "${SNAPP_STORE_DUMP_CLEAN}" "${SNAPP_STORE_DUMP_CACHED}"
+  diff -u "${MAPSERV_STORE_DUMP_CLEAN}" "${MAPSERV_STORE_DUMP_CACHED}"
+  diff -u "${ALICE_STORE_DUMP_CLEAN}" "${ALICE_STORE_DUMP_CACHED}"
+  diff -u "${BOB_STORE_DUMP_CLEAN}" "${BOB_STORE_DUMP_CACHED}"
+) | grep '^+[1-9]' \
+  | sed 's/^[^,]*,\([^,]*\),.*$/\1/' \
+  | sort \
+  | uniq -c
+
+# Report for cached run.
+echo
+echo '################# STATS FOR LOCALLY CACHED RUN ##################'
+
+# Report timings.
+cat var/log/* > "${MASTER_LOG_CACHED}"
+~/work/fabric/bin/timing-oakland-2012 "${MASTER_LOG_CACHED}"
+
+# Report stats on objects created and modified.
+echo Object stats:
+echo -n '  friendmap: '
+../../bin/dump-bdb friendmap 2>/dev/null \
+  | diff -u "${FRIENDMAP_STORE_DUMP_CACHED}" - \
+  | diffstat -bms \
+  | sed 's/^ 1 file changed, /  /'
+echo -n '      snapp: '
+../../bin/dump-bdb snapp 2>/dev/null \
+  | diff -u "${SNAPP_STORE_DUMP_CACHED}" - \
+  | diffstat -bms \
+  | sed 's/^ 1 file changed, /  /'
+echo -n '    mapserv: '
+../../bin/dump-bdb mapserv 2>/dev/null \
+  | diff -u "${MAPSERV_STORE_DUMP_CACHED}" - \
+  | diffstat -bms \
+  | sed 's/^ 1 file changed, /  /'
+echo -n '      alice: '
+../../bin/dump-bdb alice 2>/dev/null \
+  | diff -u "${ALICE_STORE_DUMP_CACHED}" - \
+  | diffstat -bms \
+  | sed 's/^ 1 file changed, /  /'
+echo -n '        bob: '
+../../bin/dump-bdb bob 2>/dev/null \
+  | diff -u "${BOB_STORE_DUMP_CACHED}" - \
+  | diffstat -bms \
+  | sed 's/^ 1 file changed, /  /'
+
+# Report stats on objects created and modified by class.
+echo
+echo Objects created or modified by class:
+(
+  ../../bin/dump-bdb friendmap 2>/dev/null \
+    | diff -u "${FRIENDMAP_STORE_DUMP_CACHED}" -
+  ../../bin/dump-bdb snapp 2>/dev/null \
+    | diff -u "${SNAPP_STORE_DUMP_CACHED}" -
+  ../../bin/dump-bdb mapserv 2>/dev/null \
+    | diff -u "${MAPSERV_STORE_DUMP_CACHED}" -
+  ../../bin/dump-bdb alice 2>/dev/null \
+    | diff -u "${ALICE_STORE_DUMP_CACHED}" -
+  ../../bin/dump-bdb bob 2>/dev/null \
+    | diff -u "${BOB_STORE_DUMP_CACHED}" -
+) | grep '^+[1-9]' \
+  | sed 's/^[^,]*,\([^,]*\),.*$/\1/' \
+  | sort \
+  | uniq -c
+
