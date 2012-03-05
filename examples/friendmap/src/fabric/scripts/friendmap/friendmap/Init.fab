@@ -21,7 +21,7 @@ where
 
       final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
 
-      final FriendMap[{*→fmStore}] app = new FriendMap[{*→fmStore}] (mapserv);
+      final FriendMap[{*→fmStore}]{} app = new FriendMap[{*→fmStore}]@fmStore (mapserv);
 
       store.getRoot().put("friendmap", app);
     }
