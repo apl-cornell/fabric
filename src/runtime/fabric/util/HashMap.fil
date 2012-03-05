@@ -135,9 +135,9 @@ public class HashMap extends AbstractMap
      * @param key the key
      * @param value the value
      */
-    HashEntry HashEntry$(Object key, Object value)
+    HashEntry fabric$util$HashMap$HashEntry$(Object key, Object value)
     {
-      BasicMapEntry$(key, value);
+      fabric$util$AbstractMap$BasicMapEntry$(key, value);
 	  return this;
     }
 
@@ -176,9 +176,9 @@ public class HashMap extends AbstractMap
    * Construct a new HashMap with the default capacity (11) and the default
    * load factor (0.75).
    */
-  public HashMap HashMap$()
+  public HashMap fabric$util$HashMap$()
   {
-    HashMap$(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR);
+    fabric$util$HashMap$(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR);
 	return this;
   }
 
@@ -193,9 +193,9 @@ public class HashMap extends AbstractMap
    *        <b>NOTE: key / value pairs are not cloned in this constructor.</b>
    * @throws NullPointerException if m is null
    */
-  public HashMap HashMap$(Map m)
+  public HashMap fabric$util$HashMap$(Map m)
   {
-    HashMap$(Math.max(m.size() * 2, DEFAULT_CAPACITY), DEFAULT_LOAD_FACTOR);
+    fabric$util$HashMap$(Math.max(m.size() * 2, DEFAULT_CAPACITY), DEFAULT_LOAD_FACTOR);
     putAll(m);
 	return this;
   }
@@ -207,9 +207,9 @@ public class HashMap extends AbstractMap
    * @param initialCapacity the initial capacity of this HashMap (&gt;=0)
    * @throws IllegalArgumentException if (initialCapacity &lt; 0)
    */
-  public HashMap HashMap$(int initialCapacity)
+  public HashMap fabric$util$HashMap$(int initialCapacity)
   {
-    HashMap$(initialCapacity, DEFAULT_LOAD_FACTOR);
+    fabric$util$HashMap$(initialCapacity, DEFAULT_LOAD_FACTOR);
 	return this;
   }
 
@@ -221,9 +221,9 @@ public class HashMap extends AbstractMap
    * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
    *                                     ! (loadFactor &gt; 0.0)
    */
-  public HashMap HashMap$(int initialCapacity, float loadFactor)
+  public HashMap fabric$util$HashMap$(int initialCapacity, float loadFactor)
   {
-	AbstractMap$();	
+      fabric$util$AbstractMap$();	
     if (initialCapacity < 0)
       throw new IllegalArgumentException("Illegal Capacity: "
                                          + initialCapacity);
@@ -525,7 +525,7 @@ public class HashMap extends AbstractMap
 
 	  return this;
 	}
-      }.AbstractSet$();
+      }.fabric$util$AbstractSet$();
     return keys;
   }
 
@@ -571,7 +571,7 @@ public class HashMap extends AbstractMap
 
 	  return this;
 	}
-      }.AbstractCollection$();
+      }.fabric$util$AbstractCollection$();
     return values;
   }
 
@@ -636,7 +636,7 @@ public class HashMap extends AbstractMap
 
 	  return this;
 	}
-      }.AbstractSet$();
+      }.fabric$util$AbstractSet$();
     return entries;
   }
 
@@ -652,7 +652,7 @@ public class HashMap extends AbstractMap
    */
   void addEntry(Object key, Object value, int idx, boolean callRemove)
   {
-    HashEntry e = (HashEntry) new HashEntry(key, value).HashEntry$();
+    HashEntry e = (HashEntry) new HashEntry(key, value).fabric$util$HashMap$HashEntry$();
     e.next = buckets[idx];
     buckets[idx] = e;
   }
@@ -704,7 +704,7 @@ public class HashMap extends AbstractMap
    */
   Iterator iterator(fabric.worker.Store store, int type)
   {
-    return (HashIterator) new HashIterator@store(type).HashIterator$();
+    return (HashIterator) new HashIterator@store(type).fabric$util$HashMap$HashIterator$();
   }
 
   /**
@@ -852,9 +852,9 @@ public class HashMap extends AbstractMap
      * Construct a new HashIterator with the supplied type.
      * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
      */
-    HashIterator HashIterator$(int type)
+    HashIterator fabric$util$HashMap$HashIterator$(int type)
     {
-	  Object$();
+	  fabric$lang$Object$();
       this.type = type;
       this.knownMod = modCount;
       this.count = size;

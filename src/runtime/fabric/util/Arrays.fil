@@ -2311,7 +2311,7 @@ public class Arrays
    */
   public static List asList(final Object[] a)
   {
-    return (Arrays.ArrayList) new Arrays.ArrayList(a).$initLabels();
+    return (Arrays.ArrayList) new Arrays.ArrayList().fabric$util$ArrayList$(a);
   }
 
   /** 
@@ -2859,7 +2859,7 @@ public class Arrays
   {
     if (v == null)
       return "null";
-    HashSet seen = (HashSet) new HashSet().$initLabels();
+    HashSet seen = (HashSet) new HashSet().fabric$util$HashSet$();
     StringBuilder b = new StringBuilder();
     deepToString(v, b, seen);
     return b.toString();
