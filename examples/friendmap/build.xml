@@ -116,25 +116,25 @@
   </target>
 
   <target name="build-local-scripts-snapp" depends="build-local-friendmap">
-    <fabc-local srcdir="${home}/src/fabric/scripts/snapp"     dstdir="${home}/classes/snapp"     >
+    <fabc-local srcdir="${home}/src/fabric/scripts/snapp"     dstdir="${home}/classes"     >
     </fabc-local>
   </target>
 
   <target name="build-local-scripts-mapserv" depends="build-local-friendmap">
-    <fabc-local srcdir="${home}/src/fabric/scripts/mapserv"     dstdir="${home}/classes/mapserv"     />
+    <fabc-local srcdir="${home}/src/fabric/scripts/mapserv"     dstdir="${home}/classes"     />
   </target>
 
   <target name="build-local-scripts-friendmap" depends="build-local-friendmap">
-    <fabc-local srcdir="${home}/src/fabric/scripts/friendmap"     dstdir="${home}/classes/friendmap"     />
+    <fabc-local srcdir="${home}/src/fabric/scripts/friendmap"     dstdir="${home}/classes"     />
   </target>
 
   <target name="build-local-scripts-alice" depends="build-local-friendmap">
-    <fabc-local srcdir="${home}/src/fabric/scripts/alice"     dstdir="${home}/classes/alice"     >
+    <fabc-local srcdir="${home}/src/fabric/scripts/alice"     dstdir="${home}/classes"     >
     </fabc-local>
   </target>
 
   <target name="build-local-scripts-bob" depends="build-local-friendmap">
-    <fabc-local srcdir="${home}/src/fabric/scripts/bob"     dstdir="${home}/classes/bob"     />
+    <fabc-local srcdir="${home}/src/fabric/scripts/bob"     dstdir="${home}/classes"     />
   </target>
 
   <target name="build-local-scripts" depends="build-local-scripts-snapp,
