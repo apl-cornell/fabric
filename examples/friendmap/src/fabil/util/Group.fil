@@ -192,10 +192,10 @@ public class Group extends Delegator
             if (proof != null) {
               DelegatesProof delProof =
                 (DelegatesProof)
-                  new DelegatesProof@s(m, this).$initLabels();
+                  new DelegatesProof@s().fabric$lang$security$DelegatesProof$(m, this);
                 return
                   (TransitiveProof)
-                    new TransitiveProof@s(proof, m, delProof).$initLabels();
+                    new TransitiveProof@s().fabric$lang$security$TransitiveProof$(proof, m, delProof);
             }
           }
           else

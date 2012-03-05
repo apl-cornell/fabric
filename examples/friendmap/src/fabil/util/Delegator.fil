@@ -26,10 +26,6 @@ public class Delegator extends AbstractPrincipal {
     return this;
   }
 
-  public Delegator() {
-    super();
-  }
-
   private void jif$init$() {}
 
   //////////////////////////////////////////////////////////////////////////////
@@ -57,10 +53,10 @@ public class Delegator extends AbstractPrincipal {
         Label proofParam = LabelUtil.toLabel(s, conf, integ);
 
         DelegatesProof dp =
-          (DelegatesProof) new DelegatesProof@s(owner, this).$initLabels();
+          (DelegatesProof) new DelegatesProof@s().fabric$lang$security$DelegatesProof$(owner, this);
         return
           (TransitiveProof)
-            new TransitiveProof@s(proof, owner, dp).$initLabels();
+            new TransitiveProof@s().fabric$lang$security$TransitiveProof$(proof, owner, dp);
       } else
         return null;
 
