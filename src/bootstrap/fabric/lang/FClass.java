@@ -4,12 +4,27 @@ public interface FClass extends fabric.lang.Object {
     
     public fabric.lang.Codebase get$codebase();
     
+    public fabric.lang.Codebase set$codebase(fabric.lang.Codebase val);
+    
     public java.lang.String get$name();
+    
+    public java.lang.String set$name(java.lang.String val);
     
     public java.lang.String get$source();
     
+    public java.lang.String set$source(java.lang.String val);
+    
     public fabric.lang.arrays.byteArray get$bytecode();
-        
+    
+    public fabric.lang.arrays.byteArray set$bytecode(
+      fabric.lang.arrays.byteArray val);
+    
+    public fabric.lang.FClass fabric$lang$FClass$(
+      fabric.lang.security.Label updateLabel,
+      fabric.lang.security.ConfPolicy accessPolicy,
+      fabric.lang.Codebase codebase, java.lang.String name,
+      java.lang.String source, fabric.lang.arrays.byteArray bytecode);
+    
     public fabric.lang.Codebase getCodebase();
     
     public java.lang.String getName();
@@ -17,19 +32,36 @@ public interface FClass extends fabric.lang.Object {
     public java.lang.String getSource();
     
     public fabric.lang.arrays.byteArray getBytecode();
-        
+    
+    public fabric.lang.Object $initLabels();
+    
     public static class _Proxy extends fabric.lang.Object._Proxy
       implements fabric.lang.FClass
     {
         
         native public fabric.lang.Codebase get$codebase();
         
+        native public fabric.lang.Codebase set$codebase(
+          fabric.lang.Codebase val);
+        
         native public java.lang.String get$name();
+        
+        native public java.lang.String set$name(java.lang.String val);
         
         native public java.lang.String get$source();
         
+        native public java.lang.String set$source(java.lang.String val);
+        
         native public fabric.lang.arrays.byteArray get$bytecode();
-                
+        
+        native public fabric.lang.arrays.byteArray set$bytecode(
+          fabric.lang.arrays.byteArray val);
+        
+        native public fabric.lang.FClass fabric$lang$FClass$(
+          fabric.lang.security.Label arg1, fabric.lang.security.ConfPolicy arg2,
+          fabric.lang.Codebase arg3, java.lang.String arg4,
+          java.lang.String arg5, fabric.lang.arrays.byteArray arg6);
+        
         native public fabric.lang.Codebase getCodebase();
         
         native public java.lang.String getName();
@@ -37,7 +69,9 @@ public interface FClass extends fabric.lang.Object {
         native public java.lang.String getSource();
         
         native public fabric.lang.arrays.byteArray getBytecode();
-                
+        
+        native public fabric.lang.Object $initLabels();
+        
         public _Proxy(FClass._Impl impl) { super(impl); }
         
         public _Proxy(fabric.worker.Store store, long onum) {
@@ -51,20 +85,27 @@ public interface FClass extends fabric.lang.Object {
         
         native public fabric.lang.Codebase get$codebase();
         
+        native public fabric.lang.Codebase set$codebase(
+          fabric.lang.Codebase val);
+        
         native public java.lang.String get$name();
+        
+        native public java.lang.String set$name(java.lang.String val);
         
         native public java.lang.String get$source();
         
+        native public java.lang.String set$source(java.lang.String val);
+        
         native public fabric.lang.arrays.byteArray get$bytecode();
-                
-        public _Impl(fabric.worker.Store $location,
-                     fabric.lang.security.Label label,
-                     fabric.lang.security.ConfPolicy accessPolicy,
-                     fabric.lang.Codebase codebase, java.lang.String name,
-                     java.lang.String source,
-                     fabric.lang.arrays.byteArray bytecode) {
-            super($location);
-        }
+        
+        native public fabric.lang.arrays.byteArray set$bytecode(
+          fabric.lang.arrays.byteArray val);
+        
+        native public fabric.lang.FClass fabric$lang$FClass$(
+          fabric.lang.security.Label updateLabel,
+          fabric.lang.security.ConfPolicy accessPolicy,
+          fabric.lang.Codebase codebase, java.lang.String name,
+          java.lang.String source, fabric.lang.arrays.byteArray bytecode);
         
         native public fabric.lang.Codebase getCodebase();
         
@@ -73,7 +114,11 @@ public interface FClass extends fabric.lang.Object {
         native public java.lang.String getSource();
         
         native public fabric.lang.arrays.byteArray getBytecode();
-                
+        
+        native public fabric.lang.Object $initLabels();
+        
+        public _Impl(fabric.worker.Store $location) { super($location); }
+        
         native protected fabric.lang.Object._Proxy $makeProxy();
         
         native public void $serialize(java.io.ObjectOutput out,

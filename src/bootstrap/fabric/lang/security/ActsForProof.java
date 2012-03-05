@@ -4,7 +4,17 @@ public interface ActsForProof extends fabric.lang.Object {
     
     public fabric.lang.security.Principal get$actor();
     
+    public fabric.lang.security.Principal set$actor(
+      fabric.lang.security.Principal val);
+    
     public fabric.lang.security.Principal get$granter();
+    
+    public fabric.lang.security.Principal set$granter(
+      fabric.lang.security.Principal val);
+    
+    public fabric.lang.security.ActsForProof fabric$lang$security$ActsForProof$(
+      fabric.lang.security.Principal actor,
+      fabric.lang.security.Principal granter);
     
     public fabric.lang.security.Principal getActor();
     
@@ -18,7 +28,18 @@ public interface ActsForProof extends fabric.lang.Object {
         
         native public fabric.lang.security.Principal get$actor();
         
+        native public fabric.lang.security.Principal set$actor(
+          fabric.lang.security.Principal val);
+        
         native public fabric.lang.security.Principal get$granter();
+        
+        native public fabric.lang.security.Principal set$granter(
+          fabric.lang.security.Principal val);
+        
+        native public fabric.lang.security.ActsForProof
+          fabric$lang$security$ActsForProof$(
+          fabric.lang.security.Principal arg1,
+          fabric.lang.security.Principal arg2);
         
         native public fabric.lang.security.Principal getActor();
         
@@ -39,19 +60,26 @@ public interface ActsForProof extends fabric.lang.Object {
         
         native public fabric.lang.security.Principal get$actor();
         
+        native public fabric.lang.security.Principal set$actor(
+          fabric.lang.security.Principal val);
+        
         native public fabric.lang.security.Principal get$granter();
         
-        _Impl(fabric.worker.Store $location,
-              fabric.lang.security.Principal actor,
-              fabric.lang.security.Principal granter) {
-            super($location);
-        }
+        native public fabric.lang.security.Principal set$granter(
+          fabric.lang.security.Principal val);
+        
+        native public fabric.lang.security.ActsForProof
+          fabric$lang$security$ActsForProof$(
+          fabric.lang.security.Principal actor,
+          fabric.lang.security.Principal granter);
         
         native public fabric.lang.security.Principal getActor();
         
         native public fabric.lang.security.Principal getGranter();
         
         abstract public void gatherDelegationDependencies(java.util.Set s);
+        
+        public _Impl(fabric.worker.Store $location) { super($location); }
         
         native protected fabric.lang.Object._Proxy $makeProxy();
         
@@ -62,13 +90,13 @@ public interface ActsForProof extends fabric.lang.Object {
               throws java.io.IOException;
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, long label, long accessLabel, java.io.ObjectInput in,
-                     java.util.Iterator refTypes,
+                     long expiry, long label, long accessLabel,
+                     java.io.ObjectInput in, java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-                  intraStoreRefs);
+            super(store, onum, version, expiry, label, accessLabel, in,
+                  refTypes, intraStoreRefs);
         }
         
         native public void $copyAppStateFrom(fabric.lang.Object._Impl other);

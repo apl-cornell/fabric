@@ -1,8 +1,5 @@
 package fabric.lang;
 
-import fabric.lang.security.ConfPolicy;
-import fabric.lang.security.Label;
-
 public interface Codebase extends fabric.lang.Object {
     
     public fabric.util.Map get$classes();
@@ -17,11 +14,22 @@ public interface Codebase extends fabric.lang.Object {
     
     public fabric.lang.Codebase resolveCodebaseName(java.lang.String name);
     
-    void addCodebaseName(java.lang.String name, fabric.lang.Codebase codebase);
-
+    public void addCodebaseName(java.lang.String name,
+                                fabric.lang.Codebase codebase);
+    
+    public fabric.lang.Codebase fabric$lang$Codebase$(
+      fabric.lang.security.Label updateLabel,
+      fabric.lang.security.ConfPolicy accessPolicy);
+    
+    public fabric.lang.Codebase fabric$lang$Codebase$(
+      fabric.lang.security.Label updateLabel,
+      fabric.lang.security.ConfPolicy accessPolicy, fabric.util.Map classes);
+    
     public void insertClass(java.lang.String name, fabric.lang.FClass fcls);
     
     public fabric.util.Map getClasses();
+    
+    public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
       implements fabric.lang.Codebase
@@ -41,13 +49,23 @@ public interface Codebase extends fabric.lang.Object {
         native public fabric.lang.Codebase resolveCodebaseName(
           java.lang.String arg1);
         
-    native public void addCodebaseName(java.lang.String name,
-        fabric.lang.Codebase codebase);
-
+        native public void addCodebaseName(java.lang.String arg1,
+                                           fabric.lang.Codebase arg2);
+        
+        native public fabric.lang.Codebase fabric$lang$Codebase$(
+          fabric.lang.security.Label arg1,
+          fabric.lang.security.ConfPolicy arg2);
+        
+        native public fabric.lang.Codebase fabric$lang$Codebase$(
+          fabric.lang.security.Label arg1, fabric.lang.security.ConfPolicy arg2,
+          fabric.util.Map arg3);
+        
         native public void insertClass(java.lang.String arg1,
                                        fabric.lang.FClass arg2);
         
         native public fabric.util.Map getClasses();
+        
+        native public fabric.lang.Object $initLabels();
         
         public _Proxy(Codebase._Impl impl) { super(impl); }
         
@@ -75,22 +93,25 @@ public interface Codebase extends fabric.lang.Object {
           java.lang.String name);
         
         native public void addCodebaseName(java.lang.String name,
-            fabric.lang.Codebase codebase);
-
-        public _Impl(fabric.worker.Store $location, Label updateLabel,
-                     ConfPolicy accessPolicy) {
-            super($location);
-        }
+                                           fabric.lang.Codebase codebase);
         
-        public _Impl(fabric.worker.Store $location, Label updateLabel,
-                     ConfPolicy accessPolicy, fabric.util.Map classes) {
-            super($location);
-        }
+        native public fabric.lang.Codebase fabric$lang$Codebase$(
+          fabric.lang.security.Label updateLabel,
+          fabric.lang.security.ConfPolicy accessPolicy);
+        
+        native public fabric.lang.Codebase fabric$lang$Codebase$(
+          fabric.lang.security.Label updateLabel,
+          fabric.lang.security.ConfPolicy accessPolicy,
+          fabric.util.Map classes);
         
         native public void insertClass(java.lang.String name,
                                        fabric.lang.FClass fcls);
         
         native public fabric.util.Map getClasses();
+        
+        native public fabric.lang.Object $initLabels();
+        
+        public _Impl(fabric.worker.Store $location) { super($location); }
         
         native protected fabric.lang.Object._Proxy $makeProxy();
         

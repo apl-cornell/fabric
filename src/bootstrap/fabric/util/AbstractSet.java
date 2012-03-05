@@ -1,47 +1,50 @@
-package fabric.lang.security;
+package fabric.util;
 
-public interface AbstractPolicy
-  extends fabric.lang.security.Policy, fabric.lang.Object
+public interface AbstractSet
+  extends fabric.util.Set, fabric.util.AbstractCollection
 {
     
-    public fabric.lang.security.AbstractPolicy
-      fabric$lang$security$AbstractPolicy$();
+    public fabric.util.AbstractSet fabric$util$AbstractSet$();
     
-    abstract public boolean equals(fabric.lang.Object that);
+    public boolean equals(fabric.lang.Object o);
     
-    abstract public int hashCode();
+    public int hashCode();
     
-    public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.AbstractPolicy
+    public boolean removeAll(fabric.util.Collection c);
+    
+    public fabric.util.Iterator iterator();
+    
+    public static class _Proxy extends fabric.util.AbstractCollection._Proxy
+      implements fabric.util.AbstractSet
     {
         
-        native public fabric.lang.security.AbstractPolicy
-          fabric$lang$security$AbstractPolicy$();
+        native public fabric.util.AbstractSet fabric$util$AbstractSet$();
         
         native public boolean equals(fabric.lang.Object arg1);
         
         native public int hashCode();
         
-        native public boolean relabelsTo(fabric.lang.security.Policy arg1,
-                                         java.util.Set arg2);
-        
-        public _Proxy(AbstractPolicy._Impl impl) { super(impl); }
+        public _Proxy(AbstractSet._Impl impl) { super(impl); }
         
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }
     }
     
-    abstract public static class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.security.AbstractPolicy
+    abstract public static class _Impl
+    extends fabric.util.AbstractCollection._Impl
+      implements fabric.util.AbstractSet
     {
         
-        native public fabric.lang.security.AbstractPolicy
-          fabric$lang$security$AbstractPolicy$();
+        native public fabric.util.AbstractSet fabric$util$AbstractSet$();
         
-        abstract public boolean equals(fabric.lang.Object that);
+        native public boolean equals(fabric.lang.Object o);
         
-        abstract public int hashCode();
+        native public int hashCode();
+        
+        native public boolean removeAll(fabric.util.Collection c);
+        
+        native public fabric.util.Iterator iterator();
         
         public _Impl(fabric.worker.Store $location) { super($location); }
         
@@ -66,11 +69,10 @@ public interface AbstractPolicy
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.AbstractPolicy._Static
+          implements fabric.util.AbstractSet._Static
         {
             
-            public _Proxy(fabric.lang.security.AbstractPolicy._Static.
-                            _Impl impl) {
+            public _Proxy(fabric.util.AbstractSet._Static._Impl impl) {
                 super(impl);
             }
             
@@ -80,7 +82,7 @@ public interface AbstractPolicy
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.AbstractPolicy._Static
+          implements fabric.util.AbstractSet._Static
         {
             
             public _Impl(fabric.worker.Store store)

@@ -7,12 +7,8 @@ public interface Label extends fabric.lang.Object {
     fabric.lang.security.Label join(fabric.worker.Store store,
                                     fabric.lang.security.Label l);
     
-    fabric.lang.security.Label join(fabric.lang.security.Label l);
-    
     fabric.lang.security.Label meet(fabric.worker.Store store,
                                     fabric.lang.security.Label l);
-    
-    fabric.lang.security.Label meet(fabric.lang.security.Label l);
     
     fabric.lang.security.ConfPolicy confPolicy();
     
@@ -30,14 +26,8 @@ public interface Label extends fabric.lang.Object {
         native public fabric.lang.security.Label join(
           fabric.worker.Store arg1, fabric.lang.security.Label arg2);
         
-        native public fabric.lang.security.Label join(
-          fabric.lang.security.Label arg1);
-        
         native public fabric.lang.security.Label meet(
           fabric.worker.Store arg1, fabric.lang.security.Label arg2);
-        
-        native public fabric.lang.security.Label meet(
-          fabric.lang.security.Label arg1);
         
         native public fabric.lang.security.ConfPolicy confPolicy();
         

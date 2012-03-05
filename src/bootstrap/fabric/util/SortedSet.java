@@ -1,40 +1,36 @@
 package fabric.util;
 
-public interface Collection extends fabric.util.Iterable, fabric.lang.Object {
+public interface SortedSet extends fabric.util.Set, fabric.lang.Object {
     
-    boolean add(fabric.lang.Object o);
+    fabric.util.Comparator comparator();
     
-    boolean addAll(fabric.util.Collection c);
+    fabric.lang.Object first();
     
-    void clear();
+    fabric.util.SortedSet headSet(fabric.lang.Object toElement);
     
-    boolean contains(fabric.lang.Object o);
+    fabric.lang.Object last();
     
-    boolean containsAll(fabric.util.Collection c);
+    fabric.util.SortedSet subSet(fabric.lang.Object fromElement,
+                                 fabric.lang.Object toElement);
     
-    boolean equals(fabric.lang.Object o);
-    
-    int hashCode();
-    
-    boolean isEmpty();
-    
-    fabric.util.Iterator iterator(fabric.worker.Store store);
-    
-    boolean remove(fabric.lang.Object o);
-    
-    boolean removeAll(fabric.util.Collection c);
-    
-    boolean retainAll(fabric.util.Collection c);
-    
-    int size();
-    
-    fabric.lang.arrays.ObjectArray toArray();
-    
-    fabric.lang.arrays.ObjectArray toArray(fabric.lang.arrays.ObjectArray a);
+    fabric.util.SortedSet tailSet(fabric.lang.Object fromElement);
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.util.Collection
+      implements fabric.util.SortedSet
     {
+        
+        native public fabric.util.Comparator comparator();
+        
+        native public fabric.lang.Object first();
+        
+        native public fabric.util.SortedSet headSet(fabric.lang.Object arg1);
+        
+        native public fabric.lang.Object last();
+        
+        native public fabric.util.SortedSet subSet(fabric.lang.Object arg1,
+                                                   fabric.lang.Object arg2);
+        
+        native public fabric.util.SortedSet tailSet(fabric.lang.Object arg1);
         
         native public boolean add(fabric.lang.Object arg1);
         
@@ -54,6 +50,8 @@ public interface Collection extends fabric.util.Iterable, fabric.lang.Object {
         
         native public fabric.util.Iterator iterator(fabric.worker.Store arg1);
         
+        native public fabric.util.Iterator iterator();
+        
         native public boolean remove(fabric.lang.Object arg1);
         
         native public boolean removeAll(fabric.util.Collection arg1);
@@ -66,8 +64,6 @@ public interface Collection extends fabric.util.Iterable, fabric.lang.Object {
         
         native public fabric.lang.arrays.ObjectArray toArray(
           fabric.lang.arrays.ObjectArray arg1);
-        
-        native public fabric.util.Iterator iterator();
         
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
