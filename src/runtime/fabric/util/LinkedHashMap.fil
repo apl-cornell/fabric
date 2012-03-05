@@ -108,9 +108,9 @@ public class LinkedHashMap extends HashMap
      * @param key the key
      * @param value the value
      */
-    LinkedHashEntry LinkedHashEntry$(Object key, Object value)
+    LinkedHashEntry fabric$util$LinkedHashMap$LinkedHashEntry$(Object key, Object value)
     {
-      HashEntry$(key, value);
+      fabric$util$HashEntry$(key, value);
       if (root == null)
         {
           root = this;
@@ -122,7 +122,7 @@ public class LinkedHashMap extends HashMap
           pred.succ = this;
           root.pred = this;
         }
-		return this;
+      return this;
     }
 
     /**
@@ -195,11 +195,11 @@ public class LinkedHashMap extends HashMap
    * Construct a new insertion-ordered LinkedHashMap with the default
    * capacity (11) and the default load factor (0.75).
    */
-  public LinkedHashMap LinkedHashMap$()
+  public LinkedHashMap fabric$util$LinkedHashMap$()
   {
-    HashMap$();
+    fabric$util$HashMap$();
     accessOrder = false;
-	return this;
+    return this;
   }
 
   /**
@@ -216,11 +216,11 @@ public class LinkedHashMap extends HashMap
    *          are not cloned in this constructor.</b>
    * @throws NullPointerException if m is null
    */
-  public LinkedHashMap LinkedHashMap$(Map m)
+  public LinkedHashMap fabric$util$LinkedHashMap$(Map m)
   {
-    HashMap$(m);
+    fabric$util$HashMap$(m);
     accessOrder = false;
-	return this;
+    return this;
   }
 
   /**
@@ -230,11 +230,11 @@ public class LinkedHashMap extends HashMap
    * @param initialCapacity the initial capacity of this HashMap (&gt;= 0)
    * @throws IllegalArgumentException if (initialCapacity &lt; 0)
    */
-  public LinkedHashMap LinkedHashMap$(int initialCapacity)
+  public LinkedHashMap fabric$util$LinkedHashMap$(int initialCapacity)
   {
-    HashMap$(initialCapacity);
+    fabric$util$HashMap$(initialCapacity);
     accessOrder = false;
-	return this;
+    return this;
   }
 
   /**
@@ -246,11 +246,11 @@ public class LinkedHashMap extends HashMap
    * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
    *                                     ! (loadFactor &gt; 0.0)
    */
-  public LinkedHashMap LinkedHashMap$(int initialCapacity, float loadFactor)
+  public LinkedHashMap fabric$util$LinkedHashMap$(int initialCapacity, float loadFactor)
   {
-    HashMap$(initialCapacity, loadFactor);
+    fabric$util$HashMap$(initialCapacity, loadFactor);
     accessOrder = false;
-	return this;
+    return this;
   }
 
   /**
@@ -263,12 +263,12 @@ public class LinkedHashMap extends HashMap
    * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
    *                                     ! (loadFactor &gt; 0.0)
    */
-  public LinkedHashMap LinkedHashMap$(int initialCapacity, float loadFactor,
+  public LinkedHashMap fabric$util$LinkedHashMap$(int initialCapacity, float loadFactor,
                        boolean accessOrder)
   {
-    HashMap$(initialCapacity, loadFactor);
+    fabric$util$HashMap$(initialCapacity, loadFactor);
     this.accessOrder = accessOrder;
-	return this;
+    return this;
   }
 
   /**
@@ -386,7 +386,7 @@ public class LinkedHashMap extends HashMap
    */
   void addEntry(Object key, Object value, int idx, boolean callRemove)
   {
-    LinkedHashEntry e = (LinkedHashEntry) new LinkedHashEntry().LinkedHashEntry$(key, value);
+    LinkedHashEntry e = (LinkedHashEntry) new LinkedHashEntry().fabric$util$LinkedHashMap$LinkedHashEntry$(key, value);
     e.next = buckets[idx];
     buckets[idx] = e;
     if (callRemove && removeEldestEntry(root))
@@ -414,7 +414,7 @@ public class LinkedHashMap extends HashMap
    */
   Iterator iterator(fabric.worker.Store store, final int type)
   {
-    return (LinkedHashIterator) new LinkedHashIterator().LinkedHashIterator$@store(type);
+    return (LinkedHashIterator) new LinkedHashIterator().fabric$util$LinkedHashMap$LinkedHashIterator$@store(type);
   }
   
   private final class LinkedHashIterator implements Iterator
@@ -430,12 +430,12 @@ public class LinkedHashMap extends HashMap
     
     final int type;
     
-    LinkedHashIterator LinkedHashIterator$(int type) {
-      Object$();
+    LinkedHashIterator fabric$util$LinkedHashMap$LinkedHashIterator$(int type) {
+      fabric$lang$Object$();
       this.type = type;
       this.current = root;
       this.knownMod = modCount;
-	  return this;
+      return this;
     }
 
     /**

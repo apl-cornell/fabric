@@ -55,8 +55,8 @@ public class TreeSet extends AbstractSet
    */
   public TreeSet TreeSet$()
   {
-    AbstractSet$();
-    map = (TreeMap) new TreeMap().TreeMap$();
+    fabric$util$AbstractSet$();
+    map = (TreeMap) new TreeMap().fabric$util$TreeMap$();
   }
 
   /**
@@ -68,8 +68,8 @@ public class TreeSet extends AbstractSet
    */
   public TreeSet TreeSet$(Comparator comparator)
   {
-    AbstractSet$();
-    map = (TreeMap) new TreeMap().TreeMap$(comparator);
+    fabric$util$AbstractSet$();
+    map = (TreeMap) new TreeMap().fabric$util$TreeMap$(comparator);
   }
 
   /**
@@ -84,10 +84,10 @@ public class TreeSet extends AbstractSet
    * @throws NullPointerException if the collection is null
    * @see Comparable
    */
-  public TreeSet TreeSet$(Collection collection)
+  public TreeSet fabric$util$TreeSet$(Collection collection)
   {
-    AbstractSet$();
-    map = (TreeMap) new TreeMap().TreeMap$();
+    fabric$util$AbstractSet$();
+    map = (TreeMap) new TreeMap().fabric$util$TreeMap$();
     addAll(collection);
   }
 
@@ -100,10 +100,10 @@ public class TreeSet extends AbstractSet
    *        and will initialize itself with all its elements
    * @throws NullPointerException if sortedSet is null
    */
-  public TreeSet TreeSet$(SortedSet sortedSet)
+  public TreeSet fabric$util$TreeSet$(SortedSet sortedSet)
   {
-    AbstractSet$();
-    map = (TreeMap) new TreeMap().TreeMap$(sortedSet.comparator());
+    fabric$util$AbstractSet$();
+    map = (TreeMap) new TreeMap().fabric$util$TreeMap$(sortedSet.comparator());
     Iterator itr = sortedSet.iterator(LOCAL_STORE);
     ((TreeMap) map).putKeysLinear(itr, sortedSet.size());
 	return this;
@@ -115,9 +115,9 @@ public class TreeSet extends AbstractSet
    *
    * @param backingMap the submap
    */
-  private TreeSet TreeSet$(SortedMap backingMap)
+  private TreeSet fabric$util$TreeSet$(SortedMap backingMap)
   {
-    AbstractSet$();
+    fabric$util$AbstractSet$();
     map = backingMap;
   }
 
@@ -212,7 +212,7 @@ public class TreeSet extends AbstractSet
    */
   public SortedSet headSet(Object to)
   {
-    return (TreeSet) new TreeSet().TreeSet$(map.headMap(to));
+    return (TreeSet) new TreeSet().fabric$util$TreeSet$(map.headMap(to));
   }
 
   /**
@@ -290,7 +290,7 @@ public class TreeSet extends AbstractSet
    */
   public SortedSet subSet(Object from, Object to)
   {
-    return (TreeSet) new TreeSet().TreeSet$(map.subMap(from, to));
+    return (TreeSet) new TreeSet().fabric$util$TreeSet$(map.subMap(from, to));
   }
 
   /**
@@ -310,7 +310,7 @@ public class TreeSet extends AbstractSet
    */
   public SortedSet tailSet(Object from)
   {
-    return (TreeSet) new TreeSet().TreeSet$(map.tailMap(from));
+    return (TreeSet) new TreeSet().fabric$util$TreeSet$(map.tailMap(from));
   }
 
   public Object $initLabels() {

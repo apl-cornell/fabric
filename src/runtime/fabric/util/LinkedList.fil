@@ -74,9 +74,9 @@ public class LinkedList extends AbstractSequentialList
      * Construct an entry.
      * @param data the list element
      */
-    Entry Entry$(Object data)
+    Entry fabric$util$LinkedList$Entry$(Object data)
     {
-      Object$();
+      fabric$lang$Object$();
       this.data = data;
       return this;
     }
@@ -187,9 +187,9 @@ public class LinkedList extends AbstractSequentialList
   /**
    * Create an empty linked list.
    */
-  public LinkedList LinkedList$()
+  public LinkedList fabric$util$LinkedList$()
   {
-    AbstractSequentialList$();
+    fabric$util$AbstractSequentialList$();
     return this;
   }
 
@@ -200,9 +200,9 @@ public class LinkedList extends AbstractSequentialList
    * @param c the collection to populate this list from
    * @throws NullPointerException if c is null
    */
-  public LinkedList LinkedList$(Collection c)
+  public LinkedList fabric$util$LinkedList$(Collection c)
   {
-    AbstractSequentialList$();
+    fabric$util$AbstractSequentialList$();
     addAll(c);
     return this;
   }
@@ -288,7 +288,7 @@ public class LinkedList extends AbstractSequentialList
    */
   public void addFirst(Object o)
   {
-    Entry e = (Entry) new Entry().Entry$(o);
+    Entry e = (Entry) new Entry().fabric$util$LinkedList$Entry$(o);
 
     modCount++;
     if (size == 0)
@@ -309,7 +309,7 @@ public class LinkedList extends AbstractSequentialList
    */
   public void addLast(Object o)
   {
-    addLastEntry((Entry) new Entry().Entry$(o));
+    addLastEntry((Entry) new Entry().fabric$util$LinkedList$Entry$(o));
   }
 
   /**
@@ -368,7 +368,7 @@ public class LinkedList extends AbstractSequentialList
    */
   public boolean add(Object o)
   {
-    addLastEntry((Entry) new Entry().Entry$(o));
+    addLastEntry((Entry) new Entry().fabric$util$LinkedList$Entry$(o));
     return true;
   }
 
@@ -445,7 +445,7 @@ public class LinkedList extends AbstractSequentialList
     // to the first entry, in order to deal with the case where (c == this).
     // [Actually, we don't have to handle this case to fufill the
     // contract for addAll(), but Sun's implementation appears to.]
-    Entry e = (Entry) new Entry().Entry$(itr.next();
+    Entry e = (Entry) new Entry().fabric$util$LinkedList$Entry$(itr.next();
     e.previous = before;
     Entry prev = e;
     Entry firstNew = e;
@@ -453,7 +453,7 @@ public class LinkedList extends AbstractSequentialList
     // Create and link all the remaining entries.
     for (int pos = 1; pos < csize; pos++)
       {
-        e = (Entry) new Entry().Entry$(itr.next();
+        e = (Entry) new Entry().fabric$util$LinkedList$Entry$(itr.next();
         e.previous = prev;
         prev.next = e;
         prev = e;
@@ -529,7 +529,7 @@ public class LinkedList extends AbstractSequentialList
   public void add(int index, Object o)
   {
     checkBoundsInclusive(index);
-    Entry e = (Entry) new Entry().Entry$(o);
+    Entry e = (Entry) new Entry().fabric$util$LinkedList$Entry$(o);
 
     if (index < size)
       {
@@ -615,7 +615,7 @@ public class LinkedList extends AbstractSequentialList
   public ListIterator listIterator(fabric.worker.Store store, int index)
   {
     checkBoundsInclusive(index);
-    return (LinkedListItr) new LinkedListItr().LinkedListItr$@store(index);
+    return (LinkedListItr) new LinkedListItr@store().fabric$util$LinkedList$LinkedListItr$(index);
   }
 
 //  /**
@@ -720,7 +720,7 @@ public class LinkedList extends AbstractSequentialList
     s.defaultReadObject();
     int i = s.readInt();
     while (--i >= 0)
-      addLastEntry((Entry) new Entry().Entry$((Object) s.readObject()));
+      addLastEntry((Entry) new Entry().fabric$util$LinkedList$Entry$((Object) s.readObject()));
   }
 
   /**
@@ -752,7 +752,7 @@ public class LinkedList extends AbstractSequentialList
      *
      * @param index the initial index
      */
-    LinkedListItr LinkedListItr$(int index)
+    LinkedListItr fabric$util$LinkedList$LinkedListItr$(int index)
     {
       Object$();
       knownMod = modCount;
@@ -894,7 +894,7 @@ public class LinkedList extends AbstractSequentialList
       knownMod++;
       size++;
       position++;
-      Entry e = (Entry) new Entry().Entry$(o);
+      Entry e = (Entry) new Entry().fabric$util$LinkedList$Entry$(o);
       e.previous = previous;
       e.next = next;
 

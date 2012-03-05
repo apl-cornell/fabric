@@ -80,9 +80,9 @@ public class Random implements Serializable
    *
    * @see System#currentTimeMillis()
    */
-  public Random Random$()
+  public Random fabric$util$Random$()
   {
-    Random$(System.currentTimeMillis());
+    fabric$util$Random$(System.currentTimeMillis());
   }
 
   /**
@@ -91,9 +91,9 @@ public class Random implements Serializable
    *
    * @param seed the initial seed
    */
-  public Random Random$(long seed)
+  public Random fabric$util$Random$(long seed)
   {
-    Object$();
+    fabric$lang$Object$();
     setSeed(seed);
   }
 

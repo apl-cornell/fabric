@@ -42,9 +42,9 @@ public abstract class AbstractSequentialList extends AbstractList
   /**
    * The main constructor, for use by subclasses.
    */
-  protected AbstractSequentialList AbstractSequentialList$()
+  protected AbstractSequentialList fabric$util$AbstractSequentialList$()
   {
-    AbstractList$();
+    fabric$util$AbstractList$();
   }
 
   /**

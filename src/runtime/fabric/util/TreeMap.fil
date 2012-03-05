@@ -347,7 +347,7 @@ public class TreeMap extends AbstractMap
           return this;
         }
 
-      }.AbstractSet$();
+      }.fabric$util$AbstractSet$();
     return entries;
   }
 
@@ -458,7 +458,7 @@ public class TreeMap extends AbstractMap
 
           return this;
         }
-      }.AbstractSet$();
+      }.fabric$util$AbstractSet$();
     return keys;
   }
 
@@ -511,7 +511,7 @@ public class TreeMap extends AbstractMap
       }
 
     // Set up new node.
-    Node n = (Node) new Node().Node$(key, value, RED);
+    Node n = (Node) new Node().fabric$util$TreeMap$Node$(key, value, RED);
     n.left = nil;
     n.right = nil;
     n.parent = nil;
@@ -613,7 +613,7 @@ public class TreeMap extends AbstractMap
    */
   public SortedMap subMap(Object fromKey, Object toKey)
   {
-    return (SubMap) new SubMap().SubMap$(fromKey, toKey);
+    return (SubMap) new SubMap().fabric$util$TreeMap$SubMap$(fromKey, toKey);
   }
 
   /**
@@ -633,7 +633,7 @@ public class TreeMap extends AbstractMap
    */
   public SortedMap tailMap(Object fromKey)
   {
-    return (SubMap) new SubMap().SubMap$(fromKey, nil);
+    return (SubMap) new SubMap().fabric$util$TreeMap$SubMap$(fromKey, nil);
   }
 
   /**
@@ -660,7 +660,7 @@ public class TreeMap extends AbstractMap
 
         public Iterator iterator(fabric.worker.Store store)
         {
-          return (TreeIterator) new TreeIterator().TreeIterator$@store(VALUES);
+          return (TreeIterator) new TreeIterator().fabric$util$TreeMap$TreeIterator$@store(VALUES);
         }
 
         public void clear()
@@ -677,7 +677,7 @@ public class TreeMap extends AbstractMap
 
           return this;
         }
-      }.Collection$();
+      }.fabric$util$Collection$();
     return values;
   }
 
@@ -826,7 +826,7 @@ public class TreeMap extends AbstractMap
     // then updating those links to the children when working on the next row.
 
     // Make the root node.
-    root = (Node) new Node().Node$(null, null, BLACK);
+    root = (Node) new Node().fabric$util$TreeMap$Node$(null, null, BLACK);
     root.left = nil;
     root.right = nil;
     root.parent = nil;
@@ -841,8 +841,8 @@ public class TreeMap extends AbstractMap
         Node last = null;
         for (int i = 0; i < rowsize; i += 2)
           {
-            Node left = (Node) new Node().Node$(null, null, BLACK);
-            Node right = (Node) new Node().Node$(null, null, BLACK);
+            Node left = (Node) new Node().fabric$util$TreeMap$Node$(null, null, BLACK);
+            Node right = (Node) new Node().fabric$util$TreeMap$Node$(null, null, BLACK);
             left.left = nil;
             right.left = nil;
             right.right = nil;
@@ -866,8 +866,8 @@ public class TreeMap extends AbstractMap
     int i;
     for (i = 0; i < overflow; i += 2)
       {
-        Node left = (Node) new Node().Node$(null, null, RED);
-        Node right = (Node) new Node().Node$(null, null, RED);
+        Node left = (Node) new Node().fabric$util$TreeMap$Node$(null, null, RED);
+        Node right = (Node) new Node().fabric$util$TreeMap$Node$(null, null, RED);
         left.left = nil;
         left.right = nil;
         left.parent = nil;
@@ -884,7 +884,7 @@ public class TreeMap extends AbstractMap
     // Add a lone left node if necessary.
     if (i - overflow == 0)
       {
-        Node left = (Node) new Node().Node$(null, null, RED);
+        Node left = (Node) new Node().fabric$util$TreeMap$Node$(null, null, RED);
         left.left = nil;
         left.right = nil;
         left.parent = parent;
@@ -1317,9 +1317,9 @@ public class TreeMap extends AbstractMap
      * Construct a new TreeIterator with the supplied type.
      * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
      */
-    TreeIterator TreeIterator$(int type)
+    TreeIterator fabric$util$TreeMap$TreeIterator$(int type)
     {
-      Object$();
+      fabric$lang$Object$();
       // FIXME gcj cannot handle this. Bug java/4695
       // this(type, firstNode(), nil);
       this.type = type;
@@ -1336,9 +1336,9 @@ public class TreeMap extends AbstractMap
      * @param first where to start iteration, nil for empty iterator
      * @param max the cutoff for iteration, nil for all remaining nodes
      */
-    TreeIterator TreeIterator$(int type, Node first, Node max)
+    TreeIterator fabric$util$TreeMap$TreeIterator$(int type, Node first, Node max)
     {
-      Object$();
+      fabric$lang$Object$();
       this.type = type;
       this.next = first;
       this.max = max;
@@ -1441,9 +1441,9 @@ public class TreeMap extends AbstractMap
      * @param maxKey the upper bound
      * @throws IllegalArgumentException if minKey &gt; maxKey
      */
-    SubMap SubMap$(Object minKey, Object maxKey)
+    SubMap fabric$util$TreeMap$SubMap$(Object minKey, Object maxKey)
     {
-      Object$();
+      fabric$lang$Object$();
       if (minKey != nil && maxKey != nil && compare(minKey, maxKey) > 0)
         throw new IllegalArgumentException("fromKey > toKey");
       this.minKey = minKey;
@@ -1515,7 +1515,7 @@ public class TreeMap extends AbstractMap
           {
             Node first = lowestGreaterThan(minKey, true);
             Node max = lowestGreaterThan(maxKey, false);
-            return (TreeIterator) new TreeIterator@store().TreeIterator$(ENTRIES, first, max);
+            return (TreeIterator) new TreeIterator@store().fabric$util$TreeMap$TreeIterator$(ENTRIES, first, max);
           }
 
           public void clear()
@@ -1561,7 +1561,7 @@ public class TreeMap extends AbstractMap
 
             return this;
           }
-        }.Set$();
+        }.fabric$util$Set$();
       return entries;
     }
 
@@ -1584,7 +1584,7 @@ public class TreeMap extends AbstractMap
     {
       if (! keyInRange(toKey))
         throw new IllegalArgumentException("key outside range");
-      return (SubMap) new SubMap().SubMap$(minKey, toKey);
+      return (SubMap) new SubMap().fabric$util$TreeMap$SubMap$(minKey, toKey);
     }
 
     public Set keySet()
@@ -1603,7 +1603,7 @@ public class TreeMap extends AbstractMap
           {
             Node first = lowestGreaterThan(minKey, true);
             Node max = lowestGreaterThan(maxKey, false);
-            return (TreeIterator) new TreeIterator@store().TreeIterator$(KEYS, first, max);
+            return (TreeIterator) new TreeIterator@store().fabric$util$TreeMap$TreeIterator$(KEYS, first, max);
           }
 
           public void clear()
@@ -1640,7 +1640,7 @@ public class TreeMap extends AbstractMap
 
             return this;
           }
-        }.Set$();
+        }.fabric$util$Set$();
       return this.keys;
     }
 
@@ -1683,14 +1683,14 @@ public class TreeMap extends AbstractMap
     {
       if (! keyInRange(fromKey) || ! keyInRange(toKey))
         throw new IllegalArgumentException("key outside range");
-      return (SubMap) new SubMap().SubMap$(fromKey, toKey);
+      return (SubMap) new SubMap().fabric$util$TreeMap$SubMap$(fromKey, toKey);
     }
 
     public SortedMap tailMap(Object fromKey)
     {
       if (! keyInRange(fromKey))
         throw new IllegalArgumentException("key outside range");
-      return (SubMap) new SubMap().SubMap$(fromKey, maxKey);
+      return (SubMap) new SubMap().fabric$util$TreeMap$SubMap$(fromKey, maxKey);
     }
 
     public Collection values()
@@ -1709,7 +1709,7 @@ public class TreeMap extends AbstractMap
           {
             Node first = lowestGreaterThan(minKey, true);
             Node max = lowestGreaterThan(maxKey, false);
-            return (TreeIterator) new TreeIterator@store().TreeIterator$(VALUES, first, max);
+            return (TreeIterator) new TreeIterator@store().fabric$util$TreeMap$TreeIterator$(VALUES, first, max);
           }
 
           public void clear()
@@ -1726,7 +1726,7 @@ public class TreeMap extends AbstractMap
 
             return this;
           }
-        }.Collection$();
+        }.fabric$util$Collection$();
       return this.values;
     }
 

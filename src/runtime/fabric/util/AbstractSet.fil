@@ -26,8 +26,9 @@ public abstract class AbstractSet extends AbstractCollection implements Set
   /**
    * The main constructor, for use by subclasses.
    */
-  protected AbstractSet AbstractSet$()
+  protected AbstractSet fabric$util$AbstractSet$()
   {
+    fabric$util$AbstractCollection$();
   }
 
   /**

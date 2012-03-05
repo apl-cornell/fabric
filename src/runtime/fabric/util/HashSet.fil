@@ -55,9 +55,9 @@ public class HashSet extends AbstractSet
    * Construct a new, empty HashSet whose backing HashMap has the default
    * capacity (11) and loadFacor (0.75).
    */
-  public HashSet HashSet$()
+  public HashSet fabric$util$HashSet$()
   {
-    HashSet$(HashMap.DEFAULT_CAPACITY, HashMap.DEFAULT_LOAD_FACTOR);
+    fabric$util$HashSet$(HashMap.DEFAULT_CAPACITY, HashMap.DEFAULT_LOAD_FACTOR);
   }
 
   /**
@@ -67,9 +67,9 @@ public class HashSet extends AbstractSet
    * @param initialCapacity the initial capacity of the backing HashMap
    * @throws IllegalArgumentException if the capacity is negative
    */
-  public HashSet HashSet$(int initialCapacity)
+  public HashSet fabric$util$HashSet$(int initialCapacity)
   {
-    HashSet$(initialCapacity, HashMap.DEFAULT_LOAD_FACTOR);
+    fabric$util$HashSet$(initialCapacity, HashMap.DEFAULT_LOAD_FACTOR);
   }
 
   /**
@@ -81,9 +81,9 @@ public class HashSet extends AbstractSet
    * @throws IllegalArgumentException if either argument is negative, or
    *         if loadFactor is POSITIVE_INFINITY or NaN
    */
-  public HashSet HashSet$(int initialCapacity, float loadFactor)
+  public HashSet fabric$util$HashSet$(int initialCapacity, float loadFactor)
   {
-    Object$();
+    fabric$util$Object$();
     map = init(initialCapacity, loadFactor);
   }
 
@@ -96,9 +96,9 @@ public class HashSet extends AbstractSet
    * @param c a collection of initial set elements
    * @throws NullPointerException if c is null
    */
-  public HashSet HashSet$(Collection c)
+  public HashSet fabric$util$HashSet$(Collection c)
   {
-    HashSet$(Math.max(2 * c.size(), HashMap.DEFAULT_CAPACITY));
+    fabric$util$HashSet$(Math.max(2 * c.size(), HashMap.DEFAULT_CAPACITY));
     addAll(c);
   }
 
@@ -210,7 +210,7 @@ public class HashSet extends AbstractSet
    */
   HashMap init(int capacity, float load)
   {
-    return (HashMap) new HashMap().HashMap$(capacity, load);
+    return (HashMap) new HashMap().fabric$util$HashMap$(capacity, load);
   }
 
   /**

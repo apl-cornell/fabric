@@ -56,9 +56,9 @@ public abstract class AbstractList extends AbstractCollection implements List
   /**
    * The main constructor, for use by subclasses.
    */
-  protected AbstractList AbstractList$()
+  protected AbstractList fabric$util$AbstractList$()
   {
-    AbstractCollection$();
+    fabric$util$AbstractCollection$();
   }
 
   /**
@@ -267,7 +267,7 @@ while (i.hasNext())
   public Iterator iterator(fabric.worker.Store store)
   {
     // Bah, Sun's implementation forbids using listIterator(0).
-    return (AnonymousIterator) new AnonymousIterator@store().AnonymousIterator$();
+    return (AnonymousIterator) new AnonymousIterator@store().fabric$util$AbstractList$AnonymousIterator$();
   }
   
   private class AnonymousIterator implements Iterator {
@@ -280,7 +280,7 @@ while (i.hasNext())
     private int last;
     private int knownMod;
 
-    AnonymousIterator AnonymousIterator$() {
+    AnonymousIterator fabric$util$AbstractList$AnonymousIterator$() {
       this.initSize = size();
       this.initModCount = modCount;
       this.pos = 0;
@@ -413,7 +413,7 @@ while (i.hasNext())
       throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
                                           + size());
 
-    return (AbstractListIterator) new AbstractListIterator@store().AbstractListIterator$(index);
+    return (AbstractListIterator) new AbstractListIterator@store().fabric$util$AbstractList$AbstractListIterator$(index);
   }
 
   /**
@@ -538,8 +538,8 @@ while (i.hasNext())
       throw new IndexOutOfBoundsException();
 
     if (this instanceof RandomAccess)
-      return (RandomAccessSubList) new RandomAccessSubList().RandomAccessSubList$(this, fromIndex, toIndex);
-    return (SubList) new SubList().SubList$(this, fromIndex, toIndex);
+      return (RandomAccessSubList) new RandomAccessSubList().fabric$util$AbstractList$RandomAccessSubList$(this, fromIndex, toIndex);
+    return (SubList) new SubList().fabric$util$AbstractList$SubList$(this, fromIndex, toIndex);
   }
 
   /**
@@ -562,10 +562,10 @@ while (i.hasNext())
     /**
      * @param index
      */
-    private AbstractListIterator AbstractListIterator$(int index) {
+    private AbstractListIterator fabric$util$AbstractList$AbstractListIterator$(int index) {
       this.index = index;
       position = index;
-      Object$();
+      fabric$lang$Object$();
     }
 
     // This will get inlined, since it is private.
@@ -759,8 +759,8 @@ while (i.hasNext())
    */
   private static class SubList extends AbstractList
   {
-    public SubList$() {
-      AbstractList$();
+    public fabric$util$AbstractList$SubList$() {
+      fabric$util$AbstractList$AbstractList$();
     }
 
     /**
@@ -779,8 +779,8 @@ while (i.hasNext())
       /**
        * @param index
        */
-      private SubListIterator SubListIterator$(int index) {
-        Object$();
+      private SubListIterator fabric$util$AbstractList$SubListIterator$(int index) {
+        fabric$lang$Object$();
         this.index = index;
         i = backingList.listIterator(LOCAL_STORE, index + offset);
         position = index;
@@ -955,9 +955,9 @@ while (i.hasNext())
      * @param fromIndex the lower bound, inclusive
      * @param toIndex the upper bound, exclusive
      */
-    SubList SubList$(AbstractList backing, int fromIndex, int toIndex)
+    SubList fabric$util$AbstractList$SubList$(AbstractList backing, int fromIndex, int toIndex)
     {
-      Object$();
+      fabric$lang$Object$();
       backingList = backing;
       modCount = backing.modCount;
       offset = fromIndex;
@@ -1199,7 +1199,7 @@ while (i.hasNext())
       checkMod();
       checkBoundsInclusive(index);
 
-      return (SubListIterator) new SubListIterator@store().SubListIterator$(index);
+      return (SubListIterator) new SubListIterator@store().fabric$util$AbstractList$SubListIterator$(index);
     }
 
     public Object $initLabels() {
@@ -1229,9 +1229,9 @@ while (i.hasNext())
      * @param fromIndex the lower bound, inclusive
      * @param toIndex the upper bound, exclusive
      */
-    RandomAccessSubList RandomAccessSubList$(AbstractList backing, int fromIndex, int toIndex)
+    RandomAccessSubList fabric$util$AbstractList$RandomAccessSubList$(AbstractList backing, int fromIndex, int toIndex)
     {
-      SubList$(backing, fromIndex, toIndex);
+      fabric$util$AbstractList$SubList$(backing, fromIndex, toIndex);
     }
 
     public Object $initLabels() {
