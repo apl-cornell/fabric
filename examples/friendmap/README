@@ -9,6 +9,8 @@ This directory contains the following sub-directories:
 
 Compiling
 ---------
+DONT DO THIS
+
 To build the initialization code that will set up the principal hierarchy,
 run 'ant' in the FriendMap example directory:
 
