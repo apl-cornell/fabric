@@ -11,11 +11,13 @@ import java.util.Map;
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.FileSource;
+import polyglot.frontend.Job;
 import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.SourceLoader;
 import polyglot.frontend.TargetFactory;
+import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
 import polyglot.main.Options;
 import polyglot.main.Report;
@@ -49,6 +51,7 @@ import fabil.parse.Lexer_c;
 import fabil.types.ClassFile;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILTypeSystem_c;
+import fabric.FabricOptions;
 import fabric.common.NSUtil;
 import fabric.lang.FClass;
 import fabric.lang.security.LabelUtil;
@@ -351,6 +354,14 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   @Override
   public JobExt jobExt() {
       return new CBJobExt();
+  }
+  
+  @Override
+  public Goal getCompileGoal(Job job) {
+    FabILOptions opts = (FabILOptions) job.extensionInfo().getOptions();
+    if (opts.createSkeleton())
+      return ((FabILScheduler) scheduler()).CreateJavaSkeleton(job);
+    else return super.getCompileGoal(job);
   }
 
 }

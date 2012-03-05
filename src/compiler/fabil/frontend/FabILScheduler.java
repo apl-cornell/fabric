@@ -537,7 +537,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     return g;
   }
   
-  protected Goal CreateJavaSkeleton(Job job) {
+  public Goal CreateJavaSkeleton(Job job) {
     TypeSystem ts = extInfo.typeSystem();
     NodeFactory nf = extInfo.nodeFactory();
     Goal g =
@@ -545,7 +545,9 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
             List<Goal> l = new ArrayList<Goal>();
-            l.add(Memoized(job));
+            l.add(Parsed(job));
+
+//            l.add(Memoized(job));
             return l;
           }
         });
