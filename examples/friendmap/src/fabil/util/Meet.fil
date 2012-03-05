@@ -72,13 +72,6 @@ public class Meet extends AbstractPrincipal {
     } else throw new AssertionFailedError().util$AssertionFailedError$("left and right act for meet");
   }
 
-                 
-  public void addDelegatesTo(Principal p) {
-    throw new Error("delegation not supported");
-  }
-  public void removeDelegatesTo(Principal p) {
-    throw new Error("delegation not supported");
-  }
 }
 
 
