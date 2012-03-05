@@ -83,10 +83,10 @@ where
     this.data     = (data     == null) ? null : Util.copyArray(data, L, L, s);
 
     if (boundary == null || data == null)
-      throw new NullPointerException();
+      throw new NullPointerException("86");
 
     if (width * height != data.length)
-      throw new ArrayIndexOutOfBoundsException();
+      throw new ArrayIndexOutOfBoundsException("89");
 
     this.width  = width;
     this.height = height;
@@ -123,7 +123,7 @@ where
     provider      <= A      // code affects access to the boundary 
   {
     if (boundary == null)
-      throw new AssertionFailedError("boundary is non-null.");
+      throw new AssertionFailedError("126 boundary is non-null.");
 
     return boundary.copy(l,a,s);
   }
@@ -152,7 +152,7 @@ where
     provider           <= A  // code affects fetches
   {
     if (this.data == null)
-      throw new AssertionFailedError("data must be non-null");
+      throw new AssertionFailedError("155 data must be non-null");
 
     return data[index(x,y)];
   }
@@ -181,7 +181,7 @@ where
     provider <= L // code affects contents
   {
     if (this.data == null)
-      throw new AssertionFailedError("data must be non-null");
+      throw new AssertionFailedError("184 data must be non-null");
 
     data[index(x,y)] = value;
   }
@@ -225,9 +225,9 @@ where
                                 s);
 
     } catch (final NullPointerException e) {
-      throw new AssertionFailedError("data and boundary must be non-null");
+      throw new AssertionFailedError("228 data and boundary must be non-null");
     } catch (final ArrayIndexOutOfBoundsException e) {
-      throw new AssertionFailedError("width * height = data.length = Util.copyArray(data, ...).length");
+      throw new AssertionFailedError("230 width * height = data.length = Util.copyArray(data, ...).length");
     }
   }
 
@@ -256,11 +256,11 @@ where
   {
     // check assertions
     if (out == null)
-      throw new NullPointerException();
+      throw new NullPointerException("259 out is null.");
     if (this.boundary == null)
-      throw new AssertionFailedError("boundary is non-null");
+      throw new AssertionFailedError("261 boundary is non-null");
     if (this.data == null)
-      throw new AssertionFailedError("data is non-null");
+      throw new AssertionFailedError("263 data is non-null");
 
     // print map as follows:
     // (top left)
@@ -286,7 +286,7 @@ where
           //  i*width + j <= (height - 1) * width + width - 1
           //               = height * width - 1
           //               < data.length
-          throw new AssertionFailedError ("width * height = data.length");
+          throw new AssertionFailedError ("289 width * height = data.length");
         }
       }
       out.println();
@@ -325,7 +325,7 @@ where
     //        TODO: this step could have accuracy problems.
     //        thus yoff * width + xoff ∈ [0, height * width) = [0, data.length)
     if (this.boundary == null)
-      throw new AssertionFailedError("boundary must be non-null");
+      throw new AssertionFailedError("328 boundary must be non-null");
 
     int xoff = (int) (width  * boundary.scale_x(x));
     int yoff = (int) (height * boundary.scale_y(y));

@@ -72,7 +72,7 @@ where
     this.locationInfo  = new Group[p,{*→network}]@store(store, name + "'s location viewers");
     this.locationLabel = new label {p←;p→locationInfo};
 
-    } else throw new AssertionFailedError("(p,q) equiv (p,q)");
+    } else throw new AssertionFailedError("75 (p,q) equiv (p,q)");
   }
 }
 

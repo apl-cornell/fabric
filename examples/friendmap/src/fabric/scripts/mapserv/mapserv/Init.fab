@@ -17,7 +17,7 @@ where
         final MapServer server = new MapServer@store("Map Server Object", store, '.');
         worker$.getStore("snapp").getRoot().put("mapserv", server);
 
-      } else throw new AssertionFailedError("mapserv ≽ MapServer.provider");
+      } else throw new AssertionFailedError("20 mapserv ≽ MapServer.provider");
     }
   }
 }

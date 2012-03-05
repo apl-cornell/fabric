@@ -58,7 +58,7 @@ where
     provider <= {this}
   {
     if (service == null)
-      throw new NullPointerException();
+      throw new NullPointerException("61 service is null");
 
     this.service = service;
   }
@@ -96,7 +96,7 @@ where
     worker$ actsfor owner, worker$ actsfor user.friends
   {
     if (user == null)
-      throw new NullPointerException();
+      throw new NullPointerException("99 user is null");
 
     printMap(user, owner, n, new label {*→owner});
   }
@@ -136,7 +136,7 @@ where
     worker$ actsfor user.friends
   {
     if (user == null)
-      throw new NullPointerException();
+      throw new NullPointerException("139 user is null");
 
     printMap(user, owner, n, new label {*→user.friends});
   }
@@ -211,7 +211,7 @@ where
     {*←worker$} <= lbl, lbl <= {*→worker$} // TODO: worker$ ≽ lbl
   {
     if (user == null)
-      throw new NullPointerException();
+      throw new NullPointerException("214 user is null");
 
     final Store localStore = worker$.getLocalStore();
 
@@ -221,10 +221,10 @@ where
     MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n, new label {*→user.friends});
     PrintStream[lbl] out = System.stdout(lbl);
 
-    if (result == null)                                             { throw new AssertionFailedError("createMap() returns a non-null value."); }
-    try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("System.stdout must return a non-null value"); }
+    if (result == null)                                             { throw new AssertionFailedError("224 createMap() returns a non-null value."); }
+    try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("225 System.stdout must return a non-null value"); }
 
-    } else throw new AssertionFailedError("worker$ equiv worker$.getLocalStore");
+    } else throw new AssertionFailedError("227 worker$ equiv worker$.getLocalStore");
   }
 
 
@@ -317,11 +317,11 @@ where
   {
     // invariant checks
     if (user == null)
-      throw new NullPointerException();
+      throw new NullPointerException("320 user is null");
     if (user.friends == null)
-      throw new AssertionFailedError("user.friends must be non-null");
+      throw new AssertionFailedError("322 user.friends must be non-null");
     if (this.service == null)
-      throw new AssertionFailedError("service must be non-null");
+      throw new AssertionFailedError("324 service must be non-null");
 
     final Store fetchStore = service.store;
     final Store localStore = s;
@@ -339,11 +339,11 @@ where
     try {
       map = this.service.createMap(fetchLabel, new label {*→service.store}, boundary);
     } catch (final NullPointerException e) {
-      throw new AssertionFailedError("boundary is non-null.");
+      throw new AssertionFailedError("342 boundary is non-null.");
     }
 
     if (map == null)
-      throw new AssertionFailedError("MapServer.createMap return is non-null.");
+      throw new AssertionFailedError("346 MapServer.createMap return is non-null.");
 
     // make a local copy (with label l)
     // TODO: s ≽ l
@@ -356,7 +356,7 @@ where
 
     return annotated;
 
-    } else throw new AssertionFailedError("service's store acts for the service");
+    } else throw new AssertionFailedError("359 service's store acts for the service");
   }
 
 
@@ -446,10 +446,10 @@ where
     final label iterLabel = new label {{*l} ⊓ {*→n} ⊓ {*friend_access_bound}};
 
     final GroupIterator[user.p, iterLabel, {*→n}] i = user.friends.iterator(localStore, iterLabel);
-    if (i == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
+    if (i == null) throw new AssertionFailedError("449 Group.iterator() should return a non-null value");
     while (i.hasNext()) {
       Principal next;
-      try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");}
+      try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("452 if i.hasNext() then i.next() should return normally.");}
 
       if (next instanceof UserWrapper[{*→n}]) {
         final UserWrapper[{*→n}] fw = (UserWrapper[{*→n}]) next;
@@ -457,7 +457,7 @@ where
         final principal          fn = fw.userNetwork;
 
         final User[fo,fn] friend = fw.user;
-        if (friend == null) throw new AssertionFailedError("UserWrapper only wraps non-null users.");
+        if (friend == null) throw new AssertionFailedError("460 UserWrapper only wraps non-null users.");
 
         // check general User invariants
         if (friend.locationLabel equiv new label {_→; *←fn,fo}) {
@@ -477,7 +477,7 @@ where
 
         if (loc != null) {
           try { boundary.expand(x, y); }
-          catch (final NullPointerException e) { throw new AssertionFailedError("boundary is non-null."); }
+          catch (final NullPointerException e) { throw new AssertionFailedError("480 boundary is non-null."); }
         } // ok: friend has no location
         } // ok: friend won't show us his location
         // TODO: declassifiers
@@ -579,7 +579,7 @@ where
     {map_update; n; friend_access_bound} <= {{*→n} ⊓ {*map_update} ⊓ {*map_access} ⊓ {*friend_access_bound}}
   {
     if (map == null) {
-      String {*→} s = "MapImage.copy return value should be non-null";
+      String {*→} s = "582 MapImage.copy return value should be non-null";
       throw new AssertionFailedError(s);
     }
 
@@ -610,11 +610,11 @@ where
     final GroupIterator[user.p, iterLabel, {*→n}]
         {*<-n,o ; user ; friend_access_bound ; n ; map_update}
         j = user.friends.iterator(worker$.getLocalStore(), iterLabel);
-    if (j == null) throw new AssertionFailedError("Group.iterator() should return a non-null value");
+    if (j == null) throw new AssertionFailedError("613 Group.iterator() should return a non-null value");
 
     while (j.hasNext()) {
       Principal next;
-      try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("if j.hasNext() then j.next() should return normally."); }
+      try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("617 if j.hasNext() then j.next() should return normally."); }
       if (next instanceof UserWrapper[{*→n}]) {
         // add friend to the map if possible
 
@@ -623,7 +623,7 @@ where
         final principal          fn = fw.userNetwork;
 
         final User[fo,fn]   friend = fw.user;
-        if (friend == null) throw new AssertionFailedError("UserWrapper only wraps non-null users.");
+        if (friend == null) throw new AssertionFailedError("626 UserWrapper only wraps non-null users.");
 
         // check whether we can access the location without leaking:
         //  - code and caller_pc          dyn: (*provider and caller_pc)
@@ -654,8 +654,8 @@ where
         if (boundary != null && boundary.contains(x,y)) {
 
         try { addPin (map, map_update, map_access, x, y, friend, fo, fn); }
-        catch (final NullPointerException e)           { throw new AssertionFailedError("annotated and friend are non-null"); }
-        catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
+        catch (final NullPointerException e)           { throw new AssertionFailedError("657 annotated and friend are non-null"); }
+        catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("658 if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
 
         } // OK:        friend isn't on the map
         } // OK:        friend's location is too secret
@@ -722,7 +722,7 @@ where
     {_←}       <= map_access
   {
     if (map == null || friend == null)
-      throw new NullPointerException();
+      throw new NullPointerException("725");
 
     map.setAt(x, y, 'f');
   }

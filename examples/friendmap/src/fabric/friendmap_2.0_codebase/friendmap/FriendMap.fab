@@ -56,7 +56,7 @@ where
     {*provider;*MapImage.provider;location;friend;map} <= map_access
   {
     if (map == null || friend == null || location == null)
-      throw new NullPointerException();
+      throw new NullPointerException("59");
 
     char annotation = 'f';
 

@@ -40,7 +40,7 @@ where
     if (new label {owner,network←; owner&network→} <= this.moodLabel)
       this.mood       = new Mood("indecisive");
     else
-      throw new AssertionFailedError("owner and network can update the mood");
+      throw new AssertionFailedError("43 owner and network can update the mood");
   }
 }
 

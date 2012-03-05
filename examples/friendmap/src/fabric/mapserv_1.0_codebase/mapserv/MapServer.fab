@@ -46,7 +46,7 @@ where
     if (store actsfor this)
       this.background = background;
     else
-      throw new AssertionFailedError("Delegation failed");
+      throw new AssertionFailedError("49 Delegation failed");
   }
 
   /**
@@ -89,7 +89,7 @@ where
     // boundary lookup taints
     {*provider;boundary} <= a
   {
-    if (boundary == null) throw new NullPointerException();
+    if (boundary == null) throw new NullPointerException("92 boundary is null");
 
     if (store actsfor this) {
 
@@ -102,12 +102,12 @@ where
                                                        10, 10, data,
                                                        this.store);
     } catch (final ArrayIndexOutOfBoundsException e) {
-      throw new AssertionFailedError("10 * 10 = 100");
+      throw new AssertionFailedError("105 10 * 10 = 100");
     } catch (final NullPointerException e) {
-      throw new AssertionFailedError("boundary and data are non-null");
+      throw new AssertionFailedError("107 boundary and data are non-null");
     }
 
-    } else throw new AssertionFailedError("delegators's store actsfor delegatee");
+    } else throw new AssertionFailedError("110 delegators's store actsfor delegatee");
   }
 }
 
