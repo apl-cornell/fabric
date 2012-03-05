@@ -410,27 +410,13 @@ public class PrincipalUtil {
 
   }
 
-  public static Principal bottomPrincipal(Store c) {
-    return bottomPrincipal();
-  }
-
   public static Principal topPrincipal() {
-    final LocalStore localStore = Worker.getWorker().getLocalStore();
-    return localStore.getTopPrincipal();
-  }
-
-  public static Principal topPrincipal(Store store) {
     final LocalStore localStore = Worker.getWorker().getLocalStore();
     return localStore.getTopPrincipal();
   }
 
   static boolean isTopPrincipal(Principal p) {
     return p instanceof TopPrincipal;
-  }
-
-  public static ConfPolicy readableByPrinPolicy(Principal p) {
-    final LocalStore localStore = Worker.getWorker().getLocalStore();
-    return readableByPrinPolicy(localStore, p);
   }
 
   public static ConfPolicy readableByPrinPolicy(Store store, Principal p) {
@@ -443,11 +429,6 @@ public class PrincipalUtil {
 
   }
 
-  public static IntegPolicy writableByPrinPolicy(Principal p) {
-    final LocalStore localStore = Worker.getWorker().getLocalStore();
-    return writableByPrinPolicy(localStore, p);
-  }
-
   public static IntegPolicy writableByPrinPolicy(Store store, Principal p) {
 //    try {
 //      LabelUtil.enterTiming();
@@ -455,11 +436,6 @@ public class PrincipalUtil {
 //    } finally {
 //      LabelUtil.exitTiming();
 //    }
-  }
-
-  public static Principal disjunction(Principal left, Principal right) {
-    final LocalStore store = Worker.getWorker().getLocalStore();
-    return disjunction(store, left, right);
   }
 
   public static Principal disjunction(Store store, Principal left, Principal right) {
@@ -478,11 +454,6 @@ public class PrincipalUtil {
 
   }
 
-  public static Principal conjunction(Principal left, Principal right) {
-    final LocalStore store = Worker.getWorker().getLocalStore();
-    return conjunction(store, left, right);
-  }
-
   public static Principal conjunction(Store store, Principal left, Principal right) {
 //    try {
 //      LabelUtil.enterTiming();
@@ -498,11 +469,6 @@ public class PrincipalUtil {
 //      LabelUtil.exitTiming();
 //    }
 
-  }
-
-  public static Principal disjunction(Collection/* Principal */principals) {
-    final Store store = Worker.getWorker().getLocalStore();
-    return disjunction(store, principals);
   }
 
   public static Principal disjunction(Store store, Collection/* <Principal> */principals) {
@@ -538,11 +504,6 @@ public class PrincipalUtil {
 //      LabelUtil.exitTiming();
 //    }
 
-  }
-
-  public static Principal conjunction(Collection/* Principal */principals) {
-    final Store store = Worker.getWorker().getLocalStore();
-    return conjunction(store, principals);
   }
 
   public static Principal conjunction(Store store, Collection/* <Principal> */principals) {
