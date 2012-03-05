@@ -97,6 +97,11 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   public Object $initLabels() {
     return this;
   }
+
+  @Override
+  public Object fabric$lang$Object$() {
+    return this;
+  }
   
   @Override
   public boolean idEquals(fabric.lang.Object other) {

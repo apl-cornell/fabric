@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -60,6 +61,11 @@ public interface Object {
    */
   ConfPolicy get$$accessPolicy();
   ConfPolicy set$$accessPolicy(ConfPolicy policy);
+  
+  /**
+   * Calls $initLabels 
+   */
+  Object fabric$lang$Object$();
   
   /**
    * Initializes the object's update label and access policy.
@@ -270,6 +276,11 @@ public interface Object {
     @Override
     public Object $initLabels() {
       return fetch().$initLabels();
+    }
+    
+    @Override
+    public Object fabric$lang$Object$() {
+      return fetch().fabric$lang$Object$();
     }
 
     @Override
@@ -521,6 +532,11 @@ public interface Object {
           .getBottomConfidPolicy());
       
       return $getProxy();
+    }
+
+    @Override
+    public Object fabric$lang$Object$() {
+      return $initLabels();
     }
 
     /**
@@ -923,8 +939,11 @@ public interface Object {
           @Override
           public Object run() throws Throwable {
             Constructor<? extends Object._Impl> constr =
-              c.getConstructor(Store.class);
-            return constr.newInstance(store).$initLabels().fetch();
+              c.getConstructor();
+            Method typemeth = c.getDeclaredMethod(c.getName().replace('.', '$')+"$",
+                Store.class);
+            Object ret = (Object) typemeth.invoke(constr.newInstance(), store);
+            return ret.fetch();
           }
         });
       }

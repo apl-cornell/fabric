@@ -1,0 +1,17 @@
+class C extends D {
+    final int{⊤→} x;
+    C() {
+        x = 10;
+        super();
+    }
+
+    public static void main(String[] args) {
+        C o = new C();
+    }
+}
+
+class D {
+    D() {
+        super();
+    }
+}

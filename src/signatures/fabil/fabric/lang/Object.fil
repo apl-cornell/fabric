@@ -19,6 +19,11 @@ public class Object extends java.lang.Object {
   
   public native boolean equals(Object o);
   
+  /**
+   * Calls $initLabels 
+   */
+  public native Object fabric$lang$Object$();
+  
   public native Statistics createStatistics();
   
   /**

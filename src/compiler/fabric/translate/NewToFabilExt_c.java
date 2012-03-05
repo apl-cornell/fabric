@@ -93,9 +93,8 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       New newExpr =
           nf.New(n.position(), n.qualifier(), n.objectType(), loc, paramargs);
       if (ts.isFabricClass(ct))
-        return rw.qq().parseExpr("(%T) %E.%s(%LE).%s()", n.objectType(),
-            newExpr, name, n.arguments(),
-            FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME);
+        return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(),
+            newExpr, name, n.arguments());
       else
         return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(), newExpr,
             name, n.arguments());
