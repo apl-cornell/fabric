@@ -239,7 +239,7 @@
       description="Builds the Fabric system"/>
 
   <!-- Compiles the Fabric compiler -->
-  <target name="fabric-compiler" depends="init,fabil-compiler"
+  <target name="fabric-compiler" depends="init,fabil-compiler,bootstrap"
       description="Builds the Fabric compiler">
     <antcall target="standard-ext">
       <param name="ext" value="fabric" />

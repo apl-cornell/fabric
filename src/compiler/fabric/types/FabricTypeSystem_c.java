@@ -132,6 +132,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   public FabricDefaultSignature fabricDefaultSignature() {
     return ds;
   }
+  
+  @Override
+  public ClassType fatalException() {
+    return load("fabric.common.exceptions.ApplicationError");  
+  }
 
   @Override
   public void initialize(ExtensionInfo extInfo) throws SemanticException {
