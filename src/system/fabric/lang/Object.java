@@ -424,6 +424,12 @@ public interface Object {
      * The innermost transaction that is holding a write lock on the object.
      */
     public Log $writeLockHolder;
+    
+    /**
+     * Stack trace for where the write lock for this object was obtained. Used
+     * for debugging.
+     */
+    public StackTraceElement[] $writeLockStackTrace;
 
     /**
      * Any transaction that has logged a read of the object, or null if none.
@@ -472,6 +478,7 @@ public interface Object {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
+      this.$writeLockStackTrace = null;
       this.$reader = Log.NO_READER;
       this.$history = null;
       this.$numWaiting = 0;
@@ -580,6 +587,7 @@ public interface Object {
     public final void $copyStateFrom(_Impl other) {
       $writer = null;
       $writeLockHolder = other.$writeLockHolder;
+      $writeLockStackTrace = other.$writeLockStackTrace;
       $reader = other.$reader;
       $history = other.$history;
       $isOwned = other.$isOwned;

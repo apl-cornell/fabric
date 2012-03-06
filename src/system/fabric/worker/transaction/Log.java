@@ -544,6 +544,7 @@ public final class Log {
       synchronized (obj) {
         obj.$writer = null;
         obj.$writeLockHolder = null;
+        obj.$writeLockStackTrace = null;
         obj.$version++;
         obj.$readMapEntry.versionNumber++;
         obj.$isOwned = false;
@@ -566,6 +567,7 @@ public final class Log {
 
       obj.$writer = null;
       obj.$writeLockHolder = null;
+      obj.$writeLockStackTrace = null;
       obj.$version = 1;
       obj.$readMapEntry.versionNumber = 1;
       obj.$isOwned = false;

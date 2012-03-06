@@ -97,6 +97,13 @@ public final class TransactionManager {
    * The innermost running transaction for the thread being managed.
    */
   private Log current;
+  
+  /**
+   * A debugging switch for storing a stack trace each time a write lock is
+   * obtained.
+   * TODO Enable this by passing "--trace-locks" as a command-line argument to the node.
+   */
+  public static boolean TRACE_WRITE_LOCKS = true;
 
   /**
    * A map from OIDs to a version number and a list of logs for transactions
@@ -204,6 +211,11 @@ public final class TransactionManager {
    *          true iff should send abort messages to stores and workers.
    */
   private void abortTransaction(boolean recurseToCohorts) {
+    // XXX HACK For now, flush the label cache. Should really have per-transaction label cache. -Jed
+    for (Store store : current.storesToContact()) {
+      store.labelCache().clear();
+    }
+    
     if (current.tid.depth == 0) {
       // Make sure no other thread is working on this transaction.
       synchronized (current.commitState) {
@@ -748,6 +760,8 @@ public final class TransactionManager {
       // Grab a write lock on the object.
       obj.$writer = current;
       obj.$writeLockHolder = current;
+      if (TRACE_WRITE_LOCKS) 
+        obj.$writeLockStackTrace = Thread.currentThread().getStackTrace();
 
       // Own the object. The call to ensureOwnership is responsible for adding
       // the object to the set of created objects.
@@ -916,6 +930,8 @@ public final class TransactionManager {
     // write set.
     obj.$history = obj.clone();
     obj.$writeLockHolder = current;
+    if (TRACE_WRITE_LOCKS)
+      obj.$writeLockStackTrace = Thread.currentThread().getStackTrace();
 
     if (obj.$getStore().isLocalStore()) {
       synchronized (current.localStoreWrites) {
