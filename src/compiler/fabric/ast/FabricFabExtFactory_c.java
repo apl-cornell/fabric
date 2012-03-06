@@ -26,16 +26,16 @@ public class FabricFabExtFactory_c extends AbstractFabExtFactory_c {
   
   @Override
   protected FabricExt extNewImpl() {
-    return new NewExt_c();
+    return new LocatedExt_c();
   }
   
   @Override
   protected FabricExt extNewFabricArrayImpl() {
-    return new NewFabricArrayExt_c();
+    return new LocatedExt_c();
   }
   
   @Override
   protected FabricExt extNewLabelImpl() {
-    return new NewLabelExt_c();
+    return new LocatedExt_c();
   }
 }

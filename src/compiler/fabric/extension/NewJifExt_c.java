@@ -22,7 +22,7 @@ public class NewJifExt_c extends JifNewExt {
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
     New      n   = (New) super.labelCheck(lc);
-    NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(n);
+    LocatedExt_c ext = (LocatedExt_c) FabricUtil.fabricExt(n);
     
     Type newType = n.objectType().type();
     // Bypass check if this is a principal object. This condition will be

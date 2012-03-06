@@ -1,5 +1,6 @@
 package fabric.extension;
 
+import jif.ast.Jif_c;
 import jif.types.ConstraintMessage;
 import jif.types.JifContext;
 import jif.types.LabelConstraint;
@@ -19,7 +20,7 @@ import fabric.types.FabricTypeSystem;
  * This class provides common functionality to the New and NewArray for managing
  * a location field
  */
-public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
+public class LocatedExt_c extends NodeExt_c implements FabricExt {
   protected Expr location;
   protected Principal storePrincipal;
 
@@ -59,7 +60,9 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
    * Returns a precise bound on the label of the reference of the allocated
    * object. Can only be called during label checking of a constructor call.
    */
-  protected abstract Label referenceLabel(FabricContext ctx);
+  protected Label referenceLabel(FabricContext ctx) {
+    return Jif_c.getPathMap(node()).NV();
+  }
 
   /**
    * Checks that the location is compatible with the <code>objectLabel</code>
