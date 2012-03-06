@@ -12,6 +12,7 @@ import fabric.common.Options.Flag.Kind;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
+import fabric.worker.transaction.TransactionManager;
 
 public abstract class Options {
   private final SortedSet<Flag> flags;
@@ -377,6 +378,24 @@ public abstract class Options {
       public int handle(String[] args, int index) {
         throw new TerminationException(0);
       }
+    });
+    
+    flags.add(new Flag(Kind.DEBUG, "--trace-objects", null, "track the "
+        + "creation of _Impls by storing a stack trace in each _Impl object") {
+          @Override
+          public int handle(String[] args, int index) {
+            fabric.lang.Object._Impl.TRACE_OBJECTS = true;
+            return index;
+          }
+    });
+    
+    flags.add(new Flag(Kind.DEBUG, "--trace-locks", null, "track the "
+        + "locking of _Impls by storing a stack trace in each _Impl object") {
+          @Override
+          public int handle(String[] args, int index) {
+            TransactionManager.TRACE_WRITE_LOCKS = true;
+            return index;
+          }
     });
 
     flags.add(new Flag(Kind.SECRET_HELP, "--secret-menu", null,

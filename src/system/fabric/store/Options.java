@@ -94,15 +94,6 @@ public class Options extends fabric.common.Options {
             return index;
           }
         });
-    
-    flags.add(new Flag(Kind.DEBUG, "--trace-objects", null, "track the "
-        + "creation of _Impls by storing a stack trace in each _Impl object") {
-          @Override
-          public int handle(String[] args, int index) {
-            fabric.lang.Object._Impl.TRACE_OBJECTS = true;
-            return index;
-          }
-    });
   }
 
   @Override

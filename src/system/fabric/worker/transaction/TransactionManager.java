@@ -100,10 +100,10 @@ public final class TransactionManager {
   
   /**
    * A debugging switch for storing a stack trace each time a write lock is
-   * obtained.
-   * TODO Enable this by passing "--trace-locks" as a command-line argument to the node.
+   * obtained. Enable this by passing "--trace-locks" as a command-line argument
+   * to the node.
    */
-  public static boolean TRACE_WRITE_LOCKS = true;
+  public static boolean TRACE_WRITE_LOCKS = false;
 
   /**
    * A map from OIDs to a version number and a list of logs for transactions
