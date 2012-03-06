@@ -25,6 +25,7 @@ import codebases.types.NamespaceResolver;
 import fabric.ExtensionInfo;
 import fabric.Topics;
 import fabric.ast.FabricNodeFactory;
+import fabric.types.FabricParsedClassType;
 import fabric.types.FabricTypeSystem;
 
 public class NamespaceChecker extends ErrorHandlingVisitor {
@@ -120,38 +121,57 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
 
   protected Collection<CodebaseClassType> directDependencies(
       CodebaseClassType cct) {
-    if (!(cct instanceof ParsedClassType))
+    if (!(cct instanceof FabricParsedClassType))
       throw new InternalCompilerError("Expected ParsedClassType for " + cct
           + ", but got: " + cct.getClass());
 
-    ParsedClassType ct = (ParsedClassType) cct;
+    FabricParsedClassType ct = (FabricParsedClassType) cct;
     ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
-    Scheduler scheduler = extInfo.scheduler();
-
     if (cct.canonicalNamespace().equals(extInfo.platformNamespace()))
       return Collections.emptySet();
-
-    CodebaseSource cs = (CodebaseSource) ct.fromSource();
-    if (cs == null) throw new InternalCompilerError("Null source for " + cct);
-
-    if (!scheduler.sourceHasJob(ct.fromSource()))
-      throw new InternalCompilerError("No job for " + ct);
-
-    if (Report.should_report(Topics.mobile, 3)) {
-      Report.report(3, "Loading job for " + cct + ":" + ct.fromSource());
+    
+    if (ct.namespaceDependencies() == null) {
+      setDependencies(ct);
+      if (ct.namespaceDependencies() == null)
+        throw new InternalCompilerError("Class " +ct + " has no namespace dependencies!");
     }
-
-    Job dep_job = scheduler.loadSource((FileSource) ct.fromSource(), true);
-
-    if (dep_job == null) throw new InternalCompilerError("Null job for " + ct);
-
-    CBJobExt dep_jobExt = (CBJobExt) dep_job.ext();
-
-    if (Report.should_report(Topics.mobile, 3)) {
-      Report.report(3,
-          "Class " + cct + " has deps " + dep_jobExt.dependencies());
+    return ct.namespaceDependencies();
+  }
+  Collection<CodebaseClassType> setDependencies(FabricParsedClassType ct) {
+    ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
+    if (ct.canonicalNamespace().equals(extInfo.platformNamespace()))
+      return Collections.emptySet();
+    
+    if (ct.namespaceDependencies() == null) {
+      Scheduler scheduler = job.extensionInfo().scheduler();
+      CodebaseSource cs = (CodebaseSource) ct.fromSource();
+  
+      if (cs == null) throw new InternalCompilerError("Null source for " + ct);
+  
+      if (!scheduler.sourceHasJob(ct.fromSource()))
+        throw new InternalCompilerError("No job for " + ct);
+  
+      if (Report.should_report(Topics.mobile, 3)) {
+        Report.report(3, "Loading job for " + ct + ":" + ct.fromSource());
+      }
+  
+      Job dep_job = scheduler.loadSource((FileSource) ct.fromSource(), true);
+  
+      if (dep_job == null)
+        throw new InternalCompilerError("Null job for " + ct);
+  
+      CBJobExt dep_jobExt = (CBJobExt) dep_job.ext();
+  
+      if (Report.should_report(Topics.mobile, 3)) {
+        Report.report(3,
+            "Class " + ct + " has deps " + dep_jobExt.dependencies());
+      }
+      ct.setNamespaceDependencies(dep_jobExt.dependencies());
+      for (CodebaseClassType cct : ct.namespaceDependencies()) {
+        FabricParsedClassType fct = (FabricParsedClassType) cct;
+        setDependencies(fct);
+      }
     }
-
-    return dep_jobExt.dependencies();
+    return ct.namespaceDependencies();
   }
 }

@@ -1,8 +1,10 @@
 package fabric.types;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import jif.types.ActsForConstraint;
 import jif.types.ActsForParam;
@@ -11,6 +13,7 @@ import jif.types.JifConstructorInstance;
 import jif.types.JifMethodInstance;
 import jif.types.JifParsedPolyType_c;
 import jif.types.LabelLeAssertion;
+import jif.types.ParamInstance;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
@@ -27,6 +30,7 @@ import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.frontend.CodebaseSource;
+import codebases.types.CodebaseClassType;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements FabricParsedClassType {
   private transient Label singleFieldLabel = null;
@@ -34,7 +38,8 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   private transient boolean fieldLabelFound = false;
   
   protected URI canonical_ns = null;
-
+  protected Set<CodebaseClassType> namespaceDependencies;
+  
   public FabricParsedClassType_c() {
     super();
   }
@@ -234,5 +239,15 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
       canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
     
     return canonical_ns;
+  }
+
+  @Override
+  public void setNamespaceDependencies(Set<CodebaseClassType> dependencies) {
+    namespaceDependencies = dependencies;
+  }
+
+  @Override
+  public Collection<CodebaseClassType> namespaceDependencies() {
+    return namespaceDependencies;
   }
 }

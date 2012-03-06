@@ -1,6 +1,8 @@
 package fabric.types;
 
 import java.net.URI;
+import java.util.Collection;
+import java.util.Set;
 
 import jif.types.JifParsedPolyType;
 import polyglot.types.MethodInstance;
@@ -11,5 +13,13 @@ public interface FabricParsedClassType extends JifParsedPolyType,
 
   void removeMethod(MethodInstance mi);
   void setCanonicalNamespace(URI ns);
+  /**
+   * @param Namespace dependencies
+   */
+  void setNamespaceDependencies(Set<CodebaseClassType> dependencies);
+  /**
+   * @return
+   */
+  Collection<CodebaseClassType> namespaceDependencies();
 
 }

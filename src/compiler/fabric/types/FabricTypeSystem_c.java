@@ -857,7 +857,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
             (fabric.util.HashMap) new fabric.util.HashMap._Impl(dest).fabric$util$HashMap$(
                 /* // XXX when HashMap becomes parameterized, these will be the labels.
                  * , lbl, lbl.confPolicy()*/
-                );
+                ); 
         new_codebase =
             (Codebase) new Codebase._Impl(dest).fabric$lang$Codebase$(lbl, lbl.confPolicy(), classes);
       }

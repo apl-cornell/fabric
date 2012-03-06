@@ -2,12 +2,16 @@ package fabric.visit;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 
 import jif.ast.JifClassDecl;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
+import polyglot.frontend.FileSource;
 import polyglot.frontend.Job;
+import polyglot.frontend.Scheduler;
 import polyglot.main.Report;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
@@ -82,7 +86,10 @@ public class FClassGenerator extends ErrorHandlingVisitor {
       JifClassDecl jcd = (JifClassDecl) n;
       FabricParsedClassType pct = (FabricParsedClassType) jcd.type();
       CodebaseSource src = (CodebaseSource) pct.fromSource();
-      
+      setDependencies(pct);
+      if ( pct.namespaceDependencies() == null) {
+        throw new InternalCompilerError("Class " + pct + " has no namespace dependencies!");
+      }
       //Set the canonical namespace of this type to the codebase
       //  (For serialization when compiling directly to bytecode)
       pct.setCanonicalNamespace(NSUtil.namespace(codebase));
@@ -140,5 +147,41 @@ public class FClassGenerator extends ErrorHandlingVisitor {
     }
     return n;
   }
-
+  Collection<CodebaseClassType> setDependencies(FabricParsedClassType ct) {
+    ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
+    if (ct.canonicalNamespace().equals(extInfo.platformNamespace()))
+      return Collections.emptySet();
+    
+    if (ct.namespaceDependencies() == null) {
+      Scheduler scheduler = job.extensionInfo().scheduler();
+      CodebaseSource cs = (CodebaseSource) ct.fromSource();
+  
+      if (cs == null) throw new InternalCompilerError("Null source for " + ct);
+  
+      if (!scheduler.sourceHasJob(ct.fromSource()))
+        throw new InternalCompilerError("No job for " + ct);
+  
+      if (Report.should_report(Topics.mobile, 3)) {
+        Report.report(3, "Loading job for " + ct + ":" + ct.fromSource());
+      }
+  
+      Job dep_job = scheduler.loadSource((FileSource) ct.fromSource(), true);
+  
+      if (dep_job == null)
+        throw new InternalCompilerError("Null job for " + ct);
+  
+      CBJobExt dep_jobExt = (CBJobExt) dep_job.ext();
+  
+      if (Report.should_report(Topics.mobile, 3)) {
+        Report.report(3,
+            "Class " + ct + " has deps " + dep_jobExt.dependencies());
+      }
+      ct.setNamespaceDependencies(dep_jobExt.dependencies());
+      for (CodebaseClassType cct : ct.namespaceDependencies()) {
+        FabricParsedClassType fct = (FabricParsedClassType) cct;
+        setDependencies(fct);
+      }
+    }
+    return ct.namespaceDependencies();
+  }
 }
