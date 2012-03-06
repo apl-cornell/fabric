@@ -22,10 +22,19 @@ BOB_SCRIPTS_CB="$(cat "${CB_DIR}/bob-scripts.codebase" | sed 's/[<>]//g')"
 
 # Initialize application state.
 "${BIN_DIR}/start-worker" snapp "${SNAPP_SCRIPTS_CB}"snapp.Init
+echo "snapp.Init"
 "${BIN_DIR}/start-worker" mapserv "${MAPSERV_SCRIPTS_CB}"mapserv.Init
+echo "mapserv.Init"
 "${BIN_DIR}/start-worker" friendmap "${FRIENDMAP_SCRIPTS_CB}"friendmap.Init
+echo "friendmap.Init"
 "${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.Init
+echo "alice.Init"
 "${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.Init
-"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.AddFriends
-"${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.AddFriends
+echo "bob.Init"
+#"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.AddFriends 
+#echo "alice.AddFriends"
+#"${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.AddFriends
+#echo "bob.AddFriends"
+
+echo "All tests finished successfully"
 

@@ -383,7 +383,7 @@ public final class LabelUtil {
       return toLabel(store, policy, bottomInteg());
   }
   public static Label liftToLabel(Store store, IntegPolicy policy) {
-      return toLabel(store, topConf(), policy);
+      return toLabel(store, bottomConf(), policy);
   }
   
   public static Label join(Store store, Label l1, Label l2) {
