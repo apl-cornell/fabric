@@ -1,5 +1,6 @@
 package fabric.ast;
 
+import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
 import fabric.extension.*;
 
@@ -26,16 +27,21 @@ public class FabricFabExtFactory_c extends AbstractFabExtFactory_c {
   
   @Override
   protected FabricExt extNewImpl() {
-    return new LocatedExt_c();
+    return new NewExt_c();
   }
   
   @Override
   protected FabricExt extNewFabricArrayImpl() {
-    return new LocatedExt_c();
+    return new NewFabricArrayExt_c();
   }
   
   @Override
   protected FabricExt extNewLabelImpl() {
-    return new LocatedExt_c();
+    return new NewLabelExt_c();
+  }
+  
+  @Override
+  protected Ext extPrincipalExprImpl() {
+    return new PrincipalExprExt_c();
   }
 }

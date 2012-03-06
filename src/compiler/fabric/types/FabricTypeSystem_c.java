@@ -91,6 +91,7 @@ import fabric.translate.FabricJoinLabelToFabilExpr_c;
 import fabric.translate.FabricMeetLabelToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
 import fabric.translate.ProviderLabelToFabilExpr_c;
+import fabric.translate.DisjunctivePrincipalToFabilExpr_c;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -549,7 +550,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
 
   @Override
   public PrincipalToJavaExpr disjunctivePrincipalTranslator() {
-    return new DisjunctivePrincipalToJavaExpr_c();
+    return new DisjunctivePrincipalToFabilExpr_c();
   }
 
   @Override

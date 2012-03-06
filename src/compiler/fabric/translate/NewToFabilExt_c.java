@@ -16,6 +16,7 @@ import polyglot.visit.NodeVisitor;
 import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricUtil;
 import fabric.extension.LocatedExt_c;
+import fabric.extension.NewExt_c;
 import fabric.types.FabricClassType;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
@@ -53,7 +54,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
 
     if (ts.isFabricClass(ct)) {
       // For non-fabric classes, there cannot be location or labels.
-      LocatedExt_c ext = (LocatedExt_c) FabricUtil.fabricExt(n);
+      NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(n);
       // set location
       loc = ext.location();
       // if location is implicit, use StoreGetter to inherit location from
