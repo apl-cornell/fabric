@@ -11,6 +11,8 @@ import jif.ast.JifNodeFactory_c;
 import jif.ast.LabelNode;
 import jif.ast.NewLabel;
 import jif.ast.ParamDecl;
+import jif.ast.PrincipalExpr;
+import jif.ast.PrincipalExpr_c;
 import jif.ast.PrincipalNode;
 import jif.types.Assertion;
 import polyglot.ast.Call;
@@ -269,6 +271,13 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     NewLabel result = super.NewLabel(pos, label);
     result = (NewLabel) setLocation(result, location);
     return result;
+  }
+  
+  @Override
+  public PrincipalExpr PrincipalExpr(Position pos, PrincipalNode principal, Expr location) {
+      PrincipalExpr n = super.PrincipalExpr(pos, principal);
+      n = (PrincipalExpr) setLocation(n, location);
+      return n;
   }
 
   // ////////////////////////////////////////////////////////////////////////////

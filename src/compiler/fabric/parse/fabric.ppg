@@ -527,7 +527,7 @@ extend primary ::=
         NEW:n LABEL label:a location_expr_opt:loc
             {: RESULT = parser.nf.NewLabel(parser.pos(n, loc), a, loc); :}
     |   NEW:n PRINCIPAL location_expr_opt:loc LPAREN principal_disjunctive:a RPAREN:z
-            {: RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a); :}
+            {: RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a, loc); :}
 
     |   NEW:n objtype_or_expr:a dims_opt:b
             {: RESULT = parser.toNewFabricArray(parser.pos(n,a), a, b, null); :}

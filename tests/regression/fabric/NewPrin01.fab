@@ -1,0 +1,6 @@
+
+public class NewPrin01[principal a, principal b] {
+    public void foo(Store store) {
+        principal p = new principal@store (a,b);
+    }
+}
