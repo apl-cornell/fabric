@@ -28,7 +28,7 @@ where
         if (userAlice.p equiv new principal@store (worker$,snapp)
         ) {
 
-          final UserWrapper[{*→store}] aw = new UserWrapper[{*→store}] (store, worker$, snapp, userAlice);
+          final UserWrapper[{*→store}] aw = new UserWrapper[{*→store}]@store(store, worker$, snapp, userAlice);
           store.getRoot().put("alice", aw);
 
           final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");

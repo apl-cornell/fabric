@@ -26,6 +26,6 @@ BOB_SCRIPTS_CB="$(cat "${CB_DIR}/bob-scripts.codebase" | sed 's/[<>]//g')"
 "${BIN_DIR}/start-worker" friendmap "${FRIENDMAP_SCRIPTS_CB}"friendmap.Init
 "${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.Init
 "${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.Init
-#"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.AddFriends
-#"${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.AddFriends
+"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.AddFriends
+"${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.AddFriends
 
