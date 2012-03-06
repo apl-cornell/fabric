@@ -27,6 +27,9 @@ public class PrincipalExprToFabilExt_c extends PrincipalExprToJavaExt_c {
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     FabILNodeFactory fabilnf = (FabILNodeFactory) rw.nodeFactory();
+    //toJava is called explicitly on principal types, without actually visiting
+    // so we need to use this ugly hack to keep track of the proper location
+    // to assign to new label objects, just like for labels.
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     PrincipalExpr n = (PrincipalExpr) node();
     PrincipalExprExt_c ext = (PrincipalExprExt_c)FabricUtil.fabricExt(n);

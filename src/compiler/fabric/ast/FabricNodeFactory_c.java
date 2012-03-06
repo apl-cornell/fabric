@@ -276,6 +276,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   @Override
   public PrincipalExpr PrincipalExpr(Position pos, PrincipalNode principal, Expr location) {
       PrincipalExpr n = super.PrincipalExpr(pos, principal);
+      n = (PrincipalExpr) n.del(((FabricDelFactory)delFactory()).delPrincipalExpr());
       n = (PrincipalExpr) setLocation(n, location);
       return n;
   }

@@ -1,6 +1,7 @@
 
 public class NewPrin01[principal a, principal b] {
-    public void foo(Store store) {
+    public void foo(final Store store) {
         principal p = new principal@store (a,b);
+        label l = new label {a→} @store;
     }
 }

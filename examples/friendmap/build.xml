@@ -88,8 +88,8 @@
 
   <target name="build-local-snapp" depends="build-util">
     <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase">
-      <!--
       <arg value="-rdebug" />
+      <!--
       <arg value="-report" /> <arg value="debug=1" />
       -->
     </fabc-local>
