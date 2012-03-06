@@ -138,7 +138,8 @@ where
     l <= a,                             // access labels must bound update labels
 
     L        <= l, // because this object affects result fields
-    provider <= l  // code affects result fields
+    provider <= l, // code affects result fields
+    {l;a}    <= l  // labels affect type of object
   {
     return new Box[l,a]@s(this.xmin, this.ymin, this.xmax, this.ymax);
   }

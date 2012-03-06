@@ -7,7 +7,6 @@ import polyglot.types.SemanticException;
 import polyglot.visit.NodeVisitor;
 import fabric.ast.FabricUtil;
 import fabric.extension.LocatedExt_c;
-import fabric.extension.NewLabelExt_c;
 import fabric.visit.FabricToFabilRewriter;
 
 public class NewLabelToFabilExt_c extends NewLabelToJavaExt_c {
@@ -25,7 +24,7 @@ public class NewLabelToFabilExt_c extends NewLabelToJavaExt_c {
     // so we need to use this ugly hack to keep track of the proper location
     // to assign to new label objects.
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
-    NewLabelExt_c ext = (NewLabelExt_c)FabricUtil.fabricExt(node());
+    LocatedExt_c ext = (LocatedExt_c)FabricUtil.fabricExt(node());
     rw = ffrw.pushLocation(ext.location());
     Node n = super.toJava(rw);
     return n;

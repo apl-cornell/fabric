@@ -20,10 +20,10 @@ public class FabricNewDel extends JL_c {
   @Override
   public Node visitChildren(NodeVisitor v) {
     Node n = super.visitChildren(v);
-    NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
+    LocatedExt_c ext = (LocatedExt_c)FabricUtil.fabricExt(n);
     if (ext.location() != null) {
       Expr loc = (Expr)v.visitEdge(n, ext.location());
-      ext = (NewExt_c)ext.location(loc);
+      ext = ext.location(loc);
       return FabricUtil.updateFabricExt(n, ext);
     }
     return n;
@@ -34,7 +34,7 @@ public class FabricNewDel extends JL_c {
   public List<Type> throwTypes(TypeSystem ts) {
     List<Type> toReturn = super.throwTypes(ts);
     Node n = this.node();
-    NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
+    LocatedExt_c ext = (LocatedExt_c)FabricUtil.fabricExt(n);
     if (ext.location() != null) {
       Expr loc = ext.location();
       toReturn.addAll(loc.del().throwTypes(ts));
@@ -46,14 +46,14 @@ public class FabricNewDel extends JL_c {
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
     Node n = super.typeCheck(tc);
-    NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
+    LocatedExt_c ext = (LocatedExt_c)FabricUtil.fabricExt(n);
     FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
     if (ext.location() != null) {
       if (!ts.isSubtype(ext.location().type(), ts.Store())) {
         throw new SemanticException("The location needs to be a Store.", ext.location().position());
       }
       JifContext context = (JifContext)tc.context();
-      ext = (NewExt_c)ext.storePrincipal(JifUtil.exprToPrincipal(ts, ext.location(), context));
+      ext = ext.storePrincipal(JifUtil.exprToPrincipal(ts, ext.location(), context));
       n = FabricUtil.updateFabricExt(n, ext);
     }
     return n;
@@ -62,10 +62,10 @@ public class FabricNewDel extends JL_c {
   @Override
   public Node disambiguateOverride(Node parent, AmbiguityRemover ar) throws SemanticException {
     Node n = super.disambiguateOverride(parent, ar);
-    NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
+    LocatedExt_c ext = (LocatedExt_c)FabricUtil.fabricExt(n);
     if (ext.location() != null) {
       Expr loc = (Expr)ar.visitEdge(n, ext.location());
-      ext = (NewExt_c)ext.location(loc);
+      ext = ext.location(loc);
       return FabricUtil.updateFabricExt(n, ext);
     }
     return n;
@@ -74,10 +74,10 @@ public class FabricNewDel extends JL_c {
   @Override
   public Node typeCheckOverride(Node parent, TypeChecker tc) throws SemanticException {
     Node n = super.typeCheckOverride(parent, tc);
-    NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
+    LocatedExt_c ext = (LocatedExt_c)FabricUtil.fabricExt(n);
     if (ext.location() != null) {
       Expr loc = (Expr)tc.visitEdge(n, ext.location());
-      ext = (NewExt_c)ext.location(loc);
+      ext = ext.location(loc);
       return FabricUtil.updateFabricExt(n, ext);
     }
     return n;    

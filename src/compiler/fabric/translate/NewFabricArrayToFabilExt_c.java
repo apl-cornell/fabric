@@ -13,7 +13,7 @@ import fabil.ast.FabILNodeFactory;
 import fabil.ast.FabricArrayInit;
 import fabric.ast.FabricUtil;
 import fabric.ast.NewFabricArray;
-import fabric.extension.NewFabricArrayExt_c;
+import fabric.extension.LocatedExt_c;
 import fabric.types.FabricClassType;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
@@ -32,7 +32,7 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     NewFabricArray n = (NewFabricArray) node();
-    NewFabricArrayExt_c ext = (NewFabricArrayExt_c) FabricUtil.fabricExt(n);
+    LocatedExt_c ext = (LocatedExt_c) FabricUtil.fabricExt(n);
 
     FabILNodeFactory nf = (FabILNodeFactory) rw.nodeFactory();
     FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();

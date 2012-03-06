@@ -119,9 +119,9 @@ where
     l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
     l <= a,                             // access labels must bound update labels
 
-    {L;*provider} <= l,     // result fields are affected by fields
-    {L;*provider} <= {*→s}, // information leaks from fields to object creation.
-    provider      <= A      // code affects access to the boundary 
+    {L;*provider;l;a;s} <= l,     // result fields are affected by fields
+    {L;*provider;l;a;s} <= {*→s}, // information leaks from fields to object creation.
+    provider            <= A      // code affects access to the boundary 
   {
     if (boundary == null)
       throw new AssertionFailedError("126 boundary is non-null.");
