@@ -34,9 +34,9 @@ public class PrincipalExprToFabilExt_c extends PrincipalExprToJavaExt_c {
     PrincipalExpr n = (PrincipalExpr) node();
     PrincipalExprExt_c ext = (PrincipalExprExt_c)FabricUtil.fabricExt(n);
     Expr loc = ext.location();
-    if (loc == null) {
-      loc = fabilnf.StoreGetter(Position.compilerGenerated());
-    }
+//    if (loc == null) {
+//      loc = fabilnf.StoreGetter(Position.compilerGenerated());
+//    }
     rw = ffrw.pushLocation(loc);
     Node node = super.toJava(rw);
     return node;
