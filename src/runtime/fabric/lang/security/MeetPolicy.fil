@@ -11,7 +11,6 @@ import fabric.util.*;
  */
 public abstract class MeetPolicy extends AbstractPolicy implements Policy {
   private Set components; // Set of Policies
-  public final Store localStore = Worker.getWorker().getLocalStore();
 
   MeetPolicy fabric$lang$security$MeetPolicy$(Set policies) {
 	fabric$lang$security$AbstractPolicy$();
