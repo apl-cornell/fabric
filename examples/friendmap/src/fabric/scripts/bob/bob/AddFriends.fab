@@ -24,6 +24,7 @@ where
     String[] args
   )
   {
+   atomic {
     final Store  snappStore = worker$.getStore("snapp");
     final Map    rootMap    = snappStore.getRoot();
 
@@ -37,6 +38,7 @@ where
       userBob.friends.add(aw);
     else
       throw new AssertionFailedError("User[n,o].p = (n, o)");
+   }
   }
 }
 

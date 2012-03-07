@@ -24,6 +24,7 @@ where
 {
   public static void main{}(String[] args)
   {
+   atomic {
     final Store snappStore = worker$.getStore("snapp");
     final Store fmStore    = worker$.getStore("friendmap");
     final Map   rootMap    = snappStore.getRoot();
@@ -39,6 +40,7 @@ where
     ) {
       app.viewMap(userAlice, aw.userOwner, aw.userNetwork);
     } else throw new AssertionFailedError("invariants");
+   }
   }
 }
 
