@@ -350,7 +350,10 @@ public class TransactionManager {
   }
 
   /**
-   * Returns a GroupContainer containing the specified object.
+   * Returns a GroupContainer containing the specified object. All surrogates
+   * referenced by any object in the group will also be in the group. This
+   * ensures that the worker will not reveal information when dereferencing
+   * surrogates.
    * 
    * @param handler
    *          Used to track read statistics. Can be null.
@@ -392,7 +395,9 @@ public class TransactionManager {
   }
 
   /**
-   * Returns a Glob containing the specified object.
+   * Returns a Glob containing the specified object. All surrogates referenced
+   * by any object in the group will also be in the group. This ensures that the
+   * worker will not reveal information when dereferencing surrogates.
    * 
    * @param subscriber
    *          If non-null, then the given worker will be subscribed to the
@@ -405,7 +410,10 @@ public class TransactionManager {
   }
 
   /**
-   * Returns an ObjectGroup containing the specified object.
+   * Returns an ObjectGroup containing the specified object. All surrogates
+   * referenced by any object in the group will also be in the group. This
+   * ensures that the worker will not reveal information when dereferencing
+   * surrogates.
    * 
    * @param principal
    *          The principal performing the read.
@@ -424,7 +432,10 @@ public class TransactionManager {
   }
 
   /**
-   * Reads a group of objects from the object database.
+   * Reads a group of objects from the object database. All surrogates
+   * referenced by any object in the group will also be in the group. This
+   * ensures that the worker will not reveal information when dereferencing
+   * surrogates.
    * 
    * @param onum
    *          The group's head object.
