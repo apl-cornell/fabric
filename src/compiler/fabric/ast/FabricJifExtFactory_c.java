@@ -6,10 +6,9 @@ import jif.extension.JifBinaryExt;
 import jif.extension.JifConstructorDeclExt;
 import jif.extension.JifFieldDeclExt_c;
 import jif.extension.JifLabelExprExt;
+import jif.extension.JifPrincipalExprExt;
 import jif.extension.JifSourceFileExt;
 import jif.translate.FieldToJavaExt_c;
-import jif.translate.InstanceOfToJavaExt_c;
-import jif.extension.JifPrincipalExprExt;
 import polyglot.ast.Ext;
 import fabric.extension.AbortJifExt_c;
 import fabric.extension.AtomicJifExt_c;
@@ -41,11 +40,11 @@ import fabric.translate.NewFabricArrayToFabilExt_c;
 import fabric.translate.NewLabelToFabilExt_c;
 import fabric.translate.NewToFabilExt_c;
 import fabric.translate.PackageNodeToFabilExt_c;
+import fabric.translate.PrincipalExprToFabilExt_c;
 import fabric.translate.RemoteWorkerGetterToFabilExt_c;
 import fabric.translate.RetryToFabilExt_c;
 import fabric.translate.SourceFileToFabilExt_c;
 import fabric.translate.WorkerToFabilExt_c;
-import fabric.translate.PrincipalExprToFabilExt_c;
 
 /**
  * This class extends the Jif Extension factory to provide Jif extension objects

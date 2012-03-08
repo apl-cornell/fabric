@@ -212,6 +212,7 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
     return new FabricNewLabelDel();
   }
   
+  @Override
   public JL delPrincipalExpr() {
     return new FabricPrincipalExprDel();
   }

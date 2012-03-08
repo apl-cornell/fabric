@@ -1,18 +1,16 @@
 package fabric.translate;
 
+import jif.ast.PrincipalExpr;
+import jif.translate.JifToJavaRewriter;
+import jif.translate.PrincipalExprToJavaExt_c;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
-import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
-import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricUtil;
 import fabric.extension.LocatedExt_c;
 import fabric.extension.PrincipalExprExt_c;
 import fabric.visit.FabricToFabilRewriter;
-import jif.ast.PrincipalExpr;
-import jif.translate.JifToJavaRewriter;
-import jif.translate.PrincipalExprToJavaExt_c;
 
 public class PrincipalExprToFabilExt_c extends PrincipalExprToJavaExt_c {
 
@@ -26,7 +24,6 @@ public class PrincipalExprToFabilExt_c extends PrincipalExprToJavaExt_c {
   
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    FabILNodeFactory fabilnf = (FabILNodeFactory) rw.nodeFactory();
     //toJava is called explicitly on principal types, without actually visiting
     // so we need to use this ugly hack to keep track of the proper location
     // to assign to new label objects, just like for labels.
