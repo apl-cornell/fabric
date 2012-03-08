@@ -99,7 +99,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     Expr accessLabelExpr = rw.labelToJava(accessLabel);
     Expr storeLabelExpr = rw.qq().parseExpr(rw.runtimeLabelUtil() + 
         ".readerPolicyLabel(" + frw.runtimePrincipalUtil() +
-        ".topPrincipal()"+", o.$getStore().getPrincipal())");
+        ".topPrincipal()"+", o.fetch().$getStore().getPrincipal())"); /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */
     sb.append("if (!" + rw.runtimeLabelUtil() + ".relabelsTo(%E, %E)) " +
     "throw new InternalError(\"Illegal Access to \" + o.$getStore());");
 
