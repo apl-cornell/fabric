@@ -9,6 +9,7 @@ import java.util.Iterator;
 
 import javax.security.auth.x500.X500Principal;
 
+import fabric.common.ClassRef;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
@@ -16,7 +17,6 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
 import fabric.common.util.MutableInteger;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -365,21 +365,38 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Inserts the given group container into the cache for the given onums.
+   * Inserts the given group container into the cache for the given set of
+   * objects.
    */
-  public final void cacheGroupContainer(LongSet onums, GroupContainer container) {
-    // Get a new ID for the glob and insert into the glob table.
+  public final void cacheGroupContainer(
+      LongKeyMap<SerializedObject> objects, GroupContainer container) {
+    // Get a new ID for the glob and keep count of the number of non-surrogates.
     long globID = nextGlobID++;
-    globTable.put(globID, container, onums.size());
+    int numNonSurrogates = 0;
 
-    // Establish globID bindings for all onums we're given.
-    for (LongIterator it = onums.iterator(); it.hasNext();) {
-      long onum = it.next();
+    // Establish globID bindings for all non-surrogate onums we're given.
+    for (Iterator<LongKeyMap.Entry<SerializedObject>> it =
+        objects.entrySet().iterator(); it.hasNext();) {
+      LongKeyMap.Entry<SerializedObject> entry = it.next();
+      SerializedObject obj = entry.getValue();
+      if (ClassRef.SURROGATE.equals(obj.getClassRef())) {
+        // Surrogate.  Do nothing.
+        continue;
+      }
+      
+      // Establish globID binding for the non-surrogate object.
+      long onum = entry.getKey();
+      numNonSurrogates++;
 
       Long oldGlobID = globIDByOnum.put(onum, globID);
       if (oldGlobID == null) continue;
 
       globTable.unpin(oldGlobID);
+    }
+    
+    if (numNonSurrogates > 0) {
+      // Insert into the glob table.
+      globTable.put(globID, container, numNonSurrogates);
     }
   }
 

@@ -13,6 +13,7 @@ import java.util.Queue;
 import java.util.Random;
 
 import fabric.common.AuthorizationUtil;
+import fabric.common.ClassRef;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -384,7 +385,7 @@ public class TransactionManager {
 
     // Cache the container.
     synchronized (database) {
-      database.cacheGroupContainer(group.objects().keySet(), container);
+      database.cacheGroupContainer(group.objects(), container);
     }
 
     return container;
@@ -446,9 +447,15 @@ public class TransactionManager {
     seen.add(onum);
     while (!toVisit.isEmpty()) {
       SerializedObject curObj = toVisit.remove();
+      if (group.size() >= MAX_GROUP_SIZE) {
+        // Only add surrogates.
+        if (ClassRef.SURROGATE.equals(curObj.getClassRef())) {
+          group.put(curObj.getOnum(), curObj);
+        }
+        continue;
+      }
+      
       group.put(curObj.getOnum(), curObj);
-
-      if (group.size() == MAX_GROUP_SIZE) break;
 
       for (Iterator<Long> it = curObj.getIntraStoreRefIterator(); it.hasNext();) {
         long relatedOnum = it.next();
