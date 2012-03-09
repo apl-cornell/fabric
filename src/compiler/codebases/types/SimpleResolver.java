@@ -66,7 +66,8 @@ public class SimpleResolver extends NamespaceResolver_c {
     else if (load_enc && encodedClazz == null && source != null) {
       // Found source, but no job.  Check class cache of canonical NS
       CodebaseSource cbsource = (CodebaseSource) source;
-      if (!cbsource.canonicalNamespace().equals(namespace)) {
+      if (!cbsource.canonicalNamespace().isOpaque()
+          && !cbsource.canonicalNamespace().equals(namespace)) {
         ClassPathLoader classpathLoader = extInfo.classpathLoader(cbsource.canonicalNamespace());
         ClassFile homeClazz = classpathLoader.loadClass(name);
         if (homeClazz != null) {
