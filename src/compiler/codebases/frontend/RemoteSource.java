@@ -44,7 +44,7 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
       Date lastModified, boolean userSpecified, boolean publish)
       throws IOException {
     super(path, name, lastModified, userSpecified);
-    this.namespace = namespace;
+    this.namespace = NSUtil.namespace(fcls.getCodebase());
     this.fcls = fcls;
     this.name = name;
     this.path = path;

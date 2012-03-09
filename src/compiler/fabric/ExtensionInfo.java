@@ -228,7 +228,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements codebases.fronte
           + " is higher than the label of its codebase ");
     }
     
-    return new RemoteSource(ns, fcls, user);
+    return new RemoteSource(NSUtil.namespace(fcls.getCodebase()), fcls, user);
   }
   
   @Override

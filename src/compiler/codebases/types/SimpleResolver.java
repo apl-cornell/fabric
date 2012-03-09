@@ -10,6 +10,7 @@ import polyglot.types.NoClassException;
 import polyglot.types.SemanticException;
 import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassPathLoader;
+import codebases.frontend.CodebaseSource;
 import codebases.frontend.ExtensionInfo;
 import codebases.frontend.URISourceLoader;
 
@@ -61,6 +62,22 @@ public class SimpleResolver extends NamespaceResolver_c {
 
         // the source has already been compiled; what are we doing here?
         return getTypeFromSource(source, name);
+    }
+    else if (load_enc && encodedClazz == null && source != null) {
+      // Found source, but no job.  Check class cache of canonical NS
+      CodebaseSource cbsource = (CodebaseSource) source;
+      if (!cbsource.canonicalNamespace().equals(namespace)) {
+        ClassPathLoader classpathLoader = extInfo.classpathLoader(cbsource.canonicalNamespace());
+        ClassFile homeClazz = classpathLoader.loadClass(name);
+        if (homeClazz != null) {
+          // Check for encoded type information.
+          if (homeClazz.encodedClassType(version) != null) {
+            if (Report.should_report(REPORT_TOPICS, 4))
+              Report.report(4, "Class " + name + " has encoded type info");
+            encodedClazz = homeClazz;
+          }
+        }
+      }
     }
 
     if (Report.should_report(REPORT_TOPICS, 4)) {
