@@ -1,10 +1,8 @@
 package fabric;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +17,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import polyglot.frontend.Compiler;
 import polyglot.frontend.ExtensionInfo;
@@ -336,41 +333,6 @@ public class Main extends polyglot.main.Main {
 
     for (int i = 0; i < args.length; i++) {
       // special case for the @ command-line parameter
-      ll.add(args[i]);
-    }
-
-    return ll;
-  }
-
-  private List<String> explodeOptions(String[] args) throws TerminationException {
-    LinkedList<String> ll = new LinkedList<String>();
-
-    for (int i = 0; i < args.length; i++) {
-      // special case for the @ command-line parameter
-      if (args[i].startsWith("@")) {
-        String fn = args[i].substring(1);
-        try {
-          BufferedReader lr = new BufferedReader(new FileReader(fn));
-          LinkedList<String> newArgs = new LinkedList<String>();
-
-          while (true) {
-            String l = lr.readLine();
-            if (l == null) break;
-
-            StringTokenizer st = new StringTokenizer(l, " ");
-            while (st.hasMoreTokens())
-              newArgs.add(st.nextToken());
-          }
-
-          lr.close();
-          ll.addAll(newArgs);
-        } catch (java.io.IOException e) {
-          throw new TerminationException(
-              "cmdline parser: couldn't read args file " + fn);
-        }
-        continue;
-      }
-
       ll.add(args[i]);
     }
 

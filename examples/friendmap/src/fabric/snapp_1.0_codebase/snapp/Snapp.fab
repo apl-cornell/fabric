@@ -9,6 +9,8 @@ import util.AssertionFailedError;
 public class Snapp extends Delegator
 where
   provider <= User.provider, User.provider <= provider,
+  User.provider <= Location.provider,
+  Location.provider <= User.provider,
 
   // trusted classes are trusted
   util.Delegator.provider     <= {*←},

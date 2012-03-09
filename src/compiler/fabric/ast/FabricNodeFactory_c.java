@@ -12,7 +12,6 @@ import jif.ast.LabelNode;
 import jif.ast.NewLabel;
 import jif.ast.ParamDecl;
 import jif.ast.PrincipalExpr;
-import jif.ast.PrincipalExpr_c;
 import jif.ast.PrincipalNode;
 import jif.types.Assertion;
 import polyglot.ast.Call;

@@ -1,31 +1,8 @@
 package fabric.translate;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import fabil.ast.FabILNodeFactory;
-import fabil.types.FabILTypeSystem;
-import fabric.types.FabricClassType;
-import fabric.types.FabricParsedClassType;
-import fabric.types.FabricParsedClassType_c;
-import fabric.types.FabricTypeSystem;
-import fabric.visit.FabricToFabilRewriter;
-
-import polyglot.ast.ClassBody;
-import polyglot.ast.ClassDecl;
-import polyglot.ast.ClassMember;
-import polyglot.ast.Expr;
-import polyglot.ast.Formal;
-import polyglot.ast.Node;
-import polyglot.ast.Stmt;
-import polyglot.ast.TypeNode;
-import polyglot.types.ClassType;
-import polyglot.types.Context;
-import polyglot.types.Flags;
-import polyglot.types.SemanticException;
-import polyglot.util.InternalCompilerError;
-import polyglot.util.Position;
 import jif.translate.ClassDeclToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.ParamToJavaExpr_c;
@@ -34,6 +11,27 @@ import jif.types.JifTypeSystem;
 import jif.types.ParamInstance;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
+import polyglot.ast.ClassBody;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
+import polyglot.ast.Expr;
+import polyglot.ast.Formal;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
+import polyglot.ast.Stmt;
+import polyglot.ast.TypeNode;
+import polyglot.types.ClassType;
+import polyglot.types.Context;
+import polyglot.types.Flags;
+import polyglot.types.SemanticException;
+import polyglot.util.InternalCompilerError;
+import polyglot.util.Position;
+import fabil.ast.FabILNodeFactory;
+import fabil.types.FabILTypeSystem;
+import fabric.types.FabricClassType;
+import fabric.types.FabricParsedClassType_c;
+import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricToFabilRewriter;
 
 public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   public static final String jifConstructorTranslatedName(ClassType ct) {
@@ -75,7 +73,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     rw = (JifToJavaRewriter)rw.context(A.pushStatic());
     FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
     JifTypeSystem jifts = rw.jif_ts();
-    List formals = produceFormals(jpt, rw, true);
+    List<Formal> formals = produceFormals(jpt, rw, true);
 
     String name = jpt.name();
 
@@ -99,7 +97,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     Expr accessLabelExpr = rw.labelToJava(accessLabel);
     Expr storeLabelExpr = rw.qq().parseExpr(rw.runtimeLabelUtil() + 
         ".readerPolicyLabel(" + frw.runtimePrincipalUtil() +
-        ".topPrincipal()"+", o.$getStore().getPrincipal())");
+        ".topPrincipal()"+", o.fetch().$getStore().getPrincipal())"); /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */
     sb.append("if (!" + rw.runtimeLabelUtil() + ".relabelsTo(%E, %E)) " +
     "throw new InternalError(\"Illegal Access to \" + o.$getStore());");
 
@@ -113,8 +111,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
       // now test each of the params
       boolean moreThanOneParam = (jpt.params().size() > 1);
       sb.append(moreThanOneParam?"boolean ok = true;":"");
-      for (Iterator iter = jpt.params().iterator(); iter.hasNext(); ) {
-        ParamInstance pi = (ParamInstance)iter.next();
+      for (ParamInstance pi : jpt.params()) {
         String paramFieldName = ParamToJavaExpr_c.paramFieldName(pi);
         String paramArgName = ParamToJavaExpr_c.paramArgName(pi);
         String comparison = "equivalentTo";
@@ -151,21 +148,25 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
   @Override
   @SuppressWarnings("unchecked")
-  protected List produceFormals(JifPolyType jpt, JifToJavaRewriter rw, boolean addObjectFormal) throws SemanticException {
-    List formals = super.produceFormals(jpt, rw, false);
+  protected List<Formal> produceFormals(JifPolyType jpt, JifToJavaRewriter rw, boolean addObjectFormal) throws SemanticException {
+    List<Formal> formals = super.produceFormals(jpt, rw, false);
+    NodeFactory javaNf = rw.java_nf();
 
     if (addObjectFormal) {
       // add the object argument too.
       TypeNode tn = rw.qq().parseType("fabric.lang.Object");
-      formals.add(rw.java_nf().Formal(Position.compilerGenerated(), Flags.FINAL, tn, "o"));
+      formals.add(javaNf.Formal(Position.compilerGenerated(), Flags.FINAL, tn,
+          javaNf.Id(Position.compilerGenerated(), "o")));
     }
+    
+    NodeFactory nf = rw.nodeFactory();
 
     // add access policy formal
 
-    Formal al = rw.nodeFactory().Formal(Position.compilerGenerated(),
-        Flags.FINAL, 
-        rw.typeToJava(rw.jif_ts().Label(), Position.compilerGenerated()), 
-    "jif$accessPolicy");
+    Formal al =
+        nf.Formal(Position.compilerGenerated(), Flags.FINAL,
+            rw.typeToJava(rw.jif_ts().Label(), Position.compilerGenerated()),
+            nf.Id(Position.compilerGenerated(), "jif$accessPolicy"));
 
     formals.add(al);
 
@@ -174,8 +175,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
   @Override
   @SuppressWarnings("unchecked")
-  protected List produceParamArgs(JifPolyType jpt, JifToJavaRewriter rw) {
-    List args = super.produceParamArgs(jpt, rw);
+  protected List<Expr> produceParamArgs(JifPolyType jpt, JifToJavaRewriter rw) {
+    List<Expr> args = super.produceParamArgs(jpt, rw);
 
     // add access policy arg
     args.add(rw.qq().parseExpr("jif$accessPolicy"));

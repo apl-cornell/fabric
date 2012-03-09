@@ -11,7 +11,9 @@ where
   provider <= {*←},
 
   snapp.User.provider        <= snapp.Snapp.provider, snapp.Snapp.provider <= snapp.User.provider,
-  snapp.UserWrapper.provider <= snapp.Snapp.provider, snapp.Snapp.provider <= snapp.UserWrapper.provider
+  snapp.UserWrapper.provider <= snapp.Snapp.provider, snapp.Snapp.provider <= snapp.UserWrapper.provider,
+  snapp.User.provider <= snapp.Location.provider,
+  snapp.Location.provider <= snapp.User.provider
 {
   public static void main {*←} (String[] args) {
     atomic {
@@ -28,7 +30,7 @@ where
         if (userBob.p equiv new principal@store (worker$,snapp)
         ) {
 
-          final UserWrapper[{*→store}] aw = new UserWrapper[{*→store}]@store (store, worker$, snapp, userBob);
+          final UserWrapper[{*→snapp}] aw = new UserWrapper[{*→snapp}]@store (store, worker$, snapp, userBob);
           store.getRoot().put("bob", aw);
 
           final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");

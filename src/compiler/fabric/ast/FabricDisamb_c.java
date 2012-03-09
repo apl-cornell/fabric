@@ -9,7 +9,6 @@ import polyglot.ast.Id;
 import polyglot.ast.Node;
 import polyglot.ast.PackageNode;
 import polyglot.ast.Prefix;
-import polyglot.types.FieldInstance;
 import polyglot.types.Importable;
 import polyglot.types.Named;
 import polyglot.types.NoClassException;

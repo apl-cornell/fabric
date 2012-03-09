@@ -146,16 +146,16 @@ public class Group extends Delegator
   //////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Return true if p is either groupOwner or is a member of the group.
+   * Return true if p acts for either groupOwner or a member of the group.
    */
   public boolean delegatesTo(Principal p) {
-    if (p == jif$util_Group_groupOwner)
+    if (PrincipalUtil.actsFor(p, jif$util_Group_groupOwner))
       return true;
 
     if (PrincipalUtil.actsFor(jif$util_Group_groupOwner, this)) {
       try {
         for (int i = 0; i < this.size; i++)
-          if (p == this.members[i])
+          if (PrincipalUtil.actsFor(p, this.members[i]))
             return true;
 
         return false;

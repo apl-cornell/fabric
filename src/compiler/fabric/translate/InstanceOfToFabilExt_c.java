@@ -1,17 +1,8 @@
 package fabric.translate;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import fabric.types.FabricSubstClassType_c;
-import fabric.types.FabricTypeSystem;
-
-import polyglot.ast.Expr;
-import polyglot.ast.Instanceof;
-import polyglot.ast.Node;
-import polyglot.types.SemanticException;
-import polyglot.visit.NodeVisitor;
 import jif.extension.JifInstanceOfDel;
 import jif.translate.ClassDeclToJavaExt_c;
 import jif.translate.InstanceOfToJavaExt_c;
@@ -22,13 +13,22 @@ import jif.types.JifSubstType;
 import jif.types.ParamInstance;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
+import polyglot.ast.Expr;
+import polyglot.ast.Instanceof;
+import polyglot.ast.Node;
+import polyglot.types.SemanticException;
+import polyglot.visit.NodeVisitor;
+import fabric.types.FabricSubstClassType_c;
+import fabric.types.FabricTypeSystem;
 
 public class InstanceOfToFabilExt_c extends InstanceOfToJavaExt_c {
   
+  @Override
   public NodeVisitor toJavaEnter(JifToJavaRewriter rw) throws SemanticException {
     return super.toJavaEnter(rw);
   }
 
+  @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     Instanceof io = (Instanceof)this.node();
     FabricTypeSystem ts = (FabricTypeSystem)rw.jif_ts();
@@ -37,14 +37,13 @@ public class InstanceOfToFabilExt_c extends InstanceOfToJavaExt_c {
         return rw.java_nf().Instanceof(io.position(), io.expr(), io.compareType());
     }
 
-    List args = new ArrayList();
+    List<Expr> args = new ArrayList<Expr>();
 
     // add all the actual param expressions to args
     JifSubstType t = (JifSubstType)compareType;
     JifSubst subst = (JifSubst)t.subst();
     JifPolyType base = (JifPolyType)t.base();
-    for (Iterator iter = base.params().iterator(); iter.hasNext(); ) {
-        ParamInstance pi = (ParamInstance)iter.next();
+    for (ParamInstance pi : base.params()) {
         args.add(rw.paramToJava(subst.get(pi)));
     }
     

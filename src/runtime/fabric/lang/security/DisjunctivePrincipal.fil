@@ -11,7 +11,6 @@ import fabric.util.*;
 public final class DisjunctivePrincipal extends Principal {
   /*final*/ Set disjuncts;
   private Integer hashCode = null;
-  public static final Store localStore = Worker.getWorker().getLocalStore();
 
   DisjunctivePrincipal fabric$lang$security$DisjunctivePrincipal$(Set disjuncts) {
 	fabric$lang$security$Principal$();

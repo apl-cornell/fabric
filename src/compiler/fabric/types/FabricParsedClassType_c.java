@@ -13,14 +13,11 @@ import jif.types.JifConstructorInstance;
 import jif.types.JifMethodInstance;
 import jif.types.JifParsedPolyType_c;
 import jif.types.LabelLeAssertion;
-import jif.types.ParamInstance;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
-import polyglot.ast.ClassMember;
 import polyglot.frontend.Source;
-import polyglot.types.ClassType;
 import polyglot.types.ConstructorInstance;
 import polyglot.types.DeserializedClassInitializer;
 import polyglot.types.FieldInstance;
@@ -171,6 +168,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
    * all the fields of this class and its superclasses.
    * It computes this by taking a join of all labels concerned.
    */
+  @SuppressWarnings("unchecked")
   @Override
   public ConfPolicy accessPolicy() {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();

@@ -8,6 +8,9 @@ where
     Snapp.provider <= User.provider,
     User.provider <= Snapp.provider,
     provider <= Snapp.provider,
+    User.provider <= Location.provider,
+    Location.provider <= User.provider,
+    
     
     // trusted classes are trusted
     util.Delegator.provider     <= {*←},

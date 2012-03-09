@@ -32,6 +32,11 @@ public class Object extends java.lang.Object {
   public native Store $getStore();
   
   /**
+   * HUGE HACK. THIS SHOULD NOT BE HERE. TODO XXX. REMOVE AFTER SURROGATES PROBLEM IS FIXED.
+   */
+  public native Object fetch();
+  
+  /**
    * A dummy method. This is a hack for working around reachability problems in
    * generated code.
    */

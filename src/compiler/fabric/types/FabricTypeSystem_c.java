@@ -14,7 +14,6 @@ import jif.ast.LabelActsForLabelConstraintNode;
 import jif.ast.LabelActsForPrincipalConstraintNode;
 import jif.ast.LabelNode;
 import jif.translate.ConjunctivePrincipalToJavaExpr_c;
-import jif.translate.DisjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
 import jif.types.ActsForConstraint;
@@ -86,12 +85,12 @@ import codebases.types.NamespaceResolver;
 import fabric.lang.Codebase;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
+import fabric.translate.DisjunctivePrincipalToFabilExpr_c;
 import fabric.translate.DynamicPrincipalToFabilExpr_c;
 import fabric.translate.FabricJoinLabelToFabilExpr_c;
 import fabric.translate.FabricMeetLabelToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
 import fabric.translate.ProviderLabelToFabilExpr_c;
-import fabric.translate.DisjunctivePrincipalToFabilExpr_c;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -859,12 +858,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         // or the highest integrity the worker can claim?
         fabric.lang.security.Label lbl = defaultPublishingLabel();
         fabric.util.HashMap classes =
-            (fabric.util.HashMap) new fabric.util.HashMap._Impl(dest).fabric$util$HashMap$(
+            new fabric.util.HashMap._Impl(dest).fabric$util$HashMap$(
                 /* // XXX when HashMap becomes parameterized, these will be the labels.
                  * , lbl, lbl.confPolicy()*/
                 ); 
         new_codebase =
-            (Codebase) new Codebase._Impl(dest).fabric$lang$Codebase$(lbl, lbl.confPolicy(), classes);
+            new Codebase._Impl(dest).fabric$lang$Codebase$(lbl, lbl.confPolicy(), classes);
       }
       return new_codebase;
     } else if (extInfo.platformNamespace().equals(namespace)

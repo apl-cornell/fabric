@@ -31,10 +31,12 @@ echo "friendmap.Init"
 echo "alice.Init"
 "${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.Init
 echo "bob.Init"
-#"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.AddFriends 
-#echo "alice.AddFriends"
-#"${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.AddFriends
-#echo "bob.AddFriends"
+"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.AddFriends 
+echo "alice.AddFriends"
+"${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.AddFriends
+echo "bob.AddFriends"
+#"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.Run 
+#echo "alice.Run"
 
 echo "All tests finished successfully"
 

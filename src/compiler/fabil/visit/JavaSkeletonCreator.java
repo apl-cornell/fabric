@@ -3,16 +3,12 @@ package fabil.visit;
 import java.util.LinkedList;
 import java.util.List;
 
-import polyglot.ast.Block;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
-import polyglot.ast.ConstructorCall;
-import polyglot.ast.ConstructorDecl;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
-import polyglot.ast.Stmt;
 import polyglot.frontend.Job;
 import polyglot.qq.QQ;
 import polyglot.types.Flags;

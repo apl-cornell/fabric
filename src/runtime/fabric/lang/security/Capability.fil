@@ -10,7 +10,6 @@ public final class Capability {
   private /*final*/ Principal jif$jif_lang_Capability_P;
   private /*final*/ Label jif$jif_lang_Capability_L;
   private /*final*/ Closure closure;
-  public static final Store localStore = Worker.getWorker().getLocalStore();
 
   public Closure getClosure() {
     return closure;
@@ -46,6 +45,8 @@ public final class Capability {
 
   public static Capability jif$cast$jif_lang_Capability(final Principal jif$P,
       final Label jif$L, final Object o) {
+    final Store localStore = Worker.getWorker().getLocalStore();
+      
     if (o == null) return null;
     if (jif$Instanceof(jif$P, jif$L, o)) return (Capability) o;
     throw new ClassCastException@localStore();

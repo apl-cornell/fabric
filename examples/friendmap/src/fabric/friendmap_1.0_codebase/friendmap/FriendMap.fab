@@ -103,7 +103,7 @@ where
 
     final Store local = worker$.getLocalStore();
 
-    printMap(user, owner, n, new label {*→user.p}@local);
+    printMap(user, owner, n, new label {*→user.p}@service.store);
   }
 
   /**
@@ -145,7 +145,7 @@ where
     if (user == null)
       throw new NullPointerException("139 user is null");
 
-    printMap(user, owner, n, new label {*→user.friends});
+    printMap(user, owner, n, new label {*→user.friends}@service.store);
   }
 
 
@@ -230,6 +230,9 @@ where
 
   /**
    * creates a map of the user's friends, visible at label l.  Return value is non-null.
+   * 
+   * l and friend_access_bound get leaked in this method body
+   * need to ensure l and friend_access_bound are not on local store at call site
    *
    * @throws NullPointerException
    *         if user is null.
@@ -638,7 +641,7 @@ where
         if (friend_access_bound <= new label {*→fn}) {
 
         // check general User invariants
-        if (friend.locationLabel equiv new label {_→; *←fn,fo}) {
+//        if (friend.locationLabel equiv new label {_→; *←fn,fo}) {
         if (friend.locationLabel <=    new label {*→fn}) {
 
         // TODO: the solver is failing, so we need to specify a label.
@@ -664,7 +667,7 @@ where
         } // OK:        friend's location is too secret
         } // OK:        friend has no location
         } // Assertion: friend.locLabel <= friend.accessLabel
-        } // Assertion: friend.locationLabel = *←fo,fn
+//        } // Assertion: friend.locationLabel = *←fo,fn
         } // OK:        it's just not safe to access user
       }
     }
