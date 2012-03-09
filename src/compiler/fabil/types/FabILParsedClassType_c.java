@@ -14,6 +14,7 @@ import polyglot.types.LazyClassInitializer;
 import polyglot.types.ParsedClassType_c;
 import polyglot.types.Resolver;
 import polyglot.types.Type;
+import polyglot.types.TypeObject;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import codebases.frontend.CodebaseSource;
@@ -80,6 +81,16 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
     return super.descendsFromImpl(ancestor);
   }
 
+  @Override
+  public boolean typeEqualsImpl(Type t) {
+    if (t instanceof FabILParsedClassType) {
+      FabILParsedClassType ct = (FabILParsedClassType) t;
+      return ct.canonicalNamespace().equals(canonical_ns)
+        && ct.fullName().equals(fullName());
+    }
+    return false;       
+  }
+  
   @Override
   public String translate(Resolver c) {
     if (isTopLevel()) {
