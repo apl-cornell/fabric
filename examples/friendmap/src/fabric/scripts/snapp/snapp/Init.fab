@@ -2,6 +2,8 @@ package snapp;
 
 import snapp.Snapp;
 import snapp.User;
+import snapp.Location; //Workaround for null provider bug. Comment out to re-introduce.
+                       //TODO: smaller testcase.
 
 public class Init
 where

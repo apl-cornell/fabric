@@ -2,6 +2,7 @@ package snapp;
 
 import util.Delegator;
 import util.AssertionFailedError;
+import snapp.Location;
 
 /**
  * An instance of Snapp corresponds to an instance of the Snapp social network.

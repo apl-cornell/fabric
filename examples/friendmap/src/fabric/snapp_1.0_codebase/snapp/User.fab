@@ -3,7 +3,7 @@ package snapp;
 import util.Group;
 import util.Meet;
 import util.AssertionFailedError;
-
+import snapp.Location;
 
 // TODO: comment labels
 

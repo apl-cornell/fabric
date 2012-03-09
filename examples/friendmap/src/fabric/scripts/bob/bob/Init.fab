@@ -2,6 +2,7 @@ package bob;
 
 import snapp.Snapp;
 import snapp.User;
+import snapp.Location;
 import snapp.UserWrapper;
 import mapserv.MapServer;
 import util.AssertionFailedError;
