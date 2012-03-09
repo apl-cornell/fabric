@@ -441,7 +441,7 @@ where
     user.p equiv (n,o)
   {
     // TODO: remove local variable annotations.
-    final Box[l, {*→s}] {*l} boundary = new Box[l, {*→s}]@s(0,0,0,0);
+    final Box[l, {*→s}] {*l} boundary = new Box[l, {*→s}]@s(0,0,10,10);
 
     final Store localStore = worker$.getLocalStore();
 
