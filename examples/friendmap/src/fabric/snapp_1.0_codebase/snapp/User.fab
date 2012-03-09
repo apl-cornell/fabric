@@ -83,11 +83,6 @@ where
     this.locationLabel = locationLabel_;
 
     super();
-    
-    if (p equiv new principal(owner,network) && locationLabel equiv new label {p←;p→locationInfo}) {
-        location = new Location[locationLabel, {*→network}]@store(3,3);
-    }
-    
   }
 }
 

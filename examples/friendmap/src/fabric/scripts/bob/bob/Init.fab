@@ -29,6 +29,9 @@ where
         final User[worker$,snapp]  userBob = snapp.createUser("Bob", worker$);
 
         if (userBob.p equiv new principal@store (worker$,snapp)
+        &&  new label {*←snapp}   <= userBob.locationLabel // TODO: store ≽ locLbl
+        &&  userBob.locationLabel <= new label {*→snapp}   //
+        &&  new label {*←userBob.p} <= userBob.locationLabel
         ) {
 
           final UserWrapper[{*→snapp}] aw = new UserWrapper[{*→snapp}]@store (store, worker$, snapp, userBob);
@@ -37,6 +40,8 @@ where
           final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
           userBob.locationInfo.add(userBob.friends);
    
+          userBob.location = new Location[userBob.locationLabel, {*→snapp}]@store(3,3);
+        
         } else throw new AssertionFailedError("userBob.p equiv (bob worker, snapp)");
       } else throw new AssertionFailedError("store actsfor snapp");
     }
