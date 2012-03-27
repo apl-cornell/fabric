@@ -91,6 +91,7 @@
       <!--
       <arg value="-rdebug" />
       <arg value="-report" /> <arg value="debug=1" />
+      <arg value="-report" /> <arg value="pc=1" />
       -->
     </fabc-local>
   </target>
@@ -289,7 +290,11 @@
         srcdir="src/fabric/scripts/snapp"
         codebasefile="${snapp-scripts.codebase.file}"
         deststore="snapp"
-        classpath="@${snapp.codebase.file}"/>
+        classpath="@${snapp.codebase.file}">
+      <!--
+      <arg value="-report" /> <arg value="mobile=3"     />
+      -->
+    </fabc-publish>
     <uptodate
         property="snapp-scripts.up-to-date"
         targetfile="${snapp-scripts.codebase.file}">

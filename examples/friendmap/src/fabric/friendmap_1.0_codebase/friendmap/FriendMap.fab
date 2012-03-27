@@ -441,7 +441,7 @@ where
     user.p equiv (n,o)
   {
     // TODO: remove local variable annotations.
-    final Box[l, {*→s}] {*l} boundary = new Box[l, {*→s}]@s(0,0,0,0);
+    final Box[l, {*→s}] {*l} boundary = new Box[l, {*→s}]@s(0,0,10,10);
 
     final Store localStore = worker$.getLocalStore();
 
@@ -466,7 +466,6 @@ where
         if (friend == null) throw new AssertionFailedError("460 UserWrapper only wraps non-null users.");
 
         // check general User invariants
-        if (friend.locationLabel equiv new label {_→; *←fn,fo}) {
         if (friend.locationLabel <=    new label {*→fn}) {
 
         // if we can fetch the user without leaking:
@@ -490,7 +489,6 @@ where
         else {
         }
         } // ok: friend is inaccessible
-        } // bad: friend invariant fails
         } // bad: friend invariant fails
 
         // otherwise we leave him off the map.
@@ -641,7 +639,6 @@ where
         if (friend_access_bound <= new label {*→fn}) {
 
         // check general User invariants
-        if (friend.locationLabel equiv new label {_→; *←fn,fo}) {
         if (friend.locationLabel <=    new label {*→fn}) {
 
         // TODO: the solver is failing, so we need to specify a label.
@@ -667,7 +664,6 @@ where
         } // OK:        friend's location is too secret
         } // OK:        friend has no location
         } // Assertion: friend.locLabel <= friend.accessLabel
-        } // Assertion: friend.locationLabel = *←fo,fn
         } // OK:        it's just not safe to access user
       }
     }

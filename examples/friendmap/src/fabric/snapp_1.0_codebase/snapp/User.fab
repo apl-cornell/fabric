@@ -3,7 +3,7 @@ package snapp;
 import util.Group;
 import util.Meet;
 import util.AssertionFailedError;
-
+import snapp.Location;
 
 // TODO: comment labels
 
@@ -23,7 +23,9 @@ where
 
   // code can flow to fields and field accesses
   provider <= {_→; *←(network,owner)},
-  provider <= {*→network}
+  provider <= {*→network},
+  provider <= Location.provider,
+  Location.provider <= provider
 {
   /** The principal (network,owner) */
   public final principal   {_→; *←(network,owner)}@{*→network} p;
@@ -43,7 +45,7 @@ where
 
   /** The user's location, only readable by members of the locationInfo group. */
   public Location[locationLabel, {*→network}]
-                           {_→; *←(network,owner)}@{*→network} location = null;
+                           {_→; *←(network,owner)}@{*→network} location;
 
 
   /**

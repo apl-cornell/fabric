@@ -2,12 +2,17 @@ package snapp;
 
 import snapp.Snapp;
 import snapp.User;
+import snapp.Location; //Workaround for null provider bug. Comment out to re-introduce.
+                       //TODO: smaller testcase.
 
 public class Init
 where
     Snapp.provider <= User.provider,
     User.provider <= Snapp.provider,
     provider <= Snapp.provider,
+    User.provider <= Location.provider,
+    Location.provider <= User.provider,
+    
     
     // trusted classes are trusted
     util.Delegator.provider     <= {*←},

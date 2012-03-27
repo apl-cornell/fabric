@@ -2,6 +2,7 @@ package alice;
 
 import snapp.Snapp;
 import snapp.User;
+import snapp.Location;
 import snapp.UserWrapper;
 import mapserv.MapServer;
 import util.AssertionFailedError;
@@ -11,7 +12,9 @@ where
   provider <= {*←},
 
   snapp.User.provider        <= snapp.Snapp.provider, snapp.Snapp.provider <= snapp.User.provider,
-  snapp.UserWrapper.provider <= snapp.Snapp.provider, snapp.Snapp.provider <= snapp.UserWrapper.provider
+  snapp.UserWrapper.provider <= snapp.Snapp.provider, snapp.Snapp.provider <= snapp.UserWrapper.provider,
+  snapp.User.provider <= snapp.Location.provider,
+  snapp.Location.provider <= snapp.User.provider
 {
   public static void main {*←} (String[] args) {
     atomic {

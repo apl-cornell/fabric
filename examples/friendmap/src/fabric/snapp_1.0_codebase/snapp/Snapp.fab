@@ -2,6 +2,7 @@ package snapp;
 
 import util.Delegator;
 import util.AssertionFailedError;
+import snapp.Location;
 
 /**
  * An instance of Snapp corresponds to an instance of the Snapp social network.
@@ -9,6 +10,8 @@ import util.AssertionFailedError;
 public class Snapp extends Delegator
 where
   provider <= User.provider, User.provider <= provider,
+  User.provider <= Location.provider,
+  Location.provider <= User.provider,
 
   // trusted classes are trusted
   util.Delegator.provider     <= {*←},
