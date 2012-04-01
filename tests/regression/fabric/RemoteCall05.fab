@@ -1,0 +1,12 @@
+/* A really simple remote call example for the compiler. */
+class RemoteCall05[principal B] {
+  public void m1{}():{} {
+    final RemoteWorker w = null;
+    if (w actsfor B) {
+      m2@w();
+    }
+  }
+
+  public void m2{}():{} {
+  }
+}

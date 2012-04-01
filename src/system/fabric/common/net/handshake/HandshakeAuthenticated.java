@@ -33,6 +33,7 @@ import javax.security.auth.x500.X500Principal;
 
 import fabric.common.Crypto;
 import fabric.common.KeyMaterial;
+import fabric.common.Logging;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -97,6 +98,7 @@ public class HandshakeAuthenticated implements Protocol {
     SSLSocket sock = (SSLSocket) initiatorFactory.createSocket(s, name, s.getPort(), true);
     sock.setUseClientMode(true);
     sock.setNeedClientAuth(true);
+    Logging.log(Logging.TIMING_LOGGER, Level.INFO, "Establishing SSL connection to {0}", name);
     sock.startHandshake();
     
     // Check that the name in the peer's certificate matches the node we're
