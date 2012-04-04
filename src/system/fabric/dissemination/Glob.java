@@ -36,7 +36,7 @@ import fabric.worker.Worker.Code;
  */
 public class Glob implements FastSerializable {
   /**
-   * The time at which this glob was created.
+   * The time at which this glob was created. This acts as a version number.
    */
   private final long timestamp;
 
@@ -58,7 +58,7 @@ public class Glob implements FastSerializable {
   private final byte[] data;
 
   /**
-   * The signature on the version, keyOnum, iv, and data.
+   * The signature on the timestamp, keyObject OID, iv, and data.
    */
   private final byte[] signature;
 
@@ -121,7 +121,7 @@ public class Glob implements FastSerializable {
    * @throws SignatureException
    */
   private void updateSignature(Signature sig) throws SignatureException {
-    // Update with version number.
+    // Update with the timestamp (which acts as the version number).
     sig.update((byte) (timestamp >>> 56));
     sig.update((byte) (timestamp >>> 48));
     sig.update((byte) (timestamp >>> 40));
@@ -131,7 +131,7 @@ public class Glob implements FastSerializable {
     sig.update((byte) (timestamp >>> 8));
     sig.update((byte) timestamp);
 
-    // Update with keyObject pointer, if non-null.
+    // Update with keyObject OID, if non-null.
     if (keyObject != null) {
       try {
         sig.update(keyObject.$getStore().name().getBytes("UTF8"));
