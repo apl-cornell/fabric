@@ -14,7 +14,6 @@ import polyglot.types.LazyClassInitializer;
 import polyglot.types.ParsedClassType_c;
 import polyglot.types.Resolver;
 import polyglot.types.Type;
-import polyglot.types.TypeObject;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import codebases.frontend.CodebaseSource;
