@@ -8,7 +8,6 @@ import fabric.extension.FabricFieldDeclDel;
 import fabric.extension.FabricNewDel;
 import fabric.extension.FabricNewLabelDel;
 import fabric.extension.FabricPrincipalExprDel;
-import fabric.extension.MethodDeclJifDel;
 
 /** Factory class for creating delegates for fabric types. */
 public class FabricDelFactory_c extends JifDelFactory_c implements
@@ -225,11 +224,6 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
   @Override
   protected JL delImportImpl() {
     return new CodebaseImportDel_c();
-  }
-
-  @Override
-  protected JL delMethodDeclImpl() {
-    return new MethodDeclJifDel();
   }
 
   @Override
