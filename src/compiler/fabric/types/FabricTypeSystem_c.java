@@ -166,7 +166,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
 
       NamespaceResolver nsr = namespaceResolver(uri);
       nsr.loadEncodedClasses(true);
-      nsr.loadRawClasses(true);
+      nsr.loadRawClasses(false);
       nsr.loadSource(true);
       runtimeResolvers.add(nsr);
     }
