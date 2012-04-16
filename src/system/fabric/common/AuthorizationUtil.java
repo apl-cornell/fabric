@@ -27,6 +27,10 @@ public class AuthorizationUtil {
   private static final OidKeyHashMap<OidKeyHashMap<Void>> cachedWriteAuthorizations =
       new OidKeyHashMap<OidKeyHashMap<Void>>();
 
+  /**
+   * Return true if cache[label][<code>principal</code>] exists, where label is given by the
+   * Oid (<code>store</code>,<code>labelOnum</code>).
+   */
   private static boolean checkAuthorizationCache(
       OidKeyHashMap<OidKeyHashMap<Void>> cache,
       Principal principal, Store store, long labelOnum) {
