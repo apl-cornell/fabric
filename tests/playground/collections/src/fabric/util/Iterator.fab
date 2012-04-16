@@ -1,0 +1,12 @@
+package fabric.util;
+
+/**
+ * An iterator interface for the Jif collection framework.
+ */
+public interface Iterator[label L] {
+    boolean{L} hasNext();
+    
+    Object{L} next{L}() throws (NoSuchElementException{L});
+
+    void remove{L}() throws (IllegalStateException{L});
+}

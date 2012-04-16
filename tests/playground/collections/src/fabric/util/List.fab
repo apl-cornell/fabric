@@ -1,0 +1,28 @@
+package fabric.util;
+
+/**
+ * A list of Fabric objects.
+ */
+public interface List[label L] extends Collection[L] {
+  
+    Object{L} get{L}(int{L} index) throws (IndexOutOfBoundsException{L});
+    
+    Object{L} set{L}(int{L} index, Object{L} element) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+        IndexOutOfBoundsException{L});
+	
+    void add{L}(int{L} index, Object{L} element) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+        IndexOutOfBoundsException{L});
+    
+    Object{L} remove{L}(int{L} index) throws (UnsupportedOperationException{L}, 
+            IndexOutOfBoundsException{L});
+    
+    int{L} indexOf{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L});
+
+    int{L} lastIndexOf{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L});
+
+    ListIterator[L]{L} listIterator{L}();
+    ListIterator[L]{L} listIterator{L}(int{L} index) throws (IndexOutOfBoundsException{L});
+    ListIterator[L]{L} listIterator{L}(Store{L} store, int{L} index) throws (IndexOutOfBoundsException{L}) where L <= {*<-store}, {*->store} <= L;
+}

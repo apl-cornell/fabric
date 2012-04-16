@@ -1,0 +1,175 @@
+package fabric.util;
+/**
+ * Base implementation for List.
+ */
+public abstract class AbstractList[label L] extends AbstractCollection[L] implements List[L] {
+
+  /**
+   * A count of the number of structural modifications that have been made to
+   * the list (that is, insertions and removals). Structural modifications
+   * are ones which change the list size or affect how iterations would
+   * behave. This field is available for use by Iterator and ListIterator,
+   * in order to throw a {@link ConcurrentModificationException} in response
+   * to the next operation on the iterator. This <i>fail-fast</i> behavior
+   * saves the user from many subtle bugs otherwise possible from concurrent
+   * modification during iteration.
+   * <p>
+   *
+   * To make lists fail-fast, increment this field by just 1 in the
+   * <code>add(int, Object)</code> and <code>remove(int)</code> methods.
+   * Otherwise, this field may be ignored.
+   */
+  int{L} modCount;
+
+  protected AbstractList{L}(Comparator[L]{L} compare) {
+    super(compare);
+  }
+    
+  /**
+   * Returns the elements at the specified position in the list.
+   *
+   * @param index the element to return
+   * @return the element at that position
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
+   */
+  public abstract Object{L} get{L}(int{L} index) throws (IndexOutOfBoundsException{L});
+  
+  /**
+   * Replace an element of this list with another object (optional operation).
+   * This implementation always throws an UnsupportedOperationException.
+   *
+   * @param index the position within this list of the element to be replaced
+   * @param o the object to replace it with
+   * @return the object that was replaced
+   * @throws UnsupportedOperationException if this list does not support the
+   *         set operation
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
+   * @throws ClassCastException if o cannot be added to this list due to its
+   *         type
+   * @throws IllegalArgumentException if o cannot be added to this list for
+   *         some other reason
+   */
+  public Object{L} set{L}(int{L} index, Object{L} element) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+      IndexOutOfBoundsException{L}) {
+    throw new UnsupportedOperationException();
+  }
+  
+  /**
+   * Add an element to the end of the list (optional operation). If the list
+   * imposes restraints on what can be inserted, such as no null elements,
+   * this should be documented. This implementation calls
+   * <code>add(size(), o);</code>, and will fail if that version does.
+   *
+   * @param o the object to add
+   * @return true, as defined by Collection for a modified list
+   * @throws UnsupportedOperationException if this list does not support the
+   *         add operation
+   * @throws ClassCastException if o cannot be added to this list due to its
+   *         type
+   * @throws IllegalArgumentException if o cannot be added to this list for
+   *         some other reason
+   * @see #add(int, Object)
+   */
+  public boolean{L} add{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}) {
+    add(size(), o);
+    return true;
+  }
+
+  /**
+   * Insert an element into the list at a given position (optional operation).
+   * This shifts all existing elements from that position to the end one
+   * index to the right.  This version of add has no return, since it is
+   * assumed to always succeed if there is no exception. This implementation
+   * always throws UnsupportedOperationException, and must be overridden to
+   * make a modifiable List.  If you want fail-fast iterators, be sure to
+   * increment modCount when overriding this.
+   *
+   * @param index the location to insert the item
+   * @param o the object to insert
+   * @throws UnsupportedOperationException if this list does not support the
+   *         add operation
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
+   * @throws ClassCastException if o cannot be added to this list due to its
+   *         type
+   * @throws IllegalArgumentException if o cannot be added to this list for
+   *         some other reason
+   * @see #modCount
+   */
+  public void add{L}(int{L} index, Object{L} element) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+      IndexOutOfBoundsException{L}) {
+    throw new UnsupportedOperationException();
+  }
+  
+  /**
+   * Remove the element at a given position in this list (optional operation).
+   * Shifts all remaining elements to the left to fill the gap. This
+   * implementation always throws an UnsupportedOperationException.
+   * If you want fail-fast iterators, be sure to increment modCount when
+   * overriding this.
+   *
+   * @param index the position within the list of the object to remove
+   * @return the object that was removed
+   * @throws UnsupportedOperationException if this list does not support the
+   *         remove operation
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
+   * @see #modCount
+   */
+  public Object{L} remove{L}(int{L} index) throws (UnsupportedOperationException{L}, 
+      IndexOutOfBoundsException{L}) {
+    throw new UnsupportedOperationException();
+  }
+  
+  /**
+   * Obtain the first index at which a given object is to be found in this
+   * list. This implementation follows a listIterator(store) until a match is found,
+   * or returns -1 if the list end is reached.
+   *
+   * @param o the object to search for
+   * @return the least integer n such that <code>o == null ? get(n) == null :
+   *         o.equals(get(n))</code>, or -1 if there is no such index
+   */
+  public int{L} indexOf{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L}) {
+    final Store localStore = worker$.getLocalStore();
+    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      ListIterator itr = listIterator(localStore, 0);
+      int size = size();
+      for (int pos = 0; pos < size; pos++)
+        if (compare.equals(o, itr.next()))
+          return pos;
+      return -1;
+    }
+    else
+      throw new Error("Cannot create iterator on local store.");
+  }
+  
+  /**
+   * Obtain the first index at which a given object is to be found in this
+   * list. This implementation follows a listIterator(store) until a match is found,
+   * or returns -1 if the list end is reached.
+   *
+   * @param o the object to search for
+   * @return the least integer n such that <code>o == null ? get(n) == null :
+   *         o.equals(get(n))</code>, or -1 if there is no such index
+   */
+  public int{L} lastIndexOf{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L}) {
+    int pos = size();
+    final Store localStore = worker$.getLocalStore();
+    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      ListIterator itr = listIterator(localStore, 0);
+      while (--pos >= 0)
+        if (compare.equals(o, itr.previous()))
+          return pos;
+      return -1;
+    }
+    else
+      throw new Error("Cannot create iterator on local store.");
+  }
+
+  public abstract ListIterator[L]{L} listIterator{L}();
+  public abstract ListIterator[L]{L} listIterator{L}(int{L} index) throws (IndexOutOfBoundsException{L});
+  public abstract ListIterator[L]{L} listIterator{L}(Store{L} store, int{L} index) throws (IndexOutOfBoundsException{L}) where L <= {*<-store}, {*->store} <= L;
+
+}

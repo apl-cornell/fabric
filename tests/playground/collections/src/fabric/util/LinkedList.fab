@@ -1,0 +1,470 @@
+package fabric.util;
+
+/**
+ * An implementation of List, using a linked list to store the
+ * list elements.
+ */
+public class LinkedList[label L] extends AbstractList[L]
+{
+    int{L} size = 0;
+    LinkedListEntry[L]{L} first;
+    LinkedListEntry[L]{L} last;
+
+    public LinkedList(Comparator[L]{L} compare) {
+        first = null;
+        last = null;
+        super(compare);
+    }
+
+    /**
+     * Checks that the index is in the range of possible elements (inclusive).
+     *
+     * @param index the index to check
+     * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size
+     */
+    void checkBoundsInclusive{L}(int{L} index):{L} throws (IndexOutOfBoundsException{L})
+    {
+      if (index < 0 || index > size)
+        throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
+                                            + size);
+    }
+
+    /**
+     * Checks that the index is in the range of existing elements (exclusive).
+     *
+     * @param index the index to check
+     * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size
+     */
+    void checkBoundsExclusive{L}(int{L} index):{L} throws (IndexOutOfBoundsException{L})
+    {
+      if (index < 0 || index >= size)
+        throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
+                                            + size);
+    }
+    
+    LinkedListEntry[L]{L} getEntry{L}(int{L} index) {
+      LinkedListEntry e;
+      int n = index;
+      if (n < size / 2)
+        {
+          e = first;
+          // n less than size/2, iterate from start
+          while (n-- > 0)
+            e = e.next;
+        }
+      else
+        {
+          e = last;
+          // n greater than size/2, iterate from end
+          while (++n < size)
+            e = e.previous;
+        }
+      return e;
+    }
+
+    void addLastEntry{L}(LinkedListEntry[L]{L} n) {      
+      modCount++;
+      if (size == 0) 
+          first = last = n;
+      else 
+      {
+        last.next = n;
+        n.previous = last;
+        last = n;
+      }
+      size++;
+    }
+    
+    void removeEntry{L}(LinkedListEntry[L]{L} e)
+    {
+      modCount++;
+      size--;
+      if (size == 0)
+        first = last = null;
+      else
+        {
+          if (e == first)
+            {
+              first = e.next;
+              e.next.previous = null;
+            }
+          else if (e == last)
+            {
+              last = e.previous;
+              e.previous.next = null;
+            }
+          else
+            {
+              e.next.previous = e.previous;
+              e.previous.next = e.next;
+            }
+        }
+    }
+
+    public int{L} size{L}() {
+      return size;
+    }
+    
+    public  Iterator[L]{L} iterator{L}() {
+      return listIterator();
+    }
+    
+    public  Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L      {
+      return listIterator(store, 0);
+    }
+
+    public boolean{L} contains{L}(Object{L} o) throws (ClassCastException{L}, 
+        NullPointerException{L}) {
+      LinkedListEntry e = first;
+      while (e != null) {
+        if (compare.equals(o, e))
+          return true;        
+        e = e.next;          
+      }
+      return false;
+    }    
+ 
+    public boolean{L} add{L}(Object{L} o) {
+      LinkedListEntry e = new LinkedListEntry();
+      e.data = o;
+      addLastEntry(e);
+      return true;
+    }
+    
+    public boolean{L} remove{L}(Object{L} o) {      
+      LinkedListEntry e = first;
+      while (e != null) {
+        if (compare.equals(o, e.data)) {
+            removeEntry(e);
+            return true;
+        }
+        e = e.next;
+      }
+      return false;
+    }
+    
+    /**
+     * Return the element at index.
+     *
+     * @param index the place to look
+     * @return the element at index
+     * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
+     */
+    public Object{L} get{L}(int{L} index) throws (IndexOutOfBoundsException{L}) {
+      checkBoundsExclusive(index);
+      return getEntry(index).data;
+    }
+    
+    /**
+     * Replace the element at the given location in the list.
+     *
+     * @param index which index to change
+     * @param o the new element
+     * @return the prior element
+     * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
+     */
+    public Object{L} set{L}(int{L} index, Object{L} element) throws (
+        NullPointerException{L}, 
+        IndexOutOfBoundsException{L})
+    {
+      checkBoundsExclusive(index);
+      LinkedListEntry e = getEntry(index);
+      Object old = e.data;
+      e.data = element;
+      return old;
+    }
+
+    /**
+     * Inserts an element in the given position in the list.
+     *
+     * @param index where to insert the element
+     * @param o the element to insert
+     * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
+     */
+    public void add{L}(int{L} index, Object{L} o) throws (ClassCastException{L}, 
+        NullPointerException{L}, IllegalArgumentException{L}) {
+    
+      checkBoundsInclusive(index);
+      LinkedListEntry e = new LinkedListEntry();
+      e.data = o;
+      
+      if (index < size)
+        {
+          modCount++;
+          LinkedListEntry after = getEntry(index);
+          e.next = after;
+          e.previous = after.previous;
+          if (after.previous == null)
+            first = e;
+          else
+            after.previous.next = e;
+          after.previous = e;
+          size++;
+        }
+      else
+        addLastEntry(e);
+    }
+    
+    public Object{L} remove{L}(int{L} index) throws (UnsupportedOperationException{L}, 
+        IndexOutOfBoundsException{L}) {
+      checkBoundsExclusive(index);
+      LinkedListEntry e = getEntry(index);
+      removeEntry(e);
+      return e.data;
+    }
+    
+    public int{L} indexOf{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L}) {
+      int index = 0;
+      LinkedListEntry e = first;
+      while (e != null)
+        {
+          if (compare.equals(o, e.data))
+            return index;
+          index++;
+          e = e.next;
+        }
+      return -1;
+    }
+    
+    public int{L} lastIndexOf{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L}) {
+      int index = size - 1;
+      LinkedListEntry e = last;
+      while (e != null)
+        {
+          if (compare.equals(o, e.data))
+            return index;
+          index--;
+          e = e.previous;
+        }
+      return -1;
+    }
+
+    
+    public ListIterator[L]{L} listIterator{L}() {
+      return new LinkedListIterator(0, this);
+    }
+    
+    public ListIterator[L]{L} listIterator{L}(int{L} index) throws (IndexOutOfBoundsException{L}) {
+      return new LinkedListIterator(index, this);
+    }
+    
+    public ListIterator[L]{L} listIterator{L}(Store{L} store, int{L} index) 
+        throws (IndexOutOfBoundsException{L}) where L <= {*<-store}, {*->store} <= L {
+        return new LinkedListIterator@store(index, this);
+    }
+}
+
+class LinkedListEntry[label L] {
+      LinkedListEntry() {}
+      LinkedListEntry[L]{L} next;
+      LinkedListEntry[L]{L} previous;
+      Object{L} data;
+}
+
+final class LinkedListIterator[label L] implements ListIterator[L] {
+  /** Number of modifications we know about. */
+  private int{L} knownMod;
+
+  /** Entry that will be returned by next(). */
+  private LinkedListEntry[L]{L} next;
+
+  /** Entry that will be returned by previous(). */
+  private LinkedListEntry[L]{L} previous;
+
+  /** Entry that will be affected by remove() or set(). */
+  private LinkedListEntry[L]{L} lastReturned;
+
+  /** Index of `next'. */
+  private int{L} position;
+
+  /** Reference to LinkedList */
+  private LinkedList[L]{L} ll;
+  
+  /**
+   * Initialize the iterator.
+   *
+   * @param index the initial index
+   */
+  LinkedListIterator{L}(int{L} index, LinkedList[L]{L} ll)
+  {    
+    try {
+      knownMod = ll.modCount;
+      if (index == ll.size)
+        {
+          next = null;
+          previous = ll.last;
+        }
+      else
+        {
+          next = ll.getEntry(index);
+          previous = next.previous;
+        }
+      position = index;
+    } catch (NullPointerException npe) {
+      throw new Error("Unexpected NullPointerException");
+    }
+  }
+  /**
+   * Checks for iterator consistency.
+   *
+   * @throws ConcurrentModificationException if the list was modified
+   */
+  private void checkMod{L}() throws (ConcurrentModificationException{L})
+  {
+    if (knownMod != ll.modCount)
+      throw new ConcurrentModificationException();
+  }
+  
+  /**
+   * Returns the index of the next element.
+   *
+   * @return the next index
+   */
+  public int{L} nextIndex()
+  {
+    return position;
+  }
+  
+  /**
+   * Returns the index of the previous element.
+   *
+   * @return the previous index
+   */
+  public int{L} previousIndex()
+  {
+    return position - 1;
+  }
+  
+  /**
+   * Returns true if more elements exist via next.
+   *
+   * @return true if next will succeed
+   */
+  public boolean{L} hasNext()
+  {
+    return (next != null);
+  }
+
+  /**
+   * Returns true if more elements exist via previous.
+   *
+   * @return true if previous will succeed
+   */
+  public boolean{L} hasPrevious()
+  {
+    return (previous != null);
+  }
+
+  /**
+   * Returns the next element.
+   *
+   * @return the next element
+   * @throws ConcurrentModificationException if the list was modified
+   * @throws NoSuchElementException if there is no next
+   */
+  public Object{L} next{L}() throws (NoSuchElementException{L}) {
+    checkMod();
+    if (next == null)
+      throw new NoSuchElementException();
+    position++;
+    lastReturned = previous = next;
+    next = lastReturned.next;
+    return lastReturned.data;
+  }
+
+  /**
+   * Returns the previous element.
+   *
+   * @return the previous element
+   * @throws ConcurrentModificationException if the list was modified
+   * @throws NoSuchElementException if there is no previous
+   */
+  public Object{L} previous{L}() throws (NoSuchElementException{L}) {
+    checkMod();
+    if (previous == null)
+      throw new NoSuchElementException();
+    position--;
+    lastReturned = next = previous;
+    previous = lastReturned.previous;
+    return lastReturned.data;
+  }
+
+  /**
+   * Remove the most recently returned element from the list.
+   *
+   * @throws ConcurrentModificationException if the list was modified
+   * @throws IllegalStateException if there was no last element
+   */
+  public void remove{L}() throws (IllegalStateException{L})
+  {
+    checkMod();
+    if (lastReturned == null)
+      throw new IllegalStateException();
+
+    // Adjust the position to before the removed element, if the element
+    // being removed is behind the cursor.
+    if (lastReturned == previous)
+      position--;
+
+    next = lastReturned.next;
+    previous = lastReturned.previous;
+    ll.removeEntry(lastReturned);
+    knownMod++;
+
+    lastReturned = null;
+  }
+
+
+  /**
+   * Adds an element between the previous and next, and advance to the next.
+   *
+   * @param o the element to add
+   * @throws ConcurrentModificationException if the list was modified
+   */
+  public void add{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, IllegalArgumentException{L}) {
+    checkMod();
+    ll.modCount++;
+    knownMod++;
+    ll.size++;
+    position++;
+    LinkedListEntry e = new LinkedListEntry();
+    e.data = o;
+    
+    e.previous = previous;
+    e.next = next;
+
+    if (previous != null)
+      previous.next = e;
+    else
+      ll.first = e;
+
+    if (next != null)
+      next.previous = e;
+    else
+      ll.last = e;
+
+    previous = e;
+    lastReturned = null;
+  }
+  
+
+  /**
+   * Changes the contents of the element most recently returned.
+   *
+   * @param o the new element
+   * @throws ConcurrentModificationException if the list was modified
+   * @throws IllegalStateException if there was no last element
+   */
+  public void set{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, IllegalArgumentException{L}, IllegalStateException{L})
+  {
+    checkMod();
+    if (lastReturned == null)
+      throw new IllegalStateException();
+    lastReturned.data = o;
+  }
+
+}
+
+
