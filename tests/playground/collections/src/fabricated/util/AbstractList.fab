@@ -1,4 +1,4 @@
-package fabric.util;
+package fabricated.util;
 /**
  * Base implementation for List.
  */

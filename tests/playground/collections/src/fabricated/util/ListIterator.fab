@@ -1,4 +1,4 @@
-package fabric.util;
+package fabricated.util;
 
 /**
  * An iterator interface for the Jif collection framework.

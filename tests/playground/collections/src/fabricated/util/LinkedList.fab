@@ -1,4 +1,5 @@
-package fabric.util;
+
+package fabricated.util;
 
 /**
  * An implementation of List, using a linked list to store the
@@ -287,6 +288,7 @@ final class LinkedListIterator[label L] implements ListIterator[L] {
    */
   LinkedListIterator{L}(int{L} index, LinkedList[L]{L} ll)
   {    
+    this.ll = ll;
     try {
       knownMod = ll.modCount;
       if (index == ll.size)

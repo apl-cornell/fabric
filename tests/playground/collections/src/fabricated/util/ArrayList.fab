@@ -1,0 +1,152 @@
+package fabricated.util;
+
+/**
+ * An array-backed implementation of the List interface.  This implements
+ * all optional list operations, and permits null elements, so that it is
+ * better than Vector, which it replaces. Random access is roughly constant
+ * time, and iteration is roughly linear time, so it is nice and fast, with
+ * less overhead than a LinkedList.
+ * <p>
+ *
+ * Each list has a capacity, and as the array reaches that capacity it
+ * is automatically transferred to a larger array. You also have access to
+ * ensureCapacity and trimToSize to control the backing array's size, avoiding
+ * reallocation or wasted memory.
+ * <p>
+ *
+ * ArrayList is not synchronized, so if you need multi-threaded access,
+ * consider using:<br>
+ * <code>List l = Collections.synchronizedList(new ArrayList(...));</code>
+ * <p>
+ *
+ * The iterators are <i>fail-fast</i>, meaning that any structural
+ * modification, except for <code>remove()</code> called on the iterator
+ * itself, cause the iterator to throw a
+ * {@link ConcurrentModificationException} rather than exhibit
+ * non-deterministic behavior.
+ *
+ * @author Jon A. Zeppieri
+ * @author Bryce McKinlay
+ * @author Eric Blake (ebb9@email.byu.edu)
+ * @see Collection
+ * @see List
+ * @see LinkedList
+ * @see Vector
+ * @see Collections#synchronizedList(List)
+ * @see AbstractList
+ * @status updated to 1.4
+ */
+public class LinkedList[label L] extends AbstractList[L] implements List[L], RandomAccess
+{
+  /**
+   * The default capacity for new ArrayLists.
+   */
+  private final int{L} DEFAULT_CAPACITY = 10;
+
+  /**
+   * The number of elements in this list.
+   * @serial the list size
+   */
+  private int{L} size;
+
+  /**
+   * Where the data is stored.
+   */
+  private Object{L}[]{L} data;
+  /**
+   * Construct a new ArrayList with the supplied initial capacity.
+   *
+   * @param capacity initial capacity of this ArrayList
+   * @throws IllegalArgumentException if capacity is negative
+   */
+  public ArrayList{L}(int{L} capacity)
+  {
+    // Must explicitly check, to get correct exception.
+    if (capacity < 0)
+      throw new IllegalArgumentException();
+    data = new Object[capacity];
+  }
+
+  /**
+   * Construct a new ArrayList with the default capacity (16).
+   */
+  public ArrayList{L}()
+  {
+    ArrayList(DEFAULT_CAPACITY);
+  }
+
+  /**
+   * Construct a new ArrayList, and initialize it with the elements
+   * in the supplied Collection. The initial capacity is 110% of the
+   * Collection's size.
+   *
+   * @param c the collection whose elements will initialize this list
+   * @throws NullPointerException if c is null
+   */
+  public ArrayList{L}(Collection c)
+  {
+    ArrayList((int) (c.size() * 1.1f));
+    addAll(c);
+    return this;
+  }
+  
+  /**
+   * Trims the capacity of this List to be equal to its size;
+   * a memory saver.
+   */
+  public void trimToSize{L}()
+  {
+    // Not a structural change from the perspective of iterators on this list,
+    // so don't update modCount.
+    data.length = size;
+  }
+
+  /**
+   * Guarantees that this list will have at least enough capacity to
+   * hold minCapacity elements. This implementation will grow the list to
+   * max(current * 2, minCapacity) if (minCapacity &gt; current). The JCL says
+   * explictly that "this method increases its capacity to minCap", while
+   * the JDK 1.3 online docs specify that the list will grow to at least the
+   * size specified.
+   *
+   * @param minCapacity the minimum guaranteed capacity
+   */
+  public void ensureCapacity{L}(int{L} minCapacity)
+  {
+    int current = data.length;
+    if (minCapacity > current) 
+      data.length = (current * 2 > minCapacity) ? (current * 2) : minCapacity;
+  }
+
+  /**
+   * Returns the number of elements in this list.
+   *
+   * @return the list size
+   */
+  public int{L} size()
+  {
+    return size;
+  }
+
+  /**
+   * Checks if the list is empty.
+   *
+   * @return true if there are no elements
+   */
+  public boolean{L} isEmpty()
+  {
+    return size == 0;
+  }
+
+  /**
+   * Returns true iff element is in this ArrayList.
+   *
+   * @param e the element whose inclusion in the List is being tested
+   * @return true if the list contains e
+   */
+  public boolean contains(Object e)
+  {
+    return indexOf(e) != -1;
+  }
+
+}

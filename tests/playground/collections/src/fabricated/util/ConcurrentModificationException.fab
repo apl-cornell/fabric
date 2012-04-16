@@ -1,4 +1,4 @@
-package fabric.util;
+package fabricated.util;
 
 public class ConcurrentModificationException extends RuntimeException {
     public ConcurrentModificationException() {

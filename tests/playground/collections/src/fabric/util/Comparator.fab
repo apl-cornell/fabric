@@ -1,5 +1,0 @@
-package fabric.util;
-
-public interface Comparator[label L] {
-  boolean{L;a;b} equals(Object a, Object b) throws (ClassCastException{L;a;b}, NullPointerException{L;a;b});
-}

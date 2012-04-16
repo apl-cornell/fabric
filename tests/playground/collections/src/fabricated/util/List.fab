@@ -1,4 +1,4 @@
-package fabric.util;
+package fabricated.util;
 
 /**
  * A list of Fabric objects.
