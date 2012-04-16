@@ -1,0 +1,53 @@
+
+== Principals ==
+
+class Principal                                 (abstract,native) extends fabric.lang.Object
+	class TopPrincipal                      (final,static)
+	final class ConjunctivePrincipal
+	final class DisjunctivePrincipal
+	class DelegatingPrincipal               (abstract,native)
+		class AbstractPrincipal         (abstract)
+			class NodePrincipal     (final)
+			class ExternalPrincipal
+
+class PrincipalUtil
+class PrincipalSet
+
+== Labels ==
+
+final class LabelUtil
+
+interface Label
+final class PairLabel implements Label
+
+interface Policy
+	interface ConfPolicy extends Policy
+	interface IntegPolicy extends Policy
+
+class AbstractPolicy                  (abstract) implements Policy
+	class WriterPolicy                       implements IntegPolicy
+	class ReaderPolicy                       implements ConfPolicy
+	class JoinPolicy              (abstract) implements Policy
+		class JoinIntegPolicy (final)    implements IntegPolicy
+		class JoinConfPolicy  (final)    implements ConfPolicy
+     	class MeetPolicy              (abstract) implements Policy
+		class MeetConfPolicy  (final)    implements ConfPolicy
+		class MeetIntegPolicy (final)    implements IntegPolicy
+
+== Misc ==
+
+class SecretKeyObject
+class PrivateKeyObject
+
+interface Closure
+
+class Capability (final)
+
+class ActsForProof              (final,abstract)
+	class ReflexiveProof    (final)
+	class ToConjunctProof   (final)
+	class TransitiveProof   (final)
+	class DelegatesProof    (final)
+	class FromDisjunctProof (final)
+
+
