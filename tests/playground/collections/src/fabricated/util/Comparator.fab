@@ -2,4 +2,5 @@ package fabricated.util;
 
 public interface Comparator[label L] {
   boolean{L} equals{L}(Object{L} a, Object{L} b) throws (ClassCastException{L}, NullPointerException{L});
+  int{L} compare{L}(Object{L} a, Object{L} b) throws (UnsupportedOperationException{L},ClassCastException{L}, NullPointerException{L}); 
 }
