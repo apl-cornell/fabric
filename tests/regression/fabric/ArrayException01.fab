@@ -1,0 +1,17 @@
+// This test case should cause an error to be reported at the call to n()
+// since m() does not declare IOOB to be thrown.
+public class ArrayException01 {
+
+	public static void m{*lbl}(label lbl, int{*lbl} i, int{*lbl}[]{*lbl} a)
+         throws (ArrayIndexOutOfBoundsException{*lbl})
+	{
+		if (i < 0)
+			throw new ArrayIndexOutOfBoundsException();
+		n(lbl, i);
+    }
+
+	public static void n{*lbl}(label lbl, int{*lbl} i) throws (IndexOutOfBoundsException{*lbl}) {
+		if (i > 0)
+			throw new IndexOutOfBoundsException();
+	}
+}
