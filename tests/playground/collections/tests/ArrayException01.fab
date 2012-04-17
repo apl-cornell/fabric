@@ -1,0 +1,24 @@
+public class ArrayException01 {
+
+	public static void m{*lbl}(label lbl, int{*lbl} i, int{*lbl}[]{*lbl} a)
+         throws (UnsupportedOperationException{*lbl}, NullPointerException{*lbl}, IllegalArgumentException{*lbl}, ArrayIndexOutOfBoundsException{*lbl})
+	{
+		if (i > 0)
+      		throw new IllegalArgumentException("fromIndex " +i 
+                                         + " > toIndex " + i);
+		if (i < 0)
+			throw new ArrayIndexOutOfBoundsException();
+		
+		int j = a[i];
+
+    for (int chunk = i; chunk < i; chunk += 6) {
+		a[chunk] = j;
+		n(lbl, j);
+    }
+
+	}
+	public static void n{*lbl}(label lbl, int{*lbl} i) throws (IndexOutOfBoundsException{*lbl}) {
+		if (i > 0)
+			throw new IndexOutOfBoundsException();
+	}
+}
