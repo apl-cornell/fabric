@@ -11,7 +11,7 @@ public interface ListIterator[label L] extends Iterator[L] {
    *
    * @return true if the list continues in the forward direction
    */
-  boolean{L} hasNext();
+  boolean{L} hasNext{L}();
     
   /**
    * Tests whether there are elements remaining in the list in the reverse
@@ -20,7 +20,7 @@ public interface ListIterator[label L] extends Iterator[L] {
    *
    * @return true if the list continues in the reverse direction
    */
-  boolean{L} hasPrevious();
+  boolean{L} hasPrevious{L}();
 
   /**
    * Obtain the next element in the list in the forward direction. Repeated

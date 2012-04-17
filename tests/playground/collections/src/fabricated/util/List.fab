@@ -22,6 +22,13 @@ public interface List[label L] extends Collection[L] {
 
     int{L} lastIndexOf{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L});
 
+    boolean{L} addAll{L}(int{L} index, Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+        IllegalStateException{L});
+
+    boolean{L} subList{L}(int{L} fromIndex, int{L}toIndex) throws (UnsupportedOperationException{L}, 
+        IndexOutOfBoundsException{L});
+
     ListIterator[L]{L} listIterator{L}();
     ListIterator[L]{L} listIterator{L}(int{L} index) throws (IndexOutOfBoundsException{L});
     ListIterator[L]{L} listIterator{L}(Store{L} store, int{L} index) throws (IndexOutOfBoundsException{L}) where L <= {*<-store}, {*->store} <= L;

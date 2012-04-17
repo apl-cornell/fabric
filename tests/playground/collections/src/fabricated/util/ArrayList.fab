@@ -36,7 +36,7 @@ package fabricated.util;
  * @see AbstractList
  * @status updated to 1.4
  */
-public class LinkedList[label L] extends AbstractList[L] implements List[L], RandomAccess
+public class ArrayList[label L] extends AbstractList[L] implements List[L], RandomAccess
 {
   /**
    * The default capacity for new ArrayLists.
@@ -52,27 +52,28 @@ public class LinkedList[label L] extends AbstractList[L] implements List[L], Ran
   /**
    * Where the data is stored.
    */
-  private Object{L}[]{L} data;
+  private final Object{L}[]{L} data;
   /**
    * Construct a new ArrayList with the supplied initial capacity.
    *
    * @param capacity initial capacity of this ArrayList
    * @throws IllegalArgumentException if capacity is negative
    */
-  public ArrayList{L}(int{L} capacity)
+  public ArrayList{L}(Comparator[L]{L} compare, int{L} capacity)
   {
     // Must explicitly check, to get correct exception.
     if (capacity < 0)
       throw new IllegalArgumentException();
     data = new Object[capacity];
+    super(compare);
   }
 
   /**
    * Construct a new ArrayList with the default capacity (16).
    */
-  public ArrayList{L}()
+  public ArrayList{L}(Comparator[L]{L} compare)
   {
-    ArrayList(DEFAULT_CAPACITY);
+    this(compare,DEFAULT_CAPACITY);
   }
 
   /**
@@ -83,11 +84,10 @@ public class LinkedList[label L] extends AbstractList[L] implements List[L], Ran
    * @param c the collection whose elements will initialize this list
    * @throws NullPointerException if c is null
    */
-  public ArrayList{L}(Collection c)
+  public ArrayList{L}(Comparator[L]{L} compare, Collection c)
   {
-    ArrayList((int) (c.size() * 1.1f));
+    super(compare,(int) (c.size() * 1.1f));
     addAll(c);
-    return this;
   }
   
   /**
@@ -144,9 +144,303 @@ public class LinkedList[label L] extends AbstractList[L] implements List[L], Ran
    * @param e the element whose inclusion in the List is being tested
    * @return true if the list contains e
    */
-  public boolean contains(Object e)
+  public boolean{L} contains{L}(Object{L} e) throws (ClassCastException{L}, NullPointerException{L})
   {
     return indexOf(e) != -1;
+  }
+
+
+  /**
+   * Returns the lowest index at which element appears in this List, or
+   * -1 if it does not appear.
+   *
+   * @param e the element whose inclusion in the List is being tested
+   * @return the index where e was found
+   */
+  public int{L} indexOf{L}(Object{L} e) throws (ClassCastException{L}, NullPointerException{L})
+  {
+    for (int i = 0; i < size; i++)
+      if (compare.equals(e, data[i]))
+        return i;
+    return -1;
+  }
+
+  /**
+   * Returns the highest index at which element appears in this List, or
+   * -1 if it does not appear.
+   *
+   * @param e the element whose inclusion in the List is being tested
+   * @return the index where e was found
+   */
+  public int{L} lastIndexOf{L}(Object{L} e) throws (ClassCastException{L}, NullPointerException{L})
+  {
+    for (int i = size - 1; i >= 0; i--)
+      if (compare.equals(e, data[i]))
+        return i;
+    return -1;
+  }
+
+  /**
+   * Retrieves the element at the user-supplied index.
+   *
+   * @param index the index of the element we are fetching
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
+   */
+  public Object{L} get{L}(int{L} index) throws (IndexOutOfBoundsException{L})
+  {
+    checkBoundExclusive(index);
+    return data[index];
+  }
+
+  /**
+   * Sets the element at the specified index.  The new element, e,
+   * can be an object of any type or null.
+   *
+   * @param index the index at which the element is being set
+   * @param e the element to be set
+   * @return the element previously at the specified index
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= 0
+   */
+  public Object{L} set{L}(int{L} index, Object{L} e) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+      IndexOutOfBoundsException{L})
+  {
+    checkBoundExclusive(index);
+    Object result = data[index];
+    data[index] = e;
+    return result;
+  }
+
+  /**
+   * Appends the supplied element to the end of this list.
+   * The element, e, can be an object of any type or null.
+   *
+   * @param e the element to be appended to this list
+   * @return true, the add will always succeed
+   */
+  public void add{L}(int{L} index, Object{L} e) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+      IndexOutOfBoundsException{L})
+  {
+    modCount++;
+    if (size == data.length)
+      ensureCapacity(size + 1);
+    data[size++] = e;
+    return true;
+  }
+  
+  /**
+   * Removes the element at the user-supplied index.
+   *
+   * @param index the index of the element to be removed
+   * @return the removed Object
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
+   */
+  public Object{L} remove{L}(int{L} index) throws (UnsupportedOperationException{L}, 
+      IndexOutOfBoundsException{L})
+  {
+    checkBoundExclusive(index);
+    Object r = data[index];
+    modCount++;
+    if (index != --size)
+      Arrays.arraycopy(data, index + 1, data, index, size - index);
+    // Aid for garbage collection by releasing this pointer.
+    data[size] = null;
+    return r;
+  }
+
+
+  /**
+   * Removes the element at the user-supplied index.
+   *
+   * @param index the index of the element to be removed
+   * @return the removed Object
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
+   */
+  public Object{L} remove{L}(int{L} index) throws (UnsupportedOperationException{L}, 
+      IndexOutOfBoundsException{L})
+  {
+    checkBoundExclusive(index);
+    Object r = data[index];
+    modCount++;
+    if (index != --size)
+      Arrays.arraycopy(data, index + 1, data, index, size - index);
+    // Aid for garbage collection by releasing this pointer.
+    data[size] = null;
+    return r;
+  }
+
+  /**
+   * Removes all elements from this List
+   */
+  public void clear{L}()
+  {
+    if (size > 0)
+      {
+        modCount++;
+        // Allow for garbage collection.
+        for (int i = 0; i < size; i++) data[i] = null;
+        size = 0;
+      }
+  }
+
+  /**
+   * Add each element in the supplied Collection to this List. It is undefined
+   * what happens if you modify the list while this is taking place; for
+   * example, if the collection contains this list.  c can contain objects
+   * of any type, as well as null values.
+   *
+   * @param c a Collection containing elements to be added to this List
+   * @return true if the list was modified, in other words c is not empty
+   * @throws NullPointerException if c is null
+   */
+  public boolean{L} addAll{L}(Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+      IllegalStateException{L})
+  {
+    return addAll(size, c);
+  }
+  
+  /**
+   * Add all elements in the supplied collection, inserting them beginning
+   * at the specified index.  c can contain objects of any type, as well
+   * as null values.
+   *
+   * @param index the index at which the elements will be inserted
+   * @param c the Collection containing the elements to be inserted
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; 0
+   * @throws NullPointerException if c is null
+   */
+  public boolean{L} addAll{L}(int{L} index, Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+      IllegalStateException{L})
+  {
+    checkBoundInclusive(index);
+    final Store localStore = worker$.getLocalStore();
+    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      Iterator itr = iterator(localStore);
+      int csize = c.size();
+  
+      modCount++;
+      if (csize + size > data.length)
+        ensureCapacity(size + csize);
+      int end = index + csize;
+      if (size > 0 && index != size)
+        Arrays.arraycopy(data, index, data, end, size - index);
+      size += csize;
+      for ( ; index < end; index++)
+        data[index] = itr.next();
+      return csize > 0;
+    } 
+    else
+        throw new Error("Cannot create iterator on local store.");
+
+  }
+
+  /**
+   * Removes all elements in the half-open interval [fromIndex, toIndex).
+   * Does nothing when toIndex is equal to fromIndex.
+   *
+   * @param fromIndex the first index which will be removed
+   * @param toIndex one greater than the last index which will be removed
+   * @throws IndexOutOfBoundsException if fromIndex &gt; toIndex
+   */
+  protected void removeRange{L}(int{L} fromIndex, int{L} toIndex) throws (IndexOutOfBoundsException{L})
+  {
+    int change = toIndex - fromIndex;
+    if (change > 0)
+      {
+        modCount++;
+        Arrays.arraycopy(data, toIndex, data, fromIndex, size - toIndex);
+        size -= change;
+      }
+    else if (change < 0)
+      throw new IndexOutOfBoundsException();
+  }
+  
+  /**
+   * Checks that the index is in the range of possible elements (inclusive).
+   *
+   * @param index the index to check
+   * @throws IndexOutOfBoundsException if index &gt; size
+   */
+  private void checkBoundInclusive{L}(int{L} index) throws (IndexOutOfBoundsException{L})
+  {
+    // Implementation note: we do not check for negative ranges here, since
+    // use of a negative index will cause an ArrayIndexOutOfBoundsException,
+    // a subclass of the required exception, with no effort on our part.
+    if (index > size)
+      throw new IndexOutOfBoundsException("Index: " + index + ", Size: "
+                                          + size);
+  }
+
+  /**
+   * Checks that the index is in the range of existing elements (exclusive).
+   *
+   * @param index the index to check
+   * @throws IndexOutOfBoundsException if index &gt;= size
+   */
+  private void checkBoundExclusive{L}(int{L} index) throws (IndexOutOfBoundsException{L})
+  {
+    // Implementation note: we do not check for negative ranges here, since
+    // use of a negative index will cause an ArrayIndexOutOfBoundsException,
+    // a subclass of the required exception, with no effort on our part.
+    if (index >= size)
+      throw new IndexOutOfBoundsException("Index: " + index + ", Size: "
+                                          + size);
+  }
+
+  /**
+   * Remove from this list all elements contained in the given collection.
+   *
+   * @param c the collection to filter out
+   * @return true if this list changed
+   * @throws NullPointerException if c is null
+   */
+  public boolean{L} removeAll{L}(Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L})
+  {
+    int i;
+    int j;
+    for (i = 0; i < size; i++)
+      if (c.contains(data[i]))
+        break;
+    if (i == size)
+      return false;
+
+    modCount++;
+    for (j = i++; i < size; i++)
+      if (! c.contains(data[i]))
+        data[j++] = data[i];
+    size -= i - j;
+    return true;
+  }
+
+  /**
+   * Retain in this vector only the elements contained in the given collection.
+   *
+   * @param c the collection to filter by
+   * @return true if this vector changed
+   * @throws NullPointerException if c is null
+   * @since 1.2
+   */
+  public boolean{L} retainAll{L}(Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L})
+  {
+    int i;
+    int j;
+    for (i = 0; i < size; i++)
+      if (! c.contains(data[i]))
+        break;
+    if (i == size)
+      return false;
+
+    modCount++;
+    for (j = i++; i < size; i++)
+      if (c.contains(data[i]))
+        data[j++] = data[i];
+    size -= i - j;
+    return true;
   }
 
 }

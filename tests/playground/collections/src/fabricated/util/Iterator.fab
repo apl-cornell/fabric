@@ -4,7 +4,7 @@ package fabricated.util;
  * An iterator interface for the Jif collection framework.
  */
 public interface Iterator[label L] {
-    boolean{L} hasNext();
+    boolean{L} hasNext{L}();
     
     Object{L} next{L}() throws (NoSuchElementException{L});
 

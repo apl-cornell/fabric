@@ -1,0 +1,72 @@
+import fabricated.util.*;
+import java.io.PrintStream;
+import fabric.runtime.Runtime;
+
+public class ALTest {
+
+  public static void main{* <- p}(principal{p<-} p, String[] args) where caller(p) {
+    int{p->;p<-}[] nums = new int[10];
+    PrintStream[{p->;p<-}] out = null;
+    try {
+        Runtime[p] runtime = Runtime[p].getRuntime();
+        out = runtime==null?null:runtime.stdout(new label {p->;p<-});
+    }
+    catch (SecurityException e) {
+        // just let out be null.
+    }
+
+    int c = 10;
+    List list = new ArrayList(new FabIntCompare());
+    for (int i = 0; i < nums.length; i++) {
+      out.println ("Adding " + c);
+      list.add(new FabInt(c--));
+    }
+    out.println ("List has "+ list.size() + " elements.");
+
+    List sorted = insertSort(new label{p->;p<-}, list);
+   
+    out.println ("Sorted List");
+    int i = 0;
+    for (Iterator it = sorted.iterator(); it.hasNext();) {
+      out.println(i++ + ":" + ((FabInt)it.next()).value);
+    }
+  }
+
+  public static List[lbl]{*lbl} insertSort{*lbl}(label lbl, Collection[lbl]{*lbl} c) {
+    List newList = new ArrayList(new FabIntCompare());
+    for (Iterator cit = c.iterator(); cit.hasNext();) {
+      FabInt next = (FabInt)cit.next(); 
+      if (newList.size() == 0) {
+        newList.add(next);
+        continue;
+      } else {
+        FabInt cur = (FabInt)newList.get(0);
+        if (next.value < cur.value) {
+          newList.add(0, next);
+          continue;
+        }
+      }
+      for (ListIterator nlit = newList.listIterator(1); nlit.hasNext();) {
+        FabInt cur = (FabInt)nlit.next();
+        if (next.value >= cur.value) {
+          nlit.add(cur);
+          break;
+        }
+      }
+    }
+    return newList;
+  }
+}
+class FabInt[label L] {
+  final int{L} value;  
+  FabInt{L}(int{L} value) {
+    this.value = value;
+    super();
+  }
+} 
+class FabIntCompare[label L] implements Comparator[L] {
+  public boolean{L} equals{L}(Object{L} a, Object{L} b) throws 
+    (ClassCastException{L}, NullPointerException{L}) {
+      return ((FabInt[L])a).value == ((FabInt[L])b).value;
+  }
+}
