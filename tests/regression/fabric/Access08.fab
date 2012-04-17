@@ -1,0 +1,23 @@
+// This test case should fail since "key" may be leaked to a's store via a read
+// channel at a[mid]
+public class Access08 {
+  public static int{*lbl;a;key} binarySearch{*lbl}(label lbl, byte{*lbl}[]{*lbl} a, byte key)
+  {
+    int low = 0;
+    int hi = a.length - 1;
+    int mid = 0;
+    while (low <= hi)
+      {
+        mid = (low + hi) >>> 1;
+        final byte d = a[mid]; // read channel?
+        if (d == key)
+          return mid;
+        else if (d > key)
+          hi = mid - 1;
+        else
+          // This gets the insertion point right on the last loop.
+          low = ++mid;
+      }
+    return -mid - 1;
+  }
+}
