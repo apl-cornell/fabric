@@ -2140,14 +2140,15 @@ public class Arrays {
     if (fromIndex < 0)
       throw new ArrayIndexOutOfBoundsException();
 
+    int _fromIndex = fromIndex, _toIndex = toIndex;
     // In general, the code attempts to be simple rather than fast, the
     // idea being that a good optimising JIT will be able to optimise it
     // better than I can, and if I try it will make it more confusing for
     // the JIT. First presort the array in chunks of length 6 with insertion
     // sort. A mergesort would give too much overhead for this length.
-    for (int chunk = fromIndex; chunk < toIndex; chunk += 6)
+    for (int chunk = _fromIndex; chunk < _toIndex; chunk += 6)
       {
-        int end = Math.min(chunk + 6, toIndex);
+        int end = Math.min(chunk + 6, _toIndex);
         for (int i = chunk + 1; i < end; i++)
           {
             if (c.compare(a[i - 1], a[i]) > 0)
@@ -2167,27 +2168,27 @@ public class Arrays {
           }
       }
 
-    int len = toIndex - fromIndex;
+    int len = _toIndex - _fromIndex;
     // If length is smaller or equal 6 we are done.
     if (len <= 6)
       return;
 
-    Object[] src = a;
-    Object[] dest = new Object[len];
-    Object[] t = null; // t is used for swapping src and dest
+    Object{*lbl}[] src = a;
+    Object{*lbl}[] dest = new Object[len];
+    Object{*lbl}[] t = null; // t is used for swapping src and dest
 
-    // The difference of the fromIndex of the src and dest array.
-    int srcDestDiff = -fromIndex;
+    // The difference of the _fromIndex of the src and dest array.
+    int srcDestDiff = -_fromIndex;
 
     // The merges are done in this loop
     for (int size = 6; size < len; size <<= 1)
       {
-        for (int start = fromIndex; start < toIndex; start += size << 1)
+        for (int start = _fromIndex; start < _toIndex; start += size << 1)
           {
             // mid is the start of the second sublist;
             // end the start of the next sublist (or end of array).
             int mid = start + size;
-            int end = Math.min(toIndex, mid + size);
+            int end = Math.min(_toIndex, mid + size);
 
             // The second list is empty or the elements are already in
             // order - no need to merge
@@ -2237,8 +2238,8 @@ public class Arrays {
         t = src;
         src = dest;
         dest = t;
-        fromIndex += srcDestDiff;
-        toIndex += srcDestDiff;
+        _fromIndex += srcDestDiff;
+        _toIndex += srcDestDiff;
         srcDestDiff = -srcDestDiff;
       }
 
@@ -2247,8 +2248,8 @@ public class Arrays {
     // contains the sorted array.
     if (src != a)
       {
-        // Note that fromIndex == 0.
-        arraycopy(lbl, src, 0, a, srcDestDiff, toIndex);
+        // Note that _fromIndex == 0.
+        arraycopy(lbl, src, 0, a, srcDestDiff, _toIndex);
       }
   }
   

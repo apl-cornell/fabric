@@ -188,10 +188,91 @@ public abstract class AbstractList[label L] extends AbstractCollection[L] implem
       throw new Error("Cannot create iterator on local store.");
   }
   
-  public abstract ListIterator[L]{L} listIterator{L}();
-  public abstract ListIterator[L]{L} listIterator{L}(int{L} index) throws (IndexOutOfBoundsException{L});
-  public abstract ListIterator[L]{L} listIterator{L}(Store{L} store, int{L} index) throws (IndexOutOfBoundsException{L}) where L <= {*<-store}, {*->store} <= L;
+  /**
+   * Return an Iterator over this collection. The iterator must provide the
+   * hasNext and next methods and should in addition provide remove if the
+   * collection is modifiable.
+   *
+   * @return an iterator
+   */
+  public Iterator[L]{L} iterator{L}() {
+    return listIterator(0);
+  }
 
+  /**
+   * Return an Iterator over this collection. The iterator must provide the
+   * hasNext and next methods and should in addition provide remove if the
+   * collection is modifiable.
+   *
+   * @return an iterator
+   */
+  public Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L
+  {
+    return listIterator(store, 0);
+  }
+
+  /**
+   * Obtain a ListIterator over this list, starting at the beginning. This
+   * implementation returns listIterator(0).
+   *
+   * @return a ListIterator over the elements of this list, in order, starting
+   *         at the beginning
+   */
+  public ListIterator[L]{L} listIterator{L}() {
+    return listIterator(0);
+  }
+  
+  /**
+   * Obtain a ListIterator over this list, starting at a given position.
+   * A first call to next() would return the same as get(index), and a
+   * first call to previous() would return the same as get(index - 1).
+   * <p>
+   *
+   * This implementation uses size(), get(int), set(int, Object),
+   * add(int, Object), and remove(int) of the backing list, and does not
+   * support remove, set, or add unless the list does. This implementation
+   * is fail-fast if you correctly maintain modCount.
+   *
+   * @param index the position, between 0 and size() inclusive, to begin the
+   *        iteration from
+   * @return a ListIterator over the elements of this list, in order, starting
+   *         at index
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
+   * @see #modCount
+   */
+  public ListIterator[L]{L} listIterator{L}(int{L} index) throws (IndexOutOfBoundsException{L}) {
+    if (index < 0 || index > size())
+      throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
+                                              + size());
+    return new AbstractListIterator(this, index);
+  }
+
+  /**
+   * Obtain a ListIterator over this list, starting at a given position.
+   * A first call to next() would return the same as get(index), and a
+   * first call to previous() would return the same as get(index - 1).
+   * <p>
+   *
+   * This implementation uses size(), get(int), set(int, Object),
+   * add(int, Object), and remove(int) of the backing list, and does not
+   * support remove, set, or add unless the list does. This implementation
+   * is fail-fast if you correctly maintain modCount.
+   *
+   * @param store where to create the list iterator object 
+   * @param index the position, between 0 and size() inclusive, to begin the
+   *        iteration from
+   * @return a ListIterator over the elements of this list, in order, starting
+   *         at index
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
+   * @see #modCount
+   */
+  public ListIterator[L]{L} listIterator{L}(Store{L} store, int{L} index) 
+      throws (IndexOutOfBoundsException{L}) where L <= {*<-store}, {*->store} <= L {
+    if (index < 0 || index > size())
+      throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
+                                              + size());
+    return new AbstractListIterator@store(this, index);
+  }
 
   /**
    * Remove the element at a given position in this list (optional operation).
@@ -327,5 +408,206 @@ public abstract class AbstractList[label L] extends AbstractCollection[L] implem
 //      return new RandomAccessSubList(this, fromIndex, toIndex);
 //    return new SubList(this, fromIndex, toIndex);
   }
-    
+     
 }
+
+final class AbstractListIterator[label L] implements ListIterator[L] {
+  /**
+   * 
+   */
+  private final int{L} index;
+
+  private final AbstractList[L]{L} al;
+  private int{L} knownMod;
+
+  private int{L} position;
+
+  private int{L} lastReturned = -1;
+
+  private int{L} size;
+
+  /**
+   * @param index
+   */
+  AbstractListIterator{L}(AbstractList[L]{L} al, int{L} index) {
+    this.index = index;
+    position = index;
+    this.al = al;
+    knownMod = al.modCount;
+    size = al.size();
+    super();
+  }
+
+  /**
+   * Checks for modifications made to the list from
+   * elsewhere while iteration is in progress.
+   *
+   * @throws ConcurrentModificationException if the
+   *         list has been modified elsewhere.
+   */
+  private void checkMod{L}() throws (ConcurrentModificationException{L})
+  {
+    if (knownMod != al.modCount)
+      throw new ConcurrentModificationException();
+  }
+
+  /**
+   * Tests to see if there are any more objects to
+   * return.
+   *
+   * @return True if the end of the list has not yet been
+   *         reached.
+   */
+  public boolean{L} hasNext{L}()
+  {
+    return position < size;
+  }
+
+  /**
+   * Tests to see if there are objects prior to the
+   * current position in the list.
+   *
+   * @return True if objects exist prior to the current
+   *         position of the iterator.
+   */
+  public boolean{L} hasPrevious{L}()
+  {
+    return position > 0;
+  }
+
+  /**
+   * Retrieves the next object from the list.
+   *
+   * @return The next object.
+   * @throws NoSuchElementException if there are no
+   *         more objects to retrieve.
+   * @throws ConcurrentModificationException if the
+   *         list has been modified elsewhere.
+   */
+  public Object{L} next{L}() throws (NoSuchElementException{L}, ConcurrentModificationException{L})
+  {
+    checkMod();
+    if (position == size)
+      throw new NoSuchElementException();
+    lastReturned = position;
+    return al.get(position++);
+  }
+
+  /**
+   * Retrieves the previous object from the list.
+   *
+   * @return The next object.
+   * @throws NoSuchElementException if there are no
+   *         previous objects to retrieve.
+   * @throws ConcurrentModificationException if the
+   *         list has been modified elsewhere.
+   */
+  public Object{L} previous{L}() throws (NoSuchElementException{L}, ConcurrentModificationException{L})
+  {
+    checkMod();
+    if (position == 0)
+      throw new NoSuchElementException();
+    lastReturned = --position;
+    return al.get(lastReturned);
+  }
+
+  /**
+   * Returns the index of the next element in the
+   * list, which will be retrieved by <code>next()</code>
+   *
+   * @return The index of the next element.
+   */
+  public int{L} nextIndex()
+  {
+    return position;
+  }
+
+  /**
+   * Returns the index of the previous element in the
+   * list, which will be retrieved by <code>previous()</code>
+   *
+   * @return The index of the previous element.
+   */
+  public int{L} previousIndex()
+  {
+    return position - 1;
+  }
+
+  /**
+  * Removes the last object retrieved by <code>next()</code>
+  * or <code>previous()</code> from the list, if the list
+  * supports object removal.
+  *
+  * @throws IllegalStateException if the iterator is positioned
+  *         before the start of the list or the last object has already
+  *         been removed.
+  * @throws UnsupportedOperationException if the list does
+  *         not support removing elements.
+  * @throws ConcurrentModificationException if the list
+  *         has been modified elsewhere.
+  */
+  public void remove{L}() 
+  {
+    checkMod();
+    if (lastReturned < 0)
+      throw new IllegalStateException();
+    al.remove(lastReturned);
+    size--;
+    position = lastReturned;
+    lastReturned = -1;
+    knownMod = al.modCount;
+  }
+
+  /**
+  * Replaces the last object retrieved by <code>next()</code>
+  * or <code>previous</code> with o, if the list supports object
+  * replacement and an add or remove operation has not already
+  * been performed.
+  *
+  * @throws IllegalStateException if the iterator is positioned
+  *         before the start of the list or the last object has already
+  *         been removed.
+  * @throws UnsupportedOperationException if the list doesn't support
+  *         the addition or removal of elements.
+  * @throws ClassCastException if the type of o is not a valid type
+  *         for this list.
+  * @throws IllegalArgumentException if something else related to o
+  *         prevents its addition.
+  * @throws ConcurrentModificationException if the list
+  *         has been modified elsewhere.
+  */
+  public void set{L}(Object{L} o) throws (UnsupportedOperationException{L}, ConcurrentModificationException{L},
+      ClassCastException{L}, IllegalArgumentException{L}, IllegalStateException{L})
+  {
+    checkMod();
+    if (lastReturned < 0)
+      throw new IllegalStateException();
+    al.set(lastReturned, o);
+  }
+
+  /**
+   * Adds the supplied object before the element that would be returned
+   * by a call to <code>next()</code>, if the list supports addition.
+   * 
+   * @param o The object to add to the list.
+   * @throws UnsupportedOperationException if the list doesn't support
+   *         the addition of new elements.
+   * @throws ClassCastException if the type of o is not a valid type
+   *         for this list.
+   * @throws IllegalArgumentException if something else related to o
+   *         prevents its addition.
+   * @throws ConcurrentModificationException if the list
+   *         has been modified elsewhere.
+   */
+  public void add{L}(Object{L} o) throws (UnsupportedOperationException{L}, ConcurrentModificationException{L},
+      ClassCastException{L}, IllegalArgumentException{L})
+  {
+    checkMod();
+    al.add(position++, o);
+    size++;
+    lastReturned = -1;
+    knownMod = al.modCount;
+  }
+
+}
+

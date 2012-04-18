@@ -41,7 +41,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
   /**
    * The default capacity for new ArrayLists.
    */
-  private final int{L} DEFAULT_CAPACITY = 10;
+  private static final int{*<-} DEFAULT_CAPACITY = 10;
 
   /**
    * The number of elements in this list.
@@ -59,7 +59,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
    * @param capacity initial capacity of this ArrayList
    * @throws IllegalArgumentException if capacity is negative
    */
-  public ArrayList{L}(Comparator[L]{L} compare, int{L} capacity)
+  public ArrayList{L}(Comparator[L]{L} compare, int{L} capacity) throws (IllegalArgumentException{L})
   {
     // Must explicitly check, to get correct exception.
     if (capacity < 0)
@@ -71,7 +71,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
   /**
    * Construct a new ArrayList with the default capacity (16).
    */
-  public ArrayList{L}(Comparator[L]{L} compare)
+  public ArrayList{L}(Comparator[L]{L} compare) throws (IllegalArgumentException{L})
   {
     this(compare,DEFAULT_CAPACITY);
   }
@@ -84,10 +84,15 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
    * @param c the collection whose elements will initialize this list
    * @throws NullPointerException if c is null
    */
-  public ArrayList{L}(Comparator[L]{L} compare, Collection c)
+  public ArrayList{L}(Comparator[L]{L} compare, Collection[L]{L} c) 
+      throws (IllegalArgumentException{L}, ClassCastException{L}, NullPointerException{L})
   {
-    super(compare,(int) (c.size() * 1.1f));
-    addAll(c);
+    this(compare,(int) (c.size() * 1.1f));
+    try {
+      addAll(c);
+    } catch (UnsupportedOperationException{L} uoe) {
+    } catch (IllegalStateException{L} ise) {      
+    }
   }
   
   /**
@@ -226,7 +231,6 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
     if (size == data.length)
       ensureCapacity(size + 1);
     data[size++] = e;
-    return true;
   }
   
   /**
@@ -243,28 +247,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
     Object r = data[index];
     modCount++;
     if (index != --size)
-      Arrays.arraycopy(data, index + 1, data, index, size - index);
-    // Aid for garbage collection by releasing this pointer.
-    data[size] = null;
-    return r;
-  }
-
-
-  /**
-   * Removes the element at the user-supplied index.
-   *
-   * @param index the index of the element to be removed
-   * @return the removed Object
-   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
-   */
-  public Object{L} remove{L}(int{L} index) throws (UnsupportedOperationException{L}, 
-      IndexOutOfBoundsException{L})
-  {
-    checkBoundExclusive(index);
-    Object r = data[index];
-    modCount++;
-    if (index != --size)
-      Arrays.arraycopy(data, index + 1, data, index, size - index);
+      Arrays.arraycopy(L, data, index + 1, data, index, size - index);
     // Aid for garbage collection by releasing this pointer.
     data[size] = null;
     return r;
@@ -315,7 +298,8 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
       ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
       IllegalStateException{L})
   {
-    checkBoundInclusive(index);
+    int _index = index;
+    checkBoundInclusive(_index);
     final Store localStore = worker$.getLocalStore();
     if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
       Iterator itr = iterator(localStore);
@@ -324,12 +308,12 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
       modCount++;
       if (csize + size > data.length)
         ensureCapacity(size + csize);
-      int end = index + csize;
-      if (size > 0 && index != size)
-        Arrays.arraycopy(data, index, data, end, size - index);
+      int end = _index + csize;
+      if (size > 0 && _index != size)
+        Arrays.arraycopy(L, data, _index, data, end, size - _index);
       size += csize;
-      for ( ; index < end; index++)
-        data[index] = itr.next();
+      for ( ; _index < end; _index++)
+        data[_index] = itr.next();
       return csize > 0;
     } 
     else
@@ -351,7 +335,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
     if (change > 0)
       {
         modCount++;
-        Arrays.arraycopy(data, toIndex, data, fromIndex, size - toIndex);
+        Arrays.arraycopy(L, data, toIndex, data, fromIndex, size - toIndex);
         size -= change;
       }
     else if (change < 0)

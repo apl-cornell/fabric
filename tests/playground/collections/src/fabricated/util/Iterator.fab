@@ -6,7 +6,19 @@ package fabricated.util;
 public interface Iterator[label L] {
     boolean{L} hasNext{L}();
     
-    Object{L} next{L}() throws (NoSuchElementException{L});
+    Object{L} next{L}() throws (NoSuchElementException{L}, ConcurrentModificationException{L});
 
-    void remove{L}() throws (IllegalStateException{L});
+    /**
+     * Remove from the list the element last returned by a call to next or
+     * previous (optional operation). This method may only be called if neither
+     * add nor remove have been called since the last call to next or previous.
+     *
+     * @throws IllegalStateException if neither next or previous have been
+     *         called, or if add or remove has been called since the last call
+     *         to next or previous
+     * @throws UnsupportedOperationException if this ListIterator does not
+     *         support the remove operation
+     */
+    void remove{L}() throws (IllegalStateException{L}, UnsupportedOperationException{L}, 
+        ConcurrentModificationException{L});
 }
