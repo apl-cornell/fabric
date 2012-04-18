@@ -140,7 +140,8 @@ where
   char  {L;x;y;*provider} // result is tainted by map, coordinates, code
   getAt
   {   // side effects:
-    A // fields are accessed
+    A ⊓// fields are accessed
+    L  // BUG: access label of arrays is the update label.
   }
   (
     float x, float y
@@ -150,7 +151,8 @@ where
     ArrayIndexOutOfBoundsException{L;x;y;*provider}
   )
   where 
-    provider           <= A  // code affects fetches
+    provider           <= A,  // code affects fetches
+    provider           <= L  // BUG: access label of arrays is the update label.
   {
     if (this.data == null)
       throw new AssertionFailedError("155 data must be non-null");
