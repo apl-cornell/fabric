@@ -8,12 +8,14 @@ import jif.extension.JifFieldDeclExt_c;
 import jif.extension.JifLabelExprExt;
 import jif.extension.JifPrincipalExprExt;
 import jif.extension.JifSourceFileExt;
+import jif.translate.ArrayAccessToJavaExt_c;
 import jif.translate.FieldToJavaExt_c;
 import polyglot.ast.Ext;
 import fabric.extension.AbortJifExt_c;
 import fabric.extension.AtomicJifExt_c;
 import fabric.extension.CallJifExt_c;
 import fabric.extension.ClassBodyJifExt_c;
+import fabric.extension.FabricArrayAccessExt;
 import fabric.extension.FabricCastExt;
 import fabric.extension.FabricClassDeclExt;
 import fabric.extension.FabricFieldExt;
@@ -96,6 +98,11 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   @Override
   protected Ext extFieldImpl() {
     return new FabricFieldExt(new FieldToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extArrayAccessImpl() {
+    return new FabricArrayAccessExt(new ArrayAccessToJavaExt_c());
   }
 
   @Override
