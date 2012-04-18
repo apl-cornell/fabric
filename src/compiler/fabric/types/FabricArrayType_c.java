@@ -1,5 +1,6 @@
 package fabric.types;
 
+import polyglot.types.FieldInstance;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import jif.types.ConstArrayType_c;
@@ -43,5 +44,20 @@ public class FabricArrayType_c
   
   private FabricTypeSystem ts() {
     return (FabricTypeSystem) ts;
+  }
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  protected void init() {
+    boolean fixField = fields == null;
+
+    super.init();
+
+    if (fixField) {
+      // Make the length field non-final.
+      FieldInstance lengthField = lengthField();
+      lengthField = lengthField.flags(lengthField.flags().clearFinal());
+      fields.set(0, lengthField);
+    }
   }
 }
