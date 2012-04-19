@@ -223,7 +223,11 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // methods for those types.
     toVisit.add(ct.superType().toClass());
     while (!toVisit.isEmpty()) {
+
       ClassType type = toVisit.remove();
+      if (type.superType() != null)
+        toVisit.add(type.superType().toClass());
+      
       if (visitedTypes.contains(type)) continue;
       visitedTypes.add(type);
 
