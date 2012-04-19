@@ -1,0 +1,11 @@
+package fab.util;
+public class ArL[label L] extends AL[L] implements L[L] {
+}
+class AC[label L] implements C[L] {
+}
+interface L[label L] extends C[L] {
+}
+interface C[label L] {
+}
+class AL[label L] extends AC[L] implements L[L] {
+}
