@@ -429,7 +429,7 @@ final class AbstractListIterator[label L] implements ListIterator[L] {
   /**
    * @param index
    */
-  AbstractListIterator{L}(AbstractList[L]{L} al, int{L} index) {
+  AbstractListIterator{L}(AbstractList[L]{L} al, int{L} index) throws (NullPointerException{L}) {
     this.index = index;
     position = index;
     this.al = al;
@@ -546,7 +546,8 @@ final class AbstractListIterator[label L] implements ListIterator[L] {
   * @throws ConcurrentModificationException if the list
   *         has been modified elsewhere.
   */
-  public void remove{L}() 
+  public void remove{L}() throws (IllegalStateException{L}, UnsupportedOperationException{L}, 
+      ConcurrentModificationException{L})
   {
     checkMod();
     if (lastReturned < 0)

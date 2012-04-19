@@ -1,4 +1,4 @@
-package fabricated.util;
+package java.lang;
 
 /**
  * Marker interface used to inform <code>List</code> implementations that
@@ -21,5 +21,6 @@ package fabricated.util;
  */
 public interface RandomAccess
 {
+  private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
   // Tagging interface only.
 }

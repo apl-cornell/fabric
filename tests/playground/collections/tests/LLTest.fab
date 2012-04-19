@@ -69,4 +69,8 @@ class FabIntCompare[label L] implements Comparator[L] {
     (ClassCastException{L}, NullPointerException{L}) {
       return ((FabInt[L])a).value == ((FabInt[L])b).value;
   }
+  public int{L} compare{L}(Object{L} a, Object{L} b) throws 
+    (ClassCastException{L}, NullPointerException{L}) {
+      return ((FabInt[L])a).value - ((FabInt[L])b).value;
+  }
 }

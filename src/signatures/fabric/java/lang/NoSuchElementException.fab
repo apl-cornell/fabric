@@ -1,6 +1,7 @@
-package fabricated.util;
+package java.lang;
 
 public class NoSuchElementException extends RuntimeException {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     public NoSuchElementException() {
 	super();
     }

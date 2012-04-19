@@ -223,14 +223,37 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
    * @param e the element to be appended to this list
    * @return true, the add will always succeed
    */
-  public void add{L}(int{L} index, Object{L} e) throws (UnsupportedOperationException{L}, 
-      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
-      IndexOutOfBoundsException{L})
+  public boolean{L} add{L}(Object{L} e) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L})
   {
     modCount++;
     if (size == data.length)
       ensureCapacity(size + 1);
     data[size++] = e;
+    return true;
+  }
+
+  /**
+   * Adds the supplied element at the specified index, shifting all
+   * elements currently at that index or higher one to the right.
+   * The element, e, can be an object of any type or null.
+   *
+   * @param index the index at which the element is being added
+   * @param e the item being added
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
+   */
+  public void add{L}(int{L} index, Object{L} e) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+      IndexOutOfBoundsException{L})
+  {
+    checkBoundInclusive(index);
+    modCount++;
+    if (size == data.length)
+      ensureCapacity(size + 1);
+    if (index != size)
+      Arrays.arraycopy(L, data, index, data, index + 1, size - index);
+    data[index] = e;
+    size++;
   }
   
   /**

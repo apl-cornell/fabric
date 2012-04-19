@@ -2261,11 +2261,18 @@ public class Arrays {
       byte{*lbl}[]{*lbl} dst, int{*lbl} dstPos, int{*lbl} length) 
           throws (ArrayIndexOutOfBoundsException{*lbl}, NullPointerException{*lbl})
   {
-    int _srcPos = srcPos, _dstPos = dstPos, _length = length;
+    int _srcPos = srcPos, _dstPos = dstPos;
+    byte{*lbl}[] tmp = new byte[length];
+    
     if (dst == null || src == null)
       throw new NullPointerException();
-    while (_length-- > 0) {
-      dst[_dstPos++] = src[_srcPos++];
+    int i=0;
+    while (i < length) {
+      tmp[i++] = src[_srcPos++];
+    }
+    i=0;
+    while (i < length) {
+      src[_dstPos++] = tmp[i++];
     }
   }
 
@@ -2273,11 +2280,18 @@ public class Arrays {
       char{*lbl}[]{*lbl} dst, int{*lbl} dstPos, int{*lbl} length) 
           throws (ArrayIndexOutOfBoundsException{*lbl}, NullPointerException{*lbl})
   {
-    int _srcPos = srcPos, _dstPos = dstPos, _length = length;
+    int _srcPos = srcPos, _dstPos = dstPos;
+    char{*lbl}[] tmp = new char[length];
+    
     if (dst == null || src == null)
       throw new NullPointerException();
-    while (_length-- > 0) {
-      dst[_dstPos++] = src[_srcPos++];
+    int i=0;
+    while (i < length) {
+      tmp[i++] = src[_srcPos++];
+    }
+    i=0;
+    while (i < length) {
+      src[_dstPos++] = tmp[i++];
     }
   }
 
@@ -2285,11 +2299,18 @@ public class Arrays {
       short{*lbl}[]{*lbl} dst, int{*lbl} dstPos, int{*lbl} length) 
           throws (ArrayIndexOutOfBoundsException{*lbl}, NullPointerException{*lbl})
   {
-    int _srcPos = srcPos, _dstPos = dstPos, _length = length;
+    int _srcPos = srcPos, _dstPos = dstPos;
+    short{*lbl}[] tmp = new short[length];
+    
     if (dst == null || src == null)
       throw new NullPointerException();
-    while (_length-- > 0) {
-      dst[_dstPos++] = src[_srcPos++];
+    int i=0;
+    while (i < length) {
+      tmp[i++] = src[_srcPos++];
+    }
+    i=0;
+    while (i < length) {
+      src[_dstPos++] = tmp[i++];
     }
   }
 
@@ -2297,11 +2318,18 @@ public class Arrays {
       int{*lbl}[]{*lbl} dst, int{*lbl} dstPos, int{*lbl} length) 
           throws (ArrayIndexOutOfBoundsException{*lbl}, NullPointerException{*lbl})
   {
-    int _srcPos = srcPos, _dstPos = dstPos, _length = length;
+    int _srcPos = srcPos, _dstPos = dstPos;
+    int{*lbl}[] tmp = new int[length];
+    
     if (dst == null || src == null)
       throw new NullPointerException();
-    while (_length-- > 0) {
-      dst[_dstPos++] = src[_srcPos++];
+    int i=0;
+    while (i < length) {
+      tmp[i++] = src[_srcPos++];
+    }
+    i=0;
+    while (i < length) {
+      src[_dstPos++] = tmp[i++];
     }
   }
   
@@ -2309,11 +2337,18 @@ public class Arrays {
       long{*lbl}[]{*lbl} dst, int{*lbl} dstPos, int{*lbl} length) 
           throws (ArrayIndexOutOfBoundsException{*lbl}, NullPointerException{*lbl})
   {
-    int _srcPos = srcPos, _dstPos = dstPos, _length = length;
+    int _srcPos = srcPos, _dstPos = dstPos;
+    long{*lbl}[] tmp = new long[length];
+    
     if (dst == null || src == null)
       throw new NullPointerException();
-    while (_length-- > 0) {
-      dst[_dstPos++] = src[_srcPos++];
+    int i=0;
+    while (i < length) {
+      tmp[i++] = src[_srcPos++];
+    }
+    i=0;
+    while (i < length) {
+      src[_dstPos++] = tmp[i++];
     }
   }
   
@@ -2321,11 +2356,18 @@ public class Arrays {
       float{*lbl}[]{*lbl} dst, int{*lbl} dstPos, int{*lbl} length) 
           throws (ArrayIndexOutOfBoundsException{*lbl}, NullPointerException{*lbl})
   {
-    int _srcPos = srcPos, _dstPos = dstPos, _length = length;
+    int _srcPos = srcPos, _dstPos = dstPos;
+    float{*lbl}[] tmp = new float[length];
+    
     if (dst == null || src == null)
       throw new NullPointerException();
-    while (_length-- > 0) {
-      dst[_dstPos++] = src[_srcPos++];
+    int i=0;
+    while (i < length) {
+      tmp[i++] = src[_srcPos++];
+    }
+    i=0;
+    while (i < length) {
+      src[_dstPos++] = tmp[i++];
     }
   }
   
@@ -2333,11 +2375,18 @@ public class Arrays {
       double{*lbl}[]{*lbl} dst, int{*lbl} dstPos, int{*lbl} length) 
           throws (ArrayIndexOutOfBoundsException{*lbl}, NullPointerException{*lbl})
   {
-    int _srcPos = srcPos, _dstPos = dstPos, _length = length;
+    int _srcPos = srcPos, _dstPos = dstPos;
+    double{*lbl}[] tmp = new double[length];
+    
     if (dst == null || src == null)
       throw new NullPointerException();
-    while (_length-- > 0) {
-      dst[_dstPos++] = src[_srcPos++];
+    int i=0;
+    while (i < length) {
+      tmp[i++] = src[_srcPos++];
+    }
+    i=0;
+    while (i < length) {
+      src[_dstPos++] = tmp[i++];
     }
   }
   
@@ -2345,11 +2394,18 @@ public class Arrays {
       Object{*lbl}[]{*lbl} dst, int{*lbl} dstPos, int{*lbl} length) 
           throws (ArrayIndexOutOfBoundsException{*lbl}, NullPointerException{*lbl})
   {
-    int _srcPos = srcPos, _dstPos = dstPos, _length = length;
+    int _srcPos = srcPos, _dstPos = dstPos;
+    Object{*lbl}[] tmp = new Object[length];
+    
     if (dst == null || src == null)
       throw new NullPointerException();
-    while (_length-- > 0) {
-      dst[_dstPos++] = src[_srcPos++];
+    int i=0;
+    while (i < length) {
+      tmp[i++] = src[_srcPos++];
+    }
+    i=0;
+    while (i < length) {
+      src[_dstPos++] = tmp[i++];
     }
   }
 
