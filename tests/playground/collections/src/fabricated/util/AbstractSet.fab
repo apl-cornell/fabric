@@ -1,4 +1,4 @@
-package fabric.util;
+package fabricated.util;
 
 /**
  * An abstract implementation of Set to make it easier to create your own
@@ -54,18 +54,18 @@ public abstract class AbstractSet[label L] extends AbstractCollection[L] impleme
     int oldsize = size();
     int count = c.size();
     final Store localStore = worker$.getLocalStore();
-    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
-      Iterator itr = c.iterator(localStore); 
-    
+    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {    
+      Iterator itr;
       if (oldsize < count)
       {
-        for (count = oldsize; count > 0; count--)
-          if (c.contains(i.next()))
-            i.remove();
+        for (itr = iterator(localStore), count = oldsize; count > 0; count--)
+          if (c.contains(itr.next()))
+            itr.remove();
       }
-      else
-        for (i = c.iterator(LOCAL_STORE); count > 0; count--)
-          remove(i.next());
+      else {
+        for (itr = c.iterator(localStore); count > 0; count--)
+          remove(itr.next());
+      }
       return oldsize != size();
     } 
     else

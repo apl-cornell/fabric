@@ -1,4 +1,4 @@
-package fabric.util;
+package fabricated.util;
 
 /**
  * An object that maps keys onto values. Keys cannot be duplicated. This
@@ -28,10 +28,6 @@ package fabric.util;
  * safe, such as putAll(m) where m is empty, even if the operation would
  * normally fail with a non-empty argument.
  *
- * The label parameter K is the policy for the information obtained by knowing what 
- * keys are contained in the map, while V is the policy for knowing the mapping from 
- * the key to its associated value.
- *
  * @author Original author unknown
  * @author Eric Blake (ebb9@email.byu.edu)
  * @see HashMap
@@ -43,14 +39,13 @@ package fabric.util;
  * @since 1.2
  * @status updated to 1.4
  */
-public interface Map[label K, label V]
+public interface Map[label L]
 {
   /**
    * Remove all entries from this Map (optional operation).
-   *
    * @throws UnsupportedOperationException if clear is not supported
    */
-  void clear{K}();
+  void clear{L}() throws (UnsupportedOperationException{L});
 
   /**
    * Returns true if this contains a mapping for the given key.
@@ -61,7 +56,7 @@ public interface Map[label K, label V]
    * @throws NullPointerException if key is <code>null</code> but the map
    *         does not permit null keys
    */
-  boolean{K} containsKey{K}(Object{K} key);
+  boolean{L} containsKey{L}(Object{L} key) throws (ClassCastException{L}, NullPointerException{L});
 
   /**
    * Returns true if this contains at least one mapping with the given value.
@@ -76,7 +71,7 @@ public interface Map[label K, label V]
    * @throws NullPointerException if the value is null and the map doesn't
    *         support null values.
    */
-  boolean{V} containsValue{V}(Object{V} value);
+  boolean{L} containsValue{L}(Object{L} value) throws (ClassCastException{L}, NullPointerException{L});
 
   /**
    * Returns a set view of the mappings in this Map.  Each element in the
@@ -92,7 +87,7 @@ public interface Map[label K, label V]
    * @return the set view of all mapping entries
    * @see Map.Entry
    */
-  Set[K]{K} entrySet{K}();
+  Set[L]{L} entrySet{L}();
 
   /**
    * Returns the value mapped by the given key. Returns <code>null</code> if
@@ -105,7 +100,7 @@ public interface Map[label K, label V]
    * @throws NullPointerException if this map does not accept null keys
    * @see #containsKey(Object)
    */
-  Object{K;V} get(Object{K} key);
+  Object{L} get{L}(Object{L} key) throws (ClassCastException{L}, NullPointerException{L});
 
   /**
    * Associates the given key to the given value (optional operation). If the
@@ -124,14 +119,15 @@ public interface Map[label K, label V]
    *         and the map forbids null keys or values
    * @see #containsKey(Object)
    */
-  Object{K;V} put(Object{K} key, Object{V} value);
+  Object{L} put{L}(Object{L} key, Object{L} value) throws (UnsupportedOperationException{L}, ClassCastException{L}, 
+      IllegalArgumentException{L}, NullPointerException{L});
 
   /**
    * Returns true if the map contains no mappings.
    *
    * @return true if the map is empty
    */
-  boolean{K} isEmpty{K}();
+  boolean{L} isEmpty{L}();
 
   /**
    * Returns a set view of the keys in this Map.  The set is backed by the
@@ -145,7 +141,7 @@ public interface Map[label K, label V]
    *
    * @return the set view of all keys
    */
-  Set[K]{K} keySet{K}();
+  Set[L]{L} keySet{L}();
 
   /**
    * Copies all entries of the given map to this one (optional operation). If
@@ -160,7 +156,8 @@ public interface Map[label K, label V]
    *         if <code>m</code> is null.
    * @see #put(Object, Object)
    */
-  void putAll{K;V}(Map[K,V]{K;V} m);
+  void putAll{L}(Map[L]{L} m) throws (UnsupportedOperationException{L}, ClassCastException{L}, 
+      IllegalArgumentException{L}, NullPointerException{L});
 
   /**
    * Removes the mapping for this key if present (optional operation). If
@@ -175,7 +172,7 @@ public interface Map[label K, label V]
    * @throws ClassCastException if the type of the key is not a valid type
    *         for this map.
    */
-  Object remove{K}(Object{K} key);
+  Object{L} remove{L}(Object{L} key) throws (UnsupportedOperationException{L}, NullPointerException{L});
 
   /**
    * Returns the number of key-value mappings in the map. If there are more
@@ -183,7 +180,7 @@ public interface Map[label K, label V]
    *
    * @return the number of mappings
    */
-  int size{K}();
+  int{L} size{L}();
 
   /**
    * Returns a collection (or bag) view of the values in this Map.  The
@@ -198,52 +195,5 @@ public interface Map[label K, label V]
    *
    * @return the collection view of all values
    */
-  Collection[V] values{V}();
-
-  /**
-   * A map entry (key-value pair). The Map.entrySet() method returns a set
-   * view of these objects; there is no other valid way to come across them.
-   * These objects are only valid for the duration of an iteration; in other
-   * words, if you mess with one after modifying the map, you are asking
-   * for undefined behavior.
-   *
-   * @author Original author unknown
-   * @author Eric Blake (ebb9@email.byu.edu)
-   * @see Map
-   * @see Map#entrySet()
-   * @since 1.2
-   * @status updated to 1.4
-   */
-  interface Entry[label K, label V]
-  {
-    /**
-     * Get the key corresponding to this entry.
-     *
-     * @return the key
-     */
-    Object{K] getKey{V}();
-
-    /**
-     * Get the value corresponding to this entry. If you already called
-     * Iterator.remove(), this is undefined.
-     *
-     * @return the value
-     */
-    Object getValue();
-
-    /**
-     * Replaces the value with the specified object (optional operation).
-     * This writes through to the map, and is undefined if you already
-     * called Iterator.remove().
-     *
-     * @param value the new value to store
-     * @return the old value
-     * @throws UnsupportedOperationException if the operation is not supported
-     * @throws ClassCastException if the value is of the wrong type
-     * @throws IllegalArgumentException if something about the value
-     *         prevents it from existing in this map
-     * @throws NullPointerException if the map forbids null values
-     */
-    Object setValue(Object value);
-  }
+  Collection[L]{L} values{L}();
 }

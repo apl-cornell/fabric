@@ -846,41 +846,41 @@ public class Arrays {
       a[i] = val;
   }
   
-  /**
-   * Fill an array with an Object value.
-   *
-   * @param a the array to fill
-   * @param val the value to fill it with
-   * @throws ClassCastException if val is not an instance of the element
-   *         type of a.
-   */
-  public static void fill{*lbl}(label lbl, Object{*lbl}[]{*lbl} a, Object{*lbl} val)
-   throws (NullPointerException{*lbl})
-  {
-    fill(lbl, a, 0, a.length, val);
-  }
-  
-  /**
-   * Fill a range of an array with an Object value.
-   *
-   * @param a the array to fill
-   * @param fromIndex the index to fill from, inclusive
-   * @param toIndex the index to fill to, exclusive
-   * @param val the value to fill with
-   * @throws ClassCastException if val is not an instance of the element
-   *         type of a.
-   * @throws IllegalArgumentException if fromIndex &gt; toIndex
-   * @throws ArrayIndexOutOfBoundsException if fromIndex &lt; 0
-   *         || toIndex &gt; a.length
-   */
-  public static void fill{*lbl}(label lbl, Object{*lbl}[]{*lbl} a, int{*lbl} fromIndex, int{*lbl} toIndex, Object{*lbl} val) 
-   throws (NullPointerException{*lbl}, IllegalArgumentException{*lbl}, ArrayIndexOutOfBoundsException{*lbl})
-  {
-    if (fromIndex > toIndex)
-      throw new IllegalArgumentException();
-    for (int i = fromIndex; i < toIndex; i++)
-      a[i] = val;
-  }
+//  /**
+//   * Fill an array with an Object value.
+//   *
+//   * @param a the array to fill
+//   * @param val the value to fill it with
+//   * @throws ClassCastException if val is not an instance of the element
+//   *         type of a.
+//   */
+//  public static void fill{*lbl}(label lbl, Object{*lbl}[]{*lbl} a, Object{*lbl} val)
+//   throws (NullPointerException{*lbl})
+//  {
+//    fill(lbl, a, 0, a.length, val);
+//  }
+//  
+//  /**
+//   * Fill a range of an array with an Object value.
+//   *
+//   * @param a the array to fill
+//   * @param fromIndex the index to fill from, inclusive
+//   * @param toIndex the index to fill to, exclusive
+//   * @param val the value to fill with
+//   * @throws ClassCastException if val is not an instance of the element
+//   *         type of a.
+//   * @throws IllegalArgumentException if fromIndex &gt; toIndex
+//   * @throws ArrayIndexOutOfBoundsException if fromIndex &lt; 0
+//   *         || toIndex &gt; a.length
+//   */
+//  public static void fill{*lbl}(label lbl, Object{*lbl}[]{*lbl} a, int{*lbl} fromIndex, int{*lbl} toIndex, Object{*lbl} val) 
+//   throws (NullPointerException{*lbl}, IllegalArgumentException{*lbl}, ArrayIndexOutOfBoundsException{*lbl})
+//  {
+//    if (fromIndex > toIndex)
+//      throw new IllegalArgumentException();
+//    for (int i = fromIndex; i < toIndex; i++)
+//      a[i] = val;
+//  }
   
   //sort
   // Thanks to Paul Fisher (rao@gnu.org) for finding this quicksort algorithm

@@ -74,7 +74,8 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
         		"in fabric.util.AbstractCollection.");
     }
     
-    public boolean{L} remove{L}(Object{L} o) {
+    public boolean{L} remove{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}) {
       final Store localStore = worker$.getLocalStore();
       if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
         Iterator itr = iterator(localStore);
@@ -123,7 +124,6 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
       }
       else
         throw new Error("Cannot create iterator on local store.");
-
     }
 
     public boolean{L} removeAll{L}(Collection[L]{L} c) throws (

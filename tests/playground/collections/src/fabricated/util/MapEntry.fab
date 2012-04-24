@@ -1,0 +1,47 @@
+package fabricated.util;
+/**
+ * A map entry (key-value pair). The Map.entrySet() method returns a set
+ * view of these objects; there is no other valid way to come across them.
+ * These objects are only valid for the duration of an iteration; in other
+ * words, if you mess with one after modifying the map, you are asking
+ * for undefined behavior.
+ *
+ * @author Original author unknown
+ * @author Eric Blake (ebb9@email.byu.edu)
+ * @see Map
+ * @see Map#entrySet()
+ * @since 1.2
+ * @status updated to 1.4
+ */
+public interface MapEntry[label L]
+{
+  /**
+   * Get the key corresponding to this entry.
+   *
+   * @return the key
+   */
+  Object{L} getKey{L}();
+
+  /**
+   * Get the value corresponding to this entry. If you already called
+   * Iterator.remove(), this is undefined.
+   *
+   * @return the value
+   */
+  Object{L} getValue{L}();
+
+  /**
+   * Replaces the value with the specified object (optional operation).
+   * This writes through to the map, and is undefined if you already
+   * called Iterator.remove().
+   *
+   * @param value the new value to store
+   * @return the old value
+   * @throws UnsupportedOperationException if the operation is not supported
+   * @throws ClassCastException if the value is of the wrong type
+   * @throws IllegalArgumentException if something about the value
+   *         prevents it from existing in this map
+   * @throws NullPointerException if the map forbids null values
+   */
+  Object{L} setValue{L}(Object{L} value);
+}
