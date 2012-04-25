@@ -13,7 +13,7 @@ public final class Input[principal servletP] extends java.lang.Object {
 
 	//    private final String{servletP:;servletP!:;this} name;
 
-	public final label{this} inputLbl;
+	public final label{this}@{servletP->} inputLbl;
 
 	/** Construct an input with an automatically generated name. */
 	public Input(Servlet[servletP]{this} s, label{this} inputLbl){

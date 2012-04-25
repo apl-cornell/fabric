@@ -138,7 +138,7 @@
       <arg value="-g"/>
       <arg value="-d"          /> <arg value="${sif.classes}"/>
       <arg value="-sourcepath" /> <arg value="${fab-src}"/>
-      <arg value="-classpath"         /> <arg pathref="standard.classpath" />
+      <arg value="-bootclasspath"         /> <arg pathref="standard.classpath" />
       <arg value="-e" />
       <arg value="-debugpositions"/>
       <arg value="-trusted-providers"/>
@@ -168,13 +168,12 @@
            vmlauncher="false">
       <arg value="${fabric.home}/bin/fabc" />
       <arg value="-g"   />
-      <arg value="-cp"  /> <arg pathref="standard.classpath" />
+      <arg value="-bootclasspath"         /> <arg pathref="standard.classpath" />
+      <arg value="-v" />
       <arg value="-sig" />
       <arg value="-trusted-providers" />
-      <!--
-        <arg value="-report"/> <arg value="frontend=1"/>
-      -->
       <arg value="-d"          /> <arg value="${sif.sig-classes}" />
+      <arg value="-addsigcp" /> <arg value="${sig-src}" />
       <arg value="-sourcepath" /> <arg value="${sig-src}" />
       <srcfile />
       <fileset dir="${sig-src}" includes="**/*.fab" />
