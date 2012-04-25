@@ -16,6 +16,7 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
 import codebases.frontend.ExtensionInfo;
 import codebases.types.CodebaseTypeSystem;
+import codebases.types.NamespaceResolver;
 
 /**
  * This class is basically identical to it's superclass with calls to
@@ -31,12 +32,14 @@ import codebases.types.CodebaseTypeSystem;
 public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
   private CodebaseTypeSystem ts;
   private ExtensionInfo extInfo;
+  private NamespaceResolver localResolver;
   protected ClassFile classFile;
 
   public FabILLazyClassInitializer(ClassFile file, CodebaseTypeSystem ts) {
     super(file, ts);
     this.ts = ts;
     this.extInfo = (ExtensionInfo) ts.extensionInfo();
+    this.localResolver = ts.namespaceResolver(extInfo.localNamespace());
     this.classFile = file;
   }
 
@@ -101,7 +104,7 @@ public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
 
     // Set the ClassType's package.
     if (!packageName.equals("")) {
-      ct.package_(ts.packageForName(extInfo.platformNamespace(), packageName));
+      ct.package_(ts.packageForName(extInfo.localNamespace(), packageName));
     }
 
     // This is the "C$I$J" part.
@@ -174,8 +177,8 @@ public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
 
     // Add unresolved class into the cache to avoid circular resolving.
 
-    ts.platformResolver().add(name, ct);
-    ts.platformResolver().add(ct.fullName(), ct);
+    localResolver.add(name, ct);
+    localResolver.add(ct.fullName(), ct);
     return ct;
   }
 
@@ -185,7 +188,7 @@ public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
       Report.report(2, "resolving " + name);
 
     try {
-      return (ClassType) ts.platformResolver().find(name);
+      return (ClassType) localResolver.find(name);
     } catch (SemanticException e) {
       throw new InternalCompilerError("could not load " + name, e);
     }
@@ -195,7 +198,7 @@ public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
   protected ClassType typeForName(String name) throws SemanticException {
     if (Report.should_report(verbose, 2))
       Report.report(2, "resolving " + name);
-    return (ClassType) ts.platformResolver().find(name);
+    return (ClassType) localResolver.find(name);
   }
 
   public ClassFile classFile() {

@@ -1,13 +1,13 @@
 package sif.servlet;
 import fabric.lang.security.Principal;
 
-public class SSW[covariant label T] {
+public class SSW[label T] {
     public final Principal{T} sessionPrincipal;
     public final String{T}    sessionId;
     public SSW(Principal{T} sessionPrincipal, String{T} sessionID) {
     	this.sessionPrincipal = sessionPrincipal;
     	this.sessionId = sessionId;
+		super();
     }
-	
 }
 

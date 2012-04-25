@@ -2,7 +2,7 @@ package sif.servlet;
 
 import java.io.*;
 import java.util.*;
-import fabric.util.Collections;
+//import fabricated.util.Collections;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -19,8 +19,6 @@ import fabric.lang.security.Principal;
 import fabric.lang.security.Label;
 import fabric.lang.security.PrincipalUtil;
 import fabric.lang.security.LabelUtil;
-import jif.lang.JifObject;
-import jif.lang.JifString;
 
 /** A servlet contains the information that is shared across users and sessions.
  * It converts between the Java HttpServlet request processing style and this one. */
@@ -469,33 +467,34 @@ abstract public class Servlet extends HttpServlet {
 
     /** Construct a node that contains an invocation of this servlet with the
      * named request and the inputs provided.
-     * @param inputs : (Input or JifString of Input name)-> String
+     * @param inputs : (Input or string of Input name)-> String
      * @param req : the request that initiated this
      * @return a new node.
      */
-    public final Node createRequest(Label L, Label E, Action a, jif.util.Map inputs, Label cL, Label cE, Node body) {        
+    public final Node createRequest(Label L, Label E, Action a, fabricated.util.Map inputs, Label cL, Label cE, Node body) {        
         return new HyperlinkRequest(servletP, L, E, a, inputs, cL, cE, body);
     }
 
-    public String createRequestURL(String actionName, jif.util.Map inputs, Request req) {
+    public String createRequestURL(String actionName, fabricated.util.Map inputs, Request req) {
         StringWriter w = new StringWriter();
         w.write(req.servletURL());
         w.write("?action=");
         w.write(HTMLWriter.escape_URI(actionName));
 
         if (inputs != null)
-            for (jif.util.Iterator i = inputs.keySet().iterator(); i.hasNext();) {
-                JifObject key = i.next();
-                if (key instanceof JifString) {
-                    JifString jkey = (JifString)key;
-                    String inputName = jkey.toString();
-                    JifString jval = (JifString)inputs.get(jkey);
-                    String val = jval.toString();
+            for (fabricated.util.Iterator i = inputs.entrySet().iterator(); i.hasNext();) {
+                fabricated.util.MapEntry entry= (fabricated.util.MapEntry) i.next();
+                if (entry.getKey().$unwrap() instanceof String
+                    && entry.getValue().$unwrap() instanceof String) {
+                	String inputName = (String) entry.getKey().$unwrap();
+                	String val = (String) entry.getValue().$unwrap();
                     w.write("&");
                     w.write(inputName);
                     w.write("=");
                     w.write(HTMLWriter.escape_URI(val));
                 }
+                else 
+                    throw new Error("Expected String but got " + entry.getKey().getClass()+ "," + entry.getValue().getClass());
             }
         return w.toString();
     }

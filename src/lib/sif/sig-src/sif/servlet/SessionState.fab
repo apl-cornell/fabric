@@ -5,7 +5,7 @@ import fabric.lang.security.Principal;
  * Global state for a single session.
  */
 
-public class SessionState[covariant label T, label A] where T <= A, {} <= A  {
+public class SessionState[label T, label A] where T <= A, {} <= A  {
 
     public SessionState(String{T} sessionId_, SessionPrincipal{T} session) {    }
     

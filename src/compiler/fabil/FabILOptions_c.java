@@ -353,5 +353,18 @@ public class FabILOptions_c extends polyglot.main.Options implements
     this.needWorker = NSUtil.processPathString(uris, path);
     return uris;
   }
-
+  
+  @Override
+  public String constructPostCompilerClasspath() {
+    StringBuilder sb = new StringBuilder(super.constructPostCompilerClasspath());
+    for (URI u : bootclasspath()) {
+      sb.append(File.pathSeparator);
+      sb.append(u.getPath());
+    }
+    for (URI u : classpath()) {
+      sb.append(File.pathSeparator);
+      sb.append(u.getPath());
+    }
+    return sb.toString();
+  }
 }

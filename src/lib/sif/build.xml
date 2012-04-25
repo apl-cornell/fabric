@@ -10,7 +10,6 @@
   -->
 
   <import file="../../../common.xml" />
-  <import file="${fabric.home}/src/lib/transient/common.xml" />
   <import file="common.xml" />
 
   <!-- signature source directory -->
@@ -35,7 +34,7 @@
   <path id="standard.classpath">
     <path refid="lib.classpath" />
     <path refid="fabric.classpath" />
-    <path refid="transient.classpath" />
+    <pathelement path="${fabric.home}/tests/playground/collections/classes" />
   </path>
 
   <!--
@@ -84,7 +83,7 @@
           depends="build-sif-java, build-sif-fab, build-sif-fil, build-sif-sig"
           description="Builds the Fabric-Servlet" />
 
-  <target name="init" depends="transient">
+  <target name="init">
     <!-- Create the time stamp -->
     <tstamp />
     <!-- Create the build directory structures used by compile -->
@@ -117,8 +116,9 @@
            vmlauncher="false">
       <arg value="${fabric.home}/bin/filc"/>
       <arg value="-d"          /> <arg value="${sif.classes}"/>
+      <arg value="-verbose"          />
       <arg value="-sourcepath" /> <arg value="${src}"/>
-      <arg value="-cp"         /> <arg pathref="standard.classpath" />
+      <arg value="-bootclasspath"         /> <arg pathref="standard.classpath" />
       <srcfile />
       <fileset dir="${fil-src}" includes="**/*.fil" />
       <globmapper from="*.fil" to="*.class" />
@@ -138,7 +138,7 @@
       <arg value="-g"/>
       <arg value="-d"          /> <arg value="${sif.classes}"/>
       <arg value="-sourcepath" /> <arg value="${fab-src}"/>
-      <arg value="-cp"         /> <arg pathref="standard.classpath" />
+      <arg value="-classpath"         /> <arg pathref="standard.classpath" />
       <arg value="-e" />
       <arg value="-debugpositions"/>
       <arg value="-trusted-providers"/>

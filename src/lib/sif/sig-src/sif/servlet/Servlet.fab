@@ -3,7 +3,7 @@ package sif.servlet;
 import java.io.*;
 import javax.servlet.ServletException;
 import sif.html.*;
-import jif.util.Map;
+import fabricated.util.Map;
 
 /** A servlet contains the information that is shared across users and sessions.
  * It converts between the Java HttpServlet request processing style and this one. */
@@ -49,7 +49,7 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
     public native final Node[L, E]{L;E;a; body} 
                       createRequest(label L, label E, 
                                     Action[servletP]{*L} a, 
-                                    Map[{servletP:;servletP!:;*L},{servletP:;servletP!:;*L}]{*L} inputs, 
+                                    Map[{servletP:;servletP!:;*L}]{*L} inputs, 
                                     label cL, label cE,
                                     Node[cL,cE]{*L} body)  where {*cL} <= {*L}, {*E;body} <= {*cE};
     

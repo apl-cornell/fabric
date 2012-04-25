@@ -600,7 +600,7 @@ final class AbstractListIterator[label L] implements ListIterator[L] {
    * @throws ConcurrentModificationException if the list
    *         has been modified elsewhere.
    */
-  public boolean add{L}(Object{L} o) throws (UnsupportedOperationException{L}, ConcurrentModificationException{L},
+  public void add{L}(Object{L} o) throws (UnsupportedOperationException{L}, ConcurrentModificationException{L},
       ClassCastException{L}, IllegalArgumentException{L})
   {
     checkMod();
