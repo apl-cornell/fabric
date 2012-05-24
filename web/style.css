@@ -10,19 +10,19 @@ p {font-family: "Times New Roman", times, serif}
 p { max-width: 75ex }
 table {font-family: "Times New Roman", times, serif}
 ul {font-family: "Times New Roman", times, serif}
-a {text-decoration: none; color: #000080; font-weight: bold}
+a {text-decoration: none; color: #558; font-weight: bold}
 a.email {font-family: System, helvetica, sans-serif}
 h1 {font-size: 300%; font-family: "Trebuchet MS", "lucida sans", helvetica, sans-serif; color: #508050}
 div.top h1 { color: #ffffff }
 div.top h4 { color: #ffffff; font-family: "Trebuchet MS", helvetica, sans-serif }
-h2 {font-size: "150%"; font-family: "Trebuchet MS", helvetica, sans-serif; color: #679}
+h2 {font-size: "150%"; font-family: "Trebuchet MS", helvetica, sans-serif; color: #669}
 span.ampm {font-variant: small-caps}
 span.name {font-size: "150%"; font-weight: bold; font-family: "Trebuchet MS", helvetica, sans-serif; color: #508050}
 
 table.twocolumn tr td { padding-top: 10; padding-left: 20; padding-right: 20 }
 
 div.download { margin: 5px; padding-top:5; padding-bottom: 5;  padding-left:
-10; padding-right: 10; background-color: #d8e8ee; border-style: outset;
+10; padding-right: 10; background-color: #eed; border-style: outset;
 border-width: 2; float: right; width: 33%}
 
 div.documentation { margin: 5px; padding-bottom: 5;  padding-left: 10;
@@ -41,7 +41,7 @@ form.questionnaire {padding: 25px}
 form.download {margin: -2px -2px 0 -2px; display: inline}
 form.download input {margin: -6px -4px 0 4em; padding: 0}
 input.download {
-    color: #000080;
+    color: #558;
     font-weight: bold;
     font-size: 110%;
     font-family: "Times New Roman", times, serif
