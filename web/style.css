@@ -7,7 +7,7 @@ div.top { text-shadow: #102010 2px 2px 2px}
 div.top table tr td {padding: 10px}
 div.top table td.links {color: white}
 p {font-family: "Times New Roman", times, serif}
-p { max-width: 75ex }
+p { max-width: 100ex }
 table {font-family: "Times New Roman", times, serif}
 ul {font-family: "Times New Roman", times, serif}
 a {text-decoration: none; color: #558; font-weight: bold}
