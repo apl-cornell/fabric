@@ -1,37 +1,46 @@
 package codebases.frontend;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
-import java.util.Date;
+
+import javax.tools.FileObject;
+
+import fabric.common.FabricLocation;
 
 public class DerivedLocalSource extends LocalSource {
-  protected File derivedFrom;
-  protected DerivedLocalSource(String path, String name, File derivedFrom,
-      Date lastModified, boolean userSpecified, URI namespace)
-      throws IOException {
-    super(path, name, lastModified, userSpecified, namespace, false);
-    this.derivedFrom = derivedFrom;
+  private final String name;
+  private URI uri;
+
+  protected DerivedLocalSource(String name, FileObject derivedFrom,
+      boolean userSpecified, FabricLocation namespace) throws IOException {
+    super(derivedFrom, userSpecified, namespace, false);
+    this.name = name;
   }
+
   /**
    * Open the source file. For compiler generated source, open the file this
-   * soruce is derived from.
+   * source is derived from.
    */
   @Override
   public Reader open() throws IOException {
-    if (reader == null) {
-      FileInputStream str = new FileInputStream(derivedFrom);
-      reader = createReader(str);
-    }
-
+    if (reader == null) reader = fileObject().openReader(false);
     return reader;
   }
-  
+
   @Override
-  protected File file() {
-    return derivedFrom;
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public URI toUri() {
+    if (uri == null) {
+      File f = new File(super.toUri().getPath()).getParentFile();
+      uri = new File(f, name).toURI();
+    }
+    return uri;
   }
 
 }

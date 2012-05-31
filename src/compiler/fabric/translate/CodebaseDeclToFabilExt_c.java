@@ -10,7 +10,7 @@ import fabil.ast.FabILNodeFactory;
 public class CodebaseDeclToFabilExt_c extends ToJavaExt_c {
 
   /**
-   * @throws SemanticException  
+   * @throws SemanticException
    */
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {

@@ -1,6 +1,5 @@
 package fabil.types;
 
-import java.net.URI;
 import java.util.Collection;
 
 import polyglot.main.Report;
@@ -14,6 +13,7 @@ import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import codebases.types.CBImportTable;
 import codebases.types.CodebaseTypeSystem;
+import fabric.common.FabricLocation;
 
 /**
  * Codebase support for the FabIL typesystem. This class duplicates some of the
@@ -22,8 +22,8 @@ import codebases.types.CodebaseTypeSystem;
  */
 public class FabILContext_c extends Context_c implements FabILContext {
   @SuppressWarnings("unchecked")
-  private static final Collection<String> TOPICS = 
-      CollectionUtil.list(Report.types, Report.context);
+  private static final Collection<String> TOPICS = CollectionUtil.list(
+      Report.types, Report.context);
 
   protected FabILContext_c(TypeSystem ts) {
     super(ts);
@@ -37,7 +37,9 @@ public class FabILContext_c extends Context_c implements FabILContext {
     if (Report.should_report(TOPICS, 3))
       Report.report(3, "find-type " + name + " in " + this);
 
-    if (isOuter()) return ((CodebaseTypeSystem) ts).namespaceResolver(namespace()).find(name);
+    if (isOuter())
+      return ((CodebaseTypeSystem) ts).namespaceResolver(namespace())
+          .find(name);
     if (isSource()) return it.find(name);
 
     Named type = findInThisScope(name);
@@ -56,21 +58,19 @@ public class FabILContext_c extends Context_c implements FabILContext {
   }
 
   @Override
-  public URI namespace() {
-    if (isOuter())
-      throw new InternalCompilerError("No namespace!");
-    return ((CBImportTable)it).namespace();
-  }
-  
-  @Override
-  public Context pushSource(ImportTable it) {
-    if (it instanceof CBImportTable)
-      return super.pushSource(it);
-    throw new InternalCompilerError("CBImportTable expected"); 
+  public FabricLocation namespace() {
+    if (isOuter()) throw new InternalCompilerError("No namespace!");
+    return ((CBImportTable) it).namespace();
   }
 
   @Override
-  public URI resolveCodebaseName(String name) {
-    return ((CBImportTable)it).resolveCodebaseName(name);
+  public Context pushSource(ImportTable it) {
+    if (it instanceof CBImportTable) return super.pushSource(it);
+    throw new InternalCompilerError("CBImportTable expected");
+  }
+
+  @Override
+  public FabricLocation resolveCodebaseName(String name) {
+    return ((CBImportTable) it).resolveCodebaseName(name);
   }
 }

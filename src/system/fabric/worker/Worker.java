@@ -118,8 +118,8 @@ public final class Worker {
   protected final NodePrincipal principal;
 
   /**
-   * The collection of dissemination caches used by this worker's
-   * dissemination node.
+   * The collection of dissemination caches used by this worker's dissemination
+   * node.
    */
   private final List<Cache> disseminationCaches;
 
@@ -456,7 +456,7 @@ public final class Worker {
         cmd.append(s);
       }
       WORKER_LOGGER.config(cmd.toString());
-      
+
       try {
         // If an instance of the worker is already running, connect to it and
         // act as a remote terminal.
@@ -482,7 +482,7 @@ public final class Worker {
           return null;
         }
       });
-      
+
       // Start listening on the admin port.
       WorkerAdmin.listen(config.workerAdminPort, worker);
 
@@ -497,9 +497,7 @@ public final class Worker {
           } else {
             nextSource = new DummyCommandSource();
           }
-          commandSource =
-              new ChainedCommandSource(commandSource,
-                  nextSource);
+          commandSource = new ChainedCommandSource(commandSource, nextSource);
         }
       } else if (opts.interactiveShell) {
         commandSource = new InteractiveCommandSource(worker);

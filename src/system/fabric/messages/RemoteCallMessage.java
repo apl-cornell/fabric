@@ -11,12 +11,11 @@ import fabric.lang.security.Principal;
 import fabric.worker.remote.RemoteCallException;
 import fabric.worker.remote.UpdateMap;
 
-public class RemoteCallMessage
-     extends Message<RemoteCallMessage.Response, RemoteCallException>
-{
-  //////////////////////////////////////////////////////////////////////////////
-  // message  contents                                                        //
-  //////////////////////////////////////////////////////////////////////////////
+public class RemoteCallMessage extends
+    Message<RemoteCallMessage.Response, RemoteCallException> {
+  // ////////////////////////////////////////////////////////////////////////////
+  // message contents //
+  // ////////////////////////////////////////////////////////////////////////////
 
   public final TransactionID tid;
   public final UpdateMap updateMap;
@@ -55,9 +54,9 @@ public class RemoteCallMessage
     this.args = args;
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // response contents                                                        //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // response contents //
+  // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
     public final Object result;
@@ -69,19 +68,19 @@ public class RemoteCallMessage
     }
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // visitor methods                                                          //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // visitor methods //
+  // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h)
-      throws ProtocolError, RemoteCallException {
+  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
+      RemoteCallException {
     return h.handle(p, this);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // serialization cruft                                                      //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // serialization cruft //
+  // ////////////////////////////////////////////////////////////////////////////
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
@@ -141,11 +140,11 @@ public class RemoteCallMessage
     try {
       this.receiverType = new FabricClassRef(ois);
       this.receiver = Message.readRef(receiverType.toClass(), ois);
-  
+
       this.methodName = ois.readUTF();
       this.parameterTypes = new Class<?>[ois.readInt()];
       this.args = new Object[parameterTypes.length];
-  
+
       for (int i = 0; i < args.length; i++) {
         parameterTypes[i] = (Class<?>) ois.readObject();
         if (ois.readBoolean())
@@ -166,10 +165,9 @@ public class RemoteCallMessage
     // Get the receiver's _Proxy class.
     Class<? extends fabric.lang.Object._Proxy> proxyType =
         receiverType.toProxyClass();
-    
+
     if (proxyType == null) {
-      throw new InternalError(
-          "Unable to find _Proxy class for " + receiverType);
+      throw new InternalError("Unable to find _Proxy class for " + receiverType);
     }
 
     return proxyType.getMethod(methodName + "_remote", mangledParamTypes);
@@ -178,18 +176,16 @@ public class RemoteCallMessage
   @Override
   protected Response readResponse(DataInput in) throws IOException {
 
-    Object    result;
+    Object result;
     UpdateMap updateMap;
 
     if (in.readBoolean())
       result = Message.readRef(fabric.lang.Object.class, in);
-    else
-      result = readObject(in, Object.class);
+    else result = readObject(in, Object.class);
 
     if (in.readBoolean())
       updateMap = new UpdateMap(in);
-    else
-      updateMap = null;
+    else updateMap = null;
 
     return new Response(result, updateMap);
   }

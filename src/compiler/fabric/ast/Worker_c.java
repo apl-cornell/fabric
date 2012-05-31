@@ -12,27 +12,27 @@ public class Worker_c extends Local_c implements Worker {
   public Worker_c(Position pos, NodeFactory nf) {
     super(pos, nf.Id(pos, "worker$"));
   }
-  
+
   /**
-   * @throws SemanticException  
+   * @throws SemanticException
    */
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
-    FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
+    FabricTypeSystem ts = (FabricTypeSystem) tc.typeSystem();
 
-    Worker c = (Worker)this.type(ts.Worker());
-    c = (Worker)c.localInstance(ts.workerLocalInstance());
-    
+    Worker c = (Worker) this.type(ts.Worker());
+    c = (Worker) c.localInstance(ts.workerLocalInstance());
+
     return c;
   }
-  
+
   @Override
   public String toString() {
     return "worker$";
   }
-  
-//  @Override
-//  public boolean isConstant() {
-//    return true;
-//  }
+
+  // @Override
+  // public boolean isConstant() {
+  // return true;
+  // }
 }

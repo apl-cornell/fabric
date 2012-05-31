@@ -72,7 +72,7 @@ public class LabelCache {
           new EntrySoftRef<P>(Cache.this, key1Proxy, key2Proxy, val);
       submap.put(key2, entry);
     }
-    
+
     public synchronized void clear() {
       entries.clear();
     }
@@ -317,7 +317,7 @@ public class LabelCache {
   public void addMeet(IntegPolicy p1, IntegPolicy p2, IntegPolicy meet) {
     integPolicyMeetCache.put(p1, p2, meet);
   }
-  
+
   public void clear() {
     toLabelCache.clear();
     labelJoinCache.clear();

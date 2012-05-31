@@ -210,11 +210,11 @@ public final class SecurityCache extends AbstractSecurityCache {
   boolean containsTrueLabelRelabel(Pair pair) {
     return trueLabelRelabels.contains(pair);
   }
-  
+
   void addTrueLabelRelabel(Pair pair) {
     trueLabelRelabels.add(pair);
   }
-  
+
   void removeTrueLabelRelabel(Pair pair) {
     trueLabelRelabels.remove(pair);
   }
@@ -222,7 +222,7 @@ public final class SecurityCache extends AbstractSecurityCache {
   boolean containsFalseLabelRelabel(Pair pair) {
     return falseLabelRelabels.contains(pair);
   }
-  
+
   void addFalseLabelRelabel(Pair pair) {
     falseLabelRelabels.add(pair);
   }
@@ -230,7 +230,7 @@ public final class SecurityCache extends AbstractSecurityCache {
   void clearFalseLabelRelabels() {
     falseLabelRelabels.clear();
   }
-  
+
   void addTrueLabelRelabelsDependency(DelegationPair del, Pair pair) {
     Set<Pair> set = trueLabelRelabelsDependencies.get(del);
     if (set == null) {
@@ -243,27 +243,27 @@ public final class SecurityCache extends AbstractSecurityCache {
   Set<Pair> removeTrueLabelRelabelsDependencies(DelegationPair pair) {
     return trueLabelRelabelsDependencies.remove(pair);
   }
-  
+
   boolean containsTruePolicyRelabel(Pair pair) {
     return truePolicyRelabels.containsKey(pair);
   }
-  
+
   Set<DelegationPair> getTruePolicyRelabels(Pair pair) {
     return truePolicyRelabels.get(pair);
   }
-  
+
   void putTruePolicyRelabels(Pair pair, Set<DelegationPair> deps) {
     truePolicyRelabels.put(pair, deps);
   }
-  
+
   void removeTruePolicyRelabel(Pair pair) {
     truePolicyRelabels.remove(pair);
   }
-  
+
   boolean containsFalsePolicyRelabel(Pair pair) {
     return falsePolicyRelabels.contains(pair);
   }
-  
+
   void addFalsePolicyRelabel(Pair pair) {
     falsePolicyRelabels.add(pair);
   }
@@ -271,7 +271,7 @@ public final class SecurityCache extends AbstractSecurityCache {
   void clearFalsePolicyRelabels() {
     falsePolicyRelabels.clear();
   }
-  
+
   void addTruePolicyRelabelsDependency(DelegationPair del, Pair pair) {
     Set<Pair> set = truePolicyRelabelsDependencies.get(del);
     if (set == null) {
@@ -280,15 +280,15 @@ public final class SecurityCache extends AbstractSecurityCache {
     }
     set.add(pair);
   }
-  
+
   Set<Pair> removeTruePolicyRelabelsDependencies(DelegationPair pair) {
     return truePolicyRelabelsDependencies.remove(pair);
   }
-  
+
   Label getLabelJoin(Pair pair) {
     return labelJoins.get(pair);
   }
-  
+
   void putLabelJoin(Pair pair, Label label) {
     labelJoins.put(pair, label);
   }
@@ -296,15 +296,15 @@ public final class SecurityCache extends AbstractSecurityCache {
   void clearLabelJoins() {
     labelJoins.clear();
   }
-  
+
   void removeLabelJoin(Pair pair) {
     labelJoins.remove(pair);
   }
-  
+
   Label getLabelMeet(Pair pair) {
     return labelMeets.get(pair);
   }
-  
+
   void putLabelMeet(Pair pair, Label label) {
     labelMeets.put(pair, label);
   }
@@ -312,11 +312,11 @@ public final class SecurityCache extends AbstractSecurityCache {
   void clearLabelMeets() {
     labelMeets.clear();
   }
-  
+
   void removeLabelMeet(Pair pair) {
     labelMeets.remove(pair);
   }
-  
+
   void addLabelJoinDependency(DelegationPair del, Pair pair) {
     Set<Pair> set = labelJoinDependencies.get(del);
     if (set == null) {
@@ -329,11 +329,11 @@ public final class SecurityCache extends AbstractSecurityCache {
   void clearLabelJoinDependencies() {
     labelJoinDependencies.clear();
   }
-  
+
   Set<Pair> removeLabelJoinDependencies(DelegationPair pair) {
     return labelJoinDependencies.remove(pair);
   }
-  
+
   void addLabelMeetDependency(DelegationPair del, Pair pair) {
     Set<Pair> set = labelMeetDependencies.get(del);
     if (set == null) {
@@ -346,7 +346,7 @@ public final class SecurityCache extends AbstractSecurityCache {
   void clearLabelMeetDependencies() {
     labelMeetDependencies.clear();
   }
-  
+
   Set<Pair> removeLabelMeetDependencies(DelegationPair pair) {
     return labelMeetDependencies.remove(pair);
   }

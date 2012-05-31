@@ -31,12 +31,12 @@ public class FabricArrayTypeNodeDel_c extends JL_c {
 
     if (!ts.isFabricType(baseType)) {
       throw new SemanticException(
-          "Non-Fabric objects cannot be stored in Fabric arrays.", atn
-              .position());
+          "Non-Fabric objects cannot be stored in Fabric arrays.",
+          atn.position());
     }
 
-    return nf.CanonicalTypeNode(atn.position(), ts.fabricArrayOf(
-        atn.position(), baseType));
+    return nf.CanonicalTypeNode(atn.position(),
+        ts.fabricArrayOf(atn.position(), baseType));
   }
 
 }

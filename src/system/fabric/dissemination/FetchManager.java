@@ -11,14 +11,14 @@ import fabric.worker.RemoteStore;
  * make use of different dissemination networks.
  */
 public interface FetchManager {
-  
+
   /**
    * Fetches the glob identified by the given onum, located at the given store.
    * 
    * @param store
-   *                the store.
+   *          the store.
    * @param onum
-   *                the object identifier.
+   *          the object identifier.
    * @return the requested glob if fetch was successful.
    * @throws AccessException
    * @throws UnreachableNodeException
@@ -29,5 +29,5 @@ public interface FetchManager {
    * Called to destroy and clean up the fetch manager.
    */
   public void destroy();
-  
+
 }

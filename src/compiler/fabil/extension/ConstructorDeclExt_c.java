@@ -17,7 +17,7 @@ import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
 public class ConstructorDeclExt_c extends ClassMemberExt_c {
-  
+
   @Override
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     // TODO add Store parameters?
@@ -41,8 +41,11 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
     NodeFactory nf = pr.nodeFactory();
     Position pos = Position.compilerGenerated();
     List<Formal> formals = new LinkedList<Formal>(decl.formals());
-    formals.add(0, nf.Formal(pos, Flags.NONE, nf.TypeNodeFromQualifiedName(pos,
-        "fabric.worker.Store"), nf.Id(pos, "$location")));
+    formals.add(
+        0,
+        nf.Formal(pos, Flags.NONE,
+            nf.TypeNodeFromQualifiedName(pos, "fabric.worker.Store"),
+            nf.Id(pos, "$location")));
     return decl.formals(formals);
   }
 

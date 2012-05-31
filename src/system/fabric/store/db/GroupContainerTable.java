@@ -48,7 +48,7 @@ final class GroupContainerTable {
   public synchronized GroupContainer remove(long globID) {
     Pair<SoftRef, MutableInteger> entry = table.remove(globID);
     if (entry == null) return null;
-    
+
     return entry.first.get();
   }
 
@@ -68,7 +68,7 @@ final class GroupContainerTable {
       super("Group container soft-ref collector");
       setDaemon(true);
     }
-    
+
     @Override
     public void run() {
       while (true) {

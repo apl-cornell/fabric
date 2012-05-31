@@ -12,7 +12,8 @@ public class NewExt_c extends LocatedExt_c implements FabricExt {
   protected Label referenceLabel(FabricContext ctx) {
     New n = (New) node();
     FabricTypeSystem ts = (FabricTypeSystem) ctx.typeSystem();
-    JifConstructorInstance ci = (JifConstructorInstance) n.constructorInstance();
+    JifConstructorInstance ci =
+        (JifConstructorInstance) n.constructorInstance();
     return ts.join(ctx.pc(), ci.returnLabel());
   }
 

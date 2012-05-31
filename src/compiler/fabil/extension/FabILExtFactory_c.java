@@ -12,20 +12,20 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public Ext extFabricArrayTypeNode() {
     Ext e = extFabricArrayTypeNodeImpl();
-    
+
     FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
     if (nextExtFactory != null) {
       Ext e2 = nextExtFactory.extFabricArrayTypeNode();
       e = composeExts(e, e2);
     }
-    
+
     return postExtFabricArrayTypeNode(e);
   }
-  
+
   protected Ext extFabricArrayTypeNodeImpl() {
     return extArrayTypeNodeImpl();
   }
-  
+
   protected Ext postExtFabricArrayTypeNode(Ext ext) {
     return postExtArrayTypeNode(ext);
   }
@@ -50,11 +50,11 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   protected Ext postExtAtomic(Ext ext) {
     return postExtBlock(ext);
   }
-  
+
   @Override
   public final Ext extAbort() {
     Ext e = extAbortImpl();
-    
+
     FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
     if (nextExtFactory != null) {
       Ext e2 = nextExtFactory.extAbort();
@@ -62,11 +62,11 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
     }
     return postExtAbort(e);
   }
-  
+
   protected Ext extAbortImpl() {
     return new AbortExt_c();
   }
-  
+
   protected Ext postExtAbort(Ext ext) {
     return postExtStmt(ext);
   }
@@ -74,7 +74,7 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extRetry() {
     Ext e = extRetryImpl();
-    
+
     FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
     if (nextExtFactory != null) {
       Ext e2 = nextExtFactory.extRetry();
@@ -82,11 +82,11 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
     }
     return postExtRetry(e);
   }
-  
+
   protected Ext extRetryImpl() {
     return new RetryExt_c();
   }
-  
+
   protected Ext postExtRetry(Ext ext) {
     return postExtStmt(ext);
   }
@@ -100,24 +100,24 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   protected Ext extArrayAccessImpl() {
     return new ArrayAccessExt_c();
   }
-  
+
   @Override
   public final Ext extFabricArrayInit() {
     Ext e = extFabricArrayInitImpl();
-    
+
     FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
     if (nextExtFactory != null) {
       Ext e2 = nextExtFactory.extFabricArrayInit();
       e = composeExts(e, e2);
     }
-    
+
     return postExtFabricArrayInit(e);
   }
 
   protected Ext extFabricArrayInitImpl() {
     return new FabricArrayInitExt_c();
   }
-  
+
   protected Ext postExtFabricArrayInit(Ext ext) {
     return postExtArrayInit(ext);
   }
@@ -126,7 +126,7 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   protected Ext extBinaryImpl() {
     return new BinaryExt_c();
   }
-  
+
   @Override
   protected Ext extCallImpl() {
     return new CallExt_c();
@@ -136,7 +136,7 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   protected Ext extCastImpl() {
     return new CastExt_c();
   }
-  
+
   @Override
   protected Ext extClassBodyImpl() {
     return new ClassBodyExt_c();
@@ -205,20 +205,20 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public Ext extNewFabricArray() {
     Ext e = extNewFabricArrayImpl();
-    
+
     FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
     if (nextExtFactory != null) {
       Ext e2 = nextExtFactory.extNewFabricArray();
       e = composeExts(e, e2);
     }
-    
+
     return postExtNewFabricArray(e);
   }
 
   protected Ext extNewFabricArrayImpl() {
     return new NewFabricArrayExt_c();
   }
-  
+
   protected Ext postExtNewFabricArray(Ext e) {
     return postExtNewArray(e);
   }
@@ -247,11 +247,11 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   protected Ext extUnaryImpl() {
     return new UnaryExt_c();
   }
-  
+
   @Override
   public final Ext extProviderLabel() {
     Ext e = extProviderLabelImpl();
-    
+
     FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
     if (nextExtFactory != null) {
       Ext e2 = nextExtFactory.extProviderLabel();
@@ -259,11 +259,11 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
     }
     return postExtProviderLabel(e);
   }
-  
+
   protected Ext extProviderLabelImpl() {
     return extExprImpl();
   }
-  
+
   protected Ext postExtProviderLabel(Ext ext) {
     return postExtExpr(ext);
   }

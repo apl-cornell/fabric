@@ -1,6 +1,5 @@
 package codebases.types;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,6 +13,7 @@ import polyglot.types.NoClassException;
 import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
 import codebases.frontend.ExtensionInfo;
+import fabric.common.FabricLocation;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
 import fabric.worker.Store;
@@ -32,13 +32,13 @@ public class PathResolver extends NamespaceResolver_c implements
   protected boolean load_enc = false;
   protected boolean load_src = false;
 
-  public PathResolver(ExtensionInfo extInfo, URI ns,
+  public PathResolver(ExtensionInfo extInfo, FabricLocation ns,
       List<NamespaceResolver> path) {
-    this(extInfo, ns, path, Collections.<String, URI> emptyMap());
+    this(extInfo, ns, path, Collections.<String, FabricLocation> emptyMap());
   }
 
-  public PathResolver(ExtensionInfo extInfo, URI ns,
-      List<NamespaceResolver> path, Map<String, URI> aliases) {
+  public PathResolver(ExtensionInfo extInfo, FabricLocation ns,
+      List<NamespaceResolver> path, Map<String, FabricLocation> aliases) {
     super(extInfo, ns, null, aliases);
     if (path.contains(null))
       throw new NullPointerException("Null resolver in path!");
@@ -48,29 +48,23 @@ public class PathResolver extends NamespaceResolver_c implements
   /**
    * Searches for a type for name in path in order. Following polyglot, there is
    * some subtlety to how resources are loaded from disk based on whether
-   * source, encoded classes, or raw classes are permitted. 
-   * 
-   * If loading source and encoded classes:
-   *
-   * - The first source file or encoded class returned by a resolver the path
-   *    will be loaded. If a source file and encoded class occur in the same
-   *    location, typically the encoded class is returned if it is newer than
-   *    the source file. See SimpleResolver for more details.
- 
-   * - If raw classes are allowed and no source or encoded class returned by
-   *    *any* resolver, the first raw class returned by a resolver is loaded. This
-   *    emulates polyglot's SourceClassResolver logic. Here, any ParsedClassType
-   *    whose LazyClassInitializer returns true for fromClassFile() is considered
-   *    to be from a raw class file.
-   *    
-   * 
+   * source, encoded classes, or raw classes are permitted. If loading source
+   * and encoded classes: - The first source file or encoded class returned by a
+   * resolver the path will be loaded. If a source file and encoded class occur
+   * in the same location, typically the encoded class is returned if it is
+   * newer than the source file. See SimpleResolver for more details. - If raw
+   * classes are allowed and no source or encoded class returned by *any*
+   * resolver, the first raw class returned by a resolver is loaded. This
+   * emulates polyglot's SourceClassResolver logic. Here, any ParsedClassType
+   * whose LazyClassInitializer returns true for fromClassFile() is considered
+   * to be from a raw class file.
    */
-  
+
   // XXX: An outstanding question: in Java, a package is not allowed to contain
   // a subpackage and type of the same name. Although we can enforce this for
   // individual codebases, when we combine them in a path resolver, both might
-  // exist.  It's not actually clear what happens for this case currently.
- @Override
+  // exist. It's not actually clear what happens for this case currently.
+  @Override
   public Importable findImpl(String name) throws SemanticException {
     Importable from_raw = null;
     for (NamespaceResolver nr : path) {
@@ -81,7 +75,8 @@ public class PathResolver extends NamespaceResolver_c implements
         // Is this type from a raw class?
         if (init.fromClassFile()) {
           if (Report.should_report(TOPICS, 4))
-            Report.report(3,  "[" + namespace + "] " +"NamespaceResolver_c: found raw class for: " + name);
+            Report.report(3, "[" + namespace + "] "
+                + "NamespaceResolver_c: found raw class for: " + name);
 
           // Is this the *first* raw class we've seen?
           if (from_raw == null) from_raw = ct;
@@ -94,7 +89,8 @@ public class PathResolver extends NamespaceResolver_c implements
     }
     if (from_raw != null) {
       if (Report.should_report(TOPICS, 3))
-        Report.report(3,  "[" + namespace + "] " +"NamespaceResolver_c: using raw class for: " + name);
+        Report.report(3, "[" + namespace + "] "
+            + "NamespaceResolver_c: using raw class for: " + name);
 
       return from_raw;
     }
@@ -157,7 +153,7 @@ public class PathResolver extends NamespaceResolver_c implements
     return old;
   }
 
-  @Override 
+  @Override
   public Label label() {
     if (extInfo.platformNamespace().equals(namespace)) {
       return LabelUtil._Impl.toLabel(extInfo.destinationStore(),
@@ -168,13 +164,13 @@ public class PathResolver extends NamespaceResolver_c implements
     for (NamespaceResolver nr : path) {
       join = LabelUtil._Impl.join(s, join, nr.label());
     }
-    //TODO: Should we actually return worker meet join?
+    // TODO: Should we actually return worker meet join?
     return join;
   }
 
   @Override
-  public URI resolveCodebaseNameImpl(String name) {
-    // if the name isn't in the cache, 
+  public FabricLocation resolveCodebaseNameImpl(String name) {
+    // if the name isn't in the cache,
     // then no codebase alias exists.
     return null;
   }

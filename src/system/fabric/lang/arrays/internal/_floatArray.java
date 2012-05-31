@@ -29,9 +29,9 @@ public interface _floatArray extends Object {
      * Creates a new float array at the given Store with the given length.
      * 
      * @param store
-     *                The store on which to allocate the array.
+     *          The store on which to allocate the array.
      * @param length
-     *                The length of the array.
+     *          The length of the array.
      */
     public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
         int length) {
@@ -43,15 +43,15 @@ public interface _floatArray extends Object {
      * array.
      * 
      * @param store
-     *                The store on which to allocate the array.
+     *          The store on which to allocate the array.
      * @param value
-     *                The backing array to use.
+     *          The backing array to use.
      */
     public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
         float[] value) {
       super(store);
       this.value = value;
-      
+
       set$$updateLabel(updateLabel);
       set$$accessPolicy(accessPolicy);
     }
@@ -87,7 +87,8 @@ public interface _floatArray extends Object {
       boolean transactionCreated =
           TransactionManager.getInstance().registerWrite(this);
       float result = this.value[i] = value;
-      if (transactionCreated) TransactionManager.getInstance().commitTransaction();
+      if (transactionCreated)
+        TransactionManager.getInstance().commitTransaction();
       return result;
     }
 

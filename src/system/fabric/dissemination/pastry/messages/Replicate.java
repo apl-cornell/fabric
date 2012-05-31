@@ -63,7 +63,8 @@ public class Replicate implements RawMessage {
 
     for (Store store : skip.storeSet()) {
       for (LongKeyMap.Entry<Long> entry : skip.get(store).entrySet()) {
-        s += "(" + store + ", " + entry.getKey() + ", " + entry.getValue() + ")";
+        s +=
+            "(" + store + ", " + entry.getKey() + ", " + entry.getValue() + ")";
       }
     }
 
@@ -73,7 +74,7 @@ public class Replicate implements RawMessage {
   @Override
   public void serialize(OutputBuffer buf) throws IOException {
     buf.writeInt(level);
-    
+
     Set<Store> storeSet = skip.storeSet();
     buf.writeInt(storeSet.size());
 
@@ -81,7 +82,7 @@ public class Replicate implements RawMessage {
       LongKeyMap<Long> submap = skip.get(store);
       buf.writeUTF(store.name());
       buf.writeInt(submap.size());
-      
+
       for (LongKeyMap.Entry<Long> entry : submap.entrySet()) {
         buf.writeLong(entry.getKey());
         buf.writeLong(entry.getValue());
@@ -102,7 +103,7 @@ public class Replicate implements RawMessage {
     for (int i = 0; i < numStores; i++) {
       Store store = worker.getStore(buf.readUTF());
       int numEntries = buf.readInt();
-      
+
       for (int j = 0; j < numEntries; j++) {
         skip.put(store, buf.readLong(), buf.readLong());
       }

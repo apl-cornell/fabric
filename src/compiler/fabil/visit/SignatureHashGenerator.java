@@ -22,7 +22,7 @@ public class SignatureHashGenerator extends NodeVisitor {
         ((FabILParsedClassType_c) ct).getClassHash();
       }
     }
-    
+
     return super.leave(old, n, v);
   }
 

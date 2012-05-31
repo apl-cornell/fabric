@@ -9,18 +9,17 @@ public interface Protocol {
    * 
    * @param name
    *          the name of the remote virtual host to connect to.
-   * 
    * @param s
    *          the socket on which to initiate a handshake.
    */
   ShakenSocket initiate(String name, Socket s) throws IOException;
-  
+
   /**
    * Receives a handshake via the given socket.
    * 
    * @param s
    *          the socket on which to receive a handshake.
    */
-  ShakenSocket receive(Socket s)                         throws IOException;
+  ShakenSocket receive(Socket s) throws IOException;
 
 }

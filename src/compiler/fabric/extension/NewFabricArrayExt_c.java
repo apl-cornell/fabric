@@ -7,7 +7,7 @@ public class NewFabricArrayExt_c extends LocatedExt_c implements FabricExt {
 
   @Override
   protected Label referenceLabel(FabricContext ctx) {
-     return ctx.pc();
+    return ctx.pc();
   }
-  
+
 }

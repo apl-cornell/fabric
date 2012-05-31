@@ -1,77 +1,44 @@
 package codebases.frontend;
 
-import java.io.ByteArrayInputStream;
+import static fabric.common.FabricLocationFactory.getLocation;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.util.Date;
+
+import javax.tools.FileObject;
 
 import jif.parse.UTF8FileSource;
 import polyglot.frontend.Source;
 import polyglot.util.InternalCompilerError;
+import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
 import fabric.lang.FClass;
 import fabric.lang.security.Label;
+import fabric.filemanager.FabricSourceObject;
 
 public class RemoteSource extends UTF8FileSource implements CodebaseSource {
-  protected final URI namespace;
+  protected final FabricLocation namespace;
   protected final FClass fcls;
   protected boolean publish;
 
   protected Reader reader = null;
 
-  public RemoteSource(URI namespace, FClass fcls, boolean userSpecified)
+  public RemoteSource(FileObject fo, FClass fcls, boolean userSpecified)
       throws IOException {
-    this(namespace, fcls, fcls.getName() + ".fab", userSpecified);
+    this(fo, fcls, userSpecified, false);
   }
 
-  public RemoteSource(URI namespace, FClass fcls, String name,
-      boolean userSpecified) throws IOException {
-    this(namespace, name, namespace.resolve(name).toString(), fcls, new Date(
-        System.currentTimeMillis()), userSpecified, false);
-  }
-
-  public RemoteSource(URI namespace, FClass fcls, String name,
-      boolean userSpecified, boolean publish) throws IOException {
-    this(namespace, name, namespace.resolve(name).toString(), fcls, new Date(
-        System.currentTimeMillis()), userSpecified, publish);
-  }
-
-  public RemoteSource(URI namespace, String name, String path, FClass fcls,
-      Date lastModified, boolean userSpecified, boolean publish)
-      throws IOException {
-    super(path, name, lastModified, userSpecified);
-    this.namespace = NSUtil.namespace(fcls.getCodebase());
+  public RemoteSource(FileObject fo, FClass fcls, boolean userSpecified,
+      boolean publish) throws IOException {
+    super(fo, userSpecified);
     this.fcls = fcls;
-    this.name = name;
-    this.path = path;
-    this.lastModified = lastModified;
+    this.namespace = getLocation(false, NSUtil.namespace(fcls.getCodebase()));
     this.publish = publish;
   }
 
   @Override
   public boolean shouldPublish() {
     return publish;
-  }
-
-  @Override
-  public Reader open() {
-    if (reader == null) {
-      String src = fcls.getSource();
-      ByteArrayInputStream bais;
-      try {
-        bais = new ByteArrayInputStream(src.getBytes("UTF-8"));
-      } catch (UnsupportedEncodingException e) {
-        System.err
-            .println("Bad Java implementation: UTF-8 encoding must be supported");
-        return null;
-      }
-      reader = createReader(bais);
-    }
-    return reader;
   }
 
   @Override
@@ -82,27 +49,15 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
     }
   }
 
-  @Override
-  protected Reader createReader(InputStream str) {
-    try {
-      return new polyglot.lex.EscapedUnicodeReader(new InputStreamReader(str,
-          "UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      System.err
-          .println("Bad Java implementation: UTF-8 encoding must be supported");
-      return null;
-    }
-  }
-
-  
-  /** 
+  /**
    * Sources are equal to each other if they refer to the same resource.
    */
   @Override
   public boolean equals(Object o) {
     if (o instanceof CodebaseSource) {
-      CodebaseSource s = (CodebaseSource)o;
-      return name().equals(s.name()) && canonicalNamespace().equals(s.canonicalNamespace());
+      CodebaseSource s = (CodebaseSource) o;
+      return name().equals(s.name())
+          && canonicalNamespace().equals(s.canonicalNamespace());
     }
     return false;
   }
@@ -113,37 +68,35 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
   }
 
   @Override
-  public URI namespace() {
+  public FabricLocation namespace() {
     return namespace;
   }
 
   @Override
-  public URI canonicalNamespace() {
-    return NSUtil.namespace(fcls.getCodebase());
+  public FabricLocation canonicalNamespace() {
+    return getLocation(false, NSUtil.namespace(fcls.getCodebase()));
   }
 
   @Override
-  public Source derivedSource(String name) {
+  public Source derivedSource(final String name) {
     try {
-      return new RemoteSource(namespace, fcls, name, userSpecified, false);
+      return new RemoteSource(new FabricSourceObject(fcls,
+          NSUtil.absoluteName(fcls), name), fcls, user_specified, false);
     } catch (IOException e) {
       throw new InternalCompilerError(e);
     }
   }
-//
-//  @Override
-//  public Source derivedSource(URI namespace) {
-//    try {
-//      return new RemoteSource(namespace, fcls, name, userSpecified, false);
-//    } catch (IOException e) {
-//      throw new InternalCompilerError(e);
-//    }
-//  }
 
   @Override
-  public Source publishedSource(URI namespace, String name) {
+  public Source publishedSource(final FabricLocation ns, final String name) {
     try {
-      return new RemoteSource(namespace, fcls, name, userSpecified, false);
+      return new RemoteSource(new FabricSourceObject(fcls,
+          NSUtil.absoluteName(fcls), name), fcls, user_specified, false) {
+        @Override
+        public String path() {
+          return ns.getUri().resolve(name).toString();
+        }
+      };
     } catch (IOException e) {
       throw new InternalCompilerError(e);
     }
@@ -160,4 +113,18 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
     throw new InternalCompilerError("Tried to republish remote source!");
   }
 
+  @Override
+  public Reader open() throws IOException {
+    return openReader(false);
+  }
+
+  @Override
+  public String path() {
+    return toUri().toString() + ".fab";
+  }
+
+  @Override
+  public String toString() {
+    return path();
+  }
 }

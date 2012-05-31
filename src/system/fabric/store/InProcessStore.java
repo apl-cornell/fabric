@@ -34,7 +34,7 @@ public class InProcessStore extends RemoteStore {
     tm = c.tm;
     sm = c.sm;
   }
-  
+
   @Override
   public void abortTransaction(TransactionID tid) {
     try {
@@ -61,8 +61,8 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   @SuppressWarnings("deprecation")
-  public boolean prepareTransaction(long tid,
-      long commitTime, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+  public boolean prepareTransaction(long tid, long commitTime,
+      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<SerializedObject>(toCreate.size());
@@ -78,7 +78,7 @@ public class InProcessStore extends RemoteStore {
     PrepareRequest req =
         new PrepareRequest(tid, commitTime, serializedCreates,
             serializedWrites, reads);
-    
+
     // Swizzle remote pointers.
     sm.createSurrogates(req);
 
@@ -102,7 +102,7 @@ public class InProcessStore extends RemoteStore {
       throw new InternalError(e);
     }
   }
-  
+
   @Override
   public java.lang.Object writeReplace() {
     return new SerializationProxy(name);

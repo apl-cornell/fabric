@@ -1,6 +1,5 @@
 package codebases.types;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -8,6 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import fabric.common.FabricLocation;
 
 import polyglot.frontend.Source;
 import polyglot.main.Report;
@@ -31,11 +32,12 @@ public class CBImportTable extends ImportTable {
 
   private final CodebaseTypeSystem ts;
 
-  protected URI ns;
+  protected FabricLocation ns;
   protected Set<String> aliases;
   protected Map<String, String> fromExternal;
 
-  public CBImportTable(CodebaseTypeSystem ts, URI ns, Package pkg, Source source) {
+  public CBImportTable(CodebaseTypeSystem ts, FabricLocation ns, Package pkg,
+      Source source) {
     super(ts, pkg, source.name());
     this.ts = ts;
     this.ns = ns;
@@ -46,7 +48,7 @@ public class CBImportTable extends ImportTable {
   // /// The following methods are basically copied from the superclass, but
   // instead of
   // /// calling the toplevel system resolver directly, they use the namespace
-  // URI
+  // FabricLocation
   @SuppressWarnings("unchecked")
   @Override
   protected Named cachedFind(String name) throws SemanticException {
@@ -211,11 +213,12 @@ public class CBImportTable extends ImportTable {
     for (int i = 0; i < lazyImports.size(); i++) {
       try {
         String longName = (String) lazyImports.get(i);
-        URI import_ns = ns;
+        FabricLocation import_ns = ns;
         // Check if this is an explicit codebase import
         String first = StringUtil.getFirstComponent(longName);
         if (aliases.contains(first)) {
-          URI u = ts.namespaceResolver(ns).resolveCodebaseName(first);
+          FabricLocation u =
+              ts.namespaceResolver(ns).resolveCodebaseName(first);
           if (u == null)
             throw new SemanticException("Unknown codebase \"" + first + "\"");
           import_ns = u;
@@ -251,7 +254,7 @@ public class CBImportTable extends ImportTable {
   protected static final Collection<?> TOPICS = CollectionUtil.list(
       Report.types, Report.resolver, Report.imports);
 
-  public URI namespace() {
+  public FabricLocation namespace() {
     return ns;
   }
 
@@ -282,7 +285,7 @@ public class CBImportTable extends ImportTable {
     else return null;
   }
 
-  public URI resolveCodebaseName(String name) {
+  public FabricLocation resolveCodebaseName(String name) {
     // Only resolve codebase names that were declared in this
     // sourcefile.
     // if (aliases.contains(name)) XXX: ?

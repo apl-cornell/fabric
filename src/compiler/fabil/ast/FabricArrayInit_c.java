@@ -63,7 +63,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
     n.label = label;
     return n;
   }
-  
+
   @Override
   public Expr accessPolicy() {
     return accessPolicy;
@@ -112,8 +112,8 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
 
     if (location != null) {
       if (!ts.isImplicitCastValid(location.type(), ts.Store())) {
-        throw new SemanticException("Array location must be a store.", location
-            .position());
+        throw new SemanticException("Array location must be a store.",
+            location.position());
       }
     }
 
@@ -125,7 +125,8 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
 
     if (accessPolicy != null) {
       if (!ts.isImplicitCastValid(accessPolicy.type(), ts.ConfPolicy())) {
-        throw new SemanticException("Invalid access policy.", accessPolicy.position());
+        throw new SemanticException("Invalid access policy.",
+            accessPolicy.position());
       }
     }
 
@@ -140,7 +141,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   @Override
   public Type childExpectedType(Expr child, AscriptionVisitor av) {
     FabILTypeSystem ts = (FabILTypeSystem) av.typeSystem();
-    
+
     if (child == location) return ts.Store();
     if (child == label) return ts.Label();
     if (child == accessPolicy) return ts.ConfPolicy();
@@ -148,7 +149,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
     Type t = av.toType();
     Type baseType = t.toArray().base();
     if (ts.isJavaInlineable(baseType)) return ts.FObject();
-    
+
     return super.childExpectedType(child, av);
   }
 
@@ -156,7 +157,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   @SuppressWarnings("rawtypes")
   public List acceptCFG(CFGBuilder v, List succs) {
     Term last = null;
-    
+
     if (accessPolicy != null) {
       v.visitCFGList(elements, accessPolicy, ENTRY);
       last = accessPolicy;

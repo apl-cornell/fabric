@@ -45,8 +45,8 @@ import fabric.worker.Worker;
  * </p>
  * <p>
  * All ObjectDB implementations should provide a constructor which takes the
- * name of the store and opens the appropriate back-end database if it exists, or
- * creates it if it doesn't exist.
+ * name of the store and opens the appropriate back-end database if it exists,
+ * or creates it if it doesn't exist.
  * </p>
  */
 public abstract class ObjectDB {
@@ -316,8 +316,8 @@ public abstract class ObjectDB {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid, Principal workerPrincipal, SubscriptionManager sm)
-      throws AccessException;
+  public abstract void commit(long tid, Principal workerPrincipal,
+      SubscriptionManager sm) throws AccessException;
 
   /**
    * Cause the objects prepared in transaction [tid] to be discarded.
@@ -368,8 +368,8 @@ public abstract class ObjectDB {
    * Inserts the given group container into the cache for the given set of
    * objects.
    */
-  public final void cacheGroupContainer(
-      LongKeyMap<SerializedObject> objects, GroupContainer container) {
+  public final void cacheGroupContainer(LongKeyMap<SerializedObject> objects,
+      GroupContainer container) {
     // Get a new ID for the glob and keep count of the number of non-surrogates.
     long globID = nextGlobID++;
     int numNonSurrogates = 0;
@@ -380,10 +380,10 @@ public abstract class ObjectDB {
       LongKeyMap.Entry<SerializedObject> entry = it.next();
       SerializedObject obj = entry.getValue();
       if (ClassRef.SURROGATE.equals(obj.getClassRef())) {
-        // Surrogate.  Do nothing.
+        // Surrogate. Do nothing.
         continue;
       }
-      
+
       // Establish globID binding for the non-surrogate object.
       long onum = entry.getKey();
       numNonSurrogates++;
@@ -393,7 +393,7 @@ public abstract class ObjectDB {
 
       globTable.unpin(oldGlobID);
     }
-    
+
     if (numNonSurrogates > 0) {
       // Insert into the glob table.
       globTable.put(globID, container, numNonSurrogates);
@@ -564,13 +564,15 @@ public abstract class ObjectDB {
         // supplied by the workers' local store.
         String principalName = new X500Principal("CN=" + name).getName();
         NodePrincipal._Impl principal =
-            (NodePrincipal._Impl) new NodePrincipal._Impl(store).fabric$lang$security$NodePrincipal$(principalName).fetch();
+            (NodePrincipal._Impl) new NodePrincipal._Impl(store)
+                .fabric$lang$security$NodePrincipal$(principalName).fetch();
         principal.$forceRenumber(ONumConstants.STORE_PRINCIPAL);
 
         // Create the label {store->_; store<-_} for the root map.
         // XXX above not done. HashMap needs to be parameterized on labels.
         fabric.util.HashMap._Impl map =
-            (fabric.util.HashMap._Impl) new fabric.util.HashMap._Impl(store).fabric$util$HashMap$().fetch();
+            (fabric.util.HashMap._Impl) new fabric.util.HashMap._Impl(store)
+                .fabric$util$HashMap$().fetch();
         map.$forceRenumber(ONumConstants.ROOT_MAP);
 
         return null;

@@ -16,27 +16,27 @@ import fabric.worker.Worker;
  * A Fetch message represents a request to fetch a particular object.
  */
 public class Fetch implements RawMessage {
-  
+
   private transient final NodeHandle sender;
   private final Id id;
   private final String store;
   private final long onum;
   private boolean refresh;
-  
+
   private transient Reply reply;
-  
+
   public Fetch(NodeHandle sender, Id id, String store, long onum) {
     this.sender = sender;
     this.id = id;
     this.store = store;
     this.onum = onum;
   }
-  
+
   /** The sender of this message. */
   public NodeHandle sender() {
     return sender;
   }
-  
+
   /** The random id of this message. */
   public Id id() {
     return id;
@@ -46,14 +46,14 @@ public class Fetch implements RawMessage {
   public String store() {
     return store;
   }
-  
+
   /** The object number of the requested object. */
   public long onum() {
     return onum;
   }
 
-  /** 
-   * A hint as to whether we want to explicitly fetch the latest version from 
+  /**
+   * A hint as to whether we want to explicitly fetch the latest version from
    * the store.
    */
   public boolean refresh() {
@@ -74,12 +74,12 @@ public class Fetch implements RawMessage {
   public void reply(Reply reply) {
     this.reply = reply;
   }
-  
+
   @Override
   public int getPriority() {
     return MEDIUM_PRIORITY;
   }
-  
+
   @Override
   public String toString() {
     return store + "/" + onum;
@@ -98,7 +98,7 @@ public class Fetch implements RawMessage {
     buf.writeLong(onum);
     buf.writeBoolean(refresh);
   }
-  
+
   /**
    * Deserialization constructor.
    */
@@ -110,30 +110,30 @@ public class Fetch implements RawMessage {
     onum = buf.readLong();
     refresh = buf.readBoolean();
   }
-  
+
   /**
    * A reply to a Fetch message. Should carry the object requested by the
    * original fetch message.
    */
   public static class Reply implements RawMessage {
-    
+
     private final Id id;
     private final String store;
     private final long onum;
     private final Glob glob;
-    
+
     public Reply(Fetch parent, Glob glob) {
       id = parent.id();
       store = parent.store();
       onum = parent.onum();
       this.glob = glob;
     }
-    
+
     /** The glob returned. */
     public Glob glob() {
       return glob;
     }
-    
+
     /** The id of this message. */
     public Id id() {
       return id;
@@ -143,7 +143,7 @@ public class Fetch implements RawMessage {
     public String store() {
       return store;
     }
-    
+
     /** The object number of the requested object. */
     public long onum() {
       return onum;
@@ -177,7 +177,7 @@ public class Fetch implements RawMessage {
       id = endpoint.readId(in, in.readShort());
       store = in.readUTF();
       onum = in.readLong();
-      
+
       Glob glob;
       try {
         glob = new Glob(in);

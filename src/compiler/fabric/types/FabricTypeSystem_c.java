@@ -1,6 +1,5 @@
 package fabric.types;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -82,6 +81,7 @@ import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
+import fabric.common.FabricLocation;
 import fabric.lang.Codebase;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
@@ -100,7 +100,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   private static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.resolver);
 
-  protected Map<URI, NamespaceResolver> namespaceResolvers;
+  protected Map<FabricLocation, NamespaceResolver> namespaceResolvers;
   protected List<NamespaceResolver> classpathResolvers;
   protected List<NamespaceResolver> sourcepathResolvers;
   protected List<NamespaceResolver> signatureResolvers;
@@ -131,10 +131,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   public FabricDefaultSignature fabricDefaultSignature() {
     return ds;
   }
-  
+
   @Override
   public ClassType fatalException() {
-    return load("fabric.common.exceptions.ApplicationError");  
+    return load("fabric.common.exceptions.ApplicationError");
   }
 
   @Override
@@ -149,32 +149,32 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   protected void initResolvers() {
-    List<URI> cp = extInfo.classpath();
-    List<URI> sp = extInfo.sourcepath();
-    List<URI> sigcp = extInfo.signaturepath();
-    List<URI> rtcp = extInfo.bootclasspath();
+    Set<FabricLocation> cp = extInfo.classpath();
+    Set<FabricLocation> sp = extInfo.sourcepath();
+    Set<FabricLocation> sigcp = extInfo.signaturepath();
+    Set<FabricLocation> rtcp = extInfo.filbootclasspath();
 
-    namespaceResolvers = new HashMap<URI, NamespaceResolver>();
+    namespaceResolvers = new HashMap<FabricLocation, NamespaceResolver>();
     signatureResolvers = new ArrayList<NamespaceResolver>();
     classpathResolvers = new ArrayList<NamespaceResolver>();
     sourcepathResolvers = new ArrayList<NamespaceResolver>();
-
     runtimeResolvers = new ArrayList<NamespaceResolver>();
-    for (URI uri : rtcp) {
-      if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing Fabric runtime resolver: " + uri);
 
-      NamespaceResolver nsr = namespaceResolver(uri);
+    for (FabricLocation location : rtcp) {
+      if (Report.should_report(TOPICS, 2))
+        Report.report(2, "Initializing Fabric runtime resolver: " + location);
+
+      NamespaceResolver nsr = namespaceResolver(location);
       nsr.loadEncodedClasses(true);
       nsr.loadRawClasses(false);
       nsr.loadSource(true);
       runtimeResolvers.add(nsr);
     }
 
-    for (URI uri : sigcp) {
+    for (FabricLocation location : sigcp) {
       if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing Fabric signature resolver: " + uri);
-      NamespaceResolver nsr = namespaceResolver(uri);
+        Report.report(2, "Initializing Fabric signature resolver: " + location);
+      NamespaceResolver nsr = namespaceResolver(location);
       nsr.loadEncodedClasses(true);
       // A raw signature class is an oxymoron
       nsr.loadRawClasses(false);
@@ -186,22 +186,22 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     platformResolver.loadSource(true);
     boolean src_in_cp = sp.isEmpty();
 
-    for (URI uri : cp) {
+    for (FabricLocation location : cp) {
       if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL classpath resolver: " + uri);
+        Report.report(2, "Initializing FabIL classpath resolver: " + location);
 
-      NamespaceResolver nsr = namespaceResolver(uri);
+      NamespaceResolver nsr = namespaceResolver(location);
       nsr.loadEncodedClasses(true);
       nsr.loadRawClasses(true);
       nsr.loadSource(src_in_cp);
       classpathResolvers.add(nsr);
     }
 
-    for (URI uri : sp) {
+    for (FabricLocation location : sp) {
       if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL sourcepath resolver: " + uri);
+        Report.report(2, "Initializing FabIL sourcepath resolver: " + location);
 
-      NamespaceResolver nsr = namespaceResolver(uri);
+      NamespaceResolver nsr = namespaceResolver(location);
       nsr.loadEncodedClasses(true);
       nsr.loadSource(true);
 
@@ -252,7 +252,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   // helped
   // identify the situations it is called in.
   @Override
-  public Package createPackage(URI ns, Package prefix, java.lang.String name) {
+  public Package createPackage(FabricLocation ns, Package prefix,
+      java.lang.String name) {
     if (prefix != null) {
       ns = ((CBPackage) prefix).namespace();
     }
@@ -263,13 +264,13 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
    * @throws SemanticException
    */
   @Override
-  public Package packageForName(URI ns, Package prefix, java.lang.String name)
-      throws SemanticException {
+  public Package packageForName(FabricLocation ns, Package prefix,
+      java.lang.String name) throws SemanticException {
     return createPackage(ns, prefix, name);
   }
 
   @Override
-  public Package packageForName(URI ns, java.lang.String name)
+  public Package packageForName(FabricLocation ns, java.lang.String name)
       throws SemanticException {
     if (name == null || name.equals("")) {
       return null;
@@ -354,7 +355,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public CBImportTable importTable(Source source, URI ns, Package pkg) {
+  public CBImportTable importTable(Source source, FabricLocation ns, Package pkg) {
     return new CBImportTable(this, ns, pkg, source);
   }
 
@@ -397,8 +398,9 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       // Always use the same local instance, because jif now use pointer
       // identity to compare local instances
       // for the purpose of label checking.
-      workerLocalInstance = new WorkerLocalInstance_c(this, Position.compilerGenerated(),
-          Flags.FINAL, Worker(), "worker$");
+      workerLocalInstance =
+          new WorkerLocalInstance_c(this, Position.compilerGenerated(),
+              Flags.FINAL, Worker(), "worker$");
 
       // workerLocalInstance.setLabel(freshLabelVariable(workerLocalInstance.position(),
       // "worker$", "worker$"));
@@ -667,27 +669,26 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   // can be used by the remote call wrapper
   @Override
   public boolean containsThisLabel(Assertion as) {
-    if(as instanceof LabelLeAssertion) {
+    if (as instanceof LabelLeAssertion) {
       LabelLeAssertion leq = (LabelLeAssertion) as;
       return containsThisLabel(leq.lhs()) || containsThisLabel(leq.rhs());
     }
-//    else if(as instanceof AutoEndorseConstraint) {
-//      AutoEndorseConstraint aec = (AutoEndorseConstraint) as;
-//      return containsThisLabel(aec.endorseTo());
-//    }
-    else if(as instanceof ActsForConstraint) {
-      ActsForConstraint<?, ?> afc = (ActsForConstraint<?,?>) as;
+    // else if(as instanceof AutoEndorseConstraint) {
+    // AutoEndorseConstraint aec = (AutoEndorseConstraint) as;
+    // return containsThisLabel(aec.endorseTo());
+    // }
+    else if (as instanceof ActsForConstraint) {
+      ActsForConstraint<?, ?> afc = (ActsForConstraint<?, ?>) as;
       boolean hasThis = false;
-      
-      if(afc.actor() instanceof Label) 
-        hasThis |= containsThisLabel((Label)afc.actor());
-      
-      if(!hasThis && afc.granter() instanceof Label)
-        hasThis |= containsThisLabel((Label)afc.actor());
-      
+
+      if (afc.actor() instanceof Label)
+        hasThis |= containsThisLabel((Label) afc.actor());
+
+      if (!hasThis && afc.granter() instanceof Label)
+        hasThis |= containsThisLabel((Label) afc.actor());
+
       return hasThis;
-    }
-    else if(as instanceof LabelActsForPrincipalConstraintNode) {
+    } else if (as instanceof LabelActsForPrincipalConstraintNode) {
       LabelActsForLabelConstraintNode laflcn =
           (LabelActsForLabelConstraintNode) as;
       LabelNode lhs = (LabelNode) laflcn.actor();
@@ -717,7 +718,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     }
     return false;
   }
-  
+
   @Override
   public boolean containsArgLabel(Label label) {
     if (label instanceof ArgLabel) {
@@ -732,31 +733,29 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       for (Label l : jl.joinComponents()) {
         if (containsArgLabel(l)) return true;
       }
-    } 
+    }
     return false;
   }
-  
+
   // TODO: determine scenarios when arg labels
   // can be used by the remote call wrapper
   @Override
   public boolean containsArgLabel(Assertion as) {
-    if(as instanceof LabelLeAssertion) {
+    if (as instanceof LabelLeAssertion) {
       LabelLeAssertion leq = (LabelLeAssertion) as;
       return containsArgLabel(leq.lhs()) || containsArgLabel(leq.rhs());
-    }
-    else if(as instanceof ActsForConstraint) {
-      ActsForConstraint<?, ?> afc = (ActsForConstraint<?,?>) as;
+    } else if (as instanceof ActsForConstraint) {
+      ActsForConstraint<?, ?> afc = (ActsForConstraint<?, ?>) as;
       boolean hasThis = false;
-      
-      if(afc.actor() instanceof Label) 
-        hasThis |= containsArgLabel((Label)afc.actor());
-      
-      if(!hasThis && afc.granter() instanceof Label)
-        hasThis |= containsArgLabel((Label)afc.actor());
-      
+
+      if (afc.actor() instanceof Label)
+        hasThis |= containsArgLabel((Label) afc.actor());
+
+      if (!hasThis && afc.granter() instanceof Label)
+        hasThis |= containsArgLabel((Label) afc.actor());
+
       return hasThis;
-    }
-    else if(as instanceof LabelActsForPrincipalConstraintNode) {
+    } else if (as instanceof LabelActsForPrincipalConstraintNode) {
       LabelActsForLabelConstraintNode laflcn =
           (LabelActsForLabelConstraintNode) as;
       LabelNode lhs = (LabelNode) laflcn.actor();
@@ -807,7 +806,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public NamespaceResolver namespaceResolver(URI ns) {
+  public NamespaceResolver namespaceResolver(FabricLocation ns) {
     NamespaceResolver sr = namespaceResolvers.get(ns);
     if (sr == null) {
       sr = extInfo.createNamespaceResolver(ns);
@@ -824,12 +823,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public boolean packageExists(URI ns, String name) {
+  public boolean packageExists(FabricLocation ns, String name) {
     return namespaceResolver(ns).packageExists(name);
   }
 
   @Override
-  public Named forName(URI ns, String name) throws SemanticException {
+  public Named forName(FabricLocation ns, String name) throws SemanticException {
     return forName(namespaceResolver(ns), name);
   }
 
@@ -845,7 +844,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public Codebase codebaseFromNS(URI namespace) {
+  public Codebase codebaseFromNS(FabricLocation namespace) {
     // Worker must be running!
     if (!Worker.isInitialized())
       throw new InternalCompilerError("Worker is not initialized.");
@@ -859,15 +858,18 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         fabric.lang.security.Label lbl = defaultPublishingLabel();
         fabric.util.HashMap classes =
             new fabric.util.HashMap._Impl(dest).fabric$util$HashMap$(
-                /* // XXX when HashMap becomes parameterized, these will be the labels.
-                 * , lbl, lbl.confPolicy()*/
-                ); 
+            /*
+             * // XXX when HashMap becomes parameterized, these will be the
+             * labels. , lbl, lbl.confPolicy()
+             */
+            );
         new_codebase =
-            new Codebase._Impl(dest).fabric$lang$Codebase$(lbl, lbl.confPolicy(), classes);
+            new Codebase._Impl(dest).fabric$lang$Codebase$(lbl,
+                lbl.confPolicy(), classes);
       }
       return new_codebase;
     } else if (extInfo.platformNamespace().equals(namespace)
-        || !namespace.getScheme().equals("fab")) {
+        || !namespace.isFabricReference()) {
       throw new InternalCompilerError("Cannot get codebase for " + namespace);
     } else {
       CodebaseResolver cr = (CodebaseResolver) namespaceResolver(namespace);
@@ -881,10 +883,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     NodePrincipal w = Worker.getWorker().getPrincipal();
     NodePrincipal st = dest.getPrincipal();
     if (w != null && st != null) {
-      //FIXME: default label should be *<-w,st
-//      fabric.util.ArrayList writers = new fabric.util.ArrayList._Impl(dest);
-//      writers.add(w);
-//      writers.add(st);
+      // FIXME: default label should be *<-w,st
+      // fabric.util.ArrayList writers = new fabric.util.ArrayList._Impl(dest);
+      // writers.add(w);
+      // writers.add(st);
       return LabelUtil._Impl.writerPolicyLabel(dest, Worker.getWorker()
           .getLocalStore().getTopPrincipal(), st);
     }
@@ -989,7 +991,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
     IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
 
-    return replaceProjections(pairLabel(L1.position(), join(cp1, cp2), meet(ip1, ip2)));
+    return replaceProjections(pairLabel(L1.position(), join(cp1, cp2),
+        meet(ip1, ip2)));
   }
 
   @Override
@@ -1000,7 +1003,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
     IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
 
-    return replaceProjections(pairLabel(L1.position(), meet(cp1, cp2), join(ip1, ip2)));
+    return replaceProjections(pairLabel(L1.position(), meet(cp1, cp2),
+        join(ip1, ip2)));
   }
 
   @Override
@@ -1010,20 +1014,20 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
 
     IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
     IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
-    
+
     return env.leq(cp1, cp2) && env.leq(ip2, ip1);
   }
-  
+
   @Override
   public Label toLabel(ConfPolicy c) {
-    if(c instanceof ConfProjectionPolicy_c) {
+    if (c instanceof ConfProjectionPolicy_c) {
       ConfProjectionPolicy_c p = (ConfProjectionPolicy_c) c;
-      return join(p.label(), noComponentsLabel()); 
+      return join(p.label(), noComponentsLabel());
     }
     return replaceProjections(pairLabel(c.position(), c,
         topIntegPolicy(c.position())));
   }
-  
+
   @Override
   public Label replaceProjections(Label label) {
     LabelSubstitution ls = new LabelSubstitution() {
@@ -1034,43 +1038,41 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
           PairLabel pair = (PairLabel) L;
           ConfPolicy c = pair.confPolicy();
           IntegPolicy i = pair.integPolicy();
-          
+
           Label conf = null, integ = null;
           if (c instanceof ConfProjectionPolicy_c) {
             ConfProjectionPolicy_c proj = (ConfProjectionPolicy_c) c;
             conf = join(proj.label().subst(this), noComponentsLabel());
-          }
-          else if (c instanceof JoinConfPolicy_c) {
+          } else if (c instanceof JoinConfPolicy_c) {
             JoinConfPolicy_c jp = (JoinConfPolicy_c) c;
             Set<Label> lifted = new HashSet<Label>();
             Set<ConfPolicy> confpols = new HashSet<ConfPolicy>();
-            
-            for(ConfPolicy cp : jp.joinComponents()) {
-              if(cp instanceof ConfProjectionPolicy_c) {
+
+            for (ConfPolicy cp : jp.joinComponents()) {
+              if (cp instanceof ConfProjectionPolicy_c) {
                 ConfProjectionPolicy_c cpproj = (ConfProjectionPolicy_c) cp;
-                lifted.add(join(cpproj.label().subst(this),
-                    noComponentsLabel()));
-              }
-              else
-                confpols.add(cp);
+                lifted
+                    .add(join(cpproj.label().subst(this), noComponentsLabel()));
+              } else confpols.add(cp);
             }
             ConfPolicy new_jp = joinConfPolicy(jp.position(), confpols);
-            Label jplabel = pairLabel(jp.position(), new_jp, topIntegPolicy(jp.position()));
+            Label jplabel =
+                pairLabel(jp.position(), new_jp, topIntegPolicy(jp.position()));
             lifted.add(jplabel);
             conf = joinLabel(L.position(), lifted);
           }
-          
-          //XXX: TODO: the dual replacements for integrity.
-          if(i instanceof IntegProjectionPolicy_c) {
+
+          // XXX: TODO: the dual replacements for integrity.
+          if (i instanceof IntegProjectionPolicy_c) {
             IntegProjectionPolicy_c proj = (IntegProjectionPolicy_c) i;
             integ = meet(proj.label().subst(this), noComponentsLabel());
-          }      
-          
-          if(conf == null && integ == null)
+          }
+
+          if (conf == null && integ == null)
             return L;
-          else if(conf == null)
+          else if (conf == null)
             conf = pairLabel(L.position(), c, topIntegPolicy(L.position()));
-          else if(integ == null)
+          else if (integ == null)
             integ = pairLabel(L.position(), bottomConfPolicy(L.position()), i);
 
           return join(conf, integ);

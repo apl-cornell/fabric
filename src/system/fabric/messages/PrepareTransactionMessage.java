@@ -19,11 +19,11 @@ import fabric.worker.TransactionPrepareFailedException;
  * a store.
  */
 public class PrepareTransactionMessage
-     extends Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException>
-{
-  //////////////////////////////////////////////////////////////////////////////
-  // message  contents                                                        //
-  //////////////////////////////////////////////////////////////////////////////
+    extends
+    Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException> {
+  // ////////////////////////////////////////////////////////////////////////////
+  // message contents //
+  // ////////////////////////////////////////////////////////////////////////////
 
   public final long tid;
   public final long commitTime;
@@ -70,7 +70,8 @@ public class PrepareTransactionMessage
   public PrepareTransactionMessage(long tid, long commitTime,
       Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) {
-    super(MessageType.PREPARE_TRANSACTION, TransactionPrepareFailedException.class);
+    super(MessageType.PREPARE_TRANSACTION,
+        TransactionPrepareFailedException.class);
 
     this.tid = tid;
     this.commitTime = commitTime;
@@ -81,9 +82,9 @@ public class PrepareTransactionMessage
     this.serializedWrites = null;
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // response contents                                                        //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // response contents //
+  // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
     /**
@@ -106,9 +107,9 @@ public class PrepareTransactionMessage
     }
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // visitor methods                                                          //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // visitor methods //
+  // ////////////////////////////////////////////////////////////////////////////
 
   @Override
   public Response dispatch(Principal p, MessageHandler h)
@@ -116,9 +117,9 @@ public class PrepareTransactionMessage
     return h.handle(p, this);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // serialization cruft                                                      //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // serialization cruft //
+  // ////////////////////////////////////////////////////////////////////////////
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
@@ -160,7 +161,8 @@ public class PrepareTransactionMessage
 
   /* readMessage */
   protected PrepareTransactionMessage(DataInput in) throws IOException {
-    super(MessageType.PREPARE_TRANSACTION, TransactionPrepareFailedException.class);
+    super(MessageType.PREPARE_TRANSACTION,
+        TransactionPrepareFailedException.class);
     this.creates = null;
     this.writes = null;
 

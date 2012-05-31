@@ -39,8 +39,8 @@ public abstract class RemoteNode implements Serializable {
       throw new NotImplementedException(e);
     }
   }
-  
-  public static SubSocketFactory createAuthFactory(KeyMaterial ... keys) {
+
+  public static SubSocketFactory createAuthFactory(KeyMaterial... keys) {
     throw new NotImplementedException();
   }
 }

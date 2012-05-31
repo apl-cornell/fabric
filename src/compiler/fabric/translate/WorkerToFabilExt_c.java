@@ -7,7 +7,7 @@ import polyglot.types.SemanticException;
 
 public class WorkerToFabilExt_c extends ExprToJavaExt_c {
   /**
-   * @throws SemanticException  
+   * @throws SemanticException
    */
   @Override
   public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {

@@ -30,23 +30,22 @@ public class ProviderLabel_c extends ClassLit_c implements ProviderLabel {
       throw new SemanticException("Cannot get provider label of a non-class "
           + "type.", typeNode.position());
     }
-    
+
     FabILTypeSystem ts = (FabILTypeSystem) tc.typeSystem();
     return type(ts.Label());
   }
 
   /** Write the expression to an output file. */
   @Override
-  public void prettyPrint(CodeWriter w, PrettyPrinter tr)
-  {
+  public void prettyPrint(CodeWriter w, PrettyPrinter tr) {
     w.begin(0);
     print(typeNode, w, tr);
     w.write(".provider");
     w.end();
   }
-  
+
   @Override
   public Node copy(NodeFactory nf) {
-      return ((FabILNodeFactory) nf).providerLabel(this.position, this.typeNode);
+    return ((FabILNodeFactory) nf).providerLabel(this.position, this.typeNode);
   }
 }

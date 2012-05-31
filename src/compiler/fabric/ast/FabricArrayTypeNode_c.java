@@ -21,7 +21,6 @@ public class FabricArrayTypeNode_c extends ArrayTypeNode_c implements
     FabricNodeFactory fabricNodeFactory = (FabricNodeFactory) nf;
     return fabricNodeFactory.FabricArrayTypeNode(position, base);
   }
-  
 
   @Override
   public Node buildTypes(TypeBuilder tb) {
@@ -34,13 +33,11 @@ public class FabricArrayTypeNode_c extends ArrayTypeNode_c implements
     FabricTypeSystem ts = (FabricTypeSystem) ar.typeSystem();
     NodeFactory nf = ar.nodeFactory();
 
-    if (!base().isDisambiguated())
-      return this;
+    if (!base().isDisambiguated()) return this;
 
-    if (!base().type().isCanonical())
-      return this;
+    if (!base().type().isCanonical()) return this;
 
     return nf.CanonicalTypeNode(position(),
-                                ts.fabricArrayOf(position(), base().type()));
+        ts.fabricArrayOf(position(), base().type()));
   }
 }

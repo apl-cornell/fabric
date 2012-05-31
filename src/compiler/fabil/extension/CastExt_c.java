@@ -15,7 +15,7 @@ public class CastExt_c extends ExprExt_c {
 
     // Get the exact proxy before we cast.
     QQ qq = pr.qq();
-    return qq.parseExpr("(%T) fabric.lang.Object._Proxy.$getProxy(%E)", cast
-        .castType(), cast.expr());
+    return qq.parseExpr("(%T) fabric.lang.Object._Proxy.$getProxy(%E)",
+        cast.castType(), cast.expr());
   }
 }

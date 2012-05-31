@@ -47,7 +47,7 @@ public class FieldAssignExt_c extends ExprExt_c {
     if (flags.isFinal()) {
       // We need to rewrite the left-hand side if translating a static field.
       if (!flags.isStatic()) return assign.right(rhs);
-      
+
       Expr lhs = pr.qq().parseExpr("this." + name);
       return assign.left(lhs).right(rhs);
     }
@@ -71,10 +71,10 @@ public class FieldAssignExt_c extends ExprExt_c {
       subs.add(target);
     }
     subs.add(rhs);
-    
+
     String setterName = "set$" + name;
     if (target.type().isArray() && name.equals("length")) {
-      // Changing the length of an array.  The setter here is different.
+      // Changing the length of an array. The setter here is different.
       setterName = "setLength";
     }
 

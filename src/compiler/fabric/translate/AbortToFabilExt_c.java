@@ -9,11 +9,11 @@ import fabric.ast.AbortStmt;
 
 public class AbortToFabilExt_c extends ToJavaExt_c {
   /**
-   * @throws SemanticException  
+   * @throws SemanticException
    */
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    AbortStmt abort = (AbortStmt)node();
+    AbortStmt abort = (AbortStmt) node();
     return ((FabILNodeFactory) rw.java_nf()).AbortStmt(abort.position());
   }
 }

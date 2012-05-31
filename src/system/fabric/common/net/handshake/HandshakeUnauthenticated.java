@@ -10,7 +10,7 @@ public class HandshakeUnauthenticated implements Protocol {
   // an incredibly simple handshake:
   // client -> server : name
   //
-  
+
   @Override
   public ShakenSocket initiate(String name, Socket s) throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
@@ -26,5 +26,5 @@ public class HandshakeUnauthenticated implements Protocol {
     System.out.println(name + " [" + name.length() + "]");
     return new ShakenSocket(name, null, s);
   }
-  
+
 }

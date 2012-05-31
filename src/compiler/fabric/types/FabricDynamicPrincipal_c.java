@@ -14,32 +14,34 @@ import polyglot.types.TypeObject;
 import polyglot.util.Position;
 
 public class FabricDynamicPrincipal_c extends DynamicPrincipal_c {
-  public FabricDynamicPrincipal_c(AccessPath path, JifTypeSystem ts, Position pos, PrincipalToJavaExpr toJava) {
+  public FabricDynamicPrincipal_c(AccessPath path, JifTypeSystem ts,
+      Position pos, PrincipalToJavaExpr toJava) {
     super(path, ts, pos, toJava);
   }
-  
+
   @Override
   public boolean equalsImpl(TypeObject o) {
     if (this == o) return true;
-    if (! (o instanceof DynamicPrincipal)) {
-        return false;
+    if (!(o instanceof DynamicPrincipal)) {
+      return false;
     }
 
     DynamicPrincipal that = (DynamicPrincipal) o;
-    
-    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
-    if (ts.isLocalWorkerAccessPath(this.path()) && ts.isLocalWorkerAccessPath(that.path())) {
+
+    FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
+    if (ts.isLocalWorkerAccessPath(this.path())
+        && ts.isLocalWorkerAccessPath(that.path())) {
       return true;
     }
-    
+
     return super.equalsImpl(o);
   }
-  
+
   @Override
   public PathMap labelCheck(JifContext A, LabelChecker lc) {
-    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
+    FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
     if (ts.isLocalWorkerAccessPath(this.path())) {
-      Label l = ts.thisLabel(this.position(), (JifClassType)A.currentClass());
+      Label l = ts.thisLabel(this.position(), (JifClassType) A.currentClass());
       return ts.pathMap().N(l).NV(l);
     }
     return super.labelCheck(A, lc);

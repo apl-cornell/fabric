@@ -69,8 +69,7 @@ public class WorkerAdmin {
     // Bind to the admin port.
     ServerSocket server;
     try {
-      server =
-          new ServerSocket(adminPort, 50, InetAddress.getByName(null));
+      server = new ServerSocket(adminPort, 50, InetAddress.getByName(null));
     } catch (IOException e) {
       throw new InternalError(e);
     }
@@ -116,11 +115,11 @@ public class WorkerAdmin {
                 for (int i = 0; i < cmd.length; i++) {
                   cmd[i] = in.readUTF();
                 }
-                
+
                 // Hand the commands off to the worker shell to execute.
                 CommandSource commandSource = new TokenizedCommandSource(cmd);
                 new WorkerShell(worker, commandSource).run();
-                
+
                 // Write a byte to indicate we're done running.
                 socket.getOutputStream().write(0);
                 socket.getOutputStream().flush();

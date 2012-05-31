@@ -28,7 +28,8 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
   protected Expr accessPolicy;
 
   public NewFabricArray_c(Position pos, TypeNode baseType, List<Expr> dims,
-      int addDims, FabricArrayInit init, Expr label, Expr accessLabel, Expr location) {
+      int addDims, FabricArrayInit init, Expr label, Expr accessLabel,
+      Expr location) {
     super(pos, baseType, dims, addDims, init);
 
     this.location = location;
@@ -111,7 +112,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     FabricArrayInit init = (FabricArrayInit) visitChild(this.init, v);
     Expr location = (Expr) visitChild(this.location, v);
     Expr label = (Expr) visitChild(this.label, v);
-    Expr accessLabel = (Expr) visitChild(this.accessPolicy, v);    
+    Expr accessLabel = (Expr) visitChild(this.accessPolicy, v);
     return reconstruct(baseType, dims, init, location, label, accessLabel);
   }
 
@@ -133,8 +134,8 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
 
     if (location != null) {
       if (!ts.isImplicitCastValid(location.type(), ts.Store())) {
-        throw new SemanticException("Array location must be a store.", location
-            .position());
+        throw new SemanticException("Array location must be a store.",
+            location.position());
       }
     }
 
@@ -146,7 +147,8 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
 
     if (accessPolicy != null) {
       if (!ts.isImplicitCastValid(accessPolicy.type(), ts.ConfPolicy())) {
-        throw new SemanticException("Invalid access policy.", accessPolicy.position());
+        throw new SemanticException("Invalid access policy.",
+            accessPolicy.position());
       }
     }
 
@@ -165,7 +167,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
         v.visitCFG(last, accessPolicy, ENTRY);
         last = accessPolicy;
       }
-      
+
       if (label != null) {
         v.visitCFG(last, label, ENTRY);
         last = label;
@@ -180,7 +182,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     } else {
       v.visitCFG(baseType, listChild(dims, null), ENTRY);
       Term last = null;
-      
+
       if (accessPolicy != null) {
         v.visitCFGList(dims, accessPolicy, ENTRY);
         last = accessPolicy;

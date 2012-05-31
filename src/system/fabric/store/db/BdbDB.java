@@ -345,8 +345,8 @@ public class BdbDB extends ObjectDB {
    * @throws DatabaseException
    *           if a database error occurs
    */
-  private PendingTransaction remove(Principal worker, Transaction txn,
-      long tid) throws DatabaseException {
+  private PendingTransaction remove(Principal worker, Transaction txn, long tid)
+      throws DatabaseException {
     byte[] key = toBytes(tid, worker);
     DatabaseEntry bdbKey = new DatabaseEntry(key);
     DatabaseEntry data = new DatabaseEntry();
@@ -443,7 +443,7 @@ public class BdbDB extends ObjectDB {
       throw new InternalError(e);
     }
   }
-  
+
   /**
    * Dumps the contents of a BDB object database to stdout.
    */

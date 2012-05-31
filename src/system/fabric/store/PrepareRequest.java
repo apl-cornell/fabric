@@ -28,14 +28,13 @@ public final class PrepareRequest {
 
   /** Create a PrepareRequest with the provided fields */
   public PrepareRequest(long tid, long commitTime,
-                        Collection<SerializedObject> creates,
-                        Collection<SerializedObject> writes,
-                        LongKeyMap<Integer> reads) {
-    this.tid     = tid;
-    this.commitTime    = commitTime;
+      Collection<SerializedObject> creates,
+      Collection<SerializedObject> writes, LongKeyMap<Integer> reads) {
+    this.tid = tid;
+    this.commitTime = commitTime;
     this.creates = creates;
-    this.writes  = writes;
-    this.reads   = reads;
+    this.writes = writes;
+    this.reads = reads;
   }
 
 }

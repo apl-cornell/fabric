@@ -1,6 +1,5 @@
 package fabric.visit;
 
-import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -25,6 +24,7 @@ import codebases.types.NamespaceResolver;
 import fabric.ExtensionInfo;
 import fabric.Topics;
 import fabric.ast.FabricNodeFactory;
+import fabric.common.FabricLocation;
 import fabric.types.FabricParsedClassType;
 import fabric.types.FabricTypeSystem;
 
@@ -43,7 +43,7 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
       CBJobExt jobExt = (CBJobExt) job.ext();
       CodebaseSource source = (CodebaseSource) job.source();
       FabricTypeSystem ts = (FabricTypeSystem) this.ts;
-      URI src_ns = source.canonicalNamespace();
+      FabricLocation src_ns = source.canonicalNamespace();
       NamespaceResolver resolver = ts.namespaceResolver(src_ns);
       NamespaceResolver completeNamespace = (NamespaceResolver) resolver.copy();
 
@@ -129,39 +129,41 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
     ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
     if (cct.canonicalNamespace().equals(extInfo.platformNamespace()))
       return Collections.emptySet();
-    
+
     if (ct.namespaceDependencies() == null) {
       setDependencies(ct);
       if (ct.namespaceDependencies() == null)
-        throw new InternalCompilerError("Class " +ct + " has no namespace dependencies!");
+        throw new InternalCompilerError("Class " + ct
+            + " has no namespace dependencies!");
     }
     return ct.namespaceDependencies();
   }
+
   Collection<CodebaseClassType> setDependencies(FabricParsedClassType ct) {
     ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
     if (ct.canonicalNamespace().equals(extInfo.platformNamespace()))
       return Collections.emptySet();
-    
+
     if (ct.namespaceDependencies() == null) {
       Scheduler scheduler = job.extensionInfo().scheduler();
       CodebaseSource cs = (CodebaseSource) ct.fromSource();
-  
+
       if (cs == null) throw new InternalCompilerError("Null source for " + ct);
-  
+
       if (!scheduler.sourceHasJob(ct.fromSource()))
         throw new InternalCompilerError("No job for " + ct);
-  
+
       if (Report.should_report(Topics.mobile, 3)) {
         Report.report(3, "Loading job for " + ct + ":" + ct.fromSource());
       }
-  
+
       Job dep_job = scheduler.loadSource((FileSource) ct.fromSource(), true);
-  
+
       if (dep_job == null)
         throw new InternalCompilerError("Null job for " + ct);
-  
+
       CBJobExt dep_jobExt = (CBJobExt) dep_job.ext();
-  
+
       if (Report.should_report(Topics.mobile, 3)) {
         Report.report(3,
             "Class " + ct + " has deps " + dep_jobExt.dependencies());

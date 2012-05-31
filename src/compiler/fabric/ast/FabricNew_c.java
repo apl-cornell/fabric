@@ -18,21 +18,21 @@ public class FabricNew_c extends JifNew_c {
       ClassBody body) {
     super(pos, tn, arguments, body);
   }
-  
+
   @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     FabricExt fabExt = FabricUtil.fabricExt(this);
-    Expr location = ((LocatedExt_c)fabExt).location();
+    Expr location = ((LocatedExt_c) fabExt).location();
     if (qualifier != null) {
       v.visitCFG(qualifier, tn, ENTRY);
     }
 
     Term last = tn;
-//    if (label != null) {
-//      v.visitCFG(last, label, ENTRY);
-//      last = label;
-//    }
+    // if (label != null) {
+    // v.visitCFG(last, label, ENTRY);
+    // last = label;
+    // }
 
     if (location != null) {
       v.visitCFG(last, location, ENTRY);
@@ -54,6 +54,5 @@ public class FabricNew_c extends JifNew_c {
 
     return succs;
   }
-  
 
 }

@@ -51,15 +51,16 @@ public class Options extends fabric.common.Options {
         return index + 1;
       }
     });
-    
-    flags.add(new Flag("--keep-open", null, "keep the worker running after executing CMD") {
+
+    flags.add(new Flag("--keep-open", null,
+        "keep the worker running after executing CMD") {
       @Override
       public int handle(String[] args, int index) {
         Options.this.keepOpen = true;
         return index;
       }
     });
-    
+
     flags.add(new Flag("--no-shell", null, "disable the worker shell. This is "
         + "useful when the worker is started with a disconnected stdin.") {
       @Override

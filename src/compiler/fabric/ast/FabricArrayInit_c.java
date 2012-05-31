@@ -16,7 +16,7 @@ import fabric.types.FabricTypeSystem;
 
 public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
   // XXX: this code copied from fabil.FabricArrayInit_c
-  
+
   protected Expr location;
   protected Expr label;
 

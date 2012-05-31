@@ -23,38 +23,37 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
       List<TypeNode> interfaces, ClassBody body) {
     super(pos, flags, name, superClass, interfaces, body);
   }
-  
+
   @SuppressWarnings("unchecked")
   @Override
   protected ClassDecl_c disambiguateSupertypes(AmbiguityRemover ar)
       throws SemanticException {
     boolean supertypesResolved = true;
-    
-    if (! type.supertypesResolved()) {
-        if (superClass != null && ! superClass.isDisambiguated()) {
-            supertypesResolved = false;
+
+    if (!type.supertypesResolved()) {
+      if (superClass != null && !superClass.isDisambiguated()) {
+        supertypesResolved = false;
+      }
+
+      for (TypeNode tn : (List<TypeNode>) interfaces) {
+        if (!tn.isDisambiguated()) {
+          supertypesResolved = false;
         }
-        
-        for (TypeNode tn : (List<TypeNode>) interfaces) {
-            if (!tn.isDisambiguated()) {
-                supertypesResolved = false;
-            }
-        }
-        
-        if (! supertypesResolved) {
-            Scheduler scheduler = ar.job().extensionInfo().scheduler();
-            Goal g = scheduler.SupertypesResolved(type);
-            throw new MissingDependencyException(g);
-        }
-        else {            
-            setSuperClass(ar, superClass);
-            setInterfaces(ar, interfaces);
-            type.setSupertypesResolved(true);
-        }
+      }
+
+      if (!supertypesResolved) {
+        Scheduler scheduler = ar.job().extensionInfo().scheduler();
+        Goal g = scheduler.SupertypesResolved(type);
+        throw new MissingDependencyException(g);
+      } else {
+        setSuperClass(ar, superClass);
+        setInterfaces(ar, interfaces);
+        type.setSupertypesResolved(true);
+      }
     }
-    
+
     return this;
-}
+  }
 
   @Override
   protected void setSuperClass(AmbiguityRemover ar, TypeNode superClass)
@@ -74,10 +73,9 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
       if (flags().contains(FabILFlags.NONFABRIC)) {
         supType = ts.Object();
       }
-      
+
       if (Report.should_report(Report.types, 3))
-        Report.report(3, "setting superclass of " + type + " to "
-            + supType);
+        Report.report(3, "setting superclass of " + type + " to " + supType);
       type.superType(supType);
     }
   }

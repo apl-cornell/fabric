@@ -1,6 +1,14 @@
 package fabil;
 
-import java.util.Collection;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+
+import javax.tools.FileObject;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaCompiler.CompilationTask;
 
 import polyglot.frontend.Compiler;
 import polyglot.main.Options;
@@ -24,59 +32,48 @@ public class Main extends polyglot.main.Main {
       System.exit(1);
     }
   }
-  ///HACK :: copied from superclass
-  @SuppressWarnings("unchecked")
+
+  // /HACK :: copied from superclass
   @Override
   protected boolean invokePostCompiler(Options options, Compiler compiler,
       ErrorQueue eq) {
     if (options.post_compiler != null && !options.output_stdout) {
       QuotedStringTokenizer st =
-          new QuotedStringTokenizer(options.post_compiler);
+          new QuotedStringTokenizer(options.post_compiler_args);
       int pc_size = st.countTokens();
-      int options_size = 2;
-      if (options.class_output_directory != null) {
-        options_size += 2;
-      }
-      if (options.generate_debugging_info) options_size++;
-      String[] javacCmd =
-          new String[pc_size + options_size + compiler.outputFiles().size() -1];
-      int j = 0;
-      //skip "javac"
-      st.nextToken();
-      for (int i = 1; i < pc_size; i++) {
-        javacCmd[j++] = st.nextToken();
-      }
-      javacCmd[j++] = "-classpath";
-      javacCmd[j++] = options.constructPostCompilerClasspath();
-      if (options.class_output_directory != null) {
-        javacCmd[j++] = "-d";
-        javacCmd[j++] = options.class_output_directory.toString();
-      }
-      if (options.generate_debugging_info) {
-        javacCmd[j++] = "-g";
+
+      ArrayList<String> javacArgs = new ArrayList<String>(pc_size);
+      while (st.hasMoreTokens()) {
+        javacArgs.add(st.nextToken());
       }
 
-      for (String s : (Collection<String>) compiler.outputFiles()) {
-        javacCmd[j++] = s;
+      if (options.generate_debugging_info) {
+        javacArgs.add("-g");
       }
 
       if (Report.should_report(verbose, 1)) {
-        StringBuffer cmdStr = new StringBuffer();
-        for (int i = 0; i < javacCmd.length; i++)
-          cmdStr.append(javacCmd[i] + " ");
-        Report.report(1, "Executing post-compiler " + cmdStr);
+        Report.report(1,
+            "Executing post-compiler " + options.post_compiler.getClass()
+                + " with arguments " + javacArgs);
       }
-
       try {
-        if (options.class_output_directory != null) {
-          options.class_output_directory.mkdirs();
-        }
-        int exitVal = com.sun.tools.javac.Main.compile(javacCmd);
-        
-        if (exitVal > 0) {
-          eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, "Non-zero return code: "
-              + exitVal);
-          return false;
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        Writer javac_err = new OutputStreamWriter(err);
+        JavaCompiler javac = options.post_compiler;
+        JavaFileManager fileManager =
+            compiler.sourceExtension().extFileManager();
+
+        CompilationTask task =
+            javac.getTask(javac_err, fileManager, null, javacArgs, null,
+                compiler.outputFiles());
+
+        if (!task.call())
+          eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, err.toString());
+
+        if (!options.keep_output_files) {
+          for (FileObject fo : compiler.outputFiles()) {
+            fo.delete();
+          }
         }
       } catch (Exception e) {
         eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, e.getMessage());

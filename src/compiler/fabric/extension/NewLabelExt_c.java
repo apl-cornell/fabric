@@ -7,7 +7,7 @@ public class NewLabelExt_c extends LocatedExt_c {
 
   @Override
   protected Label referenceLabel(FabricContext ctx) {
-    //XXX: revisit?
+    // XXX: revisit?
     return ctx.pc();
   }
 

@@ -65,7 +65,7 @@ public final class SerializationUtil {
     data[pos + 6] = (byte) (0xff & (value >> 8));
     data[pos + 7] = (byte) (0xff & (value >> 0));
   }
-  
+
   public static final int BUF_LEN = 128;
   private static final byte BUF_LEN_LOG_2 = 7;
   private static final byte BUF_LEN_MASK = 0x7f;

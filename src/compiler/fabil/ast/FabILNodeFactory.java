@@ -29,18 +29,18 @@ public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
   /**
    * Creates an AST node representing the creation of a Fabric array.
    */
-  NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr accessPolicy, Expr location, List<Expr> dims);
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label,
+      Expr accessPolicy, Expr location, List<Expr> dims);
 
-  NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr accessPolicy, Expr location, List<Expr> dims, int addDims);
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label,
+      Expr accessPolicy, Expr location, List<Expr> dims, int addDims);
 
-  NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr accessPolicy, Expr location, int addDims, FabricArrayInit init);
-  
-  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr updateLabel, Expr accessPolicy,
-      Expr location, List<Expr> dims, int addDims, FabricArrayInit init);
-  
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label,
+      Expr accessPolicy, Expr location, int addDims, FabricArrayInit init);
+
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr updateLabel,
+      Expr accessPolicy, Expr location, List<Expr> dims, int addDims,
+      FabricArrayInit init);
 
   FabricArrayInit FabricArrayInit(Position position, List<Expr> elements);
 

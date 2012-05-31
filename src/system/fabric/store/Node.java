@@ -2,7 +2,6 @@ package fabric.store;
 
 import static fabric.common.Logging.STORE_LOGGER;
 
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collections;
@@ -28,11 +27,11 @@ import fabric.worker.shell.*;
  */
 public class Node {
 
-  //////////////////////////////////////////////////////////////////////////////
-  // store invocation                                                         //
-  //////////////////////////////////////////////////////////////////////////////
-  
-  /** Main method.  Calls {@link start} and outputs errors nicely. */
+  // ////////////////////////////////////////////////////////////////////////////
+  // store invocation //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  /** Main method. Calls {@link start} and outputs errors nicely. */
   public static void main(String[] args) {
     try {
       start(args);
@@ -44,12 +43,12 @@ public class Node {
     }
   }
 
-  
   /**
-   * Main entry point for the store.  This method is useful for applications
-   * that wish to embed a fabric store.
+   * Main entry point for the store. This method is useful for applications that
+   * wish to embed a fabric store.
    * 
-   * @throws TerminationException to indicate that the store is shutting down
+   * @throws TerminationException
+   *           to indicate that the store is shutting down
    */
   public static void start(String args[]) throws TerminationException {
     STORE_LOGGER.info("Store node");
@@ -64,7 +63,7 @@ public class Node {
       printUsage(ue);
       throw new TerminationException(ue.exitCode);
     }
-    
+
     // Start up store-node services.
     final Node node = new Node(opts);
 
@@ -73,13 +72,16 @@ public class Node {
 
     // register a hook to shut down gracefully.
     Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override public void run() { node.shutdown(); }
+      @Override
+      public void run() {
+        node.shutdown();
+      }
     });
 
     // run
     node.run();
   }
-  
+
   private static void printUsage(UsageError ue) {
     PrintStream out = ue.exitCode == 0 ? System.out : System.err;
     if (ue.getMessage() != null && ue.getMessage().length() > 0) {
@@ -90,15 +92,15 @@ public class Node {
     Options.printUsage(out, ue.showSecretMenu);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // setup and shutdown                                                       //
-  //////////////////////////////////////////////////////////////////////////////
-  
+  // ////////////////////////////////////////////////////////////////////////////
+  // setup and shutdown //
+  // ////////////////////////////////////////////////////////////////////////////
+
   //
   // Note: Although this interface is designed for multiple stores, in the
   // current implementation we only allow a single store per process.
   //
-  
+
   private final Store store;
   private final Options opts;
 
@@ -145,10 +147,10 @@ public class Node {
     Thread t = new Thread(store, "Fabric network connection acceptor");
     t.setDaemon(true);
     t.start();
-    
+
     // Start listening on the worker admin port.
     WorkerAdmin.listen(store.config.workerAdminPort, Worker.getWorker());
-    
+
     // Drop into a worker shell.
     try {
       Worker worker = Worker.getWorker();

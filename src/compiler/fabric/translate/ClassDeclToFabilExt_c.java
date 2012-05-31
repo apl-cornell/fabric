@@ -38,7 +38,6 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     return ClassDeclToJavaExt_c.constructorTranslatedName(ct);
   }
 
-
   @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
@@ -51,10 +50,10 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     FabILTypeSystem ts = (FabILTypeSystem) rw.java_ts();
 
     TypeNode worker =
-      nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Worker());
+        nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Worker());
 
     List<ClassMember> members =
-      new ArrayList<ClassMember>(cd.body().members().size() + 1);
+        new ArrayList<ClassMember>(cd.body().members().size() + 1);
     members.add(nf.FieldDecl(
         Position.compilerGenerated(),
         Flags.FINAL.Static(),
@@ -68,9 +67,10 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   }
 
   @Override
-  protected ClassMember produceInstanceOfMethod(JifPolyType jpt, JifToJavaRewriter rw, boolean useGetters) throws SemanticException {
+  protected ClassMember produceInstanceOfMethod(JifPolyType jpt,
+      JifToJavaRewriter rw, boolean useGetters) throws SemanticException {
     Context A = rw.context();
-    rw = (JifToJavaRewriter)rw.context(A.pushStatic());
+    rw = (JifToJavaRewriter) rw.context(A.pushStatic());
     FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
     JifTypeSystem jifts = rw.jif_ts();
     List<Formal> formals = produceFormals(jpt, rw, true);
@@ -81,36 +81,49 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
     if (!jifts.isJifClass(jpt) || sigMode) {
       // just produce a header
-      return rw.qq().parseMember("static public native boolean %s(%LF);", INSTANCEOF_METHOD_NAME, formals);            
+      return rw.qq().parseMember("static public native boolean %s(%LF);",
+          INSTANCEOF_METHOD_NAME, formals);
     }
 
     StringBuffer sb = new StringBuffer();
     sb.append("static public boolean %s(%LF) {");
     // Add code that checks that the access label of jpt flows to o.store
     // proceed normally if it does, otherwise throw an InternalError
-    if (!(jpt instanceof FabricParsedClassType_c)) 
-      throw new InternalCompilerError("Trying to produce an instanceof method for a non-fabric class");
+    if (!(jpt instanceof FabricParsedClassType_c))
+      throw new InternalCompilerError(
+          "Trying to produce an instanceof method for a non-fabric class");
 
     FabricParsedClassType_c fpct = (FabricParsedClassType_c) jpt;
     ConfPolicy cp = fpct.accessPolicy();
-    Label accessLabel = jifts.pairLabel(cp.position(), cp, jifts.topIntegPolicy(cp.position()));
+    Label accessLabel =
+        jifts.pairLabel(cp.position(), cp, jifts.topIntegPolicy(cp.position()));
     Expr accessLabelExpr = rw.labelToJava(accessLabel);
-    Expr storeLabelExpr = rw.qq().parseExpr(rw.runtimeLabelUtil() + 
-        ".readerPolicyLabel(" + frw.runtimePrincipalUtil() +
-        ".topPrincipal()"+", o.fetch().$getStore().getPrincipal())"); /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */
-    sb.append("if (!" + rw.runtimeLabelUtil() + ".relabelsTo(%E, %E)) " +
-    "throw new InternalError(\"Illegal Access to \" + o.$getStore());");
+    Expr storeLabelExpr =
+        rw.qq().parseExpr(
+            rw.runtimeLabelUtil() + ".readerPolicyLabel("
+                + frw.runtimePrincipalUtil() + ".topPrincipal()"
+                + ", o.fetch().$getStore().getPrincipal())"); /*
+                                                               * TODO XXX HUGE
+                                                               * HACK. WE SHOULD
+                                                               * NOT CALL
+                                                               * fetch(). REMOVE
+                                                               * AFTER
+                                                               * SURROGATES
+                                                               * PROBLEM IS
+                                                               * FIXED.
+                                                               */
+    sb.append("if (!" + rw.runtimeLabelUtil() + ".relabelsTo(%E, %E)) "
+        + "throw new InternalError(\"Illegal Access to \" + o.$getStore());");
 
     if (jpt.params().isEmpty()) {
       sb.append("return (o instanceof %s);");
-    }
-    else {
+    } else {
       sb.append("if (o instanceof %s) { ");
       sb.append("%s c = (%s)o; ");
 
       // now test each of the params
       boolean moreThanOneParam = (jpt.params().size() > 1);
-      sb.append(moreThanOneParam?"boolean ok = true;":"");
+      sb.append(moreThanOneParam ? "boolean ok = true;" : "");
       for (ParamInstance pi : jpt.params()) {
         String paramFieldName = ParamToJavaExpr_c.paramFieldName(pi);
         String paramArgName = ParamToJavaExpr_c.paramArgName(pi);
@@ -119,21 +132,20 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
           comparison = "relabelsTo";
         }
 
-        sb.append(moreThanOneParam?"ok = ok && ":"return ");
+        sb.append(moreThanOneParam ? "ok = ok && " : "return ");
 
         String paramExpr = paramFieldName;
         if (useGetters) {
           paramExpr = ParamToJavaExpr_c.paramFieldNameGetter(pi) + "()";
         }
-        if (pi.isPrincipal()) {  
+        if (pi.isPrincipal()) {
           // e.g., PrincipalUtil.equivTo(c.expr, paramArgName)
-          sb.append(jifts.PrincipalUtilClassName() + "."+comparison+
-              "(c."+paramExpr+","+paramArgName+");");
-        }
-        else {
+          sb.append(jifts.PrincipalUtilClassName() + "." + comparison + "(c."
+              + paramExpr + "," + paramArgName + ");");
+        } else {
           // e.g., LabelUtil.equivTo(paramArgName)
-          sb.append(rw.runtimeLabelUtil() + "."+comparison+ 
-              "(c."+paramExpr+","+paramArgName+");");
+          sb.append(rw.runtimeLabelUtil() + "." + comparison + "(c."
+              + paramExpr + "," + paramArgName + ");");
         }
       }
       if (moreThanOneParam) sb.append("return ok;");
@@ -141,14 +153,14 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
       sb.append("return false;");
     }
     sb.append("}");
-    return rw.qq().parseMember(sb.toString(), INSTANCEOF_METHOD_NAME, 
-        formals, accessLabelExpr, storeLabelExpr, name, name, name);
+    return rw.qq().parseMember(sb.toString(), INSTANCEOF_METHOD_NAME, formals,
+        accessLabelExpr, storeLabelExpr, name, name, name);
   }
-
 
   @Override
   @SuppressWarnings("unchecked")
-  protected List<Formal> produceFormals(JifPolyType jpt, JifToJavaRewriter rw, boolean addObjectFormal) throws SemanticException {
+  protected List<Formal> produceFormals(JifPolyType jpt, JifToJavaRewriter rw,
+      boolean addObjectFormal) throws SemanticException {
     List<Formal> formals = super.produceFormals(jpt, rw, false);
     NodeFactory javaNf = rw.java_nf();
 
@@ -158,7 +170,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
       formals.add(javaNf.Formal(Position.compilerGenerated(), Flags.FINAL, tn,
           javaNf.Id(Position.compilerGenerated(), "o")));
     }
-    
+
     NodeFactory nf = rw.nodeFactory();
 
     // add access policy formal
@@ -184,8 +196,6 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     return args;
   }
 
-
-
   @Override
   protected ClassBody addInitializer(ClassBody cb, JifToJavaRewriter rw) {
     List<Stmt> inits = new ArrayList<Stmt>(rw.getInitializations());
@@ -201,13 +211,13 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
    *           if the field or access label cannot be translated
    */
   protected ClassBody addLabelInitializer(ClassBody cb, JifToJavaRewriter rw)
-  throws SemanticException {
+      throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();
     boolean sigMode = ((FabricToFabilRewriter) rw).inSignatureMode();
 
-    //FIXME: why is rw.currentClass() null?
+    // FIXME: why is rw.currentClass() null?
     ClassDecl n = (ClassDecl) node();
-    FabricClassType ct = (FabricClassType)n.type();
+    FabricClassType ct = (FabricClassType) n.type();
 
     if (!sigMode && ts.isFabricClass(ct)) {
 
@@ -220,19 +230,23 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
       }
 
       // locate labels at the same store as the object
-      rw = ((FabricToFabilRewriter) rw).pushLocation(rw.qq().parseExpr("this.$getStore()"));
+      rw =
+          ((FabricToFabilRewriter) rw).pushLocation(rw.qq().parseExpr(
+              "this.$getStore()"));
 
       Expr updateLabelExpr = rw.labelToJava(updateLabel);
 
-      Label accessLabel = ts.pairLabel(accessPolicy.position(), accessPolicy, 
-          ts.topIntegPolicy(accessPolicy.position()));
+      Label accessLabel =
+          ts.pairLabel(accessPolicy.position(), accessPolicy,
+              ts.topIntegPolicy(accessPolicy.position()));
 
       Expr accessLabelExpr = rw.labelToJava(accessLabel);
 
       return cb.addMember(rw.qq().parseMember(
           "public Object %s() { " + "this.$updateLabel = %E;  "
-          + "this.$accessPolicy = %E.confPolicy();" + "return this;" + "}",
-          FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr, accessLabelExpr));
+              + "this.$accessPolicy = %E.confPolicy();" + "return this;" + "}",
+          FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr,
+          accessLabelExpr));
     }
 
     return cb;

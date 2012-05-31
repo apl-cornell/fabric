@@ -7,7 +7,6 @@ import java.io.OutputStream;
 import fabric.common.net.naming.SocketAddress;
 import fabric.lang.security.Principal;
 
-
 /**
  * Client-side multiplexed socket implementation. The API mirrors that of
  * java.net.Socket. This class manages connection state, and provides a
@@ -17,19 +16,19 @@ import fabric.lang.security.Principal;
  * @author mdgeorge
  */
 public class SubSocket {
-  //////////////////////////////////////////////////////////////////////////////
-  // public API                                                               //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // public API //
+  // ////////////////////////////////////////////////////////////////////////////
 
   /** @see SubSocketFactory */
   protected SubSocket(SubSocketFactory factory) {
-    this.state = new Unconnected(factory); 
+    this.state = new Unconnected(factory);
   }
 
   /**
-   * Create a connected SubSocket.  This is used internally by ServerChannels
-   * for accepting incoming streams.
-   */ 
+   * Create a connected SubSocket. This is used internally by ServerChannels for
+   * accepting incoming streams.
+   */
   SubSocket(Channel.Connection conn) {
     this.state = new Connected(conn);
   }
@@ -54,22 +53,22 @@ public class SubSocket {
     return state.getInputStream();
   }
 
-  /** 
+  /**
    * Return the Principal that represents the remote endpoint of the connection
    */
   public final Principal getPrincipal() throws IOException {
     return state.getPrincipal();
   }
-  
-  //////////////////////////////////////////////////////////////////////////////
-  // State design pattern implementation                                      //
-  //                                                                          //
-  //                connect                close                              //
-  //  unconnected  --------->  connected  ------->  closed                    //
-  //       |                       |                  |                       //
-  //       +-----------------------+------------------+---------------> error //
-  //                                                       exception          //
-  //////////////////////////////////////////////////////////////////////////////
+
+  // ////////////////////////////////////////////////////////////////////////////
+  // State design pattern implementation //
+  // //
+  // connect close //
+  // unconnected ---------> connected -------> closed //
+  // | | | //
+  // +-----------------------+------------------+---------------> error //
+  // exception //
+  // ////////////////////////////////////////////////////////////////////////////
 
   private State state;
 
@@ -93,11 +92,13 @@ public class SubSocket {
     }
 
     public OutputStream getOutputStream() throws IOException {
-      throw new IOException("Cannot get an output stream: socket " + this, cause);
+      throw new IOException("Cannot get an output stream: socket " + this,
+          cause);
     }
-    
+
     public Principal getPrincipal() throws IOException {
-      throw new IOException("There is no principal associated with the socket: it " + this, cause);
+      throw new IOException(
+          "There is no principal associated with the socket: it " + this, cause);
     }
   }
 
@@ -107,15 +108,19 @@ public class SubSocket {
   protected final class Unconnected extends State {
     private final SubSocketFactory factory;
 
-    @Override public String toString() { return "is unconnected"; }
+    @Override
+    public String toString() {
+      return "is unconnected";
+    }
 
     @Override
     public void connect(String name) throws IOException {
       try {
-        Channel.Connection conn = factory.getChannel(name).connect(); 
+        Channel.Connection conn = factory.getChannel(name).connect();
         state = new Connected(conn);
       } catch (final Exception exc) {
-        IOException wrapped = new IOException("failed to connect to \"" + name + "\"", exc);
+        IOException wrapped =
+            new IOException("failed to connect to \"" + name + "\"", exc);
         state = new ErrorState(wrapped);
         throw wrapped;
       }
@@ -130,7 +135,7 @@ public class SubSocket {
    * implementation of methods in the Connected(channel) state
    */
   protected final class Connected extends State {
-    final Channel.Connection   conn;
+    final Channel.Connection conn;
 
     @Override
     public String toString() {
@@ -143,7 +148,8 @@ public class SubSocket {
         conn.close();
         state = new Closed();
       } catch (final Exception exc) {
-        IOException wrapped = new IOException("failed to close connection", exc);
+        IOException wrapped =
+            new IOException("failed to close connection", exc);
         state = new ErrorState(wrapped);
         throw wrapped;
       }
@@ -163,7 +169,7 @@ public class SubSocket {
     public Principal getPrincipal() {
       return conn.getPrincipal();
     }
-    
+
     public Connected(Channel.Connection conn) {
       this.conn = conn;
     }
@@ -173,14 +179,20 @@ public class SubSocket {
    * implementation of methods in the Closed state
    */
   protected final class Closed extends State {
-    @Override public String toString() { return "is closed"; }
+    @Override
+    public String toString() {
+      return "is closed";
+    }
   }
 
   /**
    * implementations of methods in the Error state
    */
   protected final class ErrorState extends State {
-    @Override public String toString() { return "has recieved an exception"; }
+    @Override
+    public String toString() {
+      return "has recieved an exception";
+    }
 
     public ErrorState(Exception exc) {
       super();
@@ -188,4 +200,3 @@ public class SubSocket {
     }
   }
 }
-

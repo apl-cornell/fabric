@@ -13,7 +13,7 @@ public class ArrayAccessAssignExt_c extends ExprExt_c {
     ArrayAccessAssign assign = node();
     ArrayAccess left = (ArrayAccess) assign.left();
     Expr array = left.array();
-    
+
     // Only rewrite Fabric arrays.
     FabILTypeSystem ts = rewriter.typeSystem();
     if (!ts.isFabricType(array.type())) return null;

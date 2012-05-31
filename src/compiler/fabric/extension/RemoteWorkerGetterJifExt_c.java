@@ -13,17 +13,17 @@ public class RemoteWorkerGetterJifExt_c extends JifExprExt {
   public RemoteWorkerGetterJifExt_c(ToJavaExt toJava) {
     super(toJava);
   }
-  
+
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    RemoteWorkerGetter rcg = (RemoteWorkerGetter)node();
-    
+    RemoteWorkerGetter rcg = (RemoteWorkerGetter) node();
+
     JifContext A = lc.jifContext();
-    A = (JifContext)rcg.del().enterScope(A);
-    
+    A = (JifContext) rcg.del().enterScope(A);
+
     Expr rcName = rcg.remoteWorkerName();
-    rcName = (Expr)lc.context(A).labelCheck(rcName);
-    
+    rcName = (Expr) lc.context(A).labelCheck(rcName);
+
     return updatePathMap(rcg.remoteWorkerName(rcName), getPathMap(rcName));
   }
 }

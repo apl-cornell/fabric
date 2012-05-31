@@ -25,60 +25,63 @@ import fabric.types.FabricTypeSystem;
 
 public class CastToFabilExt_c extends CastToJavaExt_c {
   protected Type exprType;
-  
+
   @Override
   public NodeVisitor toJavaEnter(JifToJavaRewriter rw) throws SemanticException {
-    Cast c = (Cast)this.node();
+    Cast c = (Cast) this.node();
     exprType = c.expr().type();
     return super.toJavaEnter(rw);
   }
-  
+
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    Cast c = (Cast)node();
-    
-    FabricTypeSystem ts = (FabricTypeSystem)rw.jif_ts();
-    FabILNodeFactory nf = (FabILNodeFactory)rw.java_nf();
-    
-    if (ts.isPrincipal(castType) 
-     && (ts.typeEquals(ts.Worker(), exprType) 
-      || ts.typeEquals(ts.RemoteWorker(), exprType))
-      || ts.typeEquals(ts.Store(), exprType)) {
-      return nf.Call(c.position(), c.expr(), nf.Id(Position.compilerGenerated(), "getPrincipal"));
+    Cast c = (Cast) node();
+
+    FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();
+    FabILNodeFactory nf = (FabILNodeFactory) rw.java_nf();
+
+    if (ts.isPrincipal(castType)
+        && (ts.typeEquals(ts.Worker(), exprType) || ts.typeEquals(
+            ts.RemoteWorker(), exprType))
+        || ts.typeEquals(ts.Store(), exprType)) {
+      return nf.Call(c.position(), c.expr(),
+          nf.Id(Position.compilerGenerated(), "getPrincipal"));
     }
-    
-    if (!((JifCastDel)c.del()).isToSubstJifClass()) {
+
+    if (!((JifCastDel) c.del()).isToSubstJifClass()) {
       return rw.java_nf().Cast(c.position(), c.castType(), c.expr());
-      
+
     }
 
     List<Expr> args = new ArrayList<Expr>();
 
     // add all the actual param expressions to args
-    JifSubstType t = (JifSubstType)this.castType;
-    JifSubst subst = (JifSubst)t.subst();
-    JifPolyType base = (JifPolyType)t.base();
+    JifSubstType t = (JifSubstType) this.castType;
+    JifSubst subst = (JifSubst) t.subst();
+    JifPolyType base = (JifPolyType) t.base();
     for (ParamInstance pi : base.params()) {
       args.add(rw.paramToJava(subst.get(pi)));
     }
 
     // add the actual expression being cast.
     args.add(c.expr());
-    
+
     // add the access label
     if (castType instanceof FabricSubstClassType_c) {
       FabricSubstClassType_c fpct = (FabricSubstClassType_c) castType;
       ConfPolicy cp = fpct.accessPolicy();
-      Label accessLabel = ts.pairLabel(cp.position(), cp, ts.topIntegPolicy(cp.position()));
+      Label accessLabel =
+          ts.pairLabel(cp.position(), cp, ts.topIntegPolicy(cp.position()));
       Expr accessLabelExpr = rw.labelToJava(accessLabel);
       args.add(accessLabelExpr);
     }
 
-    JifSubstType jst = (JifSubstType)castType;
+    JifSubstType jst = (JifSubstType) castType;
     String jifImplClass = jst.fullName();
     if (jst.flags().isInterface()) {
       jifImplClass = ClassDeclToFabilExt_c.interfaceClassImplName(jifImplClass);
     }
-    return rw.qq().parseExpr(jifImplClass + ".%s(%LE)", ClassDeclToFabilExt_c.castMethodName(jst), args);
+    return rw.qq().parseExpr(jifImplClass + ".%s(%LE)",
+        ClassDeclToFabilExt_c.castMethodName(jst), args);
   }
 }

@@ -1,6 +1,5 @@
 package fabric.types;
 
-import java.net.URI;
 import java.util.Collection;
 
 import jif.types.JifContext_c;
@@ -16,34 +15,38 @@ import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import codebases.types.CBImportTable;
 import codebases.types.CodebaseTypeSystem;
+import fabric.common.FabricLocation;
 
 public class FabricContext_c extends JifContext_c implements FabricContext {
   @SuppressWarnings("unchecked")
-  private static final Collection<String> TOPICS = 
-      CollectionUtil.list(Report.types, Report.context);
+  private static final Collection<String> TOPICS = CollectionUtil.list(
+      Report.types, Report.context);
 
   protected Expr location;
-  protected URI namespace;
-  
+  protected FabricLocation namespace;
+
   protected FabricContext_c(JifTypeSystem ts, TypeSystem jlts) {
     super(ts, jlts);
   }
 
-  //XXX: Commented out pending testing : I think this is redundant, super.push calls copy()
-//  @Override
-//  protected Context_c push() {
-//    FabricContext_c v = (FabricContext_c) super.push();
-//    v.location = location;
-//    v.namespace = namespace;
-//    return v;
-//  }
+  // XXX: Commented out pending testing : I think this is redundant, super.push
+  // calls copy()
+  // @Override
+  // protected Context_c push() {
+  // FabricContext_c v = (FabricContext_c) super.push();
+  // v.location = location;
+  // v.namespace = namespace;
+  // return v;
+  // }
 
   @Override
   public Named find(String name) throws SemanticException {
     if (Report.should_report(TOPICS, 3))
       Report.report(3, "find-type " + name + " in " + this);
 
-    if (isOuter()) return ((CodebaseTypeSystem) ts).namespaceResolver(namespace()).find(name);
+    if (isOuter())
+      return ((CodebaseTypeSystem) ts).namespaceResolver(namespace())
+          .find(name);
     if (isSource()) return it.find(name);
 
     Named type = findInThisScope(name);
@@ -66,7 +69,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
     if (name.equals("worker$") || name.equals("worker$'")) {
       return ((FabricTypeSystem) typeSystem()).workerLocalInstance();
     } else if (name.endsWith("'")) {
-      // XXX HACK! 
+      // XXX HACK!
       return super.findLocal(name.substring(0, name.length() - 1));
     }
     return super.findLocal(name);
@@ -83,17 +86,16 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
     v.location = location;
     return v;
   }
-  
+
   @Override
-  public URI namespace() {
-    if (isOuter())
-      throw new InternalCompilerError("No namespace!");
-    return ((CBImportTable)it).namespace();
+  public FabricLocation namespace() {
+    if (isOuter()) throw new InternalCompilerError("No namespace!");
+    return ((CBImportTable) it).namespace();
   }
 
   @Override
-  public URI resolveCodebaseName(String name) {
-    return ((CBImportTable)it).resolveCodebaseName(name);
+  public FabricLocation resolveCodebaseName(String name) {
+    return ((CBImportTable) it).resolveCodebaseName(name);
   }
 
 }

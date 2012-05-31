@@ -9,11 +9,11 @@ import fabric.ast.RetryStmt;
 
 public class RetryToFabilExt_c extends ToJavaExt_c {
   /**
-   * @throws SemanticException  
+   * @throws SemanticException
    */
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    RetryStmt retry = (RetryStmt)node();
+    RetryStmt retry = (RetryStmt) node();
     return ((FabILNodeFactory) rw.java_nf()).RetryStmt(retry.position());
   }
 }

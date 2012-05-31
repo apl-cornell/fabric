@@ -34,7 +34,7 @@ public abstract class ClassMemberExt_c extends FabILExt_c implements
       ClassDecl classDecl) {
     return Collections.emptyList();
   }
-  
+
   @Override
   public List<Stmt> staticImplInitMember(ProxyRewriter pr) {
     return Collections.emptyList();

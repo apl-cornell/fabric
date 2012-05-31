@@ -1,25 +1,24 @@
 package codebases.frontend;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.util.Date;
+
+import javax.tools.FileObject;
+
+import fabric.common.FabricLocation;
 
 public class PublishedLocalSource extends DerivedLocalSource {
 
-  protected PublishedLocalSource(String path, String name, File derivedFrom,
-      Date lastModified, boolean userSpecified, URI namespace)
-      throws IOException {
-    super(path, name, derivedFrom, lastModified, userSpecified, namespace);
+  protected PublishedLocalSource(String name, FileObject derivedFrom,
+      boolean userSpecified, FabricLocation namespace) throws IOException {
+    super(name, derivedFrom, userSpecified, namespace);
   }
 
-  //Allow PublishedLocalSource to be equal to RemoteSource
+  // Allow PublishedLocalSource to be equal to RemoteSource
   @Override
   public boolean equals(Object o) {
     if (o instanceof LocalSource) {
       return super.equals(o);
-    }
-    else if (o instanceof CodebaseSource) {
+    } else if (o instanceof CodebaseSource) {
       CodebaseSource src = (CodebaseSource) o;
       return name().equals(src.name())
           && canonicalNamespace().equals(src.canonicalNamespace());

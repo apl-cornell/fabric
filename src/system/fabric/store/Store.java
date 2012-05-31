@@ -1,6 +1,5 @@
 package fabric.store;
 
-
 import static fabric.common.Logging.STORE_REQUEST_LOGGER;
 import static fabric.common.ONumConstants.STORE_PRINCIPAL;
 
@@ -53,96 +52,99 @@ import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 
 class Store extends MessageToStoreHandler {
-  public final Node               node;
+  public final Node node;
   public final TransactionManager tm;
-  public final SurrogateManager   sm;
-  public final ObjectDB           os;
-  public final X509Certificate[]  certificateChain;
-  public final PublicKey          publicKey;
-  public final PrivateKey         privateKey;
-  public final ConfigProperties   config;
+  public final SurrogateManager sm;
+  public final ObjectDB os;
+  public final X509Certificate[] certificateChain;
+  public final PublicKey publicKey;
+  public final PrivateKey privateKey;
+  public final ConfigProperties config;
 
   private final SubServerSocketFactory socketFactory;
-  
+
   Store(Node node, String name) {
     super(name);
-    
+
     //
     // read properties file
     //
-    
+
     this.config = new ConfigProperties(name);
-    
+
     KeyMaterial keyset = config.getKeyMaterial();
-    
+
     this.certificateChain = keyset.getNameChain();
-    this.publicKey        = keyset.getPublicKey();
-    this.privateKey       = keyset.getPrivateKey();
-    
-    if (null == keyset.getPrincipalChain())
-    {
+    this.publicKey = keyset.getPublicKey();
+    this.privateKey = keyset.getPrivateKey();
+
+    if (null == keyset.getPrincipalChain()) {
       try {
-        X509Certificate[] principalChain = new X509Certificate[certificateChain.length + 1];
+        X509Certificate[] principalChain =
+            new X509Certificate[certificateChain.length + 1];
         for (int i = 0; i < certificateChain.length; i++)
-          principalChain[i+1] = certificateChain[i];
-        principalChain[0] = Crypto.createCertificate(Long.toString(STORE_PRINCIPAL), publicKey, name, privateKey);
+          principalChain[i + 1] = certificateChain[i];
+        principalChain[0] =
+            Crypto.createCertificate(Long.toString(STORE_PRINCIPAL), publicKey,
+                name, privateKey);
         keyset.setPrincipalChain(principalChain);
       } catch (GeneralSecurityException e) {
-        throw new InternalError("failed to create store's principal certificate", e);
+        throw new InternalError(
+            "failed to create store's principal certificate", e);
       }
     }
-    
+
     this.socketFactory = createSocketFactory(keyset);
-    
+
     this.node = node;
-    this.os   = loadStore();
-    this.tm   = new TransactionManager(this.os, this.privateKey);
-    this.sm   = new SimpleSurrogateManager(tm);
+    this.os = loadStore();
+    this.tm = new TransactionManager(this.os, this.privateKey);
+    this.sm = new SimpleSurrogateManager(tm);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // lifecycle                                                                //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // lifecycle //
+  // ////////////////////////////////////////////////////////////////////////////
 
-  
   public void initialize() {
     // Ensure each store's object database has been properly initialized.
     os.ensureInit();
   }
-  
+
   @Override
-  protected SubServerSocket createServerSocket(){
+  protected SubServerSocket createServerSocket() {
     return socketFactory.createServerSocket();
   }
 
   public void shutdown() {
-    try { os.close(); } catch(final IOException exc) { /* do nothing */ }
+    try {
+      os.close();
+    } catch (final IOException exc) { /* do nothing */
+    }
   }
-  
+
   private ObjectDB loadStore() {
     try {
       // construct ObjectDB with class specified by properties file
-      final Class<?>       osClass = Class.forName(config.backendClass);
-      final Constructor<?> osCons  = osClass.getConstructor(String.class);
-      final ObjectDB       os      = (ObjectDB) osCons.newInstance(config.name);
+      final Class<?> osClass = Class.forName(config.backendClass);
+      final Constructor<?> osCons = osClass.getConstructor(String.class);
+      final ObjectDB os = (ObjectDB) osCons.newInstance(config.name);
 
       return os;
     } catch (Exception exc) {
       throw new InternalError("could not initialize store", exc);
     }
   }
-  
+
   private SubServerSocketFactory createSocketFactory(KeyMaterial keys) {
     try {
       Protocol authProt;
       if (config.useSSL)
         authProt = new HandshakeAuthenticated(keys);
-      else
-        authProt = new HandshakeBogus(this.config.name, STORE_PRINCIPAL);
+      else authProt = new HandshakeBogus(this.config.name, STORE_PRINCIPAL);
 
-      Protocol handshake = new HandshakeComposite(
-          authProt,
-          new HandshakeUnauthenticated());
+      Protocol handshake =
+          new HandshakeComposite(authProt, new HandshakeUnauthenticated());
       NameService nameService = new DefaultNameService(PortType.STORE);
 
       return new SubServerSocketFactory(handshake, nameService);
@@ -151,18 +153,18 @@ class Store extends MessageToStoreHandler {
     }
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // message handlers                                                         //
-  //////////////////////////////////////////////////////////////////////////////
-  
+  // ////////////////////////////////////////////////////////////////////////////
+  // message handlers //
+  // ////////////////////////////////////////////////////////////////////////////
+
   @Override
-  public AbortTransactionMessage.Response handle(Principal p, AbortTransactionMessage message)
-  throws AccessException {
-    
+  public AbortTransactionMessage.Response handle(Principal p,
+      AbortTransactionMessage message) throws AccessException {
+
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-                "Handling Abort Message from {0} for tid={1}",
-                nameOf(p), message.tid.topTid);
-    
+        "Handling Abort Message from {0} for tid={1}", nameOf(p),
+        message.tid.topTid);
+
     tm.abortTransaction(p, message.tid.topTid);
     return new AbortTransactionMessage.Response();
   }
@@ -172,11 +174,10 @@ class Store extends MessageToStoreHandler {
    */
   @Override
   public AllocateMessage.Response handle(Principal p, AllocateMessage msg)
-  throws AccessException {
+      throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-                "Handling Allocate Message from {0}",
-                nameOf(p));
-    
+        "Handling Allocate Message from {0}", nameOf(p));
+
     long[] onums = tm.newOnums(p, msg.num);
     return new AllocateMessage.Response(onums);
   }
@@ -186,11 +187,10 @@ class Store extends MessageToStoreHandler {
    */
   @Override
   public CommitTransactionMessage.Response handle(Principal p,
-                                                  CommitTransactionMessage message)
-  throws TransactionCommitFailedException {
+      CommitTransactionMessage message) throws TransactionCommitFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-                "Handling Commit Message from {0} for tid={1}",
-                nameOf(p), message.transactionID);
+        "Handling Commit Message from {0} for tid={1}", nameOf(p),
+        message.transactionID);
     tm.commitTransaction(p, message.transactionID);
     return new CommitTransactionMessage.Response();
   }
@@ -200,17 +200,12 @@ class Store extends MessageToStoreHandler {
    */
   @Override
   public PrepareTransactionMessage.Response handle(Principal p,
-                                                   PrepareTransactionMessage msg)
-  throws TransactionPrepareFailedException {
+      PrepareTransactionMessage msg) throws TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-                "Handling Prepare Message, worker={0}, tid={1}",
-                nameOf(p), msg.tid);
-    boolean subTransactionCreated = prepareTransaction(p,
-                                                       msg.tid,
-                                                       msg.commitTime,
-                                                       msg.serializedCreates,
-                                                       msg.serializedWrites,
-                                                       msg.reads);
+        "Handling Prepare Message, worker={0}, tid={1}", nameOf(p), msg.tid);
+    boolean subTransactionCreated =
+        prepareTransaction(p, msg.tid, msg.commitTime, msg.serializedCreates,
+            msg.serializedWrites, msg.reads);
     return new PrepareTransactionMessage.Response(subTransactionCreated);
   }
 
@@ -219,7 +214,7 @@ class Store extends MessageToStoreHandler {
    */
   @Override
   public ReadMessage.Response handle(Principal p, ReadMessage msg)
-  throws AccessException {
+      throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Read Message from {0}, onum={1}", nameOf(p), msg.onum);
 
@@ -232,10 +227,9 @@ class Store extends MessageToStoreHandler {
    */
   @Override
   public DissemReadMessage.Response handle(Principal p, DissemReadMessage msg)
-  throws AccessException {
+      throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-                "Handling DissemRead message from {0}, onum={1}",
-                nameOf(p), msg.onum);
+        "Handling DissemRead message from {0}, onum={1}", nameOf(p), msg.onum);
 
     Glob glob = tm.getGlob(msg.onum);
 
@@ -247,10 +241,9 @@ class Store extends MessageToStoreHandler {
    */
   @Override
   public GetCertChainMessage.Response handle(Principal p,
-                                             GetCertChainMessage msg) {
+      GetCertChainMessage msg) {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-                "Handling request for SSL cert chain, worker={0}",
-                nameOf(p));
+        "Handling request for SSL cert chain, worker={0}", nameOf(p));
     return new GetCertChainMessage.Response(certificateChain);
   }
 
@@ -261,33 +254,35 @@ class Store extends MessageToStoreHandler {
   public MakePrincipalMessage.Response handle(Principal p,
       MakePrincipalMessage msg) throws FabricGeneralSecurityException {
     // Note: p should always be null.
-    
-    // Get the store's node object and its signing key. 
+
+    // Get the store's node object and its signing key.
     final fabric.worker.Store store = Worker.getWorker().getStore(name);
     final PrivateKey storeKey = privateKey;
-    
+
     // Create a principal object on the store and get the resulting object's
     // onum.
     long principalOnum = Worker.runInTopLevelTransaction(new Code<Long>() {
       @Override
       public Long run() {
         NodePrincipal principal =
-            new NodePrincipal._Impl(store).fabric$lang$security$NodePrincipal$(null);
+            new NodePrincipal._Impl(store)
+                .fabric$lang$security$NodePrincipal$(null);
         principal.addDelegatesTo(store.getPrincipal());
         return principal.$getOnum();
       }
     }, true);
-    
+
     // Create a certificate that binds the requester's key to the new principal
     // object's OID.
     X509Certificate cert;
     try {
-      cert = Crypto.createCertificate(Long.toString(principalOnum),
-          msg.requesterKey, name, storeKey);
+      cert =
+          Crypto.createCertificate(Long.toString(principalOnum),
+              msg.requesterKey, name, storeKey);
     } catch (GeneralSecurityException e) {
       throw new FabricGeneralSecurityException(e);
     }
-    
+
     return new MakePrincipalMessage.Response(principalOnum, cert,
         certificateChain);
   }
@@ -300,16 +295,15 @@ class Store extends MessageToStoreHandler {
       StalenessCheckMessage message) throws AccessException {
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling Staleness Check Message from {0}", nameOf(p));
-    return new StalenessCheckMessage.Response(tm.checkForStaleObjects(p, message.versions));
+    return new StalenessCheckMessage.Response(tm.checkForStaleObjects(p,
+        message.versions));
   }
-  
+
   /**
    * @return true iff a subtransaction was created for making Statistics
    *         objects.
    */
-  private boolean prepareTransaction(
-      Principal p,
-      long tid, long commitTime,
+  private boolean prepareTransaction(Principal p, long tid, long commitTime,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites, LongKeyMap<Integer> reads)
       throws TransactionPrepareFailedException {
@@ -320,12 +314,11 @@ class Store extends MessageToStoreHandler {
 
     sm.createSurrogates(req);
 
-    boolean subTransactionCreated =
-        tm.prepare(p, req);
+    boolean subTransactionCreated = tm.prepare(p, req);
 
     return subTransactionCreated;
   }
-  
+
   private String nameOf(Principal p) {
     return p == null ? "BOTTOM" : ("fab://" + p.$getStore().name() + "/" + p
         .$getOnum());

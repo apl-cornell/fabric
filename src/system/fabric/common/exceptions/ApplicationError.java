@@ -19,7 +19,7 @@ public class ApplicationError extends Error {
     super(msg, cause);
     report();
   }
-  
+
   private void report() {
     System.err.println("Creating ApplicationError exception:");
     System.err.println("================ BEGIN STACK TRACE ================");

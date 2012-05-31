@@ -29,7 +29,7 @@ public class WorkerShell {
   public WorkerShell(Worker worker, CommandSource commandSource) {
     this.worker = worker;
     this.commandSource = commandSource;
-    
+
     this.out = System.out;
 
     // Set up the command handlers.
@@ -77,7 +77,8 @@ public class WorkerShell {
       }
     });
 
-    this.handlers.put("time", new CommandHandler("Times a worker shell command.") {
+    this.handlers.put("time", new CommandHandler(
+        "Times a worker shell command.") {
       @Override
       public void handle(List<String> commandLine) throws HandlerException {
         String command = commandLine.get(0);
@@ -93,11 +94,12 @@ public class WorkerShell {
         try {
           handler.handle(args);
         } finally {
-          System.out.println("   Run time: " + (System.currentTimeMillis()-startTime) + " ms");
+          System.out.println("   Run time: "
+              + (System.currentTimeMillis() - startTime) + " ms");
         }
       }
     });
-    
+
     this.handlers.put("help", new CommandHandler("[CMD]", "Displays a help "
         + "message for CMD.") {
       final int SCREEN_WIDTH = 76;

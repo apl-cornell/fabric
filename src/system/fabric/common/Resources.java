@@ -9,18 +9,18 @@ import java.io.*;
  * Manages the loading of configuration files
  */
 public class Resources {
-  public static String relpathRewrite(String...relpath) {
+  public static String relpathRewrite(String... relpath) {
     String filename = prefix;
     for (String name : relpath)
       filename += File.separator + name;
-    
+
     return filename;
   }
-  
+
   public static File getFile(String... relpath) {
     return new File(relpathRewrite(relpath));
   }
-  
+
   public static InputStream readFile(String... relpath) throws IOException {
     return new FileInputStream(relpathRewrite(relpath));
   }

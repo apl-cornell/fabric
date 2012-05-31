@@ -22,7 +22,7 @@ public class SignatureCleaner extends NodeVisitor {
       decl = decl.superClass(null);
       return decl;
     }
-    
+
     if (n instanceof ClassBody) {
       // Remove everything except Polyglot's type info and nested classes.
       ClassBody body = (ClassBody) n;
@@ -33,7 +33,7 @@ public class SignatureCleaner extends NodeVisitor {
           members.add(member);
           continue;
         }
-        
+
         if (member instanceof FieldDecl) {
           FieldDecl field = (FieldDecl) member;
           if (field.name().startsWith("jlc$")) {
@@ -42,10 +42,10 @@ public class SignatureCleaner extends NodeVisitor {
           }
         }
       }
-      
+
       return body.members(members);
     }
-    
+
     return n;
   }
 
