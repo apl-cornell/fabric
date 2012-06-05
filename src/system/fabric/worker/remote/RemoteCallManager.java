@@ -65,8 +65,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       Log log = TransactionRegistry.getOrCreateInnermostLog(tid);
       tm.associateAndSyncLog(log, tid);
 
-      // Merge in the update map we got.
-      tm.getUpdateMap().putAll(remoteCallMessage.updateMap);
+      // Merge in the writer map we got.
+      tm.getWriterMap().putAll(remoteCallMessage.writerMap);
     }
 
     try {
@@ -108,8 +108,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       });
 
       // Return the result.
-      UpdateMap updateMap = TransactionManager.getInstance().getUpdateMap();
-      return new RemoteCallMessage.Response(result, updateMap);
+      WriterMap writerMap = TransactionManager.getInstance().getWriterMap();
+      return new RemoteCallMessage.Response(result, writerMap);
     } catch (RuntimeException e) {
       Throwable cause = e.getCause();
       if (cause instanceof IllegalArgumentException

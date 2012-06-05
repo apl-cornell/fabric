@@ -14,7 +14,7 @@ import fabric.lang.security.SecurityCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
-import fabric.worker.remote.UpdateMap;
+import fabric.worker.remote.WriterMap;
 
 /**
  * Stores per-transaction information. Records the objects that are created,
@@ -38,7 +38,7 @@ public final class Log {
   /**
    * A map indicating where to fetch objects from.
    */
-  UpdateMap updateMap;
+  WriterMap writerMap;
 
   /**
    * The sub-transaction.
@@ -152,7 +152,7 @@ public final class Log {
     if (parent != null) {
       try {
         Timing.SUBTX.begin();
-        this.updateMap = new UpdateMap(parent.updateMap);
+        this.writerMap = new WriterMap(parent.writerMap);
         synchronized (parent) {
           parent.child = this;
         }
@@ -164,7 +164,7 @@ public final class Log {
         Timing.SUBTX.end();
       }
     } else {
-      this.updateMap = new UpdateMap(this.tid.topTid);
+      this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
       this.securityCache = new SecurityCache(null);
 
@@ -390,9 +390,9 @@ public final class Log {
       securityCache.reset();
 
       if (parent != null) {
-        updateMap = new UpdateMap(parent.updateMap);
+        writerMap = new WriterMap(parent.writerMap);
       } else {
-        updateMap = new UpdateMap(tid.topTid);
+        writerMap = new WriterMap(tid.topTid);
       }
 
       if (retrySignal != null) {
@@ -505,9 +505,9 @@ public final class Log {
     // Replace the parent's security cache with the current cache.
     parent.securityCache.set((SecurityCache) securityCache);
 
-    // Merge the update map.
-    synchronized (parent.updateMap) {
-      parent.updateMap.putAll(updateMap);
+    // Merge the writer map.
+    synchronized (parent.writerMap) {
+      parent.writerMap.putAll(writerMap);
     }
 
     synchronized (parent) {

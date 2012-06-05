@@ -9,7 +9,7 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
 import fabric.worker.remote.RemoteCallException;
-import fabric.worker.remote.UpdateMap;
+import fabric.worker.remote.WriterMap;
 
 public class RemoteCallMessage
      extends Message<RemoteCallMessage.Response, RemoteCallException>
@@ -19,7 +19,7 @@ public class RemoteCallMessage
   //////////////////////////////////////////////////////////////////////////////
 
   public final TransactionID tid;
-  public final UpdateMap updateMap;
+  public final WriterMap writerMap;
   public final FabricClassRef receiverType;
   public final _Proxy receiver;
   public final String methodName;
@@ -28,8 +28,7 @@ public class RemoteCallMessage
 
   /**
    * @param tid
-   *          The identifier for the transaction in which the remote call is
-   *          being made.
+   *          The identifier for the transaction that is making the remote call.
    * @param receiver
    *          The object that is receiving the call.
    * @param methodName
@@ -37,7 +36,7 @@ public class RemoteCallMessage
    * @param args
    *          The arguments to the method.
    */
-  public RemoteCallMessage(TransactionID tid, UpdateMap updateMap,
+  public RemoteCallMessage(TransactionID tid, WriterMap writerMap,
       FabricClassRef receiverType, _Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args) {
     super(MessageType.REMOTE_CALL, RemoteCallException.class);
@@ -47,7 +46,7 @@ public class RemoteCallMessage
       throw new IllegalArgumentException();
 
     this.tid = tid;
-    this.updateMap = updateMap;
+    this.writerMap = writerMap;
     this.receiverType = receiverType;
     this.receiver = receiver;
     this.methodName = methodName;
@@ -61,11 +60,11 @@ public class RemoteCallMessage
 
   public static class Response implements Message.Response {
     public final Object result;
-    public final UpdateMap updateMap;
+    public final WriterMap writerMap;
 
-    public Response(Object result, UpdateMap updateMap) {
+    public Response(Object result, WriterMap writerMap) {
       this.result = result;
-      this.updateMap = updateMap;
+      this.writerMap = writerMap;
     }
   }
 
@@ -88,8 +87,8 @@ public class RemoteCallMessage
     out.writeBoolean(tid != null);
     if (tid != null) tid.write(out);
 
-    out.writeBoolean(updateMap != null);
-    if (updateMap != null) updateMap.write(out);
+    out.writeBoolean(writerMap != null);
+    if (writerMap != null) writerMap.write(out);
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -129,8 +128,8 @@ public class RemoteCallMessage
     else this.tid = null;
 
     if (in.readBoolean())
-      this.updateMap = new UpdateMap(in);
-    else this.updateMap = null;
+      this.writerMap = new WriterMap(in);
+    else this.writerMap = null;
 
     byte[] buf = new byte[in.readInt()];
     in.readFully(buf);
@@ -179,7 +178,7 @@ public class RemoteCallMessage
   protected Response readResponse(DataInput in) throws IOException {
 
     Object    result;
-    UpdateMap updateMap;
+    WriterMap writerMap;
 
     if (in.readBoolean())
       result = Message.readRef(fabric.lang.Object.class, in);
@@ -187,11 +186,11 @@ public class RemoteCallMessage
       result = readObject(in, Object.class);
 
     if (in.readBoolean())
-      updateMap = new UpdateMap(in);
+      writerMap = new WriterMap(in);
     else
-      updateMap = null;
+      writerMap = null;
 
-    return new Response(result, updateMap);
+    return new Response(result, writerMap);
   }
 
   @Override
@@ -203,8 +202,8 @@ public class RemoteCallMessage
       writeObject(out, r.result);
     }
 
-    out.writeBoolean(updateMap != null);
-    if (updateMap != null) updateMap.write(out);
+    out.writeBoolean(writerMap != null);
+    if (writerMap != null) writerMap.write(out);
   }
 
 }

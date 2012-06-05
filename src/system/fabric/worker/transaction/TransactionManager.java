@@ -47,7 +47,7 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
-import fabric.worker.remote.UpdateMap;
+import fabric.worker.remote.WriterMap;
 
 /**
  * Holds transaction management information for a single thread. Each thread has
@@ -766,7 +766,7 @@ public final class TransactionManager {
       // Own the object. The call to ensureOwnership is responsible for adding
       // the object to the set of created objects.
       ensureOwnership(obj);
-      current.updateMap.put(obj.$getProxy(), obj.get$$updateLabel());
+      current.writerMap.put(obj.$getProxy(), obj.get$$updateLabel());
     } finally {
       Timing.TXLOG.end();
     }
@@ -775,7 +775,7 @@ public final class TransactionManager {
   public void registerRead(_Impl obj) {
     synchronized (obj) {
       if (obj.$reader == current
-          && obj.$updateMapVersion == current.updateMap.version) return;
+          && obj.writerMapVersion == current.writerMap.version) return;
 
       // Nothing to do if we're not in a transaction.
       if (current == null) return;
@@ -825,7 +825,7 @@ public final class TransactionManager {
     obj.$reader = current;
 
     // Reset the object's update-map version stamp.
-    obj.$updateMapVersion = -1;
+    obj.writerMapVersion = -1;
 
     current.acquireReadLock(obj);
     if (hadToWait)
@@ -843,7 +843,7 @@ public final class TransactionManager {
 
     synchronized (obj) {
       if (obj.$writer == current
-          && obj.$updateMapVersion == current.updateMap.version && obj.$isOwned)
+          && obj.writerMapVersion == current.writerMap.version && obj.$isOwned)
         return needTransaction;
 
       try {
@@ -956,14 +956,14 @@ public final class TransactionManager {
   private void ensureOwnership(_Impl obj) {
     if (obj.$isOwned) return;
 
-    // Check the update map to see if another worker currently owns the object.
-    RemoteWorker owner = current.updateMap.getUpdate(obj.$getProxy());
+    // Check the writer map to see if another worker currently owns the object.
+    RemoteWorker owner = current.writerMap.getWriter(obj.$getProxy());
     if (owner != null)
       owner.takeOwnership(current.tid, obj.$getStore(), obj.$getOnum());
 
     // We now own the object.
     obj.$isOwned = true;
-    current.updateMap.put(obj.$getProxy(), Worker.getWorker().getLocalWorker());
+    current.writerMap.put(obj.$getProxy(), Worker.getWorker().getLocalWorker());
 
     // If the object is fresh, add it to our set of creates.
     if (obj.$version == 0) {
@@ -980,18 +980,18 @@ public final class TransactionManager {
   }
 
   /**
-   * Checks the update map and fetches from the object's owner as necessary.
+   * Checks the writer map and fetches from the object's owner as necessary.
    * This method assumes we are synchronized on the object.
    */
   private void ensureObjectUpToDate(_Impl obj) {
     // Check the object's update-map version stamp.
-    if (obj.$updateMapVersion == current.updateMap.version) return;
+    if (obj.writerMapVersion == current.writerMap.version) return;
 
     // Set the update-map version stamp on the object.
-    obj.$updateMapVersion = current.updateMap.version;
+    obj.writerMapVersion = current.writerMap.version;
 
-    // Check the update map.
-    RemoteWorker owner = current.updateMap.getUpdate(obj.$getProxy());
+    // Check the writer map.
+    RemoteWorker owner = current.writerMap.getWriter(obj.$getProxy());
     if (owner == null || owner == Worker.getWorker().getLocalWorker()) return;
 
     // Need to fetch from the owner.
@@ -1172,9 +1172,9 @@ public final class TransactionManager {
     return current.tid;
   }
 
-  public UpdateMap getUpdateMap() {
+  public WriterMap getWriterMap() {
     if (current == null) return null;
-    return current.updateMap;
+    return current.writerMap;
   }
 
   /**
@@ -1183,11 +1183,11 @@ public final class TransactionManager {
    *         created by the current transaction and is owned by that worker.
    */
   public RemoteWorker getFetchWorker(_Proxy proxy) {
-    if (current == null || !current.updateMap.containsCreate(proxy))
+    if (current == null || !current.writerMap.containsCreate(proxy))
       return null;
-    Label label = current.updateMap.getCreate(proxy);
+    Label label = current.writerMap.getCreate(proxy);
 
-    return current.updateMap.getUpdate(proxy, label);
+    return current.writerMap.getWriter(proxy, label);
   }
 
   public SecurityCache getSecurityCache() {

@@ -66,7 +66,7 @@ public final class RemoteWorker extends RemoteNode {
     tm.registerRemoteCall(this);
  
     TransactionID tid = tm.getCurrentTid();
-    UpdateMap updateMap = tm.getUpdateMap();
+    WriterMap writerMap = tm.getWriterMap();
 
     @SuppressWarnings("unchecked")
     Class<? extends fabric.lang.Object> receiverClass =
@@ -75,7 +75,7 @@ public final class RemoteWorker extends RemoteNode {
     FabricClassRef receiverClassRef = new FabricClassRef(receiverClass);
 
     RemoteCallMessage.Response response =
-        send(new RemoteCallMessage(tid, updateMap, receiverClassRef, receiver,
+        send(new RemoteCallMessage(tid, writerMap, receiverClassRef, receiver,
             methodName, parameterTypes, args));
 
     // Commit any outstanding subtransactions that occurred as a result of the
@@ -83,9 +83,9 @@ public final class RemoteWorker extends RemoteNode {
     Log innermost = TransactionRegistry.getInnermostLog(tid.topTid);
     tm.associateAndSyncLog(innermost, tid);
 
-    // Merge in the update map we got.
-    if (response.updateMap != null)
-      tm.getUpdateMap().putAll(response.updateMap);
+    // Merge in the writer map we got.
+    if (response.writerMap != null)
+      tm.getWriterMap().putAll(response.writerMap);
 
     return response.result;
   }

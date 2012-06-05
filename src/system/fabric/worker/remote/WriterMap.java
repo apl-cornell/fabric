@@ -29,7 +29,7 @@ import fabric.worker.Worker;
  * Maps proxies to the host that holds the most up-to-date copy of that object.
  * Also maps proxies of newly created objects to their corresponding labels.
  */
-public class UpdateMap implements FastSerializable {
+public class WriterMap implements FastSerializable {
 
   /**
    * The transaction ID for the topmost transaction that this map is a part of.
@@ -43,16 +43,17 @@ public class UpdateMap implements FastSerializable {
 
   /**
    * Maps hash(oid, object key) to (iv, enc(hostname, object key, iv)).
+   * TODO include top-level TID in hash.
    */
-  private Map<Hash, Pair<byte[], byte[]>> updates;
+  private Map<Hash, Pair<byte[], byte[]>> writers;
 
   /**
-   * Cache for "update" entries and non-entries that have been discovered.
+   * Cache for "writers" entries and non-entries that have been discovered.
    */
   private OidKeyHashMap<RemoteWorker> readCache;
 
   /**
-   * Cache for "update" entries that haven't been encrypted yet.
+   * Cache for "writers" entries that haven't been encrypted yet.
    */
   private OidKeyHashMap<Pair<_Proxy, RemoteWorker>> writeCache;
 
@@ -63,9 +64,9 @@ public class UpdateMap implements FastSerializable {
    *          the transaction ID for the topmost transaction that this map is a
    *          part of.
    */
-  public UpdateMap(long tid) {
+  public WriterMap(long tid) {
     this.creates = new HashMap<Hash, Label>();
-    this.updates = new HashMap<Hash, Pair<byte[], byte[]>>();
+    this.writers = new HashMap<Hash, Pair<byte[], byte[]>>();
     this.readCache = new OidKeyHashMap<RemoteWorker>();
     this.writeCache = new OidKeyHashMap<Pair<_Proxy, RemoteWorker>>();
     this.version = 0;
@@ -75,9 +76,9 @@ public class UpdateMap implements FastSerializable {
   /**
    * Copy constructor.
    */
-  public UpdateMap(UpdateMap map) {
+  public WriterMap(WriterMap map) {
     this.creates = new HashMap<Hash, Label>(map.creates);
-    this.updates = new HashMap<Hash, Pair<byte[], byte[]>>(map.updates);
+    this.writers = new HashMap<Hash, Pair<byte[], byte[]>>(map.writers);
     this.readCache = new OidKeyHashMap<RemoteWorker>(map.readCache);
     this.writeCache =
         new OidKeyHashMap<Pair<_Proxy, RemoteWorker>>(map.writeCache);
@@ -88,7 +89,7 @@ public class UpdateMap implements FastSerializable {
   /**
    * Deserialization constructor.
    */
-  public UpdateMap(DataInput in) throws IOException {
+  public WriterMap(DataInput in) throws IOException {
     this(in.readLong());
     this.version = -1;
 
@@ -118,7 +119,7 @@ public class UpdateMap implements FastSerializable {
       creates.put(key, val);
     }
 
-    // Read updates.
+    // Read writers.
     size = in.readInt();
     for (int i = 0; i < size; i++) {
       byte[] buf = new byte[in.readInt()];
@@ -131,7 +132,7 @@ public class UpdateMap implements FastSerializable {
       byte[] data = new byte[in.readInt()];
       in.readFully(data);
 
-      updates.put(key, new Pair<byte[], byte[]>(iv, data));
+      writers.put(key, new Pair<byte[], byte[]>(iv, data));
     }
   }
 
@@ -148,10 +149,10 @@ public class UpdateMap implements FastSerializable {
     return creates.get(hash(proxy));
   }
 
-  public RemoteWorker getUpdate(_Proxy proxy) {
+  public RemoteWorker getWriter(_Proxy proxy) {
     // First, check the cache.
     if (readCache.containsKey(proxy)) return readCache.get(proxy);
-    if (updates.isEmpty()) return null;
+    if (writers.isEmpty()) return null;
 
     RemoteWorker result = slowLookup(proxy, getKey(proxy));
     readCache.put(proxy, result);
@@ -165,9 +166,9 @@ public class UpdateMap implements FastSerializable {
    * @param label
    *          the label corresponding to the given proxy.
    */
-  public RemoteWorker getUpdate(_Proxy proxy, Label label) {
+  public RemoteWorker getWriter(_Proxy proxy, Label label) {
     if (readCache.containsKey(proxy)) return readCache.get(proxy);
-    if (updates.isEmpty()) return null;
+    if (writers.isEmpty()) return null;
 
     RemoteWorker result = slowLookup(proxy, getKey(label));
     readCache.put(proxy, result);
@@ -177,7 +178,7 @@ public class UpdateMap implements FastSerializable {
   private RemoteWorker slowLookup(_Proxy proxy, byte[] encryptKey) {
     try {
       Hash mapKey = hash(proxy, encryptKey);
-      Pair<byte[], byte[]> encHost = updates.get(mapKey);
+      Pair<byte[], byte[]> encHost = writers.get(mapKey);
 
       if (encHost == null) return null;
 
@@ -188,7 +189,7 @@ public class UpdateMap implements FastSerializable {
 
       if (!isValidWriter(result, proxy)) {
         throw new TransactionAbortingException(
-            "Invalid update map entry found.");
+            "Invalid writer map entry found.");
       }
 
       return result;
@@ -222,14 +223,14 @@ public class UpdateMap implements FastSerializable {
   /**
    * Puts all the entries from the given map into this map.
    */
-  public void putAll(UpdateMap map) {
+  public void putAll(WriterMap map) {
     this.creates.putAll(map.creates);
 
-    if (map.updates.isEmpty()) return;
+    if (map.writers.isEmpty()) return;
 
     flushWriteCache();
     map.flushWriteCache();
-    this.updates.putAll(map.updates);
+    this.writers.putAll(map.writers);
     this.readCache.clear();
 
     if (map.version > version)
@@ -257,7 +258,7 @@ public class UpdateMap implements FastSerializable {
           Crypto.cipherInstance(Cipher.ENCRYPT_MODE, encryptKey, iv);
       Pair<byte[], byte[]> encHost =
           new Pair<byte[], byte[]>(iv, cipher.doFinal(worker.name.getBytes()));
-      updates.put(mapKey, encHost);
+      writers.put(mapKey, encHost);
     } catch (GeneralSecurityException e) {
       throw new InternalError(e);
     }
@@ -342,9 +343,9 @@ public class UpdateMap implements FastSerializable {
       } else out.writeBoolean(false);
     }
 
-    // Write updates.
-    out.writeInt(updates.size());
-    for (Map.Entry<Hash, Pair<byte[], byte[]>> entry : updates.entrySet()) {
+    // Write writers.
+    out.writeInt(writers.size());
+    for (Map.Entry<Hash, Pair<byte[], byte[]>> entry : writers.entrySet()) {
       Hash key = entry.getKey();
       Pair<byte[], byte[]> val = entry.getValue();
 
