@@ -6,6 +6,9 @@ public abstract class DelegatingPrincipal extends Principal {
    */
   public native DelegatingPrincipal fabric$lang$security$DelegatingPrincipal$();
 
+  public static native DelegatingPrincipal jif$cast$fabric_lang_security_DelegatingPrincipal(Object o);
+  public static native boolean jif$Instanceof$fabric_lang_security_DelegatingPrincipal(Object o);
+
   public abstract void addDelegatesTo(final Principal p);
   
   public abstract void removeDelegatesTo(final Principal p);

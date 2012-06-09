@@ -3,6 +3,7 @@ package fabric.translate;
 import java.util.ArrayList;
 import java.util.List;
 
+import jif.extension.JifCastDel;
 import jif.extension.JifInstanceOfDel;
 import jif.translate.ClassDeclToJavaExt_c;
 import jif.translate.InstanceOfToJavaExt_c;
@@ -18,53 +19,49 @@ import polyglot.ast.Instanceof;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.visit.NodeVisitor;
+import fabric.types.FabricClassType;
 import fabric.types.FabricSubstClassType_c;
+import fabric.types.FabricSubstType;
 import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricToFabilRewriter;
 
 public class InstanceOfToFabilExt_c extends InstanceOfToJavaExt_c {
   
   @Override
-  public NodeVisitor toJavaEnter(JifToJavaRewriter rw) throws SemanticException {
-    return super.toJavaEnter(rw);
-  }
-
-  @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     Instanceof io = (Instanceof)this.node();
     FabricTypeSystem ts = (FabricTypeSystem)rw.jif_ts();
+    FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
 
-    if (!((JifInstanceOfDel)io.del()).isToSubstJifClass()) {
-        return rw.java_nf().Instanceof(io.position(), io.expr(), io.compareType());
-    }
-
-    List<Expr> args = new ArrayList<Expr>();
-
-    // add all the actual param expressions to args
-    JifSubstType t = (JifSubstType)compareType;
-    JifSubst subst = (JifSubst)t.subst();
-    JifPolyType base = (JifPolyType)t.base();
-    for (ParamInstance pi : base.params()) {
-        args.add(rw.paramToJava(subst.get(pi)));
+    if (!ts.isJifClass(compareType)) {
+      return rw.java_nf().Instanceof(io.position(), io.expr(), io.compareType());
     }
     
+    List<Expr> args = new ArrayList<Expr>();
+    if (((JifInstanceOfDel) io.del()).isToSubstJifClass()) {
+      // add all the actual param expressions to args
+      FabricSubstType t = (FabricSubstType)compareType;
+      JifSubst subst = (JifSubst)t.subst();
+      JifPolyType base = (JifPolyType)t.base();
+      for (ParamInstance pi : base.params()) {
+          args.add(ffrw.paramToJava(subst.get(pi)));
+      }
+    }
     // add the actual expression being cast.
     args.add(io.expr());
     
     // add the access label
-    if (compareType instanceof FabricSubstClassType_c) {
-      FabricSubstClassType_c fpct = (FabricSubstClassType_c) compareType;
-      ConfPolicy cp = fpct.accessPolicy();
-      Label accessLabel = ts.pairLabel(cp.position(), cp, ts.topIntegPolicy(cp.position()));
-      Expr accessLabelExpr = rw.labelToJava(accessLabel);
-      args.add(accessLabelExpr);
-    }
-
-    String jifImplClass = ((JifSubstType)compareType).fullName();
-    if (((JifSubstType)compareType).flags().isInterface()) {
+    FabricClassType fct = (FabricClassType) compareType;
+//    ConfPolicy cp = fct.accessPolicy();
+//    Label accessLabel =
+//        ts.pairLabel(cp.position(), cp, ts.topIntegPolicy(cp.position()));
+//    Expr accessLabelExpr = ffrw.labelToJava(accessLabel);
+//    args.add(accessLabelExpr);
+      
+    String jifImplClass = fct.fullName();
+    if (fct.flags().isInterface()) {
         jifImplClass = ClassDeclToJavaExt_c.interfaceClassImplName(jifImplClass);
     }
-    return rw.qq().parseExpr(jifImplClass + "." + ClassDeclToFabilExt_c.INSTANCEOF_METHOD_NAME + "(%LE)", (Object)args);
+    return ffrw.qq().parseExpr(jifImplClass + "." + ClassDeclToFabilExt_c.INSTANCEOF_METHOD_NAME + "(%LE)", (Object)args);
   }
-  
-
 }

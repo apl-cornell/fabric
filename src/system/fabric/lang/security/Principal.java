@@ -105,6 +105,10 @@ public interface Principal extends fabric.lang.Object {
     public PrivateKeyObject getPrivateKeyObject() {
       return ((Principal) fetch()).getPrivateKeyObject();
     }
+    
+    public static Principal jif$cast$fabric_lang_security_Principal(Object o) {
+      return Principal._Impl.jif$cast$fabric_lang_security_Principal(o);
+    }
   }
 
   abstract public static class _Impl extends fabric.lang.Object._Impl implements
@@ -202,6 +206,11 @@ public interface Principal extends fabric.lang.Object {
       TransactionManager.getInstance().registerRead(this);
       return privateKeyObject;
     }
+    
+    public static Principal jif$cast$fabric_lang_security_Principal(Object o) {
+      //XXX: What is the right access label check??
+      return (Principal)fabric.lang.Object._Proxy.$getProxy(o);
+    }
   }
 
   interface _Static extends fabric.lang.Object, Cloneable {
@@ -234,7 +243,7 @@ public interface Principal extends fabric.lang.Object {
           throws UnreachableNodeException {
         super(store);
       }
-
+      
       @Override
       protected fabric.lang.Object._Proxy $makeProxy() {
         return new fabric.lang.security.Principal._Static._Proxy(this);

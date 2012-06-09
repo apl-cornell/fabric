@@ -101,6 +101,7 @@
            debuglevel="lines,vars,source">
       <classpath>
         <path refid="standard.classpath" />
+        <pathelement path="${fabric.home}/tests/playground/collections/classes" />
       </classpath>
     </javac>
   </target>
@@ -116,7 +117,6 @@
            vmlauncher="false">
       <arg value="${fabric.home}/bin/filc"/>
       <arg value="-d"          /> <arg value="${sif.classes}"/>
-      <arg value="-verbose"          />
       <arg value="-sourcepath" /> <arg value="${src}"/>
       <arg value="-bootclasspath"         /> <arg pathref="standard.classpath" />
       <srcfile />
@@ -169,7 +169,6 @@
       <arg value="${fabric.home}/bin/fabc" />
       <arg value="-g"   />
       <arg value="-bootclasspath"         /> <arg pathref="standard.classpath" />
-      <arg value="-v" />
       <arg value="-sig" />
       <arg value="-trusted-providers" />
       <arg value="-d"          /> <arg value="${sif.sig-classes}" />
@@ -188,3 +187,4 @@
 <!--
 vim: ts=2 sw=2 ai et
 -->
+

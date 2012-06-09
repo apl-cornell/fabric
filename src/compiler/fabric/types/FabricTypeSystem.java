@@ -55,11 +55,12 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   /**
    * Checks whether <code>type</code> is a Fabric class, 
    * that is, inherits <code>fabric.lang.Object</code>.
+   * Returns false if <code>type</code> is an interface. 
    */
   boolean isFabricClass(Type type);
   /**
-   * Checks whether <code>type</code> is a Fabric class, 
-   * that is, inherits <code>fabric.lang.Object</code>.
+   * Checks whether <code>type</code> is a Fabric interface, 
+   * and inherits <code>fabric.lang.Object</code>.
    */
   boolean isFabricInterface(Type type);
 

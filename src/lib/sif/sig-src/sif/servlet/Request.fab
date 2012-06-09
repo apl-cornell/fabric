@@ -28,6 +28,6 @@ public final class Request[principal servletP] extends java.lang.Object {
 //      public native String remoteAddr();
 //      public native String servletURL();
     public native String{this} contextURL();
-    public native SessionState[lbl,lbl] getSessionState(label lbl);
+    public native SessionState[lbl] getSessionState(label lbl);
     public native void invalidateSession{*:session;session:}();
 }

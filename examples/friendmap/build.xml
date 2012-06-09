@@ -88,8 +88,8 @@
 
   <target name="build-local-snapp" depends="build-util">
     <fabc-local srcdir="${home}/src/fabric/snapp_1.0_codebase">
+      <arg value="-debugpositions" />
       <!--
-      <arg value="-rdebug" />
       <arg value="-report" /> <arg value="debug=1" />
       <arg value="-report" /> <arg value="pc=1" />
       -->
@@ -106,11 +106,13 @@
 
   <target name="build-local-friendmap" depends="build-local-mapserv, build-local-snapp, build-util">
     <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" >
+        <arg line="-dump FabricToFabilRewriter" />
         <!--
+        <arg value="-rdebug" />
+        <arg line="-debugpositions" />
         <arg value="-report" /> <arg value="pc=1" />
         <arg value="-report" /> <arg value="solver=5" />
         <arg value="-debugpositions" />
-        <arg value="-rdebug" />
         <arg value="-report" /> <arg value="labelFlow=1" />
         -->
     </fabc-local>

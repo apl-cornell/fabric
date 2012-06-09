@@ -4,12 +4,12 @@ import javax.servlet.ServletException;
 import sif.servlet.*;
 import sif.html.*;
 
-import jif.util.*;
+import fabricated.util.*;
 
 public class LoginAction[principal servP] extends AbstractAction[servP] {
-    final AuthenticatedAction[servP]{this} successAction;
-    final Input[servP]{this} inpUserID;
-    final Input[servP]{this} inpPassword;
+    final AuthenticatedAction[servP]{this}@{servP->} successAction;
+    final Input[servP]{this}@{servP->} inpUserID;
+    final Input[servP]{this}@{servP->} inpPassword;
     
     public LoginAction(Servlet[servP]{this} servlet,
                        AuthenticatedAction[servP]{this} successAction, 
@@ -111,7 +111,7 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
 }
 
 class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
-    private final LoginAction[servP]{this} loginAct;
+    private final LoginAction[servP]{this}@{servP->} loginAct;
     public SubmitLoginAction(Servlet[servP]{this} s, LoginAction[servP]{this} loginAct) {
         this.loginAct = loginAct;
         super();

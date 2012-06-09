@@ -29,6 +29,7 @@ import polyglot.util.Position;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
 import fabric.types.FabricClassType;
+import fabric.types.FabricParsedClassType;
 import fabric.types.FabricParsedClassType_c;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
@@ -42,7 +43,10 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-
+    ClassDecl fabcd = (ClassDecl) node();
+    FabricParsedClassType fct = (FabricParsedClassType) fabcd.type();
+    FabricTypeSystem fabts = (FabricTypeSystem) rw.jif_ts();
+    
     ClassDecl cd = (ClassDecl) super.toJava(rw);
 
     cd = cd.body(addLabelInitializer(cd.body(), rw));
@@ -62,9 +66,31 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
         nf.Id(Position.compilerGenerated(), "worker$"),
         nf.Call(Position.compilerGenerated(), worker,
             nf.Id(Position.compilerGenerated(), "getWorker"))));
+    
+//    if (fabts.isJifClass(fct) && // fct is not a java signature
+//        fabts.isFabricClass(fct) && // fct extends Object and is not an interface
+//        !rw.jif_ts().isParamsRuntimeRep(fct)) { // fct is not parameterized
+//      // Also add instanceof and cast  
+//      // methods to non-parameterized classes
+//      members.add(produceInstanceOfMethod(fct, rw, false));
+//      members.add(produceCastMethod(fct, rw));
+//    }
     members.addAll(cd.body().members());
 
     return cd.body(cd.body().members(members));
+  }
+
+  @Override
+  protected boolean needsDynamicTypeMethods(JifToJavaRewriter rw,
+      JifPolyType jpt) {
+    FabricTypeSystem fabts = (FabricTypeSystem) rw.jif_ts();
+    return fabts.isFabricClass(jpt);
+  }
+
+  @Override
+  protected boolean needsImplClass(JifToJavaRewriter rw, JifPolyType jpt) {
+    FabricTypeSystem fabts = (FabricTypeSystem) rw.jif_ts();
+    return fabts.isFabricInterface(jpt); // fct is an interface
   }
 
   @Override
@@ -74,9 +100,13 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
     JifTypeSystem jifts = rw.jif_ts();
     List<Formal> formals = produceFormals(jpt, rw, true);
-
+    
     String name = jpt.name();
-
+    
+    // Replace "this" principal by its store.
+    Expr thisPrincipal = rw.qq().parseExpr("o.$getStore().getPrincipal()");
+    rw.setStaticThisPrincipal(thisPrincipal);
+    
     boolean sigMode = ((FabricToFabilRewriter) rw).inSignatureMode();
 
     if (!jifts.isJifClass(jpt) || sigMode) {
@@ -95,11 +125,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     ConfPolicy cp = fpct.accessPolicy();
     Label accessLabel = jifts.pairLabel(cp.position(), cp, jifts.topIntegPolicy(cp.position()));
     Expr accessLabelExpr = rw.labelToJava(accessLabel);
-    Expr storeLabelExpr = rw.qq().parseExpr(rw.runtimeLabelUtil() + 
-        ".readerPolicyLabel(" + frw.runtimePrincipalUtil() +
-        ".topPrincipal()"+", o.fetch().$getStore().getPrincipal())"); /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */
-    sb.append("if (!" + rw.runtimeLabelUtil() + ".relabelsTo(%E, %E)) " +
-    "throw new InternalError(\"Illegal Access to \" + o.$getStore());");
+    Expr objectExpr = rw.qq().parseExpr("o");
+    sb.append(rw.runtimeLabelUtil() + ".accessCheck(%E, %E);");
 
     if (jpt.params().isEmpty()) {
       sb.append("return (o instanceof %s);");
@@ -141,8 +168,10 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
       sb.append("return false;");
     }
     sb.append("}");
+    
+    rw.clearStaticThisPrincipal();
     return rw.qq().parseMember(sb.toString(), INSTANCEOF_METHOD_NAME, 
-        formals, accessLabelExpr, storeLabelExpr, name, name, name);
+        formals, accessLabelExpr, objectExpr, name, name, name);
   }
 
 
@@ -159,30 +188,30 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
           javaNf.Id(Position.compilerGenerated(), "o")));
     }
     
-    NodeFactory nf = rw.nodeFactory();
+//    NodeFactory nf = rw.nodeFactory();
 
     // add access policy formal
-
-    Formal al =
-        nf.Formal(Position.compilerGenerated(), Flags.FINAL,
-            rw.typeToJava(rw.jif_ts().Label(), Position.compilerGenerated()),
-            nf.Id(Position.compilerGenerated(), "jif$accessPolicy"));
-
-    formals.add(al);
-
+//
+//    Formal al =
+//        nf.Formal(Position.compilerGenerated(), Flags.FINAL,
+//            rw.typeToJava(rw.jif_ts().Label(), Position.compilerGenerated()),
+//            nf.Id(Position.compilerGenerated(), "jif$accessPolicy"));
+//
+//    formals.add(al);
+//
     return formals;
   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  protected List<Expr> produceParamArgs(JifPolyType jpt, JifToJavaRewriter rw) {
-    List<Expr> args = super.produceParamArgs(jpt, rw);
-
-    // add access policy arg
-    args.add(rw.qq().parseExpr("jif$accessPolicy"));
-
-    return args;
-  }
+//  @Override
+//  @SuppressWarnings("unchecked")
+//  protected List<Expr> produceParamArgs(JifPolyType jpt, JifToJavaRewriter rw) {
+//    List<Expr> args = super.produceParamArgs(jpt, rw);
+//
+////     add access policy arg
+//    args.add(rw.qq().parseExpr("jif$accessPolicy"));
+//
+//    return args;
+//  }
 
 
 

@@ -15,14 +15,14 @@
 
   <import file="../../common.xml" />
   <import file="${fabric.home}/src/lib/sif/common.xml" />
-  <import file="${fabric.home}/src/lib/transient/common.xml" />
 
   <dirname property="travel.home" file="${ant.file.travel}" />
 
   <path id="standard.classpath">
-    <path refid="transient.classpath" />
+    <path refid="fabric.classpath" />
     <path refid="sif.classpath" />
     <path refid="lib.classpath" />
+    <pathelement path="${fabric.home}/tests/playground/collections/classes" />
     <pathelement path="${travel.home}/classes" />
   </path>
 
@@ -64,9 +64,9 @@
       <arg value="-g"/>
       <arg value="-d"          /> <arg value="${travel.home}/classes"/>
       <arg value="-sourcepath" /> <arg value="${travel.home}/src" />
-      <arg value="-cp"         /> <arg pathref="standard.classpath" />
+      <arg value="-bootclasspath" /> <arg pathref="standard.classpath" />
       <arg value="-cp"         /> <arg value="${travel.home}/classes" />
-      <arg value="-sigcp"      /> <arg pathref="sif.sigcp"/>
+      <arg value="-addsigcp"      /> <arg pathref="sif.sigcp"/>
       <arg value="-e"/>
       <arg value="-trusted-providers"/>
       <!--
@@ -123,9 +123,9 @@
       <arg value="-g"/>
       <arg value="-d"          /> <arg value="${travel.home}/classes"/>
       <arg value="-sourcepath" /> <arg value="${travel.home}/src" />
-      <arg value="-cp"         /> <arg pathref="standard.classpath" />
+      <arg value="-bootclasspath"         /> <arg pathref="standard.classpath" />
       <arg value="-cp"         /> <arg value="${travel.home}/classes" />
-      <arg value="-sigcp"      /> <arg pathref="sif.sigcp"/>
+      <arg value="-addsigcp"      /> <arg pathref="sif.sigcp"/>
       <arg value="-e"/>
       <arg value="-trusted-providers"/>
 
