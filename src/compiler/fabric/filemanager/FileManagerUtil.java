@@ -33,6 +33,19 @@ public class FileManagerUtil {
     }
     return null;
   }
+  
+  public static boolean packageExists(Codebase codebase, String packageName) {
+    Set names = codebase.getClasses().entrySet();
+    for (Iterator it = names.iterator(); it
+        .hasNext();) {
+      Entry entry = (Entry) it.next();
+      String classname = (String) WrappedJavaInlineable.$unwrap(entry.getKey());
+      String pkgName = StringUtil.getPackageComponent(classname);
+      if (pkgName.startsWith(packageName))
+        return true;
+    }
+    return false;
+  }
 
   public static List<JavaFileObject> getJavaFileObjects(Codebase codebase,
       String packageName, boolean recurse) {

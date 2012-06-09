@@ -92,7 +92,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
 
   @Override
   public FileManager extFileManager() {
-    if (extFM == null) extFM = new FabricFileManager(this);
+    if (extFM == null) extFM = new FabricFileManager(this, getFabricOptions().needMemClassObjects());
     return extFM;
   }
 

@@ -1,10 +1,14 @@
 package fabric.filemanager;
 
+import static java.io.File.separatorChar;
+
 import java.lang.Iterable;
 import java.net.URI;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.tools.FileObject;
@@ -12,6 +16,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 
 import polyglot.frontend.FileSource;
+import polyglot.main.Options;
 import polyglot.util.InternalCompilerError;
 
 import codebases.frontend.ExtensionInfo;
@@ -27,10 +32,12 @@ import fabric.common.FabricLocationFactory;
  */
 public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
   private final ExtensionInfo extInfo;
+  private final boolean needMemClassObjects;
 
-  public FabricFileManager(ExtensionInfo extInfo) {
+  public FabricFileManager(ExtensionInfo extInfo, boolean needMemClassObjects) {
     super(extInfo);
     this.extInfo = extInfo;
+    this.needMemClassObjects = needMemClassObjects;
   }
 
   @Override
@@ -49,9 +56,63 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
                 + "." + clazz);
         return FileManagerUtil.getJavaFileObject(loc.getCodebase(), classname);
       }
-      return super.getFileForInput(loc, packageName, relativeName);
     }
     return super.getFileForInput(location, packageName, relativeName);
+  }
+
+  @Override
+  public JavaFileObject getJavaFileForOutput(Location location,
+      String className, Kind kind, FileObject sibling) throws IOException {
+    if (kind.equals(Kind.CLASS) && needMemClassObjects) {
+      Options options = extInfo.getOptions();
+      Location classOutputLoc = options.classOutputDirectory();
+      if (location == null || !classOutputLoc.equals(location)
+          || !javac_fm.hasLocation(classOutputLoc)) return null;
+      URI classUri, classParentUri;
+      if (sibling == null) {
+        File classdir = null;
+        for (File f : javac_fm.getLocation(classOutputLoc)) {
+          classdir = f;
+          break;
+        }
+        if (classdir == null)
+          throw new IOException("Class output directory is not set.");
+        File classfile =
+            new File(classdir, className.replace('.', separatorChar)
+                + kind.extension);
+        classUri = classfile.toURI();
+        classParentUri = classfile.getParentFile().toURI();
+      } else {
+        File classdir = new File(sibling.toUri()).getParentFile();
+        File classfile =
+            new File(classdir,
+                className.substring(className.lastIndexOf('.') + 1)
+                    + kind.extension);
+        classUri = classfile.toURI();
+        classParentUri = classfile.getParentFile().toURI();
+      }
+      JavaFileObject jfo = new ClassObject(classUri);
+      absPathObjMap.put(classUri, jfo);
+      if (pathObjectMap.containsKey(classParentUri))
+        pathObjectMap.get(classParentUri).add(jfo);
+      else {
+        Set<JavaFileObject> s = new HashSet<JavaFileObject>();
+        s.add(jfo);
+        pathObjectMap.put(classParentUri, s);
+      }
+      return jfo;
+    }
+    return super.getJavaFileForOutput(location, className, kind, sibling);
+  }
+
+  @Override
+  public boolean packageExists(Location location, String name) {
+    if (location instanceof FabricLocation) {
+      FabricLocation loc = (FabricLocation) location;
+      if (loc.isFabricReference())
+        return FileManagerUtil.packageExists(loc.getCodebase(), name);
+    }
+    return super.packageExists(location, name);
   }
 
   @Override
@@ -108,7 +169,6 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
       if (loc.isFabricReference())
         return FileManagerUtil.getJavaFileObjects(loc.getCodebase(),
             packageName, recurse);
-      return super.list(loc, packageName, kinds, recurse);
     }
     return super.list(location, packageName, kinds, recurse);
   }

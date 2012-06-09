@@ -33,6 +33,7 @@ public class FabILOptions_c extends polyglot.main.Options implements
     FabILOptions {
   public FabricLocation source_output_dir;
   public FabricLocation class_output_dir;
+  public boolean needMemClassObjects;
   /**
    * Whether we're running in signature mode.
    */
@@ -111,6 +112,7 @@ public class FabILOptions_c extends polyglot.main.Options implements
   @Override
   public void setDefaultValues() {
     super.setDefaultValues();
+    this.needMemClassObjects = false;
     this.fully_qualified_names = true;
     this.signatureMode = false;
     this.dumpDependencies = false;
@@ -218,6 +220,9 @@ public class FabILOptions_c extends polyglot.main.Options implements
     } else if (args[index].equals("-platform-mode")) {
       index++;
       platform_mode = true;
+    } else if (args[index].equals("-need-mem-class-objects")) {
+      index++;
+      needMemClassObjects = true;
     } else if (!args[index].startsWith("-")) {
       URI u = URI.create(args[index]);
       if (u.isAbsolute()) {
@@ -416,6 +421,11 @@ public class FabILOptions_c extends polyglot.main.Options implements
   @Override
   public boolean needWorker() {
     return needWorker;
+  }
+  
+  @Override
+  public boolean needMemClassObjects() {
+    return needMemClassObjects;
   }
 
   private Set<FabricLocation> processPathString(String path) {

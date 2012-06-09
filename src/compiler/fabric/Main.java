@@ -38,6 +38,7 @@ import polyglot.util.QuotedStringTokenizer;
 import polyglot.util.StdErrorQueue;
 import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
+import fabric.filemanager.ClassObject;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.worker.AbortException;
@@ -100,6 +101,7 @@ public class Main extends polyglot.main.Main {
       args.add("-bootclasspath");
       args.add(worker.bootcp);
     }
+    args.add("-need-mem-class-objects");
 
     URI cb = NSUtil.namespace(fcls.getCodebase());
     // XXX: It might be better to use a URI method here, but
@@ -111,8 +113,8 @@ public class Main extends polyglot.main.Main {
       main.start(args.toArray(new String[0]), extInfo);
 
       Collection<JavaFileObject> outputFiles = main.compiler.outputFiles();
-      FabricLocation outputDirectory =
-          extInfo.getFabricOptions().outputDirectory();
+      int outputDirPathLen = extInfo.getFabricOptions().outputDirectory().getUri().getPath().length();
+      Map<URI, JavaFileObject> absPathObjMap = extInfo.extFileManager().getAbsPathObjMap();
       String[] suffixes =
           new String[] { "$_Impl", "$_Proxy", "$_Static", "$_Static$_Impl",
               "$_Static$_Proxy" };
@@ -122,25 +124,27 @@ public class Main extends polyglot.main.Main {
         String baseFileName = fname.substring(0, e);
         String baseClassName =
             baseFileName
-                .substring(outputDirectory.getUri().getPath().length());
+                .substring(outputDirPathLen);
         baseClassName = baseClassName.replace(File.separator, ".");
         // load base class file
         File classFile = new File(baseFileName + ".class");
-        if (classFile.exists()) {
+        URI classUri = classFile.toURI();
+        if (absPathObjMap.containsKey(classUri)) {
           if (Report.should_report(Topics.mobile, 2))
             Report.report(1, "Inserting bytecode for " + classFile);
-          bytecodeMap.put(baseClassName, getBytecode(classFile));
+          bytecodeMap.put(baseClassName, getBytecode(absPathObjMap.get(classUri)));
         }
 
         // load member classes
         for (int i = 0; i < suffixes.length; i++) {
           String fileName = baseFileName + suffixes[i];
           classFile = new File(fileName + ".class");
-          if (classFile.exists()) {
+          classUri = classFile.toURI();
+          if (absPathObjMap.containsKey(classUri)) {
             if (Report.should_report(Topics.mobile, 2))
               Report.report(1, "Inserting bytecode for " + classFile);
             bytecodeMap
-                .put(baseClassName + suffixes[i], getBytecode(classFile));
+                .put(baseClassName + suffixes[i], getBytecode(absPathObjMap.get(classUri)));
           }
         }
       }
@@ -360,6 +364,12 @@ public class Main extends polyglot.main.Main {
 
   }
 
+  protected static byte[] getBytecode(FileObject fo) throws IOException {
+    if (fo instanceof ClassObject)
+      return ((ClassObject) fo).getBytes();
+    throw new IOException("Unknown Class Object encountered");
+  }
+  
   protected static byte[] getBytecode(File classfile) throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     FileInputStream in = new FileInputStream(classfile);

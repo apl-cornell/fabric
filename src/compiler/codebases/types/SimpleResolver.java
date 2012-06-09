@@ -1,5 +1,8 @@
 package codebases.types;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import polyglot.frontend.Source;
 import polyglot.frontend.SourceLoader;
 import polyglot.main.Report;
@@ -16,6 +19,7 @@ import fabric.common.FabricLocation;
 public class SimpleResolver extends NamespaceResolver_c {
   protected final ClassFileLoader classfileLoader;
   protected final SourceLoader sourceLoader;
+  protected final Set<String> noClassCache;
   protected boolean load_raw = false;
   protected boolean load_enc = true;
   protected boolean load_src = true;
@@ -30,6 +34,7 @@ public class SimpleResolver extends NamespaceResolver_c {
     super(extInfo, namespace, parent);
     this.classfileLoader = extInfo.classFileLoader();
     this.sourceLoader = extInfo.sourceLoader();
+    noClassCache = new HashSet<String>();
     this.ignore_mod_times = extInfo.getOptions().ignore_mod_times;
   }
 
@@ -154,6 +159,7 @@ public class SimpleResolver extends NamespaceResolver_c {
    * @return ClassFile with encoded type info or null.
    */
   protected ClassFile loadFile(String name) {
+    if (noClassCache.contains(name)) return null;
     try {
       ClassFile clazz = classfileLoader.loadFile(namespace, name);
 
@@ -162,22 +168,22 @@ public class SimpleResolver extends NamespaceResolver_c {
           Report.report(4, "ClassFile for " + name + " not found in "
               + namespace);
         }
-      } else {
-        if (Report.should_report(REPORT_TOPICS, 4)) {
-          Report.report(4, "Class " + name + " found in " + namespace);
-        }
-        if (clazz.encodedClassType(extInfo.version().name()) != null) {
-          if (Report.should_report(REPORT_TOPICS, 4))
-            Report
-                .report(4, "ClassFile for " + name + " has encoded type info");
-        }
-        return clazz;
+        noClassCache.add(name);
+        return null;
       }
+      if (Report.should_report(REPORT_TOPICS, 4)) {
+        Report.report(4, "Class " + name + " found in " + namespace);
+      }
+      if (clazz.encodedClassType(extInfo.version().name()) != null) {
+        if (Report.should_report(REPORT_TOPICS, 4))
+          Report.report(4, "ClassFile for " + name + " has encoded type info");
+      }
+      return clazz;
     } catch (ClassFormatError e) {
       if (Report.should_report(REPORT_TOPICS, 4))
         Report.report(4, "Class " + name + " format error");
+      return null;
     }
-    return null;
   }
 
   @Override

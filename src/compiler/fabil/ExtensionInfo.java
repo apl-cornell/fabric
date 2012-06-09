@@ -91,7 +91,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
 
   @Override
   public FileManager extFileManager() {
-    if (extFM == null) extFM = new FabricFileManager(this);
+    if (extFM == null) extFM = new FabricFileManager(this, getFabILOptions().needMemClassObjects());
     return extFM;
   }
 

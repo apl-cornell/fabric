@@ -39,5 +39,7 @@ public interface FabILOptions {
   boolean platformMode();
 
   boolean needWorker();
+  
+  boolean needMemClassObjects();
 
 }

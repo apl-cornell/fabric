@@ -289,15 +289,12 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   public boolean needWorker() {
     return delegate.needWorker() || needWorker;
   }
-
-  /*
-   * @Override public String constructPostCompilerClasspath() { StringBuilder sb
-   * = new StringBuilder(super.constructPostCompilerClasspath()); for (URI u :
-   * bootclasspath()) { sb.append(File.pathSeparator); sb.append(u.getPath()); }
-   * for (URI u : classpath()) { sb.append(File.pathSeparator);
-   * sb.append(u.getPath()); } return sb.toString(); }
-   */
-
+  
+  @Override
+  public boolean needMemClassObjects() {
+    return delegate.needMemClassObjects();
+  }
+  
   /**
    * Should source be published to Fabric? Always false in signature or platform
    * modes.
