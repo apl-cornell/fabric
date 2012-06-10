@@ -3,9 +3,9 @@ package travel;
 import fabric.util.Map;
 
 public class Broker[principal bank, principal customer] extends AbstractPrincipal { // on broker worker (and store)
-    final Account[bank]{this←} customerAcct;
-    final Account[bank]{this←} airlineAcct;
-    final principal{this←} airline;
+    final Account[bank]{this←}@{this->} customerAcct;
+    final Account[bank]{this←}@{this->} airlineAcct;
+    final principal{this←}@{this->} airline;
     final Tickets[bank, airline, customer]{this←} custTickets;
 
     public boolean{bank->customerAcct.user; this←; bank<-; airline<-; customer←} coordinatePurchase{}(

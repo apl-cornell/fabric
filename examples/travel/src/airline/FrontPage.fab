@@ -39,7 +39,8 @@ public class FrontPage extends AuthenticatedAction[AirlinePrincipal] authority (
         
         atomic {
             // Display the front page only if the logged in user is the airline principal
-            if (currentUser equiv AirlinePrincipal) {
+            if (currentUser equiv AirlinePrincipal 
+                && lbl <= new label {AirlinePrincipal->}) {
                 FabricWorker w = worker$;
                 if (w == null) throw new ServletException("Internal Error");
                 final Store store = worker$.getStore(Config.airlineStoreName);

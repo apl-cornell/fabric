@@ -38,7 +38,8 @@ public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (Ban
 
         atomic {
             // Display the front page only for the bank principal
-            if (currentUser equiv BankPrincipal) {
+            if (currentUser equiv BankPrincipal
+                && lbl <= new label {BankPrincipal->}) {
                 FabricWorker w = worker$;
                 if (w == null) throw new ServletException("Internal Error");
                 final Store store = worker$.getStore(Config.bankStoreName);

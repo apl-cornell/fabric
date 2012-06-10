@@ -4,8 +4,8 @@ import fabric.util.Map;
 
 public class Tickets[principal bank, principal airline, principal user]  { // on airline store and worker
 
-    int {airline←} num_tickets;
-    int {airline←} total_tickets;
+    int {airline←}@{airline->} num_tickets;
+    int {airline←}@{airline->} total_tickets;
     Tickets{airline←}() {
         num_tickets = 0;
         total_tickets = 5;
