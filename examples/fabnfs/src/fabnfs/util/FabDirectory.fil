@@ -13,14 +13,14 @@ public class FabDirectory extends FileSystemObject {
 
     public FabDirectory(String name, FabDirectory parent, String fullPath) {
         super(name, parent, fullPath);
-        dirElements = (HashMap)(new HashMap().$initLabels());
+        dirElements = (HashMap)(new HashMap().fabric$util$HashMap$());
 
     }
 
     /* This returns the root directory */
     public FabDirectory() {
         super("");
-        dirElements = (HashMap)(new HashMap().$initLabels());
+        dirElements = (HashMap)(new HashMap().fabric$util$HashMap$());
     }
 
     public FileSystemObject getFile(String name) {
