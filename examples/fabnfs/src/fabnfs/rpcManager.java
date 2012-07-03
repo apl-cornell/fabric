@@ -8,7 +8,7 @@ class rpcManager extends java.lang.Object  implements RPCConsts {
   Hashtable handlers;
 
   // control debugging output
-  boolean debug = false;
+  boolean debug = true;
 
   rpcManager(int portNumber) {
     socket = new UDPPacketPort(portNumber);
@@ -34,7 +34,7 @@ class rpcManager extends java.lang.Object  implements RPCConsts {
       PacketCollector pc = (PacketCollector) packets.Get();
       if (pc != null) {
         DatagramPacket packet = pc.Packet();
-//        System.out.println("Server: Received UDP Packet - " + packet.getAddress() + ":" + packet.getPort() + "(" + packet.getSocketAddress() + ")" + arrayToString(packet.getData(), packet.getOffset(), packet.getLength()));
+        System.out.println("Server: Received UDP Packet - " + packet.getAddress() + ":" + packet.getPort() + "(" + packet.getSocketAddress() + ")" + arrayToString(packet.getData(), packet.getOffset(), packet.getLength()));
         Dispatch(new XDRPacket(packet));
         pc.Done();
       }
