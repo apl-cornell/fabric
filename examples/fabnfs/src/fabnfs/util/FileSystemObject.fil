@@ -18,6 +18,7 @@ public class FileSystemObject {
         this.fullPath = fullPath;
         if (parent == null) {
             throw new NullPointerException();
+
         }
     }
 
@@ -25,6 +26,7 @@ public class FileSystemObject {
 //        this.parent = parent;
 //        if (parent == null) {
 //            throw new NullPointerException();
+
 //        }
 //    }
 
@@ -36,6 +38,7 @@ public class FileSystemObject {
         this.lastModifiedDate = System.currentTimeMillis();
         if (parent == null) {
             throw new NullPointerException();
+
         }
     }
 
@@ -46,6 +49,7 @@ public class FileSystemObject {
         this.lastModifiedDate = System.currentTimeMillis();
         if (parent == null) {
             throw new NullPointerException();
+
         }
     }
 
@@ -53,6 +57,7 @@ public class FileSystemObject {
         if (deleted) {
             System.out.println("Inode: Deleting an already deleted file!!");
             throw new NullPointerException();
+
         }
         if (parent == null) {
             System.out.println("Inode: Parent is unexpectedly null");

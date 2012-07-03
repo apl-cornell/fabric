@@ -11,12 +11,14 @@ public class RandomAccessFileImpl implements RandomAccessFile {
     int currentPos;
 
     public RandomAccessFileImpl(Store remoteStore, String path) throws IOException {
-        this.file = new FileImpl(remoteStore, path);
+        this.file = (FileImpl)new FileImpl(remoteStore, path).$initLabels();
+
 
         if (!file.exists()) {
 //            System.err.println("File " + path + " does not exist. Creating it...");
             if (!file.mkfile()) {
                 throw new IOException("Cannot find or create file: " + path);
+
             }
         }
         fabFile = file.element;

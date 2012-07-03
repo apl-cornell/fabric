@@ -6,15 +6,15 @@ import java.io.IOException;
 public class FileSystemFactoryImpl implements FileSystemFactory {
 
     public File makeFile(Store store, Store remoteStore, String name) {
-        return new FileImpl@store(remoteStore, name);
+        return (FileImpl)new FileImpl@store(remoteStore, name).$initLabels();
     }
 
     public RandomAccessFile makeRAFile(Store localStore, Store store, String path) throws IOException {
-        return new RandomAccessFileImpl@localStore(store, path);
+        return (RandomAccessFileImpl)new RandomAccessFileImpl@localStore(store, path).$initLabels();
     }
 
     public FileInputStream makeFIStream(Store localStore, Store store, String name) throws IOException {
-        return new FileInputStreamImpl@localStore(store, name);
+        return (FileInputStreamImpl)new FileInputStreamImpl@localStore(store, name).$initLabels();
     }
 
 }

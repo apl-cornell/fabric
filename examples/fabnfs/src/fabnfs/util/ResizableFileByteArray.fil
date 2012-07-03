@@ -6,32 +6,34 @@ public class ResizableFileByteArray {
   /**
    * The backing array.
    */
-  private byteArray data;
+  private byte[] data;
 
   public ResizableFileByteArray() {
-    data = new byteArray(0);
+    data = new byte[0];
   }
 
   public int getLength() {
-    return data.getLength();
+    return data.length;
   }
 
   public void setLength(int length) {
-    data.setLength(length);
+    data.length = length;
   }
 
   public byte get(int i) {
-    return data.get(i);
+    return data[i];
   }
 
   public byte set(int i, byte val) {
-    return data.set(i, val);
+    byte old = data[i];
+    data[i] = val;
+    return old;
   }
 
   /* This method really needs to be optimized */
   public int get(int i, FileByteArray barray) {
     for (int j = i; j < i + barray.length(); j++) {
-      barray.set(j - i, data.get(j));
+      barray.set(j - i, data[j]);
     }
     return barray.length();
   }

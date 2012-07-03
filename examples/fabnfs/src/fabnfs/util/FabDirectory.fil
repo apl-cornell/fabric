@@ -13,13 +13,14 @@ public class FabDirectory extends FileSystemObject {
 
     public FabDirectory(String name, FabDirectory parent, String fullPath) {
         super(name, parent, fullPath);
-        dirElements = new HashMap();
+        dirElements = (HashMap)(new HashMap().$initLabels());
+
     }
 
     /* This returns the root directory */
     public FabDirectory() {
         super("");
-        dirElements = new HashMap();
+        dirElements = (HashMap)(new HashMap().$initLabels());
     }
 
     public FileSystemObject getFile(String name) {
@@ -37,6 +38,7 @@ public class FabDirectory extends FileSystemObject {
             FileSystemObject fso = (FileSystemObject)dirElements.remove(name);
             if (fso == null) {
                 throw new NullPointerException();
+
             }
 //            System.out.println(this.toString() + ": Removed " + name + " from " + fileName + "(" + fullPath + ")" + ": " + listString());
             return fso;
@@ -53,7 +55,8 @@ public class FabDirectory extends FileSystemObject {
 
     public FabDirectory mkdir(String name, String path) {
         atomic {
-            FabDirectory subdir = new FabDirectory(name, this, path);
+            FabDirectory subdir = (FabDirectory)(new FabDirectory(name, this, path).$initLabels());
+
             dirElements.put(name, subdir);
 //            System.out.println(this.toString() + ": Created Directory " + name + " and added it to " + fileName + "(" + fullPath + ")" + ": " + listString());
             return subdir;
@@ -62,7 +65,8 @@ public class FabDirectory extends FileSystemObject {
 
     public FabFile mkfile(String name, String path) {
         atomic {
-            FabFile file = new FabFile(name, this, path);
+            FabFile file = (FabFile)(new FabFile(name, this, path).$initLabels());
+
             dirElements.put(name, file);
 //            System.out.println(this.toString() + ": Created " + name + " and added it to " + fileName + "(" + fullPath + ")" + ": " + listString());
             return file;
@@ -75,6 +79,7 @@ public class FabDirectory extends FileSystemObject {
             int size = coll.size();
 //          System.out.println(this.toString() + ": Directory " + fileName + " has #elements = " + size + " out of " + dirElements.size());
             StringArray toReturn = new StringArray(size);
+
             int i = 0;
             for (Iterator it = coll.iterator(); it.hasNext(); ) {
                 toReturn.set(i++, ((FileSystemObject)it.next()).fileName);

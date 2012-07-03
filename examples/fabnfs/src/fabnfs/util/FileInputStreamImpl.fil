@@ -11,12 +11,15 @@ public class FileInputStreamImpl implements FileInputStream {
     int currentPos = 0;
 
     public FileInputStreamImpl(Store remoteStore, String fileName) throws IOException {
-        file = new FileImpl(remoteStore, fileName);
+        file = (FileImpl)new FileImpl(remoteStore, fileName).$initLabels();
+
         if (!file.exists()) {
             throw new IOException("File " + fileName + " does not exist");
+
         }
         if (!(file.element instanceof FabFile)) {
             throw new IOException("File " + fileName + " is a directory");
+
         }
         barray = ((FabFile)file.element).contents;
     }

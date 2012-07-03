@@ -15,7 +15,7 @@ public class NFSServer {
         Store remoteStore = Worker.getWorker().getStore(args[0]);
         FileSystemFactory factory = null;
 	atomic {
-	  factory = new FileSystemFactoryImpl@localStore();
+	  factory = (FileSystemFactory) new FileSystemFactoryImpl@localStore().$initLabels();
 	}
         unixnfs.startServer(localStore, remoteStore, factory, null);
     }

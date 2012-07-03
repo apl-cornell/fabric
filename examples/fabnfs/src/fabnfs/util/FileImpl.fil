@@ -39,6 +39,7 @@ public class FileImpl implements File {
             FabDirectory dir = rootDir;
 
             StringTokenizer tokenizer = new StringTokenizer(name, FileSystemObject.separatorChar);
+
             FileSystemObject obj = dir;
             String token = null;
             while(tokenizer.hasMoreTokens()) {

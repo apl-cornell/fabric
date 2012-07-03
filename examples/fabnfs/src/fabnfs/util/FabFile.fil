@@ -10,6 +10,7 @@ public class FabFile extends FileSystemObject {
 
     public FabFile(String name, FabDirectory parent, String fullPath) {
         super(name, parent, fullPath);
-        contents = new ResizableFileByteArray();
+        contents = (ResizableFileByteArray)new ResizableFileByteArray().$initLabels();
+
     }
 }
