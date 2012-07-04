@@ -10,8 +10,9 @@ public class FileInputStreamImpl implements FileInputStream {
 
     int currentPos = 0;
 
-    public FileInputStreamImpl(Store remoteStore, String fileName) throws IOException {
-        file = (FileImpl)new FileImpl(remoteStore, fileName).$initLabels();
+    public FileInputStreamImpl fabnfs$util$FileInputStreamImpl(Store remoteStore, String fileName) throws IOException {
+        fabric$lang$Object$();
+        file = (FileImpl)new FileImpl().fabnfs$util$FileImpl(remoteStore, fileName);
 
         if (!file.exists()) {
             throw new IOException("File " + fileName + " does not exist");
@@ -22,6 +23,7 @@ public class FileInputStreamImpl implements FileInputStream {
 
         }
         barray = ((FabFile)file.element).contents;
+        return this;
     }
 
     public long skip(long n) {

@@ -8,9 +8,9 @@ public class FabFile extends FileSystemObject {
 
     ResizableFileByteArray contents;
 
-    public FabFile(String name, FabDirectory parent, String fullPath) {
-        super(name, parent, fullPath);
-        contents = (ResizableFileByteArray)new ResizableFileByteArray().$initLabels();
-
+    public FabFile fabnfs$util$FabFile(String name, FabDirectory parent, String fullPath) {
+        fabnfs$util$FileSystemObject(name, parent, fullPath);
+        contents = (ResizableFileByteArray)new ResizableFileByteArray().fabnfs$util$ResizableFileByteArray();
+        return this;
     }
 }

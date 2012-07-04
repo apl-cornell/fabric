@@ -10,8 +10,9 @@ public class RandomAccessFileImpl implements RandomAccessFile {
     FileSystemObject fabFile;
     int currentPos;
 
-    public RandomAccessFileImpl(Store remoteStore, String path) throws IOException {
-        this.file = (FileImpl)new FileImpl(remoteStore, path).$initLabels();
+    public RandomAccessFileImpl fabnfs$util$RandomAccessFileImpl(Store remoteStore, String path) throws IOException {
+        fabric$lang$Object$();
+        this.file = (FileImpl)new FileImpl().fabnfs$util$FileImpl(remoteStore, path);
 
 
         if (!file.exists()) {
@@ -28,6 +29,7 @@ public class RandomAccessFileImpl implements RandomAccessFile {
             contents = null;
         }
         currentPos = 0;
+        return this;
     }
 
     public void seek(long offset) {

@@ -31,7 +31,8 @@ public class FileSystemObject {
 //    }
 
 
-    public FileSystemObject(String name, FabDirectory parent, String fullPath) {
+    public FileSystemObject fabnfs$util$FileSystemObject(String name, FabDirectory parent, String fullPath) {
+        fabric$lang$Object$();
         this.fileName = name;
         this.parent = parent;
         this.fullPath = fullPath;
@@ -40,9 +41,11 @@ public class FileSystemObject {
             throw new NullPointerException();
 
         }
+        return this;
     }
 
-    FileSystemObject(String name) {
+    FileSystemObject fabnfs$util$FileSystemObject(String name) {
+        fabric$lang$Object$();
         this.fileName = name;
         this.parent = (FabDirectory)this;
         this.fullPath = separatorChar;
@@ -51,6 +54,7 @@ public class FileSystemObject {
             throw new NullPointerException();
 
         }
+        return this;
     }
 
     public void selfDestruct() {

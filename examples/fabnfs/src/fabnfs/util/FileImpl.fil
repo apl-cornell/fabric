@@ -25,9 +25,11 @@ public class FileImpl implements File {
     Store remoteStore;
 
     // attributes
-    public FileImpl(Store remoteStore, String name) {
+    public FileImpl fabnfs$util$FileImpl(Store remoteStore, String name) {
+        fabric$lang$Object$();
         this.name = name;
         this.remoteStore = remoteStore;
+        return this;
     }
 
     // all the methods in java.io.File

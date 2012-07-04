@@ -14,7 +14,7 @@ public class InitializeFS {
       }
 
       Store store = Worker.getWorker().getStore(args[0]);
-      FabDirectory rootDir = (FabDirectory)new FabDirectory@store().$initLabels();
+      FabDirectory rootDir = (FabDirectory)new FabDirectory@store().fabnfs$util$FabDirectory();
 
       HashMap map = (HashMap) store.getRoot();
 

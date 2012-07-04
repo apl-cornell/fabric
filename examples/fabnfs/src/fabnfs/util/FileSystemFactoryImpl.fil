@@ -5,16 +5,21 @@ import java.io.IOException;
 
 public class FileSystemFactoryImpl implements FileSystemFactory {
 
+    public FileSystemFactoryImpl fabnfs$util$FileSystemFactoryImpl() {
+        fabric$lang$Object$();
+        return this;
+    }
+    
     public File makeFile(Store store, Store remoteStore, String name) {
-        return (FileImpl)new FileImpl@store(remoteStore, name).$initLabels();
+        return (FileImpl)new FileImpl@store().fabnfs$util$FileImpl(remoteStore, name);
     }
 
     public RandomAccessFile makeRAFile(Store localStore, Store store, String path) throws IOException {
-        return (RandomAccessFileImpl)new RandomAccessFileImpl@localStore(store, path).$initLabels();
+        return (RandomAccessFileImpl)new RandomAccessFileImpl@localStore().fabnfs$util$RandomAccessFileImpl(store, path);
     }
 
     public FileInputStream makeFIStream(Store localStore, Store store, String name) throws IOException {
-        return (FileInputStreamImpl)new FileInputStreamImpl@localStore(store, name).$initLabels();
+        return (FileInputStreamImpl)new FileInputStreamImpl@localStore().fabnfs$util$FileInputStreamImpl(store, name);
     }
 
 }

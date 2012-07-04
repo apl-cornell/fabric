@@ -11,16 +11,17 @@ public class FabDirectory extends FileSystemObject {
      */
     private HashMap dirElements;
 
-    public FabDirectory(String name, FabDirectory parent, String fullPath) {
-        super(name, parent, fullPath);
+    public FabDirectory fabnfs$util$FabDirectory(String name, FabDirectory parent, String fullPath) {
+        fabnfs$util$FileSystemObject(name, parent, fullPath);
         dirElements = (HashMap)(new HashMap().fabric$util$HashMap$());
-
+        return this;
     }
 
     /* This returns the root directory */
-    public FabDirectory() {
-        super("");
+    public FabDirectory fabnfs$util$FabDirectory() {
+        fabnfs$util$FileSystemObject("");
         dirElements = (HashMap)(new HashMap().fabric$util$HashMap$());
+        return this;
     }
 
     public FileSystemObject getFile(String name) {
@@ -55,7 +56,7 @@ public class FabDirectory extends FileSystemObject {
 
     public FabDirectory mkdir(String name, String path) {
         atomic {
-            FabDirectory subdir = (FabDirectory)(new FabDirectory(name, this, path).$initLabels());
+            FabDirectory subdir = (FabDirectory)(new FabDirectory().fabnfs$util$FabDirectory(name, this, path));
 
             dirElements.put(name, subdir);
 //            System.out.println(this.toString() + ": Created Directory " + name + " and added it to " + fileName + "(" + fullPath + ")" + ": " + listString());
@@ -65,7 +66,7 @@ public class FabDirectory extends FileSystemObject {
 
     public FabFile mkfile(String name, String path) {
         atomic {
-            FabFile file = (FabFile)(new FabFile(name, this, path).$initLabels());
+            FabFile file = (FabFile)(new FabFile().fabnfs$util$FabFile(name, this, path));
 
             dirElements.put(name, file);
 //            System.out.println(this.toString() + ": Created " + name + " and added it to " + fileName + "(" + fullPath + ")" + ": " + listString());
