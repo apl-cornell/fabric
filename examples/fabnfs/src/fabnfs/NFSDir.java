@@ -143,7 +143,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
       if (dirfd == null)
         throw new NFSException(xid, NFSERR_NOENT);
 
-      String [] dirfiles = dirfd.list().contents;
+      String [] dirfiles = dirfd.list();
       if (dirfiles == null)
         throw new NFSException(xid, NFSERR_NOENT);
 //      System.out.println("dir has " + dirfiles.length + " entries");

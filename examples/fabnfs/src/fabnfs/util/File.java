@@ -1,7 +1,8 @@
 package fabnfs.util;
 
 public interface File {
-
+  static final int EOF = -1;
+  
   public boolean exists();
 
   public boolean isFile();
@@ -18,7 +19,7 @@ public interface File {
 
   public boolean delete();
 
-  public StringArray list();
+  public String[] list();
 
   public boolean mkdir();
 

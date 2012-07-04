@@ -1,12 +1,11 @@
 package fabnfs.util;
 
-import fabnfs.util.ResizableFileByteArray;
 import fabric.worker.Store;
 import java.io.IOException;
 
 public class RandomAccessFileImpl implements RandomAccessFile {
     FileImpl file;
-    ResizableFileByteArray contents;
+    byte[] contents;
     FileSystemObject fabFile;
     int currentPos;
 
@@ -16,7 +15,7 @@ public class RandomAccessFileImpl implements RandomAccessFile {
 
 
         if (!file.exists()) {
-//            System.err.println("File " + path + " does not exist. Creating it...");
+//            System.err.println("File " + path + " does not exi]st. Creating it...");
             if (!file.mkfile()) {
                 throw new IOException("Cannot find or create file: " + path);
 
@@ -36,14 +35,14 @@ public class RandomAccessFileImpl implements RandomAccessFile {
         currentPos += (int)offset;
     }
 
-    public void write(FileByteArray b, int off, int len) {
+    public void write(byte native[] b, int off, int len) {
         atomic {
             if (contents == null) return;
-            if (contents.getLength() < currentPos + len) {
-                contents.setLength(currentPos + len);
+            if (contents.length < currentPos + len) {
+                contents.length = currentPos + len;
             }
             for (int i = 0; i < len; i++) {
-                contents.set(currentPos + i, b.get(i+off));
+                contents[currentPos + i] = b[i+off];
             }
             fabFile.lastModifiedDate = System.currentTimeMillis();
         }

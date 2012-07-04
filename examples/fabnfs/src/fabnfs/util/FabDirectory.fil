@@ -74,16 +74,16 @@ public class FabDirectory extends FileSystemObject {
         }
     }
 
-    public StringArray list() {
+    public String native[] list() {
         atomic {
             Collection coll = dirElements.values();
             int size = coll.size();
 //          System.out.println(this.toString() + ": Directory " + fileName + " has #elements = " + size + " out of " + dirElements.size());
-            StringArray toReturn = new StringArray(size);
+            String native[] toReturn = new String native[size];
 
             int i = 0;
             for (Iterator it = coll.iterator(); it.hasNext(); ) {
-                toReturn.set(i++, ((FileSystemObject)it.next()).fileName);
+                toReturn[i++] = ((FileSystemObject)it.next()).fileName;
             }
             return toReturn;
         }

@@ -1,12 +1,12 @@
 package fabnfs.util;
 
-import fabnfs.util.ResizableFileByteArray;
 import fabric.worker.Store;
 import java.io.IOException;
+import fabnfs.util.File;
 
 public class FileInputStreamImpl implements FileInputStream {
     FileImpl file;
-    ResizableFileByteArray barray;
+    byte[] barray;
 
     int currentPos = 0;
 
@@ -31,13 +31,23 @@ public class FileInputStreamImpl implements FileInputStream {
         return n;
     }
 
-    public int read(FileByteArray fbarray) {
-        return barray.get(currentPos, fbarray);
-
+    public int read(byte native[] fbarray) {
+        System.err.println("currentPos: " + currentPos);
+        System.err.println("array length: " + barray.length);
+        int i = 0;
+        while (i < fbarray.length) {
+          byte b = (byte)read();
+          if (b == File.EOF)
+            break;
+          fbarray[i++] = b;
+        }
+        return i;
     }
 
     public int read() {
-        return barray.get(currentPos++);
+        if (currentPos >= barray.length)
+          return File.EOF;
+        return barray[currentPos++];
     }
 
     public void close() {

@@ -1,16 +1,13 @@
 package fabnfs.util;
 
-import fabnfs.util.ResizableFileByteArray;
-
 public class FabFile extends FileSystemObject {
 
     // file attributes should be here
-
-    ResizableFileByteArray contents;
+    byte[] contents;
 
     public FabFile fabnfs$util$FabFile(String name, FabDirectory parent, String fullPath) {
         fabnfs$util$FileSystemObject(name, parent, fullPath);
-        contents = (ResizableFileByteArray)new ResizableFileByteArray().fabnfs$util$ResizableFileByteArray();
+        contents = new byte[0];
         return this;
     }
 }

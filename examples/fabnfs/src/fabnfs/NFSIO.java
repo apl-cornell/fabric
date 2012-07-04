@@ -4,7 +4,6 @@ import fabnfs.util.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import fabnfs.util.RandomAccessFile;
-import fabnfs.util.FileByteArray;
 
 
 class NFSIO implements NFSConsts, RPCConsts {
@@ -43,7 +42,7 @@ class NFSIO implements NFSConsts, RPCConsts {
 
             RandomAccessFile fd = fsinfo.factory.makeRAFile(fsinfo.localStore, fsinfo.store, fileName);
 	    fd.seek(offset);
-	    fd.write(new FileByteArray(packet.Data()), (int) packetOffset, (int) datalen);
+	    fd.write(packet.Data(), (int) packetOffset, (int) datalen);
 	    fd.close();
 
 	    // load in new file attributes
@@ -89,8 +88,9 @@ class NFSIO implements NFSConsts, RPCConsts {
 	    }
 
 	    FileInputStream fd = fsinfo.factory.makeFIStream(fsinfo.localStore, fsinfo.store, fileName);
+	    
 	    fd.skip(offset);
-            FileByteArray readbuf = new FileByteArray((int) count);
+            byte[] readbuf = new byte[(int) count];
 	    int numberRead = fd.read(readbuf);
 	    fd.close();
 	    // XXX comment out prints to improve performance
@@ -113,7 +113,7 @@ class NFSIO implements NFSConsts, RPCConsts {
 	    reply.AddReplyHeader(xid);
 	    reply.AddLong(NFS_OK);
 	    fa.Emit(reply);
-	    reply.AddData(numberRead, readbuf.contents);
+	    reply.AddData(numberRead, readbuf);
 
 	    return reply;
 

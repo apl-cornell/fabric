@@ -129,7 +129,7 @@ public class FileImpl implements File {
         }
     }
 
-    public StringArray list() {
+    public String native[] list() {
         atomic {
             if (!isDirectory()) {
                 return null;
@@ -206,7 +206,7 @@ public class FileImpl implements File {
                 return false;
             }
             FabFile file = (FabFile)element;
-            file.contents.setLength(0);
+            file.contents.length = 0;
             return true;
         }
     }
@@ -220,7 +220,7 @@ public class FileImpl implements File {
                 return 0;
             }
             FabFile file = (FabFile)element;
-            return file.contents.getLength();
+            return file.contents.length;
         }
     }
 
