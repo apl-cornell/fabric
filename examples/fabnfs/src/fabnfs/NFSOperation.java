@@ -14,7 +14,7 @@ class NFSOperation extends java.lang.Object implements Runnable, NFSConsts,
   }
 
   public void run() {
-    for (;;) {
+    while (true) {
       final NFSItem next = (NFSItem) input.Get();
       try {
         // System.out.print("thread waiting on nfs item queue\n");
@@ -22,9 +22,6 @@ class NFSOperation extends java.lang.Object implements Runnable, NFSConsts,
         // next.xid);
   
         // wrapping this up in a transaction of its own
-        boolean commit = true;
-        fabric.worker.transaction.TransactionManager.getInstance()
-            .startTransaction();
         Worker.runInTopLevelTransaction(new Worker.Code<Void>() {
           public Void run() {
             handler.Run(next.port, next.xid, next.procedure, next.packet);
