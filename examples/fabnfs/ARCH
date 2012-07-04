@@ -1,0 +1,59 @@
+#Two services are implemented. A Port Mapper service on PMAP_PORT=111 and the NFS service on NFS_PORT=2049.
+#Each service is implemented using the RPC protocol via an instance of rpcManager
+
+===rpcManager===
+#The 'MainLoop' of an RPC Manager collects udp packets and invokes the 'Run' method of the appropriate handler
+
+#4 threads to collect and add packets to a common list
+./fabnfs/PacketCollector.java:10:class PacketCollector extends java.lang.Object  implements Runnable {
+./fabnfs/rpcManager.java:27:    for (int i = 0; i < 4; i++)
+./fabnfs/rpcManager.java:28:    {
+./fabnfs/rpcManager.java:29:      PacketCollector pc = new PacketCollector(socket, packets);
+./fabnfs/rpcManager.java:30:      new Thread(pc).start();
+./fabnfs/rpcManager.java:31:    }    
+
+#processing happens synchronously in the current thread
+./fabnfs/rpcManager.java:33:    for (;;) {
+./fabnfs/rpcManager.java:34:      PacketCollector pc = (PacketCollector) packets.Get();
+./fabnfs/rpcManager.java:35:      if (pc != null) {
+./fabnfs/rpcManager.java:36:        DatagramPacket packet = pc.Packet();
+./fabnfs/rpcManager.java:37:        System.out.println("Server: Received UDP Packet - " + packet.getAddress() + ":" + packet.getPort() + "(" + packet.getSocketAddress() + ")" + arrayToString(packet.getData(), packet.getOffset(), packet.getLength()));
+./fabnfs/rpcManager.java:38:        Dispatch(new XDRPacket(packet));
+./fabnfs/rpcManager.java:39:        pc.Done();
+./fabnfs/rpcManager.java:40:      }
+./fabnfs/rpcManager.java:41:    }
+
+
+===rpcManager for PMAP===
+#Only 1 Handler is registered
+
+==./fabnfs/portmap.java:18:	manager.RegisterHandler(pm);==
+#portMapHandler, Run method processes request synchronously in current thread
+#Only 1 thread is created which invokes 'MainLoop'
+./fabnfs/portmap.java:3:class portmap extends java.lang.Object  implements Runnable {
+./fabnfs/nfs.java:27:    Thread pmThread = null;// the portmapper thread
+./fabnfs/nfs.java:128:	    System.out.println("Starting portmapper.");
+./fabnfs/nfs.java:129:	    portmap pmap = new portmap();
+./fabnfs/nfs.java:130:	    pmThread = new Thread(pmap);
+./fabnfs/nfs.java:131:	    pmThread.start();
+./fabnfs/nfs.java:133:	    // give the portmap thread a little time to run
+./fabnfs/nfs.java:135:		Thread.currentThread().sleep(3 * 1000);
+    
+
+===rpcManager for NFS===
+#Two handlers are registered
+
+==./fabnfs/nfs.java:57:	rpcmanager.RegisterHandler(nfs);==
+#NFSMTHandler, Run method adds request to common queue
+#30 threads asynchronously fetch NFS requests one by one from a common queue and process them in a top-level transaction
+./fabnfs/NFSOperation.java:3:class NFSOperation extends java.lang.Object implements Runnable, NFSConsts,
+./fabnfs/NFSMTHandler.java:15:    for (int i = 0; i < 30; i++) {
+./fabnfs/NFSMTHandler.java:16:      NFSOperation op = new NFSOperation(packetq, handler);
+./fabnfs/NFSMTHandler.java:17:      new Thread(op).start();
+./fabnfs/NFSMTHandler.java:18:    }
+
+==./fabnfs/nfs.java:74:	rpcmanager.RegisterHandler(mountd);==
+#MountdHandler, Run method processes request synchronously in current thread
+
+
+

@@ -8,6 +8,7 @@ import java.net.DatagramPacket;
 //
 
 class PacketCollector extends java.lang.Object  implements Runnable {
+    // packets contains upto 4 instances of 'PacketCollector'
     MTList packets;
     UDPPacketPort socket;
     DatagramPacket packet;

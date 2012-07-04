@@ -1,3 +1,9 @@
+===Compiling FabNFS===
+
+Run ant
+
+===Running FabNFS===
+
 # ==Start the store==
 # Run this in one console
 
@@ -20,3 +26,7 @@ sudo ../../bin/fab-store --name brokerStore --app-home . --jvm-cp ./classes
 # Run this from a third console. Might need to use sudo. On an Apple Mac, remove the mountvers option.
 
 mount -t nfs -o mountvers=1 -o udp -o nfsvers=2 -o mountport=2049 host:/ /mount/point
+
+===Understanding FabNFS===
+
+Read the ARCH file for a high level view of the implementation
