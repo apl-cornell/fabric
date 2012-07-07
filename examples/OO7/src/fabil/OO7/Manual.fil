@@ -15,9 +15,11 @@ public class Manual {
   char[] text;
   Module mod;
 
-  public Manual(int size) {
+  public Manual OO7$Manual(int size) {
+    fabric$lang$Object$();     
     Label label = Worker.getWorker().getLocalStore().getEmptyLabel();
     text = new char[size]~label;
+    return this;
   }
 
   public void setTitle(String title) {

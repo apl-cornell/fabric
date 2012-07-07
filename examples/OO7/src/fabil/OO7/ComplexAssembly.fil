@@ -16,11 +16,12 @@ import fabric.util.LinkedList;
 public class ComplexAssembly extends Assembly {
   LinkedList subAssemblies;
 
-  public ComplexAssembly(Benchmark db) {
-    super(db);
+  public ComplexAssembly OO7$ComplexAssembly(Benchmark db) {
+    OO7$Assembly(db);
     db.complexAssembliesById.put(new Integer(id()), this);
 
-    subAssemblies = (LinkedList) new LinkedList().$initLabels();
+    subAssemblies = (LinkedList) new LinkedList().fabric$util$LinkedList$();
+    return this;
   }
 
   public void addSubAssembly(Assembly x) {

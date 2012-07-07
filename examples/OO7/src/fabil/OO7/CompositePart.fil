@@ -23,13 +23,14 @@ public class CompositePart extends DesignObject {
   
   AtomicPart rootPart;
 
-  public CompositePart(Benchmark db) {
-    super(db);
+  public CompositePart OO7$CompositePart(Benchmark db) {
+    OO7$DesignObject(db);
     db.compositePartsById.put(new Integer(id()), this);
 
-    usedInPriv = (LinkedList) new LinkedList().$initLabels();
-    usedInShar = (LinkedList) new LinkedList().$initLabels();
-    parts      = (LinkedList) new LinkedList().$initLabels();
+    usedInPriv = (LinkedList) new LinkedList().fabric$util$LinkedList$();
+    usedInShar = (LinkedList) new LinkedList().fabric$util$LinkedList$();
+    parts      = (LinkedList) new LinkedList().fabric$util$LinkedList$();
+    return this;
   }
 
   public void setDocumentation(Document d) {

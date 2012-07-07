@@ -16,11 +16,16 @@ import fabric.util.HashMap;
 public class T2b extends PrivatePartTraversal {
   HashMap visited = null;
 
+  public T2b OO7$traversals$T2b() {
+      OO7$traversals$PrivatePartTraversal();
+      return this;
+  }
+
   public static void main(String[] args) {
     Store local = Worker.getWorker().getLocalStore();
     T2b t2 = null;
     atomic {
-      t2 = (T2b) new T2b@local().$initLabels();
+      t2 = (T2b) new T2b@local().OO7$traversals$T2b();
     }
     t2.mainImpl(args);
   }
@@ -43,7 +48,7 @@ public class T2b extends PrivatePartTraversal {
 
   public void visitCompositePart (CompositePart p) {
     Store local = Worker.getWorker().getLocalStore();
-    visited = (HashMap) new HashMap@local().$initLabels();
+    visited = (HashMap) new HashMap@local().fabric$util$HashMap$();
     p.rootPart().accept(this);
     visited = null;
   }

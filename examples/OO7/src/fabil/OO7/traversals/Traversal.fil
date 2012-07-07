@@ -18,6 +18,11 @@ public abstract class Traversal {
   public abstract void visitAtomicPart      (AtomicPart      p);
   public abstract void visitCompositePart   (CompositePart   p);
 
+  public Traversal OO7$traversals$Traversal() {
+      fabric$lang$Object$();
+      return this;
+  }
+
   /** Handles loading the benchmark object and starting the traversal.  This
    *  method calls visitBenchmark(args[0]) */
   public void mainImpl(String[] args) {

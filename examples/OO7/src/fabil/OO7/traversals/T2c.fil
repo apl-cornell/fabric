@@ -18,11 +18,16 @@ public class T2c extends PrivatePartTraversal {
   HashMap visited = null;
   int     result  = 0;
 
+  public T2c OO7$traversals$T2c() {
+      OO7$traversals$PrivatePartTraversal();
+      return this;
+  }
+
   public static void main(String[] args) {
     Store local = Worker.getWorker().getLocalStore();
     T2c t2 = null;
     atomic {
-      t2 = (T2c) new T2c@local().$initLabels();
+      t2 = (T2c) new T2c@local().OO7$traversals$T2c();
     }
     t2.mainImpl(args);
   }
@@ -46,7 +51,7 @@ public class T2c extends PrivatePartTraversal {
   public void visitCompositePart (CompositePart p) {
     Store local = Worker.getWorker().getLocalStore();
     for (int i = 0; i < 4; i++) {
-      visited = (HashMap) new HashMap@local().$initLabels();
+      visited = (HashMap) new HashMap@local().fabric$util$HashMap$();
       p.rootPart().accept(this);
       result += visited.size();
       visited = null;

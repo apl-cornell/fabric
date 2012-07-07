@@ -16,13 +16,15 @@ public class Document {
   
   CompositePart part;
 
-  public Document(Benchmark db, int size) {
+  public Document OO7$Document(Benchmark db, int size) {
+    fabric$lang$Object$();     
     this.id = db.newId();
     db.documentsById.put(new Integer(id()), this);
 
     // TODO: generate different strings, and index
     Label label = Worker.getWorker().getLocalStore().getEmptyLabel();
     this.text = new char[size]~label;
+    return this;
   }
 
   public void setTitle(String title) {

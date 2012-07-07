@@ -16,13 +16,17 @@ public class Connection {
   AtomicPart from;
   AtomicPart to;
 
-  public Connection() {
+  public Connection OO7$Connection() {
+    fabric$lang$Object$();     
     type = new String("");
+    return this;
   }
 
-  public Connection(AtomicPart from, AtomicPart to) {
+  public Connection OO7$Connection(AtomicPart from, AtomicPart to) {
+    fabric$lang$Object$();     
     setFrom(from); from.addFrom(this);
     setTo(to);     to.addTo(this);
+    return this;
   }
 
   public void setType(String type) {

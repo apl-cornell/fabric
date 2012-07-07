@@ -11,6 +11,11 @@ import fabric.util.Iterator;
  */
 public abstract class PrivatePartTraversal extends Traversal {
 
+  public PrivatePartTraversal OO7$traversals$PrivatePartTraversal () {
+      OO7$traversals$Traversal();
+      return this;
+  }
+
   public void visitBenchmark (Benchmark b) {
     Iterator i = b.modulesById().values().iterator();
     while (i.hasNext())

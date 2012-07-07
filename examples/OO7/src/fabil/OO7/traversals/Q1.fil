@@ -1,6 +1,10 @@
 package OO7.traversals;
 
 public class Q1 {
+  public Q1 OO7$traversals$Q1() {
+      fabric$lang$Object$();
+      return this;
+  }
   /* TODO: extract into a separate traversal
   public void matchQuery() throws Exception {
     // generate a random list of objects to fetch

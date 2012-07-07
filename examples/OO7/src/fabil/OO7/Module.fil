@@ -19,11 +19,12 @@ public class Module extends DesignObject {
   LinkedList/*Assembly*/ assemblies;
   ComplexAssembly  designRoot;
 
-  public Module(Benchmark db) {
-    super(db);
+  public Module OO7$Module(Benchmark db) {
+    OO7$DesignObject(db);
     db.modulesById.put(new Integer(id()), this);
     
-    assemblies = (LinkedList) new LinkedList().$initLabels();
+    assemblies = (LinkedList) new LinkedList().fabric$util$LinkedList$();
+    return this;
   }
 
   public void setManual(Manual x) {

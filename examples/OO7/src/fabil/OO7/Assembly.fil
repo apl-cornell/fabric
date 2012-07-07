@@ -14,8 +14,9 @@ public abstract class Assembly extends DesignObject {
   ComplexAssembly superAssembly;
   Module          module;
 
-  public Assembly(Benchmark db) {
-    super(db);
+  public Assembly OO7$Assembly(Benchmark db) {
+    OO7$DesignObject(db);
+    return this;
   }
 
   public void setSuperAssembly(ComplexAssembly x) {

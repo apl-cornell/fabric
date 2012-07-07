@@ -24,13 +24,14 @@ public class AtomicPart extends DesignObject {
   List/*Connection*/ from;
   CompositePart partOf;
 
-  public AtomicPart(Benchmark db) {
-    super(db);
+  public AtomicPart OO7$AtomicPart(Benchmark db) {
+    OO7$DesignObject(db);
     
     db.atomicPartsById.put(new Integer(id()), this);
     
-    to   = (LinkedList) new LinkedList().$initLabels();
-    from = (LinkedList) new LinkedList().$initLabels();
+    to   = (LinkedList) new LinkedList().fabric$util$LinkedList$();
+    from = (LinkedList) new LinkedList().fabric$util$LinkedList$();
+    return this;
   }
   
   public void setBuildDate(long buildDate) {
