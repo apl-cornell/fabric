@@ -29,7 +29,6 @@ import polyglot.util.Position;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
 import fabric.types.FabricClassType;
-import fabric.types.FabricParsedClassType;
 import fabric.types.FabricParsedClassType_c;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
@@ -43,10 +42,6 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    ClassDecl fabcd = (ClassDecl) node();
-    FabricParsedClassType fct = (FabricParsedClassType) fabcd.type();
-    FabricTypeSystem fabts = (FabricTypeSystem) rw.jif_ts();
-    
     ClassDecl cd = (ClassDecl) super.toJava(rw);
 
     cd = cd.body(addLabelInitializer(cd.body(), rw));
@@ -97,7 +92,6 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   protected ClassMember produceInstanceOfMethod(JifPolyType jpt, JifToJavaRewriter rw, boolean useGetters) throws SemanticException {
     Context A = rw.context();
     rw = (JifToJavaRewriter)rw.context(A.pushStatic());
-    FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
     JifTypeSystem jifts = rw.jif_ts();
     List<Formal> formals = produceFormals(jpt, rw, true);
     

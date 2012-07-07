@@ -2,7 +2,6 @@ package fabric.translate;
 
 import jif.translate.DynamicPrincipalToJavaExpr_c;
 import jif.translate.JifToJavaRewriter;
-import jif.types.label.AccessPath;
 import jif.types.label.AccessPathField;
 import jif.types.label.AccessPathLocal;
 import jif.types.label.AccessPathThis;
@@ -12,7 +11,6 @@ import polyglot.ast.Expr;
 import polyglot.types.FieldInstance;
 import polyglot.types.LocalInstance;
 import polyglot.types.SemanticException;
-import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import fabil.ast.FabILNodeFactory;
 import fabric.types.FabricTypeSystem;

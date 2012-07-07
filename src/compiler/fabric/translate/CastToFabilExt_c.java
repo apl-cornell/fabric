@@ -9,8 +9,6 @@ import jif.translate.JifToJavaRewriter;
 import jif.types.JifPolyType;
 import jif.types.JifSubst;
 import jif.types.ParamInstance;
-import jif.types.label.ConfPolicy;
-import jif.types.label.Label;
 import polyglot.ast.Cast;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
