@@ -36,6 +36,12 @@ public abstract class Options {
    * Directory for caching dynamically compiled code 
    */
   public String codeCache;
+  
+  /**
+   * Whether to commit reads to stores. This is for timing testing, to see the
+   * ideal benefits of promises.
+   */
+  public static boolean DEBUG_COMMIT_READS = true;
 
 
   /**
@@ -438,6 +444,22 @@ public abstract class Options {
       @Override
       public int handle(String[] args, int index) {
         Options.this.bootcp = args[index];
+        return index + 1;
+      }
+    });
+    
+    flags.add(new Flag(Kind.SECRET, "--commit-reads", "<y|n>",
+        "whether to commit reads", "yes") {
+      @Override
+      public int handle(String[] args, int index) throws UsageError {
+        String param = args[index].toLowerCase();
+        if (param.equals("true") || param.equals("y") || param.equals("yes")) {
+          DEBUG_COMMIT_READS = true;
+        } else if (param.equals("false") || param.equals("n") || param.equals("no")) {
+          DEBUG_COMMIT_READS = false;
+        } else {
+          throw new UsageError("Invalid option parameter");
+        }
         return index + 1;
       }
     });

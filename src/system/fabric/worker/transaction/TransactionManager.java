@@ -22,11 +22,13 @@ import java.util.logging.Level;
 
 import fabric.common.FabricThread;
 import fabric.common.Logging;
+import fabric.common.Options;
 import fabric.common.SerializedObject;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.Object._Impl;
@@ -477,7 +479,9 @@ public final class TransactionManager {
         public void run() {
           try {
             Collection<_Impl> creates = current.getCreatesForStore(store);
-            LongKeyMap<Integer> reads = current.getReadsForStore(store, false);
+            LongKeyMap<Integer> reads =
+                Options.DEBUG_COMMIT_READS ? current.getReadsForStore(store,
+                    false) : new LongKeyHashMap<Integer>();
             Collection<_Impl> writes = current.getWritesForStore(store);
             boolean subTransactionCreated =
                 store.prepareTransaction(current.tid.topTid,

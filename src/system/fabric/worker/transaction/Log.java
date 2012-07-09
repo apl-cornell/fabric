@@ -2,6 +2,7 @@ package fabric.worker.transaction;
 
 import java.util.*;
 
+import fabric.common.Options;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.SysUtil;
@@ -207,7 +208,9 @@ public final class Log {
   Set<Store> storesToContact() {
     Set<Store> result = new HashSet<Store>();
 
-    result.addAll(reads.storeSet());
+    if (Options.DEBUG_COMMIT_READS) {
+      result.addAll(reads.storeSet());
+    }
 
     for (_Impl obj : writes) {
       if (obj.$isOwned) result.add(obj.$getStore());
