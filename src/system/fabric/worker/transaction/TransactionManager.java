@@ -106,11 +106,12 @@ public final class TransactionManager {
   public static boolean TRACE_WRITE_LOCKS = false;
 
   /**
-   * A map from OIDs to a version number and a list of logs for transactions
-   * that have read that version of the object. For each transaction tx, an
-   * object o is in tx.reads exactly when tx is in readList[o]. A transaction
-   * has acquired a read lock if its log is in this list. All entries in this
-   * list have non-empty <code>readLocks</code> sets.
+   * A map from OIDs to <code>ReadMapEntry</code>s. Each ReadMapEntry
+   * encapsulates a version number and a list of logs for transactions that have
+   * read that version of the object. For each transaction tx, an object o is in
+   * tx.reads exactly when tx is in readMap[o].readLocks. A transaction has
+   * acquired a read lock if its log is in this list. All entries in this list
+   * have non-empty <code>readLocks</code> sets.
    */
   // Proxy objects aren't used here because doing so would result in calls to
   // hashcode() and equals() on such objects, resulting in fetching the

@@ -7,10 +7,26 @@ import fabric.worker.FabricSoftRef;
 import fabric.worker.ObjectCache;
 import fabric.lang.Object._Impl;
 
+/***
+ * See {@link TransactionManager#readMap}.
+ */
 public final class ReadMapEntry {
+  /**
+   * The object to which this entry corresponds.
+   */
   FabricSoftRef obj;
-  List<Log> readLocks;
+  
+  /**
+   * The object's version number.
+   */
   int  versionNumber;
+  
+  /**
+   * A list of logs for transactions that have read this version of the object
+   * (as specified by obj and versionNumber).
+   */
+  List<Log> readLocks;
+  
   long promise;
   
   /**
