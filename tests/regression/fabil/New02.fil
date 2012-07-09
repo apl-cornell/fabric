@@ -1,0 +1,9 @@
+package fabil;
+
+public class New01 {
+  void m() {
+    Label l = null;
+    New01 o = new New01~l();
+  }
+}
+
