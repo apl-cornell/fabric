@@ -180,8 +180,9 @@ public class SubServerSocketFactory {
      */
     @Override
     public void run() {
+      ServerSocket sock = null;
       try {
-        ServerSocket sock = new ServerSocket(address.getPort(), 0, address.getAddress());
+        sock = new ServerSocket(address.getPort(), 0, address.getAddress());
         while (true) {
           try {
             recvConnection(sock.accept());
@@ -193,7 +194,12 @@ public class SubServerSocketFactory {
         // TODO
         throw new NotImplementedException(exc);
       } finally {
-        // TODO sock.close()
+        try {
+          if (sock != null) sock.close();
+        } catch (IOException e) {
+          // TODO
+          throw new NotImplementedException(e);
+        }
       }
     }
     

@@ -39,6 +39,12 @@ public class WorkerAdmin {
 
     // Successfully connected. Ensure we have commands to run.
     if (cmd == null) {
+      try {
+        socket.close();
+      } catch (IOException e) {
+        throw new InternalError(e);
+      }
+      
       throw new UsageError(
           "Worker already running. Must specify worker commands to execute.");
     }

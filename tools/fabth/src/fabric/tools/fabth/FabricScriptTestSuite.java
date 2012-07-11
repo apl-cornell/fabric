@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import fabric.tools.fabth.Grm;
 import polyglot.pth.ScriptTestSuite;
+import polyglot.pth.Test;
 
 public class FabricScriptTestSuite extends ScriptTestSuite {
 
@@ -15,11 +16,12 @@ public class FabricScriptTestSuite extends ScriptTestSuite {
     super(scriptFilename);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   protected boolean parseScript() {
     Grm grm = new Grm(this.scriptFile);
     try {
-      this.tests = (List) grm.parse().value;
+      this.tests = (List<Test>) grm.parse().value;
     } catch (Exception e) {
       e.printStackTrace();
       this.setFailureMessage("Parsing error: " + e + ":" + e.getMessage());

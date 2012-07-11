@@ -301,6 +301,7 @@ public final class NSUtil {
           BufferedReader lr =
               new BufferedReader(new FileReader(pathFile));
           path = lr.readLine();
+          lr.close();
           
         } catch (FileNotFoundException e) {
           throw new InternalCompilerError(e);

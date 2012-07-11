@@ -1,7 +1,5 @@
 package fabric.tools.fabth;
 
-import java.util.Iterator;
-
 import fabric.tools.fabth.Options;
 import polyglot.pth.OutputController;
 
@@ -32,9 +30,7 @@ public class Main extends polyglot.pth.Main {
 
     OutputController outCtrl = createOutputController(options);
 
-    for (Iterator iter = options.getInputFilenames().iterator(); iter
-        .hasNext();) {
-      String filename = (String) iter.next();
+    for (String filename : options.getInputFilenames()) {
       FabricScriptTestSuite t = new FabricScriptTestSuite(filename);
       t.setOutputController(outCtrl);
       if (options.shouldShowResultsOnly()) {

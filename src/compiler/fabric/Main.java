@@ -354,6 +354,7 @@ public class Main extends polyglot.main.Main {
       if (n >= 0) out.write(buf, 0, n);
     } while (n >= 0);
 
+    in.close();
     return out.toByteArray();
   }
 

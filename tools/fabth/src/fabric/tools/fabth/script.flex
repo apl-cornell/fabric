@@ -2,6 +2,7 @@ package fabric.tools.fabth;
 
 import java_cup.runtime.Symbol;
 
+@SuppressWarnings("all")
 %%
 %cup
 %public

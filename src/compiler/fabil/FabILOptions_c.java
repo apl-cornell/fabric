@@ -188,6 +188,7 @@ public class FabILOptions_c extends polyglot.main.Options implements
           BufferedReader lr =
               new BufferedReader(new FileReader(arg.substring(1)));
           addCodebaseAlias(lr.readLine());
+          lr.close();
         } catch (FileNotFoundException e) {
           throw new InternalCompilerError(e);
         } catch (IOException e) {
@@ -237,6 +238,7 @@ public class FabILOptions_c extends polyglot.main.Options implements
         BufferedReader lr =
             new BufferedReader(new FileReader(alias[1].substring(1)));
         cb = lr.readLine().replaceAll("[<>]", "");
+        lr.close();
       } catch (FileNotFoundException e) {
         throw new InternalCompilerError(e);
       } catch (IOException e) {
