@@ -20,10 +20,10 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     protected native boolean{this;p;this!:} superiorsContains(Principal p) where authority (this);
     
     public native boolean{authPrf; closure; lb; *lb; executeNow; this; this→; this←}
-        isAuthorized{this!:}(java.lang.Object authPrf, 
-                Closure[this, lb] closure,
-                label lb,
-                boolean executeNow) where authority (this);
+      isAuthorized{⊥→; this←}(java.lang.Object{this→} authPrf, 
+                Closure[this, lb]{this→} closure,
+                label{this→} lb,
+                boolean{this→} executeNow) where authority (this);
     
     
     public native ActsForProof[{c→}]{this;q;this!:;q!:;c} findProofDownto(Store c, Principal q, java.lang.Object searchState);

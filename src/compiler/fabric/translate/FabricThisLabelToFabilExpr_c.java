@@ -17,8 +17,7 @@ public class FabricThisLabelToFabilExpr_c extends LabelToJavaExpr_c implements
 
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     Expr loc = ffrw.currentLocation();
-    Expr workerPrincipal =
-        rw.qq().parseExpr("Worker.getWorker().getPrincipal()");
+    Expr workerPrincipal = rw.qq().parseExpr("Worker.getWorker().getPrincipal()");
     return rw.qq().parseExpr(
         rw.runtimeLabelUtil() + ".writerPolicyLabel(%E, %E, %E)", loc,
         workerPrincipal, workerPrincipal);

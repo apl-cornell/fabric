@@ -18,6 +18,7 @@ public class PrincipalUtil {
     public static native void notifyRevokeDelegation(Principal granter,
 						     Principal superior);
 
+    // This begin label should probably have side-effects at p
     public static native Capability[p, lb]
                 authorize(principal p, Object authPrf, Closure[p, lb] c, label lb);
                 

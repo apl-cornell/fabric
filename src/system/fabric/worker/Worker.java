@@ -89,6 +89,9 @@ public final class Worker {
   /** The directory for dynamically compiled mobile code */
   public String codeCache;
 
+  /** Flag for indicating if worker needs to cache compiled code in local file system */
+  public boolean outputToLocalFS;
+  
   /** The loader used by this worker for loading classes from fabric */
   public FabricClassLoader loader;
 
@@ -472,6 +475,7 @@ public final class Worker {
       worker.filsigcp = opts.filsigcp;
       worker.codeCache = opts.codeCache;
       worker.bootcp = opts.bootcp;
+      worker.outputToLocalFS = opts.outputToLocalFS;
 
       // Attempt to read the principal object to ensure that it exists.
       final NodePrincipal workerPrincipal = worker.getPrincipal();

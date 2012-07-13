@@ -48,6 +48,10 @@ public interface DelegatingPrincipal extends Principal {
     public static DelegatingPrincipal $addDefaultDelegates(DelegatingPrincipal p) {
       return DelegatingPrincipal._Impl.$addDefaultDelegates(p);
     }
+    
+    public static DelegatingPrincipal jif$cast$fabric_lang_security_DelegatingPrincipal(Object o) {
+      return DelegatingPrincipal._Impl.jif$cast$fabric_lang_security_DelegatingPrincipal(o);
+    }
   }
 
   public abstract static class _Impl extends Principal._Impl implements
@@ -86,5 +90,11 @@ public interface DelegatingPrincipal extends Principal {
 
     @Override
     public abstract void removeDelegatesTo(Principal p);
+    
+    public static DelegatingPrincipal jif$cast$fabric_lang_security_DelegatingPrincipal(
+        Object o) {
+      //XXX: What is the right access label check??
+      return (DelegatingPrincipal)fabric.lang.Object._Proxy.$getProxy(o);
+    }
   }
 }

@@ -5,10 +5,10 @@ import fabric.lang.security.Principal;
  * Global state for a single session.
  */
 
-public class SessionState[label T, label A] where T <= A, {} <= A {
+public class SessionState[label T] {
 
-    public final SessionPrincipal{T}@{A} sessionPrincipal;
-    public final String{T}@{A}    sessionId;
+    public final SessionPrincipal{T} sessionPrincipal;
+    public final String{T} sessionId;
 
     public SessionState(String{T} sessionId_, SessionPrincipal{T} session) {
         this.sessionPrincipal = session;
@@ -22,11 +22,11 @@ public class SessionState[label T, label A] where T <= A, {} <= A {
         super();
     }
     
-    public final String{T;this} getSessionId{A}() {
+    public final String{T;this} getSessionId() {
         return sessionId;
     }
 
-    public final SessionPrincipal{T;this} sessionPrincipal{A}() {
+    public final SessionPrincipal{T;this} sessionPrincipal() {
         return sessionPrincipal;
     }
 }

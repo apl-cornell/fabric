@@ -38,6 +38,11 @@ public abstract class Options {
   public String codeCache;
 
   /**
+   * Flag for indicating if worker needs to cache compiled code in local file system
+   */
+  public boolean outputToLocalFS;
+  
+  /**
    * Whether to turn off SSL encryption for debugging purposes.
    */
   public static boolean DEBUG_NO_SSL = false;
@@ -437,6 +442,14 @@ public abstract class Options {
       public int handle(String[] args, int index) {
         Options.this.bootcp = args[index];
         return index + 1;
+      }
+    });
+    flags.add(new Flag(Kind.SECRET, "-output-to-local-fs", "", 
+        "A flag for putting .class files to the local file system") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.outputToLocalFS = true;
+        return index;
       }
     });
 

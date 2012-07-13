@@ -81,7 +81,7 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         Report.report(3, "Adding codebase alias " + cd.name()
             + " to new codebase");
 
-      Codebase cb = NSUtil.fetch_codebase(cb_ns.getUri());
+      Codebase cb = cb_ns.getCodebase();
       if (cb == null)
         throw new SemanticException("Codebase " + cb_ns + " does not exist.");
       if (namespace.equals(cb_ns))

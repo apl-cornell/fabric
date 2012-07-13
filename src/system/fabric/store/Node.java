@@ -130,6 +130,7 @@ public class Node {
       worker.filsigcp = opts.filsigcp;
       worker.codeCache = opts.codeCache;
       worker.bootcp = opts.bootcp;
+      worker.outputToLocalFS = opts.outputToLocalFS;
 
       // initialize the store
       store.initialize();

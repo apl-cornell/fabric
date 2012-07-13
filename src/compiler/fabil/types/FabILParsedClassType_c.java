@@ -125,7 +125,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
     QQ qq = pr.qq();
     if (!canonical_ns.equals(extInfo.localNamespace())
         && !canonical_ns.equals(extInfo.platformNamespace())) {
-      Codebase codebase = NSUtil.fetch_codebase(canonical_ns.getUri());
+      Codebase codebase = canonical_ns.getCodebase();
       FClass fclass = codebase.resolveClassName(fullName());
       // Convert to an OID.
       String storeName = fclass.$getStore().name();

@@ -175,7 +175,7 @@ public interface Object {
 
       // Object has been evicted. Fetch from the network.
       try {
-        // Check the current transaction's update map.
+        // Check the current transaction's writer map.
         Timing.FETCH.begin();
         // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
         if (this instanceof FClass) {
@@ -469,7 +469,7 @@ public interface Object {
     /**
      * The version number on the last update-map that was checked.
      */
-    public int $updateMapVersion;
+    public int writerMapVersion;
 
     /**
      * A stack trace of where this object was created. Used for debugging.
@@ -492,7 +492,7 @@ public interface Object {
       this.$readMapEntry = TransactionManager.getReadMapEntry(this, expiry);
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
-      this.$updateMapVersion = -1;
+      this.writerMapVersion = -1;
 
       if (TRACE_OBJECTS)
         this.$stackTrace = Thread.currentThread().getStackTrace();
@@ -595,7 +595,7 @@ public interface Object {
       $reader = other.$reader;
       $history = other.$history;
       $isOwned = other.$isOwned;
-      $updateMapVersion = other.$updateMapVersion;
+      writerMapVersion = other.writerMapVersion;
       $copyAppStateFrom(other);
     }
 

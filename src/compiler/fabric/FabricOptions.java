@@ -138,7 +138,6 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     } else if (args[index].equals("-publish-only")) {
       index++;
       publish = true;
-      post_compiler = null;
       publishOnly = true;
       needWorker = true;
     } else if (args[index].equals("-codebase-output-file")) {
@@ -290,11 +289,6 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     return delegate.needWorker() || needWorker;
   }
   
-  @Override
-  public boolean needMemClassObjects() {
-    return delegate.needMemClassObjects();
-  }
-  
   /**
    * Should source be published to Fabric? Always false in signature or platform
    * modes.
@@ -302,5 +296,19 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   public boolean publish() {
     // Never publish in signature or platform mode
     return publish & !signatureMode() && !platformMode();
+  }
+  
+  @Override
+  public String constructPostCompilerClasspath() {
+    StringBuilder sb = new StringBuilder(super.constructPostCompilerClasspath());
+    for (FabricLocation l : bootclasspath()) {
+      sb.append(File.pathSeparator);
+      sb.append(l.getUri().getPath());
+    }
+    for (FabricLocation l : classpath()) {
+      sb.append(File.pathSeparator);
+      sb.append(l.getUri().getPath());
+    }
+    return sb.toString();
   }
 }

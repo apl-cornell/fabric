@@ -32,12 +32,16 @@ import fabric.common.FabricLocationFactory;
  */
 public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
   private final ExtensionInfo extInfo;
-  private final boolean needMemClassObjects;
+  private boolean outputToLocalFS;
 
-  public FabricFileManager(ExtensionInfo extInfo, boolean needMemClassObjects) {
+  public FabricFileManager(ExtensionInfo extInfo) {
     super(extInfo);
     this.extInfo = extInfo;
-    this.needMemClassObjects = needMemClassObjects;
+    outputToLocalFS = true;
+  }
+  
+  public void disableOutputToLocalFS() {
+    outputToLocalFS = false;
   }
 
   @Override
@@ -63,7 +67,7 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
   @Override
   public JavaFileObject getJavaFileForOutput(Location location,
       String className, Kind kind, FileObject sibling) throws IOException {
-    if (kind.equals(Kind.CLASS) && needMemClassObjects) {
+    if (!outputToLocalFS && kind.equals(Kind.CLASS)) {
       Options options = extInfo.getOptions();
       Location classOutputLoc = options.classOutputDirectory();
       if (location == null || !classOutputLoc.equals(location)

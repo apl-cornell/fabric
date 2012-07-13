@@ -5,7 +5,7 @@ import fabric.lang.security.Principal;
  * Global state for a single session.
  */
 
-public class SessionState[label T, label A] where T <= A, {} <= A  {
+public class SessionState[label T] {
 
     public SessionState(String{T} sessionId_, SessionPrincipal{T} session) {    }
     
@@ -13,32 +13,14 @@ public class SessionState[label T, label A] where T <= A, {} <= A  {
     
     public SessionState(Principal{T} sp, String{T} si) {    }
 
-    public final SessionPrincipal{T}@{A} sessionPrincipal;
-    public final String{T}@{A}    sessionId;
+    public final SessionPrincipal{T} sessionPrincipal;
+    public final String{T}           sessionId;
 
     public native final String{T;this} getSessionId();
 
     public native final SessionPrincipal{T;this} sessionPrincipal(); 
 
-    /** convenience method for non-fabric code */
-//    public static SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id) {
-//    	atomic {
-//    		return new SessionState[lbl](id);
-//    	}
-//    }
-    
     // XXX Can the access label also be declassified?
-    public static SessionState[{P←},{P←}]{P←} declassifySS{P←}(SessionState[{P→;P←},{P→;P←}]{P→;P←} ss_, principal{P←} P)
-    where caller(P) {
-//    	final SessionState[{P→;P←}]{P←} ss = declassify(ss_, {P→;P←} to {P←});
-//    	if (ss == null) return null;
-//    	final SSW[{P→;P←}]{P←} ssremote = declassify(ss.remote, {P→;P←} to {P←});
-//    	if (ssremote == null) return null;
-//        final Principal{P←} sessionPrincipal = declassify(ssremote.sessionPrincipal, {P→;P←} to {P←});
-//        final String{P←}    sessionId = declassify(ssremote.sessionId, {P→;P←} to {P←});
-//        final SSW[{P←}] rem = new SSW[{P←}](sessionPrincipal, sessionId);
-//        return new SessionState[{P←}](rem);
-        return null;
-    	
-    }
+    public native static SessionState[{P←}]{P←} declassifySS{P←}(SessionState[{P→;P←}]{P→;P←} ss_, principal{P←} P)
+    where caller(P);
 }

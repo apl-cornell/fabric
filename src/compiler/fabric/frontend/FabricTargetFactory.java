@@ -5,10 +5,10 @@ import java.util.Set;
 
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
 
 import fabric.common.FabricLocation;
 
+import polyglot.filemanager.FileManager;
 import polyglot.frontend.Source;
 import polyglot.frontend.TargetFactory;
 
@@ -16,7 +16,7 @@ public class FabricTargetFactory extends TargetFactory {
 
   protected Set<FileObject> outputFiles;
 
-  public FabricTargetFactory(StandardJavaFileManager fm, FabricLocation outLoc,
+  public FabricTargetFactory(FileManager fm, FabricLocation outLoc,
       String outExt, boolean so) {
     super(fm, outLoc, outExt, so);
     this.outputFiles = new HashSet<FileObject>();

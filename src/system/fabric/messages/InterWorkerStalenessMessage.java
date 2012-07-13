@@ -9,7 +9,8 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.Principal;
 
 /**
- * Represents a request to check staleness of data in a transaction.
+ * Represents a request to check staleness of data in a transaction. Used to
+ * determine whether a transaction failed because of stale data.
  */
 public final class InterWorkerStalenessMessage
     extends

@@ -600,6 +600,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
+  //XXX: What is the relation between this implementation and
+  // isJifClass? Are signatures for Java classes FabricClasses?
   public boolean isFabricClass(Type type) {
     if (type instanceof ClassType) {
       ClassType ct = (ClassType) type;

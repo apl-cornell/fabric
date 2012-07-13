@@ -4,6 +4,7 @@ import fabric.worker.LabelCache;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
+import fabric.lang.security.PrincipalUtil;
 import fabric.lang.security.SecurityCache;
 import fabric.util.*;
 
@@ -907,6 +908,21 @@ public final class LabelUtil {
     }
   }
 
+  /**
+   * Throws an exception if o's store is not trusted to enforce accessLabel.
+   * @param accessLabel
+   * @param o
+   */
+  public static Object accessCheck(Label accessLabel, Object o) {
+    Label storeLabel = readerPolicyLabel(PrincipalUtil.topPrincipal(), 
+        /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */
+        o.fetch().$getStore().getPrincipal());
+    if (!relabelsTo(accessLabel, storeLabel))
+      throw new InternalError("Illegal access to " + o.$getStore());
+    else 
+      return o;
+  }
+  
   public Object $initLabels() {
     // XXX What should this be?  Using completely permissive values for now.
     // update label: {_ <-}

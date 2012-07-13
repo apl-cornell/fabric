@@ -10,6 +10,9 @@ public abstract class Principal {
    */
   public native Principal fabric$lang$security$Principal$();
 
+  public static native Principal jif$cast$fabric_lang_security_Principal(Object o);
+  public static native boolean jif$Instanceof$fabric_lang_security_Principal(Object o);
+
   public abstract String name();
 
   public abstract boolean delegatesTo(final Principal p);
