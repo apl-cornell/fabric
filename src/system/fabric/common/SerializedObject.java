@@ -47,7 +47,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * <li>byte[] update label's store's name data (only present if inter-store)</li>
    * <li>long update label's onum</li>
    * <li>byte whether the access policy pointer is an inter-store ref</li>
-   * <li>short access policy's store's name length (only present if inter-store)</li>
+   * <li>short access policy's store's name length (only present if inter-store)
+   * </li>
    * <li>byte[] access policy's store's name data (only present if inter-store)</li>
    * <li>long access policy's onum</li>
    * <li>ClassRef object's class</li>
@@ -220,8 +221,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * data.
    */
   private ComparablePair<String, Long> getInterStoreRef(int refPos) {
-    int storeNameLength =
-        SerializationUtil.unsignedShortAt(objectData, refPos);
+    int storeNameLength = SerializationUtil.unsignedShortAt(objectData, refPos);
     int onumPos = refPos + 2 + storeNameLength;
     DataInput in =
         new DataInputStream(new ByteArrayInputStream(objectData, refPos,
@@ -305,8 +305,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         an inter-store reference.
    */
   public boolean accessPolicyRefIsInterStore() {
-    return SerializationUtil
-        .booleanAt(objectData, isInterStoreAccessPolicyPos());
+    return SerializationUtil.booleanAt(objectData,
+        isInterStoreAccessPolicyPos());
   }
 
   /**
@@ -366,7 +366,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     if (classRef != null) return classRef;
     return classRef = ClassRef.deserialize(objectData, classRefPos());
   }
-  
+
   /**
    * @return the object's class's name.
    */
@@ -690,7 +690,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
               "  A stack trace for the creation of the remote object follows.";
           for (StackTraceElement e : impl.$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
-          
+
           message +=
               System.getProperty("line.separator")
                   + "A stack trace for the creation of the local object follows.";
@@ -724,7 +724,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
               "  A stack trace for the creation of the remote object follows.";
           for (StackTraceElement e : impl.$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
-          
+
           message +=
               System.getProperty("line.separator")
                   + "A stack trace for the creation of the local object follows.";

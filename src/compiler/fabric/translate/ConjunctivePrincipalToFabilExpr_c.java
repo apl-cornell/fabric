@@ -10,9 +10,10 @@ import polyglot.types.SemanticException;
 import fabric.visit.FabricToFabilRewriter;
 
 public class ConjunctivePrincipalToFabilExpr_c extends
-ConjunctivePrincipalToJavaExpr_c {
+    ConjunctivePrincipalToJavaExpr_c {
   @Override
-  public Expr toJava(Principal principal, JifToJavaRewriter rw) throws SemanticException {
+  public Expr toJava(Principal principal, JifToJavaRewriter rw)
+      throws SemanticException {
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     JifTypeSystem ts = rw.jif_ts();
     Expr e = null;
@@ -21,10 +22,11 @@ ConjunctivePrincipalToJavaExpr_c {
       Expr pe = rw.principalToJava(p);
       if (e == null) {
         e = pe;
-      }
-      else {
-        e = rw.qq().parseExpr(ts.PrincipalUtilClassName() + ".conjunction(%E, %E, %E)",
-            ffrw.currentLocation(), pe, e);
+      } else {
+        e =
+            rw.qq().parseExpr(
+                ts.PrincipalUtilClassName() + ".conjunction(%E, %E, %E)",
+                ffrw.currentLocation(), pe, e);
       }
     }
     return e;

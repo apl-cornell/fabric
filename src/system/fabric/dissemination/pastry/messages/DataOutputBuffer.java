@@ -11,9 +11,9 @@ import rice.p2p.commonapi.rawserialization.OutputBuffer;
  * isn't.
  */
 public class DataOutputBuffer implements DataOutput, OutputBuffer {
-  
+
   private final OutputBuffer buf;
-  
+
   public DataOutputBuffer(OutputBuffer buf) {
     this.buf = buf;
   }

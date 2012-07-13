@@ -16,7 +16,7 @@ public class EvalExt_c extends FabILExt_c {
     while (expr instanceof Cast) {
       expr = ((Cast) expr).expr();
     }
-    
+
     return eval.expr(expr);
   }
 

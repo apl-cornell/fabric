@@ -11,9 +11,9 @@ import rice.p2p.commonapi.rawserialization.InputBuffer;
  * DataInput, but isn't.
  */
 public class DataInputBuffer implements DataInput, InputBuffer {
-  
+
   private final InputBuffer buf;
-  
+
   public DataInputBuffer(InputBuffer buf) {
     this.buf = buf;
   }

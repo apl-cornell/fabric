@@ -42,8 +42,8 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
       // is not the same as ts.Object() nor ts.FObject(). As such, the default
       // superclass is ts.FObject().
       if (Report.should_report(Report.types, 3))
-        Report.report(3, "setting superclass of " + type + " to "
-            + ts.FObject());
+        Report.report(3,
+            "setting superclass of " + type + " to " + ts.FObject());
       type.superType(ts.FObject());
     }
   }

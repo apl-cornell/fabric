@@ -21,7 +21,7 @@ public class ClassBodyJifExt_c extends JifClassBodyExt {
     super(toJava);
     this.remote_wrappers = new ArrayList<ClassMember>();
   }
-  
+
   @SuppressWarnings("unchecked")
   @Override
   public Node labelCheck(LabelChecker lc) {
@@ -36,30 +36,28 @@ public class ClassBodyJifExt_c extends JifClassBodyExt {
 
     List<ClassMember> members = new ArrayList<ClassMember>();
     // label check each member, but mute reporting of errors on
-    //  remote wrappers.
-    for (ClassMember cm : (List<ClassMember>)n.members()) {
+    // remote wrappers.
+    for (ClassMember cm : (List<ClassMember>) n.members()) {
       try {
-        ClassMember toAdd = (ClassMember)lc.context(A).labelCheck(cm);
+        ClassMember toAdd = (ClassMember) lc.context(A).labelCheck(cm);
         if (toAdd != null) {
           members.add(toAdd);
         }
-      } 
-      catch (SemanticException e) {
+      } catch (SemanticException e) {
         // report it and keep going.
         lc.reportSemanticException(e);
       }
     }
-    
+
     List<ClassMember> new_wrappers = new ArrayList<ClassMember>();
     SilenceableSolverGLB.mute(true);
     for (ClassMember cm : remoteWrappers()) {
       try {
-        ClassMember toAdd = (ClassMember)lc.context(A).labelCheck(cm);
+        ClassMember toAdd = (ClassMember) lc.context(A).labelCheck(cm);
         if (toAdd != null) {
           new_wrappers.add(toAdd);
         }
-      } 
-      catch (SemanticException e) {
+      } catch (SemanticException e) {
         // report it and keep going.
         lc.reportSemanticException(e);
       }
@@ -69,7 +67,7 @@ public class ClassBodyJifExt_c extends JifClassBodyExt {
     setRemoteWrappers(new_wrappers);
     return n.members(members);
   }
-  
+
   public List<ClassMember> remoteWrappers() {
     return remote_wrappers;
   }

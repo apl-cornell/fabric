@@ -28,7 +28,7 @@ public class RetryStmt_c extends Stmt_c implements RetryStmt {
 
   @Override
   public void prettyPrint(CodeWriter w, PrettyPrinter tr) {
-      w.write("retry;");
+    w.write("retry;");
   }
 
   @Override

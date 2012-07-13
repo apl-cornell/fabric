@@ -56,7 +56,7 @@ public interface Principal extends fabric.lang.Object {
     public _Proxy(fabric.worker.Store store, long onum) {
       super(store, onum);
     }
-    
+
     @Override
     public Principal fabric$lang$security$Principal$() {
       return ((Principal) fetch()).fabric$lang$security$Principal$();
@@ -125,26 +125,27 @@ public interface Principal extends fabric.lang.Object {
       this.publicKey = keyPair.getPublic();
 
       this.privateKeyObject =
-          new PrivateKeyObject._Impl(store).fabric$lang$security$PrivateKeyObject$((Principal) $getProxy(), keyPair.getPrivate());
+          new PrivateKeyObject._Impl(store)
+              .fabric$lang$security$PrivateKeyObject$((Principal) $getProxy(),
+                  keyPair.getPrivate());
     }
-    
+
     @Override
     public Object $initLabels() {
       Store store = this.$getStore();
       Principal._Proxy thisProxy = (Principal._Proxy) this.$getProxy();
-      
+
       // Always ensure that the principal can modify its own object.
       // {this <- this}
       ConfPolicy bottomConf =
           Worker.getWorker().getLocalStore().getBottomConfidPolicy();
       IntegPolicy integ =
           LabelUtil._Impl.writerPolicy(store, thisProxy, thisProxy);
-      Label thisIntegLabel =
-          LabelUtil._Impl.toLabel(store, bottomConf, integ);
+      Label thisIntegLabel = LabelUtil._Impl.toLabel(store, bottomConf, integ);
 
       this.set$$updateLabel(thisIntegLabel);
       this.set$$accessPolicy(bottomConf);
-      
+
       return thisProxy;
     }
 
@@ -239,8 +240,7 @@ public interface Principal extends fabric.lang.Object {
     class _Impl extends fabric.lang.Object._Impl implements
         fabric.lang.security.Principal._Static {
 
-      public _Impl(Store store)
-          throws UnreachableNodeException {
+      public _Impl(Store store) throws UnreachableNodeException {
         super(store);
       }
       

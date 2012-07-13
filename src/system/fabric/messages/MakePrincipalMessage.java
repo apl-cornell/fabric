@@ -10,24 +10,23 @@ import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.Principal;
 
-public final class MakePrincipalMessage
-           extends Message<MakePrincipalMessage.Response, FabricGeneralSecurityException>
-{
-  
-  //////////////////////////////////////////////////////////////////////////////
-  // message contents                                                         //
-  //////////////////////////////////////////////////////////////////////////////
+public final class MakePrincipalMessage extends
+    Message<MakePrincipalMessage.Response, FabricGeneralSecurityException> {
+
+  // ////////////////////////////////////////////////////////////////////////////
+  // message contents //
+  // ////////////////////////////////////////////////////////////////////////////
 
   public final PublicKey requesterKey;
-  
+
   public MakePrincipalMessage(PublicKey requesterKey) {
     super(MessageType.MAKE_PRINCIPAL, FabricGeneralSecurityException.class);
     this.requesterKey = requesterKey;
   }
-  
-  //////////////////////////////////////////////////////////////////////////////
-  // response contents                                                        //
-  //////////////////////////////////////////////////////////////////////////////
+
+  // ////////////////////////////////////////////////////////////////////////////
+  // response contents //
+  // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
     /**
@@ -41,22 +40,22 @@ public final class MakePrincipalMessage
      * the chain is in <code>certChain</code>.
      */
     public final X509Certificate cert;
-    
+
     /**
      * The rest of the certificate chain.
      */
     public final X509Certificate[] certChain;
-    
+
     public Response(long onum, X509Certificate cert, X509Certificate[] certChain) {
       this.onum = onum;
       this.cert = cert;
       this.certChain = certChain;
     }
   }
-  
-  //////////////////////////////////////////////////////////////////////////////
-  // visitor methods                                                          //
-  //////////////////////////////////////////////////////////////////////////////
+
+  // ////////////////////////////////////////////////////////////////////////////
+  // visitor methods //
+  // ////////////////////////////////////////////////////////////////////////////
 
   @Override
   public Response dispatch(Principal p, MessageHandler handler)
@@ -64,15 +63,15 @@ public final class MakePrincipalMessage
     return handler.handle(p, this);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // serialization cruft                                                      //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // serialization cruft //
+  // ////////////////////////////////////////////////////////////////////////////
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
     writeObject(out, requesterKey);
   }
-  
+
   /* readMessage */
   protected MakePrincipalMessage(DataInput in) throws IOException {
     super(MessageType.MAKE_PRINCIPAL, FabricGeneralSecurityException.class);
@@ -96,7 +95,7 @@ public final class MakePrincipalMessage
     X509Certificate[] certChain = new X509Certificate[in.readInt()];
     for (int i = 0; i < certChain.length; i++)
       certChain[i] = readObject(in, X509Certificate.class);
-    
+
     return new Response(onum, cert, certChain);
   }
 

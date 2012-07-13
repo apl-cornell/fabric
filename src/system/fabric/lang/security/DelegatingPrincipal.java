@@ -13,7 +13,7 @@ public interface DelegatingPrincipal extends Principal {
    * Jif initializer.
    */
   public DelegatingPrincipal fabric$lang$security$DelegatingPrincipal$();
-  
+
   void addDelegatesTo(Principal p);
 
   void removeDelegatesTo(Principal p);
@@ -72,13 +72,13 @@ public interface DelegatingPrincipal extends Principal {
     public static DelegatingPrincipal $addDefaultDelegates(DelegatingPrincipal p) {
       NodePrincipal store = p.$getStore().getPrincipal();
       p.addDelegatesTo(store);
-      
+
       NodePrincipal worker = Worker.getWorker().getPrincipal();
       p.addDelegatesTo(worker);
-      
+
       return p;
     }
-    
+
     @Override
     public DelegatingPrincipal fabric$lang$security$DelegatingPrincipal$() {
       fabric$lang$security$Principal$();
@@ -87,7 +87,7 @@ public interface DelegatingPrincipal extends Principal {
 
     @Override
     public abstract void addDelegatesTo(Principal p);
-    
+
     @Override
     public abstract void removeDelegatesTo(Principal p);
     

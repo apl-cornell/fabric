@@ -1,36 +1,43 @@
 package fabil;
 
 import java.io.File;
-import java.net.URI;
-import java.util.List;
+import java.util.Set;
 import java.util.Map;
+
+import fabric.common.FabricLocation;
 
 public interface FabILOptions {
 
   public int optLevel();
 
   public boolean signatureMode();
-  
+
   public boolean dumpDependencies();
 
   public boolean createSkeleton();
 
   public String destinationStore();
 
-  List<URI> classpath();
+  Set<File> javaClasspathDirs();
 
-  List<URI> sourcepath();
+  Set<FabricLocation> classpath();
 
-  List<URI> signaturepath();
+  Set<FabricLocation> sourcepath();
 
-  List<URI> bootclasspath();
+  Set<FabricLocation> filsignaturepath();
 
-  Map<String, URI> codebaseAliases();
+  Set<FabricLocation> filbootclasspath();
 
-  File outputDirectory();
+  Set<FabricLocation> bootclasspath();
+
+  Map<String, FabricLocation> codebaseAliases();
+
+  FabricLocation outputDirectory();
+
+  FabricLocation classOutputDirectory();
 
   boolean platformMode();
 
-  boolean needWorker();  
-  
+  boolean needWorker();
+
 }

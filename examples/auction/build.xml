@@ -229,7 +229,7 @@
       <arg value="${fabc}"/>
       <arg value="-g"/>
       <arg value="-e"/>
-      <arg value="-d"          /> <arg value="${home.codebases}"/>
+      <arg value="-d" /> <arg value="${home.codebases}"/>
       <arg value="-report" /> <arg value="profile=1" />
       <arg value="-publish-only" />
       <arg value="-codebase-output-file"/> <arg value="${target.codebasefile}"/>

@@ -24,10 +24,11 @@ public class FabricFieldDeclDel extends JifFieldDeclDel {
     } else {
       Li = n.accessLabel().label();
     }
-    if(fts.containsThisLabel(Li)) {
-      throw new SemanticException("Access label cannot contain \"this\" label.", n.position());
+    if (fts.containsThisLabel(Li)) {
+      throw new SemanticException(
+          "Access label cannot contain \"this\" label.", n.position());
     }
-    
+
     // TODO: it seems fishy that Li can be null even if accessLabel is not null,
     // but it happens (in r3139 while building MapServ for example).
     ffi.setAccessLabel(Li == null ? null : Li.confProjection());

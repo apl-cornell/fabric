@@ -1,7 +1,5 @@
 package codebases.types;
 
-import java.net.URI;
-
 import polyglot.frontend.MissingDependencyException;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.SchedulerException;
@@ -13,16 +11,17 @@ import polyglot.types.TypeObject;
 import polyglot.types.TypeSystem;
 import polyglot.util.CannotResolvePlaceHolderException;
 import codebases.frontend.CBScheduler;
+import fabric.common.FabricLocation;
 
 /**
  * This class is basically copied from the superclass with following additions:
- * - A field for the namespace of the class this object is a place holder for. 
- * - Calls to systemResolver are replaced with calls to the appropriate namespace.
- * - resolve() calls resolveSafe();
- * - Calls to TypeExists(name) are replaced with calls to TypeExists(ns,name)
+ * - A field for the namespace of the class this object is a place holder for. -
+ * Calls to systemResolver are replaced with calls to the appropriate namespace.
+ * - resolve() calls resolveSafe(); - Calls to TypeExists(name) are replaced
+ * with calls to TypeExists(ns,name)
  */
 public class CBPlaceHolder_c extends PlaceHolder_c implements CBPlaceHolder {
-  protected URI namespace;
+  protected FabricLocation namespace;
 
   /** Used for deserializing types. */
   protected CBPlaceHolder_c() {
@@ -34,7 +33,7 @@ public class CBPlaceHolder_c extends PlaceHolder_c implements CBPlaceHolder {
   }
 
   @Override
-  public URI namespace() {
+  public FabricLocation namespace() {
     return namespace;
   }
 
@@ -43,7 +42,7 @@ public class CBPlaceHolder_c extends PlaceHolder_c implements CBPlaceHolder {
     return namespace.hashCode() ^ name.hashCode();
   }
 
-  public CBPlaceHolder_c(URI ns, String name) {
+  public CBPlaceHolder_c(FabricLocation ns, String name) {
     this.namespace = ns;
     this.name = name;
 
@@ -66,7 +65,7 @@ public class CBPlaceHolder_c extends PlaceHolder_c implements CBPlaceHolder {
       return cbts.namespaceResolver(namespace).find(name);
     } catch (MissingDependencyException e) {
       // The type is in a source file that hasn't been parsed yet.
-      g = e.goal();     
+      g = e.goal();
       scheduler.currentGoal().setUnreachableThisRun();
       scheduler.addDependencyAndEnqueue(scheduler.currentGoal(), g, false);
       throw new CannotResolvePlaceHolderException(e);
@@ -104,9 +103,10 @@ public class CBPlaceHolder_c extends PlaceHolder_c implements CBPlaceHolder {
 
     throw new CannotResolvePlaceHolderException("Could not resolve " + name);
   }
+
   @Override
   public String toString() {
     return "CBPlaceHolder(" + name + ")";
-}
+  }
 
 }

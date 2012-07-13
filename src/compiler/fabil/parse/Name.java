@@ -1,24 +1,23 @@
 package fabil.parse;
 
-import java.net.URI;
-
 import polyglot.ast.Id;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.PackageNode;
 import polyglot.util.Position;
 import codebases.types.CodebaseTypeSystem;
+import fabric.common.FabricLocation;
 
 public class Name extends polyglot.parse.Name {
   public final CodebaseTypeSystem ts;
-  public final URI ns;
+  public final FabricLocation ns;
 
-  public Name(NodeFactory nf, CodebaseTypeSystem ts, URI ns, Position pos,
-      Id name) {
+  public Name(NodeFactory nf, CodebaseTypeSystem ts, FabricLocation ns,
+      Position pos, Id name) {
     this(nf, ts, ns, pos, null, name);
   }
 
-  public Name(NodeFactory nf, CodebaseTypeSystem ts, URI ns, Position pos,
-      Name prefix, Id name) {
+  public Name(NodeFactory nf, CodebaseTypeSystem ts, FabricLocation ns,
+      Position pos, Name prefix, Id name) {
     super(nf, ts, pos, prefix, name);
     this.ns = ns;
     this.ts = ts;

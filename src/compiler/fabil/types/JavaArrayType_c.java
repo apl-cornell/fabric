@@ -42,13 +42,13 @@ public class JavaArrayType_c extends ArrayType_c implements JavaArrayType {
 
   @Override
   public String toString() {
-      return base().toString() + " native[]";
+    return base().toString() + " native[]";
   }
 
   @Override
   public void print(CodeWriter w) {
-      base().print(w);
-      w.write("native[]");
+    base().print(w);
+    w.write("native[]");
   }
 
 }

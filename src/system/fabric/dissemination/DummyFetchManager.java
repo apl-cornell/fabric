@@ -10,7 +10,7 @@ import fabric.worker.Worker;
  * This simple FetchManger always goes directly to the store.
  */
 public class DummyFetchManager implements FetchManager {
-  
+
   private Cache cache;
 
   public DummyFetchManager(Worker worker, Properties dissemConfig) {

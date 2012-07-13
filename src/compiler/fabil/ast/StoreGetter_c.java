@@ -29,7 +29,7 @@ public class StoreGetter_c extends Expr_c implements StoreGetter {
   public Term firstChild() {
     return null;
   }
-  
+
   /** Type check the expression. */
   @Override
   public Node typeCheck(TypeChecker tc) {
@@ -40,6 +40,6 @@ public class StoreGetter_c extends Expr_c implements StoreGetter {
   @Override
   public void prettyPrint(CodeWriter w, PrettyPrinter pp) {
     throw new InternalCompilerError("StoreGetter should have been rewritten.");
-  }  
-  
+  }
+
 }

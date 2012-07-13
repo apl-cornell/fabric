@@ -1,21 +1,32 @@
 package fabil;
 
+import static fabric.common.FabricLocationFactory.getLocation;
+import static java.io.File.pathSeparator;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 
+import javax.tools.FileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
+
 import polyglot.ast.NodeFactory;
+import polyglot.filemanager.FileManager;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.FileSource;
 import polyglot.frontend.Job;
 import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
-import polyglot.frontend.SourceLoader;
 import polyglot.frontend.TargetFactory;
 import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
@@ -23,19 +34,13 @@ import polyglot.main.Options;
 import polyglot.main.Report;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
-import polyglot.types.reflect.ClassFileLoader;
-import polyglot.types.reflect.ClassPathLoader;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import codebases.frontend.CBJobExt;
 import codebases.frontend.CBTargetFactory;
 import codebases.frontend.CodebaseSource;
-import codebases.frontend.CodebaseSourceLoader;
-import codebases.frontend.FileSourceLoader;
 import codebases.frontend.LocalSource;
 import codebases.frontend.RemoteSource;
-import codebases.frontend.URISourceDispatcher;
-import codebases.frontend.URISourceLoader;
 import codebases.types.CBTypeEncoder;
 import codebases.types.CodebaseResolver;
 import codebases.types.CodebaseTypeSystem;
@@ -49,19 +54,26 @@ import fabil.frontend.FabILScheduler;
 import fabil.parse.Grm;
 import fabil.parse.Lexer_c;
 import fabil.types.ClassFile;
+import fabil.types.ClassFile_c;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILTypeSystem_c;
+import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
+import fabric.filemanager.FabricFileManager;
 import fabric.lang.FClass;
 import fabric.lang.security.LabelUtil;
+import fabric.filemanager.FabricSourceObject;
 import fabric.worker.Worker;
 
 /**
  * Extension information for FabIL extension.
  */
-public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements codebases.frontend.ExtensionInfo {
-  protected static URI platform_ns = URI.create("fab:platform");
-  protected static URI local_ns = URI.create("fab:local");
+public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
+    codebases.frontend.ExtensionInfo {
+  protected static FabricLocation platform_ns = getLocation(false,
+      URI.create("fab:platform"));
+  protected static FabricLocation local_ns = getLocation(false,
+      URI.create("fab:local"));
 
   static {
     // force Topics to load
@@ -78,6 +90,12 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   }
 
   @Override
+  public FileManager extFileManager() {
+    if (extFM == null) extFM = new FabricFileManager(this);
+    return extFM;
+  }
+
+  @Override
   protected NodeFactory createNodeFactory() {
     return new FabILNodeFactory_c();
   }
@@ -91,6 +109,12 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   protected Scheduler createScheduler() {
     return new FabILScheduler(this);
   }
+  
+  @Override
+  public ClassFile createClassFile(FileObject classFileSource, byte[] code)
+      throws IOException {
+    return new ClassFile_c(classFileSource, code, this);
+  }
 
   @Override
   protected TypeSystem createTypeSystem() {
@@ -101,21 +125,12 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
   public TargetFactory targetFactory() {
     if (target_factory == null) {
       target_factory =
-          new CBTargetFactory(this, getFabILOptions().outputDirectory(),
-              getOptions().output_ext, getOptions().output_stdout);
+          new CBTargetFactory(this, extFileManager(), getFabILOptions()
+              .outputDirectory(), getOptions().output_ext,
+              getOptions().output_stdout);
     }
 
     return target_factory;
-  }
-
-  @Override
-  public SourceLoader sourceLoader() {
-    //Create a dispatcher that routes ns's to the appropriate 
-    // loader
-    if (source_loader == null) {
-      source_loader = new URISourceDispatcher(this);
-    }
-    return source_loader;
   }
 
   @Override
@@ -125,15 +140,61 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
     Grm grm = new Grm(lexer, ts, nf, eq, src.canonicalNamespace());
     return new CupParser(grm, source, eq);
   }
-  
+
   @Override
   protected void initTypeSystem() {
     try {
       // There isn't a single toplevel resolver.
-      ((CodebaseTypeSystem)ts).initialize(this);
+      ((CodebaseTypeSystem) ts).initialize(this);
     } catch (SemanticException e) {
       throw new InternalCompilerError("Unable to initialize type system: ", e);
     }
+  }
+
+  private void setFabricLocations(Collection<FabricLocation> locations,
+      StandardJavaFileManager fm) {
+    for (FabricLocation location : locations) {
+      if (location.isFileReference()) {
+        try {
+          fm.setLocation(location,
+              Collections.singleton(new File(location.getUri())));
+        } catch (IOException e) {
+          throw new InternalCompilerError(e);
+        }
+      }
+    }
+  }
+
+  private void setJavaClasspath(FabILOptions options, StandardJavaFileManager fm) {
+    Set<File> s = new LinkedHashSet<File>();
+    s.addAll(options.javaClasspathDirs());
+    for (FabricLocation location : options.filbootclasspath())
+      if (location.isFileReference()) s.add(new File(location.getUri()));
+    for (FabricLocation location : options.classpath())
+      if (location.isFileReference()) s.add(new File(location.getUri()));
+    try {
+      fm.setLocation(StandardLocation.CLASS_PATH, s);
+    } catch (IOException e) {
+      throw new InternalCompilerError(e);
+    }
+  }
+
+  @Override
+  public void addLocationsToFileManager() {
+    FabILOptions options = getFabILOptions();
+    StandardJavaFileManager fm = extFileManager();
+    for (String dir : System.getProperty("sun.boot.class.path").split(
+        pathSeparator))
+      options.bootclasspath().add(getLocation(false, new File(dir).toURI()));
+    setFabricLocations(options.bootclasspath(), fm);
+    setFabricLocations(options.filbootclasspath(), fm);
+    setFabricLocations(options.classpath(), fm);
+    setFabricLocations(options.filsignaturepath(), fm);
+    setFabricLocations(options.sourcepath(), fm);
+    setFabricLocations(Collections.singleton(options.outputDirectory()), fm);
+    setFabricLocations(Collections.singleton(options.classOutputDirectory()),
+        fm);
+    setJavaClasspath(options, fm);
   }
 
   @Override
@@ -160,33 +221,30 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
     return (FabILOptions) getOptions();
   }
 
-//  public Codebase codebase() {
-//    return codebase;
-//  }
-
   @Override
-  public FileSource createFileSource(File f, boolean user) throws IOException {
-    if (Report.should_report(Report.loader, 2))
-      Report.report(2, "Creating filesource from " + f);
-
-    return new LocalSource(f, user, localNamespace());
-  }
-
-  @Override
-  public FileSource createRemoteSource(URI ns, fabric.lang.Object obj, boolean user)
+  public FileSource createFileSource(FileObject f, boolean user)
       throws IOException {
-    if (!(obj instanceof FClass))
-      throw new InternalCompilerError("Expected FClass.");
+    if (f instanceof FabricSourceObject) {
+      fabric.lang.Object obj = ((FabricSourceObject) f).getData();
+      if (!(obj instanceof FClass))
+        throw new IOException(
+            "Expected an FClass inside the FabricSourceObject instead of a "
+                + obj.getClass());
+      FClass fcls = (FClass) obj;
+      if (!LabelUtil._Impl.relabelsTo(fcls.get$$updateLabel(), fcls
+          .getCodebase().get$$updateLabel())) {
+        // XXX: should we throw a more security-related exception here?
+        throw new IOException("The label of class " + NSUtil.absoluteName(fcls)
+            + " is higher than the label of its codebase ");
+      }
 
-    FClass fcls = (FClass) obj;    
-    if (!LabelUtil._Impl.relabelsTo(fcls.get$$updateLabel(), fcls.getCodebase()
-        .get$$updateLabel())) {
-      // XXX: should we throw a more security-related exception here?
-      throw new IOException("The label of class " + NSUtil.absoluteName(fcls)
-          + " is higher than the label of its codebase ");
+      return new RemoteSource(f, fcls, user);
+    } else {
+      if (Report.should_report(Report.loader, 2))
+        Report.report(2, "Creating filesource from " + f);
+
+      return new LocalSource(f, user, localNamespace());
     }
-    
-    return new RemoteSource(ns, fcls, user);
   }
 
   /**
@@ -195,12 +253,12 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
    * @param ns
    * @return
    */
-  public NamespaceResolver createNamespaceResolver(URI ns) {
+  public NamespaceResolver createNamespaceResolver(FabricLocation ns) {
     if (Report.should_report("resolver", 3))
       Report.report(3, "Creating namespace resolver for " + ns);
 
     FabILOptions opt = (FabILOptions) getOptions();
-    //XXX: Order is important here since the localnamespace may
+    // XXX: Order is important here since the localnamespace may
     // by the platform namespace when compiling the runtime
     if (ns.equals(platformNamespace())) {
       // A platform resolver is really just a path resolver that is treated
@@ -210,46 +268,34 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
       List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
       path.addAll(typeSystem().signatureResolvers());
       path.addAll(typeSystem().runtimeResolvers());
-
-      // FabIL also allows direct linking to Java classes, so we
-      // include the JRE classes here. Other Java classes should be
-      // specified on the classpath
-      // TODO: Make this play nice with cmdline args
-      String java_path = System.getProperty("sun.boot.class.path");
-      for (String dir : java_path.split(File.pathSeparator)) {
-        File f = new File(dir);
-        NamespaceResolver nr =
-            new SimpleResolver(this, NSUtil.file.resolve(f.getAbsolutePath()));
-        nr.loadRawClasses(true);
-        path.add(nr);
-      }
-      return new PathResolver(this, ns, path);  
+      path.addAll(typeSystem().javaruntimeResolvers());
+      return new PathResolver(this, ns, path);
     } else if (ns.equals(localNamespace())) {
-        List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
-        path.add(typeSystem().platformResolver());
-        path.addAll(typeSystem().classpathResolvers());
-        path.addAll(typeSystem().sourcepathResolvers());
-        return new PathResolver(this, ns, path, opt.codebaseAliases());
-      
-    } else if ("fab".equals(ns.getScheme())) {
+      List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
+      path.add(typeSystem().platformResolver());
+      path.addAll(typeSystem().classpathResolvers());
+      path.addAll(typeSystem().sourcepathResolvers());
+      return new PathResolver(this, ns, path, opt.codebaseAliases());
+
+    } else if (ns.isFabricReference()) {
       // Codebases may never resolve platform types, so always resolve against
-      //  the platformResolver first.
-      return new SafeResolver(this, new CodebaseResolver(this, ns));    
-    } else if ("file".equals(ns.getScheme())) {
+      // the platformResolver first.
+      return new SafeResolver(this, new CodebaseResolver(this, ns));
+    } else if (ns.isFileReference()) {
       return new SimpleResolver(this, ns);
     } else throw new InternalCompilerError("Unexpected scheme in URI: " + ns);
   }
 
-  //TODO: support multiple platform namespaces
+  // TODO: support multiple platform namespaces
 
   @Override
-  public URI platformNamespace() {
+  public FabricLocation platformNamespace() {
     return platform_ns;
   }
 
-  //TODO: support multiple local namespaces
+  // TODO: support multiple local namespaces
   @Override
-  public URI localNamespace() {
+  public FabricLocation localNamespace() {
     return getFabILOptions().platformMode() ? platformNamespace() : local_ns;
   }
 
@@ -261,79 +307,46 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
     return typeEncoder;
   }
 
-  // Loads source files
   @Override
-  public URISourceLoader sourceLoader(URI uri) {
-    if ("fab".equals(uri.getScheme())) {
-      if (uri.isOpaque())
-        throw new InternalCompilerError("Unexpected URI:" + uri);
-      return new CodebaseSourceLoader(this, uri);
-    } else if ("file".equals(uri.getScheme())) {
-      return new FileSourceLoader(this, uri);
-    } else throw new InternalCompilerError("Unexpected scheme in URI: " + uri);
-  }
-
-  //Loads class files
-  @Override
-  public ClassPathLoader classpathLoader(URI ns) {
-    if ("fab".equals(ns.getScheme())) {
-      // Load previously compiled classes from cache
-      if (ns.isOpaque())
-        throw new InternalCompilerError("Unexpected URI:" + ns);
- 
-      String java_pkg = NSUtil.javaPackageName(ns);      
-      // At the Fabric/FabIL layer, class names do not include the codebases,
-      // so we turn the java package name into a directory name and create a
-      // classpath loader that will search for class files there.
-      String cachedir = getFabILOptions().outputDirectory() + File.separator
-          + java_pkg.replace('.', File.separatorChar);          
-      return new ClassPathLoader(cachedir, new ClassFileLoader(this));
-      
-    } else if ("file".equals(ns.getScheme())) {
-      return new ClassPathLoader(ns.getPath(), new ClassFileLoader(this));
-    } else throw new InternalCompilerError("Unexpected scheme in URI: " + ns);
-  }
-
-  @Override
-  public String namespaceToJavaPackagePrefix(URI ns) {
+  public String namespaceToJavaPackagePrefix(FabricLocation ns) {
     if (ns.equals(localNamespace()) || ns.equals(platformNamespace()))
       return "";
-    else if (ns.getScheme().equals("fab")) {
-      return NSUtil.javaPackageName(ns) + ".";
+    else if (ns.isFabricReference()) {
+      return NSUtil.javaPackageName(ns.getUri()) + ".";
+    } else {
+      throw new InternalCompilerError("Cannot create Java package prefix for "
+          + ns);
     }
-    else {
-      throw new InternalCompilerError("Cannot create Java package prefix for " + ns);
-    }
-      
+
   }
 
   @Override
-  public List<URI> classpath() {
+  public Set<FabricLocation> classpath() {
     return getFabILOptions().classpath();
   }
 
   @Override
-  public List<URI> sourcepath() {
+  public Set<FabricLocation> sourcepath() {
     return getFabILOptions().sourcepath();
   }
 
   @Override
-  public ClassFile createClassFile(File classFileSource, byte[] code) {
-      return new ClassFile(classFileSource, code, this);
+  public Set<FabricLocation> filsignaturepath() {
+    return getFabILOptions().filsignaturepath();
   }
 
   @Override
-  public List<URI> signaturepath() {
-    return getFabILOptions().signaturepath();
+  public Set<FabricLocation> filbootclasspath() {
+    return getFabILOptions().filbootclasspath();
   }
 
   @Override
-  public List<URI> bootclasspath() {
+  public Set<FabricLocation> bootclasspath() {
     return getFabILOptions().bootclasspath();
   }
 
   @Override
-  public Map<String, URI> codebaseAliases() {
+  public Map<String, FabricLocation> codebaseAliases() {
     return getFabILOptions().codebaseAliases();
   }
 
@@ -345,16 +358,15 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements 
 
     String storeName = getFabILOptions().destinationStore();
 
-    if (storeName == null)
-      return Worker.getWorker().getLocalStore();
+    if (storeName == null) return Worker.getWorker().getLocalStore();
     return Worker.getWorker().getStore(storeName);
   }
-  
+
   @Override
   public JobExt jobExt() {
-      return new CBJobExt();
+    return new CBJobExt();
   }
-  
+
   @Override
   public Goal getCompileGoal(Job job) {
     FabILOptions opts = (FabILOptions) job.extensionInfo().getOptions();

@@ -21,16 +21,17 @@ public interface _shortArray extends Object {
 
   short get(int i);
 
-  public static class _Impl extends Object._Impl implements _shortArray, _InternalArrayImpl {
+  public static class _Impl extends Object._Impl implements _shortArray,
+      _InternalArrayImpl {
     private short[] value;
 
     /**
      * Creates a new short array at the given Store with the given length.
      * 
      * @param store
-     *                The store on which to allocate the array.
+     *          The store on which to allocate the array.
      * @param length
-     *                The length of the array.
+     *          The length of the array.
      */
     public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
         int length) {
@@ -42,15 +43,15 @@ public interface _shortArray extends Object {
      * array.
      * 
      * @param store
-     *                The store on which to allocate the array.
+     *          The store on which to allocate the array.
      * @param value
-     *                The backing array to use.
+     *          The backing array to use.
      */
     public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
         short[] value) {
       super(store);
       this.value = value;
-      
+
       set$$updateLabel(updateLabel);
       set$$accessPolicy(accessPolicy);
     }
@@ -86,7 +87,8 @@ public interface _shortArray extends Object {
       boolean transactionCreated =
           TransactionManager.getInstance().registerWrite(this);
       short result = this.value[i] = value;
-      if (transactionCreated) TransactionManager.getInstance().commitTransaction();
+      if (transactionCreated)
+        TransactionManager.getInstance().commitTransaction();
       return result;
     }
 

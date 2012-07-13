@@ -43,7 +43,7 @@ public interface ClassMemberExt extends FabILExt {
    * list of class members to be included in the _Static._Impl class.
    */
   List<ClassMember> staticImplMember(ProxyRewriter pr, ClassDecl classDecl);
-  
+
   /**
    * Returns the _Static._Impl.$init translation of the class member. The result
    * is a list of statements to be included in the _Static._Impl.$init method.

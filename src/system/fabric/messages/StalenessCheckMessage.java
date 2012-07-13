@@ -17,13 +17,12 @@ import fabric.lang.security.Principal;
  * A <code>StalenessCheckMessage</code> represents a request to a store to check
  * whether a given set of objects is still fresh.
  */
-public final class StalenessCheckMessage
-           extends Message<StalenessCheckMessage.Response, AccessException>
-{
+public final class StalenessCheckMessage extends
+    Message<StalenessCheckMessage.Response, AccessException> {
 
-  //////////////////////////////////////////////////////////////////////////////
-  // message contents                                                         //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // message contents //
+  // ////////////////////////////////////////////////////////////////////////////
 
   public final LongKeyMap<Integer> versions;
 
@@ -32,9 +31,9 @@ public final class StalenessCheckMessage
     this.versions = versions;
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // message contents                                                         //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // message contents //
+  // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
     public final List<SerializedObject> staleObjects;
@@ -44,20 +43,19 @@ public final class StalenessCheckMessage
     }
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // visitor methods                                                          //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // visitor methods //
+  // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h)
-      throws ProtocolError, AccessException {
+  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
+      AccessException {
     return h.handle(p, this);
   }
 
-
-  //////////////////////////////////////////////////////////////////////////////
-  // serialization cruft                                                      //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // serialization cruft //
+  // ////////////////////////////////////////////////////////////////////////////
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
@@ -74,7 +72,8 @@ public final class StalenessCheckMessage
   }
 
   /* helper method for deserialization constructor */
-  private static LongKeyHashMap<Integer> readMap(DataInput in) throws IOException {
+  private static LongKeyHashMap<Integer> readMap(DataInput in)
+      throws IOException {
     int size = in.readInt();
     LongKeyHashMap<Integer> versions = new LongKeyHashMap<Integer>(size);
     for (int i = 0; i < size; i++)
@@ -82,7 +81,6 @@ public final class StalenessCheckMessage
 
     return versions;
   }
-    
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
@@ -94,7 +92,7 @@ public final class StalenessCheckMessage
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    int  size = in.readInt();
+    int size = in.readInt();
     List<SerializedObject> staleObjects = new ArrayList<SerializedObject>(size);
     for (int i = 0; i < size; i++) {
       staleObjects.add(new SerializedObject(in));

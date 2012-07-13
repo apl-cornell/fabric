@@ -79,8 +79,7 @@ public class TransactionManager {
       throws AccessException {
     synchronized (database) {
       database.rollback(transactionID, worker);
-      STORE_TRANSACTION_LOGGER.fine("Aborted transaction "
-          + transactionID);
+      STORE_TRANSACTION_LOGGER.fine("Aborted transaction " + transactionID);
     }
   }
 
@@ -92,8 +91,7 @@ public class TransactionManager {
     synchronized (database) {
       try {
         database.commit(transactionID, workerPrincipal, sm);
-        STORE_TRANSACTION_LOGGER.fine("Committed transaction "
-            + transactionID);
+        STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
       } catch (final AccessException e) {
         throw new TransactionCommitFailedException("Insufficient Authorization");
       } catch (final RuntimeException e) {
@@ -252,8 +250,8 @@ public class TransactionManager {
           try {
             curVersion = database.getVersion(onum);
           } catch (AccessException e) {
-            throw new TransactionPrepareFailedException(versionConflicts, e
-                .getMessage());
+            throw new TransactionPrepareFailedException(versionConflicts,
+                e.getMessage());
           }
           if (curVersion != version) {
             versionConflicts.put(onum, database.read(onum));
@@ -278,7 +276,7 @@ public class TransactionManager {
       synchronized (database) {
         database.finishPrepare(tid, worker);
       }
-      
+
       STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
 
       return result;
@@ -370,18 +368,17 @@ public class TransactionManager {
     synchronized (database) {
       container = database.getCachedGroupContainer(onum);
       if (container != null) {
-      //  if (subscriber != null)
-      //    sm.subscribe(onum, subscriber, dissemSubscribe);
+        // if (subscriber != null)
+        // sm.subscribe(onum, subscriber, dissemSubscribe);
         return container;
       }
     }
 
     // XXX Ideally, the subscription registration should happen atomically with
     // the read.
-    //if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
+    // if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
     ObjectGroup group = readGroup(onum);
-    if (group == null)
-      throw new AccessException(database.getName(), onum);
+    if (group == null) throw new AccessException(database.getName(), onum);
 
     Store store = Worker.getWorker().getStore(database.getName());
     container = new GroupContainer(store, signingKey, group);
@@ -425,7 +422,8 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  public ObjectGroup getGroup(Principal principal, long onum) throws AccessException {
+  public ObjectGroup getGroup(Principal principal, long onum)
+      throws AccessException {
     ObjectGroup group = getGroupContainerAndSubscribe(onum).getGroup(principal);
     if (group == null) throw new AccessException(database.getName(), onum);
     return group;
@@ -465,7 +463,7 @@ public class TransactionManager {
         }
         continue;
       }
-      
+
       group.put(curObj.getOnum(), curObj);
 
       for (Iterator<Long> it = curObj.getIntraStoreRefIterator(); it.hasNext();) {
@@ -622,12 +620,12 @@ public class TransactionManager {
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
       checkPerms(worker, versions.keySet(), Collections.EMPTY_LIST);
     }
-    
+
     List<SerializedObject> result = new ArrayList<SerializedObject>();
     for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
       long onum = entry.getKey();
       int version = entry.getValue();
-      
+
       synchronized (database) {
         int curVersion = database.getVersion(onum);
         if (curVersion != version) {
@@ -635,7 +633,7 @@ public class TransactionManager {
         }
       }
     }
-    
+
     return result;
   }
 

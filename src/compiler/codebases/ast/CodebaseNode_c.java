@@ -1,7 +1,5 @@
 package codebases.ast;
 
-import java.net.URI;
-
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.PackageNode_c;
@@ -12,6 +10,7 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.types.CBPackage;
 import codebases.types.CodebaseTypeSystem;
+import fabric.common.FabricLocation;
 
 /**
  * A CodebaseNode is a qualifier to a type in another namespace. CodebaseNodes
@@ -22,18 +21,21 @@ import codebases.types.CodebaseTypeSystem;
  */
 
 public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
-  protected URI namespace;
+  protected FabricLocation namespace;
   protected String alias;
-  protected URI externalNS;
+  protected FabricLocation externalNS;
 
-  public CodebaseNode_c(Position pos, URI namespace, String alias, URI externalNS) {
-    //XXX: PackageNode_c has an assertion that prevents package_ from being null
-    //          but the implementation seems to allow it. For now, we ignore the
-    //          assertion and extend PackageNode_c
-    this(pos,namespace, alias, externalNS, null);
+  public CodebaseNode_c(Position pos, FabricLocation namespace, String alias,
+      FabricLocation externalNS) {
+    // XXX: PackageNode_c has an assertion that prevents package_ from being
+    // null
+    // but the implementation seems to allow it. For now, we ignore the
+    // assertion and extend PackageNode_c
+    this(pos, namespace, alias, externalNS, null);
   }
-  
-  public CodebaseNode_c(Position pos, URI namespace, String alias, URI externalNS, Package package_) {
+
+  public CodebaseNode_c(Position pos, FabricLocation namespace, String alias,
+      FabricLocation externalNS, Package package_) {
     super(pos, package_);
     this.namespace = namespace;
     this.externalNS = externalNS;
@@ -47,32 +49,33 @@ public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
       }
     }
   }
-  
+
   @Override
   public boolean isDisambiguated() {
-    //CodebaseNodes may have null packages. 
+    // CodebaseNodes may have null packages.
     return package_ == null || super.isDisambiguated();
   }
 
   @Override
-  public URI namespace() {
+  public FabricLocation namespace() {
     return namespace;
   }
-  
-  @Override 
+
+  @Override
   public String alias() {
     return alias;
   }
 
   @Override
-  public URI externalNamespace() {
+  public FabricLocation externalNamespace() {
     return externalNS;
   }
 
   @Override
   public Node copy(NodeFactory nf) {
     CodebaseNodeFactory cnf = (CodebaseNodeFactory) nf;
-    return cnf.CodebaseNode(this.position,  namespace, alias, externalNS, package_);
+    return cnf.CodebaseNode(this.position, namespace, alias, externalNS,
+        package_);
   }
 
   @Override
@@ -88,8 +91,7 @@ public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
 
   @Override
   public String toString() {
-      return externalNS.toString() +  
-          ((package_ == null) ? "": super.toString());
+    return externalNS.toString() + ((package_ == null) ? "" : super.toString());
   }
 
 }

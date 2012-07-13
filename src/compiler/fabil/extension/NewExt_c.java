@@ -24,9 +24,8 @@ public class NewExt_c extends AnnotatedExt_c {
 
     // Only rewrite if instantiating a pure Fabric type.
     FabILTypeSystem ts = pr.typeSystem();
-    if (!ts.isPureFabricType(typeNode))
-      return super.rewriteProxiesImpl(pr);
-    
+    if (!ts.isPureFabricType(typeNode)) return super.rewriteProxiesImpl(pr);
+
     List<Expr> newargs = new LinkedList<Expr>(call.arguments());
     newargs.add(0, call.location());
 

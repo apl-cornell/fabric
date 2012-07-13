@@ -17,11 +17,11 @@ import fabil.visit.AbortRetryCollector;
 public class Atomic_c extends Block_c implements Atomic {
   protected List<LocalInstance> updatedLocals;
   protected boolean mayAbort;
-  
+
   public Atomic_c(Position pos, List<Stmt> statements) {
     super(pos, statements);
   }
-  
+
   @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
@@ -32,53 +32,53 @@ public class Atomic_c extends Block_c implements Atomic {
     // edge come out of the entry of this block.
     FabILTypeSystem ts = (FabILTypeSystem) v.typeSystem();
     v.visitThrow(this, ENTRY, ts.AbortException());
-    
-    // Find all the aborts and retries that are lexically enclosed in the 
+
+    // Find all the aborts and retries that are lexically enclosed in the
     // atomic blocks, and add appropriate edges.
     List<AbortStmt> aborts = new ArrayList<AbortStmt>();
     List<RetryStmt> retries = new ArrayList<RetryStmt>();
-    
-    for (Stmt s : (List<Stmt>)statements()) {
+
+    for (Stmt s : (List<Stmt>) statements()) {
       AbortRetryCollector c = new AbortRetryCollector(aborts, retries);
       s.visit(c);
     }
-    
+
     for (AbortStmt abort : aborts) {
       v.edge(abort, this, EXIT);
     }
     for (RetryStmt retry : retries) {
       v.edge(retry, this, ENTRY);
     }
-    
+
     return super.acceptCFG(v, succs);
   }
-  
+
   @Override
   public List<LocalInstance> updatedLocals() {
     return updatedLocals;
   }
-  
+
   @Override
   public Atomic updatedLocals(List<LocalInstance> s) {
     if (s == this.updatedLocals) {
       return this;
     }
-    Atomic_c n = (Atomic_c)this.copy();
+    Atomic_c n = (Atomic_c) this.copy();
     n.updatedLocals = s;
     return n;
   }
-  
+
   @Override
   public boolean mayAbort() {
     return mayAbort;
   }
-  
+
   @Override
   public Atomic mayAbort(boolean b) {
     if (b == mayAbort) {
       return this;
     }
-    Atomic_c n = (Atomic_c)this.copy();
+    Atomic_c n = (Atomic_c) this.copy();
     n.mayAbort = b;
     return n;
   }

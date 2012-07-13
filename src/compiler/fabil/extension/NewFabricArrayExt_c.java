@@ -47,12 +47,14 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
     Type arrayType = ts.fabricRuntimeArrayOf(baseType);
     String typeArg = "";
     if (baseType.isReference()) {
-      if (ts.isPureFabricType(baseType)) typeArg = baseType.toString();
+      if (ts.isPureFabricType(baseType))
+        typeArg = baseType.toString();
       else typeArg = "fabric.lang.Object";
       typeArg += "._Proxy.class, ";
     }
-    return qq.parseExpr("(%T) new %T(%E, %E, %E, " + typeArg + "%E).$getProxy()",
-        arrayType, arrayImplType, newArray.location(), newArray.updateLabel(), newArray.accessLabel(), size);
+    return qq.parseExpr("(%T) new %T(%E, %E, %E, " + typeArg
+        + "%E).$getProxy()", arrayType, arrayImplType, newArray.location(),
+        newArray.updateLabel(), newArray.accessLabel(), size);
   }
 
   @Override
@@ -89,63 +91,63 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
 
   private NewFabricArray assignUpdateLabel(LabelAssigner la, NewFabricArray expr)
       throws SemanticException {
-        if (expr.updateLabel() != null) return expr;
-      
-        FabILNodeFactory nf = la.nodeFactory();
-        FabILTypeSystem ts = la.typeSystem();
-        QQ qq = la.qq();
-      
-        if (!ts.isFabricReference(expr.type())) return expr;
-      
-        // Need a label. Use null by default for principal objects. The Principal
-        // constructor will fill in the appropriate label.
-        if (ts.isPrincipalClass(expr.type())) {
-          return expr.updateLabel(qq.parseExpr("null").type(ts.Null()));
-        }
-      
-        // Need a label. By default, we use the same label as the context.
-        Context context = la.context();
-        ClassType currentClass = context.currentClass();
-        if (!ts.isFabricReference(currentClass)) {
-          throw new SemanticException("Missing label", expr.position());
-        }
-      
-        Receiver receiver;
-        if (context.inStaticContext()) {
-          receiver =
-              nf.CanonicalTypeNode(Position.compilerGenerated(), currentClass);
-        } else {
-          receiver = qq.parseExpr("this").type(currentClass);
-        }
-      
-        Position pos = Position.compilerGenerated();
-        Call defaultLabel = nf.Call(pos, receiver,
-	    nf.Id(pos, "get$$updateLabel"));
-      
-        Flags flags = Flags.NONE;
-        if (context.inStaticContext()) flags = Flags.STATIC;
-      
-        MethodInstance lmi =
-            ts.methodInstance(pos, currentClass, flags, ts.Label(),
-		"get$$updateLabel", Collections.emptyList(),
-		Collections.emptyList());
-        defaultLabel = (Call) defaultLabel.type(ts.Label());
-        defaultLabel = defaultLabel.methodInstance(lmi);
-        return expr.updateLabel(defaultLabel);
-      }
+    if (expr.updateLabel() != null) return expr;
 
-  private NewFabricArray assignAccessPolicy(LabelAssigner la, NewFabricArray expr) {
-    if (expr.accessLabel() != null) return expr;
-  
+    FabILNodeFactory nf = la.nodeFactory();
     FabILTypeSystem ts = la.typeSystem();
     QQ qq = la.qq();
-  
+
     if (!ts.isFabricReference(expr.type())) return expr;
-    
+
+    // Need a label. Use null by default for principal objects. The Principal
+    // constructor will fill in the appropriate label.
+    if (ts.isPrincipalClass(expr.type())) {
+      return expr.updateLabel(qq.parseExpr("null").type(ts.Null()));
+    }
+
+    // Need a label. By default, we use the same label as the context.
+    Context context = la.context();
+    ClassType currentClass = context.currentClass();
+    if (!ts.isFabricReference(currentClass)) {
+      throw new SemanticException("Missing label", expr.position());
+    }
+
+    Receiver receiver;
+    if (context.inStaticContext()) {
+      receiver =
+          nf.CanonicalTypeNode(Position.compilerGenerated(), currentClass);
+    } else {
+      receiver = qq.parseExpr("this").type(currentClass);
+    }
+
+    Position pos = Position.compilerGenerated();
+    Call defaultLabel = nf.Call(pos, receiver, nf.Id(pos, "get$$updateLabel"));
+
+    Flags flags = Flags.NONE;
+    if (context.inStaticContext()) flags = Flags.STATIC;
+
+    MethodInstance lmi =
+        ts.methodInstance(pos, currentClass, flags, ts.Label(),
+            "get$$updateLabel", Collections.emptyList(),
+            Collections.emptyList());
+    defaultLabel = (Call) defaultLabel.type(ts.Label());
+    defaultLabel = defaultLabel.methodInstance(lmi);
+    return expr.updateLabel(defaultLabel);
+  }
+
+  private NewFabricArray assignAccessPolicy(LabelAssigner la,
+      NewFabricArray expr) {
+    if (expr.accessLabel() != null) return expr;
+
+    FabILTypeSystem ts = la.typeSystem();
+    QQ qq = la.qq();
+
+    if (!ts.isFabricReference(expr.type())) return expr;
+
     // Need a policy. Use the object label's confidentiality policy by default.
     Expr label = expr.updateLabel();
     Expr policy = qq.parseExpr("%E.confPolicy()", label).type(ts.ConfPolicy());
-    
+
     MethodInstance mi =
         ts.methodInstance(Position.compilerGenerated(),
             (ReferenceType) ts.Label(), Flags.PUBLIC, ts.ConfPolicy(),

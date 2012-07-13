@@ -1,7 +1,6 @@
 package fabric;
 
-import java.net.URI;
-import java.util.List;
+import java.util.Set;
 
 import polyglot.ast.Node;
 import polyglot.frontend.CyclicDependencyException;
@@ -15,6 +14,7 @@ import polyglot.frontend.goals.SourceFileGoal;
 import polyglot.main.Options;
 import polyglot.util.InternalCompilerError;
 import fabil.frontend.FabILScheduler;
+import fabric.common.FabricLocation;
 
 /**
  * A small extension of the fabil ExtensionInfo and Scheduler to perform fabil
@@ -104,8 +104,8 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
   // Override signature path so that we use the filsigcp
   // path during the FabIL compilation phase
   @Override
-  public List<URI> signaturepath() {
-    return fabext.fabILSignaturePath();
+  public Set<FabricLocation> filsignaturepath() {
+    return fabext.filsignaturepath();
   }
 
 }

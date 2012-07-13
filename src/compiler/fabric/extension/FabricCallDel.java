@@ -8,7 +8,7 @@ import jif.extension.JifCallDel;
 public class FabricCallDel extends JifCallDel {
   @Override
   public boolean targetIsNeverNull() {
-    Receiver r = ((Call)node()).target();
+    Receiver r = ((Call) node()).target();
     return super.targetIsNeverNull() || r instanceof Worker;
   }
 }

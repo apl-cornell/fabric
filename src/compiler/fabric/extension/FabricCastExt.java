@@ -15,21 +15,20 @@ public class FabricCastExt extends JifCastExt {
   public FabricCastExt(ToJavaExt toJava) {
     super(toJava);
   }
-  
+
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    
+
     // TODO: this causes ref and n to be label checked twice, but it seems
     // there's no way around it.
-    
-    Expr     ref  = (Expr)     lc.labelCheck(node().expr());
-    TypeNode n    = (TypeNode) lc.labelCheck(node().castType());
-    
+
+    Expr ref = (Expr) lc.labelCheck(node().expr());
+    TypeNode n = (TypeNode) lc.labelCheck(node().castType());
+
     if (n.type().isReference())
-      DereferenceHelper.checkAccess(ref,
-                                    (FabricReferenceType) n.type(),
-                                    lc, node().position());
-    
+      DereferenceHelper.checkAccess(ref, (FabricReferenceType) n.type(), lc,
+          node().position());
+
     return super.labelCheck(lc);
   }
 

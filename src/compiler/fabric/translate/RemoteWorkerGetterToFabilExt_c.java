@@ -10,19 +10,19 @@ import fabric.ast.RemoteWorkerGetter;
 
 public class RemoteWorkerGetterToFabilExt_c extends ExprToJavaExt_c {
   /**
-   * @throws SemanticException  
+   * @throws SemanticException
    */
   @Override
   public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {
-    FabILNodeFactory nf = (FabILNodeFactory)rw.java_nf();
-    
-    RemoteWorkerGetter rcg = (RemoteWorkerGetter)node();
-    
+    FabILNodeFactory nf = (FabILNodeFactory) rw.java_nf();
+
+    RemoteWorkerGetter rcg = (RemoteWorkerGetter) node();
+
     return nf.Call(rcg.position(),
-                   rw.qq().parseExpr("worker$"),
-//                   nf.Local(Position.compilerGenerated(), 
-//                            nf.Id(Position.compilerGenerated(), "worker$")), 
-                   nf.Id(Position.compilerGenerated(), "getWorker"), 
-                   rcg.remoteWorkerName());
+        rw.qq().parseExpr("worker$"),
+        // nf.Local(Position.compilerGenerated(),
+        // nf.Id(Position.compilerGenerated(), "worker$")),
+        nf.Id(Position.compilerGenerated(), "getWorker"),
+        rcg.remoteWorkerName());
   }
 }

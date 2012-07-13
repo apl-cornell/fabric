@@ -1,6 +1,5 @@
 package fabric.ast;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,6 +40,7 @@ import codebases.ast.CodebaseDecl;
 import codebases.ast.CodebaseDecl_c;
 import codebases.ast.CodebaseNode;
 import codebases.ast.CodebaseNode_c;
+import fabric.common.FabricLocation;
 import fabric.extension.FabricExt;
 import fabric.extension.LocatedExt_c;
 
@@ -71,27 +71,30 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public Disamb disamb() {
     return new FabricDisamb_c();
   }
+
   @Override
-  public CodebaseNode CodebaseNode(Position pos, URI ns, String name, URI externalNS) {  
+  public CodebaseNode CodebaseNode(Position pos, FabricLocation ns,
+      String name, FabricLocation externalNS) {
     return CodebaseNode(pos, ns, name, externalNS, null);
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, URI ns, String name, URI externalNS, Package package_) {  
+  public CodebaseNode CodebaseNode(Position pos, FabricLocation ns,
+      String name, FabricLocation externalNS, Package package_) {
     CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, package_);
     n = (CodebaseNode) n.ext(fabricExtFactory().extCodebaseNode());
     n = (CodebaseNode) n.del(fabricDelFactory().delCodebaseNode());
-    return n;  
+    return n;
   }
-  
+
   @Override
-  public CodebaseDecl CodebaseDecl(Position pos, Id name) {  
+  public CodebaseDecl CodebaseDecl(Position pos, Id name) {
     CodebaseDecl n = new CodebaseDecl_c(pos, name);
     n = (CodebaseDecl) n.ext(fabricExtFactory().extCodebaseDecl());
     n = (CodebaseDecl) n.del(fabricDelFactory().delCodebaseDecl());
-    return n;  
+    return n;
   }
-  
+
   // ////////////////////////////////////////////////////////////////////////////
   // new factory methods //
   // ////////////////////////////////////////////////////////////////////////////
@@ -225,7 +228,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
       throw new InternalCompilerError("Fabric does not support inner classes.");
     if (outer != null)
       throw new InternalCompilerError("Fabric does not support inner classes.");
-    
+
     @SuppressWarnings("unchecked")
     New n = new FabricNew_c(pos, objectType, args, body);
     n = (New) n.ext(extFactory().extNew());
@@ -271,13 +274,16 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     result = (NewLabel) setLocation(result, location);
     return result;
   }
-  
+
   @Override
-  public PrincipalExpr PrincipalExpr(Position pos, PrincipalNode principal, Expr location) {
-      PrincipalExpr n = super.PrincipalExpr(pos, principal);
-      n = (PrincipalExpr) n.del(((FabricDelFactory)delFactory()).delPrincipalExpr());
-      n = (PrincipalExpr) setLocation(n, location);
-      return n;
+  public PrincipalExpr PrincipalExpr(Position pos, PrincipalNode principal,
+      Expr location) {
+    PrincipalExpr n = super.PrincipalExpr(pos, principal);
+    n =
+        (PrincipalExpr) n.del(((FabricDelFactory) delFactory())
+            .delPrincipalExpr());
+    n = (PrincipalExpr) setLocation(n, location);
+    return n;
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -309,26 +315,26 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     n = (JifClassDecl) n.del(delFactory().delClassDecl());
     return n;
   }
-  
+
   @Override
-  public FabricFieldDecl FabricFieldDecl(Position pos, Flags flags, 
+  public FabricFieldDecl FabricFieldDecl(Position pos, Flags flags,
       TypeNode type, LabelNode accessLabel, Id name, Expr init) {
-    FabricFieldDecl n = new FabricFieldDecl_c(pos, flags, type, accessLabel,
-        name, init);
-    n = (FabricFieldDecl)n.ext(extFactory().extFieldDecl());
-    n = (FabricFieldDecl)n.del(delFactory().delFieldDecl());    
+    FabricFieldDecl n =
+        new FabricFieldDecl_c(pos, flags, type, accessLabel, name, init);
+    n = (FabricFieldDecl) n.ext(extFactory().extFieldDecl());
+    n = (FabricFieldDecl) n.del(delFactory().delFieldDecl());
     return n;
   }
-  
 
   @SuppressWarnings("rawtypes")
   @Override
   public ClassBody ClassBody(Position pos, List members) {
     @SuppressWarnings("unchecked")
     ClassBody n = new ClassBody_c(pos, CollectionUtil.nonNullList(members));
-    n = (ClassBody)n.ext(extFactory().extClassBody());
-    n = (ClassBody)n.del(delFactory().delClassBody());
-    return n;  }
+    n = (ClassBody) n.ext(extFactory().extClassBody());
+    n = (ClassBody) n.del(delFactory().delClassBody());
+    return n;
+  }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
@@ -365,18 +371,20 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     n = (AmbPrincipalNode) n.del(delFactory().delExpr());
     return n;
   }
-  
+
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public SourceFile SourceFile(Position pos, PackageNode packageName, 
+  public SourceFile SourceFile(Position pos, PackageNode packageName,
       List imports, List decls) {
     return SourceFile(pos, packageName, Collections.EMPTY_LIST, imports, decls);
   }
 
   @Override
-  public SourceFile SourceFile(Position pos, PackageNode packageName, List<CodebaseDecl> codebases,
-      List<Import> imports, List<TopLevelDecl> decls) {
-    SourceFile sf = new CBSourceFile_c(pos, packageName, imports, codebases, decls);
+  public SourceFile SourceFile(Position pos, PackageNode packageName,
+      List<CodebaseDecl> codebases, List<Import> imports,
+      List<TopLevelDecl> decls) {
+    SourceFile sf =
+        new CBSourceFile_c(pos, packageName, imports, codebases, decls);
     sf = (SourceFile) sf.ext(jifExtFactory().extSourceFile());
     sf = (SourceFile) sf.del(delFactory().delSourceFile());
     return sf;

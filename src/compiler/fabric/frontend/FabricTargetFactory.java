@@ -1,28 +1,36 @@
 package fabric.frontend;
 
-import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.tools.FileObject;
+import javax.tools.JavaFileObject;
+
+import fabric.common.FabricLocation;
+
+import polyglot.filemanager.FileManager;
 import polyglot.frontend.Source;
 import polyglot.frontend.TargetFactory;
 
 public class FabricTargetFactory extends TargetFactory {
 
-  protected Set<File> outputFiles;
-  public FabricTargetFactory(File outDir, String outExt, boolean so) {
-    super(outDir, outExt, so);
-    this.outputFiles = new HashSet<File>();
-  }
-    
-  @Override
-  public File outputFile(String packageName, String className, Source source) {
-    File f = super.outputFile(packageName, className, source);
-    outputFiles.add(f);
-    return f;
+  protected Set<FileObject> outputFiles;
+
+  public FabricTargetFactory(FileManager fm, FabricLocation outLoc,
+      String outExt, boolean so) {
+    super(fm, outLoc, outExt, so);
+    this.outputFiles = new HashSet<FileObject>();
   }
 
-  public Set<File> outputFiles() {
+  @Override
+  public JavaFileObject outputFileObject(String packageName, String className,
+      Source source) {
+    JavaFileObject fo = super.outputFileObject(packageName, className, source);
+    outputFiles.add(fo);
+    return fo;
+  }
+
+  public Set<FileObject> outputFiles() {
     return outputFiles;
   }
 }

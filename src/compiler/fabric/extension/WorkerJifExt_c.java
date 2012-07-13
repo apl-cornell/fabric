@@ -14,20 +14,20 @@ public class WorkerJifExt_c extends JifExprExt {
   public WorkerJifExt_c(ToJavaExt toJava) {
     super(toJava);
   }
-  
+
   /**
-   * @throws SemanticException  
+   * @throws SemanticException
    */
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
     // Basically the same as the label checking for literals.
-    Worker c = (Worker)node();
-    
+    Worker c = (Worker) node();
+
     JifContext A = lc.jifContext();
-    A = (JifContext)c.del().enterScope(A);
-    
-    FabricTypeSystem ts = (FabricTypeSystem)lc.typeSystem();
-    
+    A = (JifContext) c.del().enterScope(A);
+
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+
     PathMap X = ts.pathMap();
     X = X.N(A.pc());
     X = X.NV(A.pc());

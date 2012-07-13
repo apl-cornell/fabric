@@ -1,13 +1,13 @@
 package codebases.types;
 
-import java.net.URI;
 import java.util.Arrays;
 
 import codebases.frontend.ExtensionInfo;
+import fabric.common.FabricLocation;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 
-/** 
+/**
  * This resolver preempts lookups to inner by first using the platform resolver.
  * This ensures the platform classes cannot be redefined by a codebase.
  * 
@@ -23,7 +23,7 @@ public class SafeResolver extends PathResolver implements NamespaceResolver {
   }
 
   @Override
-  public URI resolveCodebaseNameImpl(String name) {
+  public FabricLocation resolveCodebaseNameImpl(String name) {
     return inner.resolveCodebaseName(name);
   }
 

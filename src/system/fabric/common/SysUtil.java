@@ -26,7 +26,6 @@ import fabric.worker.Worker;
 /**
  * Convenience class containing generally useful methods such as functional
  * programming idioms and hashing methods.
- * 
  */
 
 public final class SysUtil {
@@ -55,11 +54,11 @@ public final class SysUtil {
   public static byte[] hashPlatformClass(Class<?> c) throws IOException {
     boolean hashing_Impl = false;
     Class<?> ifaceClass = null;
-    
+
     // There are two cases here. If the class extends fabric.lang.Object and was
     // compiled with filc/fabc, we use the compiler-generated hash. Otherwise,
     // we hash the class's bytecode.
-    
+
     if (fabric.lang.Object.class.isAssignableFrom(c)) {
       // We have a Fabric class. Use the filc/fabc-generated hash, if any. If we
       // get any exceptions from attempting to do this, we assume that the class
@@ -71,7 +70,7 @@ public final class SysUtil {
       } catch (IllegalArgumentException e) {
       } catch (IllegalAccessException e) {
       }
-      
+
       // Fabric class wasn't compiled by filc/fabc. Instead, we hash the
       // bytecode for the _Impl class, if any, to ensure we cover the class's
       // code.
@@ -84,8 +83,8 @@ public final class SysUtil {
         }
       }
     }
-    
-    // Class wasn't compiled by filc/fabc.  Hash the bytecode instead.
+
+    // Class wasn't compiled by filc/fabc. Hash the bytecode instead.
     String className = c.getName();
 
     CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing platform class: {0}",
@@ -105,7 +104,7 @@ public final class SysUtil {
     } else {
       classLoader = c.getClassLoader();
     }
-    
+
     if (classLoader == null) {
       classLoader = ClassLoader.getSystemClassLoader();
     }
@@ -144,7 +143,7 @@ public final class SysUtil {
         digest.update(hashPlatformClass(superClass));
       }
     }
-    
+
     // Include declared interfaces, if any.
     Class<?>[] interfaces =
         hashing_Impl ? ifaceClass.getInterfaces() : c.getInterfaces();
@@ -165,7 +164,7 @@ public final class SysUtil {
 
     return result;
   }
-  
+
   /**
    * Returns the class hash for the Fabric class referred by the given
    * FabricClassRef.
@@ -214,12 +213,11 @@ public final class SysUtil {
         return (Class<? extends _Impl>) nested;
       }
     }
-    
+
     return null;
   }
 
-  public static URL locateClass(String className)
-      throws ClassNotFoundException {
+  public static URL locateClass(String className) throws ClassNotFoundException {
     Class<?> c = Worker.getWorker().getClassLoader().loadClass(className);
 
     ClassLoader classLoader = c.getClassLoader();
@@ -301,7 +299,7 @@ public final class SysUtil {
       }
     };
   }
-  
+
   /**
    * Turns an object into an array of bytes using Java serialization.
    */
@@ -311,10 +309,10 @@ public final class SysUtil {
     oos.writeObject(obj);
     oos.flush();
     baos.flush();
-    
+
     return baos.toByteArray();
   }
-  
+
   /**
    * Turns an array of bytes into an object using Java serialization.
    */
@@ -326,23 +324,23 @@ public final class SysUtil {
   }
 
   /**
-   * A Thunk<T> represents a delayed execution resulting in type T.  The
+   * A Thunk<T> represents a delayed execution resulting in type T. The
    * computation create() is executed the first time get() is called, and its
-   * value is stored and returned on subsequent calls to get(). 
+   * value is stored and returned on subsequent calls to get().
    */
   public static abstract class Thunk<T> {
     private boolean initialized = false;
-    private T value = null; 
-    
+    private T value = null;
+
     public final T get() {
-      if (! initialized) {
+      if (!initialized) {
         value = create();
         initialized = true;
       }
-      
+
       return value;
     }
-    
+
     protected abstract T create();
   }
 

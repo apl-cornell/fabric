@@ -11,14 +11,12 @@ public class FieldDeclToFabilExt_c extends FieldDeclToJavaExt_c {
   public NodeVisitor toJavaEnter(JifToJavaRewriter rw) throws SemanticException {
     rw = (JifToJavaRewriter) super.toJavaEnter(rw);
 
-    //XXX: the serialization pass doesn't use the Fabric NodeFactory *sigh*
-    //skip fields used for polyglot metadata 
+    // XXX: the serialization pass doesn't use the Fabric NodeFactory *sigh*
+    // skip fields used for polyglot metadata
     if (node() instanceof FabricFieldDecl) {
       FabricFieldDecl f = (FabricFieldDecl) node();
       return rw.bypass(f.accessLabel());
-    }
-    else
-      return rw;
+    } else return rw;
   }
-  
+
 }

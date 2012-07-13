@@ -3,10 +3,12 @@ package fabric.lang;
 public class DefaultStatistics implements Statistics {
 
   @Override
-  public void commitRead()  { }
+  public void commitRead() {
+  }
 
   @Override
-  public void commitWrote() { }
+  public void commitWrote() {
+  }
 
   @Override
   public int generatePromise() {

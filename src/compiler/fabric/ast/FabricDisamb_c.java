@@ -1,7 +1,5 @@
 package fabric.ast;
 
-import java.net.URI;
-
 import jif.ast.JifDisamb_c;
 import polyglot.ast.Ambiguous;
 import polyglot.ast.Disamb;
@@ -27,6 +25,7 @@ import codebases.types.CBImportTable;
 import codebases.types.CodebaseClassType;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
+import fabric.common.FabricLocation;
 import fabric.types.FabricContext;
 
 /**
@@ -37,7 +36,7 @@ import fabric.types.FabricContext;
 // NB: The body of this class is almost identical to FabilDisamb, but this
 // class extends JifDisamb_c.
 public class FabricDisamb_c extends JifDisamb_c implements Disamb {
-  protected URI namespace;
+  protected FabricLocation namespace;
 
   /* Convenience fields */
   private CodebaseTypeSystem ts;
@@ -175,7 +174,7 @@ public class FabricDisamb_c extends JifDisamb_c implements Disamb {
           }
           CBImportTable it = (CBImportTable) c.importTable();
           if (it.isExternal(name.id())) {
-            // This type was loaded with a codebase import, 
+            // This type was loaded with a codebase import,
             // so it is an external dep
             CBJobExt ext = (CBJobExt) v.job().ext();
             String alias = it.aliasFor(name.id());
@@ -207,7 +206,7 @@ public class FabricDisamb_c extends JifDisamb_c implements Disamb {
     if (packageOK()) {
       // Is it an explicit codebase?
       FabricContext ctx = (FabricContext) v.context();
-      URI ns = ctx.resolveCodebaseName(name.id());
+      FabricLocation ns = ctx.resolveCodebaseName(name.id());
       if (ns != null)
         return nf.CodebaseNode(pos, namespace, name.id(), ns);
       else

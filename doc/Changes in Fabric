@@ -1,0 +1,52 @@
+Design changes in Fabric
+========================
+
+src/compiler
+------------
+
+1. codebases/frontend - CodebaseSourceLoader, FileSourceLoader, URISourceDispatcher and 
+                        URISourceLoader are replaced by a file manager(FabricFileManager).
+2. fabil/types        - ClassFile is now an interface (extending ClassFile in polyglot) and 
+                        ClassFile_c is a class implementing the interface.
+3. fabil and fabric   - ExtensionInfo now has no method called createRemoteSource. Instead, 
+                        LocalSource and RemoteSource are now being generated through 
+                        createFileSourceMethod.
+4. fabil and fabric   - Main method is now calling call method of CompilationTask(which is 
+                        obtained by calling getTask method on JavaCompiler) to compile .java 
+                        files unless a post-compiler is provided explicitly by the "-post" 
+			option.
+5. fabil              - In FabILOptions, a method bootclasspath is renamed to filbootclasspath 
+                        to avoid the confusion in FabricOptions.
+6. Almost everywhere  - URI related to a FileSource or CodebaseSource is wrapped and replaced 
+                        by FabricLocation.
+
+Additions to Fabric
+===================
+
+src/compiler
+------------
+
+1. fabric/filemanager - This package includes 
+                        FabricFileManager - It deals with loading of the source files and 
+                        files for any missing type during compilation.
+                        FabricSourceObject - It is a wrapper around the FClass and an object 
+                        that FabricFileManager can understand and deal with.
+                        FileManagerUtil - It provides helper methods to FabricFileManager.
+                        ClassObject - It represents an in-memory object that will hold the bytecode 
+                        after post compiler processing.
+2. fabil              - FabILOptions now has four additional methods. bootclasspath (for setting 
+                        java boot classpath), outputDirectory (for setting the output directory 
+                        for source files), classOutputDirectory (for setting the output directory 
+                        for class files) and needMemClassObjects (for indicating if store/worker 
+                        setup requires to put .class files in memory after the compilation of 
+                        FClasses.
+3. fabil/types        - FabILTypeSystem has an additional method javaruntimeResolvers (for 
+                        getting the resolvers that resolve a type in java boot classpath namespace).
+src/system
+----------
+
+4. fabric/common      - FabricLocation, FabricLocation_c and FabricLocationFactory (that generates 
+                        new or generated location based on a URI)
+5. fabric/common      - Options has now a new flag (for setting outputToLocalFS parameter), 
+                        which is set while parsing the options given in scripts or on a commandline 
+			for starting stores and workers.

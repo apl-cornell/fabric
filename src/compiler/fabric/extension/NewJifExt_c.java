@@ -21,9 +21,9 @@ public class NewJifExt_c extends JifNewExt {
 
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    New      n   = (New) super.labelCheck(lc);
+    New n = (New) super.labelCheck(lc);
     NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(n);
-    
+
     Type newType = n.objectType().type();
     // Bypass check if this is a principal object. This condition will be
     // enforced with the $addDefaultDelegates method
@@ -33,27 +33,20 @@ public class NewJifExt_c extends JifNewExt {
       FabricClassType ct = (FabricClassType) newType;
       FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
 
-
       Label accessLabel = ts.toLabel(ct.accessPolicy());
       if (accessLabel != null) {
-        accessLabel = JifInstantiator.instantiate(
-            accessLabel,
-            lc.jifContext(),
-            n,
-            newType.toReference(),
-            Jif_c.getPathMap(n).NV());
+        accessLabel =
+            JifInstantiator.instantiate(accessLabel, lc.jifContext(), n,
+                newType.toReference(), Jif_c.getPathMap(n).NV());
       }
 
       Label objectLabel = ct.updateLabel();
       if (objectLabel != null) {
-        objectLabel = JifInstantiator.instantiate(
-            objectLabel,
-            lc.jifContext(),
-            n,
-            newType.toReference(),
-            Jif_c.getPathMap(n).NV());
+        objectLabel =
+            JifInstantiator.instantiate(objectLabel, lc.jifContext(), n,
+                newType.toReference(), Jif_c.getPathMap(n).NV());
       }
-      
+
       ext.labelCheck(lc, objectLabel, accessLabel);
     }
 

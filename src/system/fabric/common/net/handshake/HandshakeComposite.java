@@ -12,17 +12,17 @@ import fabric.common.exceptions.NotImplementedException;
 public class HandshakeComposite implements Protocol {
 
   private Map<String, Protocol> handshakes;
-  private Protocol              outgoing;
-  
-  public HandshakeComposite(Protocol ... protocols) {
+  private Protocol outgoing;
+
+  public HandshakeComposite(Protocol... protocols) {
     this.handshakes = new HashMap<String, Protocol>(protocols.length);
     for (Protocol p : protocols) {
       this.handshakes.put(p.getClass().getName(), p);
     }
-    
-    this.outgoing   = protocols[0];
+
+    this.outgoing = protocols[0];
   }
-  
+
   @Override
   public ShakenSocket initiate(String name, Socket s) throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
@@ -37,9 +37,9 @@ public class HandshakeComposite implements Protocol {
 
     Protocol protocol = this.handshakes.get(protName);
     if (null == protocol)
-      // TODO
+    // TODO
       throw new NotImplementedException(handshakes.keySet() + "||" + protName);
-    
+
     return protocol.receive(s);
   }
 

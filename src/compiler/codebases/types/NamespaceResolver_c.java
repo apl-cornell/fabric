@@ -1,7 +1,6 @@
 package codebases.types;
 
 import java.io.InvalidClassException;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,6 +37,7 @@ import polyglot.util.StringUtil;
 import polyglot.util.TypeEncoder;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.ExtensionInfo;
+import fabric.common.FabricLocation;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
@@ -50,21 +50,20 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   @SuppressWarnings("unchecked")
   private static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.resolver);
-  protected static final List<String> REPORT_TOPICS = Arrays.asList(new String[] {
-      Report.types, Report.resolver, Report.loader });
+  protected static final List<String> REPORT_TOPICS = Arrays
+      .asList(new String[] { Report.types, Report.resolver, Report.loader });
   protected static final int NOT_COMPATIBLE = -1;
   protected static final int MINOR_NOT_COMPATIBLE = 1;
   protected static final int COMPATIBLE = 0;
-  protected final URI namespace;
+  protected final FabricLocation namespace;
   protected final ExtensionInfo extInfo;
   protected final TypeEncoder te;
   protected final NamespaceResolver parent;
 
-
-  ///////////////////////////////////////////////////////////////////////////
+  // /////////////////////////////////////////////////////////////////////////
   // Caches
-  ///////////////////////////////////////////////////////////////////////////
-  
+  // /////////////////////////////////////////////////////////////////////////
+
   /** packageExists == true cache */
   protected Set<String> packages;
   /** packageExists == false cache */
@@ -73,37 +72,39 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   protected Map<String, Importable> cache;
   /** class not found cache */
   protected Map<String, SemanticException> notFound;
-  
+
   /** alias cache */
-  protected final Map<String,URI> aliasCache;
+  protected final Map<String, FabricLocation> aliasCache;
   /** no such alias cache */
   protected Set<String> noAlias;
 
   protected Label integrity;
 
-  public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace) {
+  public NamespaceResolver_c(ExtensionInfo extInfo, FabricLocation namespace) {
     this(extInfo, namespace, null);
   }
-  public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace,
+
+  public NamespaceResolver_c(ExtensionInfo extInfo, FabricLocation namespace,
       NamespaceResolver parent) {
-    this(extInfo, namespace, parent, new HashMap<String, URI>());
+    this(extInfo, namespace, parent, new HashMap<String, FabricLocation>());
   }
-  public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace,
-      NamespaceResolver parent, Map<String, URI> aliases) {
+
+  public NamespaceResolver_c(ExtensionInfo extInfo, FabricLocation namespace,
+      NamespaceResolver parent, Map<String, FabricLocation> aliases) {
     this.cache = new HashMap<String, Importable>();
     this.packages = new HashSet<String>();
     this.noPackage = new HashSet<String>();
     this.notFound = new HashMap<String, SemanticException>();
-    // A namespace URI must end with a '/' so we can properly
-    // compare URIs and create new ones using resolve()
-    if (!namespace.isOpaque() && !namespace.getScheme().equals("file")
-        && !namespace.getPath().endsWith("/"))
+    // A namespace FabricLocation must end with a '/' so we can properly
+    // compare FabricLocations and create new ones using resolve()
+    if (!namespace.isOpaque() && !namespace.isFileReference()
+        && !namespace.getUri().getPath().endsWith("/"))
       throw new InternalCompilerError("Malformed namespace: " + namespace);
     this.namespace = namespace;
     this.extInfo = extInfo;
     this.te = extInfo.typeEncoder();
     this.parent = parent;
-    this.aliasCache = new HashMap<String,URI>(aliases);
+    this.aliasCache = new HashMap<String, FabricLocation>(aliases);
     this.noAlias = new HashSet<String>();
   }
 
@@ -114,9 +115,9 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     else if (noPackage.contains(name))
       return false;
     else {
-      URI aliasNS = null;
+      FabricLocation aliasNS = null;
       if (!StringUtil.isNameShort(name)) {
-        //First check if name uses a codebase alias.
+        // First check if name uses a codebase alias.
         String first = StringUtil.getFirstComponent(name);
         aliasNS = resolveCodebaseName(first);
       }
@@ -125,15 +126,13 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
         NamespaceResolver nr = ts.namespaceResolver(aliasNS);
         String pkg = StringUtil.removeFirstComponent(name);
         boolean res;
-        if (!"".equals(pkg)) 
+        if (!"".equals(pkg))
           res = nr.packageExists(pkg);
-        else
-          res = true;
-        
+        else res = true;
+
         if (res)
           packages.add(name);
-        else
-          noPackage.add(name);
+        else noPackage.add(name);
       }
 
       if (packageExistsImpl(name)) {
@@ -148,8 +147,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
   @Override
   public final Importable find(String name) throws SemanticException {
- 
-     if (Report.should_report(TOPICS, 2))
+
+    if (Report.should_report(TOPICS, 2))
       Report.report(2, "[" + namespace + "] " + "NamespaceResolver_c: find: "
           + name);
 
@@ -164,9 +163,9 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
             + "NamespaceResolver_c: not cached: " + name);
 
       try {
-        URI aliasNS = null;
+        FabricLocation aliasNS = null;
         if (!StringUtil.isNameShort(name)) {
-          //First check if name uses a codebase alias.
+          // First check if name uses a codebase alias.
           String first = StringUtil.getFirstComponent(name);
           aliasNS = resolveCodebaseName(first);
         }
@@ -202,7 +201,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
       if (Report.should_report(TOPICS, 3))
         Report.report(3, "[" + namespace + "] "
-            + "NamespaceResolver_c: loaded: " + name + "(" + q + ")" + " from NS:" + ((CodebaseClassType)q).canonicalNamespace());
+            + "NamespaceResolver_c: loaded: " + name + "(" + q + ")"
+            + " from NS:" + ((CodebaseClassType) q).canonicalNamespace());
     } else {
       if (Report.should_report(TOPICS, 3))
         Report.report(3, "[" + namespace + "] "
@@ -244,7 +244,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
           "Expected entry to implement CodebaseClassType and ParsedTypeObject, but got "
               + q.getClass());
 
-    // /TODO: This method may need to check more things related to clashes with package names.
+    // /TODO: This method may need to check more things related to clashes with
+    // package names.
     if (packageExists(name))
       throw new SemanticException("Type \"" + name
           + "\" clashes with package of the same name.", q.position());
@@ -262,11 +263,11 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
       }
     } else throw new InternalCompilerError(q + " is not a ParsedTypeObject: "
         + q.getClass());
-    
+
     replace(name, q);
 
-    // If we are loading a class from another namespace, 
-    //  add the class to that namespace too.
+    // If we are loading a class from another namespace,
+    // add the class to that namespace too.
     if (q instanceof CodebaseClassType) {
       CodebaseClassType cct = (CodebaseClassType) q;
       if (!namespace.equals(cct.canonicalNamespace())) {
@@ -308,7 +309,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   }
 
   @Override
-  public URI namespace() {
+  public FabricLocation namespace() {
     return namespace;
   }
 
@@ -323,20 +324,20 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     Job job = scheduler.loadSource((FileSource) source, true);
     CodebaseSource cbsrc = (CodebaseSource) source;
 
-    //The type may be remote and not added to our namespace yet.
+    // The type may be remote and not added to our namespace yet.
     Importable n = ts.namespaceResolver(cbsrc.canonicalNamespace()).check(name);
 
     if (n != null) {
       return n;
     }
 
-    //The type may not have reached the proper compilation pass yet.
+    // The type may not have reached the proper compilation pass yet.
     if (job != null) {
-           
+
       Goal g = scheduler.TypesInitialized(job);
 
       if (!scheduler.reached(g)) {
-        
+
         throw new MissingDependencyException(g);
       }
     }
@@ -377,7 +378,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
       throw e;
     } catch (InvalidClassException e) {
       throw new BadSerializationException(clazz.name() + "@"
-          + clazz.getClassFileLocation());
+          + clazz.getClassFileURI());
     }
 
     if (dt instanceof ClassType) {
@@ -395,8 +396,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
         Report.report(2, "Returning serialized ClassType for " + clazz.name()
             + ".");
 
-      //XXX: Is this really necessary? (I don't think it is)
-      //ensureInitialized();
+      // XXX: Is this really necessary? (I don't think it is)
+      // ensureInitialized();
       return ct;
     } else {
       throw new SemanticException("Class " + name + " not found in "
@@ -439,10 +440,9 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   }
 
   @Override
-  public final URI resolveCodebaseName(String name) {
-    URI ns = aliasCache.get(name);
-    if (ns != null)
-      return ns;
+  public final FabricLocation resolveCodebaseName(String name) {
+    FabricLocation ns = aliasCache.get(name);
+    if (ns != null) return ns;
     if (!noAlias.contains(name)) {
       ns = resolveCodebaseNameImpl(name);
       if (ns == null)
@@ -454,9 +454,9 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     }
     return null;
   }
-  
+
   @Override
-  public Map<String, URI> codebaseAliases() {
+  public Map<String, FabricLocation> codebaseAliases() {
     return Collections.unmodifiableMap(aliasCache);
   }
 
@@ -478,5 +478,5 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
       return integrity;
     }
     throw new InternalCompilerError("Not implemented yet! Hurry up!");
-  }  
+  }
 }

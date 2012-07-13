@@ -1,7 +1,6 @@
 package fabil.visit;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import polyglot.ast.ClassDecl;
@@ -17,11 +16,11 @@ public class ClassSerializer extends polyglot.visit.ClassSerializer {
 
   protected boolean sig_mode;
 
-  public ClassSerializer(TypeSystem ts, NodeFactory nf, Date date,
+  public ClassSerializer(TypeSystem ts, NodeFactory nf, long time,
       ErrorQueue eq, Version ver, boolean signatureMode) {
-    super(ts, nf, date, eq, ver);
-    //Replace TypeEncode with call to factory method. 
-    this.te = ((ExtensionInfo)ts.extensionInfo()).typeEncoder();
+    super(ts, nf, time, eq, ver);
+    // Replace TypeEncode with call to factory method.
+    this.te = ((ExtensionInfo) ts.extensionInfo()).typeEncoder();
     this.sig_mode = signatureMode;
   }
 

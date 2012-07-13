@@ -8,9 +8,10 @@ import java.util.List;
 public class TokenizedCommandSource extends CommandSource {
   protected int nextToken;
   protected final String[] tokens;
-  
+
   /**
-   * @param tokens an array wherein each element is an individual token.
+   * @param tokens
+   *          an array wherein each element is an individual token.
    */
   public TokenizedCommandSource(String[] tokens) {
     this.tokens = tokens;
@@ -20,14 +21,14 @@ public class TokenizedCommandSource extends CommandSource {
   @Override
   public List<String> getNextCommand(List<String> buf) {
     if (nextToken >= tokens.length) return null;
-    
+
     buf.clear();
     while (nextToken < tokens.length) {
       String token = tokens[nextToken++];
       if (";".equals(token)) return buf;
       buf.add(token);
     }
-    
+
     return buf;
   }
 

@@ -14,7 +14,7 @@ public class AbortStmt_c extends Stmt_c implements AbortStmt {
   public AbortStmt_c(Position pos) {
     super(pos);
   }
-  
+
   @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
@@ -28,7 +28,7 @@ public class AbortStmt_c extends Stmt_c implements AbortStmt {
 
   @Override
   public void prettyPrint(CodeWriter w, PrettyPrinter tr) {
-      w.write("abort;");
+    w.write("abort;");
   }
 
   @Override

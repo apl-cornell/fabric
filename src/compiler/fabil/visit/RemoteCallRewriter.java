@@ -27,7 +27,7 @@ public class RemoteCallRewriter extends NodeVisitor {
   public Node leave(Node old, Node n, NodeVisitor v) {
     return ext(n).rewriteRemoteCalls(this);
   }
-  
+
   /**
    * @return the qq
    */
@@ -38,7 +38,7 @@ public class RemoteCallRewriter extends NodeVisitor {
   public NodeFactory nodeFactory() {
     return nf;
   }
-  
+
   public FabILTypeSystem typeSystem() {
     return ts;
   }

@@ -26,7 +26,7 @@ public class InitializerExt_c extends ClassMemberExt_c {
     Flags flags = init.flags();
 
     if (!flags.isStatic()) return super.staticImplInitMember(pr);
-    
+
     return Collections.singletonList((Stmt) init.body());
   }
 

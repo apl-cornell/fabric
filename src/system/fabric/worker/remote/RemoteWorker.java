@@ -46,7 +46,7 @@ import fabric.worker.transaction.TransactionRegistry;
  * object representing that worker.
  */
 public final class RemoteWorker extends RemoteNode {
-  
+
   private transient final SubSocketFactory subSocketFactory;
 
   /**
@@ -55,7 +55,7 @@ public final class RemoteWorker extends RemoteNode {
    */
   public RemoteWorker(String name) {
     super(name);
-    
+
     this.subSocketFactory = Worker.getWorker().authToWorker;
   }
 
@@ -64,7 +64,7 @@ public final class RemoteWorker extends RemoteNode {
       throws UnreachableNodeException, RemoteCallException {
     TransactionManager tm = TransactionManager.getInstance();
     tm.registerRemoteCall(this);
- 
+
     TransactionID tid = tm.getCurrentTid();
     WriterMap writerMap = tm.getWriterMap();
 
@@ -91,8 +91,7 @@ public final class RemoteWorker extends RemoteNode {
   }
 
   public void prepareTransaction(long tid, long commitTime)
-       throws UnreachableNodeException,
-              TransactionPrepareFailedException {
+      throws UnreachableNodeException, TransactionPrepareFailedException {
     send(new PrepareTransactionMessage(tid, commitTime));
   }
 
@@ -107,8 +106,8 @@ public final class RemoteWorker extends RemoteNode {
    * @param tid
    *          the tid for the transaction that is aborting.
    */
-  public void abortTransaction(TransactionID tid)
-      throws AccessException, UnreachableNodeException {
+  public void abortTransaction(TransactionID tid) throws AccessException,
+      UnreachableNodeException {
     send(new AbortTransactionMessage(tid));
   }
 
@@ -128,15 +127,16 @@ public final class RemoteWorker extends RemoteNode {
 
     if (remoteSerializedObj == null)
       throw new InternalError("Inter-worker object read failed.");
-    
+
     _Impl remoteObj =
         remoteSerializedObj.second.deserialize(remoteSerializedObj.first);
     obj.$copyAppStateFrom(remoteObj);
   }
 
-  public Pair<Store, SerializedObject> readObject(TransactionID tid, Store store, long onum)
-      throws AccessException {
-    DirtyReadMessage.Response response = send(new DirtyReadMessage(tid, store, onum));
+  public Pair<Store, SerializedObject> readObject(TransactionID tid,
+      Store store, long onum) throws AccessException {
+    DirtyReadMessage.Response response =
+        send(new DirtyReadMessage(tid, store, onum));
     if (response.obj == null) return null;
     return new Pair<Store, SerializedObject>(response.store, response.obj);
   }
@@ -150,7 +150,7 @@ public final class RemoteWorker extends RemoteNode {
   public void takeOwnership(TransactionID tid, Store store, long onum) {
     try {
       send(new TakeOwnershipMessage(tid, store, onum));
-    } catch(TakeOwnershipFailedException e) {
+    } catch (TakeOwnershipFailedException e) {
       throw new InternalError(e);
     }
   }
@@ -221,7 +221,7 @@ public final class RemoteWorker extends RemoteNode {
     }
     return response.result;
   }
-  
+
   private <R extends Message.Response, E extends FabricException> R send(
       Message<R, E> message) throws E {
     return send(subSocketFactory, message);

@@ -1,7 +1,5 @@
 package codebases.visit;
 
-import java.net.URI;
-
 import polyglot.ast.NodeFactory;
 import polyglot.ast.SourceFile;
 import polyglot.frontend.Job;
@@ -11,9 +9,11 @@ import polyglot.util.CodeWriter;
 import polyglot.visit.Translator;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.ExtensionInfo;
+import fabric.common.FabricLocation;
 
 public class CodebaseTranslator extends Translator {
   protected final ExtensionInfo extInfo;
+
   public CodebaseTranslator(Job job, TypeSystem ts, NodeFactory nf,
       TargetFactory tf) {
     super(job, ts, nf, tf);
@@ -24,7 +24,7 @@ public class CodebaseTranslator extends Translator {
   protected void writeHeader(SourceFile sfn, CodeWriter w) {
     // XXX: HACK -- The translator hasn't entered the scope of the file yet,
     // so we basically are inlining what translate() would do.
-    URI ns = ((CodebaseSource) sfn.source()).canonicalNamespace();
+    FabricLocation ns = ((CodebaseSource) sfn.source()).canonicalNamespace();
     if (sfn.package_() != null) {
       w.write("package ");
       w.write(extInfo.namespaceToJavaPackagePrefix(ns));
@@ -44,7 +44,7 @@ public class CodebaseTranslator extends Translator {
       }
     }
 
-    //XXX: assuming fully_qualified_names is set, no imports are written
+    // XXX: assuming fully_qualified_names is set, no imports are written
     // boolean newline = false;
     // // No imports
     // for (Iterator i = sfn.imports().iterator(); i.hasNext();) {

@@ -1,6 +1,5 @@
 package fabric.types;
 
-import java.net.URI;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -28,37 +27,39 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseClassType;
+import fabric.common.FabricLocation;
 
-public class FabricParsedClassType_c extends JifParsedPolyType_c implements FabricParsedClassType {
+public class FabricParsedClassType_c extends JifParsedPolyType_c implements
+    FabricParsedClassType {
   private transient Label singleFieldLabel = null;
   private transient ConfPolicy accessPolicy = null;
   private transient boolean fieldLabelFound = false;
-  
-  protected URI canonical_ns = null;
+
+  protected FabricLocation canonical_ns = null;
   protected Set<CodebaseClassType> namespaceDependencies;
-  
+
   public FabricParsedClassType_c() {
     super();
   }
 
-  public FabricParsedClassType_c(FabricTypeSystem ts, LazyClassInitializer init,
-      Source fromSource) {
+  public FabricParsedClassType_c(FabricTypeSystem ts,
+      LazyClassInitializer init, Source fromSource) {
     super(ts, init, fromSource);
     if (fromSource == null)
       throw new NullPointerException("fromSource cannot be null!");
-    this.canonical_ns =
-        ((CodebaseSource) fromSource).canonicalNamespace();
+    this.canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
   }
 
   @Override
   public boolean descendsFromImpl(Type ancestor) {
     FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
 
-    if (flags().contains(FabricFlags.NONFABRIC) && ts.typeEquals(ancestor, ts.FObject())) {
+    if (flags().contains(FabricFlags.NONFABRIC)
+        && ts.typeEquals(ancestor, ts.FObject())) {
       // XXX nonfabric interfaces do not descend from fabric.lang.Object.
       return false;
     }
-    
+
     // All Fabric interface types descend from fabric.lang.Object.
     if (ancestor.isCanonical() && !ancestor.isNull()
         && !ts.typeEquals(this, ancestor) && ancestor.isReference()
@@ -73,28 +74,29 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
 
     return super.descendsFromImpl(ancestor);
   }
-  
-  
+
   /**
-   * This method returns the upper bound of the labels of 
-   * all the fields of this class and its superclasses.
-   * It computes this by taking a join of all labels concerned.
+   * This method returns the upper bound of the labels of all the fields of this
+   * class and its superclasses. It computes this by taking a join of all labels
+   * concerned.
    */
   @Override
-  //XXX: These methods should be revisited post Oakland.
+  // XXX: These methods should be revisited post Oakland.
   public Label updateLabel() {
-    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
+    FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
 
     if (!fieldLabelFound) {
       if (ts.isFabricClass(this)) {
-        FabricClassType superType = (FabricClassType)superType();
+        FabricClassType superType = (FabricClassType) superType();
 
-        Label classLabel = ts.pairLabel(Position.compilerGenerated(), 
-            ts.bottomConfPolicy(Position.compilerGenerated()),
-            ts.topIntegPolicy(Position.compilerGenerated()));
-        
-        Label superLabel = superType == null ? classLabel : superType.updateLabel();
-        
+        Label classLabel =
+            ts.pairLabel(Position.compilerGenerated(),
+                ts.bottomConfPolicy(Position.compilerGenerated()),
+                ts.topIntegPolicy(Position.compilerGenerated()));
+
+        Label superLabel =
+            superType == null ? classLabel : superType.updateLabel();
+
         LabelEnv classEnv = classEnv();
         for (FieldInstance fi : fields()) {
           if (fi.flags().isStatic()) continue;
@@ -105,31 +107,31 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
           }
         }
         singleFieldLabel =
-            superLabel == null ? classLabel : trustUpperBound(
-                classEnv, classLabel, superLabel);
+            superLabel == null ? classLabel : trustUpperBound(classEnv,
+                classLabel, superLabel);
       }
       fieldLabelFound = true;
     }
     return singleFieldLabel;
   }
-  
-  //XXX: These methods should be revisited post Oakland.
+
+  // XXX: These methods should be revisited post Oakland.
   private Label trustUpperBound(LabelEnv env, Label L1, Label L2) {
-    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
+    FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
 
     Label join = ts.tjoin(L1, L2);
-    if(ts.tleq(env, join, L2)) {
-      //join is bound by L2, use L2
+    if (ts.tleq(env, join, L2)) {
+      // join is bound by L2, use L2
       return L2;
-    } else if(!ts.tleq(env, join, L1)) {
-      //join is not bound by L1, use join
+    } else if (!ts.tleq(env, join, L1)) {
+      // join is not bound by L1, use join
       return join;
     } else {
-      //otherwise, keep classLabel
+      // otherwise, keep classLabel
       return L1;
     }
   }
-  
+
   private FabricContext classContext() {
     FabricContext classctx = (FabricContext) ts.createContext();
     classctx = (FabricContext) classctx.pushClass(this, this);
@@ -158,34 +160,34 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     }
     return classctx;
   }
-  
+
   private LabelEnv classEnv() {
     return classContext().labelEnv();
   }
-  
+
   /**
-   * This method returns the upper bound of the labels of 
-   * all the fields of this class and its superclasses.
-   * It computes this by taking a join of all labels concerned.
+   * This method returns the upper bound of the labels of all the fields of this
+   * class and its superclasses. It computes this by taking a join of all labels
+   * concerned.
    */
   @SuppressWarnings("unchecked")
   @Override
   public ConfPolicy accessPolicy() {
-    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
-    
+    FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
+
     if (accessPolicy == null) {
       if (ts.FObject().equals(this))
         accessPolicy = ts.bottomConfPolicy(Position.compilerGenerated());
       else if (ts.isFabricInterface(this)) {
         accessPolicy = ((FabricClassType) superType()).accessPolicy();
 
-        for (ConstructorInstance ci  : (List<ConstructorInstance>) constructors()) {
+        for (ConstructorInstance ci : (List<ConstructorInstance>) constructors()) {
           JifConstructorInstance jci = (JifConstructorInstance) ci;
           ConfPolicy beginConf = ts.confProjection(jci.pcBound());
           if (beginConf == null) continue;
           accessPolicy = ts.join(accessPolicy, beginConf);
         }
-        for (MethodInstance mi  : (List<MethodInstance>) methods()) {
+        for (MethodInstance mi : (List<MethodInstance>) methods()) {
           if (mi.flags().isStatic()) continue;
           JifMethodInstance jmi = (JifMethodInstance) mi;
           ConfPolicy beginConf = ts.confProjection(jmi.pcBound());
@@ -213,11 +215,11 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
 
     return accessPolicy;
   }
-  
+
   @SuppressWarnings("unchecked")
   @Override
   public void removeMethod(MethodInstance mi) {
-    for (Iterator<MethodInstance> it = methods.iterator(); it.hasNext(); ) {
+    for (Iterator<MethodInstance> it = methods.iterator(); it.hasNext();) {
       if (it.next() == mi) {
         it.remove();
       }
@@ -225,17 +227,17 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   }
 
   @Override
-  public void setCanonicalNamespace(URI ns) {
+  public void setCanonicalNamespace(FabricLocation ns) {
     this.canonical_ns = ns;
   }
-  
+
   @Override
-  public URI canonicalNamespace() {
+  public FabricLocation canonicalNamespace() {
     // HACK superclass constructor accesses canonical namespace before it can be
     // initialized.
     if (canonical_ns == null)
       canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
-    
+
     return canonical_ns;
   }
 

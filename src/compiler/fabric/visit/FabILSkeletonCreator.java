@@ -39,10 +39,9 @@ public class FabILSkeletonCreator extends NodeVisitor {
           MethodDecl pd = (MethodDecl) m;
           if (pd.body() != null) {
             pd = (MethodDecl) pd.body(null);
-            //Make this method native if not already
-            if (!pd.flags().isNative())
-              pd = pd.flags(pd.flags().Native());
-          } 
+            // Make this method native if not already
+            if (!pd.flags().isNative()) pd = pd.flags(pd.flags().Native());
+          }
           stubmembers.add(pd);
         } else if (m instanceof ConstructorDecl) {
           ConstructorDecl cd = (ConstructorDecl) m;
@@ -52,14 +51,12 @@ public class FabILSkeletonCreator extends NodeVisitor {
             List<Stmt> l = new LinkedList<Stmt>();
             l.add((Stmt) b.statements().get(0));
             cd = (ConstructorDecl) cd.body(b.statements(l));
-          } else
-            cd = (ConstructorDecl) cd.body(null);
-          stubmembers.add(cd);          
+          } else cd = (ConstructorDecl) cd.body(null);
+          stubmembers.add(cd);
         }
       }
 
       return ((ClassBody) n).members(stubmembers);
-    } else
-      return n;
+    } else return n;
   }
 }
