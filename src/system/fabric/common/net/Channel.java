@@ -42,8 +42,8 @@ abstract class Channel extends Thread {
 
     this.sock = s.sock;
     this.remotePrincipal = s.principal;
-    this.out = new DataOutputStream(this.sock.getOutputStream());
-    this.in = new DataInputStream(this.sock.getInputStream());
+    this.out = new DataOutputStream(new BufferedOutputStream(this.sock.getOutputStream()));
+    this.in = new DataInputStream(new BufferedInputStream(this.sock.getInputStream()));
     this.connections = new HashMap<Integer, Connection>();
 
     start();
@@ -200,7 +200,7 @@ abstract class Channel extends Thread {
 
     /** forward data to the reading thread */
     public void receiveData(byte[] b) throws IOException {
-      NETWORK_CHANNEL_LOGGER.fine("putting data in pipe");
+      NETWORK_CHANNEL_LOGGER.fine("putting " + b.length + " bytes in pipe");
       sink.write(b);
       sink.flush();
     }
