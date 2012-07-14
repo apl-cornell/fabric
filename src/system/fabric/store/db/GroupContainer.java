@@ -13,7 +13,7 @@ import fabric.lang.security.Principal;
 
 /**
  * A group container contains a group or a glob, and supports converting between
- * them.  This class is thread-safe.
+ * them. This class is thread-safe.
  */
 public final class GroupContainer {
   private final Store store;
@@ -22,7 +22,7 @@ public final class GroupContainer {
 
   private ObjectGroup group;
   private Glob glob;
-  
+
   /**
    * The set of onums for the objects contained in this group.
    */
@@ -33,7 +33,7 @@ public final class GroupContainer {
     this.signingKey = signingKey;
     this.group = group;
     this.glob = null;
-    
+
     this.onums = group.objects().keySet();
 
     for (SerializedObject obj : group.objects().values()) {

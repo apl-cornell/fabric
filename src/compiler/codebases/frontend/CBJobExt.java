@@ -11,24 +11,26 @@ import codebases.types.CodebaseClassType;
 
 public class CBJobExt implements JobExt {
   protected Set<CodebaseClassType> dependencies;
-  protected Map<CodebaseClassType,String> externalDeps;
+  protected Map<CodebaseClassType, String> externalDeps;
+
   public CBJobExt() {
     dependencies = new HashSet<CodebaseClassType>();
-    externalDeps = new HashMap<CodebaseClassType,String>();
+    externalDeps = new HashMap<CodebaseClassType, String>();
   }
-  
-  public boolean addDependency(CodebaseClassType ct) {
-    //System.err.println("ADDING DEPENDENCY:" + ct + " :" +ct.canonicalNamespace() + ":"+ct.getClass());
 
-    return dependencies.add(ct);      
+  public boolean addDependency(CodebaseClassType ct) {
+    // System.err.println("ADDING DEPENDENCY:" + ct + " :"
+    // +ct.canonicalNamespace() + ":"+ct.getClass());
+
+    return dependencies.add(ct);
   }
-  
+
   public Set<CodebaseClassType> dependencies() {
     return Collections.unmodifiableSet(dependencies);
   }
-  
+
   public boolean addExternalDependency(CodebaseClassType ct, String alias) {
-    return externalDeps.put(ct, alias) == null;      
+    return externalDeps.put(ct, alias) == null;
   }
 
   public boolean isExternal(CodebaseClassType ct) {

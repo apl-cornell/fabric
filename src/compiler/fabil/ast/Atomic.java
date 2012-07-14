@@ -10,7 +10,10 @@ import polyglot.types.LocalInstance;
  */
 public interface Atomic extends Block {
   List<LocalInstance> updatedLocals();
+
   Atomic updatedLocals(List<LocalInstance> s);
+
   boolean mayAbort();
+
   Atomic mayAbort(boolean b);
 }

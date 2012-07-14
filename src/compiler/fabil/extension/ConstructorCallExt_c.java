@@ -27,9 +27,11 @@ public class ConstructorCallExt_c extends FabILExt_c {
       return super.rewriteProxies(pr);
 
     List<Expr> args = new LinkedList<Expr>(call.arguments());
-    args.add(0, nf.AmbExpr(Position.compilerGenerated(), nf.Id(Position
-        .compilerGenerated(), "$location")));
-    
+    args.add(
+        0,
+        nf.AmbExpr(Position.compilerGenerated(),
+            nf.Id(Position.compilerGenerated(), "$location")));
+
     return call.arguments(args);
   }
 

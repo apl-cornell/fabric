@@ -14,18 +14,18 @@ import fabil.types.FabILTypeSystem;
  * Assigns object locations to all <code>new</code> expressions.
  */
 public class LocationAssigner extends ContextVisitor {
-  
+
   private QQ qq;
 
   public LocationAssigner(Job job, ExtensionInfo extInfo) {
     super(job, extInfo.typeSystem(), extInfo.nodeFactory());
     this.qq = new QQ(extInfo);
   }
-  
+
   public QQ qq() {
     return qq;
   }
-  
+
   @Override
   public FabILNodeFactory nodeFactory() {
     return (FabILNodeFactory) super.nodeFactory();

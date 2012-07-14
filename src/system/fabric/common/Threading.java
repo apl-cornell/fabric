@@ -15,21 +15,19 @@ import fabric.common.exceptions.InternalError;
 
 /**
  * This is the home for all things threading.
- *
+ * 
  * @author mdgeorge
  */
 public class Threading {
   private static ExecutorService pool = newCachedThreadPool();
-  
+
   /**
    * create an ExecutorService that creates threads on demand and caches them
    * for one minute.
    */
   private static ExecutorService newCachedThreadPool() {
-    return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                                  60L, TimeUnit.SECONDS,
-                                  new SynchronousQueue<Runnable>(),
-                                  new FabricThreadFactory()) {
+    return new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+        new SynchronousQueue<Runnable>(), new FabricThreadFactory()) {
       @Override
       protected void afterExecute(Runnable r, Throwable t) {
         super.afterExecute(r, t);
@@ -44,26 +42,27 @@ public class Threading {
             Thread.currentThread().interrupt(); // ignore/reset
           }
         }
-        
+
         if (t != null)
-          Logging.MISC_LOGGER.log(Level.SEVERE, "Thread exited with exception", t);
+          Logging.MISC_LOGGER.log(Level.SEVERE, "Thread exited with exception",
+              t);
       }
     };
   }
-  
+
   /**
    * Get the thread pool.
    * 
-   * @throws InternalError if the thread pool is not initialized.
+   * @throws InternalError
+   *           if the thread pool is not initialized.
    */
   public static ExecutorService getPool() throws InternalError {
     if (Threading.pool == null)
       throw new InternalError("Threading not initialized");
-    
+
     return Threading.pool;
   }
-  
-  
+
   /**
    * A ThreadFactory that creates FabricThread.Impls.
    */
@@ -74,10 +73,9 @@ public class Threading {
     }
   }
 
-  /** Convenience class for creating runnables that set the name of the thread.
-   * Subclasses should override runImpl instead of run.  For example:
-   * 
-   * <code>
+  /**
+   * Convenience class for creating runnables that set the name of the thread.
+   * Subclasses should override runImpl instead of run. For example: <code>
    * Runnable r = new NamedRunnable("thread for eating cookies") {
    *   void runImpl() {
    *     // eat cookies
@@ -89,11 +87,11 @@ public class Threading {
    */
   public static abstract class NamedRunnable implements Runnable {
     private String name;
-    
+
     public NamedRunnable(String name) {
       this.name = name;
     }
-    
+
     @Override
     public final void run() {
       Thread current = Thread.currentThread();
@@ -102,16 +100,14 @@ public class Threading {
       runImpl();
       current.setName(oldName);
     }
-    
+
     protected abstract void runImpl();
   }
-  
-  
-  /** Convenience class for creating Callables that set the name of the thread.
-   * NamedCallable is to Callable as NamedRunnable (above) is to Runnable.  For
-   * example:
-   * 
-   * <code>
+
+  /**
+   * Convenience class for creating Callables that set the name of the thread.
+   * NamedCallable is to Callable as NamedRunnable (above) is to Runnable. For
+   * example: <code>
    * Callable<Cookie> r = new NamedCallable("thread for baking cookies") {
    *   Cookie callImpl() {
    *     // compute ingredients
@@ -124,11 +120,11 @@ public class Threading {
    */
   public static abstract class NamedCallable<V> implements Callable<V> {
     private String name;
-    
+
     public NamedCallable(String name) {
       this.name = name;
     }
-    
+
     @Override
     public final V call() {
       Thread current = Thread.currentThread();
@@ -138,7 +134,7 @@ public class Threading {
       current.setName(oldName);
       return result;
     }
-    
+
     protected abstract V callImpl();
   }
 }

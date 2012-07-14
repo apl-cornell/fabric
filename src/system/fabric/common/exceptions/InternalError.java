@@ -19,7 +19,7 @@ public class InternalError extends Error {
     super(msg, cause);
     report();
   }
-  
+
   private void report() {
     System.err.println("Creating InternalError exception:");
     System.err.println("================ BEGIN STACK TRACE ================");

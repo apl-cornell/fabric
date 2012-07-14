@@ -1,7 +1,5 @@
 package fabil.ast;
 
-import java.net.URI;
-
 import polyglot.ast.Ambiguous;
 import polyglot.ast.Disamb;
 import polyglot.ast.Disamb_c;
@@ -28,10 +26,11 @@ import codebases.types.CodebaseClassType;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
 import fabil.types.FabILContext;
+import fabric.common.FabricLocation;
 import polyglot.types.Package;
 
 public class FabILDisamb extends Disamb_c implements Disamb {
-  protected URI namespace;
+  protected FabricLocation namespace;
 
   /* Convenience fields */
   private CodebaseTypeSystem ts;
@@ -45,9 +44,8 @@ public class FabILDisamb extends Disamb_c implements Disamb {
     this.ts = (CodebaseTypeSystem) v.typeSystem();
     this.nf = (CodebaseNodeFactory) v.nodeFactory();
 
-
-    Node n  = super.disambiguate(amb, v, pos, prefix, name);
-    //System.err.println("DISAMB:"+ this + ":"+ name +" to " + n);
+    Node n = super.disambiguate(amb, v, pos, prefix, name);
+    // System.err.println("DISAMB:"+ this + ":"+ name +" to " + n);
     return n;
   }
 
@@ -60,8 +58,9 @@ public class FabILDisamb extends Disamb_c implements Disamb {
       if (nr.packageExists(name.id()) && packageOK()) {
         try {
           Package p = ts.packageForName(cn.externalNamespace(), name.id());
-          Node n = nf.CodebaseNode(pos, cn.namespace(), cn.alias(),
-              cn.externalNamespace(),p);
+          Node n =
+              nf.CodebaseNode(pos, cn.namespace(), cn.alias(),
+                  cn.externalNamespace(), p);
           return n;
         } catch (SemanticException e) {
           throw new InternalCompilerError("Error creating package node: "
@@ -112,7 +111,6 @@ public class FabILDisamb extends Disamb_c implements Disamb {
     }
     return null;
   }
-
 
   @SuppressWarnings("unused")
   @Override
@@ -168,8 +166,8 @@ public class FabILDisamb extends Disamb_c implements Disamb {
     // no variable found. try types.
     if (typeOK()) {
       try {
-        Named n = c.find(name.id());        
-        
+        Named n = c.find(name.id());
+
         if (n instanceof Type) {
           Type type = (Type) n;
           if (!type.isCanonical()) {
@@ -178,7 +176,7 @@ public class FabILDisamb extends Disamb_c implements Disamb {
           }
           CBImportTable it = (CBImportTable) c.importTable();
           if (it.isExternal(name.id())) {
-            // This type was loaded with a codebase import, 
+            // This type was loaded with a codebase import,
             // so it is an external dep
             CBJobExt ext = (CBJobExt) v.job().ext();
             String alias = it.aliasFor(name.id());
@@ -209,16 +207,16 @@ public class FabILDisamb extends Disamb_c implements Disamb {
 
     // Either a codebase alias or a package
     if (packageOK()) {
-      
+
       // Is it an explicit codebase?
       FabILContext ctx = (FabILContext) v.context();
 
-      URI ns = ctx.resolveCodebaseName(name.id());
+      FabricLocation ns = ctx.resolveCodebaseName(name.id());
       if (ns != null)
         return nf.CodebaseNode(pos, namespace, name.id(), ns);
       else
-        // Must be a package then...
-        return nf.PackageNode(pos, ts.packageForName(namespace, name.id()));
+      // Must be a package then...
+      return nf.PackageNode(pos, ts.packageForName(namespace, name.id()));
     }
 
     return null;

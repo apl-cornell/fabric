@@ -44,24 +44,26 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
 
     Expr labelloc = ext.location();
     if (labelloc == null) labelloc = nf.StoreGetter(n.position());
-    //push the new location
-    rw = ((FabricToFabilRewriter)rw).pushLocation(labelloc);
+    // push the new location
+    rw = ((FabricToFabilRewriter) rw).pushLocation(labelloc);
 
     Expr updateLabelExpr = null;
     Expr accessPolicyExpr = null;
-    
-    if (ts.isFabricClass(base)) {
-     
-      Label baseLabel = ((FabricClassType)base).updateLabel();
-      updateLabelExpr = rw.labelToJava(baseLabel);      
 
-      ConfPolicy accessPolicy = ((FabricClassType)base).accessPolicy();
+    if (ts.isFabricClass(base)) {
+
+      Label baseLabel = ((FabricClassType) base).updateLabel();
+      updateLabelExpr = rw.labelToJava(baseLabel);
+
+      ConfPolicy accessPolicy = ((FabricClassType) base).accessPolicy();
       Label accessLabel = ts.toLabel(accessPolicy);
 
-      accessPolicyExpr = rw.qq().parseExpr("%E.confPolicy()", rw.labelToJava(accessLabel));
+      accessPolicyExpr =
+          rw.qq().parseExpr("%E.confPolicy()", rw.labelToJava(accessLabel));
     }
 
-    return nf.NewFabricArray(n.position(), n.baseType(), updateLabelExpr, accessPolicyExpr, ext.location(), n
-        .dims(), n.additionalDims(), (FabricArrayInit) n.init());
+    return nf.NewFabricArray(n.position(), n.baseType(), updateLabelExpr,
+        accessPolicyExpr, ext.location(), n.dims(), n.additionalDims(),
+        (FabricArrayInit) n.init());
   }
 }

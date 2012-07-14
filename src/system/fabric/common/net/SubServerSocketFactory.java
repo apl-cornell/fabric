@@ -18,7 +18,6 @@ import fabric.common.net.handshake.ShakenSocket;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.SocketAddress;
 
-
 /**
  * factory for creating SubServerSockets. This class decorates a
  * javax.net.ServerSocketFactory, which is used for instantiating the underlying
@@ -27,21 +26,23 @@ import fabric.common.net.naming.SocketAddress;
  * @author mdgeorge
  */
 public class SubServerSocketFactory {
-  //////////////////////////////////////////////////////////////////////////////
-  // public API                                                               //
-  //////////////////////////////////////////////////////////////////////////////
-  
-  /** Creates a new SubServerSocketFactory decorating the given
+  // ////////////////////////////////////////////////////////////////////////////
+  // public API //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Creates a new SubServerSocketFactory decorating the given
    * ServerSocketFactory.
    * 
-   * @param factory the ServerSocketFactory that will be used to create the
-   *        ServerSockets used to implement SubServerSockets returned by this
+   * @param factory
+   *          the ServerSocketFactory that will be used to create the
+   *          ServerSockets used to implement SubServerSockets returned by this
    */
   public SubServerSocketFactory(Protocol handshake, NameService nameService) {
-    this.handshake   = handshake;
+    this.handshake = handshake;
     this.nameService = nameService;
-    
-    this.acceptors   = new HashMap<SocketAddress, Acceptor> ();
+
+    this.acceptors = new HashMap<SocketAddress, Acceptor>();
   }
 
   /** create an unbound server socket. */
@@ -54,62 +55,70 @@ public class SubServerSocketFactory {
     return createServerSocket(host, 50);
   }
 
-  /** create a server socket to await connections to the given local host name
+  /**
+   * create a server socket to await connections to the given local host name
    * and port number.
-   *
-   * @param name    the local name
-   * @param backlog the number of waiting connections to allow on this socket
-   * @see javax.net.ServerSocketFactory#createServerSocket(int, int, InetAddress)
+   * 
+   * @param name
+   *          the local name
+   * @param backlog
+   *          the number of waiting connections to allow on this socket
+   * @see javax.net.ServerSocketFactory#createServerSocket(int, int,
+   *      InetAddress)
    */
-  public SubServerSocket createServerSocket(String name, int backlog) throws IOException {
+  public SubServerSocket createServerSocket(String name, int backlog)
+      throws IOException {
     SubServerSocket result = new SubServerSocket(this);
     result.bind(name, backlog);
     return result;
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // implementation                                                           //
-  //////////////////////////////////////////////////////////////////////////////
-  
-  private final Protocol            handshake;
-  private final NameService                  nameService;
+  // ////////////////////////////////////////////////////////////////////////////
+  // implementation //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  private final Protocol handshake;
+  private final NameService nameService;
   private final Map<SocketAddress, Acceptor> acceptors;
-  
+
   /**
-   * creates a new ConnectionQueue for the local name.  Uses the name service to
+   * creates a new ConnectionQueue for the local name. Uses the name service to
    * resolve the name to an address.
-   *  
-   * @param  backlog      the size of the queue
-   * @throws IOException  if a queue with the given name already exists
+   * 
+   * @param backlog
+   *          the size of the queue
+   * @throws IOException
+   *           if a queue with the given name already exists
    */
-  synchronized Acceptor.ConnectionQueue bind (String name, int backlog) throws IOException {
+  synchronized Acceptor.ConnectionQueue bind(String name, int backlog)
+      throws IOException {
     SocketAddress addr = nameService.localResolve(name);
-    
+
     Acceptor a = acceptors.get(addr);
     if (null == a) {
       a = new Acceptor(addr);
       acceptors.put(addr, a);
     }
-    
+
     // note that an exception is only thrown if the acceptor previously existed,
     // so no cleanup is necessary
     return a.makeQueue(name, backlog);
   }
-  
-  synchronized void closeAcceptor (Acceptor a) {
+
+  synchronized void closeAcceptor(Acceptor a) {
     // TODO
     throw new NotImplementedException();
   }
-  
-  //////////////////////////////////////////////////////////////////////////////
-  // Acceptor  (corresponds single to java.net.ServerSocket)                  //
-  //////////////////////////////////////////////////////////////////////////////
-  
+
+  // ////////////////////////////////////////////////////////////////////////////
+  // Acceptor (corresponds single to java.net.ServerSocket) //
+  // ////////////////////////////////////////////////////////////////////////////
+
   /**
-   * An acceptor encapsulates a single java.net.ServerSocket.  It functions as a
-   * producer-consumer of SubSockets (via the connected(s) and s accept() methods)
-   * and runs a thread in the background which awaits incoming connections and
-   * spawns new ServerChannels to handle them.  
+   * An acceptor encapsulates a single java.net.ServerSocket. It functions as a
+   * producer-consumer of SubSockets (via the connected(s) and s accept()
+   * methods) and runs a thread in the background which awaits incoming
+   * connections and spawns new ServerChannels to handle them.
    * 
    * @author mdgeorge
    */
@@ -119,43 +128,47 @@ public class SubServerSocketFactory {
 
     /* children keyed by name */
     private final Map<String, ConnectionQueue> queues;
-    
+
     Acceptor(SocketAddress addr) {
       super("connection dispatcher for " + addr);
 
       this.address = addr;
-      this.queues  = new HashMap<String, ConnectionQueue> ();
-      
+      this.queues = new HashMap<String, ConnectionQueue>();
+
       start();
     }
 
     /**
      * Creates a ConnectionQueue for the given name on this acceptor.
      * 
-     * @param  size         the size of the queue 
-     * @throws IOException  if the queue already exists
+     * @param size
+     *          the size of the queue
+     * @throws IOException
+     *           if the queue already exists
      */
     ConnectionQueue makeQueue(String name, int size) throws IOException {
       if (queues.containsKey(name))
-        throw new IOException("attempted to bind multiple SubServerSockets to " + name + " @ " + address);
-      
+        throw new IOException("attempted to bind multiple SubServerSockets to "
+            + name + " @ " + address);
+
       ConnectionQueue queue = new ConnectionQueue(name, size);
       queues.put(name, queue);
       return queue;
     }
-    
+
     /** release the resources associated with a child */
     @SuppressWarnings("unused")
     private void closeQueue(ConnectionQueue child) {
       // TODO
       throw new NotImplementedException();
     }
-    
+
     /** handle an incoming connection */
     private void recvConnection(Socket s) {
       try {
-        NETWORK_CONNECTION_LOGGER.log(Level.INFO, "receiving new connection from \"{0}\"", s.getInetAddress());
-        ShakenSocket    conn  = handshake.receive(s);
+        NETWORK_CONNECTION_LOGGER.log(Level.INFO,
+            "receiving new connection from \"{0}\"", s.getInetAddress());
+        ShakenSocket conn = handshake.receive(s);
         ConnectionQueue queue = queues.get(conn.name);
         if (null == queue) {
           // TODO: close the connection.
@@ -167,22 +180,22 @@ public class SubServerSocketFactory {
         throw new NotImplementedException(e);
       }
     }
-    
+
     /** handle a failure of the underlying socket */
     private void recvException(IOException e) {
       // TODO
       throw new NotImplementedException(e);
     }
-    
+
     /**
-     * Listens for incoming TCP connections and spawns new ServerChannels to deal
-     * with them.
+     * Listens for incoming TCP connections and spawns new ServerChannels to
+     * deal with them.
      */
     @Override
     public void run() {
-      ServerSocket sock = null;
       try {
-        sock = new ServerSocket(address.getPort(), 0, address.getAddress());
+        ServerSocket sock =
+            new ServerSocket(address.getPort(), 0, address.getAddress());
         while (true) {
           try {
             recvConnection(sock.accept());
@@ -190,48 +203,43 @@ public class SubServerSocketFactory {
             recvException(e);
           }
         }
-      } catch(IOException exc) {
+      } catch (IOException exc) {
         // TODO
         throw new NotImplementedException(exc);
       } finally {
-        try {
-          if (sock != null) sock.close();
-        } catch (IOException e) {
-          // TODO
-          throw new NotImplementedException(e);
-        }
+        // TODO sock.close()
       }
     }
-    
-    ////////////////////////////////////////////////////////////////////////////
-    // Connection Queue (corresponds to SubServerSocket)                      //
-    ////////////////////////////////////////////////////////////////////////////
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Connection Queue (corresponds to SubServerSocket) //
+    // //////////////////////////////////////////////////////////////////////////
 
     /**
      * Contains all of the state for a listening SubSocket.
      */
     class ConnectionQueue {
       /* key for Acceptor.this.queues */
-      private final String                   name;
-      
+      private final String name;
+
       /* children */
-      private final Set<ServerChannel>       channels;
-      
+      private final Set<ServerChannel> channels;
+
       /* queue of connections that are ready to be accepted by a SubServerSocket */
       private final BlockingQueue<SubSocket> connections;
-      
+
       ConnectionQueue(String name, int size) {
         this.name = name;
-        
-        this.channels    = new HashSet<ServerChannel> ();
+
+        this.channels = new HashSet<ServerChannel>();
         this.connections = new ArrayBlockingQueue<SubSocket>(size);
       }
-      
+
       /** cleanup when associated SubServerSocket is closed. */
       void close() {
         throw new NotImplementedException();
       }
-      
+
       /** wait for an incoming SubSocket connection */
       @SuppressWarnings("unused")
       SubSocket accept() throws IOException {
@@ -241,65 +249,71 @@ public class SubServerSocketFactory {
           throw new NotImplementedException(e);
         }
       }
-      
-      /** create a new ServerChannel (in response to a new incoming socket connection) */
+
+      /**
+       * create a new ServerChannel (in response to a new incoming socket
+       * connection)
+       */
       void open(ShakenSocket s) throws IOException {
         channels.add(new ServerChannel(s));
       }
-      
-      /** receive an incoming subsocket connection */ 
+
+      /** receive an incoming subsocket connection */
       private void receive(SubSocket s) {
         try {
           connections.add(s);
-        } catch(IllegalStateException e) {
+        } catch (IllegalStateException e) {
           // TODO: queue is full, close s
           throw new NotImplementedException(e);
         }
       }
-      
+
       @Override
       public String toString() {
         return name + " [" + address + "]";
       }
-      
-      //////////////////////////////////////////////////////////////////////////
-      // ServerChannel (corresponds to java.net.Socket)                       //
-      //////////////////////////////////////////////////////////////////////////
+
+      // ////////////////////////////////////////////////////////////////////////
+      // ServerChannel (corresponds to java.net.Socket) //
+      // ////////////////////////////////////////////////////////////////////////
 
       /**
-       * A server channel is capable of receiving new incoming connections, but not
-       * of making new outgoing connections.  It is associated both with a local
-       * SocketAddress (IP + port) and a remote IP address.
-       *  
+       * A server channel is capable of receiving new incoming connections, but
+       * not of making new outgoing connections. It is associated both with a
+       * local SocketAddress (IP + port) and a remote IP address.
+       * 
        * @author mdgeorge
        */
       class ServerChannel extends Channel {
         ServerChannel(ShakenSocket sock) throws IOException {
           super(sock);
-          
+
           setName("demultiplexer for " + toString());
         }
 
-        /** create a new subsocket for an incoming connection and notify the acceptor */
+        /**
+         * create a new subsocket for an incoming connection and notify the
+         * acceptor
+         */
         @Override
         protected Connection accept(int sequence) throws IOException {
           Connection result = new Connection(sequence);
-          SubSocket  socket = new SubSocket(result);
+          SubSocket socket = new SubSocket(result);
           receive(socket);
           return result;
         }
-        
+
         @Override
         protected void cleanup() {
           ConnectionQueue.this.channels.remove(this);
         }
-        
+
         @Override
         public String toString() {
-          return "channel from " + sock.getInetAddress() + " to \"" + ConnectionQueue.this.toString() + "\"";
+          return "channel from " + sock.getInetAddress() + " to \""
+              + ConnectionQueue.this.toString() + "\"";
         }
       }
     }
   }
 }
-

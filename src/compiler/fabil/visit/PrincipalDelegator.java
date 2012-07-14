@@ -55,11 +55,11 @@ public class PrincipalDelegator extends NodeVisitor {
         call = (Call) call.type(delegatingPrincipal);
 
         MethodInstance mi =
-            ts.methodInstance(pos, delegatingPrincipal, Flags.PUBLIC
-                .set(Flags.STATIC), delegatingPrincipal,
-                "$addDefaultDelegates", Collections
-                    .singletonList(delegatingPrincipal), Collections
-                    .emptyList());
+            ts.methodInstance(pos, delegatingPrincipal,
+                Flags.PUBLIC.set(Flags.STATIC), delegatingPrincipal,
+                "$addDefaultDelegates",
+                Collections.singletonList(delegatingPrincipal),
+                Collections.emptyList());
         call = call.methodInstance(mi);
 
         Cast cast = nf.Cast(pos, newCall.objectType(), call);
@@ -76,8 +76,9 @@ public class PrincipalDelegator extends NodeVisitor {
       if (!newCall.objectType().type().isSubtype(delegatingPrincipal))
         return super.leave(old, n, v);
 
-      ClassType nct =  ((ClassType) newCall.objectType().type());
-      //XXX: This replace must match ClassDeclToJavaExt_c.constructorTranslatedName
+      ClassType nct = ((ClassType) newCall.objectType().type());
+      // XXX: This replace must match
+      // ClassDeclToJavaExt_c.constructorTranslatedName
       String initName = (nct.fullName() + ".").replace('.', '$');
       if (!call.name().equals(initName)) return super.leave(old, n, v);
 

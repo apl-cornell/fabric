@@ -1,6 +1,7 @@
 package fabric.visit;
 
-import java.net.URI;
+import static fabric.common.FabricLocationFactory.getLocation;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,6 +29,7 @@ import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
 import fabric.ExtensionInfo;
 import fabric.ast.FabricNodeFactory;
+import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.types.FabricContext;
@@ -44,7 +46,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
   }
 
   protected boolean principalExpected = false;
-  
+
   public FabricToFabilRewriter(Job job, FabricTypeSystem fab_ts,
       FabricNodeFactory fab_nf, fabil.ExtensionInfo fabil_ext) {
     super(job, fab_ts, fab_nf, fabil_ext);
@@ -55,30 +57,29 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     fabric.ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
     FabricTypeSystem fab_ts = (FabricTypeSystem) jif_ts();
     Source derived;
-    if (src.shouldPublish() && 
-        extInfo.localNamespace().equals(src.canonicalNamespace())) {
-      //If the source we are deriving source is being published, 
+    if (src.shouldPublish()
+        && extInfo.localNamespace().equals(src.canonicalNamespace())) {
+      // If the source we are deriving source is being published,
       // we should use the published namespace.
 
       Codebase cb = fab_ts.codebaseFromNS(src.canonicalNamespace());
-      URI published_ns = NSUtil.namespace(cb);
+      FabricLocation published_ns = getLocation(false, NSUtil.namespace(cb));
       derived = src.publishedSource(published_ns, newName);
-    }
-    else {
-      //Otherwise, we just create a derived source with a new name
+    } else {
+      // Otherwise, we just create a derived source with a new name
       derived = src.derivedSource(newName);
     }
     if (Report.should_report(TOPICS, 2)) {
       Report.report(2, "Creating derived source " + derived + " from " + src);
     }
-    
+
     return derived;
   }
 
   public boolean fabIsPublished() {
     return ((CodebaseSource) job.source()).shouldPublish();
   }
-  
+
   public FabricToFabilRewriter pushLocation(Expr location) {
     FabricContext context = (FabricContext) context();
     return (FabricToFabilRewriter) context(context.pushLocation(location));
@@ -94,13 +95,13 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     }
     return loc;
   }
-  
+
   /**
    * The full class path of the runtime principal utility.
    */
   public String runtimePrincipalUtil() {
-      return jif_ts().PrincipalUtilClassName();
-  }    
+    return jif_ts().PrincipalUtilClassName();
+  }
 
   @Override
   public String runtimeLabelUtil() {
@@ -125,15 +126,16 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
       return fabil_nf.FabricArrayTypeNode(pos,
           typeToJava(t.toArray().base(), pos));
     }
-    
+
     if (t.isClass() && !fabric_ts.isLabel(t) && !fabric_ts.isPrincipal(t)) {
-      CodebaseClassType ct= (CodebaseClassType) t.toClass();
+      CodebaseClassType ct = (CodebaseClassType) t.toClass();
       CBJobExt ext = (CBJobExt) job().ext();
       if (ct instanceof FabricSubstType)
         ct = (CodebaseClassType) ((FabricSubstType) ct).base();
       if (ext.isExternal(ct)) {
         String alias = ext.aliasFor(ct);
-        return fabil_nf.TypeNodeFromQualifiedName(pos, alias + "." + t.toClass().fullName());
+        return fabil_nf.TypeNodeFromQualifiedName(pos, alias + "."
+            + t.toClass().fullName());
       }
     }
     return super.typeToJava(t, pos);
@@ -161,7 +163,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
 
         String newName =
             cd.name() + "." + job.extensionInfo().defaultFileExtension();
-        
+
         CBSourceFile cbn = (CBSourceFile) n;
         CodebaseSource source = (CodebaseSource) cbn.source();
         Source derived = createDerivedSource(source, newName);

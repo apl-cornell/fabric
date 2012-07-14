@@ -10,7 +10,7 @@ import fabric.lang.security.Label;
 import fabric.worker.Store;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
-  
+
   public final T obj;
 
   private WrappedJavaInlineable(T obj) {
@@ -85,14 +85,16 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
 
   @Override
   public ConfPolicy get$$accessPolicy() {
-    throw new InternalError("WrappedJavaInlineables don't have access policies.");
+    throw new InternalError(
+        "WrappedJavaInlineables don't have access policies.");
   }
 
   @Override
   public ConfPolicy set$$accessPolicy(ConfPolicy val) {
-    throw new InternalError("WrappedJavaInlineables don't have access policies.");
+    throw new InternalError(
+        "WrappedJavaInlineables don't have access policies.");
   }
-  
+
   @Override
   public Object $initLabels() {
     return this;
@@ -102,7 +104,7 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   public Object fabric$lang$Object$() {
     return this;
   }
-  
+
   @Override
   public boolean idEquals(fabric.lang.Object other) {
     return obj == other;
@@ -153,7 +155,7 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   public void $forceRenumber(long onum) {
     throw new InternalError("Unsupported operation");
   }
-  
+
   @Override
   public Statistics createStatistics() {
     return DefaultStatistics.instance;

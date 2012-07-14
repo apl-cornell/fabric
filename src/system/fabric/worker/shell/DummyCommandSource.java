@@ -6,9 +6,9 @@ import java.util.List;
  * A command source that blocks indefinitely when asked for a command.
  */
 public class DummyCommandSource extends CommandSource {
-  
+
   private static Object condVar = new Object();
-  
+
   public static void signalToQuit() {
     synchronized (condVar) {
       condVar.notifyAll();
@@ -23,7 +23,7 @@ public class DummyCommandSource extends CommandSource {
       }
     } catch (InterruptedException e) {
     }
-    
+
     return null;
   }
 

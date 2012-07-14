@@ -93,11 +93,10 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       New newExpr =
           nf.New(n.position(), n.qualifier(), n.objectType(), loc, paramargs);
       if (ts.isFabricClass(ct))
-        return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(),
-            newExpr, name, n.arguments());
-      else
         return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(), newExpr,
             name, n.arguments());
+      else return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(), newExpr,
+          name, n.arguments());
     } else {
       // ct represents params at runtime, but is a Java class with a
       // Jif signature.

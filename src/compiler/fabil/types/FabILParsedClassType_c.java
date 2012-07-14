@@ -1,7 +1,7 @@
 package fabil.types;
 
 import java.io.IOException;
-import java.net.URI;
+
 import java.security.MessageDigest;
 import java.util.List;
 
@@ -21,6 +21,7 @@ import fabil.ExtensionInfo;
 import fabil.visit.ClassHashGenerator;
 import fabil.visit.ProviderRewriter;
 import fabric.common.Crypto;
+import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
@@ -31,7 +32,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
   /**
    * The namespace used to resolve the dependencies of this class
    */
-  protected URI canonical_ns;
+  protected FabricLocation canonical_ns;
 
   /**
    * Memoizes a secure hash of the class. If this class-type information is
@@ -85,11 +86,11 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
     if (t instanceof FabILParsedClassType) {
       FabILParsedClassType ct = (FabILParsedClassType) t;
       return ct.canonicalNamespace().equals(canonical_ns)
-        && ct.fullName().equals(fullName());
+          && ct.fullName().equals(fullName());
     }
-    return false;       
+    return false;
   }
-  
+
   @Override
   public String translate(Resolver c) {
     if (isTopLevel()) {
@@ -124,7 +125,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
     QQ qq = pr.qq();
     if (!canonical_ns.equals(extInfo.localNamespace())
         && !canonical_ns.equals(extInfo.platformNamespace())) {
-      Codebase codebase = NSUtil.fetch_codebase(canonical_ns);
+      Codebase codebase = canonical_ns.getCodebase();
       FClass fclass = codebase.resolveClassName(fullName());
       // Convert to an OID.
       String storeName = fclass.$getStore().name();
@@ -144,11 +145,11 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
   }
 
   @Override
-  public URI canonicalNamespace() {
+  public FabricLocation canonicalNamespace() {
     return canonical_ns;
   }
 
-    @Override
+  @Override
   public byte[] getClassHash() {
     if (classHash != null) return classHash;
 
@@ -163,14 +164,14 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
       } catch (IOException e) {
         throw new InternalCompilerError(e);
       }
-     
+
     } else {
       // Type was probably obtained from a Java class file. Hash the bytecode.
       FabILLazyClassInitializer init = (FabILLazyClassInitializer) init();
       ClassFile classFile = init.classFile();
       digest.update(classFile.getHash());
     }
-   
+
     if (!flags.isInterface()) {
       // Include the super class's hash.
       FabILParsedClassType_c superClassType =

@@ -1,9 +1,9 @@
 package codebases.ast;
 
-import java.net.URI;
+import fabric.common.FabricLocation;
 
 import polyglot.types.Qualifier;
 
 public interface CodebaseQualifier extends Qualifier {
-  URI namespace();
+  FabricLocation namespace();
 }

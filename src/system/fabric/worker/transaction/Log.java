@@ -54,8 +54,8 @@ public final class Log {
   /**
    * A flag indicating whether this transaction should abort or be retried. This
    * flag should be checked before each operation. This flag is set when it's
-   * non-null and indicates the transaction in the stack that is
-   * to be retried; all child transactions are to be aborted.
+   * non-null and indicates the transaction in the stack that is to be retried;
+   * all child transactions are to be aborted.
    */
   volatile TransactionID retrySignal;
 
@@ -226,7 +226,7 @@ public final class Log {
 
     return result;
   }
-  
+
   /**
    * @return a set of stores to contact when checking for object freshness.
    */
@@ -236,7 +236,7 @@ public final class Log {
     for (ReadMapEntry entry : readsReadByParent) {
       result.add(entry.obj.store);
     }
-    
+
     return result;
   }
 
@@ -244,7 +244,8 @@ public final class Log {
    * Returns a map from onums to version numbers of objects read at the given
    * store. Reads on created objects are never included.
    * 
-   * @param includeModified whether to include reads on modified objects.
+   * @param includeModified
+   *          whether to include reads on modified objects.
    */
   @SuppressWarnings("unchecked")
   LongKeyMap<Integer> getReadsForStore(Store store, boolean includeModified) {
@@ -255,13 +256,13 @@ public final class Log {
     for (LongKeyMap.Entry<ReadMapEntry> entry : submap.entrySet()) {
       result.put(entry.getKey(), entry.getValue().versionNumber);
     }
-    
+
     if (parent != null) {
       for (ReadMapEntry entry : readsReadByParent) {
         result.put(entry.obj.onum, entry.versionNumber);
       }
     }
-    
+
     if (store.isLocalStore()) {
       Iterable<_Impl> writesToExclude =
           includeModified ? Collections.EMPTY_LIST : localStoreWrites;

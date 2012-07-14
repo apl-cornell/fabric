@@ -42,19 +42,19 @@ public class Node {
     defaults.put("replication_interval", "300000");
     defaults.put("aggregation_interval", "600000");
     defaults.put("pastry_protocol_periodicLeafSet_lease_period", "8000");
-    
+
     // Load values from dissemConfig into the parameters for the Pastry
     // environment.
     Parameters params = env.getParameters();
     for (String key : dissemConfig.stringPropertyNames()) {
       if (!key.startsWith("fabric.dissemination.pastry.")) continue;
-      
+
       String value = dissemConfig.getProperty(key);
       key = key.substring("fabric.dissemination.pastry.".length());
       params.setString(key, value);
       defaults.remove(key);
     }
-    
+
     // Load defaults for any keys that weren't specified in dissemConfig.
     for (Map.Entry<String, String> entry : defaults.entrySet()) {
       params.setString(entry.getKey(), entry.getValue());
@@ -113,7 +113,7 @@ public class Node {
             + ")");
       }
     }
-    
+
     if (spinCount >= 2) {
       System.out.println("Pastry node ready.");
     }

@@ -7,20 +7,19 @@ import jif.types.ConstArrayType_c;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 
-/** The only ArrayType class created by the FabricTypeSystem.
+/**
+ * The only ArrayType class created by the FabricTypeSystem.
+ * 
  * @see FabricTypeSystem for further description
  * @author mdgeorge
- *
  */
-public class FabricArrayType_c
-     extends ConstArrayType_c
-  implements FabricArrayType {
-  
+public class FabricArrayType_c extends ConstArrayType_c implements
+    FabricArrayType {
+
   protected boolean isNative;
-  
+
   public FabricArrayType_c(FabricTypeSystem ts, Position pos, Type base,
-                           boolean isConst, boolean isNonConst,
-                           boolean isNative) {
+      boolean isConst, boolean isNonConst, boolean isNative) {
     super(ts, pos, base, isConst, isNonConst);
     this.isNative = isNative;
   }
@@ -41,11 +40,11 @@ public class FabricArrayType_c
     // the update label.
     return ts().confProjection(updateLabel());
   }
-  
+
   private FabricTypeSystem ts() {
     return (FabricTypeSystem) ts;
   }
-  
+
   @SuppressWarnings("unchecked")
   @Override
   protected void init() {

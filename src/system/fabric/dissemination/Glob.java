@@ -138,7 +138,7 @@ public class Glob implements FastSerializable {
       } catch (UnsupportedEncodingException e) {
         throw new InternalError(e);
       }
-      
+
       long val = keyObject.$getOnum();
       sig.update((byte) (val >>> 56));
       sig.update((byte) (val >>> 48));
@@ -157,8 +157,8 @@ public class Glob implements FastSerializable {
     sig.update(data);
   }
 
-  private Cipher makeCipher(final SecretKeyObject keyObject, int opmode, byte[] iv)
-      throws GeneralSecurityException {
+  private Cipher makeCipher(final SecretKeyObject keyObject, int opmode,
+      byte[] iv) throws GeneralSecurityException {
     byte[] key = null;
     if (keyObject != null) {
       key = Worker.runInSubTransaction(new Code<SecretKey>() {
@@ -225,7 +225,8 @@ public class Glob implements FastSerializable {
     return timestamp < glob.timestamp;
   }
 
-  public void verifySignature(PublicKey key) throws SignatureException, InvalidKeyException {
+  public void verifySignature(PublicKey key) throws SignatureException,
+      InvalidKeyException {
     // Check the signature.
     Signature verifier = Crypto.signatureInstance();
     verifier.initVerify(key);

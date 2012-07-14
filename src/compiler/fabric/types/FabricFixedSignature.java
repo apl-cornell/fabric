@@ -7,10 +7,11 @@ import polyglot.ast.FieldDecl;
 import polyglot.types.Type;
 import fabric.ast.FabricFieldDecl;
 
-public class FabricFixedSignature extends FixedSignature implements FabricDefaultSignature {
+public class FabricFixedSignature extends FixedSignature implements
+    FabricDefaultSignature {
 
   FabricTypeSystem fts;
-  
+
   public FabricFixedSignature(FabricTypeSystem fts) {
     super(fts);
     this.fts = fts;
@@ -29,5 +30,5 @@ public class FabricFixedSignature extends FixedSignature implements FabricDefaul
       return ln.label();
     }
   }
-  
+
 }

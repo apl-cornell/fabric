@@ -4,7 +4,7 @@ import fabric.lang.security.NodePrincipal;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
-final class SessionAttributes  {
+final class SessionAttributes {
   /**
    * Whether the worker is a dissemination node.
    */
@@ -24,7 +24,7 @@ final class SessionAttributes  {
    * The worker's principal object.
    */
   final NodePrincipal workerPrincipal;
-  
+
   /**
    * The worker's node
    */
@@ -39,20 +39,20 @@ final class SessionAttributes  {
     this.store = store;
     this.workerPrincipalName = null;
     this.workerPrincipal = null;
-    this.remoteNode      = Worker.getWorker().getWorker(workerName);
+    this.remoteNode = Worker.getWorker().getWorker(workerName);
 
   }
 
   /**
    * Constructs a SessionAttributes object corresponding to a worker node.
    */
- SessionAttributes(Store store, String workerName,
-      String workerPrincipalName, NodePrincipal worker) {
+  SessionAttributes(Store store, String workerName, String workerPrincipalName,
+      NodePrincipal worker) {
     this.workerIsDissem = false;
     this.store = store;
     this.workerPrincipalName = workerPrincipalName;
     this.workerPrincipal = worker;
-    this.remoteNode      = Worker.getWorker().getWorker(workerName);
+    this.remoteNode = Worker.getWorker().getWorker(workerName);
 
   }
 }

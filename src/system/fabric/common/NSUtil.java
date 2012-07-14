@@ -1,5 +1,7 @@
 package fabric.common;
 
+import static fabric.common.FabricLocationFactory.getLocation;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,6 +11,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -231,7 +234,8 @@ public final class NSUtil {
     try {
       codebaseOnum = Long.parseLong(m.group(2));
     } catch (NumberFormatException e) {
-      throw new ClassNotFoundException("Invalid onum in java name:" + javaName + ":" + m.group(2));
+      throw new ClassNotFoundException("Invalid onum in java name:" + javaName
+          + ":" + m.group(2));
     }
     String className = m.group(3);
 
@@ -276,13 +280,14 @@ public final class NSUtil {
     return namespace(cb).resolve(f.getName());
   }
 
-  /**
+/**
    * Process a path string of the form <URI>:/localdir/:... into URIs and add to a list
    * @param uris the list to add the URIs to
    * @param path the path-style string of URIs and directories, with URIs delimited by '<' and '>'
    * @return true if path contains any remote references
    */
-  public static boolean processPathString(List<URI> uris, String path) {
+  public static boolean processPathString(Set<FabricLocation> locations,
+      String path) {
     boolean needWorker = false;
     while (!path.isEmpty()) {
       String remaining = "";
@@ -290,16 +295,13 @@ public final class NSUtil {
         try {
           int next_idx = path.indexOf(":");
           String pathFile;
-          if (next_idx > 0) 
-            pathFile = path.substring(1, next_idx);
-          else 
-            pathFile = path.substring(1);
-          
           if (next_idx > 0)
-            remaining = path.substring(next_idx+1);
+            pathFile = path.substring(1, next_idx);
+          else pathFile = path.substring(1);
 
-          BufferedReader lr =
-              new BufferedReader(new FileReader(pathFile));
+          if (next_idx > 0) remaining = path.substring(next_idx + 1);
+
+          BufferedReader lr = new BufferedReader(new FileReader(pathFile));
           path = lr.readLine();
           lr.close();
           
@@ -316,18 +318,18 @@ public final class NSUtil {
           if (end < 0) throw new InternalCompilerError("Invalid path");
           String cb = path.substring(idx + 1, end);
           if (!cb.endsWith("/")) cb += "/";
-  
+
           URI u = URI.create(cb);
-          uris.add(u);
-  
+          locations.add(getLocation(false, u));
+
           if (u.getScheme().equals("fab")) needWorker = true;
           idx = end + 1;
-  
+
         } else if (path.charAt(idx) == File.pathSeparatorChar) {
           idx++;
         } else {
           int end = path.indexOf(File.pathSeparatorChar, idx);
-  
+
           String dir = "";
           if (end < 0) {
             dir = path.substring(idx);
@@ -338,15 +340,16 @@ public final class NSUtil {
           }
           if (!"".equals(dir)) {
             if (!dir.endsWith("/")) dir += "/";
-  
+
             URI u = URI.create(dir);
-  
+
             if (u.isAbsolute())
-              uris.add(u);
+              locations.add(getLocation(false, u));
             else {
               File f = new File(dir);
               String suf = f.isDirectory() ? "/" : "";
-              uris.add(file.resolve(f.getAbsolutePath() + suf));
+              locations.add(getLocation(false,
+                  file.resolve(f.getAbsolutePath() + suf)));
             }
           }
         }

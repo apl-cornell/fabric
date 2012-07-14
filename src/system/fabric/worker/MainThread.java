@@ -35,14 +35,14 @@ public final class MainThread extends FabricThread.Impl {
   public void run() {
     try {
       main.invoke(null, args);
-      
+
     } catch (InvocationTargetException e) {
       Throwable cause = e.getCause();
       // Trim the stack trace to omit stuff dealing with the worker framework.
       List<StackTraceElement> trace = new ArrayList<StackTraceElement>();
       for (StackTraceElement elt : cause.getStackTrace())
         trace.add(elt);
-      
+
       String mainClassName = main.getDeclaringClass().getName();
 
       for (ListIterator<StackTraceElement> it =
@@ -60,8 +60,7 @@ public final class MainThread extends FabricThread.Impl {
     }
   }
 
-  public static void invoke(Method main, Object args)
-      throws Throwable {
+  public static void invoke(Method main, Object args) throws Throwable {
     MainThread thread = new MainThread(main, args);
     thread.start();
     while (true) {

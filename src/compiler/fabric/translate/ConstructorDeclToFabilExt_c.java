@@ -16,25 +16,27 @@ public class ConstructorDeclToFabilExt_c extends ConstructorDeclToJavaExt_c {
     Node n = super.toJava(rw);
     if (n instanceof MethodDecl) {
       // The constructor declaration has been rewritten to a method declaration.
-      MethodDecl md = (MethodDecl)n;
+      MethodDecl md = (MethodDecl) n;
       if (md.body() != null) {
-        FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
-//        FabILTypeSystem ts = (FabILTypeSystem)rw.java_ts();
+        FabILNodeFactory nf = (FabILNodeFactory) rw.nodeFactory();
+        // FabILTypeSystem ts = (FabILTypeSystem)rw.java_ts();
 
-        List<Stmt> stmts = new ArrayList<Stmt>(md.body().statements().size() + 1);
-        
-//        TypeNode worker = nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Worker());
-//        stmts.add(nf.LocalDecl(Position.compilerGenerated(), 
-//                               Flags.FINAL, 
-//                               worker, 
-//                               nf.Id(Position.compilerGenerated(), 
-//                                     "worker$"),
-//                               nf.Call(Position.compilerGenerated(), 
-//                                       worker, 
-//                                       nf.Id(Position.compilerGenerated(), 
-//                                             "getWorker"))));
+        List<Stmt> stmts =
+            new ArrayList<Stmt>(md.body().statements().size() + 1);
+
+        // TypeNode worker = nf.CanonicalTypeNode(Position.compilerGenerated(),
+        // ts.Worker());
+        // stmts.add(nf.LocalDecl(Position.compilerGenerated(),
+        // Flags.FINAL,
+        // worker,
+        // nf.Id(Position.compilerGenerated(),
+        // "worker$"),
+        // nf.Call(Position.compilerGenerated(),
+        // worker,
+        // nf.Id(Position.compilerGenerated(),
+        // "getWorker"))));
         stmts.addAll(md.body().statements());
-        
+
         return md.body(nf.Block(md.body().position(), stmts));
       }
     }

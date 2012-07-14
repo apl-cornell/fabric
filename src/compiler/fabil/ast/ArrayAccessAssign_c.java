@@ -20,7 +20,7 @@ public class ArrayAccessAssign_c extends polyglot.ast.ArrayAccessAssign_c {
     if (child == right) {
       FabILTypeSystem ts = (FabILTypeSystem) av.typeSystem();
       Type array = ((ArrayAccess) left).array().type();
-      Type base  = array.toArray().ultimateBase();
+      Type base = array.toArray().ultimateBase();
       if (ts.isJavaInlineable(base) && ts.isFabricArray(array))
         return ts.FObject();
     }

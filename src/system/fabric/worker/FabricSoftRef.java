@@ -7,13 +7,14 @@ import fabric.worker.transaction.ReadMapEntry;
 import fabric.lang.Object._Impl;
 
 public class FabricSoftRef extends SoftReference<_Impl> {
-  
-  private static final ReferenceQueue<_Impl> queue = new ReferenceQueue<_Impl>();
-  
+
+  private static final ReferenceQueue<_Impl> queue =
+      new ReferenceQueue<_Impl>();
+
   static {
     new RefCollector().start();
   }
-  
+
   public Store store;
   public long onum;
   public ReadMapEntry readMapEntry;
@@ -23,7 +24,7 @@ public class FabricSoftRef extends SoftReference<_Impl> {
     this.store = store;
     this.onum = onum;
   }
-  
+
   /**
    * Evicts the _Impl associated with this soft reference from the worker's
    * cache.
@@ -33,7 +34,7 @@ public class FabricSoftRef extends SoftReference<_Impl> {
   public boolean evict() {
     return store.evict(onum);
   }
-  
+
   /**
    * Decrements the associated ReadMapEntry's pin count and does garbage
    * collection if possible.
@@ -41,24 +42,25 @@ public class FabricSoftRef extends SoftReference<_Impl> {
   public void depin() {
     if (readMapEntry != null && readMapEntry.depin()) readMapEntry = null;
   }
-  
+
   public void readMapEntry(ReadMapEntry readMapEntry) {
     this.readMapEntry = readMapEntry;
   }
-  
+
   private static class RefCollector extends Thread {
     RefCollector() {
       super("Reference collector");
       setDaemon(true);
     }
-    
+
     @Override
     public void run() {
       while (true) {
         try {
           FabricSoftRef ref = (FabricSoftRef) queue.remove();
           ref.depin();
-        } catch (InterruptedException e) {}
+        } catch (InterruptedException e) {
+        }
       }
     }
   }

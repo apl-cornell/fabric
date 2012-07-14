@@ -14,6 +14,7 @@ public class CodebaseNodeToFabilExt_c extends ToJavaExt_c {
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     FabILNodeFactory nf = (FabILNodeFactory) rw.java_nf();
     CodebaseNode cd = (CodebaseNode) node();
-    return nf.CodebaseNode(cd.position(), cd.namespace(), cd.alias(), cd.externalNamespace());
+    return nf.CodebaseNode(cd.position(), cd.namespace(), cd.alias(),
+        cd.externalNamespace());
   }
 }

@@ -28,12 +28,12 @@ public class AuthorizationUtil {
       new OidKeyHashMap<OidKeyHashMap<Void>>();
 
   /**
-   * Return true if cache[label][<code>principal</code>] exists, where label is given by the
-   * Oid (<code>store</code>,<code>labelOnum</code>).
+   * Return true if cache[label][<code>principal</code>] exists, where label is
+   * given by the Oid (<code>store</code>,<code>labelOnum</code>).
    */
   private static boolean checkAuthorizationCache(
-      OidKeyHashMap<OidKeyHashMap<Void>> cache,
-      Principal principal, Store store, long labelOnum) {
+      OidKeyHashMap<OidKeyHashMap<Void>> cache, Principal principal,
+      Store store, long labelOnum) {
     OidKeyHashMap<Void> submap;
     synchronized (cache) {
       submap = cache.get(store, labelOnum);
@@ -67,8 +67,8 @@ public class AuthorizationUtil {
    * the label at the given oid. This is run as a subtransaction of the current
    * transaction.
    */
-  public static boolean isReadPermitted(final Principal principal,
-      Store store, long labelOnum) {
+  public static boolean isReadPermitted(final Principal principal, Store store,
+      long labelOnum) {
     // Allow the store's worker principal to do anything. We use pointer
     // equality here to avoid having to call into the worker.
     if (principal == Worker.getWorker().getPrincipal()) return true;

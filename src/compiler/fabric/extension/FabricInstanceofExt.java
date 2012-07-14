@@ -18,19 +18,18 @@ public class FabricInstanceofExt extends JifInstanceofExt {
   public FabricInstanceofExt(ToJavaExt toJava) {
     super(toJava);
   }
-  
+
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    Expr     ref  = (Expr) lc.labelCheck(node().expr());
-    TypeNode type = (TypeNode) lc.labelCheck(node().compareType()); 
-    
-    DereferenceHelper.checkAccess(ref,
-                                  (FabricReferenceType) type.type(),
-                                  lc, node().position());
-    
+    Expr ref = (Expr) lc.labelCheck(node().expr());
+    TypeNode type = (TypeNode) lc.labelCheck(node().compareType());
+
+    DereferenceHelper.checkAccess(ref, (FabricReferenceType) type.type(), lc,
+        node().position());
+
     return super.labelCheck(lc);
   }
-  
+
   @Override
   public Instanceof node() {
     return (Instanceof) super.node();

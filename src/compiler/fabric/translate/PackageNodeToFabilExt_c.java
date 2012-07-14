@@ -1,7 +1,6 @@
 package fabric.translate;
 
-import java.net.URI;
-
+import static fabric.common.FabricLocationFactory.getLocation;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.PackageNodeToJavaExt_c;
 import jif.translate.ToJavaExt;
@@ -12,6 +11,7 @@ import polyglot.types.SemanticException;
 import codebases.types.CBPackage;
 import fabil.types.FabILTypeSystem;
 import fabric.ExtensionInfo;
+import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.types.FabricTypeSystem;
@@ -29,11 +29,11 @@ public class PackageNodeToFabilExt_c extends PackageNodeToJavaExt_c implements
     FabricToFabilRewriter ftfr = (FabricToFabilRewriter) rw;
     ExtensionInfo fab_ext = (ExtensionInfo) ftfr.jif_ts().extensionInfo();
 
-    URI pkgNS = ((CBPackage) p).namespace();
+    FabricLocation pkgNS = ((CBPackage) p).namespace();
     if (ftfr.fabIsPublished() && pkgNS.equals(fab_ext.localNamespace())) {
 
       Codebase cb = fab_ts.codebaseFromNS(pkgNS);
-      pkgNS = NSUtil.namespace(cb);
+      pkgNS = getLocation(false, NSUtil.namespace(cb));
     }
 
     p = fil_ts.packageForName(pkgNS, p.fullName());

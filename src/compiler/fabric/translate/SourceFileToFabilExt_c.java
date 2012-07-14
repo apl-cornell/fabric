@@ -13,7 +13,7 @@ import fabric.visit.FabricToFabilRewriter;
 
 public class SourceFileToFabilExt_c extends SourceFileToJavaExt_c {
   /**
-   * @throws SemanticException  
+   * @throws SemanticException
    */
   @SuppressWarnings("unchecked")
   @Override
@@ -23,8 +23,9 @@ public class SourceFileToFabilExt_c extends SourceFileToJavaExt_c {
     FabricToFabilRewriter ftfr = (FabricToFabilRewriter) rw;
     PackageNode pkgNode = n.package_();
     FabILNodeFactory nf = (FabILNodeFactory) rw.java_nf();
-    
-    n = (CBSourceFile) nf.SourceFile(n.position(), pkgNode, n.codebaseDecls(),
+
+    n =
+        (CBSourceFile) nf.SourceFile(n.position(), pkgNode, n.codebaseDecls(),
             n.imports(), n.decls());
 
     // Create a source derived from the fabric one. This is in support

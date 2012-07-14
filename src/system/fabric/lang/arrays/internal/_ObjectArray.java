@@ -39,16 +39,16 @@ public interface _ObjectArray<T extends Object> extends Object {
      * Creates a new object array at the given Store with the given length.
      * 
      * @param store
-     *                The store on which to allocate the array.
+     *          The store on which to allocate the array.
      * @param length
-     *                The length of the array.
+     *          The length of the array.
      */
     public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
         Class<? extends Object._Proxy> proxyType, int length) {
       super(store);
       this.proxyType = getProxy(proxyType);
       value = new Object[length];
-      
+
       set$$updateLabel(updateLabel);
       set$$accessPolicy(accessPolicy);
     }
@@ -58,16 +58,16 @@ public interface _ObjectArray<T extends Object> extends Object {
      * array.
      * 
      * @param store
-     *                The store on which to allocate the array.
+     *          The store on which to allocate the array.
      * @param value
-     *                The backing array to use.
+     *          The backing array to use.
      */
     public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
         Class<? extends Object._Proxy> proxyType, T[] value) {
       super(store);
       this.proxyType = getProxy(proxyType);
       this.value = value;
-      
+
       set$$updateLabel(updateLabel);
       set$$accessPolicy(accessPolicy);
     }
@@ -91,7 +91,7 @@ public interface _ObjectArray<T extends Object> extends Object {
             $readRef(proxyType, refTypes.next(), in, store, intraStoreRefs);
       }
     }
-    
+
     private static final Map<Class<?>, Class<? extends fabric.lang.Object._Proxy>> proxyCache =
         Collections
             .synchronizedMap(new HashMap<Class<?>, Class<? extends fabric.lang.Object._Proxy>>());
@@ -106,10 +106,9 @@ public interface _ObjectArray<T extends Object> extends Object {
      */
     @SuppressWarnings("unchecked")
     private Class<? extends fabric.lang.Object._Proxy> getProxy(Class<?> c) {
-      Class<? extends fabric.lang.Object._Proxy> result =
-        proxyCache.get(c);
+      Class<? extends fabric.lang.Object._Proxy> result = proxyCache.get(c);
       if (result != null) return result;
-      
+
       if (c.getSimpleName().equals("_Proxy")) {
         result = (Class<? extends fabric.lang.Object._Proxy>) c;
         proxyCache.put(c, result);

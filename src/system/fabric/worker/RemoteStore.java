@@ -60,7 +60,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * The object table: locally resident objects.
    */
   private transient final ObjectCache cache;
-  
+
   /**
    * Cache for interning labels and policies.
    */
@@ -88,14 +88,14 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    */
   protected RemoteStore(String name) {
     super(name);
-    
+
     this.cache = new ObjectCache(name);
     this.labelCache = new LabelCache();
     this.fetchLocks = new LongKeyHashMap<FetchLock>();
     this.fresh_ids = new LinkedList<Long>();
     this.publicKey = null;
   }
-  
+
   /**
    * Creates a store representing the store at the given host name.
    */
@@ -123,13 +123,10 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * Sends a PREPARE message to the store.
    */
   @Override
-  public boolean prepareTransaction(long tid,
-                                    long commitTime,
-                                    Collection<Object._Impl> toCreate,
-                                    LongKeyMap<Integer> reads,
-                                    Collection<Object._Impl> writes)
-          throws TransactionPrepareFailedException,
-                 UnreachableNodeException {
+  public boolean prepareTransaction(long tid, long commitTime,
+      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<Object._Impl> writes)
+      throws TransactionPrepareFailedException, UnreachableNodeException {
     PrepareTransactionMessage.Response response =
         send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
             commitTime, toCreate, reads, writes));
@@ -254,7 +251,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
       throws AccessException {
     DissemReadMessage.Response response =
         send(Worker.getWorker().unauthToStore, new DissemReadMessage(onum));
-    
+
     PublicKey key = getPublicKey();
     try {
       response.glob.verifySignature(key);
@@ -283,7 +280,8 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @param num
    *          The number of objects to allocate
    */
-  protected void reserve(int num) throws AccessException, UnreachableNodeException {
+  protected void reserve(int num) throws AccessException,
+      UnreachableNodeException {
     while (fresh_ids.size() < num) {
       // log.info("Requesting new onums, storeid=" + storeID);
       if (num < 512) num = 512;
@@ -310,10 +308,10 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   @Override
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
     List<SerializedObject> staleObjects = getStaleObjects(reads);
-    
+
     for (SerializedObject obj : staleObjects)
       updateCache(obj);
-    
+
     return !staleObjects.isEmpty();
   }
 
@@ -402,7 +400,8 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
 
       // Validate the certificate chain.
       try {
-        Crypto.validateCertificateChain(certificateChain, Worker.instance.config.getKeyMaterial().getTrustedCerts());
+        Crypto.validateCertificateChain(certificateChain,
+            Worker.instance.config.getKeyMaterial().getTrustedCerts());
         publicKey = certificateChain[0].getPublicKey();
       } catch (GeneralSecurityException e) {
         // do nothing
@@ -425,56 +424,58 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * Returns a certificate chain for a new principal object for the given worker
    * key. This certificate chain is not guaranteed to end in a trusted root.
    */
-  public X509Certificate[] makeWorkerPrincipal(Worker worker, PublicKey workerKey) {
+  public X509Certificate[] makeWorkerPrincipal(Worker worker,
+      PublicKey workerKey) {
     MakePrincipalMessage.Response response;
     try {
-      response = send(worker.unauthToStore, new MakePrincipalMessage(
-          workerKey));
+      response =
+          send(worker.unauthToStore, new MakePrincipalMessage(workerKey));
     } catch (FabricGeneralSecurityException e) {
       throw new NotImplementedException();
     }
-    
+
     X509Certificate cert = response.cert;
-    
+
     // Check that the top certificate in the chain satisfies the following:
     // - signed by the store
     // - contains the worker's key
-    
+
     Principal issuerDN = cert.getIssuerDN();
     // XXX This next line is really hacky.
     if (!name.equals(Crypto.getCN(issuerDN.getName()))) {
       throw new InternalError("Certificate signer (" + issuerDN.getName()
           + ") does not match store (" + name + ")");
     }
-    
+
     if (!cert.getPublicKey().equals(workerKey)) {
       throw new InternalError("Key in certificate does not match worker key");
     }
-    
-    X509Certificate[] result = new X509Certificate[response.certChain.length + 1];
+
+    X509Certificate[] result =
+        new X509Certificate[response.certChain.length + 1];
     result[0] = cert;
     for (int i = 0; i < response.certChain.length; i++) {
       result[i + 1] = response.certChain[i];
     }
-    
+
     return result;
   }
 
-  //////////////////////////////////
+  // ////////////////////////////////
   // Java custom-serialization gunk
-  //////////////////////////////////
-  
+  // ////////////////////////////////
+
   public java.lang.Object writeReplace() {
     return new SerializationProxy(name);
   }
-  
+
   public static final class SerializationProxy implements Serializable {
     private final String storeName;
-    
+
     public SerializationProxy(String storeName) {
       this.storeName = storeName;
     }
-    
+
     java.lang.Object readResolve() {
       return Worker.getWorker().getStore(storeName);
     }

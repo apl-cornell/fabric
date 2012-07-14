@@ -7,7 +7,7 @@ abstract class CommandHandler {
    * A description of the parameters supported by this command.
    */
   final String params;
-  
+
   /**
    * A description of how to use this command.
    */

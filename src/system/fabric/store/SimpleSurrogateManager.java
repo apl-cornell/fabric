@@ -56,7 +56,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
       } else {
         updateLabelOnum = obj.getUpdateLabelOnum();
       }
-      
+
       long accessPolicyOnum;
       if (obj.updateLabelRefIsInterStore()) {
         ComparablePair<String, Long> ref = obj.getInterStoreUpdateLabelRef();
@@ -97,7 +97,8 @@ public class SimpleSurrogateManager implements SurrogateManager {
           if (onum == null) {
             // create surrogate
             onum = tm.newOnums(1)[0];
-            surrogates.add(new SerializedObject(onum, updateLabelOnum, accessPolicyOnum, ref));
+            surrogates.add(new SerializedObject(onum, updateLabelOnum,
+                accessPolicyOnum, ref));
             cache.put(ref, onum);
           }
           hadRemotes = true;

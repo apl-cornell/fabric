@@ -13,7 +13,6 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-
 /**
  * This is the clearing house of all loggers available for use in the system.
  */
@@ -21,11 +20,12 @@ public final class Logging {
   // //////////////////////////////////////////////////////////////////////////
   // static configuration
   // //////////////////////////////////////////////////////////////////////////
-  
+
   static {
-    System.setProperty("java.util.logging.config.class", LogConfigLoader.class.getName());
+    System.setProperty("java.util.logging.config.class",
+        LogConfigLoader.class.getName());
   }
-  
+
   // //////////////////////////////////////////////////////////////////////////
   // STORE LOGGERS
   // //////////////////////////////////////////////////////////////////////////
@@ -33,20 +33,20 @@ public final class Logging {
   /**
    * For requests received by the store.
    */
-  public static final Logger STORE_REQUEST_LOGGER =
-      Logger.getLogger("fabric.store.requests");
+  public static final Logger STORE_REQUEST_LOGGER = Logger
+      .getLogger("fabric.store.requests");
 
   /**
    * For transaction events on the store.
    */
-  public static final Logger STORE_TRANSACTION_LOGGER =
-      Logger.getLogger("fabric.store.transactions");
+  public static final Logger STORE_TRANSACTION_LOGGER = Logger
+      .getLogger("fabric.store.transactions");
 
   /**
    * For back-end DB events on the store.
    */
-  public static final Logger STORE_DB_LOGGER =
-      Logger.getLogger("fabric.store.db");
+  public static final Logger STORE_DB_LOGGER = Logger
+      .getLogger("fabric.store.db");
 
   /**
    * For other store-related events that don't fit into any other category. Use
@@ -61,14 +61,14 @@ public final class Logging {
   /**
    * For transaction events on the worker.
    */
-  public static final Logger WORKER_TRANSACTION_LOGGER =
-      Logger.getLogger("fabric.worker.transactions");
+  public static final Logger WORKER_TRANSACTION_LOGGER = Logger
+      .getLogger("fabric.worker.transactions");
 
   /**
    * For local-store events on the worker.
    */
-  public static final Logger WORKER_LOCAL_STORE_LOGGER =
-      Logger.getLogger("fabric.worker.localstore");
+  public static final Logger WORKER_LOCAL_STORE_LOGGER = Logger
+      .getLogger("fabric.worker.localstore");
 
   /**
    * For other worker-related events that don't fit into any other category. Use
@@ -83,26 +83,26 @@ public final class Logging {
   /**
    * For network connection events.
    */
-  public static final Logger NETWORK_CONNECTION_LOGGER =
-      Logger.getLogger("fabric.net.connections");
+  public static final Logger NETWORK_CONNECTION_LOGGER = Logger
+      .getLogger("fabric.net.connections");
 
   /**
    * For network channel events.
    */
-  public static final Logger NETWORK_CHANNEL_LOGGER =
-      Logger.getLogger("fabric.net.channel");
+  public static final Logger NETWORK_CHANNEL_LOGGER = Logger
+      .getLogger("fabric.net.channel");
 
   /**
    * For network messages received from remote nodes.
    */
-  public static final Logger NETWORK_MESSAGE_RECEIVE_LOGGER =
-      Logger.getLogger("fabric.net.messages.received");
+  public static final Logger NETWORK_MESSAGE_RECEIVE_LOGGER = Logger
+      .getLogger("fabric.net.messages.received");
 
   /**
    * For network messages sent to remote nodes.
    */
-  public static final Logger NETWORK_MESSAGE_SEND_LOGGER =
-      Logger.getLogger("fabric.net.messages.sent");
+  public static final Logger NETWORK_MESSAGE_SEND_LOGGER = Logger
+      .getLogger("fabric.net.messages.sent");
 
   // //////////////////////////////////////////////////////////////////////////
   // MISCELLANEOUS LOGGERS
@@ -112,29 +112,28 @@ public final class Logging {
    * For configuration-related events.
    */
   public static final Logger CONFIG_LOGGER = Logger.getLogger("fabric.config");
-  
+
   /**
    * For mey management related events
    */
   public static final Logger KEY_LOGGER = Logger.getLogger("fabric.keys");
-  
+
   /**
    * For events related to the naming service.
    */
   public static final Logger NAMING_LOGGER = Logger.getLogger("fabric.naming");
-  
+
   /**
    * For class-hashing events.
    */
-  public static final Logger CLASS_HASHING_LOGGER =
-      Logger.getLogger("fabric.class_hashing");
+  public static final Logger CLASS_HASHING_LOGGER = Logger
+      .getLogger("fabric.class_hashing");
 
   /**
    * For detailed timing analysis.
    */
-  public static final Logger TIMING_LOGGER =
-      Logger.getLogger("fabric.timing");
-  
+  public static final Logger TIMING_LOGGER = Logger.getLogger("fabric.timing");
+
   /**
    * For other events that don't fit into any other category. Use sparingly.
    */
@@ -145,7 +144,8 @@ public final class Logging {
   // //////////////////////////////////////////////////////////////////////////
 
   /**
-   * Logs a message, with one object parameter.  This is just here for completeness.
+   * Logs a message, with one object parameter. This is just here for
+   * completeness.
    * 
    * @param logger
    *          The logger to log to
@@ -233,14 +233,14 @@ public final class Logging {
   public static class LogConfigLoader {
     public LogConfigLoader() {
       String configFile = Resources.relpathRewrite("etc", "logging.properties");
-  
+
       // Read the configuration.
       try {
         InputStream in = new FileInputStream(configFile);
         Properties p = new Properties();
         p.load(in);
         in.close();
-  
+
         // Make the log filename absolute if it isn't already.
         final String key = "java.util.logging.FileHandler.pattern";
         String logFile = p.getProperty(key);
@@ -248,11 +248,11 @@ public final class Logging {
           logFile = Resources.relpathRewrite(logFile);
         }
         p.setProperty(key, logFile);
-        
+
         // Ensure that the directory containing the logs exists to avoid
         // crashing
         new File(logFile).getParentFile().mkdirs();
-        
+
         // Load the properties into the LogManager. ugh.
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintStream pout = new PrintStream(out);
@@ -261,12 +261,12 @@ public final class Logging {
         }
         pout.flush();
         out.flush();
-  
+
         LogManager.getLogManager().readConfiguration(
             new ByteArrayInputStream(out.toByteArray()));
       } catch (IOException e) {
       }
-  
+
     }
   }
 }

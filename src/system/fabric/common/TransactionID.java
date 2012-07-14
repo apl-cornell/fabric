@@ -7,7 +7,6 @@ import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.Random;
 
-
 public class TransactionID implements FastSerializable, Serializable {
   /**
    * Source for random tids.
@@ -34,7 +33,7 @@ public class TransactionID implements FastSerializable, Serializable {
   public TransactionID() {
     this((TransactionID) null);
   }
-  
+
   /**
    * Creates a new top-level transaction id with the given id.
    */
@@ -44,6 +43,7 @@ public class TransactionID implements FastSerializable, Serializable {
 
   /**
    * Creates a new transaction ID that is a child of the given tid.
+   * 
    * @param parent
    */
   public TransactionID(TransactionID parent) {

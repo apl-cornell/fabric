@@ -1,7 +1,6 @@
 package codebases.frontend;
 
-import java.net.URI;
-
+import fabric.common.FabricLocation;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Pass;
 import polyglot.frontend.Scheduler;
@@ -10,14 +9,14 @@ import polyglot.frontend.goals.TypeExists;
 import polyglot.types.TypeSystem;
 
 public class CBTypeExists extends TypeExists {
-  public static Goal create(Scheduler scheduler, URI ns, String name) {
-    return scheduler.internGoal(new CBTypeExists(ns,name));
+  public static Goal create(Scheduler scheduler, FabricLocation ns, String name) {
+    return scheduler.internGoal(new CBTypeExists(ns, name));
   }
 
-  protected URI namespace;
+  protected FabricLocation namespace;
   protected String typeName;
 
-  protected CBTypeExists(URI ns, String name) {
+  protected CBTypeExists(FabricLocation ns, String name) {
     super(name);
     this.namespace = ns;
   }
@@ -28,7 +27,6 @@ public class CBTypeExists extends TypeExists {
     return new CBTypeExistsPass(extInfo.scheduler(), ts, this);
   }
 
-
   @Override
   public boolean equals(Object o) {
     return o instanceof CBTypeExists
@@ -37,10 +35,10 @@ public class CBTypeExists extends TypeExists {
 
   @Override
   public String toString() {
-    return "CBTypeExists( ["+namespace+ "] " + typeName + ")";
+    return "CBTypeExists( [" + namespace + "] " + typeName + ")";
   }
 
-  public URI namespace() {
+  public FabricLocation namespace() {
     // TODO Auto-generated method stub
     return namespace;
   }

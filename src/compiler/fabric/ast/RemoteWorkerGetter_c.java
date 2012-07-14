@@ -15,21 +15,21 @@ import fabric.types.FabricTypeSystem;
 
 public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
   protected Expr remoteWorkerName; // cannot be null
-  
+
   public RemoteWorkerGetter_c(Position pos, Expr remoteWorkerName) {
     super(pos);
     this.remoteWorkerName = remoteWorkerName;
   }
-  
+
   protected RemoteWorkerGetter reconstruct(Expr remoteWorkerName) {
     if (this.remoteWorkerName != remoteWorkerName) {
-      RemoteWorkerGetter_c n = (RemoteWorkerGetter_c)copy();
+      RemoteWorkerGetter_c n = (RemoteWorkerGetter_c) copy();
       n.remoteWorkerName = remoteWorkerName;
       return n;
     }
     return this;
   }
-  
+
   @Override
   public Expr remoteWorkerName() {
     return remoteWorkerName;
@@ -39,10 +39,10 @@ public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
   public RemoteWorkerGetter remoteWorkerName(Expr expr) {
     return reconstruct(expr);
   }
-  
+
   @Override
   public Node visitChildren(NodeVisitor v) {
-    Expr remoteWorkerName = (Expr)this.remoteWorkerName.visit(v);
+    Expr remoteWorkerName = (Expr) this.remoteWorkerName.visit(v);
     return reconstruct(remoteWorkerName);
   }
 
@@ -57,23 +57,23 @@ public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
   public Term firstChild() {
     return remoteWorkerName;
   }
-  
+
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
-    FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
-    
+    FabricTypeSystem ts = (FabricTypeSystem) tc.typeSystem();
+
     if (!remoteWorkerName.isTypeChecked()) {
       return this;
     }
-    
+
     if (!ts.typeEquals(remoteWorkerName.type(), ts.String())) {
-      throw new SemanticException("Remote worker name has to be a String.", 
-                                  remoteWorkerName.position());
+      throw new SemanticException("Remote worker name has to be a String.",
+          remoteWorkerName.position());
     }
-    
+
     return this.type(ts.RemoteWorker());
   }
-  
+
   @Override
   public String toString() {
     return "worker$(" + remoteWorkerName + ")";

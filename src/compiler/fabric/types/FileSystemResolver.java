@@ -7,7 +7,7 @@ import polyglot.types.TopLevelResolver;
 public class FileSystemResolver implements TopLevelResolver {
 
   /**
-   * @throws SemanticException  
+   * @throws SemanticException
    */
   @Override
   public Named find(String name) throws SemanticException {

@@ -18,8 +18,8 @@ import fabil.visit.ReadWriteChecker.State;
 public class FieldExt_c extends ExprExt_c {
 
   /**
-   * For read/write optimization.
-   * Access state of the target if it is a local variable.
+   * For read/write optimization. Access state of the target if it is a local
+   * variable.
    */
   private State accessState;
 
@@ -33,12 +33,12 @@ public class FieldExt_c extends ExprExt_c {
       rewriteTarget =
           special.kind() != Special.THIS || special.qualifier() != null;
     }
-    
+
     if (rewriteTarget) target = (Receiver) field.visitChild(target, pr);
     Id name = (Id) field.visitChild(field.id(), pr);
     field = field.target(target).id(name);
-    
-    return ((FieldExt_c)field.ext()).rewriteProxiesImpl(pr);
+
+    return ((FieldExt_c) field.ext()).rewriteProxiesImpl(pr);
   }
 
   @Override
@@ -59,11 +59,11 @@ public class FieldExt_c extends ExprExt_c {
     if (container instanceof ClassType
         && ((ClassType) container).flags().isInterface())
       return super.rewriteProxiesImpl(pr);
-    
+
     // optimization to reduce register reads and writes
     if (accessState != null) {
       target = pr.replaceTarget(target, accessState);
-      
+
       if (accessState.read() && !field.name().equals("length")) {
         return field.target(target);
       }
@@ -85,11 +85,11 @@ public class FieldExt_c extends ExprExt_c {
   public Field node() {
     return (Field) super.node();
   }
-  
+
   public void accessState(State s) {
     this.accessState = s;
   }
-  
+
   public State accessState() {
     return accessState;
   }

@@ -16,34 +16,38 @@ import fabric.worker.transaction.TransactionManager;
 
 public abstract class Options {
   private final SortedSet<Flag> flags;
-  
+
   /**
    * Fabric runtime classpath for linking dynamically compiled code
    */
   public String bootcp;
 
   /**
-   * Fabric signature path for dynamically compiled code 
+   * Fabric signature path for dynamically compiled code
    */
   public String sigcp;
-  
+
   /**
-   * FabIL signature path for dynamically compiled code 
+   * FabIL signature path for dynamically compiled code
    */
   public String filsigcp;
-  
+
   /**
-   * Directory for caching dynamically compiled code 
+   * Directory for caching dynamically compiled code
    */
   public String codeCache;
+
+  /**
+   * Flag for indicating if worker needs to cache compiled code in local file system
+   */
+  public boolean outputToLocalFS;
   
   /**
    * Whether to commit reads to stores. This is for timing testing, to see the
    * ideal benefits of promises.
    */
   public static boolean DEBUG_COMMIT_READS = true;
-
-
+  
   /**
    * Whether to turn off SSL encryption for debugging purposes.
    */
@@ -54,7 +58,6 @@ public abstract class Options {
     protected final Set<String> ids;
     protected final String params;
     protected final String usage;
-
 
     /**
      * @param id
@@ -385,23 +388,23 @@ public abstract class Options {
         throw new TerminationException(0);
       }
     });
-    
+
     flags.add(new Flag(Kind.DEBUG, "--trace-objects", null, "track the "
         + "creation of _Impls by storing a stack trace in each _Impl object") {
-          @Override
-          public int handle(String[] args, int index) {
-            fabric.lang.Object._Impl.TRACE_OBJECTS = true;
-            return index;
-          }
+      @Override
+      public int handle(String[] args, int index) {
+        fabric.lang.Object._Impl.TRACE_OBJECTS = true;
+        return index;
+      }
     });
-    
+
     flags.add(new Flag(Kind.DEBUG, "--trace-locks", null, "track the "
         + "locking of _Impls by storing a stack trace in each _Impl object") {
-          @Override
-          public int handle(String[] args, int index) {
-            TransactionManager.TRACE_WRITE_LOCKS = true;
-            return index;
-          }
+      @Override
+      public int handle(String[] args, int index) {
+        TransactionManager.TRACE_WRITE_LOCKS = true;
+        return index;
+      }
     });
 
     flags.add(new Flag(Kind.SECRET_HELP, "--secret-menu", null,
@@ -429,7 +432,7 @@ public abstract class Options {
         return index + 1;
       }
     });
-    
+
     flags.add(new Flag(Kind.SECRET, "--code-cache", "<dir>",
         "directory for code compiled by the worker") {
       @Override
@@ -438,13 +441,21 @@ public abstract class Options {
         return index + 1;
       }
     });
-    
+
     flags.add(new Flag(Kind.SECRET, "--bootclasspath", "<path>",
         "directory for Fabric runtime classes") {
       @Override
       public int handle(String[] args, int index) {
         Options.this.bootcp = args[index];
         return index + 1;
+      }
+    });
+    flags.add(new Flag(Kind.SECRET, "-output-to-local-fs", "", 
+        "A flag for putting .class files to the local file system") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.outputToLocalFS = true;
+        return index;
       }
     });
     

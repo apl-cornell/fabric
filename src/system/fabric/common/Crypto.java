@@ -146,31 +146,30 @@ public final class Crypto {
    * Validates the given certificate chain against the given trust store.
    */
   public static void validateCertificateChain(Certificate[] certificateChain,
-                                              Set<TrustAnchor> trustStore)
-                     throws GeneralSecurityException {
+      Set<TrustAnchor> trustStore) throws GeneralSecurityException {
     PKIXParameters params = new PKIXParameters(trustStore);
     params.setSigProvider(BouncyCastleProvider.PROVIDER_NAME);
     params.setRevocationEnabled(false);
     CertificateFactory certFactory = CertificateFactory.getInstance("X509");
     CertPath certPath =
-      certFactory.generateCertPath(Arrays.asList(certificateChain));
+        certFactory.generateCertPath(Arrays.asList(certificateChain));
     CertPathValidator pathValidator = CertPathValidator.getInstance("PKIX");
     pathValidator.validate(certPath, params);
   }
-  
+
   /**
    * Generates a certificate, signed by the issuer, binding the subject's name
    * to their public key.
    */
-  public static X509Certificate createCertificate(
-      String subjectName, PublicKey subjectKey,
-      String issuerName, PrivateKey issuerKey) throws GeneralSecurityException {
-    
+  public static X509Certificate createCertificate(String subjectName,
+      PublicKey subjectKey, String issuerName, PrivateKey issuerKey)
+      throws GeneralSecurityException {
+
     Calendar expiry = Calendar.getInstance();
     expiry.add(Calendar.YEAR, 1);
-    
+
     X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
-    
+
     certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
     certGen.setIssuerDN(new X509Name("CN=" + issuerName));
     certGen.setSubjectDN(new X509Name("CN=" + subjectName));
@@ -178,10 +177,10 @@ public final class Crypto {
     certGen.setPublicKey(subjectKey);
     certGen.setNotBefore(new Date(System.currentTimeMillis()));
     certGen.setNotAfter(expiry.getTime());
-    
+
     return certGen.generate(issuerKey);
   }
-  
+
   /**
    * Extracts the CN component of a Distinguished Name.
    */
@@ -196,7 +195,7 @@ public final class Crypto {
       }
     } catch (InvalidNameException e) {
     }
-    
+
     return null;
   }
 }

@@ -87,8 +87,8 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
 
     if (location != null) {
       if (!ts.isImplicitCastValid(location.type(), ts.Store())) {
-        throw new SemanticException("Array location must be a store.", location
-            .position());
+        throw new SemanticException("Array location must be a store.",
+            location.position());
       }
     }
 
@@ -150,11 +150,11 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
       throws SemanticException {
     New_c n = (New_c) super.typeCheckOverride(parent, tc);
     if (n == null) return null;
-        
+
     if (n.location != null) {
       n = n.location((Expr) n.visitChild(n.location, tc));
     }
-    
+
     return n;
   }
 
@@ -162,7 +162,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
   @Override
   public Node copy(NodeFactory nf) {
     FabILNodeFactory filNf = (FabILNodeFactory) nf;
-    return filNf.New(this.position, this.qualifier, this.tn,
-        this.location, this.arguments, this.body);
+    return filNf.New(this.position, this.qualifier, this.tn, this.location,
+        this.arguments, this.body);
   }
 }

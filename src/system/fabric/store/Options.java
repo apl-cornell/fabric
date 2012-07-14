@@ -76,7 +76,7 @@ public class Options extends fabric.common.Options {
         return index + 1;
       }
     });
-    
+
     flags.add(new Flag("--no-shell", null, "disable the worker shell. This is "
         + "useful when the store is started with a disconnected stdin.") {
       @Override
@@ -88,12 +88,12 @@ public class Options extends fabric.common.Options {
 
     flags.add(new Flag(Kind.DEBUG, "--nossl", null,
         "disables SSL for debugging purposes") {
-          @Override
-          public int handle(String[] args, int index) {
-            fabric.common.Options.DEBUG_NO_SSL = true;
-            return index;
-          }
-        });
+      @Override
+      public int handle(String[] args, int index) {
+        fabric.common.Options.DEBUG_NO_SSL = true;
+        return index;
+      }
+    });
   }
 
   @Override
@@ -110,7 +110,7 @@ public class Options extends fabric.common.Options {
   @Override
   public void validateOptions() throws UsageError {
     if (null == storeName) throw new UsageError("No store name specified");
-    
+
     // Default codeCache is set here because it depends on storeName.
     if (null == codeCache) {
       this.codeCache = Resources.relpathRewrite("var", "cache", storeName);
@@ -130,7 +130,7 @@ public class Options extends fabric.common.Options {
     this.cmd = new String[args.length - index];
     for (int idx = index; idx < args.length; idx++)
       this.cmd[idx - index] = args[idx];
-    
+
     return args.length;
   }
 }

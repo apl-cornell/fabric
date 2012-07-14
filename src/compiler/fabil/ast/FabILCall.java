@@ -5,5 +5,6 @@ import polyglot.ast.Expr;
 
 public interface FabILCall extends Call {
   Expr remoteWorker();
+
   FabILCall remoteWorker(Expr remoteWorker);
 }

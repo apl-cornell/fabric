@@ -9,7 +9,7 @@ import fabric.lang.Object;
 import fabric.worker.Store;
 
 /**
- * A map keyed on OIDs.  Supports null keys.
+ * A map keyed on OIDs. Supports null keys.
  */
 public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   Map<Store, LongKeyMap<V>> map;
@@ -48,8 +48,8 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   }
 
   public boolean containsKey(Object obj) {
-    return obj == null ? hasNullEntry : containsKey(obj.$getStore(), obj
-        .$getOnum());
+    return obj == null ? hasNullEntry : containsKey(obj.$getStore(),
+        obj.$getOnum());
   }
 
   public boolean containsKey(Store store, long onum) {
@@ -122,7 +122,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
 
   public int size() {
     int result = 0;
-    
+
     for (LongKeyMap<V> submap : this)
       result += submap.size();
 

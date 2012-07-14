@@ -38,7 +38,7 @@ public abstract class ClassRef implements FastSerializable {
       ClassRef deserialize(byte[] data, int pos) {
         return new PlatformClassRef(data, pos);
       }
-      
+
       @Override
       String className(byte[] data, int pos) {
         return PlatformClassRef.className(data, pos);
@@ -75,7 +75,7 @@ public abstract class ClassRef implements FastSerializable {
       ClassRef deserialize(byte[] data, int pos) {
         return new FabricClassRef(data, pos);
       }
-      
+
       @Override
       String className(byte[] data, int pos) {
         return "fab://" + FabricClassRef.storeName(data, pos) + "/"
@@ -105,14 +105,14 @@ public abstract class ClassRef implements FastSerializable {
     };
 
     abstract ClassRef deserialize(byte[] data, int pos);
-    
+
     abstract String className(byte[] data, int pos);
 
     abstract void copySerialization(DataInput in, DataOutput out, byte[] buf)
         throws IOException;
 
     abstract int lengthAt(byte[] data, int pos);
-    
+
     abstract boolean isSurrogate(byte[] data, int pos);
   }
 
@@ -148,7 +148,7 @@ public abstract class ClassRef implements FastSerializable {
    */
   @SuppressWarnings("unchecked")
   public static ClassRef makeRef(Class<?> clazz) {
-    if (NSUtil.isPlatformName(clazz.getName())) 
+    if (NSUtil.isPlatformName(clazz.getName()))
       return new PlatformClassRef(clazz);
     return new FabricClassRef((Class<? extends fabric.lang.Object>) clazz);
   }
@@ -434,7 +434,7 @@ public abstract class ClassRef implements FastSerializable {
       return Arrays.copyOfRange(data, classHashPos, classHashPos
           + classHashLength(data, pos));
     }
-    
+
     static boolean isSurrogate(byte[] data, int pos) {
       return className(data, pos).equals(Surrogate.class.getName());
     }
@@ -801,7 +801,7 @@ public abstract class ClassRef implements FastSerializable {
     ClassRefType type = ClassRefType.values()[data[pos]];
     return type.deserialize(data, pos + 1);
   }
-  
+
   /**
    * Gets the name of the class represented by the ClassRef starting at the
    * given position in the given byte array.

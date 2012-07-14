@@ -1,11 +1,16 @@
 package fabil.types;
 
+import java.util.List;
+
 import codebases.types.CodebaseTypeSystem;
+import codebases.types.NamespaceResolver;
 import polyglot.ast.TypeNode;
 import polyglot.types.*;
 import polyglot.util.Position;
 
 public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
+
+  List<NamespaceResolver> javaruntimeResolvers();
 
   // TODO: fabric.worker or fabric.lang?
   /**
@@ -47,7 +52,7 @@ public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
 
   /** The ClassType of fabric.lang.security.Label. */
   Type Label();
-  
+
   /** The ClassType of fabric.lang.security.ConfPolicy. */
   Type ConfPolicy();
 
@@ -58,12 +63,14 @@ public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
   ClassType fabricRuntimeArrayImplOf(Type type);
 
   ClassType toFabricRuntimeArray(ArrayType type);
-  
+
   /**
    * Returns the compile-time representation of a Fabric array type.
    */
   FabricArrayType fabricArrayOf(Type baseType);
+
   FabricArrayType fabricArrayOf(Position pos, Type type);
+
   FabricArrayType fabricArrayOf(Type type, int dims);
 
   /**
@@ -173,10 +180,10 @@ public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
    */
   boolean isCompiledByFabc(ClassType ct);
 
-//  /**
-//   * Sets the LoadedClassResolver to use when looking for Fabric runtime
-//   * classes.
-//   */
-//  void setRuntimeClassResolver(LoadedClassResolver lcr);
+  // /**
+  // * Sets the LoadedClassResolver to use when looking for Fabric runtime
+  // * classes.
+  // */
+  // void setRuntimeClassResolver(LoadedClassResolver lcr);
 
 }

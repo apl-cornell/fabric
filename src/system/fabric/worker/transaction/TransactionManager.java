@@ -99,7 +99,7 @@ public final class TransactionManager {
    * The innermost running transaction for the thread being managed.
    */
   private Log current;
-  
+
   /**
    * A debugging switch for storing a stack trace each time a write lock is
    * obtained. Enable this by passing "--trace-locks" as a command-line argument
@@ -214,11 +214,12 @@ public final class TransactionManager {
    *          true iff should send abort messages to stores and workers.
    */
   private void abortTransaction(boolean recurseToCohorts) {
-    // XXX HACK For now, flush the label cache. Should really have per-transaction label cache. -Jed
+    // XXX HACK For now, flush the label cache. Should really have
+    // per-transaction label cache. -Jed
     for (Store store : current.storesToContact()) {
       store.labelCache().clear();
     }
-    
+
     if (current.tid.depth == 0) {
       // Make sure no other thread is working on this transaction.
       synchronized (current.commitState) {
@@ -294,9 +295,8 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the transaction was aborted and needs to be retried.
    */
-  public void commitTransaction()
-      throws AbortException, TransactionRestartingException,
-      TransactionAtomicityViolationException {
+  public void commitTransaction() throws AbortException,
+      TransactionRestartingException, TransactionAtomicityViolationException {
     Timing.COMMIT.begin();
     try {
       commitTransactionAt(System.currentTimeMillis());
@@ -415,8 +415,7 @@ public final class TransactionManager {
    *           if the prepare fails.
    */
   private Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
-      final long commitTime,
-      Set<Store> stores, List<RemoteWorker> workers) {
+      final long commitTime, Set<Store> stores, List<RemoteWorker> workers) {
     final Map<RemoteNode, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
@@ -484,8 +483,8 @@ public final class TransactionManager {
                     false) : new LongKeyHashMap<Integer>();
             Collection<_Impl> writes = current.getWritesForStore(store);
             boolean subTransactionCreated =
-                store.prepareTransaction(current.tid.topTid,
-                    commitTime, creates, reads, writes);
+                store.prepareTransaction(current.tid.topTid, commitTime,
+                    creates, reads, writes);
 
             if (subTransactionCreated) {
               RemoteWorker storeWorker = worker.getWorker(store.name());
@@ -552,12 +551,12 @@ public final class TransactionManager {
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
 
       sendAbortMessages(stores, workers, failures.keySet());
-      
+
       synchronized (current.commitState) {
         current.commitState.value = PREPARE_FAILED;
         current.commitState.notifyAll();
       }
-      
+
       abortPrepare(failures);
     } else {
       synchronized (current.commitState) {
@@ -573,10 +572,11 @@ public final class TransactionManager {
    * Aborts a failed prepare. Throws a TransactionRestartingException to
    * indicate that the transaction should be restarted.
    */
-  private void abortPrepare(Map<RemoteNode, TransactionPrepareFailedException> failures) {
+  private void abortPrepare(
+      Map<RemoteNode, TransactionPrepareFailedException> failures) {
     failures.remove(null);
     TransactionPrepareFailedException e =
-      new TransactionPrepareFailedException(failures);
+        new TransactionPrepareFailedException(failures);
     Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
         "{0} error committing: prepare failed exception: {1}", current, e);
     TransactionID tid = current.tid;
@@ -589,15 +589,15 @@ public final class TransactionManager {
    */
   public void sendCommitMessagesAndCleanUp()
       throws TransactionAtomicityViolationException {
-    sendCommitMessagesAndCleanUp(current.storesToContact(), current.workersCalled);
+    sendCommitMessagesAndCleanUp(current.storesToContact(),
+        current.workersCalled);
   }
 
   /**
    * Sends commit messages to the given set of stores and workers.
    */
-  private void sendCommitMessagesAndCleanUp(
-      Set<Store> stores, List<RemoteWorker> workers)
-      throws TransactionAtomicityViolationException {
+  private void sendCommitMessagesAndCleanUp(Set<Store> stores,
+      List<RemoteWorker> workers) throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
@@ -730,8 +730,8 @@ public final class TransactionManager {
    * @param fails
    *          the set of nodes that have reported failure.
    */
-  private void sendAbortMessages(Set<Store> stores,
-      List<RemoteWorker> workers, Set<RemoteNode> fails) {
+  private void sendAbortMessages(Set<Store> stores, List<RemoteWorker> workers,
+      Set<RemoteNode> fails) {
     for (Store store : stores)
       if (!fails.contains(store)) {
         try {
@@ -765,7 +765,7 @@ public final class TransactionManager {
       // Grab a write lock on the object.
       obj.$writer = current;
       obj.$writeLockHolder = current;
-      if (TRACE_WRITE_LOCKS) 
+      if (TRACE_WRITE_LOCKS)
         obj.$writeLockStackTrace = Thread.currentThread().getStackTrace();
 
       // Own the object. The call to ensureOwnership is responsible for adding

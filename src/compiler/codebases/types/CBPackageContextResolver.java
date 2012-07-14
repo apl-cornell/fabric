@@ -1,7 +1,6 @@
 package codebases.types;
 
-import java.net.URI;
-
+import fabric.common.FabricLocation;
 import polyglot.types.ClassType;
 import polyglot.types.Named;
 import polyglot.types.NoClassException;
@@ -13,18 +12,19 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
 
 public class CBPackageContextResolver extends PackageContextResolver {
-  protected URI ns;
+  protected FabricLocation ns;
+
   public CBPackageContextResolver(CodebaseTypeSystem ts, Package p) {
     super(ts, p);
-    this.ns = ((CBPackage)p).namespace();
+    this.ns = ((CBPackage) p).namespace();
   }
-  
+
   /**
    * The system resolver.
    */
   @Override
   public Resolver outer() {
-      return ((CodebaseTypeSystem) ts).namespaceResolver(ns);
+    return ((CodebaseTypeSystem) ts).namespaceResolver(ns);
   }
 
   /**
@@ -32,31 +32,32 @@ public class CBPackageContextResolver extends PackageContextResolver {
    */
   @Override
   public Named find(String name, ClassType accessor) throws SemanticException {
-      if (! StringUtil.isNameShort(name)) {
-          throw new InternalCompilerError(
-              "Cannot lookup qualified name " + name);
-      }
-      
-      Named n = null;
+    if (!StringUtil.isNameShort(name)) {
+      throw new InternalCompilerError("Cannot lookup qualified name " + name);
+    }
 
-      try {
-          n = ((CodebaseTypeSystem) ts).namespaceResolver(ns).find(p.fullName() + "." + name);
-      }
-      catch (NoClassException e) {
-          // Rethrow if some _other_ class or package was not found.
-          if (!e.getClassName().equals(p.fullName() + "." + name)) {
-              throw e;
-          }
-      }
+    Named n = null;
 
-      if (n == null) {
-          n = ((CodebaseTypeSystem)ts).createPackage(ns, p, name);
+    try {
+      n =
+          ((CodebaseTypeSystem) ts).namespaceResolver(ns).find(
+              p.fullName() + "." + name);
+    } catch (NoClassException e) {
+      // Rethrow if some _other_ class or package was not found.
+      if (!e.getClassName().equals(p.fullName() + "." + name)) {
+        throw e;
       }
-      
-      if (! canAccess(n, accessor)) {
-          throw new SemanticException("Cannot access " + n + " from " + accessor + ".");
-      }
-      
-      return n;
+    }
+
+    if (n == null) {
+      n = ((CodebaseTypeSystem) ts).createPackage(ns, p, name);
+    }
+
+    if (!canAccess(n, accessor)) {
+      throw new SemanticException("Cannot access " + n + " from " + accessor
+          + ".");
+    }
+
+    return n;
   }
 }

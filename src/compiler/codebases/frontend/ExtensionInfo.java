@@ -1,15 +1,15 @@
 package codebases.frontend;
 
 import java.io.IOException;
-import java.net.URI;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import polyglot.frontend.FileSource;
-import polyglot.types.reflect.ClassPathLoader;
+import javax.tools.FileObject;
+
 import codebases.types.CBTypeEncoder;
 import codebases.types.CodebaseTypeSystem;
-import fabric.lang.Object;
+import fabil.types.ClassFile;
+import fabric.common.FabricLocation;
 import fabric.worker.Store;
 
 /**
@@ -22,21 +22,10 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
 
   /**
    * Return the type encoder used by this extension.
+   * 
    * @return the type encoder
    */
   CBTypeEncoder typeEncoder();
-
-  /**
-   * Create a classpath loader for a given namespace.
-   * @return the classpath loader
-   */
-  ClassPathLoader classpathLoader(URI namespace);
-
-  /**
-   * Create a source loader for a given namespace.
-   * @return the source loader
-   */
-  URISourceLoader sourceLoader(URI namespace);
 
   /**
    * The namespace used for source resolved against the classpath and
@@ -45,14 +34,7 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * 
    * @return the namespace
    */
-  URI localNamespace();
-
-  /**
-   * Create a source file from a remote Fabric object.
-   * 
-   * @return the namespace
-   */
-  FileSource createRemoteSource(URI ns, Object obj, boolean b) throws IOException;
+  FabricLocation localNamespace();
 
   /**
    * The namespace used for built-in types like fabric.lang.Object. This
@@ -61,8 +43,10 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * 
    * @return the namespace
    */
-  URI platformNamespace();
+  FabricLocation platformNamespace();
 
+  @Override
+  ClassFile createClassFile(FileObject fo, byte[] code)throws IOException;
   /**
    * Return the java package prefix for the given namespace. This prefix is
    * prepended to the names of published classes to obtain a unique Java name.
@@ -70,7 +54,7 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * 
    * @return the java package prefix string
    */
-  String namespaceToJavaPackagePrefix(URI ns);
+  String namespaceToJavaPackagePrefix(FabricLocation ns);
 
   /**
    * The classpath used to resolve dependencies during compilation. May contain
@@ -78,37 +62,48 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * 
    * @return The list of directories and codebases to search.
    */
-  List<URI> classpath();
-  
+  Set<FabricLocation> classpath();
+
   /**
    * The sourcepath used to resolve source dependencies during compilation. When
-   * publishing to Fabric, dependencies resolved through the sourcepath
-   * will be published alongside source specified on the commandline.
+   * publishing to Fabric, dependencies resolved through the sourcepath will be
+   * published alongside source specified on the commandline.
    * 
    * @return The list of directories and codebases to search.
    */
-  List<URI> sourcepath();
+  Set<FabricLocation> sourcepath();
 
   /**
    * The locations of signature files for native classes.
+   * 
    * @return The list of directories and codebases to search.
    */
-  List<URI> signaturepath();
+  Set<FabricLocation> filsignaturepath();
 
   /**
    * The locations of platform classes such as fabric.lang.Object.
+   * 
    * @return The list of directories and codebases to search.
    */
-  List<URI> bootclasspath();
+  Set<FabricLocation> filbootclasspath();
 
   /**
-   * A map between codebase aliases used in source and the URI of the intended codebase.
+   * The locations of java boot classes
+   * 
+   * @return The list of directories on local file system
+   */
+  Set<FabricLocation> bootclasspath();
+
+  /**
+   * A map between codebase aliases used in source and the URI of the intended
+   * codebase.
+   * 
    * @return The list of directories and codebases to search.
    */
-  Map<String, URI> codebaseAliases();
+  Map<String, FabricLocation> codebaseAliases();
 
   Store destinationStore();
-  
+
   @Override
   CodebaseTypeSystem typeSystem();
 

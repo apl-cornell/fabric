@@ -39,7 +39,7 @@ public final class LocalStore implements Store, Serializable {
   private IntegPolicy bottomIntegPolicy;
   private Label emptyLabel;
   private Label publicReadonlyLabel;
-  
+
   /**
    * Only used to obtain ObjectCache.Entry objects so we can satisfy the
    * contract for readFromCache(long).
@@ -54,9 +54,9 @@ public final class LocalStore implements Store, Serializable {
   private Set<Pair<Principal, Principal>> localDelegates;
 
   @Override
-  public boolean prepareTransaction(
-      long tid, long commitTime, Collection<Object._Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Object._Impl> writes) {
+  public boolean prepareTransaction(long tid, long commitTime,
+      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<Object._Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
@@ -92,7 +92,7 @@ public final class LocalStore implements Store, Serializable {
   public ObjectCache.Entry readObjectNoDissem(long onum) {
     return readImplNoDissem(onum).$cacheEntry;
   }
-  
+
   private _Impl readImplNoDissem(long onum) {
     if (!ONumConstants.isGlobalConstant(onum))
       throw new InternalError("Not supported.");
@@ -129,7 +129,7 @@ public final class LocalStore implements Store, Serializable {
   public ObjectCache.Entry readFromCache(long onum) {
     return cache.get(onum);
   }
-  
+
   @Override
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
     return false;
@@ -225,7 +225,7 @@ public final class LocalStore implements Store, Serializable {
   public void cache(_Impl impl) {
     // nothing to do
   }
-  
+
   @Override
   public ObjectCache.Entry cache(SerializedObject obj) {
     throw new InternalError(
@@ -252,13 +252,14 @@ public final class LocalStore implements Store, Serializable {
 
         // Create the object representing the top principal.
         topPrincipal =
-            new TopPrincipal._Impl(LocalStore.this).fabric$lang$security$PrincipalUtil$TopPrincipal$();
+            new TopPrincipal._Impl(LocalStore.this)
+                .fabric$lang$security$PrincipalUtil$TopPrincipal$();
         topPrincipal.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 
         // Create the object representing the bottom confidentiality policy.
         bottomConfidPolicy =
-            LabelUtil._Impl
-                .readerPolicy(LocalStore.this, null, (Principal) null);
+            LabelUtil._Impl.readerPolicy(LocalStore.this, null,
+                (Principal) null);
         bottomConfidPolicy.$forceRenumber(ONumConstants.BOTTOM_CONFIDENTIALITY);
 
         // Create the object representing the bottom integrity policy.
@@ -281,8 +282,8 @@ public final class LocalStore implements Store, Serializable {
 
         // Create the object representing the top integrity policy.
         topIntegPolicy =
-            LabelUtil._Impl
-                .writerPolicy(LocalStore.this, null, (Principal) null);
+            LabelUtil._Impl.writerPolicy(LocalStore.this, null,
+                (Principal) null);
         topIntegPolicy.$forceRenumber(ONumConstants.TOP_INTEGRITY);
 
         // Create the object representing the empty label.
@@ -294,8 +295,9 @@ public final class LocalStore implements Store, Serializable {
         // Create the label {worker->_; worker<-_} for the root map.
         // No need to renumber this. References to the local store's root map
         // should not be leaking to remote stores.
-        // XXX the above is not being done. HashMap needs to be parameterized on labels.
-        
+        // XXX the above is not being done. HashMap needs to be parameterized on
+        // labels.
+
         // Create root map.
         rootMap = new HashMap._Impl(LocalStore.this).fabric$util$HashMap$();
         localDelegates = new HashSet<Pair<Principal, Principal>>();
@@ -314,10 +316,10 @@ public final class LocalStore implements Store, Serializable {
     this.cache.put((_Impl) publicReadonlyLabel.fetch());
   }
 
-  //////////////////////////////////
+  // ////////////////////////////////
   // Java custom-serialization gunk
-  //////////////////////////////////
-  
+  // ////////////////////////////////
+
   private java.lang.Object writeReplace() throws ObjectStreamException {
     throw new NotSerializableException();
   }

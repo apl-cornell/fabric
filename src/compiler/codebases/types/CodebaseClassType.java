@@ -1,9 +1,9 @@
 package codebases.types;
 
-import java.net.URI;
+import fabric.common.FabricLocation;
 
 import polyglot.types.ClassType;
 
 public interface CodebaseClassType extends ClassType {
-  URI canonicalNamespace();
+  FabricLocation canonicalNamespace();
 }

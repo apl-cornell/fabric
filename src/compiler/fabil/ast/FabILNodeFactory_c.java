@@ -1,6 +1,5 @@
 package fabil.ast;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,6 +35,8 @@ import fabil.extension.FabILDelFactory;
 import fabil.extension.FabILDelFactory_c;
 import fabil.extension.FabILExtFactory;
 import fabil.extension.FabILExtFactory_c;
+import fabric.common.FabricLocation;
+
 /**
  * NodeFactory for FabIL extension.
  */
@@ -55,17 +56,20 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   protected FabILDelFactory delFactory() {
     return (FabILDelFactory) super.delFactory();
   }
+
   @Override
-  public CodebaseNode CodebaseNode(Position pos, URI ns, String name, URI externalNS) {  
+  public CodebaseNode CodebaseNode(Position pos, FabricLocation ns,
+      String name, FabricLocation externalNS) {
     return CodebaseNode(pos, ns, name, externalNS, null);
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, URI ns, String name, URI externalNS, Package package_) {  
+  public CodebaseNode CodebaseNode(Position pos, FabricLocation ns,
+      String name, FabricLocation externalNS, Package package_) {
     CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, package_);
     n = (CodebaseNode) n.ext(extFactory().extCodebaseNode());
     n = (CodebaseNode) n.del(delFactory().delCodebaseNode());
-    return n;  
+    return n;
   }
 
   @Override
@@ -150,8 +154,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @Override
   @SuppressWarnings("unchecked")
-  public New New(Position pos, Expr outer, TypeNode objectType,
-      Expr location, List<Expr> args, ClassBody body) {
+  public New New(Position pos, Expr outer, TypeNode objectType, Expr location,
+      List<Expr> args, ClassBody body) {
     New n =
         new New_c(pos, outer, objectType, CollectionUtil.nonNullList(args),
             body, location);
@@ -160,7 +164,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
     return n;
   }
-  
+
   // Constructors with fewer arguments ////////////////////////////////////////
 
   @SuppressWarnings("unchecked")
@@ -177,36 +181,40 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   }
 
   @Override
-  public New New(Position pos, Expr outer, TypeNode objectType,
-      Expr location, List<Expr> args) {
+  public New New(Position pos, Expr outer, TypeNode objectType, Expr location,
+      List<Expr> args) {
     return New(pos, outer, objectType, location, args, null);
   }
 
   @Override
-  public New New(Position pos, TypeNode type, Expr location,
-      List<Expr> args, polyglot.ast.ClassBody body) {
+  public New New(Position pos, TypeNode type, Expr location, List<Expr> args,
+      polyglot.ast.ClassBody body) {
     return New(pos, null, type, location, args, body);
   }
 
   @Override
   public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
       Expr label, Expr accessPolicy, Expr location, List<Expr> dims) {
-    return NewFabricArray(pos, base, label, accessPolicy, location, dims, 0, null);
+    return NewFabricArray(pos, base, label, accessPolicy, location, dims, 0,
+        null);
   }
 
   @Override
   public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
       Expr label, Expr accessPolicy, Expr location, List<Expr> dims, int addDims) {
-    return NewFabricArray(pos, base, label, accessPolicy, location, dims, addDims, null);
+    return NewFabricArray(pos, base, label, accessPolicy, location, dims,
+        addDims, null);
   }
 
   @Override
   public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr accessPolicy, Expr location, int addDims, FabricArrayInit init) {
+      Expr label, Expr accessPolicy, Expr location, int addDims,
+      FabricArrayInit init) {
     List<Expr> emptyList = Collections.emptyList();
-    return NewFabricArray(pos, base, label, accessPolicy, location, emptyList, addDims, init);
+    return NewFabricArray(pos, base, label, accessPolicy, location, emptyList,
+        addDims, init);
   }
-  
+
   @Override
   public RetryStmt RetryStmt(Position pos) {
     RetryStmt s = new RetryStmt_c(pos);
@@ -248,13 +256,13 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public SourceFile SourceFile(Position pos, PackageNode packageName, 
+  public SourceFile SourceFile(Position pos, PackageNode packageName,
       List imports, List decls) {
     return SourceFile(pos, packageName, Collections.EMPTY_LIST, imports, decls);
   }
 
   @Override
-  @SuppressWarnings({ })  
+  @SuppressWarnings({})
   public SourceFile SourceFile(Position pos, PackageNode packageName,
       List<CodebaseDecl> codebases, List<Import> imports,
       List<TopLevelDecl> decls) {
@@ -274,12 +282,11 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   }
 
   @Override
-  public CodebaseDecl CodebaseDecl(Position pos,
-      polyglot.ast.Id name) {
+  public CodebaseDecl CodebaseDecl(Position pos, polyglot.ast.Id name) {
     CodebaseDecl n = new CodebaseDecl_c(pos, name);
     n = (CodebaseDecl) n.ext(extFactory().extCodebaseDecl());
     n = (CodebaseDecl) n.del(delFactory().delCodebaseDecl());
-    return n;  
+    return n;
   }
 
   @Override

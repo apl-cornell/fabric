@@ -2,8 +2,8 @@ package codebases.frontend;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.net.URI;
 
+import fabric.common.FabricLocation;
 import fabric.lang.security.Label;
 
 import polyglot.frontend.Source;
@@ -12,19 +12,22 @@ public interface CodebaseSource {
   /**
    * The namespace loading this source.
    */
-  URI namespace();
+  FabricLocation namespace();
 
   /**
    * The short name of this source (i.e. its filename).
+   * 
    * @return
    */
   String name();
 
   /**
-   * The canonical namespace of source is the namespace its dependencies are resolved in.
+   * The canonical namespace of source is the namespace its dependencies are
+   * resolved in.
+   * 
    * @return The canonical namespace of this source
    */
-  URI canonicalNamespace();
+  FabricLocation canonicalNamespace();
 
   /**
    * Some compiler jobs are dynamically generated during compiling a resource,
@@ -39,20 +42,21 @@ public interface CodebaseSource {
    * @return A source derived from this CodebaseSource with a new (short) name
    */
   Source derivedSource(String name);
-  
+
   /**
    * Create a derived source object with a new namespace and short name.
+   * 
    * @param namespace
    * @param name
    * @return
    */
-  Source publishedSource(URI namespace, String name);
+  Source publishedSource(FabricLocation namespace, String name);
 
   /**
    * Whether a new class object should be published for this source file and
    * associated with the codebase representing the namespace.
    * 
-   * @return 
+   * @return
    */
   boolean shouldPublish();
 
@@ -63,10 +67,10 @@ public interface CodebaseSource {
 
   /** Open the source file. */
   public Reader open() throws IOException;
+
   /** Close the source file. */
   public void close() throws IOException;
 
   void setPublish(boolean pub);
-
 
 }

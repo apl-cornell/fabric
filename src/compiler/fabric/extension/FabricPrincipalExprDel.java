@@ -13,10 +13,10 @@ public class FabricPrincipalExprDel extends JL_c {
   @Override
   public Node visitChildren(NodeVisitor v) {
     Node n = super.visitChildren(v);
-    PrincipalExprExt_c ext = (PrincipalExprExt_c)FabricUtil.fabricExt(n);
+    PrincipalExprExt_c ext = (PrincipalExprExt_c) FabricUtil.fabricExt(n);
     if (ext.location() != null) {
-      Expr loc = (Expr)v.visitEdge(n, ext.location());
-      ext = (PrincipalExprExt_c)ext.location(loc);
+      Expr loc = (Expr) v.visitEdge(n, ext.location());
+      ext = (PrincipalExprExt_c) ext.location(loc);
       return FabricUtil.updateFabricExt(n, ext);
     }
     return n;
@@ -25,11 +25,12 @@ public class FabricPrincipalExprDel extends JL_c {
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
     Node n = super.typeCheck(tc);
-    PrincipalExprExt_c ext = (PrincipalExprExt_c)FabricUtil.fabricExt(n);
-    FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
+    PrincipalExprExt_c ext = (PrincipalExprExt_c) FabricUtil.fabricExt(n);
+    FabricTypeSystem ts = (FabricTypeSystem) tc.typeSystem();
     if (ext.location() != null) {
       if (!ts.isSubtype(ext.location().type(), ts.Store())) {
-        throw new SemanticException("The location needs to be a Store.", ext.location().position());
+        throw new SemanticException("The location needs to be a Store.", ext
+            .location().position());
       }
     }
     return n;

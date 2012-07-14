@@ -11,4 +11,3 @@ public class DuplicateStoreException extends UsageError {
     super("Tried to run multiple stores with the same name");
   }
 }
-
