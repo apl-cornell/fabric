@@ -1,8 +1,8 @@
 package fabric.common.net;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 import fabric.common.net.naming.SocketAddress;
 import fabric.lang.security.Principal;
@@ -44,12 +44,12 @@ public class SubSocket {
   }
 
   /** @see java.net.Socket#getOutputStream() */
-  public final OutputStream getOutputStream() throws IOException {
+  public final BufferedOutputStream getOutputStream() throws IOException {
     return state.getOutputStream();
   }
 
   /** @see java.net.Socket#getInputStream() */
-  public final InputStream getInputStream() throws IOException {
+  public final BufferedInputStream getInputStream() throws IOException {
     return state.getInputStream();
   }
 
@@ -87,11 +87,11 @@ public class SubSocket {
       throw new IOException("Cannot connect: socket " + this, cause);
     }
 
-    public InputStream getInputStream() throws IOException {
+    public BufferedInputStream getInputStream() throws IOException {
       throw new IOException("Cannot get an input stream: socket " + this, cause);
     }
 
-    public OutputStream getOutputStream() throws IOException {
+    public BufferedOutputStream getOutputStream() throws IOException {
       throw new IOException("Cannot get an output stream: socket " + this,
           cause);
     }
@@ -156,12 +156,12 @@ public class SubSocket {
     }
 
     @Override
-    public InputStream getInputStream() {
+    public BufferedInputStream getInputStream() {
       return conn.in;
     }
 
     @Override
-    public OutputStream getOutputStream() {
+    public BufferedOutputStream getOutputStream() {
       return conn.out;
     }
 

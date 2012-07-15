@@ -1,7 +1,5 @@
 package fabric.messages;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -57,11 +55,9 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                     try {
                       // Handle the connection.
                       DataInputStream in =
-                          new DataInputStream(new BufferedInputStream(
-                              connection.getInputStream()));
+                          new DataInputStream(connection.getInputStream());
                       DataOutputStream out =
-                          new DataOutputStream(new BufferedOutputStream(
-                              connection.getOutputStream()));
+                          new DataOutputStream(connection.getOutputStream());
 
                       Message<?, ?> message = Message.receive(in);
                       try {

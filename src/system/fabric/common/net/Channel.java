@@ -158,18 +158,18 @@ abstract class Channel extends Thread {
    */
   class Connection {
     final public int streamID;
-    final public InputStream in;
-    final public OutputStream out;
+    final public BufferedInputStream in;
+    final public BufferedOutputStream out;
 
-    final public OutputStream sink;
+    final private BufferedOutputStream sink;
 
     public Connection(int streamID) throws IOException {
       this.streamID = streamID;
       this.out = new BufferedOutputStream(new MuxedOutputStream(streamID));
 
       PipedInputStream in = new PipedInputStream();
-      this.sink = new PipedOutputStream(in);
-      this.in = in;
+      this.sink = new BufferedOutputStream(new PipedOutputStream(in));
+      this.in = new BufferedInputStream(in);
       connections.put(this.streamID, this);
     }
 
