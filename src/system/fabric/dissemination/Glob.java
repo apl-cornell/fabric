@@ -14,6 +14,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.util.logging.Level;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -22,6 +23,7 @@ import javax.crypto.SecretKey;
 
 import fabric.common.Crypto;
 import fabric.common.FastSerializable;
+import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.InternalError;
@@ -30,6 +32,8 @@ import fabric.lang.security.SecretKeyObject;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
+
+import static fabric.common.Logging.NETWORK_MESSAGE_RECEIVE_LOGGER;
 
 /**
  * A glob is an ObjectGroup that has been encrypted and signed.
@@ -302,7 +306,13 @@ public class Glob implements FastSerializable {
           new DataInputStream(new CipherInputStream(bis, cipher));
 
       // Decrypt the group.
-      return new ObjectGroup(in);
+      ObjectGroup result = new ObjectGroup(in);
+      if (NETWORK_MESSAGE_RECEIVE_LOGGER.isLoggable(Level.FINE)) {
+        Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
+            "Decrypted object group from {0} containing {1} objects", store,
+            result.objects().size());
+      }
+      return result;
     } catch (IOException e) {
       throw new InternalError(e);
     } catch (GeneralSecurityException e) {

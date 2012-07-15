@@ -482,6 +482,14 @@ public final class TransactionManager {
                 Options.DEBUG_COMMIT_READS ? current.getReadsForStore(store,
                     false) : new LongKeyHashMap<Integer>();
             Collection<_Impl> writes = current.getWritesForStore(store);
+            
+            if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+              Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE, "Preparing "
+                  + "transaction {0} to {1}: {2} created, {3} read, "
+                  + "{4} modified", current.tid.topTid, store, creates.size(),
+                  reads.size(), writes.size());
+            }
+            
             boolean subTransactionCreated =
                 store.prepareTransaction(current.tid.topTid, commitTime,
                     creates, reads, writes);
