@@ -70,6 +70,15 @@ abstract class Channel extends Thread {
     out.writeInt(0);
     out.flush();
   }
+  
+  /**
+   * Sends a flush signal.
+   */
+  public synchronized void sendFlush(int streamID) throws IOException {
+    out.writeInt(streamID);
+    out.writeInt(-1);
+    out.flush();
+  }
 
   /** send data */
   public synchronized void sendData(int streamID, byte[] data, int offset,
@@ -80,7 +89,6 @@ abstract class Channel extends Thread {
     out.writeInt(streamID);
     out.writeInt(len);
     out.write(data, offset, len);
-    out.flush();
   }
 
   /** called on receipt of a channel close message */
@@ -98,6 +106,12 @@ abstract class Channel extends Thread {
   public synchronized void recvClose(int streamID) throws IOException {
     Connection listener = getReceiver(streamID);
     listener.receiveClose();
+  }
+
+  /** called on receipt of flush message */
+  public synchronized void flushData(int streamID) throws IOException {
+    Connection listener = getReceiver(streamID);
+    listener.flushData();
   }
 
   /** called on receipt of data message */
@@ -137,6 +151,12 @@ abstract class Channel extends Thread {
         if (len == 0) {
           // error - deliver to reader
           recvClose(streamID);
+          continue;
+        }
+        
+        if (len == -1) {
+          // Flush to reader.
+          flushData(streamID);
           continue;
         }
 
@@ -202,6 +222,10 @@ abstract class Channel extends Thread {
     public void receiveData(byte[] b) throws IOException {
       NETWORK_CHANNEL_LOGGER.fine("putting " + b.length + " bytes in pipe");
       sink.write(b);
+    }
+    
+    /** flush data to the reading thread */
+    public void flushData() throws IOException {
       sink.flush();
     }
   }
@@ -216,6 +240,11 @@ abstract class Channel extends Thread {
 
     public MuxedOutputStream(int streamID) {
       this.streamID = streamID;
+    }
+
+    @Override
+    public void flush() throws IOException {
+      sendFlush(streamID);
     }
 
     @Override
