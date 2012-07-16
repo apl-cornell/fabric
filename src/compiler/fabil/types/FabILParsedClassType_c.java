@@ -22,7 +22,6 @@ import fabil.visit.ClassHashGenerator;
 import fabil.visit.ProviderRewriter;
 import fabric.common.Crypto;
 import fabric.common.FabricLocation;
-import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
