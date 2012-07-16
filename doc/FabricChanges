@@ -33,13 +33,13 @@ src/compiler
                         that FabricFileManager can understand and deal with.
                         FileManagerUtil - It provides helper methods to FabricFileManager.
                         ClassObject - It represents an in-memory object that will hold the bytecode 
-                        after post compiler processing.
-2. fabil              - FabILOptions now has four additional methods. bootclasspath (for setting 
+                        after post compiler processing. This object will be generated when the 
+			"-post" option or the "-output-to-local-fs" option is not specified. 
+			Otherwise .class files will be generated on the local file system.
+2. fabil              - FabILOptions now has three additional methods. bootclasspath (for setting 
                         java boot classpath), outputDirectory (for setting the output directory 
-                        for source files), classOutputDirectory (for setting the output directory 
-                        for class files) and needMemClassObjects (for indicating if store/worker 
-                        setup requires to put .class files in memory after the compilation of 
-                        FClasses.
+                        for source files) and classOutputDirectory (for setting the output directory 
+                        for class files)
 3. fabil/types        - FabILTypeSystem has an additional method javaruntimeResolvers (for 
                         getting the resolvers that resolve a type in java boot classpath namespace).
 src/system

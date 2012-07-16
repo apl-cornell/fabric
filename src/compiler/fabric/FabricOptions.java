@@ -218,11 +218,11 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       File source_output_file = null;
       if (!isSourceOutputGiven() && !isClassOutputGiven())
         super.source_output_dir =
-            super.class_output_dir = Collections.singleton(currFile);
+            super.class_output_dir = Collections.singleton(current_directory);
       else if (!isSourceOutputGiven() && isClassOutputGiven())
         super.source_output_dir = super.class_output_dir;
       else if (!isClassOutputGiven())
-        super.class_output_dir = Collections.singleton(currFile);
+        super.class_output_dir = Collections.singleton(current_directory);
       for (File f : super.source_output_dir) {
         source_output_file = f;
         break;
@@ -242,11 +242,11 @@ public class FabricOptions extends JifOptions implements FabILOptions {
       File class_output_file = null;
       if (!isSourceOutputGiven() && !isClassOutputGiven())
         super.source_output_dir =
-            super.class_output_dir = Collections.singleton(currFile);
+            super.class_output_dir = Collections.singleton(current_directory);
       else if (!isSourceOutputGiven() && isClassOutputGiven())
         super.source_output_dir = super.class_output_dir;
       else if (!isClassOutputGiven())
-        super.class_output_dir = Collections.singleton(currFile);
+        super.class_output_dir = Collections.singleton(current_directory);
       for (File f : super.class_output_dir) {
         class_output_file = f;
         break;
