@@ -12,8 +12,8 @@ import polyglot.types.ImportTable;
 import polyglot.types.Package;
 import polyglot.types.SemanticException;
 import polyglot.util.CollectionUtil;
+import polyglot.util.ListUtil;
 import polyglot.util.Position;
-import polyglot.util.TypedList;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeBuilder;
 import codebases.frontend.CodebaseSource;
@@ -76,8 +76,8 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
         || !CollectionUtil.equals(codebases, this.codebases)) {
       CBSourceFile_c n = (CBSourceFile_c) copy();
       n.package_ = package_;
-      n.imports = TypedList.copyAndCheck(imports, Import.class, true);
-      n.decls = TypedList.copyAndCheck(decls, TopLevelDecl.class, true);
+      n.imports = ListUtil.copy(imports, true);
+      n.decls = ListUtil.copy(decls, true);
       return n;
     }
     return this;
