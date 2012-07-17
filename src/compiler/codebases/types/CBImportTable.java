@@ -251,7 +251,7 @@ public class CBImportTable extends ImportTable {
     lazyImportPositions = new ArrayList<Object>();
   }
 
-  protected static final Collection<?> TOPICS = CollectionUtil.list(
+  protected static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.resolver, Report.imports);
 
   public FabricLocation namespace() {
