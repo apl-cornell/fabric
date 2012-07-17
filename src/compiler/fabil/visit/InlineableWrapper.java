@@ -101,7 +101,7 @@ public class InlineableWrapper extends AscriptionVisitor {
           ts.methodInstance(CG, wrappedJavaInlineable,
               Flags.PUBLIC.set(Flags.STATIC).set(Flags.FINAL),
               wrappedJavaInlineable, "$wrap",
-              Collections.singletonList(ts.Object()), Collections.emptyList());
+              Collections.singletonList((Type) ts.Object()), Collections.<Type> emptyList());
       call = (Call) call.type(toType);
       return call.methodInstance(mi);
     }
@@ -115,8 +115,8 @@ public class InlineableWrapper extends AscriptionVisitor {
     MethodInstance mi =
         ts.methodInstance(CG, wrappedJavaInlineable,
             Flags.PUBLIC.set(Flags.STATIC).set(Flags.FINAL), ts.Object(),
-            "$unwrap", Collections.singletonList(ts.FObject()),
-            Collections.emptyList());
+            "$unwrap", Collections.singletonList((Type) ts.FObject()),
+            Collections.<Type> emptyList());
 
     Cast result =
         nf.Cast(CG, nf.CanonicalTypeNode(CG, toType), call.methodInstance(mi));

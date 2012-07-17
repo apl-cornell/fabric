@@ -32,7 +32,7 @@ public class UpdatedVariableFinder extends NodeVisitor {
       v.declared.addAll(declared);
 
       Block b = (Block) n;
-      for (Stmt s : (List<Stmt>) b.statements()) {
+      for (Stmt s : b.statements()) {
         if (s instanceof LocalDecl) {
           LocalDecl ld = (LocalDecl) s;
           v.declared.add(ld.localInstance());
@@ -46,7 +46,7 @@ public class UpdatedVariableFinder extends NodeVisitor {
       v.declared.addAll(declared);
 
       For f = (For) n;
-      for (Stmt s : (List<Stmt>) f.inits()) {
+      for (ForInit s : f.inits()) {
         if (s instanceof LocalDecl) {
           LocalDecl ld = (LocalDecl) s;
           v.declared.add(ld.localInstance());

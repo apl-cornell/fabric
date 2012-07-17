@@ -111,8 +111,8 @@ public class FabricArrayInitExt_c extends AnnotatedExt_c {
 
     MethodInstance lmi =
         ts.methodInstance(pos, currentClass, flags, ts.Label(),
-            "get$$updateLabel", Collections.emptyList(),
-            Collections.emptyList());
+            "get$$updateLabel", Collections.<Type> emptyList(),
+            Collections.<Type> emptyList());
     defaultLabel = (Call) defaultLabel.type(ts.Label());
     defaultLabel = defaultLabel.methodInstance(lmi);
     return expr.updateLabel(defaultLabel);
@@ -134,7 +134,7 @@ public class FabricArrayInitExt_c extends AnnotatedExt_c {
     MethodInstance mi =
         ts.methodInstance(Position.compilerGenerated(),
             (ReferenceType) ts.Label(), Flags.PUBLIC, ts.ConfPolicy(),
-            "confPolicy", Collections.emptyList(), Collections.emptyList());
+            "confPolicy", Collections.<Type> emptyList(), Collections.<Type> emptyList());
     policy = ((Call) policy).methodInstance(mi);
     return expr.accessPolicy(policy);
   }
