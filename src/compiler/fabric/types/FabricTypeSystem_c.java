@@ -487,8 +487,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public Subst subst(Map substMap, Map cache) {
-    return new FabricSubst_c(this, substMap, cache);
+  public Subst subst(Map substMap) {
+    return new FabricSubst_c(this, substMap);
   }
 
   @Override
