@@ -213,8 +213,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Maps method names to sets of formal argument types. This prevents us
     // from generating duplicate methods.
-    Map<String, Set<List<Type>>> translatedInstances =
-        new HashMap<String, Set<List<Type>>>();
+    Map<String, Set<List<? extends Type>>> translatedInstances =
+        new HashMap<String, Set<List<? extends Type>>>();
 
     // First populate the above data structures with the super class and the
     // type hierarchy above that. The proxy's super class will already have
@@ -236,9 +236,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         if (mi.flags().isStatic()) continue;
 
         String name = mi.name();
-        Set<List<Type>> formalTypes = translatedInstances.get(name);
+        Set<List<? extends Type>> formalTypes = translatedInstances.get(name);
         if (formalTypes == null) {
-          formalTypes = new HashSet<List<Type>>();
+          formalTypes = new HashSet<List<? extends Type>>();
           translatedInstances.put(name, formalTypes);
         }
         formalTypes.add(mi.formalTypes());
@@ -255,12 +255,12 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       List<? extends MethodInstance> methods = type.methods();
       for (MethodInstance mi : methods) {
         String name = mi.name();
-        List<Type> types = mi.formalTypes();
+        List<? extends Type> types = mi.formalTypes();
 
         // Ensure this isn't a duplicate method.
-        Set<List<Type>> formalTypes = translatedInstances.get(name);
+        Set<List<? extends Type>> formalTypes = translatedInstances.get(name);
         if (formalTypes == null) {
-          formalTypes = new HashSet<List<Type>>();
+          formalTypes = new HashSet<List<? extends Type>>();
           translatedInstances.put(name, formalTypes);
         }
 
@@ -305,7 +305,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Generate the formals list. While we're doing this, may as well generate
     // the args list too.
     StringBuffer args = new StringBuffer();
-    List<Type> formalTypes = mi.formalTypes();
+    List<? extends Type> formalTypes = mi.formalTypes();
     int argCount = 1;
     for (Type t : formalTypes) {
       methodDecl.append((argCount == 1 ? "" : ", ") + "%T arg" + argCount);

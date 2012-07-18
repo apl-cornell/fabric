@@ -1,7 +1,6 @@
 package fabil.types;
 
 import java.io.IOException;
-
 import java.security.MessageDigest;
 import java.util.List;
 
@@ -181,12 +180,17 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
     }
 
     // Include declared interfaces' hashes.
-    @SuppressWarnings("unchecked")
-    List<FabILParsedClassType_c> interfaces = interfaces();
-    for (FabILParsedClassType_c iface : interfaces) {
+    List<FabILParsedClassType> interfaces = interfaces();
+    for (FabILParsedClassType iface : interfaces) {
       digest.update(iface.getClassHash());
     }
 
     return classHash = digest.digest();
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public List<FabILParsedClassType> interfaces() {
+    return (List<FabILParsedClassType>) super.interfaces();
   }
 }

@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import fabric.common.FabricLocation;
-
 import polyglot.frontend.Source;
 import polyglot.main.Report;
 import polyglot.types.ImportTable;
@@ -22,13 +20,13 @@ import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
+import fabric.common.FabricLocation;
 
 public class CBImportTable extends ImportTable {
   // NB: this field 'hides' a private superclass field that is used for the same
   // purpose. However, we override all code that uses the superclass field, so
   // we
   // don't depend on these values being equal.
-  protected static final Object NOT_FOUND = "NOT FOUND";
 
   private final CodebaseTypeSystem ts;
 
@@ -247,8 +245,8 @@ public class CBImportTable extends ImportTable {
       }
     }
 
-    lazyImports = new ArrayList<Object>();
-    lazyImportPositions = new ArrayList<Object>();
+    lazyImports = new ArrayList<String>();
+    lazyImportPositions = new ArrayList<Position>();
   }
 
   protected static final Collection<String> TOPICS = CollectionUtil.list(
