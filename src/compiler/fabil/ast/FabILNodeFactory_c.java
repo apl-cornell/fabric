@@ -140,7 +140,6 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label,
       Expr accessPolicy, Expr location, List<Expr> dims, int addDims,
       FabricArrayInit init) {
@@ -153,7 +152,6 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public New New(Position pos, Expr outer, TypeNode objectType, Expr location,
       List<Expr> args, ClassBody body) {
     New n =
