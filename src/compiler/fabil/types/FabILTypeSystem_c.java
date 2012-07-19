@@ -246,10 +246,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @SuppressWarnings("unchecked")
   @Override
   // XXX: Why is this method here?
-  protected List<MethodInstance> findAcceptableMethods(ReferenceType container,
+  protected List<? extends MethodInstance> findAcceptableMethods(ReferenceType container,
       String name, @SuppressWarnings("rawtypes") List argTypes,
       ClassType currClass) throws SemanticException {
-    List<MethodInstance> result =
+    List<? extends MethodInstance> result =
         super.findAcceptableMethods(container, name, argTypes, currClass);
     if (isJavaInlineable(container)) {
       // Remove any methods from fabric.lang.Object. They don't really exist.
