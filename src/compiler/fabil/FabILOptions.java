@@ -1,14 +1,13 @@
 package fabil;
 
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 import java.util.Map;
 
 import fabric.common.FabricLocation;
 
 public interface FabILOptions {
-
-  public int optLevel();
 
   public boolean signatureMode();
 
@@ -18,21 +17,21 @@ public interface FabILOptions {
 
   public String destinationStore();
 
-  Set<File> javaClasspathDirs();
+  List<File> javaClasspathDirs();
 
-  Set<FabricLocation> classpath();
+  List<FabricLocation> classpath();
 
-  Set<FabricLocation> sourcepath();
+  List<FabricLocation> sourcepath();
 
-  Set<FabricLocation> filsignaturepath();
+  List<FabricLocation> filsignaturepath();
 
-  Set<FabricLocation> filbootclasspath();
+  List<FabricLocation> filbootclasspath();
 
-  Set<FabricLocation> bootclasspath();
+  List<FabricLocation> bootclasspath();
 
   Map<String, FabricLocation> codebaseAliases();
 
-  FabricLocation outputDirectory();
+  FabricLocation outputLocation();
 
   FabricLocation classOutputDirectory();
 

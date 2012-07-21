@@ -116,7 +116,7 @@ public class Main extends polyglot.main.Main {
 
       Collection<JavaFileObject> outputFiles = main.compiler.outputFiles();
       int outputDirPathLen =
-          extInfo.getFabricOptions().outputDirectory().getUri().getPath()
+          extInfo.getFabricOptions().outputLocation().getUri().getPath()
               .length();
       Map<URI, JavaFileObject> absPathObjMap =
           extInfo.extFileManager().getAbsPathObjMap();
@@ -254,8 +254,6 @@ public class Main extends polyglot.main.Main {
       throw new TerminationException(ue.exitCode());
     }
 
-    ext.addLocationsToFileManager();
-
     if (options.needWorker()) {
       if (Report.should_report(Topics.mobile, 2))
         Report.report(2,
@@ -327,7 +325,7 @@ public class Main extends polyglot.main.Main {
               File f = new File(opt.codebaseFilename());
               if (!f.isAbsolute())
                 f =
-                    new File(opt.outputDirectory().getUri().getPath(), f
+                    new File(opt.outputLocation().getUri().getPath(), f
                         .getPath());
               FileWriter fw;
               try {

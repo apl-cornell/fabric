@@ -286,9 +286,8 @@ public final class NSUtil {
    * @param path the path-style string of URIs and directories, with URIs delimited by '<' and '>'
    * @return true if path contains any remote references
    */
-  public static boolean processPathString(Set<FabricLocation> locations,
-      String path) {
-    boolean needWorker = false;
+  public static List<FabricLocation> processPathString(String path) {
+    List<FabricLocation> locations = new ArrayList<FabricLocation>();
     while (!path.isEmpty()) {
       String remaining = "";
       if (path.startsWith("@")) {
@@ -321,7 +320,7 @@ public final class NSUtil {
           URI u = URI.create(cb);
           locations.add(getLocation(false, u));
 
-          if (u.getScheme().equals("fab")) needWorker = true;
+//          if (u.getScheme().equals("fab")) needWorker = true;
           idx = end + 1;
 
         } else if (path.charAt(idx) == File.pathSeparatorChar) {
@@ -355,6 +354,6 @@ public final class NSUtil {
       }
       path = remaining;
     }
-    return needWorker;
+    return locations;
   }
 }

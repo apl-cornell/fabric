@@ -3,8 +3,10 @@ package fabric;
 import java.io.File;
 import java.io.PrintStream;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,8 +27,8 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     this.delegate = new FabILOptions_c(extension);
   }
 
-  public FabricLocation source_output_dir;
-  public FabricLocation class_output_dir;
+//  public FabricLocation source_output;
+//  public FabricLocation class_output;
   /**
    * Whether to fully compile classes or just verify and publish.
    */
@@ -40,7 +42,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   /**
    * The classpath for the Fabric signatures of FabIL and Java classes.
    */
-  public Set<FabricLocation> sigcp;
+  public List<FabricLocation> sigcp;
 
   @Override
   public void setDefaultValues() {
@@ -53,7 +55,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     this.fatalExceptions = true;
     this.publishOnly = false;
 
-    this.sigcp = new LinkedHashSet<FabricLocation>();
+    this.sigcp = new ArrayList<FabricLocation>();
   }
 
   /* FabIL Options (forwarded to delegate ) ********************************** */
@@ -73,11 +75,6 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   @Override
   public boolean dumpDependencies() {
     return delegate.dumpDependencies;
-  }
-
-  @Override
-  public int optLevel() {
-    return delegate.optLevel();
   }
 
   @Override
@@ -178,17 +175,17 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     return codebaseFilename;
   }
 
-  public Set<FabricLocation> signaturepath() {
+  public List<FabricLocation> signaturepath() {
     return sigcp;
   }
 
   @Override
-  public Set<File> javaClasspathDirs() {
+  public List<File> javaClasspathDirs() {
     return delegate.javaClasspathDirs();
   }
 
   @Override
-  public Set<FabricLocation> filsignaturepath() {
+  public List<FabricLocation> filsignaturepath() {
     return delegate.sigcp;
   }
 
@@ -213,50 +210,50 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   }
 
   @Override
-  public FabricLocation outputDirectory() {
-    if (source_output_dir == null) {
-      File source_output_file = null;
-      if (!isSourceOutputGiven() && !isClassOutputGiven())
-        super.source_output_dir =
-            super.class_output_dir = Collections.singleton(current_directory);
-      else if (!isSourceOutputGiven() && isClassOutputGiven())
-        super.source_output_dir = super.class_output_dir;
-      else if (!isClassOutputGiven())
-        super.class_output_dir = Collections.singleton(current_directory);
-      for (File f : super.source_output_dir) {
-        source_output_file = f;
-        break;
-      }
-      if (source_output_file == null)
-        throw new InternalCompilerError("Source output location is not set.");
-      source_output_dir =
-          new FabricLocation_c("SOURCE_OUTPUT", true,
-              source_output_file.toURI());
-    }
-    return source_output_dir;
+  public FabricLocation outputLocation() {
+//    if (source_output == null) {
+//      File source_output_file = null;
+//      if (!isSourceOutputGiven() && !isClassOutputGiven())
+//        super.source_output_directory =
+//            super.class_output_directory = Collections.singleton(current_directory);
+//      else if (!isSourceOutputGiven() && isClassOutputGiven())
+//        super.source_output_directory = super.class_output_directory;
+//      else if (!isClassOutputGiven())
+//        super.class_output_directory = Collections.singleton(current_directory);
+//      for (File f : super.source_output_directory) {
+//        source_output_file = f;
+//        break;
+//      }
+//      if (source_output_file == null)
+//        throw new InternalCompilerError("Source output location is not set.");
+//      source_output =
+//          new FabricLocation_c("SOURCE_OUTPUT", true,
+//              source_output_file.toURI());
+//    }
+    return (FabricLocation) source_output;
   }
 
   @Override
   public FabricLocation classOutputDirectory() {
-    if (class_output_dir == null) {
-      File class_output_file = null;
-      if (!isSourceOutputGiven() && !isClassOutputGiven())
-        super.source_output_dir =
-            super.class_output_dir = Collections.singleton(current_directory);
-      else if (!isSourceOutputGiven() && isClassOutputGiven())
-        super.source_output_dir = super.class_output_dir;
-      else if (!isClassOutputGiven())
-        super.class_output_dir = Collections.singleton(current_directory);
-      for (File f : super.class_output_dir) {
-        class_output_file = f;
-        break;
-      }
-      if (class_output_file == null)
-        throw new InternalCompilerError("Class output location is not set.");
-      class_output_dir =
-          new FabricLocation_c("CLASS_OUTPUT", true, class_output_file.toURI());
-    }
-    return class_output_dir;
+//    if (class_output == null) {
+//      File class_output_file = null;
+//      if (!isSourceOutputGiven() && !isClassOutputGiven())
+//        super.source_output_directory =
+//            super.class_output_directory = Collections.singleton(current_directory);
+//      else if (!isSourceOutputGiven() && isClassOutputGiven())
+//        super.source_output_directory = super.class_output_directory;
+//      else if (!isClassOutputGiven())
+//        super.class_output_directory = Collections.singleton(current_directory);
+//      for (File f : super.class_output_directory) {
+//        class_output_file = f;
+//        break;
+//      }
+//      if (class_output_file == null)
+//        throw new InternalCompilerError("Class output location is not set.");
+//      class_output =
+//          new FabricLocation_c("CLASS_OUTPUT", true, class_output_file.toURI());
+//    }
+    return (FabricLocation) class_output;
   }
 
   @Override

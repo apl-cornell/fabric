@@ -126,7 +126,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
     if (target_factory == null) {
       target_factory =
           new CBTargetFactory(this, extFileManager(), getFabILOptions()
-              .outputDirectory(), getOptions().output_ext,
+              .outputLocation(), getOptions().output_ext,
               getOptions().output_stdout);
     }
 
@@ -183,15 +183,15 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   public void addLocationsToFileManager() {
     FabILOptions options = getFabILOptions();
     StandardJavaFileManager fm = extFileManager();
-    for (String dir : System.getProperty("sun.boot.class.path").split(
-        pathSeparator))
-      options.bootclasspath().add(getLocation(false, new File(dir).toURI()));
+//    for (String dir : System.getProperty("sun.boot.class.path").split(
+//        pathSeparator))
+//      options.bootclasspath().add(getLocation(false, new File(dir).toURI()));
     setFabricLocations(options.bootclasspath(), fm);
     setFabricLocations(options.filbootclasspath(), fm);
     setFabricLocations(options.classpath(), fm);
     setFabricLocations(options.filsignaturepath(), fm);
     setFabricLocations(options.sourcepath(), fm);
-    setFabricLocations(Collections.singleton(options.outputDirectory()), fm);
+    setFabricLocations(Collections.singleton(options.outputLocation()), fm);
     setFabricLocations(Collections.singleton(options.classOutputDirectory()),
         fm);
     setJavaClasspath(options, fm);

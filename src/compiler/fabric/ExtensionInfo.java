@@ -148,7 +148,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
     setFabricLocations(options.signaturepath(), fm);
     setFabricLocations(options.filsignaturepath(), fm);
     setFabricLocations(options.sourcepath(), fm);
-    setFabricLocations(Collections.singleton(options.outputDirectory()), fm);
+    setFabricLocations(Collections.singleton(options.outputLocation()), fm);
     setFabricLocations(Collections.singleton(options.classOutputDirectory()),
         fm);
     setJavaClasspath(options, fm);
@@ -360,7 +360,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
     if (target_factory == null) {
       target_factory =
           new CBTargetFactory(this, extFileManager(), getFabricOptions()
-              .outputDirectory(), getOptions().output_ext,
+              .outputLocation(), getOptions().output_ext,
               getOptions().output_stdout);
     }
 
