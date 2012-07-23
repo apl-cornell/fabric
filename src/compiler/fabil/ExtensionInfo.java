@@ -180,21 +180,18 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   }
 
   @Override
-  public void addLocationsToFileManager() {
+  protected FileManager createFileManager() {
+    FileManager fm = super.createFileManager();
     FabILOptions options = getFabILOptions();
-    StandardJavaFileManager fm = extFileManager();
-//    for (String dir : System.getProperty("sun.boot.class.path").split(
-//        pathSeparator))
-//      options.bootclasspath().add(getLocation(false, new File(dir).toURI()));
     setFabricLocations(options.bootclasspath(), fm);
-    setFabricLocations(options.filbootclasspath(), fm);
     setFabricLocations(options.classpath(), fm);
-    setFabricLocations(options.filsignaturepath(), fm);
+    setFabricLocations(options.signaturepath(), fm);
     setFabricLocations(options.sourcepath(), fm);
     setFabricLocations(Collections.singleton(options.outputLocation()), fm);
     setFabricLocations(Collections.singleton(options.classOutputDirectory()),
         fm);
     setJavaClasspath(options, fm);
+    return fm;
   }
 
   @Override
@@ -321,27 +318,27 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   }
 
   @Override
-  public Set<FabricLocation> classpath() {
+  public List<FabricLocation> classpath() {
     return getFabILOptions().classpath();
   }
 
   @Override
-  public Set<FabricLocation> sourcepath() {
+  public List<FabricLocation> sourcepath() {
     return getFabILOptions().sourcepath();
   }
 
-  @Override
-  public Set<FabricLocation> filsignaturepath() {
-    return getFabILOptions().filsignaturepath();
-  }
+//  @Override
+//  public List<FabricLocation> filsignaturepath() {
+//    return getFabILOptions().filsignaturepath();
+//  }
+//
+//  @Override
+//  public List<FabricLocation> filbootclasspath() {
+//    return getFabILOptions().filbootclasspath();
+//  }
 
   @Override
-  public Set<FabricLocation> filbootclasspath() {
-    return getFabILOptions().filbootclasspath();
-  }
-
-  @Override
-  public Set<FabricLocation> bootclasspath() {
+  public List<FabricLocation> bootclasspath() {
     return getFabILOptions().bootclasspath();
   }
 

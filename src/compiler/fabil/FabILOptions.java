@@ -23,7 +23,7 @@ public interface FabILOptions {
 
   List<FabricLocation> sourcepath();
 
-  List<FabricLocation> filsignaturepath();
+  List<FabricLocation> signaturepath();
 
   List<FabricLocation> filbootclasspath();
 
@@ -38,5 +38,7 @@ public interface FabILOptions {
   boolean platformMode();
 
   boolean needWorker();
+
+  int optLevel();
 
 }

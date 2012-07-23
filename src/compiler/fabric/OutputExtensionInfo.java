@@ -1,5 +1,6 @@
 package fabric;
 
+import java.util.List;
 import java.util.Set;
 
 import polyglot.ast.Node;
@@ -101,11 +102,11 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
     }
   }
 
-  // Override signature path so that we use the filsigcp
-  // path during the FabIL compilation phase
-  @Override
-  public Set<FabricLocation> filsignaturepath() {
-    return fabext.filsignaturepath();
-  }
+//  // Override signature path so that we use the filsigcp
+//  // path during the FabIL compilation phase
+//  @Override
+//  public List<FabricLocation> filsignaturepath() {
+//    return fabext.filsignaturepath();
+//  }
 
 }

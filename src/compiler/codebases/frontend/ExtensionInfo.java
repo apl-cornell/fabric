@@ -1,8 +1,8 @@
 package codebases.frontend;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.tools.FileObject;
 
@@ -62,7 +62,7 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * 
    * @return The list of directories and codebases to search.
    */
-  Set<FabricLocation> classpath();
+  List<FabricLocation> classpath();
 
   /**
    * The sourcepath used to resolve source dependencies during compilation. When
@@ -71,28 +71,28 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * 
    * @return The list of directories and codebases to search.
    */
-  Set<FabricLocation> sourcepath();
+  List<FabricLocation> sourcepath();
 
-  /**
-   * The locations of signature files for native classes.
-   * 
-   * @return The list of directories and codebases to search.
-   */
-  Set<FabricLocation> filsignaturepath();
-
-  /**
-   * The locations of platform classes such as fabric.lang.Object.
-   * 
-   * @return The list of directories and codebases to search.
-   */
-  Set<FabricLocation> filbootclasspath();
+//  /**
+//   * The locations of signature files for native classes.
+//   * 
+//   * @return The list of directories and codebases to search.
+//   */
+//  List<FabricLocation> filsignaturepath();
+//
+//  /**
+//   * The locations of platform classes such as fabric.lang.Object.
+//   * 
+//   * @return The list of directories and codebases to search.
+//   */
+//  List<FabricLocation> filbootclasspath();
 
   /**
    * The locations of java boot classes
    * 
    * @return The list of directories on local file system
    */
-  Set<FabricLocation> bootclasspath();
+  List<FabricLocation> bootclasspath();
 
   /**
    * A map between codebase aliases used in source and the URI of the intended

@@ -140,19 +140,19 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
   }
 
   @Override
-  public void addLocationsToFileManager() {
+  protected FileManager createFileManager() {
+    FileManager fm = super.createFileManager();
     FabricOptions options = getFabricOptions();
-    StandardJavaFileManager fm = extFileManager();
+    setFabricLocations(options.bootclasspath(), fm);
     setFabricLocations(options.filbootclasspath(), fm);
     setFabricLocations(options.classpath(), fm);
-    setFabricLocations(options.signaturepath(), fm);
-    setFabricLocations(options.filsignaturepath(), fm);
+//    setFabricLocations(options.filsignaturepath(), fm);
     setFabricLocations(options.sourcepath(), fm);
     setFabricLocations(Collections.singleton(options.outputLocation()), fm);
     setFabricLocations(Collections.singleton(options.classOutputDirectory()),
         fm);
-    setJavaClasspath(options, fm);
-    filext.addLocationsToFileManager();
+//    setJavaClasspath(options, fm);
+    return fm;
   }
 
   @Override
@@ -368,31 +368,31 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
   }
 
   @Override
-  public Set<FabricLocation> classpath() {
+  public List<FabricLocation> classpath() {
     return getFabricOptions().classpath();
   }
 
   @Override
-  public Set<FabricLocation> sourcepath() {
+  public List<FabricLocation> sourcepath() {
     return getFabricOptions().sourcepath();
   }
 
-  public Set<FabricLocation> signaturepath() {
+  public List<FabricLocation> signaturepath() {
     return getFabricOptions().signaturepath();
   }
 
-  @Override
-  public Set<FabricLocation> filsignaturepath() {
-    return getFabricOptions().filsignaturepath();
-  }
+//  @Override
+//  public List<FabricLocation> filsignaturepath() {
+//    return getFabricOptions().filsignaturepath();
+//  }
+
+//  @Override
+//  public List<FabricLocation> filbootclasspath() {
+//    return getFabricOptions().filbootclasspath();
+//  }
 
   @Override
-  public Set<FabricLocation> filbootclasspath() {
-    return getFabricOptions().filbootclasspath();
-  }
-
-  @Override
-  public Set<FabricLocation> bootclasspath() {
+  public List<FabricLocation> bootclasspath() {
     return getFabricOptions().bootclasspath();
   }
 

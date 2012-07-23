@@ -149,10 +149,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   protected void initResolvers() {
-    Set<FabricLocation> cp = extInfo.classpath();
-    Set<FabricLocation> sp = extInfo.sourcepath();
-    Set<FabricLocation> sigcp = extInfo.signaturepath();
-    Set<FabricLocation> rtcp = extInfo.filbootclasspath();
+    List<FabricLocation> cp = extInfo.classpath();
+    List<FabricLocation> sp = extInfo.sourcepath();
+    List<FabricLocation> sigcp = extInfo.signaturepath();
+    List<FabricLocation> rtcp = extInfo.bootclasspath();
 
     namespaceResolvers = new HashMap<FabricLocation, NamespaceResolver>();
     signatureResolvers = new ArrayList<NamespaceResolver>();

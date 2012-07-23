@@ -78,7 +78,7 @@ parser Grm extends jif.parse.Grm {:
                                     ambNewArray.baseType(),
                                     loc,
                                     ambNewArray.expr(),
-                                    ambNewArray.dims(),
+                                    (List<Expr>)ambNewArray.dims(),
                                     ambNewArray.additionalDims());
       }
       else {

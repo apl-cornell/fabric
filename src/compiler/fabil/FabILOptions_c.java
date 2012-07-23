@@ -1,7 +1,5 @@
 package fabil;
 
-import static fabric.common.FabricLocationFactory.getLocation;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -19,10 +17,12 @@ import polyglot.frontend.ExtensionInfo;
 import polyglot.main.OptFlag;
 import polyglot.main.OptFlag.Arg;
 import polyglot.main.OptFlag.Switch;
+import polyglot.main.OptFlag.IntFlag;
 import polyglot.main.UsageError;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Pair;
 import fabric.common.FabricLocation;
+import fabric.common.FabricLocationFactory;
 import fabric.common.FabricLocation_c;
 import fabric.common.NSUtil;
 
@@ -94,6 +94,11 @@ public class FabILOptions_c extends polyglot.main.Options implements
   public List<FabricLocation> bootclasspath;
 
   /**
+   * Use optimizations.
+   */
+  public int optLevel;
+  
+  /**
    * Codebase names.
    */
   protected Map<String, FabricLocation> codebase_aliases;
@@ -109,25 +114,33 @@ public class FabILOptions_c extends polyglot.main.Options implements
     source_path = new ArrayList<FabricLocation>();
     filbootclasspath = new ArrayList<FabricLocation>();
     bootclasspath = new ArrayList<FabricLocation>();
+    sigcp = new ArrayList<FabricLocation>();
     codebase_aliases = new LinkedHashMap<String, FabricLocation>();
   }
   
   @Override
   protected void populateFlags(Set<OptFlag<?>> flags) {
+    // Override some flags:
+//    OptFlag.remove("-sigcp", flags);
+//    OptFlag.remove("-addsigcp", flags);
+//    OptFlag.remove("-classpath", flags);
+//    OptFlag.remove("-sourcepath", flags);
+//    OptFlag.remove("-bootclasspath", flags);
+
     flags.add(new Switch("-sig", "compile sources to signatures"));
 
     flags.add(new Switch("-dumpdeps", "output dependencies for each class"));
 
     // Override all the path options
-    flags.add(new OptFlag<List<FabricLocation>>("-sigcp", "<path>",
-        "path for Fabric signatures (e.g. for fabric.lang.Object)") {
+    flags.add(new OptFlag<List<FabricLocation>>(new String[] {"-sigcp", "-filsigcp"}, "<path>",
+        "path for FabIL signatures (e.g. for fabric.lang.Object)") {
       @Override
       public Arg<List<FabricLocation>> handle(String[] args, int index) {
         List<FabricLocation> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
-    flags.add(new OptFlag<List<FabricLocation>>("-addsigcp", "<path>",
+    flags.add(new OptFlag<List<FabricLocation>>(new String[] {"-addsigcp", "-addfilsigcp"}, "<path>",
         "additional path for FabIL signatures; prefixed to sigcp") {
       @Override
       public Arg<List<FabricLocation>> handle(String[] args, int index) {
@@ -135,7 +148,7 @@ public class FabILOptions_c extends polyglot.main.Options implements
         return createArg(index + 1, path);
       }
     });
-    flags.add(new OptFlag<List<FabricLocation>>("-classpath", "<path>",
+    flags.add(new OptFlag<List<FabricLocation>>(new String[] {"-classpath", "-cp"}, "<path>",
         "where to find class files or mobile code to link against,"
             + " may contain <escaped> URIs of codebases") {
       @Override
@@ -229,12 +242,13 @@ public class FabILOptions_c extends polyglot.main.Options implements
           throw new UsageError("Invalid codebase reference in alias:" + arg);
 
         return createArg(index + 1, new Pair<String, FabricLocation>(alias[0],
-            getLocation(false, uri)));
+            FabricLocationFactory.getLocation(false, uri)));
       }
     });
     flags.add(new Switch("-generate-native-skeletons",
         "generate java bootstrap skeletons for each class"));
     flags.add(new Switch("-platform-mode", "build platform classes"));
+    flags.add(new IntFlag("-optlevel", "<num>", "perform level <num> optimizations", 0));    
 
     super.populateFlags(flags);
   }
@@ -261,7 +275,7 @@ public class FabILOptions_c extends polyglot.main.Options implements
 
   @Override
   @SuppressWarnings("unchecked")
-  protected void handleArg(Arg<?> arg) {
+  protected void handleArg(Arg<?> arg) throws UsageError {
     if (arg.flag().ids().contains("-sig")) {
       // Signature mode implies platform mode. The local namespace should be the
       // platform ns
@@ -278,7 +292,7 @@ public class FabILOptions_c extends polyglot.main.Options implements
       sigcp.addAll((List<FabricLocation>) arg.value());
     
     } else if (arg.flag().ids().contains("-addbootcp")) {
-      filbootclasspath.addAll((List<FabricLocation>) arg.value());
+      bootclasspath.addAll((List<FabricLocation>) arg.value());
 
     } else if (arg.flag().ids().contains("-classpath")) {
       classpath.addAll((List<FabricLocation>) arg.value());
@@ -287,7 +301,7 @@ public class FabILOptions_c extends polyglot.main.Options implements
       source_path.addAll((List<FabricLocation>) arg.value());
       
     } else if (arg.flag().ids().contains("-bootclasspath")) {
-      filbootclasspath.addAll((List<FabricLocation>) arg.value());
+      bootclasspath.addAll((List<FabricLocation>) arg.value());
       
     } else if (arg.flag().ids().contains("-worker")) {
       workerName = (String) arg.value();
@@ -307,7 +321,12 @@ public class FabILOptions_c extends polyglot.main.Options implements
 
     } else if (arg.flag().ids().contains("-platform-mode")) {
       platform_mode = (Boolean) arg.value();
-    } 
+      
+    } else if (arg.flag().ids().contains("-optlevel")) {
+      optLevel = (Integer) arg.value();
+
+    } else super.handleArg(arg);
+
   }
 
   
@@ -345,7 +364,7 @@ public class FabILOptions_c extends polyglot.main.Options implements
   }
 
   @Override
-  public List<FabricLocation> filsignaturepath() {
+  public List<FabricLocation> signaturepath() {
     return sigcp;
   }
 
@@ -420,6 +439,11 @@ public class FabILOptions_c extends polyglot.main.Options implements
   @Override
   public boolean needWorker() {
     return needWorker;
+  }
+  
+  @Override
+  public int optLevel() {
+    return optLevel;
   }
   
   @Override

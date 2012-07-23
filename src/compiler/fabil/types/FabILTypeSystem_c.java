@@ -47,6 +47,7 @@ import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseClassType;
 import codebases.types.NamespaceResolver;
+import fabil.FabILOptions;
 import fabric.common.FabricLocation;
 import fabric.lang.Codebase;
 import fabric.worker.Worker;
@@ -536,11 +537,12 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     // object (which implements FabILOptions). In particular, to get the right
     // signaturepath
     // we have to call getFabILOptions().
-    Set<FabricLocation> cp = extInfo.classpath();
-    Set<FabricLocation> sp = extInfo.sourcepath();
-    Set<FabricLocation> sigcp = extInfo.filsignaturepath();
-    Set<FabricLocation> rtcp = extInfo.filbootclasspath();
-    Set<FabricLocation> javartcp = extInfo.bootclasspath();
+    FabILOptions opt = (FabILOptions) extInfo.getOptions();
+    List<FabricLocation> cp = opt.classpath();
+    List<FabricLocation> sp = opt.sourcepath();
+    List<FabricLocation> sigcp = opt.signaturepath();
+    List<FabricLocation> rtcp = opt.bootclasspath();
+    List<FabricLocation> javartcp = opt.bootclasspath();
 
     namespaceResolvers = new HashMap<FabricLocation, NamespaceResolver>();
     signatureResolvers = new ArrayList<NamespaceResolver>();
