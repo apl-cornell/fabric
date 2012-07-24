@@ -8,6 +8,7 @@ import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.MethodInstance;
+import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import fabil.ExtensionInfo;
@@ -58,8 +59,8 @@ public class PrincipalDelegator extends NodeVisitor {
             ts.methodInstance(pos, delegatingPrincipal,
                 Flags.PUBLIC.set(Flags.STATIC), delegatingPrincipal,
                 "$addDefaultDelegates",
-                Collections.singletonList(delegatingPrincipal),
-                Collections.emptyList());
+                Collections.singletonList((Type) delegatingPrincipal),
+                Collections.<Type> emptyList());
         call = call.methodInstance(mi);
 
         Cast cast = nf.Cast(pos, newCall.objectType(), call);

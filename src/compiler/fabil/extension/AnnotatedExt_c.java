@@ -54,7 +54,7 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
 
     MethodInstance mi =
         ts.methodInstance(pos, currentClass, flags, ts.Store(), "$getStore",
-            Collections.emptyList(), Collections.emptyList());
+            Collections.<Type> emptyList(), Collections.<Type> emptyList());
     defaultLocation = (Call) defaultLocation.type(ts.Store());
     defaultLocation = defaultLocation.methodInstance(mi);
     return expr.location(defaultLocation);

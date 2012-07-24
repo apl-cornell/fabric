@@ -13,6 +13,7 @@ import polyglot.types.MemberInstance;
 import polyglot.types.Named;
 import polyglot.types.NoClassException;
 import polyglot.types.ParsedTypeObject;
+import polyglot.types.ReferenceType;
 import polyglot.types.Resolver;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
@@ -128,7 +129,7 @@ public class CBClassContextResolver extends ClassContextResolver {
       }
     }
 
-    for (Type sup : (List<Type>) type.interfaces()) {
+    for (ReferenceType sup : type.interfaces()) {
       if (sup instanceof ClassType) {
         Resolver r = ts.classContextResolver((ClassType) sup, accessor);
         try {

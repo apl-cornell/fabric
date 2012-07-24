@@ -3,9 +3,8 @@ package fabric.tools.fabth;
 import java.io.File;
 import java.util.List;
 
-import fabric.worker.Worker;
-
 import polyglot.pth.SourceFileTest;
+import fabric.worker.Worker;
 
 public class FabricSourceFileTest extends SourceFileTest {
   public FabricSourceFileTest(String filename) {

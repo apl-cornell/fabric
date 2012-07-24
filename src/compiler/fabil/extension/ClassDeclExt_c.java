@@ -1,6 +1,7 @@
 package fabil.extension;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,7 +20,6 @@ import polyglot.ast.FieldDecl;
 import polyglot.ast.Formal;
 import polyglot.ast.Id;
 import polyglot.ast.Initializer;
-import polyglot.ast.Local;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
@@ -65,7 +65,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
    * 
    * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
    */
-  @SuppressWarnings("unchecked")
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {
     ClassDecl classDecl = node();
@@ -162,7 +161,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   /**
    * Returns the Proxy translation of the class declaration.
    */
-  @SuppressWarnings("unchecked")
   private ClassDecl makeProxy(ProxyRewriter pr, ClassType superClass) {
     ClassDecl classDecl = node();
 
@@ -215,8 +213,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Maps method names to sets of formal argument types. This prevents us
     // from generating duplicate methods.
-    Map<String, Set<List<Type>>> translatedInstances =
-        new HashMap<String, Set<List<Type>>>();
+    Map<String, Set<List<? extends Type>>> translatedInstances =
+        new HashMap<String, Set<List<? extends Type>>>();
 
     // First populate the above data structures with the super class and the
     // type hierarchy above that. The proxy's super class will already have
@@ -230,7 +228,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       if (visitedTypes.contains(type)) continue;
       visitedTypes.add(type);
 
-      List<MethodInstance> methods = type.methods();
+      List<? extends MethodInstance> methods = type.methods();
       for (MethodInstance mi : methods) {
         // We actually want to generate proxies for static methods even if they
         // exist already in a super type. This way, static method dispatching
@@ -238,9 +236,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         if (mi.flags().isStatic()) continue;
 
         String name = mi.name();
-        Set<List<Type>> formalTypes = translatedInstances.get(name);
+        Set<List<? extends Type>> formalTypes = translatedInstances.get(name);
         if (formalTypes == null) {
-          formalTypes = new HashSet<List<Type>>();
+          formalTypes = new HashSet<List<? extends Type>>();
           translatedInstances.put(name, formalTypes);
         }
         formalTypes.add(mi.formalTypes());
@@ -254,15 +252,15 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       if (visitedTypes.contains(type)) continue;
       visitedTypes.add(type);
 
-      List<MethodInstance> methods = type.methods();
+      List<? extends MethodInstance> methods = type.methods();
       for (MethodInstance mi : methods) {
         String name = mi.name();
-        List<Type> types = mi.formalTypes();
+        List<? extends Type> types = mi.formalTypes();
 
         // Ensure this isn't a duplicate method.
-        Set<List<Type>> formalTypes = translatedInstances.get(name);
+        Set<List<? extends Type>> formalTypes = translatedInstances.get(name);
         if (formalTypes == null) {
-          formalTypes = new HashSet<List<Type>>();
+          formalTypes = new HashSet<List<? extends Type>>();
           translatedInstances.put(name, formalTypes);
         }
 
@@ -273,7 +271,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         if (!mi.flags().isPrivate()) result.add(makeProxyMethod(pr, mi));
       }
 
-      toVisit.addAll(type.interfaces());
+      toVisit.addAll((Collection<? extends ClassType>) type.interfaces());
     }
 
     return result;
@@ -282,7 +280,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   /**
    * Generates a proxy method for the given method instance.
    */
-  @SuppressWarnings("unchecked")
   private ClassMember makeProxyMethod(ProxyRewriter pr, MethodInstance mi) {
     FabILTypeSystem ts = pr.typeSystem();
 
@@ -308,7 +305,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Generate the formals list. While we're doing this, may as well generate
     // the args list too.
     StringBuffer args = new StringBuffer();
-    List<Type> formalTypes = mi.formalTypes();
+    List<? extends Type> formalTypes = mi.formalTypes();
     int argCount = 1;
     for (Type t : formalTypes) {
       methodDecl.append((argCount == 1 ? "" : ", ") + "%T arg" + argCount);
@@ -322,7 +319,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     methodDecl.append(") ");
 
     // Figure out the throws list.
-    List<Type> throwTypes = mi.throwTypes();
+    List<? extends Type> throwTypes = mi.throwTypes();
     if (!throwTypes.isEmpty()) {
       methodDecl.append("throws %LT ");
       subst.add(new ArrayList<Type>(throwTypes));
@@ -350,7 +347,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   /**
    * Returns the Impl translation of the class declaration.
    */
-  @SuppressWarnings("unchecked")
   private ClassDecl makeImpl(ProxyRewriter pr, ClassType superClass) {
     ClassDecl classDecl = node();
     ClassType classType = classDecl.type();
@@ -391,7 +387,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   /**
    * Produces the _Static interface declaration for the static non-final fields.
    */
-  @SuppressWarnings("unchecked")
   private List<ClassMember> makeStatic(ProxyRewriter pr, ClassType superClass) {
     ClassDecl classDecl = node();
     ClassType classType = classDecl.type();
@@ -603,7 +598,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     return Collections.singletonList((ClassMember) decl);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node rewriteThreads(ThreadRewriter tr) {
     ClassDecl decl = node();
@@ -636,7 +630,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
                 + "{$tm = tm;}"));
 
     // Add the start() method if one doesn't yet exist.
-    if (type.methods("start", Collections.emptyList()).isEmpty()) {
+    if (type.methods("start", Collections.<Type> emptyList()).isEmpty()) {
       body =
           body.addMember(qq.parseMember("public void start() {"
               + "fabric.worker.transaction.TransactionManager.getInstance()"
@@ -647,7 +641,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     return result;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node rewriteRemoteCalls(RemoteCallRewriter rr) {
     NodeFactory nf = rr.nodeFactory();
@@ -665,7 +658,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     List<ClassMember> members =
         new ArrayList<ClassMember>(cd.body().members().size());
 
-    for (ClassMember cm : (List<ClassMember>) cd.body().members()) {
+    for (ClassMember cm : cd.body().members()) {
       members.add(cm);
       if (!(cm instanceof MethodDecl)) continue;
 
@@ -703,7 +696,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         members.add(fd);
 
         // Now create the wrapper method.
-        List<Local> locals = new ArrayList<Local>(realFormals.size());
+        List<Expr> locals = new ArrayList<Expr>(realFormals.size());
         for (Formal f : realFormals) {
           locals.add(nf.Local(Position.compilerGenerated(), f.id()));
         }
@@ -769,7 +762,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         catchStmts.add(rr.qq().parseStmt(
             "java.lang.Throwable $t = $e.getCause();"));
         // We need to catch RemoteCallException, and rethrow the cause.
-        for (TypeNode exception : (List<TypeNode>) md.throwTypes()) {
+        for (TypeNode exception : md.throwTypes()) {
           catchStmts.add(rr.qq().parseStmt(
               "if ($t instanceof %T) throw (%T)$t;", exception, exception));
         }

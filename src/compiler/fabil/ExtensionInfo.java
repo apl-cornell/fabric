@@ -90,9 +90,21 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   }
 
   @Override
-  public FileManager extFileManager() {
-    if (extFM == null) extFM = new FabricFileManager(this);
-    return extFM;
+  public FileManager createFileManager() {
+    return new FabricFileManager(this);
+  }
+  
+  @Override
+  protected void configureFileManager() {
+    FabILOptions options = getOptions();
+    setFabricLocations(options.bootclasspath(), extFM);
+    setFabricLocations(options.classpath(), extFM);
+    setFabricLocations(options.signaturepath(), extFM);
+    setFabricLocations(options.sourcepath(), extFM);
+    setFabricLocations(Collections.singleton(options.outputLocation()), extFM);
+    setFabricLocations(Collections.singleton(options.classOutputDirectory()),
+        extFM);
+    setJavaClasspath(options, extFM);
   }
 
   @Override
@@ -102,7 +114,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
 
   @Override
   protected Options createOptions() {
-    return new FabILOptions_c(this);
+    return new FabILOptions(this);
   }
 
   @Override
@@ -125,8 +137,8 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   public TargetFactory targetFactory() {
     if (target_factory == null) {
       target_factory =
-          new CBTargetFactory(this, extFileManager(), getFabILOptions()
-              .outputDirectory(), getOptions().output_ext,
+          new CBTargetFactory(this, extFileManager(), getOptions()
+              .outputLocation(), getOptions().output_ext,
               getOptions().output_stdout);
     }
 
@@ -168,7 +180,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   private void setJavaClasspath(FabILOptions options, StandardJavaFileManager fm) {
     Set<File> s = new LinkedHashSet<File>();
     s.addAll(options.javaClasspathDirs());
-    for (FabricLocation location : options.filbootclasspath())
+    for (FabricLocation location : options.bootclasspath())
       if (location.isFileReference()) s.add(new File(location.getUri()));
     for (FabricLocation location : options.classpath())
       if (location.isFileReference()) s.add(new File(location.getUri()));
@@ -177,24 +189,6 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
     } catch (IOException e) {
       throw new InternalCompilerError(e);
     }
-  }
-
-  @Override
-  public void addLocationsToFileManager() {
-    FabILOptions options = getFabILOptions();
-    StandardJavaFileManager fm = extFileManager();
-    for (String dir : System.getProperty("sun.boot.class.path").split(
-        pathSeparator))
-      options.bootclasspath().add(getLocation(false, new File(dir).toURI()));
-    setFabricLocations(options.bootclasspath(), fm);
-    setFabricLocations(options.filbootclasspath(), fm);
-    setFabricLocations(options.classpath(), fm);
-    setFabricLocations(options.filsignaturepath(), fm);
-    setFabricLocations(options.sourcepath(), fm);
-    setFabricLocations(Collections.singleton(options.outputDirectory()), fm);
-    setFabricLocations(Collections.singleton(options.classOutputDirectory()),
-        fm);
-    setJavaClasspath(options, fm);
   }
 
   @Override
@@ -217,8 +211,9 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
     return new Version();
   }
 
-  public FabILOptions getFabILOptions() {
-    return (FabILOptions) getOptions();
+  @Override
+  public FabILOptions getOptions() {
+    return (FabILOptions) super.getOptions();
   }
 
   @Override
@@ -296,7 +291,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   // TODO: support multiple local namespaces
   @Override
   public FabricLocation localNamespace() {
-    return getFabILOptions().platformMode() ? platformNamespace() : local_ns;
+    return getOptions().platformMode() ? platformNamespace() : local_ns;
   }
 
   @Override
@@ -321,33 +316,33 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   }
 
   @Override
-  public Set<FabricLocation> classpath() {
-    return getFabILOptions().classpath();
+  public List<FabricLocation> classpath() {
+    return getOptions().classpath();
   }
 
   @Override
-  public Set<FabricLocation> sourcepath() {
-    return getFabILOptions().sourcepath();
+  public List<FabricLocation> sourcepath() {
+    return getOptions().sourcepath();
   }
 
-  @Override
-  public Set<FabricLocation> filsignaturepath() {
-    return getFabILOptions().filsignaturepath();
-  }
+//  @Override
+//  public List<FabricLocation> filsignaturepath() {
+//    return getFabILOptions().filsignaturepath();
+//  }
+//
+//  @Override
+//  public List<FabricLocation> filbootclasspath() {
+//    return getFabILOptions().filbootclasspath();
+//  }
 
   @Override
-  public Set<FabricLocation> filbootclasspath() {
-    return getFabILOptions().filbootclasspath();
-  }
-
-  @Override
-  public Set<FabricLocation> bootclasspath() {
-    return getFabILOptions().bootclasspath();
+  public List<FabricLocation> bootclasspath() {
+    return getOptions().bootclasspath();
   }
 
   @Override
   public Map<String, FabricLocation> codebaseAliases() {
-    return getFabILOptions().codebaseAliases();
+    return getOptions().codebaseAliases();
   }
 
   @Override
@@ -356,7 +351,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
     if (!Worker.isInitialized())
       throw new InternalCompilerError("Worker is not initialized.");
 
-    String storeName = getFabILOptions().destinationStore();
+    String storeName = getOptions().destinationStore();
 
     if (storeName == null) return Worker.getWorker().getLocalStore();
     return Worker.getWorker().getStore(storeName);

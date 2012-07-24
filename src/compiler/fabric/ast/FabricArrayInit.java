@@ -6,8 +6,7 @@ import polyglot.ast.Expr;
 
 public interface FabricArrayInit extends polyglot.ast.ArrayInit {
   @Override
-  @SuppressWarnings("rawtypes")
-  FabricArrayInit elements(List elements);
+  FabricArrayInit elements(List<Expr> elements);
 
   FabricArrayInit location(Expr location);
 

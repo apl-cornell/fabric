@@ -9,8 +9,8 @@ import polyglot.ast.NodeFactory;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
+import polyglot.util.ListUtil;
 import polyglot.util.Position;
-import polyglot.util.TypedList;
 import polyglot.visit.NodeVisitor;
 import fabric.types.FabricTypeSystem;
 
@@ -64,7 +64,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     if (!CollectionUtil.equals(elements, this.elements)
         || location != this.location || label != this.label) {
       FabricArrayInit_c n = (FabricArrayInit_c) copy();
-      n.elements = TypedList.copyAndCheck(elements, Expr.class, true);
+      n.elements = ListUtil.copy(elements, true);
       n.location = location;
       n.label = label;
       return n;

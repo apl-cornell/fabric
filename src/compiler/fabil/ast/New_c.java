@@ -11,8 +11,8 @@ import polyglot.ast.TypeNode;
 import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
 import polyglot.util.CollectionUtil;
+import polyglot.util.ListUtil;
 import polyglot.util.Position;
-import polyglot.util.TypedList;
 import polyglot.visit.AmbiguityRemover;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.NodeVisitor;
@@ -58,7 +58,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
       New_c n = (New_c) copy();
       n.tn = tn;
       n.qualifier = qualifier;
-      n.arguments = TypedList.copyAndCheck(arguments, Expr.class, true);
+      n.arguments = ListUtil.copy(arguments, true);
       n.body = body;
       n.location = location;
 

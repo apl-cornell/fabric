@@ -10,6 +10,7 @@ import java.util.List;
 import jif.translate.JifToJavaRewriter;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.Expr;
+import polyglot.ast.Import;
 import polyglot.ast.Node;
 import polyglot.ast.SourceFile;
 import polyglot.ast.TopLevelDecl;
@@ -147,7 +148,6 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     return opts.signatureMode();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node leavingSourceFile(SourceFile n) {
     List<TopLevelDecl> l =
@@ -159,7 +159,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
         // cd is public, we will put it in its own source file.
         SourceFile sf =
             java_nf().SourceFile(Position.compilerGenerated(), n.package_(),
-                Collections.EMPTY_LIST, Collections.singletonList(cd));
+                Collections.<Import> emptyList(), Collections.singletonList((TopLevelDecl) cd));
 
         String newName =
             cd.name() + "." + job.extensionInfo().defaultFileExtension();

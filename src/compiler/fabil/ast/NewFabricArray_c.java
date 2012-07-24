@@ -13,8 +13,8 @@ import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
+import polyglot.util.ListUtil;
 import polyglot.util.Position;
-import polyglot.util.TypedList;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
@@ -93,7 +93,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
         || label != this.label || accessLabel != this.accessPolicy) {
       NewFabricArray_c n = (NewFabricArray_c) copy();
       n.baseType = baseType;
-      n.dims = TypedList.copyAndCheck(dims, Expr.class, true);
+      n.dims = ListUtil.copy(dims, true);
       n.init = init;
       n.location = location;
       n.label = label;

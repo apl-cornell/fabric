@@ -11,8 +11,8 @@ import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
+import polyglot.util.ListUtil;
 import polyglot.util.Position;
-import polyglot.util.TypedList;
 import polyglot.visit.AscriptionVisitor;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.NodeVisitor;
@@ -85,7 +85,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
         || location != this.location || label != this.label
         || accessLabel != this.accessPolicy) {
       FabricArrayInit_c n = (FabricArrayInit_c) copy();
-      n.elements = TypedList.copyAndCheck(elements, Expr.class, true);
+      n.elements = ListUtil.copy(elements, true);
       n.location = location;
       n.label = label;
       n.accessPolicy = accessLabel;

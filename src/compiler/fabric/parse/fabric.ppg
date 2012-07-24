@@ -78,7 +78,7 @@ parser Grm extends jif.parse.Grm {:
                                     ambNewArray.baseType(),
                                     loc,
                                     ambNewArray.expr(),
-                                    ambNewArray.dims(),
+                                    (List<Expr>)ambNewArray.dims(),
                                     ambNewArray.additionalDims());
       }
       else {
@@ -287,12 +287,12 @@ codebase_declarations_opt ::=
         codebase_declarations:a
             {: RESULT = a; :}
     |
-            {: RESULT = new TypedList(new LinkedList(), CodebaseDecl.class, false); :}
+            {: RESULT = new LinkedList<CodebaseDecl>(); :}
     ;
 codebase_declarations ::=
                     // List of CodebaseDecl
         codebase_declaration:a
-            {: List l = new TypedList(new LinkedList(), CodebaseDecl.class, false);
+            {: List l = new LinkedList<CodebaseDecl>();
                l.add(a);
                RESULT = l; :}
     |   codebase_declarations:a codebase_declaration:b
@@ -399,7 +399,7 @@ extend principal_base ::=
 override field_declaration ::=
                     // List of ClassMember
         modifiers_opt:a type:b AT label:al variable_declarators:c SEMICOLON:e
-            {: List l = new TypedList(new LinkedList(), ClassMember.class, false);
+            {: List l = new LinkedList<ClassMember>();
                for (Iterator i = c.iterator(); i.hasNext(); ) {
                    VarDeclarator d = (VarDeclarator) i.next();
                    l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
@@ -408,7 +408,7 @@ override field_declaration ::=
                }
                RESULT = l; :}
 		|  modifiers_opt:a type:b variable_declarators:c SEMICOLON:e
-            {: List l = new TypedList(new LinkedList(), ClassMember.class, false);
+            {: List l = new LinkedList<ClassMember>();
                for (Iterator i = c.iterator(); i.hasNext(); ) {
                    VarDeclarator d = (VarDeclarator) i.next();
                    l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),

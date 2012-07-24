@@ -9,8 +9,8 @@ import polyglot.types.ConstructorInstance;
 import polyglot.types.FieldInstance;
 import polyglot.types.MethodInstance;
 import polyglot.types.ParsedClassType;
+import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
-import polyglot.types.Type;
 import polyglot.types.reflect.ClassFileLazyClassInitializer;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
@@ -47,7 +47,7 @@ public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
   public void initInterfaces() {
     if (interfacesInitialized) return;
     // Clear first in case we were interrupted
-    ct.setInterfaces(new ArrayList<Type>());
+    ct.setInterfaces(new ArrayList<ReferenceType>());
     super.initInterfaces();
   }
 
@@ -72,7 +72,7 @@ public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
     if (memberClassesInitialized) return;
 
     // Clear first in case we were interrupted
-    ct.setMemberClasses(new ArrayList<Type>());
+    ct.setMemberClasses(new ArrayList<ClassType>());
     super.initMemberClasses();
   }
 

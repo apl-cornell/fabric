@@ -35,7 +35,7 @@ classpath="${FILC_CP}:${cp}:${classpath}"
 sigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar"
 
 command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" \
-                   fabil.Main -bootclasspath \"$(fixpath ${FABIL_BOOTCP})\" \
+                   fabil.Main -addbootcp \"$(fixpath ${FABIL_BOOTCP})\" \
                               -sigcp \"$(fixpath ${sigcp})\" ${args}"
 
 if [ -n "${verbose}" ]

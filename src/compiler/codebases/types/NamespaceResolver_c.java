@@ -479,4 +479,9 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     }
     throw new InternalCompilerError("Not implemented yet! Hurry up!");
   }
+  
+  @Override
+  public String toString() {
+      return namespace.toString();
+  }
 }

@@ -25,6 +25,8 @@ div.download { margin: 5px; padding-top:5; padding-bottom: 5;  padding-left:
 10; padding-right: 10; background-color: #eed; border-style: outset;
 border-width: 2; float: right; width: 33%}
 
+ol > li {margin-bottom: 1ex}
+
 div.documentation { margin: 5px; padding-bottom: 5;  padding-left: 10;
 padding-right: 10; background-color: #e0e8ee; border-style: outset;
 border-width: 2; float: right; width: 50%}

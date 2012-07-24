@@ -18,7 +18,7 @@ public class SignatureCleaner extends NodeVisitor {
     if (n instanceof ClassDecl) {
       // Remove extends and implements clauses.
       ClassDecl decl = (ClassDecl) n;
-      decl = decl.interfaces(Collections.emptyList());
+      decl = decl.interfaces(Collections.<TypeNode> emptyList());
       decl = decl.superClass(null);
       return decl;
     }

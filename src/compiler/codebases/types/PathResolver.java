@@ -66,7 +66,6 @@ public class PathResolver extends NamespaceResolver_c implements
   // exist. It's not actually clear what happens for this case currently.
   @Override
   public Importable findImpl(String name) throws SemanticException {
-    Importable from_raw = null;
     for (NamespaceResolver nr : path) {
       try {
         ParsedClassType ct = (ParsedClassType) nr.find(name);
@@ -77,24 +76,12 @@ public class PathResolver extends NamespaceResolver_c implements
           if (Report.should_report(TOPICS, 4))
             Report.report(3, "[" + namespace + "] "
                 + "NamespaceResolver_c: found raw class for: " + name);
-
-          // Is this the *first* raw class we've seen?
-          if (from_raw == null) from_raw = ct;
-          continue;
         }
         return ct;
 
       } catch (NoClassException e) {
       }
     }
-    if (from_raw != null) {
-      if (Report.should_report(TOPICS, 3))
-        Report.report(3, "[" + namespace + "] "
-            + "NamespaceResolver_c: using raw class for: " + name);
-
-      return from_raw;
-    }
-
     throw new NoClassException(name);
   }
 

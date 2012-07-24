@@ -27,8 +27,8 @@ public class WorkerAdmin {
    *           if no worker is listening on the admin port.
    */
   public static void connect(int adminPort, String[] cmd) throws UsageError,
-      WorkerNotRunningException {
-    Socket socket;
+  WorkerNotRunningException {
+    Socket socket = null;
     try {
       socket = new Socket((String) null, adminPort);
     } catch (ConnectException e) {
@@ -39,12 +39,12 @@ public class WorkerAdmin {
 
     // Successfully connected. Ensure we have commands to run.
     if (cmd == null) {
-      try {
-        socket.close();
-      } catch (IOException e) {
-        throw new InternalError(e);
+      if (socket != null) {
+        try {
+          socket.close();
+        } catch (IOException e) {
+        }
       }
-      
       throw new UsageError(
           "Worker already running. Must specify worker commands to execute.");
     }

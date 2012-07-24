@@ -12,9 +12,8 @@ import jif.types.Param;
 import jif.types.ParamInstance;
 
 public class FabricSubst_c extends JifSubst_c {
-  public FabricSubst_c(JifTypeSystem ts, Map<ParamInstance, Param> subst,
-      Map<Type, Type> cache) {
-    super(ts, subst, cache);
+  public FabricSubst_c(JifTypeSystem ts, Map<ParamInstance, Param> subst) {
+    super(ts, subst);
   }
 
   @Override

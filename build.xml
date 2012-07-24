@@ -103,6 +103,22 @@
     <property name="configure.up-to-date" value="true"/>
   </target>
 
+  <!-- Configures Eclipse's .classpath file. -->
+  <target name="eclipse" depends="eclipse-check"
+      unless="eclipse.up-to-date"
+      description="Configures Eclipse's .classpath file">
+    <condition property="tools.jar-entry"
+        value="&lt;classpathentry kind=&quot;lib&quot; path=&quot;${jdk.home}/lib/tools.jar&quot;/&gt;"
+        else="">
+      <available file="${jdk.home}/lib/tools.jar" />
+    </condition>
+    <copy file="eclipse-classpath.in" tofile=".classpath">
+      <filterset>
+        <filter token="TOOLS.JAR" value="${tools.jar-entry}" />
+      </filterset>
+    </copy>
+  </target>
+
   <!-- Configures the executables in the bin directory. -->
   <target name="bin" depends="configure,bin-check" unless="bin.up-to-date"
       description="Configures the executables in the bin directory">
@@ -157,6 +173,11 @@
   <target name="configure-version" unless="fabric.version">
     <property file="${fabric.home}/version.properties" prefix="fabric" />
     <property name="fabric.version" value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}" />
+  </target>
+
+  <target name="eclipse-check">
+    <uptodate property="eclipse.up-to-date" targetfile=".classpath"
+        srcfile="eclipse-classpath.in" />
   </target>
 
   <target name="bin-check">
@@ -249,7 +270,7 @@
   </target>
 
   <!-- Compiles the FabIL compiler -->
-  <target name="fabil-compiler" depends="init,bootstrap,native"
+  <target name="fabil-compiler" depends="init,bootstrap,native,eclipse"
       description="Builds the FabIL compiler">
     <antcall target="standard-ext">
       <param name="ext" value="fabil" />
@@ -304,7 +325,7 @@
       <arg value="-nooutput" />
       <arg value="-classpath" />
       <arg value="${bootstrap.classes}" />
-      <arg value="-bootclasspath" />
+      <arg value="-addbootcp" />
       <arg value="${bootstrap.classes}:${polyglot.classpath}" />
       <arg value="-sigcp" />
       <arg value="${signatures.fabil.src}:${runtime.src}" />
@@ -528,9 +549,8 @@
       <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg line="${debug.flag}" />
-      <arg value="-bootclasspath" />
+      <arg value="-addbootcp" />
       <arg value="${runtime.src}:${bootstrap.classes}" />
-      <arg value="-O0" />
       <arg value="-d" />
       <arg value="${runtime.classes}" />
       <arg value="-platform-mode"/>
@@ -553,14 +573,13 @@
         vmlauncher="false">
       <arg value="${filc}" />
       <arg line="${debug.flag}" />
-      <arg value="-O0" />
       <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg value="-j" />
       <arg value="-Xms256M" />
       <arg value="-d" />
       <arg value="${runtime.classes}" />
-      <arg value="-bootclasspath" />
+      <arg value="-addbootcp" />
       <arg value="${runtime.classes}:${runtime.src}:${polyglot.classpath}:${bootstrap.classes}" />
       <arg value="-platform-mode"/>
       <srcfile />
@@ -585,10 +604,11 @@
       <arg line="${debug.flag}" />
       <arg value="-j" />
       <arg value="-Xms256M" />
-      <arg value="-O0" />
       <arg value="-e" />
+      <!--
       <arg value="-bootclasspath" />
       <arg value="${runtime.classes}:${classes}"/>
+      -->
       <arg value="-trusted-providers" />
       <arg value="-d" />
       <arg value="${runtime.classes}" />

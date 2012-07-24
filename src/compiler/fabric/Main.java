@@ -102,6 +102,9 @@ public class Main extends polyglot.main.Main {
       args.add("-bootclasspath");
       args.add(worker.bootcp);
     }
+    if (!worker.outputToLocalFS) {
+      args.add("-no-output-to-fs");
+    }
 
     URI cb = NSUtil.namespace(fcls.getCodebase());
     // XXX: It might be better to use a URI method here, but
@@ -110,13 +113,11 @@ public class Main extends polyglot.main.Main {
     Main main = new Main();
     try {
       fabric.ExtensionInfo extInfo = new fabric.ExtensionInfo(bytecodeMap);
-      if (!worker.outputToLocalFS)
-        ((FabricFileManager) extInfo.extFileManager()).disableOutputToLocalFS();
       main.start(args.toArray(new String[0]), extInfo);
 
       Collection<JavaFileObject> outputFiles = main.compiler.outputFiles();
       int outputDirPathLen =
-          extInfo.getFabricOptions().outputDirectory().getUri().getPath()
+          extInfo.getOptions().outputLocation().getUri().getPath()
               .length();
       Map<URI, JavaFileObject> absPathObjMap =
           extInfo.extFileManager().getAbsPathObjMap();
@@ -124,7 +125,7 @@ public class Main extends polyglot.main.Main {
           new String[] { "$_Impl", "$_Proxy", "$_Static", "$_Static$_Impl",
               "$_Static$_Proxy" };
       for (JavaFileObject jfo : outputFiles) {
-        String fname = jfo.getName();
+        String fname = jfo.toUri().getPath();
         int e = fname.lastIndexOf(".java");
         String baseFileName = fname.substring(0, e);
         String baseClassName = baseFileName.substring(outputDirPathLen);
@@ -254,8 +255,6 @@ public class Main extends polyglot.main.Main {
       throw new TerminationException(ue.exitCode());
     }
 
-    ext.addLocationsToFileManager();
-
     if (options.needWorker()) {
       if (Report.should_report(Topics.mobile, 2))
         Report.report(2,
@@ -322,12 +321,12 @@ public class Main extends polyglot.main.Main {
           try {
             start(o, s, extInfo, q);
 
-            if (extInfo.getFabricOptions().codebaseFilename() != null) {
-              FabricOptions opt = extInfo.getFabricOptions();
+            if (extInfo.getOptions().codebaseFilename() != null) {
+              FabricOptions opt = extInfo.getOptions();
               File f = new File(opt.codebaseFilename());
               if (!f.isAbsolute())
                 f =
-                    new File(opt.outputDirectory().getUri().getPath(), f
+                    new File(opt.outputLocation().getUri().getPath(), f
                         .getPath());
               FileWriter fw;
               try {
@@ -342,12 +341,12 @@ public class Main extends polyglot.main.Main {
               } catch (fabric.common.exceptions.InternalError e) {
                 throw new TerminationException(
                     "Error writing codebase reference to "
-                        + extInfo.getFabricOptions().codebaseFilename() + ": "
+                        + extInfo.getOptions().codebaseFilename() + ": "
                         + e.getMessage(), 1);
               } catch (IOException e) {
                 throw new TerminationException(
                     "Error writing codebase reference to "
-                        + extInfo.getFabricOptions().codebaseFilename() + ": "
+                        + extInfo.getOptions().codebaseFilename() + ": "
                         + e.getMessage(), 1);
               }
             }
