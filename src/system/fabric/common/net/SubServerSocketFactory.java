@@ -1,6 +1,9 @@
 package fabric.common.net;
 
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
+
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -11,7 +14,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 
-import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.handshake.ShakenSocket;
@@ -193,9 +195,9 @@ public class SubServerSocketFactory {
      */
     @Override
     public void run() {
+      ServerSocket sock = null;
       try {
-        ServerSocket sock =
-            new ServerSocket(address.getPort(), 0, address.getAddress());
+        sock = new ServerSocket(address.getPort(), 0, address.getAddress());
         while (true) {
           try {
             recvConnection(sock.accept());
@@ -207,7 +209,12 @@ public class SubServerSocketFactory {
         // TODO
         throw new NotImplementedException(exc);
       } finally {
-        // TODO sock.close()
+        if (sock != null) {
+          try {
+            sock.close();
+          } catch (IOException e) {
+          }
+        }
       }
     }
 

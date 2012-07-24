@@ -9,11 +9,11 @@ public class Options extends polyglot.pth.Options {
     super.parseCommandLine(args);
   }
 
-  public List getInputFilenames() {
+  public List<String> getInputFilenames() {
     return inputFilenames;
   }
 
-  public void setInputFilenames(List inputFilenames) {
+  public void setInputFilenames(List<String> inputFilenames) {
     this.inputFilenames = inputFilenames;
   }
 
