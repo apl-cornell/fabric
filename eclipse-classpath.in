@@ -2,7 +2,11 @@
 <classpath>
 	<classpathentry kind="src" path="src/compiler"/>
 	<classpathentry kind="src" path="src/system"/>
-	<classpathentry excluding="fabric/Main.java" kind="src" output="bs-classes" path="src/bootstrap"/>
+	<classpathentry excluding="fabric/Main.java" kind="src" output="bs-classes" path="src/bootstrap">
+		<attributes>
+			<attribute name="ignore_optional_problems" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="src" output="tools/code-normalizer/classes" path="tools/code-normalizer/src"/>
 	<classpathentry kind="src" output="tools/fabth/classes" path="tools/fabth/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
