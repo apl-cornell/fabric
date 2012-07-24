@@ -56,7 +56,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     this.fabext = fabext;
     this.filext = filext;
     this.fabil_target =
-        new TargetFactory(filext.extFileManager(), filext.getFabILOptions()
+        new TargetFactory(filext.extFileManager(), filext.getOptions()
             .outputLocation(), "fil", Options.global.output_stdout);
 
   }

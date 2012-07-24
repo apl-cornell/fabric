@@ -45,7 +45,6 @@ import codebases.types.NamespaceResolver;
 import codebases.types.PathResolver;
 import codebases.types.SafeResolver;
 import codebases.types.SimpleResolver;
-import fabil.FabILOptions;
 import fabil.types.ClassFile;
 import fabil.types.ClassFile_c;
 import fabil.types.FabILTypeSystem;
@@ -91,12 +90,6 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
   }
 
   @Override
-  public FileManager extFileManager() {
-    if (extFM == null) extFM = new FabricFileManager(this);
-    return extFM;
-  }
-
-  @Override
   public void initCompiler(Compiler compiler) {
     super.initCompiler(compiler);
     filext.initCompiler(compiler);
@@ -125,10 +118,9 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
     }
   }
 
-  private void setJavaClasspath(FabILOptions options, StandardJavaFileManager fm) {
+  private void setJavaClasspath(FabricOptions options, StandardJavaFileManager fm) {
     Set<File> s = new LinkedHashSet<File>();
-    s.addAll(options.javaClasspathDirs());
-    for (FabricLocation location : options.filbootclasspath())
+    for (FabricLocation location : options.bootclasspath())
       if (location.isFileReference()) s.add(new File(location.getUri()));
     for (FabricLocation location : options.classpath())
       if (location.isFileReference()) s.add(new File(location.getUri()));
@@ -141,18 +133,20 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
 
   @Override
   protected FileManager createFileManager() {
-    FileManager fm = super.createFileManager();
-    FabricOptions options = getFabricOptions();
-    setFabricLocations(options.bootclasspath(), fm);
-    setFabricLocations(options.filbootclasspath(), fm);
-    setFabricLocations(options.classpath(), fm);
-//    setFabricLocations(options.filsignaturepath(), fm);
-    setFabricLocations(options.sourcepath(), fm);
-    setFabricLocations(Collections.singleton(options.outputLocation()), fm);
+    return new FabricFileManager(this);
+  }
+  
+  @Override
+  protected void configureFileManager() {
+    FabricOptions options = getOptions();
+    setFabricLocations(options.bootclasspath(), extFM);
+    setFabricLocations(options.classpath(), extFM);
+    setFabricLocations(options.signaturepath(), extFM);
+    setFabricLocations(options.sourcepath(), extFM);
+    setFabricLocations(Collections.singleton(options.outputLocation()), extFM);
     setFabricLocations(Collections.singleton(options.classOutputDirectory()),
-        fm);
-//    setJavaClasspath(options, fm);
-    return fm;
+        extFM);
+    setJavaClasspath(options, extFM);
   }
 
   @Override
@@ -211,9 +205,10 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
 
   @Override
   protected FabricTypeSystem createTypeSystem() {
-    return new FabricTypeSystem_c(jlext.typeSystem());
+    return new FabricTypeSystem_c(filext.typeSystem());
   }
 
+  
   @Override
   protected FabricOptions createOptions() {
     return new FabricOptions(this);
@@ -264,8 +259,9 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
         solvePerClassBody, solvePerMethod, doLabelSubst);
   }
 
-  public FabricOptions getFabricOptions() {
-    return (FabricOptions) getOptions();
+  @Override
+  public FabricOptions getOptions() {
+    return (FabricOptions) super.getOptions();
   }
 
   @Override
@@ -293,7 +289,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
       // TODO: generalize and make this better. We should only publish
       // source in the sourcepath. Plus, the user may be re-publishing remote
       // source with a new codebase.
-      src.setPublish(getFabricOptions().publish());
+      src.setPublish(getOptions().publish());
       return src;
     }
   }
@@ -314,7 +310,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
     if (Report.should_report("resolver", 3))
       Report.report(3, "Creating namespace resolver for " + ns);
 
-    FabricOptions opt = getFabricOptions();
+    FabricOptions opt = getOptions();
     // XXX: Order is important here since the localnamespace may
     // by the platform namespace when compiling the runtime
     if (ns.equals(platformNamespace())) {
@@ -359,7 +355,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
   public TargetFactory targetFactory() {
     if (target_factory == null) {
       target_factory =
-          new CBTargetFactory(this, extFileManager(), getFabricOptions()
+          new CBTargetFactory(this, extFileManager(), getOptions()
               .outputLocation(), getOptions().output_ext,
               getOptions().output_stdout);
     }
@@ -369,16 +365,16 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
 
   @Override
   public List<FabricLocation> classpath() {
-    return getFabricOptions().classpath();
+    return getOptions().classpath();
   }
 
   @Override
   public List<FabricLocation> sourcepath() {
-    return getFabricOptions().sourcepath();
+    return getOptions().sourcepath();
   }
 
   public List<FabricLocation> signaturepath() {
-    return getFabricOptions().signaturepath();
+    return getOptions().signaturepath();
   }
 
 //  @Override
@@ -393,12 +389,12 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
 
   @Override
   public List<FabricLocation> bootclasspath() {
-    return getFabricOptions().bootclasspath();
+    return getOptions().bootclasspath();
   }
 
   @Override
   public Map<String, FabricLocation> codebaseAliases() {
-    return getFabricOptions().codebaseAliases();
+    return getOptions().codebaseAliases();
   }
 
 }

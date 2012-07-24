@@ -102,6 +102,9 @@ public class Main extends polyglot.main.Main {
       args.add("-bootclasspath");
       args.add(worker.bootcp);
     }
+    if (worker.outputToLocalFS) {
+      args.add("-output-to-fs");
+    }
 
     URI cb = NSUtil.namespace(fcls.getCodebase());
     // XXX: It might be better to use a URI method here, but
@@ -110,13 +113,11 @@ public class Main extends polyglot.main.Main {
     Main main = new Main();
     try {
       fabric.ExtensionInfo extInfo = new fabric.ExtensionInfo(bytecodeMap);
-      if (!worker.outputToLocalFS)
-        ((FabricFileManager) extInfo.extFileManager()).disableOutputToLocalFS();
       main.start(args.toArray(new String[0]), extInfo);
 
       Collection<JavaFileObject> outputFiles = main.compiler.outputFiles();
       int outputDirPathLen =
-          extInfo.getFabricOptions().outputLocation().getUri().getPath()
+          extInfo.getOptions().outputLocation().getUri().getPath()
               .length();
       Map<URI, JavaFileObject> absPathObjMap =
           extInfo.extFileManager().getAbsPathObjMap();
@@ -320,8 +321,8 @@ public class Main extends polyglot.main.Main {
           try {
             start(o, s, extInfo, q);
 
-            if (extInfo.getFabricOptions().codebaseFilename() != null) {
-              FabricOptions opt = extInfo.getFabricOptions();
+            if (extInfo.getOptions().codebaseFilename() != null) {
+              FabricOptions opt = extInfo.getOptions();
               File f = new File(opt.codebaseFilename());
               if (!f.isAbsolute())
                 f =
@@ -340,12 +341,12 @@ public class Main extends polyglot.main.Main {
               } catch (fabric.common.exceptions.InternalError e) {
                 throw new TerminationException(
                     "Error writing codebase reference to "
-                        + extInfo.getFabricOptions().codebaseFilename() + ": "
+                        + extInfo.getOptions().codebaseFilename() + ": "
                         + e.getMessage(), 1);
               } catch (IOException e) {
                 throw new TerminationException(
                     "Error writing codebase reference to "
-                        + extInfo.getFabricOptions().codebaseFilename() + ": "
+                        + extInfo.getOptions().codebaseFilename() + ": "
                         + e.getMessage(), 1);
               }
             }

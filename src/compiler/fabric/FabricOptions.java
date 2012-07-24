@@ -1,7 +1,14 @@
 package fabric;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,11 +16,16 @@ import java.util.Set;
 import jif.JifOptions;
 import polyglot.main.OptFlag;
 import polyglot.main.OptFlag.Arg;
+import polyglot.main.OptFlag.IntFlag;
 import polyglot.main.OptFlag.Switch;
 import polyglot.main.UsageError;
+import polyglot.util.InternalCompilerError;
+import polyglot.util.Pair;
 import fabric.common.FabricLocation;
+import fabric.common.FabricLocationFactory;
 import fabric.common.FabricLocation_c;
 import fabric.common.NSUtil;
+import fabric.filemanager.FabricFileManager;
 
 public class FabricOptions extends JifOptions {
   /**
@@ -48,24 +60,25 @@ public class FabricOptions extends JifOptions {
    */
   public List<FabricLocation> bootclasspath;
 
-//  /**
-//   * Codebase names.
-//   */
-//  protected Map<String, FabricLocation> codebase_aliases;
+  // /**
+  // * Codebase names.
+  // */
+  // protected Map<String, FabricLocation> codebase_aliases;
 
   public FabricOptions(ExtensionInfo extension) {
     super(extension);
-    
+
+    sigcp = new ArrayList<FabricLocation>();
     classpath = new ArrayList<FabricLocation>();
     source_path = new ArrayList<FabricLocation>();
     filbootclasspath = new ArrayList<FabricLocation>();
     bootclasspath = new ArrayList<FabricLocation>();
-//    codebase_aliases = new LinkedHashMap<String, FabricLocation>();
+    codebase_aliases = new LinkedHashMap<String, FabricLocation>();
   }
 
   public FabricLocation source_output;
   public FabricLocation class_output;
-  
+
   /**
    * Whether we're running in signature mode.
    */
@@ -106,23 +119,23 @@ public class FabricOptions extends JifOptions {
    */
   protected Map<String, FabricLocation> codebase_aliases;
 
-  @Override
-  public void setDefaultValues() {
-    super.setDefaultValues();
-
-    // Override default in Jif: do not trust providers.
-    this.trustedProviders = false;
-
-    this.fully_qualified_names = true;
-    this.fatalExceptions = true;
-    this.publishOnly = false;
-
-    this.sigcp = new ArrayList<FabricLocation>();
-  }
+//  @Override
+//  public void setDefaultValues() {
+//    super.setDefaultValues();
+//
+//    // Override default in Jif: do not trust providers.
+//    this.trustedProviders = false;
+//
+//    this.fully_qualified_names = true;
+//    this.fatalExceptions = true;
+//    this.publishOnly = false;
+//
+//    this.sigcp = new ArrayList<FabricLocation>();
+//  }
 
   /* FabIL Options (forwarded to delegate ) ********************************** */
 
-  //protected FabILOptions_c delegate;
+  // protected FabILOptions delegate;
 
   /**
    * Whether to publish source to Fabric.
@@ -134,51 +147,53 @@ public class FabricOptions extends JifOptions {
    */
   protected boolean needWorker;
 
-//  @Override
-//  public boolean dumpDependencies() {
-//    return delegate.dumpDependencies;
-//  }
-//
-//  @Override
-//  public boolean signatureMode() {
-//    return delegate.signatureMode();
-//  }
+  // @Override
+  // public boolean dumpDependencies() {
+  // return delegate.dumpDependencies;
+  // }
+  //
+  // @Override
+  // public boolean signatureMode() {
+  // return delegate.signatureMode();
+  // }
 
-//  /* Parsing ***************************************************************** */
-//  @Override
-//  public void usage(PrintStream out) {
-//    super.usage(out);
-//    usageForFlag(out, "-filsigcp <path>",
-//        "path for FabIL signatures (e.g. for fabric.lang.Object)");
-//    usageForFlag(out, "-addfilsigcp <path>",
-//        "additional path for FabIL signatures; prefixed to sigcp");
-//    usageForFlag(out, "-worker <worker>", "compile as a specific worker");
-//    usageForFlag(out, "-deststore <store>",
-//        "publish source to a Fabric store (all source on the commandline and"
-//            + " loaded through the sourcepath will be published)");
-//    usageForFlag(out, "-codebase-alias <name>=<URI>",
-//        "associate a codebase with an alias in source files");
-//    usageForFlag(out, "-publish", "Publish source to Fabric.");
-//    usageForFlag(out, "-publish-only",
-//        "Verify and publish source, do not compile to bytecode.");
-//    usageForFlag(out, "-codebase-output-file <filename>",
-//        "Write Fabric reference of published codebase to file.");
-//    usageForFlag(out, "-generate-native-skeletons",
-//        "generate FabIL and Java bootstrap skeletons for each class");
-//    usageForFlag(out, "-no-fail-on-exception",
-//        "Force runtime exceptions to be caught or declared.");
-//
-//    usageForFlag(out, "-O", "turn optimizations on");
-//
-//    out.println("Most <path> arguments accept local directory paths as well as");
-//    out.println("Fabric references to codebases objects in the following form:");
-//    usageForFlag(out, "<path>",
-//        "\"<fab://store/codebase_onum>:/path/to/local/dir/:...\"");
-//  }
+  // /* Parsing
+  // ***************************************************************** */
+  // @Override
+  // public void usage(PrintStream out) {
+  // super.usage(out);
+  // usageForFlag(out, "-filsigcp <path>",
+  // "path for FabIL signatures (e.g. for fabric.lang.Object)");
+  // usageForFlag(out, "-addfilsigcp <path>",
+  // "additional path for FabIL signatures; prefixed to sigcp");
+  // usageForFlag(out, "-worker <worker>", "compile as a specific worker");
+  // usageForFlag(out, "-deststore <store>",
+  // "publish source to a Fabric store (all source on the commandline and"
+  // + " loaded through the sourcepath will be published)");
+  // usageForFlag(out, "-codebase-alias <name>=<URI>",
+  // "associate a codebase with an alias in source files");
+  // usageForFlag(out, "-publish", "Publish source to Fabric.");
+  // usageForFlag(out, "-publish-only",
+  // "Verify and publish source, do not compile to bytecode.");
+  // usageForFlag(out, "-codebase-output-file <filename>",
+  // "Write Fabric reference of published codebase to file.");
+  // usageForFlag(out, "-generate-native-skeletons",
+  // "generate FabIL and Java bootstrap skeletons for each class");
+  // usageForFlag(out, "-no-fail-on-exception",
+  // "Force runtime exceptions to be caught or declared.");
+  //
+  // usageForFlag(out, "-O", "turn optimizations on");
+  //
+  // out.println("Most <path> arguments accept local directory paths as well as");
+  // out.println("Fabric references to codebases objects in the following form:");
+  // usageForFlag(out, "<path>",
+  // "\"<fab://store/codebase_onum>:/path/to/local/dir/:...\"");
+  // }
 
   @Override
   protected void populateFlags(Set<OptFlag<?>> flags) {
-    
+    flags.add(new Switch("-sig", "compile sources to signatures"));
+
     flags.add(new OptFlag<List<FabricLocation>>("-sigcp", "<path>",
         "path for Fabric signatures (e.g. for fabric.lang.Object)") {
       @Override
@@ -212,18 +227,21 @@ public class FabricOptions extends JifOptions {
       }
     });
     flags.add(new Switch("-publish", "Publish source to Fabric"));
-    flags.add(new Switch("-publish-only", "Verify and publish source, do not compile to bytecode"));
-    
-    flags.add(new OptFlag<String>("-codebase-output-file", "<name>", 
+    flags.add(new Switch("-publish-only",
+        "Verify and publish source, do not compile to bytecode"));
+
+    flags.add(new OptFlag<String>("-codebase-output-file", "<name>",
         "Write Fabric reference of published codebase to file.") {
       @Override
       public Arg<String> handle(String[] args, int index) {
         return createArg(index + 1, args[index]);
       }
     });
-    flags.add(new Switch("-no-fail-on-exception", "Force runtime exceptions to be caught or declared."));
-    
-    flags.add(new OptFlag<List<FabricLocation>>("-classpath", "<path>",
+    flags.add(new Switch("-no-fail-on-exception",
+        "Force runtime exceptions to be caught or declared."));
+
+    flags.add(new OptFlag<List<FabricLocation>>(new String[] { "-classpath",
+        "-cp" }, "<path>",
         "where to find class files or mobile code to link against,"
             + " may contain <escaped> URIs of codebases") {
       @Override
@@ -249,15 +267,120 @@ public class FabricOptions extends JifOptions {
         return createArg(index + 1, path);
       }
     });
+    flags.add(new Switch("-trusted-providers",
+        "set the providers of the sources being compiled to be trusted"));
 
+    flags.add(new OptFlag<String>("-worker", "<name>",
+        "The worker to use for fetching and publishing mobile code.") {
+      @Override
+      public Arg<String> handle(String[] args, int index) {
+        return createArg(index + 1, args[index]);
+      }
+
+      @Override
+      public Arg<String> defaultArg() {
+        try {
+          return createDefault(java.net.InetAddress.getLocalHost()
+              .getHostName());
+        } catch (UnknownHostException e) {
+          return createDefault("localhost");
+        }
+      }
+
+    });
+    flags.add(new OptFlag<String>("-deststore", "<name>",
+        "The the destination store for published classes.") {
+      @Override
+      public Arg<String> handle(String[] args, int index) {
+        return createArg(index + 1, args[index]);
+      }
+    });
+    flags.add(new OptFlag<Pair<String, FabricLocation>>(new String[] {
+        "-codebase-alias", "-cb-alias" }, "<name>",
+        "The the destination store for published classes.") {
+      @Override
+      public Arg<Pair<String, FabricLocation>> handle(String[] args, int index)
+          throws UsageError {
+
+        String arg = args[index];
+        if (arg.startsWith("@")) {
+          try {
+            BufferedReader lr =
+                new BufferedReader(new FileReader(arg.substring(1)));
+            arg = lr.readLine();
+            lr.close();
+          } catch (FileNotFoundException e) {
+            throw new InternalCompilerError(e);
+          } catch (IOException e) {
+            throw new InternalCompilerError(e);
+          }
+        }
+        String[] alias = arg.split("=");
+        if (alias.length != 2)
+          throw new UsageError("Invalid codebase alias:" + arg);
+        String cb = alias[1];
+
+        if (cb.startsWith("@")) {
+          try {
+            BufferedReader lr =
+                new BufferedReader(new FileReader(alias[1].substring(1)));
+            cb = lr.readLine().replaceAll("[<>]", "");
+            lr.close();
+          } catch (FileNotFoundException e) {
+            throw new InternalCompilerError(e);
+          } catch (IOException e) {
+            throw new InternalCompilerError(e);
+          }
+        }
+        if (!cb.endsWith("/")) cb += "/";
+        URI uri = URI.create(cb);
+        if (uri.isOpaque() || !uri.isAbsolute())
+          throw new UsageError("Invalid codebase reference in alias:" + arg);
+
+        return createArg(index + 1, new Pair<String, FabricLocation>(alias[0],
+            FabricLocationFactory.getLocation(false, uri)));
+      }
+    });
+    flags.add(new Switch("-generate-native-skeletons",
+        "generate java bootstrap skeletons for each class"));
+    flags.add(new Switch("-platform-mode", "build platform classes"));
+    flags.add(new IntFlag("-optlevel", "<num>",
+        "perform level <num> optimizations", 0));
+    
     super.populateFlags(flags);
+
+    OptFlag.removeFlag("-untrusted-providers", flags);
+    OptFlag.removeFlag("-fail-on-exception", flags);
   }
-  
+
+  @Override
+  protected int parseSourceArg(String[] args, int index) {
+    URI u = URI.create(args[index]);
+    if (!u.isAbsolute()) {
+      File f = new File(args[index]).getAbsoluteFile();
+      u = NSUtil.file.resolve(f.toURI());
+    }
+    Arg<URI> src = new Arg<URI>(index + 1, u);
+    arguments.add(src);
+    return src.next();
+  }
+
+  @Override
+  protected void handleSourceArg(Arg<?> arg, Set<String> source) {
+    URI uri = (URI) arg.value();
+    if (uri.getScheme().equals("fab")) needWorker = true;
+    source.add(uri.toString());
+  }
+
   @SuppressWarnings("unchecked")
   @Override
   protected void handleArg(Arg<?> arg) throws UsageError {
     // parse new options from fabric
-    if (arg.flag().ids().contains("-filsigcp")) {
+    if (arg.flag().ids().contains("-sig")) {
+      // Signature mode implies platform mode. The local namespace should be the
+      // platform ns
+      signatureMode = (Boolean) arg.value();
+    } else if (arg.flag().ids().contains("-filsigcp")) {
       // handled by FabIL
     } else if (arg.flag().ids().contains("-addfilsigcp")) {
       // handled by FabIL
@@ -266,58 +389,129 @@ public class FabricOptions extends JifOptions {
       sigcp.addAll((List<FabricLocation>) arg.value());
 
     } else if (arg.flag().ids().contains("-addsigcp")) {
-      sigcp.addAll((List<FabricLocation>) arg.value());    
-      
+      sigcp.addAll((List<FabricLocation>) arg.value());
+
     } else if (arg.flag().ids().contains("-classpath")) {
       classpath.addAll((List<FabricLocation>) arg.value());
-    
+
     } else if (arg.flag().ids().contains("-sourcepath")) {
       source_path.addAll((List<FabricLocation>) arg.value());
-      
+
     } else if (arg.flag().ids().contains("-bootclasspath")) {
       bootclasspath.addAll((List<FabricLocation>) arg.value());
-      
+
     } else if (arg.flag().ids().contains("-publish")) {
       publish = (Boolean) arg.value();
-      
+
     } else if (arg.flag().ids().contains("-publish-only")) {
       publishOnly = (Boolean) arg.value();
-      
+
     } else if (arg.flag().ids().contains("-codebase-output-file")) {
       this.codebaseFilename = (String) arg.value();
-      
+
     } else if (arg.flag().ids().contains("-no-fail-on-exception")) {
-      fatalExceptions = (Boolean) arg.value();
+      fatalExceptions = !(Boolean) arg.value();
+
+    } else if (arg.flag().ids().contains("-trusted-providers")) {
+      trustedProviders = (Boolean) arg.value();
+
+    } else if (arg.flag().ids().contains("-worker")) {
+      workerName = (String) arg.value();
+
+    } else if (arg.flag().ids().contains("-deststore")) {
+      destinationStore = (String) arg.value();
+      needWorker = true;
+
+    } else if (arg.flag().ids().contains("-codebase-alias")) {
+      Pair<String, FabricLocation> pair =
+          (Pair<String, FabricLocation>) arg.value();
+      String alias = pair.part1();
+      FabricLocation loc = pair.part2();
+      codebase_aliases.put(alias, loc);
+
+    } else if (arg.flag().ids().contains("-generate-native-skeletons")) {
+      createSkeleton = (Boolean) arg.value();
+
+    } else if (arg.flag().ids().contains("-platform-mode")) {
+      platform_mode = (Boolean) arg.value();
+
+    } else if (arg.flag().ids().contains("-optlevel")) {
+      optLevel = (Integer) arg.value();
+      
+    } else super.handleArg(arg);
+  }     
+
+  
+  /**
+   * Filter and add arguments for FabIL. 
+   * @param flags
+   * @return FabIL-safe args
+   * @throws UsageError 
+   */
+  @SuppressWarnings("unchecked")
+  public List<OptFlag.Arg<?>> fabilArgs(Set<OptFlag<?>> flags) throws UsageError {
+    List<Arg<?>> fabILArgs = new ArrayList<OptFlag.Arg<?>>();
+    
+    OptFlag<List<FabricLocation>> sigcp =
+        (OptFlag<List<FabricLocation>>) OptFlag.lookupFlag("-sigcp", flags);
+    OptFlag<List<FabricLocation>> addsigcp =
+        (OptFlag<List<FabricLocation>>) OptFlag.lookupFlag("-addsigcp", flags);
+   
+    for (Arg<?> arg : arguments) {
+      if (arg.flag() != null) {
+
+        // Skip Fabric sigcp args
+        if (arg.flag().ids().contains("-sigcp")
+            || arg.flag().ids().contains("-addsigcp")) {
+          continue;
+        }
+        // Rewrite FabIL sigcp args
+        else if (arg.flag().ids().contains("-filsigcp")) {
+          fabILArgs.add(sigcp.createArg(-1, (List<FabricLocation>) arg.value()));
+        }
+        else if (arg.flag().ids().contains("-addfilsigcp")) {
+          fabILArgs.add(addsigcp.createArg(-1, (List<FabricLocation>) arg.value()));
+        }
+        if (flags.contains(arg.flag())) {
+          fabILArgs.add(arg);
+        }
+      }                 
     }
-    else super.handleArg(arg);
+    // FabIL's bootclasspath is the same, but should include the JRE
+    OptFlag<?> addboot = OptFlag.lookupFlag("-addbootcp", flags);
+    fabILArgs.add(addboot.handle(new String[] {jvmbootclasspath()}, 0));
+
+    return fabILArgs;
   }
 
   @Override
   protected void postApplyArgs() {
-    // Signature mode implies platform mode
-    if (signatureMode)
-      platform_mode = true;
-    // Don't serialize types with skeletons
-    if (createSkeleton)
-      serialize_type_info = false;
+    // publishOnly mode implies publish
+    if (publishOnly)
+      publish = true;
     
+    // Signature mode implies platform mode
+    if (signatureMode) platform_mode = true;
+    
+    // Don't serialize types with skeletons
+    if (createSkeleton) serialize_type_info = false;
+
     source_output =
         new FabricLocation_c("SOURCE_OUTPUT", true,
             source_output_directory.toURI());
     class_output =
         new FabricLocation_c("CLASS_OUTPUT", true,
             class_output_directory.toURI());
-    
-    // We need a worker if any path entry or source file 
+
+    // We need a worker if any path entry or source file
     // is a remote URI
     for (FabricLocation loc : classpath) {
-      if (loc.isFabricReference())
-        needWorker = true;
+      if (loc.isFabricReference()) needWorker = true;
     }
     for (FabricLocation loc : source_path) {
-     if (loc.isFabricReference())
-       needWorker = true;
+      if (loc.isFabricReference()) needWorker = true;
     }
+    
   }
 
   public boolean publishOnly() {
@@ -332,26 +526,28 @@ public class FabricOptions extends JifOptions {
     return sigcp;
   }
 
-//  @Override
-//  public List<File> javaClasspathDirs() {
-//    return delegate.javaClasspathDirs();
-//  }
-//
-//  @Override
-//  public List<FabricLocation> filsignaturepath() {
-//    return delegate.sigcp;
-//  }
-//
+  // @Override
+  // public List<File> javaClasspathDirs() {
+  // return delegate.javaClasspathDirs();
+  // }
+  //
+  // @Override
+  // public List<FabricLocation> filsignaturepath() {
+  // return delegate.sigcp;
+  // }
+  //
   public Map<String, FabricLocation> codebaseAliases() {
     return codebase_aliases;
   }
-//
-//  // / Options processed by FabIL delegate
-//  @Override
+
+  //
+  // // / Options processed by FabIL delegate
+  // @Override
   public boolean createSkeleton() {
     return createSkeleton;
   }
-//
+
+  //
   public String destinationStore() {
     return destinationStore;
   }
@@ -391,7 +587,7 @@ public class FabricOptions extends JifOptions {
   public boolean needWorker() {
     return needWorker;
   }
-  
+
   public boolean signatureMode() {
     return signatureMode;
   }
@@ -404,10 +600,11 @@ public class FabricOptions extends JifOptions {
     // Never publish in signature or platform mode
     return publish & !signatureMode() && !platformMode();
   }
-  
+
   @Override
   public String constructPostCompilerClasspath() {
-    StringBuilder sb = new StringBuilder(super.constructPostCompilerClasspath());
+    StringBuilder sb =
+        new StringBuilder(super.constructPostCompilerClasspath());
     for (FabricLocation l : bootclasspath) {
       sb.append(File.pathSeparator);
       sb.append(l.getUri().getPath());

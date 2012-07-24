@@ -32,18 +32,14 @@ import fabric.common.FabricLocationFactory;
  */
 public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
   private final ExtensionInfo extInfo;
-  private boolean outputToLocalFS;
+  private boolean noOutputToFS;
 
   public FabricFileManager(ExtensionInfo extInfo) {
     super(extInfo);
     this.extInfo = extInfo;
-    outputToLocalFS = true;
+    noOutputToFS = extInfo.getOptions().noOutputToFS;
   }
   
-  public void disableOutputToLocalFS() {
-    outputToLocalFS = false;
-  }
-
   @Override
   public FileObject getFileForInput(Location location, String packageName,
       String relativeName) throws IOException {
@@ -67,7 +63,7 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
   @Override
   public JavaFileObject getJavaFileForOutput(Location location,
       String className, Kind kind, FileObject sibling) throws IOException {
-    if (!outputToLocalFS && kind.equals(Kind.CLASS)) {
+    if (noOutputToFS && kind.equals(Kind.CLASS)) {
       Options options = extInfo.getOptions();
       Location classOutputLoc = options.classOutputDirectory();
       if (location == null || !classOutputLoc.equals(location)
@@ -193,13 +189,13 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
     URI u = URI.create(fileName);
     if (!u.isAbsolute())
       throw new InternalCompilerError("Expected absolute URI");
-    FabricLocation loc =
-        FabricLocationFactory.getLocation(false, NSUtil.dirname(u));
-    if (loc.isFabricReference()) {
+    if (u.getScheme().equals("fab")) {
+      FabricLocation loc =
+          FabricLocationFactory.getLocation(false, NSUtil.dirname(u));
       FileObject fo = getFileForInput(loc, "", NSUtil.basename(u));
       return extInfo.createFileSource(fo, userSpecified);
-    } else if (loc.isFileReference())
-      return fileSource(loc, NSUtil.basename(u), userSpecified);
-    throw new IOException("Error: Illegal location " + loc);
+    } else {
+      return super.fileSource(u.getPath(), userSpecified);
+    }
   }
 }

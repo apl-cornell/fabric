@@ -688,7 +688,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   @Deprecated
   public TopLevelResolver loadedResolver() {
-    throw toplevel_resolution_error();
+    // XXX: backwards compatibility for JifContext to resolve jif.principals.*
+    return platformResolver();
   }
 
   @Override

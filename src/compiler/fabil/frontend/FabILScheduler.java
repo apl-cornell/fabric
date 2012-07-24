@@ -180,7 +180,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
             List<Goal> l = new ArrayList<Goal>();
             l.add(TypeChecked(job));
 
-            if (extInfo.getFabILOptions().optLevel() > 0) {
+            if (extInfo.getOptions().optLevel() > 0) {
               l.add(TypeCheckedAfterFlatten(job));
             }
 
@@ -375,7 +375,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         // l.add(LabelsAssigned(job));
         l.add(PrincipalsDelegated(job));
 
-        if (extInfo.getFabILOptions().optLevel() > 0) {
+        if (extInfo.getOptions().optLevel() > 0) {
           l.add(ReadWriteChecked(job));
         }
 

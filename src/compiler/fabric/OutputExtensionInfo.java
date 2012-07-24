@@ -1,19 +1,26 @@
 package fabric;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import polyglot.ast.Node;
 import polyglot.frontend.CyclicDependencyException;
 import polyglot.frontend.EmptyPass;
+import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Job;
 import polyglot.frontend.Pass;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.Source;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.SourceFileGoal;
+import polyglot.main.OptFlag;
 import polyglot.main.Options;
+import polyglot.main.UsageError;
+import polyglot.main.OptFlag.Arg;
 import polyglot.util.InternalCompilerError;
+import fabil.FabILOptions;
+import fabil.FabILOptions;
 import fabil.frontend.FabILScheduler;
 import fabric.common.FabricLocation;
 
@@ -23,21 +30,51 @@ import fabric.common.FabricLocation;
  */
 public class OutputExtensionInfo extends fabil.ExtensionInfo {
 
-  protected ExtensionInfo fabext;
+  protected fabric.ExtensionInfo fabext;
 
   @Override
   public Scheduler createScheduler() {
     return new OutputScheduler(this);
   }
 
-  @Override
-  protected Options createOptions() {
-    // we share the options with fabric, which in turn delegates to a
-    // FabILOptions object for the fabil options handling.
-    return fabext.getOptions();
+//  @Override
+//  protected Options createOptions() {
+//    // we share the options with fabric, which in turn delegates to a
+//    // FabILOptions object for the fabil options handling.
+//    return fabext.getOptions();
+//  }
+  
+  static protected class FabILOutputOptions extends FabILOptions {
+
+    public FabILOutputOptions(ExtensionInfo extension) {
+      super(extension);
+    }
+
+    /**
+     * Skip checks regarding source files.
+     */
+    @Override
+    protected void validateArgs() throws UsageError {
+    }
+
   }
 
-  public OutputExtensionInfo(ExtensionInfo fabext) {
+  @Override
+  protected Options createOptions() {
+      FabricOptions parentOpts = fabext.getOptions();
+      FabILOutputOptions opt = new FabILOutputOptions(this);
+      // filter the parent's options by the ones this extension understands
+      try {
+          List<Arg<?>> arguments = parentOpts.fabilArgs(opt.flags());
+          opt.processArguments(arguments, Collections.<String> emptySet());
+      } catch (UsageError e) {
+          throw new InternalCompilerError(
+                  "Got usage error while configuring output extension", e);
+      }
+      return opt;
+  }
+
+  public OutputExtensionInfo(fabric.ExtensionInfo fabext) {
     this.fabext = fabext;
   }
 
