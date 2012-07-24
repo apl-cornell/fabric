@@ -15,9 +15,8 @@ public class RetryStmt_c extends Stmt_c implements RetryStmt {
     super(pos);
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     return Collections.EMPTY_LIST;
   }
 

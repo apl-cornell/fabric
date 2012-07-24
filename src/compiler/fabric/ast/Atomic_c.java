@@ -15,13 +15,11 @@ public class Atomic_c extends Block_c implements Atomic {
     super(pos, statements);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public List<Stmt> statements() {
     return super.statements();
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     // TODO There needs to be an edge for AbortException

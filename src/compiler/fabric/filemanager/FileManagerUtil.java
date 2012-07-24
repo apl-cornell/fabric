@@ -1,20 +1,19 @@
 package fabric.filemanager;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.tools.JavaFileObject;
 
 import polyglot.util.StringUtil;
-
 import fabric.common.NSUtil;
+import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.Object;
-import fabric.lang.Codebase;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.util.Iterator;
-import fabric.util.Set;
 import fabric.util.Map.Entry;
+import fabric.util.Set;
 
 /**
  * FabricUtil provides helper methods

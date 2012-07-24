@@ -22,7 +22,6 @@ public class ClassBodyJifExt_c extends JifClassBodyExt {
     this.remote_wrappers = new ArrayList<ClassMember>();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node labelCheck(LabelChecker lc) {
     ClassBody n = (ClassBody) node();
@@ -37,7 +36,7 @@ public class ClassBodyJifExt_c extends JifClassBodyExt {
     List<ClassMember> members = new ArrayList<ClassMember>();
     // label check each member, but mute reporting of errors on
     // remote wrappers.
-    for (ClassMember cm : (List<ClassMember>) n.members()) {
+    for (ClassMember cm : n.members()) {
       try {
         ClassMember toAdd = (ClassMember) lc.context(A).labelCheck(cm);
         if (toAdd != null) {

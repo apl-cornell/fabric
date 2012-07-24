@@ -3,7 +3,16 @@ package fabil.extension;
 import java.util.ArrayList;
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Assign;
+import polyglot.ast.ClassBody;
+import polyglot.ast.ClassMember;
+import polyglot.ast.Field;
+import polyglot.ast.FieldAssign;
+import polyglot.ast.FieldDecl;
+import polyglot.ast.Initializer;
+import polyglot.ast.Node;
+import polyglot.ast.Receiver;
+import polyglot.ast.Stmt;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.util.Position;
@@ -14,7 +23,6 @@ import fabil.visit.StaticInitializerCollector;
 
 public class ClassBodyExt_c extends FabILExt_c {
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node collectStaticInitializers(StaticInitializerCollector sc) {
     ClassBody body = node();

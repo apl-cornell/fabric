@@ -28,6 +28,7 @@ import polyglot.types.LocalInstance;
 import polyglot.types.TypeSystem;
 import polyglot.visit.DataFlow;
 import polyglot.visit.FlowGraph;
+import polyglot.visit.FlowGraph.EdgeKey;
 import fabil.ast.Atomic;
 import fabil.extension.CallExt_c;
 import fabil.extension.FieldAssignExt_c;
@@ -42,7 +43,7 @@ import fabil.types.FabILTypeSystem;
  * 
  * @author xinz
  */
-public class ReadWriteChecker extends DataFlow {
+public class ReadWriteChecker extends DataFlow<ReadWriteChecker.DataFlowItem> {
 
   private final FabILTypeSystem ts;
 
@@ -52,7 +53,8 @@ public class ReadWriteChecker extends DataFlow {
   }
 
   @Override
-  protected Item createInitialItem(FlowGraph graph, Term node, boolean entry) {
+  protected DataFlowItem createInitialItem(FlowGraph<DataFlowItem> graph,
+      Term node, boolean entry) {
     if (node instanceof ConstructorDecl) {
       return DataFlowItem.BOTTOM_C;
     } else {
@@ -61,8 +63,8 @@ public class ReadWriteChecker extends DataFlow {
   }
 
   @Override
-  protected Item confluence(@SuppressWarnings("rawtypes") List items,
-      Term node, boolean entry, FlowGraph graph) {
+  protected DataFlowItem confluence(List<DataFlowItem> items, Term node,
+      boolean entry, FlowGraph<DataFlowItem> graph) {
     DataFlowItem out = null;
 
     for (Object o : items) {
@@ -82,11 +84,11 @@ public class ReadWriteChecker extends DataFlow {
     return out;
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  protected Map flow(Item in, FlowGraph graph, Term n, boolean entry,
-      Set edgeKeys) {
-    DataFlowItem out = (DataFlowItem) in;
+  protected Map<EdgeKey, DataFlowItem> flow(DataFlowItem in,
+      FlowGraph<DataFlowItem> graph, Term n, boolean entry,
+      Set<EdgeKey> edgeKeys) {
+    DataFlowItem out = in;
 
     if (entry) {
       if (n instanceof Atomic) {
@@ -262,9 +264,9 @@ public class ReadWriteChecker extends DataFlow {
   }
 
   @Override
-  protected void check(FlowGraph graph, Term n, boolean entry, Item inItem,
-      @SuppressWarnings("rawtypes") Map outItems) {
-    DataFlowItem in = (DataFlowItem) inItem;
+  protected void check(FlowGraph<DataFlowItem> graph, Term n, boolean entry,
+      DataFlowItem inItem, Map<EdgeKey, DataFlowItem> outItems) {
+    DataFlowItem in = inItem;
 
     if (!entry) {
       if (n instanceof Field) {
@@ -292,7 +294,7 @@ public class ReadWriteChecker extends DataFlow {
           if (e instanceof Local) {
             Local l = (Local) e;
             ((FieldAssignExt_c) a.ext())
-                .accessState(in.state(l.localInstance()));
+            .accessState(in.state(l.localInstance()));
           } else if (isThis(e)) {
             ((FieldAssignExt_c) a.ext()).accessState(in.state(null));
           }

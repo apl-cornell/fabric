@@ -1,12 +1,12 @@
 package codebases.frontend;
 
-import fabric.common.FabricLocation;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Pass;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.TypeExists;
 import polyglot.types.TypeSystem;
+import fabric.common.FabricLocation;
 
 public class CBTypeExists extends TypeExists {
   public static Goal create(Scheduler scheduler, FabricLocation ns, String name) {

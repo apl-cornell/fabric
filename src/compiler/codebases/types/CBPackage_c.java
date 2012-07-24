@@ -1,10 +1,10 @@
 package codebases.types;
 
-import fabric.common.FabricLocation;
 import polyglot.types.Package;
 import polyglot.types.Package_c;
 import polyglot.types.Resolver;
 import polyglot.types.TypeSystem;
+import fabric.common.FabricLocation;
 
 public class CBPackage_c extends Package_c implements CBPackage {
   protected FabricLocation namespace;

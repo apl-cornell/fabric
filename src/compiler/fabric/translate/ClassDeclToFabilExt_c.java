@@ -39,7 +39,6 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   }
 
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     ClassDecl cd = (ClassDecl) super.toJava(rw);
@@ -170,7 +169,6 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
 
   @Override
-  @SuppressWarnings("unchecked")
   protected List<Formal> produceFormals(JifPolyType jpt, JifToJavaRewriter rw, boolean addObjectFormal) throws SemanticException {
     List<Formal> formals = super.produceFormals(jpt, rw, false);
     NodeFactory javaNf = rw.java_nf();
@@ -197,7 +195,6 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   }
 
 //  @Override
-//  @SuppressWarnings("unchecked")
 //  protected List<Expr> produceParamArgs(JifPolyType jpt, JifToJavaRewriter rw) {
 //    List<Expr> args = super.produceParamArgs(jpt, rw);
 //

@@ -68,7 +68,6 @@ public final class RemoteWorker extends RemoteNode {
     TransactionID tid = tm.getCurrentTid();
     WriterMap writerMap = tm.getWriterMap();
 
-    @SuppressWarnings("unchecked")
     Class<? extends fabric.lang.Object> receiverClass =
         (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
             .getClass().getEnclosingClass();

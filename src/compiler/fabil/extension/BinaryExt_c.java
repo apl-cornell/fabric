@@ -1,9 +1,9 @@
 package fabil.extension;
 
-import fabil.visit.ProxyRewriter;
 import polyglot.ast.Binary;
 import polyglot.ast.Expr;
 import polyglot.qq.QQ;
+import fabil.visit.ProxyRewriter;
 
 public class BinaryExt_c extends ExprExt_c {
   @Override

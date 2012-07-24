@@ -1,10 +1,18 @@
 package fabric.lang.arrays.internal;
 
-import fabric.worker.Store;
-import fabric.lang.arrays.*;
 import fabric.lang.Object;
+import fabric.lang.arrays.ObjectArray;
+import fabric.lang.arrays.booleanArray;
+import fabric.lang.arrays.byteArray;
+import fabric.lang.arrays.charArray;
+import fabric.lang.arrays.doubleArray;
+import fabric.lang.arrays.floatArray;
+import fabric.lang.arrays.intArray;
+import fabric.lang.arrays.longArray;
+import fabric.lang.arrays.shortArray;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
+import fabric.worker.Store;
 
 /**
  * A utility class for converting Java arrays into Fabric arrays.

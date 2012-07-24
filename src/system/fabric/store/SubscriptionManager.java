@@ -5,16 +5,16 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import fabric.worker.remote.RemoteWorker;
 import fabric.common.FabricThread;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.Pair;
+import fabric.dissemination.Glob;
 import fabric.net.UnreachableNodeException;
 import fabric.store.db.GroupContainer;
-import fabric.dissemination.Glob;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * Keeps track of who's subscribed to what object. Handles subscriptions for a

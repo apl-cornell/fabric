@@ -25,7 +25,6 @@ import fabric.common.FabricLocation;
 import fabric.common.FabricLocationFactory;
 import fabric.common.FabricLocation_c;
 import fabric.common.NSUtil;
-import fabric.filemanager.FabricFileManager;
 
 public class FabricOptions extends JifOptions {
   /**
@@ -119,19 +118,19 @@ public class FabricOptions extends JifOptions {
    */
   protected Map<String, FabricLocation> codebase_aliases;
 
-//  @Override
-//  public void setDefaultValues() {
-//    super.setDefaultValues();
-//
-//    // Override default in Jif: do not trust providers.
-//    this.trustedProviders = false;
-//
-//    this.fully_qualified_names = true;
-//    this.fatalExceptions = true;
-//    this.publishOnly = false;
-//
-//    this.sigcp = new ArrayList<FabricLocation>();
-//  }
+  //  @Override
+  //  public void setDefaultValues() {
+  //    super.setDefaultValues();
+  //
+  //    // Override default in Jif: do not trust providers.
+  //    this.trustedProviders = false;
+  //
+  //    this.fully_qualified_names = true;
+  //    this.fatalExceptions = true;
+  //    this.publishOnly = false;
+  //
+  //    this.sigcp = new ArrayList<FabricLocation>();
+  //  }
 
   /* FabIL Options (forwarded to delegate ) ********************************** */
 
@@ -241,9 +240,9 @@ public class FabricOptions extends JifOptions {
         "Force runtime exceptions to be caught or declared."));
 
     flags.add(new OptFlag<List<FabricLocation>>(new String[] { "-classpath",
-        "-cp" }, "<path>",
-        "where to find class files or mobile code to link against,"
-            + " may contain <escaped> URIs of codebases") {
+    "-cp" }, "<path>",
+    "where to find class files or mobile code to link against,"
+        + " may contain <escaped> URIs of codebases") {
       @Override
       public Arg<List<FabricLocation>> handle(String[] args, int index) {
         List<FabricLocation> path = NSUtil.processPathString(args[index]);
@@ -346,7 +345,7 @@ public class FabricOptions extends JifOptions {
     flags.add(new Switch("-platform-mode", "build platform classes"));
     flags.add(new IntFlag("-optlevel", "<num>",
         "perform level <num> optimizations", 0));
-    
+
     super.populateFlags(flags);
 
     OptFlag.removeFlag("-untrusted-providers", flags);
@@ -372,7 +371,6 @@ public class FabricOptions extends JifOptions {
     source.add(uri.toString());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   protected void handleArg(Arg<?> arg) throws UsageError {
     // parse new options from fabric
@@ -437,26 +435,25 @@ public class FabricOptions extends JifOptions {
 
     } else if (arg.flag().ids().contains("-optlevel")) {
       optLevel = (Integer) arg.value();
-      
-    } else super.handleArg(arg);
-  }     
 
-  
+    } else super.handleArg(arg);
+  }
+
+
   /**
-   * Filter and add arguments for FabIL. 
+   * Filter and add arguments for FabIL.
    * @param flags
    * @return FabIL-safe args
-   * @throws UsageError 
+   * @throws UsageError
    */
-  @SuppressWarnings("unchecked")
   public List<OptFlag.Arg<?>> fabilArgs(Set<OptFlag<?>> flags) throws UsageError {
     List<Arg<?>> fabILArgs = new ArrayList<OptFlag.Arg<?>>();
-    
+
     OptFlag<List<FabricLocation>> sigcp =
         (OptFlag<List<FabricLocation>>) OptFlag.lookupFlag("-sigcp", flags);
     OptFlag<List<FabricLocation>> addsigcp =
         (OptFlag<List<FabricLocation>>) OptFlag.lookupFlag("-addsigcp", flags);
-   
+
     for (Arg<?> arg : arguments) {
       if (arg.flag() != null) {
 
@@ -475,7 +472,7 @@ public class FabricOptions extends JifOptions {
         if (flags.contains(arg.flag())) {
           fabILArgs.add(arg);
         }
-      }                 
+      }
     }
     // FabIL's bootclasspath is the same, but should include the JRE
     OptFlag<?> addboot = OptFlag.lookupFlag("-addbootcp", flags);
@@ -489,10 +486,10 @@ public class FabricOptions extends JifOptions {
     // publishOnly mode implies publish
     if (publishOnly)
       publish = true;
-    
+
     // Signature mode implies platform mode
     if (signatureMode) platform_mode = true;
-    
+
     // Don't serialize types with skeletons
     if (createSkeleton) serialize_type_info = false;
 
@@ -511,7 +508,7 @@ public class FabricOptions extends JifOptions {
     for (FabricLocation loc : source_path) {
       if (loc.isFabricReference()) needWorker = true;
     }
-    
+
   }
 
   public boolean publishOnly() {
@@ -556,10 +553,12 @@ public class FabricOptions extends JifOptions {
     return workerName;
   }
 
+  @Override
   public FabricLocation outputLocation() {
     return source_output;
   }
 
+  @Override
   public FabricLocation classOutputDirectory() {
     return class_output;
   }

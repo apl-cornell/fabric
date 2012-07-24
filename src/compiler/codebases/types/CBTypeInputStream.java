@@ -14,14 +14,13 @@ import polyglot.util.TypeInputStream;
 public class CBTypeInputStream extends TypeInputStream {
   private CodebaseTypeSystem ts;
 
-  @SuppressWarnings("rawtypes")
-  public CBTypeInputStream(InputStream in, TypeSystem ts, Map cache)
+  public CBTypeInputStream(InputStream in, TypeSystem ts,
+      Map<Object, Object> cache)
       throws IOException {
     super(in, ts, cache);
     this.ts = (CodebaseTypeSystem) ts;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void installInPlaceHolderCache(PlaceHolder p, TypeObject t) {
     cache.put(p, t);

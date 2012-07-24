@@ -1,7 +1,6 @@
 package codebases.types;
 
 import static fabric.common.FabricLocationFactory.getLocation;
-
 import codebases.frontend.ExtensionInfo;
 import fabric.common.FabricLocation;
 import fabric.common.NSUtil;

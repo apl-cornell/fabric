@@ -1,6 +1,10 @@
 package fabil.extension;
 
-import polyglot.ast.*;
+import polyglot.ast.ArrayTypeNode;
+import polyglot.ast.JL_c;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
+import polyglot.ast.TypeNode;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.visit.AmbiguityRemover;

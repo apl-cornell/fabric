@@ -1,10 +1,10 @@
 package fabil.visit;
 
-import fabil.types.FabILParsedClassType_c;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.Node;
 import polyglot.types.ParsedClassType;
 import polyglot.visit.NodeVisitor;
+import fabil.types.FabILParsedClassType_c;
 
 /**
  * Ensures hashes in FabILParsedClassType_c instances are computed when

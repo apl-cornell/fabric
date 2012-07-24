@@ -1,9 +1,9 @@
 package fabric.extension;
 
-import fabric.ast.Worker;
+import jif.extension.JifCallDel;
 import polyglot.ast.Call;
 import polyglot.ast.Receiver;
-import jif.extension.JifCallDel;
+import fabric.ast.Worker;
 
 public class FabricCallDel extends JifCallDel {
   @Override

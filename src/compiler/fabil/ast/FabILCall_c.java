@@ -56,7 +56,6 @@ public class FabILCall_c extends Call_c implements FabILCall {
     return n;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node visitChildren(NodeVisitor v) {
     Receiver target = (Receiver) visitChild(this.target, v);
@@ -113,8 +112,7 @@ public class FabILCall_c extends Call_c implements FabILCall {
 
     int count = 0;
 
-    for (@SuppressWarnings("unchecked")
-    Iterator<Expr> i = arguments.iterator(); i.hasNext();) {
+    for (Iterator<Expr> i = arguments.iterator(); i.hasNext();) {
       if (count++ > 2) {
         sb.append("...");
         break;

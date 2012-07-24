@@ -188,7 +188,6 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
     return classHash = digest.digest();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public List<FabILParsedClassType> interfaces() {
     return (List<FabILParsedClassType>) super.interfaces();

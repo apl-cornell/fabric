@@ -1,6 +1,5 @@
 package codebases.types;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -27,8 +26,7 @@ public class CBClassContextResolver extends ClassContextResolver {
     super(ts, type);
   }
 
-  @SuppressWarnings("rawtypes")
-  private static final Collection TOPICS = CollectionUtil.list(Report.types,
+  private static final List<String> TOPICS = CollectionUtil.list(Report.types,
       Report.resolver);
 
   /**
@@ -37,7 +35,6 @@ public class CBClassContextResolver extends ClassContextResolver {
    * @param name
    *          The name to search for.
    */
-  @SuppressWarnings("unchecked")
   @Override
   public Named find(String name, ClassType accessor) throws SemanticException {
 
@@ -144,8 +141,7 @@ public class CBClassContextResolver extends ClassContextResolver {
       throw new NoClassException(name, type);
     } else if (acceptable.size() > 1) {
       Set<Type> containers = new HashSet<Type>(acceptable.size());
-      for (Iterator<Named> i = acceptable.iterator(); i.hasNext();) {
-        Named n = i.next();
+      for (Named n : acceptable) {
         if (n instanceof MemberInstance) {
           MemberInstance mi = (MemberInstance) n;
           containers.add(mi.container());

@@ -43,7 +43,6 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
     this.qq = new QQ(job.extensionInfo());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
 
@@ -57,7 +56,7 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
       ClassBodyJifExt_c ext = (ClassBodyJifExt_c) JifUtil.jifExt(cd.body());
       List<ClassMember> remote_wrappers = ext.remoteWrappers();
 
-      for (ClassMember cm : (List<ClassMember>) cd.body().members()) {
+      for (ClassMember cm : cd.body().members()) {
         if (cm instanceof JifMethodDecl) {
           JifMethodDecl md = (JifMethodDecl) cm;
           if (!md.flags().isPublic() || md.flags().isStatic()) continue;
@@ -73,7 +72,7 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 
           String call_fmt = "%s(%LE);";
           List<Expr> args = new ArrayList<Expr>(md.formals().size());
-          for (Formal formal : (List<Formal>) md.formals()) {
+          for (Formal formal : md.formals()) {
             Local l = nf.Local(Position.compilerGenerated(), formal.id());
             args.add(l);
           }

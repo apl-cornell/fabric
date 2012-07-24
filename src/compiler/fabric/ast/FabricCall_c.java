@@ -68,12 +68,10 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
     Receiver target = (Receiver) visitChild(this.target, v);
     Id name = (Id) visitChild(this.name, v);
     Expr remoteWorker = (Expr) visitChild(this.remoteWorker, v);
-    @SuppressWarnings("unchecked")
     List<Expr> arguments = visitList(this.arguments, v);
     return reconstruct(target, name, remoteWorker, arguments);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
     FabricCall c = (FabricCall) super.typeCheck(tc);

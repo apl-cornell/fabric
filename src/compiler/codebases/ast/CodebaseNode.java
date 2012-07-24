@@ -1,7 +1,7 @@
 package codebases.ast;
 
-import fabric.common.FabricLocation;
 import polyglot.ast.PackageNode;
+import fabric.common.FabricLocation;
 
 public interface CodebaseNode extends PackageNode {
   /**

@@ -12,7 +12,6 @@ import polyglot.util.Position;
 import fabil.visit.ProxyRewriter;
 
 public class ConstructorCallExt_c extends FabILExt_c {
-  @SuppressWarnings("unchecked")
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {
     // Need to add a $location argument to super(...) and this(...) constructor

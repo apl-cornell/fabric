@@ -16,8 +16,8 @@ import java.util.Set;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.main.OptFlag;
 import polyglot.main.OptFlag.Arg;
-import polyglot.main.OptFlag.Switch;
 import polyglot.main.OptFlag.IntFlag;
+import polyglot.main.OptFlag.Switch;
 import polyglot.main.UsageError;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Pair;
@@ -276,7 +276,6 @@ public class FabILOptions extends polyglot.main.Options {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   protected void handleArg(Arg<?> arg) throws UsageError {
     if (arg.flag().ids().contains("-sig")) {
       // Signature mode implies platform mode. The local namespace should be the

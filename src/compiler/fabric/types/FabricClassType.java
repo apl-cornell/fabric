@@ -1,7 +1,7 @@
 package fabric.types;
 
-import codebases.types.CodebaseClassType;
 import jif.types.JifClassType;
+import codebases.types.CodebaseClassType;
 
 public interface FabricClassType extends JifClassType, CodebaseClassType,
     FabricReferenceType {

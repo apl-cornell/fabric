@@ -32,7 +32,6 @@ public class CallExt_c extends ExprExt_c {
    */
   private State accessState;
 
-  @SuppressWarnings("unchecked")
   @Override
   protected Expr rewriteProxiesOverrideImpl(ProxyRewriter pr) {
     Call call = node();
@@ -130,7 +129,6 @@ public class CallExt_c extends ExprExt_c {
         "fabric.worker.transaction.TransactionManager.startThread(%E)", target);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node rewriteRemoteCalls(RemoteCallRewriter rr) {
     FabILCall c = (FabILCall) node();

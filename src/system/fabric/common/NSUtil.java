@@ -11,7 +11,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -257,7 +256,7 @@ public final class NSUtil {
   // group 4: $_Impl or $_Proxy or ""
   private static final Pattern javaNameRegex =
       Pattern
-          .compile("(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)((?:\\$_Impl)|(?:\\$_Proxy)|)");
+      .compile("(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)((?:\\$_Impl)|(?:\\$_Proxy)|)");
 
   /**
    * Return the namespace representing a codebase.
@@ -280,7 +279,7 @@ public final class NSUtil {
     return namespace(cb).resolve(f.getName());
   }
 
-/**
+  /**
    * Process a path string of the form <URI>:/localdir/:... into URIs and add to a list
    * @param uris the list to add the URIs to
    * @param path the path-style string of URIs and directories, with URIs delimited by '<' and '>'
@@ -302,7 +301,7 @@ public final class NSUtil {
 
           BufferedReader lr = new BufferedReader(new FileReader(pathFile));
           path = lr.readLine();
-
+          lr.close();
         } catch (FileNotFoundException e) {
           throw new InternalCompilerError(e);
         } catch (IOException e) {
@@ -320,7 +319,7 @@ public final class NSUtil {
           URI u = URI.create(cb);
           locations.add(getLocation(false, u));
 
-//          if (u.getScheme().equals("fab")) needWorker = true;
+          //          if (u.getScheme().equals("fab")) needWorker = true;
           idx = end + 1;
 
         } else if (path.charAt(idx) == File.pathSeparatorChar) {

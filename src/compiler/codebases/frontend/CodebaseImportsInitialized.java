@@ -24,7 +24,6 @@ public class CodebaseImportsInitialized extends VisitorGoal {
     super(job, new InitCodebaseImports(job, (CodebaseTypeSystem) ts, nf));
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
     List<Goal> l = new ArrayList<Goal>();

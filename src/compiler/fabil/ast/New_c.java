@@ -68,7 +68,6 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     return this;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public New_c visitChildren(NodeVisitor v) {
     Expr qualifier = (Expr) visitChild(this.qualifier, v);
@@ -95,9 +94,8 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     return result;
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     if (qualifier != null) {
       v.visitCFG(qualifier, tn, ENTRY);
     }
@@ -158,7 +156,6 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     return n;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node copy(NodeFactory nf) {
     FabILNodeFactory filNf = (FabILNodeFactory) nf;

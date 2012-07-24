@@ -26,13 +26,14 @@ public class SimpleSurrogateManager implements SurrogateManager {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public void createSurrogates(PrepareRequest req) {
     Map<ComparablePair<String, Long>, Long> cache =
         new TreeMap<ComparablePair<String, Long>, Long>();
     Collection<SerializedObject> surrogates = new ArrayList<SerializedObject>();
 
-    for (SerializedObject obj : SysUtil.chain(req.creates, req.writes)) {
+    @SuppressWarnings("unchecked")
+    Iterable<SerializedObject> chain = SysUtil.chain(req.creates, req.writes);
+    for (SerializedObject obj : chain) {
       Iterator<Long> intraStore = obj.getIntraStoreRefIterator();
       Iterator<ComparablePair<String, Long>> interStore =
           obj.getInterStoreRefIterator();

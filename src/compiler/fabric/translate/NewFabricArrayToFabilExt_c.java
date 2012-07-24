@@ -28,7 +28,6 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
     return rw;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     NewFabricArray n = (NewFabricArray) node();

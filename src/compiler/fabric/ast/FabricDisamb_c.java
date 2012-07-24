@@ -112,7 +112,6 @@ public class FabricDisamb_c extends JifDisamb_c implements Disamb {
     return null;
   }
 
-  @SuppressWarnings("unused")
   @Override
   protected Node disambiguatePackagePrefix(PackageNode pn)
       throws SemanticException {

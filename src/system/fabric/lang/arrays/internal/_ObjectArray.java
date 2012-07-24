@@ -27,7 +27,7 @@ public interface _ObjectArray<T extends Object> extends Object {
   T get(int i);
 
   public static class _Impl<T extends Object> extends Object._Impl implements
-      _ObjectArray<T>, _InternalArrayImpl {
+  _ObjectArray<T>, _InternalArrayImpl {
     /**
      * The class representing the proxy type for the array elements.
      */
@@ -75,7 +75,6 @@ public interface _ObjectArray<T extends Object> extends Object {
     /**
      * Used for deserializing.
      */
-    @SuppressWarnings("unchecked")
     public _Impl(Store store, long onum, int version, long expiry, long label,
         long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs) throws IOException,
@@ -84,7 +83,7 @@ public interface _ObjectArray<T extends Object> extends Object {
           intraStoreRefs);
       proxyType =
           (Class<? extends Object._Proxy>) Worker.getWorker().getClassLoader()
-              .loadClass(in.readUTF());
+          .loadClass(in.readUTF());
       value = new Object[in.readInt()];
       for (int i = 0; i < value.length; i++) {
         value[i] =
@@ -94,7 +93,7 @@ public interface _ObjectArray<T extends Object> extends Object {
 
     private static final Map<Class<?>, Class<? extends fabric.lang.Object._Proxy>> proxyCache =
         Collections
-            .synchronizedMap(new HashMap<Class<?>, Class<? extends fabric.lang.Object._Proxy>>());
+        .synchronizedMap(new HashMap<Class<?>, Class<? extends fabric.lang.Object._Proxy>>());
 
     /**
      * Given a Fabric class, returns the corresponding _Proxy class. If the
@@ -104,13 +103,15 @@ public interface _ObjectArray<T extends Object> extends Object {
      * fabric.lang.arrays are implemented in Fabric, which isn't able to talk
      * about the _Proxy classes.
      */
-    @SuppressWarnings("unchecked")
     private Class<? extends fabric.lang.Object._Proxy> getProxy(Class<?> c) {
       Class<? extends fabric.lang.Object._Proxy> result = proxyCache.get(c);
       if (result != null) return result;
 
       if (c.getSimpleName().equals("_Proxy")) {
-        result = (Class<? extends fabric.lang.Object._Proxy>) c;
+        @SuppressWarnings("unchecked")
+        Class<? extends fabric.lang.Object._Proxy> proxyClass =
+        (Class<? extends fabric.lang.Object._Proxy>) c;
+        result = proxyClass;
         proxyCache.put(c, result);
         return result;
       }
@@ -118,7 +119,10 @@ public interface _ObjectArray<T extends Object> extends Object {
       Class<?>[] classes = c.getClasses();
       for (Class<?> c_ : classes) {
         if (c_.getSimpleName().equals("_Proxy")) {
-          result = (Class<? extends fabric.lang.Object._Proxy>) c_;
+          @SuppressWarnings("unchecked")
+          Class<? extends fabric.lang.Object._Proxy> proxyClass =
+          (Class<? extends fabric.lang.Object._Proxy>) c_;
+          result = proxyClass;
           proxyCache.put(c, result);
           return result;
         }
@@ -134,27 +138,27 @@ public interface _ObjectArray<T extends Object> extends Object {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public T get(int i) {
       TransactionManager.getInstance().registerRead(this);
-      return (T) value[i];
+      @SuppressWarnings("unchecked")
+      T t = (T) value[i];
+      return t;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public T set(int i, T value) {
       boolean transactionCreated =
           TransactionManager.getInstance().registerWrite(this);
-      T result = (T) (this.value[i] = value);
+      this.value[i] = value;
       if (transactionCreated)
         TransactionManager.getInstance().commitTransaction();
-      return result;
+      return value;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
+      @SuppressWarnings("unchecked")
       _ObjectArray._Impl<T> src = (_ObjectArray._Impl<T>) other;
       value = src.value;
     }
@@ -172,12 +176,12 @@ public interface _ObjectArray<T extends Object> extends Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-        throws IOException {
+            throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeUTF(proxyType.getName());
       out.writeInt(value.length);
-      for (int i = 0; i < value.length; i++)
-        $writeRef($getStore(), value[i], refTypes, out, intraStoreRefs,
+      for (Object element : value)
+        $writeRef($getStore(), element, refTypes, out, intraStoreRefs,
             interStoreRefs);
     }
 
@@ -188,7 +192,7 @@ public interface _ObjectArray<T extends Object> extends Object {
   }
 
   public static class _Proxy<T extends Object> extends Object._Proxy implements
-      _ObjectArray<T> {
+  _ObjectArray<T> {
 
     public _Proxy(Store store, long onum) {
       super(store, onum);
@@ -199,19 +203,16 @@ public interface _ObjectArray<T extends Object> extends Object {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public int get$length() {
       return ((_ObjectArray<T>) fetch()).get$length();
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public T get(int i) {
       return ((_ObjectArray<T>) fetch()).get(i);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public T set(int i, T value) {
       return ((_ObjectArray<T>) fetch()).set(i, value);
     }

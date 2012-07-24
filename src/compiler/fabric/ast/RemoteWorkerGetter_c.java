@@ -46,7 +46,6 @@ public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
     return reconstruct(remoteWorkerName);
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     v.visitCFG(remoteWorkerName, this, EXIT);

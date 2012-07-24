@@ -1,12 +1,12 @@
 package fabil.visit;
 
-import fabil.ExtensionInfo;
-import fabil.extension.FabILExt;
-import fabil.types.FabILTypeSystem;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.qq.QQ;
 import polyglot.visit.NodeVisitor;
+import fabil.ExtensionInfo;
+import fabil.extension.FabILExt;
+import fabil.types.FabILTypeSystem;
 
 public class RemoteCallRewriter extends NodeVisitor {
   protected QQ qq;

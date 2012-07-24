@@ -60,7 +60,6 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  @SuppressWarnings("deprecation")
   public boolean prepareTransaction(long tid, long commitTime,
       Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws TransactionPrepareFailedException {
@@ -69,11 +68,17 @@ public class InProcessStore extends RemoteStore {
     Collection<SerializedObject> serializedWrites =
         new ArrayList<SerializedObject>(writes.size());
 
-    for (_Impl o : toCreate)
-      serializedCreates.add(new SerializedObject(o));
+    for (_Impl o : toCreate) {
+      @SuppressWarnings("deprecation")
+      SerializedObject serialized = new SerializedObject(o);
+      serializedCreates.add(serialized);
+    }
 
-    for (_Impl o : writes)
-      serializedWrites.add(new SerializedObject(o));
+    for (_Impl o : writes) {
+      @SuppressWarnings("deprecation")
+      SerializedObject serialized = new SerializedObject(o);
+      serializedWrites.add(serialized);
+    }
 
     PrepareRequest req =
         new PrepareRequest(tid, commitTime, serializedCreates,

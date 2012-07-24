@@ -67,12 +67,10 @@ public class TakeOwnershipMessage extends
         .readLong());
   }
 
-  @SuppressWarnings("unused")
   @Override
   public void writeResponse(DataOutput out, Response r) throws IOException {
   }
 
-  @SuppressWarnings("unused")
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     return new Response();

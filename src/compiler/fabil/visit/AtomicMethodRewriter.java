@@ -25,7 +25,6 @@ public class AtomicMethodRewriter extends NodeVisitor {
     this.nf = extInfo.nodeFactory();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node override(Node parent, Node n) {
     if (n instanceof MethodDecl) {

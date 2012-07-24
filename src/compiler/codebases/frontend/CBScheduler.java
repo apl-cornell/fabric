@@ -1,8 +1,7 @@
 package codebases.frontend;
 
-import fabric.common.FabricLocation;
-
 import polyglot.frontend.goals.Goal;
+import fabric.common.FabricLocation;
 
 /**
  * Ideally this interface would extend an interface that all schedulers

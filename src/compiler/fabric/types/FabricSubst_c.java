@@ -2,17 +2,16 @@ package fabric.types;
 
 import java.util.Map;
 
-import polyglot.types.ClassType;
-import polyglot.types.Type;
-
 import jif.types.JifClassType;
 import jif.types.JifSubst_c;
 import jif.types.JifTypeSystem;
 import jif.types.Param;
 import jif.types.ParamInstance;
+import polyglot.types.ClassType;
 
 public class FabricSubst_c extends JifSubst_c {
-  public FabricSubst_c(JifTypeSystem ts, Map<ParamInstance, Param> subst) {
+  public FabricSubst_c(JifTypeSystem ts,
+      Map<ParamInstance, ? extends Param> subst) {
     super(ts, subst);
   }
 

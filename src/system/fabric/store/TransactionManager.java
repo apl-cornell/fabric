@@ -516,7 +516,7 @@ public class TransactionManager {
             // create a promise
 
             if (database.isWritten(onum))
-            // object has been written - no promise for you!
+              // object has been written - no promise for you!
               return obj;
 
             // check to see if someone else has created a promise
@@ -611,14 +611,14 @@ public class TransactionManager {
    * Checks the given set of objects for staleness and returns a list of updates
    * for any stale objects found.
    */
-  @SuppressWarnings("unchecked")
   List<SerializedObject> checkForStaleObjects(Principal worker,
       LongKeyMap<Integer> versions) throws AccessException {
     // First, check read and write permissions.
     Store store = Worker.getWorker().getStore(database.getName());
     if (worker == null || worker.$getStore() != store
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
-      checkPerms(worker, versions.keySet(), Collections.EMPTY_LIST);
+      checkPerms(worker, versions.keySet(),
+          Collections.<SerializedObject> emptyList());
     }
 
     List<SerializedObject> result = new ArrayList<SerializedObject>();

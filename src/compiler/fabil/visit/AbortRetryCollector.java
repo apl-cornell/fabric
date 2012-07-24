@@ -2,9 +2,11 @@ package fabil.visit;
 
 import java.util.List;
 
-import fabil.ast.*;
 import polyglot.ast.Node;
 import polyglot.visit.NodeVisitor;
+import fabil.ast.AbortStmt;
+import fabil.ast.Atomic;
+import fabil.ast.RetryStmt;
 
 public class AbortRetryCollector extends NodeVisitor {
   protected List<AbortStmt> aborts;

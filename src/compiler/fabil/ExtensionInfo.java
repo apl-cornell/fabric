@@ -1,7 +1,6 @@
 package fabil;
 
 import static fabric.common.FabricLocationFactory.getLocation;
-import static java.io.File.pathSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,8 +11,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 
 import javax.tools.FileObject;
 import javax.tools.StandardJavaFileManager;
@@ -60,9 +59,9 @@ import fabil.types.FabILTypeSystem_c;
 import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
 import fabric.filemanager.FabricFileManager;
+import fabric.filemanager.FabricSourceObject;
 import fabric.lang.FClass;
 import fabric.lang.security.LabelUtil;
-import fabric.filemanager.FabricSourceObject;
 import fabric.worker.Worker;
 
 /**
@@ -252,7 +251,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
     if (Report.should_report("resolver", 3))
       Report.report(3, "Creating namespace resolver for " + ns);
 
-    FabILOptions opt = (FabILOptions) getOptions();
+    FabILOptions opt = getOptions();
     // XXX: Order is important here since the localnamespace may
     // by the platform namespace when compiling the runtime
     if (ns.equals(platformNamespace())) {

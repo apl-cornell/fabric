@@ -1,6 +1,5 @@
 package fabric.ast;
 
-import fabric.types.FabricTypeSystem;
 import polyglot.ast.ArrayTypeNode_c;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
@@ -8,6 +7,7 @@ import polyglot.ast.TypeNode;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
 import polyglot.visit.TypeBuilder;
+import fabric.types.FabricTypeSystem;
 
 public class FabricArrayTypeNode_c extends ArrayTypeNode_c implements
     FabricArrayTypeNode {

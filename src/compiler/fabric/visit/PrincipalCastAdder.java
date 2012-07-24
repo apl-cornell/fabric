@@ -1,6 +1,5 @@
 package fabric.visit;
 
-import fabric.types.FabricTypeSystem;
 import polyglot.ast.Cast;
 import polyglot.ast.Expr;
 import polyglot.ast.NodeFactory;
@@ -10,6 +9,7 @@ import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 import polyglot.visit.AscriptionVisitor;
+import fabric.types.FabricTypeSystem;
 
 public class PrincipalCastAdder extends AscriptionVisitor {
   public PrincipalCastAdder(Job job, TypeSystem ts, NodeFactory nf) {

@@ -3,12 +3,10 @@ package fabric.filemanager;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 import java.net.URI;
 
-import fabric.lang.FClass;
-
 import polyglot.filemanager.SourceObject;
+import fabric.lang.FClass;
 
 /**
  * FabricSourceObject represents an FClass associated with a particular

@@ -152,7 +152,6 @@ public class ProxyRewriter extends NodeVisitor {
     return target;
   }
 
-  @SuppressWarnings("unchecked")
   private CodeDecl produceShadowDecls(CodeDecl n) {
     Map<LocalInstance, String> shadows = shadowStack.peek();
 

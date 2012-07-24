@@ -25,7 +25,6 @@ public class JavaSkeletonCreator extends NodeVisitor {
     qq = new QQ(job.extensionInfo());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node parent, Node old, Node n, NodeVisitor v) {
     // For each class,

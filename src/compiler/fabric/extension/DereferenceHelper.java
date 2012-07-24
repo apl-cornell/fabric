@@ -1,14 +1,5 @@
 package fabric.extension;
 
-import fabric.types.FabricReferenceType;
-import fabric.types.FabricTypeSystem;
-import polyglot.ast.Expr;
-import polyglot.ast.Receiver;
-import polyglot.ast.Special;
-import polyglot.ast.TypeNode;
-import polyglot.types.SemanticException;
-import polyglot.util.InternalCompilerError;
-import polyglot.util.Position;
 import jif.ast.JifInstantiator;
 import jif.ast.Jif_c;
 import jif.types.ConstraintMessage;
@@ -18,6 +9,15 @@ import jif.types.NamedLabel;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
+import polyglot.ast.Expr;
+import polyglot.ast.Receiver;
+import polyglot.ast.Special;
+import polyglot.ast.TypeNode;
+import polyglot.types.SemanticException;
+import polyglot.util.InternalCompilerError;
+import polyglot.util.Position;
+import fabric.types.FabricReferenceType;
+import fabric.types.FabricTypeSystem;
 
 /**
  * A class containing code for checking access labels on dereferences.

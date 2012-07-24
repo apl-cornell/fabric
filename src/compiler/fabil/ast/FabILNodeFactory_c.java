@@ -41,7 +41,7 @@ import fabric.common.FabricLocation;
  * NodeFactory for FabIL extension.
  */
 public class FabILNodeFactory_c extends NodeFactory_c implements
-    FabILNodeFactory {
+FabILNodeFactory {
 
   public FabILNodeFactory_c() {
     super(new FabILExtFactory_c(), new FabILDelFactory_c());
@@ -128,9 +128,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @Override
   public ClassDecl ClassDecl(Position pos, Flags flags, Id name,
-      TypeNode superClass, @SuppressWarnings("rawtypes") List interfaces,
+      TypeNode superClass, List<TypeNode> interfaces,
       ClassBody body) {
-    @SuppressWarnings("unchecked")
     ClassDecl n =
         new ClassDecl_c(pos, flags, name, superClass,
             CollectionUtil.nonNullList(interfaces), body);
@@ -165,10 +164,9 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   // Constructors with fewer arguments ////////////////////////////////////////
 
-  @SuppressWarnings("unchecked")
   @Override
   public New New(Position pos, Expr outer, TypeNode objectType,
-      @SuppressWarnings("rawtypes") List args, ClassBody body) {
+      List<Expr> args, ClassBody body) {
     return New(pos, outer, objectType, null, args, body);
   }
 
@@ -229,9 +227,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return s;
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
-  public Call Call(Position pos, Receiver target, Id name, List args) {
+  public Call Call(Position pos, Receiver target, Id name, List<Expr> args) {
     return Call(pos, target, name, null, args);
   }
 
@@ -252,15 +249,13 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return n;
   }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public SourceFile SourceFile(Position pos, PackageNode packageName,
-      List imports, List decls) {
+      List<Import> imports, List<TopLevelDecl> decls) {
     return SourceFile(pos, packageName, Collections.EMPTY_LIST, imports, decls);
   }
 
   @Override
-  @SuppressWarnings({})
   public SourceFile SourceFile(Position pos, PackageNode packageName,
       List<CodebaseDecl> codebases, List<Import> imports,
       List<TopLevelDecl> decls) {

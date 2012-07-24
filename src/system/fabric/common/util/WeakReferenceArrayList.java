@@ -19,9 +19,10 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
 
   private int modCount;
 
-  @SuppressWarnings("unchecked")
   public WeakReferenceArrayList() {
-    data = new WeakReference[10];
+    @SuppressWarnings("unchecked")
+    WeakReference<T>[] tmp = new WeakReference[10];
+    data = tmp;
     size = 0;
     modCount = 0;
   }
@@ -65,7 +66,6 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
     size = compactedSize;
   }
 
-  @SuppressWarnings("unchecked")
   private void ensureCapacity(int minCapacity) {
     compactData();
 
@@ -74,6 +74,7 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
       int newCap = current * 2;
       if (minCapacity > newCap) newCap = minCapacity;
 
+      @SuppressWarnings("unchecked")
       WeakReference<T>[] newData = new WeakReference[newCap];
       for (int i = 0; i < size; i++) {
         newData[i] = data[i];

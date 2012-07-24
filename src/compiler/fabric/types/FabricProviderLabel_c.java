@@ -1,10 +1,9 @@
 package fabric.types;
 
-import polyglot.types.ParsedClassType;
-
 import jif.translate.LabelToJavaExpr;
 import jif.types.JifClassType;
 import jif.types.label.ProviderLabel_c;
+import polyglot.types.ParsedClassType;
 import codebases.frontend.ExtensionInfo;
 import codebases.types.CodebaseClassType;
 import fabric.common.FabricLocation;

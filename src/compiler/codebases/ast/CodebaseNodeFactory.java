@@ -2,8 +2,6 @@ package codebases.ast;
 
 import java.util.List;
 
-import fabric.common.FabricLocation;
-
 import polyglot.ast.Id;
 import polyglot.ast.Import;
 import polyglot.ast.NodeFactory;
@@ -12,6 +10,7 @@ import polyglot.ast.SourceFile;
 import polyglot.ast.TopLevelDecl;
 import polyglot.types.Package;
 import polyglot.util.Position;
+import fabric.common.FabricLocation;
 
 public interface CodebaseNodeFactory extends NodeFactory {
   SourceFile SourceFile(Position pos, PackageNode packageName,

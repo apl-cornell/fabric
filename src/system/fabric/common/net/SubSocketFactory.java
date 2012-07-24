@@ -1,12 +1,13 @@
 package fabric.common.net;
 
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.SocketAddress;

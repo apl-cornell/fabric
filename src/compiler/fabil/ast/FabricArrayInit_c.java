@@ -20,7 +20,7 @@ import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
 public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
-    Annotated {
+Annotated {
 
   protected Expr location;
   protected Expr label;
@@ -36,7 +36,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   }
 
   @Override
-  public FabricArrayInit elements(@SuppressWarnings("rawtypes") List elements) {
+  public FabricArrayInit elements(List<Expr> elements) {
     return (FabricArrayInit) super.elements(elements);
   }
 
@@ -95,7 +95,6 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
     return this;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node visitChildren(NodeVisitor v) {
     List<Expr> elements = visitList(this.elements, v);
@@ -154,8 +153,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   }
 
   @Override
-  @SuppressWarnings("rawtypes")
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     Term last = null;
 
     if (accessPolicy != null) {
@@ -190,7 +188,6 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
     return succs;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node copy(NodeFactory nf) {
     FabILNodeFactory filNf = (FabILNodeFactory) nf;

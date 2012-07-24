@@ -1,13 +1,13 @@
 package fabric.ast;
 
-import fabric.types.FabricTypeSystem;
+import jif.ast.AmbPrincipalNode_c;
 import polyglot.ast.Expr;
 import polyglot.ast.Id;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
-import jif.ast.AmbPrincipalNode_c;
+import fabric.types.FabricTypeSystem;
 
 /**
  * In Fabric, objects of <code>Worker</code> and <code>RemoteWorker</code> are

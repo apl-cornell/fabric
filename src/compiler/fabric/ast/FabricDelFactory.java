@@ -1,7 +1,7 @@
 package fabric.ast;
 
-import polyglot.ast.JL;
 import jif.ast.JifDelFactory;
+import polyglot.ast.JL;
 
 /** Factory for delegates for all of the AST nodes in the Fabric language. */
 public interface FabricDelFactory extends JifDelFactory {

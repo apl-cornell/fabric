@@ -15,7 +15,12 @@ import fabric.common.exceptions.UsageError;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 import fabric.worker.admin.WorkerAdmin;
-import fabric.worker.shell.*;
+import fabric.worker.shell.ChainedCommandSource;
+import fabric.worker.shell.CommandSource;
+import fabric.worker.shell.DummyCommandSource;
+import fabric.worker.shell.InteractiveCommandSource;
+import fabric.worker.shell.TokenizedCommandSource;
+import fabric.worker.shell.WorkerShell;
 
 /**
  * The Node class encapsulates the shared resources for multiple stores and

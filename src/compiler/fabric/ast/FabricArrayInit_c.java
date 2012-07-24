@@ -28,7 +28,6 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     this.label = label;
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
   public FabricArrayInit elements(List elements) {
     return (FabricArrayInit) super.elements(elements);
@@ -73,7 +72,6 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     return this;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node visitChildren(NodeVisitor v) {
     List<Expr> elements = visitList(this.elements, v);
@@ -87,7 +85,6 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     return ((FabricTypeSystem) ts).fabricArrayOf(position(), baseType);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node copy(NodeFactory nf) {
     FabricNodeFactory fabNF = (FabricNodeFactory) nf;

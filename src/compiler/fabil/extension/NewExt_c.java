@@ -13,7 +13,6 @@ import fabil.visit.ProxyRewriter;
 
 public class NewExt_c extends AnnotatedExt_c {
 
-  @SuppressWarnings("unchecked")
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     New call = node();

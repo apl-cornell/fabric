@@ -34,7 +34,6 @@ public class AmbNewFabricArray_c extends AmbNewArray_c implements
     return result;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
     Expr expr = (Expr) super.disambiguate(ar);

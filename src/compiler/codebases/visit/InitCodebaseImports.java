@@ -28,7 +28,6 @@ public class InitCodebaseImports extends InitImportsVisitor {
     this.ts = ts;
   }
 
-  @SuppressWarnings("unused")
   @Override
   public NodeVisitor enterCall(Node n) throws SemanticException {
     if (n instanceof SourceFile) {

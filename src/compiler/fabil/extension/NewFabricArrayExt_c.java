@@ -40,7 +40,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
     if (newArray.dims().size() < 1)
       throw new InternalCompilerError("Missing array dimension");
 
-    Expr size = (Expr) newArray.dims().get(0);
+    Expr size = newArray.dims().get(0);
 
     Type baseType = newArray.type().toArray().base();
     Type arrayImplType = ts.fabricRuntimeArrayImplOf(baseType);

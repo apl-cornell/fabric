@@ -21,7 +21,7 @@ import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
 public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
-    Annotated {
+Annotated {
 
   protected Expr label;
   protected Expr location;
@@ -104,7 +104,6 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     return this;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node visitChildren(NodeVisitor v) {
     TypeNode baseType = (TypeNode) visitChild(this.baseType, v);
@@ -129,7 +128,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     if (!ts.isFabricType(result.baseType)) {
       throw new SemanticException(
           "Non-Fabric objects cannot be stored in Fabric arrays.", node()
-              .position());
+          .position());
     }
 
     if (location != null) {
@@ -155,9 +154,8 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     return result;
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     if (init != null) {
       v.visitCFG(baseType, listChild(dims, init), ENTRY);
       v.visitCFGList(dims, init, ENTRY);
@@ -214,7 +212,6 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     return succs;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node copy(NodeFactory nf) {
     FabILNodeFactory filNf = (FabILNodeFactory) nf;

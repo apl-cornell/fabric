@@ -3,8 +3,8 @@ package fabric.worker;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 
-import fabric.worker.transaction.ReadMapEntry;
 import fabric.lang.Object._Impl;
+import fabric.worker.transaction.ReadMapEntry;
 
 public class FabricSoftRef extends SoftReference<_Impl> {
 

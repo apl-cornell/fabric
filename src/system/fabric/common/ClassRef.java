@@ -146,11 +146,14 @@ public abstract class ClassRef implements FastSerializable {
    *          the interface corresponding to the Fabric type, and not the _Proxy
    *          or _Impl classes.
    */
-  @SuppressWarnings("unchecked")
   public static ClassRef makeRef(Class<?> clazz) {
     if (NSUtil.isPlatformName(clazz.getName()))
       return new PlatformClassRef(clazz);
-    return new FabricClassRef((Class<? extends fabric.lang.Object>) clazz);
+
+    @SuppressWarnings("unchecked")
+    Class<? extends fabric.lang.Object> fabClass =
+    (Class<? extends fabric.lang.Object>) clazz;
+    return new FabricClassRef(fabClass);
   }
 
   /**
@@ -183,13 +186,15 @@ public abstract class ClassRef implements FastSerializable {
    *           if no _Impl class is found (usually because this is either a Java
    *           class or a Fabric interface)
    */
-  @SuppressWarnings("unchecked")
   public Class<? extends _Impl> toImplClass() {
+    @SuppressWarnings("unchecked")
     Class<? extends Object> outer = (Class<? extends Object>) toClass();
 
     if (outer.equals(Surrogate.class)) {
       // Special case for Surrogate: it itself is an _Impl class.
-      return (Class<? extends _Impl>) outer;
+      @SuppressWarnings("unchecked")
+      Class<? extends _Impl> implClass = (Class<? extends _Impl>) outer;
+      return implClass;
     }
 
     Class<? extends _Impl> result = SysUtil.getImplClass(outer);
@@ -206,12 +211,13 @@ public abstract class ClassRef implements FastSerializable {
    *           if no _Proxy class is found (usually because this is not a Fabric
    *           class)
    */
-  @SuppressWarnings("unchecked")
   public Class<? extends fabric.lang.Object._Proxy> toProxyClass() {
     Class<?> outer = toClass();
     for (Class<?> c : outer.getClasses()) {
       if (c.getSimpleName().equals("_Proxy")) {
-        return (Class<? extends _Proxy>) c;
+        @SuppressWarnings("unchecked")
+        Class<? extends _Proxy> proxyClass = (Class<? extends _Proxy>) c;
+        return proxyClass;
       }
     }
 
@@ -518,12 +524,12 @@ public abstract class ClassRef implements FastSerializable {
       return SysUtil.hashFClass(this);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public final Class<? extends fabric.lang.Object> toClass() {
       try {
-        return (Class<? extends Object>) Worker.getWorker().getClassLoader()
-            .loadClass(javaClassName());
+        return
+            (Class<? extends Object>) Worker.getWorker().getClassLoader()
+                .loadClass(javaClassName());
       } catch (ClassNotFoundException e) {
         throw new InternalError(e);
       }
@@ -656,7 +662,7 @@ public abstract class ClassRef implements FastSerializable {
     private static int storeNameLength(byte[] data, int pos) {
       int x =
           SerializationUtil
-              .unsignedShortAt(data, storeNameLengthPos(data, pos));
+          .unsignedShortAt(data, storeNameLengthPos(data, pos));
       return x;
     }
 

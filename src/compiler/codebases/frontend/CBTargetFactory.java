@@ -2,11 +2,10 @@ package codebases.frontend;
 
 import javax.tools.JavaFileObject;
 
-import fabric.common.FabricLocation;
-
 import polyglot.filemanager.FileManager;
 import polyglot.frontend.Source;
 import polyglot.frontend.TargetFactory;
+import fabric.common.FabricLocation;
 
 public class CBTargetFactory extends TargetFactory {
   protected final ExtensionInfo extInfo;

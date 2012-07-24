@@ -44,7 +44,6 @@ public class AtomicRewriter extends NodeVisitor {
     return (FabILExt) n.ext();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     Node result = ext(n).rewriteAtomic(this);
@@ -56,7 +55,7 @@ public class AtomicRewriter extends NodeVisitor {
 
       if (mi != null && !mi.returnType().equals(ts.Void()) && md.body() != null) {
         boolean endWithAtomic = false;
-        for (Stmt s : (List<Stmt>) md.body().statements()) {
+        for (Stmt s : md.body().statements()) {
           if (s instanceof Atomic) {
             endWithAtomic = true;
           } else {

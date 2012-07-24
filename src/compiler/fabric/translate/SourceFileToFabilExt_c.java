@@ -15,7 +15,6 @@ public class SourceFileToFabilExt_c extends SourceFileToJavaExt_c {
   /**
    * @throws SemanticException
    */
-  @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     CBSourceFile n = (CBSourceFile) node();

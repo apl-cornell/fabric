@@ -39,7 +39,6 @@ public class CallJifExt_c extends JifCallExt {
     super(toJava);
   }
 
-  @SuppressWarnings("unchecked")
   protected void labelCheckArgs(LabelChecker lc, Call c,
       List<Label> actualLabels) throws SemanticException {
     JifContext A = lc.context();
@@ -49,7 +48,7 @@ public class CallJifExt_c extends JifCallExt {
     PathMap Xj = ts.pathMap();
     Xj = Xj.N(A.pc());
 
-    for (Expr arg : (List<Expr>) c.arguments()) {
+    for (Expr arg : c.arguments()) {
       // A[pc := X_{j-1}[N]] |- Ej : Xj
       A = (JifContext) A.pushBlock();
       A.setPc(Xj.N(), lc);
@@ -69,7 +68,6 @@ public class CallJifExt_c extends JifCallExt {
     // return Xjoin;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
     Node n = super.labelCheck(lc);

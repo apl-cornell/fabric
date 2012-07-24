@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
 import polyglot.ast.Ext;
 import polyglot.ast.NodeFactory;
 import polyglot.main.Version;
@@ -24,9 +25,8 @@ public class ClassSerializer extends polyglot.visit.ClassSerializer {
     this.sig_mode = signatureMode;
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public List createSerializationMembers(ClassDecl cd) {
+  public List<ClassMember> createSerializationMembers(ClassDecl cd) {
     Ext ext = cd.ext();
     if (sig_mode || ext instanceof ClassDeclExt_c
         && ((ClassDeclExt_c) ext).shouldSerializeType()) {

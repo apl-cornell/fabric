@@ -1,8 +1,19 @@
 package fabil.visit;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Assign;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
+import polyglot.ast.Expr;
+import polyglot.ast.FieldDecl;
+import polyglot.ast.Id;
+import polyglot.ast.MethodDecl;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
+import polyglot.ast.Return;
+import polyglot.ast.Stmt;
 import polyglot.frontend.Job;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
@@ -49,7 +60,6 @@ public class Memoizer extends NodeVisitor {
     return this;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     Memoizer mv = (Memoizer) v;
@@ -86,7 +96,6 @@ public class Memoizer extends NodeVisitor {
     return n;
   }
 
-  @SuppressWarnings("unchecked")
   protected MethodDecl transform(MethodDecl md, MethodInstance mi) {
     Id flagId = nf.Id(Position.compilerGenerated(), flagName);
     Id valueId = nf.Id(Position.compilerGenerated(), valueName);

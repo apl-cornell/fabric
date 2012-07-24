@@ -17,6 +17,7 @@ import polyglot.ast.Call;
 import polyglot.ast.CanonicalTypeNode;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
 import polyglot.ast.Disamb;
 import polyglot.ast.Expr;
 import polyglot.ast.Id;
@@ -48,7 +49,7 @@ import fabric.extension.LocatedExt_c;
  * NodeFactory for fabric extension.
  */
 public class FabricNodeFactory_c extends JifNodeFactory_c implements
-    FabricNodeFactory {
+FabricNodeFactory {
 
   // ////////////////////////////////////////////////////////////////////////////
   // public constructors //
@@ -220,16 +221,15 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     return result;
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public New New(Position pos, Expr outer, TypeNode objectType, List args,
+  public New New(Position pos, Expr outer, TypeNode objectType,
+      List<Expr> args,
       ClassBody body) {
     if (body != null)
       throw new InternalCompilerError("Fabric does not support inner classes.");
     if (outer != null)
       throw new InternalCompilerError("Fabric does not support inner classes.");
 
-    @SuppressWarnings("unchecked")
     New n = new FabricNew_c(pos, objectType, args, body);
     n = (New) n.ext(extFactory().extNew());
     n = (New) n.del(delFactory().delNew());
@@ -290,10 +290,9 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   // overridden factory methods //
   // ////////////////////////////////////////////////////////////////////////////
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public ClassDecl ClassDecl(Position pos, Flags flags, Id name,
-      TypeNode superClass, List interfaces, ClassBody body) {
+      TypeNode superClass, List<TypeNode> interfaces, ClassBody body) {
     ClassDecl n =
         new ClassDecl_c(pos, flags, name, Collections.<ParamDecl> emptyList(),
             superClass, interfaces, Collections.<PrincipalNode> emptyList(),
@@ -326,19 +325,16 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     return n;
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public ClassBody ClassBody(Position pos, List members) {
-    @SuppressWarnings("unchecked")
+  public ClassBody ClassBody(Position pos, List<ClassMember> members) {
     ClassBody n = new ClassBody_c(pos, CollectionUtil.nonNullList(members));
     n = (ClassBody) n.ext(extFactory().extClassBody());
     n = (ClassBody) n.del(delFactory().delClassBody());
     return n;
   }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public Call Call(Position pos, Receiver target, Id name, List args) {
+  public Call Call(Position pos, Receiver target, Id name, List<Expr> args) {
     return Call(pos, target, name, null, args);
   }
 
@@ -372,10 +368,9 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     return n;
   }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public SourceFile SourceFile(Position pos, PackageNode packageName,
-      List imports, List decls) {
+      List<Import> imports, List<TopLevelDecl> decls) {
     return SourceFile(pos, packageName, Collections.EMPTY_LIST, imports, decls);
   }
 

@@ -1,11 +1,11 @@
 package fabric.types;
 
-import polyglot.types.FieldInstance;
-import polyglot.types.Type;
-import polyglot.util.Position;
 import jif.types.ConstArrayType_c;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
+import polyglot.types.FieldInstance;
+import polyglot.types.Type;
+import polyglot.util.Position;
 
 /**
  * The only ArrayType class created by the FabricTypeSystem.
@@ -45,7 +45,6 @@ public class FabricArrayType_c extends ConstArrayType_c implements
     return (FabricTypeSystem) ts;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   protected void init() {
     boolean fixField = fields == null;

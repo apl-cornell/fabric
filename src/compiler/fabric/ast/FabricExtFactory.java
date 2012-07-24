@@ -1,7 +1,7 @@
 package fabric.ast;
 
-import polyglot.ast.Ext;
 import jif.ast.JifExtFactory;
+import polyglot.ast.Ext;
 
 /**
  * Factory for extensions for all of the AST nodes in the Fabric language. Note

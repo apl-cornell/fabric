@@ -157,7 +157,6 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * @see Cloneable
    * @see Object#clone()
    */
-  @SuppressWarnings("unchecked")
   @Override
   protected Object clone() throws CloneNotSupportedException {
     AbstractLongKeyMap<V> copy = (AbstractLongKeyMap<V>) super.clone();
@@ -223,11 +222,10 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * @return true if the object equals this map
    * @see Set#equals(Object)
    */
-  @SuppressWarnings("unchecked")
   @Override
   public boolean equals(Object o) {
     return (o == this || (o instanceof LongKeyMap && entrySet().equals(
-        ((LongKeyMap<V>) o).entrySet())));
+        ((LongKeyMap<?>) o).entrySet())));
   }
 
   /**

@@ -56,6 +56,6 @@ public class InstanceOfToFabilExt_c extends InstanceOfToJavaExt_c {
     if (fct.flags().isInterface()) {
         jifImplClass = ClassDeclToJavaExt_c.interfaceClassImplName(jifImplClass);
     }
-    return ffrw.qq().parseExpr(jifImplClass + "." + ClassDeclToFabilExt_c.INSTANCEOF_METHOD_NAME + "(%LE)", (Object)args);
+    return ffrw.qq().parseExpr(jifImplClass + "." + ClassDeclToJavaExt_c.INSTANCEOF_METHOD_NAME + "(%LE)", (Object)args);
   }
 }

@@ -2,7 +2,12 @@ package fabric.ast;
 
 import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
-import fabric.extension.*;
+import fabric.extension.FabricExt;
+import fabric.extension.NewExt_c;
+import fabric.extension.NewFabricArrayExt_c;
+import fabric.extension.NewLabelExt_c;
+import fabric.extension.NodeExt_c;
+import fabric.extension.PrincipalExprExt_c;
 
 /**
  * This class constructs {@link FabricExt} objects for the Fabric language

@@ -2,12 +2,11 @@ package fabric.filemanager;
 
 import static java.io.File.separatorChar;
 
-import java.lang.Iterable;
-import java.net.URI;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,13 +17,11 @@ import javax.tools.JavaFileObject.Kind;
 import polyglot.frontend.FileSource;
 import polyglot.main.Options;
 import polyglot.util.InternalCompilerError;
-
 import codebases.frontend.ExtensionInfo;
-
 import fabil.types.ClassFile;
 import fabric.common.FabricLocation;
-import fabric.common.NSUtil;
 import fabric.common.FabricLocationFactory;
+import fabric.common.NSUtil;
 
 /**
  * FileManager implementation for Fabric - a class that provides input and

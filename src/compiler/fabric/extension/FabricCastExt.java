@@ -1,14 +1,14 @@
 package fabric.extension;
 
-import fabric.types.FabricReferenceType;
+import jif.extension.JifCastExt;
+import jif.translate.ToJavaExt;
+import jif.visit.LabelChecker;
 import polyglot.ast.Cast;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.ast.TypeNode;
 import polyglot.types.SemanticException;
-import jif.extension.JifCastExt;
-import jif.translate.ToJavaExt;
-import jif.visit.LabelChecker;
+import fabric.types.FabricReferenceType;
 
 public class FabricCastExt extends JifCastExt {
 
