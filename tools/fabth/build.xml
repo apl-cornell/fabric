@@ -132,6 +132,13 @@
       <arg value="${symbol.class}" />
       <arg value="${cup.file}" />
     </java>
+    <replaceregexp
+      file="${parser.dir}/${parser.class}.java"
+      match="^(public )?class"
+      replace="@SuppressWarnings(&quot;all&quot;) \1class"
+      flags="g"
+      byline="yes"
+      />
   </target>
 
   <target name="cup-parser-deps">
