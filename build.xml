@@ -325,7 +325,7 @@
       <arg value="-nooutput" />
       <arg value="-classpath" />
       <arg value="${bootstrap.classes}" />
-      <arg value="-bootclasspath" />
+      <arg value="-addbootcp" />
       <arg value="${bootstrap.classes}:${polyglot.classpath}" />
       <arg value="-sigcp" />
       <arg value="${signatures.fabil.src}:${runtime.src}" />
@@ -549,9 +549,8 @@
       <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg line="${debug.flag}" />
-      <arg value="-bootclasspath" />
+      <arg value="-addbootcp" />
       <arg value="${runtime.src}:${bootstrap.classes}" />
-      <arg value="-O0" />
       <arg value="-d" />
       <arg value="${runtime.classes}" />
       <arg value="-platform-mode"/>
@@ -574,14 +573,13 @@
         vmlauncher="false">
       <arg value="${filc}" />
       <arg line="${debug.flag}" />
-      <arg value="-O0" />
       <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg value="-j" />
       <arg value="-Xms256M" />
       <arg value="-d" />
       <arg value="${runtime.classes}" />
-      <arg value="-bootclasspath" />
+      <arg value="-addbootcp" />
       <arg value="${runtime.classes}:${runtime.src}:${polyglot.classpath}:${bootstrap.classes}" />
       <arg value="-platform-mode"/>
       <srcfile />
@@ -606,10 +604,11 @@
       <arg line="${debug.flag}" />
       <arg value="-j" />
       <arg value="-Xms256M" />
-      <arg value="-O0" />
       <arg value="-e" />
+      <!--
       <arg value="-bootclasspath" />
       <arg value="${runtime.classes}:${classes}"/>
+      -->
       <arg value="-trusted-providers" />
       <arg value="-d" />
       <arg value="${runtime.classes}" />
