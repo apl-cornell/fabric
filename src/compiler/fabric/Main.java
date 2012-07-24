@@ -102,8 +102,8 @@ public class Main extends polyglot.main.Main {
       args.add("-bootclasspath");
       args.add(worker.bootcp);
     }
-    if (worker.outputToLocalFS) {
-      args.add("-output-to-fs");
+    if (!worker.outputToLocalFS) {
+      args.add("-no-output-to-fs");
     }
 
     URI cb = NSUtil.namespace(fcls.getCodebase());
@@ -125,7 +125,7 @@ public class Main extends polyglot.main.Main {
           new String[] { "$_Impl", "$_Proxy", "$_Static", "$_Static$_Impl",
               "$_Static$_Proxy" };
       for (JavaFileObject jfo : outputFiles) {
-        String fname = jfo.getName();
+        String fname = jfo.toUri().getPath();
         int e = fname.lastIndexOf(".java");
         String baseFileName = fname.substring(0, e);
         String baseClassName = baseFileName.substring(outputDirPathLen);
