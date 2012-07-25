@@ -4,6 +4,11 @@ public class RemoteCall04 {
   int i;
   RemoteCall04 child;
 
+  public RemoteCall04 system$RemoteCall04$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
   public void m() {
     i++;
 
@@ -20,7 +25,7 @@ public class RemoteCall04 {
     Store store = Worker.getWorker().getStore("store0");
     RemoteWorker remoteWorker = Worker.getWorker().getWorker("store0");
     atomic {
-      t = new RemoteCall04@store();
+      t = new RemoteCall04@store().system$RemoteCall04$();
       t.i = 10;
       t.m_remote@remoteWorker(Worker.getWorker().getPrincipal());
       t.child.i = 42;

@@ -3,6 +3,11 @@ package system;
 public class RemoteCall05 {
   int i = 0;
 
+  public RemoteCall05 system$RemoteCall05$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
   public void f_store0(int n) {
     if (n <= 0) return;
 
@@ -34,7 +39,7 @@ public class RemoteCall05 {
     RemoteCall05 t = null;
     int result1 = 0;
     atomic {
-      t = new RemoteCall05@store();
+      t = new RemoteCall05@store().system$RemoteCall05$();
       t.f_store0(5);
       result1 = t.i;
     }
