@@ -341,7 +341,7 @@ public abstract class ClassRef implements FastSerializable {
       } catch (ClassNotFoundException e) {
         throw new InternalError(e);
       }
-      checkHash(classHash(data, pos));
+//      checkHash(classHash(data, pos));
     }
 
     /**
@@ -359,7 +359,7 @@ public abstract class ClassRef implements FastSerializable {
 
       byte[] hash = new byte[in.readShort()];
       in.readFully(hash);
-      checkHash(hash);
+//      checkHash(hash);
     }
 
     /**
