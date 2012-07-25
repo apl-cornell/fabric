@@ -3,8 +3,8 @@ package fabric.types;
 import jif.types.Equation;
 import jif.types.JifTypeSystem;
 import jif.types.SolverGLB;
-import jif.types.VarMap;
 import jif.types.UnsatisfiableConstraintException;
+import jif.types.VarMap;
 import polyglot.types.SemanticException;
 
 /**

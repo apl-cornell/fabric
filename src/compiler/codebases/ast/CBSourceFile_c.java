@@ -56,20 +56,19 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
   }
 
   /** Visit the children of the source file. */
-  @SuppressWarnings("rawtypes")
   @Override
   public Node visitChildren(NodeVisitor v) {
     PackageNode package_ = (PackageNode) visitChild(this.package_, v);
-    List codebases = visitList(this.codebases, v);
-    List imports = visitList(this.imports, v);
-    List decls = visitList(this.decls, v);
+    List<CodebaseDecl> codebases = visitList(this.codebases, v);
+    List<Import> imports = visitList(this.imports, v);
+    List<TopLevelDecl> decls = visitList(this.decls, v);
     return reconstruct(package_, codebases, imports, decls);
   }
 
   /** Reconstruct the source file. */
-  @SuppressWarnings("rawtypes")
-  protected CBSourceFile_c reconstruct(PackageNode package_, List codebases,
-      List imports, List decls) {
+  protected CBSourceFile_c reconstruct(PackageNode package_,
+      List<CodebaseDecl> codebases, List<Import> imports,
+      List<TopLevelDecl> decls) {
     if (package_ != this.package_
         || !CollectionUtil.equals(imports, this.imports)
         || !CollectionUtil.equals(decls, this.decls)
@@ -95,7 +94,6 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
     return n;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node copy(NodeFactory nf) {
     return ((CodebaseNodeFactory) nf).SourceFile(this.position, this.package_,

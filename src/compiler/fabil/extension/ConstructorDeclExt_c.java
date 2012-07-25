@@ -26,7 +26,6 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
     return Collections.singletonList((ClassMember) node);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {
     // Need to add a $location argument to the constructor declaration if the

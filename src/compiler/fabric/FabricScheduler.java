@@ -261,11 +261,11 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
 
   private Goal allFClassesGenerated =
       new Barrier("allFClassesGenerated", this) {
-        @Override
-        public Goal goalForJob(Job j) {
-          return FClassGenerated(j);
-        }
-      };
+    @Override
+    public Goal goalForJob(Job j) {
+      return FClassGenerated(j);
+    }
+  };
 
   public Goal AllFClassesGenerated() {
     return allFClassesGenerated;
@@ -324,7 +324,6 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     NodeFactory nf = extInfo.nodeFactory();
     Goal g =
         internGoal(new VisitorGoal(job, new FabricExceptionChecker(job, ts, nf)) {
-          @SuppressWarnings("unchecked")
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
             List<Goal> l = new ArrayList<Goal>();
@@ -357,7 +356,6 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
 
   public Goal FabILSkeletonGenerated(final Job job) {
     Goal g = internGoal(new AbstractGoal(job) {
-      @SuppressWarnings("unchecked")
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
@@ -377,7 +375,6 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     return g;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public boolean runToCompletion() {
     long startTime = System.currentTimeMillis();
@@ -394,7 +391,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     }
     if (fab_complete) {
       // Create a goal to compile every source file.
-      for (Job job : (Collection<Job>) filext.scheduler().jobs()) {
+      for (Job job : filext.scheduler().jobs()) {
         filext.scheduler().addGoal(filext.getCompileGoal(job));
       }
       return filext.scheduler().runToCompletion();

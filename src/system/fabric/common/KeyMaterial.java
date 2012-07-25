@@ -1,5 +1,7 @@
 package fabric.common;
 
+import static fabric.common.Logging.KEY_LOGGER;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -7,7 +9,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.cert.Certificate;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -16,6 +17,7 @@ import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
@@ -30,8 +32,6 @@ import javax.security.auth.x500.X500Principal;
 import fabric.common.exceptions.InternalError;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.Worker;
-
-import static fabric.common.Logging.KEY_LOGGER;
 
 /**
  * Convenience class for managing the keystores used by fabric nodes. Setter

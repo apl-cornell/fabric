@@ -2,7 +2,6 @@ package fabric.store.db;
 
 import java.security.PrivateKey;
 
-import fabric.worker.Store;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -10,6 +9,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongSet;
 import fabric.dissemination.Glob;
 import fabric.lang.security.Principal;
+import fabric.worker.Store;
 
 /**
  * A group container contains a group or a glob, and supports converting between

@@ -24,7 +24,6 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
     super(pos, flags, name, superClass, interfaces, body);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   protected ClassDecl_c disambiguateSupertypes(AmbiguityRemover ar)
       throws SemanticException {
@@ -35,7 +34,7 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
         supertypesResolved = false;
       }
 
-      for (TypeNode tn : (List<TypeNode>) interfaces) {
+      for (TypeNode tn : interfaces) {
         if (!tn.isDisambiguated()) {
           supertypesResolved = false;
         }

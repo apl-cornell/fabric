@@ -21,10 +21,10 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.tools.FileObject;
+import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
-import javax.tools.JavaCompiler.CompilationTask;
 
 import polyglot.frontend.Compiler;
 import polyglot.frontend.ExtensionInfo;
@@ -38,7 +38,6 @@ import polyglot.util.QuotedStringTokenizer;
 import polyglot.util.StdErrorQueue;
 import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
-import fabric.filemanager.FabricFileManager;
 import fabric.filemanager.ClassObject;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
@@ -118,12 +117,12 @@ public class Main extends polyglot.main.Main {
       Collection<JavaFileObject> outputFiles = main.compiler.outputFiles();
       int outputDirPathLen =
           extInfo.getOptions().outputLocation().getUri().getPath()
-              .length();
+          .length();
       Map<URI, JavaFileObject> absPathObjMap =
           extInfo.extFileManager().getAbsPathObjMap();
       String[] suffixes =
           new String[] { "$_Impl", "$_Proxy", "$_Static", "$_Static$_Impl",
-              "$_Static$_Proxy" };
+      "$_Static$_Proxy" };
       for (JavaFileObject jfo : outputFiles) {
         String fname = jfo.toUri().getPath();
         int e = fname.lastIndexOf(".java");
@@ -149,22 +148,22 @@ public class Main extends polyglot.main.Main {
         }
 
         // load member classes
-        for (int i = 0; i < suffixes.length; i++) {
-          String fileName = baseFileName + suffixes[i];
+        for (String suffixe : suffixes) {
+          String fileName = baseFileName + suffixe;
           classFile = new File(fileName + ".class");
           classUri = classFile.toURI();
           if (worker.outputToLocalFS) {
             if (classFile.exists()) {
               if (Report.should_report(Topics.mobile, 2))
                 Report.report(1, "Inserting bytecode for " + classUri);
-              bytecodeMap.put(baseClassName + suffixes[i],
+              bytecodeMap.put(baseClassName + suffixe,
                   getBytecode(classFile));
             }
           } else {
             if (absPathObjMap.containsKey(classUri)) {
               if (Report.should_report(Topics.mobile, 2))
                 Report.report(1, "Inserting bytecode for " + classUri);
-              bytecodeMap.put(baseClassName + suffixes[i],
+              bytecodeMap.put(baseClassName + suffixe,
                   getBytecode(absPathObjMap.get(classUri)));
             }
           }
@@ -326,8 +325,8 @@ public class Main extends polyglot.main.Main {
               File f = new File(opt.codebaseFilename());
               if (!f.isAbsolute())
                 f =
-                    new File(opt.outputLocation().getUri().getPath(), f
-                        .getPath());
+                new File(opt.outputLocation().getUri().getPath(), f
+                    .getPath());
               FileWriter fw;
               try {
                 fw = new FileWriter(f);
@@ -374,9 +373,9 @@ public class Main extends polyglot.main.Main {
   private List<String> argsToList(String[] args) throws TerminationException {
     LinkedList<String> ll = new LinkedList<String>();
 
-    for (int i = 0; i < args.length; i++) {
+    for (String arg : args) {
       // special case for the @ command-line parameter
-      ll.add(args[i]);
+      ll.add(arg);
     }
 
     return ll;
@@ -437,7 +436,7 @@ public class Main extends polyglot.main.Main {
           if (options.generate_debugging_info) optionsSize++;
           String[] javacCmd =
               new String[pcSize + optionsSize + compiler.outputFiles().size()
-                  - 1];
+                         - 1];
           int j = 0;
           // skip "javac"
           st.nextToken();
@@ -459,13 +458,13 @@ public class Main extends polyglot.main.Main {
 
           if (Report.should_report(verbose, 1)) {
             StringBuffer cmdStr = new StringBuffer();
-            for (int i = 0; i < javacCmd.length; i++)
-              cmdStr.append(javacCmd[i] + " ");
+            for (String element : javacCmd)
+              cmdStr.append(element + " ");
             Report.report(1, "Executing post-compiler " + cmdStr);
           }
 
           int exitVal = com.sun.tools.javac.Main.compile(javacCmd);
-          
+
           if (!options.keep_output_files) {
             for (FileObject fo : compiler.outputFiles())
               fo.delete();

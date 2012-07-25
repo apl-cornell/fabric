@@ -2,7 +2,15 @@ package fabric.common.net;
 
 import static fabric.common.Logging.NETWORK_CHANNEL_LOGGER;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;

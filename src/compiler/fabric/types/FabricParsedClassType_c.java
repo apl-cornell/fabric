@@ -30,7 +30,7 @@ import codebases.types.CodebaseClassType;
 import fabric.common.FabricLocation;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements
-    FabricParsedClassType {
+FabricParsedClassType {
   private transient Label singleFieldLabel = null;
   private transient ConfPolicy accessPolicy = null;
   private transient boolean fieldLabelFound = false;
@@ -139,7 +139,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements
       if (constraint instanceof ActsForConstraint) {
         @SuppressWarnings("unchecked")
         ActsForConstraint<ActsForParam, ActsForParam> pi =
-            (ActsForConstraint<ActsForParam, ActsForParam>) constraint;
+        (ActsForConstraint<ActsForParam, ActsForParam>) constraint;
         ActsForParam actor = pi.actor();
         ActsForParam granter = pi.granter();
         if (actor instanceof Principal && granter instanceof Principal) {
@@ -170,7 +170,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements
    * class and its superclasses. It computes this by taking a join of all labels
    * concerned.
    */
-  @SuppressWarnings("unchecked")
   @Override
   public ConfPolicy accessPolicy() {
     FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
@@ -216,7 +215,6 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements
     return accessPolicy;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void removeMethod(MethodInstance mi) {
     for (Iterator<MethodInstance> it = methods.iterator(); it.hasNext();) {

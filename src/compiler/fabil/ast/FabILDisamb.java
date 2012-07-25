@@ -10,6 +10,7 @@ import polyglot.ast.Prefix;
 import polyglot.types.Importable;
 import polyglot.types.Named;
 import polyglot.types.NoClassException;
+import polyglot.types.Package;
 import polyglot.types.Qualifier;
 import polyglot.types.Resolver;
 import polyglot.types.SemanticException;
@@ -27,7 +28,6 @@ import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
 import fabil.types.FabILContext;
 import fabric.common.FabricLocation;
-import polyglot.types.Package;
 
 public class FabILDisamb extends Disamb_c implements Disamb {
   protected FabricLocation namespace;
@@ -112,7 +112,6 @@ public class FabILDisamb extends Disamb_c implements Disamb {
     return null;
   }
 
-  @SuppressWarnings("unused")
   @Override
   protected Node disambiguatePackagePrefix(PackageNode pn)
       throws SemanticException {

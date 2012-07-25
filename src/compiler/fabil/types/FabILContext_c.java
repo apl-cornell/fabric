@@ -21,7 +21,6 @@ import fabric.common.FabricLocation;
  * names.
  */
 public class FabILContext_c extends Context_c implements FabILContext {
-  @SuppressWarnings("unchecked")
   private static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.context);
 

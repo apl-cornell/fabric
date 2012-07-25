@@ -53,7 +53,6 @@ import fabric.lang.Codebase;
 import fabric.worker.Worker;
 
 public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
-  @SuppressWarnings("unchecked")
   private static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.resolver);
 
@@ -120,9 +119,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return new CBClassContextResolver(this, type);
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public Object placeHolder(TypeObject o, Set roots) {
+  public Object placeHolder(TypeObject o, Set<? extends TypeObject> roots) {
     assert_(o);
     if (o instanceof ParsedClassType) {
       CodebaseClassType ct = (CodebaseClassType) o;
@@ -231,7 +229,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return new FabILContext_c(this);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public List<String> defaultPackageImports() {
     // Include fabric.lang as a default import.
@@ -244,11 +241,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return result;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   // XXX: Why is this method here?
   protected List<? extends MethodInstance> findAcceptableMethods(ReferenceType container,
-      String name, @SuppressWarnings("rawtypes") List argTypes,
+      String name, List<? extends Type> argTypes,
       ClassType currClass) throws SemanticException {
     List<? extends MethodInstance> result =
         super.findAcceptableMethods(container, name, argTypes, currClass);
@@ -449,10 +445,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return isJavaInlineable(type.type());
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
   public MethodInstance methodInstance(Position pos, ReferenceType container,
-      Flags flags, Type returnType, String name, List argTypes, List excTypes) {
+      Flags flags, Type returnType, String name, List<? extends Type> argTypes,
+      List<? extends Type> excTypes) {
     assert_(container);
     assert_(returnType);
     assert_(argTypes);
@@ -494,7 +490,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return f;
   }
 
-  @SuppressWarnings("deprecation")
   @Override
   public String translateClass(Resolver c, ClassType t) {
     // Fully qualify classes in fabric.lang.security.
@@ -502,7 +497,9 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
       // Using the deprecated method because the non-deprecated version
       // (packageForName) declares that a SemanticException can be thrown, even
       // though the two methods behave identically.
-      if (t.package_().equals(createPackage("fabric.lang.security"))) {
+      @SuppressWarnings("deprecation")
+      Package fls = createPackage("fabric.lang.security");
+      if (t.package_().equals(fls)) {
         return super.translateClass(null, t);
       }
     }
@@ -537,7 +534,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     // object (which implements FabILOptions). In particular, to get the right
     // signaturepath
     // we have to call getFabILOptions().
-    FabILOptions opt = (FabILOptions) extInfo.getOptions();
+    FabILOptions opt = extInfo.getOptions();
     List<FabricLocation> cp = opt.classpath();
     List<FabricLocation> sp = opt.sourcepath();
     List<FabricLocation> sigcp = opt.signaturepath();

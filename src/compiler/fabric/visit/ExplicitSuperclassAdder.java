@@ -1,11 +1,11 @@
 package fabric.visit;
 
-import fabric.types.FabricTypeSystem;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.types.Flags;
 import polyglot.visit.NodeVisitor;
+import fabric.types.FabricTypeSystem;
 
 /**
  * A Visitor that replaces all implicit superclasses with explicit extends

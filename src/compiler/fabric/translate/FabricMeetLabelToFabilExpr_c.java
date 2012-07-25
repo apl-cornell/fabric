@@ -3,14 +3,13 @@ package fabric.translate;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import fabric.visit.FabricToFabilRewriter;
-
-import polyglot.ast.Expr;
-import polyglot.types.SemanticException;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.MeetLabelToJavaExpr_c;
 import jif.types.label.Label;
 import jif.types.label.MeetLabel;
+import polyglot.ast.Expr;
+import polyglot.types.SemanticException;
+import fabric.visit.FabricToFabilRewriter;
 
 public class FabricMeetLabelToFabilExpr_c extends MeetLabelToJavaExpr_c {
   @Override

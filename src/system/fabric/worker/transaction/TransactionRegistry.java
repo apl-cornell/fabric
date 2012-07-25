@@ -1,9 +1,9 @@
 package fabric.worker.transaction;
 
-import fabric.worker.Store;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.worker.Store;
 
 /**
  * Holds a map from top-level transaction IDs to their logs.

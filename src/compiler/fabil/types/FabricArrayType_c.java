@@ -17,7 +17,6 @@ public class FabricArrayType_c extends ArrayType_c implements FabricArrayType {
     super(ts, pos, base);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   protected void init() {
     boolean fixField = fields == null;

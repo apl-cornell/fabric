@@ -1,6 +1,7 @@
 package fabric.common.net;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 import fabric.common.net.SubServerSocketFactory.Acceptor;
 
@@ -120,15 +121,8 @@ public class SubServerSocket {
     }
 
     @Override
-    public SubSocket accept() throws IOException {
-      try {
-        return queue.accept();
-      } catch (IOException e) {
-        IOException wrapped =
-            new IOException("failed to accept (socket " + this + ")", e);
-        state = new ErrorState(wrapped);
-        throw wrapped;
-      }
+    public SubSocket accept() {
+      return queue.accept();
     }
 
     @Override

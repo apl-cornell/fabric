@@ -4,7 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.ClassBody;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
+import polyglot.ast.FieldDecl;
+import polyglot.ast.Node;
+import polyglot.ast.TypeNode;
 import polyglot.visit.NodeVisitor;
 
 /**

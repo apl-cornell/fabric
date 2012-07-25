@@ -12,9 +12,9 @@ import polyglot.frontend.Source;
 import polyglot.util.InternalCompilerError;
 import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
+import fabric.filemanager.FabricSourceObject;
 import fabric.lang.FClass;
 import fabric.lang.security.Label;
-import fabric.filemanager.FabricSourceObject;
 
 public class RemoteSource extends UTF8FileSource implements CodebaseSource {
   protected final FabricLocation namespace;

@@ -1,7 +1,7 @@
 package fabric.common;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.net.ssl.SSLSocketFactory;
 

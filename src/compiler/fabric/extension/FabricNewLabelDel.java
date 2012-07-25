@@ -1,13 +1,13 @@
 package fabric.extension;
 
-import fabric.ast.FabricUtil;
-import fabric.types.FabricTypeSystem;
 import polyglot.ast.Expr;
 import polyglot.ast.JL_c;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
+import fabric.ast.FabricUtil;
+import fabric.types.FabricTypeSystem;
 
 public class FabricNewLabelDel extends JL_c {
   @Override
@@ -15,7 +15,7 @@ public class FabricNewLabelDel extends JL_c {
     Node n = super.visitChildren(v);
     NewLabelExt_c ext = (NewLabelExt_c) FabricUtil.fabricExt(n);
     if (ext.location() != null) {
-      Expr loc = (Expr) v.visitEdge(n, ext.location());
+      Expr loc = v.visitEdge(n, ext.location());
       ext = (NewLabelExt_c) ext.location(loc);
       return FabricUtil.updateFabricExt(n, ext);
     }

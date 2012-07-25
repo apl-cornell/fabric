@@ -83,7 +83,7 @@ import java.util.Set;
  * @since 1.2
  */
 public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
-    LongKeyMap<V>, Cloneable, Serializable {
+LongKeyMap<V>, Cloneable, Serializable {
   /**
    * Default number of buckets. This is the value the JDK 1.3 uses. Some early
    * documentation specified this value as 101. That is incorrect. Package
@@ -228,7 +228,6 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * @throws IllegalArgumentException
    *           if (initialCapacity &lt; 0) || ! (loadFactor &gt; 0.0)
    */
-  @SuppressWarnings("unchecked")
   public LongKeyHashMap(int initialCapacity, float loadFactor) {
     if (initialCapacity < 0)
       throw new IllegalArgumentException("Illegal Capacity: " + initialCapacity);
@@ -236,7 +235,10 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
       throw new IllegalArgumentException("Illegal Load: " + loadFactor);
 
     if (initialCapacity == 0) initialCapacity = 1;
-    buckets = new HashEntry[initialCapacity];
+
+    @SuppressWarnings("unchecked")
+    HashEntry<V>[] buckets = new HashEntry[initialCapacity];
+    this.buckets = buckets;
     this.loadFactor = loadFactor;
     threshold = (int) (initialCapacity * loadFactor);
   }
@@ -438,7 +440,6 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * 
    * @return the clone
    */
-  @SuppressWarnings("unchecked")
   @Override
   public Object clone() {
     LongKeyHashMap<V> copy = null;
@@ -447,8 +448,12 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
     } catch (CloneNotSupportedException x) {
       // This is impossible.
     }
-    copy.buckets = new HashEntry[buckets.length];
+
+    @SuppressWarnings("unchecked")
+    HashEntry<V>[] buckets = new HashEntry[this.buckets.length];
+    copy.buckets = buckets;
     copy.putAllInternal(this);
+
     // Clear the entry cache. AbstractMap.clone() does the others.
     copy.entries = null;
     return copy;
@@ -466,40 +471,40 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   @Override
   public LongSet keySet() {
     if (keys == null)
-    // Create an AbstractSet with custom implementations of those methods
-    // that can be overridden easily and efficiently.
+      // Create an AbstractSet with custom implementations of those methods
+      // that can be overridden easily and efficiently.
       keys = new AbstractLongSet() {
-        @Override
-        public int size() {
-          return size;
-        }
+      @Override
+      public int size() {
+        return size;
+      }
 
-        @Override
-        public LongIterator iterator() {
-          // Cannot create the iterator directly, because of LinkedHashMap.
-          return keyIterator();
-        }
+      @Override
+      public LongIterator iterator() {
+        // Cannot create the iterator directly, because of LinkedHashMap.
+        return keyIterator();
+      }
 
-        @Override
-        public void clear() {
-          LongKeyHashMap.this.clear();
-        }
+      @Override
+      public void clear() {
+        LongKeyHashMap.this.clear();
+      }
 
-        @Override
-        public boolean contains(long o) {
-          return containsKey(o);
-        }
+      @Override
+      public boolean contains(long o) {
+        return containsKey(o);
+      }
 
-        @Override
-        public boolean remove(long o) {
-          // Test against the size of the HashMap to determine if anything
-          // really got removed. This is necessary because the return value
-          // of HashMap.remove() is ambiguous in the null case.
-          int oldsize = size;
-          LongKeyHashMap.this.remove(o);
-          return oldsize != size;
-        }
-      };
+      @Override
+      public boolean remove(long o) {
+        // Test against the size of the HashMap to determine if anything
+        // really got removed. This is necessary because the return value
+        // of HashMap.remove() is ambiguous in the null case.
+        int oldsize = size;
+        LongKeyHashMap.this.remove(o);
+        return oldsize != size;
+      }
+    };
     return keys;
   }
 
@@ -515,25 +520,25 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   @Override
   public Collection<V> values() {
     if (values == null)
-    // We don't bother overriding many of the optional methods, as doing so
-    // wouldn't provide any significant performance advantage.
+      // We don't bother overriding many of the optional methods, as doing so
+      // wouldn't provide any significant performance advantage.
       values = new AbstractCollection<V>() {
-        @Override
-        public int size() {
-          return size;
-        }
+      @Override
+      public int size() {
+        return size;
+      }
 
-        @Override
-        public Iterator<V> iterator() {
-          // Cannot create the iterator directly, because of LinkedHashMap.
-          return LongKeyHashMap.this.iterator(VALUES);
-        }
+      @Override
+      public Iterator<V> iterator() {
+        // Cannot create the iterator directly, because of LinkedHashMap.
+        return LongKeyHashMap.this.iterator(VALUES);
+      }
 
-        @Override
-        public void clear() {
-          LongKeyHashMap.this.clear();
-        }
-      };
+      @Override
+      public void clear() {
+        LongKeyHashMap.this.clear();
+      }
+    };
     return values;
   }
 
@@ -553,40 +558,40 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   @Override
   public Set<LongKeyMap.Entry<V>> entrySet() {
     if (entries == null)
-    // Create an AbstractSet with custom implementations of those methods
-    // that can be overridden easily and efficiently.
+      // Create an AbstractSet with custom implementations of those methods
+      // that can be overridden easily and efficiently.
       entries = new AbstractSet<LongKeyMap.Entry<V>>() {
-        @Override
-        public int size() {
-          return size;
-        }
+      @Override
+      public int size() {
+        return size;
+      }
 
-        @Override
-        public Iterator<LongKeyMap.Entry<V>> iterator() {
-          // Cannot create the iterator directly, because of LinkedHashMap.
-          return LongKeyHashMap.this.iterator(ENTRIES);
-        }
+      @Override
+      public Iterator<LongKeyMap.Entry<V>> iterator() {
+        // Cannot create the iterator directly, because of LinkedHashMap.
+        return LongKeyHashMap.this.iterator(ENTRIES);
+      }
 
-        @Override
-        public void clear() {
-          LongKeyHashMap.this.clear();
-        }
+      @Override
+      public void clear() {
+        LongKeyHashMap.this.clear();
+      }
 
-        @Override
-        public boolean contains(Object o) {
-          return getEntry(o) != null;
-        }
+      @Override
+      public boolean contains(Object o) {
+        return getEntry(o) != null;
+      }
 
-        @Override
-        public boolean remove(Object o) {
-          HashEntry<V> e = getEntry(o);
-          if (e != null) {
-            LongKeyHashMap.this.remove(e.key);
-            return true;
-          }
-          return false;
+      @Override
+      public boolean remove(Object o) {
+        HashEntry<V> e = getEntry(o);
+        if (e != null) {
+          LongKeyHashMap.this.remove(e.key);
+          return true;
         }
-      };
+        return false;
+      }
+    };
     return entries;
   }
 
@@ -620,9 +625,9 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * @see #entrySet()
    */
   // Package visible, for use in nested classes.
-  @SuppressWarnings("unchecked")
   final HashEntry<V> getEntry(Object o) {
     if (!(o instanceof Map.Entry)) return null;
+    @SuppressWarnings("unchecked")
     LongKeyMap.Entry<V> me = (LongKeyMap.Entry<V>) o;
     long key = me.getKey();
     int idx = hash(key);
@@ -671,8 +676,8 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * @param m
    *          the map to initialize this from
    */
-  @SuppressWarnings("unchecked")
   void putAllInternal(LongKeyMap<? extends V> m) {
+    @SuppressWarnings("unchecked")
     final LongKeyMap<V> addMap = (LongKeyMap<V>) m;
     final Iterator<LongKeyMap.Entry<V>> it = addMap.entrySet().iterator();
     size = 0;
@@ -694,13 +699,14 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * This is not specified, but the new size is twice the current size plus one;
    * this number is not always prime, unfortunately.
    */
-  @SuppressWarnings("unchecked")
   private void rehash() {
     HashEntry<V>[] oldBuckets = buckets;
 
     int newcapacity = (buckets.length * 2) + 1;
     threshold = (int) (newcapacity * loadFactor);
-    buckets = new HashEntry[newcapacity];
+    @SuppressWarnings("unchecked")
+    HashEntry<V>[] buckets = new HashEntry[newcapacity];
+    this.buckets = buckets;
 
     for (int i = oldBuckets.length - 1; i >= 0; i--) {
       HashEntry<V> e = oldBuckets[i];
@@ -755,14 +761,15 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    *             They are followed by size entries, each consisting of a key
    *             (Object) and a value (Object).
    */
-  @SuppressWarnings("unchecked")
   private void readObject(ObjectInputStream s) throws IOException,
-      ClassNotFoundException {
+  ClassNotFoundException {
     // Read the threshold and loadFactor fields.
     s.defaultReadObject();
 
     // Read and use capacity, followed by key/value pairs.
-    buckets = new HashEntry[s.readInt()];
+    @SuppressWarnings("unchecked")
+    HashEntry<V>[] buckets = new HashEntry[s.readInt()];
+    this.buckets = buckets;
     int len = s.readInt();
     size = len;
     while (len-- > 0) {
@@ -830,7 +837,6 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
      *           if there is none
      */
     @Override
-    @SuppressWarnings("unchecked")
     public T next() {
       if (knownMod != modCount) throw new ConcurrentModificationException();
       if (count == 0) throw new NoSuchElementException();
@@ -842,8 +848,15 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
 
       next = e.next;
       last = e;
-      if (type == VALUES) return (T) e.value;
-      return (T) e;
+      if (type == VALUES) {
+        @SuppressWarnings("unchecked")
+        T value = (T) e.value;
+        return value;
+      }
+
+      @SuppressWarnings("unchecked")
+      T t = (T) e;
+      return t;
     }
 
     /**

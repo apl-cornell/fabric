@@ -14,7 +14,6 @@ public class RetryStmt_c extends Branch_c implements RetryStmt {
     super(pos, FabricBranch.RETRY, null);
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     return Collections.EMPTY_LIST;

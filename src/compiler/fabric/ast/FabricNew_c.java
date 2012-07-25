@@ -19,7 +19,6 @@ public class FabricNew_c extends JifNew_c {
     super(pos, tn, arguments, body);
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     FabricExt fabExt = FabricUtil.fabricExt(this);

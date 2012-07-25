@@ -3,7 +3,11 @@ package fabil.visit;
 import java.util.Collections;
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Call;
+import polyglot.ast.Cast;
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
+import polyglot.ast.Receiver;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
@@ -41,7 +45,6 @@ public class PrincipalDelegator extends NodeVisitor {
     return super.begin();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     if (n instanceof New) {

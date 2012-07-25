@@ -91,7 +91,7 @@ public final class Worker {
 
   /** Flag for indicating if worker needs to cache compiled code in local file system */
   public boolean outputToLocalFS;
-  
+
   /** The loader used by this worker for loading classes from fabric */
   public FabricClassLoader loader;
 
@@ -206,7 +206,6 @@ public final class Worker {
     return config.name;
   }
 
-  @SuppressWarnings("unchecked")
   private Worker(ConfigProperties config, Long principalOnum,
       Map<String, RemoteStore> initStoreSet) throws InternalError, UsageError,
       IOException, GeneralSecurityException {
@@ -417,7 +416,7 @@ public final class Worker {
   }
 
   public static void initialize(String name) throws IllegalStateException,
-      IOException, InternalError, UsageError, GeneralSecurityException {
+  IOException, InternalError, UsageError, GeneralSecurityException {
     initialize(new ConfigProperties(name));
   }
 
@@ -667,7 +666,7 @@ public final class Worker {
 
         TransactionID currentTid = tm.getCurrentTid();
         if (e.tid.isDescendantOf(currentTid))
-        // Restart this transaction.
+          // Restart this transaction.
           continue;
 
         // Need to restart a parent transaction.
@@ -702,7 +701,7 @@ public final class Worker {
             TransactionID currentTid = tm.getCurrentTid();
             if (currentTid == null || e.tid.isDescendantOf(currentTid)
                 && !currentTid.equals(e.tid))
-            // Restart the transaction just we tried to commit.
+              // Restart the transaction just we tried to commit.
               continue;
 
             // Need to restart a parent transaction.

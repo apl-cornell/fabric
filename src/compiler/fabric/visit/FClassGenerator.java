@@ -4,7 +4,6 @@ import static fabric.common.FabricLocationFactory.getLocation;
 
 import java.io.IOException;
 import java.net.URI;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;

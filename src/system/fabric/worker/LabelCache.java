@@ -21,7 +21,7 @@ public class LabelCache {
    */
   private static final class Cache<P extends Object> {
     private static final class EntrySoftRef<P extends Object> extends
-        SoftReference<P> {
+    SoftReference<P> {
       final Cache<P> cache;
       final Object._Proxy key1;
       final Object._Proxy key2;
@@ -83,22 +83,22 @@ public class LabelCache {
         setDaemon(true);
       }
 
-      @SuppressWarnings("rawtypes")
       @Override
       public void run() {
         while (true) {
           try {
+            @SuppressWarnings("rawtypes")
             EntrySoftRef ref = (EntrySoftRef) queue.remove();
 
             // GC has snapped the soft reference "ref". Remove its entry from
             // cache.
             synchronized (ref.cache) {
-              @SuppressWarnings("unchecked")
+              @SuppressWarnings("rawtypes")
               OidKeyHashMap<EntrySoftRef> subMap =
                   (OidKeyHashMap<EntrySoftRef>) ref.cache.entries.get(ref.key1);
               if (subMap != null) {
                 synchronized (subMap) {
-                  EntrySoftRef curRef = subMap.get(ref.key2);
+                  EntrySoftRef<?> curRef = subMap.get(ref.key2);
                   if (curRef == ref) {
                     subMap.remove(ref.key2);
                     if (subMap.isEmpty()) ref.cache.entries.remove(ref.key1);

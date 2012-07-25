@@ -3,7 +3,6 @@ package fabric;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -52,14 +51,14 @@ import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
 import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
+import fabric.filemanager.FabricFileManager;
+import fabric.filemanager.FabricSourceObject;
 import fabric.lang.FClass;
 import fabric.lang.security.LabelUtil;
 import fabric.parse.Grm;
 import fabric.parse.Lexer_c;
 import fabric.types.FabricTypeSystem;
 import fabric.types.FabricTypeSystem_c;
-import fabric.filemanager.FabricSourceObject;
-import fabric.filemanager.FabricFileManager;
 import fabric.visit.FabricLabelChecker;
 import fabric.worker.Store;
 

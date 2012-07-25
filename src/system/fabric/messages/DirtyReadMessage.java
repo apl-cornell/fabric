@@ -17,7 +17,7 @@ import fabric.worker.Worker;
  * Represents a request from a worker to read an object owned by another worker.
  */
 public class DirtyReadMessage extends
-    Message<DirtyReadMessage.Response, AccessException> {
+Message<DirtyReadMessage.Response, AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -47,14 +47,16 @@ public class DirtyReadMessage extends
 
     public final SerializedObject obj;
 
-    @SuppressWarnings("deprecation")
     public Response(_Impl obj) {
       if (obj == null) {
         this.store = null;
         this.obj = null;
       } else {
         this.store = obj.$getStore();
-        this.obj = new SerializedObject(obj);
+
+        @SuppressWarnings("deprecation")
+        SerializedObject serialized = new SerializedObject(obj);
+        this.obj = serialized;
       }
     }
 
@@ -70,7 +72,7 @@ public class DirtyReadMessage extends
 
   @Override
   public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
-      AccessException {
+  AccessException {
     return h.handle(p, this);
   }
 

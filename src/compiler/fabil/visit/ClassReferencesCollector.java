@@ -70,7 +70,6 @@ public class ClassReferencesCollector extends NodeVisitor {
       writeDependencies(sfn);
     } else if (ast instanceof SourceCollection) {
       SourceCollection sc = (SourceCollection) ast;
-      @SuppressWarnings("unchecked")
       List<SourceFile> sources = sc.sources();
       for (SourceFile sfn : sources) {
         writeDependencies(sfn);

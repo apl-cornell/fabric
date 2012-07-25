@@ -1,7 +1,7 @@
 package fabric.ast;
 
-import polyglot.ast.Expr;
 import jif.ast.AmbNewArray;
+import polyglot.ast.Expr;
 
 public interface AmbNewFabricArray extends AmbNewArray {
 

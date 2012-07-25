@@ -1,18 +1,28 @@
 package fabil.visit;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import fabil.ast.Atomic;
-
-import polyglot.ast.*;
+import polyglot.ast.Block;
+import polyglot.ast.For;
+import polyglot.ast.ForInit;
+import polyglot.ast.Formal;
+import polyglot.ast.Local;
+import polyglot.ast.LocalAssign;
+import polyglot.ast.LocalDecl;
+import polyglot.ast.Node;
+import polyglot.ast.ProcedureDecl;
+import polyglot.ast.Stmt;
 import polyglot.types.LocalInstance;
 import polyglot.visit.NodeVisitor;
+import fabil.ast.Atomic;
 
 public class UpdatedVariableFinder extends NodeVisitor {
   protected Set<LocalInstance> declared = new HashSet<LocalInstance>();
   protected Set<LocalInstance> updated = new HashSet<LocalInstance>();
 
-  @SuppressWarnings("unchecked")
   @Override
   public NodeVisitor enter(Node n) {
     if (n instanceof ProcedureDecl) {
@@ -21,7 +31,7 @@ public class UpdatedVariableFinder extends NodeVisitor {
       v.updated = new HashSet<LocalInstance>();
 
       ProcedureDecl pd = (ProcedureDecl) n;
-      for (Formal f : (List<Formal>) pd.formals()) {
+      for (Formal f : pd.formals()) {
         v.declared.add(f.localInstance());
       }
 

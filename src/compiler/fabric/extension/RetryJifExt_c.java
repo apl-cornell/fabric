@@ -1,13 +1,13 @@
 package fabric.extension;
 
-import fabric.ast.RetryStmt;
-import polyglot.ast.Node;
 import jif.extension.JifBranchExt;
 import jif.translate.ToJavaExt;
 import jif.types.JifContext;
 import jif.types.JifTypeSystem;
 import jif.types.PathMap;
 import jif.visit.LabelChecker;
+import polyglot.ast.Node;
+import fabric.ast.RetryStmt;
 
 public class RetryJifExt_c extends JifBranchExt {
   public RetryJifExt_c(ToJavaExt toJava) {

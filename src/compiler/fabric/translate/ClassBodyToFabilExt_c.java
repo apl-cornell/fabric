@@ -3,18 +3,16 @@ package fabric.translate;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabric.extension.ClassBodyJifExt_c;
-
+import jif.ast.JifUtil;
+import jif.translate.ClassBodyToJavaExt_c;
+import jif.translate.JifToJavaRewriter;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassMember;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
-import jif.ast.JifUtil;
-import jif.translate.ClassBodyToJavaExt_c;
-import jif.translate.JifToJavaRewriter;
+import fabric.extension.ClassBodyJifExt_c;
 
 public class ClassBodyToFabilExt_c extends ClassBodyToJavaExt_c {
-  @SuppressWarnings({ "unchecked", "unused" })
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     ClassBody cb = (ClassBody) node();

@@ -1,16 +1,16 @@
 package fabric.extension;
 
-import fabric.ast.FabricUtil;
-import fabric.types.FabricClassType;
-import fabric.types.FabricTypeSystem;
-import polyglot.ast.NewArray;
-import polyglot.ast.Node;
-import polyglot.types.SemanticException;
-import polyglot.types.Type;
 import jif.extension.JifNewArrayExt;
 import jif.translate.ToJavaExt;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
+import polyglot.ast.NewArray;
+import polyglot.ast.Node;
+import polyglot.types.SemanticException;
+import polyglot.types.Type;
+import fabric.ast.FabricUtil;
+import fabric.types.FabricClassType;
+import fabric.types.FabricTypeSystem;
 
 public class NewArrayJifExt_c extends JifNewArrayExt {
   public NewArrayJifExt_c(ToJavaExt toJava) {

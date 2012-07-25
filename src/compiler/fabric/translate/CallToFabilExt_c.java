@@ -13,7 +13,6 @@ import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricCall;
 
 public class CallToFabilExt_c extends CallToJavaExt_c {
-  @SuppressWarnings("unchecked")
   @Override
   public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {
     FabricCall c = (FabricCall) node();

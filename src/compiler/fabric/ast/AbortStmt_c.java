@@ -14,7 +14,6 @@ public class AbortStmt_c extends Branch_c implements AbortStmt {
     super(pos, FabricBranch.ABORT, null);
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     return Collections.EMPTY_LIST;

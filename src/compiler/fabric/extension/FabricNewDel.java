@@ -22,14 +22,13 @@ public class FabricNewDel extends JL_c {
     Node n = super.visitChildren(v);
     NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(n);
     if (ext.location() != null) {
-      Expr loc = (Expr) v.visitEdge(n, ext.location());
+      Expr loc = v.visitEdge(n, ext.location());
       ext = (NewExt_c) ext.location(loc);
       return FabricUtil.updateFabricExt(n, ext);
     }
     return n;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public List<Type> throwTypes(TypeSystem ts) {
     List<Type> toReturn = super.throwTypes(ts);
@@ -67,7 +66,7 @@ public class FabricNewDel extends JL_c {
     Node n = super.disambiguateOverride(parent, ar);
     NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(n);
     if (ext.location() != null) {
-      Expr loc = (Expr) ar.visitEdge(n, ext.location());
+      Expr loc = ar.visitEdge(n, ext.location());
       ext = (NewExt_c) ext.location(loc);
       return FabricUtil.updateFabricExt(n, ext);
     }
@@ -80,7 +79,7 @@ public class FabricNewDel extends JL_c {
     Node n = super.typeCheckOverride(parent, tc);
     NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(n);
     if (ext.location() != null) {
-      Expr loc = (Expr) tc.visitEdge(n, ext.location());
+      Expr loc = tc.visitEdge(n, ext.location());
       ext = (NewExt_c) ext.location(loc);
       return FabricUtil.updateFabricExt(n, ext);
     }

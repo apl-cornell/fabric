@@ -38,7 +38,6 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
 
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   /**
    * This method needs more comments, particularly explaining how the location arguments are handled.

@@ -25,7 +25,6 @@ public class FabILSkeletonCreator extends NodeVisitor {
   public FabILSkeletonCreator(Job job, TypeSystem ts, NodeFactory nf) {
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node parent, Node old, Node n, NodeVisitor v) {
     if (n instanceof ClassBody) {
@@ -49,7 +48,7 @@ public class FabILSkeletonCreator extends NodeVisitor {
           if (b != null && b.statements() != null
               && b.statements().get(0) instanceof ConstructorCall) {
             List<Stmt> l = new LinkedList<Stmt>();
-            l.add((Stmt) b.statements().get(0));
+            l.add(b.statements().get(0));
             cd = (ConstructorDecl) cd.body(b.statements(l));
           } else cd = (ConstructorDecl) cd.body(null);
           stubmembers.add(cd);

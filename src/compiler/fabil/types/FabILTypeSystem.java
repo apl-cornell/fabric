@@ -2,11 +2,14 @@ package fabil.types;
 
 import java.util.List;
 
+import polyglot.ast.TypeNode;
+import polyglot.types.ArrayType;
+import polyglot.types.ClassType;
+import polyglot.types.Type;
+import polyglot.types.TypeSystem;
+import polyglot.util.Position;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
-import polyglot.ast.TypeNode;
-import polyglot.types.*;
-import polyglot.util.Position;
 
 public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
 

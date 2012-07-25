@@ -5,6 +5,7 @@ import java.util.List;
 
 import jif.extension.JifCastDel;
 import jif.translate.CastToJavaExt_c;
+import jif.translate.ClassDeclToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
 import jif.types.JifPolyType;
 import jif.types.JifSubst;
@@ -58,10 +59,10 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
 
     String jifImplClass = fct.fullName();
     if (fct.flags().isInterface()) {
-      jifImplClass = ClassDeclToFabilExt_c.interfaceClassImplName(jifImplClass);
+      jifImplClass = ClassDeclToJavaExt_c.interfaceClassImplName(jifImplClass);
     }
     return ffrw.qq().parseExpr(jifImplClass + ".%s(%LE)",
-        ClassDeclToFabilExt_c.castMethodName(fct), args);
+        ClassDeclToJavaExt_c.castMethodName(fct), args);
 
   }
 }

@@ -22,9 +22,8 @@ public class Atomic_c extends Block_c implements Atomic {
     super(pos, statements);
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     // the current semantics of an atomic block is that it executes like a
     // normal block, unless an exception occurs in which case it is rolled
     // back and an AbortException is thrown, with the body of the block
@@ -38,7 +37,7 @@ public class Atomic_c extends Block_c implements Atomic {
     List<AbortStmt> aborts = new ArrayList<AbortStmt>();
     List<RetryStmt> retries = new ArrayList<RetryStmt>();
 
-    for (Stmt s : (List<Stmt>) statements()) {
+    for (Stmt s : statements()) {
       AbortRetryCollector c = new AbortRetryCollector(aborts, retries);
       s.visit(c);
     }

@@ -202,7 +202,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
    * Generates proxy methods for methods contained in the given class type and
    * all the interfaces it implements.
    */
-  @SuppressWarnings("unchecked")
   private List<ClassMember> makeProxyMethods(ProxyRewriter pr, ClassType ct) {
     List<ClassMember> result = new ArrayList<ClassMember>();
 

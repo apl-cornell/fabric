@@ -17,6 +17,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongKeyMap.Entry;
 import fabric.common.util.MutableInteger;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -375,9 +376,7 @@ public abstract class ObjectDB {
     int numNonSurrogates = 0;
 
     // Establish globID bindings for all non-surrogate onums we're given.
-    for (Iterator<LongKeyMap.Entry<SerializedObject>> it =
-        objects.entrySet().iterator(); it.hasNext();) {
-      LongKeyMap.Entry<SerializedObject> entry = it.next();
+    for (Entry<SerializedObject> entry : objects.entrySet()) {
       SerializedObject obj = entry.getValue();
       if (ClassRef.SURROGATE.equals(obj.getClassRef())) {
         // Surrogate. Do nothing.
@@ -551,13 +550,13 @@ public abstract class ObjectDB {
    * creates, for example, the name-service map and the store's principal, if
    * they do not already exist in the database.
    */
-  @SuppressWarnings("deprecation")
   public final void ensureInit() {
     if (isInitialized()) return;
 
     final Store store = Worker.getWorker().getStore(name);
 
     Worker.runInSubTransaction(new Worker.Code<Void>() {
+      @SuppressWarnings("deprecation")
       @Override
       public Void run() {
         // No need to initialize global constants here, as those objects will be

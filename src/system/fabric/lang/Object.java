@@ -53,19 +53,19 @@ public interface Object {
   /** The label that protects this object at run time. */
   Label get$$updateLabel();
   Label set$$updateLabel(Label label);
-  
+
   /**
    * The object's access policy, specifying the program contexts in which it is
    * safe to use this object.
    */
   ConfPolicy get$$accessPolicy();
   ConfPolicy set$$accessPolicy(ConfPolicy policy);
-  
+
   /**
-   * Calls $initLabels 
+   * Calls $initLabels
    */
   Object fabric$lang$Object$();
-  
+
   /**
    * Initializes the object's update label and access policy.
    */
@@ -73,7 +73,7 @@ public interface Object {
 
   /** Whether this object is "equal" to another object. */
   boolean equals(Object o);
-  
+
   /** Whether this object has the same identity as another object. */
   boolean idEquals(Object o);
 
@@ -96,8 +96,9 @@ public interface Object {
    * 
    * @deprecated
    */
+  @Deprecated
   void $forceRenumber(long onum);
-  
+
   /**
    * Creates a Statistics object to determine promises for this Object.
    */
@@ -148,7 +149,7 @@ public interface Object {
         }
       }
     }
-    
+
     /**
      * Ensures the object is resident in memory and returns its cache entry. If
      * the object is fetched from the network, it will not be deserialized.
@@ -157,15 +158,15 @@ public interface Object {
       // Check soft ref.
       _Impl impl = ref.get();
       if (impl != null) return impl.$cacheEntry;
-      
+
       // Check anchor.
       if (anchor != null) return anchor.$cacheEntry;
-      
+
       // Intercept reads of global constants and redirect them to the local store.
       if (ONumConstants.isGlobalConstant(ref.onum)) {
         return Worker.getWorker().getLocalStore().readObject(ref.onum);
       }
-      
+
       // Check worker's cache.
       ObjectCache.Entry result = ref.store.readFromCache(ref.onum);
       if (result != null) return result;
@@ -224,7 +225,7 @@ public interface Object {
     public final long $getOnum() {
       return ref.onum;
     }
-    
+
     @Override
     public final boolean idEquals(Object other) {
       return this.$getStore() == other.$getStore() && this.$getOnum() == other.$getOnum();
@@ -237,7 +238,7 @@ public interface Object {
       // serialized object. We can do this without interacting with the
       // transaction manager, since labels are immutable, and stores are trusted
       // to enforce this.
-      
+
       // Paranoia: continually fetch in case the entry becomes evicted between
       // the fetchEntry() and the getLabel().
       while (true) {
@@ -245,12 +246,12 @@ public interface Object {
         if (result != null) return result;
       }
     }
-    
+
     @Override
     public final Label set$$updateLabel(Label label) {
       return fetch().set$$updateLabel(label);
     }
-    
+
     @Override
     public final ConfPolicy get$$accessPolicy() {
       // If the object hasn't been deserialized yet, avoid deserialization by
@@ -258,7 +259,7 @@ public interface Object {
       // serialized object. We can do this without interacting with the
       // transaction manager, since access labels are immutable, and stores are
       // trusted to enforce this.
-      
+
       // Paranoia: continually fetch in case the entry becomes evicted between
       // the fetchEntry() and the getAccessLabel().
       while (true) {
@@ -266,17 +267,17 @@ public interface Object {
         if (result != null) return result;
       }
     }
-    
+
     @Override
     public final ConfPolicy set$$accessPolicy(ConfPolicy policy) {
       return fetch().set$$accessPolicy(policy);
     }
-    
+
     @Override
     public Object $initLabels() {
       return fetch().$initLabels();
     }
-    
+
     @Override
     public Object fabric$lang$Object$() {
       return fetch().fabric$lang$Object$();
@@ -289,7 +290,7 @@ public interface Object {
       // serialized object. We can do this without interacting with the
       // transaction manager, since the object's class is immutable, and stores
       // are trusted to enforce this.
-      
+
       // Paranoia: continually fetch in case the entry becomes evicted between
       // the fetchEntry() and the getProxy().
       while (true) {
@@ -307,7 +308,7 @@ public interface Object {
       if (o instanceof Object) return ((Object) o).$getProxy();
       return o;
     }
-    
+
     /**
      * return true if o1 and o2 are objects with the same identity.
      */
@@ -362,16 +363,17 @@ public interface Object {
      * 
      * @deprecated
      */
+    @Deprecated
     @Override
     public final void $forceRenumber(long onum) {
       fetch().$forceRenumber(onum);
     }
-    
+
     @Override
     public Statistics createStatistics() {
       return fetch().createStatistics();
     }
-    
+
     /**
      * A dummy method. This is a hack for working around reachability problems in
      * generated code.
@@ -391,7 +393,7 @@ public interface Object {
     private _Proxy $proxy;
 
     public final FabricSoftRef $ref;
-    
+
     /**
      * The worker's cache entry object for this _Impl.
      */
@@ -403,7 +405,7 @@ public interface Object {
     protected _Proxy $class;
 
     protected Label $updateLabel;
-    
+
     protected ConfPolicy $accessPolicy;
 
     public int $version;
@@ -424,7 +426,7 @@ public interface Object {
      * The innermost transaction that is holding a write lock on the object.
      */
     public Log $writeLockHolder;
-    
+
     /**
      * Stack trace for where the write lock for this object was obtained. Used
      * for debugging.
@@ -465,7 +467,7 @@ public interface Object {
      * The version number on the last update-map that was checked.
      */
     public int writerMapVersion;
-    
+
     /**
      * A stack trace of where this object was created. Used for debugging.
      */
@@ -488,12 +490,12 @@ public interface Object {
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
       this.writerMapVersion = -1;
-      
+
       if (TRACE_OBJECTS)
         this.$stackTrace = Thread.currentThread().getStackTrace();
       else this.$stackTrace = null;
     }
-    
+
     /**
      * A debugging switch for storing a stack trace each time an _Impl is
      * created. This is enabled by passing "--trace-objects" as a command-line
@@ -527,16 +529,16 @@ public interface Object {
         throw new InternalError(e);
       }
     }
-    
+
     @Override
     public Object $initLabels() {
       // Update label is public, untrusted.
       set$$updateLabel(Worker.getWorker().getLocalStore().getEmptyLabel());
-      
+
       // Access policy is public.
       set$$accessPolicy(Worker.getWorker().getLocalStore()
           .getBottomConfidPolicy());
-      
+
       return $getProxy();
     }
 
@@ -621,7 +623,7 @@ public interface Object {
     public final Label get$$updateLabel() {
       return $updateLabel;
     }
-    
+
     @Override
     public final Label set$$updateLabel(Label label) {
       TransactionManager tm = TransactionManager.getInstance();
@@ -630,12 +632,12 @@ public interface Object {
       if (transactionCreated) tm.commitTransaction();
       return label;
     }
-    
+
     @Override
     public final ConfPolicy get$$accessPolicy() {
       return $accessPolicy;
     }
-    
+
     @Override
     public final ConfPolicy set$$accessPolicy(ConfPolicy policy) {
       TransactionManager tm = TransactionManager.getInstance();
@@ -660,12 +662,12 @@ public interface Object {
       return $getStore() == other.$getStore()
           && $getOnum() == other.$getOnum();
     }
-    
+
     @Override
     public final _Impl fetch() {
       return this;
     }
-    
+
     @Override
     public Statistics createStatistics() {
       return DefaultStatistics.instance;
@@ -691,8 +693,8 @@ public interface Object {
      * @param interStoreRefs
      *          A list to which global object names (hostname/onum pairs),
      *          denoting inter-store references, will be written.
+     * @throws IOException
      */
-    @SuppressWarnings("unused")
     public void $serialize(ObjectOutput serializedOutput,
         List<RefTypeEnum> refTypes, List<Long> intraStoreRefs,
         List<Pair<String, Long>> interStoreRefs) throws IOException {
@@ -727,23 +729,24 @@ public interface Object {
      * @param intraStoreRefs
      *          An iterator of intra-store references, each represented by an
      *          onum.
+     * @throws IOException
+     * @throws ClassNotFoundException
      */
-    @SuppressWarnings("unused")
     public _Impl(Store store, long onum, int version, long expiry,
         long updateLabel, long accessPolicy, ObjectInput serializedInput,
         Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs)
-        throws IOException, ClassNotFoundException {
+            throws IOException, ClassNotFoundException {
       this(store, onum, version, expiry);
       this.$updateLabel =  new Label._Proxy(store, updateLabel);
       this.$accessPolicy = new ConfPolicy._Proxy(store, accessPolicy);
     }
-    
+
     /**
      * Maps proxy classes to their constructors.
      */
     private static final Map<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>> constructorTable =
         Collections
-            .synchronizedMap(new HashMap<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>>());
+        .synchronizedMap(new HashMap<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>>());
 
     /**
      * A helper method for reading a pointer during object deserialization.
@@ -767,8 +770,8 @@ public interface Object {
      */
     protected static final Object $readRef(
         Class<? extends Object._Proxy> proxyClass, RefTypeEnum refType,
-        ObjectInput in, Store store, Iterator<Long> intraStoreRefs)
-        throws IOException, ClassNotFoundException {
+            ObjectInput in, Store store, Iterator<Long> intraStoreRefs)
+                throws IOException, ClassNotFoundException {
       switch (refType) {
       case NULL:
         return null;
@@ -784,7 +787,7 @@ public interface Object {
             constructor = proxyClass.getConstructor(Store.class, long.class);
             constructorTable.put(proxyClass, constructor);
           }
-          
+
           return constructor.newInstance(
               store, intraStoreRefs.next());
         } catch (Exception e) {
@@ -845,7 +848,7 @@ public interface Object {
         out.writeObject(obj.$unwrap());
         return;
       }
-      
+
       _Proxy p = (_Proxy) obj;
       if (ONumConstants.isGlobalConstant(p.ref.onum) || p.ref.store.equals(store)) {
         // Intra-store reference.
@@ -902,13 +905,14 @@ public interface Object {
      * 
      * @deprecated
      */
+    @Deprecated
     @Override
     public final void $forceRenumber(long onum) {
       long oldOnum = $ref.onum;
       this.$ref.onum = onum;
       TransactionRegistry.renumberObject($ref.store, oldOnum, onum);
     }
-    
+
 
     /**
      * A dummy method. This is a hack for working around reachability problems in
@@ -946,7 +950,7 @@ public interface Object {
           @Override
           public Object run() throws Throwable {
             Constructor<? extends Object._Impl> constr =
-              c.getConstructor(Store.class);
+                c.getConstructor(Store.class);
             return constr.newInstance(store).$initLabels().fetch();
           }
         });

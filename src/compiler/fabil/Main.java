@@ -7,10 +7,10 @@ import java.io.Writer;
 import java.util.ArrayList;
 
 import javax.tools.FileObject;
+import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
-import javax.tools.JavaCompiler.CompilationTask;
 
 import polyglot.frontend.Compiler;
 import polyglot.main.Options;

@@ -1,13 +1,13 @@
 package fabil.visit;
 
-import fabil.ExtensionInfo;
-import fabil.ast.FabILNodeFactory;
-import fabil.extension.FabILExt;
-import fabil.types.FabILTypeSystem;
 import polyglot.ast.Node;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.visit.NodeVisitor;
+import fabil.ExtensionInfo;
+import fabil.ast.FabILNodeFactory;
+import fabil.extension.FabILExt;
+import fabil.types.FabILTypeSystem;
 
 /**
  * Rewrites threads, hooking them into the worker transaction manager.

@@ -1,11 +1,11 @@
 package fabric.visit;
 
-import fabric.types.SilenceableSolverGLB;
+import jif.ast.JifMethodDecl;
+import jif.visit.LabelChecker;
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.Job;
 import polyglot.types.TypeSystem;
-import jif.ast.JifMethodDecl;
-import jif.visit.LabelChecker;
+import fabric.types.SilenceableSolverGLB;
 
 public class FabricLabelChecker extends LabelChecker {
   public FabricLabelChecker(Job job, TypeSystem ts, NodeFactory nf,

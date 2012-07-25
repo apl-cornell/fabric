@@ -38,7 +38,6 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     return md;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   protected Block guardWithConstraints(JifToJavaRewriter rw, Block b)
       throws SemanticException {

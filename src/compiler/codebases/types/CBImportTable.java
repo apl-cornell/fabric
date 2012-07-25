@@ -47,7 +47,6 @@ public class CBImportTable extends ImportTable {
   // instead of
   // /// calling the toplevel system resolver directly, they use the namespace
   // FabricLocation
-  @SuppressWarnings("unchecked")
   @Override
   protected Named cachedFind(String name) throws SemanticException {
     Object res = map.get(name);
@@ -61,7 +60,6 @@ public class CBImportTable extends ImportTable {
     return t;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Named find(String name) throws SemanticException {
     if (Report.should_report(TOPICS, 2))
@@ -201,7 +199,6 @@ public class CBImportTable extends ImportTable {
     return null;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   protected void lazyImport() throws SemanticException {
     if (lazyImports.isEmpty()) {
@@ -210,7 +207,7 @@ public class CBImportTable extends ImportTable {
 
     for (int i = 0; i < lazyImports.size(); i++) {
       try {
-        String longName = (String) lazyImports.get(i);
+        String longName = lazyImports.get(i);
         FabricLocation import_ns = ns;
         // Check if this is an explicit codebase import
         String first = StringUtil.getFirstComponent(longName);
@@ -237,7 +234,7 @@ public class CBImportTable extends ImportTable {
         map.put(shortName, t);
       } catch (SemanticException e) {
         if (e.position() == null) {
-          Position p = (Position) lazyImportPositions.get(i);
+          Position p = lazyImportPositions.get(i);
           if (p == null) p = sourcePos;
           e = new SemanticException(p, e);
         }

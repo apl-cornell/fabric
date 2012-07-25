@@ -20,7 +20,6 @@ public class FabricScriptTestSuite extends ScriptTestSuite {
   protected boolean parseScript() {
     Grm grm = new Grm(this.scriptFile);
     try {
-      @SuppressWarnings("unchecked")
       List<Test> tests = (List<Test>) grm.parse().value;
       this.tests = tests;
     } catch (Exception e) {

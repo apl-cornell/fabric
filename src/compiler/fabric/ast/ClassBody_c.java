@@ -15,7 +15,6 @@ public class ClassBody_c extends polyglot.ast.ClassBody_c {
     super(pos, members);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node visitChildren(NodeVisitor v) {
     Node n = super.visitChildren(v);

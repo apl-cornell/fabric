@@ -158,13 +158,6 @@ public class SubServerSocketFactory {
       return queue;
     }
 
-    /** release the resources associated with a child */
-    @SuppressWarnings("unused")
-    private void closeQueue(ConnectionQueue child) {
-      // TODO
-      throw new NotImplementedException();
-    }
-
     /** handle an incoming connection */
     private void recvConnection(Socket s) {
       try {
@@ -248,8 +241,7 @@ public class SubServerSocketFactory {
       }
 
       /** wait for an incoming SubSocket connection */
-      @SuppressWarnings("unused")
-      SubSocket accept() throws IOException {
+      SubSocket accept() {
         try {
           return connections.take();
         } catch (InterruptedException e) {

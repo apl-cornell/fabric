@@ -3,7 +3,15 @@ package fabric.messages;
 import static fabric.common.Logging.NETWORK_MESSAGE_RECEIVE_LOGGER;
 import static fabric.common.Logging.NETWORK_MESSAGE_SEND_LOGGER;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
@@ -146,18 +154,19 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    * 
    * @param out
    *          the channel on which to send the response
-   * @param r
+   * @param response
    *          the response to send.
    * @throws IOException
    *           if the provided <code>DataOutput</code> fails.
    */
-  @SuppressWarnings("unchecked")
-  public void respond(DataOutput out, Message.Response r) throws IOException {
+  public void respond(DataOutput out, Message.Response response) throws IOException {
     // Signal that no error occurred.
     out.writeBoolean(false);
 
     // Write out the response.
-    writeResponse(out, (R) r);
+    @SuppressWarnings("unchecked")
+    R r = (R) response;
+    writeResponse(out, r);
 
     Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE,
         "Sent successful response to {0}", messageType);
@@ -195,75 +204,88 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    * This enum gives a mapping between message types and ordinals. This is used
    * for efficient encoding and decoding of the type of a message.
    */
-  @SuppressWarnings("all")
   protected static enum MessageType {
     ALLOCATE_ONUMS {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      AllocateMessage parse(DataInput in) throws IOException {
         return new AllocateMessage(in);
       }
     },
     READ_ONUM {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      ReadMessage parse(DataInput in) throws IOException {
         return new ReadMessage(in);
       }
     },
     PREPARE_TRANSACTION {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      PrepareTransactionMessage parse(DataInput in) throws IOException {
         return new PrepareTransactionMessage(in);
       }
     },
     COMMIT_TRANSACTION {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      CommitTransactionMessage parse(DataInput in) throws IOException {
         return new CommitTransactionMessage(in);
       }
     },
     ABORT_TRANSACTION {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      AbortTransactionMessage parse(DataInput in) throws IOException {
         return new AbortTransactionMessage(in);
       }
     },
     DISSEM_READ_ONUM {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      DissemReadMessage parse(DataInput in) throws IOException {
         return new DissemReadMessage(in);
       }
     },
     REMOTE_CALL {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      RemoteCallMessage parse(DataInput in) throws IOException {
         return new RemoteCallMessage(in);
       }
     },
     DIRTY_READ {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      DirtyReadMessage parse(DataInput in) throws IOException {
         return new DirtyReadMessage(in);
       }
     },
     TAKE_OWNERSHIP {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      TakeOwnershipMessage parse(DataInput in) throws IOException {
         return new TakeOwnershipMessage(in);
       }
     },
     OBJECT_UPDATE {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      ObjectUpdateMessage parse(DataInput in) throws IOException {
         return new ObjectUpdateMessage(in);
       }
     },
     GET_CERT_CHAIN {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      GetCertChainMessage parse(DataInput in) throws IOException {
         return new GetCertChainMessage(in);
       }
     },
     MAKE_PRINCIPAL {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      MakePrincipalMessage parse(DataInput in) throws IOException {
         return new MakePrincipalMessage(in);
       }
     },
     STALENESS_CHECK {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      StalenessCheckMessage parse(DataInput in) throws IOException {
         return new StalenessCheckMessage(in);
       }
     },
     INTERWORKER_STALENESS {
-      Message parse(DataInput in) throws IOException {
+      @Override
+      InterWorkerStalenessMessage parse(DataInput in) throws IOException {
         return new InterWorkerStalenessMessage(in);
       }
     },
@@ -308,14 +330,15 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    *          corresponding to the Fabric type, and not the _Proxy or _Impl
    *          classes.
    */
-  @SuppressWarnings("unchecked")
   protected static _Proxy readRef(Class<?> type, DataInput in)
       throws IOException {
     Store store = Worker.getWorker().getStore(in.readUTF());
     Class<? extends _Proxy> proxyType = null;
     for (Class<?> c : type.getClasses()) {
       if (c.getSimpleName().equals("_Proxy")) {
-        proxyType = (Class<? extends _Proxy>) c;
+        @SuppressWarnings("unchecked")
+        Class<? extends _Proxy> tmp = (Class<? extends _Proxy>) c;
+        proxyType = tmp;
         break;
       }
     }

@@ -18,7 +18,6 @@ import codebases.types.CodebaseTypeSystem;
 import fabric.common.FabricLocation;
 
 public class FabricContext_c extends JifContext_c implements FabricContext {
-  @SuppressWarnings("unchecked")
   private static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.context);
 

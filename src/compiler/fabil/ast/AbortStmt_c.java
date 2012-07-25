@@ -15,9 +15,8 @@ public class AbortStmt_c extends Stmt_c implements AbortStmt {
     super(pos);
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     return Collections.EMPTY_LIST;
   }
 

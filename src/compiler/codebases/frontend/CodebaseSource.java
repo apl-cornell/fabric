@@ -3,10 +3,9 @@ package codebases.frontend;
 import java.io.IOException;
 import java.io.Reader;
 
+import polyglot.frontend.Source;
 import fabric.common.FabricLocation;
 import fabric.lang.security.Label;
-
-import polyglot.frontend.Source;
 
 public interface CodebaseSource {
   /**

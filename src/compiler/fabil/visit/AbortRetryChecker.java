@@ -1,6 +1,5 @@
 package fabil.visit;
 
-import fabil.ast.*;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.Job;
@@ -8,6 +7,9 @@ import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
 import polyglot.visit.ErrorHandlingVisitor;
 import polyglot.visit.NodeVisitor;
+import fabil.ast.AbortStmt;
+import fabil.ast.Atomic;
+import fabil.ast.RetryStmt;
 
 public class AbortRetryChecker extends ErrorHandlingVisitor {
   protected boolean inAtomic = false;

@@ -1,16 +1,33 @@
 package fabric.visit;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
-import jif.ast.*;
+import jif.ast.JifMethodDecl;
+import jif.ast.JifUtil;
+import jif.ast.LabelExpr;
 import jif.extension.JifBinaryDel;
-import jif.types.*;
-import jif.types.label.*;
+import jif.types.ActsForConstraint;
+import jif.types.ActsForParam;
+import jif.types.Assertion;
+import jif.types.CallerConstraint;
+import jif.types.JifMethodInstance;
+import jif.types.LabelLeAssertion;
+import jif.types.label.AccessPath;
+import jif.types.label.IntegPolicy;
+import jif.types.label.Label;
 import jif.types.principal.Principal;
-import fabric.ast.FabricNodeFactory;
-import fabric.types.FabricParsedClassType;
-import fabric.types.FabricTypeSystem;
-import polyglot.ast.*;
+import polyglot.ast.Binary;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
+import polyglot.ast.Eval;
+import polyglot.ast.Expr;
+import polyglot.ast.Formal;
+import polyglot.ast.MethodDecl;
+import polyglot.ast.Node;
+import polyglot.ast.Stmt;
 import polyglot.frontend.Job;
 import polyglot.types.LocalInstance;
 import polyglot.types.MethodInstance;
@@ -19,6 +36,9 @@ import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
+import fabric.ast.FabricNodeFactory;
+import fabric.types.FabricParsedClassType;
+import fabric.types.FabricTypeSystem;
 
 public class RemoteCallWrapperUpdater extends NodeVisitor {
   protected Job job;
@@ -32,7 +52,6 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
     this.nf = nf;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     if (n instanceof ClassDecl) {
@@ -42,7 +61,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
       if (!ts.isFabricClass(pct)) {
         // Remove all the remote wrappers.
         List<ClassMember> members = new ArrayList<ClassMember>();
-        for (ClassMember cm : (List<ClassMember>) cd.body().members()) {
+        for (ClassMember cm : cd.body().members()) {
           if (cm instanceof MethodDecl) {
             MethodDecl md = (MethodDecl) cm;
             if (md.name().endsWith("_remote")) {
@@ -66,7 +85,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
 
         FabricParsedClassType pct = (FabricParsedClassType) mi.container();
 
-        Formal f = (Formal) md.formals().get(0);
+        Formal f = md.formals().get(0);
         // Formal lbf = (Formal)md.formals().get(1);
         LocalInstance li = f.localInstance();
 
@@ -146,6 +165,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
                       Binary.COND_AND, check);
             }
           } else if (as instanceof ActsForConstraint) {
+            @SuppressWarnings("unchecked")
             ActsForConstraint<ActsForParam, ActsForParam> afc =
                 (ActsForConstraint<ActsForParam, ActsForParam>) as;
             ActsForParam actor = afc.actor();
@@ -198,7 +218,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
           conseq = nf.Return(eval.position(), eval.expr());
         }
 
-        Stmt alter = (Stmt) md.body().statements().get(1);
+        Stmt alter = md.body().statements().get(1);
 
         Stmt s = nf.If(Position.compilerGenerated(), labelComp, conseq, alter);
 

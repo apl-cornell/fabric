@@ -2,11 +2,11 @@ package fabric.visit;
 
 import java.util.List;
 
+import polyglot.ast.Node;
+import polyglot.visit.NodeVisitor;
 import fabric.ast.AbortStmt;
 import fabric.ast.Atomic;
 import fabric.ast.RetryStmt;
-import polyglot.ast.Node;
-import polyglot.visit.NodeVisitor;
 
 public class AbortRetryCollector extends NodeVisitor {
   protected List<AbortStmt> aborts;

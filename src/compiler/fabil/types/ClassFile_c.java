@@ -5,9 +5,8 @@ import java.security.MessageDigest;
 
 import javax.tools.FileObject;
 
-import fabric.common.Crypto;
-
 import polyglot.frontend.ExtensionInfo;
+import fabric.common.Crypto;
 
 /**
  * Just like Polyglot's ClassFile, except this carries a secure hash of the

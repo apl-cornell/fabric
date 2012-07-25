@@ -50,7 +50,6 @@ public final class SysUtil {
    *          a Fabric class, this is the interface corresponding to the Fabric
    *          type, and not the _Proxy or _Impl classes.
    */
-  @SuppressWarnings("unchecked")
   public static byte[] hashPlatformClass(Class<?> c) throws IOException {
     boolean hashing_Impl = false;
     Class<?> ifaceClass = null;
@@ -64,7 +63,10 @@ public final class SysUtil {
       // get any exceptions from attempting to do this, we assume that the class
       // wasn't compiled by filc/fabc and hash the bytecode instead.
       try {
-        return classHashFieldValue((Class<? extends fabric.lang.Object>) c);
+        @SuppressWarnings("unchecked")
+        Class<? extends fabric.lang.Object> fabricClass =
+        (Class<? extends fabric.lang.Object>) c;
+        return classHashFieldValue(fabricClass);
       } catch (NoSuchFieldException e) {
       } catch (SecurityException e) {
       } catch (IllegalArgumentException e) {
@@ -147,22 +149,22 @@ public final class SysUtil {
     // Include declared interfaces, if any.
     Class<?>[] interfaces =
         hashing_Impl ? ifaceClass.getInterfaces() : c.getInterfaces();
-    for (Class<?> iface : interfaces) {
-      // Assume the interface is also a platform class.
-      digest.update(hashPlatformClass(iface));
-    }
+        for (Class<?> iface : interfaces) {
+          // Assume the interface is also a platform class.
+          digest.update(hashPlatformClass(iface));
+        }
 
-    result = digest.digest();
+        result = digest.digest();
 
-    classHashCache.put(className, result);
+        classHashCache.put(className, result);
 
-    if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
-      String hash = new BigInteger(1, result).toString(16);
-      Logging.log(CLASS_HASHING_LOGGER, Level.FINEST, "  Hash for {0} is {1}",
-          className, hash);
-    }
+        if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
+          String hash = new BigInteger(1, result).toString(16);
+          Logging.log(CLASS_HASHING_LOGGER, Level.FINEST, "  Hash for {0} is {1}",
+              className, hash);
+        }
 
-    return result;
+        return result;
   }
 
   /**
@@ -205,12 +207,13 @@ public final class SysUtil {
    *         found (i.e., clazz represents a Fabric interface),
    *         <code>null</code> is returned.
    */
-  @SuppressWarnings("unchecked")
   public static Class<? extends _Impl> getImplClass(
       Class<? extends fabric.lang.Object> clazz) {
     for (Class<?> nested : clazz.getClasses()) {
       if (nested.getSimpleName().equals("_Impl")) {
-        return (Class<? extends _Impl>) nested;
+        @SuppressWarnings("unchecked")
+        Class<? extends _Impl> implClass = (Class<? extends _Impl>) nested;
+        return implClass;
       }
     }
 
@@ -317,7 +320,7 @@ public final class SysUtil {
    * Turns an array of bytes into an object using Java serialization.
    */
   public static Object deserialize(byte[] bytes) throws IOException,
-      ClassNotFoundException {
+  ClassNotFoundException {
     ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
     ObjectInputStream ois = new ObjectInputStream(bais);
     return ois.readObject();

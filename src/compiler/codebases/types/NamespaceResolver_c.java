@@ -47,7 +47,6 @@ import fabric.worker.Worker;
 
 // /TODO: Disentangle the ideas of classpath and class cache/output directory
 public abstract class NamespaceResolver_c implements NamespaceResolver {
-  @SuppressWarnings("unchecked")
   private static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.resolver);
   protected static final List<String> REPORT_TOPICS = Arrays

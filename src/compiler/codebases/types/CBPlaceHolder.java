@@ -1,8 +1,7 @@
 package codebases.types;
 
-import fabric.common.FabricLocation;
-
 import polyglot.types.NamedPlaceHolder;
+import fabric.common.FabricLocation;
 
 public interface CBPlaceHolder extends NamedPlaceHolder {
   public FabricLocation namespace();

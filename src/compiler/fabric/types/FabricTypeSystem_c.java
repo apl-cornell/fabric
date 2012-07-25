@@ -24,6 +24,8 @@ import jif.types.JifTypeSystem_c;
 import jif.types.LabelLeAssertion;
 import jif.types.LabelSubstitution;
 import jif.types.LabeledType;
+import jif.types.Param;
+import jif.types.ParamInstance;
 import jif.types.Solver;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
@@ -95,8 +97,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements
-    FabricTypeSystem {
-  @SuppressWarnings("unchecked")
+FabricTypeSystem {
   private static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.resolver);
 
@@ -293,9 +294,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return new CBClassContextResolver(this, type);
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public Object placeHolder(TypeObject o, Set roots) {
+  public Object placeHolder(TypeObject o, Set<? extends TypeObject> roots) {
     assert_(o);
     if (o instanceof FabricParsedClassType) {
       FabricParsedClassType ct = (FabricParsedClassType) o;
@@ -485,9 +485,9 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return super.strip(type);
   }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public Subst subst(Map substMap) {
+  public Subst<ParamInstance, Param> subst(
+      Map<ParamInstance, ? extends Param> substMap) {
     return new FabricSubst_c(this, substMap);
   }
 
@@ -771,8 +771,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   @Override
   public FabricArrayType fabricArrayOf(Position pos, Type t) {
     return new FabricArrayType_c(this, pos, t,
-    /* isConst */false, /* isNonConst */true,
-    /* isNative */false);
+        /* isConst */false, /* isNonConst */true,
+        /* isNative */false);
   }
 
   @Override
@@ -790,16 +790,17 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     }
 
     return new FabricArrayType_c(this, pos, type,
-    /* isConst */false, /* isNonConst */true,
-    /* isNative */true);
+        /* isConst */false, /* isNonConst */true,
+        /* isNative */true);
   }
 
-  @SuppressWarnings("deprecation")
   @Override
   public String translateClass(Resolver c, ClassType t) {
     // Fully qualify classes in fabric.lang.security.
     if (t.package_() != null) {
-      if (t.package_().equals(createPackage("fabric.lang.security"))) {
+      @SuppressWarnings("deprecation")
+      Package createPackage = createPackage("fabric.lang.security");
+      if (t.package_().equals(createPackage)) {
         return super.translateClass(null, t);
       }
     }
@@ -839,9 +840,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return forName(platformResolver(), name);
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public Type typeForClass(Class clazz) throws SemanticException {
+  public Type typeForClass(Class<?> clazz) throws SemanticException {
     return typeForClass(platformResolver(), clazz);
   }
 
@@ -860,11 +860,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         fabric.lang.security.Label lbl = defaultPublishingLabel();
         fabric.util.HashMap classes =
             new fabric.util.HashMap._Impl(dest).fabric$util$HashMap$(
-            /*
-             * // XXX when HashMap becomes parameterized, these will be the
-             * labels. , lbl, lbl.confPolicy()
-             */
-            );
+                /*
+                 * // XXX when HashMap becomes parameterized, these will be the
+                 * labels. , lbl, lbl.confPolicy()
+                 */
+                );
         new_codebase =
             new Codebase._Impl(dest).fabric$lang$Codebase$(lbl,
                 lbl.confPolicy(), classes);
@@ -1054,7 +1054,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
               if (cp instanceof ConfProjectionPolicy_c) {
                 ConfProjectionPolicy_c cpproj = (ConfProjectionPolicy_c) cp;
                 lifted
-                    .add(join(cpproj.label().subst(this), noComponentsLabel()));
+                .add(join(cpproj.label().subst(this), noComponentsLabel()));
               } else confpols.add(cp);
             }
             ConfPolicy new_jp = joinConfPolicy(jp.position(), confpols);

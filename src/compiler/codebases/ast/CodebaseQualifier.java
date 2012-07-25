@@ -1,8 +1,7 @@
 package codebases.ast;
 
-import fabric.common.FabricLocation;
-
 import polyglot.types.Qualifier;
+import fabric.common.FabricLocation;
 
 public interface CodebaseQualifier extends Qualifier {
   FabricLocation namespace();

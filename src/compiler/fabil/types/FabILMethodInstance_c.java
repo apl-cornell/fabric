@@ -2,15 +2,22 @@ package fabil.types;
 
 import java.util.List;
 
-import polyglot.types.*;
+import polyglot.types.Declaration;
+import polyglot.types.Flags;
+import polyglot.types.MemberInstance;
+import polyglot.types.MethodInstance;
+import polyglot.types.MethodInstance_c;
+import polyglot.types.ProcedureInstance;
+import polyglot.types.ReferenceType;
+import polyglot.types.Type;
+import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 
 public class FabILMethodInstance_c extends MethodInstance_c {
 
-  @SuppressWarnings("rawtypes")
   public FabILMethodInstance_c(TypeSystem ts, Position pos,
       ReferenceType container, Flags flags, Type returnType, String name,
-      List formalTypes, List excTypes) {
+      List<? extends Type> formalTypes, List<? extends Type> excTypes) {
     super(ts, pos, container, flags, returnType, name, formalTypes, excTypes);
   }
 

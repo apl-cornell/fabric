@@ -3,9 +3,9 @@ package fabric.worker.transaction;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabric.lang.Object._Impl;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.ObjectCache;
-import fabric.lang.Object._Impl;
 
 /***
  * See {@link TransactionManager#readMap}.
