@@ -40,6 +40,11 @@ public abstract class ClassRef implements FastSerializable {
       }
 
       @Override
+      ClassRef deserialize(DataInput in) throws IOException {
+        return new PlatformClassRef(in);
+      }
+
+      @Override
       String className(byte[] data, int pos) {
         return PlatformClassRef.className(data, pos);
       }
@@ -77,6 +82,11 @@ public abstract class ClassRef implements FastSerializable {
       }
 
       @Override
+      ClassRef deserialize(DataInput in) throws IOException {
+        return new FabricClassRef(in);
+      }
+
+      @Override
       String className(byte[] data, int pos) {
         return "fab://" + FabricClassRef.storeName(data, pos) + "/"
             + FabricClassRef.onum(data, pos);
@@ -105,6 +115,8 @@ public abstract class ClassRef implements FastSerializable {
     };
 
     abstract ClassRef deserialize(byte[] data, int pos);
+
+    abstract ClassRef deserialize(DataInput in) throws IOException;
 
     abstract String className(byte[] data, int pos);
 
@@ -333,6 +345,24 @@ public abstract class ClassRef implements FastSerializable {
     }
 
     /**
+     * Deserializes a PlatformClassRef object from the given DataInput.
+     */
+    private PlatformClassRef(DataInput in) throws IOException {
+      super(ClassRefType.PLATFORM);
+
+      try {
+        this.clazz =
+            Worker.getWorker().getClassLoader().loadClass(in.readUTF());
+      } catch (ClassNotFoundException e) {
+        throw new InternalError(e);
+      }
+
+      byte[] hash = new byte[in.readShort()];
+      in.readFully(hash);
+      checkHash(hash);
+    }
+
+    /**
      * Copies a serialized PlatformClassRef from the given DataInput to the
      * given DataOutput.
      */
@@ -529,7 +559,7 @@ public abstract class ClassRef implements FastSerializable {
       try {
         return
             (Class<? extends Object>) Worker.getWorker().getClassLoader()
-                .loadClass(javaClassName());
+            .loadClass(javaClassName());
       } catch (ClassNotFoundException e) {
         throw new InternalError(e);
       }
@@ -591,7 +621,7 @@ public abstract class ClassRef implements FastSerializable {
     /**
      * Deserializes a FabricClassRef object from the given DataInput.
      */
-    public FabricClassRef(DataInput in) throws IOException {
+    private FabricClassRef(DataInput in) throws IOException {
       super(ClassRefType.FABRIC);
 
       byte[] storeNameData = new byte[in.readShort()];
@@ -806,6 +836,15 @@ public abstract class ClassRef implements FastSerializable {
   public static ClassRef deserialize(byte[] data, int pos) {
     ClassRefType type = ClassRefType.values()[data[pos]];
     return type.deserialize(data, pos + 1);
+  }
+
+  /**
+   * Deserializes a ClassRef from the given DataInput.
+   * @throws IOException
+   */
+  public static ClassRef deserialize(DataInput in) throws IOException {
+    ClassRefType type = ClassRefType.values()[in.readByte()];
+    return type.deserialize(in);
   }
 
   /**

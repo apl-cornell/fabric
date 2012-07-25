@@ -9,7 +9,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
 
-import fabric.common.ClassRef.FabricClassRef;
+import fabric.common.ClassRef;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Object._Proxy;
@@ -18,7 +18,7 @@ import fabric.worker.remote.RemoteCallException;
 import fabric.worker.remote.WriterMap;
 
 public class RemoteCallMessage
-     extends Message<RemoteCallMessage.Response, RemoteCallException>
+extends Message<RemoteCallMessage.Response, RemoteCallException>
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
@@ -26,7 +26,7 @@ public class RemoteCallMessage
 
   public final TransactionID tid;
   public final WriterMap writerMap;
-  public final FabricClassRef receiverType;
+  public final ClassRef receiverType;
   public final _Proxy receiver;
   public final String methodName;
   public final Class<?>[] parameterTypes;
@@ -43,7 +43,7 @@ public class RemoteCallMessage
    *          The arguments to the method.
    */
   public RemoteCallMessage(TransactionID tid, WriterMap writerMap,
-      FabricClassRef receiverType, _Proxy receiver, String methodName,
+      ClassRef receiverType, _Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args) {
     super(MessageType.REMOTE_CALL, RemoteCallException.class);
 
@@ -144,13 +144,13 @@ public class RemoteCallMessage
         new ObjectInputStream(new ByteArrayInputStream(buf));
 
     try {
-      this.receiverType = new FabricClassRef(ois);
+      this.receiverType = ClassRef.deserialize(ois);
       this.receiver = Message.readRef(receiverType.toClass(), ois);
-  
+
       this.methodName = ois.readUTF();
       this.parameterTypes = new Class<?>[ois.readInt()];
       this.args = new Object[parameterTypes.length];
-  
+
       for (int i = 0; i < args.length; i++) {
         parameterTypes[i] = (Class<?>) ois.readObject();
         if (ois.readBoolean())
@@ -171,7 +171,7 @@ public class RemoteCallMessage
     // Get the receiver's _Proxy class.
     Class<? extends fabric.lang.Object._Proxy> proxyType =
         receiverType.toProxyClass();
-    
+
     if (proxyType == null) {
       throw new InternalError(
           "Unable to find _Proxy class for " + receiverType);
