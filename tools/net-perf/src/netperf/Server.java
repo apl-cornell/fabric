@@ -24,11 +24,24 @@ public class Server {
     SubServerSocket server = sssf.createServerSocket("localhost");
 
     while (true) {
-      // Receive and ack pings on a single sub-socket.
+      // Receive an initial connection to flush out the initial setup overhead.
       SubSocket socket = server.accept();
       DataInputStream in =
           new DataInputStream(new BufferedInputStream(socket.getInputStream()));
       DataOutputStream out =
+          new DataOutputStream(new BufferedOutputStream(
+              socket.getOutputStream()));
+      in.readInt();
+      out.writeInt(0);
+      out.flush();
+      in.close();
+      out.close();
+
+      // Receive and ack pings on a single sub-socket.
+      socket = server.accept();
+      in =
+          new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+      out =
           new DataOutputStream(new BufferedOutputStream(
               socket.getOutputStream()));
 
@@ -65,21 +78,26 @@ public class Server {
 
       // Throughput test.
       byte[] megabyte = new byte[1000 * 1000];
-      long bytesWritten = 0;
+      long bytesReceived = 0;
       socket = server.accept();
       in =
           new DataInputStream(new BufferedInputStream(socket.getInputStream()));
       out =
           new DataOutputStream(new BufferedOutputStream(
               socket.getOutputStream()));
+      long start = System.nanoTime();
       try {
         while (true) {
           in.readFully(megabyte);
-          bytesWritten += megabyte.length;
+          bytesReceived += megabyte.length;
         }
       } catch (IOException e) {
       }
-      System.out.println(bytesWritten);
+      long end = System.nanoTime();
+      System.out.println(Config.formatBytes(bytesReceived) + " received in "
+          + Config.formatTime(end - start) + " ("
+          + Config.formatbps(8000000000.0 * bytesReceived / (end - start))
+          + ")");
 
       try {
         in.close();

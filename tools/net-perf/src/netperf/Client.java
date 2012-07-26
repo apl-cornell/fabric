@@ -5,7 +5,6 @@ import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -28,23 +27,6 @@ public class Client {
     return sum / data.length;
   }
 
-  private static DecimalFormat zeroDForm = new DecimalFormat("##0");
-  private static DecimalFormat oneDForm = new DecimalFormat("#0.0");
-  private static DecimalFormat twoDForm = new DecimalFormat("0.00");
-  private static DecimalFormat threeDForm = new DecimalFormat("0.000");
-
-  private static String formatTime(long ns) {
-    double ms = ns / 1000000.0;
-
-    if (ms < 1) return threeDForm.format(ms) + "ms";
-
-    if (ms < 10) return twoDForm.format(ms) + "ms";
-
-    if (ms < 100) return oneDForm.format(ms) + "ms";
-
-    return zeroDForm.format(ms) + "ms";
-  }
-
   public static void main(String[] args) throws IOException,
   InterruptedException {
     if (args.length == 0) {
@@ -58,12 +40,23 @@ public class Client {
     NameService dns = new DNS();
     SubSocketFactory ssf = new SubSocketFactory(protocol, dns);
 
-    // Send pings, all on the same sub-socket.
-    System.out.println("Measuring latency for single sub-socket...");
+    // Set up a first sub-socket to flush out the initial setup overhead.
     SubSocket socket = ssf.createSocket(host);
     DataInputStream in =
         new DataInputStream(new BufferedInputStream(socket.getInputStream()));
     DataOutputStream out =
+        new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+    out.writeInt(0);
+    out.flush();
+    in.readInt();
+    in.close();
+    out.close();
+
+    // Send pings, all on the same sub-socket.
+    System.out.println("Measuring latency for single sub-socket...");
+    socket = ssf.createSocket(host);
+    in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+    out =
         new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
     byte[] ping = new byte[Config.PING_SIZE];
@@ -82,7 +75,7 @@ public class Client {
 
       times[i] = end - start;
       System.out.println(Config.PING_SIZE + " bytes from " + host + ": req="
-          + (i + 1) + " time=" + formatTime(times[i]));
+          + (i + 1) + " time=" + Config.formatTimeMS(times[i]));
     }
 
     System.out.println();
@@ -91,9 +84,9 @@ public class Client {
 
     // Print stats.
     Arrays.sort(times);
-    System.out.println("rtt min/avg/max = " + formatTime(times[0]) + "/"
-        + formatTime(average(times)) + "/"
-        + formatTime(times[Config.NUM_PINGS - 1]));
+    System.out.println("rtt min/avg/max = " + Config.formatTimeMS(times[0])
+        + "/" + Config.formatTimeMS(average(times)) + "/"
+        + Config.formatTimeMS(times[Config.NUM_PINGS - 1]));
     System.out.println();
 
     // Send pings, each on its own sub-socket.
@@ -124,16 +117,16 @@ public class Client {
 
       times[i] = end - start;
       System.out.println(Config.PING_SIZE + " bytes from " + host + ": req="
-          + (i + 1) + " time=" + formatTime(times[i]));
+          + (i + 1) + " time=" + Config.formatTimeMS(times[i]));
     }
 
     System.out.println();
 
     // Print stats.
     Arrays.sort(times);
-    System.out.println("rtt min/avg/max = " + formatTime(times[0]) + "/"
-        + formatTime(average(times)) + "/"
-        + formatTime(times[Config.NUM_PINGS - 1]));
+    System.out.println("rtt min/avg/max = " + Config.formatTimeMS(times[0])
+        + "/" + Config.formatTimeMS(average(times)) + "/"
+        + Config.formatTimeMS(times[Config.NUM_PINGS - 1]));
     System.out.println();
 
     // Throughput test.
@@ -145,7 +138,9 @@ public class Client {
   }
 
   private static class Data {
-    long bytesWritten = 0;
+    long start = 0;
+    long end = 0;
+    long bytesSent = 0;
     boolean run = true;
   }
 
@@ -163,13 +158,20 @@ public class Client {
         try {
           Random rand = new Random();
           byte[] megabyte = new byte[1000 * 1000];
+          data.start = System.nanoTime();
           while (data.run) {
             rand.nextBytes(megabyte);
             out.write(megabyte);
-            data.bytesWritten += megabyte.length;
+            data.bytesSent += megabyte.length;
           }
         } catch (IOException e) {
           e.printStackTrace();
+        } finally {
+          try {
+            out.flush();
+          } catch (IOException e) {
+          }
+          data.end = System.nanoTime();
         }
       }
     };
@@ -186,7 +188,12 @@ public class Client {
     in.close();
     out.close();
 
-    System.out.println(data.bytesWritten);
+    System.out.println(Config.formatBytes(data.bytesSent)
+        + " sent in "
+        + Config.formatTime(data.end - data.start)
+        + " ("
+        + Config.formatbps(8000000000.0 * data.bytesSent
+            / (data.end - data.start)) + ")");
   }
 
 }
