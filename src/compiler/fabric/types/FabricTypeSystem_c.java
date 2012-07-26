@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jif.ast.JifUtil;
 import jif.ast.LabelActsForLabelConstraintNode;
 import jif.ast.LabelActsForPrincipalConstraintNode;
 import jif.ast.LabelNode;
@@ -414,7 +413,7 @@ FabricTypeSystem {
     try {
       JifLocalInstance li = workerLocalInstance();
       Principal p =
-          dynamicPrincipal(pos, JifUtil.varInstanceToAccessPath(li, pos));
+ dynamicPrincipal(pos, varInstanceToAccessPath(li, pos));
       li.setLabel(pairLabel(li.position(),
           readerPolicy(li.position(), p, bottomPrincipal(li.position())),
           writerPolicy(li.position(), p, p)));

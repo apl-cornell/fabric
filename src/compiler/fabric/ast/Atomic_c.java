@@ -21,7 +21,7 @@ public class Atomic_c extends Block_c implements Atomic {
   }
 
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     // TODO There needs to be an edge for AbortException
 
     // Find all the aborts and retries that are lexically enclosed in the
