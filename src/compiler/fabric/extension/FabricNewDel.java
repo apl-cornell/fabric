@@ -2,7 +2,6 @@ package fabric.extension;
 
 import java.util.List;
 
-import jif.ast.JifUtil;
 import jif.types.JifContext;
 import polyglot.ast.Expr;
 import polyglot.ast.JL_c;
@@ -53,7 +52,7 @@ public class FabricNewDel extends JL_c {
       }
       JifContext context = (JifContext) tc.context();
       ext =
-          (NewExt_c) ext.storePrincipal(JifUtil.exprToPrincipal(ts,
+          (NewExt_c) ext.storePrincipal(ts.exprToPrincipal(ts,
               ext.location(), context));
       n = FabricUtil.updateFabricExt(n, ext);
     }

@@ -29,7 +29,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
   }
 
   @Override
-  public FabricArrayInit elements(List elements) {
+  public FabricArrayInit elements(List<Expr> elements) {
     return (FabricArrayInit) super.elements(elements);
   }
 

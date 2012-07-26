@@ -411,7 +411,7 @@ public abstract class AbstractList[label L] extends AbstractCollection[L] implem
      
 }
 
-final class AbstractListIterator[label L] implements ListIterator[L] {
+class AbstractListIterator[label L] implements ListIterator[L] {
   /**
    * 
    */
@@ -432,6 +432,7 @@ final class AbstractListIterator[label L] implements ListIterator[L] {
   AbstractListIterator{L}(AbstractList[L]{L} al, int{L} index) throws (NullPointerException{L}) {
     this.index = index;
     position = index;
+    if (al == null) throw new NullPointerException();
     this.al = al;
     knownMod = al.modCount;
     size = al.size();

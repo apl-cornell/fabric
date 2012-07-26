@@ -2,7 +2,7 @@ package fabric.worker.remote;
 
 import java.io.IOException;
 
-import fabric.common.ClassRef.FabricClassRef;
+import fabric.common.ClassRef;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
@@ -61,7 +61,7 @@ public final class RemoteWorker extends RemoteNode {
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
-      throws UnreachableNodeException, RemoteCallException {
+          throws UnreachableNodeException, RemoteCallException {
     TransactionManager tm = TransactionManager.getInstance();
     tm.registerRemoteCall(this);
 
@@ -70,8 +70,8 @@ public final class RemoteWorker extends RemoteNode {
 
     Class<? extends fabric.lang.Object> receiverClass =
         (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
-            .getClass().getEnclosingClass();
-    FabricClassRef receiverClassRef = new FabricClassRef(receiverClass);
+        .getClass().getEnclosingClass();
+    ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
 
     RemoteCallMessage.Response response =
         send(new RemoteCallMessage(tid, writerMap, receiverClassRef, receiver,
@@ -95,7 +95,7 @@ public final class RemoteWorker extends RemoteNode {
   }
 
   public void commitTransaction(long tid) throws UnreachableNodeException,
-      TransactionCommitFailedException {
+  TransactionCommitFailedException {
     send(new CommitTransactionMessage(tid));
   }
 
@@ -106,7 +106,7 @@ public final class RemoteWorker extends RemoteNode {
    *          the tid for the transaction that is aborting.
    */
   public void abortTransaction(TransactionID tid) throws AccessException,
-      UnreachableNodeException {
+  UnreachableNodeException {
     send(new AbortTransactionMessage(tid));
   }
 

@@ -171,12 +171,6 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       tm.associateLog(null);
     }
 
-    try {
-      tm.sendPrepareMessages(prepareTransactionMessage.commitTime);
-    } finally {
-      tm.associateLog(null);
-    }
-
     return new PrepareTransactionMessage.Response();
   }
 

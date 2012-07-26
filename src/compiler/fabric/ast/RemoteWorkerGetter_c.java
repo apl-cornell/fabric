@@ -47,7 +47,7 @@ public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
   }
 
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     v.visitCFG(remoteWorkerName, this, EXIT);
     return succs;
   }

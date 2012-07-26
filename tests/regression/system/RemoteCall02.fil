@@ -3,6 +3,11 @@ package system;
 public class RemoteCall02 {
   int i;
 
+  public RemoteCall02 system$RemoteCall02$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
   public void m() {
     i++;
   }
@@ -16,7 +21,7 @@ public class RemoteCall02 {
     Store store = Worker.getWorker().getStore("store0");
     RemoteWorker remoteWorker = Worker.getWorker().getWorker("store0");
     atomic {
-      t = new RemoteCall02@store();
+      t = new RemoteCall02@store().system$RemoteCall02$();
     }
 
     atomic {
