@@ -3,14 +3,15 @@ package fabric.types;
 import jif.types.Assertion;
 import jif.types.JifTypeSystem;
 import jif.types.hierarchy.LabelEnv;
-import jif.types.label.AccessPath;
 import jif.types.label.ConfPolicy;
 import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
+import polyglot.ast.Expr;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.ReferenceType;
+import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import codebases.frontend.CodebaseSource;
@@ -45,8 +46,6 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
       String name);
 
   Type strip(Type type);
-
-  boolean isLocalWorkerAccessPath(AccessPath ap);
 
   ConfPolicy representableConfProjection(Label L);
 
@@ -117,5 +116,15 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    * @return
    */
   Label replaceProjections(Label label);
+
+  /**
+   * @param expr
+   * @param context
+   * @param pos
+   * @return
+   * @throws SemanticException
+   */
+  Principal storePrincipal(Expr expr, FabricContext context, Position pos)
+      throws SemanticException;
 
 }

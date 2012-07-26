@@ -27,8 +27,6 @@ import jif.types.ParamInstance;
 import jif.types.Solver;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
-import jif.types.label.AccessPathConstant;
-import jif.types.label.AccessPathLocal;
 import jif.types.label.ArgLabel;
 import jif.types.label.ConfPolicy;
 import jif.types.label.ConfProjectionPolicy_c;
@@ -43,6 +41,7 @@ import jif.types.label.ProviderLabel;
 import jif.types.label.ThisLabel;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
+import polyglot.ast.Expr;
 import polyglot.ext.param.types.Subst;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
@@ -410,7 +409,7 @@ FabricTypeSystem {
     if (workerLocalPrincipal == null) {
       WorkerLocalInstance wli = workerLocalInstance();
       workerLocalPrincipal =
-          dynamicPrincipal(pos, new AccessPathWorker(wli, pos));
+          dynamicPrincipal(pos, new AccessPathLocalWorker(wli, pos));
       wli.setLabel(pairLabel(
           wli.position(),
           readerPolicy(wli.position(), workerLocalPrincipal,
@@ -419,6 +418,14 @@ FabricTypeSystem {
                   workerLocalPrincipal)));
     }
     return workerLocalPrincipal;
+  }
+
+  @Override
+  public Principal storePrincipal(Expr expr, FabricContext context, Position pos)
+      throws SemanticException {
+    AccessPath ap = exprToAccessPath(expr, context);
+    AccessPathStore store = new AccessPathStore(ap, pos);
+    return dynamicPrincipal(pos, store);
   }
 
   @Override
@@ -485,36 +492,6 @@ FabricTypeSystem {
   public Subst<ParamInstance, Param> subst(
       Map<ParamInstance, ? extends Param> substMap) {
     return new FabricSubst_c(this, substMap);
-  }
-
-  @Override
-  public DynamicPrincipal dynamicPrincipal(Position pos, AccessPath path) {
-    DynamicPrincipal t =
-        new FabricDynamicPrincipal_c(path, this, pos,
-            dynamicPrincipalTranslator());
-    return t;
-  }
-
-  @Override
-  public Principal pathToPrincipal(Position pos, AccessPath path) {
-    if (path instanceof AccessPathConstant) {
-      AccessPathConstant apc = (AccessPathConstant) path;
-      if (!apc.isPrincipalConstant()) {
-        throw new InternalCompilerError(
-            "Dynamic principal with a constant access path: " + apc);
-      }
-      return (Principal) apc.constantValue();
-    }
-    DynamicPrincipal t =
-        new FabricDynamicPrincipal_c(path, this, pos,
-            dynamicPrincipalTranslator());
-    return t;
-  }
-
-  @Override
-  public boolean isLocalWorkerAccessPath(AccessPath ap) {
-    return ap instanceof AccessPathLocal
-        && ((AccessPathLocal) ap).localInstance() == workerLocalInstance();
   }
 
   @Override
