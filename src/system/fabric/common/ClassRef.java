@@ -519,7 +519,7 @@ public abstract class ClassRef implements FastSerializable {
      *          corresponding to the Fabric type, and not the _Proxy or _Impl
      *          classes.
      */
-    public FabricClassRef(Class<? extends fabric.lang.Object> clazz) {
+    private FabricClassRef(Class<? extends fabric.lang.Object> clazz) {
       super(ClassRefType.FABRIC);
       try {
         this.fClass = (FClass._Proxy) NSUtil.toProxy(clazz.getName());
