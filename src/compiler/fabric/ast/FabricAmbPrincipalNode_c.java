@@ -32,7 +32,7 @@ public class FabricAmbPrincipalNode_c extends AmbPrincipalNode_c {
       FabricNodeFactory nf = (FabricNodeFactory) ar.nodeFactory();
 
       return nf.CanonicalPrincipalNode(position(),
-          ts.workerPrincipal(position()));
+          ts.workerLocalPrincipal(position()));
     }
 
     return super.disambiguate(ar);

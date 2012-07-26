@@ -91,7 +91,7 @@ public class FabILOptions extends polyglot.main.Options {
    * Use optimizations.
    */
   public int optLevel;
-  
+
   /**
    * Codebase names.
    */
@@ -110,7 +110,7 @@ public class FabILOptions extends polyglot.main.Options {
     sigcp = new ArrayList<FabricLocation>();
     codebase_aliases = new LinkedHashMap<String, FabricLocation>();
   }
-  
+
   @Override
   protected void populateFlags(Set<OptFlag<?>> flags) {
     flags.add(new Switch("-sig", "compile sources to signatures"));
@@ -153,19 +153,19 @@ public class FabILOptions extends polyglot.main.Options {
       }
     });
     flags.add(new OptFlag<List<FabricLocation>>("-bootclasspath", "<path>",
-        "where to find Fabric runtime classes", 
+        "where to find Fabric runtime classes",
         "JVM property: sun.boot.class.path (or all jars in java.home/lib)") {
       @Override
       public Arg<List<FabricLocation>> handle(String[] args, int index) {
         List<FabricLocation> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
-      
+
       @Override
       public Arg<List<FabricLocation>> defaultArg() {
         return createDefault(NSUtil.processPathString(jvmbootclasspath()));
       }
-      
+
     });
     flags.add(new OptFlag<List<FabricLocation>>("-addbootcp", "<path>",
         "prepend <path> to the bootclasspath") {
@@ -173,9 +173,9 @@ public class FabILOptions extends polyglot.main.Options {
       public Arg<List<FabricLocation>> handle(String[] args, int index) {
         List<FabricLocation> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
-      }       
+      }
     });
-    
+
     flags.add(new OptFlag<String>("-worker", "<name>",
         "The worker to use for fetching and publishing mobile code.") {
       @Override
@@ -250,7 +250,7 @@ public class FabILOptions extends polyglot.main.Options {
     flags.add(new Switch("-generate-native-skeletons",
         "generate java bootstrap skeletons for each class"));
     flags.add(new Switch("-platform-mode", "build platform classes"));
-    flags.add(new IntFlag("-optlevel", "<num>", "perform level <num> optimizations", 0));    
+    flags.add(new IntFlag("-optlevel", "<num>", "perform level <num> optimizations", 0));
 
     super.populateFlags(flags);
   }
@@ -266,7 +266,7 @@ public class FabILOptions extends polyglot.main.Options {
     arguments.add(src);
     return src.next();
   }
-  
+
   @Override
   protected void handleSourceArg(Arg<?> arg, Set<String> source) {
     URI uri = (URI) arg.value();
@@ -281,48 +281,48 @@ public class FabILOptions extends polyglot.main.Options {
       // Signature mode implies platform mode. The local namespace should be the
       // platform ns
       signatureMode = (Boolean) arg.value();
-    
+
     } else if (arg.flag().ids().contains("-dumpdeps")) {
-      dumpDependencies = (Boolean) arg.value(); 
-    
+      dumpDependencies = (Boolean) arg.value();
+
     } else if (arg.flag().ids().contains("-sigcp")) {
       sigcp.clear();
       sigcp.addAll((List<FabricLocation>) arg.value());
-      
+
     } else if (arg.flag().ids().contains("-addsigcp")) {
       sigcp.addAll((List<FabricLocation>) arg.value());
-    
+
     } else if (arg.flag().ids().contains("-addbootcp")) {
       bootclasspath.addAll((List<FabricLocation>) arg.value());
 
     } else if (arg.flag().ids().contains("-classpath")) {
       classpath.addAll((List<FabricLocation>) arg.value());
-    
+
     } else if (arg.flag().ids().contains("-sourcepath")) {
       source_path.addAll((List<FabricLocation>) arg.value());
-      
+
     } else if (arg.flag().ids().contains("-bootclasspath")) {
       bootclasspath.addAll((List<FabricLocation>) arg.value());
-      
+
     } else if (arg.flag().ids().contains("-worker")) {
       workerName = (String) arg.value();
-    
+
     } else if (arg.flag().ids().contains("-deststore")) {
       destinationStore = (String) arg.value();
       needWorker = true;
-      
+
     } else if (arg.flag().ids().contains("-codebase-alias")) {
       Pair<String, FabricLocation> pair = (Pair<String, FabricLocation>) arg.value();
       String alias = pair.part1();
       FabricLocation loc = pair.part2();
       codebase_aliases.put(alias, loc);
-      
+
     } else if (arg.flag().ids().contains("-generate-native-skeletons")) {
       createSkeleton = (Boolean) arg.value();
 
     } else if (arg.flag().ids().contains("-platform-mode")) {
       platform_mode = (Boolean) arg.value();
-      
+
     } else if (arg.flag().ids().contains("-optlevel")) {
       optLevel = (Integer) arg.value();
 
@@ -330,7 +330,7 @@ public class FabILOptions extends polyglot.main.Options {
 
   }
 
-  
+
   @Override
   protected void postApplyArgs() {
     // Signature mode implies platform mode
@@ -339,23 +339,23 @@ public class FabILOptions extends polyglot.main.Options {
     // Don't serialize types with skeletons
     if (createSkeleton)
       serialize_type_info = false;
-    
+
     source_output =
         new FabricLocation_c("SOURCE_OUTPUT", true,
             source_output_directory.toURI());
     class_output =
         new FabricLocation_c("CLASS_OUTPUT", true,
             class_output_directory.toURI());
-    
-    // We need a worker if any path entry or source file 
+
+    // We need a worker if any path entry or source file
     // is a remote URI
     for (FabricLocation loc : classpath) {
       if (loc.isFabricReference())
         needWorker = true;
     }
     for (FabricLocation loc : source_path) {
-     if (loc.isFabricReference())
-       needWorker = true;
+      if (loc.isFabricReference())
+        needWorker = true;
     }
   }
 
@@ -424,11 +424,11 @@ public class FabILOptions extends polyglot.main.Options {
   public boolean needWorker() {
     return needWorker;
   }
-  
+
   public int optLevel() {
     return optLevel;
   }
-  
+
   @Override
   public String constructPostCompilerClasspath() {
     StringBuilder sb = new StringBuilder(super.constructPostCompilerClasspath());

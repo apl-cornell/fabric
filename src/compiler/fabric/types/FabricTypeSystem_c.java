@@ -18,7 +18,6 @@ import jif.types.ActsForConstraint;
 import jif.types.Assertion;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
-import jif.types.JifLocalInstance;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabelLeAssertion;
 import jif.types.LabelSubstitution;
@@ -384,7 +383,9 @@ FabricTypeSystem {
     return load("fabric.lang.security.DelegatingPrincipal");
   }
 
-  private JifLocalInstance workerLocalInstance = null;
+  protected WorkerLocalInstance workerLocalInstance = null;
+
+  protected DynamicPrincipal workerLocalPrincipal = null;
 
   @Override
   public ThisLabel thisLabel(Position pos, ReferenceType ct) {
@@ -392,7 +393,7 @@ FabricTypeSystem {
   }
 
   @Override
-  public JifLocalInstance workerLocalInstance() {
+  public WorkerLocalInstance workerLocalInstance() {
     if (workerLocalInstance == null) {
       // Always use the same local instance, because jif now use pointer
       // identity to compare local instances
@@ -400,28 +401,24 @@ FabricTypeSystem {
       workerLocalInstance =
           new WorkerLocalInstance_c(this, Position.compilerGenerated(),
               Flags.FINAL, Worker(), "worker$");
-
-      // workerLocalInstance.setLabel(freshLabelVariable(workerLocalInstance.position(),
-      // "worker$", "worker$"));
     }
     return workerLocalInstance;
   }
 
   @Override
-  public Principal workerPrincipal(Position pos) {
-    // return dynamicPrincipal(pos, new AccessPathWorker(pos, this));
-    try {
-      JifLocalInstance li = workerLocalInstance();
-      Principal p =
- dynamicPrincipal(pos, varInstanceToAccessPath(li, pos));
-      li.setLabel(pairLabel(li.position(),
-          readerPolicy(li.position(), p, bottomPrincipal(li.position())),
-          writerPolicy(li.position(), p, p)));
-      return p;
-    } catch (SemanticException e) {
-      // shouldn't happen
-      throw new InternalCompilerError(e);
+  public Principal workerLocalPrincipal(Position pos) {
+    if (workerLocalPrincipal == null) {
+      WorkerLocalInstance wli = workerLocalInstance();
+      workerLocalPrincipal =
+          dynamicPrincipal(pos, new AccessPathWorker(wli, pos));
+      wli.setLabel(pairLabel(
+          wli.position(),
+          readerPolicy(wli.position(), workerLocalPrincipal,
+              bottomPrincipal(wli.position())),
+              writerPolicy(wli.position(), workerLocalPrincipal,
+                  workerLocalPrincipal)));
     }
+    return workerLocalPrincipal;
   }
 
   @Override

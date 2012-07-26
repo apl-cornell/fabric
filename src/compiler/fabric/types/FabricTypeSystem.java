@@ -10,7 +10,6 @@ import jif.types.label.Label;
 import jif.types.principal.Principal;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
-import polyglot.types.LocalInstance;
 import polyglot.types.ReferenceType;
 import polyglot.types.Type;
 import polyglot.util.Position;
@@ -35,9 +34,9 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    * @param pos
    * @return
    */
-  Principal workerPrincipal(Position pos);
+  Principal workerLocalPrincipal(Position pos);
 
-  LocalInstance workerLocalInstance();
+  WorkerLocalInstance workerLocalInstance();
 
   FabricDefaultSignature fabricDefaultSignature();
 
@@ -56,13 +55,13 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   /**
    * Checks whether <code>type</code> is a Fabric class, that is, inherits
    * <code>fabric.lang.Object</code>.
-   * Returns false if <code>type</code> is an interface. 
-   * Returns false if <code>type</code> is an interface. 
+   * Returns false if <code>type</code> is an interface.
+   * Returns false if <code>type</code> is an interface.
    */
   boolean isFabricClass(Type type);
 
   /**
-   * Checks whether <code>type</code> is a Fabric interface, 
+   * Checks whether <code>type</code> is a Fabric interface,
    * and inherits <code>fabric.lang.Object</code>.
    */
   boolean isFabricInterface(Type type);
