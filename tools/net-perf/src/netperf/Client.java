@@ -194,11 +194,11 @@ public class Client {
         + Config.formatTimeMS(times[Config.NUM_FLOOD_PINGS - 1]));
     System.out.println();
 
-//    // Throughput test on single sub-socket.
-//    throughputTest(ssf.createSocket(host));
+    // Throughput test on single sub-socket.
+    throughputTest(ssf.createSocket(host));
 
     // Throughput test with each megabyte on its own sub-socket.
-    throughputTest(ssf, host);
+//    throughputTest(ssf, host);
 
     socket.close();
   }
@@ -210,7 +210,6 @@ public class Client {
     boolean run = true;
   }
 
-  @SuppressWarnings("unused")
   private static void throughputTest(final SubSocket socket)
       throws IOException, InterruptedException {
     System.out.println("Running throughput test on single sub-socket ("
@@ -252,7 +251,6 @@ public class Client {
     try {
       thread.join();
     } catch (InterruptedException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
     in.close();
@@ -266,6 +264,7 @@ public class Client {
             / (data.end - data.start)) + ")");
   }
 
+  @SuppressWarnings("unused")
   private static void throughputTest(final SubSocketFactory factory,
       final String host) throws InterruptedException {
     System.out.println("Running throughput test with socket set-up & "
@@ -309,7 +308,6 @@ public class Client {
     try {
       thread.join();
     } catch (InterruptedException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
 

@@ -76,8 +76,8 @@ public class Server {
         out.close();
       }
 
-//      throughputTestSingleSocket(server);
-      throughputTestMultipleSockets(server);
+      throughputTestSingleSocket(server);
+//      throughputTestMultipleSockets(server);
 
       try {
         socket.close();
@@ -86,7 +86,6 @@ public class Server {
     }
   }
 
-  @SuppressWarnings("unused")
   private static void throughputTestSingleSocket(SubServerSocket server)
       throws IOException {
     // Throughput test on single sub-socket.
@@ -121,6 +120,7 @@ public class Server {
     }
   }
 
+  @SuppressWarnings("unused")
   private static void throughputTestMultipleSockets(SubServerSocket server) {
     // Throughput test with each megabyte on its own sub-socket.
     long bytesReceived = 0;
