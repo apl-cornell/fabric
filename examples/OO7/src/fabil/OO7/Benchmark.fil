@@ -139,14 +139,14 @@ public class Benchmark {
     this.numConnPerAtomic = numConnPerAtomic;
     
     // Initialize extents
-    this.atomicPartsById        = (HashMap) new HashMap@partStore().fabric$util$HashMap$();
-    //this.atomicPartsByBuildDate = (HashMap) new HashMap@partStore().fabric$util$HashMap$();
-    this.compositePartsById     = (HashMap) new HashMap@partStore().fabric$util$HashMap$();
-    //this.documentsByTitle       = (HashMap) new HashMap@documentStore().fabric$util$HashMap$();
-    this.documentsById          = (HashMap) new HashMap@documentStore().fabric$util$HashMap$();
-    this.baseAssembliesById     = (HashMap) new HashMap@assemblyStore().fabric$util$HashMap$();
-    this.complexAssembliesById  = (HashMap) new HashMap@assemblyStore().fabric$util$HashMap$();
-    this.modulesById            = (HashMap) new HashMap@moduleStore().fabric$util$HashMap$();
+    this.atomicPartsById        = (HashMap) new LinkedHashMap@partStore().fabric$util$LinkedHashMap$();
+    //this.atomicPartsByBuildDate = (HashMap) new LinkedHashMap@partStore().fabric$util$LinkedHashMap$();
+    this.compositePartsById     = (HashMap) new LinkedHashMap@partStore().fabric$util$LinkedHashMap$();
+    //this.documentsByTitle       = (HashMap) new LinkedHashMap@documentStore().fabric$util$LinkedHashMap$();
+    this.documentsById          = (HashMap) new LinkedHashMap@documentStore().fabric$util$LinkedHashMap$();
+    this.baseAssembliesById     = (HashMap) new LinkedHashMap@assemblyStore().fabric$util$LinkedHashMap$();
+    this.complexAssembliesById  = (HashMap) new LinkedHashMap@assemblyStore().fabric$util$LinkedHashMap$();
+    this.modulesById            = (HashMap) new LinkedHashMap@moduleStore().fabric$util$LinkedHashMap$();
     return this;
   }
 
