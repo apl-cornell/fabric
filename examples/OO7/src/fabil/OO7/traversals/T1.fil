@@ -5,6 +5,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.util.Iterator;
 import fabric.util.HashMap;
+import fabric.util.LinkedHashMap;
 
 /** Traverse the assembly hierarchy.  As each base assembly is visited, visit
  * each of its unshared referenced parts.  As each composite part is visited,
@@ -42,7 +43,7 @@ public class T1 extends PrivatePartTraversal {
 
   public void visitCompositePart (CompositePart p) {
     Store local = Worker.getWorker().getLocalStore();
-    visited = (HashMap) new HashMap@local().fabric$util$HashMap$();
+    visited = (HashMap) new LinkedHashMap@local().fabric$util$LinkedHashMap$();
     p.rootPart().accept(this);
     result += visited.size();
     visited = null;
