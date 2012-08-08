@@ -67,9 +67,10 @@ public class Threading {
    * A ThreadFactory that creates FabricThread.Impls.
    */
   private static class FabricThreadFactory implements ThreadFactory {
+    private int nextID = 1;
     @Override
-    public Thread newThread(Runnable r) {
-      return new FabricThread.Impl(r, "Idle thread");
+    public synchronized Thread newThread(Runnable r) {
+      return new FabricThread.Impl(r, "Idle thread " + (nextID++));
     }
   }
 
