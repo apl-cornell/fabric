@@ -1,0 +1,39 @@
+package system;
+
+public class Exception01 {
+  int i;
+
+  public Exception01 system$Exception01$() {
+    fabric$lang$Object$();
+    return this;
+  }
+  public void m() {
+    i++;
+  }
+
+  public void m_remote(fabric.lang.security.Principal p) {
+    i++;
+    throw new NullPointerException("This is the test exception.");
+  }
+
+  public static void main(String[] args) {
+    Exception01 t = null;
+    Store store = Worker.getWorker().getStore("store0");
+    atomic {
+      t = new Exception01@store().system$Exception01$();
+    }
+
+    atomic {
+      t.m_remote(Worker.getWorker().getPrincipal());
+    }
+
+    int curI = 0;
+    atomic {
+      curI = t.i;
+    }
+
+    if (curI == 1) System.out.println("TEST PASSED.");
+    else System.out.println("TEST FAILED: expected t.i == 1 but got " + curI);
+  }
+}
+

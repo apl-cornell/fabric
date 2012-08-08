@@ -1,0 +1,40 @@
+package system;
+
+public class RemoteException01 {
+  int i;
+
+  public RemoteException01 system$RemoteException01$() {
+    fabric$lang$Object$();
+    return this;
+  }
+  public void m() {
+    i++;
+  }
+
+  public void m_remote(fabric.lang.security.Principal p) {
+    i++;
+    throw new NullPointerException("This is the test exception from the remote call");
+  }
+
+  public static void main(String[] args) {
+    RemoteException01 t = null;
+    Store store = Worker.getWorker().getStore("store0");
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker("store0");
+    atomic {
+      t = new RemoteException01@store().system$RemoteException01$();
+    }
+
+    atomic {
+      t.m_remote@remoteWorker(Worker.getWorker().getPrincipal());
+    }
+
+    int curI = 0;
+    atomic {
+      curI = t.i;
+    }
+
+    if (curI == 1) System.out.println("TEST PASSED.");
+    else System.out.println("TEST FAILED: expected t.i == 1 but got " + curI);
+  }
+}
+
