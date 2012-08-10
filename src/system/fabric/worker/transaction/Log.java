@@ -1,11 +1,19 @@
 package fabric.worker.transaction;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 import fabric.common.Options;
+import fabric.common.SysUtil;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
-import fabric.common.SysUtil;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
@@ -247,7 +255,6 @@ public final class Log {
    * @param includeModified
    *          whether to include reads on modified objects.
    */
-  @SuppressWarnings("unchecked")
   LongKeyMap<Integer> getReadsForStore(Store store, boolean includeModified) {
     LongKeyMap<Integer> result = new LongKeyHashMap<Integer>();
     LongKeyMap<ReadMapEntry> submap = reads.get(store);
@@ -265,14 +272,18 @@ public final class Log {
 
     if (store.isLocalStore()) {
       Iterable<_Impl> writesToExclude =
-          includeModified ? Collections.EMPTY_LIST : localStoreWrites;
-      for (_Impl write : SysUtil.chain(writesToExclude, localStoreCreates))
-        result.remove(write.$getOnum());
+          includeModified ? Collections.<_Impl> emptyList() : localStoreWrites;
+          @SuppressWarnings("unchecked")
+          Iterable<_Impl> chain = SysUtil.chain(writesToExclude, localStoreCreates);
+          for (_Impl write : chain)
+            result.remove(write.$getOnum());
     } else {
       Iterable<_Impl> writesToExclude =
-          includeModified ? Collections.EMPTY_LIST : writes;
-      for (_Impl write : SysUtil.chain(writesToExclude, creates))
-        if (write.$getStore() == store) result.remove(write.$getOnum());
+          includeModified ? Collections.<_Impl> emptyList() : writes;
+          @SuppressWarnings("unchecked")
+          Iterable<_Impl> chain = SysUtil.chain(writesToExclude, creates);
+          for (_Impl write : chain)
+            if (write.$getStore() == store) result.remove(write.$getOnum());
     }
 
     return result;
@@ -354,7 +365,6 @@ public final class Log {
    * Updates logs and data structures in <code>_Impl</code>s to abort this
    * transaction. All locks held by this transaction are released.
    */
-  @SuppressWarnings("unchecked")
   void abort() {
     // Release read locks.
     for (LongKeyMap<ReadMapEntry> submap : reads) {
@@ -367,7 +377,9 @@ public final class Log {
       entry.releaseLock(this);
 
     // Roll back writes and release write locks.
-    for (_Impl write : SysUtil.chain(writes, localStoreWrites)) {
+    @SuppressWarnings("unchecked")
+    Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
+    for (_Impl write : chain) {
       synchronized (write) {
         write.$copyStateFrom(write.$history);
 
@@ -524,7 +536,6 @@ public final class Log {
    * transaction. Assumes this is a top-level transaction. All locks held by
    * this transaction are released.
    */
-  @SuppressWarnings("unchecked")
   void commitTopLevel() {
     // Release read locks.
     for (LongKeyMap<ReadMapEntry> submap : reads) {
@@ -538,7 +549,9 @@ public final class Log {
       throw new InternalError("something was read by a non-existent parent");
 
     // Release write locks and ownerships; update version numbers.
-    for (_Impl obj : SysUtil.chain(writes, localStoreWrites)) {
+    @SuppressWarnings("unchecked")
+    Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
+    for (_Impl obj : chain) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
@@ -562,7 +575,9 @@ public final class Log {
     }
 
     // Release write locks on created objects and set version numbers.
-    for (_Impl obj : SysUtil.chain(creates, localStoreCreates)) {
+    @SuppressWarnings("unchecked")
+    Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
+    for (_Impl obj : chain2) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
@@ -702,6 +717,7 @@ public final class Log {
    * 
    * @deprecated
    */
+  @Deprecated
   public void renumberObject(Store store, long onum, long newOnum) {
     ReadMapEntry entry = reads.remove(store, onum);
     if (entry != null) {

@@ -15,6 +15,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 
 import fabric.common.exceptions.NotImplementedException;
+import fabric.common.net.SubServerSocketFactory.Acceptor.ConnectionQueue;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.handshake.ShakenSocket;
 import fabric.common.net.naming.NameService;
@@ -41,8 +42,22 @@ public class SubServerSocketFactory {
    *          ServerSockets used to implement SubServerSockets returned by this
    */
   public SubServerSocketFactory(Protocol handshake, NameService nameService) {
+    this(handshake, nameService, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
+  }
+
+  /**
+   * Creates a new SubServerSocketFactory decorating the given
+   * ServerSocketFactory.
+   * 
+   * @param factory
+   *          the ServerSocketFactory that will be used to create the
+   *          ServerSockets used to implement SubServerSockets returned by this
+   */
+  public SubServerSocketFactory(Protocol handshake, NameService nameService,
+      int maxOpenConnectionsPerChannel) {
     this.handshake = handshake;
     this.nameService = nameService;
+    this.maxOpenConnectionsPerChannel = maxOpenConnectionsPerChannel;
 
     this.acceptors = new HashMap<SocketAddress, Acceptor>();
   }
@@ -82,6 +97,7 @@ public class SubServerSocketFactory {
   private final Protocol handshake;
   private final NameService nameService;
   private final Map<SocketAddress, Acceptor> acceptors;
+  private final int maxOpenConnectionsPerChannel;
 
   /**
    * creates a new ConnectionQueue for the local name. Uses the name service to
@@ -97,14 +113,18 @@ public class SubServerSocketFactory {
     SocketAddress addr = nameService.localResolve(name);
 
     Acceptor a = acceptors.get(addr);
-    if (null == a) {
-      a = new Acceptor(addr);
-      acceptors.put(addr, a);
+    if (a != null) {
+      // note that an exception is only thrown if the acceptor previously
+      // existed, so no cleanup is necessary
+      return a.makeQueue(name, backlog);
     }
 
-    // note that an exception is only thrown if the acceptor previously existed,
-    // so no cleanup is necessary
-    return a.makeQueue(name, backlog);
+    a = new Acceptor(addr);
+    ConnectionQueue result = a.makeQueue(name, backlog);
+    a.start();
+    acceptors.put(addr, a);
+
+    return result;
   }
 
   synchronized void closeAcceptor(Acceptor a) {
@@ -136,8 +156,6 @@ public class SubServerSocketFactory {
 
       this.address = addr;
       this.queues = new HashMap<String, ConnectionQueue>();
-
-      start();
     }
 
     /**
@@ -149,13 +167,15 @@ public class SubServerSocketFactory {
      *           if the queue already exists
      */
     ConnectionQueue makeQueue(String name, int size) throws IOException {
-      if (queues.containsKey(name))
-        throw new IOException("attempted to bind multiple SubServerSockets to "
-            + name + " @ " + address);
+      synchronized (queues) {
+        if (queues.containsKey(name))
+          throw new IOException("attempted to bind multiple SubServerSockets to "
+              + name + " @ " + address);
 
-      ConnectionQueue queue = new ConnectionQueue(name, size);
-      queues.put(name, queue);
-      return queue;
+        ConnectionQueue queue = new ConnectionQueue(name, size);
+        queues.put(name, queue);
+        return queue;
+      }
     }
 
     /** handle an incoming connection */
@@ -163,12 +183,19 @@ public class SubServerSocketFactory {
       try {
         NETWORK_CONNECTION_LOGGER.log(Level.INFO,
             "receiving new connection from \"{0}\"", s.getInetAddress());
+
         ShakenSocket conn = handshake.receive(s);
-        ConnectionQueue queue = queues.get(conn.name);
+
+        ConnectionQueue queue;
+        synchronized (queues) {
+          queue = queues.get(conn.name);
+        }
+
         if (null == queue) {
           // TODO: close the connection.
           throw new NotImplementedException();
         }
+
         queue.open(conn);
       } catch (IOException e) {
         // TODO: failed to initiate, close s.
@@ -254,16 +281,18 @@ public class SubServerSocketFactory {
        * connection)
        */
       void open(ShakenSocket s) throws IOException {
-        channels.add(new ServerChannel(s));
+        synchronized (channels) {
+          channels.add(new ServerChannel(s));
+        }
       }
 
       /** receive an incoming subsocket connection */
       private void receive(SubSocket s) {
         try {
-          connections.add(s);
-        } catch (IllegalStateException e) {
-          // TODO: queue is full, close s
-          throw new NotImplementedException(e);
+          connections.put(s);
+        } catch (InterruptedException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
         }
       }
 
@@ -284,8 +313,9 @@ public class SubServerSocketFactory {
        * @author mdgeorge
        */
       class ServerChannel extends Channel {
-        ServerChannel(ShakenSocket sock) throws IOException {
-          super(sock);
+        ServerChannel(ShakenSocket sock)
+            throws IOException {
+          super(sock, maxOpenConnectionsPerChannel);
 
           setName("demultiplexer for " + toString());
         }
@@ -304,7 +334,9 @@ public class SubServerSocketFactory {
 
         @Override
         protected void cleanup() {
-          ConnectionQueue.this.channels.remove(this);
+          synchronized (ConnectionQueue.this.channels) {
+            ConnectionQueue.this.channels.remove(this);
+          }
         }
 
         @Override

@@ -5,5 +5,5 @@ PATH="${PATH}:${APP_HOME}/../../bin"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab --jvm-cp "${APP_HOME}/classes" --app-home "${APP_HOME}" --name worker OO7.Benchmark fab://database/OO7 tiny 3 "$@"
+fab --jvm-cp "${APP_HOME}/classes" --app-home "${APP_HOME}" --name worker OO7.Benchmark fab://database/OO7 small 3 "$@"
 

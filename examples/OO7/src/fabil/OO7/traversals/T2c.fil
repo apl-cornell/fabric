@@ -5,6 +5,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.util.Iterator;
 import fabric.util.HashMap;
+import fabric.util.LinkedHashMap;
 
 /** Traversal T2: Traversal with updates Repeat Traversal T1, but update
  *  objects during the traversal. There are three types of update patterns in
@@ -51,7 +52,7 @@ public class T2c extends PrivatePartTraversal {
   public void visitCompositePart (CompositePart p) {
     Store local = Worker.getWorker().getLocalStore();
     for (int i = 0; i < 4; i++) {
-      visited = (HashMap) new HashMap@local().fabric$util$HashMap$();
+      visited = (HashMap) new LinkedHashMap@local().fabric$util$LinkedHashMap$();
       p.rootPart().accept(this);
       result += visited.size();
       visited = null;

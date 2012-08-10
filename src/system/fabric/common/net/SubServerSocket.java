@@ -156,7 +156,6 @@ public class SubServerSocket {
     }
 
     public ErrorState(Exception exc) {
-      super();
       this.cause = exc;
     }
   }
