@@ -154,12 +154,8 @@ abstract class Channel extends Thread {
     try {
       while (true) {
         int streamID = in.readInt();
-        if (streamID == 0) {
-          recvClose();
-          continue;
-        }
-
         int len = in.readInt();
+
         if (len == 0) {
           recvClose(streamID);
           continue;
