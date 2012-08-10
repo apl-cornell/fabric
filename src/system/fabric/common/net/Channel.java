@@ -6,10 +6,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -70,150 +67,10 @@ abstract class Channel extends Thread {
         new DataInputStream(new BufferedInputStream(this.sock.getInputStream(),
             sock.getReceiveBufferSize()));
 
-// Temporary gunk until we're done tuning performance.
-
-//Playback
-//    this.out =
-//        s.principal == null ? new DataOutputStream(new BufferedOutputStream(
-//            new FileOutputStream("/dev/null"))) : new DataOutputStream(
-//            new BufferedOutputStream(this.sock.getOutputStream()));
-//
-//    this.in =
-//        s.principal == null ? new DataInputStream(new BufferedInputStream(
-//                        new FileInputStream("/tmp/data3.dat"))) : new DataInputStream(
-//            new BufferedInputStream(this.sock.getInputStream()));
-
-// Capture
-//    this.out =
-//        s.principal == null ? new DataOutputStream(new BufferedOutputStream(
-//            new TeeOutputStream(this.sock.getOutputStream(),
-//                "/tmp/request3.dat")))
-//    : new DataOutputStream(
-//        new BufferedOutputStream(this.sock.getOutputStream()));
-//
-//        this.in =
-//            s.principal == null ? new DataInputStream(new BufferedInputStream(
-//                new TeeInputStream(sock.getInputStream(), "/tmp/data3.dat")))
-//        : new DataInputStream(new BufferedInputStream(
-//            this.sock.getInputStream()));
-
     this.connections = new HashMap<Integer, Connection>();
     this.maxOpenConnections = maxOpenConnections;
 
     start();
-  }
-
-  /**
-   * Temporary gunk until we're done tuning performance.
-   */
-  private static class TeeOutputStream extends OutputStream {
-    private OutputStream os;
-    private FileOutputStream fos;
-
-    public TeeOutputStream(OutputStream os, String filename)
-        throws FileNotFoundException {
-      this.os = os;
-      this.fos = new FileOutputStream(filename);
-    }
-
-    @Override
-    public void write(int b) throws IOException {
-      os.write(b);
-      fos.write(b);
-    }
-
-    @Override
-    public void write(byte[] b) throws IOException {
-      os.write(b);
-      fos.write(b);
-    }
-
-    @Override
-    public void write(byte[] b, int off, int len) throws IOException {
-      os.write(b, off, len);
-      fos.write(b, off, len);
-    }
-
-    @Override
-    public void flush() throws IOException {
-      os.flush();
-      fos.flush();
-    }
-
-    @Override
-    public void close() throws IOException {
-      os.close();
-      fos.close();
-    }
-
-  }
-
-  /**
-   * Temporary gunk until we're done tuning performance.
-   */
-  private static class TeeInputStream extends InputStream {
-    private InputStream is;
-    private FileOutputStream fos;
-
-    public TeeInputStream(InputStream is, String filename)
-        throws FileNotFoundException {
-      this.is = is;
-      this.fos = new FileOutputStream(filename);
-    }
-
-    @Override
-    public int read() throws IOException {
-      int result = is.read();
-      fos.write(result);
-      fos.flush();
-      return result;
-    }
-
-    @Override
-    public int read(byte[] b) throws IOException {
-      return read(b, 0, b.length);
-    }
-
-    @Override
-    public int read(byte[] b, int off, int len) throws IOException {
-      int result = is.read(b, off, len);
-      if (result == -1) {
-        fos.flush();
-        fos.close();
-      } else {
-        fos.write(b, off, result);
-        fos.flush();
-      }
-      return result;
-    }
-
-    @Override
-    public int available() throws IOException {
-      return is.available();
-    }
-
-    @Override
-    public void close() throws IOException {
-      is.close();
-      fos.flush();
-      fos.close();
-    }
-
-    @Override
-    public synchronized void mark(int readlimit) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public synchronized void reset() throws IOException {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean markSupported() {
-      return false;
-    }
-
   }
 
   @Override

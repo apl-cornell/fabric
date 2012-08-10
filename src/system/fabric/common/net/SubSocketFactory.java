@@ -122,21 +122,7 @@ public final class SubSocketFactory {
 
     @Override
     protected Connection accept(int sequence) throws IOException {
-//      throw new IOException("unexpected accept request on client channel");
-      
-      // Temporary gunk until we're done tuning performance.
-      int x;
-      synchronized (connections) {
-        while (!connections.containsKey(sequence)) {
-          try {
-            connections.wait();
-          } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-          }
-        }
-        return connections.get(sequence);
-      }
+      throw new IOException("unexpected accept request on client channel");
     }
 
     @Override
