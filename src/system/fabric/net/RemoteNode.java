@@ -34,7 +34,11 @@ public abstract class RemoteNode implements Serializable {
       SubSocketFactory subSocketFactory, Message<R, E> message) throws E {
     try {
       SubSocket socket = subSocketFactory.createSocket(name);
-      return message.send(socket);
+      try {
+        return message.send(socket);
+      } finally {
+        socket.close();
+      }
     } catch (IOException e) {
       throw new NotImplementedException(e);
     }

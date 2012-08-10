@@ -6,6 +6,8 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,11 +29,21 @@ import fabric.lang.security.Principal;
  * @author mdgeorge
  */
 abstract class Channel extends Thread {
+  static final int DEFAULT_MAX_OPEN_CONNECTIONS = 50;
+
   private final DataOutputStream out;
   private final DataInputStream in;
   protected final Socket sock;
 
-  private final Map<Integer, Connection> connections;
+  /**
+   * Contains connections for which the remote end-point has not yet closed.
+   */
+  protected final Map<Integer, Connection> connections;
+
+  /**
+   * Maximum size of <code>connections</code>.
+   */
+  private final int maxOpenConnections;
   private final Principal remotePrincipal;
 
   // channel protocol:
@@ -44,17 +56,164 @@ abstract class Channel extends Thread {
   // any unrecognized or previously closed stream ID should create a new stream
   // (thus the subsocket close message should be the last sent by a subsocket).
 
-  protected Channel(ShakenSocket s) throws IOException {
-    super();
+  protected Channel(ShakenSocket s, int maxOpenConnections) throws IOException {
     setDaemon(true);
 
     this.sock = s.sock;
     this.remotePrincipal = s.principal;
-    this.out = new DataOutputStream(new BufferedOutputStream(this.sock.getOutputStream()));
-    this.in = new DataInputStream(new BufferedInputStream(this.sock.getInputStream()));
+
+    this.out =
+        new DataOutputStream(new BufferedOutputStream(
+            this.sock.getOutputStream(), sock.getSendBufferSize()));
+
+    this.in =
+        new DataInputStream(new BufferedInputStream(this.sock.getInputStream(),
+            sock.getReceiveBufferSize()));
+
+// Temporary gunk until we're done tuning performance.
+
+//Playback
+//    this.out =
+//        s.principal == null ? new DataOutputStream(new BufferedOutputStream(
+//            new FileOutputStream("/dev/null"))) : new DataOutputStream(
+//            new BufferedOutputStream(this.sock.getOutputStream()));
+//
+//    this.in =
+//        s.principal == null ? new DataInputStream(new BufferedInputStream(
+//                        new FileInputStream("/tmp/data3.dat"))) : new DataInputStream(
+//            new BufferedInputStream(this.sock.getInputStream()));
+
+// Capture
+//    this.out =
+//        s.principal == null ? new DataOutputStream(new BufferedOutputStream(
+//            new TeeOutputStream(this.sock.getOutputStream(),
+//                "/tmp/request3.dat")))
+//    : new DataOutputStream(
+//        new BufferedOutputStream(this.sock.getOutputStream()));
+//
+//        this.in =
+//            s.principal == null ? new DataInputStream(new BufferedInputStream(
+//                new TeeInputStream(sock.getInputStream(), "/tmp/data3.dat")))
+//        : new DataInputStream(new BufferedInputStream(
+//            this.sock.getInputStream()));
+
     this.connections = new HashMap<Integer, Connection>();
+    this.maxOpenConnections = maxOpenConnections;
 
     start();
+  }
+
+  /**
+   * Temporary gunk until we're done tuning performance.
+   */
+  private static class TeeOutputStream extends OutputStream {
+    private OutputStream os;
+    private FileOutputStream fos;
+
+    public TeeOutputStream(OutputStream os, String filename)
+        throws FileNotFoundException {
+      this.os = os;
+      this.fos = new FileOutputStream(filename);
+    }
+
+    @Override
+    public void write(int b) throws IOException {
+      os.write(b);
+      fos.write(b);
+    }
+
+    @Override
+    public void write(byte[] b) throws IOException {
+      os.write(b);
+      fos.write(b);
+    }
+
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+      os.write(b, off, len);
+      fos.write(b, off, len);
+    }
+
+    @Override
+    public void flush() throws IOException {
+      os.flush();
+      fos.flush();
+    }
+
+    @Override
+    public void close() throws IOException {
+      os.close();
+      fos.close();
+    }
+
+  }
+
+  /**
+   * Temporary gunk until we're done tuning performance.
+   */
+  private static class TeeInputStream extends InputStream {
+    private InputStream is;
+    private FileOutputStream fos;
+
+    public TeeInputStream(InputStream is, String filename)
+        throws FileNotFoundException {
+      this.is = is;
+      this.fos = new FileOutputStream(filename);
+    }
+
+    @Override
+    public int read() throws IOException {
+      int result = is.read();
+      fos.write(result);
+      fos.flush();
+      return result;
+    }
+
+    @Override
+    public int read(byte[] b) throws IOException {
+      return read(b, 0, b.length);
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+      int result = is.read(b, off, len);
+      if (result == -1) {
+        fos.flush();
+        fos.close();
+      } else {
+        fos.write(b, off, result);
+        fos.flush();
+      }
+      return result;
+    }
+
+    @Override
+    public int available() throws IOException {
+      return is.available();
+    }
+
+    @Override
+    public void close() throws IOException {
+      is.close();
+      fos.flush();
+      fos.close();
+    }
+
+    @Override
+    public synchronized void mark(int readlimit) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public synchronized void reset() throws IOException {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean markSupported() {
+      return false;
+    }
+
   }
 
   @Override
@@ -66,51 +225,51 @@ abstract class Channel extends Thread {
   /** called to clean up a channel that has been closed */
   protected abstract void cleanup();
 
-  /** send channel close message */
-  public synchronized void sendClose() throws IOException {
-    out.writeInt(0);
-    out.flush();
-  }
-
   /** send subsocket close message */
-  public synchronized void sendClose(int streamID) throws IOException {
-    out.writeInt(streamID);
-    out.writeInt(0);
-    out.flush();
+  private void sendClose(int streamID) throws IOException {
+    synchronized (out) {
+      out.writeInt(streamID);
+      out.writeInt(0);
+      out.flush();
+    }
   }
 
   /** send data */
-  public synchronized void sendData(int streamID, byte[] data, int offset,
-      int len) throws IOException {
+  private void sendData(int streamID, byte[] data, int offset, int len)
+      throws IOException {
     NETWORK_CHANNEL_LOGGER.log(Level.FINE, "sending " + len
         + " bytes of data on {0}", this);
 
-    out.writeInt(streamID);
-    out.writeInt(len);
-    out.write(data, offset, len);
-    out.flush();
+    synchronized (out) {
+      out.writeInt(streamID);
+      out.writeInt(len);
+      out.write(data, offset, len);
+      out.flush();
+    }
   }
 
   /** called on receipt of a channel close message */
-  public synchronized void recvClose() {
+  private void recvClose() {
     NETWORK_CHANNEL_LOGGER.log(Level.INFO,
         "cleaning up {0} after channel close", this);
 
-    for (Connection c : connections.values())
-      c.receiveClose();
+    synchronized (connections) {
+      while (!connections.isEmpty()) {
+        connections.values().iterator().next().receiveClose();
+      }
+    }
 
     cleanup();
   }
 
   /** called on receipt of subsocket close message */
-  public synchronized void recvClose(int streamID) throws IOException {
+  private void recvClose(int streamID) throws IOException {
     Connection listener = getReceiver(streamID);
     listener.receiveClose();
   }
 
   /** called on receipt of data message */
-  public synchronized void recvData(int streamID, byte[] data)
-      throws IOException {
+  private void recvData(int streamID, byte[] data) throws IOException {
     Connection listener = getReceiver(streamID);
     listener.receiveData(data);
   }
@@ -119,16 +278,18 @@ abstract class Channel extends Thread {
    * returns the Connection associated with a given stream id, creating it if
    * necessary
    */
-  private synchronized Connection getReceiver(int streamID) throws IOException {
-    Connection result = connections.get(streamID);
-    if (result == null) {
-      result = accept(streamID);
+  private Connection getReceiver(int streamID) throws IOException {
+    synchronized (connections) {
+      Connection result = connections.get(streamID);
+      if (result == null) {
+        result = accept(streamID);
+      }
+      return result;
     }
-    return result;
   }
 
   /**
-   * Reads data off of the input stream and dispatches it to the appropriate
+   * Reads data from the input stream and dispatches it to the appropriate
    * reader.
    */
   @Override
@@ -143,7 +304,6 @@ abstract class Channel extends Thread {
 
         int len = in.readInt();
         if (len == 0) {
-          // error - deliver to reader
           recvClose(streamID);
           continue;
         }
@@ -166,19 +326,54 @@ abstract class Channel extends Thread {
    */
   class Connection {
     final public int streamID;
-    final public InputStream in;
-    final public OutputStream out;
 
-    final public OutputStream sink;
+    /**
+     * The application-facing input stream.
+     */
+    final public PipedInputStream in;
+
+    /**
+     * The application-facing output stream.
+     */
+    final public BufferedOutputStream out;
+
+    /**
+     * The output stream for sending data to the application.
+     */
+    final public PipedOutputStream sink;
+
+    /**
+     * Size of stream headers. Currently two ints: streamID and packet length.
+     */
+    public static final int STREAM_HEADER_SIZE = 8;
+
+    /**
+     * Whether the connection has been closed locally. The connection is not
+     * fully closed until it is closed by both end points.
+     */
+    private boolean locallyClosed;
 
     public Connection(int streamID) throws IOException {
-      this.streamID = streamID;
-      this.out = new BufferedOutputStream(new MuxedOutputStream(streamID));
+      this.locallyClosed = false;
 
-      PipedInputStream in = new PipedInputStream();
+      this.streamID = streamID;
+      this.out =
+          new BufferedOutputStream(new MuxedOutputStream(streamID),
+              sock.getSendBufferSize() - STREAM_HEADER_SIZE);
+
+      this.in =
+          new PipedInputStream(sock.getReceiveBufferSize() - STREAM_HEADER_SIZE);
       this.sink = new PipedOutputStream(in);
-      this.in = in;
-      connections.put(this.streamID, this);
+      synchronized (connections) {
+        while (connections.size() >= maxOpenConnections) {
+          try {
+            connections.wait();
+          } catch (InterruptedException e) {
+          }
+        }
+        connections.put(this.streamID, this);
+        connections.notifyAll();
+      }
     }
 
     @Override
@@ -190,15 +385,46 @@ abstract class Channel extends Thread {
       return Channel.this.remotePrincipal;
     }
 
-    /** this method is called by SubSocket.close(). */
-    public void close() throws IOException {
+    /**
+     * Locally closes the connection. This method is called by SubSocket.close().
+     */
+    public synchronized void close() throws IOException {
+      if (locallyClosed) return;
+      locallyClosed = true;
+
+      try {
+        in.close();
+      } catch (IOException e) {
+        throw new InternalError(
+            "Unexpected error while closing application-facing input stream", e);
+      }
+
+      try {
+        out.close();
+      } catch (IOException e) {
+        throw new InternalError(
+            "Unexpected error while closing application-facing output stream",
+            e);
+      }
+
+      try {
+        sink.close();
+      } catch (final IOException e) {
+        throw new InternalError("Internal pipe failed unexpectedly", e);
+      }
+
       sendClose(streamID);
-      connections.remove(streamID);
     }
 
-    /** this method called by recvClose in response to a close message */
-    public void receiveClose() {
-      connections.remove(this);
+    /**
+     * This method called by recvClose in response to a close message.
+     */
+    public synchronized void receiveClose() {
+      synchronized (connections) {
+        connections.remove(streamID);
+        connections.notifyAll();
+      }
+
       try {
         sink.close();
       } catch (final IOException e) {
@@ -207,10 +433,15 @@ abstract class Channel extends Thread {
     }
 
     /** forward data to the reading thread */
-    public void receiveData(byte[] b) throws IOException {
-      NETWORK_CHANNEL_LOGGER.fine("putting " + b.length + " bytes in pipe");
-      sink.write(b);
-      sink.flush();
+    public synchronized void receiveData(byte[] b) throws IOException {
+      if (!locallyClosed) {
+        NETWORK_CHANNEL_LOGGER.fine("putting " + b.length + " bytes in pipe");
+        sink.write(b);
+        sink.flush();
+      } else {
+        NETWORK_CHANNEL_LOGGER.fine("discarding " + b.length
+            + " bytes (pipe closed)");
+      }
     }
   }
 

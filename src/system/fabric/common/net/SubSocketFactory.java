@@ -22,6 +22,7 @@ public final class SubSocketFactory {
   private final Protocol protocol;
   private final NameService nameService;
   private final Map<String, ClientChannel> channels;
+  private final int maxOpenConnectionsPerChannel;
 
   /**
    * Create a new SubSocket factory that decorates the given SocketFactory. Note
@@ -30,9 +31,21 @@ public final class SubSocketFactory {
    * implementations).
    */
   public SubSocketFactory(Protocol protocol, NameService nameService) {
+    this(protocol, nameService, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
+  }
+
+  /**
+   * Create a new SubSocket factory that decorates the given SocketFactory. Note
+   * that SubSockets created from different SubSocketFactories will not attempt
+   * to share channels (as these channels may have different underlying socket
+   * implementations).
+   */
+  public SubSocketFactory(Protocol protocol, NameService nameService,
+      int maxOpenConnectionsPerChannel) {
     this.protocol = protocol;
     this.nameService = nameService;
     this.channels = new HashMap<String, ClientChannel>();
+    this.maxOpenConnectionsPerChannel = maxOpenConnectionsPerChannel;
   }
 
   /**
@@ -56,24 +69,26 @@ public final class SubSocketFactory {
    * return a channel associated with the given address, creating it if
    * necessary.
    */
-  synchronized ClientChannel getChannel(String name) throws IOException {
-    ClientChannel result = channels.get(name);
-    if (null == result) {
-      NETWORK_CONNECTION_LOGGER.log(Level.INFO,
-          "establishing new connection to \"{0}\"", name);
-      SocketAddress addr = nameService.resolve(name);
+  ClientChannel getChannel(String name) throws IOException {
+    synchronized (channels) {
+      ClientChannel result = channels.get(name);
+      if (null == result) {
+        NETWORK_CONNECTION_LOGGER.log(Level.INFO,
+            "establishing new connection to \"{0}\"", name);
+        SocketAddress addr = nameService.resolve(name);
 
-      Socket s = new Socket(addr.getAddress(), addr.getPort());
-      s.setSoLinger(false, 0);
-      s.setTcpNoDelay(true);
+        Socket s = new Socket(addr.getAddress(), addr.getPort());
+        s.setSoLinger(false, 0);
+        s.setTcpNoDelay(true);
 
-      result = new ClientChannel(name, s);
-      channels.put(name, result);
-      NETWORK_CONNECTION_LOGGER.log(Level.INFO,
-          "connection to {0} established.", name);
+        result = new ClientChannel(name, s, maxOpenConnectionsPerChannel);
+        channels.put(name, result);
+        NETWORK_CONNECTION_LOGGER.log(Level.INFO,
+            "connection to {0} established.", name);
+      }
+
+      return result;
     }
-
-    return result;
   }
 
   /**
@@ -90,8 +105,9 @@ public final class SubSocketFactory {
     /* the next sequence number to be created */
     private int nextSequenceNumber;
 
-    public ClientChannel(String name, Socket s) throws IOException {
-      super(protocol.initiate(name, s));
+    public ClientChannel(String name, Socket s, int maxOpenConnections)
+        throws IOException {
+      super(protocol.initiate(name, s), maxOpenConnections);
 
       this.name = name;
       nextSequenceNumber = 1;
@@ -106,12 +122,28 @@ public final class SubSocketFactory {
 
     @Override
     protected Connection accept(int sequence) throws IOException {
-      throw new IOException("unexpected accept request on client channel");
+//      throw new IOException("unexpected accept request on client channel");
+      
+      // Temporary gunk until we're done tuning performance.
+      int x;
+      synchronized (connections) {
+        while (!connections.containsKey(sequence)) {
+          try {
+            connections.wait();
+          } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+        }
+        return connections.get(sequence);
+      }
     }
 
     @Override
     protected void cleanup() {
-      SubSocketFactory.this.channels.remove(this);
+      synchronized (SubSocketFactory.this.channels) {
+        SubSocketFactory.this.channels.remove(this);
+      }
     }
 
     @Override

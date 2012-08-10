@@ -108,8 +108,6 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
     Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
         "Received response for {0} from {1}", messageType, s);
 
-    in.close();
-
     return response;
   }
 
