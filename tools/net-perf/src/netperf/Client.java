@@ -1,7 +1,5 @@
 package netperf;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -42,27 +40,24 @@ public class Client {
 
     // Set up a first sub-socket to flush out the initial setup overhead.
     SubSocket socket = ssf.createSocket(host);
-    DataInputStream in =
-        new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-    DataOutputStream out =
-        new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+    DataInputStream in = new DataInputStream(socket.getInputStream());
+    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
     out.writeInt(0);
     out.flush();
     in.readInt();
-    in.close();
-    out.close();
+    socket.close();
 
     // Send pings with interval between each, all on the same sub-socket.
     System.out.println("Measuring latency for single sub-socket with "
         + Config.PING_INTERVAL + " ms between requests...");
     socket = ssf.createSocket(host);
-    in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-    out =
-        new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+    in = new DataInputStream(socket.getInputStream());
+    out = new DataOutputStream(socket.getOutputStream());
 
     byte[] ping = new byte[Config.PING_SIZE];
     long[] times = new long[Config.NUM_PINGS];
 
+    int tenth = (int) Math.ceil(Config.NUM_PINGS / 10.0);
     for (int i = 0; i < Config.NUM_PINGS; i++) {
       rand.nextBytes(ping);
 
@@ -75,8 +70,9 @@ public class Client {
       long end = System.nanoTime();
 
       times[i] = end - start;
-      System.out.println(Config.PING_SIZE + " bytes from " + host + ": req="
-          + (i + 1) + " time=" + Config.formatTimeMS(times[i]));
+      if (i % tenth == 0)
+        System.out.println(Config.PING_SIZE + " bytes from " + host + ": req="
+            + (i + 1) + " time=" + Config.formatTimeMS(times[i]));
     }
 
     System.out.println();
@@ -106,8 +102,7 @@ public class Client {
     }
 
     System.out.println();
-    in.close();
-    out.close();
+    socket.close();
 
     // Print stats.
     Arrays.sort(times);
@@ -128,24 +123,21 @@ public class Client {
       long start = System.nanoTime();
 
       socket = ssf.createSocket(host);
-      in =
-          new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-      out =
-          new DataOutputStream(new BufferedOutputStream(
-              socket.getOutputStream()));
+      in = new DataInputStream(socket.getInputStream());
+      out = new DataOutputStream(socket.getOutputStream());
 
       out.write(ping);
       out.flush();
       in.readFully(ping);
 
-      in.close();
-      out.close();
+      socket.close();
 
       long end = System.nanoTime();
 
       times[i] = end - start;
-      System.out.println(Config.PING_SIZE + " bytes from " + host + ": req="
-          + (i + 1) + " time=" + Config.formatTimeMS(times[i]));
+      if (i % tenth == 0)
+        System.out.println(Config.PING_SIZE + " bytes from " + host + ": req="
+            + (i + 1) + " time=" + Config.formatTimeMS(times[i]));
     }
 
     System.out.println();
@@ -167,18 +159,14 @@ public class Client {
       long start = System.nanoTime();
 
       socket = ssf.createSocket(host);
-      in =
-          new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-      out =
-          new DataOutputStream(new BufferedOutputStream(
-              socket.getOutputStream()));
+      in = new DataInputStream(socket.getInputStream());
+      out = new DataOutputStream(socket.getOutputStream());
 
       out.write(ping);
       out.flush();
       in.readFully(ping);
 
-      in.close();
-      out.close();
+      socket.close();
 
       long end = System.nanoTime();
 
@@ -197,10 +185,8 @@ public class Client {
     // Throughput test on single sub-socket.
     throughputTest(ssf.createSocket(host));
 
-    // Throughput test with each megabyte on its own sub-socket.
-//    throughputTest(ssf, host);
-
-    socket.close();
+    // Throughput test with each packet on its own sub-socket.
+    throughputTest(ssf, host);
   }
 
   private static class Data {
@@ -215,10 +201,7 @@ public class Client {
     System.out.println("Running throughput test on single sub-socket ("
         + Config.THROUGHPUT_TEST_LEN + "s)...");
 
-    final DataInputStream in =
-        new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-    final DataOutputStream out =
-        new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+    final DataOutputStream out = new DataOutputStream(socket.getOutputStream());
     final Data data = new Data();
 
     Thread thread = new Thread() {
@@ -226,12 +209,12 @@ public class Client {
       public void run() {
         try {
           Random rand = new Random();
-          byte[] megabyte = new byte[1000 * 1000];
+          byte[] packet = new byte[Config.THROUGHPUT_PACKET_SIZE];
           data.start = System.nanoTime();
           while (data.run) {
-            rand.nextBytes(megabyte);
-            out.write(megabyte);
-            data.bytesSent += megabyte.length;
+            rand.nextBytes(packet);
+            out.write(packet);
+            data.bytesSent += packet.length;
           }
         } catch (IOException e) {
           e.printStackTrace();
@@ -253,8 +236,7 @@ public class Client {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-    in.close();
-    out.close();
+    socket.close();
 
     System.out.println(Config.formatBytes(data.bytesSent)
         + " sent in "
@@ -264,7 +246,6 @@ public class Client {
             / (data.end - data.start)) + ")");
   }
 
-  @SuppressWarnings("unused")
   private static void throughputTest(final SubSocketFactory factory,
       final String host) throws InterruptedException {
     System.out.println("Running throughput test with socket set-up & "
@@ -277,22 +258,17 @@ public class Client {
       public void run() {
         try {
           Random rand = new Random();
-          byte[] megabyte = new byte[1000 * 1000];
+          byte[] packet = new byte[Config.THROUGHPUT_PACKET_SIZE];
           data.start = System.nanoTime();
           while (data.run) {
             final SubSocket socket = factory.createSocket(host);
-            final DataInputStream in =
-                new DataInputStream(new BufferedInputStream(
-                    socket.getInputStream()));
             final DataOutputStream out =
-                new DataOutputStream(new BufferedOutputStream(
-                    socket.getOutputStream()));
-            rand.nextBytes(megabyte);
-            out.write(megabyte);
+                new DataOutputStream(socket.getOutputStream());
+            rand.nextBytes(packet);
+            out.write(packet);
             out.flush();
-            in.close();
-            out.close();
-            data.bytesSent += megabyte.length;
+            socket.close();
+            data.bytesSent += packet.length;
           }
         } catch (IOException e) {
           e.printStackTrace();
@@ -309,6 +285,13 @@ public class Client {
       thread.join();
     } catch (InterruptedException e) {
       e.printStackTrace();
+    }
+
+    try {
+      // Signal server to stop.
+      SubSocket socket = factory.createSocket(host);
+      socket.close();
+    } catch (IOException e) {
     }
 
     System.out.println(Config.formatBytes(data.bytesSent)
