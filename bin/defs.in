@@ -80,7 +80,7 @@ fi
 classpath="$(unixpath "${CLASSPATH}")"
 
 # Give the JVM more memory.
-vmargs="-Xmx1024M -Xms256M"
+vmargs="-Xmx1024M -Xms256M -Dfile.encoding=UTF-8"
 
 ####################
 
