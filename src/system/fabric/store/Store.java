@@ -37,6 +37,8 @@ import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
+import fabric.messages.BeginTransactionMessage;
+import fabric.messages.BeginTransactionMessage.Response;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
@@ -203,6 +205,12 @@ class Store extends MessageToStoreHandler {
       PrepareTransactionMessage msg) throws TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Prepare Message, worker={0}, tid={1}", nameOf(p), msg.tid);
+
+    // TODO Consider delaying writes in the presence of promises
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINE,
+        "TODO: Consider delaying writes in the presence of promises, tid={1}",
+        msg.tid);
+
     boolean subTransactionCreated =
         prepareTransaction(p, msg.tid, msg.commitTime, msg.serializedCreates,
             msg.serializedWrites, msg.reads);
@@ -266,7 +274,7 @@ class Store extends MessageToStoreHandler {
       public Long run() {
         NodePrincipal principal =
             new NodePrincipal._Impl(store)
-                .fabric$lang$security$NodePrincipal$(null);
+        .fabric$lang$security$NodePrincipal$(null);
         principal.addDelegatesTo(store.getPrincipal());
         return principal.$getOnum();
       }
@@ -306,7 +314,7 @@ class Store extends MessageToStoreHandler {
   private boolean prepareTransaction(Principal p, long tid, long commitTime,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites, LongKeyMap<Integer> reads)
-      throws TransactionPrepareFailedException {
+          throws TransactionPrepareFailedException {
 
     PrepareRequest req =
         new PrepareRequest(tid, commitTime, serializedCreates,
@@ -322,5 +330,18 @@ class Store extends MessageToStoreHandler {
   private String nameOf(Principal p) {
     return p == null ? "BOTTOM" : ("fab://" + p.$getStore().name() + "/" + p
         .$getOnum());
+  }
+
+  @Override
+  public Response handle(Principal p,
+      BeginTransactionMessage beginTransactionMessage) {
+    Logging
+    .log(
+        STORE_REQUEST_LOGGER,
+        Level.SEVERE,
+        "TODO: Implement Store.handle(Principal, BeginTransactionMessage) method from {0}.",
+        nameOf(p));
+
+    return new BeginTransactionMessage.Response();
   }
 }

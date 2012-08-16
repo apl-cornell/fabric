@@ -92,7 +92,7 @@ public interface Store extends Serializable {
    * @throws TransactionCommitFailedException
    */
   void commitTransaction(long transactionID) throws UnreachableNodeException,
-      TransactionCommitFailedException;
+  TransactionCommitFailedException;
 
   /**
    * Determines whether the given set of objects are stale.
@@ -131,4 +131,16 @@ public interface Store extends Serializable {
    * @return the resulting cache entry.
    */
   public ObjectCache.Entry cache(SerializedObject obj);
+
+  /**
+   * Notifies the store that the transaction is entering the Begin phase.
+   * 
+   * @return whether a subtransaction was created on the store as a result of
+   *         the prepare.
+   */
+  boolean beginTransaction(long tid, long commitTime,
+      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<_Impl> writes) throws UnreachableNodeException,
+      TransactionBeginFailedException;
+
 }

@@ -1,5 +1,7 @@
 package fabric.worker;
 
+import static fabric.common.Logging.WORKER_LOCAL_STORE_LOGGER;
+
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
@@ -31,6 +33,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
+import fabric.messages.BeginTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
@@ -126,7 +129,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   public boolean prepareTransaction(long tid, long commitTime,
       Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<Object._Impl> writes)
-      throws TransactionPrepareFailedException, UnreachableNodeException {
+          throws TransactionPrepareFailedException, UnreachableNodeException {
     PrepareTransactionMessage.Response response =
         send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
             commitTime, toCreate, reads, writes));
@@ -281,7 +284,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    *          The number of objects to allocate
    */
   protected void reserve(int num) throws AccessException,
-      UnreachableNodeException {
+  UnreachableNodeException {
     while (fresh_ids.size() < num) {
       // log.info("Requesting new onums, storeid=" + storeID);
       if (num < 512) num = 512;
@@ -459,6 +462,23 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     }
 
     return result;
+  }
+
+  @Override
+  public boolean beginTransaction(long tid, long commitTime,
+      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<_Impl> writes) throws UnreachableNodeException,
+      TransactionBeginFailedException {
+    // TODO: Implement this.
+    WORKER_LOCAL_STORE_LOGGER
+    .fine("TODO: Implement RemoteStore.beginTransaction(...).");
+
+    BeginTransactionMessage.Response response =
+        send(Worker.getWorker().authToStore, new BeginTransactionMessage(tid,
+            commitTime, toCreate, reads, writes));
+
+    return response.transactionBegun;
+
   }
 
   // ////////////////////////////////

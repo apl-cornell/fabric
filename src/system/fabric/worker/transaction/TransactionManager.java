@@ -44,6 +44,7 @@ import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionAbortingException;
 import fabric.worker.TransactionAtomicityViolationException;
+import fabric.worker.TransactionBeginFailedException;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
@@ -389,12 +390,106 @@ public final class TransactionManager {
     Set<Store> stores = current.storesToContact();
     List<RemoteWorker> workers = current.workersCalled;
 
+    // Send begin messages to our cohorts
+    sendBeginMessages(commitTime, stores, workers);
+
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
     sendPrepareMessages(commitTime, stores, workers);
 
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(stores, workers);
+  }
+
+  /**
+   * Sends begin messages to the cohorts.
+   * 
+   * TODO Implement this to send begin messages at the start of a transaction.
+   * @param commitTime
+   *
+   * @param stores
+   * @param workers
+   * @return
+   */
+  private Map<RemoteNode, TransactionBeginFailedException> sendBeginMessages(
+      final long commitTime, Set<Store> stores, List<RemoteWorker> workers) {
+    final Map<RemoteNode, TransactionBeginFailedException> failures =
+        Collections
+        .synchronizedMap(new HashMap<RemoteNode, TransactionBeginFailedException>());
+
+    Logging.log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
+        "TODO: Implement sendBeginMessages(stores, workers) from {0}.",
+        current.tid.topTid);
+
+    List<Thread> threads = new ArrayList<Thread>();
+
+    final Worker worker = Worker.getWorker();
+    for (final Store store : stores) {
+      Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+          Logging.log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
+              "TODO: Thread running beginTransaction from {0}.",
+              current.tid.topTid);
+
+          try {
+            LongKeyMap<Integer> reads =
+                Options.DEBUG_COMMIT_READS ? current.getReadsForStore(store,
+                    false) : new LongKeyHashMap<Integer>();
+                Collection<_Impl> writes = current.getWritesForStore(store);
+
+                boolean transactionBegun =
+                    store.beginTransaction(current.tid.topTid, commitTime, writes,
+                        reads, writes);
+
+                if (transactionBegun) {
+                  RemoteWorker storeWorker = worker.getWorker(store.name());
+                  synchronized (current.workersCalled) {
+                    current.workersCalled.add(storeWorker);
+                  }
+                }
+          } catch (TransactionBeginFailedException e) {
+            failures.put((RemoteNode) store, e);
+            Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE,
+                "TODO: store.beginTransaction from threw an exception. {0}.",
+                current.tid.topTid);
+          } catch (UnreachableNodeException e) {
+            Logging
+            .log(
+                WORKER_TRANSACTION_LOGGER,
+                Level.FINE,
+                "TODO: store.beginTransaction unreachable store exception. {0}.",
+                current.tid.topTid);
+            failures.put((RemoteNode) store,
+                new TransactionBeginFailedException("Unreachable store"));
+          }
+        }
+      };
+      Thread thread = new Thread(runnable, "worker begin to " + store.name());
+      threads.add(thread);
+      thread.start();
+    }
+
+    // Wait for replies.
+    for (Thread thread : threads) {
+      while (true) {
+        try {
+          thread.join();
+          break;
+        } catch (InterruptedException e) {
+          // Do nothing
+        }
+      }
+    }
+
+    // Check for conflicts and unreachable stores/workers.
+    if (!failures.isEmpty()) {
+      String logMessage =
+          "Transaction tid=" + current.tid.topTid + ":  begin failed.";
+      WORKER_TRANSACTION_LOGGER.fine(logMessage);
+    }
+
+    return failures;
   }
 
   /**
@@ -467,6 +562,7 @@ public final class TransactionManager {
       };
       thread.start();
       threads.add(thread);
+
     }
 
     // Go through each store and send prepare messages in parallel.
@@ -481,25 +577,25 @@ public final class TransactionManager {
             LongKeyMap<Integer> reads =
                 Options.DEBUG_COMMIT_READS ? current.getReadsForStore(store,
                     false) : new LongKeyHashMap<Integer>();
-            Collection<_Impl> writes = current.getWritesForStore(store);
-            
-            if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
-              Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE, "Preparing "
-                  + "transaction {0} to {1}: {2} created, {3} read, "
-                  + "{4} modified", current.tid.topTid, store, creates.size(),
-                  reads.size(), writes.size());
-            }
-            
-            boolean subTransactionCreated =
-                store.prepareTransaction(current.tid.topTid, commitTime,
-                    creates, reads, writes);
+                Collection<_Impl> writes = current.getWritesForStore(store);
 
-            if (subTransactionCreated) {
-              RemoteWorker storeWorker = worker.getWorker(store.name());
-              synchronized (current.workersCalled) {
-                current.workersCalled.add(storeWorker);
-              }
-            }
+                if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+                  Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE, "Preparing "
+                      + "transaction {0} to {1}: {2} created, {3} read, "
+                      + "{4} modified", current.tid.topTid, store, creates.size(),
+                      reads.size(), writes.size());
+                }
+
+                boolean subTransactionCreated =
+                    store.prepareTransaction(current.tid.topTid, commitTime,
+                        creates, reads, writes);
+
+                if (subTransactionCreated) {
+                  RemoteWorker storeWorker = worker.getWorker(store.name());
+                  synchronized (current.workersCalled) {
+                    current.workersCalled.add(storeWorker);
+                  }
+                }
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) store, e);
           } catch (UnreachableNodeException e) {

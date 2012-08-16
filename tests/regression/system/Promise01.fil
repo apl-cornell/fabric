@@ -1,0 +1,36 @@
+package system;
+
+public class Promise01 {
+  int i;
+
+  public Promise01 system$Promise01$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
+  public void m() {
+    i++;
+  }
+
+  public static void main(String[] args) {
+    Promise01 t = null;
+    Store store = Worker.getWorker().getStore("store0");
+    atomic {
+      t = new Promise01@store().system$Promise01$();
+    }
+
+    atomic {
+      t.m();
+    }
+
+    int curI = 0;
+    atomic {
+      curI = t.i;
+    }
+
+    if (curI == 1) System.out.println("TEST PASSED.");
+    else System.out.println("TEST FAILED: expected t.i == 1 but got " + curI);
+  }
+}
+
+

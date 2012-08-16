@@ -24,6 +24,7 @@ import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil.TopPrincipal;
+import fabric.net.UnreachableNodeException;
 import fabric.util.HashMap;
 import fabric.util.Map;
 
@@ -253,7 +254,7 @@ public final class LocalStore implements Store, Serializable {
         // Create the object representing the top principal.
         topPrincipal =
             new TopPrincipal._Impl(LocalStore.this)
-                .fabric$lang$security$PrincipalUtil$TopPrincipal$();
+        .fabric$lang$security$PrincipalUtil$TopPrincipal$();
         topPrincipal.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 
         // Create the object representing the bottom confidentiality policy.
@@ -316,6 +317,17 @@ public final class LocalStore implements Store, Serializable {
     this.cache.put((_Impl) publicReadonlyLabel.fetch());
   }
 
+  @Override
+  public boolean beginTransaction(long tid, long commitTime,
+      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<_Impl> writes) throws UnreachableNodeException,
+      TransactionBeginFailedException {
+    // TODO: Implement this.
+    WORKER_LOCAL_STORE_LOGGER
+    .fine("TODO: Local Store in local transaction in begin phase.");
+    return false;
+  }
+
   // ////////////////////////////////
   // Java custom-serialization gunk
   // ////////////////////////////////
@@ -323,4 +335,5 @@ public final class LocalStore implements Store, Serializable {
   private java.lang.Object writeReplace() throws ObjectStreamException {
     throw new NotSerializableException();
   }
+
 }

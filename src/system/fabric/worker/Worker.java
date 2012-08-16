@@ -249,7 +249,7 @@ public final class Worker {
     try {
       Constructor<FetchManager> fetchManagerConstructor =
           (Constructor<FetchManager>) Class.forName(config.dissemClass)
-              .getConstructor(Worker.class, Properties.class);
+          .getConstructor(Worker.class, Properties.class);
       this.fetchManager =
           fetchManagerConstructor.newInstance(this,
               config.disseminationProperties);
@@ -680,6 +680,11 @@ public final class Worker {
 
         // Retry if the exception was a result of stale objects.
         if (tm.checkForStaleObjects()) continue;
+
+        System.out.println("\n\n**************\n\n");
+        System.out.println("\n\n**************\n\n");
+        System.out.println(e);
+        e.printStackTrace();
 
         throw new AbortException(e);
       } finally {
