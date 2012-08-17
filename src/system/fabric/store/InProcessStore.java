@@ -1,5 +1,7 @@
 package fabric.store;
 
+import static fabric.common.Logging.WORKER_LOCAL_STORE_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -12,7 +14,10 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object._Impl;
+import fabric.messages.BeginTransactionMessage;
+import fabric.net.UnreachableNodeException;
 import fabric.worker.RemoteStore;
+import fabric.worker.TransactionBeginFailedException;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
@@ -88,6 +93,23 @@ public class InProcessStore extends RemoteStore {
     sm.createSurrogates(req);
 
     return tm.prepare(Worker.getWorker().getPrincipal(), req);
+  }
+
+  @Override
+  public boolean beginTransaction(long tid, long commitTime,
+      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<_Impl> writes) throws UnreachableNodeException,
+      TransactionBeginFailedException {
+
+    WORKER_LOCAL_STORE_LOGGER
+        .severe("*** TODO: Implement InProcess.beginTransaction(...).*** ");
+
+    BeginTransactionMessage.Response response =
+        send(Worker.getWorker().authToStore, new BeginTransactionMessage(tid,
+            commitTime, toCreate, reads, writes));
+
+    return response.transactionBegun;
+
   }
 
   @Override

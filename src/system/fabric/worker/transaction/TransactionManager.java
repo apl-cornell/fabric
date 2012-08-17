@@ -390,8 +390,10 @@ public final class TransactionManager {
     Set<Store> stores = current.storesToContact();
     List<RemoteWorker> workers = current.workersCalled;
 
-    // Send begin messages to our cohorts
-    sendBeginMessages(commitTime, stores, workers);
+    if (Options.DEBUG_ENABLE_PROMISES) {
+      // Send begin messages to our cohorts
+      sendBeginMessages(commitTime, stores, workers);
+    }
 
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
@@ -418,7 +420,7 @@ public final class TransactionManager {
         .synchronizedMap(new HashMap<RemoteNode, TransactionBeginFailedException>());
 
     Logging.log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
-        "TODO: Implement sendBeginMessages(stores, workers) from {0}.",
+        "TODO: Implement fabric.worker.transaction.TansactionManager.sendBeginMessages(...) from {0}.",
         current.tid.topTid);
 
     List<Thread> threads = new ArrayList<Thread>();
@@ -428,10 +430,6 @@ public final class TransactionManager {
       Runnable runnable = new Runnable() {
         @Override
         public void run() {
-          Logging.log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
-              "TODO: Thread running beginTransaction from {0}.",
-              current.tid.topTid);
-
           try {
             LongKeyMap<Integer> reads =
                 Options.DEBUG_COMMIT_READS ? current.getReadsForStore(store,
@@ -450,16 +448,7 @@ public final class TransactionManager {
                 }
           } catch (TransactionBeginFailedException e) {
             failures.put((RemoteNode) store, e);
-            Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE,
-                "TODO: store.beginTransaction from threw an exception. {0}.",
-                current.tid.topTid);
           } catch (UnreachableNodeException e) {
-            Logging
-            .log(
-                WORKER_TRANSACTION_LOGGER,
-                Level.FINE,
-                "TODO: store.beginTransaction unreachable store exception. {0}.",
-                current.tid.topTid);
             failures.put((RemoteNode) store,
                 new TransactionBeginFailedException("Unreachable store"));
           }

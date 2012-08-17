@@ -469,9 +469,11 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
       Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws UnreachableNodeException,
       TransactionBeginFailedException {
+
     // TODO: Implement this.
     WORKER_LOCAL_STORE_LOGGER
-    .fine("TODO: Implement RemoteStore.beginTransaction(...).");
+        .severe("*** TODO: Implement RemoteStore.beginTransaction(...).*** ");
+
 
     BeginTransactionMessage.Response response =
         send(Worker.getWorker().authToStore, new BeginTransactionMessage(tid,

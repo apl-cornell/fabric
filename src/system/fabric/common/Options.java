@@ -41,17 +41,22 @@ public abstract class Options {
    * Flag for indicating if worker needs to cache compiled code in local file system
    */
   public boolean outputToLocalFS;
-  
+
   /**
    * Whether to commit reads to stores. This is for timing testing, to see the
    * ideal benefits of promises.
    */
   public static boolean DEBUG_COMMIT_READS = true;
-  
+
   /**
    * Whether to turn off SSL encryption for debugging purposes.
    */
   public static boolean DEBUG_NO_SSL = false;
+
+  /**
+   * Whether to turn on promises for debugging purposes.
+   */
+  public static boolean DEBUG_ENABLE_PROMISES = false;
 
   public static abstract class Flag implements Comparable<Flag> {
     protected final Kind kind;
@@ -382,7 +387,7 @@ public abstract class Options {
     });
 
     flags.add(new Flag(Kind.VERSION, new String[] { "--version", "-v",
-        "-version" }, null, "print version info") {
+    "-version" }, null, "print version info") {
       @Override
       public int handle(String[] args, int index) {
         throw new TerminationException(0);
@@ -450,7 +455,7 @@ public abstract class Options {
         return index + 1;
       }
     });
-    flags.add(new Flag(Kind.SECRET, "-output-to-local-fs", "", 
+    flags.add(new Flag(Kind.SECRET, "-output-to-local-fs", "",
         "A flag for putting .class files to the local file system") {
       @Override
       public int handle(String[] args, int index) {
@@ -458,7 +463,7 @@ public abstract class Options {
         return index;
       }
     });
-    
+
     flags.add(new Flag(Kind.SECRET, "--commit-reads", "<y|n>",
         "whether to commit reads", "yes") {
       @Override
@@ -468,6 +473,23 @@ public abstract class Options {
           DEBUG_COMMIT_READS = true;
         } else if (param.equals("false") || param.equals("n") || param.equals("no")) {
           DEBUG_COMMIT_READS = false;
+        } else {
+          throw new UsageError("Invalid option parameter");
+        }
+        return index + 1;
+      }
+    });
+
+    flags.add(new Flag(Kind.SECRET, "--enable-promises", "<y|n>",
+        "whether to enable promises", "yes") {
+      @Override
+      public int handle(String[] args, int index) throws UsageError {
+        String param = args[index].toLowerCase();
+        if (param.equals("true") || param.equals("y") || param.equals("yes")) {
+          DEBUG_ENABLE_PROMISES = true;
+        } else if (param.equals("false") || param.equals("n")
+            || param.equals("no")) {
+          DEBUG_ENABLE_PROMISES = false;
         } else {
           throw new UsageError("Invalid option parameter");
         }

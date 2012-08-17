@@ -115,6 +115,7 @@ Message<BeginTransactionMessage.Response, TransactionBeginFailedException> {
   @Override
   public Response dispatch(Principal p, MessageHandler h)
       throws TransactionBeginFailedException {
+
     return h.handle(p, this);
   }
 

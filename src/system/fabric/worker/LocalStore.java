@@ -324,7 +324,8 @@ public final class LocalStore implements Store, Serializable {
       TransactionBeginFailedException {
     // TODO: Implement this.
     WORKER_LOCAL_STORE_LOGGER
-    .fine("TODO: Local Store in local transaction in begin phase.");
+    .severe("*** TODO: Implement fabric.worker.LocalStore.beginTransaction(...).*** ");
+
     return false;
   }
 
