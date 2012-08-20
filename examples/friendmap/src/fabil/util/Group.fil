@@ -29,12 +29,11 @@ public class Group extends Delegator
    * Create a new group with the given name and the default maximum size.
    */
   public Group util$Group$(
-    final Store   store,
     final String  name
   )
   {
-    util$Delegator$(store, name, jif$util_Group_groupOwner);
-    this.members = new Principal[SIZE]@store;
+    util$Delegator$(name, jif$util_Group_groupOwner);
+    this.members = new Principal[SIZE];
     return this;
   }
 
@@ -42,13 +41,12 @@ public class Group extends Delegator
    * Create a new group with the given name and maximum size.
    */
   public Group util$Group$(
-    final Store   store,
     final String  name,
     final int     maxSize
   ) throws NegativeArraySizeException
   {
-    util$Delegator$(store, name, jif$util_Group_groupOwner);
-    this.members = new Principal[maxSize]@store;
+    util$Delegator$(name, jif$util_Group_groupOwner);
+    this.members = new Principal[maxSize];
     return this;
   }
 

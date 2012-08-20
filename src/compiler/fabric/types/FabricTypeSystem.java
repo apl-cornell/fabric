@@ -7,7 +7,6 @@ import jif.types.label.ConfPolicy;
 import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
-import polyglot.ast.Expr;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.ReferenceType;
@@ -16,6 +15,8 @@ import polyglot.types.Type;
 import polyglot.util.Position;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseTypeSystem;
+import fabric.ast.RemoteWorkerGetter;
+import fabric.ast.Store;
 
 public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   ClassType FObject();
@@ -124,7 +125,17 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    * @return
    * @throws SemanticException
    */
-  Principal storePrincipal(Expr expr, FabricContext context, Position pos)
+  Principal storePrincipal(Store store, FabricContext context, Position pos)
       throws SemanticException;
+
+  /**
+   * @param worker
+   * @param context
+   * @param pos
+   * @return
+   * @throws SemanticException
+   */
+  Principal remoteWorkerPrincipal(RemoteWorkerGetter worker,
+      FabricContext context, Position pos) throws SemanticException;
 
 }

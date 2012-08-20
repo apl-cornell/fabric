@@ -24,6 +24,8 @@ import fabric.extension.MethodDeclJifExt;
 import fabric.extension.NewJifExt_c;
 import fabric.extension.RemoteWorkerGetterJifExt_c;
 import fabric.extension.RetryJifExt_c;
+import fabric.extension.StoreJifExt_c;
+import fabric.extension.StoreToFabilExt_c;
 import fabric.extension.WorkerJifExt_c;
 import fabric.translate.AbortToFabilExt_c;
 import fabric.translate.AtomicToFabilExt_c;
@@ -53,7 +55,7 @@ import fabric.translate.WorkerToFabilExt_c;
  * for atomic sections.
  */
 public class FabricJifExtFactory_c extends JifExtFactory_c implements
-    FabricExtFactory {
+FabricExtFactory {
   // ////////////////////////////////////////////////////////////////////////////
   // overridden Jif AST nodes (TODO: should be ext.del's?) //
   // ////////////////////////////////////////////////////////////////////////////
@@ -168,6 +170,11 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements
   @Override
   public Ext extWorker() {
     return new WorkerJifExt_c(new WorkerToFabilExt_c());
+  }
+
+  @Override
+  public Ext extStore() {
+    return new StoreJifExt_c(new StoreToFabilExt_c());
   }
 
   @Override

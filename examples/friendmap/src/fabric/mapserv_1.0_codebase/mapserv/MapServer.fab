@@ -17,9 +17,7 @@ where
        Box.provider <= provider, provider <=      Box.provider
 {
 
-  private char {_→;*←this}@{*→this.store} background;
-  final public Store{this}@{*→this.store} store;
-
+  private char {_→;*←this}@{*→this.store$} background;
 
   /**
    * Create a new map server, with the given background character.
@@ -28,22 +26,19 @@ where
   MapServer
   {               // side effects:
     {this} ⊓      // TODO
-    {_→; *←store} // TODO
+    {_→; *←this} // TODO
   }
   (
     String {this} name,
-    Store  {this} store,
-    char   {_→; *←store} background
+    char   {_→; *←this} background
   )
   where
-    provider <= {this},
-    provider <= {_→;*←store}
+    provider <= {this}
   {
-    this.store = store;
+    super(name);
 
-    super(store, name, store);
-
-    if (store actsfor this)
+    if (store$ actsfor this
+        && provider <= new label{_→;*←this})
       this.background = background;
     else
       throw new AssertionFailedError("49 Delegation failed");
@@ -60,14 +55,14 @@ where
    *     if boundary is null.
    */
   public
-  MapImage[l,{*→store}] {*l}
+  MapImage[l,{*→store$}] {*l}
                        // resulting map will be protected at l
                        // and stored at store
   createMap
   {            // side effects:
     {*l}     ⊓ // result is updated
     {*a}     ⊓ // boundary is accessed
-    {*→store}  // map is created
+    {*→store$}  // map is created
   }
   (
     label l,
@@ -80,7 +75,7 @@ where
   )
   where
     // TODO; store ≽ l@store; map is created at store
-    {*←store} <= l, l <= {*→store}, {*→store} <= {*→store},
+    {*←store$} <= l, l <= {*→store$}, {*→store$} <= {*→store$},
     l <= a, // access label for result must bound update label
 
     // result taints
@@ -91,7 +86,7 @@ where
   {
     if (boundary == null) throw new NullPointerException("92 boundary is null");
 
-    if (store actsfor this) {
+    if (store$ actsfor this) {
 
     final char{*l}[]{*l} data = new char[100]/* TODO: @store */;
     for (int i = 0; i < data.length; i++)
@@ -99,9 +94,9 @@ where
 
     try {
       // TODO: solver failing, had to add annotation
-      return new MapImage[l,{*→this.store}]{*l}@store(boundary, l, a,
+      return new MapImage[l,{*→this.store$}]{*l}@store$(boundary, l, a,
                                                       10, 10, data,
-                                                      this.store);
+                                                      this.store$);
 
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError("105 10 * 10 = 100");

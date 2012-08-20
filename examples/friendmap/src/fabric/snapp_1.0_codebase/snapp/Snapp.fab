@@ -22,7 +22,7 @@ where
   /* The store this object is stored on.  Used for allocating Users.
    * this.store ≽ this
    */
-  public final Store {this}@{*→this} store;
+//  public final Store {this}@{*→this} store;
 
   /**
    * Create a new Snapp, operated by owner.
@@ -32,23 +32,21 @@ where
   {                // side effects:
     {this}       ⊓ // supertype fields are set
     {_→; *←this} ⊓ // fields are set
-    {*→store}      // store is contacted
+    {*→store$}      // store is contacted
   }
   (
     final String    name,
-    final principal owner,
-    final Store     store
+    final principal owner
   )
   : {*provider}
   where
     // the parameters and code affect the assignment to the fields
-    {*provider; name; owner; store} <= {this},
+    {*provider; name; owner} <= {this},
     // establish invariants
-    store actsfor owner,
-    provider <= {⊤→store}
+    store$ actsfor owner,
+    provider <= {⊤→store$}
   {
-    this.store = store;
-    super(store, name, owner);
+    super(name, owner);
   }
 
   public
@@ -65,13 +63,13 @@ where
   : {*provider}
   where
     // TODO: store ≽ {_→; *←this,owner}@{*→this}
-    {_→; *←this,owner} <= {*→store}, {*←store} <= {_→; *←this,owner}, {*→this} <= {*→store},
+    {_→; *←this,owner} <= {*→store$}, {*←store$} <= {_→; *←this,owner}, {*→this} <= {*→store$},
 
     // code and args affect resulting User object
     {*provider; name; owner} <= {_→; *←this,owner}
   {
-    if (this.store actsfor this)
-      return new User[owner,this]@store(name, store);
+    if (this.store$ actsfor this)
+      return new User[owner,this]@store$(name, store$);
     else
       throw new AssertionFailedError("73 Snapp.store should act for Snapp");
   }

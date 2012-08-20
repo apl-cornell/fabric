@@ -76,4 +76,11 @@ public interface FabricNodeFactory extends JifNodeFactory, CodebaseNodeFactory {
 
   FabricFieldDecl FabricFieldDecl(Position pos, Flags flags, TypeNode type,
       LabelNode accessLabel, Id name, Expr init);
+
+  /**
+   * @param expr
+   * @param pos
+   * @return
+   */
+  fabric.ast.Store Store(Position pos, Expr expr);
 }

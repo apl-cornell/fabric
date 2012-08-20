@@ -125,6 +125,7 @@ import java.math.BigInteger;
         /* Fabric-specific keywords */
         keywords.put("atomic",        new Integer(sym.ATOMIC));
         keywords.put("worker$",       new Integer(sym.WORKER));
+       	keywords.put("store$",       new Integer(sym.STORE));        
         keywords.put("nonfabric",     new Integer(sym.NONFABRIC));
         keywords.put("codebase",     new Integer(sym.CODEBASE));        
     }

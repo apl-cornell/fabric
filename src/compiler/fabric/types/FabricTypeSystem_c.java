@@ -18,6 +18,8 @@ import jif.types.ActsForConstraint;
 import jif.types.Assertion;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
+import jif.types.JifContext;
+import jif.types.JifTypeSystem;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabelLeAssertion;
 import jif.types.LabelSubstitution;
@@ -80,6 +82,7 @@ import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
+import fabric.ast.RemoteWorkerGetter;
 import fabric.common.FabricLocation;
 import fabric.lang.Codebase;
 import fabric.lang.security.LabelUtil;
@@ -421,11 +424,42 @@ FabricTypeSystem {
   }
 
   @Override
-  public Principal storePrincipal(Expr expr, FabricContext context, Position pos)
-      throws SemanticException {
-    AccessPath ap = exprToAccessPath(expr, context);
-    AccessPathStore store = new AccessPathStore(ap, pos);
-    return dynamicPrincipal(pos, store);
+  public Principal storePrincipal(fabric.ast.Store store, FabricContext context,
+      Position pos)
+          throws SemanticException {
+    AccessPath ap = exprToAccessPath(store, context);
+//    AccessPathStore storeap = new AccessPathStore(ap, Store(), pos);
+    return dynamicPrincipal(pos, ap);
+  }
+
+  @Override
+  public Principal remoteWorkerPrincipal(RemoteWorkerGetter worker,
+      FabricContext context, Position pos) throws SemanticException {
+    AccessPath ap = exprToAccessPath(worker, context);
+    return dynamicPrincipal(pos, ap);
+  }
+
+  @Override
+  public boolean isFinalAccessExpr(JifTypeSystem ts, Expr e) {
+    if (e instanceof fabric.ast.Store) {
+      fabric.ast.Store store = (fabric.ast.Store) e;
+      return isFinalAccessExpr(ts, store.expr());
+    }
+    return super.isFinalAccessExpr(ts, e);
+  }
+
+  @Override
+  public AccessPath exprToAccessPath(Expr e, Type expectedType,
+      JifContext context) throws SemanticException {
+    if (e instanceof RemoteWorkerGetter) {
+      throw new UnsupportedOperationException(
+          "RemoteWorker access paths not yet supported");
+    } else if (e instanceof fabric.ast.Store) {
+      fabric.ast.Store st = (fabric.ast.Store) e;
+      return new AccessPathStore(exprToAccessPath(st.expr(), context), Store(),
+          st.position());
+    }
+    return super.exprToAccessPath(e, expectedType, context);
   }
 
   @Override
@@ -648,10 +682,6 @@ FabricTypeSystem {
       LabelLeAssertion leq = (LabelLeAssertion) as;
       return containsThisLabel(leq.lhs()) || containsThisLabel(leq.rhs());
     }
-    // else if(as instanceof AutoEndorseConstraint) {
-    // AutoEndorseConstraint aec = (AutoEndorseConstraint) as;
-    // return containsThisLabel(aec.endorseTo());
-    // }
     else if (as instanceof ActsForConstraint) {
       ActsForConstraint<?, ?> afc = (ActsForConstraint<?, ?>) as;
       boolean hasThis = false;

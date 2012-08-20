@@ -287,23 +287,27 @@ public class FabILOptions extends polyglot.main.Options {
 
     } else if (arg.flag().ids().contains("-sigcp")) {
       sigcp.clear();
-      sigcp.addAll((List<FabricLocation>) arg.value());
+      sigcp.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
+          arg.value(), FabricLocation.class));
 
     } else if (arg.flag().ids().contains("-addsigcp")) {
-      sigcp.addAll((List<FabricLocation>) arg.value());
+      sigcp.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
+          arg.value(), FabricLocation.class));
 
     } else if (arg.flag().ids().contains("-addbootcp")) {
-      bootclasspath.addAll((List<FabricLocation>) arg.value());
-
+      bootclasspath.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
+          arg.value(), FabricLocation.class));
     } else if (arg.flag().ids().contains("-classpath")) {
-      classpath.addAll((List<FabricLocation>) arg.value());
+      classpath.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
+          arg.value(), FabricLocation.class));
 
     } else if (arg.flag().ids().contains("-sourcepath")) {
-      source_path.addAll((List<FabricLocation>) arg.value());
+      source_path.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
+          arg.value(), FabricLocation.class));
 
     } else if (arg.flag().ids().contains("-bootclasspath")) {
-      bootclasspath.addAll((List<FabricLocation>) arg.value());
-
+      bootclasspath.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
+          arg.value(), FabricLocation.class));
     } else if (arg.flag().ids().contains("-worker")) {
       workerName = (String) arg.value();
 
@@ -312,7 +316,9 @@ public class FabILOptions extends polyglot.main.Options {
       needWorker = true;
 
     } else if (arg.flag().ids().contains("-codebase-alias")) {
-      Pair<String, FabricLocation> pair = (Pair<String, FabricLocation>) arg.value();
+      @SuppressWarnings("unchecked")
+      Pair<String, FabricLocation> pair =
+      (Pair<String, FabricLocation>) arg.value();
       String alias = pair.part1();
       FabricLocation loc = pair.part2();
       codebase_aliases.put(alias, loc);
@@ -327,9 +333,7 @@ public class FabILOptions extends polyglot.main.Options {
       optLevel = (Integer) arg.value();
 
     } else super.handleArg(arg);
-
   }
-
 
   @Override
   protected void postApplyArgs() {
@@ -442,5 +446,4 @@ public class FabILOptions extends polyglot.main.Options {
     }
     return sb.toString();
   }
-
 }

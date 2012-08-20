@@ -11,7 +11,7 @@ import fabric.extension.FabricPrincipalExprDel;
 
 /** Factory class for creating delegates for fabric types. */
 public class FabricDelFactory_c extends JifDelFactory_c implements
-    FabricDelFactory {
+FabricDelFactory {
 
   // ////////////////////////////////////////////////////////////////////////////
   // new ast methods //
@@ -101,6 +101,26 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
   }
 
   protected JL postDelWorker(JL e) {
+    return postDelExpr(e);
+  }
+
+  @Override
+  public JL delStore() {
+    JL e = delStoreImpl();
+
+    if (nextDelFactory() != null
+        && nextDelFactory() instanceof FabricDelFactory) {
+      JL e2 = ((FabricDelFactory) nextDelFactory()).delStore();
+      e = composeDels(e, e2);
+    }
+    return postDelStore(e);
+  }
+
+  protected JL delStoreImpl() {
+    return delExprImpl();
+  }
+
+  protected JL postDelStore(JL e) {
     return postDelExpr(e);
   }
 

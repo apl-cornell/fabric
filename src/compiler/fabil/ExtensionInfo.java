@@ -68,7 +68,7 @@ import fabric.worker.Worker;
  * Extension information for FabIL extension.
  */
 public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
-    codebases.frontend.ExtensionInfo {
+codebases.frontend.ExtensionInfo {
   protected static FabricLocation platform_ns = getLocation(false,
       URI.create("fab:platform"));
   protected static FabricLocation local_ns = getLocation(false,
@@ -92,7 +92,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   public FileManager createFileManager() {
     return new FabricFileManager(this);
   }
-  
+
   @Override
   protected void configureFileManager() {
     FabILOptions options = getOptions();
@@ -120,7 +120,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   protected Scheduler createScheduler() {
     return new FabILScheduler(this);
   }
-  
+
   @Override
   public ClassFile createClassFile(FileObject classFileSource, byte[] code)
       throws IOException {
@@ -181,13 +181,13 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
     s.addAll(options.javaClasspathDirs());
     for (FabricLocation location : options.bootclasspath())
       if (location.isFileReference()) s.add(new File(location.getUri()));
-    for (FabricLocation location : options.classpath())
-      if (location.isFileReference()) s.add(new File(location.getUri()));
-    try {
-      fm.setLocation(StandardLocation.CLASS_PATH, s);
-    } catch (IOException e) {
-      throw new InternalCompilerError(e);
-    }
+        for (FabricLocation location : options.classpath())
+          if (location.isFileReference()) s.add(new File(location.getUri()));
+            try {
+              fm.setLocation(StandardLocation.CLASS_PATH, s);
+            } catch (IOException e) {
+              throw new InternalCompilerError(e);
+            }
   }
 
   @Override

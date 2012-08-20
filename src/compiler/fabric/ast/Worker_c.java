@@ -1,16 +1,16 @@
 package fabric.ast;
 
+import polyglot.ast.Id;
 import polyglot.ast.Local_c;
 import polyglot.ast.Node;
-import polyglot.ast.NodeFactory;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.TypeChecker;
 import fabric.types.FabricTypeSystem;
 
 public class Worker_c extends Local_c implements Worker {
-  public Worker_c(Position pos, NodeFactory nf) {
-    super(pos, nf.Id(pos, "worker$"));
+  public Worker_c(Position pos, Id workerId) {
+    super(pos, workerId);
   }
 
   /**
@@ -28,7 +28,7 @@ public class Worker_c extends Local_c implements Worker {
 
   @Override
   public String toString() {
-    return "worker$";
+    return name();
   }
 
   // @Override

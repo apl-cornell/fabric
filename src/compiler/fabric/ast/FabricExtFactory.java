@@ -29,4 +29,9 @@ public interface FabricExtFactory extends JifExtFactory {
   Ext extCodebaseNode();
 
   Ext extCodebaseDecl();
+
+  /**
+   * @return
+   */
+  Ext extStore();
 }

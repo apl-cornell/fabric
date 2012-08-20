@@ -266,6 +266,14 @@ public class FabricOptions extends JifOptions {
         return createArg(index + 1, path);
       }
     });
+    flags.add(new OptFlag<List<FabricLocation>>("-addbootcp", "<path>",
+        "prepend <path> to the bootclasspath") {
+      @Override
+      public Arg<List<FabricLocation>> handle(String[] args, int index) {
+        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+        return createArg(index + 1, path);
+      }
+    });
     flags.add(new Switch("-trusted-providers",
         "set the providers of the sources being compiled to be trusted"));
 
@@ -384,19 +392,28 @@ public class FabricOptions extends JifOptions {
       // handled by FabIL
     } else if (arg.flag().ids().contains("-sigcp")) {
       sigcp.clear();
-      sigcp.addAll((List<FabricLocation>) arg.value());
+      sigcp.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
+          arg.value(), FabricLocation.class));
 
     } else if (arg.flag().ids().contains("-addsigcp")) {
-      sigcp.addAll((List<FabricLocation>) arg.value());
+      sigcp.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
+          arg.value(), FabricLocation.class));
 
     } else if (arg.flag().ids().contains("-classpath")) {
-      classpath.addAll((List<FabricLocation>) arg.value());
+      classpath.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
+          arg.value(), FabricLocation.class));
 
     } else if (arg.flag().ids().contains("-sourcepath")) {
-      source_path.addAll((List<FabricLocation>) arg.value());
+      source_path.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
+          arg.value(), FabricLocation.class));
 
     } else if (arg.flag().ids().contains("-bootclasspath")) {
-      bootclasspath.addAll((List<FabricLocation>) arg.value());
+      bootclasspath.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
+          arg.value(), FabricLocation.class));
+
+    } else if (arg.flag().ids().contains("-addbootcp")) {
+      bootclasspath.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
+          arg.value(), FabricLocation.class));
 
     } else if (arg.flag().ids().contains("-publish")) {
       publish = (Boolean) arg.value();
@@ -421,8 +438,9 @@ public class FabricOptions extends JifOptions {
       needWorker = true;
 
     } else if (arg.flag().ids().contains("-codebase-alias")) {
+      @SuppressWarnings("unchecked")
       Pair<String, FabricLocation> pair =
-          (Pair<String, FabricLocation>) arg.value();
+      (Pair<String, FabricLocation>) arg.value();
       String alias = pair.part1();
       FabricLocation loc = pair.part2();
       codebase_aliases.put(alias, loc);
@@ -439,14 +457,14 @@ public class FabricOptions extends JifOptions {
     } else super.handleArg(arg);
   }
 
-
   /**
    * Filter and add arguments for FabIL.
    * @param flags
    * @return FabIL-safe args
    * @throws UsageError
    */
-  public List<OptFlag.Arg<?>> fabilArgs(Set<OptFlag<?>> flags) throws UsageError {
+  public List<OptFlag.Arg<?>> fabilArgs(Set<OptFlag<?>> flags)
+      throws UsageError {
     List<Arg<?>> fabILArgs = new ArrayList<OptFlag.Arg<?>>();
 
     OptFlag<List<FabricLocation>> sigcp =
@@ -464,10 +482,11 @@ public class FabricOptions extends JifOptions {
         }
         // Rewrite FabIL sigcp args
         else if (arg.flag().ids().contains("-filsigcp")) {
-          fabILArgs.add(sigcp.createArg(-1, (List<FabricLocation>) arg.value()));
-        }
-        else if (arg.flag().ids().contains("-addfilsigcp")) {
-          fabILArgs.add(addsigcp.createArg(-1, (List<FabricLocation>) arg.value()));
+          fabILArgs
+          .add(sigcp.createArg(-1, (List<FabricLocation>) arg.value()));
+        } else if (arg.flag().ids().contains("-addfilsigcp")) {
+          fabILArgs.add(addsigcp.createArg(-1,
+              (List<FabricLocation>) arg.value()));
         }
         if (flags.contains(arg.flag())) {
           fabILArgs.add(arg);
@@ -476,7 +495,7 @@ public class FabricOptions extends JifOptions {
     }
     // FabIL's bootclasspath is the same, but should include the JRE
     OptFlag<?> addboot = OptFlag.lookupFlag("-addbootcp", flags);
-    fabILArgs.add(addboot.handle(new String[] {jvmbootclasspath()}, 0));
+    fabILArgs.add(addboot.handle(new String[] { jvmbootclasspath() }, 0));
 
     return fabILArgs;
   }
@@ -484,8 +503,7 @@ public class FabricOptions extends JifOptions {
   @Override
   protected void postApplyArgs() {
     // publishOnly mode implies publish
-    if (publishOnly)
-      publish = true;
+    if (publishOnly) publish = true;
 
     // Signature mode implies platform mode
     if (signatureMode) platform_mode = true;
@@ -523,28 +541,28 @@ public class FabricOptions extends JifOptions {
     return sigcp;
   }
 
-  // @Override
-  // public List<File> javaClasspathDirs() {
-  // return delegate.javaClasspathDirs();
-  // }
-  //
-  // @Override
-  // public List<FabricLocation> filsignaturepath() {
-  // return delegate.sigcp;
-  // }
-  //
+// @Override
+// public List<File> javaClasspathDirs() {
+// return delegate.javaClasspathDirs();
+// }
+//
+// @Override
+// public List<FabricLocation> filsignaturepath() {
+// return delegate.sigcp;
+// }
+//
   public Map<String, FabricLocation> codebaseAliases() {
     return codebase_aliases;
   }
 
-  //
-  // // / Options processed by FabIL delegate
-  // @Override
+//
+// // / Options processed by FabIL delegate
+// @Override
   public boolean createSkeleton() {
     return createSkeleton;
   }
 
-  //
+//
   public String destinationStore() {
     return destinationStore;
   }

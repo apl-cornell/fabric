@@ -143,9 +143,17 @@ FabricNodeFactory {
 
   @Override
   public Worker Worker(Position pos) {
-    Worker n = new Worker_c(pos, this);
+    Worker n = new Worker_c(pos, Id(pos, "worker$"));
     n = (Worker) n.ext(fabricExtFactory().extWorker());
     n = (Worker) n.del(fabricDelFactory().delWorker());
+    return n;
+  }
+
+  @Override
+  public Store Store(Position pos, Expr expr) {
+    Store n = new Store_c(pos, expr);
+    n = (Store) n.ext(fabricExtFactory().extStore());
+    n = (Store) n.del(fabricDelFactory().delStore());
     return n;
   }
 

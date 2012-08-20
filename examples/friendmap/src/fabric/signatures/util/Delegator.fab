@@ -10,16 +10,23 @@ public class Delegator extends AbstractPrincipal {
   public native
   Delegator
   {           // side effects
-    {this} ⊓  // fields are updated
-    {*→store} // TODO: object is created
+    {this}// ⊓  // fields are updated
+//    {*→store$} // TODO: object is created
   }
   (
-    Store     {this} store,
     String    {this} name,
     principal {this} owner
-  )
-  where
-    store actsfor owner;
+  );
+  
+  public native
+  Delegator
+  {           // side effects
+    {this} //⊓  // fields are updated
+//    {*→store$} // TODO: object is created
+  }
+  (
+    String    {this} name
+  );
 
   //////////////////////////////////////////////////////////////////////////////
   // Principal methods                                                        //

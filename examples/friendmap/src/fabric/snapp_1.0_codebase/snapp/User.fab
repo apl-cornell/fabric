@@ -73,8 +73,8 @@ where
     p = new principal@store(owner,network);
 
     if (p equiv new principal(owner,network)) {
-      friends_       = new Group[p,{*→network}]@store(store, name + "'s friends");
-      locationInfo_  = new Group[p,{*→network}]@store(store, name + "'s location viewers");
+      friends_       = new Group[p,{*→network}]@store(name + "'s friends");
+      locationInfo_  = new Group[p,{*→network}]@store(name + "'s location viewers");
       locationLabel_ = new label {p←;p→locationInfo}@store;
     } else throw new AssertionFailedError("75 (p,q) equiv (p,q)");
 

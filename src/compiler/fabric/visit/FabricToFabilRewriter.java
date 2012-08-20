@@ -48,6 +48,9 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
 
   protected boolean principalExpected = false;
 
+  /** An expression used to instantiate the 'this' principal in static contexts */
+  protected Expr staticThisExpr;
+
   public FabricToFabilRewriter(Job job, FabricTypeSystem fab_ts,
       FabricNodeFactory fab_nf, fabil.ExtensionInfo fabil_ext) {
     super(job, fab_ts, fab_nf, fabil_ext);
@@ -177,6 +180,26 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
 
     this.additionalClassDecls.clear();
     return n.decls(l);
+  }
+
+  /**
+   * Provide an expression to instantiate "this" principals with in static contexts.
+   * This is primarily used to replace occurences of "this" in translated label
+   * expressions in the body of compiler-generated instanceof methods.
+   */
+  public void setStaticThisExpr(Expr e) {
+    staticThisExpr = e;
+  }
+
+  /**
+   * Clear "this" principal expression.
+   */
+  public void clearStaticThisExpr() {
+    staticThisExpr = null;
+  }
+
+  public Expr staticThisExpr() {
+    return staticThisExpr;
   }
 
 }

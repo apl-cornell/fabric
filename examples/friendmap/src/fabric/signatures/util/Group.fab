@@ -24,7 +24,7 @@ where
   {*←groupOwner} <= A
 {
 
-  private int {}@{A} accessLabelKludge; 
+  private int {*←groupOwner}@{A} accessLabelKludge; 
 
   //////////////////////////////////////////////////////////////////////////////
   // Group constructors                                                       //
@@ -36,17 +36,11 @@ where
   public native
   Group
   {           // side effects:
-    {this} ⊓  // fields are updated
-    {*→store} // objects are created at store
+    {this} //⊓  // fields are updated
   }
   (
-    final Store  {this} store,
     final String {this} name
-  )
-  where
-    {_→} <= {*→store}, {*←store} <= {*←groupOwner}, A <= {*→store}, // TODO: store ≽ {*←groupOwner}@A
-    store actsfor groupOwner;
-
+  );
 
   /**
    * Create a new group with the given name and maximum size.
@@ -55,20 +49,16 @@ where
   Group
   {           // side effects:
     {this} ⊓  // fields are updated
-    {*→store} // objects are created at store
+    {*→store$} // objects are created at store
   }
   (
-    final Store  {this} store,
     final String {this} name,
     final int    {this} maxSize
   )
   throws
   (
     NegativeArraySizeException{maxSize}
-  )
-  where
-    {_→} <= {*→store}, {*←store} <= {*←groupOwner}, A <= {*→store}, // TODO: store ≽ {*←groupOwner}@A
-    store actsfor groupOwner;
+  );
 
   //////////////////////////////////////////////////////////////////////////////
   // Group membership operations                                              //

@@ -16,6 +16,7 @@ import polyglot.util.Position;
  */
 public class AccessPathStore extends AccessPath {
   protected final AccessPath path;
+  protected final Type storeType;
 
   /**
    * @param path
@@ -23,9 +24,10 @@ public class AccessPathStore extends AccessPath {
    * @param fieldName
    * @param pos
    */
-  public AccessPathStore(AccessPath path, Position pos) {
+  public AccessPathStore(AccessPath path, Type storeType, Position pos) {
     super(pos);
     this.path = path;
+    this.storeType = storeType;
   }
 
   @Override
@@ -51,13 +53,12 @@ public class AccessPathStore extends AccessPath {
     AccessPath newPath = path.subst(r, e);
     if (newPath == path) return this;
 
-    return new AccessPathStore(newPath, position());
+    return new AccessPathStore(newPath, storeType, position());
   }
 
   @Override
   public Type type() {
-    if (path == null) return null;
-    return path.type();
+    return storeType;
   }
 
   @Override
@@ -106,6 +107,11 @@ public class AccessPathStore extends AccessPath {
    */
   public AccessPath path() {
     return path;
+  }
+
+  @Override
+  public String toString() {
+    return path + ".store$";
   }
 
 }
