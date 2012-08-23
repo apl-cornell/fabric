@@ -1,0 +1,33 @@
+package system;
+
+public class ReadWriteMixCreate01 {
+
+  public int i;
+
+  public ReadWriteMixCreate01 system$ReadWriteMixCreate01$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
+  public static void main(String[] args) {
+
+
+    int size = args[0];
+
+    ReadWriteMix[] objs = new ReadWriteMix[size];
+    Store store = Worker.getWorker().getStore("store0");
+
+
+    atomic {
+      for (int j = 0; j < size; j++) {
+          objs[j]= new ReadWriteMixCreate01@store().system$ReadWriteMixCreate01$();
+          objs[j].i = j;
+      }
+    }
+
+    Map root = (Map) store.getRoot();
+    root.put("testKey", objs);
+
+  }
+}
+

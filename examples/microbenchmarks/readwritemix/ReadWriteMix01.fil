@@ -1,0 +1,34 @@
+package system;
+
+public class ReadWriteMix01 {
+
+  public int i;
+
+  public ReadWriteMix01 system$ReadWriteMix01$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
+  public static void main(String[] args) {
+
+
+    int size = args[0];
+    int reads = args[1];
+
+    Store store = Worker.getWorker().getStore("store0");
+    Map root = (Map) store.getRoot();
+    ReadWriteMix[] objs = root.get("testKey");
+
+    int sum = 0;
+    atomic {
+      for (int j = 0; j < reads; j++) {
+         sum += objs[j].i
+      }
+      for (int j = reads+1; j < size; j++) {
+         objs[j].i = objs[j].i + 1;
+      }
+    }
+
+  }
+}
+
