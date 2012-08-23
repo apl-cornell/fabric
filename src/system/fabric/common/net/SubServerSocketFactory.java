@@ -184,6 +184,8 @@ public class SubServerSocketFactory {
         NETWORK_CONNECTION_LOGGER.log(Level.INFO,
             "receiving new connection from \"{0}\"", s.getInetAddress());
 
+        s.setTcpNoDelay(true);
+
         ShakenSocket conn = handshake.receive(s);
 
         ConnectionQueue queue;
