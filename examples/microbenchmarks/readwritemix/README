@@ -1,0 +1,9 @@
+
+To compile:
+~/workspace/fabric/bin/filc *.fil
+
+To run:
+fab-store --app-home . --name store0 --jvm-cp classes
+
+fab --app-home . --name worker0 --jvm-cp classes readwritemix.ReadWreMixCreate01
+
