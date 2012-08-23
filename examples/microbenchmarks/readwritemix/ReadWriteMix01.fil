@@ -1,4 +1,6 @@
-package system;
+package readwritemix;
+
+import fabric.util.Map;
 
 public class ReadWriteMix01 {
 
@@ -12,23 +14,26 @@ public class ReadWriteMix01 {
   public static void main(String[] args) {
 
 
-    int size = args[0];
-    int reads = args[1];
+    int size = Integer.parseInt(args[0]);
+    int reads = Integer.parseInt(args[1]);
 
     Store store = Worker.getWorker().getStore("store0");
     Map root = (Map) store.getRoot();
-    ReadWriteMix[] objs = root.get("testKey");
+    ReadWriteMix01[] objs = (ReadWriteMix01[])root.get("testKey");
 
     int sum = 0;
-    atomic {
-      for (int j = 0; j < reads; j++) {
-         sum += objs[j].i
+    int j = 0;
+    for (j = 0; j < reads; j++) {
+      atomic {
+        sum += objs[j].i;
       }
-      for (int j = reads+1; j < size; j++) {
+    }
+    for (j = reads+1; j < size; j++) {
+      atomic {
          objs[j].i = objs[j].i + 1;
       }
     }
-
   }
+
 }
 
