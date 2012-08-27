@@ -8,4 +8,6 @@ NAME=$1 ; shift ;
 
 fab --jvm-cp "${APP_HOME}/classes" --app-home "${APP_HOME}" --name "${NAME}" readwritemix.ReadWriteMixCreate01 "$@"
 
+echo "done."
+
 

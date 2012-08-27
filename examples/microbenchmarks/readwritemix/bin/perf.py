@@ -10,17 +10,24 @@ import pexpect
 
 times = []
 
+#/home/soule/workspace/promises/examples/microbenchmarks/readwritemix/bin/start-store
+# bin/create-db store0 1000
+#./bin/worker zoe1 n 1000 50
+
+
 class ThreadClass(threading.Thread):
-    def __init__(self, h, w, c, t):
+    def __init__(self, h, w, c, t, s, p):
         threading.Thread.__init__(self)
         self.host = h
         self.worker = w
         self.commit = c
         self.hot = t
+        self.size = s
+        self.percentage = p
     def run(self):
         ssh = 'ssh'
         user = 'soule@%s' % self.host
-        cmd = '/home/soule/workspace/promises/examples/microbenchmarks/readwritemix/bin/worker %s %s'  % (self.worker, self.commit)
+        cmd = '/home/soule/workspace/promises/examples/microbenchmarks/readwritemix/bin/worker %s %s %d %d'  % (self.worker, self.commit, self.size, self.percentage)
         if (self.hot) :
             cmd += ' --hot'
         exe = [ssh, user, cmd]
@@ -31,9 +38,15 @@ class ThreadClass(threading.Thread):
             times.append(int(result))
             #print 'host: %s time %s' % (self.worker, result)       
         
+def create_db(size):
+    cmd = '/home/soule/workspace/promises/examples/microbenchmarks/readwritemix/bin/create-db store0 %d'  % (size)
+    child = pexpect.spawn ('ssh soule@mal.cs.cornell.edu /home/soule/workspace/promises/examples/microbenchmarks/readwritemix/bin/start-store')
+    child.expect ('done.*')
+    print "database created..."
+     
 def start_store():
     child = pexpect.spawn ('ssh soule@mal.cs.cornell.edu /home/soule/workspace/promises/examples/microbenchmarks/readwritemix/bin/start-store')
-    child.expect ('mal0>.*')
+    child.expect ('store0>.*')
     print "store running..."
     return child
 
@@ -62,15 +75,16 @@ def plot(name):
     os.system('ps2pdf ' + ps)
 
 
-
-def test_hot(worker_names):
+def test_warm(worker_names, size, percentage):
     threads = []
-    with open('./hot.dat', 'w') as f:
+    splot = 'warm-%d-%d' % (size, percentage)
+    fdata = './' + splot + '.dat'
+    with open(fdata, 'w') as f:
         store = start_store()
         # run once to warm the store
         print "warming store..."
         (worker, host) = worker_names[0]
-        t = ThreadClass(host, worker, 'n', True)
+        t = ThreadClass(host, worker, 'n', False, size, percentage)
         t.start()
         t.join()
         print "beginning test..."
@@ -84,7 +98,7 @@ def test_hot(worker_names):
             for commit in ['y', 'n']:
                 # start all the workers...
                 for (worker, host) in workers:              
-                    t = ThreadClass(host, worker, commit, True)
+                    t = ThreadClass(host, worker, commit, False, size, percentage)
                     t.start()
                     threads.append(t)
                     # wait for the workers to finish
@@ -100,51 +114,14 @@ def test_hot(worker_names):
             print s
             f.write(s + '\n')
         stop_store(store)
-    plot('hot')
-
-def test_warm(worker_names):
-    threads = []
-    with open('./warm.dat', 'w') as f:
-        store = start_store()
-        # run once to warm the store
-        print "warming store..."
-        (worker, host) = worker_names[0]
-        t = ThreadClass(host, worker, 'n', False)
-        t.start()
-        t.join()
-        print "beginning test..."
-        s = '#%s\t%s\t%s' % ( 'workers', 'commit_time', 'nocommit_time')
-        print s
-        f.write(s + '\n')
-        for num_workers in range(1,7):
-            workers = worker_names[0:num_workers]
-            commit_time = 0.0
-            nocommit_time = 0.0           
-            for commit in ['y', 'n']:
-                # start all the workers...
-                for (worker, host) in workers:              
-                    t = ThreadClass(host, worker, commit, False)
-                    t.start()
-                    threads.append(t)
-                    # wait for the workers to finish
-                    for t in threads:
-                        t.join()
-                average = float(sum(times)) / len(times)
-                print "workers =" + str(num_workers) + ", commit=" + commit + ", average=" + str(average)
-                if commit == 'y':
-                    commit_time = average
-                else:
-                    nocommit_time = average
-            s = '%d\t%0.2f\t%0.2f' % (num_workers, commit_time, nocommit_time)
-            print s
-            f.write(s + '\n')
-        stop_store(store)
-    plot('warm')
+    plot(splot)
         
 
-def test_cold(worker_names):
+def test_cold(worker_names, size, percentage):
     threads = []
-    with open('./cold.dat', 'w') as f:
+    splot = 'cold-%d-%d' % (size, percentage)
+    fdata = './' + splot + '.dat'
+    with open(fdata, 'w') as f:
         s = '#%s\t%s\t%s' % ( 'workers', 'commit_time', 'nocommit_time')
         print s
         f.write(s + '\n')
@@ -156,7 +133,7 @@ def test_cold(worker_names):
                 store = start_store()
                 # start all the workers...
                 for (worker, host) in workers:              
-                    t = ThreadClass(host, worker, commit, False)
+                    t = ThreadClass(host, worker, commit, False, size, percentage)
                     t.start()
                     threads.append(t)
                     # wait for the workers to finish
@@ -172,7 +149,7 @@ def test_cold(worker_names):
             s = '%d\t%0.2f\t%0.2f' % (num_workers, commit_time, nocommit_time)
             print s
             f.write(s + '\n')
-    plot('cold')
+    plot(splot)
         
 def main():
     worker_names = [ ('zoe1', 'zoe.cs.cornell.edu'),
@@ -182,9 +159,8 @@ def main():
                 ('wash2', 'wash.systems.cs.cornell.edu'),
                 ('inara2', 'inara.systems.cs.cornell.edu')
                 ]
-    #test_warm(worker_names)
-    test_cold(worker_names)
-    #test_hot(worker_names)
+    #test_warm(worker_names, 100, 50)
+    test_cold(worker_names, 100, 50)
     #plot('hot')
 
 if __name__ == "__main__":
