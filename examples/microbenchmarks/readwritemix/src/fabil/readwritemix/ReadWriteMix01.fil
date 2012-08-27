@@ -18,6 +18,7 @@ public class ReadWriteMix01 {
     float percentReads = Float.parseFloat(args[1]);
     int reads = (int)((percentReads) / 100 * size);
 
+    // start time here
     Store store = Worker.getWorker().getStore("store0");
     Map root = (Map) store.getRoot();
     ReadWriteMix01[] objs = (ReadWriteMix01[])root.get("testKey");
@@ -35,6 +36,7 @@ public class ReadWriteMix01 {
       }
     }
   }
+  // end time here
 
 }
 
