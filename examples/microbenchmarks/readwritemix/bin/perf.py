@@ -67,7 +67,7 @@ def plot(name):
     with open(gnu, 'w') as f:
         f.write('set terminal postscript\n')
         f.write('set output \"' + ps + '\"\n')
-        f.write('set title \"007 ' + name + '\"\n')
+        f.write('set title \"Read Write Mix ' + name + '\"\n')
         f.write('set xlabel \"workers\"\n');
         f.write('set ylabel \"time\"\n');
         f.write(cmd)
@@ -159,8 +159,8 @@ def main():
                 ('wash2', 'wash.systems.cs.cornell.edu'),
                 ('inara2', 'inara.systems.cs.cornell.edu')
                 ]
-    #test_warm(worker_names, 100, 50)
-    test_cold(worker_names, 100, 50)
+    test_warm(worker_names, 100, 50)
+    #test_cold(worker_names, 100, 50)
     #plot('hot')
 
 if __name__ == "__main__":
