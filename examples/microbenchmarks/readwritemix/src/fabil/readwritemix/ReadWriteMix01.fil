@@ -1,6 +1,7 @@
 package readwritemix;
 
 import fabric.util.Map;
+import fabric.common.Timing;
 
 public class ReadWriteMix01 {
 
@@ -18,7 +19,7 @@ public class ReadWriteMix01 {
     float percentReads = Float.parseFloat(args[1]);
     int reads = (int)((percentReads) / 100 * size);
 
-    // start time here
+    Timing.reset();
     Store store = Worker.getWorker().getStore("store0");
     Map root = (Map) store.getRoot();
     ReadWriteMix01[] objs = (ReadWriteMix01[])root.get("testKey");
@@ -35,8 +36,7 @@ public class ReadWriteMix01 {
          objs[j].i = objs[j].i + 1;
       }
     }
+    Timing.printStats();
   }
-  // end time here
-
 }
 

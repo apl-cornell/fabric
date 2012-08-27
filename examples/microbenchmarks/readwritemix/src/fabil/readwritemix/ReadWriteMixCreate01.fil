@@ -12,7 +12,7 @@ public class ReadWriteMixCreate01 {
   }
 
   public static void main(String[] args) {
-
+    System.out.println("creating database...");
     atomic {
       int size = Integer.parseInt(args[0]);
       Store store = Worker.getWorker().getStore("store0");
@@ -24,7 +24,7 @@ public class ReadWriteMixCreate01 {
       Map root = (Map) store.getRoot();
       root.put("testKey", objs);
     }
-
+    System.out.println("done.");
   }
 }
 
