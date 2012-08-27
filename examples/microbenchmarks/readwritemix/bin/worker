@@ -1,0 +1,10 @@
+#!/bin/bash
+
+APP_HOME="$(dirname $0)/.."
+PATH="${PATH}:${APP_HOME}/../../bin"
+
+export FABRIC_HOME="${APP_HOME}"
+NAME=$1 ; COMMIT=$2 ; shift 2 ;
+
+fab --jvm-cp "${APP_HOME}/classes" --app-home "${APP_HOME}" --name "${NAME}" --commit-reads "${COMMIT}" readwritemix.ReadWreMix01 fab://mal0/store0 "$@"
+

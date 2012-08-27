@@ -15,7 +15,8 @@ public class ReadWriteMix01 {
 
 
     int size = Integer.parseInt(args[0]);
-    int reads = Integer.parseInt(args[1]);
+    float percentReads = Float.parseFloat(args[1]);
+    int reads = (int)((percentReads) / 100 * size);
 
     Store store = Worker.getWorker().getStore("store0");
     Map root = (Map) store.getRoot();
