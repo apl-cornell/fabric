@@ -64,168 +64,168 @@ where
     super();
   }
 
-  /**
-   * prints a map of the user's friends, visible to the user
-   *
-   * @throws NullPointerException
-   *         if user is null.
-   */
-  public
-  void
-  viewMap
-  {                     // side effects:
-    {*→n}             ⊓ // user is fetched
-    {*→user.friends}  ⊓ // user's friends are fetched
-    {*→service.store$} ⊓ // map is fetched
-    {*→user.p}          // map is output to the owner
-  }
-  (
-    User[owner,n] user,
-    principal     owner,
-    principal     n
-  )
-  throws
-  (
-    NullPointerException {*provider; user}
-  )
-  where
-    {*provider; *MapServer.provider; user; n; owner} <= {{*→n} ⊓ {*→user.friends} ⊓ {*→service.store$} ⊓ {*→user.p}},  
-    {_→; *←(n,owner)} <= {{*→user.friends} ⊓ {*→user.p}},
-    {*←service}       <= {*→user.p},
-//    {*->user.p} <= {*->worker$},  
-//    // general user invariants
-//    worker$ actsfor owner,
-    (owner,n) equiv user.p,
-    user.p  actsfor user.friends
-  {
-    if (user == null)
-      throw new NullPointerException("99 user is null");
-      
-    final Store local = worker$.getLocalStore();
-
-    printMap(user, owner, n, new label {*→user.p}@service.store$);
-  }
-
-  /**
-   * prints a map of the user's friends, visible to the user's friends
-   *
-   * @throws NullPointerException
-   *         if user is null.
-   * @throws SecurityException
-   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
-   */
-  public
-  void
-  postMap
-  {                     // side effects:
-    {*→n}             ⊓ // user is fetched
-    {*→user.friends}  ⊓ // user's wall is updated; user's friends are fetched
-    {*→service.store$}   // map is fetched
-  }
-  (
-    final User[owner,n] user,
-    final principal     owner,
-    final principal     n
-  )
-  throws
-  (
-    NullPointerException {*provider; user}
-  )
-  where
-    // see printMap constraints
-    {*provider; *MapServer.provider; user; n} <= {{*→n} ⊓ {*→service.store$} ⊓ {*→user.friends} ⊓ {*→service.store$}},
-    {*←service}     <= {*→user.friends},
-    {_→; *←owner,n} <= {*→user.friends},
-
-    // general user invariants
-    worker$ actsfor owner,
-    (owner,n) equiv user.p,
-    user.p  actsfor user.friends
-  {
-    if (user == null)
-      throw new NullPointerException("139 user is null");
-
-    printMap(user, owner, n, new label {*→user.friends}@service.store$);
-  }
-
-
-  /**
-   * Helper method that gets the map and prints it out.
-   *
-   * @throws NullPointerException
-   *         if user is null.
-   * @throws SecurityException
-   *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
-   */
-  private
-  void
-  printMap
-  {                          // side effects
-    {*→n}                  ⊓ // fetches of user's information
-    {*→service.store$}      ⊓ // map service is contacted
-    {*lbl}                   // output on lbl channel
-  }
-  (
-    final User[owner,n] user,
-    final principal     owner,
-    final principal     n,
-    final label         lbl
-  )
-  throws
-  (
-    NullPointerException {*provider; user}
-  )
-  where
-    // user fetch depends on
-    //  - code and caller_pc
-    //  - user pointer
-    //  - policies
-    //  - the intermediate state of the result
-    {*provider; *MapServer.provider} <= {*→n},
-    {user}                           <= {*→n},
-    {n; lbl}                         <= {*→n},
-    {*lbl}                           <= {*→n},
-
-    // initial map fetch depends on
-    //  - confidentiality of code
-    //  - user pointer
-    //  - policies
-    {*provider; *MapServer.provider} <= {*→service.store$},
-    {user}                           <= {*→service.store$},
-    {n; lbl}                         <= {*→service.store$},
-
-    // map output depends on
-    //  - code
-    //  - user and user's contents
-    //  - map service results
-    //  - policies
-    {*provider; *MapServer.provider} <= {*lbl},
-    {user}                           <= {*lbl}, {_→; *←(n,owner)} <= {*lbl},
-    {*←service}                      <= {*lbl},
-    {lbl; n}                         <= {*lbl},
-
-    // invariants
-    user.p equiv (n,owner)
-
-    // lbl objects created on worker$
-//    {*←worker$} <= lbl, lbl <= {*→worker$} // TODO: worker$ ≽ lbl
-  {
-    if (user == null)
-      throw new NullPointerException("214 user is null");
-
-    final Store localStore = worker$.getLocalStore();
-
-    if (localStore equiv worker$)
-    {
-
-    MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n, lbl);
-    PrintStream[lbl] out = System.stdout(lbl);
-
-    if (result == null)                                             { throw new AssertionFailedError("224 createMap() returns a non-null value."); }
-    try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("225 System.stdout must return a non-null value"); }
-
-    } else throw new AssertionFailedError("227 worker$ equiv worker$.getLocalStore");
-  }
+//   /**
+//    * prints a map of the user's friends, visible to the user
+//    *
+//    * @throws NullPointerException
+//    *         if user is null.
+//    */
+//   public
+//   void
+//   viewMap
+//   {                     // side effects:
+//     {*→n}             ⊓ // user is fetched
+//     {*→user.friends}  ⊓ // user's friends are fetched
+//     {*→service.store$} ⊓ // map is fetched
+//     {*→user.p}          // map is output to the owner
+//   }
+//   (
+//     User[owner,n] user,
+//     principal     owner,
+//     principal     n
+//   )
+//   throws
+//   (
+//     NullPointerException {*provider; user}
+//   )
+//   where
+//     {*provider; *MapServer.provider; user; n; owner} <= {{*→n} ⊓ {*→user.friends} ⊓ {*→service.store$} ⊓ {*→user.p}},  
+//     {_→; *←(n,owner)} <= {{*→user.friends} ⊓ {*→user.p}},
+//     {*←service}       <= {*→user.p},
+// //    {*->user.p} <= {*->worker$},  
+// //    // general user invariants
+// //    worker$ actsfor owner,
+//     (owner,n) equiv user.p,
+//     user.p  actsfor user.friends
+//   {
+//     if (user == null)
+//       throw new NullPointerException("99 user is null");
+//       
+//     final Store local = worker$.getLocalStore();
+// 
+//     printMap(user, owner, n, new label {*→user.p}@service.store$);
+//   }
+// 
+//   /**
+//    * prints a map of the user's friends, visible to the user's friends
+//    *
+//    * @throws NullPointerException
+//    *         if user is null.
+//    * @throws SecurityException
+//    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+//    */
+//   public
+//   void
+//   postMap
+//   {                     // side effects:
+//     {*→n}             ⊓ // user is fetched
+//     {*→user.friends}  ⊓ // user's wall is updated; user's friends are fetched
+//     {*→service.store$}   // map is fetched
+//   }
+//   (
+//     final User[owner,n] user,
+//     final principal     owner,
+//     final principal     n
+//   )
+//   throws
+//   (
+//     NullPointerException {*provider; user}
+//   )
+//   where
+//     // see printMap constraints
+//     {*provider; *MapServer.provider; user; n} <= {{*→n} ⊓ {*→service.store$} ⊓ {*→user.friends} ⊓ {*→service.store$}},
+//     {*←service}     <= {*→user.friends},
+//     {_→; *←owner,n} <= {*→user.friends},
+// 
+//     // general user invariants
+//     worker$ actsfor owner,
+//     (owner,n) equiv user.p,
+//     user.p  actsfor user.friends
+//   {
+//     if (user == null)
+//       throw new NullPointerException("139 user is null");
+// 
+//     printMap(user, owner, n, new label {*→user.friends}@service.store$);
+//   }
+// 
+// 
+//   /**
+//    * Helper method that gets the map and prints it out.
+//    *
+//    * @throws NullPointerException
+//    *         if user is null.
+//    * @throws SecurityException
+//    *         under unspecified circumstances (whenever jif.runtime.Runtime[user].getRuntime().stdout() would)
+//    */
+//   private
+//   void
+//   printMap
+//   {                          // side effects
+//     {*→n}                  ⊓ // fetches of user's information
+//     {*→service.store$}      ⊓ // map service is contacted
+//     {*lbl}                   // output on lbl channel
+//   }
+//   (
+//     final User[owner,n] user,
+//     final principal     owner,
+//     final principal     n,
+//     final label         lbl
+//   )
+//   throws
+//   (
+//     NullPointerException {*provider; user}
+//   )
+//   where
+//     // user fetch depends on
+//     //  - code and caller_pc
+//     //  - user pointer
+//     //  - policies
+//     //  - the intermediate state of the result
+//     {*provider; *MapServer.provider} <= {*→n},
+//     {user}                           <= {*→n},
+//     {n; lbl}                         <= {*→n},
+//     {*lbl}                           <= {*→n},
+// 
+//     // initial map fetch depends on
+//     //  - confidentiality of code
+//     //  - user pointer
+//     //  - policies
+//     {*provider; *MapServer.provider} <= {*→service.store$},
+//     {user}                           <= {*→service.store$},
+//     {n; lbl}                         <= {*→service.store$},
+// 
+//     // map output depends on
+//     //  - code
+//     //  - user and user's contents
+//     //  - map service results
+//     //  - policies
+//     {*provider; *MapServer.provider} <= {*lbl},
+//     {user}                           <= {*lbl}, {_→; *←(n,owner)} <= {*lbl},
+//     {*←service}                      <= {*lbl},
+//     {lbl; n}                         <= {*lbl},
+// 
+//     // invariants
+//     user.p equiv (n,owner)
+// 
+//     // lbl objects created on worker$
+// //    {*←worker$} <= lbl, lbl <= {*→worker$} // TODO: worker$ ≽ lbl
+//   {
+//     if (user == null)
+//       throw new NullPointerException("214 user is null");
+// 
+//     final Store localStore = worker$.getLocalStore();
+// 
+//     if (localStore equiv worker$)
+//     {
+// 
+//     MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n, lbl);
+//     PrintStream[lbl] out = System.stdout(lbl);
+// 
+//     if (result == null)                                             { throw new AssertionFailedError("224 createMap() returns a non-null value."); }
+//     try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("225 System.stdout must return a non-null value"); }
+// 
+//     } else throw new AssertionFailedError("227 worker$ equiv worker$.getLocalStore");
+//   }
 
 
   /**
@@ -243,7 +243,7 @@ where
   {                          // side effects:
     {*→n}                  ⊓ // user is fetched
     {*l}                   ⊓ // result  map is updated
-    {*→service.store$}      ⊓ // initial map is fetched
+    {*→service.store$}     ⊓ // initial map is fetched
     {*→s}                  ⊓ // result is created at s
     {*friend_access_bound}   // friends are fetched
   }
@@ -313,7 +313,7 @@ where
     {*l}                             <= {*friend_access_bound},
 
     // intermediate objects created at local store
-//    l <= {*→worker$}, {*←worker$} <= l, // TODO: worker$ ≽ l
+    l <= {*→worker$}, {*←worker$} <= l, // TODO: worker$ ≽ l
 
     // l objects created at s
     {*←s} <= l, l <= {*→s}, {*→s} <= {*→s}, // TODO: s ≽ l@{s→}: result created at s
@@ -570,7 +570,7 @@ where
     {map_update; friend_access_bound} <= {*map_update},
 
     // objects are created on the local store.
-//    {*←worker$} <= map_update, map_update <= {*→worker$}, // TODO: worker$ ≽ map_update
+    {*←worker$} <= map_update, map_update <= {*→worker$}, // TODO: worker$ ≽ map_update
 
     // general access policy invariants
     {_←}          <= {*map_access},
@@ -586,6 +586,9 @@ where
       String {*→} s = "582 MapImage.copy return value should be non-null";
       throw new AssertionFailedError(s);
     }
+
+    if (user == null)
+      throw new AssertionFailedError("591 annotateMap assumes user is non-null");
 
     final Store local = worker$.getLocalStore();
     if (local equiv worker$) {

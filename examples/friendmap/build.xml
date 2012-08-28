@@ -106,8 +106,8 @@
 
   <target name="build-local-friendmap" depends="build-local-mapserv, build-local-snapp, build-util">
     <fabc-local srcdir="${home}/src/fabric/friendmap_1.0_codebase" >
-        <arg line="-dump FabricToFabilRewriter" />
         <!--
+        <arg line="-dump FabricToFabilRewriter" />
         <arg value="-rdebug" />
         <arg line="-debugpositions" />
         <arg value="-report" /> <arg value="pc=1" />
@@ -466,6 +466,9 @@
         <arg value="-classpath" /> <arg value="@{classpath}" />
         <arg value="-addsigcp"  /> <arg value="${home}/classes/fab-sig" />
         <arg value="-addbootcp" /> <arg value="${home}/classes/fab-sig-impl" />
+        <!--
+        <arg value="-no-fail-on-exception" />
+        -->
         <extra-args />
         <srcfile />
 
