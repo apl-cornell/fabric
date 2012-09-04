@@ -37,6 +37,14 @@ class ThreadClass(threading.Thread):
             result = m.group(1)
             times.append(int(result))
             #print 'host: %s time %s' % (self.worker, result)       
+
+def mean_and_dev(times):         
+    #average = float(sum(times)) / len(times)
+    mean = reduce(lambda x, y: float(x) + float(y), times) / len(times)
+    deviations = map(lambda x: x - mean, times)
+    squares = map(lambda x: x * x, deviations)
+    dev = math.sqrt(reduce(lambda x, y: x + y, squares) /  (len(squares) - 1))
+    return (mean, dev)
         
 def create_db(size):
     cmd = '/home/soule/workspace/promises/examples/microbenchmarks/readwritemix/bin/create-db store0 %d'  % (size)
@@ -63,7 +71,9 @@ def plot(name):
     ps = "./" + name + ".ps"
     cmd = "plot "
     cmd +=  "\"" + data + "\" u 1:2 t \'commit\' w linespoints, "
-    cmd +=  "\"" + data + "\" u 1:3 t \'nocommit\' w linespoints "
+    cmd += "\"\" u 1:2:3 notitle w yerrorbars, "    
+    cmd +=  "\"" + data + "\" u 1:4 t \'nocommit\' w linespoints, "
+    cmd += "\"\" u 1:4:5 notitle w yerrorbars"    
     with open(gnu, 'w') as f:
         f.write('set terminal postscript\n')
         f.write('set output \"' + ps + '\"\n')
@@ -94,7 +104,9 @@ def test_warm(worker_names, size, percentage):
         for num_workers in range(1,7):
             workers = worker_names[0:num_workers]
             commit_time = 0.0
-            nocommit_time = 0.0           
+            nocommit_time = 0.0
+            commit_dev = 0.0
+            nocommit_dev = 0.0
             for commit in ['y', 'n']:
                 # start all the workers...
                 for (worker, host) in workers:              
@@ -104,13 +116,15 @@ def test_warm(worker_names, size, percentage):
                     # wait for the workers to finish
                     for t in threads:
                         t.join()
-                average = float(sum(times)) / len(times)
+                (average, dev) = mean_and_dev(times)
                 print "workers =" + str(num_workers) + ", commit=" + commit + ", average=" + str(average)
                 if commit == 'y':
                     commit_time = average
+                    commit_dev = dev
                 else:
                     nocommit_time = average
-            s = '%d\t%0.2f\t%0.2f' % (num_workers, commit_time, nocommit_time)
+                    nocommit_dev = dev
+            s = '%d\t%0.2f\t%0.2f\t%0.2f\t%0.2f' % (num_workers, commit_time, commit_dev, nocommit_time, nocommit_dev)
             print s
             f.write(s + '\n')
         stop_store(store)
@@ -129,6 +143,8 @@ def test_cold(worker_names, size, percentage):
             workers = worker_names[0:num_workers]
             commit_time = 0.0
             nocommit_time = 0.0
+            commit_dev = 0.0
+            nocommit_dev = 0.0
             for commit in ['y', 'n']:        
                 store = start_store()
                 # start all the workers...
@@ -139,14 +155,16 @@ def test_cold(worker_names, size, percentage):
                     # wait for the workers to finish
                     for t in threads:
                         t.join()
-                average = float(sum(times)) / len(times)
+                (average, dev) = mean_and_dev(times)
                 print "workers =" + str(num_workers) + ", commit=" + commit + ", average=" + str(average)
                 stop_store(store)
                 if commit == 'y':
                     commit_time = average
+                    commit_dev = dev
                 else:
                     nocommit_time = average
-            s = '%d\t%0.2f\t%0.2f' % (num_workers, commit_time, nocommit_time)
+                    nocommit_dev = dev            
+            s = '%d\t%0.2f\t%0.2f\t%0.2f\t%0.2f' % (num_workers, commit_time, commit_dev, nocommit_time, nocommit_dev)
             print s
             f.write(s + '\n')
     plot(splot)
