@@ -38,12 +38,14 @@ class ThreadClass(threading.Thread):
             times.append(int(result))
             #print 'host: %s time %s' % (self.worker, result)       
 
-def mean_and_dev(times):         
+def mean_and_dev(l):         
     #average = float(sum(times)) / len(times)
-    mean = reduce(lambda x, y: float(x) + float(y), times) / len(times)
-    deviations = map(lambda x: x - mean, times)
+    mean = float(reduce(lambda x, y: x + y, l)) / len(l)
+    deviations = map(lambda x: x - mean, l)
     squares = map(lambda x: x * x, deviations)
-    dev = math.sqrt(reduce(lambda x, y: x + y, squares) /  (len(squares) - 1))
+    dev = 0
+    if len(squares) > 1:
+        dev = math.sqrt(reduce(lambda x, y: x + y, squares) /  (len(squares) - 1))
     return (mean, dev)
         
 def create_db(size):
@@ -98,7 +100,7 @@ def test_warm(worker_names, size, percentage):
         t.start()
         t.join()
         print "beginning test..."
-        s = '#%s\t%s\t%s' % ( 'workers', 'commit_time', 'nocommit_time')
+        s = '#%s\t%s\t%s\t%s\t%s' % ( 'workers', 'commit_time', 'commit_dev', 'nocommit_time', 'nocommit_dev')
         print s
         f.write(s + '\n')
         for num_workers in range(1,7):
@@ -114,10 +116,10 @@ def test_warm(worker_names, size, percentage):
                     t.start()
                     threads.append(t)
                     # wait for the workers to finish
-                    for t in threads:
-                        t.join()
-                (average, dev) = mean_and_dev(times)
-                print "workers =" + str(num_workers) + ", commit=" + commit + ", average=" + str(average)
+                for t in threads:
+                    t.join()
+                (average, dev) = mean_and_dev(times)                
+                print "workers =" + str(num_workers) + ", commit=" + commit + ", average=" + str(average) + ", dev=" + str(dev)
                 if commit == 'y':
                     commit_time = average
                     commit_dev = dev
@@ -136,7 +138,7 @@ def test_cold(worker_names, size, percentage):
     splot = 'cold-%d-%d' % (size, percentage)
     fdata = './' + splot + '.dat'
     with open(fdata, 'w') as f:
-        s = '#%s\t%s\t%s' % ( 'workers', 'commit_time', 'nocommit_time')
+        s = '#%s\t%s\t%s\t%s\t%s' % ( 'workers', 'commit_time', 'commit_dev', 'nocommit_time', 'nocommit_dev')
         print s
         f.write(s + '\n')
         for num_workers in range(1,7):
@@ -153,10 +155,10 @@ def test_cold(worker_names, size, percentage):
                     t.start()
                     threads.append(t)
                     # wait for the workers to finish
-                    for t in threads:
-                        t.join()
+                for t in threads:
+                    t.join()
                 (average, dev) = mean_and_dev(times)
-                print "workers =" + str(num_workers) + ", commit=" + commit + ", average=" + str(average)
+                print "workers =" + str(num_workers) + ", commit=" + commit + ", average=" + str(average) + ", dev=" + str(dev)
                 stop_store(store)
                 if commit == 'y':
                     commit_time = average
@@ -177,8 +179,8 @@ def main():
                 ('wash2', 'wash.systems.cs.cornell.edu'),
                 ('inara2', 'inara.systems.cs.cornell.edu')
                 ]
-    test_warm(worker_names, 100, 50)
-    #test_cold(worker_names, 100, 50)
+    #test_warm(worker_names, 100, 50)
+    test_cold(worker_names, 100, 50)
     #plot('hot')
 
 if __name__ == "__main__":
