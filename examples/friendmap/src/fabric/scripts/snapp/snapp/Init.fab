@@ -23,7 +23,7 @@ where
   public static void main{⊤←}(String[] args) {
     atomic {
       final Store store = worker$.getWorker().getStore("snapp");
-      final Snapp snapp = new Snapp@store("Snapp Principal Object", store, store);
+      final Snapp snapp = new Snapp@store("Snapp Principal Object", store);
 
       store.getRoot().put("snapp", snapp);
     }
