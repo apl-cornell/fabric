@@ -29,4 +29,10 @@ public class AccessPathLocalWorker extends AccessPathLocal {
     return ts.pathMap().N(l).NV(l);
   }
 
+  @Override
+  public boolean equals(Object other) {
+    if (other instanceof AccessPathLocalWorker)
+      return li == ((AccessPathLocalWorker) other).li;
+    else return false;
+  }
 }
