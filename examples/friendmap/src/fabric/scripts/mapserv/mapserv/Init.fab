@@ -14,7 +14,7 @@ where
       final Store     store  = worker$.getStore("mapserv");
       if (MapServer.provider <= new label {*←store}) {
 
-        final MapServer server = new MapServer@store("Map Server Object", store, '.');
+        final MapServer server = new MapServer@store("Map Server Object", '.');
         worker$.getStore("snapp").getRoot().put("mapserv", server);
 
       } else throw new AssertionFailedError("20 mapserv ≽ MapServer.provider");

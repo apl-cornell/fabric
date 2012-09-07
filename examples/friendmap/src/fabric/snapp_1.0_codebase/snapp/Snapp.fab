@@ -43,7 +43,7 @@ where
     // the parameters and code affect the assignment to the fields
     {*provider; name; owner} <= {this},
     // establish invariants
-    store$ actsfor owner,
+//    store$ actsfor owner,
     provider <= {⊤→store$}
   {
     super(name, owner);
