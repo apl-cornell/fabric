@@ -1,5 +1,6 @@
 package codebases.types;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -56,6 +57,14 @@ public class SimpleResolver extends NamespaceResolver_c {
           Report.report(4, "Class " + name + " has encoded type info");
         encodedClazz = clazz;
       }
+      if (encodedClazz != null
+          && !name.replace(".", File.separator).equals(encodedClazz.name())) {
+//        if (Report.should_report(report_topics, 3))
+//          Report.report(3, "Not using " + encodedClazz.name()
+//              + "(case-insensitive filesystem?)");
+        encodedClazz = null;
+        clazz = null;
+      }
     }
 
     // Find source file
@@ -82,6 +91,14 @@ public class SimpleResolver extends NamespaceResolver_c {
             if (Report.should_report(REPORT_TOPICS, 4))
               Report.report(4, "Class " + name + " has encoded type info");
             encodedClazz = homeClazz;
+          }
+          if (encodedClazz != null
+              && !name.replace(".", File.separator).equals(encodedClazz.name())) {
+//            if (Report.should_report(report_topics, 3))
+//              Report.report(3, "Not using " + encodedClazz.name()
+//                  + "(case-insensitive filesystem?)");
+            encodedClazz = null;
+            clazz = null;
           }
         }
       }
