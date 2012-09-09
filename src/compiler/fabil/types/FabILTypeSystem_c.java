@@ -506,16 +506,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return super.translateClass(c, t);
   }
 
-  public boolean isPlatformType(Named name) {
-    return isPlatformType(name.fullName());
-  }
-
-  public boolean isPlatformType(String fullName) {
-    String typeName = fullName;
-    return typeName.startsWith("java") || typeName.startsWith("fabric")
-        || typeName.startsWith("jif");
-  }
-
   @Override
   public void initialize(ExtensionInfo extInfo) throws SemanticException {
     // There is no toplevel resolver -- names are resolved via the source's
