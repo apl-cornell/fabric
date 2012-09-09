@@ -46,7 +46,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     TOPICS.add("mobile");
   }
 
-  protected boolean principalExpected = false;
+  // protected boolean principalExpected = false;
 
   /** An expression used to instantiate the 'this' principal in static contexts */
   protected Expr staticThisExpr;
@@ -162,7 +162,8 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
         // cd is public, we will put it in its own source file.
         SourceFile sf =
             java_nf().SourceFile(Position.compilerGenerated(), n.package_(),
-                Collections.<Import> emptyList(), Collections.singletonList((TopLevelDecl) cd));
+//                Collections.<Import> emptyList(),
+                n.imports(), Collections.singletonList((TopLevelDecl) cd));
 
         String newName =
             cd.name() + "." + job.extensionInfo().defaultFileExtension();

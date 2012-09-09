@@ -23,7 +23,7 @@ import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
 
 public class CastToFabilExt_c extends CastToJavaExt_c {
-  
+
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     Cast c = (Cast)node();
@@ -31,15 +31,15 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     FabricTypeSystem ts = (FabricTypeSystem)ffrw.jif_ts();
     FabILNodeFactory nf = (FabILNodeFactory)ffrw.java_nf();
-    if (ts.isPrincipal(castType) 
-     && (ts.typeEquals(ts.Worker(), exprType) 
-      || ts.typeEquals(ts.RemoteWorker(), exprType))
-      || ts.typeEquals(ts.Store(), exprType)) {
+    if (ts.isPrincipal(castType)
+        && (ts.typeEquals(ts.Worker(), exprType) || ts.typeEquals(
+            ts.RemoteWorker(), exprType))
+            || ts.typeEquals(ts.Store(), exprType)) {
       return nf.Call(c.position(), c.expr(), nf.Id(Position.compilerGenerated(), "getPrincipal"));
     }
-    
+
     if (castType.isPrimitive() || !ts.isJifClass(castType)) {
-      return rw.java_nf().Cast(c.position(), c.castType(), c.expr());      
+      return rw.java_nf().Cast(c.position(), c.castType(), c.expr());
     }
 
     List<Expr> args = new ArrayList<Expr>();
@@ -57,7 +57,7 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
 
     FabricClassType fct = (FabricClassType) castType;
 
-    String jifImplClass = fct.fullName();
+    String jifImplClass = fct.name();
     if (fct.flags().isInterface()) {
       jifImplClass = ClassDeclToJavaExt_c.interfaceClassImplName(jifImplClass);
     }

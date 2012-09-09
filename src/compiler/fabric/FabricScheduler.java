@@ -40,7 +40,7 @@ import fabric.visit.FabILSkeletonCreator;
 import fabric.visit.FabricExceptionChecker;
 import fabric.visit.FabricToFabilRewriter;
 import fabric.visit.NamespaceChecker;
-import fabric.visit.PrincipalCastAdder;
+import fabric.visit.CoercePrincipals;
 import fabric.visit.RemoteCallWrapperAdder;
 import fabric.visit.RemoteCallWrapperUpdater;
 import fabric.worker.Worker;
@@ -204,12 +204,12 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     return g;
   }
 
-  public Goal PrincipalCastsAdded(Job job) {
+  public Goal PrincipalsCoerced(Job job) {
     FabricTypeSystem ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
 
     Goal g =
-        internGoal(new VisitorGoal(job, new PrincipalCastAdder(job, ts, nf)) {
+        internGoal(new VisitorGoal(job, new CoercePrincipals(job, ts, nf)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
             List<Goal> l = new ArrayList<Goal>();
@@ -304,7 +304,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
             filext)));
     try {
       addPrerequisiteDependency(g, this.Serialized(job));
-      addPrerequisiteDependency(g, this.PrincipalCastsAdded(job));
+      addPrerequisiteDependency(g, this.PrincipalsCoerced(job));
 
       // make sure that if Object.fab is being compiled, it is always
       // written to FabIL before any other job.

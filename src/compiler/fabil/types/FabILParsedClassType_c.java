@@ -7,11 +7,14 @@ import java.util.List;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.frontend.Source;
+import polyglot.main.Options;
 import polyglot.qq.QQ;
 import polyglot.types.DeserializedClassInitializer;
 import polyglot.types.LazyClassInitializer;
+import polyglot.types.Named;
 import polyglot.types.ParsedClassType_c;
 import polyglot.types.Resolver;
+import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
@@ -25,7 +28,7 @@ import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
 public class FabILParsedClassType_c extends ParsedClassType_c implements
-    FabILParsedClassType {
+FabILParsedClassType {
 
   /**
    * The namespace used to resolve the dependencies of this class
@@ -97,19 +100,28 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
       if (package_() == null) {
         return extInfo.namespaceToJavaPackagePrefix(canonical_ns) + name();
       }
+      //FIXME: To avoid codegen bugs where the package of a class
+      // conflicts with an in-scope variable, we should avoid generating
+      // fully qualified names whenever possible.
+      // Unfortunately, since the ProxyRewriter transforms our FabIL AST into
+      // java in-place, there are a lot of Ambiguous nodes in the tree,
+      // causing the Translator to set the context to null.
+      // When the context is null, the only option is to create a FQ name,
+      // so we can't avoid these kinds of naming conflicts.
+      // The best option would be to refactor the FabIL->Java phase
+      // into an ExtensionRewriter pass.
+      if (c != null && !Options.global.fully_qualified_names
+      // Have to be explicit about default imports
+          && !ts.defaultPackageImports().contains(package_().fullName())) {
+        try {
+          Named x = c.find(name());
 
-      // XXX: Never use short name
-      // if (c != null && !Options.global.fully_qualified_names
-      // && codebase == null) {
-      // try {
-      // Named x = c.find(name());
-      //
-      // if (ts.equals(this, x)) {
-      // return name();
-      // }
-      // } catch (SemanticException e) {
-      // }
-      // }
+          if (ts.equals(this, x)) {
+            return name();
+          }
+        } catch (SemanticException e) {
+        }
+      }
 
       return extInfo.namespaceToJavaPackagePrefix(canonical_ns)
           + package_().translate(c) + "." + name();

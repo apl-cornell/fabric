@@ -1,5 +1,6 @@
 package codebases.visit;
 
+import polyglot.ast.Import;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.SourceFile;
 import polyglot.frontend.Job;
@@ -44,17 +45,14 @@ public class CodebaseTranslator extends Translator {
       }
     }
 
-    // XXX: assuming fully_qualified_names is set, no imports are written
-    // boolean newline = false;
-    // // No imports
-    // for (Iterator i = sfn.imports().iterator(); i.hasNext();) {
-    // Import imp = (Import) i.next();
-    // imp.del().translate(w, this);
-    // newline = true;
-    // }
-    //
-    // if (newline) {
-    // w.newline(0);
-    // }
+    boolean newline = false;
+    for (Import imp : sfn.imports()) {
+      imp.del().translate(w, this);
+      newline = true;
+    }
+
+    if (newline) {
+      w.newline(0);
+    }
   }
 }
