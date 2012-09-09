@@ -80,7 +80,6 @@ public class Store_c extends Expr_c implements Store {
   public List<Type> throwTypes(TypeSystem ts) {
 
     if (!(expr instanceof Special)) {
-      System.err.println("Throws: NPE");
       return Collections.singletonList((Type) ts.NullPointerException());
     }
     return Collections.<Type> emptyList();
