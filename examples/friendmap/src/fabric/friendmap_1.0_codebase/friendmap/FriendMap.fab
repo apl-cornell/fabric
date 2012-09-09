@@ -93,8 +93,8 @@ where
     {_→; *←(n,owner)} <= {{*→user.friends} ⊓ {*→user.p}},
     {*←service}       <= {*→user.p},
     {*→user.p} <= {*→worker$},  
-    // general user invariants
-    worker$ actsfor owner,
+//    // general user invariants
+//    worker$ actsfor owner,
     (owner,n) equiv user.p,
     user.p  actsfor user.friends
   {
