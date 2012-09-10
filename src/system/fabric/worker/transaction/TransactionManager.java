@@ -710,7 +710,10 @@ public final class TransactionManager {
    * transaction.
    */
   private void sendAbortMessages() {
-    sendAbortMessages(current.storesToContact(), current.workersCalled,
+    Set<Store> stores =
+        current.tid.depth == 0 ? current.storesToContact() : Collections
+            .<Store> emptySet();
+    sendAbortMessages(stores, current.workersCalled,
         Collections.<RemoteNode> emptySet());
   }
 
