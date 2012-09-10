@@ -53,23 +53,25 @@ class Hello {
       final Store store = worker$.getStore("store");
 
       // get a reference to the runtime.  This is how fabric programs access the console.
-      Runtime[p] runtime = Runtime[p].getRuntime();
+      final Runtime[p] runtime = Runtime[p].getRuntime();
 
       // because we're storing p's message on "store", we must ensure that p trusts store
-      if (store actsfor p) {
+      if (runtime.store$ actsfor p) {
+        if (store actsfor p) {
 
-        // create an object there holding our important message
-        Message[p]{p->;p<-} h = new Message[p]@store("Hello World!  Fabric is coming for you...");
+          // create an object there holding our important message
+          Message[p]{p->;p<-} h = new Message[p]@store("Hello World!  Fabric is coming for you...");
 
-        // store a reference to our object in the store's root map
-        Map root = store.getRoot();
-        root.put("hello", h);
+          // store a reference to our object in the store's root map
+          Map root = store.getRoot();
+          root.put("hello", h);
 
-        // output the contents of the object
-        runtime.out().println(h.message);
+          // output the contents of the object
+          runtime.out().println(h.message);
 
-      } else {
-        runtime.out().println("store is not sufficiently trusted.");
+        } else {
+          runtime.out().println("store is not sufficiently trusted.");
+        }
       }
     }
   }
