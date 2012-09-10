@@ -723,4 +723,9 @@ public final class Log {
 
     if (child != null) child.renumberObject(store, onum, newOnum);
   }
+
+  @Override
+  public String toString() {
+    return "[" + tid + "]";
+  }
 }

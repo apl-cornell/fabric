@@ -153,4 +153,10 @@ public class TransactionID implements FastSerializable, Serializable {
 
     return ancestor1;
   }
+
+  @Override
+  public String toString() {
+    String prefix = parent == null ? "" : (parent + ":");
+    return prefix + Long.toHexString(tid);
+  }
 }
