@@ -37,7 +37,8 @@ public class Runtime {
 //            throw new SecurityException("The current user does not act for "
 //                    + p.name() + ".");
 //        }
-        return (Runtime) new Runtime().fabric$runtime$Runtime$(p);
+        Store local = Worker.getWorker().getLocalStore();
+        return (Runtime) new Runtime@local().fabric$runtime$Runtime$(p);
     }
 
     /** Get the current user  */
@@ -224,9 +225,11 @@ public class Runtime {
   public Object $initLabels() {
     // XXX What should this be?  Using completely permissive values for now.
     // update label: {_ <-}
-    // access policy: {_ ->}
+    // access policy: {worker$ ->}
     this.$updateLabel = LabelUtil.noComponents();
-    this.$accessPolicy = LabelUtil.bottomConf();
+    this.$accessPolicy = LabelUtil.readerPolicy(local,
+	Worker.getWorker().getPrincipal(),
+	PrincipalUtil.bottomPrincipal());
 
     return this;
   }
