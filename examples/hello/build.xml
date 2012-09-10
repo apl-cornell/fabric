@@ -55,6 +55,7 @@
       <arg value="-sourcepath" /> <arg value="${hello.home}/src" />
       <arg value="-cp"         /> <arg value="${hello.home}/classes" />
       <arg value="-e"/>
+      <arg value="-trusted-providers" />
       <srcfile />
 
       <fileset dir="${hello.home}/src" includes="**/*.fab" />

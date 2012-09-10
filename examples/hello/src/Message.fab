@@ -4,7 +4,7 @@ public class Message[principal p] where provider actsfor p {
 
   public final String{p->;p<-} message;
 
-  public Message(String{p->;p<-} message):{p<-;p->;*provider} {
+  public Message(String{p->;p<-} message):{p<-;p->} {
     this.message = message;
     super();
   }
