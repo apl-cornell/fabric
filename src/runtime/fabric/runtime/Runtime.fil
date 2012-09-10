@@ -19,9 +19,9 @@ public class Runtime {
     private Store local;
 
     private Runtime fabric$runtime$Runtime$(Principal p) {
-	fabric$lang$Object$();
         this.dynp = p;
         this.local = Worker.getWorker().getLocalStore();
+	fabric$lang$Object$();
         return this;
     }
 
