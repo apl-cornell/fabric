@@ -63,6 +63,11 @@ public class Store_c extends Expr_c implements Store {
     return this.expr(e);
   }
 
+  @Override
+  public boolean isDisambiguated() {
+    return expr.isDisambiguated();
+  }
+
   /** Type check the expression. */
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
@@ -75,6 +80,7 @@ public class Store_c extends Expr_c implements Store {
     FabricTypeSystem ts = (FabricTypeSystem) tc.typeSystem();
     return type(ts.Store());
   }
+
 
   @Override
   public List<Type> throwTypes(TypeSystem ts) {

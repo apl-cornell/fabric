@@ -70,39 +70,38 @@ public class SimpleResolver extends NamespaceResolver_c {
     // Find source file
     Source source = null;
     if (load_src) source = sourceLoader.classSource(namespace, name);
+      // Check if a job for the source already exists.
+      if (extInfo.scheduler().sourceHasJob(source)) {
+        if (Report.should_report(Report.loader, 4))
+          new Exception("Source has job " + source).printStackTrace();
 
-    // Check if a job for the source already exists.
-    if (extInfo.scheduler().sourceHasJob(source)) {
-      if (Report.should_report(Report.loader, 4))
-        new Exception("Source has job " + source).printStackTrace();
-
-      // the source has already been compiled; what are we doing here?
-      return getTypeFromSource(source, name);
-    } else if (load_enc && encodedClazz == null && source != null) {
-      // Found source, but no job. Check class cache of canonical NS
-      CodebaseSource cbsource = (CodebaseSource) source;
-      if (!cbsource.canonicalNamespace().isOpaque()
-          && !cbsource.canonicalNamespace().equals(namespace)) {
-        ClassFile homeClazz =
-            classfileLoader.loadFile(cbsource.canonicalNamespace(), name);
-        if (homeClazz != null) {
-          // Check for encoded type information.
-          if (homeClazz.encodedClassType(version) != null) {
-            if (Report.should_report(REPORT_TOPICS, 4))
-              Report.report(4, "Class " + name + " has encoded type info");
-            encodedClazz = homeClazz;
-          }
-          if (encodedClazz != null
-              && !name.replace(".", File.separator).equals(encodedClazz.name())) {
+        // the source has already been compiled; what are we doing here?
+        return getTypeFromSource(source, name);
+      } else if (load_enc && encodedClazz == null && source != null) {
+        // Found source, but no job. Check class cache of canonical NS
+        CodebaseSource cbsource = (CodebaseSource) source;
+        if (!cbsource.canonicalNamespace().isOpaque()
+            && !cbsource.canonicalNamespace().equals(namespace)) {
+          ClassFile homeClazz =
+              classfileLoader.loadFile(cbsource.canonicalNamespace(), name);
+          if (homeClazz != null) {
+            // Check for encoded type information.
+            if (homeClazz.encodedClassType(version) != null) {
+              if (Report.should_report(REPORT_TOPICS, 4))
+                Report.report(4, "Class " + name + " has encoded type info");
+              encodedClazz = homeClazz;
+            }
+            if (encodedClazz != null
+                && !name.replace(".", File.separator).equals(encodedClazz.name())) {
 //            if (Report.should_report(report_topics, 3))
 //              Report.report(3, "Not using " + encodedClazz.name()
 //                  + "(case-insensitive filesystem?)");
-            encodedClazz = null;
-            clazz = null;
+              encodedClazz = null;
+              clazz = null;
+            }
           }
         }
       }
-    }
 
     if (Report.should_report(REPORT_TOPICS, 4)) {
       if (source == null)

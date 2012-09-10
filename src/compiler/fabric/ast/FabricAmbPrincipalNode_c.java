@@ -46,7 +46,12 @@ public class FabricAmbPrincipalNode_c extends AmbPrincipalNode_c {
             ts.remoteWorkerPrincipal(worker, ctx, position()));
 
       } else if (expr instanceof Store) {
-        // Local worker principal.
+        if (!ar.isASTDisambiguated(expr)) {
+          ar.job().extensionInfo().scheduler().currentGoal()
+              .setUnreachableThisRun();
+          return this;
+        }
+
         FabricTypeSystem ts = (FabricTypeSystem) ar.typeSystem();
         FabricNodeFactory nf = (FabricNodeFactory) ar.nodeFactory();
         FabricContext ctx = (FabricContext) ar.context();

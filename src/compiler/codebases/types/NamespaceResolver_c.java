@@ -339,7 +339,12 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
         throw new MissingDependencyException(g);
       }
+
     }
+    if (extInfo.extFileManager().caseInsensitive())
+      // Sigh... This source may have originally been enqueued under a
+      // case insensitive name.  Allow the TypeSystem to keep looking.
+      throw new NoClassException(name);
 
     // The source has already been compiled, but the type was not created there.
     throw new SemanticException("Could not find \"" + name + "\" in " + source
@@ -478,9 +483,9 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     }
     throw new InternalCompilerError("Not implemented yet! Hurry up!");
   }
-  
+
   @Override
   public String toString() {
-      return namespace.toString();
+    return namespace.toString();
   }
 }

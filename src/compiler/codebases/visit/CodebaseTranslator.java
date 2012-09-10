@@ -21,6 +21,10 @@ public class CodebaseTranslator extends Translator {
     this.extInfo = (ExtensionInfo) job.extensionInfo();
   }
 
+  public String namespaceToJavaPackagePrefix(FabricLocation ns) {
+    return extInfo.namespaceToJavaPackagePrefix(ns);
+  }
+
   @Override
   protected void writeHeader(SourceFile sfn, CodeWriter w) {
     // XXX: HACK -- The translator hasn't entered the scope of the file yet,
@@ -28,7 +32,7 @@ public class CodebaseTranslator extends Translator {
     FabricLocation ns = ((CodebaseSource) sfn.source()).canonicalNamespace();
     if (sfn.package_() != null) {
       w.write("package ");
-      w.write(extInfo.namespaceToJavaPackagePrefix(ns));
+      w.write(namespaceToJavaPackagePrefix(ns));
       sfn.package_().del().translate(w, this);
       w.write(";");
       w.newline(0);
@@ -46,6 +50,11 @@ public class CodebaseTranslator extends Translator {
     }
 
     boolean newline = false;
+    for (String pkg : ts.defaultPackageImports()) {
+      w.write("import ");
+      w.write(pkg + ".*;");
+      w.newline(0);
+    }
     for (Import imp : sfn.imports()) {
       imp.del().translate(w, this);
       newline = true;

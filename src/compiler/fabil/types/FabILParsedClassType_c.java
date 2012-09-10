@@ -7,14 +7,11 @@ import java.util.List;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.frontend.Source;
-import polyglot.main.Options;
 import polyglot.qq.QQ;
 import polyglot.types.DeserializedClassInitializer;
 import polyglot.types.LazyClassInitializer;
-import polyglot.types.Named;
 import polyglot.types.ParsedClassType_c;
 import polyglot.types.Resolver;
-import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
@@ -110,18 +107,22 @@ FabILParsedClassType {
       // so we can't avoid these kinds of naming conflicts.
       // The best option would be to refactor the FabIL->Java phase
       // into an ExtensionRewriter pass.
-      if (c != null && !Options.global.fully_qualified_names
-      // Have to be explicit about default imports
-          && !ts.defaultPackageImports().contains(package_().fullName())) {
-        try {
-          Named x = c.find(name());
-
-          if (ts.equals(this, x)) {
-            return name();
-          }
-        } catch (SemanticException e) {
-        }
-      }
+      // TODO: Also -- there are some remaining issues regarding classes in the
+      // same Fabric package that are linked from different codebases.
+      // these need to either be emitted as FQ names, or an import statement
+      // needs to be added to the emitted Java source.
+//      if (c != null && !Options.global.fully_qualified_names
+//      // Have to be explicit about default imports
+//          && !ts.defaultPackageImports().contains(package_().fullName())) {
+//        try {
+//          Named x = c.find(name());
+//
+//          if (ts.equals(this, x)) {
+//            return name();
+//          }
+//        } catch (SemanticException e) {
+//        }
+//      }
 
       return extInfo.namespaceToJavaPackagePrefix(canonical_ns)
           + package_().translate(c) + "." + name();
