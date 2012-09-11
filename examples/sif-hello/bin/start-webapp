@@ -5,7 +5,7 @@ FABRIC="${APP_HOME}/../.."
 PATH="${PATH}:${FABRIC}/bin"
 
 CP="${APP_HOME}/classes"
-CP="${CP}:${FABRIC}/lib/fabric-transient.jar"
+CP="${CP}:${FABRIC}/lib/fabric-collections.jar"
 CP="${CP}:${FABRIC}/lib/fabric-sif.jar"
 
 export FABRIC_HOME="${APP_HOME}"

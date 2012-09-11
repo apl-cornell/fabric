@@ -15,12 +15,12 @@
 
   <import file="../../common.xml" />
   <import file="${fabric.home}/src/lib/sif/common.xml" />
-  <import file="${fabric.home}/src/lib/transient/common.xml" />
+  <import file="${fabric.home}/src/lib/collections/common.xml" />
 
   <dirname property="hello.home" file="${ant.file.sif-hello}" />
 
   <path id="standard.classpath">
-    <path refid="transient.classpath" />
+    <path refid="collections.classpath" />
     <path refid="sif.classpath" />
     <path refid="lib.classpath" />
     <pathelement path="${hello.home}/classes" />

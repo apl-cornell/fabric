@@ -1,0 +1,88 @@
+<!--
+  This is the Apache Ant build file for the Fabric collections library
+  implementation.
+-->
+
+<project name="collections" default="build-all" basedir=".">
+  <description>
+    Build file for the collections library.
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../../common.xml" />
+  <import file="common.xml" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${collections.home}/classes"/>
+    <delete file="${jar.collections}"/>
+  </target>
+
+  <target name="clobber" depends="clean" />
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+          description="Builds the collections package">
+    <mkdir dir="${collections.home}/classes" />
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${collections.home}"
+           dest="${collections.home}/classes"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabc}" />
+      <arg line="${debug.flag}" />
+      <arg value="-d"           /> <arg value="${collections.home}/classes" />
+      <arg value="-sourcepath"  /> <arg value="${collections.home}/src" />
+      <arg value="-cp"          /> <arg value="${collections.home}/classes" />
+      <arg value="-trusted-providers"/>
+      <!-- 
+      <arg value="-rdebug"/>
+      -->
+
+      <srcfile />
+      <fileset dir="${collections.home}/src" includes="**/*.fab" />
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+  <!--
+  ****************************************************************************
+    Jar targets         
+  ****************************************************************************
+  -->
+
+  <uptodate property="jar.uptodate" targetfile="${jar.collections}">
+    <srcfiles dir="${collections.home}/src" />
+  </uptodate>
+
+  <target name="jar" unless="jar.uptodate" description="Create collections library jar">
+    <antcall target="build-all" />
+    <jar jarfile="${jar.collections}" basedir="${collections.home}/classes" includes="**/*.class" />
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

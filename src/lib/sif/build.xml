@@ -10,6 +10,7 @@
   -->
 
   <import file="../../../common.xml" />
+  <import file="${fabric.home}/src/lib/collections/common.xml" />
   <import file="common.xml" />
 
   <!-- signature source directory -->
@@ -34,7 +35,7 @@
   <path id="standard.classpath">
     <path refid="lib.classpath" />
     <path refid="fabric.classpath" />
-    <pathelement path="${fabric.home}/tests/playground/collections/classes" />
+    <path refid="collections.classpath" />
   </path>
 
   <!--
@@ -83,7 +84,7 @@
           depends="build-sif-java, build-sif-fab, build-sif-fil, build-sif-sig"
           description="Builds the Fabric-Servlet" />
 
-  <target name="init">
+  <target name="init" depends="collections">
     <!-- Create the time stamp -->
     <tstamp />
     <!-- Create the build directory structures used by compile -->
@@ -101,7 +102,6 @@
            debuglevel="lines,vars,source">
       <classpath>
         <path refid="standard.classpath" />
-        <pathelement path="${fabric.home}/tests/playground/collections/classes" />
       </classpath>
     </javac>
   </target>
@@ -118,7 +118,7 @@
       <arg value="${fabric.home}/bin/filc"/>
       <arg value="-d"          /> <arg value="${sif.classes}"/>
       <arg value="-sourcepath" /> <arg value="${src}"/>
-      <arg value="-bootclasspath"         /> <arg pathref="standard.classpath" />
+      <arg value="-addbootcp" /> <arg pathref="standard.classpath" />
       <srcfile />
       <fileset dir="${fil-src}" includes="**/*.fil" />
       <globmapper from="*.fil" to="*.class" />
@@ -168,7 +168,7 @@
            vmlauncher="false">
       <arg value="${fabric.home}/bin/fabc" />
       <arg value="-g"   />
-      <arg value="-bootclasspath"         /> <arg pathref="standard.classpath" />
+      <arg value="-addbootcp"         /> <arg pathref="standard.classpath" />
       <arg value="-sig" />
       <arg value="-trusted-providers" />
       <arg value="-d"          /> <arg value="${sif.sig-classes}" />
