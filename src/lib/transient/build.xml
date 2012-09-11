@@ -58,15 +58,7 @@
 
       <srcfile />
       <fileset dir="${transient.home}/src">
-        <include name="jif/util/Map.fab" />
         <include name="jif/lang/ExternalPrincipal.fab" />
-        <include name="jif/util/List.fab" />
-        <include name="jif/util/LinkedList.fab" />
-        <include name="jif/lang/JifString.fab" />
-        <include name="jif/util/Set.fab" />
-        <include name="jif/util/Date.fab" />
-        <include name="jif/util/ArrayList.fab" />
-        <include name="jif/util/HashMap.fab" />
       </fileset>
       <globmapper from="*.fab" to="*.class" />
     </apply>
