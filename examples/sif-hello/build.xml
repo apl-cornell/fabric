@@ -64,12 +64,12 @@
            vmlauncher="false">
       <arg value="${fabric.home}/bin/fabc"/>
       <arg value="-g"/>
+      <arg value="-e"/>
       <arg value="-d"          /> <arg value="${hello.home}/classes"/>
       <arg value="-sourcepath" /> <arg value="${hello.home}/src" />
       <arg value="-cp"         /> <arg pathref="standard.classpath" />
       <arg value="-cp"         /> <arg value="${hello.home}/classes" />
-      <arg value="-sigcp"      /> <arg pathref="sif.sigcp"/>
-      <arg value="-e"/>
+      <arg value="-addsigcp"      /> <arg pathref="sif.sigcp"/>
       <arg value="-trusted-providers"/>
 
       <!--
@@ -129,6 +129,7 @@
       <arg value="-cp"         /> <arg pathref="standard.classpath" />
       <arg value="-cp"         /> <arg value="${hello.home}/classes" />
       <arg value="-addsigcp"      /> <arg pathref="sif.sigcp"/>
+      <arg value="-trusted-providers" />
 
       <!--
         <arg value="-report" /> <arg value="solver=5" />

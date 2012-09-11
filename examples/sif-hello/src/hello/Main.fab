@@ -1,6 +1,5 @@
 package hello;
 
-import java.util.*;
 import sif.servlet.Servlet;
 import sif.servlet.Request;
 import sif.servlet.SessionState;
@@ -9,7 +8,7 @@ import sif.servlet.SessionPrincipal;
 import javax.servlet.ServletException;
 
 public final class Main extends Servlet[HelloServEP] {
-    final Store{this} localStore;
+    final Store{this}@{} localStore;
     public Main() throws ServletException {
         FabricWorker cl = FabricWorker.getWorker();
         Store lStore = null;        
