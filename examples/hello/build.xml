@@ -54,7 +54,6 @@
       <arg value="-d"          /> <arg value="${hello.home}/classes"/>
       <arg value="-sourcepath" /> <arg value="${hello.home}/src" />
       <arg value="-cp"         /> <arg value="${hello.home}/classes" />
-      <arg value="-e"/>
       <arg value="-trusted-providers" />
       <srcfile />
 
