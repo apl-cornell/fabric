@@ -53,6 +53,7 @@
       <arg value="-sourcepath"  /> <arg value="${collections.home}/src" />
       <arg value="-cp"          /> <arg value="${collections.home}/classes" />
       <arg value="-trusted-providers"/>
+      <arg value="-no-warnings"/>
       <!-- 
       <arg value="-rdebug"/>
       -->
