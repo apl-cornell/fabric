@@ -56,10 +56,12 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
     args.add(c.expr());
 
     FabricClassType fct = (FabricClassType) castType;
-
     String jifImplClass = fct.name();
     if (fct.flags().isInterface()) {
-      jifImplClass = ClassDeclToJavaExt_c.interfaceClassImplName(jifImplClass);
+      // use the full name for the interface, since the IMPL class
+      // will not be in the import table.
+      jifImplClass =
+          ClassDeclToJavaExt_c.interfaceClassImplName(fct.fullName());
     }
     return ffrw.qq().parseExpr(jifImplClass + ".%s(%LE)",
         ClassDeclToJavaExt_c.castMethodName(fct), args);

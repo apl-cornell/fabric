@@ -66,7 +66,7 @@ import fabric.worker.Store;
  * Extension information for fabric extension.
  */
 public class ExtensionInfo extends jif.ExtensionInfo implements
-    codebases.frontend.ExtensionInfo {
+codebases.frontend.ExtensionInfo {
   /*
    * Note: jif.ExtensionInfo has a jif.OutputExtensionInfo field jlext. The only
    * unoverridden place this is used is in a call to initCompiler, so it should
@@ -121,20 +121,20 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
     Set<File> s = new LinkedHashSet<File>();
     for (FabricLocation location : options.bootclasspath())
       if (location.isFileReference()) s.add(new File(location.getUri()));
-    for (FabricLocation location : options.classpath())
-      if (location.isFileReference()) s.add(new File(location.getUri()));
-    try {
-      fm.setLocation(StandardLocation.CLASS_PATH, s);
-    } catch (IOException e) {
-      throw new InternalCompilerError(e);
-    }
+        for (FabricLocation location : options.classpath())
+          if (location.isFileReference()) s.add(new File(location.getUri()));
+            try {
+              fm.setLocation(StandardLocation.CLASS_PATH, s);
+            } catch (IOException e) {
+              throw new InternalCompilerError(e);
+            }
   }
 
   @Override
   protected FileManager createFileManager() {
     return new FabricFileManager(this);
   }
-  
+
   @Override
   protected void configureFileManager() {
     FabricOptions options = getOptions();
@@ -207,7 +207,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
     return new FabricTypeSystem_c(filext.typeSystem());
   }
 
-  
+
   @Override
   protected FabricOptions createOptions() {
     return new FabricOptions(this);
@@ -326,7 +326,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
       path.addAll(typeSystem().classpathResolvers());
       path.addAll(typeSystem().sourcepathResolvers());
       return new PathResolver(this, ns, path, opt.codebaseAliases());
-    } else if (ns.isFabricReference()) {
+    } else if (ns.isFabricReference() && !ns.isOpaque()) {
       // Codebases may never resolve platform types, so always resolve against
       // the platformResolver first.
       return new SafeResolver(this, new CodebaseResolver(this, ns));
