@@ -38,7 +38,7 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
       return nf.Call(c.position(), c.expr(), nf.Id(Position.compilerGenerated(), "getPrincipal"));
     }
 
-    if (castType.isPrimitive() || !ts.isJifClass(castType)) {
+    if (castType.isPrimitive() || !ts.isFabricClass(castType)) {
       return rw.java_nf().Cast(c.position(), c.castType(), c.expr());
     }
 
