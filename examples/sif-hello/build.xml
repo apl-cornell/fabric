@@ -88,7 +88,7 @@
       -->
 
       <srcfile />
-      <fileset dir="${hello.home}/src" includes="**/*.fab" excludes="jif/principals/*.fab" />
+      <fileset dir="${hello.home}/src" includes="**/*.fab" excludes="jif/**/*.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
 
@@ -147,7 +147,7 @@
       -->
 
       <srcfile />
-      <fileset dir="${hello.home}/src" includes="jif/principals/*.fab" />
+      <fileset dir="${hello.home}/src" includes="jif/**/*.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
   </target>
