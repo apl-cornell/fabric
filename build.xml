@@ -610,6 +610,7 @@
       <arg value="${runtime.classes}:${classes}"/>
       -->
       <arg value="-trusted-providers" />
+      <arg value="-platform-mode" />
       <arg value="-d" />
       <arg value="${runtime.classes}" />
       <arg value="-sourcepath" />
