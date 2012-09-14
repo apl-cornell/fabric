@@ -1,0 +1,5 @@
+public class AccessCast01 {
+  void m() {
+    AccessCast01 x = (AccessCast01) null;
+  }
+}
