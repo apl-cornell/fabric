@@ -13,7 +13,7 @@ while true; do
       vmargs="${vmargs} '$1'"
       shift
       ;;
-    -cp)
+    --jvm-cp)
       shift
       cp="${cp}:$1"
       shift
