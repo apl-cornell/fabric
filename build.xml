@@ -283,15 +283,7 @@
   <target name="fabric-signatures"
       depends="init,bootstrap,bin,fabric-compiler,fabil-runtime,worker,store"
       description="Compiles the Fabric signature classes">
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${fabric.home}"
-           dest="${signatures.fabric.classes}"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabc}"/>
+    <fabsigc dest="${signatures.fabric.classes}">
       <arg value="-platform-mode" /> 
       <arg value="-bootclasspath" />
       <arg value="${runtime.classes}:${classes}"/>
@@ -299,44 +291,24 @@
       <arg value="-trusted-providers" />
       <arg value="-sigcp"/>
       <arg value="${signatures.fabric.src}" />
-      <arg value="-sig"/>
-      <arg value="-d"/>
-      <arg value="${signatures.fabric.classes}"/>
-      <srcfile />
       <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
+    </fabsigc>
   </target>
 
   <!-- Compiles the FabIL signatures -->
   <target name="fabil-signatures"
       depends="init,bootstrap,fabil-compiler,bin,native"
       description="Compiles the FabIL signature clasess">
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${fabric.home}"
-           dest="${signatures.fabil.classes}"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${filc}" />
+    <filsigc dest="${signatures.fabil.classes}">
       <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg value="-nooutput" />
-      <arg value="-classpath" />
-      <arg value="${bootstrap.classes}" />
       <arg value="-addbootcp" />
-      <arg value="${bootstrap.classes}:${polyglot.classpath}" />
+      <arg value="${bootstrap.classes}:${polyglot.classpath}"/>
       <arg value="-sigcp" />
       <arg value="${signatures.fabil.src}:${runtime.src}" />
-      <arg value="-sig" />
-      <arg value="-d" />
-      <arg value="${signatures.fabil.classes}" />
-      <srcfile />
       <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
-      <globmapper from="*.fil" to="*.class" />
-    </apply>
+    </filsigc>
   </target>
 
   <!-- Compiles the Fabric tools -->
@@ -374,28 +346,16 @@
     <equals arg1="n" arg2="${do.regen}"/>
   </condition>
   <fail if="do.abort">Bootstrap regeneration aborted by user.</fail>
-    <apply executable="bash"
-        parallel="true"
-        failonerror="true"
-        dest="${bootstrap.src}"
-        dir="${runtime.src}"
-        relative="false"
-        skipemptyfilesets="true"
-        vmlauncher="false">
-      <arg value="${filc}" />
+    <filc dest="${bootstrap.src}">
       <arg value="-generate-native-skeletons" /> 
       <arg value="-noserial" /> 
       <arg value="-c" />
-      <arg value="-d" /> <arg value="${bootstrap.src}"/>
-      <arg value="-debugpositions" />
       <arg value="-sourcepath"/>
       <arg value="${runtime.src}"/>
-      <srcfile />
       <fileset dir="${runtime.src}"
           includes="**/*.fil"
           excludes="**/*.fab"/>
-      <globmapper from="*.fil" to="*.*" />
-    </apply>
+    </filc>
   </target>
 
   <!--
@@ -538,91 +498,45 @@
       <include name="fabric/worker/UserAbortException.java" />
     </javac>
 
-    <apply executable="bash"
-        parallel="true"
-        failonerror="true"
-        dir="${fabric.home}"
-        dest="${runtime.classes}"
-        relative="false"
-        skipemptyfilesets="true"
-        vmlauncher="false">
-      <arg value="${filc}" />
+    <filc dest="${runtime.classes}">
       <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
-      <arg line="${debug.flag}" />
       <arg value="-addbootcp" />
-      <arg value="${runtime.src}:${bootstrap.classes}" />
-      <arg value="-d" />
-      <arg value="${runtime.classes}" />
+      <arg value="${bootstrap.classes}" />
       <arg value="-platform-mode"/>
-      <srcfile />
       <fileset dir="${arrays.src}" includes="fabric/lang/arrays/*.fil"/>
-      <globmapper from="*.fil" to="*.class" />
-    </apply>
+    </filc>
   </target>
 
   <!-- Compiles the part of the Fabric runtime that is implemented in FabIL -->
   <target name="fabil-runtime"
       depends="init,bootstrap,fabil-compiler,fabil-signatures,fabric-arrays">
-    <apply executable="bash"
-        parallel="true"
-        failonerror="true"
-        dir="${fabric.home}"
-        dest="${runtime.classes}"
-        relative="false"
-        skipemptyfilesets="true"
-        vmlauncher="false">
-      <arg value="${filc}" />
-      <arg line="${debug.flag}" />
+    <filc dest="${runtime.classes}">
       <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg value="-j" />
       <arg value="-Xms256M" />
-      <arg value="-d" />
-      <arg value="${runtime.classes}" />
       <arg value="-addbootcp" />
-      <arg value="${runtime.classes}:${runtime.src}:${polyglot.classpath}:${bootstrap.classes}" />
+      <arg value="${polyglot.classpath}:${bootstrap.classes}" />
       <arg value="-platform-mode"/>
-      <srcfile />
       <fileset dir="${runtime.src}" includes="**/*.fil" />
-
-      <globmapper from="*.fil" to="*.class" />
-    </apply>
+    </filc>
   </target>
 
   <!-- Compiles the part of the runtime that is implemented in Fabric -->
   <target name="fabric-runtime"
       depends="fabric-signatures,fabil-runtime">
-    <apply executable="bash"
-        parallel="true"
-        failonerror="true"
-        dir="${fabric.home}"
-        dest="${runtime.classes}"
-        relative="false"
-        skipemptyfilesets="true"
-        vmlauncher="false">
-      <arg value="${fabc}" />
-      <arg line="${debug.flag}" />
+    <fabc dest="${runtime.classes}">
       <arg value="-j" />
       <arg value="-Xms256M" />
       <arg value="-e" />
-      <!--
-      <arg value="-bootclasspath" />
-      <arg value="${runtime.classes}:${classes}"/>
-      -->
       <arg value="-trusted-providers" />
       <arg value="-platform-mode" />
-      <arg value="-d" />
-      <arg value="${runtime.classes}" />
       <arg value="-sourcepath" />
       <arg value="${runtime.src}" />
-
-      <srcfile />
       <fileset dir="${runtime.src}"
           includes="**/*.fab" />
-
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
+    </fabc>
   </target>
 
   <!--

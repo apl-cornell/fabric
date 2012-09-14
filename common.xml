@@ -128,6 +128,79 @@
     <pathelement location="${runtime.classes}" />
     <pathelement location="${lib}/fabric-rt.jar" />
   </path>
+
+  <!-- Some useful Ant macros for invoking our compilers. -->
+  <macrodef name="fabc">
+    <attribute
+        name="dest"
+        description="The output directory."/>
+    <element name="extra-args" implicit="true"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dest="@{dest}"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${fabc}"/>
+        <arg line="${debug.flag}"/>
+        <arg value="-d"/> <arg value="@{dest}"/>
+        <extra-args/>
+        <srcfile/>
+        <globmapper from="*.fab" to="*.class"/>
+      </apply>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="fabsigc">
+    <attribute
+        name="dest"
+        description="The output directory."/>
+    <element name="extra-args" implicit="true"/>
+    <sequential>
+      <fabc dest="@{dest}">
+        <arg value="-sig"/>
+        <extra-args/>
+      </fabc>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="filc">
+    <attribute
+        name="dest"
+        description="The output directory."/>
+    <element name="extra-args" implicit="true"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dest="@{dest}"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${filc}"/>
+        <arg line="${debug.flag}"/>
+        <arg value="-d"/> <arg value="@{dest}"/>
+        <extra-args/>
+        <srcfile/>
+        <globmapper from="*.fil" to="*.class"/>
+      </apply>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="filsigc">
+    <attribute
+        name="dest"
+        description="The output directory."/>
+    <element name="extra-args" implicit="true"/>
+    <sequential>
+      <filc dest="@{dest}">
+        <arg value="-sig"/>
+        <extra-args/>
+      </filc>
+    </sequential>
+  </macrodef>
 </project>
 
 
