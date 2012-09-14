@@ -259,7 +259,7 @@ public class FabricOptions extends JifOptions {
       }
     });
     flags.add(new OptFlag<List<FabricLocation>>("-bootclasspath", "<path>",
-        "where to find Fabric runtime classes") {
+        "where to find classes for the Fabric platform") {
       @Override
       public Arg<List<FabricLocation>> handle(String[] args, int index) {
         List<FabricLocation> path = NSUtil.processPathString(args[index]);

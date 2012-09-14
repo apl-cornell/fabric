@@ -153,7 +153,7 @@ public class FabILOptions extends polyglot.main.Options {
       }
     });
     flags.add(new OptFlag<List<FabricLocation>>("-bootclasspath", "<path>",
-        "where to find Fabric runtime classes",
+        "where to find classes for the Fabric platform",
         "JVM property: sun.boot.class.path (or all jars in java.home/lib)") {
       @Override
       public Arg<List<FabricLocation>> handle(String[] args, int index) {
