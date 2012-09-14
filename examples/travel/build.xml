@@ -22,7 +22,7 @@
     <path refid="fabric.classpath" />
     <path refid="sif.classpath" />
     <path refid="lib.classpath" />
-    <pathelement path="${fabric.home}/tests/playground/collections/classes" />
+    <pathelement path="${fabric.home}/src/lib/collections/classes" />
     <pathelement path="${travel.home}/classes" />
   </path>
 
