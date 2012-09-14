@@ -1,5 +1,8 @@
-public class AccessCast01 {
-  void m() {
+public class AccessCast01
+where provider <= {}
+{
+  
+  void m{}() {
     AccessCast01 x = (AccessCast01) null;
   }
 }
