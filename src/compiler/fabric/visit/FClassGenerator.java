@@ -157,7 +157,8 @@ public class FClassGenerator extends ErrorHandlingVisitor {
     return n;
   }
 
-  Collection<CodebaseClassType> setDependencies(FabricParsedClassType ct) {
+  Collection<CodebaseClassType> setDependencies(FabricParsedClassType ct)
+      throws SemanticException {
     ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
     if (ct.canonicalNamespace().equals(extInfo.platformNamespace()))
       return Collections.emptySet();
@@ -166,7 +167,12 @@ public class FClassGenerator extends ErrorHandlingVisitor {
       Scheduler scheduler = job.extensionInfo().scheduler();
       CodebaseSource cs = (CodebaseSource) ct.fromSource();
 
-      if (cs == null) throw new InternalCompilerError("Null source for " + ct);
+      if (cs == null)
+        throw new SemanticException(
+            "Class "
+                + ct.fullName()
+                + " has no source file associated with it, but is a dependency of a published class. Was it compiled locally?"
+                + "Published classes may only link against Fabric platform classes and other published classes.");
 
       if (!scheduler.sourceHasJob(ct.fromSource()))
         throw new InternalCompilerError("No job for " + ct);

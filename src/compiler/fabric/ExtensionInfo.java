@@ -283,13 +283,15 @@ codebases.frontend.ExtensionInfo {
 
       return new RemoteSource(f, fcls, user);
     } else {
-      LocalSource src = new LocalSource(f, user, localNamespace());
-      // Publish all local source unless we're in platform mode.
-      // TODO: generalize and make this better. We should only publish
-      // source in the sourcepath. Plus, the user may be re-publishing remote
-      // source with a new codebase.
-      src.setPublish(getOptions().publish());
-      return src;
+      FabricLocation ns =
+          getOptions().platformMode() ? platformNamespace() : localNamespace();
+          LocalSource src = new LocalSource(f, user, ns);
+          // Publish all local source unless we're in platform mode.
+          // TODO: generalize and make this better. We should only publish
+          // source in the sourcepath. Plus, the user may be re-publishing remote
+          // source with a new codebase.
+          src.setPublish(getOptions().publish());
+          return src;
     }
   }
 

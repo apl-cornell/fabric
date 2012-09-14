@@ -69,6 +69,7 @@ public class Main extends polyglot.main.Main {
     args.add("1000");
     args.add("-mergestrings");
     args.add("-simpleoutput");
+    args.add("-no-warnings");
 
     // For debugging.
     args.add("-g");
@@ -456,25 +457,25 @@ public class Main extends polyglot.main.Main {
           for (JavaFileObject jfo : compiler.outputFiles())
             javacCmd[j++] = new File(jfo.toUri()).getAbsolutePath();
 
-          if (Report.should_report(verbose, 1)) {
-            StringBuffer cmdStr = new StringBuffer();
-            for (String element : javacCmd)
-              cmdStr.append(element + " ");
-            Report.report(1, "Executing post-compiler " + cmdStr);
-          }
+              if (Report.should_report(verbose, 1)) {
+                StringBuffer cmdStr = new StringBuffer();
+                for (String element : javacCmd)
+                  cmdStr.append(element + " ");
+                    Report.report(1, "Executing post-compiler " + cmdStr);
+              }
 
-          int exitVal = com.sun.tools.javac.Main.compile(javacCmd);
+              int exitVal = com.sun.tools.javac.Main.compile(javacCmd);
 
-          if (!options.keep_output_files) {
-            for (FileObject fo : compiler.outputFiles())
-              fo.delete();
-          }
+              if (!options.keep_output_files) {
+                for (FileObject fo : compiler.outputFiles())
+                  fo.delete();
+              }
 
-          if (exitVal > 0) {
-            eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, "Non-zero return code: "
-                + exitVal);
-            return false;
-          }
+              if (exitVal > 0) {
+                eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, "Non-zero return code: "
+                    + exitVal);
+                return false;
+              }
         }
       } catch (Exception e) {
         eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, e.getMessage());

@@ -337,9 +337,6 @@ public class FabILOptions extends polyglot.main.Options {
 
   @Override
   protected void postApplyArgs() {
-    // Signature mode implies platform mode
-    if (signatureMode)
-      platform_mode = true;
     // Don't serialize types with skeletons
     if (createSkeleton)
       serialize_type_info = false;

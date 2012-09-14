@@ -228,7 +228,8 @@
     <fabc-publish
         srcdir="src/fabric/snapp_1.0_codebase"
         codebasefile="${snapp.codebase.file}"
-        deststore="snapp"/>
+        deststore="snapp">
+    </fabc-publish>
     <uptodate property="snapp.up-to-date" targetfile="${snapp.codebase.file}">
       <srcfiles dir="src/fabric/snapp_1.0_codebase" includes="**/*.fab" />
     </uptodate>
@@ -461,6 +462,7 @@
         <arg value="${fabc}" />
         <arg value="-g" />
         <arg value="-e" />
+        <arg value="-no-warnings" />
         <arg value="-d" />         <arg value="@{dstdir}" />
         <arg value="-sourcepath"/> <arg value="@{srcdir}" />
         <arg value="-classpath" /> <arg value="@{classpath}" />
@@ -496,6 +498,9 @@
              skipemptyfilesets="true"
              vmlauncher="false">
         <arg value="${fabc}" />
+        <!-- We are extending the platform with some convenience classes
+             for handling principals -->
+        <arg value="-platform-mode" />
         <arg value="-trusted-providers" />
         <arg value="-sig" />
         <arg value="-g" />

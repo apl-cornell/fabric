@@ -236,8 +236,9 @@ codebases.frontend.ExtensionInfo {
     } else {
       if (Report.should_report(Report.loader, 2))
         Report.report(2, "Creating filesource from " + f);
-
-      return new LocalSource(f, user, localNamespace());
+      FabricLocation ns =
+          getOptions().platformMode() ? platformNamespace() : localNamespace();
+      return new LocalSource(f, user, ns);
     }
   }
 
@@ -271,7 +272,7 @@ codebases.frontend.ExtensionInfo {
       path.addAll(typeSystem().sourcepathResolvers());
       return new PathResolver(this, ns, path, opt.codebaseAliases());
 
-    } else if (ns.isFabricReference()) {
+    } else if (ns.isFabricReference() && !ns.isOpaque()) {
       // Codebases may never resolve platform types, so always resolve against
       // the platformResolver first.
       return new SafeResolver(this, new CodebaseResolver(this, ns));
@@ -290,7 +291,7 @@ codebases.frontend.ExtensionInfo {
   // TODO: support multiple local namespaces
   @Override
   public FabricLocation localNamespace() {
-    return getOptions().platformMode() ? platformNamespace() : local_ns;
+    return local_ns;
   }
 
   @Override

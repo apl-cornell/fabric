@@ -505,9 +505,6 @@ public class FabricOptions extends JifOptions {
     // publishOnly mode implies publish
     if (publishOnly) publish = true;
 
-    // Signature mode implies platform mode
-    if (signatureMode) platform_mode = true;
-
     // Don't serialize types with skeletons
     if (createSkeleton) serialize_type_info = false;
 

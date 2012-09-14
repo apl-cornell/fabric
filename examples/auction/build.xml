@@ -231,6 +231,7 @@
       <arg value="-e"/>
       <arg value="-d" /> <arg value="${home.codebases}"/>
       <arg value="-report" /> <arg value="profile=1" />
+      <arg value="-no-warnings" />
       <arg value="-publish-only" />
       <arg value="-codebase-output-file"/> <arg value="${target.codebasefile}"/>
       <arg value="-sourcepath" /> <arg value="${codebase.dir}" />
@@ -253,6 +254,7 @@
            vmlauncher="false">
       <arg value="${fabric.home}/bin/fabc"/>
       <arg value="-g"/>
+      <arg value="-no-warnings"/>
       <arg value="-e"/>
       <arg value="-d"/> <arg value="${home}/classes"/>
       <srcfile />
@@ -295,6 +297,7 @@
       <arg value="-g"/>
       <arg value="-debugpositions"/>
       <arg value="-e"/>
+      <arg value="-no-warnings"/>
       <!--
       <arg value="-trusted-providers"/>
       <arg value="-rdebug"/>

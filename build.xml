@@ -292,6 +292,7 @@
            skipemptyfilesets="true"
            vmlauncher="false">
       <arg value="${fabc}"/>
+      <arg value="-platform-mode" /> 
       <arg value="-bootclasspath" />
       <arg value="${runtime.classes}:${classes}"/>
       <arg value="-nooutput"/>
