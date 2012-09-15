@@ -29,7 +29,7 @@ while true; do
   esac
 done
 
-classpath="${FILC_CP}:${cp}:${classpath}"
+classpath="${FILC_CP}:${cp}"
 
 # Jar files should always appear *after* their corresponding class directories.
 sigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar"

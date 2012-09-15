@@ -74,14 +74,13 @@ if [ -z "${code_cache}" ]; then
 fi
 mkdir -p ${code_cache}
 
-classpath="${FABRIC_WORKER_CP}:${jvmcp}:${classpath}:${code_cache}"
+classpath="${FABRIC_WORKER_CP}:${jvmcp}:${code_cache}"
 
-sigcp="${TOP}/sig-classes/fabric:${TOP}/lib/fabric-sig.jar"
-filsigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar"
 command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" \
           fabric.worker.Worker --bootclasspath \"$(fixpath ${FABRIC_BOOTCP})\" \
-                               --sigcp \"$(fixpath ${sigcp})\" \
-                               --filsigcp \"$(fixpath ${filsigcp})\" ${args}"
+                               --sigcp \"$(fixpath ${FABRIC_SIG_CP})\" \
+                               --filsigcp \"$(fixpath ${FABIL_SIG_CP})\" \
+                               ${args}"
 
 if [ -n "${verbose}" ]; then
   echo "${command}"
