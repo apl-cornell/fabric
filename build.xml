@@ -529,7 +529,6 @@
     <fabc dest="${runtime.classes}">
       <arg value="-j" />
       <arg value="-Xms256M" />
-      <arg value="-e" />
       <arg value="-trusted-providers" />
       <arg value="-platform-mode" />
       <arg value="-sourcepath" />

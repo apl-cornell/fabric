@@ -146,6 +146,7 @@
         <arg value="${fabc}"/>
         <arg line="${debug.flag}"/>
         <arg value="-d"/> <arg value="@{dest}"/>
+        <arg value="-e"/>
         <extra-args/>
         <srcfile/>
         <globmapper from="*.fab" to="*.class"/>
