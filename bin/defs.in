@@ -159,4 +159,4 @@ FABRIC_SIG_CP="${FABRIC_SIG_CP}:${TOP}/lib/fabric-sig.jar"
 # Signature classpath to use when compiling FabIL programs.
 # Jar files should always appear *after* their corresponding class directories.
 FABIL_SIG_CP="${TOP}/sig-classes/fabil"
-FABIL_SIG_CP="${FABRIC_SIG_CP}:${TOP}/lib/fabric-il-sig.jar"
+FABIL_SIG_CP="${FABIL_SIG_CP}:${TOP}/lib/fabric-il-sig.jar"
