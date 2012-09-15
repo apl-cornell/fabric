@@ -20,7 +20,7 @@ public class FabricNew_c extends JifNew_c {
   }
 
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     FabricExt fabExt = FabricUtil.fabricExt(this);
     Expr location = ((LocatedExt_c) fabExt).location();
     if (qualifier != null) {

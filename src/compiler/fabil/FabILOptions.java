@@ -316,7 +316,6 @@ public class FabILOptions extends polyglot.main.Options {
       needWorker = true;
 
     } else if (arg.flag().ids().contains("-codebase-alias")) {
-      @SuppressWarnings("unchecked")
       Pair<String, FabricLocation> pair =
       (Pair<String, FabricLocation>) arg.value();
       String alias = pair.part1();

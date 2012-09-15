@@ -10,7 +10,6 @@ import java.util.List;
 import jif.translate.JifToJavaRewriter;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.Expr;
-import polyglot.ast.Import;
 import polyglot.ast.Node;
 import polyglot.ast.SourceFile;
 import polyglot.ast.TopLevelDecl;
