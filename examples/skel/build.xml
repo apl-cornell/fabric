@@ -54,47 +54,22 @@
 
   <target name="build-fabil" description="Builds the fabil version of skel">
     <mkdir dir="${home}/classes" />
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${home}"
-           dest="${home}/classes/fabil"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${filc}" />
-      <arg line="${debug.flag}" />
-      <arg value="-d" />          <arg value="${home}/classes" />
+    <filc dest="${home}/classes/fabil">
       <arg value="-sourcepath" /> <arg value="${home}/src/fabil" />
       <arg value="-cp" />         <arg value="${home}/classes" />
-      <srcfile />
-      <fileset dir="${home}/src/fabric" includes="**/*.fab" />
-      <globmapper from="*.fil" to="*.class" />
-    </apply>
+      <fileset dir="${home}/src/fabil" includes="**/*.fil" />
+    </filc>
   </target>
 
   <target name="build-fabric" description="Builds the fabric version of skel">
     <mkdir dir="${home}/classes" />
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${home}"
-           dest="${home}/classes/fabric"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabc}"/>
-      <arg value="-g"/>
-      <arg value="-e"/>
-      <arg value="-d"          /> <arg value="${home}/classes"/>
+    <fabc dest="${home}/classes/fabric">
       <arg value="-sourcepath" /> <arg value="${home}/src/fabric" />
       <arg value="-cp"         /> <arg value="${home}/classes" />
-      <arg value="-e"/>
       <srcfile />
 
       <fileset dir="${home}/src/fabric" includes="**/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
+    </fabc>
   </target>
 
   <target name="build-all" depends="build-java, build-jif, build-fabric, build-fabil" />

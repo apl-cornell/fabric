@@ -18,10 +18,9 @@ The store does not have any persistent application data.
 Follow these steps to run this example. The following items should be on the classpath:
 
 a. $FABRIC/examples/tree/classes
-b. $FABRIC/src/lib/transient/classes
-c. $FABRIC/classes
-d. $FABRIC/rt-classes
-e. $FABRIC/src/lib/sif/classes
+b. $FABRIC/classes
+c. $FABRIC/rt-classes
+d. $FABRIC/src/lib/sif/classes
 
 Step 1. Start a fresh instance of the store0
 

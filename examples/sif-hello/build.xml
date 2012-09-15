@@ -16,17 +16,8 @@
   <import file="../../common.xml" />
   <import file="${fabric.home}/src/lib/sif/common.xml" />
   <import file="${fabric.home}/src/lib/collections/common.xml" />
-  <import file="${fabric.home}/src/lib/transient/common.xml" />
 
   <dirname property="hello.home" file="${ant.file.sif-hello}" />
-
-  <path id="standard.classpath">
-    <path refid="collections.classpath" />
-    <path refid="transient.classpath" />
-    <path refid="sif.classpath" />
-    <path refid="lib.classpath" />
-    <pathelement path="${hello.home}/classes" />
-  </path>
 
   <!--
   ****************************************************************************
@@ -54,22 +45,14 @@
 
   <target name="build-hello" depends="sif, build-principals"
           description="Builds the SIF Hello example">
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${hello.home}"
-           dest="${hello.home}/classes"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabric.home}/bin/fabc"/>
-      <arg value="-g"/>
-      <arg value="-e"/>
-      <arg value="-d"          /> <arg value="${hello.home}/classes"/>
+    <fabc dest="${hello.home}/classes">
       <arg value="-sourcepath" /> <arg value="${hello.home}/src" />
-      <arg value="-cp"         /> <arg pathref="standard.classpath" />
-      <arg value="-cp"         /> <arg value="${hello.home}/classes" />
-      <arg value="-addsigcp"      /> <arg pathref="sif.sigcp"/>
+<!--XXX-->      <arg value="-addbootcp"/> <arg value="${hello.home}/classes" />
+      <arg value="-cp"/> <arg pathref="collections.classpath"/>
+      <arg value="-cp"/> <arg pathref="sif.classpath"/>
+      <arg value="-cp"/> <arg pathref="lib.classpath"/>
+      <arg value="-cp"/> <arg value="${hello.home}/classes"/>
+      <arg value="-addsigcp"/> <arg pathref="sif.sigcp"/>
       <arg value="-trusted-providers"/>
 
       <!--
@@ -87,47 +70,20 @@
         <arg value="-report" /> <arg value="debug=5" />
       -->
 
-      <srcfile />
       <fileset dir="${hello.home}/src" includes="**/*.fab" excludes="jif/**/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
+    </fabc>
 
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${hello.home}"
-           dest="${hello.home}/classes"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabric.home}/bin/filc"/>
-      <arg value="-g"/>
-      <arg value="-d"          /> <arg value="${hello.home}/classes"/>
+    <filc dest="${hello.home}/classes">
       <arg value="-sourcepath" /> <arg value="${hello.home}/src" />
-      <arg value="-cp"         /> <arg pathref="standard.classpath" />
-      <arg value="-cp"         /> <arg value="${hello.home}/classes" />
-      <srcfile />
+      <arg value="-cp"/> <arg value="${hello.home}/classes"/>
       <fileset dir="${hello.home}/src" includes="**/*.fil" />
-      <globmapper from="*.fil" to="*.class" />
-    </apply>
+    </filc>
   </target>
 
-  <target name="build-principals" depends="transient">
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${hello.home}"
-           dest="${hello.home}/classes"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabric.home}/bin/fabc"/>
-      <arg value="-g"/>
-      <arg value="-e"/>
-      <arg value="-d"          /> <arg value="${hello.home}/classes"/>
+  <target name="build-principals">
+    <fabc dest="${hello.home}/classes">
       <arg value="-sourcepath" /> <arg value="${hello.home}/src" />
-      <arg value="-cp"         /> <arg pathref="standard.classpath" />
-      <arg value="-cp"         /> <arg value="${hello.home}/classes" />
+      <arg value="-cp"/> <arg value="${hello.home}/classes"/>
       <arg value="-addsigcp"      /> <arg pathref="sif.sigcp"/>
       <arg value="-trusted-providers" />
 
@@ -146,10 +102,8 @@
         <arg value="-report" /> <arg value="debug=5" />
       -->
 
-      <srcfile />
       <fileset dir="${hello.home}/src" includes="jif/**/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
+    </fabc>
   </target>
 
 </project>

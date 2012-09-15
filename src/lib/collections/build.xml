@@ -39,17 +39,7 @@
   <target name="build"
           description="Builds the collections package">
     <mkdir dir="${collections.home}/classes" />
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${collections.home}"
-           dest="${collections.home}/classes"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabc}" />
-      <arg line="${debug.flag}" />
-      <arg value="-d"           /> <arg value="${collections.home}/classes" />
+    <fabc dest="${collections.home}/classes">
       <arg value="-sourcepath"  /> <arg value="${collections.home}/src" />
       <arg value="-cp"          /> <arg value="${collections.home}/classes" />
       <arg value="-trusted-providers"/>
@@ -58,10 +48,8 @@
       <arg value="-rdebug"/>
       -->
 
-      <srcfile />
       <fileset dir="${collections.home}/src" includes="**/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
+    </fabc>
   </target>
 
   <target name="build-all" depends="build" />
