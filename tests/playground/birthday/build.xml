@@ -10,7 +10,7 @@
   ****************************************************************************
   -->
 
-  <import file="../../common.xml" />
+  <import file="../../../common.xml" />
 
   <dirname property="home" file="${ant.file}"/>
   <property name="home.codebases" value="${home}/codebases"/>

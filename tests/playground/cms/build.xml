@@ -14,7 +14,7 @@
   -->
 
   <dirname  property="cms.home" file="${ant.file.fabric-cms}" />
-  <property name="fabric.home"  value="${cms.home}/../.." />
+  <property name="fabric.home"  value="${cms.home}/../../.." />
 
   <path id="fabil.sigpath">
     <pathelement location="${fabric.home}/sig-classes/fabil" />

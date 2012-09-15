@@ -13,7 +13,7 @@
   ****************************************************************************
   -->
 
-  <import file="../../common.xml" />
+  <import file="../../../common.xml" />
 
   <dirname property="applet.home" file="${ant.file.applet}" />
 
