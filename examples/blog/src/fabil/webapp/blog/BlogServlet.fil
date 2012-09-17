@@ -127,7 +127,7 @@ public class BlogServlet extends HttpServlet {
   private void handleClientAction(HttpServletRequest request,
       HttpServletResponse response) throws IOException {
     atomic {
-      request.setAttribute("debug", new Boolean~currentLabel@localStore(true));
+      request.setAttribute("debug", new Boolean@localStore(true));
     }
     String clientAction = request.getParameter("clientaction");
     if (clientAction.equals("connect")) {
@@ -152,7 +152,7 @@ public class BlogServlet extends HttpServlet {
   private void handleDebugAction(HttpServletRequest request) {
     String debugAction = request.getParameter("debugaction");
     atomic {
-      request.setAttribute("debug", new Boolean~currentLabel@localStore(true));
+      request.setAttribute("debug", new Boolean@localStore(true));
     }
     if (debugAction.equals("recreate")) {
       try {
@@ -234,7 +234,7 @@ public class BlogServlet extends HttpServlet {
     }
     request.setAttribute("clientslist", list);
     atomic {
-      request.setAttribute("clientError", new Boolean~currentLabel@localStore(
+      request.setAttribute("clientError", new Boolean@localStore(
           Statistics.getClientError()));
     }
     request.setAttribute("statistics", Statistics.getInstance());
@@ -295,7 +295,7 @@ public class BlogServlet extends HttpServlet {
     }
     request.setAttribute("posts", posts);
     atomic {
-      request.setAttribute("numPosts", new Integer~currentLabel@localStore(size));
+      request.setAttribute("numPosts", new Integer@localStore(size));
     }
     return PAGE_POSTS;
   }

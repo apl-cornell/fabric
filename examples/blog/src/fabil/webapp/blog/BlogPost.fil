@@ -9,20 +9,25 @@ public class BlogPost {
 
   private String content;
   private String title;
-  private final Date creationTime;
+  private /*final*/ Date creationTime;
   private int views;
-  private final int id;
-  private final List/*Comment*/ comments;
+  private /*final*/ int id;
+  private /*final*/ List/*Comment*/ comments;
   private static int counter = 0;
 
-  public BlogPost(String title, String content) {
+  public BlogPost webapp$blog$BlogPost$(String title, String content) {
+    creationTime = new Date();
+    id = ++counter;
+    comments = new ArrayList/*Comment*/().fabric$util$ArrayList$();
+
+    fabric$lang$Object$();
+
     Statistics.getInstance().registerCreate();
     this.content = content;
     this.title = title;
-    creationTime = new Date();
     views = 0;
-    comments = new ArrayList/*Comment*/();
-    id = ++counter;
+
+    return this;
   }
 
   public String getContent() {
@@ -73,7 +78,7 @@ public class BlogPost {
 
   public List/*Comment*/ getComments() {
     Statistics.getInstance().registerRead(this);
-    return Collections.unmodifiableList(comments);
+    return Collections.unmodifiableList(Diagnostics.getLocalStore(), comments);
   }
 
   public void removeComment(Comment c) {
@@ -84,6 +89,15 @@ public class BlogPost {
   public int getId() {
     Statistics.getInstance().registerRead(this);
     return id;
+  }
+
+  public Object $initLabels() {
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 
 }

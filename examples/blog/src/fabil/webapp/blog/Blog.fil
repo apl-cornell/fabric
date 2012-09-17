@@ -13,17 +13,29 @@ public class Blog {
 
   private static Blog instance;
 
-  private final Map/*Integer, BlogPost*/ blogPosts;
+  private /*final*/ Map/*Integer, BlogPost*/ blogPosts;
 
-  private final Map/*Integer, Comment*/ comments;
+  private /*final*/ Map/*Integer, Comment*/ comments;
 
-  private Blog() {
-    blogPosts = new TreeMap/*Integer, BlogPost*/(new Comparator/*Integer*/() {
-      public int compare(Object o1, Object o2) {
-        return ((Integer)o2).intValue() - ((Integer)o1).intValue();
-      }
-    });
-    comments = new HashMap/*Integer, Comment*/();
+  private Blog webapp$blog$Blog$() {
+    blogPosts = new TreeMap/*Integer, BlogPost*/().fabric$util$TreeMap$(
+	new Comparator/*Integer*/() {
+	  public int compare(Object o1, Object o2) {
+	    return ((Integer)o2).intValue() - ((Integer)o1).intValue();
+	  }
+
+	  public Object $initLabels() {
+	    // update label: {_ <-}
+	    // access policy: {_ ->}
+	    this.$updateLabel = LabelUtil.noComponents();
+	    this.$accessPolicy = LabelUtil.bottomConf();
+
+	    return this;
+	  }
+	});
+    comments = new HashMap/*Integer, Comment*/().fabric$util$HashMap$();
+    fabric$lang$Object$();
+    return this;
   }
 
   public void emptyDatabase() {
@@ -34,12 +46,14 @@ public class Blog {
 
   public Collection/*BlogPost*/ getBlogPosts() {
     Statistics.getInstance().registerRead(this);
-    return Collections.unmodifiableCollection(blogPosts.values());
+    return Collections.unmodifiableCollection(Diagnostics.getLocalStore(),
+	blogPosts.values());
   }
 
   public Collection/*Comment*/ getComments() {
     Statistics.getInstance().registerRead(this);
-    return Collections.unmodifiableCollection(comments.values());
+    return Collections.unmodifiableCollection(Diagnostics.getLocalStore(),
+	comments.values());
   }
 
   public void addBlogPost(BlogPost post) {
@@ -75,7 +89,7 @@ public class Blog {
   }
   
   public static void createNewInstance(Store s, Label l) {
-    instance = new Blog~l@s();
+    instance = new Blog@s().webapp$blog$Blog$();
   }
   
   public static void setInstance(Blog b) {
@@ -101,4 +115,12 @@ public class Blog {
     return (Comment)comments.get(new Integer(id));
   }
 
+  public Object $initLabels() {
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
 }
