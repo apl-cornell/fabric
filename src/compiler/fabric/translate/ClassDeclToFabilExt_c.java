@@ -102,6 +102,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
     StringBuffer sb = new StringBuffer();
     sb.append("static public boolean %s(%LF) {");
+
+    sb.append("if (o == null) return false;");
     // Add code that checks that the access label of jpt flows to o.store
     // proceed normally if it does, otherwise throw an InternalError
     if (!(jpt instanceof FabricParsedClassType_c))
