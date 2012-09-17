@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -202,15 +203,18 @@ public final class TransactionManager {
     }
   }
 
+  /**
+   * Aborts the transaction, recursing to the workers that were called.
+   */
   public void abortTransaction() {
-    abortTransaction(true);
+    abortTransaction(Collections.<Store> emptySet(), current.workersCalled);
   }
 
   /**
-   * @param recurseToCohorts
-   *          true iff should send abort messages to stores and workers.
+   * Aborts the transaction, recursing to the given stores and workers.
    */
-  private void abortTransaction(boolean recurseToCohorts) {
+  private void abortTransaction(Set<Store> storesToContact,
+      List<RemoteWorker> workersToContact) {
     // XXX HACK For now, flush the label cache. Should really have
     // per-transaction label cache. -Jed
     for (Store store : current.storesToContact()) {
@@ -261,7 +265,7 @@ public final class TransactionManager {
     // Wait for all other threads to finish.
     current.waitForThreads();
 
-    if (recurseToCohorts) sendAbortMessages();
+    sendAbortMessages(storesToContact, workersToContact);
     current.abort();
     WORKER_TRANSACTION_LOGGER.warning(current + " aborted");
 
@@ -406,7 +410,8 @@ public final class TransactionManager {
 
   /**
    * Sends prepare messages to the given set of stores and workers. If the
-   * prepare fails, the local portion of the transaction is rolled back.
+   * prepare fails, the local portion and given branch of the transaction is
+   * rolled back.
    * 
    * @throws TransactionRestartingException
    *           if the prepare fails.
@@ -434,9 +439,7 @@ public final class TransactionManager {
       case PREPARE_FAILED:
       case ABORTING:
       case ABORTED:
-        // XXX HACK UGLY
-        failures.put(null, null);
-        abortPrepare(failures);
+        abortPrepare(Collections.<Store> emptySet(), workers, failures);
       }
     }
 
@@ -522,20 +525,27 @@ public final class TransactionManager {
 
     // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
+      stores = new HashSet<Store>(stores);
+      workers = new ArrayList<RemoteWorker>(workers);
+
       String logMessage =
           "Transaction tid=" + current.tid.topTid + ":  prepare failed.";
 
       for (Map.Entry<RemoteNode, TransactionPrepareFailedException> entry : failures
           .entrySet()) {
         if (entry.getKey() instanceof RemoteStore) {
-          // Remove old objects from our cache.
           RemoteStore store = (RemoteStore) entry.getKey();
+          stores.remove(store);
+
+          // Remove old objects from our cache.
           LongKeyMap<SerializedObject> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
             for (SerializedObject obj : versionConflicts.values())
               store.updateCache(obj);
           }
+        } else {
+          workers.remove(entry.getKey());
         }
 
         if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
@@ -552,7 +562,8 @@ public final class TransactionManager {
         current.commitState.notifyAll();
       }
 
-      abortPrepare(failures);
+      abortPrepare(Collections.<Store> emptySet(),
+          Collections.<RemoteWorker> emptyList(), failures);
     } else {
       synchronized (current.commitState) {
         current.commitState.value = PREPARED;
@@ -566,16 +577,18 @@ public final class TransactionManager {
   /**
    * Aborts a failed prepare. Throws a TransactionRestartingException to
    * indicate that the transaction should be restarted.
+   * 
+   * @param stores the stores to recurse to.
+   * @param workers the workers to recurse to.
    */
-  private void abortPrepare(
+  private void abortPrepare(Set<Store> stores, List<RemoteWorker> workers,
       Map<RemoteNode, TransactionPrepareFailedException> failures) {
-    failures.remove(null);
     TransactionPrepareFailedException e =
         new TransactionPrepareFailedException(failures);
     Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
         "{0} error committing: prepare failed exception: {1}", current, e);
     TransactionID tid = current.tid;
-    abortTransaction(false);
+    abortTransaction(stores, workers);
     throw new TransactionRestartingException(tid);
   }
 
@@ -709,12 +722,8 @@ public final class TransactionManager {
    * Sends abort messages to all other nodes that were contacted during the
    * transaction.
    */
-  private void sendAbortMessages() {
-    Set<Store> stores =
-        current.tid.depth == 0 ? current.storesToContact() : Collections
-            .<Store> emptySet();
-    sendAbortMessages(stores, current.workersCalled,
-        Collections.<RemoteNode> emptySet());
+  private void sendAbortMessages(Set<Store> stores, List<RemoteWorker> workers) {
+    sendAbortMessages(stores, workers, Collections.<RemoteNode> emptySet());
   }
 
   /**
