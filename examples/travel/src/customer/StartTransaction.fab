@@ -47,10 +47,12 @@ public class StartTransaction extends CustomerAction {
         if (lbl <= new label {bstore->}) {
             
           Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
-          Object obj = root.get(Config.brokerMapKey);
-          if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+          final Object obj = root.get(Config.brokerMapKey);
+          if (obj.store$ actsfor bstore) {
+              if(obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
               brokerInit =
                   (Broker[BankPrincipal, CustomerPrincipal])obj;
+              }
           }
           final Broker[BankPrincipal, CustomerPrincipal] broker = brokerInit;
           

@@ -19,9 +19,10 @@ public class AuthSessState[label T] extends SessionState[T] {
     	super(si, sp);
     }
     
-    public principal{T;sessionPrincipal←} currentUser() {
+    public principal{T;sessionPrincipal←} currentUser{T}() {
     	try {
-    	    if (wrapper.lbl equiv new label {sessionPrincipal←}) {
+    	    if (wrapper.lbl equiv new label {sessionPrincipal←} 
+    	         &&  T <= wrapper.lbl) {
     	        principal{T;sessionPrincipal←} toReturn = wrapper.wrapwrap.currentUser; 
                 return toReturn;
     	    } else {
