@@ -75,6 +75,7 @@ codebases.frontend.ExtensionInfo {
   protected OutputExtensionInfo filext = new OutputExtensionInfo(this);
   protected Map<String, byte[]> bytecode;
   protected CBTypeEncoder typeEncoder;
+
   static {
     // force Topics to load
     new Topics();

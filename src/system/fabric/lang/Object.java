@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Constructor;
+import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import fabric.common.Logging;
+import fabric.common.NSUtil;
 import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
 import fabric.common.SerializedObject;
@@ -943,15 +945,34 @@ public interface Object {
        */
       public static final Object $makeStaticInstance(
           final Class<? extends Object._Impl> c) {
-        // XXX Need a real store and a real label. (Should be given as args.)
-        final LocalStore store = Worker.getWorker().getLocalStore();
 
         return Worker.runInSubTransaction(new Worker.Code<Object>() {
           @Override
           public Object run() throws Throwable {
-            Constructor<? extends Object._Impl> constr =
-                c.getConstructor(Store.class);
-            return constr.newInstance(store).$initLabels().fetch();
+            String name = c.getCanonicalName();
+            Store store;
+            if (!NSUtil.isPlatformName(name)) {
+              Object o = NSUtil.toProxy(name);
+              store = o.$getStore();
+              if (o instanceof FClass) {
+                FClass fclass = (FClass) o;
+                Object inst = fclass.get$staticInstance();
+                if (inst == null) {
+                  Constructor<? extends Object._Impl> constr =
+                      c.getConstructor(Store.class);
+                  inst = constr.newInstance(store).$initLabels();
+                  fclass.set$staticInstance(inst);
+                }
+                return inst.fetch();
+              } else throw new InternalError("Expected FClass for "
+                  + o.toString() + " but got " + o.getClass());
+            }
+            else {
+              store = Worker.getWorker().getLocalStore();
+              Constructor<? extends Object._Impl> constr =
+                  c.getConstructor(Store.class);
+              return constr.newInstance(store).$initLabels().fetch();
+            }
           }
         });
       }

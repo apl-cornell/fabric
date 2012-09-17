@@ -41,6 +41,8 @@ import fabric.common.NSUtil;
 import fabric.filemanager.ClassObject;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
+import fabric.lang.FabricClassLoader;
+import fabric.util.Iterator;
 import fabric.worker.AbortException;
 import fabric.worker.Worker;
 
@@ -287,6 +289,7 @@ public class Main extends polyglot.main.Main {
     if (!invokePostCompiler(options, compiler, eq)) {
       throw new TerminationException(1);
     }
+
   }
 
   public void compileInWorker(Options options, Set<String> source,
@@ -333,6 +336,7 @@ public class Main extends polyglot.main.Main {
                 fw = new FileWriter(f);
                 FabricLocation localNS = extInfo.localNamespace();
                 Codebase cb = extInfo.typeSystem().codebaseFromNS(localNS);
+                initializeStaticInstances(cb);
                 URI ns = NSUtil.namespace(cb);
                 System.err.println("Creating codebase file "
                     + f.getAbsolutePath() + " with " + ns);
@@ -368,6 +372,25 @@ public class Main extends polyglot.main.Main {
         }
       }
       throw new TerminationException(e.getMessage());
+    }
+  }
+
+  /**
+   * Load all published classes so that their static state is initialized.
+   * @throws ClassNotFoundException
+   */
+  protected void initializeStaticInstances(Codebase cb)
+      throws ClassNotFoundException {
+    fabric.util.Map classes = cb.get$classes();
+    FabricClassLoader loader = new FabricClassLoader(getClass().getClassLoader());
+    for (Iterator it =
+        classes.keySet().iterator(Worker.getWorker().getLocalStore()); it
+        .hasNext();) {
+      String className =
+          (String) fabric.lang.WrappedJavaInlineable.$unwrap(it.next());
+      FClass fcls = cb.resolveClassName(className);
+      loader.loadClass(NSUtil.javaClassName((fabric.lang.FClass._Proxy) fcls
+          .$getProxy()));
     }
   }
 
