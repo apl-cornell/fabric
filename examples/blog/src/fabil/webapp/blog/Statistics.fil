@@ -22,28 +22,32 @@ public class Statistics {
   public static Statistics getInstance() {
     if (instance == null) {
       instance = new ThreadLocal/*Statistics*/();
-      busyClients = new HashSet/*String*/();
-      clients = new HashSet/*String*/();
+      busyClients = new HashSet/*String*/().fabric$util$HashSet$();
+      clients = new HashSet/*String*/().fabric$util$HashSet$();
       clientError = false; 
     }
     Statistics s = (Statistics)instance.get();
     if (s == null) {
-      s = new Statistics();
+      s = new Statistics().webapp$blog$Statistics$();
       instance.set(s);
     }
     return s;
   }
 
-  private Statistics() {
+  private Statistics webapp$blog$Statistics$() {
+    fabric$lang$Object$();
+
     newPage(Diagnostics.getLocalStore(), Diagnostics.getCurrentLabel());
+
+    return this;
   }
 
   public void newPage(Store s, Label l) {
     atomic {
       startTime = System.currentTimeMillis();
-      updates = new HashSet~l@s/*Object*/();
-      reads = new HashSet~l@s/*Object*/();
-      currentPage = new PageStats~l@s();
+      updates = new HashSet@s/*Object*/().fabric$util$HashSet$();
+      reads = new HashSet@s/*Object*/().fabric$util$HashSet$();
+      currentPage = new PageStats@s().webapp$PageStats$();
     }
   }
 
@@ -81,7 +85,8 @@ public class Statistics {
   }
 
   public static Collection/*String*/ getClients() {
-    return Collections.unmodifiableCollection(clients);
+    return Collections.unmodifiableCollection(Diagnostics.getLocalStore(),
+	clients);
   }
 
   public void doneApp() {
@@ -108,7 +113,8 @@ public class Statistics {
   }
 
   public static Collection/*String*/ getBusyClients() {
-    return Collections.unmodifiableCollection(busyClients);
+    return Collections.unmodifiableCollection(Diagnostics.getLocalStore(),
+	busyClients);
   }
 
   public static void removeAllBusyClients() {
@@ -126,5 +132,14 @@ public class Statistics {
 
   public static boolean getClientError() {
     return clientError;
+  }
+
+  public Object $initLabels() {
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

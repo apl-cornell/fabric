@@ -17,8 +17,8 @@ public class BlogServer {
     Server server = null;
     
     atomic {
-      server = new Server@store(8080);
-      WebAppContext webapp = new WebAppContext@store();
+      server = new Server(8080);
+      WebAppContext webapp = new WebAppContext();
       webapp.setContextPath("/");
       webapp.setWar(jetty_home + "/web");
       webapp.addServlet(BlogServlet.class, "/web");
