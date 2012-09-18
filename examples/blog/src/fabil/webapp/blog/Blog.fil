@@ -20,6 +20,11 @@ public class Blog {
   private Blog webapp$blog$Blog$() {
     blogPosts = new TreeMap/*Integer, BlogPost*/().fabric$util$TreeMap$(
 	new Comparator/*Integer*/() {
+	  public Comparator webapp$blog$Blog$1$() {
+	    fabric$lang$Object$();
+	    return this;
+	  }
+
 	  public int compare(Object o1, Object o2) {
 	    return ((Integer)o2).intValue() - ((Integer)o1).intValue();
 	  }
@@ -32,7 +37,7 @@ public class Blog {
 
 	    return this;
 	  }
-	});
+	}.webapp$blog$Blog$1$());
     comments = new HashMap/*Integer, Comment*/().fabric$util$HashMap$();
     fabric$lang$Object$();
     return this;
