@@ -25,7 +25,7 @@ public class FrontPage extends AuthenticatedAction[AirlinePrincipal] authority (
     public final void invokeImpl{*lbl}(label{*lbl} lbl,
             Request[AirlinePrincipal]{*lbl} req,
             Servlet[AirlinePrincipal]{*lbl} servlet,
-            AuthSessState[lbl]{*lbl} state,
+            AuthSessState{*lbl} state,
             principal{*lbl} currentUser) 
             throws (ServletException{*lbl;req.session←})
             where caller(req.session),

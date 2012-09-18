@@ -38,7 +38,7 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
         ServletException{*lbl;req.session!:} ex = null;
         boolean{*lbl;req.session!:} ret = true;
         try {
-            final AuthSessState[lbl] state = (AuthSessState[lbl])req.getSessionState(lbl);
+            final AuthSessState state = (AuthSessState)req.getSessionState(lbl);
             final LoginAction[servP] la = new LoginAction[servP](servlet, successAction, req.session);
             
             if (state != null && state.currentUser() == null
@@ -69,10 +69,10 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
             SessionState state_ = req.getSessionState(lbl);
             if (servlet_ == null || state_ == null ||
                     !(servlet_ instanceof AbstractServlet[servP]) ||
-                    !(state_ instanceof AuthSessState[lbl]))
+                    !(state_ instanceof AuthSessState))
                 throw new ServletException("Error processing request");
             final AbstractServlet[servP] servlet = (AbstractServlet[servP])servlet_;
-            final AuthSessState[lbl] state = (AuthSessState[lbl])state_;
+            final AuthSessState state = (AuthSessState)state_;
             if (state == null || servlet == null) return;
 
             // Check if someone is logged in. If not, then the login page is created.
@@ -92,7 +92,7 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
     public void callWrapper{*lbl}(label{*lbl} lbl,
             Request[servP]{*lbl} req,
             Servlet[servP]{*lbl} servlet,
-            AuthSessState[lbl]{*lbl} state) 
+            AuthSessState{*lbl} state) 
                 throws (ServletException{*lbl;req.session!:})
                 where caller(req.session),
                 lbl <= {⊤→req.session},
@@ -108,7 +108,7 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
     public abstract void invokeImpl{*lbl}(label{*lbl} lbl,
                                       Request[servP]{*lbl} req,
                                       Servlet[servP]{*lbl} servlet,
-                                      AuthSessState[lbl]{*lbl} state,
+                                      AuthSessState{*lbl} state,
                                       principal{*lbl} currentUser) 
         throws (ServletException{*lbl;req.session←})
           where caller(req.session),

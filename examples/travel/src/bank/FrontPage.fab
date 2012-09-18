@@ -24,7 +24,7 @@ public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (Ban
     public final void invokeImpl{*lbl}(label{*lbl} lbl,
             Request[BankPrincipal]{*lbl} req,
             Servlet[BankPrincipal]{*lbl} servlet,
-            AuthSessState[lbl]{*lbl} state,
+            AuthSessState{*lbl} state,
             principal{*lbl} currentUser) 
             throws (ServletException{*lbl;req.session←})
             where caller(req.session),
