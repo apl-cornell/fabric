@@ -318,7 +318,7 @@ public class Main extends polyglot.main.Main {
             x);
       }
 
-      Worker.runInTopLevelTransaction(new Worker.Code<Void>() {
+      Worker.runInSubTransaction(new Worker.Code<Void>() {
         @Override
         public Void run() {
           try {
@@ -360,7 +360,7 @@ public class Main extends polyglot.main.Main {
           }
           return null;
         }
-      }, false);
+      });
     } catch (AbortException e) {
       if (e.getCause() != null) {
         Throwable abortCause = e.getCause();
@@ -480,25 +480,25 @@ public class Main extends polyglot.main.Main {
           for (JavaFileObject jfo : compiler.outputFiles())
             javacCmd[j++] = new File(jfo.toUri()).getAbsolutePath();
 
-              if (Report.should_report(verbose, 1)) {
-                StringBuffer cmdStr = new StringBuffer();
-                for (String element : javacCmd)
-                  cmdStr.append(element + " ");
-                    Report.report(1, "Executing post-compiler " + cmdStr);
-              }
+          if (Report.should_report(verbose, 1)) {
+            StringBuffer cmdStr = new StringBuffer();
+            for (String element : javacCmd)
+              cmdStr.append(element + " ");
+            Report.report(1, "Executing post-compiler " + cmdStr);
+          }
 
-              int exitVal = com.sun.tools.javac.Main.compile(javacCmd);
+          int exitVal = com.sun.tools.javac.Main.compile(javacCmd);
 
-              if (!options.keep_output_files) {
-                for (FileObject fo : compiler.outputFiles())
-                  fo.delete();
-              }
+          if (!options.keep_output_files) {
+            for (FileObject fo : compiler.outputFiles())
+              fo.delete();
+          }
 
-              if (exitVal > 0) {
-                eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, "Non-zero return code: "
-                    + exitVal);
-                return false;
-              }
+          if (exitVal > 0) {
+            eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, "Non-zero return code: "
+                + exitVal);
+            return false;
+          }
         }
       } catch (Exception e) {
         eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, e.getMessage());
