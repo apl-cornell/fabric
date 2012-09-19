@@ -6,20 +6,15 @@ import jif.types.JifContext_c;
 import jif.types.JifTypeSystem;
 import polyglot.ast.Expr;
 import polyglot.main.Report;
-import polyglot.types.ClassType;
 import polyglot.types.Context;
 import polyglot.types.LocalInstance;
 import polyglot.types.Named;
-import polyglot.types.Resolver;
 import polyglot.types.SemanticException;
-import polyglot.types.Type;
 import polyglot.types.TypeSystem;
-import polyglot.types.VarInstance;
 import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import codebases.types.CBImportTable;
 import codebases.types.CodebaseTypeSystem;
-import fabil.types.FabILTypeSystem;
 import fabric.common.FabricLocation;
 
 public class FabricContext_c extends JifContext_c implements FabricContext {
@@ -34,47 +29,47 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   }
 
 
-  @Override
-  protected VarInstance findStaticPrincipal(String name) {
-    // Principals are masquerading as classes.   Find the class
-    // and pull the principal out of the class.  Ick.
-    //
-    // Basically copied from super class and adapted to use
-    // namespaces.  Double Ick.
-    ClassType principal;
-    FabricTypeSystem fabts = (FabricTypeSystem) ts;
-    FabILTypeSystem filts = (FabILTypeSystem) jlts;
-    Resolver fabPlatform = fabts.platformResolver();
-
-    try {
-      principal = (ClassType) fabPlatform.find(jifts.PrincipalClassName());
-    }
-    catch (SemanticException e) {
-      throw new InternalCompilerError("Cannot find " + jifts.PrincipalClassName() + " class.", e);
-    }
-
-    Named n;
-    try {
-      // Look for the principal only in class files.
-      String className = "jif.principals." + name;
-      n = jlts.loadedResolver().find(className);
-    } catch (SemanticException e) {
-      return null;
-    }
-
-    if (n instanceof Type) {
-      Type t = (Type) n;
-      if (t.isClass()) {
-
-        if (jlts.isSubtype(t.toClass(), principal)) {
-          return jifts.principalInstance(null,
-              jifts.externalPrincipal(null, name));
-        }
-      }
-    }
-    return null;
-
-  }
+//  @Override
+//  protected VarInstance findStaticPrincipal(String name) {
+//    // Principals are masquerading as classes.   Find the class
+//    // and pull the principal out of the class.  Ick.
+//    //
+//    // Basically copied from super class and adapted to use
+//    // namespaces.  Double Ick.
+//    ClassType principal;
+//    FabricTypeSystem fabts = (FabricTypeSystem) ts;
+//    FabILTypeSystem filts = (FabILTypeSystem) jlts;
+//    Resolver fabPlatform = filts.platformResolver();
+//
+//    try {
+//      principal = (ClassType) fabPlatform.find(jifts.PrincipalClassName());
+//    }
+//    catch (SemanticException e) {
+//      throw new InternalCompilerError("Cannot find " + jifts.PrincipalClassName() + " class.", e);
+//    }
+//
+//    Named n;
+//    try {
+//      // Look for the principal only in class files.
+//      String className = "jif.principals." + name;
+//      n = jlts.loadedResolver().find(className);
+//    } catch (SemanticException e) {
+//      return null;
+//    }
+//
+//    if (n instanceof Type) {
+//      Type t = (Type) n;
+//      if (t.isClass()) {
+//
+//        if (jlts.isSubtype(t.toClass(), principal)) {
+//          return jifts.principalInstance(null,
+//              jifts.externalPrincipal(null, name));
+//        }
+//      }
+//    }
+//    return null;
+//
+//  }
 
 
   @Override

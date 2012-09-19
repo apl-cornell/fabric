@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Constructor;
-import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -952,6 +951,7 @@ public interface Object {
             String name = c.getCanonicalName();
             Store store;
             if (!NSUtil.isPlatformName(name)) {
+              System.err.println("CREATING STATIC INSTANCE FOR MOBILE CLASS");
               Object o = NSUtil.toProxy(name);
               store = o.$getStore();
               if (o instanceof FClass) {
