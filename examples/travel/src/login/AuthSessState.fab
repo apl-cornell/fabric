@@ -5,7 +5,7 @@ import sif.servlet.SessionPrincipal;
 import fabricated.util.*;
 
 public class AuthSessState extends SessionState {
-    principal{sessionPrincipal←} currentUser = null;
+    principal{sessionPrincipal←}@{⊤→store$} currentUser = null;
     
     public AuthSessState(String{this} id, SessionPrincipal{this} session) {
     	super(id, session);

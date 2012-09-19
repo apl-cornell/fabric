@@ -64,10 +64,10 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
     atomic {
       if (localStore != null && localStore equiv worker$ &&
 	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
-	toReturn = new SessionState@localStore(id, session);
+	return new SessionState@localStore(id, session);
       }
     }
-    return toReturn;
+    return null;
   }
   
   // This method will only be called by the runtime
