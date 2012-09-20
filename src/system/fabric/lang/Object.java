@@ -950,8 +950,8 @@ public interface Object {
           public Object run() throws Throwable {
             String name = c.getCanonicalName();
             Store store;
+
             if (!NSUtil.isPlatformName(name)) {
-              System.err.println("CREATING STATIC INSTANCE FOR MOBILE CLASS");
               Object o = NSUtil.toProxy(name);
               store = o.$getStore();
               if (o instanceof FClass) {
