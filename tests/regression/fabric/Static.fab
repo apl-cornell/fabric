@@ -1,0 +1,12 @@
+public class Static where Static.provider <= {}
+{
+    public static int{_->_;_<-_} count = 0;
+    public static void inc{_->_}() {
+        count++;
+        if(count > 2)
+            throw new Error();
+    }
+    public static void main{_->_;_<-_}(String[] args) {
+        inc();
+    }
+}
