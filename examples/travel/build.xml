@@ -68,7 +68,6 @@
       <arg value="-cp"         /> <arg value="${travel.home}/classes" />
       <arg value="-addsigcp"      /> <arg pathref="sif.sigcp"/>
       <arg value="-e"/>
-      <arg value="-rdebug"/>
       <arg value="-trusted-providers"/>
       <!--
       <arg value="-rdebug" />
