@@ -1,4 +1,4 @@
-package jif;
+package fabric;
 
 public final class Config {
   public static final String{*!:} helloStoreName = "backend";  
