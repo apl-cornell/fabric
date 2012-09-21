@@ -248,7 +248,7 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
                                 if (state_.sessionPrincipal equiv session) { // NPE thrown here!!
                                     state_.currentUser(logU);
                                 }
-                            } catch(ClassCastException e) {}
+                            }
                             catch (NullPointerException e) {}
 
                             final label newLbl = new label {*lbl; session←};
