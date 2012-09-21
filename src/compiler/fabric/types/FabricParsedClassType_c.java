@@ -12,9 +12,11 @@ import jif.types.JifConstructorInstance;
 import jif.types.JifMethodInstance;
 import jif.types.JifParsedPolyType_c;
 import jif.types.LabelLeAssertion;
+import jif.types.LabelSubstitution;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
+import jif.types.label.ThisLabel;
 import jif.types.principal.Principal;
 import polyglot.frontend.Source;
 import polyglot.types.ConstructorInstance;
@@ -22,6 +24,7 @@ import polyglot.types.DeserializedClassInitializer;
 import polyglot.types.FieldInstance;
 import polyglot.types.LazyClassInitializer;
 import polyglot.types.MethodInstance;
+import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
@@ -83,11 +86,11 @@ FabricParsedClassType {
   @Override
   // XXX: These methods should be revisited post Oakland.
   public Label updateLabel() {
-    FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
+    final FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
 
     if (!fieldLabelFound) {
       if (ts.isFabricClass(this)) {
-        FabricClassType superType = (FabricClassType) superType();
+        final FabricClassType superType = (FabricClassType) superType();
 
         Label classLabel =
             ts.pairLabel(Position.compilerGenerated(),
@@ -104,6 +107,27 @@ FabricParsedClassType {
           if (ts.isLabeled(t)) {
             Label tslabel = ts.labelOfType(t);
             classLabel = trustUpperBound(classEnv, classLabel, tslabel);
+          }
+        }
+        if (superLabel != null) {
+          final FabricClassType subType = this;
+          LabelSubstitution replaceThis = new LabelSubstitution() {
+
+            @Override
+            public Label substLabel(Label L) throws SemanticException {
+              if (L instanceof ThisLabel) {
+                ThisLabel ths = (ThisLabel) L;
+                if (ths.classType().equals(superType))
+                  return ts.thisLabel(ths.position(), subType);
+              }
+              return L;
+            }
+
+          };
+          try {
+            superLabel = superLabel.subst(replaceThis);
+          } catch (SemanticException e) {
+            throw new InternalCompilerError(e);
           }
         }
         singleFieldLabel =

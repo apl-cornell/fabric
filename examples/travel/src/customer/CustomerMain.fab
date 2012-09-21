@@ -58,16 +58,16 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
   
   // TODO Provide default implementations for these 2 methods in Servlet.fab:
   // This method will only be called by the runtime
-  protected SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+  protected SessionState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
       String{*lbl} id, SessionPrincipal{*lbl} session) {
-    SessionState[lbl] toReturn = null;
+    SessionState toReturn = null;
     atomic {
       if (localStore != null && localStore equiv worker$ &&
 	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
-	toReturn = new SessionState[lbl]@localStore(id, session);
+	return new SessionState@localStore(id, session);
       }
     }
-    return toReturn;
+    return null;
   }
   
   // This method will only be called by the runtime
