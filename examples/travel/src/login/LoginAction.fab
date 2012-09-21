@@ -30,27 +30,32 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
         if (!(servlet_ instanceof AbstractServlet[servP])) throw new ServletException("Error processing request");
         final AbstractServlet[servP] servlet = (AbstractServlet[servP])servlet_;
         if (req == null) throw new ServletException("Error processing request");
-        SessionState state_ = req.getSessionState(lbl);
-        if (!(state_ instanceof AuthSessState)) throw new ServletException("Incorrect session state");
-        final AuthSessState state = (AuthSessState)state_;
-        if (servlet == null || state == null) throw new ServletException("Error processing request");
-        
-        atomic {
-            if (req.session equiv state.sessionPrincipal) {
-                // when this action is invoked, just produce the login page.
-                final label sessLbl = new label {req.session→;req.session←};
-                if (lbl <= sessLbl && inpPassword != null && inpUserID != null 
-                        && inpUserID.inputLbl <= sessLbl && inpPassword.inputLbl equiv sessLbl 
-                        && new label {*lbl; req.session←} <= inpUserID.inputLbl) {
-                    producePage(new label {*lbl;req.session←}, req, servlet, state, null, null);
+        final SessionState state_ = req.getSessionState(lbl);
+        if ( lbl <= new label {⊤→state_.store$} ) {
+            if (!(state_ instanceof AuthSessState)) throw new ServletException("Incorrect session state");
+            final AuthSessState state = (AuthSessState)state_;
+            if ( lbl <= new label {⊤→state.store$} ) {
+            
+                if (servlet == null || state == null) throw new ServletException("Error processing request");
+
+                atomic {
+                    if (req.session equiv state.sessionPrincipal) {
+                        // when this action is invoked, just produce the login page.
+                        final label sessLbl = new label {req.session→;req.session←};
+                        if (lbl <= sessLbl && inpPassword != null && inpUserID != null 
+                                && inpUserID.inputLbl <= sessLbl && inpPassword.inputLbl equiv sessLbl 
+                                && new label {*lbl; req.session←} <= inpUserID.inputLbl) {
+                            producePage(new label {*lbl;req.session←}, req, servlet, state, null, null);
+                        }
+                        else {
+                            String lblString = LabelUtil.toString(lbl);
+                            throw new ServletException("LoginAction.producePage: lbl too high: " + lblString);
+                        }
+                    }
+                    else {
+                        throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
+                    }
                 }
-                else {
-                    String lblString = LabelUtil.toString(lbl);
-                    throw new ServletException("LoginAction.producePage: lbl too high: " + lblString);
-                }
-            }
-            else {
-                throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
             }
         }
     }
@@ -124,22 +129,29 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
         lbl <= {*:req.session} {
 
         Servlet[servP] servlet_ = getServlet();
-        if (!(servlet_ instanceof AbstractServlet[servP])) throw new ServletException("Error processing request");
-        AbstractServlet[servP] servlet = (AbstractServlet[servP])servlet_;
-        if (req == null) throw new ServletException("Error processing request");
-        SessionState state_ = req.getSessionState(lbl);
-        if (!(state_ instanceof AuthSessState)) throw new ServletException("Incorrect session state");
-        final AuthSessState state = (AuthSessState)state_;
-        if (servlet == null || state == null) throw new ServletException("Error processing request");
+        AbstractServlet[servP] servlet;
+        if (lbl <= new label {⊤→servlet_.store$}) {
+            try { servlet = (AbstractServlet[servP])servlet_; } catch (ClassCastException e) {throw new ServletException("Error processing request");}
+            if (req == null) throw new ServletException("Error processing request");
+            final SessionState state_ = req.getSessionState(lbl);
 
-        atomic {
-            final label newLbl = new label {*lbl; req.session←};
+            
+            if (lbl <= new label {⊤→state_.store$}) {
+                try {
+                    final AuthSessState state = (AuthSessState)state_;  
+                    if (servlet == null || state == null) throw new ServletException("Error processing request");
 
-            if (req.session equiv state.sessionPrincipal) {
-                this.invokeImpl(newLbl, req, servlet, state);
-            }
-            else {
-                throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
+                    atomic {
+                        final label newLbl = new label {*lbl; req.session←};
+
+                        if (req.session equiv state.sessionPrincipal) {
+                            this.invokeImpl(newLbl, req, servlet, state);
+                        }
+                        else {
+                            throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
+                        }
+                    }
+                } catch (ClassCastException e) {throw new ServletException("Incorrect session state");}
             }
         }
     }
