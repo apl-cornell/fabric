@@ -22,6 +22,7 @@ import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongKeyMap.Entry;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
@@ -39,7 +40,7 @@ import fabric.worker.Worker.Code;
 public class TransactionManager {
 
   private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
-  private static final int MAX_GROUP_SIZE = 75;
+  private static final int MIN_GROUP_SIZE = 75;
 
   private static final Random rand = new Random();
 
@@ -372,23 +373,13 @@ public class TransactionManager {
         // sm.subscribe(onum, subscriber, dissemSubscribe);
         return container;
       }
+
+      // if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
+      GroupContainer group = makeGroup(onum);
+      if (group == null) throw new AccessException(database.getName(), onum);
+
+      return group;
     }
-
-    // XXX Ideally, the subscription registration should happen atomically with
-    // the read.
-    // if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
-    ObjectGroup group = readGroup(onum);
-    if (group == null) throw new AccessException(database.getName(), onum);
-
-    Store store = Worker.getWorker().getStore(database.getName());
-    container = new GroupContainer(store, signingKey, group);
-
-    // Cache the container.
-    synchronized (database) {
-      database.cacheGroupContainer(group.objects(), container);
-    }
-
-    return container;
   }
 
   /**
@@ -430,7 +421,7 @@ public class TransactionManager {
   }
 
   /**
-   * Reads a group of objects from the object database. All surrogates
+   * Creates a group of objects from the object database. All surrogates
    * referenced by any object in the group will also be in the group. This
    * ensures that the worker will not reveal information when dereferencing
    * surrogates.
@@ -440,41 +431,100 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  private ObjectGroup readGroup(long onum) {
-    SerializedObject obj = read(onum);
+  private GroupContainer makeGroup(long onum) {
+    // Obtain a partial group for the object.
+    PartialObjectGroup partialGroup = readPartialGroup(onum);
+
+    for (Entry<SerializedObject> entry : partialGroup.frontier.entrySet()) {
+      long frontierOnum = entry.getKey();
+      if (database.getCachedGroupContainer(frontierOnum) != null) continue;
+
+      SerializedObject frontierObj = entry.getValue();
+      PartialObjectGroup frontierGroup =
+          readPartialGroup(frontierOnum, frontierObj);
+      if (frontierGroup.size() >= MIN_GROUP_SIZE) continue;
+
+      // Group on the frontier isn't big enough. Coalesce it with the group
+      // we're creating.
+      database.coalescePartialGroups(frontierGroup, partialGroup);
+    }
+
+    return database.promotePartialGroup(signingKey, partialGroup);
+  }
+
+  /**
+   * Returns a partial group of objects. A partial group is a group containing
+   * at most MIN_GROUP_SIZE objects, but may need to be grown because the object
+   * sub-graphs on the group's frontier may not be large enough to fill an
+   * entire group.
+   */
+  PartialObjectGroup readPartialGroup(long onum) {
+    return readPartialGroup(onum, null);
+  }
+
+  /**
+   * Returns a partial group of objects. A partial group is a group containing
+   * at most MIN_GROUP_SIZE objects, but may need to be grown because the object
+   * sub-graphs on the group's frontier may not be large enough to fill an
+   * entire group.
+   * 
+   * @param obj
+   *          The object corresponding to the given onum. If null, the object
+   *          will be read from the database.
+   */
+  private PartialObjectGroup readPartialGroup(long onum, SerializedObject obj) {
+    PartialObjectGroup partialGroup = database.getCachedPartialGroup(onum);
+    if (partialGroup != null) return partialGroup;
+
+    if (obj == null) obj = read(onum);
     if (obj == null) return null;
 
     long headLabelOnum = obj.getUpdateLabelOnum();
 
     LongKeyMap<SerializedObject> group =
-        new LongKeyHashMap<SerializedObject>(MAX_GROUP_SIZE);
+        new LongKeyHashMap<SerializedObject>(MIN_GROUP_SIZE);
+    LongKeyMap<SerializedObject> frontier =
+        new LongKeyHashMap<SerializedObject>();
+
+    // Number of non-surrogate objects in the group.
+    int groupSize = 0;
+
     Queue<SerializedObject> toVisit = new LinkedList<SerializedObject>();
     LongSet seen = new LongHashSet();
 
-    // Do a breadth-first traversal and add objects to an object group.
+    // Do a breadth-first traversal and add objects to the group.
     toVisit.add(obj);
     seen.add(onum);
     while (!toVisit.isEmpty()) {
-      SerializedObject curObj = toVisit.remove();
-      if (group.size() >= MAX_GROUP_SIZE) {
-        // Only add surrogates.
-        if (ClassRef.SURROGATE.equals(curObj.getClassRef())) {
-          group.put(curObj.getOnum(), curObj);
-        }
+      SerializedObject curObject = toVisit.remove();
+      long curOnum = curObject.getOnum();
+
+      // Always add surrogates.
+      if (ClassRef.SURROGATE.equals(curObject.getClassRef())) {
+        group.put(curOnum, curObject);
         continue;
       }
 
-      group.put(curObj.getOnum(), curObj);
+      // Ensure that the object hasn't been grouped already.
+      if (database.getCachedGroupID(curOnum) != null) continue;
 
-      for (Iterator<Long> it = curObj.getIntraStoreRefIterator(); it.hasNext();) {
+      if (groupSize >= MIN_GROUP_SIZE) {
+        // Partial group is full. Add the object to the partial group's
+        // frontier.
+        frontier.put(curOnum, curObject);
+        continue;
+      }
+
+      // Add object to partial group.
+      group.put(curOnum, curObject);
+      groupSize++;
+
+      // Visit links outgoing from the object.
+      for (Iterator<Long> it = curObject.getIntraStoreRefIterator(); it
+          .hasNext();) {
         long relatedOnum = it.next();
         if (seen.contains(relatedOnum)) continue;
         seen.add(relatedOnum);
-
-        // Ensure that the related object hasn't been globbed already.
-        synchronized (database) {
-          if (database.getCachedGroupContainer(relatedOnum) != null) continue;
-        }
 
         SerializedObject related = read(relatedOnum);
         if (related == null) continue;
@@ -489,7 +539,10 @@ public class TransactionManager {
       }
     }
 
-    return new ObjectGroup(group);
+    PartialObjectGroup result =
+        new PartialObjectGroup(groupSize, group, frontier);
+    database.cachePartialGroup(result);
+    return result;
   }
 
   /**

@@ -3,6 +3,7 @@ package fabric.store.db;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -12,6 +13,7 @@ import javax.security.auth.x500.X500Principal;
 import fabric.common.ClassRef;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
+import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongIterator;
@@ -23,6 +25,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
+import fabric.store.PartialObjectGroup;
 import fabric.store.SubscriptionManager;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -64,16 +67,16 @@ public abstract class ObjectDB {
   private final LongKeyMap<Long> globIDByOnum;
 
   /**
-   * Maps globIDs to GroupContainers and the number of times the GroupContainer
-   * is referenced in globIDByOnum.
+   * Maps globIDs to entries (either GroupContainers or PartialObjectGroups) and
+   * the number of times the entry is referenced in globIDByOnum.
    */
-  private final GroupContainerTable globTable;
+  private final GroupTable globTable;
 
   /**
    * The data stored for a partially prepared transaction.
    */
   protected static final class PendingTransaction implements FastSerializable,
-      Iterable<Long> {
+  Iterable<Long> {
     public final long tid;
     public final Principal owner;
     public final Collection<Long> reads;
@@ -195,7 +198,7 @@ public abstract class ObjectDB {
     this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
     this.rwLocks = new LongKeyHashMap<Pair<Long, LongKeyMap<MutableInteger>>>();
     this.globIDByOnum = new LongKeyHashMap<Long>();
-    this.globTable = new GroupContainerTable();
+    this.globTable = new GroupTable();
     this.nextGlobID = 0;
   }
 
@@ -356,47 +359,101 @@ public abstract class ObjectDB {
   }
 
   /**
+   * Given the ID of the group to which the given onum belongs. Null is returned
+   * if no such group exists.
+   */
+  public final Long getCachedGroupID(long onum) {
+    return globIDByOnum.get(onum);
+  }
+
+  private final GroupTable.Entry getGroupTableEntry(long onum) {
+    Long groupID = getCachedGroupID(onum);
+    if (groupID == null) return null;
+    return globTable.getContainer(groupID);
+  }
+
+  /**
+   * Gives the cached partial group for the given onum. Null is returned if no
+   * such partial group exists.
+   */
+  public final PartialObjectGroup getCachedPartialGroup(long onum) {
+    GroupTable.Entry entry = getGroupTableEntry(onum);
+    if (entry instanceof PartialObjectGroup) return (PartialObjectGroup) entry;
+    return null;
+  }
+
+  /**
    * Returns the cached GroupContainer containing the given onum. Null is
    * returned if no such GroupContainer exists.
    */
   public final GroupContainer getCachedGroupContainer(long onum) {
-    Long globID = globIDByOnum.get(onum);
-    if (globID == null) return null;
-    return globTable.getContainer(globID);
+    GroupTable.Entry entry = getGroupTableEntry(onum);
+    if (entry instanceof GroupContainer) return (GroupContainer) entry;
+    return null;
   }
 
   /**
-   * Inserts the given group container into the cache for the given set of
-   * objects.
+   * Inserts the given partial group into the cache.
    */
-  public final void cacheGroupContainer(LongKeyMap<SerializedObject> objects,
-      GroupContainer container) {
-    // Get a new ID for the glob and keep count of the number of non-surrogates.
-    long globID = nextGlobID++;
-    int numNonSurrogates = 0;
+  public final void cachePartialGroup(PartialObjectGroup partialGroup) {
+    // Get a new ID for the partial group.
+    long groupID = nextGlobID++;
 
-    // Establish globID bindings for all non-surrogate onums we're given.
-    for (Entry<SerializedObject> entry : objects.entrySet()) {
+    partialGroup.setID(groupID);
+
+    // Establish groupID bindings for all non-surrogate onums we're given.
+    for (Entry<SerializedObject> entry : partialGroup.objects.entrySet()) {
       SerializedObject obj = entry.getValue();
       if (ClassRef.SURROGATE.equals(obj.getClassRef())) {
-        // Surrogate. Do nothing.
         continue;
       }
 
-      // Establish globID binding for the non-surrogate object.
+      // Establish groupID binding for the non-surrogate object.
       long onum = entry.getKey();
-      numNonSurrogates++;
-
-      Long oldGlobID = globIDByOnum.put(onum, globID);
-      if (oldGlobID == null) continue;
-
-      globTable.unpin(oldGlobID);
+      Long oldGroupID = globIDByOnum.put(onum, groupID);
+      if (oldGroupID != null) {
+        globTable.unpin(oldGroupID);
+      }
     }
 
-    if (numNonSurrogates > 0) {
-      // Insert into the glob table.
-      globTable.put(globID, container, numNonSurrogates);
+    if (partialGroup.size() > 0) {
+      // Insert into the group table.
+      globTable.put(groupID, partialGroup, partialGroup.size());
     }
+  }
+
+  /**
+   * Coalesces one partial group into another.
+   */
+  public void coalescePartialGroups(PartialObjectGroup from,
+      PartialObjectGroup to) {
+    long fromID = from.groupID();
+    long toID = to.groupID();
+
+    globTable.remove(fromID);
+
+    for (LongIterator it = from.objects.keySet().iterator(); it.hasNext();) {
+      long onum = it.next();
+      Long oldGroupID = globIDByOnum.put(onum, toID);
+      if (oldGroupID != null && oldGroupID != fromID)
+        globTable.unpin(oldGroupID);
+    }
+
+    to.mergeFrom(from);
+    if (to.size() > 0)
+      globTable.put(toID, to, to.size());
+  }
+
+  public GroupContainer promotePartialGroup(PrivateKey signingKey,
+      PartialObjectGroup partialGroup) {
+    ObjectGroup group = new ObjectGroup(partialGroup.objects);
+    Store store = Worker.getWorker().getStore(getName());
+    GroupContainer result = new GroupContainer(store, signingKey, group);
+    if (partialGroup.size() > 0) {
+      globTable.put(partialGroup.groupID(), result, partialGroup.size());
+    }
+
+    return result;
   }
 
   /**
@@ -414,7 +471,21 @@ public abstract class ObjectDB {
     Long globID = globIDByOnum.remove(onum);
     GroupContainer group = null;
     if (globID != null) {
-      group = globTable.remove(globID);
+      GroupTable.Entry entry = globTable.remove(globID);
+      // Clean out entries in globIDByOnum that refer to the entry we just
+      // removed.
+      if (entry instanceof GroupContainer) {
+        group = (GroupContainer) entry;
+        for (LongIterator it = group.onums.iterator(); it.hasNext();) {
+          globIDByOnum.remove(it.next());
+        }
+      } else {
+        PartialObjectGroup partialGroup = (PartialObjectGroup) entry;
+        for (LongIterator it = partialGroup.objects.keySet().iterator(); it
+            .hasNext();) {
+          globIDByOnum.remove(it.next());
+        }
+      }
     }
 
     // Notify the subscription manager that the group has been updated.
@@ -564,14 +635,14 @@ public abstract class ObjectDB {
         String principalName = new X500Principal("CN=" + name).getName();
         NodePrincipal._Impl principal =
             (NodePrincipal._Impl) new NodePrincipal._Impl(store)
-                .fabric$lang$security$NodePrincipal$(principalName).fetch();
+        .fabric$lang$security$NodePrincipal$(principalName).fetch();
         principal.$forceRenumber(ONumConstants.STORE_PRINCIPAL);
 
         // Create the label {store->_; store<-_} for the root map.
         // XXX above not done. HashMap needs to be parameterized on labels.
         fabric.util.HashMap._Impl map =
             (fabric.util.HashMap._Impl) new fabric.util.HashMap._Impl(store)
-                .fabric$util$HashMap$().fetch();
+        .fabric$util$HashMap$().fetch();
         map.$forceRenumber(ONumConstants.ROOT_MAP);
 
         return null;

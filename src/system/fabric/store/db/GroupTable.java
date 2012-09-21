@@ -9,21 +9,24 @@ import fabric.common.util.MutableInteger;
 import fabric.common.util.Pair;
 
 /**
- * Maps globIDs to pairs of GroupContainers and pin counts. This class is
- * thread-safe and only keeps soft references to the group containers.
+ * Maps globIDs to pairs of Groups and pin counts. This class is thread-safe
+ * and only keeps soft references to the group containers.
  */
-final class GroupContainerTable {
+public final class GroupTable {
   private final LongKeyMap<Pair<SoftRef, MutableInteger>> table;
-  private final ReferenceQueue<GroupContainer> queue;
+  private final ReferenceQueue<Entry> queue;
 
-  public GroupContainerTable() {
+  public static abstract class Entry {
+  }
+
+  public GroupTable() {
     this.table = new LongKeyHashMap<Pair<SoftRef, MutableInteger>>();
-    this.queue = new ReferenceQueue<GroupContainer>();
+    this.queue = new ReferenceQueue<Entry>();
 
     new Collector().start();
   }
 
-  public synchronized GroupContainer getContainer(long globID) {
+  public synchronized Entry getContainer(long globID) {
     Pair<SoftRef, MutableInteger> pair = table.get(globID);
     if (pair == null) return null;
     return pair.first.get();
@@ -37,7 +40,7 @@ final class GroupContainerTable {
     pair.second.value--;
   }
 
-  public synchronized void put(long globID, GroupContainer groupContainer,
+  public synchronized void put(long globID, Entry groupContainer,
       int pinCount) {
     SoftRef ref = new SoftRef(globID, groupContainer, queue);
     Pair<SoftRef, MutableInteger> entry =
@@ -45,18 +48,17 @@ final class GroupContainerTable {
     table.put(globID, entry);
   }
 
-  public synchronized GroupContainer remove(long globID) {
+  public synchronized Entry remove(long globID) {
     Pair<SoftRef, MutableInteger> entry = table.remove(globID);
     if (entry == null) return null;
 
     return entry.first.get();
   }
 
-  private static class SoftRef extends SoftReference<GroupContainer> {
+  private static class SoftRef extends SoftReference<Entry> {
     final long globId;
 
-    public SoftRef(long globID, GroupContainer group,
-        ReferenceQueue<GroupContainer> queue) {
+    public SoftRef(long globID, Entry group, ReferenceQueue<Entry> queue) {
       super(group, queue);
 
       this.globId = globID;
