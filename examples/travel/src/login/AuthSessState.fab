@@ -11,7 +11,7 @@ public class AuthSessState extends SessionState {
     	super(id, session);
     }
     
-    public AuthSessState(SessionPrincipal{this} sp,
+    public AuthSessState{sp←}(final SessionPrincipal{this} sp,
             String{this} si,
             principal{sp←} cu) {
     	super(si, sp);
