@@ -21,6 +21,7 @@ import fabric.util.HashSet;
  */
 public class FClass {
   protected /*final*/ Codebase codebase;
+  protected /*final*/ Object staticInstance;
   protected /*final*/ String   name;
   protected /*final*/ String   source;
   protected /*final*/ byte[]   bytecode;

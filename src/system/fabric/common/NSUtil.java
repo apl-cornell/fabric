@@ -244,7 +244,7 @@ public final class NSUtil {
     FClass result = codebase.resolveClassName(className);
     if (result == null)
       throw new ClassNotFoundException("Failed to load " + className
-          + " in codebase " + codebase);
+          + " in codebase " + codebase + "[" + javaName + "]");
 
     return result;
   }
@@ -256,7 +256,7 @@ public final class NSUtil {
   // group 4: $_Impl or $_Proxy or ""
   private static final Pattern javaNameRegex =
       Pattern
-      .compile("(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)((?:\\$_Impl)|(?:\\$_Proxy)|)");
+      .compile("(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)([$.]_Static)?((?:[$.]_Impl)|(?:[$.]_Proxy)|)");
 
   /**
    * Return the namespace representing a codebase.

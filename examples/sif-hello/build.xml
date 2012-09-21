@@ -43,34 +43,17 @@
   <target name="build-all" depends="build-hello" />
   <target name="all" depends="build-all" />
 
-  <target name="build-hello" depends="sif, build-principals"
+  <target name="build-hello" depends="sif"
           description="Builds the SIF Hello example">
     <fabc dest="${hello.home}/classes">
       <arg value="-sourcepath" /> <arg value="${hello.home}/src" />
-<!--XXX-->      <arg value="-addbootcp"/> <arg value="${hello.home}/classes" />
       <arg value="-cp"/> <arg pathref="collections.classpath"/>
       <arg value="-cp"/> <arg pathref="sif.classpath"/>
       <arg value="-cp"/> <arg pathref="lib.classpath"/>
       <arg value="-cp"/> <arg value="${hello.home}/classes"/>
       <arg value="-addsigcp"/> <arg pathref="sif.sigcp"/>
       <arg value="-trusted-providers"/>
-
-      <!--
-        <arg value="-report" /> <arg value="solver=5" />
-        <arg value="-debugpositions"/>
-        <arg value="-dump"   /> <arg value="FabricToFabilRewriter"/>
-        <arg value="-dump"   /> <arg value="PrincipalCastAdder"/>
-        <arg value="-report" /> <arg value="frontend=1"/>
-        <arg value="-report" /> <arg value="visit=2"/>
-        <arg value="-report" /> <arg value="labelEnv=5" />
-        <arg value="-print"  /> <arg value="RemoteCallWrapperUpdater"/>
-        <arg value="-print"  /> <arg value="FieldLabelResolver"/>
-        <arg value="-report" /> <arg value="error=5"/>
-        <arg value="-report" /> <arg value="errors=5"/>
-        <arg value="-report" /> <arg value="debug=5" />
-      -->
-
-      <fileset dir="${hello.home}/src" includes="**/*.fab" excludes="jif/**/*.fab" />
+      <fileset dir="${hello.home}/src" includes="**/*.fab"/>
     </fabc>
 
     <filc dest="${hello.home}/classes">
@@ -79,33 +62,6 @@
       <fileset dir="${hello.home}/src" includes="**/*.fil" />
     </filc>
   </target>
-
-  <target name="build-principals">
-    <fabc dest="${hello.home}/classes">
-      <arg value="-sourcepath" /> <arg value="${hello.home}/src" />
-      <arg value="-cp"/> <arg value="${hello.home}/classes"/>
-      <arg value="-addsigcp"      /> <arg pathref="sif.sigcp"/>
-      <arg value="-trusted-providers" />
-
-      <!--
-        <arg value="-report" /> <arg value="solver=5" />
-        <arg value="-debugpositions"/>
-        <arg value="-dump"   /> <arg value="FabricToFabilRewriter"/>
-        <arg value="-dump"   /> <arg value="PrincipalCastAdder"/>
-        <arg value="-report" /> <arg value="frontend=1"/>
-        <arg value="-report" /> <arg value="visit=2"/>
-        <arg value="-report" /> <arg value="labelEnv=5" />
-        <arg value="-print"  /> <arg value="RemoteCallWrapperUpdater"/>
-        <arg value="-print"  /> <arg value="FieldLabelResolver"/>
-        <arg value="-report" /> <arg value="error=5"/>
-        <arg value="-report" /> <arg value="errors=5"/>
-        <arg value="-report" /> <arg value="debug=5" />
-      -->
-
-      <fileset dir="${hello.home}/src" includes="jif/**/*.fab" />
-    </fabc>
-  </target>
-
 </project>
 
 <!--
