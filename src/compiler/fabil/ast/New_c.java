@@ -7,6 +7,7 @@ import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.Term;
+import polyglot.ast.Term_c;
 import polyglot.ast.TypeNode;
 import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
@@ -113,7 +114,8 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
       v.visitCFG(body(), this, EXIT);
     } else {
       if (!arguments.isEmpty()) {
-        v.visitCFG(last, listChild(arguments, null), ENTRY);
+        v.visitCFG(last, Term_c.<Expr, Expr, Expr> listChild(arguments, null),
+            ENTRY);
         v.visitCFGList(arguments, this, EXIT);
       } else {
         v.visitCFG(last, this, EXIT);
