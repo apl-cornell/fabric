@@ -1,5 +1,6 @@
 package fabric.lang.security;
 
+import fabric.common.util.Pair;
 import fabric.worker.LabelCache;
 import fabric.worker.Worker;
 import fabric.worker.Store;
@@ -395,7 +396,7 @@ public final class LabelUtil {
       if (l2 == null) return l1;
 
       if (l1 instanceof PairLabel && l2 instanceof PairLabel) {
-        SecurityCache.Pair pair = new SecurityCache.Pair(l1, l2);
+        Pair pair = new Pair(l1, l2);
         Label result = cache.getLabelJoin(pair);
 
         if (result == null) {
@@ -446,7 +447,7 @@ public final class LabelUtil {
       if (l2 == null) return l1;
 
       if (l1 instanceof PairLabel && l2 instanceof PairLabel) {
-        SecurityCache.Pair pair = new SecurityCache.Pair(l1, l2);
+        Pair pair = new Pair(l1, l2);
         Label result = cache.getLabelMeet(pair);
 
         if (result == null) {
@@ -685,7 +686,7 @@ public final class LabelUtil {
       if (from == to || from.equals(to)) return true;
       
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
-      SecurityCache.Pair pair = new SecurityCache.Pair(from, to);
+      Pair pair = new Pair(from, to);
       if (cache.containsTrueLabelRelabel(pair)) return true;
       if (cache.containsFalseLabelRelabel(pair)) return false;
       
@@ -744,7 +745,7 @@ public final class LabelUtil {
       if (from == to || from.equals(to)) return true;
       
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
-      SecurityCache.Pair pair = new SecurityCache.Pair(from, to);
+      Pair pair = new Pair(from, to);
       if (cache.containsTruePolicyRelabel(pair)) {
         s.addAll(cache.getTruePolicyRelabels(pair));
         return true;
@@ -878,7 +879,7 @@ public final class LabelUtil {
       (java.util.Set) cache.removeTrueLabelRelabelsDependencies(del);
     if (deps != null) {
       for (java.util.Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-        SecurityCache.Pair afp = (SecurityCache.Pair) iter.next();
+        Pair afp = (Pair) iter.next();
         cache.removeTrueLabelRelabel(afp);
       }
     }
@@ -886,7 +887,7 @@ public final class LabelUtil {
     deps = (java.util.Set) cache.removeTruePolicyRelabelsDependencies(del);
     if (deps != null) {
       for (java.util.Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-        SecurityCache.Pair afp = (SecurityCache.Pair) iter.next();
+        Pair afp = (Pair) iter.next();
         cache.removeTruePolicyRelabel(afp);
       }
     }
@@ -894,7 +895,7 @@ public final class LabelUtil {
     deps = (java.util.Set) cache.removeLabelJoinDependencies(del);
     if (deps != null) {
       for (java.util.Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-        SecurityCache.Pair afp = (SecurityCache.Pair) iter.next();
+        Pair afp = (Pair) iter.next();
         cache.removeLabelJoin(afp);
       }
     }
@@ -902,7 +903,7 @@ public final class LabelUtil {
     deps = (java.util.Set) cache.removeLabelMeetDependencies(del);
     if (deps != null) {
       for (java.util.Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-        SecurityCache.Pair afp = (SecurityCache.Pair) iter.next();
+        Pair afp = (Pair) iter.next();
         cache.removeLabelMeet(afp);
       }
     }

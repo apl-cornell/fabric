@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import fabric.common.util.Pair;
 import fabric.worker.transaction.AbstractSecurityCache;
 
 /**
@@ -36,19 +37,24 @@ public final class SecurityCache extends AbstractSecurityCache {
   private Map<DelegationPair, Set<ActsForPair>> actsForDependencies;
 
   // ///////////////////////////////////////////////////////////////////////////
+  // Relabelling caches
+  // ///////////////////////////////////////////////////////////////////////////
+
+  private Set<Pair<Label, Label>> trueLabelRelabels;
+  private Set<Pair<Label, Label>> falseLabelRelabels;
+  private Map<DelegationPair, Set<Pair<Label, Label>>> trueLabelRelabelsDependencies;
+  private Map<Pair<Label, Label>, Set<DelegationPair>> truePolicyRelabels;
+  private Set<Pair<Label, Label>> falsePolicyRelabels;
+  private Map<DelegationPair, Set<Pair<Label, Label>>> truePolicyRelabelsDependencies;
+
+  // ///////////////////////////////////////////////////////////////////////////
   // Label caches
   // ///////////////////////////////////////////////////////////////////////////
 
-  private Set<Pair> trueLabelRelabels;
-  private Set<Pair> falseLabelRelabels;
-  private Map<DelegationPair, Set<Pair>> trueLabelRelabelsDependencies;
-  private Map<Pair, Set<DelegationPair>> truePolicyRelabels;
-  private Set<Pair> falsePolicyRelabels;
-  private Map<DelegationPair, Set<Pair>> truePolicyRelabelsDependencies;
-  private Map<Pair, Label> labelJoins;
-  private Map<Pair, Label> labelMeets;
-  private Map<DelegationPair, Set<Pair>> labelJoinDependencies;
-  private Map<DelegationPair, Set<Pair>> labelMeetDependencies;
+  private Map<Pair<Label, Label>, Label> labelJoins;
+  private Map<DelegationPair, Set<Pair<Label, Label>>> labelJoinDependencies;
+  private Map<Pair<Label, Label>, Label> labelMeets;
+  private Map<DelegationPair, Set<Pair<Label, Label>>> labelMeetDependencies;
 
   public SecurityCache(SecurityCache parent) {
     this.parent = parent;
@@ -59,18 +65,21 @@ public final class SecurityCache extends AbstractSecurityCache {
       this.actsForDependencies =
           new HashMap<DelegationPair, Set<ActsForPair>>();
 
-      this.trueLabelRelabels = new HashSet<Pair>();
-      this.falseLabelRelabels = new HashSet<Pair>();
+      this.trueLabelRelabels = new HashSet<Pair<Label, Label>>();
+      this.falseLabelRelabels = new HashSet<Pair<Label, Label>>();
       this.trueLabelRelabelsDependencies =
-          new HashMap<DelegationPair, Set<Pair>>();
-      this.truePolicyRelabels = new HashMap<Pair, Set<DelegationPair>>();
-      this.falsePolicyRelabels = new HashSet<Pair>();
+          new HashMap<DelegationPair, Set<Pair<Label, Label>>>();
+      this.truePolicyRelabels =
+          new HashMap<Pair<Label, Label>, Set<DelegationPair>>();
+      this.falsePolicyRelabels = new HashSet<Pair<Label, Label>>();
       this.truePolicyRelabelsDependencies =
-          new HashMap<DelegationPair, Set<Pair>>();
-      this.labelJoins = new HashMap<Pair, Label>();
-      this.labelMeets = new HashMap<Pair, Label>();
-      this.labelJoinDependencies = new HashMap<DelegationPair, Set<Pair>>();
-      this.labelMeetDependencies = new HashMap<DelegationPair, Set<Pair>>();
+          new HashMap<DelegationPair, Set<Pair<Label, Label>>>();
+      this.labelJoins = new HashMap<Pair<Label, Label>, Label>();
+      this.labelMeets = new HashMap<Pair<Label, Label>, Label>();
+      this.labelJoinDependencies =
+          new HashMap<DelegationPair, Set<Pair<Label, Label>>>();
+      this.labelMeetDependencies =
+          new HashMap<DelegationPair, Set<Pair<Label, Label>>>();
       return;
     }
 
@@ -80,23 +89,29 @@ public final class SecurityCache extends AbstractSecurityCache {
         new HashMap<DelegationPair, Set<ActsForPair>>(
             parent.actsForDependencies);
 
-    this.trueLabelRelabels = new HashSet<Pair>(parent.trueLabelRelabels);
-    this.falseLabelRelabels = new HashSet<Pair>(parent.falseLabelRelabels);
+    this.trueLabelRelabels =
+        new HashSet<Pair<Label, Label>>(parent.trueLabelRelabels);
+    this.falseLabelRelabels =
+        new HashSet<Pair<Label, Label>>(parent.falseLabelRelabels);
     this.trueLabelRelabelsDependencies =
-        new HashMap<DelegationPair, Set<Pair>>(
+        new HashMap<DelegationPair, Set<Pair<Label, Label>>>(
             parent.trueLabelRelabelsDependencies);
     this.truePolicyRelabels =
-        new HashMap<Pair, Set<DelegationPair>>(parent.truePolicyRelabels);
-    this.falsePolicyRelabels = new HashSet<Pair>(parent.falsePolicyRelabels);
+        new HashMap<Pair<Label, Label>, Set<DelegationPair>>(
+            parent.truePolicyRelabels);
+    this.falsePolicyRelabels =
+        new HashSet<Pair<Label, Label>>(parent.falsePolicyRelabels);
     this.truePolicyRelabelsDependencies =
-        new HashMap<DelegationPair, Set<Pair>>(
+        new HashMap<DelegationPair, Set<Pair<Label, Label>>>(
             parent.truePolicyRelabelsDependencies);
-    this.labelJoins = new HashMap<Pair, Label>(parent.labelJoins);
-    this.labelMeets = new HashMap<Pair, Label>(parent.labelMeets);
+    this.labelJoins = new HashMap<Pair<Label, Label>, Label>(parent.labelJoins);
+    this.labelMeets = new HashMap<Pair<Label, Label>, Label>(parent.labelMeets);
     this.labelJoinDependencies =
-        new HashMap<DelegationPair, Set<Pair>>(parent.labelJoinDependencies);
+        new HashMap<DelegationPair, Set<Pair<Label, Label>>>(
+            parent.labelJoinDependencies);
     this.labelMeetDependencies =
-        new HashMap<DelegationPair, Set<Pair>>(parent.labelMeetDependencies);
+        new HashMap<DelegationPair, Set<Pair<Label, Label>>>(
+            parent.labelMeetDependencies);
   }
 
   @Override
@@ -124,11 +139,11 @@ public final class SecurityCache extends AbstractSecurityCache {
       trueLabelRelabels.addAll(parent.trueLabelRelabels);
       falseLabelRelabels.addAll(parent.falseLabelRelabels);
       trueLabelRelabelsDependencies
-          .putAll(parent.trueLabelRelabelsDependencies);
+      .putAll(parent.trueLabelRelabelsDependencies);
       truePolicyRelabels.putAll(parent.truePolicyRelabels);
       falsePolicyRelabels.addAll(parent.falsePolicyRelabels);
       truePolicyRelabelsDependencies
-          .putAll(parent.truePolicyRelabelsDependencies);
+      .putAll(parent.truePolicyRelabelsDependencies);
       labelJoins.putAll(parent.labelJoins);
       labelMeets.putAll(parent.labelMeets);
       labelJoinDependencies.putAll(parent.labelJoinDependencies);
@@ -207,23 +222,23 @@ public final class SecurityCache extends AbstractSecurityCache {
   // Label cache operations
   // ///////////////////////////////////////////////////////////////////////////
 
-  boolean containsTrueLabelRelabel(Pair pair) {
+  boolean containsTrueLabelRelabel(Pair<Label, Label> pair) {
     return trueLabelRelabels.contains(pair);
   }
 
-  void addTrueLabelRelabel(Pair pair) {
+  void addTrueLabelRelabel(Pair<Label, Label> pair) {
     trueLabelRelabels.add(pair);
   }
 
-  void removeTrueLabelRelabel(Pair pair) {
+  void removeTrueLabelRelabel(Pair<Label, Label> pair) {
     trueLabelRelabels.remove(pair);
   }
 
-  boolean containsFalseLabelRelabel(Pair pair) {
+  boolean containsFalseLabelRelabel(Pair<Label, Label> pair) {
     return falseLabelRelabels.contains(pair);
   }
 
-  void addFalseLabelRelabel(Pair pair) {
+  void addFalseLabelRelabel(Pair<Label, Label> pair) {
     falseLabelRelabels.add(pair);
   }
 
@@ -231,40 +246,42 @@ public final class SecurityCache extends AbstractSecurityCache {
     falseLabelRelabels.clear();
   }
 
-  void addTrueLabelRelabelsDependency(DelegationPair del, Pair pair) {
-    Set<Pair> set = trueLabelRelabelsDependencies.get(del);
+  void addTrueLabelRelabelsDependency(DelegationPair del,
+      Pair<Label, Label> pair) {
+    Set<Pair<Label, Label>> set = trueLabelRelabelsDependencies.get(del);
     if (set == null) {
-      set = new HashSet<Pair>();
+      set = new HashSet<Pair<Label, Label>>();
       trueLabelRelabelsDependencies.put(del, set);
     }
     set.add(pair);
   }
 
-  Set<Pair> removeTrueLabelRelabelsDependencies(DelegationPair pair) {
+  Set<Pair<Label, Label>> removeTrueLabelRelabelsDependencies(
+      DelegationPair pair) {
     return trueLabelRelabelsDependencies.remove(pair);
   }
 
-  boolean containsTruePolicyRelabel(Pair pair) {
+  boolean containsTruePolicyRelabel(Pair<Label, Label> pair) {
     return truePolicyRelabels.containsKey(pair);
   }
 
-  Set<DelegationPair> getTruePolicyRelabels(Pair pair) {
+  Set<DelegationPair> getTruePolicyRelabels(Pair<Label, Label> pair) {
     return truePolicyRelabels.get(pair);
   }
 
-  void putTruePolicyRelabels(Pair pair, Set<DelegationPair> deps) {
+  void putTruePolicyRelabels(Pair<Label, Label> pair, Set<DelegationPair> deps) {
     truePolicyRelabels.put(pair, deps);
   }
 
-  void removeTruePolicyRelabel(Pair pair) {
+  void removeTruePolicyRelabel(Pair<Label, Label> pair) {
     truePolicyRelabels.remove(pair);
   }
 
-  boolean containsFalsePolicyRelabel(Pair pair) {
+  boolean containsFalsePolicyRelabel(Pair<Label, Label> pair) {
     return falsePolicyRelabels.contains(pair);
   }
 
-  void addFalsePolicyRelabel(Pair pair) {
+  void addFalsePolicyRelabel(Pair<Label, Label> pair) {
     falsePolicyRelabels.add(pair);
   }
 
@@ -272,24 +289,26 @@ public final class SecurityCache extends AbstractSecurityCache {
     falsePolicyRelabels.clear();
   }
 
-  void addTruePolicyRelabelsDependency(DelegationPair del, Pair pair) {
-    Set<Pair> set = truePolicyRelabelsDependencies.get(del);
+  void addTruePolicyRelabelsDependency(DelegationPair del,
+      Pair<Label, Label> pair) {
+    Set<Pair<Label, Label>> set = truePolicyRelabelsDependencies.get(del);
     if (set == null) {
-      set = new HashSet<Pair>();
+      set = new HashSet<Pair<Label, Label>>();
       truePolicyRelabelsDependencies.put(del, set);
     }
     set.add(pair);
   }
 
-  Set<Pair> removeTruePolicyRelabelsDependencies(DelegationPair pair) {
+  Set<Pair<Label, Label>> removeTruePolicyRelabelsDependencies(
+      DelegationPair pair) {
     return truePolicyRelabelsDependencies.remove(pair);
   }
 
-  Label getLabelJoin(Pair pair) {
+  Label getLabelJoin(Pair<Label, Label> pair) {
     return labelJoins.get(pair);
   }
 
-  void putLabelJoin(Pair pair, Label label) {
+  void putLabelJoin(Pair<Label, Label> pair, Label label) {
     labelJoins.put(pair, label);
   }
 
@@ -297,15 +316,15 @@ public final class SecurityCache extends AbstractSecurityCache {
     labelJoins.clear();
   }
 
-  void removeLabelJoin(Pair pair) {
+  void removeLabelJoin(Pair<Label, Label> pair) {
     labelJoins.remove(pair);
   }
 
-  Label getLabelMeet(Pair pair) {
+  Label getLabelMeet(Pair<Label, Label> pair) {
     return labelMeets.get(pair);
   }
 
-  void putLabelMeet(Pair pair, Label label) {
+  void putLabelMeet(Pair<Label, Label> pair, Label label) {
     labelMeets.put(pair, label);
   }
 
@@ -313,14 +332,14 @@ public final class SecurityCache extends AbstractSecurityCache {
     labelMeets.clear();
   }
 
-  void removeLabelMeet(Pair pair) {
+  void removeLabelMeet(Pair<Label, Label> pair) {
     labelMeets.remove(pair);
   }
 
-  void addLabelJoinDependency(DelegationPair del, Pair pair) {
-    Set<Pair> set = labelJoinDependencies.get(del);
+  void addLabelJoinDependency(DelegationPair del, Pair<Label, Label> pair) {
+    Set<Pair<Label, Label>> set = labelJoinDependencies.get(del);
     if (set == null) {
-      set = new HashSet<Pair>();
+      set = new HashSet<Pair<Label, Label>>();
       labelJoinDependencies.put(del, set);
     }
     set.add(pair);
@@ -330,14 +349,14 @@ public final class SecurityCache extends AbstractSecurityCache {
     labelJoinDependencies.clear();
   }
 
-  Set<Pair> removeLabelJoinDependencies(DelegationPair pair) {
+  Set<Pair<Label, Label>> removeLabelJoinDependencies(DelegationPair pair) {
     return labelJoinDependencies.remove(pair);
   }
 
-  void addLabelMeetDependency(DelegationPair del, Pair pair) {
-    Set<Pair> set = labelMeetDependencies.get(del);
+  void addLabelMeetDependency(DelegationPair del, Pair<Label, Label> pair) {
+    Set<Pair<Label, Label>> set = labelMeetDependencies.get(del);
     if (set == null) {
-      set = new HashSet<Pair>();
+      set = new HashSet<Pair<Label, Label>>();
       labelMeetDependencies.put(del, set);
     }
     set.add(pair);
@@ -347,7 +366,7 @@ public final class SecurityCache extends AbstractSecurityCache {
     labelMeetDependencies.clear();
   }
 
-  Set<Pair> removeLabelMeetDependencies(DelegationPair pair) {
+  Set<Pair<Label, Label>> removeLabelMeetDependencies(DelegationPair pair) {
     return labelMeetDependencies.remove(pair);
   }
 
@@ -368,8 +387,9 @@ public final class SecurityCache extends AbstractSecurityCache {
       if (o == null || !o.getClass().equals(this.getClass())) return false;
 
       PrincipalPair that = (PrincipalPair) o;
-      return PrincipalUtil._Impl.equals(this.p, that.p)
-          && PrincipalUtil._Impl.equals(this.q, that.q);
+      return PrincipalUtil._Impl.equals(this.p, that.p);
+      // Redundant. PrincipalUtil.equals does this already.
+//           && PrincipalUtil._Impl.equals(this.q, that.q)
     }
 
     @Override
@@ -399,40 +419,6 @@ public final class SecurityCache extends AbstractSecurityCache {
   static class DelegationPair extends PrincipalPair {
     DelegationPair(Principal superior, Principal inferior) {
       super(superior, inferior);
-    }
-  }
-
-  /**
-   * Internal representation of a pair of objects, used for the caches. Ported
-   * from Jif's jif.lang.LabelUtil.
-   */
-  static class Pair {
-    final Object left; // must be non null
-    final Object right; // must be non null
-
-    public Pair(Object left, Object right) {
-      this.left = left;
-      this.right = right;
-    }
-
-    @Override
-    public int hashCode() {
-      return left.hashCode() ^ right.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (o instanceof Pair) {
-        Pair that = (Pair) o;
-        return (this.left == that.left || this.left.equals(that.left))
-            && (this.right == that.right || this.right.equals(that.right));
-      }
-      return false;
-    }
-
-    @Override
-    public String toString() {
-      return left + "-" + right;
     }
   }
 }
