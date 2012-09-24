@@ -7,6 +7,7 @@ import polyglot.ast.NewArray_c;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.Term;
+import polyglot.ast.Term_c;
 import polyglot.ast.TypeNode;
 import polyglot.types.ArrayType;
 import polyglot.types.SemanticException;
@@ -178,7 +179,8 @@ Annotated {
 
       v.visitCFG(last, this, EXIT);
     } else {
-      v.visitCFG(baseType, listChild(dims, null), ENTRY);
+      v.visitCFG(baseType, Term_c.<Expr, Expr, Expr> listChild(dims, null),
+          ENTRY);
       Term last = null;
 
       if (accessPolicy != null) {
