@@ -47,15 +47,15 @@ public class AirlinePrincipal extends ExternalPrincipal {
           Map rootMap = brokerStore.getRoot();
           if (rootMap != null) {
             Object obj = rootMap.get(Config.airlinePrincipalMapKey);
-            AirlinePrincipal airlinePrincipal = null;
+            AirlinePrincipal airline= null;
             if (obj instanceof AirlinePrincipal) {
-              airlinePrincipal = (AirlinePrincipal) obj;
+              airline = (AirlinePrincipal) obj;
             } else {
-              airlinePrincipal = new AirlinePrincipal@brokerStore();
-              rootMap.put(Config.airlinePrincipalMapKey, airlinePrincipal);
+              airline = new AirlinePrincipal@brokerStore();
+              rootMap.put(Config.airlinePrincipalMapKey, airline);
             }
             
-            return airlinePrincipal;
+            return airline;
           }
         }
       }

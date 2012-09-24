@@ -18,7 +18,6 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
   public CustomerMain() throws ServletException {
     FabricWorker cl = FabricWorker.getWorker();
     Store lStore = null;
-    AbstractPrincipal customerPrincipal = null;
     if (cl != null) {
       lStore = cl.getLocalStore();
     }
