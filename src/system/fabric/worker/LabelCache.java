@@ -17,7 +17,7 @@ import fabric.lang.security.Principal;
 public class LabelCache {
 
   /**
-   * Maps OIDs to (maps of OIDs to T proxies).
+   * Maps OIDs to (maps of OIDs to P proxies).
    */
   private static final class Cache<P extends Object> {
     private static final class EntrySoftRef<P extends Object> extends
