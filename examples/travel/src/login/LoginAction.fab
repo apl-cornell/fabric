@@ -190,8 +190,13 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
               caller(req.session)
     {
  
-        if (req == null || servlet == null || state == null || !(req.session instanceof SessionPrincipal)) 
+        if (req == null || servlet == null || state == null) 
             return;
+        if (lbl <= new label {req.store$->}
+           && lbl <= new label {req.session->}) {
+          if (!(req.session instanceof SessionPrincipal))
+            return;
+        } else return;
 
         if (loginAct == null || loginAct.successAction == null || 
                 loginAct.inpUserID == null || loginAct.inpPassword == null) return;
