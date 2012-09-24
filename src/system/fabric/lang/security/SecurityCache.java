@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import fabric.common.util.Pair;
+import fabric.worker.Store;
 import fabric.worker.transaction.AbstractSecurityCache;
 
 /**
@@ -51,9 +52,9 @@ public final class SecurityCache extends AbstractSecurityCache {
   // Label caches
   // ///////////////////////////////////////////////////////////////////////////
 
-  private Map<Pair<Label, Label>, Label> labelJoins;
+  private Map<Pair<Label, Label>, Map<Store, Label>> labelJoins;
   private Map<DelegationPair, Set<Pair<Label, Label>>> labelJoinDependencies;
-  private Map<Pair<Label, Label>, Label> labelMeets;
+  private Map<Pair<Label, Label>, Map<Store, Label>> labelMeets;
   private Map<DelegationPair, Set<Pair<Label, Label>>> labelMeetDependencies;
 
   public SecurityCache(SecurityCache parent) {
@@ -74,8 +75,8 @@ public final class SecurityCache extends AbstractSecurityCache {
       this.falsePolicyRelabels = new HashSet<Pair<Label, Label>>();
       this.truePolicyRelabelsDependencies =
           new HashMap<DelegationPair, Set<Pair<Label, Label>>>();
-      this.labelJoins = new HashMap<Pair<Label, Label>, Label>();
-      this.labelMeets = new HashMap<Pair<Label, Label>, Label>();
+      this.labelJoins = new HashMap<Pair<Label, Label>, Map<Store, Label>>();
+      this.labelMeets = new HashMap<Pair<Label, Label>, Map<Store, Label>>();
       this.labelJoinDependencies =
           new HashMap<DelegationPair, Set<Pair<Label, Label>>>();
       this.labelMeetDependencies =
@@ -104,8 +105,10 @@ public final class SecurityCache extends AbstractSecurityCache {
     this.truePolicyRelabelsDependencies =
         new HashMap<DelegationPair, Set<Pair<Label, Label>>>(
             parent.truePolicyRelabelsDependencies);
-    this.labelJoins = new HashMap<Pair<Label, Label>, Label>(parent.labelJoins);
-    this.labelMeets = new HashMap<Pair<Label, Label>, Label>(parent.labelMeets);
+    this.labelJoins =
+        new HashMap<Pair<Label, Label>, Map<Store, Label>>(parent.labelJoins);
+    this.labelMeets =
+        new HashMap<Pair<Label, Label>, Map<Store, Label>>(parent.labelMeets);
     this.labelJoinDependencies =
         new HashMap<DelegationPair, Set<Pair<Label, Label>>>(
             parent.labelJoinDependencies);
@@ -304,12 +307,28 @@ public final class SecurityCache extends AbstractSecurityCache {
     return truePolicyRelabelsDependencies.remove(pair);
   }
 
-  Label getLabelJoin(Pair<Label, Label> pair) {
-    return labelJoins.get(pair);
+  private <T, U, V> V get(Map<T, Map<U, V>> map, T key1, U key2) {
+    Map<U, V> result = map.get(key1);
+    if (result == null) return null;
+    return result.get(key2);
   }
 
-  void putLabelJoin(Pair<Label, Label> pair, Label label) {
-    labelJoins.put(pair, label);
+  private <T, U, V> V put(Map<T, Map<U, V>> map, T key1, U key2, V val) {
+    Map<U, V> submap = map.get(key1);
+    if (submap == null) {
+      submap = new HashMap<U, V>();
+      map.put(key1, submap);
+    }
+
+    return submap.put(key2, val);
+  }
+
+  Label getLabelJoin(Pair<Label, Label> pair, Store store) {
+    return get(labelJoins, pair, store);
+  }
+
+  void putLabelJoin(Pair<Label, Label> pair, Store store, Label label) {
+    put(labelJoins, pair, store, label);
   }
 
   void clearLabelJoins() {
@@ -320,12 +339,12 @@ public final class SecurityCache extends AbstractSecurityCache {
     labelJoins.remove(pair);
   }
 
-  Label getLabelMeet(Pair<Label, Label> pair) {
-    return labelMeets.get(pair);
+  Label getLabelMeet(Pair<Label, Label> pair, Store store) {
+    return get(labelMeets, pair, store);
   }
 
-  void putLabelMeet(Pair<Label, Label> pair, Label label) {
-    labelMeets.put(pair, label);
+  void putLabelMeet(Pair<Label, Label> pair, Store store, Label label) {
+    put(labelMeets, pair, store, label);
   }
 
   void clearLabelMeets() {
@@ -388,7 +407,7 @@ public final class SecurityCache extends AbstractSecurityCache {
 
       PrincipalPair that = (PrincipalPair) o;
       return PrincipalUtil._Impl.equals(this.p, that.p);
-      // Redundant. PrincipalUtil.equals does this already.
+      // Redundant; PrincipalUtil.equals does this already:
 //           && PrincipalUtil._Impl.equals(this.q, that.q)
     }
 

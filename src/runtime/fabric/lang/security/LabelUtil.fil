@@ -397,7 +397,7 @@ public final class LabelUtil {
 
       if (l1 instanceof PairLabel && l2 instanceof PairLabel) {
         Pair pair = new Pair(l1, l2);
-        Label result = cache.getLabelJoin(pair);
+        Label result = cache.getLabelJoin(pair, store);
 
         if (result == null) {
           LabelCache labelCache = store.labelCache();
@@ -416,7 +416,7 @@ public final class LabelUtil {
                 (SecurityCache.DelegationPair) iter.next();
               cache.addLabelJoinDependency(del, pair);
             }
-            cache.putLabelJoin(pair, result);
+            cache.putLabelJoin(pair, store, result);
             labelCache.addJoin(l1, l2, result);
           }
         }
@@ -448,7 +448,7 @@ public final class LabelUtil {
 
       if (l1 instanceof PairLabel && l2 instanceof PairLabel) {
         Pair pair = new Pair(l1, l2);
-        Label result = cache.getLabelMeet(pair);
+        Label result = cache.getLabelMeet(pair, store);
 
         if (result == null) {
           LabelCache labelCache = store.labelCache();
@@ -467,7 +467,7 @@ public final class LabelUtil {
                 (SecurityCache.DelegationPair) iter.next();
               cache.addLabelMeetDependency(del, pair);
             }
-            cache.putLabelMeet(pair, result);
+            cache.putLabelMeet(pair, store, result);
             labelCache.addMeet(l1, l2, result);
           }
         }

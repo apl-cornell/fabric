@@ -30,6 +30,7 @@ public class Pair<T1, T2> {
 
   @Override
   public int hashCode() {
+    // This hash code implementation could probably be improved.
     return (first == null ? 0 : first.hashCode())
         ^ (second == null ? 0 : second.hashCode());
   }
