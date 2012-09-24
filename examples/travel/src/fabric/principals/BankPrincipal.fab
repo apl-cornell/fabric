@@ -1,4 +1,4 @@
-package jif.principals;
+package fabric.principals;
 
 import fabric.util.Map;
 import travel.Config;
