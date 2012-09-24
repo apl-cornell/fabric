@@ -42,6 +42,8 @@ import jif.types.label.PairLabel;
 import jif.types.label.ProviderLabel;
 import jif.types.label.ThisLabel;
 import jif.types.principal.DynamicPrincipal;
+import jif.types.principal.ExternalPrincipal;
+import jif.types.principal.ExternalPrincipal_c;
 import jif.types.principal.Principal;
 import polyglot.ast.Expr;
 import polyglot.ext.param.types.Subst;
@@ -437,6 +439,13 @@ FabricTypeSystem {
       FabricContext context, Position pos) throws SemanticException {
     AccessPath ap = exprToAccessPath(worker, context);
     return dynamicPrincipal(pos, ap);
+  }
+
+
+  @Override
+  public ExternalPrincipal externalPrincipal(Position pos, String name) {
+    return new ExternalPrincipal_c(name, this,
+        new FabExternalPrincipalToJavaExpr_c(), pos);
   }
 
   @Override
