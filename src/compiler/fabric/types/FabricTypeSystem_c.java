@@ -19,7 +19,6 @@ import jif.types.Assertion;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
 import jif.types.JifContext;
-import jif.types.JifTypeSystem;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabelLeAssertion;
 import jif.types.LabelSubstitution;
@@ -449,12 +448,12 @@ FabricTypeSystem {
   }
 
   @Override
-  public boolean isFinalAccessExpr(JifTypeSystem ts, Expr e) {
+  public boolean isFinalAccessExpr(Expr e) {
     if (e instanceof fabric.ast.Store) {
       fabric.ast.Store store = (fabric.ast.Store) e;
-      return isFinalAccessExpr(ts, store.expr());
+      return isFinalAccessExpr(store.expr());
     }
-    return super.isFinalAccessExpr(ts, e);
+    return super.isFinalAccessExpr(e);
   }
 
   @Override

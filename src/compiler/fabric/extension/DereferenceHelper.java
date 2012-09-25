@@ -77,7 +77,8 @@ public class DereferenceHelper {
 
     // ({this} <= access label) holds true at all access sites
 //    A.addAssertionLE(thisLabel(ct), toLabel(ct.accessPolicy()));
-    if (ts.descendsFrom(targetType, ts.DelegatingPrincipal())) {
+    if (ts.isFinalAccessExpr(ref)
+        && ts.descendsFrom(targetType, ts.DelegatingPrincipal())) {
       // this.store >= this holds true for all principals
       A.addActsFor(
           ts.dynamicPrincipal(pos,

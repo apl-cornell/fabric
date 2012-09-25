@@ -28,7 +28,7 @@ public class StoreInstantiator extends JifInstantiator {
       AccessPath storePath) throws SemanticException {
     JifTypeSystem ts = (JifTypeSystem) callerContext.typeSystem();
     AccessPath receiverPath;
-    if (ts.isFinalAccessExprOrConst(ts, receiverExpr, receiverType)) {
+    if (ts.isFinalAccessExprOrConst(receiverExpr, receiverType)) {
       receiverPath =
           ts.exprToAccessPath(receiverExpr, receiverType, callerContext);
     } else {
