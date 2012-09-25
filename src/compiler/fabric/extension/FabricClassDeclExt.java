@@ -7,10 +7,10 @@ import jif.types.ConstraintMessage;
 import jif.types.JifClassType;
 import jif.types.JifContext;
 import jif.types.JifParsedPolyType;
-import jif.types.JifTypeSystem;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.PrincipalConstraint;
+import jif.types.label.AccessPathThis;
 import jif.types.label.Label;
 import jif.types.label.ProviderLabel;
 import jif.types.principal.Principal;
@@ -19,6 +19,7 @@ import polyglot.ast.ClassBody;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
+import fabric.types.AccessPathStore;
 import fabric.types.FabricParsedClassType;
 import fabric.types.FabricTypeSystem;
 
@@ -34,13 +35,13 @@ public class FabricClassDeclExt extends JifClassDeclExt {
     JifClassDecl n = (JifClassDecl) node();
     FabricParsedClassType pct = (FabricParsedClassType) n.type();
 
-    JifTypeSystem jts = lc.typeSystem();
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     JifContext A = lc.jifContext();
     A = (JifContext) A.pushClass(n.type(), n.type());
     A = n.addParamsToContext(A);
     A = n.addAuthorityToContext(A);
 
-    A.setCurrentCodePCBound(jts.notTaken());
+    A.setCurrentCodePCBound(ts.notTaken());
 
     final JifParsedPolyType ct = (JifParsedPolyType) n.type();
 
@@ -60,19 +61,19 @@ public class FabricClassDeclExt extends JifClassDeclExt {
         // of the principals that have authorized ct must act for pl.
         lc.constrain(authPrincipal, PrincipalConstraint.ACTSFOR, pl,
             A.labelEnv(), n.position(), new ConstraintMessage() {
-              @Override
-              public String msg() {
-                return "Superclass " + superType + " requires " + ct + " to "
-                    + "have the authority of principal " + pl;
-              }
+          @Override
+          public String msg() {
+            return "Superclass " + superType + " requires " + ct + " to "
+                + "have the authority of principal " + pl;
+          }
 
-              @Override
-              public String detailMsg() {
-                return "The class " + superType + " has the authority of the "
-                    + "principal " + pl + ". To extend this class, " + ct
-                    + " must also have the authority of " + pl + ".";
-              }
-            });
+          @Override
+          public String detailMsg() {
+            return "The class " + superType + " has the authority of the "
+                + "principal " + pl + ". To extend this class, " + ct
+                + " must also have the authority of " + pl + ".";
+          }
+        });
 
       }
     }
@@ -83,23 +84,28 @@ public class FabricClassDeclExt extends JifClassDeclExt {
 
     // Access label checks
     Label classAccessLabel =
-        ((FabricTypeSystem) jts).toLabel(pct.accessPolicy());
+        ts.toLabel(pct.accessPolicy());
 
     // ({this} <= access label) holds true at all access sites
-    A.addAssertionLE(jts.thisLabel(ct), classAccessLabel);
-
-    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+    A.addAssertionLE(ts.thisLabel(ct), classAccessLabel);
+    if (ts.descendsFrom(ct, ts.DelegatingPrincipal())) {
+      // this.store >= this holds true for all principals
+      Position pos = Position.compilerGenerated();
+      A.addActsFor(ts.dynamicPrincipal(pos, new AccessPathStore(
+          new AccessPathThis(ct, pos), ts.Store(), pos)), ts.dynamicPrincipal(
+          pos, new AccessPathThis(ct, pos)));
+    }
     if (ts.isFabricClass(pct)) {
       // check that the access label has the top integrity label, i.e. it only
       // has a meaningful confidentiality component
       lc.constrain(
-          new NamedLabel("top integ", jts.pairLabel(
+          new NamedLabel("top integ", ts.pairLabel(
               Position.compilerGenerated(),
-              jts.bottomConfPolicy(Position.compilerGenerated()),
-              jts.topIntegPolicy(Position.compilerGenerated()))),
-          LabelConstraint.LEQ,
-          new NamedLabel("access policy", classAccessLabel), A.labelEnv(),
-          n.position(), new ConstraintMessage() {
+              ts.bottomConfPolicy(Position.compilerGenerated()),
+              ts.topIntegPolicy(Position.compilerGenerated()))),
+              LabelConstraint.LEQ,
+              new NamedLabel("access policy", classAccessLabel), A.labelEnv(),
+              n.position(), new ConstraintMessage() {
             @Override
             public String msg() {
               return "The access policy should have no integrity component";
@@ -112,12 +118,12 @@ public class FabricClassDeclExt extends JifClassDeclExt {
           LabelConstraint.LEQ,
           new NamedLabel("access policy", classAccessLabel), A.labelEnv(),
           n.position(), new ConstraintMessage() {
-            @Override
-            public String msg() {
-              return "The access policy of a class should be at least as restrictive"
-                  + " as its object label";
-            }
-          });
+        @Override
+        public String msg() {
+          return "The access policy of a class should be at least as restrictive"
+              + " as its object label";
+        }
+      });
 
     }
 
@@ -128,17 +134,17 @@ public class FabricClassDeclExt extends JifClassDeclExt {
             + provider.classType().fullName(), provider);
     lc.constrain(namedProvider, authPrincipal, A.labelEnv(), n.position(),
         new ConstraintMessage() {
-          @Override
-          public String msg() {
-            return provider + " must act for " + authPrincipal;
-          }
+      @Override
+      public String msg() {
+        return provider + " must act for " + authPrincipal;
+      }
 
-          @Override
-          public String detailMsg() {
-            return provider + " is the provider of " + ct
-                + " but does not have authority to act for " + authPrincipal;
-          }
-        });
+      @Override
+      public String detailMsg() {
+        return provider + " is the provider of " + ct
+            + " but does not have authority to act for " + authPrincipal;
+      }
+    });
 
     // label check class conformance
     labelCheckClassConformance(ct, lc);

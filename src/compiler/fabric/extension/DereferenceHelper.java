@@ -17,6 +17,7 @@ import polyglot.ast.TypeNode;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
+import fabric.types.AccessPathStore;
 import fabric.types.FabricReferenceType;
 import fabric.types.FabricTypeSystem;
 
@@ -73,6 +74,17 @@ public class DereferenceHelper {
     JifContext A = lc.context();
     Label objLabel = Jif_c.getPathMap(ref).NV();
     Label pc = ts.join(Jif_c.getPathMap(ref).N(), A.currentCodePCBound());
+
+    // ({this} <= access label) holds true at all access sites
+//    A.addAssertionLE(thisLabel(ct), toLabel(ct.accessPolicy()));
+    if (ts.descendsFrom(targetType, ts.DelegatingPrincipal())) {
+      // this.store >= this holds true for all principals
+      A.addActsFor(
+          ts.dynamicPrincipal(pos,
+              new AccessPathStore(
+                  ts.exprToAccessPath(ref, A), ts.Store(), pos)),
+                  ts.dynamicPrincipal(pos, ts.exprToAccessPath(ref, A)));
+    }
 
     // get the access label of the type
     final ConfPolicy accessPolicy = targetType.accessPolicy();

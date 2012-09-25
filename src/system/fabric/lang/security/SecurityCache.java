@@ -3,6 +3,7 @@ package fabric.lang.security;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import fabric.common.util.Pair;
@@ -75,6 +76,7 @@ public final class SecurityCache extends AbstractSecurityCache {
       this.falsePolicyRelabels = new HashSet<Pair<Label, Label>>();
       this.truePolicyRelabelsDependencies =
           new HashMap<DelegationPair, Set<Pair<Label, Label>>>();
+
       this.labelJoins = new HashMap<Pair<Label, Label>, Map<Store, Label>>();
       this.labelMeets = new HashMap<Pair<Label, Label>, Map<Store, Label>>();
       this.labelJoinDependencies =
@@ -86,35 +88,24 @@ public final class SecurityCache extends AbstractSecurityCache {
 
     this.actsFor = new HashMap<ActsForPair, ActsForProof>(parent.actsFor);
     this.notActsFor = new HashSet<ActsForPair>(parent.notActsFor);
-    this.actsForDependencies =
-        new HashMap<DelegationPair, Set<ActsForPair>>(
-            parent.actsForDependencies);
+    this.actsForDependencies = copyMapSet(parent.actsForDependencies);
 
     this.trueLabelRelabels =
         new HashSet<Pair<Label, Label>>(parent.trueLabelRelabels);
     this.falseLabelRelabels =
         new HashSet<Pair<Label, Label>>(parent.falseLabelRelabels);
     this.trueLabelRelabelsDependencies =
-        new HashMap<DelegationPair, Set<Pair<Label, Label>>>(
-            parent.trueLabelRelabelsDependencies);
-    this.truePolicyRelabels =
-        new HashMap<Pair<Label, Label>, Set<DelegationPair>>(
-            parent.truePolicyRelabels);
+        copyMapSet(parent.trueLabelRelabelsDependencies);
+    this.truePolicyRelabels = copyMapSet(parent.truePolicyRelabels);
     this.falsePolicyRelabels =
         new HashSet<Pair<Label, Label>>(parent.falsePolicyRelabels);
     this.truePolicyRelabelsDependencies =
-        new HashMap<DelegationPair, Set<Pair<Label, Label>>>(
-            parent.truePolicyRelabelsDependencies);
-    this.labelJoins =
-        new HashMap<Pair<Label, Label>, Map<Store, Label>>(parent.labelJoins);
-    this.labelMeets =
-        new HashMap<Pair<Label, Label>, Map<Store, Label>>(parent.labelMeets);
-    this.labelJoinDependencies =
-        new HashMap<DelegationPair, Set<Pair<Label, Label>>>(
-            parent.labelJoinDependencies);
-    this.labelMeetDependencies =
-        new HashMap<DelegationPair, Set<Pair<Label, Label>>>(
-            parent.labelMeetDependencies);
+        copyMapSet(parent.truePolicyRelabelsDependencies);
+
+    this.labelJoins = copyMapMap(parent.labelJoins);
+    this.labelMeets = copyMapMap(parent.labelMeets);
+    this.labelJoinDependencies = copyMapSet(parent.labelJoinDependencies);
+    this.labelMeetDependencies = copyMapSet(parent.labelMeetDependencies);
   }
 
   @Override
@@ -129,6 +120,7 @@ public final class SecurityCache extends AbstractSecurityCache {
     truePolicyRelabels.clear();
     falsePolicyRelabels.clear();
     truePolicyRelabelsDependencies.clear();
+
     labelJoins.clear();
     labelMeets.clear();
     labelJoinDependencies.clear();
@@ -137,20 +129,45 @@ public final class SecurityCache extends AbstractSecurityCache {
     if (parent != null) {
       actsFor.putAll(parent.actsFor);
       notActsFor.addAll(parent.notActsFor);
-      actsForDependencies.putAll(parent.actsForDependencies);
+      copyMapSet(parent.actsForDependencies, actsForDependencies);
 
       trueLabelRelabels.addAll(parent.trueLabelRelabels);
       falseLabelRelabels.addAll(parent.falseLabelRelabels);
-      trueLabelRelabelsDependencies
-      .putAll(parent.trueLabelRelabelsDependencies);
-      truePolicyRelabels.putAll(parent.truePolicyRelabels);
+      copyMapSet(parent.trueLabelRelabelsDependencies,
+          trueLabelRelabelsDependencies);
+      copyMapSet(parent.truePolicyRelabels, truePolicyRelabels);
       falsePolicyRelabels.addAll(parent.falsePolicyRelabels);
-      truePolicyRelabelsDependencies
-      .putAll(parent.truePolicyRelabelsDependencies);
-      labelJoins.putAll(parent.labelJoins);
-      labelMeets.putAll(parent.labelMeets);
-      labelJoinDependencies.putAll(parent.labelJoinDependencies);
-      labelMeetDependencies.putAll(parent.labelMeetDependencies);
+      copyMapSet(parent.truePolicyRelabelsDependencies,
+          truePolicyRelabelsDependencies);
+
+      copyMapMap(parent.labelJoins, labelJoins);
+      copyMapMap(parent.labelMeets, labelMeets);
+      copyMapSet(parent.labelJoinDependencies, labelJoinDependencies);
+      copyMapSet(parent.labelMeetDependencies, labelMeetDependencies);
+    }
+  }
+
+  private <T, U> Map<T, Set<U>> copyMapSet(Map<T, Set<U>> src) {
+    Map<T, Set<U>> result = new HashMap<T, Set<U>>();
+    copyMapSet(src, result);
+    return result;
+  }
+
+  private <T, U, V> Map<T, Map<U, V>> copyMapMap(Map<T, Map<U, V>> src) {
+    Map<T, Map<U, V>> result = new HashMap<T, Map<U, V>>();
+    copyMapMap(src, result);
+    return result;
+  }
+
+  private <T, U> void copyMapSet(Map<T, Set<U>> src, Map<T, Set<U>> dst) {
+    for (Entry<T, Set<U>> entry : src.entrySet()) {
+      dst.put(entry.getKey(), new HashSet<U>(entry.getValue()));
+    }
+  }
+
+  private <T, U, V> void copyMapMap(Map<T, Map<U, V>> src, Map<T, Map<U, V>> dst) {
+    for (Entry<T, Map<U, V>> entry : src.entrySet()) {
+      dst.put(entry.getKey(), new HashMap<U, V>(entry.getValue()));
     }
   }
 

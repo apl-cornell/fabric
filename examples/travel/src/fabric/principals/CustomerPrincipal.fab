@@ -17,15 +17,15 @@ public class CustomerPrincipal extends ExternalPrincipal {
           Map rootMap = brokerStore.getRoot();
           if (rootMap != null) {
             Object obj = rootMap.get(Config.customerPrincipalMapKey);
-            CustomerPrincipal customerPrincipal = null;
+            CustomerPrincipal customer = null;
             if (obj instanceof CustomerPrincipal) {
-              customerPrincipal = (CustomerPrincipal) obj;
+              customer = (CustomerPrincipal) obj;
             } else {
-              customerPrincipal = new CustomerPrincipal@brokerStore();
-              rootMap.put(Config.customerPrincipalMapKey, customerPrincipal);
+              customer = new CustomerPrincipal@brokerStore();
+              rootMap.put(Config.customerPrincipalMapKey, customer);
             }
             
-            return customerPrincipal;
+            return customer;
           }
         }
       }

@@ -49,15 +49,15 @@ public class BankPrincipal extends ExternalPrincipal {
           Map rootMap = brokerStore.getRoot();
           if (rootMap != null) {
             Object obj = rootMap.get(Config.bankPrincipalMapKey);
-            BankPrincipal bankPrincipal = null;
+            BankPrincipal bank = null;
             if (obj instanceof BankPrincipal) {
-              bankPrincipal = (BankPrincipal) obj;
+              bank = (BankPrincipal) obj;
             } else {
-                bankPrincipal = new BankPrincipal@brokerStore();
-                rootMap.put(Config.bankPrincipalMapKey, bankPrincipal);
+                bank = new BankPrincipal@brokerStore();
+                rootMap.put(Config.bankPrincipalMapKey, bank);
             }
             
-            return bankPrincipal;
+            return bank;
           }
         }
       }

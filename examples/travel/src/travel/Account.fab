@@ -44,6 +44,7 @@ public class Account[principal bank]  { // on bank store and worker
     Account(principal{bank←} user_) {
         user = user_;
         balance = new Balance(); // @ bank store
+        super();
     }
     
     public String{bank←} name() {

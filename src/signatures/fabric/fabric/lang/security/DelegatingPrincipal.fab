@@ -12,7 +12,7 @@ package fabric.lang.security;
  * <code>removeDelegatesTo</code>.
  */
 public abstract class DelegatingPrincipal extends Principal {
-  char{this->}@{this.store$->} __dummy__;
+  char{this->}@{this->} __dummy__;
   public abstract void addDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);    
   public abstract void removeDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);
   
