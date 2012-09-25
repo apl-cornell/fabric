@@ -72,13 +72,12 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
   // The id can have a bottom label, since it is a random number 
   // that was just created  
   protected SessionPrincipal createSessionPrincipal(String{⊥→;⊤←} id) {
-    SessionPrincipal toReturn = null;
     atomic {
       if (brokerstore != null) {
-	toReturn = new SessionPrincipal@brokerstore(id);
+	return new SessionPrincipal@brokerstore(id);
       }
     }
-    return toReturn;
+    return null;
   }
 
   /**

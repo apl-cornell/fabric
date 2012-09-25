@@ -57,14 +57,13 @@ public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
   // This method will only be called by the runtime
   protected AuthSessState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
       String{*lbl} id, SessionPrincipal{*lbl} session) {
-    AuthSessState toReturn = null;
     atomic {
       if (localStore != null && localStore equiv worker$ &&
 	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
-	toReturn = new AuthSessState@localStore(id, session);
+	return new AuthSessState@localStore(id, session);
       }
     }
-    return toReturn;
+    return null;
   }
 
   // This method will only be called by the runtime
