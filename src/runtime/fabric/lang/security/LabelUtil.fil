@@ -4,7 +4,6 @@ import java.util.HashSet;
 
 import fabric.common.util.Pair;
 import fabric.common.util.Triple;
-import fabric.worker.LabelCache;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;

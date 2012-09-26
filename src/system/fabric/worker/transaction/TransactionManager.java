@@ -215,12 +215,6 @@ public final class TransactionManager {
    */
   private void abortTransaction(Set<Store> storesToContact,
       List<RemoteWorker> workersToContact) {
-    // XXX HACK For now, flush the label cache. Should really have
-    // per-transaction label cache. -Jed
-    for (Store store : current.storesToContact()) {
-      store.labelCache().clear();
-    }
-
     if (current.tid.depth == 0) {
       // Make sure no other thread is working on this transaction.
       synchronized (current.commitState) {

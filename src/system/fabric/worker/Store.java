@@ -28,12 +28,6 @@ public interface Store extends Serializable {
   public boolean isLocalStore();
 
   /**
-   * @return a cache for interning labels and policies that are constructed at
-   *         this store.
-   */
-  LabelCache labelCache();
-
-  /**
    * Notifies the store that the transaction is entering the Prepare phase.
    * 
    * @return whether a subtransaction was created on the store as a result of
