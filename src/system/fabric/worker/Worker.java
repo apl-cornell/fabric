@@ -51,6 +51,7 @@ import fabric.lang.arrays.ObjectArray;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.IntegPolicy;
 import fabric.lang.security.Label;
+import fabric.lang.security.LabelCache;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.admin.WorkerAdmin;
@@ -117,6 +118,9 @@ public final class Worker {
 
   /** The manager to use for fetching objects from stores. */
   protected final FetchManager fetchManager;
+
+  /** The global label cache. */
+  protected final LabelCache labelCache;
 
   protected final NodePrincipal principal;
 
@@ -256,6 +260,8 @@ public final class Worker {
     } catch (Exception e) {
       throw new InternalError("Unable to load fetch manager", e);
     }
+
+    this.labelCache = new LabelCache();
 
     this.principal =
         initializePrincipal(config.homeStore, principalOnum,

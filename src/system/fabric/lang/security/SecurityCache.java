@@ -12,8 +12,11 @@ import fabric.worker.Store;
 import fabric.worker.transaction.AbstractSecurityCache;
 
 /**
- * A cache of acts-for relationships and relabelling judgements. This is kept in
- * the fabric.lang.security package to ensure that only security-related classes
+ * A per-transaction cache of acts-for relationships, relabelling judgements,
+ * and label and policy objects (allowing us to intern Label, ConfPolicy, and
+ * IntegPolicy objects). Because this a transaction-level cache, it is separate
+ * from LabelCache, which is a top-level cache. This is kept in the
+ * fabric.lang.security package to ensure that only security-related classes
  * can modify this cache.
  */
 public final class SecurityCache extends AbstractSecurityCache {
@@ -135,10 +138,11 @@ public final class SecurityCache extends AbstractSecurityCache {
   private Map<Triple<ConfPolicy, IntegPolicy, Store>, Label> toLabelCache;
 
   /**
-   * Cache for label joins. If (L1,L2,S) is mapped to L3, then L3 is an object
-   * on store S representing L1 ⊔ L2.
+   * Cache for label joins. If (L1,L2,S) is mapped to (L3,D), then L3 is an
+   * object on store S representing L1 ⊔ L2, and was created using the
+   * delegations in the (immutable) set D.
    */
-  private Map<Triple<Label, Label, Store>, Label> labelJoins;
+  private Map<Triple<Label, Label, Store>, Pair<Label, Set<DelegationPair>>> labelJoins;
 
   /**
    * Cache for label join dependencies. Maps delegation pairs to the components
@@ -149,10 +153,11 @@ public final class SecurityCache extends AbstractSecurityCache {
   private Map<DelegationPair, Set<Triple<Label, Label, Store>>> labelJoinDependencies;
 
   /**
-   * Cache for label meets. If (L1,L2,S) is mapped to L3, then L3 is an object
-   * on store S representing L1 ⊓ L2.
+   * Cache for label meets. If (L1,L2,S) is mapped to (L3,D), then L3 is an
+   * object on store S representing L1 ⊓ L2, and was created using the
+   * delegations in the (immutable) set D.
    */
-  private Map<Triple<Label, Label, Store>, Label> labelMeets;
+  private Map<Triple<Label, Label, Store>, Pair<Label, Set<DelegationPair>>> labelMeets;
 
   /**
    * Cache for label meet dependencies. Maps delegation pairs to the components
@@ -194,8 +199,10 @@ public final class SecurityCache extends AbstractSecurityCache {
         new HashMap<SecurityCache.DelegationPair, Set<Triple<Policy, Policy, Store>>>();
     this.toLabelCache =
         new HashMap<Triple<ConfPolicy, IntegPolicy, Store>, Label>();
-    this.labelJoins = new HashMap<Triple<Label, Label, Store>, Label>();
-    this.labelMeets = new HashMap<Triple<Label, Label, Store>, Label>();
+    this.labelJoins =
+        new HashMap<Triple<Label, Label, Store>, Pair<Label, Set<DelegationPair>>>();
+    this.labelMeets =
+        new HashMap<Triple<Label, Label, Store>, Pair<Label, Set<DelegationPair>>>();
     this.labelJoinDependencies =
         new HashMap<SecurityCache.DelegationPair, Set<Triple<Label, Label, Store>>>();
     this.labelMeetDependencies =
@@ -442,6 +449,10 @@ public final class SecurityCache extends AbstractSecurityCache {
     return readerPolicies.get(triple);
   }
 
+  Set<Entry<Triple<Principal, Principal, Store>, ConfPolicy>> readerPolicyEntrySet() {
+    return readerPolicies.entrySet();
+  }
+
   void putReaderPolicy(Triple<Principal, Principal, Store> triple,
       ConfPolicy policy) {
     readerPolicies.put(triple, policy);
@@ -449,6 +460,10 @@ public final class SecurityCache extends AbstractSecurityCache {
 
   IntegPolicy getWriterPolicy(Triple<Principal, Principal, Store> triple) {
     return writerPolicies.get(triple);
+  }
+
+  Set<Entry<Triple<Principal, Principal, Store>, IntegPolicy>> writerPolicyEntrySet() {
+    return writerPolicies.entrySet();
   }
 
   void putWriterPolicy(Triple<Principal, Principal, Store> triple,
@@ -459,6 +474,10 @@ public final class SecurityCache extends AbstractSecurityCache {
   Pair<Policy, Set<DelegationPair>> getPolicyJoin(
       Triple<Policy, Policy, Store> triple) {
     return policyJoins.get(triple);
+  }
+
+  Set<Entry<Triple<Policy, Policy, Store>, Pair<Policy, Set<DelegationPair>>>> policyJoinEntrySet() {
+    return policyJoins.entrySet();
   }
 
   void putPolicyJoin(Triple<Policy, Policy, Store> triple, Policy policy,
@@ -496,6 +515,10 @@ public final class SecurityCache extends AbstractSecurityCache {
     return policyMeets.get(triple);
   }
 
+  Set<Entry<Triple<Policy, Policy, Store>, Pair<Policy, Set<DelegationPair>>>> policyMeetEntrySet() {
+    return policyMeets.entrySet();
+  }
+
   void putPolicyMeet(Triple<Policy, Policy, Store> triple, Policy policy,
       Set<DelegationPair> deps) {
     policyMeets
@@ -530,17 +553,26 @@ public final class SecurityCache extends AbstractSecurityCache {
     return toLabelCache.get(triple);
   }
 
+  Set<Entry<Triple<ConfPolicy, IntegPolicy, Store>, Label>> labelEntrySet() {
+    return toLabelCache.entrySet();
+  }
+
   void putLabel(Triple<ConfPolicy, IntegPolicy, Store> triple, Label label) {
     toLabelCache.put(triple, label);
   }
 
   Label getLabelJoin(Triple<Label, Label, Store> triple) {
-    return labelJoins.get(triple);
+    Pair<Label, ?> value = labelJoins.get(triple);
+    return value == null ? null : value.first;
+  }
+
+  Set<Entry<Triple<Label, Label, Store>, Pair<Label, Set<DelegationPair>>>> labelJoinEntrySet() {
+    return labelJoins.entrySet();
   }
 
   void putLabelJoin(Triple<Label, Label, Store> triple, Label label,
       Set<DelegationPair> deps) {
-    labelJoins.put(triple, label);
+    labelJoins.put(triple, new Pair<Label, Set<DelegationPair>>(label, deps));
 
     // Record that this join depends on the given set of dependencies.
     for (DelegationPair del : deps) {
@@ -557,12 +589,17 @@ public final class SecurityCache extends AbstractSecurityCache {
   }
 
   Label getLabelMeet(Triple<Label, Label, Store> triple) {
-    return labelMeets.get(triple);
+    Pair<Label, ?> value = labelMeets.get(triple);
+    return value == null ? null : value.first;
+  }
+
+  Set<Entry<Triple<Label, Label, Store>, Pair<Label, Set<DelegationPair>>>> labelMeetEntrySet() {
+    return labelMeets.entrySet();
   }
 
   void putLabelMeet(Triple<Label, Label, Store> triple, Label label,
       Set<DelegationPair> deps) {
-    labelMeets.put(triple, label);
+    labelMeets.put(triple, new Pair<Label, Set<DelegationPair>>(label, deps));
 
     // Record that this meet depends on the given set of dependencies.
     for (DelegationPair del : deps) {
