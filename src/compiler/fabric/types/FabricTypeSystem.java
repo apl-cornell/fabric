@@ -52,10 +52,20 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
 
   IntegPolicy representableIntegProjection(Label L);
 
+
+  /**
+   * Returns true if type extends fabric.lang.Object
+   */
+  boolean isPersistent(Type type);
+
+  /**
+   * Returns true if type does not extend fabric.lang.Object
+   */
+  public boolean isTransient(Type type);
+
   /**
    * Checks whether <code>type</code> is a Fabric class, that is, inherits
    * <code>fabric.lang.Object</code>.
-   * Returns false if <code>type</code> is an interface.
    * Returns false if <code>type</code> is an interface.
    */
   boolean isFabricClass(Type type);

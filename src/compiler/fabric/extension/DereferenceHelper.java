@@ -70,6 +70,13 @@ public class DereferenceHelper {
     // if the ref is a null literal, then the access label check is not required
     if (ref instanceof NullLit) return;
 
+    // Dereferencing a reference with a transient type does not result in a fetch unless
+    // 1) it is java.lang.Object (could refer to a fabric.lang.Object)
+    // 2) it is an Interface (could be implemented by a fabric.lang.Object)
+    if (ts.isTransient(ref.type()) && !ref.type().equals(ts.Object())
+        && !(ref.type().isClass() && ref.type().toClass().flags().isInterface()))
+      return;
+
     // check that the pc and ref label can flow to the access label
     JifContext A = lc.context();
     Label objLabel = Jif_c.getPathMap(ref).NV();

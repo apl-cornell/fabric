@@ -464,6 +464,7 @@ FabricTypeSystem {
           "RemoteWorker access paths not yet supported");
     } else if (e instanceof fabric.ast.Store) {
       fabric.ast.Store st = (fabric.ast.Store) e;
+
       return new AccessPathStore(exprToAccessPath(st.expr(), context), Store(),
           st.position());
     }
@@ -614,9 +615,49 @@ FabricTypeSystem {
     return super.integProjection(L);
   }
 
+  /**
+   * Returns true if the type has runtime methods for cast and instanceof
+   */
   @Override
-  //XXX: What is the relation between this implementation and
-  // isJifClass? Are signatures for Java classes FabricClasses?
+  public boolean needsDynamicTypeMethods(Type ct) {
+    return isParamsRuntimeRep(ct) || isPersistent(ct) || isFabricInterface(ct);
+  }
+
+  /**
+   * Returns true if the type uses an external class to define its is dynamic type methods
+   */
+  @Override
+  public boolean needsImplClass(Type ct) {
+    return isFabricInterface(ct); // fct is an interface
+  }
+
+  /**
+   * Returns true if type extends fabric.lang.Object
+   */
+  @Override
+  public boolean isPersistent(Type type) {
+    if (type instanceof ClassType) {
+      ClassType ct = (ClassType) type;
+
+      while (ct != null) {
+        if (typeEquals(ct, FObject())) {
+          return true;
+        }
+        ct = (ClassType) ct.superType();
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Returns true if type does not extend fabric.lang.Object
+   */
+  @Override
+  public boolean isTransient(Type type) {
+    return !isPersistent(type);
+  }
+
+  @Override
   public boolean isFabricClass(Type type) {
     if (type instanceof ClassType) {
       ClassType ct = (ClassType) type;

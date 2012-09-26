@@ -64,6 +64,12 @@ public class Store_c extends Expr_c implements Store {
   }
 
   @Override
+  public boolean isTypeChecked() {
+    // TODO Auto-generated method stub
+    return expr.isTypeChecked();
+  }
+
+  @Override
   public boolean isDisambiguated() {
     return expr.isDisambiguated();
   }
@@ -76,8 +82,8 @@ public class Store_c extends Expr_c implements Store {
     Type t = expr.type();
     if (!t.isReference())
       throw new SemanticException("Cannot get store of non reference type.");
-
     FabricTypeSystem ts = (FabricTypeSystem) tc.typeSystem();
+
     return type(ts.Store());
   }
 

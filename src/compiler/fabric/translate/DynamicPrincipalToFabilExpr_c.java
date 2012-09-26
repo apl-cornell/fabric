@@ -44,6 +44,10 @@ public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c 
         }
       } else if (dp.path() instanceof AccessPathStore) {
         AccessPathStore store = (AccessPathStore) dp.path();
+        if (ts.isTransient(store.path().type())) {
+          return frw.qq().parseExpr("Worker.getWorker().getPrincipal()");
+        }
+
         Expr e = accessPathToExpr(frw, store.path());
         return frw.qq().parseExpr("%E.$getStore().getPrincipal()", e);
       }

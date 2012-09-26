@@ -69,9 +69,9 @@
       <arg value="-addsigcp"      /> <arg pathref="sif.sigcp"/>
       <arg value="-e"/>
       <arg value="-trusted-providers"/>
-        <arg value="-debugpositions"/>
-        <arg value="-rdebug"/>
       <!--
+        <arg value="-rdebug"/>
+        <arg value="-debugpositions"/>
       <arg value="-rdebug" />
         <arg value="-report" /> <arg value="frontend=1"/>
         <arg value="-report" /> <arg value="solver=5" />

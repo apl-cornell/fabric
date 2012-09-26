@@ -20,17 +20,16 @@ import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
 
 public class InstanceOfToFabilExt_c extends InstanceOfToJavaExt_c {
-  
+
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     Instanceof io = (Instanceof)this.node();
-    FabricTypeSystem ts = (FabricTypeSystem)rw.jif_ts();
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
-
-    if (!ts.isJifClass(compareType)) {
+    FabricTypeSystem ts = (FabricTypeSystem) ffrw.typeSystem();
+    if (!ts.needsDynamicTypeMethods(compareType)) {
       return rw.java_nf().Instanceof(io.position(), io.expr(), io.compareType());
     }
-    
+
     List<Expr> args = new ArrayList<Expr>();
     if (((JifInstanceOfDel) io.del()).isToSubstJifClass()) {
       // add all the actual param expressions to args
@@ -38,24 +37,20 @@ public class InstanceOfToFabilExt_c extends InstanceOfToJavaExt_c {
       JifSubst subst = (JifSubst)t.subst();
       JifPolyType base = (JifPolyType)t.base();
       for (ParamInstance pi : base.params()) {
-          args.add(ffrw.paramToJava(subst.get(pi)));
+        args.add(ffrw.paramToJava(subst.get(pi)));
       }
     }
     // add the actual expression being cast.
     args.add(io.expr());
-    
+
     // add the access label
     FabricClassType fct = (FabricClassType) compareType;
-//    ConfPolicy cp = fct.accessPolicy();
-//    Label accessLabel =
-//        ts.pairLabel(cp.position(), cp, ts.topIntegPolicy(cp.position()));
-//    Expr accessLabelExpr = ffrw.labelToJava(accessLabel);
-//    args.add(accessLabelExpr);
-      
+
     String jifImplClass = fct.fullName();
     if (fct.flags().isInterface()) {
-        jifImplClass = ClassDeclToJavaExt_c.interfaceClassImplName(jifImplClass);
+      jifImplClass = ClassDeclToJavaExt_c.interfaceClassImplName(jifImplClass);
     }
     return ffrw.qq().parseExpr(jifImplClass + "." + ClassDeclToJavaExt_c.INSTANCEOF_METHOD_NAME + "(%LE)", (Object)args);
   }
+
 }
