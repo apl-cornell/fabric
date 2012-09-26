@@ -20,11 +20,11 @@ public class LabelCache {
     extends
     SoftReference<P> {
       final Cache<K1, K2, P> cache;
-      final K1._Proxy key1;
-      final K2._Proxy key2;
+      final Object._Proxy key1;
+      final Object._Proxy key2;
 
-      private EntrySoftRef(Cache<K1, K2, P> cache, K1._Proxy key1,
-          K2._Proxy key2, P value) {
+      private EntrySoftRef(Cache<K1, K2, P> cache, Object._Proxy key1,
+          Object._Proxy key2, P value) {
         super(value);
         this.cache = cache;
         this.key1 = key1;
