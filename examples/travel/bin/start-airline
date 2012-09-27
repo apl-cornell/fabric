@@ -12,5 +12,5 @@ CP="${CP}:${FABRIC}/lib/fabric-sif.jar"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab-store -classpath "${CP}" --name airline "$@"
+fab-store --jvm-cp "${CP}" --app-home "${FABRIC_HOME}" --name airline "$@"
 
