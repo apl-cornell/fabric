@@ -266,7 +266,9 @@ public final class Log {
 
     if (parent != null) {
       for (ReadMapEntry entry : readsReadByParent) {
-        result.put(entry.obj.onum, entry.versionNumber);
+        if (store.equals(entry.obj.store)) {
+          result.put(entry.obj.onum, entry.versionNumber);
+        }
       }
     }
 
