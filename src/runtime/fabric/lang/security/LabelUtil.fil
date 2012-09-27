@@ -865,53 +865,6 @@ public final class LabelUtil {
     // XXX for the moment, just clear out the caches.
     cache.clearFalseLabelRelabels();
     cache.clearFalsePolicyRelabels();
-
-    // the label meets and joins can be soundly left, they just
-    // may not be as simplified as they could be. However, to maintain
-    // compatability with previous behavior, we will clear the caches
-    cache.clearLabelJoins();
-    cache.clearLabelMeets();
-    cache.clearLabelJoinDependencies();
-    cache.clearLabelMeetDependencies();
-  }
-
-  static void notifyRevokeDelegation(Principal granter, Principal superior) {
-    SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
-    SecurityCache.DelegationPair del =
-      new SecurityCache.DelegationPair(superior, granter);
-    
-    java.util.Set/* <Pair> */deps =
-      (java.util.Set) cache.removeTrueLabelRelabelsDependencies(del);
-    if (deps != null) {
-      for (java.util.Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-        Pair afp = (Pair) iter.next();
-        cache.removeTrueLabelRelabel(afp);
-      }
-    }
-    
-    deps = (java.util.Set) cache.removeTruePolicyRelabelsDependencies(del);
-    if (deps != null) {
-      for (java.util.Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-        Pair afp = (Pair) iter.next();
-        cache.removeTruePolicyRelabel(afp);
-      }
-    }
-    
-    deps = (java.util.Set) cache.removeLabelJoinDependencies(del);
-    if (deps != null) {
-      for (java.util.Iterator/* <Triple> */iter = deps.iterator(); iter.hasNext();) {
-        Triple afp = (Triple) iter.next();
-        cache.removeLabelJoin(afp);
-      }
-    }
-    
-    deps = (java.util.Set) cache.removeLabelMeetDependencies(del);
-    if (deps != null) {
-      for (java.util.Iterator/* <Triple> */iter = deps.iterator(); iter.hasNext();) {
-        Triple afp = (Triple) iter.next();
-        cache.removeLabelMeet(afp);
-      }
-    }
   }
 
   /**

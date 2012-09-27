@@ -18,6 +18,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
+import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -174,7 +175,9 @@ public final class Log {
     } else {
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
-      this.securityCache = new SecurityCache(null);
+
+      LabelCache labelCache = Worker.getWorker().labelCache;
+      this.securityCache = new SecurityCache(labelCache);
 
       // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
@@ -588,6 +591,9 @@ public final class Log {
       obj.$readMapEntry.versionNumber = 1;
       obj.$isOwned = false;
     }
+
+    // Merge the security cache into the top-level label cache.
+    securityCache.mergeWithTopLevel();
   }
 
   /**

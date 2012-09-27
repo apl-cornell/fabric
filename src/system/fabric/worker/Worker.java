@@ -120,7 +120,7 @@ public final class Worker {
   protected final FetchManager fetchManager;
 
   /** The global label cache. */
-  protected final LabelCache labelCache;
+  public final LabelCache labelCache;
 
   protected final NodePrincipal principal;
 

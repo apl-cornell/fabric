@@ -1,5 +1,6 @@
 package fabric.lang.security;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -21,6 +22,7 @@ import fabric.worker.transaction.AbstractSecurityCache;
  */
 public final class SecurityCache extends AbstractSecurityCache {
   private final SecurityCache parent;
+  private final LabelCache topLevelCache;
 
   // ///////////////////////////////////////////////////////////////////////////
   // Acts-for caches
@@ -48,7 +50,7 @@ public final class SecurityCache extends AbstractSecurityCache {
   // ///////////////////////////////////////////////////////////////////////////
 
   /**
-   * Cache for positive label relabelling relationships. If (L1,L2) is in this
+   * Cache for positive label-relabelling relationships. If (L1,L2) is in this
    * set, then L1 relabels to L2.
    */
   private Set<Pair<Label, Label>> trueLabelRelabels;
@@ -167,13 +169,22 @@ public final class SecurityCache extends AbstractSecurityCache {
    */
   private Map<DelegationPair, Set<Triple<Label, Label, Store>>> labelMeetDependencies;
 
+  public SecurityCache(LabelCache topLevelCache) {
+    this(topLevelCache, null);
+  }
+
   public SecurityCache(SecurityCache parent) {
+    this(parent.topLevelCache, parent);
+    copyStateFromParent();
+  }
+
+  private SecurityCache(LabelCache topLevelCache, SecurityCache parent) {
     this.parent = parent;
+    this.topLevelCache = topLevelCache;
 
     this.actsFor = new HashMap<ActsForPair, ActsForProof>();
     this.notActsFor = new HashSet<ActsForPair>();
-    this.actsForDependencies =
-        new HashMap<DelegationPair, Set<ActsForPair>>();
+    this.actsForDependencies = new HashMap<DelegationPair, Set<ActsForPair>>();
 
     this.trueLabelRelabels = new HashSet<Pair<Label, Label>>();
     this.falseLabelRelabels = new HashSet<Pair<Label, Label>>();
@@ -207,8 +218,6 @@ public final class SecurityCache extends AbstractSecurityCache {
         new HashMap<SecurityCache.DelegationPair, Set<Triple<Label, Label, Store>>>();
     this.labelMeetDependencies =
         new HashMap<SecurityCache.DelegationPair, Set<Triple<Label, Label, Store>>>();
-
-    copyStateFromParent();
   }
 
   @Override
@@ -236,36 +245,34 @@ public final class SecurityCache extends AbstractSecurityCache {
     labelJoinDependencies.clear();
     labelMeetDependencies.clear();
 
-    copyStateFromParent();
+    if (parent != null) copyStateFromParent();
   }
 
   private void copyStateFromParent() {
-    if (parent != null) {
-      actsFor.putAll(parent.actsFor);
-      notActsFor.addAll(parent.notActsFor);
-      copyMapSet(parent.actsForDependencies, actsForDependencies);
+    actsFor.putAll(parent.actsFor);
+    notActsFor.addAll(parent.notActsFor);
+    copyMapSet(parent.actsForDependencies, actsForDependencies);
 
-      trueLabelRelabels.addAll(parent.trueLabelRelabels);
-      falseLabelRelabels.addAll(parent.falseLabelRelabels);
-      copyMapSet(parent.trueLabelRelabelsDependencies,
-          trueLabelRelabelsDependencies);
-      copyMapSet(parent.truePolicyRelabels, truePolicyRelabels);
-      falsePolicyRelabels.addAll(parent.falsePolicyRelabels);
-      copyMapSet(parent.truePolicyRelabelsDependencies,
-          truePolicyRelabelsDependencies);
+    trueLabelRelabels.addAll(parent.trueLabelRelabels);
+    falseLabelRelabels.addAll(parent.falseLabelRelabels);
+    copyMapSet(parent.trueLabelRelabelsDependencies,
+        trueLabelRelabelsDependencies);
+    copyMapSet(parent.truePolicyRelabels, truePolicyRelabels);
+    falsePolicyRelabels.addAll(parent.falsePolicyRelabels);
+    copyMapSet(parent.truePolicyRelabelsDependencies,
+        truePolicyRelabelsDependencies);
 
-      readerPolicies.putAll(parent.readerPolicies);
-      writerPolicies.putAll(parent.writerPolicies);
-      policyJoins.putAll(parent.policyJoins);
-      copyMapSet(parent.policyJoinDependencies, policyJoinDependencies);
-      policyMeets.putAll(parent.policyMeets);
-      copyMapSet(parent.policyMeetDependencies, policyMeetDependencies);
-      toLabelCache.putAll(parent.toLabelCache);
-      labelJoins.putAll(parent.labelJoins);
-      copyMapSet(parent.labelJoinDependencies, labelJoinDependencies);
-      labelMeets.putAll(parent.labelMeets);
-      copyMapSet(parent.labelMeetDependencies, labelMeetDependencies);
-    }
+    readerPolicies.putAll(parent.readerPolicies);
+    writerPolicies.putAll(parent.writerPolicies);
+    policyJoins.putAll(parent.policyJoins);
+    copyMapSet(parent.policyJoinDependencies, policyJoinDependencies);
+    policyMeets.putAll(parent.policyMeets);
+    copyMapSet(parent.policyMeetDependencies, policyMeetDependencies);
+    toLabelCache.putAll(parent.toLabelCache);
+    labelJoins.putAll(parent.labelJoins);
+    copyMapSet(parent.labelJoinDependencies, labelJoinDependencies);
+    labelMeets.putAll(parent.labelMeets);
+    copyMapSet(parent.labelMeetDependencies, labelMeetDependencies);
   }
 
   private <T, U> void copyMapSet(Map<T, Set<U>> src, Map<T, Set<U>> dst) {
@@ -300,6 +307,87 @@ public final class SecurityCache extends AbstractSecurityCache {
     labelMeetDependencies = cache.labelMeetDependencies;
   }
 
+  protected void mergeWithTopLevel() {
+    // Sanity check: make sure we don't have a parent -- only top-level security
+    // caches for top-level transactions should be merged with the top-level
+    // cache.
+    if (parent != null) throw new InternalError();
+
+    topLevelCache.addAll(this);
+  }
+
+  void notifyRevokedDelegation(DelegationPair del) {
+    {
+      // Remove all positive acts-for relationships that depend on the
+      // delegation.
+      Set<ActsForPair> deps = actsForDependencies.remove(del);
+      if (deps != null) {
+        for (ActsForPair pair : deps) {
+          actsFor.remove(pair);
+        }
+      }
+    }
+    {
+      // Remove all positive label-relabelling relationships that depend on the
+      // given delegation.
+      Set<Pair<Label, Label>> deps = trueLabelRelabelsDependencies.remove(del);
+      if (deps != null) {
+        for (Pair<Label, Label> pair : deps) {
+          trueLabelRelabels.remove(pair);
+        }
+      }
+    }
+    {
+      // Remove all positive policy-relabelling relationships that depend on the
+      // give delegation.
+      Set<Pair<Policy, Policy>> deps =
+          truePolicyRelabelsDependencies.remove(del);
+      if (deps != null) {
+        for (Pair<Policy, Policy> pair : deps) {
+          truePolicyRelabels.remove(pair);
+        }
+      }
+    }
+    {
+      // Remove all cached policy joins that depend on the given delegation.
+      Set<Triple<Policy, Policy, Store>> deps =
+          policyJoinDependencies.remove(del);
+      if (deps != null) {
+        for (Triple<Policy, Policy, Store> triple : deps) {
+          policyJoins.remove(triple);
+        }
+      }
+    }
+    {
+      // Remove all cached policy meets that depend on the given delegation.
+      Set<Triple<Policy, Policy, Store>> deps =
+          policyMeetDependencies.remove(del);
+      if (deps != null) {
+        for (Triple<Policy, Policy, Store> triple : deps) {
+          policyMeets.remove(triple);
+        }
+      }
+    }
+    {
+      // Remove all cached label joins that depend on the given delegation.
+      Set<Triple<Label, Label, Store>> deps = labelJoinDependencies.remove(del);
+      if (deps != null) {
+        for (Triple<Label, Label, Store> triple : deps) {
+          labelJoins.remove(triple);
+        }
+      }
+    }
+    {
+      // Remove all cached label meets that depend on the given delegation.
+      Set<Triple<Label, Label, Store>> deps = labelMeetDependencies.remove(del);
+      if (deps != null) {
+        for (Triple<Label, Label, Store> triple : deps) {
+          labelMeets.remove(triple);
+        }
+      }
+    }
+  }
+
   // ///////////////////////////////////////////////////////////////////////////
   // Acts-for cache operations
   // ///////////////////////////////////////////////////////////////////////////
@@ -314,10 +402,6 @@ public final class SecurityCache extends AbstractSecurityCache {
 
   void putActsFor(ActsForPair pair, ActsForProof proof) {
     actsFor.put(pair, proof);
-  }
-
-  void removeActsFor(ActsForPair pair) {
-    actsFor.remove(pair);
   }
 
   boolean containsNotActsFor(ActsForPair pair) {
@@ -345,10 +429,6 @@ public final class SecurityCache extends AbstractSecurityCache {
     return actsForDependencies.get(pair);
   }
 
-  Set<ActsForPair> removeActsForDependencies(DelegationPair pair) {
-    return actsForDependencies.remove(pair);
-  }
-
   // ///////////////////////////////////////////////////////////////////////////
   // Label cache operations
   // ///////////////////////////////////////////////////////////////////////////
@@ -364,10 +444,6 @@ public final class SecurityCache extends AbstractSecurityCache {
     for (DelegationPair del : deps) {
       addTrueLabelRelabelsDependency(del, pair);
     }
-  }
-
-  void removeTrueLabelRelabel(Pair<Label, Label> pair) {
-    trueLabelRelabels.remove(pair);
   }
 
   boolean containsFalseLabelRelabel(Pair<Label, Label> pair) {
@@ -392,11 +468,6 @@ public final class SecurityCache extends AbstractSecurityCache {
     set.add(pair);
   }
 
-  Set<Pair<Label, Label>> removeTrueLabelRelabelsDependencies(
-      DelegationPair pair) {
-    return trueLabelRelabelsDependencies.remove(pair);
-  }
-
   boolean containsTruePolicyRelabel(Pair<Policy, Policy> pair) {
     return truePolicyRelabels.containsKey(pair);
   }
@@ -412,10 +483,6 @@ public final class SecurityCache extends AbstractSecurityCache {
     for (DelegationPair del : deps) {
       addTruePolicyRelabelsDependency(del, pair);
     }
-  }
-
-  void removeTruePolicyRelabel(Pair<Policy, Policy> pair) {
-    truePolicyRelabels.remove(pair);
   }
 
   boolean containsFalsePolicyRelabel(Pair<Policy, Policy> pair) {
@@ -440,46 +507,90 @@ public final class SecurityCache extends AbstractSecurityCache {
     set.add(pair);
   }
 
-  Set<Pair<Policy, Policy>> removeTruePolicyRelabelsDependencies(
-      DelegationPair pair) {
-    return truePolicyRelabelsDependencies.remove(pair);
-  }
-
+  /**
+   * Given a triple (P1, P2, S), returns a cached object on store S that
+   * represents the confidentiality policy P1→P2. Null is returned if no such
+   * object is cached. The top-level cache is checked first before falling back
+   * on the transaction-local cache.
+   */
   ConfPolicy getReaderPolicy(Triple<Principal, Principal, Store> triple) {
-    return readerPolicies.get(triple);
+    ConfPolicy result = topLevelCache.getReaderPolicy(triple);
+    if (result == null) result = readerPolicies.get(triple);
+    return result;
   }
 
+  /**
+   * Returns the reader-policy entry set for the transaction-local cache. In
+   * each ((P1, P2, S), C) entry, C is an object on store S representing the
+   * confidentiality policy P1→P2.
+   */
   Set<Entry<Triple<Principal, Principal, Store>, ConfPolicy>> readerPolicyEntrySet() {
     return readerPolicies.entrySet();
   }
 
+  /**
+   * Adds a reader policy to the transaction-local cache.
+   */
   void putReaderPolicy(Triple<Principal, Principal, Store> triple,
       ConfPolicy policy) {
     readerPolicies.put(triple, policy);
   }
 
+  /**
+   * Given a triple (P1, P2, S), returns a cached object on store S that
+   * represents the integrity policy P1←P2. Null is returned if no such object
+   * is cached. The top-level cache is checked first before falling back on the
+   * transaction-local cache.
+   */
   IntegPolicy getWriterPolicy(Triple<Principal, Principal, Store> triple) {
-    return writerPolicies.get(triple);
+    IntegPolicy result = topLevelCache.getWriterPolicy(triple);
+    if (result == null) result = writerPolicies.get(triple);
+    return result;
   }
 
+  /**
+   * Returns the writer-policy entry set for the transaction-local cache. In
+   * each ((P1, P2, S), I) entry, I is an object on store S representing the
+   * integrity policy P1←P2.
+   */
   Set<Entry<Triple<Principal, Principal, Store>, IntegPolicy>> writerPolicyEntrySet() {
     return writerPolicies.entrySet();
   }
 
+  /**
+   * Adds a writer policy to the transaction-local cache.
+   */
   void putWriterPolicy(Triple<Principal, Principal, Store> triple,
       IntegPolicy policy) {
     writerPolicies.put(triple, policy);
   }
 
+  /**
+   * Given a triple (P1, P2, S), returns a cached object on store S that
+   * represents the policy P1 ⊔ P2. Null is returned if no such object is
+   * cached. The top-level cache is checked first before falling back on the
+   * transaction-local cache.
+   */
   Pair<Policy, Set<DelegationPair>> getPolicyJoin(
       Triple<Policy, Policy, Store> triple) {
-    return policyJoins.get(triple);
+    Policy result = topLevelCache.getPolicyJoin(triple);
+    if (result == null) return policyJoins.get(triple);
+    return new Pair<Policy, Set<DelegationPair>>(result,
+        Collections.<DelegationPair> emptySet());
   }
 
+  /**
+   * Returns the policy-join entry set for the transaction-local cache. In each
+   * ((P1, P2, S), (P3, D)) entry, P3 is an object on store S representing the
+   * policy P1 ⊔ P2, and was constructed using the delegations in D.
+   */
   Set<Entry<Triple<Policy, Policy, Store>, Pair<Policy, Set<DelegationPair>>>> policyJoinEntrySet() {
     return policyJoins.entrySet();
   }
 
+  /**
+   * Adds a policy join to the transaction-local cache.
+   */
   void putPolicyJoin(Triple<Policy, Policy, Store> triple, Policy policy,
       Set<DelegationPair> deps) {
     policyJoins
@@ -491,6 +602,10 @@ public final class SecurityCache extends AbstractSecurityCache {
     }
   }
 
+  /**
+   * Records that the the policy-join entry corresponding to the given triple
+   * depends on the given delegation.
+   */
   private void addPolicyJoinDependency(DelegationPair del,
       Triple<Policy, Policy, Store> triple) {
     Set<Triple<Policy, Policy, Store>> set = policyJoinDependencies.get(del);
@@ -499,15 +614,6 @@ public final class SecurityCache extends AbstractSecurityCache {
       policyJoinDependencies.put(del, set);
     }
     set.add(triple);
-  }
-
-  void clearPolicyJoinDependencies() {
-    policyJoinDependencies.clear();
-  }
-
-  Set<Triple<Policy, Policy, Store>> removePolicyJoinDependencies(
-      DelegationPair pair) {
-    return policyJoinDependencies.remove(pair);
   }
 
   Pair<Policy, Set<DelegationPair>> getPolicyMeet(
@@ -538,15 +644,6 @@ public final class SecurityCache extends AbstractSecurityCache {
       policyMeetDependencies.put(del, set);
     }
     set.add(triple);
-  }
-
-  void clearPolicyMeetDependencies() {
-    policyMeetDependencies.clear();
-  }
-
-  Set<Triple<Policy, Policy, Store>> removePolicyMeetDependencies(
-      DelegationPair pair) {
-    return policyMeetDependencies.remove(pair);
   }
 
   Label getLabel(Triple<ConfPolicy, IntegPolicy, Store> triple) {
@@ -580,14 +677,6 @@ public final class SecurityCache extends AbstractSecurityCache {
     }
   }
 
-  void clearLabelJoins() {
-    labelJoins.clear();
-  }
-
-  void removeLabelJoin(Triple<Label, Label, Store> triple) {
-    labelJoins.remove(triple);
-  }
-
   Label getLabelMeet(Triple<Label, Label, Store> triple) {
     Pair<Label, ?> value = labelMeets.get(triple);
     return value == null ? null : value.first;
@@ -607,14 +696,6 @@ public final class SecurityCache extends AbstractSecurityCache {
     }
   }
 
-  void clearLabelMeets() {
-    labelMeets.clear();
-  }
-
-  void removeLabelMeet(Triple<Label, Label, Store> triple) {
-    labelMeets.remove(triple);
-  }
-
   private void addLabelJoinDependency(DelegationPair del,
       Triple<Label, Label, Store> triple) {
     Set<Triple<Label, Label, Store>> set = labelJoinDependencies.get(del);
@@ -625,15 +706,6 @@ public final class SecurityCache extends AbstractSecurityCache {
     set.add(triple);
   }
 
-  void clearLabelJoinDependencies() {
-    labelJoinDependencies.clear();
-  }
-
-  Set<Triple<Label, Label, Store>> removeLabelJoinDependencies(
-      DelegationPair pair) {
-    return labelJoinDependencies.remove(pair);
-  }
-
   void addLabelMeetDependency(DelegationPair del,
       Triple<Label, Label, Store> triple) {
     Set<Triple<Label, Label, Store>> set = labelMeetDependencies.get(del);
@@ -642,15 +714,6 @@ public final class SecurityCache extends AbstractSecurityCache {
       labelMeetDependencies.put(del, set);
     }
     set.add(triple);
-  }
-
-  void clearLabelMeetDependencies() {
-    labelMeetDependencies.clear();
-  }
-
-  Set<Triple<Label, Label, Store>> removeLabelMeetDependencies(
-      DelegationPair pair) {
-    return labelMeetDependencies.remove(pair);
   }
 
   static <T extends fabric.lang.Object, U> Triple<T, T, U> canonicalize(T x,
