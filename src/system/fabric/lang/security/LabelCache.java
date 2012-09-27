@@ -100,15 +100,14 @@ public class LabelCache {
 
     @Override
     public int hashCode() {
-      int result = (int) key1onum ^ (int) key2onum ^ store.hashCode();
+      return hashCode(key1store, key1onum) ^ hashCode(key2store, key2onum)
+          ^ store.hashCode();
+    }
 
-      if (!ONumConstants.isGlobalConstant(key1onum))
-        result ^= key1store.hashCode();
-
-      if (!ONumConstants.isGlobalConstant(key2onum))
-        result ^= key2store.hashCode();
-
-      return result;
+    private static int hashCode(Store store, long onum) {
+      if (store == null) return 0;
+      if (ONumConstants.isGlobalConstant(onum)) return (int) onum;
+      return store.hashCode() ^ (int) onum;
     }
 
     @Override
