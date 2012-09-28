@@ -113,7 +113,13 @@ public class Create {
             AbstractPrincipal bank     = BankPrincipal.getInstance();
             AbstractPrincipal customer = CustomerPrincipal.getInstance();
             AbstractPrincipal airline  = AirlinePrincipal.getInstance();
-            Broker            broker   = new Broker@brokerStore(bank,customer);
+
+            Account  airlineAccount = new Account@bankStore(bank).travel$Account$(airline);
+            Account customerAccount = new Account@bankStore(bank).travel$Account$(customer);
+
+            Tickets tickets = new Tickets@airlineStore(bank,airline,customer).travel$Tickets$();
+            
+            Broker            broker   = new Broker@brokerStore(bank,customer).travel$Broker$(customerAccount, airlineAccount, tickets, airline);
 
             IntegPolicy brokerTrusted  = LabelUtil.writerPolicy(brokerStore,  broker, broker);   // {broker<-}
             IntegPolicy bankTrusted    = LabelUtil.writerPolicy(brokerStore,  bank,   bank);     // {bank<-}
@@ -124,11 +130,6 @@ public class Create {
             Label airlineLabel  = LabelUtil.toLabel(bankStore, airlineSecret,  bankTrusted);
             Label customerLabel = LabelUtil.toLabel(bankStore, customerSecret, bankTrusted);
             Label ticketsLabel  = LabelUtil.toLabel(airlineStore, airlineTrusted);
-
-            Account  airlineAccount = new Account@bankStore(bank).travel$Account$(airline);
-            Account customerAccount = new Account@bankStore(bank).travel$Account$(customer);
-
-            Tickets tickets = new Tickets@airlineStore(bank,airline,customer).travel$Tickets$();
 
             // call broker constructor
             broker = broker.travel$Broker$(customerAccount,airlineAccount,tickets,airline);
