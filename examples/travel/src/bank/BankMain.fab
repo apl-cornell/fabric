@@ -30,11 +30,13 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
         root = (Map) brokerstore.getRoot();
     }
     Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
-    if (root != null) {
-        Object obj = root.get(Config.brokerMapKey);
-        if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
-            brokerInit = (Broker[BankPrincipal, CustomerPrincipal])obj;
-        }
+    atomic {
+      if (root != null) {
+	  Object obj = root.get(Config.brokerMapKey);
+	  if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+	      brokerInit = (Broker[BankPrincipal, CustomerPrincipal])obj;
+	  }
+      }
     }
     broker = brokerInit;
     super();

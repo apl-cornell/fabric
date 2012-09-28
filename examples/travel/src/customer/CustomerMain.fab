@@ -28,16 +28,18 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
     if (brokerstore != null) {
         root = (Map) brokerstore.getRoot();
     }
-    if (root != null) {
-        Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
-        Object obj = root.get(Config.brokerMapKey);
-        if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
-            brokerInit =
-                (Broker[BankPrincipal, CustomerPrincipal])obj;
-    }
-    broker = brokerInit;
-    } else {
-        broker = null;
+    atomic {
+	if (root != null) {
+	    Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
+	    Object obj = root.get(Config.brokerMapKey);
+	    if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+		brokerInit =
+		    (Broker[BankPrincipal, CustomerPrincipal])obj;
+	}
+	broker = brokerInit;
+	} else {
+	    broker = null;
+	}
     }
     
   }
