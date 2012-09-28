@@ -12,6 +12,6 @@ CP="${CP}:${FABRIC}/lib/fabric-sif.jar"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab-http -classpath "${CP}" "$@" \
+fab-http --jvm-cp "${CP}" --app-home "${FABRIC_HOME}" "$@" \
   --name airlineweb ${APP_HOME}/web/airline --port 8082
 
