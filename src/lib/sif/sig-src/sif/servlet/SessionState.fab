@@ -13,8 +13,8 @@ public class SessionState {
     
     public SessionState(Principal{this} sp, String{this} si) {    }
 
-    public final SessionPrincipal{this}@{sessionPrincipal←} sessionPrincipal;
-    public final String{this}@{sessionPrincipal←}           sessionId;
+    public final SessionPrincipal{this}@{sessionPrincipal→} sessionPrincipal;
+    public final String{this}@{sessionPrincipal→}           sessionId;
 
     public native final String{this} getSessionId();
 
