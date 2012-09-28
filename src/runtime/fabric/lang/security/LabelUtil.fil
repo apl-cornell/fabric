@@ -2,6 +2,7 @@ package fabric.lang.security;
 
 import java.util.HashSet;
 
+import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.common.util.Triple;
 import fabric.worker.Worker;
@@ -877,7 +878,8 @@ public final class LabelUtil {
         /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */
         o.fetch().$getStore().getPrincipal());
     if (!relabelsTo(accessLabel, storeLabel))
-      throw new InternalError("Illegal access to " + o.$getStore());
+      throw new InternalError("Illegal access to " + o.$getStore()
+          + ": access label is " + accessLabel.toString());
     else 
       return o;
   }
