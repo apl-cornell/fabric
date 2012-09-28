@@ -7,8 +7,8 @@ import fabric.lang.security.Principal;
 
 public class SessionState {
 
-    public final SessionPrincipal{this}@{sessionPrincipal←} sessionPrincipal;
-    public final String{this}@{sessionPrincipal←} sessionId;
+    public final SessionPrincipal{this}@{sessionPrincipal→} sessionPrincipal;
+    public final String{this}@{sessionPrincipal→} sessionId;
 
     public SessionState(String{this} sessionId_, SessionPrincipal{this} session) {
         this.sessionPrincipal = session;
