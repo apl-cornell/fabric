@@ -11,6 +11,6 @@ public class WorkerToFabilExt_c extends ExprToJavaExt_c {
    */
   @Override
   public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {
-    return rw.qq().parseExpr("worker$");
+    return rw.qq().parseExpr("Worker.getWorker()");
   }
 }

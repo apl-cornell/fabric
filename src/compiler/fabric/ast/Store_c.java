@@ -65,7 +65,6 @@ public class Store_c extends Expr_c implements Store {
 
   @Override
   public boolean isTypeChecked() {
-    // TODO Auto-generated method stub
     return expr.isTypeChecked();
   }
 
