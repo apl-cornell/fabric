@@ -51,11 +51,10 @@ and "userStore").
       $ bin/start-store airlineBStore
       $ bin/start-store userStore
 
-     If you are starting from fresh stores, you will need to initialize the
-     application state by following the next step.  Otherwise, skip to step 3
-     below.
+  2. If you are starting from fresh stores, you will need to initialize the
+     application state.  Otherwise, skip to step 3 below.
 
-  2. Run the 'initialize' script to initialize the stores' state.  This will
+     Run the 'initialize' script to initialize the stores' state.  This will
      initialize the principal hierarchy, publish the example's code to the
      stores, and initialize the application's state.
 
