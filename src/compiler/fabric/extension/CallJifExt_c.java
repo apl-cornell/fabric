@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import jif.ast.JifInstantiator;
 import jif.extension.JifCallExt;
 import jif.translate.ToJavaExt;
 import jif.types.Assertion;
@@ -17,6 +16,7 @@ import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.PathMap;
 import jif.types.PrincipalConstraint;
+import jif.types.label.AccessPath;
 import jif.types.label.ArgLabel;
 import jif.types.label.ConfPolicy;
 import jif.types.label.IntegPolicy;
@@ -105,15 +105,17 @@ public class CallJifExt_c extends JifCallExt {
 
       Label entryLabel = mi.pcBound();
       Label returnLabel = ts.join(mi.returnValueLabel(), mi.returnLabel());
-
+      AccessPath storeap = ts.storeAccessPathFor(target, A);
       entryLabel =
-          JifInstantiator.instantiate(entryLabel, A, target, target.type()
+          StoreInstantiator.instantiate(entryLabel, A, target, target.type()
               .toReference(), targetLabel, formalLabels, formalTypes,
-              actualLabels, c.arguments(), Collections.<Label> emptyList());
+              actualLabels, c.arguments(), Collections.<Label> emptyList(),
+              storeap);
       returnLabel =
-          JifInstantiator.instantiate(returnLabel, A, target, target.type()
+          StoreInstantiator.instantiate(returnLabel, A, target, target.type()
               .toReference(), targetLabel, formalLabels, formalTypes,
-              actualLabels, c.arguments(), Collections.<Label> emptyList());
+              actualLabels, c.arguments(), Collections.<Label> emptyList(),
+              storeap);
 
       Principal remotePrincipal = c.remoteWorkerPrincipal();
 
@@ -127,9 +129,9 @@ public class CallJifExt_c extends JifCallExt {
         ArgLabel fl_ = (ArgLabel) ts.labelOfType(ft);
         Label fl = fl_.upperBound();
         fl =
-            JifInstantiator.instantiate(fl, A, target, target.type()
+            StoreInstantiator.instantiate(fl, A, target, target.type()
                 .toReference(), targetLabel, formalLabels, formalTypes,
-                actualLabels, c.arguments(), Collections.EMPTY_LIST);
+                actualLabels, c.arguments(), Collections.EMPTY_LIST, storeap);
 
         ConfPolicy cp = ts.confProjection(fl);
         IntegPolicy ip = ts.integProjection(fl);
@@ -182,15 +184,15 @@ public class CallJifExt_c extends JifCallExt {
       lc.constrain(
           new NamedLabel("{C(m), *<-c}", ts.pairLabel(Position
               .compilerGenerated(), entryConfPolicy, ts.writerPolicy(
-              Position.compilerGenerated(),
-              ts.topPrincipal(Position.compilerGenerated()), remotePrincipal))),
-          LabelConstraint.LEQ,
-          new NamedLabel("[*->c, I(rv)]", ts.pairLabel(Position
-              .compilerGenerated(), ts.readerPolicy(
-              Position.compilerGenerated(),
-              ts.topPrincipal(Position.compilerGenerated()), remotePrincipal),
-              ts.integProjection(returnLabel))), A.labelEnv(), c.position(),
-          new ConstraintMessage() {
+                  Position.compilerGenerated(),
+                  ts.topPrincipal(Position.compilerGenerated()), remotePrincipal))),
+                  LabelConstraint.LEQ,
+                  new NamedLabel("[*->c, I(rv)]", ts.pairLabel(Position
+                      .compilerGenerated(), ts.readerPolicy(
+                          Position.compilerGenerated(),
+                          ts.topPrincipal(Position.compilerGenerated()), remotePrincipal),
+                          ts.integProjection(returnLabel))), A.labelEnv(), c.position(),
+                          new ConstraintMessage() {
             @Override
             public String msg() {
               return "Insecure remote method call: Either the callee worker is not allowed to read"
@@ -217,21 +219,21 @@ public class CallJifExt_c extends JifCallExt {
           for (Principal p : cc.principals()) {
             lc.constrain(remotePrincipal, PrincipalConstraint.ACTSFOR, p,
                 A.labelEnv(), c.position(), new ConstraintMessage() {
-                  @Override
-                  public String msg() {
-                    return "The principal of the remote worker must act for every principal in the caller constraint.";
-                  }
+              @Override
+              public String msg() {
+                return "The principal of the remote worker must act for every principal in the caller constraint.";
+              }
 
-                  @Override
-                  public String detailMsg() {
-                    return "The principal of the remote worker must act for every principal in the caller constraint.";
-                  }
+              @Override
+              public String detailMsg() {
+                return "The principal of the remote worker must act for every principal in the caller constraint.";
+              }
 
-                  @Override
-                  public String technicalMsg() {
-                    return "c acts for p in obj.m@c(...) with the constraint caller(p)";
-                  }
-                });
+              @Override
+              public String technicalMsg() {
+                return "c acts for p in obj.m@c(...) with the constraint caller(p)";
+              }
+            });
           }
         }
       }

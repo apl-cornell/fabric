@@ -79,8 +79,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     List<Formal> formals = produceFormals(jpt, frw);
     String name = jpt.name();
 
-    // Replace "this" principal by its store.
-    Expr thisPrincipal = frw.qq().parseExpr("o.$getStore().getPrincipal()");
+    // Replace "this" with argument to instanceof.
+    Expr thisPrincipal = frw.qq().parseExpr("o");
     frw.setStaticThisExpr(thisPrincipal);
 
     boolean sigMode = frw.inSignatureMode();

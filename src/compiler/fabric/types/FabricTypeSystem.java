@@ -1,12 +1,15 @@
 package fabric.types;
 
 import jif.types.Assertion;
+import jif.types.JifContext;
 import jif.types.JifTypeSystem;
 import jif.types.hierarchy.LabelEnv;
+import jif.types.label.AccessPath;
 import jif.types.label.ConfPolicy;
 import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
+import polyglot.ast.Expr;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.ReferenceType;
@@ -147,5 +150,14 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    */
   Principal remoteWorkerPrincipal(RemoteWorkerGetter worker,
       FabricContext context, Position pos) throws SemanticException;
+
+  /**
+   * @param ref
+   * @param context
+   * @return
+   * @throws SemanticException
+   */
+  AccessPath storeAccessPathFor(Expr ref, JifContext context)
+      throws SemanticException;
 
 }

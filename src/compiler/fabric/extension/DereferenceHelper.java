@@ -1,11 +1,11 @@
 package fabric.extension;
 
-import jif.ast.JifInstantiator;
 import jif.ast.Jif_c;
 import jif.types.ConstraintMessage;
 import jif.types.JifContext;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
+import jif.types.label.AccessPath;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
@@ -17,7 +17,6 @@ import polyglot.ast.TypeNode;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import fabric.types.AccessPathStore;
 import fabric.types.FabricReferenceType;
 import fabric.types.FabricTypeSystem;
 
@@ -81,24 +80,21 @@ public class DereferenceHelper {
     JifContext A = lc.context();
     Label objLabel = Jif_c.getPathMap(ref).NV();
     Label pc = ts.join(Jif_c.getPathMap(ref).N(), A.currentCodePCBound());
-
+    AccessPath storeap = ts.storeAccessPathFor(ref, A);
     // ({this} <= access label) holds true at all access sites
 //    A.addAssertionLE(thisLabel(ct), toLabel(ct.accessPolicy()));
-    if (ts.isFinalAccessExpr(ref)
-        && ts.descendsFrom(targetType, ts.DelegatingPrincipal())) {
+    if (ts.descendsFrom(targetType, ts.DelegatingPrincipal())) {
       // this.store >= this holds true for all principals
-      A.addActsFor(
-          ts.dynamicPrincipal(pos,
-              new AccessPathStore(
-                  ts.exprToAccessPath(ref, A), ts.Store(), pos)),
-                  ts.dynamicPrincipal(pos, ts.exprToAccessPath(ref, A)));
+      A.addActsFor(ts.dynamicPrincipal(pos, storeap),
+          ts.dynamicPrincipal(pos, ts.exprToAccessPath(ref, A)));
     }
 
     // get the access label of the type
     final ConfPolicy accessPolicy = targetType.accessPolicy();
     final Label accessLabel = ts.toLabel(accessPolicy);
     final Label instantiated =
-        JifInstantiator.instantiate(accessLabel, A, ref, targetType, objLabel);
+        StoreInstantiator.instantiate(accessLabel, A, ref, targetType,
+            objLabel, storeap);
 
     lc.constrain(new NamedLabel("reference label", objLabel),
         LabelConstraint.LEQ, new NamedLabel("access label", instantiated),

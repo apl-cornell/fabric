@@ -28,6 +28,7 @@ import jif.types.ParamInstance;
 import jif.types.Solver;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
+import jif.types.label.AccessPathUninterpreted;
 import jif.types.label.ArgLabel;
 import jif.types.label.ConfPolicy;
 import jif.types.label.ConfProjectionPolicy_c;
@@ -83,6 +84,7 @@ import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
+import fabric.ast.FabricNodeFactory;
 import fabric.ast.RemoteWorkerGetter;
 import fabric.common.FabricLocation;
 import fabric.lang.Codebase;
@@ -469,6 +471,21 @@ FabricTypeSystem {
           st.position());
     }
     return super.exprToAccessPath(e, expectedType, context);
+  }
+
+  @Override
+  public AccessPath storeAccessPathFor(Expr ref, JifContext context)
+      throws SemanticException {
+    AccessPath storeap;
+    FabricNodeFactory nf = (FabricNodeFactory) extensionInfo().nodeFactory();
+    Position pos = Position.compilerGenerated();
+    if (isFinalAccessExpr(ref)) {
+      storeap =
+          new AccessPathStore(exprToAccessPath(ref, context), Store(), pos);
+    } else {
+      storeap = new AccessPathUninterpreted(nf.Store(pos, ref), pos);
+    }
+    return storeap;
   }
 
   @Override

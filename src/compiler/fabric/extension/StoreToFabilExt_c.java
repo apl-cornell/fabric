@@ -20,8 +20,8 @@ public class StoreToFabilExt_c extends ToJavaExt_c implements ToJavaExt {
     if (ts.isTransient(store.expr().type())) {
       return rw.qq().parseExpr("Worker.getWorker().getLocalStore()");
     }
-
-    return rw.qq().parseExpr("%E.$getStore()", store.expr());
+    /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */
+    return rw.qq().parseExpr("%E.fetch().$getStore()", store.expr());
   }
 
 }
