@@ -7,6 +7,4 @@ PATH="${PATH}:${FABRIC}/bin"
 CP="${APP_HOME}/classes/fab-sig-impl"
 
 export FABRIC_HOME="${APP_HOME}"
-
-fab --jvm-cp "${CP}" --app-home "${FABRIC_HOME}" --bootclasspath ${APP_HOME}/classes/fab-sig-impl:${FABRIC}/rt-classes:${FABRIC}/classes --sigcp ${APP_HOME}/classes/fab-sig:${FABRIC}/sig-classes/fabric --name "$@"
-
+fab --jvm-cp "${CP}" --app-home "${FABRIC_HOME}" --output-to-fs --bootclasspath ${APP_HOME}/classes/fab-sig-impl:${FABRIC}/rt-classes:${FABRIC}/classes --sigcp ${APP_HOME}/classes/fab-sig:${FABRIC}/sig-classes/fabric --name "$@"
