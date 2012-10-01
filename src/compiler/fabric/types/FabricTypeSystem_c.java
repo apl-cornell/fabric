@@ -653,6 +653,7 @@ FabricTypeSystem {
    */
   @Override
   public boolean isPersistent(Type type) {
+    type = unlabel(type);
     if (type instanceof ClassType) {
       ClassType ct = (ClassType) type;
 
@@ -671,7 +672,8 @@ FabricTypeSystem {
    */
   @Override
   public boolean isTransient(Type type) {
-    return !isPersistent(type);
+    //FIXME: why is type ever null?
+    return type != null && !isPersistent(type);
   }
 
   @Override
