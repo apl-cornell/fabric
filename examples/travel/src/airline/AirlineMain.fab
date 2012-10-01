@@ -12,9 +12,9 @@ import javax.servlet.ServletException;
 import login.*;
 
 public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
-  final Store{this}@{AirlinePrincipal->} localStore;
-  final Store{this}@{AirlinePrincipal->} brokerstore;
-  final principal{this}@{AirlinePrincipal->} broker;
+  final Store{this}@{⊤→} localStore;
+  final Store{this}@{⊤→} brokerstore;
+  final principal{this}@{⊤→} broker;
   
   public AirlineMain() throws ServletException {
     FabricWorker cl = FabricWorker.getWorker();

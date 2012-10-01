@@ -12,9 +12,9 @@ import javax.servlet.ServletException;
 import login.*;
 
 public final class BankMain extends AbstractServlet[BankPrincipal] {
-  final Store{this}@{BankPrincipal->} localStore;
-  final Store{this}@{BankPrincipal->} brokerstore;
-  final principal{this}@{BankPrincipal->} broker;
+  final Store{this}@{⊤→} localStore;
+  final Store{this}@{⊤→} brokerstore;
+  final principal{this}@{⊤→} broker;
   
   public BankMain() throws ServletException {
     FabricWorker cl = FabricWorker.getWorker();

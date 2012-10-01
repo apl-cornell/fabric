@@ -12,8 +12,8 @@ public final class Request[principal servletP] extends java.lang.Object {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 
     
-    public final Servlet[servletP]{this}@{servletP->} servlet;
-    public final principal{this}@{servletP->}  session; // principal for the current session
+    public final Servlet[servletP]{this}@{⊤→} servlet;
+    public final principal{this}@{⊤→}  session; // principal for the current session
         
     private Request() {  this.servlet = null; this.session = (Principal)null; }
     

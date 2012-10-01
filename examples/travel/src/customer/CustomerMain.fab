@@ -11,9 +11,9 @@ import sif.servlet.SessionPrincipal;
 import javax.servlet.ServletException;
 
 public final class CustomerMain extends Servlet[CustomerPrincipal] {
-  final Store{this}@{CustomerPrincipal->} localStore;
-  final Store{this}@{CustomerPrincipal->} brokerstore;
-  final principal{this}@{CustomerPrincipal->} broker;
+  final Store{this}@{⊤→} localStore;
+  final Store{this}@{⊤→} brokerstore;
+  final principal{this}@{⊤→} broker;
   
   public CustomerMain() throws ServletException {
     FabricWorker cl = FabricWorker.getWorker();
