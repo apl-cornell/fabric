@@ -194,7 +194,7 @@ abstract public class Servlet extends HttpServlet {
         }
     }
 
-    private final void producePage(Request req) throws IOException, ServletException {        
+    private final void producePage(final Request req) throws IOException, ServletException {        
         LabeledAction laction = null;
         //            if (false) { // debugging: dump parameter names
         //                String params = "";
@@ -264,7 +264,13 @@ abstract public class Servlet extends HttpServlet {
 //                DEBUG.print("Action " + (time_end - time_start) + " Dynamic_Security " + clear + " ");
             }
             else {
-                laction.a.invoke(laction.L, req);
+		final LabeledAction laction_ = laction;
+		Worker.runInSubTransaction(new Worker.Code<Void>() {
+		  public Void run() throws ServletException {
+		    laction_.a.invoke(laction_.L, req);
+		    return null;
+		  }
+		});
             }
 
         } 
