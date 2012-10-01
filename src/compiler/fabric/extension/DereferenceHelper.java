@@ -6,6 +6,7 @@ import jif.types.JifContext;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.label.AccessPath;
+import jif.types.label.AccessPathUninterpreted;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
@@ -81,12 +82,17 @@ public class DereferenceHelper {
     Label objLabel = Jif_c.getPathMap(ref).NV();
     Label pc = ts.join(Jif_c.getPathMap(ref).N(), A.currentCodePCBound());
     AccessPath storeap = ts.storeAccessPathFor(ref, A);
-    // ({this} <= access label) holds true at all access sites
-//    A.addAssertionLE(thisLabel(ct), toLabel(ct.accessPolicy()));
     if (ts.descendsFrom(targetType, ts.DelegatingPrincipal())) {
-      // this.store >= this holds true for all principals
-      A.addActsFor(ts.dynamicPrincipal(pos, storeap),
-          ts.dynamicPrincipal(pos, ts.exprToAccessPath(ref, A)));
+      if (ts.isFinalAccessExpr(ref)) {
+        // this.store >= this holds true for all principals
+        A.addActsFor(ts.dynamicPrincipal(pos, storeap),
+            ts.dynamicPrincipal(pos, ts.exprToAccessPath(ref, A)));
+      }
+      else {
+        // ref is not a final access path, so make an uninterpreted path instead
+        A.addActsFor(ts.dynamicPrincipal(pos, storeap),
+            ts.dynamicPrincipal(pos, new AccessPathUninterpreted(ref, pos)));
+      }
     }
 
     // get the access label of the type
