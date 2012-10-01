@@ -13,8 +13,8 @@ public final class DisjunctivePrincipal extends Principal {
   private Integer hashCode = null;
 
   DisjunctivePrincipal fabric$lang$security$DisjunctivePrincipal$(Set disjuncts) {
-	fabric$lang$security$Principal$();
     this.disjuncts = disjuncts;
+	fabric$lang$security$Principal$();
 	return this;
   }
 
