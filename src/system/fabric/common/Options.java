@@ -445,7 +445,7 @@ public abstract class Options {
         return index + 1;
       }
     });
-    flags.add(new Flag(Kind.SECRET, "-output-to-local-fs", "",
+    flags.add(new Flag(Kind.SECRET, "-output-to-fs", "",
         "A flag for putting .class files to the local file system") {
       @Override
       public int handle(String[] args, int index) {
