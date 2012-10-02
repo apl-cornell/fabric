@@ -71,7 +71,7 @@ public class Store_c extends Expr_c implements Store {
 
   @Override
   public boolean isTypeChecked() {
-    return expr.isTypeChecked();
+    return expr.isTypeChecked() && type().isCanonical();
   }
 
   @Override
