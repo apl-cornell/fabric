@@ -56,11 +56,11 @@
   -->
 
   <target name="build-sig">
-    <fabsigc srcdir="${home}/src/fabric/signatures">
+    <fabsigc-example srcdir="${home}/src/fabric/signatures">
       <!--
       <arg value="-rdebug" />
       -->
-    </fabsigc>
+    </fabsigc-example>
   </target>
 
   <target name="build-fabil">
@@ -480,10 +480,10 @@
     </sequential>
   </macrodef>
 
-  <!-- fabsigc
+  <!-- fabsigc-example
        compile the fabric signatures
   -->
-  <macrodef name="fabsigc">
+  <macrodef name="fabsigc-example">
     <attribute name="srcdir" />
     <attribute name="includes" default="**/*.fab" />
     <attribute name="excludes" default="" />
