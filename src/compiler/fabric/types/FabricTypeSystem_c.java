@@ -653,6 +653,7 @@ FabricTypeSystem {
    */
   @Override
   public boolean isPersistent(Type type) {
+    if (type == null) throw new NullPointerException();
     type = unlabel(type);
     if (type instanceof ClassType) {
       ClassType ct = (ClassType) type;
@@ -672,12 +673,13 @@ FabricTypeSystem {
    */
   @Override
   public boolean isTransient(Type type) {
-    //FIXME: why is type ever null?
+    if (type == null) throw new NullPointerException();
     return type != null && !isPersistent(type);
   }
 
   @Override
   public boolean isFabricClass(Type type) {
+
     if (type instanceof ClassType) {
       ClassType ct = (ClassType) type;
 

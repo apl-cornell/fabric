@@ -17,7 +17,7 @@ public class StoreToFabilExt_c extends ToJavaExt_c implements ToJavaExt {
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     Store store = (Store) node();
     FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();
-    if (ts.isTransient(store.expr().type())) {
+    if (store.isLocalStore()) {
       return rw.qq().parseExpr("Worker.getWorker().getLocalStore()");
     }
     /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */

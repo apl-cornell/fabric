@@ -22,6 +22,12 @@ import fabric.types.FabricTypeSystem;
  */
 public class Store_c extends Expr_c implements Store {
   protected Expr expr;
+  protected boolean isLocal;
+  @Override
+  public Object copy() {
+    Store s = (Store) super.copy();
+    return s;
+  }
 
   /**
    * @param pos
@@ -77,13 +83,14 @@ public class Store_c extends Expr_c implements Store {
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
     if (!expr.type().isCanonical()) return this;
+    if (type().isCanonical()) return this;
 
     Type t = expr.type();
     if (!t.isReference())
       throw new SemanticException("Cannot get store of non reference type.");
     FabricTypeSystem ts = (FabricTypeSystem) tc.typeSystem();
 
-    return type(ts.Store());
+    return isLocalStore(ts.isTransient(t)).type(ts.Store());
   }
 
 
@@ -101,4 +108,19 @@ public class Store_c extends Expr_c implements Store {
     //TODO: need to extend NotNullChecker to make this work in general
     return expr instanceof Special;
   }
+
+  @Override
+  public boolean isLocalStore() {
+    return isLocal;
+  }
+
+  protected Expr isLocalStore(boolean isLocal) {
+    if (this.isLocal == isLocal) {
+      return this;
+    }
+    Store_c n = (Store_c) copy();
+    n.isLocal = isLocal;
+    return n;
+  }
+
 }
