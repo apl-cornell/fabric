@@ -29,8 +29,8 @@ public class PrivateKeyObject {
    */
   public PrivateKeyObject fabric$lang$security$PrivateKeyObject$(Principal p, PrivateKey key) {
     this.principal = p;
-    fabric$lang$Object$();
     this.key = key;
+    fabric$lang$Object$();
     return this;
   }
   

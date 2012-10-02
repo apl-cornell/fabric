@@ -14,8 +14,8 @@ public final class DisjunctivePrincipal extends Principal {
 
   DisjunctivePrincipal fabric$lang$security$DisjunctivePrincipal$(Set disjuncts) {
     this.disjuncts = disjuncts;
-	fabric$lang$security$Principal$();
-	return this;
+    fabric$lang$security$Principal$();
+    return this;
   }
 
   public String name() {
