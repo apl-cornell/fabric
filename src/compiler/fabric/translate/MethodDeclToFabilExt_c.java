@@ -37,8 +37,7 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
               .parseStmt(
                   "throw new fabric.worker.remote.RemoteCallLabelCheckFailedException();"));
 
-      // Wrap the whole thing in a try-catch that prints out any throwables that
-      // are thrown.
+      // Wrap the whole thing in a try-catch that prints out any thrown exceptions.
       String varName = UniqueID.newID("e");
       Try tryStmt =
           (Try) qq.parseStmt("try { %S } catch (java.lang.RuntimeException " + varName
