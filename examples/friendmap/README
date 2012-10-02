@@ -13,9 +13,10 @@ Using
 This example uses five stores ("friendmap", "mapserv", "snapp", "alice", and
 "bob").
 
-  0. Start in the FriendMap example directory:
+  0. Start in the FriendMap example directory. Build the principal utilities:
 
       $ cd $FABRIC/examples/friendmap
+      $ ant build-util
 
   1. Start up instances of the five stores. The 'start-all' script will start
      each store in a separate xterm window:
