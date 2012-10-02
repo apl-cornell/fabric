@@ -71,6 +71,11 @@ public class SubSocket {
     return state.getPrincipal();
   }
 
+  @Override
+  public String toString() {
+    return state.toString();
+  }
+
   // ////////////////////////////////////////////////////////////////////////////
   // State design pattern implementation //
   // //
@@ -91,25 +96,25 @@ public class SubSocket {
     protected Exception cause = null;
 
     void close() throws IOException {
-      throw new IOException("Cannot close socket: socket " + this, cause);
+      throw new IOException("Cannot close socket: " + this, cause);
     }
 
     void connect(String name) throws IOException {
-      throw new IOException("Cannot connect: socket " + this, cause);
+      throw new IOException("Cannot connect: " + this, cause);
     }
 
     InputStream getInputStream() throws IOException {
-      throw new IOException("Cannot get an input stream: socket " + this, cause);
+      throw new IOException("Cannot get an input stream: " + this, cause);
     }
 
     BufferedOutputStream getOutputStream() throws IOException {
-      throw new IOException("Cannot get an output stream: socket " + this,
+      throw new IOException("Cannot get an output stream: " + this,
           cause);
     }
 
     Principal getPrincipal() throws IOException {
       throw new IOException(
-          "There is no principal associated with the socket: it " + this, cause);
+          "There is no principal associated with the socket: " + this, cause);
     }
   }
 
@@ -121,7 +126,7 @@ public class SubSocket {
 
     @Override
     public String toString() {
-      return "is unconnected";
+      return "unconnected socket";
     }
 
     @Override
@@ -150,7 +155,7 @@ public class SubSocket {
 
     @Override
     public String toString() {
-      return "is connected (" + conn.toString() + ")";
+      return "connected socket (" + conn.toString() + ")";
     }
 
     @Override
@@ -192,7 +197,7 @@ public class SubSocket {
   private final class Closed extends State {
     @Override
     public String toString() {
-      return "is closed";
+      return "socket closed";
     }
   }
 
@@ -202,7 +207,7 @@ public class SubSocket {
   private final class ErrorState extends State {
     @Override
     public String toString() {
-      return "has recieved an exception";
+      return "socket has received an exception";
     }
 
     private ErrorState(Exception exc) {
