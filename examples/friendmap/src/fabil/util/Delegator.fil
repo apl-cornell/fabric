@@ -16,9 +16,9 @@ public class Delegator extends AbstractPrincipal {
     // and thus {owner←} ⊑ {this←}
     // we just can't convince the compiler of this fact.
 
-    this.fabric$lang$security$AbstractPrincipal$(name);
     this.owner = owner;
     this.name  = name;
+    this.fabric$lang$security$AbstractPrincipal$(name);
     return this;
   }
   
@@ -30,9 +30,9 @@ public class Delegator extends AbstractPrincipal {
       // and thus {owner←} ⊑ {this←}
       // we just can't convince the compiler of this fact.
 
-      this.fabric$lang$security$AbstractPrincipal$(name);
       this.owner = this.$getStore().getPrincipal();
       this.name  = name;
+      this.fabric$lang$security$AbstractPrincipal$(name);
       return this;
     }
 

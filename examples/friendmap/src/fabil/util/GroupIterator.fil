@@ -17,7 +17,7 @@ public class GroupIterator
 
     this.g = g;
     this.i = 0;
-
+    fabric$lang$Object$();
     return this;
   }
 
