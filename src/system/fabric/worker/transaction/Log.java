@@ -122,7 +122,40 @@ public final class Log {
 
   public static class CommitState {
     public static enum Values {
-      UNPREPARED, PREPARING, PREPARED, PREPARE_FAILED, COMMITTING, COMMITTED, ABORTING, ABORTED
+      /**
+       * Signifies a transaction before it has been prepared or aborted.
+       */
+      UNPREPARED,
+      /**
+       * Signifies a transaction that is currently being prepared.
+       */
+      PREPARING,
+      /**
+       * Signifies a transaction that has successfully prepared, but has not yet
+       * been committed.
+       */
+      PREPARED,
+      /**
+       * Signifies a transaction that has failed to prepare, but has not yet
+       * been rolled back.
+       */
+      PREPARE_FAILED,
+      /**
+       * Signifies a transaction that is currently being committed.
+       */
+      COMMITTING,
+      /**
+       * Signifies a transaction that has been committed.
+       */
+      COMMITTED,
+      /**
+       * Signifies a transaction that is currently being aborted.
+       */
+      ABORTING,
+      /**
+       * Signifies a transaction that has been aborted.
+       */
+      ABORTED
     }
 
     public Values value = Values.UNPREPARED;
