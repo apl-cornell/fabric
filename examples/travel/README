@@ -102,13 +102,13 @@ application data and the workers each host a web application.
 	http://localhost:8081/bank
 
 	User: bank
-	Pass: knab
+	Pass: password
 
       The airline application can be accessed at:
 	http://localhost:8082/airline
 
 	User: airline
-	Pass: enilria
+	Pass: password
 
   III. You can clean up the stores' persistent state by removing 'var' from the
        travel example directory:
