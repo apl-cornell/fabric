@@ -151,7 +151,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   @Override
   public PrepareTransactionMessage.Response handle(Principal p,
       PrepareTransactionMessage prepareTransactionMessage)
-      throws TransactionPrepareFailedException {
+          throws TransactionPrepareFailedException {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
@@ -181,7 +181,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   @Override
   public CommitTransactionMessage.Response handle(Principal p,
       CommitTransactionMessage commitTransactionMessage)
-      throws TransactionCommitFailedException {
+          throws TransactionCommitFailedException {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry

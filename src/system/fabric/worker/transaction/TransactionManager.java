@@ -300,10 +300,18 @@ public final class TransactionManager {
     }
   }
 
+  /**
+   * @throws TransactionRestartingException
+   *           if the prepare fails.
+   */
   public void commitTransactionAt(long commitTime) {
     commitTransactionAt(commitTime, false);
   }
 
+  /**
+   * @throws TransactionRestartingException
+   *           if the prepare fails.
+   */
   public void commitTransactionAt(long commitTime, boolean ignoreRetrySignal) {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
@@ -395,10 +403,12 @@ public final class TransactionManager {
   /**
    * Sends prepare messages to the cohorts. Also sends abort messages if any
    * cohort fails to prepare.
+   * 
+   * @throws TransactionRestartingException
+   *           if the prepare fails.
    */
-  public Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
-      long commitTime) {
-    return sendPrepareMessages(commitTime, current.storesToContact(),
+  public void sendPrepareMessages(long commitTime) {
+    sendPrepareMessages(commitTime, current.storesToContact(),
         current.workersCalled);
   }
 
@@ -410,8 +420,8 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  private Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
-      final long commitTime, Set<Store> stores, List<RemoteWorker> workers) {
+  private void sendPrepareMessages(final long commitTime, Set<Store> stores,
+      List<RemoteWorker> workers) {
     final Map<RemoteNode, TransactionPrepareFailedException> failures =
         Collections
         .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
@@ -423,13 +433,13 @@ public final class TransactionManager {
         break;
       case PREPARING:
       case PREPARED:
-        return failures;
+        return;
       case COMMITTING:
       case COMMITTED:
         WORKER_TRANSACTION_LOGGER.log(Level.FINE,
             "Ignoring prepare request (transaction state = {0})",
             current.commitState.value);
-        return failures;
+        return;
       case PREPARE_FAILED:
       case ABORTING:
       case ABORTED:
@@ -564,8 +574,6 @@ public final class TransactionManager {
         current.commitState.notifyAll();
       }
     }
-
-    return failures;
   }
 
   /**
