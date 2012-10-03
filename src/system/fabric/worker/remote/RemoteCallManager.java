@@ -24,6 +24,7 @@ import fabric.messages.TakeOwnershipMessage;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TakeOwnershipFailedException;
@@ -167,6 +168,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
 
     try {
       tm.sendPrepareMessages(prepareTransactionMessage.commitTime);
+    } catch (TransactionRestartingException e) {
+      throw new TransactionPrepareFailedException(e);
     } finally {
       tm.associateLog(null);
     }
