@@ -22,7 +22,6 @@ import polyglot.visit.ContextVisitor;
 import codebases.ast.CodebaseNode;
 import codebases.ast.CodebaseNodeFactory;
 import codebases.frontend.CBJobExt;
-import codebases.types.CBImportTable;
 import codebases.types.CodebaseClassType;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
@@ -173,23 +172,7 @@ public class FabILDisamb extends Disamb_c implements Disamb {
             throw new InternalCompilerError(
                 "Found an ambiguous type in the context: " + type, pos);
           }
-          CBImportTable it = (CBImportTable) c.importTable();
-          if (it.isExternal(name.id())) {
-            // This type was loaded with a codebase import,
-            // so it is an external dep
-            CBJobExt ext = (CBJobExt) v.job().ext();
-            String alias = it.aliasFor(name.id());
-            if (alias == null)
-              throw new InternalCompilerError("Type " + type
-                  + " is external, but the import table has no alias for it");
-            ext.addExternalDependency((CodebaseClassType) type, alias);
-            return nf.CanonicalTypeNode(pos, type);
-          } else {
-            // This type was loaded was *not* loaded w/ an codebase alias
-            CBJobExt ext = (CBJobExt) v.job().ext();
-            ext.addDependency((CodebaseClassType) type);
-            return nf.CanonicalTypeNode(pos, type);
-          }
+          return nf.CanonicalTypeNode(pos, type);
         }
       } catch (NoClassException e) {
 
@@ -214,8 +197,8 @@ public class FabILDisamb extends Disamb_c implements Disamb {
       if (ns != null)
         return nf.CodebaseNode(pos, namespace, name.id(), ns);
       else
-      // Must be a package then...
-      return nf.PackageNode(pos, ts.packageForName(namespace, name.id()));
+        // Must be a package then...
+        return nf.PackageNode(pos, ts.packageForName(namespace, name.id()));
     }
 
     return null;
