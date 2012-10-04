@@ -48,14 +48,14 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 			agentB.prepareForAuction();
 	
 			// this variable stores the winning agent. When winner == 0 we have no winner yet
-			int winner = 0;
+			String winner = null;
 	
 			Offer offerA = null;
 			Offer offerB = null;
 			try { offerB = agentB.makeFirstOffer(); } catch (NullPointerException e) {}
 	
 			// main auction loop 
-			while (winner == 0) {
+			while (winner == null) {
 				try { offerA = agentA.makeOffer (userAgent, offerB); // makeOffer returns null if it can't compete anymore.
 	                        } catch (NullPointerException e) {}
 	 
@@ -63,7 +63,7 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 	                        try { noChoice =  userAgent.choice(offerA, offerB) != -1; 
 				} catch (NullPointerException e) {} 
 				if (offerA == null || noChoice ) {
-				    winner = 2; // declare that B is the winning agent 
+				    winner = "Airline B"; // declare that B is the winning agent 
 				    break;
 				}
 				noChoice = false;
@@ -72,14 +72,14 @@ public class AirlineExample [principal AirlineA, principal AirlineB,
 				noChoice = userAgent.choice(offerB, offerA) != -1;
 
 				if (offerB == null || noChoice) { 
-				    winner = 1; // declare that A is the winning agent
+				    winner = "Airline A"; // declare that A is the winning agent
 				}
 			}
 	
 			// with enough authority we can declassify anything... ;-) 
-			int {Broker ->; Broker <-} w0 = endorse (winner, {*auction_lbl} to {Broker ->; Broker <-} );
+			String {Broker ->; Broker <-} w0 = endorse (winner, {*auction_lbl} to {Broker ->; Broker <-} );
 		
-			int {} w = declassify ( w0, {} ); 
+			String {} w = declassify ( w0, {} ); 
 			output.println ("Ending Airline example with winner " + w);
 		}
 		else
