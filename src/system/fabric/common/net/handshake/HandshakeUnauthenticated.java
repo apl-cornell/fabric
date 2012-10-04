@@ -23,7 +23,6 @@ public class HandshakeUnauthenticated implements Protocol {
   public ShakenSocket receive(Socket s) throws IOException {
     DataInputStream in = new DataInputStream(s.getInputStream());
     String name = in.readUTF();
-    System.out.println(name + " [" + name.length() + "]");
     return new ShakenSocket(name, null, s);
   }
 
