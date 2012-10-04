@@ -13,7 +13,6 @@ import java.util.Queue;
 import java.util.Random;
 
 import fabric.common.AuthorizationUtil;
-import fabric.common.ClassRef;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -499,7 +498,7 @@ public class TransactionManager {
       long curOnum = curObject.getOnum();
 
       // Always add surrogates.
-      if (ClassRef.SURROGATE.equals(curObject.getClassRef())) {
+      if (curObject.isSurrogate()) {
         group.put(curOnum, curObject);
         continue;
       }

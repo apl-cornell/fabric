@@ -10,7 +10,6 @@ import java.util.Iterator;
 
 import javax.security.auth.x500.X500Principal;
 
-import fabric.common.ClassRef;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
@@ -404,7 +403,7 @@ public abstract class ObjectDB {
     // Establish groupID bindings for all non-surrogate onums we're given.
     for (Entry<SerializedObject> entry : partialGroup.objects.entrySet()) {
       SerializedObject obj = entry.getValue();
-      if (ClassRef.SURROGATE.equals(obj.getClassRef())) {
+      if (obj.isSurrogate()) {
         continue;
       }
 
