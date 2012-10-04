@@ -14,28 +14,22 @@ This directory contains the following sub-directories:
   - web: web server configuration information
 
 
-Compiling
----------
-To build the example, run 'ant' in the OO7 example directory:
-
-  $ ant
-
-
 Using
 -----
 This example comes with a store named "backend" for storing
 persistent data, and a worker named "webserver" that provides the
 web-based user interface.
 
-  0. Begin in the sif-hello example directory:
+  0. Begin in the sif-hello example directory and compile the example:
 
         $ cd $FABRIC/examples/sif-hello
+        $ ant
 
   1. Start the "backend" store:
 
         $ bin/start-store
 
-  2. Start the web-server:
+  2. Start the web server:
 
         $ bin/start-webapp
 

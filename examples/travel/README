@@ -15,12 +15,6 @@ This directory contains the following sub-directories:
   - etc: configuration files for the example's stores and workers
   - web: supporting files (HTML, CSS, etc.) for the webapps
 
-Compiling
----------
-To build the example, run 'ant' in the travel example directory:
-
-  $ ant
-
 
 Using
 -----
@@ -28,11 +22,12 @@ This example uses three stores ("bank", "airline", and "broker") and three
 workers ("customer", "bankweb" and "airlineweb"). The stores have persistent
 application data and the workers each host a web application.
 
-  0. Start in the travel example directory:
+  0. Start in the travel example directory and compile the example:
 
       $ cd $FABRIC/examples/travel
+      $ ant
 
-  I. Start up all the stores and, if necessary, initialize their state:
+  I. Start all the stores and, if necessary, initialize their state:
 
     1. Start fresh instances of the broker, airline and bank stores. The
        'start-all-stores' script will start each store in a separate xterm

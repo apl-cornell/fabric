@@ -13,6 +13,7 @@ This directory contains the following sub-directories:
   - bin: a collection of scripts for running the example
   - etc: configuration files for the example's Fabric nodes
 
+
 Using
 -----
 This example uses four stores ("brokerStore", "airlineAStore", "airlineBStore",

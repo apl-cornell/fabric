@@ -12,22 +12,16 @@ This directory contains the following sub-directories:
   - etc: configuration files for the example's store and worker
 
 
-Compiling
----------
-To build the example, run 'ant' in the OO7 example directory:
-
-  $ ant
-
-
 Using
 -----
 This example comes with a store named "database" for storing the OO7 databases,
 and a worker named "worker" for creating OO7 databases and running the OO7
 traversals.
 
-  0. Begin in the OO7 example directory:
+  0. Begin in the OO7 example directory and compile the example:
 
         $ cd $FABRIC/examples/OO7
+        $ ant
 
   1. Start the "database" store that will be holding the OO7 databases:
 
