@@ -132,12 +132,12 @@
   </target>
 
   <target name="publish-all"
-      depends="publish-broker,publish-airlineA,publish-airlineB,publish-user,fabil-init"
+      depends="publish-broker,publish-airlineA,publish-airlineB,publish-user"
       description="Publish all source">
   </target>
 
   <target name="publish-cb"
-      depends="publish-broker,publish-airlineA2,publish-airlineB,publish-user,fabil-init"
+      depends="publish-broker,publish-airlineA2,publish-airlineB,publish-user"
       description="Publish all source">
   </target>
 
@@ -218,17 +218,19 @@
 
   <target name="publish" description="Publish Fabric source">
     <mkdir dir="${home.codebases}"/>
-    <fabc dest="${home.codebases}">
+    <fabc-in-worker
+        dest="${home.codebases}"
+        worker="${provider}"
+        app-home="${home}">
       <env key="FABRIC_HOME" value="${home}"/>
       <arg value="-no-warnings" />
       <arg value="-publish-only" />
       <arg value="-codebase-output-file"/> <arg value="${target.codebasefile}"/>
       <arg value="-sourcepath" /> <arg value="${codebase.dir}" />
-      <arg value="-worker" /> <arg value="${provider}" />
       <arg value="-deststore" /> <arg value="${dest}" />
       <arg line="${publish.args}"/>
       <fileset dir="${codebase.dir}" includes="**/*.fab" />
-    </fabc>
+    </fabc-in-worker>
   </target>
 
   <target name="fabil-init" description="Build init classes">
