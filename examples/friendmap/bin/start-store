@@ -8,5 +8,10 @@ CP="${APP_HOME}/classes/fab-sig-impl"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab-store --jvm-cp "${CP}" --app-home "${FABRIC_HOME}" --output-to-fs --bootclasspath ${APP_HOME}/classes/fab-sig-impl:${FABRIC}/rt-classes:${FABRIC}/classes --sigcp ${APP_HOME}/classes/fab-sig:${FABRIC}/sig-classes/fabric --name "$@"
-
+fab-store \
+  --jvm-cp "${CP}" \
+  --app-home "${FABRIC_HOME}" \
+  --output-to-fs \
+  --addbootcp "${APP_HOME}/classes/fab-sig-impl" \
+  --addsigcp "${APP_HOME}/classes/fab-sig" \
+  --name "$@"
