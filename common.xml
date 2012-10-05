@@ -150,6 +150,7 @@
         <arg line="${debug.flag}"/>
         <arg value="-d"/> <arg value="@{dest}"/>
         <arg value="-e"/>
+        <arg value="-no-warnings"/>
         <extra-args/>
         <srcfile/>
         <globmapper from="*.fab" to="*.class"/>

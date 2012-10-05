@@ -223,7 +223,6 @@
         worker="${provider}"
         app-home="${home}">
       <env key="FABRIC_HOME" value="${home}"/>
-      <arg value="-no-warnings" />
       <arg value="-publish-only" />
       <arg value="-codebase-output-file"/> <arg value="${target.codebasefile}"/>
       <arg value="-sourcepath" /> <arg value="${codebase.dir}" />
@@ -235,7 +234,6 @@
 
   <target name="fabil-init" description="Build init classes">
     <fabc dest="${home}/classes">
-      <arg value="-no-warnings"/>
       <fileset dir="${broker.fab.src}" includes="**/*.fab"/>
     </fabc>
 
@@ -251,9 +249,8 @@
   <target name="build-local" description="">
     <fabc dest="${home}/classes">
       <arg value="-report" /> <arg value="profile=1" />
-      <arg value="-debugpositions"/>
-      <arg value="-no-warnings"/>
       <!--
+      <arg value="-debugpositions"/>
       <arg value="-trusted-providers"/>
       <arg value="-rdebug"/>
       <arg value="-report"/> <arg value="frontend=1"/>
