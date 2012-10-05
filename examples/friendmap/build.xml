@@ -13,7 +13,7 @@
 
   <dirname property="home" file="${ant.file.friendmap}" />
 
-  <target name="build-all" depends="build-local"/>
+  <target name="build-all" depends="build-util"/>
   <target name="all"       depends="build-all"/>
 
   <property name="home.codebases" value="${home}/var/codebases"/>
