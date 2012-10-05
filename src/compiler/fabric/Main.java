@@ -127,7 +127,7 @@ public class Main extends polyglot.main.Main {
 //      }
       Collection<JavaFileObject> outputFiles = main.compiler.outputFiles();
       int outputDirPathLen =
-          extInfo.getOptions().outputLocation().getUri().getPath()
+          extInfo.getOptions().outputLocation().getUri().normalize().getPath()
           .length();
       Map<URI, JavaFileObject> absPathObjMap =
           extInfo.extFileManager().getAbsPathObjMap();
