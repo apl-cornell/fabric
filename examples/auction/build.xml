@@ -2,7 +2,7 @@
   This is the Apache Ant build file for the Auction example
 -->
 
-<project name="auction" default="build-all" basedir=".">
+<project name="auction" default="all" basedir=".">
   <description>
     Build auction example
   </description>
@@ -118,7 +118,7 @@
 
   <!--
   ****************************************************************************
-    Publication targets.
+    Deployment targets.
   ****************************************************************************
   -->
 
@@ -211,7 +211,7 @@
 
   <!--
   ____________________________________________________________________________
-    Publication helper targets.
+    Deployment helper targets.
   -->
 
   <target name="check-broker">
