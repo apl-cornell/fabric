@@ -6,11 +6,8 @@ import polyglot.ast.Block;
 import polyglot.ast.If;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
-import polyglot.ast.Try;
-import polyglot.qq.QQ;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
-import polyglot.util.UniqueID;
 import fabil.ast.FabILNodeFactory;
 
 public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
@@ -24,7 +21,6 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     }
 
     FabILNodeFactory nf = (FabILNodeFactory) rw.nodeFactory();
-    QQ qq = rw.qq();
 
     if (md.name().endsWith("_remote")) {
       // Fabric wrapper
@@ -32,20 +28,11 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
       If ifStmt = (If) md.body().statements().get(0);
       ifStmt =
           ifStmt
-          .alternative(rw
-              .qq()
-              .parseStmt(
-                  "throw new fabric.worker.remote.RemoteCallLabelCheckFailedException();"));
-
-      // Wrap the whole thing in a try-catch that prints out any thrown exceptions.
-      String varName = UniqueID.newID("e");
-      Try tryStmt =
-          (Try) qq.parseStmt("try { %S } catch (java.lang.RuntimeException " + varName
-              + ") { System.err.println(\"Caught exception while executing "
-              + "remote call:\"); " + varName + ".printStackTrace(); throw "
-              + varName + ";}",
-              ifStmt);
-      return md.body(nf.Block(Position.compilerGenerated(), tryStmt));
+              .alternative(rw
+                  .qq()
+                  .parseStmt(
+                      "throw new fabric.worker.remote.RemoteCallLabelCheckFailedException();"));
+      return md.body(nf.Block(Position.compilerGenerated(), ifStmt));
     }
 
     return md;
