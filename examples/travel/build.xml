@@ -19,13 +19,6 @@
 
   <dirname property="travel.home" file="${ant.file.travel}" />
 
-  <path id="standard.classpath">
-    <path refid="sif.classpath" />
-    <path refid="collections.classpath" />
-    <path refid="lib.classpath" />
-    <pathelement path="${travel.home}/classes" />
-  </path>
-
   <!--
   ****************************************************************************
     Targets for cleaning up the directory tree.
@@ -54,7 +47,10 @@
           description="Builds the SIF Travel example">
     <fabc dest="${travel.home}/classes">
       <arg value="-sourcepath" /> <arg value="${travel.home}/src" />
-      <arg value="-cp"         /> <arg pathref="standard.classpath" />
+      <arg value="-cp"         /> <arg pathref="sif.classpath" />
+      <arg value="-cp"         /> <arg pathref="collections.classpath" />
+      <arg value="-cp"         /> <arg pathref="lib.classpath" />
+      <arg value="-cp"         /> <arg value="${travel.home}/classes" />
       <arg value="-addsigcp"   /> <arg pathref="sif.sigcp"/>
       <arg value="-trusted-providers"/>
       <!--
