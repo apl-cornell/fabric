@@ -1,4 +1,4 @@
-The Fabric Runtime System {#runtime}
+The Fabric runtime system {#runtime}
 =========================
 There are three types of nodes in the Fabric design: stores, workers,
 and dissemination nodes. In the current implementation, there are no

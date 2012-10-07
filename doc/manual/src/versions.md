@@ -1,4 +1,4 @@
-Version History {#versions}
+Version history {#versions}
 ===============
 
 Version 0.2.0 (Oct 2012)

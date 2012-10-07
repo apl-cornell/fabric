@@ -1,4 +1,4 @@
-Example Programs {#examples}
+Example programs {#examples}
 ================
 The `examples` directory in the distribution contains several example
 Fabric programs. Each example includes a separate README describing how to

@@ -1,4 +1,4 @@
-The Fabric Language {#language}
+The Fabric language {#language}
 ===================
 
 The Fabric programming language is an extension of the Jif programming language

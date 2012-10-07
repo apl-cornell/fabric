@@ -1,4 +1,4 @@
-Running Fabric Programs {#running}
+Running Fabric programs {#running}
 =======================
 Once this is done, you can start the worker by running:
 ~~~
