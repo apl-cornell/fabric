@@ -3,7 +3,7 @@ Version History {#versions}
 
 Version 0.2.0 (Oct 2012)
 -------------
-* Support for mobile code (see @ref fabric-oakland2012)
+* Support for mobile code (see @cite mobile-fabric-2012)
   * Mobile-code label checking
   * Provider-bounded label checking
   * Type fingerprint checking for remote calls
@@ -28,6 +28,7 @@ Version 0.2.0 (Oct 2012)
   object database
 
 * Various performance improvements.
+
 
 Version 0.1.0 (Sep 2010)
 -------------

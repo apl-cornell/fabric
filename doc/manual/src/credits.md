@@ -1,6 +1,5 @@
 Credits {#credits}
 =======
-
 The current Fabric developers are:
 
   * [Jed Liu](http://www.cs.cornell.edu/~liujed/)
@@ -26,6 +25,7 @@ of the Fabric project.
 [Steve Chong](http://www.cs.cornell.edu/~schong/) provided guidance on
 extending Jif and provided quick bug fixes to the base Jif compiler.
 
+
 Sponsors
 --------
 The development of the Fabric project has been supported by a number
@@ -40,4 +40,3 @@ of funding sources, including:
 
 This work does not necessarily represent the opinions, expressed or
 implied, of any of these sponsors.
-

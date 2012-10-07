@@ -665,9 +665,9 @@ INPUT = \
   index.md \
   setup.md \
   language.md \
-  examples.md \
-  compiling.md \
+  runtime.md \
   running.md \
+  examples.md \
   versions.md \
   credits.md \
 
@@ -1221,7 +1221,7 @@ MATHJAX_EXTENSIONS     =
 # typically be disabled. For large projects the javascript based search engine
 # can be slow, then enabling SERVER_BASED_SEARCH may provide a better solution.
 
-SEARCHENGINE           = YES
+SEARCHENGINE           = NO
 
 # When the SERVER_BASED_SEARCH tag is enabled the search engine will be
 # implemented using a PHP enabled web server instead of at the web client
