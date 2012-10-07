@@ -8,15 +8,22 @@ For more information, see our paper "Fabric: A Platform for Secure
 Distributed Computation and Storage" published in SOSP 2009
 @cite fabric2009.
 
-
-Requirements
-------------
-This Fabric distribution builds on Unix. We recommend that you use Java
-6 or later. We have experienced problems with older versions. Fabric
-is compiled with the [Apache Ant build tool](http://ant.apache.org/).
+More information about Fabric, including the latest release, can be found at
+the [Fabric web site](http://www.cs.cornell.edu/projects/fabric/).
 
 
-Package Contents
+User support and feedback
+-------------------------
+If you use Fabric, we'd appreciate your letting us know. We welcome comments,
+bug reports, and discussion about Fabric on the [Fabric users]
+(https://lists.cs.cornell.edu/mailman/listinfo/fabric-users) mailing list.
+
+[Subscribe to fabric-announce]
+(https://lists.cs.cornell.edu/mailman/listinfo/fabric-announce) to be notified
+about new releases of Fabric and related announcements.
+
+
+Package contents
 ----------------
 The Fabric distribution package contains the following directories:
 
@@ -25,7 +32,7 @@ The Fabric distribution package contains the following directories:
       tasks.
 
   - `doc`:
-      The Fabric internal API documentation and licenses.
+      The Fabric manual, internal API documentation, and licenses.
 
       - `doc/api`:
 	  The Fabric internal API documentation.
@@ -35,7 +42,7 @@ The Fabric distribution package contains the following directories:
 	  dependencies.
 
       - `doc/manual`:
-	  This manual.
+	  The Fabric user manual.
 
   - `etc`:
       Configuration files for Fabric.

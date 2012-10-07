@@ -1,6 +1,13 @@
 Setting up Fabric {#setup}
 =================
 
+Requirements
+------------
+This Fabric distribution builds on Unix. We recommend that you use Java
+6 or later. We have experienced problems with older versions. Fabric
+is compiled with the [Apache Ant build tool](http://ant.apache.org/).
+
+
 Configuring
 -----------
 -# Before using Fabric, you must specify the locations of the Polyglot
