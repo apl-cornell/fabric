@@ -665,6 +665,7 @@ INPUT = \
   index.md \
   setup.md \
   language.md \
+  compiling.md \
   runtime.md \
   running.md \
   examples.md \
