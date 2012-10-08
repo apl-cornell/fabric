@@ -167,14 +167,6 @@ if [[ -z "${CSR}" ]] ; then
   mkdir -p "${APP_HOME}/etc/csr"|| exit 1
 fi
 
-# Construct the DN.
-DN="CN=${NODE_NAME}"
-[[ -n "${OU}" ]] && DN="${DN}, OU=${OU}"
-[[ -n "${O}" ]] && DN="${DN}, O=${O}"
-[[ -n "${L}" ]] && DN="${DN}, L=${L}"
-[[ -n "${ST}" ]] && DN="${DN}, ST=${ST}"
-[[ -n "${C}" ]] && DN="${DN}, C=${C}"
-
 # If necessary, ask for the keystore password.
 while [[ -z "${PASSWD}" ]] ; do
   while true ; do
@@ -204,6 +196,14 @@ while [[ -z "${PASSWD}" ]] ; do
 
   echo
 done
+
+# Construct the DN.
+DN="CN=${NODE_NAME}"
+[[ -n "${OU}" ]] && DN="${DN}, OU=${OU}"
+[[ -n "${O}" ]] && DN="${DN}, O=${O}"
+[[ -n "${L}" ]] && DN="${DN}, L=${L}"
+[[ -n "${ST}" ]] && DN="${DN}, ST=${ST}"
+[[ -n "${C}" ]] && DN="${DN}, C=${C}"
 
 # Generate the key pair.
 keytool -genkeypair -alias "${NODE_NAME}" -keyalg rsa -keysize "${KEYSIZE}" \
