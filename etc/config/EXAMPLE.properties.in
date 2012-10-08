@@ -1,18 +1,23 @@
 # This is an example node configuration file.
-# Copy this file to <node name>.properties and edit that file.
+#
+# Copy this file to APP_HOME/etc/config/NODE_NAME.properties and
+# edit that file.
 
 
-# File in ${FABRIC_HOME}/etc/keys that holds the node's private key store.
-# This is optional.  By default, this is <node name>.keystore.
+# The file in the APP_HOME/etc/keys directory that holds the node's
+# private key store. This is optional.
+#
+# By default, this is NODE_NAME.keystore.
 #
 # Create the private key store with:
-#   ${FABRIC_HOME}/bin/genkey <node name>
+#   ${FABRIC_HOME}/bin/genkey --app-home APP_HOME NODE_NAME
 
 #fabric.node.keystore = node.name.example.keystore
 
 
 
 # The name of the worker's home store.
+#
 # This is required for workers.  It specifies where the worker's principal
 # object is to be created.
 
@@ -34,7 +39,9 @@
 
 
 # The IP address or DNS name that this node can be reached at.  This is
-# optional; the default is <node name>
+# optional.
+#
+# By default, this is NODE_NAME.
 
 #fabric.node.hostname = fabric.example.net
 
