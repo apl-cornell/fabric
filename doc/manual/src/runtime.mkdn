@@ -57,28 +57,51 @@ separate Fabric installation.
 
 Generate the key pair and the certificate-signing request (CSR).
 ~~~
-  $ genkey --name valinor --app-home /opt/fabric
+  $ genkey --app-home /opt/fabric --name valinor
 ~~~
 This creates a Java keystore `/opt/fabric/etc/keys/valinor.keystore`
-containing the node's private key, and a certificate-signing request
-(CSR) in `/opt/fabric/etc/csr/valinor.csr`.
+containing the node's private key, and a CSR in
+`/opt/fabric/etc/csr/valinor.csr`.
 
-Have the CSR signed by a certificate authority (CA). To sign using
-Fabric's CA facility:
+Have the CSR signed by a CA. To sign using Fabric's CA facility:
 ~~~
-  $ 
+  $ ca-sign /opt/fabric/etc/csr/valinor.csr /tmp/valinor.crt
 ~~~
+This creates a signed certificate in `/tmp/valinor.crt`.
 
-For convenience, the Fabric distribution comes with a CA. For security,
-however, it is recommended that you create your own CA.
+Once you have a signed certificate, import it and the CA's certificate
+into the node's keystore:
 ~~~
-  $ 
+  $ import-cert --keystore /opt/fabric/etc/keys/valinor.keystore \
+      --ca etc/ca/ca.crt /tmp/valinor.crt
 ~~~
+Before importing the certificates, this will display the CA certificate
+and ask you whether it should be trusted.
 
 ### Method 2: Using `make-node`
 @anchor make-node
 
-moo
+This method creates the key pair and certificate in a single step, using
+the CA in the Fabric installation to sign the certificate.
+~~~
+  $ make-node --app-home /opt/fabric --name valinor
+~~~
+Before importing the certificates into the node's keystore, this will
+display the CA certificate and ask you whether it should be trusted.
+
+
+Import other CA certificates
+----------------------------
+If this node will be communicating with nodes whose certificates are
+signed by other CAs, you will also need to import the certificates of
+those CAs.
+~~~
+  $ add-trusted-ca --keystore /opt/fabric/etc/keys/valinor.keystore \
+      other-ca.crt
+~~~
+Before importing the certificate into the node's keystore, this will
+display the CA certificate and ask you whether it should be trusted.
+
 
 Create a node-configuration file
 --------------------------------

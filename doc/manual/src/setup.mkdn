@@ -4,7 +4,8 @@ Setting up Fabric {#setup}
 Requirements
 ------------
 This Fabric distribution builds on Unix. We recommend that you use Java
-6 or later. We have experienced problems with older versions. Fabric
+6 or later. We have experienced problems with older versions.
+[OpenSSL](http://www.openssl.org/) is used to sign certificates. Fabric
 is compiled with the [Apache Ant build tool](http://ant.apache.org/).
 
 
