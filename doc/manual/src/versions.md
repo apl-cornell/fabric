@@ -4,11 +4,11 @@ Version history {#versions}
 Version 0.2.0 (Oct 2012)
 -------------
 * Support for mobile code (see @cite mobile-fabric-2012)
-  * Mobile-code label checking
-  * Provider-bounded label checking
-  * Type fingerprint checking for remote calls
-  * Type fingerprint checking when objects are loaded
-  * Access-label checking
+  * [Provider labels](@ref provider-labels)
+  * [Access labels](@ref access-labels)
+  * Type fingerprint checking for remote calls and objects
+
+* Support for [codebases](@ref codebases)
 
 * Support for heterogeneous field labels
 
