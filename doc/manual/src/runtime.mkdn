@@ -45,11 +45,24 @@ overwriting any previously generated CA, and saves the CA certificate in
 Generate a key pair and certificate
 -----------------------------------
 Each Fabric node needs a key pair and a signed X.509 certificate.  These
-can be created in one of two ways. The [first method](#genkey) is
-suggested for better flexibility. The [second method](#make-node) is
-provided for convenience.
+can be created in one of two ways.  The [first method](#make-node) is
+provided for convenience.  The [second method](#genkey) is suggested for
+better flexibility.
 
-### Method 1: Using `genkey`
+### Method 1: Using `make-node`
+@anchor make-node
+
+This method creates the key pair and certificate in a single step, using
+the CA in the Fabric installation to sign the certificate.
+~~~
+  $ make-node --app-home /opt/fabric --name valinor
+~~~
+This creates a Java keystore `/opt/fabric/etc/keys/valinor.keystore`
+containing the node's private key and certificate. Before importing the
+certificate into the node's keystore, the CA certificate will be
+displayed, and you will be asked whether it should be trusted.
+
+### Method 2: Using `genkey`
 @anchor genkey
 This method creates the key pair and certificate in multiple steps, and
 is useful if you are using a commercial CA, or if the CA is on a
@@ -77,17 +90,6 @@ into the node's keystore:
 ~~~
 Before importing the certificates, this will display the CA certificate
 and ask you whether it should be trusted.
-
-### Method 2: Using `make-node`
-@anchor make-node
-
-This method creates the key pair and certificate in a single step, using
-the CA in the Fabric installation to sign the certificate.
-~~~
-  $ make-node --app-home /opt/fabric --name valinor
-~~~
-Before importing the certificates into the node's keystore, this will
-display the CA certificate and ask you whether it should be trusted.
 
 
 Import other CA certificates
