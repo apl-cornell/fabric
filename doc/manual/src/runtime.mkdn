@@ -1,0 +1,110 @@
+The Fabric runtime system {#runtime}
+=========================
+There are three types of nodes in the Fabric design: stores, workers,
+and dissemination nodes. In the current implementation, there are no
+separate dissemination nodes; rather each worker and store participates
+as a peer in the dissemination network.
+
+  * @subpage node-config
+  * @subpage start-nodes
+
+
+@page node-config Creating Fabric nodes
+
+Fabric nodes run relative to an _application home_ directory, which
+contains the nodes' configuration and state. As a transitional
+mechanism, the application home can also contain naming information,
+specifying how to contact other Fabric nodes.
+
+This guide demonstrates how to create and configure a Fabric node.  As a
+running example, the node is named `valinor` and uses `/opt/fabric` as
+the application home. Commands given are relative to the Fabric
+installation directory, and assume the Fabric `bin` directory is on the
+`PATH`.
+
+
+Create a certificate authority
+------------------------------
+Fabric uses SSL to secure communication between nodes, so each node must
+have an X.509 certificate signed by a certificate authority (CA). While
+commercial CAs may be used, the Fabric distribution uses OpenSSL to
+provide a custom CA for convenience.
+
+This Fabric distribution comes with a CA whose key pair and certificate
+have been pre-generated. Using this pre-generated CA avoids having to
+distribute the CA certificate across separate Fabric installations, but
+is insecure. For security, we recommend creating your own CA:
+~~~
+  $ make-ca
+~~~
+By default, this creates a CA in `etc/ca` of the Fabric installation,
+overwriting any previously generated CA, and saves the CA certificate in
+`etc/ca/ca.crt`.
+
+
+Generate a key pair and certificate
+-----------------------------------
+Each Fabric node needs a key pair and a signed X.509 certificate.  These
+can be created in one of two ways. The [first method](#genkey) is
+suggested for better flexibility. The [second method](#make-node) is
+provided for convenience.
+
+### Method 1: Using `genkey`
+@anchor genkey
+This method creates the key pair and certificate in multiple steps, and
+is useful if you are using a commercial CA, or if the CA is on a
+separate Fabric installation.
+
+Generate the key pair and the certificate-signing request (CSR).
+~~~
+  $ genkey --name valinor --app-home /opt/fabric
+~~~
+This creates a Java keystore `/opt/fabric/etc/keys/valinor.keystore`
+containing the node's private key, and a certificate-signing request
+(CSR) in `/opt/fabric/etc/csr/valinor.csr`.
+
+Have the CSR signed by a certificate authority (CA). To sign using
+Fabric's CA facility:
+~~~
+  $ 
+~~~
+
+For convenience, the Fabric distribution comes with a CA. For security,
+however, it is recommended that you create your own CA.
+~~~
+  $ 
+~~~
+
+### Method 2: Using `make-node`
+@anchor make-node
+
+moo
+
+Create a node-configuration file
+--------------------------------
+Our node reads its configuration information out of the file
+`etc/config/valinor.properties` in the application home. The Fabric
+distribution offers `etc/config/EXAMPLE.properties.in` as a template.
+Copy this to `/opt/fabric/etc/config/valinor.properties` and edit the
+file:
+~~~
+  $ cp etc/config/EXAMPLE.properties.in /opt/fabric/etc/config/valinor.properties
+  $ vim /opt/fabric/etc/config/valinor.properties
+~~~
+
+This file contains a few configuration parameters:
+  * `fabric.node.keystore` This specifies the name
+
+
+@page start-nodes Starting Fabric nodes
+
+To start a store, run:
+~~~
+  $ fab-store --name [store_name]
+~~~
+Unless you are using mobile code, the store must have the classes of
+objects that it will store on its classpath.  This can be specified with
+the `--jvm-cp` option:
+~~~
+  $ fab-store --jvm-cp /path/to/classfiles --name [store_name]
+~~~
