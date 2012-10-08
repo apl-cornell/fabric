@@ -9,17 +9,18 @@ security policies.  Therefore, a good place to start is with the [Jif
 manual](http://www.cs.cornell.edu/jif/doc/jif-3.3.0/manual.html).
 
 Fabric extends Jif with several additional features:
-  - using and creating persistent objects on remote stores
-  - nested transactions
-  - remote method calls
-  - access labels
-  - provider labels
-  - codebases
+  - [using and creating persistent objects on remote stores]
+    (#persistent-objects)
+  - [nested transactions](#transactions)
+  - [remote method calls] (#remote-calls)
+  - [access labels] (#access-labels)
+  - [provider labels] (#provider-labels)
+  - [codebases] (#codebases)
 
 These features are summarized below, but more information can be found in two
 papers about Fabric @cite fabric2009, @cite mobile-fabric-2012.
 
-Persistent objects
+Persistent objects  @anchor persistent-objects
 ------------------
   Fabric objects are, in general, persistent. Further, they may be stored
   persistently at a remote node (a storage node, or store). Applications that
@@ -44,7 +45,7 @@ Persistent objects
   by attaching it to a field or fields of the object. (If multiple
   fields have labels, the object label combines all of them.)
 
-Nested transactions
+Nested transactions  @anchor transactions
 -------------------
   Fabric computations are organized in _transactions_, which occur, as far as
   the programmer can tell, atomically and in isolation from the rest of the
@@ -65,7 +66,7 @@ Nested transactions
   Transactions may be nested freely. The results of a nested transaction are
   only visible to the outer transaction once it successfully commits.
 
-Remote method calls
+Remote method calls  @anchor remote-calls
 -------------------
   Unlike in most distributed object systems, computation in Fabric stays
   on the same network node unless the program explicitly transfers control
@@ -79,13 +80,13 @@ Remote method calls
   o.m@w(args);
 ~~~
 
-  Unlike many other distributed systems with remote calls, the objects
+  Unlike in many other distributed systems with remote calls, the objects
   used during the computation of the method `m` need not reside at the
   remote worker `w`. Also note that transactions can span multiple
   remote calls; these calls will be executed as a single transaction.
 
-Access labels
------------
+Access labels  @anchor access-labels
+-------------
   When an object is accessed during computation on a worker, but is not yet
   cached at the worker, the worker must fetch the object data from the node
   where it is stored.  Thus, the contacted node learns that an access to the
@@ -121,12 +122,12 @@ Access labels
   label `{this.store→}`. For any object `o`, the pseudo-field `o.store`
   represents the node on which `o` is stored.
 
-Provider labels
+Provider labels  @anchor provider-labels
 ---------------
   Remote method calls make it possible to invoke a method on a remote node even
   when that node has not previously seen the class of the object receiving the
-  call, or its code. To make this possible, Fabric code is stored in class
-  objects, which are also persistent objects in Fabric. We refer to the act of
+  call, or its code. To make this possible, Fabric code is stored in _class
+  objects_, which are also persistent objects in Fabric. We refer to the act of
   adding a class object to Fabric as _publishing_ that class.
   
   All code has an information-flow label called the _provider label_,
@@ -134,13 +135,12 @@ Provider labels
   precisely the object label of the class object.
 
   Inside Fabric code, the provider label can be named explicitly as `provider`.
-  Before loading Fabric code, a Fabric node checks the information flows within
+  Before loading code from a class object, a Fabric node checks the information flows within
   the code, using the provider label to implicitly keep track of the influence
   that the code publisher has on computations performed by the code.
 
-Codebases
+Codebases @anchor codebases
 ---------
-
   Unlike Java classes, Fabric class objects are accompanied by linkage
   specifications called _codebases_. There is no global mapping in Fabric from
   class names to class objects. Instead, each code publisher can choose their
@@ -162,6 +162,7 @@ Codebases
 ~~~
 package pkg;
 codebase cb1;
+
 class B extends C {
   void m(cb1.pkg.A a) {
     …

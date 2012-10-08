@@ -1,4 +1,4 @@
-Compiling and publishing programs
+Compiling and publishing programs {#compiling}
 =================================
 
 Compiling
