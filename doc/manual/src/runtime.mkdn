@@ -177,13 +177,43 @@ copied to any node that will contact `valinor`.
 
 @page start-nodes Starting Fabric nodes
 
-To start a store, run:
+Continuing with the example from the [previous section](#node-config),
+our example node will be named `valinor` and will use `/opt/fabric` as
+the application home. The commands given are relative to the Fabric
+installation directory.
+
+Starting a store
+----------------
+To start `valinor` as a store:
 ~~~
-  $ bin/fab-store --name [store_name]
+  $ bin/fab-store --app-home /opt/fabric --name valinor
 ~~~
-Unless you are using mobile code, the store must have the classes of
-objects that it will store on its classpath.  This can be specified with
-the `--jvm-cp` option:
+While the store is running, you are presented with a shell for the
+store's colocated worker. You can use this shell to run Fabric
+applications from within the worker. (See @ref running.)
+
+The node's class path must include any non-mobile application classes
+that it will use.  This can be specified with the `--jvm-cp` option:
 ~~~
-  $ bin/fab-store --jvm-cp /path/to/classfiles --name [store_name]
+  $ bin/fab-store --jvm-cp /path/to/class/files --app-home /opt/fabric \
+      --name valinor
+~~~
+
+Starting a worker
+-----------------
+The following command starts `valinor` as a worker that is initially
+idle, but is available to receive remote calls.
+~~~
+  $ bin/fab --app-home /opt/fabric --name valinor
+~~~
+
+While the worker is running, you are presented with the worker's shell.
+You can use this shell to run Fabric applications from within the
+worker. (See @ref running.)
+
+The worker's class path must include any non-mobile application classes
+that it will use.  This can be specified with the `--jvm-cp` option:
+~~~
+  $ bin/fab --jvm-cp /path/to/class/files --app-home /opt/fabric \
+      --name valinor
 ~~~
