@@ -12,7 +12,7 @@ as a peer in the dissemination network.
 @page node-config Creating Fabric nodes
 
 Fabric nodes run relative to an _application home_ directory, which
-contains the nodes' configuration and state. As a transitional
+contains the nodes' configuration and state. As a transitional naming
 mechanism, the application home can also contain naming information,
 specifying how to contact other Fabric nodes.
 
@@ -22,8 +22,10 @@ the application home. Commands given are relative to the Fabric
 installation directory, and assume the Fabric `bin` directory is on the
 `PATH`.
 
-The name of the node can be any legal DNS hostname, though it need not
-have a DNS entry, nor does it need to match the host machine's DNS name.
+The name of the node can be any legal DNS hostname. This should ideally
+match the host machine's DNS name. However, with the transitional naming
+mechanism, a node's name need not have a DNS entry, nor is it required
+to match the host machine's DNS name.
 
 
 Create a certificate authority
