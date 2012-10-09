@@ -44,8 +44,10 @@
   <!-- Timestamp file for bootstrap classes. -->
   <property name="bootstrap.tstamp" location="${bootstrap.classes}/.tstamp"/>
 
-  <!-- Documentation directory -->
+  <!-- Documentation directories -->
   <property name="doc" location="${fabric.home}/doc"/>
+  <property name="manual.src" location="${doc}/manual/src"/>
+  <property name="manual.html" location="${doc}/manual/html"/>
 
   <!-- Configuration directory -->
   <property name="etc" location="${fabric.home}/etc"/>
@@ -746,18 +748,46 @@ public class Version {
   ****************************************************************************
   -->
 
-  <target name="check-for-doxygen">
-      <fail message="Failed to find doxygen. Make sure to set the doxygen.executable property in configure.properties.">
-        <condition>
-          <not>
-            <available file="${doxygen.executable}" property="doxygen.available" />
-          </not>
-        </condition>
-      </fail>
+  <target name="manual" depends="check-for-doxygen">
+    <!-- Delete old HTML output. -->
+    <delete dir="${manual.html}"/>
+    <delete dir="${manual.src}/html"/>
+
+    <!-- Generate new HTML. -->
+    <exec executable="${doxygen.executable}" failonerror="true"
+        dir="${manual.src}" />
+
+    <!-- Move HTML into place. -->
+    <move file="${manual.src}/html" tofile="${manual.html}"/>
   </target>
 
-  <target name="manual" depends="check-for-doxygen">
-    <exec executable="${doxygen.executable}" failonerror="true" dir="${fabric.home}/doc/manual/src" />
+  <!--
+  ____________________________________________________________________________
+    Documentation helper targets.
+  -->
+
+  <target name="check-for-doxygen">
+    <condition property="doxygen.executable" value="doxygen">
+      <not>
+        <isset property="doxygen.executable"/>
+      </not>
+    </condition>
+
+    <property environment="env" />
+
+    <fail message="Failed to find doxygen. Make sure to set the 'doxygen.executable' property in extra.properties.">
+      <condition>
+        <not>
+          <available
+              file="${doxygen.executable}"
+              property="doxygen.available">
+            <filepath>
+              <pathelement path="${env.PATH}"/>
+            </filepath>
+          </available>
+        </not>
+      </condition>
+    </fail>
   </target>
 
   <!--

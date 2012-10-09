@@ -9,6 +9,7 @@
   <property name="build.sysclasspath" value="ignore" />
 
   <property file="${fabric.home}/config.properties" />
+  <property file="${fabric.home}/extra.properties" />
 
   <!-- Polyglot installation location -->
   <!-- If it is not defined in the properties file, use the environment
