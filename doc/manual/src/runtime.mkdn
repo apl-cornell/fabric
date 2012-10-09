@@ -130,10 +130,12 @@ This file contains a few configuration parameters:
     the name of the store that will hold the worker's principal object.
 
   * `fabric.worker.port` is optional. It specifies the network port on
-    which the node should listen for remote calls.
+    which the node should listen for remote calls. The default worker
+    port is 3372.
 
   * `fabric.store.port` is optional. For stores, it specifies the
-    network port on which the store should listen for connections.
+    network port on which the store should listen for connections. The
+    default store port is 3472.
 
   * `fabric.node.hostname` is optional. It specifies the IP address or
     the DNS name of the node's host machine. By default, this is the
@@ -145,15 +147,32 @@ Configure name resolution
 We must specify how other nodes can contact the node we just created.
 Ideally, this is done by adding a DNS entry with with an `A` (or `AAAA`)
 record containing the host machine's IP address and a `TXT` record
-specifying the node's network-port configuration. This use of the `TXT`
-record prevents the node's network-port configuration from being tied to
-the node's name (à la http://example.com:8080/) and allows the port
-configuration to change over time.
+specifying the node's network-port configuration. A store listening on
+port 3472 should have a `TXT` record `"fabric-store: 3472"`. Similarly, a
+worker listening on port 3372 should have a `TXT` record `"fabric-worker:
+3372"`. (Default values are assumed if these records do not exist.) This
+use of the `TXT` record prevents the node's network-port configuration
+from being tied to the node's name (à la http://example.com:8080/) and
+allows the port configuration to change
+over time.
 
-Because this use of the `TXT` record is non-standard (and currently
-unimplemented), we provide a transitional mechanism for resolving node
-names.
+However, because this use of DNS is non-standard, we provide a
+transitional mechanism for resolving node names. To resolve a node,
+Fabric first looks in the `etc/config` directory of the application
+home. If it finds a `.properties` configuration file for the node, then
+it uses the configuration information found in that file. Otherwise, DNS
+is used.
 
+When resolving a node, this transitional naming mechanism must be used
+if (a) the node's name does not match the host machine's DNS name, or
+(b) the node has a non-default port configuration and no corresponding
+`TXT` records in DNS.
+
+To contact such a node, `valinor` must have a copy of the node's
+`.properties` configuration file in the `etc/config` directory of the
+application home. Similarly, if `valinor` relies on the transitional
+mechanism to be found, then its `.properties` configuration file must be
+copied to any node that will contact `valinor`.
 
 
 @page start-nodes Starting Fabric nodes
