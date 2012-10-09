@@ -141,9 +141,19 @@ This file contains a few configuration parameters:
     same as the node's name.
 
 
-Configure node-name resolution
-------------------------------
-We must specify how other nodes 
+Configure name resolution
+-------------------------
+We must specify how other nodes can contact the node we just created.
+Ideally, this is done by adding a DNS entry with with an `A` (or `AAAA`)
+record containing the host machine's IP address and a `TXT` record
+specifying the node's network-port configuration. This use of the `TXT`
+record prevents the node's network-port configuration from being tied to
+the node's name (à la http://example.com:8080/) and allows the port
+configuration to change over time.
+
+Because this use of the `TXT` record is non-standard (and currently
+unimplemented), we provide a transitional mechanism for resolving node
+names.
 
 
 
