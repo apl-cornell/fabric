@@ -48,6 +48,7 @@
   <property name="doc" location="${fabric.home}/doc"/>
   <property name="manual.src" location="${doc}/manual/src"/>
   <property name="manual.html" location="${doc}/manual/html"/>
+  <property name="manual.pdf" location="${doc}/manual/manual.pdf"/>
 
   <!-- Configuration directory -->
   <property name="etc" location="${fabric.home}/etc"/>
@@ -751,14 +752,22 @@ public class Version {
   <target name="manual" depends="check-for-doxygen">
     <!-- Delete old HTML output. -->
     <delete dir="${manual.html}"/>
+    <delete file="${manual.pdf}"/>
     <delete dir="${manual.src}/html"/>
+    <delete dir="${manual.src}/latex"/>
 
-    <!-- Generate new HTML. -->
+    <!-- Generate HTML and LaTeX. -->
     <exec executable="${doxygen.executable}" failonerror="true"
         dir="${manual.src}" />
 
-    <!-- Move HTML into place. -->
+    <!-- Compile LaTeX. -->
+    <exec executable="make" failonerror="true" dir="${manual.src}/latex">
+      <arg value="pdf"/>
+    </exec>
+
+    <!-- Move HTML and PDF into place. -->
     <move file="${manual.src}/html" tofile="${manual.html}"/>
+    <move file="${manual.src}/latex/refman.pdf" tofile="${manual.pdf}"/>
   </target>
 
   <!--
