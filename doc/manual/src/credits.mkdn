@@ -22,7 +22,7 @@ Past Fabric developers are:
 [Nate Nystrom](http://www.inf.usi.ch/nystrom/) was involved in the early stages
 of the Fabric project.
 
-[Steve Chong](http://www.cs.cornell.edu/~schong/) provided guidance on
+[Steve Chong](http://people.seas.harvard.edu/~chong/) provided guidance on
 extending Jif and provided quick bug fixes to the base Jif compiler.
 
 
