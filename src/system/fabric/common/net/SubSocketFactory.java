@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
+import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.SocketAddress;
 
 /**
@@ -21,6 +22,7 @@ import fabric.common.net.naming.SocketAddress;
 public final class SubSocketFactory {
   private final Protocol protocol;
   private final NameService nameService;
+  private final PortType portType;
   private final Map<String, ClientChannel> channels;
   private final int maxOpenConnectionsPerChannel;
 
@@ -30,8 +32,9 @@ public final class SubSocketFactory {
    * to share channels (as these channels may have different underlying socket
    * implementations).
    */
-  public SubSocketFactory(Protocol protocol, NameService nameService) {
-    this(protocol, nameService, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
+  public SubSocketFactory(Protocol protocol, NameService nameService,
+      PortType portType) {
+    this(protocol, nameService, portType, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
   }
 
   /**
@@ -41,9 +44,10 @@ public final class SubSocketFactory {
    * implementations).
    */
   public SubSocketFactory(Protocol protocol, NameService nameService,
-      int maxOpenConnectionsPerChannel) {
+      PortType portType, int maxOpenConnectionsPerChannel) {
     this.protocol = protocol;
     this.nameService = nameService;
+    this.portType = portType;
     this.channels = new HashMap<String, ClientChannel>();
     this.maxOpenConnectionsPerChannel = maxOpenConnectionsPerChannel;
   }
@@ -75,7 +79,7 @@ public final class SubSocketFactory {
       if (null == result) {
         NETWORK_CONNECTION_LOGGER.log(Level.INFO,
             "establishing new connection to \"{0}\"", name);
-        SocketAddress addr = nameService.resolve(name);
+        SocketAddress addr = nameService.resolve(name, portType);
 
         Socket s = new Socket(addr.getAddress(), addr.getPort());
         s.setSoLinger(false, 0);

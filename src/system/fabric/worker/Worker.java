@@ -38,9 +38,9 @@ import fabric.common.net.handshake.HandshakeBogus;
 import fabric.common.net.handshake.HandshakeComposite;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 import fabric.common.net.handshake.Protocol;
-import fabric.common.net.naming.DefaultNameService;
-import fabric.common.net.naming.DefaultNameService.PortType;
+import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.net.naming.NameService;
+import fabric.common.net.naming.NameService.PortType;
 import fabric.dissemination.Cache;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
@@ -224,8 +224,7 @@ public final class Worker {
     this.remoteWorkers = new HashMap<String, RemoteWorker>();
     this.localStore = new LocalStore();
 
-    NameService storeNameService = new DefaultNameService(PortType.STORE);
-    NameService workerNameService = new DefaultNameService(PortType.WORKER);
+    NameService nameService = new TransitionalNameService();
 
     // initialize the various socket factories
     Protocol authProt;
@@ -238,13 +237,16 @@ public final class Worker {
         new HandshakeComposite(new HandshakeUnauthenticated());
 
     this.authToStore =
-        new SubSocketFactory(authenticateProtocol, storeNameService);
+        new SubSocketFactory(authenticateProtocol, nameService,
+            PortType.STORE);
     this.authToWorker =
-        new SubSocketFactory(authenticateProtocol, workerNameService);
+        new SubSocketFactory(authenticateProtocol, nameService, PortType.WORKER);
     this.unauthToStore =
-        new SubSocketFactory(nonAuthenticateProtocol, storeNameService);
+        new SubSocketFactory(nonAuthenticateProtocol, nameService,
+            PortType.STORE);
     this.authFromAll =
-        new SubServerSocketFactory(authenticateProtocol, workerNameService);
+        new SubServerSocketFactory(authenticateProtocol, nameService,
+            PortType.WORKER);
 
     this.remoteCallManager = new RemoteCallManager(this);
     this.disseminationCaches = new ArrayList<Cache>(1);
@@ -253,7 +255,7 @@ public final class Worker {
     try {
       Constructor<FetchManager> fetchManagerConstructor =
           (Constructor<FetchManager>) Class.forName(config.dissemClass)
-              .getConstructor(Worker.class, Properties.class);
+          .getConstructor(Worker.class, Properties.class);
       this.fetchManager =
           fetchManagerConstructor.newInstance(this,
               config.disseminationProperties);

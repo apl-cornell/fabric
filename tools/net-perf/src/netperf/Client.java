@@ -36,7 +36,7 @@ public class Client {
     final Random rand = new Random();
     Protocol protocol = new HandshakeUnauthenticated();
     NameService dns = new DNS();
-    SubSocketFactory ssf = new SubSocketFactory(protocol, dns);
+    SubSocketFactory ssf = new SubSocketFactory(protocol, dns, null);
 
     // Set up a first sub-socket to flush out the initial setup overhead.
     SubSocket socket = ssf.createSocket(host);
