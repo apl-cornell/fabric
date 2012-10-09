@@ -742,6 +742,26 @@ public class Version {
 
   <!--
   ****************************************************************************
+    Documentation target
+  ****************************************************************************
+  -->
+
+  <target name="check-for-doxygen">
+      <fail message="Failed to find doxygen. Make sure to set the doxygen.executable property in configure.properties.">
+        <condition>
+          <not>
+            <available file="${doxygen.executable}" property="doxygen.available" />
+          </not>
+        </condition>
+      </fail>
+  </target>
+
+  <target name="manual" depends="check-for-doxygen">
+    <exec executable="${doxygen.executable}" failonerror="true" dir="${fabric.home}/doc/manual/src" />
+  </target>
+
+  <!--
+  ****************************************************************************
     Jar targets
   ****************************************************************************
   -->
