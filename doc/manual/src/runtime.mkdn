@@ -17,10 +17,9 @@ mechanism, the application home can also contain naming information,
 specifying how to contact other Fabric nodes.
 
 This guide demonstrates how to create and configure a Fabric node.  As a
-running example, the node is named `valinor` and uses `/opt/fabric` as
-the application home. Commands given are relative to the Fabric
-installation directory, and assume the Fabric `bin` directory is on the
-`PATH`.
+running example, the node we create will be named `valinor` and will use
+`/opt/fabric` as the application home. The commands given are relative
+to the Fabric installation directory.
 
 The name of the node can be any legal DNS hostname. This should ideally
 match the host machine's DNS name. However, with the transitional naming
@@ -40,7 +39,7 @@ have been pre-generated. Using this pre-generated CA avoids having to
 distribute the CA certificate across separate Fabric installations, but
 is insecure. For security, we recommend creating your own CA:
 ~~~
-  $ make-ca
+  $ bin/make-ca
 ~~~
 By default, this creates a CA in `etc/ca` of the Fabric installation,
 overwriting any previously generated CA, and saves the CA certificate in
@@ -60,7 +59,7 @@ better flexibility.
 This method creates the key pair and certificate in a single step, using
 the CA in the Fabric installation to sign the certificate.
 ~~~
-  $ make-node --app-home /opt/fabric --name valinor
+  $ bin/make-node --app-home /opt/fabric --name valinor
 ~~~
 This creates a Java keystore `/opt/fabric/etc/keys/valinor.keystore`
 containing the node's private key and certificate. Before importing the
@@ -75,7 +74,7 @@ separate Fabric installation.
 
 Generate the key pair and the certificate-signing request (CSR).
 ~~~
-  $ genkey --app-home /opt/fabric --name valinor
+  $ bin/genkey --app-home /opt/fabric --name valinor
 ~~~
 This creates a Java keystore `/opt/fabric/etc/keys/valinor.keystore`
 containing the node's private key, and a CSR in
@@ -83,14 +82,14 @@ containing the node's private key, and a CSR in
 
 Have the CSR signed by a CA. To sign using Fabric's CA facility:
 ~~~
-  $ ca-sign /opt/fabric/etc/csr/valinor.csr /tmp/valinor.crt
+  $ bin/ca-sign /opt/fabric/etc/csr/valinor.csr /tmp/valinor.crt
 ~~~
 This creates a signed certificate in `/tmp/valinor.crt`.
 
 Once you have a signed certificate, import it and the CA's certificate
 into the node's keystore:
 ~~~
-  $ import-cert --keystore /opt/fabric/etc/keys/valinor.keystore \
+  $ bin/import-cert --keystore /opt/fabric/etc/keys/valinor.keystore \
       --ca etc/ca/ca.crt /tmp/valinor.crt
 ~~~
 Before importing the certificates, this will display the CA certificate
@@ -103,7 +102,7 @@ If this node will be communicating with nodes whose certificates are
 signed by other CAs, you will also need to import the certificates of
 those CAs.
 ~~~
-  $ add-trusted-ca --keystore /opt/fabric/etc/keys/valinor.keystore \
+  $ bin/add-trusted-ca --keystore /opt/fabric/etc/keys/valinor.keystore \
       other-ca.crt
 ~~~
 Before importing the certificate into the node's keystore, this will
@@ -161,11 +160,11 @@ names.
 
 To start a store, run:
 ~~~
-  $ fab-store --name [store_name]
+  $ bin/fab-store --name [store_name]
 ~~~
 Unless you are using mobile code, the store must have the classes of
 objects that it will store on its classpath.  This can be specified with
 the `--jvm-cp` option:
 ~~~
-  $ fab-store --jvm-cp /path/to/classfiles --name [store_name]
+  $ bin/fab-store --jvm-cp /path/to/classfiles --name [store_name]
 ~~~
