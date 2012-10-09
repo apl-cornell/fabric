@@ -20,7 +20,8 @@ Publishing
 ----------
 The Fabric compiler can publish code to a Fabric store, making the code
 available for download and use by Fabric workers. Publishing code
-requires a running store and a configured worker. (See @ref running.) To
+requires a running store and a configured worker.
+(See @ref start-nodes.) To
 publish, the Fabric compiler needs a few additional parameters:
 
   * the name of the store that will host the published code,
