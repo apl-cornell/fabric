@@ -190,12 +190,12 @@ To start `valinor` as a store:
 ~~~
 While the store is running, you are presented with a shell for the
 store's colocated worker. You can use this shell to run Fabric
-applications from within the worker. (See @ref running.)
+applications from within the colocated worker. (See @ref running.)
 
 The node's class path must include any non-mobile application classes
 that it will use.  This can be specified with the `--jvm-cp` option:
 ~~~
-  $ bin/fab-store --jvm-cp /path/to/class/files --app-home /opt/fabric \
+  $ bin/fab-store --jvm-cp /path/to/classes --app-home /opt/fabric \
       --name valinor
 ~~~
 
@@ -214,6 +214,6 @@ worker. (See @ref running.)
 The worker's class path must include any non-mobile application classes
 that it will use.  This can be specified with the `--jvm-cp` option:
 ~~~
-  $ bin/fab --jvm-cp /path/to/class/files --app-home /opt/fabric \
+  $ bin/fab --jvm-cp /path/to/classes --app-home /opt/fabric \
       --name valinor
 ~~~
