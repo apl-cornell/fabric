@@ -22,6 +22,9 @@ the application home. Commands given are relative to the Fabric
 installation directory, and assume the Fabric `bin` directory is on the
 `PATH`.
 
+The name of the node can be any legal DNS hostname, though it need not
+have a DNS entry, nor does it need to match the host machine's DNS name.
+
 
 Create a certificate authority
 ------------------------------
@@ -105,9 +108,9 @@ Before importing the certificate into the node's keystore, this will
 display the CA certificate and ask you whether it should be trusted.
 
 
-Create a node-configuration file
---------------------------------
-Our node reads its configuration information out of the file
+Configure the node
+------------------
+Our node `valinor` reads its configuration information from the file
 `etc/config/valinor.properties` in the application home. The Fabric
 distribution offers `etc/config/EXAMPLE.properties.in` as a template.
 Copy this to `/opt/fabric/etc/config/valinor.properties` and edit the
@@ -118,7 +121,28 @@ file:
 ~~~
 
 This file contains a few configuration parameters:
-  * `fabric.node.keystore` This specifies the name
+  * `fabric.node.keystore` is required. It specifies the location of the
+    node's keystore file. In our example, this is
+    `/opt/fabric/etc/keys/valinor.keystore`.
+
+  * `fabric.worker.homeStore` is only required for workers. It specifies
+    the name of the store that will hold the worker's principal object.
+
+  * `fabric.worker.port` is optional. It specifies the network port on
+    which the node should listen for remote calls.
+
+  * `fabric.store.port` is optional. For stores, it specifies the
+    network port on which the store should listen for connections.
+
+  * `fabric.node.hostname` is optional. It specifies the IP address or
+    the DNS name of the node's host machine. By default, this is the
+    same as the node's name.
+
+
+Configure node-name resolution
+------------------------------
+We must specify how other nodes 
+
 
 
 @page start-nodes Starting Fabric nodes
