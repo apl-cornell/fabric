@@ -12,15 +12,11 @@ The following command starts the worker, executes the class
 running, then the command attaches to the already-running worker and
 executes `hello.Main` from within that instance.
 ~~~
-  $ bin/fab --app-home /opt/fabric --name valinor hello.Main
-~~~
-
-The (non-mobile) class `hello.Main`, and any non-mobile classes it uses,
-must be specified with the `--jvm-cp` option:
-~~~
   $ bin/fab --jvm-cp /path/to/classes --app-home /opt/fabric \
       --name valinor hello.Main
 ~~~
+The `--jvm-cp` option specifies a path containing the (non-mobile) class
+`hello.Main` and any non-mobile classes it uses.
 
 To execute a mobile class, specify the class's codebase-relative name.
 For example,
@@ -32,7 +28,7 @@ For example,
 From the worker shell
 ---------------------
 If a class name is not given when starting a worker, then the worker
-will start idle and the user will be given a worker shell:
+starts idle and the user is given a worker shell:
 ~~~
   $ bin/fab --app-home /opt/fabric --name valinor
 
@@ -59,9 +55,10 @@ class's name into the shell:
 
   valinor>
 ~~~
+The worker must have the requisite non-mobile classes on its class path, as
+specified by the `--jvm-cp` command-line option when starting the worker.
 
-Similarly, to execute a mobile class, enter the class's
-codebase-relative name:
+To execute a mobile class, enter the class's codebase-relative name:
 ~~~
   valinor> fab://helloStore/35/hello.Main
   Hello, world!
