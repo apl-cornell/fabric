@@ -1,11 +1,70 @@
 Running Fabric programs {#running}
 =======================
-Once this is done, you can start the worker by running:
+This guide demonstrates how to run a Fabric program. As a running
+example, we will use a worker named `valinor`, with `/opt/fabric` as the
+application home. The commands given are relative to the Fabric
+installation directory.
+
+From the command line
+---------------------
+The following command starts the worker, executes the class
+`hello.Main`, and shuts down the worker. If the worker is already
+running, then the command attaches to the already-running worker and
+executes `hello.Main` from within that instance.
 ~~~
-  $ fab --name [worker_name] [main_class]
+  $ bin/fab --app-home /opt/fabric --name valinor hello.Main
 ~~~
-where [main_class] is the fully-qualified name of the class you wish to
-invoke. If the main class is omitted, the worker will simply start and
-wait for remote calls. As with stores, workers must have the classes
-they will use on their classpath, which can be specified with the
--classpath option or in the CLASSPATH environment variable.
+
+The (non-mobile) class `hello.Main`, and any non-mobile classes it uses,
+must be specified with the `--jvm-cp` option:
+~~~
+  $ bin/fab --jvm-cp /path/to/classes --app-home /opt/fabric \
+      --name valinor hello.Main
+~~~
+
+To execute a mobile class, specify the class's codebase-relative name.
+For example,
+~~~
+  $ bin/fab --app-home /opt/fabric --name valinor \
+      fab://helloStore/35/hello.Main
+~~~
+
+From the worker shell
+---------------------
+If a class name is not given when starting a worker, then the worker
+will start idle and the user will be given a worker shell:
+~~~
+  $ bin/fab --app-home /opt/fabric --name valinor
+
+  Worker started
+
+  valinor>
+~~~
+
+Stores also have worker shells for their colocated worker:
+~~~
+  $ bin/fab-store --app-home /opt/fabric --name valinor
+
+  Worker started
+  Store started
+
+  valinor>
+~~~
+
+To execute a non-mobile class from within the worker, simply enter the
+class's name into the shell:
+~~~
+  valinor> hello.Main
+  Hello, world!
+
+  valinor>
+~~~
+
+Similarly, to execute a mobile class, enter the class's
+codebase-relative name:
+~~~
+  valinor> fab://helloStore/35/hello.Main
+  Hello, world!
+
+  valinor>
+~~~
