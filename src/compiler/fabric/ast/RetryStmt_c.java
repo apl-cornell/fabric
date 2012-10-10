@@ -15,7 +15,7 @@ public class RetryStmt_c extends Branch_c implements RetryStmt {
   }
 
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     return Collections.EMPTY_LIST;
   }
 
