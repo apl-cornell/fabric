@@ -49,12 +49,11 @@ overwriting any previously generated CA, and saves the CA certificate in
 Generate a key pair and certificate
 -----------------------------------
 Each Fabric node needs a key pair and a signed X.509 certificate.  These
-can be created in one of two ways.  The [first method](#make-node) is
-provided for convenience.  The [second method](#genkey) is suggested for
+can be created in one of two ways.  The [first method](@ref make-node) is
+provided for convenience.  The [second method](@ref genkey) is suggested for
 better flexibility.
 
-### Method 1: Using `make-node`
-@anchor make-node
+### Method 1: Using `make-node` @anchor make-node
 
 This method creates the key pair and certificate in a single step, using
 the CA in the Fabric installation to sign the certificate.
@@ -66,8 +65,8 @@ containing the node's private key and certificate. Before importing the
 certificate into the node's keystore, the CA certificate will be
 displayed, and you will be asked whether it should be trusted.
 
-### Method 2: Using `genkey`
-@anchor genkey
+### Method 2: Using `genkey` @anchor genkey
+
 This method creates the key pair and certificate in multiple steps, and
 is useful if you are using a commercial CA, or if the CA is on a
 separate Fabric installation.
@@ -177,7 +176,7 @@ copied to any node that will contact `valinor`.
 
 @page start-nodes Starting Fabric nodes
 
-Continuing with the example from the [previous section](#node-config),
+Continuing with the example from the [previous section](@ref node-config),
 our example node will be named `valinor` and will use `/opt/fabric` as
 the application home. The commands given are relative to the Fabric
 installation directory.

@@ -10,17 +10,17 @@ manual](http://www.cs.cornell.edu/jif/doc/jif-3.3.0/manual.html).
 
 Fabric extends Jif with several additional features:
   - [using and creating persistent objects on remote stores]
-    (#persistent-objects)
-  - [nested transactions](#transactions)
-  - [remote method calls] (#remote-calls)
-  - [access labels] (#access-labels)
-  - [provider labels] (#provider-labels)
-  - [codebases] (#codebases)
+    (@ref persistent-objects)
+  - [nested transactions](@ref transactions)
+  - [remote method calls] (@ref remote-calls)
+  - [access labels] (@ref access-labels)
+  - [provider labels] (@ref provider-labels)
+  - [codebases] (@ref codebases)
 
 These features are summarized below, but more information can be found in two
 papers about Fabric @cite fabric2009, @cite mobile-fabric-2012.
 
-Persistent objects  @anchor persistent-objects
+Persistent objects @anchor persistent-objects
 ------------------
   Fabric objects are, in general, persistent. Further, they may be stored
   persistently at a remote node (a storage node, or store). Applications that
@@ -45,7 +45,7 @@ Persistent objects  @anchor persistent-objects
   by attaching it to a field or fields of the object. (If multiple
   fields have labels, the object label combines all of them.)
 
-Nested transactions  @anchor transactions
+Nested transactions @anchor transactions
 -------------------
   Fabric computations are organized in _transactions_, which occur, as far as
   the programmer can tell, atomically and in isolation from the rest of the
@@ -66,7 +66,7 @@ Nested transactions  @anchor transactions
   Transactions may be nested freely. The results of a nested transaction are
   only visible to the outer transaction once it successfully commits.
 
-Remote method calls  @anchor remote-calls
+Remote method calls @anchor remote-calls
 -------------------
   Unlike in most distributed object systems, computation in Fabric stays
   on the same network node unless the program explicitly transfers control
@@ -85,7 +85,7 @@ Remote method calls  @anchor remote-calls
   remote worker `w`. Also note that transactions can span multiple
   remote calls; these calls will be executed as a single transaction.
 
-Access labels  @anchor access-labels
+Access labels @anchor access-labels
 -------------
   When an object is accessed during computation on a worker, but is not yet
   cached at the worker, the worker must fetch the object data from the node
@@ -122,7 +122,7 @@ Access labels  @anchor access-labels
   label `{this.store→}`. For any object `o`, the pseudo-field `o.store`
   represents the node on which `o` is stored.
 
-Provider labels  @anchor provider-labels
+Provider labels @anchor provider-labels
 ---------------
   Remote method calls make it possible to invoke a method on a remote node even
   when that node has not previously seen the class of the object receiving the
