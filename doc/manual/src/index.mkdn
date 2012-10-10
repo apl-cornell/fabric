@@ -1,7 +1,7 @@
 Introduction {#index}
 ============
 Fabric is a language and runtime system that supports secure federated
-distributed systems. This document briefly describes the contents of
+distributed computing. This document briefly describes the contents of
 the package and should get you started running some Fabric examples.
 For more information, see our paper "Fabric: A Platform for Secure
 Distributed Computation and Storage" published in SOSP 2009
