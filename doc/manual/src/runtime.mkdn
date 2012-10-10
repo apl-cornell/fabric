@@ -1,0 +1,218 @@
+The Fabric runtime system {#runtime}
+=========================
+There are three types of nodes in the Fabric design: stores, workers,
+and dissemination nodes. In the current implementation, there are no
+separate dissemination nodes; rather each worker and store participates
+as a peer in the dissemination network.
+
+  * @subpage node-config
+  * @subpage start-nodes
+
+
+@page node-config Creating Fabric nodes
+
+Fabric nodes run relative to an _application home_ directory, which
+contains the nodes' configuration and state. As a transitional naming
+mechanism, the application home can also contain naming information,
+specifying how to contact other Fabric nodes.
+
+This guide demonstrates how to create and configure a Fabric node.  As a
+running example, the node we create will be named `valinor` and will use
+`/opt/fabric` as the application home. The commands given are relative
+to the Fabric installation directory.
+
+The name of the node can be any legal DNS hostname. This should ideally
+match the host machine's DNS name. However, with the transitional naming
+mechanism, a node's name need not have a DNS entry, nor is it required
+to match the host machine's DNS name.
+
+
+Create a certificate authority
+------------------------------
+Fabric uses SSL to secure communication between nodes, so each node must
+have an X.509 certificate signed by a certificate authority (CA). While
+commercial CAs may be used, the Fabric distribution uses OpenSSL to
+provide a custom CA for convenience.
+
+This Fabric distribution comes with a CA whose key pair and certificate
+have been pre-generated. Using this pre-generated CA avoids having to
+distribute the CA certificate across separate Fabric installations, but
+is insecure. For security, we recommend creating your own CA:
+~~~
+  $ bin/make-ca
+~~~
+By default, this creates a CA in `etc/ca` of the Fabric installation,
+overwriting any previously generated CA, and saves the CA certificate in
+`etc/ca/ca.crt`.
+
+
+Generate a key pair and certificate
+-----------------------------------
+Each Fabric node needs a key pair and a signed X.509 certificate.  These
+can be created in one of two ways.  The [first method](@ref make-node) is
+provided for convenience.  The [second method](@ref genkey) is suggested for
+better flexibility.
+
+### Method 1: Using `make-node` @anchor make-node
+
+This method creates the key pair and certificate in a single step, using
+the CA in the Fabric installation to sign the certificate.
+~~~
+  $ bin/make-node --app-home /opt/fabric --name valinor
+~~~
+This creates a Java keystore `/opt/fabric/etc/keys/valinor.keystore`
+containing the node's private key and certificate. Before importing the
+certificate into the node's keystore, the CA certificate will be
+displayed, and you will be asked whether it should be trusted.
+
+### Method 2: Using `genkey` @anchor genkey
+
+This method creates the key pair and certificate in multiple steps, and
+is useful if you are using a commercial CA, or if the CA is on a
+separate Fabric installation.
+
+Generate the key pair and the certificate-signing request (CSR).
+~~~
+  $ bin/genkey --app-home /opt/fabric --name valinor
+~~~
+This creates a Java keystore `/opt/fabric/etc/keys/valinor.keystore`
+containing the node's private key, and a CSR in
+`/opt/fabric/etc/csr/valinor.csr`.
+
+Have the CSR signed by a CA. To sign using Fabric's CA facility:
+~~~
+  $ bin/ca-sign /opt/fabric/etc/csr/valinor.csr /tmp/valinor.crt
+~~~
+This creates a signed certificate in `/tmp/valinor.crt`.
+
+Once you have a signed certificate, import it and the CA's certificate
+into the node's keystore:
+~~~
+  $ bin/import-cert --keystore /opt/fabric/etc/keys/valinor.keystore \
+      --ca etc/ca/ca.crt /tmp/valinor.crt
+~~~
+Before importing the certificates, this will display the CA certificate
+and ask you whether it should be trusted.
+
+
+Import other CA certificates
+----------------------------
+If this node will be communicating with nodes whose certificates are
+signed by other CAs, you will also need to import the certificates of
+those CAs.
+~~~
+  $ bin/add-trusted-ca --keystore /opt/fabric/etc/keys/valinor.keystore \
+      other-ca.crt
+~~~
+Before importing the certificate into the node's keystore, this will
+display the CA certificate and ask you whether it should be trusted.
+
+
+Configure the node
+------------------
+Our node `valinor` reads its configuration information from the file
+`etc/config/valinor.properties` in the application home. The Fabric
+distribution offers `etc/config/EXAMPLE.properties.in` as a template.
+Copy this to `/opt/fabric/etc/config/valinor.properties` and edit the
+file:
+~~~
+  $ cp etc/config/EXAMPLE.properties.in /opt/fabric/etc/config/valinor.properties
+  $ vim /opt/fabric/etc/config/valinor.properties
+~~~
+
+This file contains a few configuration parameters:
+  * `fabric.node.keystore` is required. It specifies the location of the
+    node's keystore file. In our example, this is
+    `/opt/fabric/etc/keys/valinor.keystore`.
+
+  * `fabric.worker.homeStore` is only required for workers. It specifies
+    the name of the store that will hold the worker's principal object.
+
+  * `fabric.worker.port` is optional. It specifies the network port on
+    which the node should listen for remote calls. The default worker
+    port is 3372.
+
+  * `fabric.store.port` is optional. For stores, it specifies the
+    network port on which the store should listen for connections. The
+    default store port is 3472.
+
+  * `fabric.node.hostname` is optional. It specifies the IP address or
+    the DNS name of the node's host machine. By default, this is the
+    same as the node's name.
+
+
+Configure name resolution
+-------------------------
+We must specify how other nodes can contact the node we just created.
+Ideally, this is done by adding a DNS entry with with an `A` (or `AAAA`)
+record containing the host machine's IP address and a `TXT` record
+specifying the node's network-port configuration. A store listening on
+port 3472 should have a `TXT` record `"fabric-store: 3472"`. Similarly, a
+worker listening on port 3372 should have a `TXT` record `"fabric-worker:
+3372"`. (Default values are assumed if these records do not exist.) This
+use of the `TXT` record prevents the node's network-port configuration
+from being tied to the node's name (à la http://example.com:8080/) and
+allows the port configuration to change
+over time.
+
+However, because this use of DNS is non-standard, we provide a
+transitional mechanism for resolving node names. To resolve a node,
+Fabric first looks in the `etc/config` directory of the application
+home. If it finds a `.properties` configuration file for the node, then
+it uses the configuration information found in that file. Otherwise, DNS
+is used.
+
+When resolving a node, this transitional naming mechanism must be used
+if (a) the node's name does not match the host machine's DNS name, or
+(b) the node has a non-default port configuration and no corresponding
+`TXT` records in DNS.
+
+To contact such a node, `valinor` must have a copy of the node's
+`.properties` configuration file in the `etc/config` directory of the
+application home. Similarly, if `valinor` relies on the transitional
+mechanism to be found, then its `.properties` configuration file must be
+copied to any node that will contact `valinor`.
+
+
+@page start-nodes Starting Fabric nodes
+
+Continuing with the example from the [previous section](@ref node-config),
+our example node will be named `valinor` and will use `/opt/fabric` as
+the application home. The commands given are relative to the Fabric
+installation directory.
+
+Starting a store
+----------------
+To start `valinor` as a store:
+~~~
+  $ bin/fab-store --app-home /opt/fabric --name valinor
+~~~
+While the store is running, you are presented with a shell for the
+store's colocated worker. You can use this shell to run Fabric
+applications from within the colocated worker. (See @ref running.)
+
+The node's class path must include any non-mobile application classes
+that it will use.  This can be specified with the `--jvm-cp` option:
+~~~
+  $ bin/fab-store --jvm-cp /path/to/classes --app-home /opt/fabric \
+      --name valinor
+~~~
+
+Starting a worker
+-----------------
+The following command starts `valinor` as a worker that is initially
+idle, but is available to receive remote calls.
+~~~
+  $ bin/fab --app-home /opt/fabric --name valinor
+~~~
+
+While the worker is running, you are presented with the worker's shell.
+You can use this shell to run Fabric applications from within the
+worker. (See @ref running.)
+
+The worker's class path must include any non-mobile application classes
+that it will use.  This can be specified with the `--jvm-cp` option:
+~~~
+  $ bin/fab --jvm-cp /path/to/classes --app-home /opt/fabric \
+      --name valinor
+~~~

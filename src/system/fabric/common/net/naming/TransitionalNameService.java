@@ -11,29 +11,12 @@ import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
 import fabric.common.Resources;
+import fabric.common.util.Pair;
 
-public class DefaultNameService implements NameService {
+public class TransitionalNameService implements NameService {
 
-  public enum PortType {
-    WORKER {
-      @Override
-      int getPort(ConfigProperties p) {
-        return p.workerPort;
-      }
-    },
-    STORE {
-      @Override
-      int getPort(ConfigProperties p) {
-        return p.storePort;
-      }
-    },
-    ;
-
-    abstract int getPort(ConfigProperties p);
-  }
-
-  private Map<String, SocketAddress> entries;
-  private SocketAddress defaultAddr;
+  private final Map<Pair<String, PortType>, SocketAddress> entries;
+  private final DNS dns;
 
   /**
    * Loads the entries in the name service from properties files in a directory.
@@ -45,14 +28,13 @@ public class DefaultNameService implements NameService {
    * @param portType
    *          the type of port number to read.
    */
-  public DefaultNameService(PortType portType) throws IOException {
-    ConfigProperties defs = ConfigProperties.getDefaults();
-    this.defaultAddr = new SocketAddress(null, portType.getPort(defs));
+  public TransitionalNameService() throws IOException {
+    dns = new DNS();
 
     //
     // load other properties files from the directory
     //
-    entries = new HashMap<String, SocketAddress>();
+    entries = new HashMap<Pair<String, PortType>, SocketAddress>();
     File directory = Resources.getFile("etc", "config");
     for (File f : directory.listFiles())
       if (f.getName().endsWith(".properties")) {
@@ -66,10 +48,13 @@ public class DefaultNameService implements NameService {
         ConfigProperties props = new ConfigProperties(name);
 
         String host = props.hostname;
-        int port = portType.getPort(props);
 
-        this.entries.put(name, new SocketAddress(InetAddress.getByName(host),
-            port));
+        for (PortType portType : PortType.values()) {
+          int port = portType.getPort(props);
+          this.entries.put(new Pair<String, NameService.PortType>(name,
+              portType), new SocketAddress(InetAddress.getByName(host),
+                  port));
+        }
       }
 
     //
@@ -78,28 +63,35 @@ public class DefaultNameService implements NameService {
     if (NAMING_LOGGER.isLoggable(Level.FINEST)) {
       // find length so output is pretty
       int size = 0;
-      for (String name : entries.keySet())
-        size = name.length() > size ? name.length() : size;
+      for (Pair<String, PortType> name : entries.keySet()) {
+        int length = name.toString().length();
+        size = length > size ? length : size;
+      }
 
       // print nicely
-      for (Map.Entry<String, SocketAddress> e : entries.entrySet())
+      for (Map.Entry<Pair<String, PortType>, SocketAddress> e : entries
+          .entrySet())
         NAMING_LOGGER.finest(String.format("name service: %1$" + size
             + "s -> %2$s", e.getKey(), e.getValue()));
     }
   }
 
   @Override
-  public SocketAddress localResolve(String name) {
-    SocketAddress result = entries.get(name);
-    if (result == null) result = defaultAddr;
+  public SocketAddress localResolve(String name, PortType portType)
+      throws IOException {
+    SocketAddress result =
+        entries.get(new Pair<String, PortType>(name, portType));
+    if (result == null) result = dns.localResolve(name, portType);
 
     return result;
   }
 
   @Override
-  public SocketAddress resolve(String name) {
-    SocketAddress result = entries.get(name);
-    if (result == null) result = defaultAddr;
+  public SocketAddress resolve(String name, PortType portType)
+      throws IOException {
+    SocketAddress result =
+        entries.get(new Pair<String, PortType>(name, portType));
+    if (result == null) result = dns.resolve(name, portType);
 
     return result;
   }

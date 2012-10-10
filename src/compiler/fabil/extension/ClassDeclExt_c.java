@@ -73,7 +73,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Only translate if we're processing a Fabric class.
     if (!pr.typeSystem().isFabricClass(classDecl.type()))
-    // Tag for type serialization.
+      // Tag for type serialization.
       return classDecl.ext(shouldSerializeType(true));
 
     NodeFactory nf = pr.nodeFactory();
@@ -444,11 +444,15 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             (Object) proxyMembers);
     interfaceMembers.add(proxyDecl);
 
+    // Create the serialization method and deserialization constructor, and add
+    // them to the list of static impl members.
+    List<ClassMember> serializationDecls = makeSerializers(pr, implMembers);
+    implMembers.addAll(serializationDecls);
+
     // Create the impl constructor declarations and add them to the list of
     // static impl members.
     ClassMember implConstructorDecl =
-        qq.parseMember("public _Impl(fabric.worker.Store store) "
-            + "throws fabric.net.UnreachableNodeException {"
+        qq.parseMember("public _Impl(fabric.worker.Store store) {"
             + "super(store); }");
     implMembers.add(implConstructorDecl);
 

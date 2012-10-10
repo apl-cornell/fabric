@@ -117,13 +117,13 @@ public class Replicate implements RawMessage {
    */
   public static class Reply implements RawMessage {
 
-    private final Map<Pair<Store, Long>, Glob> globs;
+    private final Map<Pair<RemoteStore, Long>, Glob> globs;
 
-    public Reply(Map<Pair<Store, Long>, Glob> globs) {
+    public Reply(Map<Pair<RemoteStore, Long>, Glob> globs) {
       this.globs = globs;
     }
 
-    public Map<Pair<Store, Long>, Glob> globs() {
+    public Map<Pair<RemoteStore, Long>, Glob> globs() {
       return globs;
     }
 
@@ -141,7 +141,7 @@ public class Replicate implements RawMessage {
     public String toString() {
       String s = "Replicate.Reply [";
 
-      for (Pair<Store, Long> p : globs.keySet()) {
+      for (Pair<RemoteStore, Long> p : globs.keySet()) {
         s = s + p;
       }
 
@@ -153,7 +153,7 @@ public class Replicate implements RawMessage {
       DataOutputBuffer out = new DataOutputBuffer(buf);
       out.writeInt(globs.size());
 
-      for (Map.Entry<Pair<Store, Long>, Glob> e : globs.entrySet()) {
+      for (Map.Entry<Pair<RemoteStore, Long>, Glob> e : globs.entrySet()) {
         out.writeUTF(e.getKey().first.name());
         out.writeLong(e.getKey().second);
         e.getValue().write(out);
@@ -167,7 +167,7 @@ public class Replicate implements RawMessage {
       DataInputBuffer in = new DataInputBuffer(buf);
       Worker worker = Worker.getWorker();
       int n = in.readInt();
-      globs = new HashMap<Pair<Store, Long>, Glob>(n);
+      globs = new HashMap<Pair<RemoteStore, Long>, Glob>(n);
 
       for (int i = 0; i < n; i++) {
         RemoteStore store = worker.getStore(in.readUTF());
@@ -175,7 +175,7 @@ public class Replicate implements RawMessage {
         try {
           Glob g = new Glob(in);
           g.verifySignature(store.getPublicKey());
-          globs.put(new Pair<Store, Long>(store, onum), g);
+          globs.put(new Pair<RemoteStore, Long>(store, onum), g);
         } catch (GeneralSecurityException e) {
         }
       }

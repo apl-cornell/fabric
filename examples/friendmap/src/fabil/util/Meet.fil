@@ -13,10 +13,11 @@ public class Meet extends AbstractPrincipal {
     Principal right
   )
   {
-    fabric$lang$security$AbstractPrincipal$(name);
+    if (left == null || right == null) throw new NullPointerException("Cannot create meet with null principal!");
     this.left  = left;
     this.right = right;
     this.store = store;
+    fabric$lang$security$AbstractPrincipal$(name);
     return this;
   }
 
@@ -29,6 +30,7 @@ public class Meet extends AbstractPrincipal {
     return util$Meet$(store, "(" + left.name() + ") meet (" + right.name() + ")", left, right);
   }
 
+
   public Meet() { super(); }
 
   private void jif$init() { }
@@ -36,7 +38,13 @@ public class Meet extends AbstractPrincipal {
   //////////////////////////////////////////////////////////////////////////////
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////
-
+  public
+  boolean 
+  delegatesTo(Principal p)
+  {
+    return p == left || p == right;
+  }
+  
   /**
    * See Principal.findProofUpto.
    */

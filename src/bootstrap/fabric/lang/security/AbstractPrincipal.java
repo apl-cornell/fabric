@@ -15,37 +15,43 @@ public interface AbstractPrincipal
     public fabric.lang.security.AbstractPrincipal
       fabric$lang$security$AbstractPrincipal$(final java.lang.String name);
     
-    public fabric.lang.security.AbstractPrincipal
-      fabric$lang$security$AbstractPrincipal$(
-      final java.lang.String name, final fabric.lang.security.Principal p);
-    
+    @Override
     public java.lang.String name();
     
+    @Override
     public boolean delegatesTo(fabric.lang.security.Principal p);
     
+    @Override
     public void addDelegatesTo(fabric.lang.security.Principal p);
     
+    @Override
     public void removeDelegatesTo(fabric.lang.security.Principal p);
     
     public boolean superiorsContains(fabric.lang.security.Principal p);
     
+    @Override
     public boolean isAuthorized(java.lang.Object authPrf,
                                 fabric.lang.security.Closure closure,
                                 fabric.lang.security.Label lb,
                                 boolean executeNow);
     
+    @Override
     public fabric.lang.security.ActsForProof findProofDownto(
       fabric.worker.Store store, fabric.lang.security.Principal q,
       java.lang.Object searchState);
     
+    @Override
     public fabric.lang.security.ActsForProof findProofUpto(
       fabric.worker.Store store, fabric.lang.security.Principal p,
       java.lang.Object searchState);
     
+    @Override
     public int hashCode();
     
+    @Override
     public boolean equals(fabric.lang.Object o);
     
+    @Override
     public boolean equals(fabric.lang.security.Principal p);
     
     public static class _Proxy
@@ -53,14 +59,19 @@ public interface AbstractPrincipal
       implements fabric.lang.security.AbstractPrincipal
     {
         
+        @Override
         native public java.lang.String get$name();
         
+        @Override
         native public java.lang.String set$name(java.lang.String val);
         
+        @Override
         native public fabric.util.Map get$superiors();
         
+        @Override
         native public fabric.util.Map set$superiors(fabric.util.Map val);
         
+        @Override
         native public fabric.lang.security.AbstractPrincipal
           fabric$lang$security$AbstractPrincipal$(java.lang.String arg1);
         
@@ -68,30 +79,39 @@ public interface AbstractPrincipal
           fabric$lang$security$AbstractPrincipal$(
           java.lang.String arg1, fabric.lang.security.Principal arg2);
         
+        @Override
         native public java.lang.String name();
         
+        @Override
         native public boolean delegatesTo(fabric.lang.security.Principal arg1);
         
+        @Override
         native public boolean superiorsContains(
           fabric.lang.security.Principal arg1);
         
+        @Override
         native public boolean isAuthorized(java.lang.Object arg1,
                                            fabric.lang.security.Closure arg2,
                                            fabric.lang.security.Label arg3,
                                            boolean arg4);
         
+        @Override
         native public fabric.lang.security.ActsForProof findProofDownto(
           fabric.worker.Store arg1, fabric.lang.security.Principal arg2,
           java.lang.Object arg3);
         
+        @Override
         native public fabric.lang.security.ActsForProof findProofUpto(
           fabric.worker.Store arg1, fabric.lang.security.Principal arg2,
           java.lang.Object arg3);
         
+        @Override
         native public int hashCode();
         
+        @Override
         native public boolean equals(fabric.lang.Object arg1);
         
+        @Override
         native public boolean equals(fabric.lang.security.Principal arg1);
         
         public _Proxy(AbstractPrincipal._Impl impl) { super(impl); }
@@ -106,12 +126,16 @@ public interface AbstractPrincipal
       implements fabric.lang.security.AbstractPrincipal
     {
         
+        @Override
         native public java.lang.String get$name();
         
+        @Override
         native public java.lang.String set$name(java.lang.String val);
         
+        @Override
         native public fabric.util.Map get$superiors();
         
+        @Override
         native public fabric.util.Map set$superiors(fabric.util.Map val);
         
         public _Impl(fabric.worker.Store $location) {
@@ -120,6 +144,7 @@ public interface AbstractPrincipal
         
         native private void jif$init();
         
+        @Override
         native public fabric.lang.security.AbstractPrincipal
           fabric$lang$security$AbstractPrincipal$(final java.lang.String name);
         
@@ -127,38 +152,51 @@ public interface AbstractPrincipal
           fabric$lang$security$AbstractPrincipal$(
           final java.lang.String name, final fabric.lang.security.Principal p);
         
+        @Override
         native public java.lang.String name();
         
+        @Override
         native public boolean delegatesTo(fabric.lang.security.Principal p);
         
+        @Override
         native public void addDelegatesTo(fabric.lang.security.Principal p);
         
+        @Override
         native public void removeDelegatesTo(fabric.lang.security.Principal p);
         
+        @Override
         native public boolean superiorsContains(
           fabric.lang.security.Principal p);
         
+        @Override
         native public boolean isAuthorized(java.lang.Object authPrf,
                                            fabric.lang.security.Closure closure,
                                            fabric.lang.security.Label lb,
                                            boolean executeNow);
         
+        @Override
         native public fabric.lang.security.ActsForProof findProofDownto(
           fabric.worker.Store store, fabric.lang.security.Principal q,
           java.lang.Object searchState);
         
+        @Override
         native public fabric.lang.security.ActsForProof findProofUpto(
           fabric.worker.Store store, fabric.lang.security.Principal p,
           java.lang.Object searchState);
         
+        @Override
         native public int hashCode();
         
+        @Override
         native public boolean equals(fabric.lang.Object o);
         
+        @Override
         native public boolean equals(fabric.lang.security.Principal p);
         
+        @Override
         native protected fabric.lang.Object._Proxy $makeProxy();
         
+        @Override
         native public void $serialize(java.io.ObjectOutput out,
                                       java.util.List refTypes,
                                       java.util.List intraStoreRefs,
@@ -175,6 +213,7 @@ public interface AbstractPrincipal
                   intraStoreRefs);
         }
         
+        @Override
         native public void $copyAppStateFrom(fabric.lang.Object._Impl other);
     }
     
@@ -202,6 +241,7 @@ public interface AbstractPrincipal
                 super(store);
             }
             
+            @Override
             native protected fabric.lang.Object._Proxy $makeProxy();
             
             native private void $init();

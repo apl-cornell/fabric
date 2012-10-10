@@ -28,7 +28,7 @@ public class StoreInstantiator extends JifInstantiator {
       AccessPath storePath) throws SemanticException {
     JifTypeSystem ts = (JifTypeSystem) callerContext.typeSystem();
     AccessPath receiverPath;
-    if (ts.isFinalAccessExprOrConst(ts, receiverExpr, receiverType)) {
+    if (ts.isFinalAccessExprOrConst(receiverExpr, receiverType)) {
       receiverPath =
           ts.exprToAccessPath(receiverExpr, receiverType, callerContext);
     } else {
@@ -91,6 +91,32 @@ public class StoreInstantiator extends JifInstantiator {
       }
       return ap;
     }
+  }
+
+  /**
+   * @param entryLabel
+   * @param a
+   * @param target
+   * @param reference
+   * @param targetLabel
+   * @param formalLabels
+   * @param formalTypes
+   * @param actualLabels
+   * @param arguments
+   * @param emptyList
+   * @param storeap
+   * @return
+   * @throws SemanticException
+   */
+  public static Label instantiate(Label entryLabel, JifContext ctx,
+      Expr target, ReferenceType type, Label targetLabel,
+      List<ArgLabel> formalLabels, List<? extends Type> formalTypes,
+      List<Label> actualLabels, List<Expr> arguments,
+      List<Label> actualParamLabels,
+      AccessPath storeap) throws SemanticException {
+    return JifInstantiator.instantiate(entryLabel, ctx, target, type,
+        targetLabel, formalLabels, formalTypes, actualLabels, arguments,
+        actualParamLabels);
   }
 
 }

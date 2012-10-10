@@ -19,7 +19,6 @@ import jif.types.Assertion;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
 import jif.types.JifContext;
-import jif.types.JifTypeSystem;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabelLeAssertion;
 import jif.types.LabelSubstitution;
@@ -29,6 +28,7 @@ import jif.types.ParamInstance;
 import jif.types.Solver;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
+import jif.types.label.AccessPathUninterpreted;
 import jif.types.label.ArgLabel;
 import jif.types.label.ConfPolicy;
 import jif.types.label.ConfProjectionPolicy_c;
@@ -84,6 +84,7 @@ import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
+import fabric.ast.FabricNodeFactory;
 import fabric.ast.RemoteWorkerGetter;
 import fabric.common.FabricLocation;
 import fabric.lang.Codebase;
@@ -449,12 +450,12 @@ FabricTypeSystem {
   }
 
   @Override
-  public boolean isFinalAccessExpr(JifTypeSystem ts, Expr e) {
+  public boolean isFinalAccessExpr(Expr e) {
     if (e instanceof fabric.ast.Store) {
       fabric.ast.Store store = (fabric.ast.Store) e;
-      return isFinalAccessExpr(ts, store.expr());
+      return isFinalAccessExpr(store.expr());
     }
-    return super.isFinalAccessExpr(ts, e);
+    return super.isFinalAccessExpr(e);
   }
 
   @Override
@@ -465,10 +466,26 @@ FabricTypeSystem {
           "RemoteWorker access paths not yet supported");
     } else if (e instanceof fabric.ast.Store) {
       fabric.ast.Store st = (fabric.ast.Store) e;
+
       return new AccessPathStore(exprToAccessPath(st.expr(), context), Store(),
           st.position());
     }
     return super.exprToAccessPath(e, expectedType, context);
+  }
+
+  @Override
+  public AccessPath storeAccessPathFor(Expr ref, JifContext context)
+      throws SemanticException {
+    AccessPath storeap;
+    FabricNodeFactory nf = (FabricNodeFactory) extensionInfo().nodeFactory();
+    Position pos = Position.compilerGenerated();
+    if (isFinalAccessExpr(ref)) {
+      storeap =
+          new AccessPathStore(exprToAccessPath(ref, context), Store(), pos);
+    } else {
+      storeap = new AccessPathUninterpreted(nf.Store(pos, ref), pos);
+    }
+    return storeap;
   }
 
   @Override
@@ -615,10 +632,54 @@ FabricTypeSystem {
     return super.integProjection(L);
   }
 
+  /**
+   * Returns true if the type has runtime methods for cast and instanceof
+   */
   @Override
-  //XXX: What is the relation between this implementation and
-  // isJifClass? Are signatures for Java classes FabricClasses?
+  public boolean needsDynamicTypeMethods(Type ct) {
+    return isParamsRuntimeRep(ct) || isPersistent(ct) || isFabricInterface(ct);
+  }
+
+  /**
+   * Returns true if the type uses an external class to define its is dynamic type methods
+   */
+  @Override
+  public boolean needsImplClass(Type ct) {
+    return isFabricInterface(ct); // fct is an interface
+  }
+
+  /**
+   * Returns true if type extends fabric.lang.Object
+   */
+  @Override
+  public boolean isPersistent(Type type) {
+    if (type == null) throw new NullPointerException();
+    type = unlabel(type);
+    if (type instanceof ClassType) {
+      ClassType ct = (ClassType) type;
+
+      while (ct != null) {
+        if (typeEquals(ct, FObject())) {
+          return true;
+        }
+        ct = (ClassType) ct.superType();
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Returns true if type does not extend fabric.lang.Object
+   */
+  @Override
+  public boolean isTransient(Type type) {
+    if (type == null) throw new NullPointerException();
+    return type != null && !isPersistent(type);
+  }
+
+  @Override
   public boolean isFabricClass(Type type) {
+
     if (type instanceof ClassType) {
       ClassType ct = (ClassType) type;
 

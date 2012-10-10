@@ -23,4 +23,10 @@ public interface Store extends Expr {
    */
   boolean exprIsNeverNull();
 
+  /**
+   * @return
+   */
+  boolean isLocalStore();
+
+
 }

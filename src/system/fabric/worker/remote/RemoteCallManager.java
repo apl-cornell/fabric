@@ -24,6 +24,7 @@ import fabric.messages.TakeOwnershipMessage;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TakeOwnershipFailedException;
@@ -151,7 +152,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   @Override
   public PrepareTransactionMessage.Response handle(Principal p,
       PrepareTransactionMessage prepareTransactionMessage)
-      throws TransactionPrepareFailedException {
+          throws TransactionPrepareFailedException {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
@@ -167,6 +168,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
 
     try {
       tm.sendPrepareMessages(prepareTransactionMessage.commitTime);
+    } catch (TransactionRestartingException e) {
+      throw new TransactionPrepareFailedException(e);
     } finally {
       tm.associateLog(null);
     }
@@ -181,7 +184,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   @Override
   public CommitTransactionMessage.Response handle(Principal p,
       CommitTransactionMessage commitTransactionMessage)
-      throws TransactionCommitFailedException {
+          throws TransactionCommitFailedException {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry

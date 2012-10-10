@@ -3,6 +3,5 @@ package fabric.worker;
 public interface Store extends fabric.lang.JavaInlineable {
   NodePrincipal getPrincipal();
   fabric.util.Map getRoot();
-  LabelCache labelCache();
   String name();
 }

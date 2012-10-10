@@ -16,21 +16,15 @@ This directory contains the following sub-directories:
   - etc: configuration files for the blog's store and worker
 
 
-Compiling
----------
-To build the example, run 'ant' in the blog example directory:
-
-  $ ant
-
-
 Using
 -----
 This example uses a store named "blog-store" for storing the blog's data, and a
 worker named "blog-worker" for running the web frontend.
 
-  0. Begin in the blog example directory:
+  0. Begin in the blog example directory and compile the example:
 
 	$ cd $FABRIC/examples/blog
+	$ ant
 
   1. Start the "blog-store" store that will be storing the blog's data:
 

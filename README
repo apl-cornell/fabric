@@ -95,15 +95,14 @@ how to build and run it.  We briefly list the examples here:
 
   - examples/sif-hello:
       A demonstration of the Fabric port of the Servlets with
-      Information Flow (SIF) library.  This example shows how web
+      Information Flow (SIF) library [2]. This example shows how web
       services can be built on top of Fabric.
 
   - examples/travel:
-      A more complete demonstration of Fabric's features.  This
-      application involves coordination between an airline, bank, and
-      customer to negotiate the purchase of a ticket.  Each principal
-      (airline, bank, and customer) also has a user interface written
-      using the SIF library.
+      A more complete demonstration of Fabric's features.  This application
+      involves coordination between an airline, bank, and customer to negotiate
+      the purchase of a ticket.  Each principal (airline, bank, and customer)
+      also has a web-based user interface written using the SIF library.
 
   - examples/OO7:
       This is an implementation of the OO7 Object Oriented Database
@@ -179,7 +178,7 @@ calls, and the creation of persistent objects on stores.
     interference from other simultaneous transactions, even those taking
     place at other network nodes.
 
-  - Explicit remote calls are specified using the o.m@w(x) syntax:
+  - Explicit remote calls are specified using the syntax o.m@w(x):
 
       RemoteWorker w = FabricWorker.getWorker().getWorker("workername");
       o.m@w(args);

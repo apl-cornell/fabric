@@ -19,10 +19,8 @@ where
   util.Group.provider         <= {*←}
 {
 
-  /* The store this object is stored on.  Used for allocating Users.
-   * this.store ≽ this
-   */
-//  public final Store {this}@{*→this} store;
+  /** This is a dummy field to set the object label. */
+  public final int {_→; _←} dummy = 0;
 
   /**
    * Create a new Snapp, operated by owner.

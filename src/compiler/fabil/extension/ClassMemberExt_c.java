@@ -30,8 +30,7 @@ public abstract class ClassMemberExt_c extends FabILExt_c implements
   }
 
   @Override
-  public List<ClassMember> staticImplMember(ProxyRewriter pr,
-      ClassDecl classDecl) {
+  public List<ClassMember> staticImplMember(ProxyRewriter pr, ClassDecl parent) {
     return Collections.emptyList();
   }
 
@@ -42,13 +41,12 @@ public abstract class ClassMemberExt_c extends FabILExt_c implements
 
   @Override
   public List<ClassMember> staticInterfaceMember(ProxyRewriter pr,
-      ClassDecl classDecl) {
+      ClassDecl parent) {
     return Collections.emptyList();
   }
 
   @Override
-  public List<ClassMember> staticProxyMember(ProxyRewriter pr,
-      ClassDecl classDecl) {
+  public List<ClassMember> staticProxyMember(ProxyRewriter pr, ClassDecl parent) {
     return Collections.emptyList();
   }
 

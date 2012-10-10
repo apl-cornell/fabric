@@ -20,4 +20,9 @@ public abstract class AbstractSecurityCache {
    * the given cache will no longer be used.
    */
   protected abstract void set(SecurityCache cache);
+
+  /**
+   * Merges this cache with the top-level LabelCache.
+   */
+  protected abstract void mergeWithTopLevel();
 }

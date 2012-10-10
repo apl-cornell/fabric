@@ -12,9 +12,9 @@ import javax.servlet.ServletException;
 import login.*;
 
 public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
-  final Store{this}@{AirlinePrincipal->} localStore;
-  final Store{this}@{AirlinePrincipal->} brokerstore;
-  final principal{this}@{AirlinePrincipal->} broker;
+  final Store{this}@{⊤→} localStore;
+  final Store{this}@{⊤→} brokerstore;
+  final principal{this}@{⊤→} broker;
   
   public AirlineMain() throws ServletException {
     FabricWorker cl = FabricWorker.getWorker();
@@ -30,11 +30,13 @@ public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
         root = (Map) brokerstore.getRoot();
     }
     Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
-    if (root != null) {
-        Object obj = root.get(Config.brokerMapKey);
-        if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
-            brokerInit = (Broker[BankPrincipal, CustomerPrincipal])obj;
-        }
+    atomic {
+      if (root != null) {
+	  Object obj = root.get(Config.brokerMapKey);
+	  if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+	      brokerInit = (Broker[BankPrincipal, CustomerPrincipal])obj;
+	  }
+      }
     }
     broker = brokerInit;
     super();
@@ -57,14 +59,13 @@ public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
   // This method will only be called by the runtime
   protected AuthSessState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
       String{*lbl} id, SessionPrincipal{*lbl} session) {
-    AuthSessState toReturn = null;
     atomic {
       if (localStore != null && localStore equiv worker$ &&
 	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
-	toReturn = new AuthSessState@localStore(id, session);
+	return new AuthSessState@localStore(id, session);
       }
     }
-    return toReturn;
+    return null;
   }
 
   // This method will only be called by the runtime

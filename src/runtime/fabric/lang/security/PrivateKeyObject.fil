@@ -28,9 +28,9 @@ public class PrivateKeyObject {
    * @param p the principal to which this key belongs.
    */
   public PrivateKeyObject fabric$lang$security$PrivateKeyObject$(Principal p, PrivateKey key) {
-    fabric$lang$Object$();
     this.principal = p;
     this.key = key;
+    fabric$lang$Object$();
     return this;
   }
   

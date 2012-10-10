@@ -106,16 +106,7 @@ public class PrincipalUtil {
     SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
     SecurityCache.DelegationPair del =
       new SecurityCache.DelegationPair(superior, granter);
-    java.util.Set deps = cache.removeActsForDependencies(del);
-    if (deps != null) {
-      for (java.util.Iterator iter = deps.iterator(); iter.hasNext();) {
-        SecurityCache.ActsForPair afp = (SecurityCache.ActsForPair) iter.next();
-        cache.removeActsFor(afp);
-      }
-    }
-     
-    // need to notify the label cache too
-    LabelUtil.notifyRevokeDelegation(granter, superior);
+    cache.notifyRevokedDelegation(del);
   }
 
   /**

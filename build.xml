@@ -44,8 +44,11 @@
   <!-- Timestamp file for bootstrap classes. -->
   <property name="bootstrap.tstamp" location="${bootstrap.classes}/.tstamp"/>
 
-  <!-- Documentation directory -->
+  <!-- Documentation directories -->
   <property name="doc" location="${fabric.home}/doc"/>
+  <property name="manual.src" location="${doc}/manual/src"/>
+  <property name="manual.html" location="${doc}/manual/html"/>
+  <property name="manual.pdf" location="${doc}/manual/manual.pdf"/>
 
   <!-- Configuration directory -->
   <property name="etc" location="${fabric.home}/etc"/>
@@ -738,6 +741,69 @@ public class Version {
       <group title="Dissemination Layer"   packages="fabric.dissemination*" />
 
     </javadoc>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Documentation target
+  ****************************************************************************
+  -->
+
+  <target name="manual" depends="check-for-doxygen">
+    <!-- Delete old HTML output. -->
+    <delete dir="${manual.html}"/>
+    <delete file="${manual.pdf}"/>
+    <delete dir="${manual.src}/html"/>
+    <delete dir="${manual.src}/latex"/>
+
+    <!-- Generate HTML and LaTeX. -->
+    <exec executable="${doxygen.executable}" failonerror="true"
+        dir="${manual.src}" />
+
+    <!-- Compile LaTeX. -->
+    <copy file="${manual.src}/utf8.sty" todir="${manual.src}/latex"/>
+    <copy file="${manual.src}/custom.sty" todir="${manual.src}/latex"/>
+    <exec executable="make" failonerror="true" dir="${manual.src}/latex">
+      <arg value="pdf"/>
+    </exec>
+
+    <!-- Move HTML and PDF into place. -->
+    <move file="${manual.src}/html" tofile="${manual.html}"/>
+    <move file="${manual.src}/latex/refman.pdf" tofile="${manual.pdf}"/>
+  </target>
+
+  <!--
+  ____________________________________________________________________________
+    Documentation helper targets.
+  -->
+
+  <target name="check-for-doxygen">
+    <condition property="doxygen.executable" value="doxygen">
+      <not>
+        <isset property="doxygen.executable"/>
+      </not>
+    </condition>
+
+    <property environment="env" />
+
+    <fail message="Failed to find doxygen. Make sure to set the 'doxygen.executable' property in extra.properties.">
+      <condition>
+        <not>
+          <or>
+            <available
+                file="${doxygen.executable}"
+                property="doxygen.available"/>
+            <available
+                file="${doxygen.executable}"
+                property="doxygen.available">
+              <filepath>
+                <pathelement path="${env.PATH}"/>
+              </filepath>
+            </available>
+          </or>
+        </not>
+      </condition>
+    </fail>
   </target>
 
   <!--

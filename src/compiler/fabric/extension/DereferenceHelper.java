@@ -1,11 +1,12 @@
 package fabric.extension;
 
-import jif.ast.JifInstantiator;
 import jif.ast.Jif_c;
 import jif.types.ConstraintMessage;
 import jif.types.JifContext;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
+import jif.types.label.AccessPath;
+import jif.types.label.AccessPathUninterpreted;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
@@ -17,7 +18,6 @@ import polyglot.ast.TypeNode;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import fabric.types.AccessPathStore;
 import fabric.types.FabricReferenceType;
 import fabric.types.FabricTypeSystem;
 
@@ -70,27 +70,37 @@ public class DereferenceHelper {
     // if the ref is a null literal, then the access label check is not required
     if (ref instanceof NullLit) return;
 
+    // Dereferencing a reference with a transient type does not result in a fetch unless
+    // 1) it is java.lang.Object (could refer to a fabric.lang.Object)
+    // 2) it is an Interface (could be implemented by a fabric.lang.Object)
+    if (ts.isTransient(ref.type()) && !ref.type().equals(ts.Object())
+        && !(ref.type().isClass() && ref.type().toClass().flags().isInterface()))
+      return;
+
     // check that the pc and ref label can flow to the access label
     JifContext A = lc.context();
     Label objLabel = Jif_c.getPathMap(ref).NV();
     Label pc = ts.join(Jif_c.getPathMap(ref).N(), A.currentCodePCBound());
-
-    // ({this} <= access label) holds true at all access sites
-//    A.addAssertionLE(thisLabel(ct), toLabel(ct.accessPolicy()));
+    AccessPath storeap = ts.storeAccessPathFor(ref, A);
     if (ts.descendsFrom(targetType, ts.DelegatingPrincipal())) {
-      // this.store >= this holds true for all principals
-      A.addActsFor(
-          ts.dynamicPrincipal(pos,
-              new AccessPathStore(
-                  ts.exprToAccessPath(ref, A), ts.Store(), pos)),
-                  ts.dynamicPrincipal(pos, ts.exprToAccessPath(ref, A)));
+      if (ts.isFinalAccessExpr(ref)) {
+        // this.store >= this holds true for all principals
+        A.addActsFor(ts.dynamicPrincipal(pos, storeap),
+            ts.dynamicPrincipal(pos, ts.exprToAccessPath(ref, A)));
+      }
+      else {
+        // ref is not a final access path, so make an uninterpreted path instead
+        A.addActsFor(ts.dynamicPrincipal(pos, storeap),
+            ts.dynamicPrincipal(pos, new AccessPathUninterpreted(ref, pos)));
+      }
     }
 
     // get the access label of the type
     final ConfPolicy accessPolicy = targetType.accessPolicy();
     final Label accessLabel = ts.toLabel(accessPolicy);
     final Label instantiated =
-        JifInstantiator.instantiate(accessLabel, A, ref, targetType, objLabel);
+        StoreInstantiator.instantiate(accessLabel, A, ref, targetType,
+            objLabel, storeap);
 
     lc.constrain(new NamedLabel("reference label", objLabel),
         LabelConstraint.LEQ, new NamedLabel("access label", instantiated),

@@ -5,13 +5,10 @@ FABRIC="${APP_HOME}/../.."
 PATH="${PATH}:${FABRIC}/bin"
 
 CP="${APP_HOME}/classes"
-CP="${CP}:${FABRIC}/src/lib/transient/classes"
-CP="${CP}:${FABRIC}/lib/fabric-transient.jar"
 CP="${CP}:${FABRIC}/src/lib/sif/classes"
 CP="${CP}:${FABRIC}/lib/fabric-sif.jar"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab-http -classpath "${CP}" "$@" \
-  --name customer ${APP_HOME}/web/customer --port 8080
+fab-http --jvm-cp "${CP}" --app-home "${FABRIC_HOME}" --name "$@"
 

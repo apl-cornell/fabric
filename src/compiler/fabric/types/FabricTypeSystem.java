@@ -1,12 +1,15 @@
 package fabric.types;
 
 import jif.types.Assertion;
+import jif.types.JifContext;
 import jif.types.JifTypeSystem;
 import jif.types.hierarchy.LabelEnv;
+import jif.types.label.AccessPath;
 import jif.types.label.ConfPolicy;
 import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
+import polyglot.ast.Expr;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.ReferenceType;
@@ -52,10 +55,20 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
 
   IntegPolicy representableIntegProjection(Label L);
 
+
+  /**
+   * Returns true if type extends fabric.lang.Object
+   */
+  boolean isPersistent(Type type);
+
+  /**
+   * Returns true if type does not extend fabric.lang.Object
+   */
+  public boolean isTransient(Type type);
+
   /**
    * Checks whether <code>type</code> is a Fabric class, that is, inherits
    * <code>fabric.lang.Object</code>.
-   * Returns false if <code>type</code> is an interface.
    * Returns false if <code>type</code> is an interface.
    */
   boolean isFabricClass(Type type);
@@ -137,5 +150,14 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    */
   Principal remoteWorkerPrincipal(RemoteWorkerGetter worker,
       FabricContext context, Position pos) throws SemanticException;
+
+  /**
+   * @param ref
+   * @param context
+   * @return
+   * @throws SemanticException
+   */
+  AccessPath storeAccessPathFor(Expr ref, JifContext context)
+      throws SemanticException;
 
 }

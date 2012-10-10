@@ -1,0 +1,20 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+# Start the stores.
+"${BIN_DIR}/run-in-xterm" "Broker store" "${BIN_DIR}/start-store" broker &
+"${BIN_DIR}/run-in-xterm" "Airline store" "${BIN_DIR}/start-store" airline &
+"${BIN_DIR}/run-in-xterm" "Bank store" "${BIN_DIR}/start-store" bank &
+
+# Wait a bit for the stores to start up.
+sleep 3
+
+# Start the workers.
+"${BIN_DIR}/run-in-xterm" "Customer webapp worker" \
+  "${BIN_DIR}/start-worker" customer &
+"${BIN_DIR}/run-in-xterm" "Bank webapp worker" \
+  "${BIN_DIR}/start-worker" bankweb &
+"${BIN_DIR}/run-in-xterm" "Airline webapp worker" \
+  "${BIN_DIR}/start-worker" airlineweb &
+

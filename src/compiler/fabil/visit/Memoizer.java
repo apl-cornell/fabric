@@ -22,6 +22,9 @@ import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 
+/**
+ * Adds code for memoizing the result of fabric.lang.security.PairLabel.hashCode().
+ */
 public class Memoizer extends NodeVisitor {
   protected Job job;
   protected NodeFactory nf;
@@ -88,7 +91,7 @@ public class Memoizer extends NodeVisitor {
                 nf.Field(Position.compilerGenerated(),
                     nf.This(Position.compilerGenerated()),
                     nf.Id(Position.compilerGenerated(), valueName)),
-                Assign.ASSIGN, ret.expr());
+                    Assign.ASSIGN, ret.expr());
         return ret.expr(e);
       }
     }
@@ -120,15 +123,15 @@ public class Memoizer extends NodeVisitor {
         Position.compilerGenerated(),
         nf.Field(Position.compilerGenerated(),
             nf.This(Position.compilerGenerated()), flagId),
-        nf.Return(
-            Position.compilerGenerated(),
-            nf.Field(Position.compilerGenerated(),
-                nf.This(Position.compilerGenerated()), valueId))));
+            nf.Return(
+                Position.compilerGenerated(),
+                nf.Field(Position.compilerGenerated(),
+                    nf.This(Position.compilerGenerated()), valueId))));
     stmts.add(nf.Eval(Position.compilerGenerated(), nf.FieldAssign(
         Position.compilerGenerated(),
         nf.Field(Position.compilerGenerated(),
             nf.This(Position.compilerGenerated()), flagId), Assign.ASSIGN,
-        nf.BooleanLit(Position.compilerGenerated(), true))));
+            nf.BooleanLit(Position.compilerGenerated(), true))));
 
     stmts.addAll(md.body().statements());
 

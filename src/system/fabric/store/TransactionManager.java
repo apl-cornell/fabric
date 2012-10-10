@@ -13,7 +13,6 @@ import java.util.Queue;
 import java.util.Random;
 
 import fabric.common.AuthorizationUtil;
-import fabric.common.ClassRef;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -295,9 +294,10 @@ public class TransactionManager {
     }
   }
 
+
   /**
    * Checks that the worker principal has permissions to read/write the given
-   * objects. If it doesn't, a AccessException is thrown.
+   * objects. If it doesn't, an AccessException is thrown.
    */
   private void checkPerms(final Principal worker, final LongSet reads,
       final Collection<SerializedObject> writes) throws AccessException {
@@ -318,8 +318,7 @@ public class TransactionManager {
           // Check read permissions.
           if (!AuthorizationUtil.isReadPermitted(worker, label.$getStore(),
               label.$getOnum())) {
-            return new AccessException("Insufficient privileges to read "
-                + "object " + onum);
+            return new AccessException("read", worker, storeCopy);
           }
         }
 
@@ -334,8 +333,7 @@ public class TransactionManager {
           // Check write permissions.
           if (!AuthorizationUtil.isWritePermitted(worker, label.$getStore(),
               label.$getOnum())) {
-            return new AccessException("Insufficient privileges to write "
-                + "object " + onum);
+            return new AccessException("write", worker, storeCopy);
           }
         }
 
@@ -500,7 +498,7 @@ public class TransactionManager {
       long curOnum = curObject.getOnum();
 
       // Always add surrogates.
-      if (ClassRef.SURROGATE.equals(curObject.getClassRef())) {
+      if (curObject.isSurrogate()) {
         group.put(curOnum, curObject);
         continue;
       }

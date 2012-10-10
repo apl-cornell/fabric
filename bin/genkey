@@ -13,17 +13,22 @@ Usage: $(basename "$0") [options]
   Creates a key pair and certificate-signing request for a Fabric node.
 
 Options:
-  --hostname name
-      the DNS hostname of the node for which the key pair is to be made.
+  --name name
+      the name of the node for which the key pair is to be made.
       Default: ${HOSTNAME:-\$HOSTNAME}
 
   --keysize bits
       the length of the node's private key. Default: ${DEFAULT_KEYSIZE}
 
+  --app-home directory
+      the base directory for the store's configuration and state. This
+      directory must exist.
+      Default: ${TOP}
+
   --keystore filename
       the keystore to which the new key pair is to be added. The keystore will
       be created if it does not exist.
-      Default: ${TOP}/etc/keys/HOSTNAME.keystore
+      Default: APP_HOME/etc/keys/NODE_NAME.keystore
 
   --pass password
       the password for the keystore. This must be at least six characters long.
@@ -32,7 +37,7 @@ Options:
 
   --csr filename
       the filename to which the certificate-signing request will be written.
-      Default: ${TOP}/etc/csr/HOSTNAME.csr
+      Default: APP_HOME/etc/csr/NODE_NAME.csr
 
   The following are optional. If not specified, they will be left blank.
 
@@ -74,15 +79,20 @@ KEYSIZE="${DEFAULT_KEYSIZE}"
 while true; do
   case "$1" in
     "") break ;;
-    --hostname)
+    --name)
       shift
-      HOSTNAME="$1"
-      shift || noArg hostname
+      NODE_NAME="$1"
+      shift || noArg name
       ;;
     --keysize)
       shift
       KEYSIZE="$1"
       shift || noArg keysize
+      ;;
+    --app-home)
+      shift
+      APP_HOME="$1"
+      shift || noArg app-home
       ;;
     --keystore)
       shift
@@ -135,23 +145,27 @@ while true; do
   esac
 done
 
-[[ -z "${HOSTNAME}" ]] && error Must specify a hostname.
+[[ -z "${NODE_NAME}" ]] && NODE_NAME="${HOSTNAME}"
+[[ -z "${NODE_NAME}" ]] && error Must specify a node name.
 
 # Assign default values to unspecified options.
-[[ -z "${KEYSTORE}" ]] && KEYSTORE="${TOP}/etc/keys/${HOSTNAME}.keystore"
-
-if [[ -z "${CSR}" ]] ; then
-  CSR="${TOP}/etc/csr/${HOSTNAME}.csr"
-  mkdir -p "${TOP}/etc/csr"
+[[ -z "${APP_HOME}" ]] && APP_HOME="${TOP}"
+if [[ ! -e "${APP_HOME}" ]] ; then
+  error "Application home directory doesn't exist: ${APP_HOME}"
+fi
+if [[ ! -d "${APP_HOME}" ]] ; then
+  error "Application home not a directory: ${APP_HOME}"
 fi
 
-# Construct the DN.
-DN="CN=${HOSTNAME}"
-[[ -n "${OU}" ]] && DN="${DN}, OU=${OU}"
-[[ -n "${O}" ]] && DN="${DN}, O=${O}"
-[[ -n "${L}" ]] && DN="${DN}, L=${L}"
-[[ -n "${ST}" ]] && DN="${DN}, ST=${ST}"
-[[ -n "${C}" ]] && DN="${DN}, C=${C}"
+if [[ -z "${KEYSTORE}" ]] ; then
+  KEYSTORE="${APP_HOME}/etc/keys/${NODE_NAME}.keystore"
+  mkdir -p "${APP_HOME}/etc/keys" || exit 1
+fi
+
+if [[ -z "${CSR}" ]] ; then
+  CSR="${APP_HOME}/etc/csr/${NODE_NAME}.csr"
+  mkdir -p "${APP_HOME}/etc/csr"|| exit 1
+fi
 
 # If necessary, ask for the keystore password.
 while [[ -z "${PASSWD}" ]] ; do
@@ -183,13 +197,21 @@ while [[ -z "${PASSWD}" ]] ; do
   echo
 done
 
+# Construct the DN.
+DN="CN=${NODE_NAME}"
+[[ -n "${OU}" ]] && DN="${DN}, OU=${OU}"
+[[ -n "${O}" ]] && DN="${DN}, O=${O}"
+[[ -n "${L}" ]] && DN="${DN}, L=${L}"
+[[ -n "${ST}" ]] && DN="${DN}, ST=${ST}"
+[[ -n "${C}" ]] && DN="${DN}, C=${C}"
+
 # Generate the key pair.
-keytool -genkeypair -alias "${HOSTNAME}" -keyalg rsa -keysize "${KEYSIZE}" \
+keytool -genkeypair -alias "${NODE_NAME}" -keyalg rsa -keysize "${KEYSIZE}" \
   -keypass "${PASSWD}" -dname "${DN}" -keystore "${KEYSTORE}" \
   -storepass "${PASSWD}" || exit 1
 
 # Generate the CSR.
-keytool -certreq -alias "${HOSTNAME}" -file "${CSR}" -keystore "${KEYSTORE}" \
+keytool -certreq -alias "${NODE_NAME}" -file "${CSR}" -keystore "${KEYSTORE}" \
   -storepass "${PASSWD}" || exit 1
 
 cat <<EOF

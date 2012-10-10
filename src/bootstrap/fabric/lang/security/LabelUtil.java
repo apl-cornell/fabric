@@ -280,9 +280,11 @@ public interface LabelUtil extends fabric.lang.Object {
         native public static boolean relabelsTo(
           fabric.lang.security.Label arg1, fabric.lang.security.Label arg2);
         
+        @Override
         native public boolean acts_for(fabric.lang.security.Label arg1,
                                        fabric.lang.security.Principal arg2);
         
+        @Override
         native public boolean actsFor(fabric.lang.security.Label arg1,
                                       fabric.lang.security.Principal arg2);
         
@@ -302,10 +304,6 @@ public interface LabelUtil extends fabric.lang.Object {
         native public static int hashCode(fabric.lang.security.Label arg1);
         
         native public static void notifyNewDelegation(
-          fabric.lang.security.Principal arg1,
-          fabric.lang.security.Principal arg2);
-        
-        native public static void notifyRevokeDelegation(
           fabric.lang.security.Principal arg1,
           fabric.lang.security.Principal arg2);
 
@@ -595,9 +593,11 @@ public interface LabelUtil extends fabric.lang.Object {
         native public static boolean relabelsTo(fabric.lang.security.Label from,
                                                 fabric.lang.security.Label to);
         
+        @Override
         native public boolean acts_for(fabric.lang.security.Label actor,
                                        fabric.lang.security.Principal granter);
         
+        @Override
         native public boolean actsFor(fabric.lang.security.Label actor,
                                       fabric.lang.security.Principal granter);
         
@@ -628,12 +628,10 @@ public interface LabelUtil extends fabric.lang.Object {
           fabric.lang.security.Principal granter,
           fabric.lang.security.Principal superior);
         
-        native public static void notifyRevokeDelegation(
-          fabric.lang.security.Principal granter,
-          fabric.lang.security.Principal superior);
-        
+        @Override
         native protected fabric.lang.Object._Proxy $makeProxy();
         
+        @Override
         native public void $serialize(java.io.ObjectOutput out,
                                       java.util.List refTypes,
                                       java.util.List intraStoreRefs,
@@ -659,6 +657,7 @@ public interface LabelUtil extends fabric.lang.Object {
           implements fabric.lang.security.LabelUtil._Static
         {
             
+            @Override
             native public fabric.worker.LocalStore get$localStore();
             
             public _Proxy(fabric.lang.security.LabelUtil._Static._Impl impl) {
@@ -674,6 +673,7 @@ public interface LabelUtil extends fabric.lang.Object {
           implements fabric.lang.security.LabelUtil._Static
         {
             
+            @Override
             native public fabric.worker.LocalStore get$localStore();
             
             public _Impl(fabric.worker.Store store)
@@ -681,6 +681,7 @@ public interface LabelUtil extends fabric.lang.Object {
                 super(store);
             }
             
+            @Override
             native protected fabric.lang.Object._Proxy $makeProxy();
             
             native private void $init();

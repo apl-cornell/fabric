@@ -78,8 +78,13 @@ public abstract class RemoteNode implements Serializable {
       SubSocket socket = getSocket(subSocketFactory);
       try {
         return message.send(socket);
+      } catch (IOException e) {
+        socket = null;
+        throw e;
       } finally {
-        recycle(subSocketFactory, socket);
+        if (socket != null) {
+          recycle(subSocketFactory, socket);
+        }
       }
     } catch (IOException e) {
       throw new NotImplementedException(e);

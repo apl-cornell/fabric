@@ -9,6 +9,7 @@
   <property name="build.sysclasspath" value="ignore" />
 
   <property file="${fabric.home}/config.properties" />
+  <property file="${fabric.home}/extra.properties" />
 
   <!-- Polyglot installation location -->
   <!-- If it is not defined in the properties file, use the environment
@@ -84,6 +85,9 @@
   <!-- fabc executable -->
   <property name="fabc" location="${bin}/fabc" />
 
+  <!-- fabc-in-worker executable -->
+  <property name="fabc-in-worker" location="${bin}/fabc-in-worker" />
+
   <!-- filc executable -->
   <property name="filc" location="${bin}/filc" />
 
@@ -147,12 +151,47 @@
         <arg line="${debug.flag}"/>
         <arg value="-d"/> <arg value="@{dest}"/>
         <arg value="-e"/>
+        <arg value="-no-warnings"/>
         <extra-args/>
         <srcfile/>
         <globmapper from="*.fab" to="*.class"/>
       </apply>
     </sequential>
   </macrodef>
+
+  <macrodef name="fabc-in-worker">
+    <attribute
+        name="dest"
+        description="The output directory."/>
+    <attribute
+        name="worker"
+        description="The name of the worker."/>
+    <attribute
+        name="app-home"
+        description="The home directory of the application."/>
+    <element name="extra-args" implicit="true"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dest="@{dest}"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${fabc-in-worker}"/>
+        <arg value="--name"/> <arg value="@{worker}"/>
+        <arg value="--app-home"/> <arg value="@{app-home}"/>
+        <arg line="${debug.flag}"/>
+        <arg value="-d"/> <arg value="@{dest}"/>
+        <arg value="-e"/>
+        <arg value="-no-warnings"/>
+        <extra-args/>
+        <srcfile/>
+        <globmapper from="*.fab" to="*.class"/>
+      </apply>
+    </sequential>
+  </macrodef>
+
 
   <macrodef name="fabsigc">
     <attribute

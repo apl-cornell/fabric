@@ -59,6 +59,10 @@ while true; do
       debug_suspend=n
       shift
       ;;
+    --suspend)
+      debug_suspend=y
+      shift
+      ;;      
     --*)
       args="${args} '$1' '$2'"
       shift 2

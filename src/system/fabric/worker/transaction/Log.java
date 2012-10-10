@@ -18,6 +18,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
+import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -121,7 +122,40 @@ public final class Log {
 
   public static class CommitState {
     public static enum Values {
-      UNPREPARED, PREPARING, PREPARED, PREPARE_FAILED, COMMITTING, COMMITTED, ABORTING, ABORTED
+      /**
+       * Signifies a transaction before it has been prepared or aborted.
+       */
+      UNPREPARED,
+      /**
+       * Signifies a transaction that is currently being prepared.
+       */
+      PREPARING,
+      /**
+       * Signifies a transaction that has successfully prepared, but has not yet
+       * been committed.
+       */
+      PREPARED,
+      /**
+       * Signifies a transaction that has failed to prepare, but has not yet
+       * been rolled back.
+       */
+      PREPARE_FAILED,
+      /**
+       * Signifies a transaction that is currently being committed.
+       */
+      COMMITTING,
+      /**
+       * Signifies a transaction that has been committed.
+       */
+      COMMITTED,
+      /**
+       * Signifies a transaction that is currently being aborted.
+       */
+      ABORTING,
+      /**
+       * Signifies a transaction that has been aborted.
+       */
+      ABORTED
     }
 
     public Values value = Values.UNPREPARED;
@@ -174,7 +208,9 @@ public final class Log {
     } else {
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
-      this.securityCache = new SecurityCache(null);
+
+      LabelCache labelCache = Worker.getWorker().labelCache;
+      this.securityCache = new SecurityCache(labelCache);
 
       // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
@@ -263,7 +299,9 @@ public final class Log {
 
     if (parent != null) {
       for (ReadMapEntry entry : readsReadByParent) {
-        result.put(entry.obj.onum, entry.versionNumber);
+        if (store.equals(entry.obj.store)) {
+          result.put(entry.obj.onum, entry.versionNumber);
+        }
       }
     }
 
@@ -588,6 +626,9 @@ public final class Log {
       obj.$readMapEntry.versionNumber = 1;
       obj.$isOwned = false;
     }
+
+    // Merge the security cache into the top-level label cache.
+    securityCache.mergeWithTopLevel();
   }
 
   /**

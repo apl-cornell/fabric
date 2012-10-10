@@ -7,9 +7,9 @@ import sif.html.*;
 import fabricated.util.*;
 
 public class LoginAction[principal servP] extends AbstractAction[servP] {
-    final AuthenticatedAction[servP]{this}@{servP->} successAction;
-    final Input[servP]{this}@{servP->} inpUserID;
-    final Input[servP]{this}@{servP->} inpPassword;
+    final AuthenticatedAction[servP]{this}@{⊤→} successAction;
+    final Input[servP]{this}@{⊤→} inpUserID;
+    final Input[servP]{this}@{⊤→} inpPassword;
     
     public LoginAction(Servlet[servP]{this} servlet,
                        AuthenticatedAction[servP]{this} successAction, 
@@ -116,7 +116,7 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
 }
 
 class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
-    private final LoginAction[servP]{this}@{servP->} loginAct;
+    private final LoginAction[servP]{this}@{⊤→} loginAct;
     public SubmitLoginAction(Servlet[servP]{this} s, LoginAction[servP]{this} loginAct) {
         this.loginAct = loginAct;
         super();

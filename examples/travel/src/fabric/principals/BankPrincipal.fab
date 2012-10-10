@@ -12,7 +12,7 @@ public class BankPrincipal extends ExternalPrincipal {
   
   public BankPrincipal() {
     // XXX Is this kind of initialization secure?
-    this.pass  = new BankPassword[this]("knab");
+    this.pass  = new BankPassword[this]("password");
     super("bank");
   }
   

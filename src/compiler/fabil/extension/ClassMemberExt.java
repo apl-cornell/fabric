@@ -30,19 +30,19 @@ public interface ClassMemberExt extends FabILExt {
    * Returns the _Static-interface translation of the class member. The result
    * is a list of class members to be included in the _Static interface.
    */
-  List<ClassMember> staticInterfaceMember(ProxyRewriter pr, ClassDecl classDecl);
+  List<ClassMember> staticInterfaceMember(ProxyRewriter pr, ClassDecl parent);
 
   /**
    * Returns the _Static._Proxy translation of the class member. The result is a
    * list of class members to be included in the _Static._Proxy class.
    */
-  List<ClassMember> staticProxyMember(ProxyRewriter pr, ClassDecl classDecl);
+  List<ClassMember> staticProxyMember(ProxyRewriter pr, ClassDecl parent);
 
   /**
    * Returns the _Static._Impl translation of the class member. The result is a
    * list of class members to be included in the _Static._Impl class.
    */
-  List<ClassMember> staticImplMember(ProxyRewriter pr, ClassDecl classDecl);
+  List<ClassMember> staticImplMember(ProxyRewriter pr, ClassDecl parent);
 
   /**
    * Returns the _Static._Impl.$init translation of the class member. The result

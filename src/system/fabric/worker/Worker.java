@@ -38,9 +38,9 @@ import fabric.common.net.handshake.HandshakeBogus;
 import fabric.common.net.handshake.HandshakeComposite;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 import fabric.common.net.handshake.Protocol;
-import fabric.common.net.naming.DefaultNameService;
-import fabric.common.net.naming.DefaultNameService.PortType;
+import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.net.naming.NameService;
+import fabric.common.net.naming.NameService.PortType;
 import fabric.dissemination.Cache;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
@@ -51,6 +51,7 @@ import fabric.lang.arrays.ObjectArray;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.IntegPolicy;
 import fabric.lang.security.Label;
+import fabric.lang.security.LabelCache;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.admin.WorkerAdmin;
@@ -117,6 +118,9 @@ public final class Worker {
 
   /** The manager to use for fetching objects from stores. */
   protected final FetchManager fetchManager;
+
+  /** The global label cache. */
+  public final LabelCache labelCache;
 
   protected final NodePrincipal principal;
 
@@ -220,8 +224,7 @@ public final class Worker {
     this.remoteWorkers = new HashMap<String, RemoteWorker>();
     this.localStore = new LocalStore();
 
-    NameService storeNameService = new DefaultNameService(PortType.STORE);
-    NameService workerNameService = new DefaultNameService(PortType.WORKER);
+    NameService nameService = new TransitionalNameService();
 
     // initialize the various socket factories
     Protocol authProt;
@@ -234,13 +237,16 @@ public final class Worker {
         new HandshakeComposite(new HandshakeUnauthenticated());
 
     this.authToStore =
-        new SubSocketFactory(authenticateProtocol, storeNameService);
+        new SubSocketFactory(authenticateProtocol, nameService,
+            PortType.STORE);
     this.authToWorker =
-        new SubSocketFactory(authenticateProtocol, workerNameService);
+        new SubSocketFactory(authenticateProtocol, nameService, PortType.WORKER);
     this.unauthToStore =
-        new SubSocketFactory(nonAuthenticateProtocol, storeNameService);
+        new SubSocketFactory(nonAuthenticateProtocol, nameService,
+            PortType.STORE);
     this.authFromAll =
-        new SubServerSocketFactory(authenticateProtocol, workerNameService);
+        new SubServerSocketFactory(authenticateProtocol, nameService,
+            PortType.WORKER);
 
     this.remoteCallManager = new RemoteCallManager(this);
     this.disseminationCaches = new ArrayList<Cache>(1);
@@ -249,13 +255,15 @@ public final class Worker {
     try {
       Constructor<FetchManager> fetchManagerConstructor =
           (Constructor<FetchManager>) Class.forName(config.dissemClass)
-              .getConstructor(Worker.class, Properties.class);
+          .getConstructor(Worker.class, Properties.class);
       this.fetchManager =
           fetchManagerConstructor.newInstance(this,
               config.disseminationProperties);
     } catch (Exception e) {
       throw new InternalError("Unable to load fetch manager", e);
     }
+
+    this.labelCache = new LabelCache();
 
     this.principal =
         initializePrincipal(config.homeStore, principalOnum,
@@ -447,80 +455,87 @@ public final class Worker {
 
     Worker worker = null;
     try {
-      // Parse the command-line options and read in the worker's configuration.
-      final Options opts = new Options(args);
-      final ConfigProperties config = new ConfigProperties(opts.name);
-
-      // log the command line
-      StringBuilder cmd = new StringBuilder("Command Line: Worker");
-      for (String s : args) {
-        cmd.append(" ");
-        cmd.append(s);
-      }
-      WORKER_LOGGER.config(cmd.toString());
-
       try {
-        // If an instance of the worker is already running, connect to it and
-        // act as a remote terminal.
-        WorkerAdmin.connect(config.workerAdminPort, opts.cmd);
-        return;
-      } catch (WorkerNotRunningException e) {
-        // Fall through and initialize the worker.
-      }
+        // Parse the command-line options and read in the worker's configuration.
+        final Options opts = new Options(args);
+        final ConfigProperties config = new ConfigProperties(opts.name);
 
-      initialize(config);
-      worker = getWorker();
-      worker.sigcp = opts.sigcp;
-      worker.filsigcp = opts.filsigcp;
-      worker.codeCache = opts.codeCache;
-      worker.bootcp = opts.bootcp;
-      worker.outputToLocalFS = opts.outputToLocalFS;
-
-      // Attempt to read the principal object to ensure that it exists.
-      final NodePrincipal workerPrincipal = worker.getPrincipal();
-      runInSubTransaction(new Code<Void>() {
-        @Override
-        public Void run() {
-          WORKER_LOGGER.config("Worker principal is " + workerPrincipal);
-          return null;
+        // log the command line
+        StringBuilder cmd = new StringBuilder("Command Line: Worker");
+        for (String s : args) {
+          cmd.append(" ");
+          cmd.append(s);
         }
-      });
+        WORKER_LOGGER.config(cmd.toString());
 
-      // Start listening on the admin port.
-      WorkerAdmin.listen(config.workerAdminPort, worker);
+        try {
+          // If an instance of the worker is already running, connect to it and
+          // act as a remote terminal.
+          WorkerAdmin.connect(config.workerAdminPort, opts.cmd);
+          return;
+        } catch (WorkerNotRunningException e) {
+          // Fall through and initialize the worker.
+        }
 
-      // Construct the source of commands for the worker shell.
-      CommandSource commandSource;
-      if (opts.cmd != null) {
-        commandSource = new TokenizedCommandSource(opts.cmd);
-        if (opts.keepOpen) {
-          CommandSource nextSource;
-          if (opts.interactiveShell) {
-            nextSource = new InteractiveCommandSource(worker);
-          } else {
-            nextSource = new DummyCommandSource();
+        initialize(config);
+        worker = getWorker();
+        worker.sigcp = opts.sigcp;
+        worker.filsigcp = opts.filsigcp;
+        worker.codeCache = opts.codeCache;
+        worker.bootcp = opts.bootcp;
+        worker.outputToLocalFS = opts.outputToLocalFS;
+
+        // Attempt to read the principal object to ensure that it exists.
+        final NodePrincipal workerPrincipal = worker.getPrincipal();
+        runInSubTransaction(new Code<Void>() {
+          @Override
+          public Void run() {
+            WORKER_LOGGER.config("Worker principal is " + workerPrincipal);
+            return null;
           }
-          commandSource = new ChainedCommandSource(commandSource, nextSource);
+        });
+
+        // Start listening on the admin port.
+        WorkerAdmin.listen(config.workerAdminPort, worker);
+
+        // Construct the source of commands for the worker shell.
+        CommandSource commandSource;
+        if (opts.cmd != null) {
+          commandSource = new TokenizedCommandSource(opts.cmd);
+          if (opts.keepOpen) {
+            CommandSource nextSource;
+            if (opts.interactiveShell) {
+              nextSource = new InteractiveCommandSource(worker);
+            } else {
+              nextSource = new DummyCommandSource();
+            }
+            commandSource = new ChainedCommandSource(commandSource, nextSource);
+          }
+        } else if (opts.interactiveShell) {
+          commandSource = new InteractiveCommandSource(worker);
+        } else {
+          commandSource = new DummyCommandSource();
         }
-      } else if (opts.interactiveShell) {
-        commandSource = new InteractiveCommandSource(worker);
-      } else {
-        commandSource = new DummyCommandSource();
-      }
 
-      // Drop into the worker shell.
-      new WorkerShell(worker, commandSource).run();
-    } catch (UsageError ue) {
-      PrintStream out = ue.exitCode == 0 ? System.out : System.err;
-      if (ue.getMessage() != null && ue.getMessage().length() > 0) {
-        out.println(ue.getMessage());
-        out.println();
-      }
+        // Drop into the worker shell.
+        new WorkerShell(worker, commandSource).run();
+      } catch (UsageError ue) {
+        PrintStream out = ue.exitCode == 0 ? System.out : System.err;
+        if (ue.getMessage() != null && ue.getMessage().length() > 0) {
+          out.println(ue.getMessage());
+          out.println();
+        }
 
-      Options.printUsage(out, ue.showSecretMenu);
-      throw new TerminationException(ue.exitCode);
-    } finally {
-      if (worker != null) worker.shutdown();
+        Options.printUsage(out, ue.showSecretMenu);
+        throw new TerminationException(ue.exitCode);
+      } finally {
+        if (worker != null) worker.shutdown();
+      }
+    } catch (TerminationException te) {
+      if (te.getMessage() != null)
+        (te.exitCode == 0 ? System.out : System.err).println(te.getMessage());
+
+      System.exit(te.exitCode);
     }
   }
 

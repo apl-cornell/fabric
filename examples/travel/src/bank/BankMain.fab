@@ -12,9 +12,9 @@ import javax.servlet.ServletException;
 import login.*;
 
 public final class BankMain extends AbstractServlet[BankPrincipal] {
-  final Store{this}@{BankPrincipal->} localStore;
-  final Store{this}@{BankPrincipal->} brokerstore;
-  final principal{this}@{BankPrincipal->} broker;
+  final Store{this}@{⊤→} localStore;
+  final Store{this}@{⊤→} brokerstore;
+  final principal{this}@{⊤→} broker;
   
   public BankMain() throws ServletException {
     FabricWorker cl = FabricWorker.getWorker();
@@ -30,11 +30,13 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
         root = (Map) brokerstore.getRoot();
     }
     Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
-    if (root != null) {
-        Object obj = root.get(Config.brokerMapKey);
-        if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
-            brokerInit = (Broker[BankPrincipal, CustomerPrincipal])obj;
-        }
+    atomic {
+      if (root != null) {
+	  Object obj = root.get(Config.brokerMapKey);
+	  if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+	      brokerInit = (Broker[BankPrincipal, CustomerPrincipal])obj;
+	  }
+      }
     }
     broker = brokerInit;
     super();
@@ -72,13 +74,12 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
   // The id can have a bottom label, since it is a random number 
   // that was just created  
   protected SessionPrincipal createSessionPrincipal(String{⊥→;⊤←} id) {
-    SessionPrincipal toReturn = null;
     atomic {
       if (brokerstore != null) {
-	toReturn = new SessionPrincipal@brokerstore(id);
+	return new SessionPrincipal@brokerstore(id);
       }
     }
-    return toReturn;
+    return null;
   }
 
   /**

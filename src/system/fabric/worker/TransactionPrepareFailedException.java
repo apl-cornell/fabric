@@ -18,6 +18,11 @@ public class TransactionPrepareFailedException extends FabricException {
 
   public final List<String> messages;
 
+  public TransactionPrepareFailedException(TransactionRestartingException cause) {
+    this.messages = null;
+    this.versionConflicts = null;
+  }
+
   public TransactionPrepareFailedException(
       LongKeyMap<SerializedObject> versionConflicts) {
     this.versionConflicts = versionConflicts;

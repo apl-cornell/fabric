@@ -44,8 +44,20 @@ public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c 
         }
       } else if (dp.path() instanceof AccessPathStore) {
         AccessPathStore store = (AccessPathStore) dp.path();
-        Expr e = accessPathToExpr(frw, store.path());
-        return frw.qq().parseExpr("%E.$getStore().getPrincipal()", e);
+        if (ts.isTransient(store.path().type())) {
+          return frw.qq().parseExpr("Worker.getWorker().getPrincipal()");
+        }
+
+        Expr e;
+        if (store.path() instanceof AccessPathThis
+            && frw.staticThisExpr() != null && frw.context().inStaticContext()) {
+          // safe to use "this" since it doesn't result in a fetch.
+          e = frw.staticThisExpr();
+        } else {
+          e = accessPathToExpr(frw, store.path());
+        }
+        /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */
+        return frw.qq().parseExpr("%E.fetch().$getStore().getPrincipal()", e);
       }
     }
     return super.toJava(principal, frw);
@@ -59,7 +71,10 @@ public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c 
     if (ap instanceof AccessPathThis) {
       if (frw.staticThisExpr() != null
           && frw.context().inStaticContext())
-        return frw.staticThisExpr();
+        // replace "this" principal with its store.
+        /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */
+        return frw.qq().parseExpr("%E.fetch().$getStore().getPrincipal()",
+            frw.staticThisExpr());
       else return nf.This(ap.position());
     } else
       return super.accessPathToExpr(frw, ap);

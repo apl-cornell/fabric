@@ -12,7 +12,7 @@ public class AirlinePrincipal extends ExternalPrincipal {
     
     public AirlinePrincipal() {
         // XXX Is this kind of initialization secure?
-        this.pass  = new AirlinePassword[this]("enilria");
+        this.pass  = new AirlinePassword[this]("password");
         super("airline");
     }
   

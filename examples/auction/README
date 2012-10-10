@@ -13,26 +13,17 @@ This directory contains the following sub-directories:
   - bin: a collection of scripts for running the example
   - etc: configuration files for the example's Fabric nodes
 
-Compiling
----------
-To build the initialization code that will set up the principal hierarchy,
-run 'ant' in the auction example directory:
-
-  $ ant
-
-You can expect messages warning that certain exceptions will be treated as
-fatal errors during this and subsequent steps.
-TODO: remove and/or fix spurious error messages.
-
 
 Using
 -----
 This example uses four stores ("brokerStore", "airlineAStore", "airlineBStore",
 and "userStore").
 
-  0. Start in the auction example directory:
+  0. Start in the auction example directory and build the initialization code
+     for setting up the principal hierarchy:
 
       $ cd $FABRIC/examples/auction
+      $ ant
 
   1. Start up instances of the broker, airline, and user stores. The
      'start-all' script will start each store in a separate xterm window:
@@ -51,18 +42,17 @@ and "userStore").
       $ bin/start-store airlineBStore
       $ bin/start-store userStore
 
-     If you are starting from fresh stores, you will need to initialize the
-     application state by following the next step.  Otherwise, skip to step 3
-     below.
+  2. If you are starting from fresh stores, you will need to initialize the
+     application state.  Otherwise, skip to step 3 below.
 
-  2. Run the 'initialize' script to initialize the stores' state.  This will
+     Run the 'initialize' script to initialize the stores' state.  This will
      initialize the principal hierarchy, publish the example's code to the
      stores, and initialize the application's state.
 
       $ bin/initialize
 
-  3. The 'auction' script will run the example.  You should see the output in
-     the broker store's console.
+  3. The 'auction' script will run the example.  You should see output in the
+     broker store's console, indicating that Airline B has won the auction.
 
       $ bin/auction
 

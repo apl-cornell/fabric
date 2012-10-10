@@ -7,7 +7,6 @@ import jif.translate.ClassDeclToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.ParamToJavaExpr_c;
 import jif.types.JifPolyType;
-import jif.types.JifTypeSystem;
 import jif.types.ParamInstance;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
@@ -17,7 +16,6 @@ import polyglot.ast.ClassMember;
 import polyglot.ast.Expr;
 import polyglot.ast.Formal;
 import polyglot.ast.Node;
-import polyglot.ast.NodeFactory;
 import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
 import polyglot.types.ClassType;
@@ -67,35 +65,27 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   }
 
   @Override
-  protected boolean needsDynamicTypeMethods(JifToJavaRewriter rw,
-      JifPolyType jpt) {
-    FabricTypeSystem fabts = (FabricTypeSystem) rw.jif_ts();
-    return fabts.isFabricClass(jpt);
-  }
-
-  @Override
-  protected boolean needsImplClass(JifToJavaRewriter rw, JifPolyType jpt) {
-    FabricTypeSystem fabts = (FabricTypeSystem) rw.jif_ts();
-    return fabts.isFabricInterface(jpt); // fct is an interface
-  }
-
-  @Override
   protected ClassMember produceInstanceOfMethod(JifPolyType jpt, JifToJavaRewriter rw, boolean useGetters) throws SemanticException {
+
     Context A = rw.context();
     FabricToFabilRewriter frw =
         (FabricToFabilRewriter) rw.context(A.pushStatic());
-    JifTypeSystem jifts = frw.jif_ts();
-    List<Formal> formals = produceFormals(jpt, frw, true);
+    FabricTypeSystem jifts = (FabricTypeSystem) frw.jif_ts();
 
+    if (jifts.isTransient(jpt)) {
+      return super.produceInstanceOfMethod(jpt, frw, useGetters);
+    }
+
+    List<Formal> formals = produceFormals(jpt, frw);
     String name = jpt.name();
 
-    // Replace "this" principal by its store.
-    Expr thisPrincipal = frw.qq().parseExpr("o.$getStore().getPrincipal()");
+    // Replace "this" with argument to instanceof.
+    Expr thisPrincipal = frw.qq().parseExpr("o");
     frw.setStaticThisExpr(thisPrincipal);
 
     boolean sigMode = frw.inSignatureMode();
 
-    if (!jifts.isJifClass(jpt) || sigMode) {
+    if (jifts.isSignature(jpt) || sigMode) {
       // just produce a header
       return frw.qq().parseMember("static public native boolean %s(%LF);", INSTANCEOF_METHOD_NAME, formals);
     }
@@ -162,31 +152,18 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
         formals, accessLabelExpr, objectExpr, name, name, name);
   }
 
-
   @Override
-  protected List<Formal> produceFormals(JifPolyType jpt, JifToJavaRewriter rw, boolean addObjectFormal) throws SemanticException {
-    List<Formal> formals = super.produceFormals(jpt, rw, false);
-    NodeFactory javaNf = rw.java_nf();
-
-    if (addObjectFormal) {
-      // add the object argument too.
-      TypeNode tn = rw.qq().parseType("fabric.lang.Object");
-      formals.add(javaNf.Formal(Position.compilerGenerated(), Flags.FINAL, tn,
-          javaNf.Id(Position.compilerGenerated(), "o")));
+  protected Formal produceObjectFormal(JifPolyType jpt, JifToJavaRewriter rw) {
+    FabricTypeSystem ts = (FabricTypeSystem) rw.typeSystem();
+    if (ts.isTransient(jpt)) {
+      return super.produceObjectFormal(jpt, rw);
     }
-
-//    NodeFactory nf = rw.nodeFactory();
-
-    // add access policy formal
-//
-//    Formal al =
-//        nf.Formal(Position.compilerGenerated(), Flags.FINAL,
-//            rw.typeToJava(rw.jif_ts().Label(), Position.compilerGenerated()),
-//            nf.Id(Position.compilerGenerated(), "jif$accessPolicy"));
-//
-//    formals.add(al);
-//
-    return formals;
+    else {
+      TypeNode tn = rw.qq().parseType("fabric.lang.Object");
+      return rw.java_nf().Formal(Position.compilerGenerated(),
+          Flags.FINAL, tn,
+          rw.java_nf().Id(Position.compilerGenerated(), "o"));
+    }
   }
 
 //  @Override

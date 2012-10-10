@@ -30,7 +30,7 @@ where
 
         if (userAlice.p equiv new principal@store (worker$,sn)
         ) {
-
+          // We get a stack overflow error here at runtime.
           final UserWrapper[{*→sn}] aw = new UserWrapper[{*→sn}]@store(store, worker$, sn, userAlice);
           store.getRoot().put("alice", aw);
 
