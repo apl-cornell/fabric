@@ -788,13 +788,18 @@ public class Version {
     <fail message="Failed to find doxygen. Make sure to set the 'doxygen.executable' property in extra.properties.">
       <condition>
         <not>
-          <available
-              file="${doxygen.executable}"
-              property="doxygen.available">
-            <filepath>
-              <pathelement path="${env.PATH}"/>
-            </filepath>
-          </available>
+          <or>
+            <available
+                file="${doxygen.executable}"
+                property="doxygen.available"/>
+            <available
+                file="${doxygen.executable}"
+                property="doxygen.available">
+              <filepath>
+                <pathelement path="${env.PATH}"/>
+              </filepath>
+            </available>
+          </or>
         </not>
       </condition>
     </fail>
