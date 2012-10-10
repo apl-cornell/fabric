@@ -7,6 +7,16 @@ For more information, see our paper "Fabric: A Platform for Secure
 Distributed Computation and Storage" published in SOSP 2009
 @cite fabric2009.
 
+@htmlonly
+A PDF version of this manual <a href="../manual.pdf">is available</a>.
+@endhtmlonly
+@latexonly
+An HTML version of this manual
+\href
+  {http://www.cs.cornell.edu/projects/fabric/manual/0.2.0/html/}
+  {\tt is available}.
+@endlatexonly
+
 More information about Fabric, including the latest release, can be found at
 the [Fabric web site](http://www.cs.cornell.edu/projects/fabric/).
 
