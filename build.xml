@@ -761,6 +761,7 @@ public class Version {
         dir="${manual.src}" />
 
     <!-- Compile LaTeX. -->
+    <copy file="${manual.src}/utf8.sty" todir="${manual.src}/latex"/>
     <copy file="${manual.src}/custom.sty" todir="${manual.src}/latex"/>
     <exec executable="make" failonerror="true" dir="${manual.src}/latex">
       <arg value="pdf"/>
