@@ -1,6 +1,6 @@
 body {font-size: "100%"; background-color: #ffffff; color: black; margin: 0 }
 div.top {background-color: #48C}
-div.top td {font-family: "Trebuchet MS", "lucida sans", helvetica, sans-serif}
+div.top td {font-family: "Cronos Pro", "Trebuchet MS", "lucida sans", helvetica, sans-serif}
 div.top a {color: white }
 div.top a:hover {color: #ffff80 }
 div.top { text-shadow: #102010 2px 2px 2px}
@@ -12,12 +12,12 @@ table {font-family: "Times New Roman", times, serif}
 ul {font-family: "Times New Roman", times, serif}
 a {text-decoration: none; color: #558; font-weight: bold}
 a.email {font-family: System, helvetica, sans-serif}
-h1 {font-size: 300%; font-family: "Trebuchet MS", "lucida sans", helvetica, sans-serif; color: #508050}
+h1 {font-size: 300%; font-family: "Cronos Pro", "Trebuchet MS", "lucida sans", helvetica, sans-serif; color: #508050}
 div.top h1 { color: #ffffff }
-div.top h4 { color: #ffffff; font-family: "Trebuchet MS", helvetica, sans-serif }
-h2 {font-size: "150%"; font-family: "Trebuchet MS", helvetica, sans-serif; color: #669}
+div.top h4 { color: #ffffff; font-family: "Cronos Pro", "Trebuchet MS", helvetica, sans-serif }
+h2 {font-size: "150%"; font-family: "Cronos Pro", "Trebuchet MS", helvetica, sans-serif; color: #669}
 span.ampm {font-variant: small-caps}
-span.name {font-size: "150%"; font-weight: bold; font-family: "Trebuchet MS", helvetica, sans-serif; color: #508050}
+span.name {font-size: "150%"; font-weight: bold; font-family: "Cronos Pro", "Trebuchet MS", helvetica, sans-serif; color: #508050}
 
 table.twocolumn tr td { padding-top: 10; padding-left: 20; padding-right: 20 }
 
@@ -50,11 +50,8 @@ input.download {
     font-family: "Times New Roman", times, serif
     padding-left: 6em;
 }
-input.download:hover {
-    color: #66f;
-}
-input.download-old:hover {
-    color: #66f;
+input.download:hover, input.download-old:hover {
+    color: #48f;
 }
 input.download-old {
     border: none;
