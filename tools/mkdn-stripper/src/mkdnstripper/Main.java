@@ -8,7 +8,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,17 +53,32 @@ public class Main {
     }
 
     for (File file : files) {
-      strip(file);
+      List<String> text = readFile(file);
+      if (text == null) continue;
+
+      text = strip(text);
+
+      for (String s : text)
+        System.out.println(s);
+
+//      try {
+//        Writer writer = new FileWriter(file, false);
+//        writer.write((String) sym.value);
+//        writer.close();
+//      } catch (IOException e) {
+//        e.printStackTrace();
+//      }
+      //
     }
   }
 
-  public static void strip(File file) {
+  private static List<String> readFile(File file) {
     BufferedReader reader;
     try {
       reader = new BufferedReader(new FileReader(file));
     } catch (FileNotFoundException e) {
       System.err.println("File not found: " + file);
-      return;
+      return null;
     }
 
     // Read the file into a buffer.
@@ -79,52 +96,57 @@ public class Main {
           reader.close();
         } catch (IOException e1) {
         }
-        return;
+        return null;
       }
     }
-
-    text = unflow(text);
-    text = unmark(text);
-    text = flow(text);
-
-    for (String s : text)
-      System.out.println(s);
 
     try {
       reader.close();
     } catch (IOException e) {
     }
 
-//    try {
-//      Writer writer = new FileWriter(file, false);
-//      writer.write((String) sym.value);
-//      writer.close();
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    }
-//
+    return text;
+  }
+
+  /**
+   * Strips markdown from a chunk of text and reflows it.
+   */
+  public static List<String> strip(List<String> text) {
+    return flow(stripNoFlow(text, Collections.<String, Integer> emptyMap()));
+  }
+
+  private static List<String> stripNoFlow(List<String> text,
+      Map<String, Integer> citationMap) {
+    text = unflow(text);
+    text = unmark(text, citationMap);
+    return text;
   }
 
   /**
    * Eliminates whitespace and newlines to unflow the given text.
    */
   private static List<String> unflow(List<String> text) {
+    boolean inCodeBlock = false;
     List<String> unflowed = new ArrayList<String>(text.size());
     for (int lineNum = 0; lineNum < text.size();) {
       // Read until we absolutely need a new line.
       String line = trimTrailingWhitespace(text.get(lineNum++));
-      if (line.length() > 0 && !isSectionLine(line)) {
+      if (line.length() > 0 && !isSectionLine(line) && !isCodeBlockFence(line)
+          && !inCodeBlock) {
         while (lineNum < text.size()) {
           String nextLine = text.get(lineNum).trim();
 
-          // Section lines ("----" and "====") go on their own line.
+          // Section lines ("----", "====") go on their own line.
           if (isSectionLine(nextLine)) break;
+
+          // Code block fences ("~~~") go on their own line.
+          if (isCodeBlockFence(nextLine)) break;
 
           // Paragraph break.
           if (nextLine.length() == 0) break;
 
           // Bullet list.
-          if (nextLine.startsWith("* ") || nextLine.startsWith("- ")) break;
+          if (listBullet(nextLine).length() > 0) break;
 
           line += " " + nextLine;
           lineNum++;
@@ -134,6 +156,8 @@ public class Main {
       // Replace tabs with spaces.
       line = replaceTabs(line);
       unflowed.add(line);
+
+      inCodeBlock ^= isCodeBlockFence(line);
     }
 
     return unflowed;
@@ -145,6 +169,9 @@ public class Main {
 
   private static final Pattern TAB_PATTERN = Pattern.compile("\t");
 
+  /**
+   * Replaces tabs with spaces.
+   */
   private static String replaceTabs(String line) {
     Matcher m = TAB_PATTERN.matcher(line);
     StringBuffer sb = new StringBuffer();
@@ -159,7 +186,7 @@ public class Main {
   }
 
   private static final Pattern SECTION_LINE_PATTERN = Pattern
-      .compile("^((-+)|(=+))$");
+      .compile("^(-+|=+)$");
 
   /**
    * Returns true iff given a string that, when trimmed, is entirely '='s or '-'s.
@@ -168,22 +195,44 @@ public class Main {
     return SECTION_LINE_PATTERN.matcher(s.trim()).matches();
   }
 
+  private static final Pattern LIST_BULLET_PATTERN = Pattern
+      .compile("^(\\*|-|\\d+\\.|\\[\\d+\\]) ");
+
+  /**
+   * Returns the bullet portion of the line, if any.
+   */
+  private static String listBullet(String line) {
+    Matcher matcher = LIST_BULLET_PATTERN.matcher(line);
+    if (matcher.find())
+      return matcher.group();
+    else return "";
+  }
+
   /**
    * Removes markdown annotations from the given text. Text is assumed to be
    * unflowed.
    */
-  private static List<String> unmark(List<String> text) {
+  private static List<String> unmark(List<String> text,
+      Map<String, Integer> citationMap) {
     List<String> unmarked = new ArrayList<String>(text.size());
     for (String line : text) {
-      line = stripCitations(line);
+      line = stripCitations(line, citationMap);
       line = stripLinks(line);
       line = stripHeaderLabels(line);
-      unmarked.add(line);
+      line = stripCodeBlockFences(line);
+      if (isInclude(line)) {
+        unmarked.addAll(handleInclude(line));
+      } else {
+        unmarked.add(line);
+      }
     }
 
     return unmarked;
   }
 
+  /**
+   * Does line-wrapping on unwrapped text.
+   */
   private static List<String> flow(List<String> text) {
     List<String> flowed = new ArrayList<String>();
     for (int lineNum = 0; lineNum < text.size();) {
@@ -206,6 +255,9 @@ public class Main {
     return flowed;
   }
 
+  /**
+   * Does line-wrapping on a single line of text.
+   */
   private static List<String> flow(String line) {
     if (line.length() < MAX_LINE_LENGTH)
       return Collections.singletonList(line);
@@ -219,15 +271,13 @@ public class Main {
 
     // Unindent and detect whether we have a list.
     line = line.substring(indentSize);
-    boolean haveList = line.startsWith("* ") || line.startsWith("- ");
-    String listBullet;
-    if (haveList) {
-      // Strip list bullet for now.
-      listBullet = line.substring(0, 2);
-      line = line.substring(2).trim();
-    } else {
-      listBullet = "";
-    }
+    String listBullet = listBullet(line);
+    String hangingIndent = "";
+    for (int i = 0; i < listBullet.length(); i++)
+      hangingIndent += " ";
+
+    // Strip list bullet for now.
+    line = line.substring(listBullet.length()).trim();
 
     List<String> flowed =
         flow(line, MAX_LINE_LENGTH - indentSize - listBullet.length());
@@ -237,7 +287,7 @@ public class Main {
       if (result.isEmpty()) {
         s = listBullet + s;
       } else {
-        s = (haveList ? "  " : "") + s;
+        s = hangingIndent + s;
       }
 
       result.add(indent + s);
@@ -246,6 +296,9 @@ public class Main {
     return result;
   }
 
+  /**
+   * Wraps a single line of text to a certain line length.
+   */
   private static final List<String> flow(String line, int length) {
     List<String> result = new ArrayList<String>();
     while (line.length() > length) {
@@ -270,11 +323,66 @@ public class Main {
     return result;
   }
 
-  private static final Pattern CITE_PATTERN = Pattern
-      .compile("\\s*@cite\\s+\\S+");
+  private static final Pattern INCLUDE_PATTERN = Pattern
+      .compile("^#include\\s+(\\S+)((\\s+\\S+)*)");
 
-  private static String stripCitations(String line) {
-    return trimTrailingWhitespace(regexpReplace(line, CITE_PATTERN, ""));
+  private static boolean isInclude(String line) {
+    return INCLUDE_PATTERN.matcher(line).matches();
+  }
+
+  /**
+   * Handles an "#include" directive.
+   */
+  private static List<String> handleInclude(String line) {
+    Matcher m = INCLUDE_PATTERN.matcher(line);
+    m.find();
+    String fileName = m.group(1);
+    Map<String, Integer> citationMap = makeCitationMap(m.group(2).trim());
+
+    List<String> file = readFile(new File(fileName));
+
+    return stripNoFlow(file, citationMap);
+  }
+
+  private static final Pattern CITATION_MAP_ENTRY_PATTERN = Pattern
+      .compile("(\\d+)=(\\S+)");
+
+  /**
+   * Turns "1=key1 2=key2 3=key3" to a map (key1→1, key2→2, key3→3).
+   */
+  private static Map<String, Integer> makeCitationMap(String s) {
+    Matcher m = CITATION_MAP_ENTRY_PATTERN.matcher(s);
+    Map<String, Integer> result = new HashMap<String, Integer>();
+    while (m.find()) {
+      String key = m.group(2);
+      int value = Integer.parseInt(m.group(1));
+      result.put(key, value);
+    }
+
+    return result;
+  }
+
+  private static final Pattern CITE_PATTERN = Pattern
+      .compile("\\s*@cite\\s+([^\\s.]+)");
+
+  private static String stripCitations(String line,
+      Map<String, Integer> citationMap) {
+    Matcher m = CITE_PATTERN.matcher(line);
+    StringBuffer sb = new StringBuffer();
+    while (m.find()) {
+      String citation = m.group(1);
+      String replacement;
+      if (!citationMap.containsKey(citation)) {
+        replacement = "";
+      } else {
+        replacement = " [" + citationMap.get(citation) + "]";
+      }
+
+      m.appendReplacement(sb, replacement);
+    }
+
+    m.appendTail(sb);
+    return sb.toString();
   }
 
   private static final Pattern LINK_PATTERN = Pattern
@@ -289,6 +397,17 @@ public class Main {
 
   private static String stripHeaderLabels(String line) {
     return trimTrailingWhitespace(regexpReplace(line, HEADER_LABEL_PATTERN, ""));
+  }
+
+  private static final Pattern CODEBLOCK_FENCE_PATTERN = Pattern
+      .compile("^~~~.*$");
+
+  private static boolean isCodeBlockFence(String s) {
+    return CODEBLOCK_FENCE_PATTERN.matcher(s).matches();
+  }
+
+  private static String stripCodeBlockFences(String line) {
+    return regexpReplace(line, CODEBLOCK_FENCE_PATTERN, "");
   }
 
   private static String regexpReplace(String line, Pattern pattern,
