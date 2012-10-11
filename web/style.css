@@ -1,5 +1,5 @@
 body {font-size: "100%"; background-color: #ffffff; color: black; margin: 0 }
-div.top {background-color: #50a0c0}
+div.top {background-color: #48C}
 div.top td {font-family: "Trebuchet MS", "lucida sans", helvetica, sans-serif}
 div.top a {color: white }
 div.top a:hover {color: #ffff80 }
@@ -35,7 +35,7 @@ border-width: 2; float: right; width: 50%}
 tr.projects { border-style: solid; border-width: 1; border-color: black }
 
 body.download {margin: 0; padding: 0}
-div.inset { padding: 10 }
+div.inset { padding: 5ex 6ex }
 div.content { margin: 0; padding: 0 }
 p.explanation { width: 80ex; padding: 25px}
 td.question {vertical-align: top; text-align: right; font-weight: bold }
@@ -72,8 +72,10 @@ form.questionnaire {
 h1 span.title { vertical-align: top }
 
 div.figure {
-    padding: 5ex 5ex 0 0; display: float; float: right
+    padding: 5ex 5ex 2ex 5ex; float: right
 }
+div.figure img { margin: 0 auto }
+
 div.downloads {
 }
 
