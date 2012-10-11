@@ -1,0 +1,146 @@
+<!--
+  This is the Apache Ant build file for the Markdown stripper.
+-->
+
+<project name="mkdn-stripper" default="build-all" basedir=".">
+  <description>
+    Build file for Markdown-stripper tool
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="mkdn-stripper.home" file="${ant.file.mkdn-stripper}" />
+  <path id="mkdn-stripper.classpath">
+    <path refid="polyglot.classpath" />
+  </path>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${mkdn-stripper.home}/classes" />
+  </target>
+
+  <target name="clobber" depends="clean">
+    <delete>
+      <fileset dir="${mkdn-stripper.home}/src">
+        <include name="mkdnstripper/Lexer.java" />
+        <include name="mkdnstripper/Grm.java" />
+        <include name="mkdnstripper/sym.java" />
+      </fileset>
+    </delete>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build" description="Builds the Markdown stripper">
+    <mkdir dir="${mkdn-stripper.home}/classes" />
+    <antcall target="jflex-lexer">
+      <param name="lexer.dir"
+          value="${mkdn-stripper.home}/src/mkdnstripper" />
+      <param name="lexer.class" value="Lexer" />
+      <param name="jflex.file" value="lexer.flex" />
+    </antcall>
+
+    <antcall target="cup-parser">
+      <param name="parser.dir"
+          value="${mkdn-stripper.home}/src/mkdnstripper" />
+      <param name="parser.class" value="Grm" />
+      <param name="symbol.class" value="sym" />
+      <param name="cup.file" value="grm.cup" />
+    </antcall>
+
+    <javac source="1.6" target="1.6" srcdir="${mkdn-stripper.home}/src"
+        destdir="${mkdn-stripper.home}/classes" debug="on"
+        includes="**">
+      <classpath>
+        <path refid="mkdn-stripper.classpath" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+  <!--
+  ****************************************************************************
+    Generic helper stuff for building Polyglot extensions.
+  ****************************************************************************
+  -->
+
+  <target name="jflex-lexer" depends="jflex-lexer-deps"
+      unless="jflex.lexer.up-to-date">
+    <java classname="JFlex.Main" fork="true" dir="${lexer.dir}"
+        failonerror="true">
+      <classpath refid="mkdn-stripper.classpath" />
+      <arg value="${jflex.file}" />
+    </java>
+  </target>
+
+  <target name="jflex-lexer-deps">
+    <dependset>
+      <srcfileset dir="${lexer.dir}" includes="${jflex.file}" />
+      <targetfileset dir="${lexer.dir}" includes="${lexer.class}.java" />
+    </dependset>
+    <available property="jflex.lexer.up-to-date"
+        file="${lexer.dir}/${lexer.class}.java" />
+  </target>
+
+  <target name="cup-parser" depends="cup-parser-using-jar"
+      unless="cup.parser.up-to-date">
+  </target>
+
+  <target name="cup-parser-using-jar" depends="cup-parser-deps"
+      unless="cup.parser.up-to-date">
+    <java classname="java_cup.Main" fork="true" dir="${parser.dir}"
+        failonerror="true">
+      <classpath refid="mkdn-stripper.classpath" />
+      <arg value="-parser" />
+      <arg value="${parser.class}" />
+      <arg value="-symbols" />
+      <arg value="${symbol.class}" />
+      <arg value="${cup.file}" />
+    </java>
+    <replaceregexp
+      file="${parser.dir}/${parser.class}.java"
+      match="^(public )?class"
+      replace="@SuppressWarnings(&quot;all&quot;) \1class"
+      flags="g"
+      byline="yes"
+      />
+  </target>
+
+  <target name="cup-parser-deps">
+    <dependset>
+      <srcfileset dir="${parser.dir}" includes="${cup.file}" />
+      <targetfileset dir="${parser.dir}">
+        <include name="${parser.class}.java" />
+        <include name="${symbol.class}.java" />
+      </targetfileset>
+    </dependset>
+    <condition property="cup.parser.up-to-date">
+      <and>
+        <available file="${parser.dir}/${parser.class}.java" />
+        <available file="${parser.dir}/${symbol.class}.java" />
+      </and>
+    </condition>
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->
