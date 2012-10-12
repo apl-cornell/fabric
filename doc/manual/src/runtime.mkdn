@@ -120,25 +120,60 @@ file:
   $ vim /opt/fabric/etc/config/valinor.properties
 ~~~
 
-This file contains a few configuration parameters:
-  * `fabric.node.keystore` is required. It specifies the location of the
-    node's keystore file. In our example, this is
+In the application home, the file `etc/config.properties` specifies
+configuration parameters common to all nodes that share that application
+home. These values can be overridden in the node-specific configuration
+file.
+
+These configuration files contain several parameters.
+
+### Configuration parameters common to all nodes
+#### Required
+
+  * `fabric.node.keystore` specifies the location of the node's keystore
+    file. In our example, this is
     `/opt/fabric/etc/keys/valinor.keystore`.
 
-  * `fabric.worker.homeStore` is only required for workers. It specifies
-    the name of the store that will hold the worker's principal object.
+  * `fabric.node.password` specifies the password for the node's
+    keystore file.
 
-  * `fabric.worker.port` is optional. It specifies the network port on
-    which the node should listen for remote calls. The default worker
-    port is 3372.
+  * `fabric.node.fetchmanager.class` specifies the class for the
+    dissemination layer implementation. Valid options include
+    `fabric.dissemination.PastryFetchManager` and
+    `fabric.dissemination.DummyFetchManager`.
 
-  * `fabric.store.port` is optional. For stores, it specifies the
-    network port on which the store should listen for connections. The
-    default store port is 3472.
+#### Optional
 
-  * `fabric.node.hostname` is optional. It specifies the IP address or
-    the DNS name of the node's host machine. By default, this is the
-    same as the node's name.
+  * `fabric.node.hostname` specifies the IP address or the DNS name of
+    the node's host machine. By default, this is the same as the node's
+    name.
+
+### Configuration parameters for worker nodes
+#### Required
+
+  * `fabric.worker.homeStore` specifies the name of the store that will
+    hold the worker's principal object.
+
+#### Optional
+
+  * `fabric.worker.port` specifies the network port on which the node
+    should listen for remote calls. The default worker port is 3372.
+
+  * `fabric.worker.adminPort` specifies the network port on which the
+    worker should listen for administrative connections.  The default
+    administrative port is 3572.
+
+### Configuration parameters for storage nodes
+#### Required
+
+  * `fabric.store.db.class` specifies the class for the store's back-end
+    database. Valid options include `fabric.store.db.BdbDB` and
+    `fabric.store.db.MemoryDB`.
+
+#### Optional
+
+  * `fabric.store.port` it specifies the network port on which the store
+    should listen for connections. The default store port is 3472.
 
 
 Configure name resolution
