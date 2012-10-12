@@ -1,11 +1,21 @@
 # Fabric configuration properties.
 
-# Base directory of Jif installation
+# Base directory of Jif installation.
 #   Will override the value defined in environment variable $JIF.
 #   Must be an absolute path.
+#   
+#   If you are using the copy of Jif included in the Fabric
+#   distribution, set this to the base directory of your Fabric
+#   installation.
+#
 jif.home=${env.HOME}/jif
 
-# Base directory of Polyglot installation
-#   Will override the value defined in environment variable $POLYGLOT
+# Base directory of Polyglot installation.
+#   Will override the value defined in environment variable $POLYGLOT.
 #   Must be an absolute path.
+#   
+#   If you are using the copy of Polyglot included in the Fabric
+#   distribution, set this to the base directory of your Fabric
+#   installation.
+#
 polyglot.home=${env.HOME}/polyglot
