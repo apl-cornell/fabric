@@ -4,7 +4,7 @@ Fabric is a language and runtime system that supports secure federated
 distributed computing. This is a quick-start manual to get you started
 running some Fabric examples. A more detailed manual can be found in
 the doc/manual directory of this distribution, or on the web at
-<http://www.cs.cornell.edu/project/fabric/0.2.0/manual/html/>.
+<http://www.cs.cornell.edu/project/fabric/@VERSION@/manual/html/>.
 
 More information about Fabric, including the latest release, can be
 found at the Fabric website <http://www.cs.cornell.edu/project/fabric/>.

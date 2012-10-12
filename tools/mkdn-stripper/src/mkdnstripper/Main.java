@@ -28,49 +28,37 @@ public class Main {
    *          list of source files to strip
    */
   public static void main(String[] args) {
-    if (args.length == 0) {
-      System.err.println("Usage: mkdnstripper.Main [FILE]...");
+    if (args.length != 2) {
+      System.err.println("Usage: mkdnstripper.Main SRC DEST");
       System.err.println();
-      System.err.println("  FILE(s) are clobbered with stripped copies.");
+      System.err.println("  Reads from SRC, strips Markdown codes, and writes "
+          + "the result to DEST.");
       System.err.println();
       return;
     }
 
-    // Construct a list of Files from the given arguments, ensuring we can read
-    // each file.
-    List<File> files = new ArrayList<File>(args.length);
-    for (String filename : args) {
-      File file = new File(filename);
-      if (!file.canRead()) {
-        System.err.println("Unable to read " + filename);
-      } else {
-        files.add(file);
-      }
-    }
-
-    // Abort if any files were unreadable.
-    if (files.size() != args.length) {
-      System.err.println("Aborting -- no files changed.");
+    // Ensure we can read the input file.
+    File source = new File(args[0]);
+    if (!source.canRead()) {
+      System.err.println("Unable to read " + args[0]);
       return;
     }
+    
+    List<String> text = readFile(source);
+    if (text == null) return;
+    
+    text = strip(text);
 
-    for (File file : files) {
-      List<String> text = readFile(file);
-      if (text == null) continue;
-
-      text = strip(text);
-
-      try {
-        Writer writer = new FileWriter(file, false);
-        boolean first = true;
-        for (String s : text) {
-          writer.write((first ? "" : "\n") + s);
-          first = false;
-        }
-        writer.close();
-      } catch (IOException e) {
-        e.printStackTrace();
+    try {
+      Writer writer = new FileWriter(new File(args[1]), false);
+      boolean first = true;
+      for (String s : text) {
+        writer.write((first ? "" : "\n") + s);
+        first = false;
       }
+      writer.close();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 

@@ -1029,24 +1029,34 @@ public class Version {
   </target>
 
   <!-- Creates a distribution tarball from the current working copy. -->
-  <target name="dist.tar"
+  <!--target name="dist.tar"
       depends="configure-version,build-all,jar-all,javadoc,manual,
+        keyword-filter"-->
+  <target name="dist.tar"
+      depends="configure-version,build-all,jar-all,manual,
         keyword-filter">
     <delete dir="${fabric.home}/fabric-${fabric.version}" />
+
+    <!-- Process *.in to insert current year and version. -->
+    <copy todir="${fabric.home}" filtering="yes">
+      <fileset dir="${fabric.home}">
+        <include name="COPYING.in"/>
+        <include name="README.mkdn.in"/>
+      </fileset>
+      <mapper type="glob" from="*.in" to="*"/>
+    </copy>
 
     <!-- Process *.mkdn in top-level directory. -->
     <apply executable="${fabric.home}/tools/mkdn-stripper/bin/strip-mkdn"
         dir="${fabric.home}">
-      <fileset dir="${fabric.home}" includes="*.mkdn"/>
-    </apply>
-    <move todir="${fabric.home}">
+      <srcfile/>
+      <targetfile/>
       <fileset dir="${fabric.home}" includes="*.mkdn"/>
       <mapper type="glob" from="*.mkdn" to="*"/>
-    </move>
+    </apply>
 
-    <!-- Process COPYING to insert current year and version. -->
-    <copy file="${fabric.home}/COPYING.in" tofile="${fabric.home}/COPYING"
-        filtering="yes"/>
+    <!-- Clean up a bit. -->
+    <delete file="${fabric.home}/README.mkdn"/>
 
     <tar destfile="${fabric.home}/fabric-${fabric.version}.tar.gz"
         compression="gzip">
