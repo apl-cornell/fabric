@@ -1,8 +1,8 @@
 This release of the Fabric distribution is governed by the GNU
 Public License as described by the following copyright notice.
 
-Fabric
-Copyright (C) 2010 Fabric project group, Cornell University
+Fabric @version@
+Copyright (C) 2010-@year@ Fabric project group, Cornell University
 
 Fabric is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by

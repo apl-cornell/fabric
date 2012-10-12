@@ -998,6 +998,7 @@ public class Version {
   <target name="dist.tar"
       depends="configure-version,build-all,jar-all,javadoc,manual">
     <delete dir="${fabric.home}/fabric-${fabric.version}" />
+
     <!-- Process *.mkdn in top-level directory. -->
     <apply executable="${fabric.home}/tools/mkdn-stripper/bin/strip-mkdn"
         dir="${fabric.home}">
@@ -1007,6 +1008,16 @@ public class Version {
       <fileset dir="${fabric.home}" includes="*.mkdn"/>
       <mapper type="glob" from="*.mkdn" to="*"/>
     </move>
+
+    <!-- Process COPYING to insert current year and version. -->
+    <tstamp>
+      <format property="this-year" timezone="America/New_York" pattern="yyyy" />
+    </tstamp>
+    <filter token="year" value="${this-year}"/>
+    <filter token="version" value="${fabric.version}"/>
+    <copy file="${fabric.home}/COPYING.in" tofile="${fabric.home}/COPYING"
+        filtering="yes">
+    </copy>
 
     <tar destfile="${fabric.home}/fabric-${fabric.version}.tar.gz"
         compression="gzip">
