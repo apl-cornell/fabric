@@ -1,5 +1,6 @@
 package fabric.types;
 
+import java.net.URI;
 import java.util.Collection;
 
 import jif.types.JifContext_c;
@@ -18,7 +19,6 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.types.CBImportTable;
 import codebases.types.CodebaseTypeSystem;
-import fabric.common.FabricLocation;
 
 public class FabricContext_c extends JifContext_c implements FabricContext {
   private static final Collection<String> TOPICS = CollectionUtil.list(
@@ -106,13 +106,13 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   }
 
   @Override
-  public FabricLocation namespace() {
+  public URI namespace() {
     if (isOuter()) throw new InternalCompilerError("No namespace!");
     return ((CBImportTable) it).namespace();
   }
 
   @Override
-  public FabricLocation resolveCodebaseName(String name) {
+  public URI resolveCodebaseName(String name) {
     return ((CBImportTable) it).resolveCodebaseName(name);
   }
 

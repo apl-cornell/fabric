@@ -1,5 +1,7 @@
 package codebases.ast;
 
+import java.net.URI;
+
 import polyglot.ast.Import;
 import polyglot.ast.JL_c;
 import polyglot.ast.Node;
@@ -16,10 +18,9 @@ import polyglot.visit.TypeChecker;
 import codebases.types.CodebaseContext;
 import codebases.types.CodebaseTypeSystem;
 import codebases.visit.CodebaseTranslator;
-import fabric.common.FabricLocation;
 
 public class CodebaseImportDel_c extends JL_c {
-  protected FabricLocation ns;
+  protected URI ns;
   protected ClassType ct;
   /** Check that imported classes and packages exist. */
   @Override
@@ -38,7 +39,7 @@ public class CodebaseImportDel_c extends JL_c {
     // The first component of the type name must be a package or a codebase
     // alias.
     String pkgName = StringUtil.getFirstComponent(im.name());
-    FabricLocation import_ns;
+    URI import_ns;
 
     Named nt = null;
     import_ns = ts.namespaceResolver(ns).resolveCodebaseName(pkgName);

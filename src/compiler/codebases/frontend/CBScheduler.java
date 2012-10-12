@@ -1,7 +1,8 @@
 package codebases.frontend;
 
+import java.net.URI;
+
 import polyglot.frontend.goals.Goal;
-import fabric.common.FabricLocation;
 
 /**
  * Ideally this interface would extend an interface that all schedulers
@@ -10,5 +11,5 @@ import fabric.common.FabricLocation;
  * @author owen
  */
 public interface CBScheduler {
-  Goal TypeExists(FabricLocation ns, String name);
+  Goal TypeExists(URI ns, String name);
 }

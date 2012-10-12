@@ -1,5 +1,6 @@
 package codebases.types;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,13 +14,12 @@ import polyglot.types.NoClassException;
 import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
 import codebases.frontend.ExtensionInfo;
-import fabric.common.FabricLocation;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
 import fabric.worker.Store;
 
 public class PathResolver extends NamespaceResolver_c implements
-    NamespaceResolver {
+NamespaceResolver {
   private static final Collection<String> TOPICS;
   static {
     TOPICS = new ArrayList<String>(2);
@@ -32,13 +32,13 @@ public class PathResolver extends NamespaceResolver_c implements
   protected boolean load_enc = false;
   protected boolean load_src = false;
 
-  public PathResolver(ExtensionInfo extInfo, FabricLocation ns,
+  public PathResolver(ExtensionInfo extInfo, URI ns,
       List<NamespaceResolver> path) {
-    this(extInfo, ns, path, Collections.<String, FabricLocation> emptyMap());
+    this(extInfo, ns, path, Collections.<String, URI> emptyMap());
   }
 
-  public PathResolver(ExtensionInfo extInfo, FabricLocation ns,
-      List<NamespaceResolver> path, Map<String, FabricLocation> aliases) {
+  public PathResolver(ExtensionInfo extInfo, URI ns,
+      List<NamespaceResolver> path, Map<String, URI> aliases) {
     super(extInfo, ns, null, aliases);
     if (path.contains(null))
       throw new NullPointerException("Null resolver in path!");
@@ -156,7 +156,7 @@ public class PathResolver extends NamespaceResolver_c implements
   }
 
   @Override
-  public FabricLocation resolveCodebaseNameImpl(String name) {
+  public URI resolveCodebaseNameImpl(String name) {
     // if the name isn't in the cache,
     // then no codebase alias exists.
     return null;

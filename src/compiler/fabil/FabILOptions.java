@@ -8,10 +8,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.tools.JavaFileManager.Location;
 
 import polyglot.frontend.ExtensionInfo;
 import polyglot.main.OptFlag;
@@ -21,9 +23,6 @@ import polyglot.main.OptFlag.Switch;
 import polyglot.main.UsageError;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Pair;
-import fabric.common.FabricLocation;
-import fabric.common.FabricLocationFactory;
-import fabric.common.FabricLocation_c;
 import fabric.common.NSUtil;
 
 /**
@@ -32,8 +31,6 @@ import fabric.common.NSUtil;
  * class names seems a bit wonky.
  */
 public class FabILOptions extends polyglot.main.Options {
-  public FabricLocation source_output;
-  public FabricLocation class_output;
   /**
    * Whether we're running in signature mode.
    */
@@ -44,10 +41,13 @@ public class FabILOptions extends polyglot.main.Options {
    */
   public boolean dumpDependencies;
 
+  protected final List<URI> sourcepath_uris;
+  protected final List<URI> classpath_uris;
+
   /**
    * The classpath for the FabIL signatures of Java objects.
    */
-  public List<FabricLocation> sigcp;
+  public final List<File> sigcp;
 
   /**
    * Whether to create a Java skeleton for each class.
@@ -71,23 +71,6 @@ public class FabILOptions extends polyglot.main.Options {
   protected String destinationStore;
 
   /**
-   * Class path. May include Fabric references to codebases. NB: This field
-   * hides the corresponding field in polyglot.main.Options
-   */
-  protected List<FabricLocation> classpath;
-
-  /**
-   * Source path. May include Fabric references to codebases. NB: This field
-   * hides the corresponding field in polyglot.main.Options
-   */
-  protected List<FabricLocation> source_path;
-
-  /**
-   * Default java boot classpath.
-   */
-  public List<FabricLocation> bootclasspath;
-
-  /**
    * Use optimizations.
    */
   public int optLevel;
@@ -95,7 +78,7 @@ public class FabILOptions extends polyglot.main.Options {
   /**
    * Codebase names.
    */
-  protected Map<String, FabricLocation> codebase_aliases;
+  protected Map<String, URI> codebase_aliases;
 
   /**
    * Whether we are building platform classes.
@@ -104,11 +87,10 @@ public class FabILOptions extends polyglot.main.Options {
 
   public FabILOptions(ExtensionInfo extension) {
     super(extension);
-    classpath = new ArrayList<FabricLocation>();
-    source_path = new ArrayList<FabricLocation>();
-    bootclasspath = new ArrayList<FabricLocation>();
-    sigcp = new ArrayList<FabricLocation>();
-    codebase_aliases = new LinkedHashMap<String, FabricLocation>();
+    sigcp = new ArrayList<File>();
+    sourcepath_uris = new ArrayList<URI>();
+    classpath_uris = new ArrayList<URI>();
+    codebase_aliases = new HashMap<String, URI>();
   }
 
   @Override
@@ -118,60 +100,61 @@ public class FabILOptions extends polyglot.main.Options {
     flags.add(new Switch("-dumpdeps", "output dependencies for each class"));
 
     // Override all the path options
-    flags.add(new OptFlag<List<FabricLocation>>("-sigcp", "<path>",
+    flags.add(new OptFlag<List<URI>>("-sigcp", "<path>",
         "path for FabIL signatures (e.g. for fabric.lang.Object)") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
-    flags.add(new OptFlag<List<FabricLocation>>("-addsigcp", "<path>",
+    flags.add(new OptFlag<List<URI>>("-addsigcp", "<path>",
         "additional path for FabIL signatures; prefixed to sigcp") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
-    flags.add(new OptFlag<List<FabricLocation>>(new String[] {"-classpath", "-cp"}, "<path>",
+    flags.add(new OptFlag<List<URI>>(new String[] { "-classpath", "-cp" },
+        "<path>",
         "where to find class files or mobile code to link against,"
             + " may contain <escaped> URIs of codebases") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
-    flags.add(new OptFlag<List<FabricLocation>>("-sourcepath", "<path>",
+    flags.add(new OptFlag<List<URI>>("-sourcepath", "<path>",
         "where to find source files to compile or publish, "
             + "may contain <escaped> URIs of codebases") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
-    flags.add(new OptFlag<List<FabricLocation>>("-bootclasspath", "<path>",
+    flags.add(new OptFlag<List<URI>>("-bootclasspath", "<path>",
         "where to find classes for the Fabric platform",
         "JVM property: sun.boot.class.path (or all jars in java.home/lib)") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
 
       @Override
-      public Arg<List<FabricLocation>> defaultArg() {
+      public Arg<List<URI>> defaultArg() {
         return createDefault(NSUtil.processPathString(jvmbootclasspath()));
       }
 
     });
-    flags.add(new OptFlag<List<FabricLocation>>("-addbootcp", "<path>",
+    flags.add(new OptFlag<List<URI>>("-addbootcp", "<path>",
         "prepend <path> to the bootclasspath") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
@@ -201,11 +184,11 @@ public class FabILOptions extends polyglot.main.Options {
         return createArg(index + 1, args[index]);
       }
     });
-    flags.add(new OptFlag<Pair<String, FabricLocation>>(new String[] {
+    flags.add(new OptFlag<Pair<String, URI>>(new String[] {
         "-codebase-alias", "-cb-alias" }, "<name>",
         "The the destination store for published classes.") {
       @Override
-      public Arg<Pair<String, FabricLocation>> handle(String[] args, int index)
+      public Arg<Pair<String, URI>> handle(String[] args, int index)
           throws UsageError {
 
         String arg = args[index];
@@ -243,8 +226,7 @@ public class FabILOptions extends polyglot.main.Options {
         if (uri.isOpaque() || !uri.isAbsolute())
           throw new UsageError("Invalid codebase reference in alias:" + arg);
 
-        return createArg(index + 1, new Pair<String, FabricLocation>(alias[0],
-            FabricLocationFactory.getLocation(false, uri)));
+        return createArg(index + 1, new Pair<String, URI>(alias[0], uri));
       }
     });
     flags.add(new Switch("-generate-native-skeletons",
@@ -287,27 +269,29 @@ public class FabILOptions extends polyglot.main.Options {
 
     } else if (arg.flag().ids().contains("-sigcp")) {
       sigcp.clear();
-      sigcp.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
-          arg.value(), FabricLocation.class));
+      List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);
+      sigcp.addAll(URIsToFiles(uris));
 
     } else if (arg.flag().ids().contains("-addsigcp")) {
-      sigcp.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
-          arg.value(), FabricLocation.class));
+      List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);
+      sigcp.addAll(URIsToFiles(uris));
 
-    } else if (arg.flag().ids().contains("-addbootcp")) {
-      bootclasspath.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
-          arg.value(), FabricLocation.class));
     } else if (arg.flag().ids().contains("-classpath")) {
-      classpath.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
-          arg.value(), FabricLocation.class));
+      List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);
+      classpathURIs().addAll(uris);
 
     } else if (arg.flag().ids().contains("-sourcepath")) {
-      source_path.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
-          arg.value(), FabricLocation.class));
+      sourcepathURIs().addAll(this.<List<URI>, URI> sccast(arg.value(),
+          URI.class));
 
     } else if (arg.flag().ids().contains("-bootclasspath")) {
-      bootclasspath.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
-          arg.value(), FabricLocation.class));
+      List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);
+      bootclasspathDirectories().addAll(URIsToFiles(uris));
+
+    } else if (arg.flag().ids().contains("-addbootcp")) {
+      List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);
+      bootclasspathDirectories().addAll(URIsToFiles(uris));
+
     } else if (arg.flag().ids().contains("-worker")) {
       workerName = (String) arg.value();
 
@@ -316,10 +300,9 @@ public class FabILOptions extends polyglot.main.Options {
       needWorker = true;
 
     } else if (arg.flag().ids().contains("-codebase-alias")) {
-      Pair<String, FabricLocation> pair =
-      (Pair<String, FabricLocation>) arg.value();
+      Pair<String, URI> pair = (Pair<String, URI>) arg.value();
       String alias = pair.part1();
-      FabricLocation loc = pair.part2();
+      URI loc = pair.part2();
       codebase_aliases.put(alias, loc);
 
     } else if (arg.flag().ids().contains("-generate-native-skeletons")) {
@@ -340,46 +323,39 @@ public class FabILOptions extends polyglot.main.Options {
     if (createSkeleton)
       serialize_type_info = false;
 
-    source_output =
-        new FabricLocation_c("SOURCE_OUTPUT", true,
-            source_output_directory.toURI());
-    class_output =
-        new FabricLocation_c("CLASS_OUTPUT", true,
-            class_output_directory.toURI());
-
     // We need a worker if any path entry or source file
     // is a remote URI
-    for (FabricLocation loc : classpath) {
-      if (loc.isFabricReference())
+    for (URI loc : classpathURIs()) {
+      if (loc.getScheme().equals("fab"))
         needWorker = true;
     }
-    for (FabricLocation loc : source_path) {
-      if (loc.isFabricReference())
+    for (URI loc : sourcepathURIs()) {
+      if (loc.getScheme().equals("fab"))
         needWorker = true;
     }
   }
 
-  public List<File> javaClasspathDirs() {
-    return classpath_directories;
-  }
+//  public List<File> javaClasspathDirs() {
+//    return classpath_directories;
+//  }
 
-  public List<FabricLocation> signaturepath() {
+  public List<File> signaturepath() {
     return sigcp;
   }
 
-  public List<FabricLocation> classpath() {
-    return classpath;
+  public List<URI> classpath() {
+    return classpathURIs();
   }
 
-  public List<FabricLocation> sourcepath() {
-    return source_path;
+  public List<URI> sourcepath() {
+    return sourcepathURIs();
   }
 
-  public List<FabricLocation> bootclasspath() {
-    return bootclasspath;
+  public List<File> bootclasspath() {
+    return bootclasspathDirectories();
   }
 
-  public Map<String, FabricLocation> codebaseAliases() {
+  public Map<String, URI> codebaseAliases() {
     return codebase_aliases;
   }
 
@@ -412,12 +388,12 @@ public class FabILOptions extends polyglot.main.Options {
   }
 
   @Override
-  public FabricLocation outputLocation() {
+  public Location outputLocation() {
     return source_output;
   }
 
   @Override
-  public FabricLocation classOutputDirectory() {
+  public Location classOutputLocation() {
     return class_output;
   }
 
@@ -429,17 +405,35 @@ public class FabILOptions extends polyglot.main.Options {
     return optLevel;
   }
 
+  public static List<File> URIsToFiles(List<URI> uris) {
+    List<File> files = new ArrayList<File>(uris.size());
+    for (URI u : uris) {
+      files.add(new File(u));
+    }
+    return files;
+  }
+
   @Override
   public String constructPostCompilerClasspath() {
     StringBuilder sb = new StringBuilder(super.constructPostCompilerClasspath());
-    for (FabricLocation l : bootclasspath()) {
+    for (File l : bootclasspathDirectories()) {
       sb.append(File.pathSeparator);
-      sb.append(l.getUri().getPath());
+      sb.append(l.getPath());
     }
-    for (FabricLocation l : classpath()) {
-      sb.append(File.pathSeparator);
-      sb.append(l.getUri().getPath());
+    for (URI l : classpath()) {
+      if (l.getScheme().equals("file")) {
+        sb.append(File.pathSeparator);
+        sb.append(l.getPath());
+      }
     }
     return sb.toString();
+  }
+
+  public List<URI> classpathURIs() {
+    return classpath_uris;
+  }
+
+  public List<URI> sourcepathURIs() {
+    return sourcepath_uris;
   }
 }

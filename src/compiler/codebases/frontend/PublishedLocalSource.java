@@ -1,15 +1,14 @@
 package codebases.frontend;
 
 import java.io.IOException;
+import java.net.URI;
 
 import javax.tools.FileObject;
-
-import fabric.common.FabricLocation;
 
 public class PublishedLocalSource extends DerivedLocalSource {
 
   protected PublishedLocalSource(String name, FileObject derivedFrom,
-      boolean userSpecified, FabricLocation namespace) throws IOException {
+      boolean userSpecified, URI namespace) throws IOException {
     super(name, derivedFrom, userSpecified, namespace);
   }
 

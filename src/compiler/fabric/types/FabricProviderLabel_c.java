@@ -1,12 +1,13 @@
 package fabric.types;
 
+import java.net.URI;
+
 import jif.translate.LabelToJavaExpr;
 import jif.types.JifClassType;
 import jif.types.label.ProviderLabel_c;
 import polyglot.types.ParsedClassType;
 import codebases.frontend.ExtensionInfo;
 import codebases.types.CodebaseClassType;
-import fabric.common.FabricLocation;
 
 public class FabricProviderLabel_c extends ProviderLabel_c {
 
@@ -18,7 +19,7 @@ public class FabricProviderLabel_c extends ProviderLabel_c {
       ExtensionInfo extInfo =
           (ExtensionInfo) classType.typeSystem().extensionInfo();
       CodebaseClassType cbct = (CodebaseClassType) classType;
-      FabricLocation ns = cbct.canonicalNamespace();
+      URI ns = cbct.canonicalNamespace();
       // If this class isn't from the local or platform namespace,
       // then we should never trust it.
       if (!ns.equals(extInfo.localNamespace())

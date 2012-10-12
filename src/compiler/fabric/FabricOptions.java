@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,9 +21,6 @@ import polyglot.main.OptFlag.Switch;
 import polyglot.main.UsageError;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Pair;
-import fabric.common.FabricLocation;
-import fabric.common.FabricLocationFactory;
-import fabric.common.FabricLocation_c;
 import fabric.common.NSUtil;
 
 public class FabricOptions extends JifOptions {
@@ -37,46 +34,42 @@ public class FabricOptions extends JifOptions {
    */
   protected String destinationStore;
 
-  /**
-   * Class path. May include Fabric references to codebases. NB: This field
-   * hides the corresponding field in polyglot.main.Options
-   */
-  protected List<FabricLocation> classpath;
+//  /**
+//   * Class path. May include Fabric references to codebases. NB: This field
+//   * hides the corresponding field in polyglot.main.Options
+//   */
+//  protected List<FabricLocation> classpath;
+//
+//  /**
+//   * Source path. May include Fabric references to codebases. NB: This field
+//   * hides the corresponding field in polyglot.main.Options
+//   */
+//  protected List<FabricLocation> source_path;
+//
+//  /**
+//   * Boot classpath. Location of the FabIL runtime classes.
+//   */
+//  public List<FabricLocation> filbootclasspath;
+//
+//  public final List<File> filbootclasspath_directories;
 
-  /**
-   * Source path. May include Fabric references to codebases. NB: This field
-   * hides the corresponding field in polyglot.main.Options
-   */
-  protected List<FabricLocation> source_path;
+//  /**
+//   * Default java boot classpath.
+//   */
+//  public List<FabricLocation> bootclasspath;
+  protected final List<URI> sourcepath_uris;
+  protected final List<URI> classpath_uris;
 
-  /**
-   * Boot classpath. Location of the FabIL runtime classes.
-   */
-  public List<FabricLocation> filbootclasspath;
-
-  /**
-   * Default java boot classpath.
-   */
-  public List<FabricLocation> bootclasspath;
-
-  // /**
-  // * Codebase names.
-  // */
-  // protected Map<String, FabricLocation> codebase_aliases;
 
   public FabricOptions(ExtensionInfo extension) {
     super(extension);
-
-    sigcp = new ArrayList<FabricLocation>();
-    classpath = new ArrayList<FabricLocation>();
-    source_path = new ArrayList<FabricLocation>();
-    filbootclasspath = new ArrayList<FabricLocation>();
-    bootclasspath = new ArrayList<FabricLocation>();
-    codebase_aliases = new LinkedHashMap<String, FabricLocation>();
+    sourcepath_uris = new ArrayList<URI>();
+    classpath_uris = new ArrayList<URI>();
+    codebase_aliases = new HashMap<String, URI>();
   }
 
-  public FabricLocation source_output;
-  public FabricLocation class_output;
+//  public FabricLocation source_output;
+//  public FabricLocation class_output;
 
   /**
    * Whether we're running in signature mode.
@@ -92,11 +85,6 @@ public class FabricOptions extends JifOptions {
    * Name of file to write URL of new codebase to.
    */
   protected String codebaseFilename;
-
-  /**
-   * The classpath for the Fabric signatures of FabIL and Java classes.
-   */
-  public List<FabricLocation> sigcp;
 
   /**
    * Whether we are building platform classes.
@@ -116,25 +104,7 @@ public class FabricOptions extends JifOptions {
   /**
    * Codebase names.
    */
-  protected Map<String, FabricLocation> codebase_aliases;
-
-  //  @Override
-  //  public void setDefaultValues() {
-  //    super.setDefaultValues();
-  //
-  //    // Override default in Jif: do not trust providers.
-  //    this.trustedProviders = false;
-  //
-  //    this.fully_qualified_names = true;
-  //    this.fatalExceptions = true;
-  //    this.publishOnly = false;
-  //
-  //    this.sigcp = new ArrayList<FabricLocation>();
-  //  }
-
-  /* FabIL Options (forwarded to delegate ) ********************************** */
-
-  // protected FabILOptions delegate;
+  protected Map<String, URI> codebase_aliases;
 
   /**
    * Whether to publish source to Fabric.
@@ -146,82 +116,39 @@ public class FabricOptions extends JifOptions {
    */
   protected boolean needWorker;
 
-  // @Override
-  // public boolean dumpDependencies() {
-  // return delegate.dumpDependencies;
-  // }
-  //
-  // @Override
-  // public boolean signatureMode() {
-  // return delegate.signatureMode();
-  // }
-
-  // /* Parsing
-  // ***************************************************************** */
-  // @Override
-  // public void usage(PrintStream out) {
-  // super.usage(out);
-  // usageForFlag(out, "-filsigcp <path>",
-  // "path for FabIL signatures (e.g. for fabric.lang.Object)");
-  // usageForFlag(out, "-addfilsigcp <path>",
-  // "additional path for FabIL signatures; prefixed to sigcp");
-  // usageForFlag(out, "-worker <worker>", "compile as a specific worker");
-  // usageForFlag(out, "-deststore <store>",
-  // "publish source to a Fabric store (all source on the commandline and"
-  // + " loaded through the sourcepath will be published)");
-  // usageForFlag(out, "-codebase-alias <name>=<URI>",
-  // "associate a codebase with an alias in source files");
-  // usageForFlag(out, "-publish", "Publish source to Fabric.");
-  // usageForFlag(out, "-publish-only",
-  // "Verify and publish source, do not compile to bytecode.");
-  // usageForFlag(out, "-codebase-output-file <filename>",
-  // "Write Fabric reference of published codebase to file.");
-  // usageForFlag(out, "-generate-native-skeletons",
-  // "generate FabIL and Java bootstrap skeletons for each class");
-  // usageForFlag(out, "-no-fail-on-exception",
-  // "Force runtime exceptions to be caught or declared.");
-  //
-  // usageForFlag(out, "-O", "turn optimizations on");
-  //
-  // out.println("Most <path> arguments accept local directory paths as well as");
-  // out.println("Fabric references to codebases objects in the following form:");
-  // usageForFlag(out, "<path>",
-  // "\"<fab://store/codebase_onum>:/path/to/local/dir/:...\"");
-  // }
-
   @Override
   protected void populateFlags(Set<OptFlag<?>> flags) {
     flags.add(new Switch("-sig", "compile sources to signatures"));
 
-    flags.add(new OptFlag<List<FabricLocation>>("-sigcp", "<path>",
+    flags.add(new OptFlag<List<URI>>("-sigcp", "<path>",
         "path for Fabric signatures (e.g. for fabric.lang.Object)") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
-    flags.add(new OptFlag<List<FabricLocation>>("-addsigcp", "<path>",
+    flags.add(new OptFlag<List<URI>>("-addsigcp", "<path>",
         "additional path for Fabric signatures; prefixed to sigcp") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
-    flags.add(new OptFlag<List<FabricLocation>>("-filsigcp", "<path>",
+    flags.add(new OptFlag<List<URI>>("-filsigcp", "<path>",
         "path for Fabric signatures (e.g. for fabric.lang.Object)") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
-    flags.add(new OptFlag<List<FabricLocation>>("-addfilsigcp", "<path>",
+    flags.add(new OptFlag<List<URI>>("-addfilsigcp", "<path>",
         "additional path for Fabric signatures; prefixed to sigcp") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
@@ -239,38 +166,38 @@ public class FabricOptions extends JifOptions {
     flags.add(new Switch("-no-fail-on-exception",
         "Force runtime exceptions to be caught or declared."));
 
-    flags.add(new OptFlag<List<FabricLocation>>(new String[] { "-classpath",
+    flags.add(new OptFlag<List<URI>>(new String[] { "-classpath",
     "-cp" }, "<path>",
     "where to find class files or mobile code to link against,"
         + " may contain <escaped> URIs of codebases") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
-    flags.add(new OptFlag<List<FabricLocation>>("-sourcepath", "<path>",
+    flags.add(new OptFlag<List<URI>>("-sourcepath", "<path>",
         "where to find source files to compile or publish, "
             + "may contain <escaped> URIs of codebases") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
-    flags.add(new OptFlag<List<FabricLocation>>("-bootclasspath", "<path>",
+    flags.add(new OptFlag<List<URI>>("-bootclasspath", "<path>",
         "where to find classes for the Fabric platform") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
-    flags.add(new OptFlag<List<FabricLocation>>("-addbootcp", "<path>",
+    flags.add(new OptFlag<List<URI>>("-addbootcp", "<path>",
         "prepend <path> to the bootclasspath") {
       @Override
-      public Arg<List<FabricLocation>> handle(String[] args, int index) {
-        List<FabricLocation> path = NSUtil.processPathString(args[index]);
+      public Arg<List<URI>> handle(String[] args, int index) {
+        List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
     });
@@ -302,11 +229,11 @@ public class FabricOptions extends JifOptions {
         return createArg(index + 1, args[index]);
       }
     });
-    flags.add(new OptFlag<Pair<String, FabricLocation>>(new String[] {
+    flags.add(new OptFlag<Pair<String, URI>>(new String[] {
         "-codebase-alias", "-cb-alias" }, "<name>",
         "The the destination store for published classes.") {
       @Override
-      public Arg<Pair<String, FabricLocation>> handle(String[] args, int index)
+      public Arg<Pair<String, URI>> handle(String[] args, int index)
           throws UsageError {
 
         String arg = args[index];
@@ -344,8 +271,7 @@ public class FabricOptions extends JifOptions {
         if (uri.isOpaque() || !uri.isAbsolute())
           throw new UsageError("Invalid codebase reference in alias:" + arg);
 
-        return createArg(index + 1, new Pair<String, FabricLocation>(alias[0],
-            FabricLocationFactory.getLocation(false, uri)));
+        return createArg(index + 1, new Pair<String, URI>(alias[0], uri));
       }
     });
     flags.add(new Switch("-generate-native-skeletons",
@@ -364,7 +290,12 @@ public class FabricOptions extends JifOptions {
   protected int parseSourceArg(String[] args, int index) {
     URI u = URI.create(args[index]);
     if (!u.isAbsolute()) {
-      File f = new File(args[index]).getAbsoluteFile();
+      File f;
+      try {
+        f = new File(args[index]).getCanonicalFile();
+      } catch (IOException e) {
+        throw new InternalCompilerError(e);
+      }
       u = NSUtil.file.resolve(f.toURI());
     }
     Arg<URI> src = new Arg<URI>(index + 1, u);
@@ -392,28 +323,28 @@ public class FabricOptions extends JifOptions {
       // handled by FabIL
     } else if (arg.flag().ids().contains("-sigcp")) {
       sigcp.clear();
-      sigcp.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
-          arg.value(), FabricLocation.class));
+      List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);
+      sigcp.addAll(URIsToFiles(uris));
 
     } else if (arg.flag().ids().contains("-addsigcp")) {
-      sigcp.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
-          arg.value(), FabricLocation.class));
+      List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);
+      sigcp.addAll(URIsToFiles(uris));
 
     } else if (arg.flag().ids().contains("-classpath")) {
-      classpath.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
-          arg.value(), FabricLocation.class));
+      List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);
+      classpathURIs().addAll(uris);
 
     } else if (arg.flag().ids().contains("-sourcepath")) {
-      source_path.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
-          arg.value(), FabricLocation.class));
+      sourcepathURIs().addAll(this.<List<URI>, URI> sccast(arg.value(),
+          URI.class));
 
     } else if (arg.flag().ids().contains("-bootclasspath")) {
-      bootclasspath.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
-          arg.value(), FabricLocation.class));
+      List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);
+      bootclasspathDirectories().addAll(URIsToFiles(uris));
 
     } else if (arg.flag().ids().contains("-addbootcp")) {
-      bootclasspath.addAll(this.<List<FabricLocation>, FabricLocation> sccast(
-          arg.value(), FabricLocation.class));
+      List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);
+      bootclasspathDirectories().addAll(URIsToFiles(uris));
 
     } else if (arg.flag().ids().contains("-publish")) {
       publish = (Boolean) arg.value();
@@ -438,10 +369,9 @@ public class FabricOptions extends JifOptions {
       needWorker = true;
 
     } else if (arg.flag().ids().contains("-codebase-alias")) {
-      Pair<String, FabricLocation> pair =
-      (Pair<String, FabricLocation>) arg.value();
+      Pair<String, URI> pair = (Pair<String, URI>) arg.value();
       String alias = pair.part1();
-      FabricLocation loc = pair.part2();
+      URI loc = pair.part2();
       codebase_aliases.put(alias, loc);
 
     } else if (arg.flag().ids().contains("-generate-native-skeletons")) {
@@ -456,6 +386,13 @@ public class FabricOptions extends JifOptions {
     } else super.handleArg(arg);
   }
 
+  public static List<File> URIsToFiles(List<URI> uris) {
+    List<File> files = new ArrayList<File>(uris.size());
+    for (URI u : uris) {
+      files.add(new File(u));
+    }
+    return files;
+  }
   /**
    * Filter and add arguments for FabIL.
    * @param flags
@@ -466,10 +403,10 @@ public class FabricOptions extends JifOptions {
       throws UsageError {
     List<Arg<?>> fabILArgs = new ArrayList<OptFlag.Arg<?>>();
 
-    OptFlag<List<FabricLocation>> sigcp =
-        (OptFlag<List<FabricLocation>>) OptFlag.lookupFlag("-sigcp", flags);
-    OptFlag<List<FabricLocation>> addsigcp =
-        (OptFlag<List<FabricLocation>>) OptFlag.lookupFlag("-addsigcp", flags);
+    OptFlag<List<URI>> sigcp =
+        (OptFlag<List<URI>>) OptFlag.lookupFlag("-sigcp", flags);
+    OptFlag<List<URI>> addsigcp =
+        (OptFlag<List<URI>>) OptFlag.lookupFlag("-addsigcp", flags);
 
     for (Arg<?> arg : arguments) {
       if (arg.flag() != null) {
@@ -481,11 +418,9 @@ public class FabricOptions extends JifOptions {
         }
         // Rewrite FabIL sigcp args
         else if (arg.flag().ids().contains("-filsigcp")) {
-          fabILArgs
-          .add(sigcp.createArg(-1, (List<FabricLocation>) arg.value()));
+          fabILArgs.add(sigcp.createArg(-1, (List<URI>) arg.value()));
         } else if (arg.flag().ids().contains("-addfilsigcp")) {
-          fabILArgs.add(addsigcp.createArg(-1,
-              (List<FabricLocation>) arg.value()));
+          fabILArgs.add(addsigcp.createArg(-1, (List<URI>) arg.value()));
         }
         if (flags.contains(arg.flag())) {
           fabILArgs.add(arg);
@@ -507,20 +442,24 @@ public class FabricOptions extends JifOptions {
     // Don't serialize types with skeletons
     if (createSkeleton) serialize_type_info = false;
 
-    source_output =
-        new FabricLocation_c("SOURCE_OUTPUT", true,
-            source_output_directory.toURI());
-    class_output =
-        new FabricLocation_c("CLASS_OUTPUT", true,
-            class_output_directory.toURI());
+//    try {
+//      source_output =
+//          new FabricLocation_c("SOURCE_OUTPUT", true, source_output_directory
+//              .getCanonicalFile().toURI());
+//      class_output =
+//          new FabricLocation_c("CLASS_OUTPUT", true, class_output_directory
+//              .getCanonicalFile().toURI());
+//    } catch (IOException e) {
+//      throw new InternalCompilerError(e);
+//    }
 
     // We need a worker if any path entry or source file
     // is a remote URI
-    for (FabricLocation loc : classpath) {
-      if (loc.isFabricReference()) needWorker = true;
+    for (URI loc : classpathURIs()) {
+      if (loc.getScheme().equals("fab")) needWorker = true;
     }
-    for (FabricLocation loc : source_path) {
-      if (loc.isFabricReference()) needWorker = true;
+    for (URI loc : sourcepathURIs()) {
+      if (loc.getScheme().equals("fab")) needWorker = true;
     }
 
   }
@@ -533,32 +472,20 @@ public class FabricOptions extends JifOptions {
     return codebaseFilename;
   }
 
-  public List<FabricLocation> signaturepath() {
+  public List<File> signaturepath() {
     return sigcp;
   }
 
-// @Override
-// public List<File> javaClasspathDirs() {
-// return delegate.javaClasspathDirs();
-// }
-//
-// @Override
-// public List<FabricLocation> filsignaturepath() {
-// return delegate.sigcp;
-// }
-//
-  public Map<String, FabricLocation> codebaseAliases() {
+
+  public Map<String, URI> codebaseAliases() {
     return codebase_aliases;
   }
 
-//
-// // / Options processed by FabIL delegate
-// @Override
+// Options processed by FabIL delegate
   public boolean createSkeleton() {
     return createSkeleton;
   }
 
-//
   public String destinationStore() {
     return destinationStore;
   }
@@ -567,31 +494,15 @@ public class FabricOptions extends JifOptions {
     return workerName;
   }
 
-  @Override
-  public FabricLocation outputLocation() {
-    return source_output;
-  }
-
-  @Override
-  public FabricLocation classOutputDirectory() {
-    return class_output;
-  }
-
-  public List<FabricLocation> classpath() {
-    return classpath;
-  }
-
-  public List<FabricLocation> sourcepath() {
-    return source_path;
-  }
-
-  public List<FabricLocation> filbootclasspath() {
-    return filbootclasspath;
-  }
-
-  public List<FabricLocation> bootclasspath() {
-    return bootclasspath;
-  }
+//  @Override
+//  public FabricLocation outputLocation() {
+//    return source_output;
+//  }
+//
+//  @Override
+//  public FabricLocation classOutputDirectory() {
+//    return class_output;
+//  }
 
   public boolean platformMode() {
     return platform_mode;
@@ -618,14 +529,22 @@ public class FabricOptions extends JifOptions {
   public String constructPostCompilerClasspath() {
     StringBuilder sb =
         new StringBuilder(super.constructPostCompilerClasspath());
-    for (FabricLocation l : bootclasspath) {
+    for (File l : bootclasspathDirectories()) {
       sb.append(File.pathSeparator);
-      sb.append(l.getUri().getPath());
+      sb.append(l.getPath());
     }
-    for (FabricLocation l : classpath) {
+    for (URI l : classpathURIs()) {
       sb.append(File.pathSeparator);
-      sb.append(l.getUri().getPath());
+      sb.append(l.getPath());
     }
     return sb.toString();
+  }
+
+  public List<URI> classpathURIs() {
+    return classpath_uris;
+  }
+
+  public List<URI> sourcepathURIs() {
+    return sourcepath_uris;
   }
 }

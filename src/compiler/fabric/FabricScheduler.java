@@ -1,5 +1,6 @@
 package fabric;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -32,15 +33,14 @@ import codebases.frontend.CodebaseImportsInitialized;
 import codebases.frontend.CodebaseSource;
 import codebases.visit.CBTypeBuilder;
 import fabric.ast.FabricNodeFactory;
-import fabric.common.FabricLocation;
 import fabric.types.FabricTypeSystem;
+import fabric.visit.CoercePrincipals;
 import fabric.visit.ExplicitSuperclassAdder;
 import fabric.visit.FClassGenerator;
 import fabric.visit.FabILSkeletonCreator;
 import fabric.visit.FabricExceptionChecker;
 import fabric.visit.FabricToFabilRewriter;
 import fabric.visit.NamespaceChecker;
-import fabric.visit.CoercePrincipals;
 import fabric.visit.RemoteCallWrapperAdder;
 import fabric.visit.RemoteCallWrapperUpdater;
 import fabric.worker.Worker;
@@ -400,7 +400,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
   }
 
   @Override
-  public Goal TypeExists(FabricLocation ns, String name) {
+  public Goal TypeExists(URI ns, String name) {
     return CBTypeExists.create(this, ns, name);
   }
 

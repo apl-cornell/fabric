@@ -1,6 +1,7 @@
 package codebases.types;
 
 import java.io.InvalidClassException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,7 +38,6 @@ import polyglot.util.StringUtil;
 import polyglot.util.TypeEncoder;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.ExtensionInfo;
-import fabric.common.FabricLocation;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
@@ -54,7 +54,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   protected static final int NOT_COMPATIBLE = -1;
   protected static final int MINOR_NOT_COMPATIBLE = 1;
   protected static final int COMPATIBLE = 0;
-  protected final FabricLocation namespace;
+  protected final URI namespace;
   protected final ExtensionInfo extInfo;
   protected final TypeEncoder te;
   protected final NamespaceResolver parent;
@@ -73,37 +73,38 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   protected Map<String, SemanticException> notFound;
 
   /** alias cache */
-  protected final Map<String, FabricLocation> aliasCache;
+  protected final Map<String, URI> aliasCache;
   /** no such alias cache */
   protected Set<String> noAlias;
 
   protected Label integrity;
 
-  public NamespaceResolver_c(ExtensionInfo extInfo, FabricLocation namespace) {
+  public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace) {
     this(extInfo, namespace, null);
   }
 
-  public NamespaceResolver_c(ExtensionInfo extInfo, FabricLocation namespace,
+  public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace,
       NamespaceResolver parent) {
-    this(extInfo, namespace, parent, new HashMap<String, FabricLocation>());
+    this(extInfo, namespace, parent, Collections
+        .<String, URI> emptyMap());
   }
 
-  public NamespaceResolver_c(ExtensionInfo extInfo, FabricLocation namespace,
-      NamespaceResolver parent, Map<String, FabricLocation> aliases) {
+  public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace,
+      NamespaceResolver parent, Map<String, URI> aliases) {
     this.cache = new HashMap<String, Importable>();
     this.packages = new HashSet<String>();
     this.noPackage = new HashSet<String>();
     this.notFound = new HashMap<String, SemanticException>();
-    // A namespace FabricLocation must end with a '/' so we can properly
-    // compare FabricLocations and create new ones using resolve()
-    if (!namespace.isOpaque() && !namespace.isFileReference()
-        && !namespace.getUri().getPath().endsWith("/"))
+    // A namespace URI must end with a '/' so we can properly
+    // compare URI and create new ones using resolve()
+    if (!namespace.isOpaque() //&& !namespace.isFileReference()
+        && !namespace.getPath().endsWith("/"))
       throw new InternalCompilerError("Malformed namespace: " + namespace);
     this.namespace = namespace;
     this.extInfo = extInfo;
     this.te = extInfo.typeEncoder();
     this.parent = parent;
-    this.aliasCache = new HashMap<String, FabricLocation>(aliases);
+    this.aliasCache = new HashMap<String, URI>(aliases);
     this.noAlias = new HashSet<String>();
   }
 
@@ -114,7 +115,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     else if (noPackage.contains(name))
       return false;
     else {
-      FabricLocation aliasNS = null;
+      URI aliasNS = null;
       if (!StringUtil.isNameShort(name)) {
         // First check if name uses a codebase alias.
         String first = StringUtil.getFirstComponent(name);
@@ -162,7 +163,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
             + "NamespaceResolver_c: not cached: " + name);
 
       try {
-        FabricLocation aliasNS = null;
+        URI aliasNS = null;
         if (!StringUtil.isNameShort(name)) {
           // First check if name uses a codebase alias.
           String first = StringUtil.getFirstComponent(name);
@@ -308,7 +309,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   }
 
   @Override
-  public FabricLocation namespace() {
+  public URI namespace() {
     return namespace;
   }
 
@@ -444,8 +445,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   }
 
   @Override
-  public final FabricLocation resolveCodebaseName(String name) {
-    FabricLocation ns = aliasCache.get(name);
+  public final URI resolveCodebaseName(String name) {
+    URI ns = aliasCache.get(name);
     if (ns != null) return ns;
     if (!noAlias.contains(name)) {
       ns = resolveCodebaseNameImpl(name);
@@ -460,7 +461,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   }
 
   @Override
-  public Map<String, FabricLocation> codebaseAliases() {
+  public Map<String, URI> codebaseAliases() {
     return Collections.unmodifiableMap(aliasCache);
   }
 

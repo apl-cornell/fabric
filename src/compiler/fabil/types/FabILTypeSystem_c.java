@@ -1,5 +1,8 @@
 package fabil.types;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -47,8 +50,7 @@ import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseClassType;
 import codebases.types.NamespaceResolver;
-import fabil.FabILOptions;
-import fabric.common.FabricLocation;
+import fabric.filemanager.FabricFileManager;
 import fabric.lang.Codebase;
 import fabric.worker.Worker;
 
@@ -57,15 +59,9 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
       Report.types, Report.resolver);
 
   private fabil.ExtensionInfo extInfo;
-
-  protected Map<FabricLocation, NamespaceResolver> namespaceResolvers;
-  protected List<NamespaceResolver> classpathResolvers;
-  protected List<NamespaceResolver> sourcepathResolvers;
-  protected List<NamespaceResolver> signatureResolvers;
-  protected List<NamespaceResolver> runtimeResolvers;
-  protected List<NamespaceResolver> javaruntimeResolvers;
-
+  protected Map<URI, NamespaceResolver> namespaceResolvers;
   protected NamespaceResolver platformResolver;
+  protected NamespaceResolver applicationResolver;
 
   @Override
   public CBPackageContextResolver createPackageContextResolver(Package p) {
@@ -77,7 +73,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   // helped
   // identify the situations it is called in.
   @Override
-  public Package createPackage(FabricLocation ns, Package prefix,
+  public Package createPackage(URI ns, Package prefix,
       java.lang.String name) {
     if (prefix != null) {
       ns = ((CBPackage) prefix).namespace();
@@ -90,13 +86,13 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
    *           subclasses may throw SemanticExceptions
    */
   @Override
-  public Package packageForName(FabricLocation ns, Package prefix,
+  public Package packageForName(URI ns, Package prefix,
       java.lang.String name) throws SemanticException {
     return createPackage(ns, prefix, name);
   }
 
   @Override
-  public Package packageForName(FabricLocation ns, java.lang.String name)
+  public Package packageForName(URI ns, java.lang.String name)
       throws SemanticException {
     if (name == null || name.equals("")) {
       return null;
@@ -324,7 +320,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   @Override
-  public CBImportTable importTable(Source source, FabricLocation ns, Package pkg) {
+  public CBImportTable importTable(Source source, URI ns, Package pkg) {
     return new CBImportTable(this, ns, pkg, source);
   }
 
@@ -514,90 +510,37 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     this.loadedResolver = null;
     this.systemResolver = null;
     this.extInfo = (fabil.ExtensionInfo) extInfo;
-    initResolvers();
+    namespaceResolvers = new HashMap<URI, NamespaceResolver>();
+    try {
+      initResolvers();
+    } catch (IOException e) {
+      throw new SemanticException("Could not initialize resolvers", e);
+    }
   }
 
-  protected void initResolvers() {
-    // NB: getOptions() and getFabILOptions() do not return the same thing if
-    // we are compiling from Fabric source! getOptions() returns the
-    // FabricOptions()
-    // object (which implements FabILOptions). In particular, to get the right
-    // signaturepath
-    // we have to call getFabILOptions().
-    FabILOptions opt = extInfo.getOptions();
-    List<FabricLocation> cp = opt.classpath();
-    List<FabricLocation> sp = opt.sourcepath();
-    List<FabricLocation> sigcp = opt.signaturepath();
-    List<FabricLocation> rtcp = opt.bootclasspath();
-    List<FabricLocation> javartcp = opt.bootclasspath();
-
-    namespaceResolvers = new HashMap<FabricLocation, NamespaceResolver>();
-    signatureResolvers = new ArrayList<NamespaceResolver>();
-    classpathResolvers = new ArrayList<NamespaceResolver>();
-    sourcepathResolvers = new ArrayList<NamespaceResolver>();
-    runtimeResolvers = new ArrayList<NamespaceResolver>();
-    javaruntimeResolvers = new ArrayList<NamespaceResolver>();
-
-    for (FabricLocation location : rtcp) {
-      if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL runtime resolver: " + location);
-
-      NamespaceResolver nsr = namespaceResolver(location);
-      nsr.loadEncodedClasses(true);
-      nsr.loadRawClasses(true);
-      nsr.loadSource(true);
-      runtimeResolvers.add(nsr);
-    }
-
-    for (FabricLocation location : javartcp) {
-      if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing Java runtime resolver: " + location);
-      NamespaceResolver nsr = namespaceResolver(location);
-      nsr.loadRawClasses(true);
-      javaruntimeResolvers.add(nsr);
-    }
-
-    for (FabricLocation location : sigcp) {
-      if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL signature resolver: " + location);
-      NamespaceResolver nsr = namespaceResolver(location);
-      nsr.loadEncodedClasses(true);
-      // A raw signature class is an oxymoron
-      nsr.loadRawClasses(false);
-      nsr.loadSource(true);
-      signatureResolvers.add(nsr);
-    }
-
+  protected void initResolvers() throws IOException {
+    FabricFileManager fileManager =
+        (FabricFileManager) extInfo.extFileManager();
+    List<File> platform_directories =
+        new ArrayList<File>();
+    platform_directories.addAll(extInfo.getOptions().signaturepath());
+    platform_directories.addAll( extInfo.bootclasspath());
+    fileManager.setLocation(extInfo.getOptions().bootclasspath,
+        platform_directories);
     platformResolver = namespaceResolver(extInfo.platformNamespace());
-    platformResolver.loadSource(true);
-    boolean src_in_cp = sp.isEmpty();
+    platformResolver.loadRawClasses(true);
 
-    for (FabricLocation location : cp) {
-      if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL classpath resolver: " + location);
+    fileManager
+    .setLocation(extInfo.getOptions().classpath, extInfo.classpath());
 
-      NamespaceResolver nsr = namespaceResolver(location);
-      nsr.loadEncodedClasses(true);
-      nsr.loadRawClasses(true);
-      nsr.loadSource(src_in_cp);
-      classpathResolvers.add(nsr);
-    }
-
-    for (FabricLocation location : sp) {
-      if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL sourcepath resolver: " + location);
-
-      NamespaceResolver nsr = namespaceResolver(location);
-      nsr.loadEncodedClasses(true);
-      nsr.loadSource(true);
-
-      if (!classpathResolvers.contains(nsr)) nsr.loadEncodedClasses(false);
-      sourcepathResolvers.add(nsr);
-    }
+    fileManager.setLocation(extInfo.getOptions().source_path,
+        extInfo.sourcepath());
+    applicationResolver = namespaceResolver(extInfo.localNamespace());
+    applicationResolver.loadRawClasses(true);
   }
 
   @Override
-  public NamespaceResolver namespaceResolver(FabricLocation ns) {
+  public NamespaceResolver namespaceResolver(URI ns) {
     NamespaceResolver sr = namespaceResolvers.get(ns);
     if (sr == null) {
       sr = extInfo.createNamespaceResolver(ns);
@@ -607,12 +550,12 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   @Override
-  public boolean packageExists(FabricLocation ns, String name) {
+  public boolean packageExists(URI ns, String name) {
     return namespaceResolver(ns).packageExists(name);
   }
 
   @Override
-  public Named forName(FabricLocation ns, String name) throws SemanticException {
+  public Named forName(URI ns, String name) throws SemanticException {
     return forName(namespaceResolver(ns), name);
   }
 
@@ -622,7 +565,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   @Override
-  public Codebase codebaseFromNS(FabricLocation namespace) {
+  public Codebase codebaseFromNS(URI namespace) {
     // Worker must be running!
     if (!Worker.isInitialized())
       throw new InternalCompilerError("Worker is not initialized.");
@@ -708,48 +651,4 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
           "Must call initResolvers() first! platform");
     return platformResolver;
   }
-
-  @Override
-  public List<NamespaceResolver> signatureResolvers() {
-    if (signatureResolvers == null)
-      throw new InternalCompilerError(
-          "Must call initResolvers() first! signaturepath");
-    return signatureResolvers;
-  }
-
-  @Override
-  public List<NamespaceResolver> classpathResolvers() {
-    if (classpathResolvers == null)
-      throw new InternalCompilerError(
-          "Must call initResolvers() first! classpath");
-
-    return classpathResolvers;
-  }
-
-  @Override
-  public List<NamespaceResolver> sourcepathResolvers() {
-    if (sourcepathResolvers == null)
-      throw new InternalCompilerError(
-          "Must call initResolvers() first! sourcepath");
-
-    return sourcepathResolvers;
-  }
-
-  @Override
-  public List<NamespaceResolver> runtimeResolvers() {
-    if (runtimeResolvers == null)
-      throw new InternalCompilerError(
-          "Must call initResolvers() first! runtime");
-
-    return runtimeResolvers;
-  }
-
-  @Override
-  public List<NamespaceResolver> javaruntimeResolvers() {
-    if (javaruntimeResolvers == null)
-      throw new InternalCompilerError(
-          "Must call initResolvers() first! javaruntime");
-    return javaruntimeResolvers;
-  }
-
 }

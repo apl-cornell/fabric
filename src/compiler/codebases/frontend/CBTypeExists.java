@@ -1,22 +1,23 @@
 package codebases.frontend;
 
+import java.net.URI;
+
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Pass;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.TypeExists;
 import polyglot.types.TypeSystem;
-import fabric.common.FabricLocation;
 
 public class CBTypeExists extends TypeExists {
-  public static Goal create(Scheduler scheduler, FabricLocation ns, String name) {
+  public static Goal create(Scheduler scheduler, URI ns, String name) {
     return scheduler.internGoal(new CBTypeExists(ns, name));
   }
 
-  protected FabricLocation namespace;
+  protected URI namespace;
   protected String typeName;
 
-  protected CBTypeExists(FabricLocation ns, String name) {
+  protected CBTypeExists(URI ns, String name) {
     super(name);
     this.namespace = ns;
   }
@@ -38,8 +39,7 @@ public class CBTypeExists extends TypeExists {
     return "CBTypeExists( [" + namespace + "] " + typeName + ")";
   }
 
-  public FabricLocation namespace() {
-    // TODO Auto-generated method stub
+  public URI namespace() {
     return namespace;
   }
 

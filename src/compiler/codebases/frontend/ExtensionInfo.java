@@ -1,6 +1,8 @@
 package codebases.frontend;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -9,7 +11,6 @@ import javax.tools.FileObject;
 import codebases.types.CBTypeEncoder;
 import codebases.types.CodebaseTypeSystem;
 import fabil.types.ClassFile;
-import fabric.common.FabricLocation;
 import fabric.worker.Store;
 
 /**
@@ -34,7 +35,7 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * 
    * @return the namespace
    */
-  FabricLocation localNamespace();
+  URI localNamespace();
 
   /**
    * The namespace used for built-in types like fabric.lang.Object. This
@@ -43,7 +44,7 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * 
    * @return the namespace
    */
-  FabricLocation platformNamespace();
+  URI platformNamespace();
 
   @Override
   ClassFile createClassFile(FileObject fo, byte[] code)throws IOException;
@@ -54,7 +55,7 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * 
    * @return the java package prefix string
    */
-  String namespaceToJavaPackagePrefix(FabricLocation ns);
+  String namespaceToJavaPackagePrefix(URI ns);
 
   /**
    * The classpath used to resolve dependencies during compilation. May contain
@@ -62,7 +63,7 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * 
    * @return The list of directories and codebases to search.
    */
-  List<FabricLocation> classpath();
+  List<URI> classpath();
 
   /**
    * The sourcepath used to resolve source dependencies during compilation. When
@@ -71,28 +72,14 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * 
    * @return The list of directories and codebases to search.
    */
-  List<FabricLocation> sourcepath();
-
-//  /**
-//   * The locations of signature files for native classes.
-//   * 
-//   * @return The list of directories and codebases to search.
-//   */
-//  List<FabricLocation> filsignaturepath();
-//
-//  /**
-//   * The locations of platform classes such as fabric.lang.Object.
-//   * 
-//   * @return The list of directories and codebases to search.
-//   */
-//  List<FabricLocation> filbootclasspath();
+  List<URI> sourcepath();
 
   /**
    * The locations of java boot classes
    * 
    * @return The list of directories on local file system
    */
-  List<FabricLocation> bootclasspath();
+  List<File> bootclasspath();
 
   /**
    * A map between codebase aliases used in source and the URI of the intended
@@ -100,7 +87,7 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
    * 
    * @return The list of directories and codebases to search.
    */
-  Map<String, FabricLocation> codebaseAliases();
+  Map<String, URI> codebaseAliases();
 
   Store destinationStore();
 

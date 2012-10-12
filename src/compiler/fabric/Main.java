@@ -1,14 +1,10 @@
 package fabric;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.Writer;
 import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -21,24 +17,21 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.tools.FileObject;
-import javax.tools.JavaCompiler.CompilationTask;
-import javax.tools.JavaFileManager;
+import javax.tools.JavaFileManager.Location;
 import javax.tools.JavaFileObject;
-import javax.tools.ToolProvider;
+import javax.tools.JavaFileObject.Kind;
 
+import polyglot.filemanager.ExtFileManager;
 import polyglot.frontend.Compiler;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.main.Options;
 import polyglot.main.Report;
 import polyglot.main.UsageError;
-import polyglot.util.ErrorInfo;
+import polyglot.types.reflect.ClassFile;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
-import polyglot.util.QuotedStringTokenizer;
 import polyglot.util.StdErrorQueue;
-import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
-import fabric.filemanager.ClassObject;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.util.Iterator;
@@ -54,6 +47,7 @@ public class Main extends polyglot.main.Main {
   protected fabric.ExtensionInfo extInfo;
 
   protected static String[] buildArgs(FClass fcls) {
+
     Worker worker = Worker.getWorker();
     List<String> args = new LinkedList<String>();
     args.add("-worker");
@@ -70,8 +64,8 @@ public class Main extends polyglot.main.Main {
     args.add("-g");
 
     /* print time to complete Fabric and FabIL passes */
-    // args.add("-report");
-    // args.add("frontend=2");
+//    args.add("-report");
+//    args.add("frontend=2");
     // args.add("-report");
     // args.add("profile=1");
     // args.add("-report");
@@ -102,8 +96,6 @@ public class Main extends polyglot.main.Main {
     }
 
     URI cb = NSUtil.namespace(fcls.getCodebase());
-    // XXX: It might be better to use a URI method here, but
-    // cb.resolve(name) doesn't do what you might think
     args.add(cb.resolve(fcls.getName()).toString());
     return args.toArray(new String[0]);
   }
@@ -113,6 +105,7 @@ public class Main extends polyglot.main.Main {
    */
   public static void compile(FClass fcls, Map<String, byte[]> bytecodeMap)
       throws GeneralSecurityException, IOException {
+
     if (fcls == null || bytecodeMap == null)
       throw new GeneralSecurityException("Invalid arguments to compile");
 
@@ -123,62 +116,43 @@ public class Main extends polyglot.main.Main {
 //      } else {
       Main main = new Main();
       fabric.ExtensionInfo extInfo = new fabric.ExtensionInfo(bytecodeMap);
+      if (Report.should_report(Topics.mobile, 2)) {
+        Report.report(2, "Compiling mobile class " + fcls.toString());
+      }
       main.start(buildArgs(fcls), extInfo);
+      if (Report.should_report(Topics.mobile, 2)) {
+        Report.report(2, "Finished compiling mobile class " + fcls.toString());
+      }
 //      }
       Collection<JavaFileObject> outputFiles = main.compiler.outputFiles();
-      int outputDirPathLen =
-          extInfo.getOptions().outputLocation().getUri().normalize().getPath()
-          .length();
-      Map<URI, JavaFileObject> absPathObjMap =
-          extInfo.extFileManager().getAbsPathObjMap();
       String[] suffixes =
-          new String[] { "$_Impl", "$_Proxy", "$_Static", "$_Static$_Impl",
+          new String[] { "", "$_Impl", "$_Proxy", "$_Static", "$_Static$_Impl",
       "$_Static$_Proxy" };
+      Location classOutput = extInfo.getOptions().classOutputLocation();
       for (JavaFileObject jfo : outputFiles) {
-        String fname = jfo.toUri().getPath();
-        int e = fname.lastIndexOf(".java");
-        String baseFileName = fname.substring(0, e);
-        String baseClassName = baseFileName.substring(outputDirPathLen);
-        baseClassName = baseClassName.replace(File.separator, ".");
-        // load base class file
-        File classFile = new File(baseFileName + ".class");
-        URI classUri = classFile.toURI();
-        Worker worker = Worker.getWorker();
-        if (worker.outputToLocalFS) {
-          if (classFile.exists()) {
-            if (Report.should_report(Topics.mobile, 2))
-              Report.report(1, "Inserting bytecode for " + classUri);
-            bytecodeMap.put(baseClassName, getBytecode(classFile));
-          }
-        } else {
-          if (absPathObjMap.containsKey(classUri)) {
-            if (Report.should_report(Topics.mobile, 2))
-              Report.report(1, "Inserting bytecode for " + classUri);
-            bytecodeMap.put(baseClassName,
-                getBytecode(absPathObjMap.get(classUri)));
-          }
-        }
+        URI src = jfo.toUri();
+        //XXX: This is still a hack, but it is a struggle to come
+        // up with a robust way of extracting the package name
+        // with the current setup.
+        String fileName = src.getPath();
+        int index = fileName.indexOf("$$");
+        fileName = fileName.substring(index);
+        for (String ext : suffixes) {
+          String classFileName =
+              fileName.substring(0, fileName.lastIndexOf(".java")) + ext;
+          classFileName = classFileName.replace(File.separator, ".");
 
-        // load member classes
-        for (String suffixe : suffixes) {
-          String fileName = baseFileName + suffixe;
-          classFile = new File(fileName + ".class");
-          classUri = classFile.toURI();
-          if (worker.outputToLocalFS) {
-            if (classFile.exists()) {
-              if (Report.should_report(Topics.mobile, 2))
-                Report.report(1, "Inserting bytecode for " + classUri);
-              bytecodeMap.put(baseClassName + suffixe,
-                  getBytecode(classFile));
-            }
-          } else {
-            if (absPathObjMap.containsKey(classUri)) {
-              if (Report.should_report(Topics.mobile, 2))
-                Report.report(1, "Inserting bytecode for " + classUri);
-              bytecodeMap.put(baseClassName + suffixe,
-                  getBytecode(absPathObjMap.get(classUri)));
-            }
+          FileObject classFo =
+              extInfo.extFileManager().getJavaFileForInput(classOutput,
+                  classFileName, Kind.CLASS);
+          if (classFo == null) continue;
+          byte[] code = ExtFileManager.getBytes(classFo);
+          ClassFile classFile = extInfo.createClassFile(classFo, code);
+          String fullName = classFile.name().replace(File.separator, ".");
+          if (Report.should_report(Topics.mobile, 2)) {
+            Report.report(2, "Inserting bytecode for " + fullName);
           }
+          bytecodeMap.put(fullName, code);
         }
       }
     } catch (TerminationException e) {
@@ -338,13 +312,11 @@ public class Main extends polyglot.main.Main {
               FabricOptions opt = extInfo.getOptions();
               File f = new File(opt.codebaseFilename());
               if (!f.isAbsolute())
-                f =
-                new File(opt.outputLocation().getUri().getPath(), f
-                    .getPath());
+                f = new File(opt.classOutputDirectory(), f.getPath());
               FileWriter fw;
               try {
                 fw = new FileWriter(f);
-                FabricLocation localNS = extInfo.localNamespace();
+                URI localNS = extInfo.localNamespace();
                 Codebase cb = extInfo.typeSystem().codebaseFromNS(localNS);
                 initializeStaticInstances(extInfo, cb);
                 URI ns = NSUtil.namespace(cb);
@@ -365,6 +337,7 @@ public class Main extends polyglot.main.Main {
               }
             }
           } catch (Throwable e) {
+
             // Always abort the transaction on an exception
             throw new AbortException(e);
           }
@@ -390,10 +363,9 @@ public class Main extends polyglot.main.Main {
    * @param extInfo
    * @throws ClassNotFoundException
    */
-  protected void initializeStaticInstances(fabric.ExtensionInfo extInfo, Codebase cb)
-      throws ClassNotFoundException {
+  protected void initializeStaticInstances(fabric.ExtensionInfo extInfo,
+      Codebase cb) throws ClassNotFoundException {
     fabric.util.Map classes = cb.get$classes();
-//    FabricClassLoader loader = new FabricClassLoader(getClass().getClassLoader());
     List<String> files = new ArrayList<String>();
     for (Iterator it =
         classes.keySet().iterator(Worker.getWorker().getLocalStore()); it
@@ -402,8 +374,6 @@ public class Main extends polyglot.main.Main {
           (String) fabric.lang.WrappedJavaInlineable.$unwrap(it.next());
       FClass fcls = cb.resolveClassName(className);
       files.add(NSUtil.absoluteName(fcls).toString());
-//      loader.loadClass(NSUtil.javaClassName((fabric.lang.FClass._Proxy) fcls
-//          .$getProxy()));
     }
     compiler.compileFiles(files);
   }
@@ -418,108 +388,4 @@ public class Main extends polyglot.main.Main {
 
     return ll;
   }
-
-  protected static void insertByteCode(String className) {
-
-  }
-
-  protected static byte[] getBytecode(FileObject fo) throws IOException {
-    if (fo instanceof ClassObject) return ((ClassObject) fo).getBytes();
-    throw new IOException("Unknown Class Object encountered");
-  }
-
-  protected static byte[] getBytecode(File classfile) throws IOException {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    FileInputStream in = new FileInputStream(classfile);
-    byte[] buf = new byte[4096];
-    int n = 0;
-
-    do {
-      n = in.read(buf);
-      if (n >= 0) out.write(buf, 0, n);
-    } while (n >= 0);
-
-    in.close();
-    return out.toByteArray();
-  }
-
-  @Override
-  // /HACK :: copied from superclass
-  protected boolean invokePostCompiler(Options options, Compiler compiler,
-      ErrorQueue eq) {
-    if (!options.output_stdout) {
-      try {
-        if (options.post_compiler == null) {
-          ArrayList<String> postCompilerArgs = new ArrayList<String>(1);
-          if (options.generate_debugging_info) postCompilerArgs.add("-g");
-          ByteArrayOutputStream err = new ByteArrayOutputStream();
-          Writer javac_err = new OutputStreamWriter(err);
-          JavaFileManager fileManager =
-              compiler.sourceExtension().extFileManager();
-          CompilationTask task =
-              ToolProvider.getSystemJavaCompiler().getTask(javac_err,
-                  fileManager, null, postCompilerArgs, null,
-                  compiler.outputFiles());
-
-          if (!task.call())
-            eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, err.toString());
-        } else {
-          QuotedStringTokenizer st =
-              new QuotedStringTokenizer(options.post_compiler);
-          int pcSize = st.countTokens();
-          int optionsSize = 2;
-          if (options.class_output_directory != null) {
-            optionsSize += 2;
-          }
-          if (options.generate_debugging_info) optionsSize++;
-          String[] javacCmd =
-              new String[pcSize + optionsSize + compiler.outputFiles().size()
-                         - 1];
-          int j = 0;
-          // skip "javac"
-          st.nextToken();
-          for (int i = 1; i < pcSize; i++) {
-            javacCmd[j++] = st.nextToken();
-          }
-          javacCmd[j++] = "-classpath";
-          javacCmd[j++] = options.constructPostCompilerClasspath();
-          if (options.class_output_directory != null) {
-            javacCmd[j++] = "-d";
-            javacCmd[j++] = options.class_output_directory.toString();
-          }
-          if (options.generate_debugging_info) {
-            javacCmd[j++] = "-g";
-          }
-
-          for (JavaFileObject jfo : compiler.outputFiles())
-            javacCmd[j++] = new File(jfo.toUri()).getAbsolutePath();
-
-          if (Report.should_report(verbose, 1)) {
-            StringBuffer cmdStr = new StringBuffer();
-            for (String element : javacCmd)
-              cmdStr.append(element + " ");
-            Report.report(1, "Executing post-compiler " + cmdStr);
-          }
-
-          int exitVal = com.sun.tools.javac.Main.compile(javacCmd);
-
-          if (!options.keep_output_files) {
-            for (FileObject fo : compiler.outputFiles())
-              fo.delete();
-          }
-
-          if (exitVal > 0) {
-            eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, "Non-zero return code: "
-                + exitVal);
-            return false;
-          }
-        }
-      } catch (Exception e) {
-        eq.enqueue(ErrorInfo.POST_COMPILER_ERROR, e.getMessage());
-        return false;
-      }
-    }
-    return true;
-  }
-
 }

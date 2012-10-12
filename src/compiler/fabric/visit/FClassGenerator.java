@@ -1,7 +1,5 @@
 package fabric.visit;
 
-import static fabric.common.FabricLocationFactory.getLocation;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
@@ -27,7 +25,6 @@ import codebases.types.CodebaseClassType;
 import fabil.visit.ClassHashGenerator;
 import fabric.ExtensionInfo;
 import fabric.Topics;
-import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
@@ -43,7 +40,7 @@ import fabric.worker.Store;
  */
 public class FClassGenerator extends ErrorHandlingVisitor {
   // protected Source src = null;
-  protected FabricLocation namespace;
+  protected URI namespace;
   protected Codebase codebase;
 
   public FClassGenerator(Job job, TypeSystem ts, NodeFactory nf) {
@@ -74,13 +71,13 @@ public class FClassGenerator extends ErrorHandlingVisitor {
     fabric.ExtensionInfo fabext = (ExtensionInfo) job.extensionInfo();
     if (n instanceof CodebaseDecl) {
       CodebaseDecl cd = (CodebaseDecl) n;
-      FabricLocation cb_ns =
+      URI cb_ns =
           fts.namespaceResolver(namespace).resolveCodebaseName(cd.name().id());
       if (Report.should_report(Topics.mobile, 3))
         Report.report(3, "Adding codebase alias " + cd.name()
             + " to new codebase");
 
-      Codebase cb = cb_ns.getCodebase();
+      Codebase cb = NSUtil.fetch_codebase(cb_ns);
       if (cb == null)
         throw new SemanticException("Codebase " + cb_ns + " does not exist.");
       if (namespace.equals(cb_ns))
@@ -100,7 +97,8 @@ public class FClassGenerator extends ErrorHandlingVisitor {
       }
       // Set the canonical namespace of this type to the codebase
       // (For serialization when compiling directly to bytecode)
-      pct.setCanonicalNamespace(getLocation(false, NSUtil.namespace(codebase)));
+      pct.setCanonicalNamespace(NSUtil.namespace(codebase));
+      //getLocation(false, NSUtil.namespace(codebase)));
 
       if (!src.shouldPublish())
         throw new InternalCompilerError(
@@ -132,8 +130,8 @@ public class FClassGenerator extends ErrorHandlingVisitor {
         for (CodebaseClassType dep : dependencies) {
           if (fabext.platformNamespace().equals(dep.canonicalNamespace())
               || src.namespace().equals(dep.canonicalNamespace())) continue;
-          FabricLocation depNS = dep.canonicalNamespace();
-          URI fcls_ref = depNS.getUri().resolve(dep.fullName());
+          URI depNS = dep.canonicalNamespace();
+          URI fcls_ref = depNS.resolve(dep.fullName());
 
           if (Report.should_report(Topics.mobile, 3)) {
             Report.report(3, "Inserting " + dep.fullName() + " [" + fcls_ref
