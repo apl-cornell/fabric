@@ -14,7 +14,7 @@ A PDF version of this manual <a href="../manual.pdf">is available</a>.
 @latexonly
 An HTML version of this manual
 \href
-  {http://www.cs.cornell.edu/projects/fabric/manual/0.2.0/html/}
+  {http://www.cs.cornell.edu/projects/fabric/manual/@VERSION@/html/}
   {\tt is available}.
 @endlatexonly
 

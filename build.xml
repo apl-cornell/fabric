@@ -47,6 +47,7 @@
   <!-- Documentation directories -->
   <property name="doc" location="${fabric.home}/doc"/>
   <property name="manual.src" location="${doc}/manual/src"/>
+  <property name="manual.tmp" location="${doc}/manual/tmp"/>
   <property name="manual.html" location="${doc}/manual/html"/>
   <property name="manual.pdf" location="${doc}/manual/manual.pdf"/>
 
@@ -71,7 +72,7 @@
   <!-- tmp directory (for creating the distribution) -->
   <property name="tmp" location="${fabric.home}/tmp"/>
 
-  <!-- SCM root locations -->
+  <!-- RCS root locations -->
   <property name="svn.root.fabric"
       value="https://forge.cornell.edu/svn/repos/fabric/trunk"/>
   <property name="cvs.root.jif"
@@ -80,7 +81,6 @@
       value=":ext:gforge.cis.cornell.edu:/cvsroot/polyglot"/>
 
   <!-- Jif distribution location -->
-  <property name="jif.version.default" value="3.4.0" />
   <property name="jif.url.prefix"
       value="http://www.cs.cornell.edu/jif/releases/jif-"/>
   <property name="jif.url.suffix"
@@ -595,6 +595,35 @@
   </target>
 
   <!--
+    Configures properties for dependency versions.
+  -->
+  <target name="configure-dependency-versions">
+    <!-- Get Polyglot version. -->
+    <property file="${polyglot.home}/build.properties" prefix="polyglot" />
+    <property name="polyglot.version"
+        value="${polyglot.version.major}.${polyglot.version.minor}.${polyglot.version.patch}" />
+    <filter token="POLYGLOT-VERSION" value="${polyglot.version}"/>
+
+    <!-- Get Jif version. -->
+    <property file="${jif.home}/version.properties" prefix="jif" />
+    <property name="jif.version"
+        value="${jif.version.major}.${jif.version.minor}.${jif.version.patch}"/>
+    <filter token="JIF-VERSION" value="${jif.version}"/>
+  </target>
+
+  <!--
+    Sets up keyword filters.
+  -->
+  <target name="keyword-filter"
+      depends="configure-version,configure-dependency-versions">
+    <tstamp>
+      <format property="this-year" timezone="America/New_York" pattern="yyyy" />
+    </tstamp>
+    <filter token="YEAR" value="${this-year}"/>
+    <filter token="VERSION" value="${fabric.version}"/>
+  </target>
+
+  <!--
   ____________________________________________________________________________
     Version-management helper targets.
   -->
@@ -756,27 +785,32 @@ public class Version {
   ****************************************************************************
   -->
 
-  <target name="manual" depends="check-for-doxygen">
-    <!-- Delete old HTML output. -->
+  <target name="manual" depends="check-for-doxygen,keyword-filter">
+    <!-- Delete old output. -->
     <delete dir="${manual.html}"/>
     <delete file="${manual.pdf}"/>
-    <delete dir="${manual.src}/html"/>
-    <delete dir="${manual.src}/latex"/>
+    <delete dir="${manual.tmp}"/>
+
+    <!-- Copy sources to scratch directory while filtering. -->
+    <copy todir="${manual.tmp}" filtering="yes" encoding="UTF-8">
+      <fileset dir="${manual.src}" excludes="utf8.sty"/>
+    </copy>
+    <copy file="${manual.src}/utf8.sty" todir="${manual.tmp}"/>
 
     <!-- Generate HTML and LaTeX. -->
     <exec executable="${doxygen.executable}" failonerror="true"
-        dir="${manual.src}" />
+        dir="${manual.tmp}" />
 
     <!-- Compile LaTeX. -->
-    <copy file="${manual.src}/utf8.sty" todir="${manual.src}/latex"/>
-    <copy file="${manual.src}/custom.sty" todir="${manual.src}/latex"/>
-    <exec executable="make" failonerror="true" dir="${manual.src}/latex">
+    <copy file="${manual.tmp}/utf8.sty" todir="${manual.tmp}/latex"/>
+    <copy file="${manual.tmp}/custom.sty" todir="${manual.tmp}/latex"/>
+    <exec executable="make" failonerror="true" dir="${manual.tmp}/latex">
       <arg value="pdf"/>
     </exec>
 
     <!-- Move HTML and PDF into place. -->
-    <move file="${manual.src}/html" tofile="${manual.html}"/>
-    <move file="${manual.src}/latex/refman.pdf" tofile="${manual.pdf}"/>
+    <move file="${manual.tmp}/html" tofile="${manual.html}"/>
+    <move file="${manual.tmp}/latex/refman.pdf" tofile="${manual.pdf}"/>
   </target>
 
   <!--
@@ -996,7 +1030,8 @@ public class Version {
 
   <!-- Creates a distribution tarball from the current working copy. -->
   <target name="dist.tar"
-      depends="configure-version,build-all,jar-all,javadoc,manual">
+      depends="configure-version,build-all,jar-all,javadoc,manual,
+        keyword-filter">
     <delete dir="${fabric.home}/fabric-${fabric.version}" />
 
     <!-- Process *.mkdn in top-level directory. -->
@@ -1010,14 +1045,8 @@ public class Version {
     </move>
 
     <!-- Process COPYING to insert current year and version. -->
-    <tstamp>
-      <format property="this-year" timezone="America/New_York" pattern="yyyy" />
-    </tstamp>
-    <filter token="year" value="${this-year}"/>
-    <filter token="version" value="${fabric.version}"/>
     <copy file="${fabric.home}/COPYING.in" tofile="${fabric.home}/COPYING"
-        filtering="yes">
-    </copy>
+        filtering="yes"/>
 
     <tar destfile="${fabric.home}/fabric-${fabric.version}.tar.gz"
         compression="gzip">
@@ -1217,53 +1246,56 @@ public class Version {
   <!--
     Ensures there is a built copy of Jif in the tmp directory.
   -->
-  <target name="build-jif" depends="get-jif-version">
+  <target name="build-jif" depends="get-jif-download-version">
     <antcall target="mkdir-tmp" />
-    <antcall target="build-polyglot-scm"/>
-    <antcall target="build-jif-scm"/>
+    <antcall target="build-polyglot-rcs"/>
+    <antcall target="build-jif-rcs"/>
     <antcall target="download-jif"/>
   </target>
 
   <!--
     Asks the user for the version of Jif to build against.
 
-    ${use-jif-scm} will be a boolean indicating whether SCM should be used. If
-    this is false, then ${jif.version} will be the version of Jif to be
-    downloaded.
+    ${use-jif-rcs} will be a boolean indicating whether RCS should be used. If
+    this is false, then ${jif.download.version} will be the version of Jif to
+    be downloaded.
   -->
-  <target name="get-jif-version" depends="ask-jif-scm" unless="${use-jif-scm}">
+  <target name="get-jif-download-version"
+      depends="ask-jif-rcs,configure-dependency-versions"
+      unless="${use-jif-rcs}">
     <input message="Jif version to download?"
-        defaultvalue="${jif.version.default}"
-        addproperty="jif.version"/>
+        defaultvalue="${jif.version}"
+        addproperty="jif.download.version"/>
   </target>
 
-  <target name="ask-jif-scm">
+  <target name="ask-jif-rcs">
     <input message="Build against Jif HEAD?"
         validargs="y,n" defaultvalue="n"
-        addproperty="do.jif-scm"/>
+        addproperty="do.jif-rcs"/>
 
-    <condition property="use-jif-scm">
-      <equals arg1="y" arg2="${do.jif-scm}"/>
+    <condition property="use-jif-rcs">
+      <equals arg1="y" arg2="${do.jif-rcs}"/>
     </condition>
   </target>
 
   <!--
     Downloads and extracts Jif in the tmp directory.
   -->
-  <target name="download-jif" depends="get-jif-version" unless="${use-jif-scm}">
+  <target name="download-jif" depends="get-jif-download-version"
+      unless="${use-jif-rcs}">
     <property name="jif.download.url"
-        value="${jif.url.prefix}${jif.version}${jif.url.suffix}"/>
+        value="${jif.url.prefix}${jif.download.version}${jif.url.suffix}"/>
     <get src="${jif.download.url}" dest="${tmp}/jif.zip" verbose="on"/>
     <unzip src="${tmp}/jif.zip" dest="${tmp}"/>
-    <move file="${tmp}/jif-${jif.version}" tofile="${tmp}/jif"/>
+    <move file="${tmp}/jif-${jif.download.version}" tofile="${tmp}/jif"/>
   </target>
 
 
   <!--
     Checks out and builds Polyglot in the tmp directory.
   -->
-  <target name="build-polyglot-scm" depends="get-jif-version"
-      if="${use-jif-scm}">
+  <target name="build-polyglot-rcs" depends="get-jif-download-version"
+      if="${use-jif-rcs}">
     <!-- Check out Polyglot from CVS. -->
     <antcall target="cvs-checkout">
       <param name="name" value="polyglot" />
@@ -1280,7 +1312,7 @@ public class Version {
   <!--
     Checks out and builds Jif in the tmp directory.
   -->
-  <target name="build-jif-scm" depends="build-polyglot-scm" if="${use-jif-scm}">
+  <target name="build-jif-rcs" depends="build-polyglot-rcs" if="${use-jif-rcs}">
     <!-- Check out Jif from CVS. -->
     <antcall target="cvs-checkout">
       <param name="name" value="jif" />
