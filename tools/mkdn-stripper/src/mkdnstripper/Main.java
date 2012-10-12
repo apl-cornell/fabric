@@ -5,7 +5,9 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -58,17 +60,17 @@ public class Main {
 
       text = strip(text);
 
-      for (String s : text)
-        System.out.println(s);
-
-//      try {
-//        Writer writer = new FileWriter(file, false);
-//        writer.write((String) sym.value);
-//        writer.close();
-//      } catch (IOException e) {
-//        e.printStackTrace();
-//      }
-      //
+      try {
+        Writer writer = new FileWriter(file, false);
+        boolean first = true;
+        for (String s : text) {
+          writer.write((first ? "" : "\n") + s);
+          first = false;
+        }
+        writer.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 
