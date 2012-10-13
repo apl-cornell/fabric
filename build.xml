@@ -51,6 +51,9 @@
   <property name="manual.html" location="${doc}/manual/html"/>
   <property name="manual.pdf" location="${doc}/manual/manual.pdf"/>
 
+  <!-- Certificate authority directory -->
+  <property name="ca" location="${fabric.home}/ca"/>
+
   <!-- Configuration directory -->
   <property name="etc" location="${fabric.home}/etc"/>
 
@@ -1029,11 +1032,8 @@ public class Version {
   </target>
 
   <!-- Creates a distribution tarball from the current working copy. -->
-  <!--target name="dist.tar"
-      depends="configure-version,build-all,jar-all,javadoc,manual,
-        keyword-filter"-->
   <target name="dist.tar"
-      depends="configure-version,build-all,jar-all,manual,
+      depends="configure-version,build-all,jar-all,javadoc,manual,
         keyword-filter">
     <delete dir="${fabric.home}/fabric-${fabric.version}" />
 
@@ -1058,6 +1058,7 @@ public class Version {
     <!-- Clean up a bit. -->
     <delete file="${fabric.home}/README.mkdn"/>
 
+    <!-- Create actual tarball. -->
     <tar destfile="${fabric.home}/fabric-${fabric.version}.tar.gz"
         compression="gzip">
       <!-- Include top-level files. -->
@@ -1066,6 +1067,7 @@ public class Version {
         <include name="build.xml" />
         <include name="common.xml" />
         <include name="config.properties.in" />
+        <include name="eclipse-classpath.in" />
         <include name="CHANGES" />
         <include name="COPYING" />
         <include name="CREDITS" />
@@ -1078,8 +1080,10 @@ public class Version {
         <include name="add-trusted-ca" />
         <include name="ca-sign" />
         <include name="codebase-tool" />
+        <include name="dump-bdb" />
         <include name="fab" />
         <include name="fabc" />
+        <include name="fabc-in-worker" />
         <include name="fab-store" />
         <include name="filc" />
         <include name="genkey" />
@@ -1096,21 +1100,22 @@ public class Version {
         <include name="defs.in" />
       </tarfileset>
 
-      <!-- Include docs. -->
+      <!-- Include certificate authority. -->
+      <tarfileset dir="${ca}" prefix="fabric-${fabric.version}/ca">
+        <include name="**" />
+      </tarfileset>
+
+      <!-- Include docs & manual. -->
       <tarfileset dir="${doc}" prefix="fabric-${fabric.version}/doc">
         <include name="api/**" />
+        <include name="manual/manual.pdf" />
+        <include name="manual/html/**" />
       </tarfileset>
 
       <!-- Include licences. -->
       <tarfileset dir="${doc}/licenses"
           prefix="fabric-${fabric.version}/doc/licenses">
-        <include name="apache-2.0.txt" />
-        <include name="eclipse-1.0.html" />
-        <include name="free-pastry.txt" />
-        <include name="gpl-2.0.txt" />
-        <include name="lgpl-2.1.txt" />
-        <include name="mit-x11.txt" />
-        <include name="sleepycat.txt" />
+        <include name="*" />
       </tarfileset>
 
       <!-- Include configuration files. -->
@@ -1153,6 +1158,8 @@ public class Version {
         <include name="java_cup.jar" />
         <!-- FreePastry -->
         <include name="FreePastry-*.jar" />
+        <!-- JLine -->
+        <include name="jline-*.jar" />
         <!-- BDB -->
         <include name="je-*.jar" />
         <include name="src/je-*.tar.gz" />
