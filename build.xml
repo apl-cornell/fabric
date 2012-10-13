@@ -51,9 +51,6 @@
   <property name="manual.html" location="${doc}/manual/html"/>
   <property name="manual.pdf" location="${doc}/manual/manual.pdf"/>
 
-  <!-- Certificate authority directory -->
-  <property name="ca" location="${fabric.home}/ca"/>
-
   <!-- Configuration directory -->
   <property name="etc" location="${fabric.home}/etc"/>
 
@@ -224,10 +221,8 @@
     <delete file="${jar.tools}" />
 
     <subant target="clean">
-      <filelist dir="${examples}" files="build.xml" />
-      <filelist dir="${tools}"    files="build.xml" />
-      <filelist dir="${libs}"     files="build.xml" />
-      <filelist dir="${tests}"    files="build.xml" />
+      <fileset dir="." includes="*/build.xml" />
+      <filelist dir="${libs}" files="build.xml" />
     </subant>
   </target>
 
@@ -248,9 +243,8 @@
     </delete>
 
     <subant target="clobber">
-      <filelist dir="${examples}" files="build.xml" />
-      <filelist dir="${tools}"    files="build.xml" />
-      <filelist dir="${libs}"     files="build.xml" />
+      <fileset dir="." includes="*/build.xml" />
+      <filelist dir="${libs}" files="build.xml" />
     </subant>
   </target>
 
@@ -1101,7 +1095,7 @@ public class Version {
       </tarfileset>
 
       <!-- Include certificate authority. -->
-      <tarfileset dir="${ca}" prefix="fabric-${fabric.version}/ca">
+      <tarfileset dir="${etc}/ca" prefix="fabric-${fabric.version}/ca">
         <include name="**" />
       </tarfileset>
 
@@ -1186,6 +1180,7 @@ public class Version {
         <include name="compiler/**/parse/*.cup" />
         <include name="compiler/**/parse/*.ppg" />
         <include name="compiler/**/doc-files/**" />
+        <include name="arrays/**/*.fil" />
         <include name="runtime/**/*.fil" />
         <include name="runtime/**/*.fab" />
         <include name="signatures/fabil/**/*.fil" />
@@ -1219,7 +1214,13 @@ public class Version {
       <!-- Include examples. -->
       <tarfileset dir="${examples}" prefix="fabric-${fabric.version}/examples">
         <include name="build.xml" />
+        <include name="auction/README" />
+        <include name="auction/build.xml" />
+        <include name="auction/*/**" />
         <include name="blog/**" />
+        <include name="friendmap/README" />
+        <include name="friendmap/build.xml" />
+        <include name="friendmap/*/**" />
         <include name="hello/**" />
         <include name="OO7/**" />
         <include name="sif-hello/**" />
@@ -1252,10 +1253,10 @@ public class Version {
         <include name="sif/src/**/*.java" />
 
         <!-- transient -->
-        <include name="transient/README" />
-        <include name="transient/build.xml" />
-        <include name="transient/common.xml" />
-        <include name="transient/src/**/*.fab" />
+        <include name="collections/README" />
+        <include name="collections/build.xml" />
+        <include name="collections/common.xml" />
+        <include name="collections/src/**/*.fab" />
       </tarfileset>
     </tar>
   </target>
