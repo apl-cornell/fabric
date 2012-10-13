@@ -1,1 +1,1 @@
-#include doc/manual/src/credits.mkdn
+#include doc/manual/src/credits.mkdn

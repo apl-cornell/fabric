@@ -19,3 +19,4 @@ jif.home=${env.HOME}/jif
 #   installation.
 #
 polyglot.home=${env.HOME}/polyglot
+
