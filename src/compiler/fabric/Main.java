@@ -210,6 +210,17 @@ public class Main extends polyglot.main.Main {
   }
 
   @Override
+  protected List<String> getSystemJavacArgs(Options options) {
+    List<String> result =
+        new ArrayList<String>(super.getSystemJavacArgs(options));
+    result.add("-source");
+    result.add("1.6");
+    result.add("-target");
+    result.add("1.6");
+    return result;
+  }
+
+  @Override
   public void start(String[] args, ExtensionInfo extInfo) {
     fabric.ExtensionInfo fabExtInfo = (fabric.ExtensionInfo) extInfo;
     super.start(args, fabExtInfo);

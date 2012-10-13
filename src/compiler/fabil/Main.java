@@ -1,5 +1,9 @@
 package fabil;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import polyglot.main.Options;
 
 /**
  * Main is the main program of the compiler extension. It simply invokes
@@ -15,5 +19,16 @@ public class Main extends polyglot.main.Main {
       System.err.println(e.getMessage());
       System.exit(1);
     }
+  }
+
+  @Override
+  protected List<String> getSystemJavacArgs(Options options) {
+    List<String> result =
+        new ArrayList<String>(super.getSystemJavacArgs(options));
+    result.add("-source");
+    result.add("1.6");
+    result.add("-target");
+    result.add("1.6");
+    return result;
   }
 }
