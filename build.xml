@@ -1131,7 +1131,7 @@ public class Version {
         <!-- Compiled library jars -->
         <include name="fabric-sif.jar" />
         <include name="fabric-sif-sig.jar" />
-        <include name="fabric-transient.jar" />
+        <include name="fabric-collections.jar" />
 
         <!-- Polyglot, PPG, and Jif -->
         <include name="polyglot.jar" />
@@ -1252,7 +1252,7 @@ public class Version {
         <include name="sif/src/**/*.fil" />
         <include name="sif/src/**/*.java" />
 
-        <!-- transient -->
+        <!-- Collections -->
         <include name="collections/README" />
         <include name="collections/build.xml" />
         <include name="collections/common.xml" />
