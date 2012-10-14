@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class Main extends polyglot.main.Main
 {
-  public native static long compile(fabric.lang.FClass fcls, java.util.Map/*String, bytes*/ bytecodeMap)
+  public native static void compile(fabric.lang.FClass fcls, java.util.Map/*String, bytes*/ bytecodeMap)
       throws GeneralSecurityException, IOException; 
-  public native static long compileFromShell(List<String> args, InputStream in, PrintStream out);
+  public native static void compileFromShell(List<String> args, InputStream in, PrintStream out);
 }
