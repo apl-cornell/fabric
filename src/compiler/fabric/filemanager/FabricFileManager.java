@@ -104,7 +104,13 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
           }
         } else {
           if (pathEntry.getPath().endsWith(".jar")) {
-            final JarFile jar = new JarFile(pathEntry.getPath());
+            final JarFile jar;
+            try {
+              jar = new JarFile(pathEntry.getPath());
+            } catch (FileNotFoundException e) {
+              return null;
+            }
+
             String entryName = fileKey(packageName, relativeName);
             final ZipEntry entry = jar.getEntry(entryName);
             if (entry != null) {
