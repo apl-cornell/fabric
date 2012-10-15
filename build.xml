@@ -973,12 +973,13 @@ public class Version {
       <param name="sub-ant.target" value="gen-version" />
     </antcall>
 
-    <!-- Copy tarballs into the scratch copy. -->
+    <!-- Copy jars into the scratch copy. -->
     <copy todir="${tmp}/fabric/lib">
       <fileset dir="${tmp}/jif/lib">
         <include name="jif.jar" />
         <include name="polyglot.jar" />
         <include name="ppg.jar" />
+        <include name="pth.jar" />
         <include name="JFlex.jar" />
         <include name="java_cup.jar" />
       </fileset>
@@ -1345,6 +1346,7 @@ public class Version {
         <include name="jif.jar" />
         <include name="polyglot.jar" />
         <include name="ppg.jar" />
+        <include name="pth.jar" />
         <include name="JFlex.jar" />
         <include name="java_cup.jar" />
       </fileset>
