@@ -890,7 +890,8 @@ public class Version {
 
     <copy todir="${tmp}">
       <fileset dir="${tools}">
-        <include name="*/classes/**/*.class" />
+        <!-- Store browser -->
+        <include name="storebrowser/classes/**/*.class" />
       </fileset>
       <regexpmapper from="^[^/]*/classes/(.*)$$" to="\1" />
     </copy>
@@ -1096,7 +1097,7 @@ public class Version {
       </tarfileset>
 
       <!-- Include certificate authority. -->
-      <tarfileset dir="${etc}/ca" prefix="fabric-${fabric.version}/ca">
+      <tarfileset dir="${etc}/ca" prefix="fabric-${fabric.version}/etc/ca">
         <include name="**" />
       </tarfileset>
 
@@ -1122,6 +1123,8 @@ public class Version {
 
       <!-- Include library dependencies. -->
       <tarfileset dir="${lib}" prefix="fabric-${fabric.version}/lib">
+        <include name="README" />
+
         <!-- Compiled jars -->
         <include name="fabric.jar" />
         <include name="fabric-rt.jar" />
@@ -1138,6 +1141,8 @@ public class Version {
         <include name="polyglot.jar" />
         <include name="jif.jar" />
         <include name="ppg.jar" />
+
+        <include name="src/README" />
 
         <!--
           ********************************************************************
@@ -1217,16 +1222,20 @@ public class Version {
         <include name="build.xml" />
         <include name="auction/README" />
         <include name="auction/build.xml" />
-        <include name="auction/*/**" />
+        <include name="auction/etc/**" />
+        <include name="auction/src/**" />
         <include name="blog/**" />
         <include name="friendmap/README" />
         <include name="friendmap/build.xml" />
-        <include name="friendmap/*/**" />
+        <include name="friendmap/etc/**" />
+        <include name="friendmap/src/**" />
         <include name="hello/**" />
         <include name="OO7/**" />
         <include name="sif-hello/**" />
-        <include name="travel/**" />
-        <exclude name="travel/prototype/**" />
+        <include name="travel/README" />
+        <include name="travel/build.xml" />
+        <include name="travel/etc/**" />
+        <include name="travel/src/**" />
         <!-- Exclude scripts.  These will be handled below. -->
         <exclude name="*/bin/*" />
       </tarfileset>
