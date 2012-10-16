@@ -595,17 +595,52 @@
     Configures properties for dependency versions.
   -->
   <target name="configure-dependency-versions">
+    <!--
+      Generate code that will determine Polyglot and Jif versions. This is done
+      this way because we won't have Polyglot's build.properties file if we're
+      only building against polyglot.jar.
+    -->
+    <antcall target="mkdir-tmp" />
+    <echo file="${tmp}/VersionInfo.java">
+import polyglot.frontend.JLVersion;
+import jif.Version;
+
+public class VersionInfo {
+  public static void main(String[] args) {
+    polyglot.main.Version ver;
+    if ("jif".equals(args[0])) {
+      ver = new Version();
+    } else if ("polyglot".equals(args[0])) {
+      ver = new JLVersion();
+    } else return;
+
+    System.out.print(ver.major() + "." + ver.minor() + "." + ver.patch_level());
+  }
+}
+</echo>
+    <javac
+        srcdir="${tmp}"
+        destdir="${tmp}"
+        includes="VersionInfo.java"
+        classpathref="jif.classpath"/>
+
     <!-- Get Polyglot version. -->
-    <property file="${polyglot.home}/build.properties" prefix="polyglot" />
-    <property name="polyglot.version"
-        value="${polyglot.version.major}.${polyglot.version.minor}.${polyglot.version.patch}" />
-    <filter token="POLYGLOT-VERSION" value="${polyglot.version}"/>
+    <java classname="VersionInfo" outputproperty="polyglot.version">
+      <arg value="polyglot"/>
+      <classpath>
+        <pathelement location="${tmp}"/>
+        <path refid="jif.classpath"/>
+      </classpath>
+    </java>
 
     <!-- Get Jif version. -->
-    <property file="${jif.home}/version.properties" prefix="jif" />
-    <property name="jif.version"
-        value="${jif.version.major}.${jif.version.minor}.${jif.version.patch}"/>
-    <filter token="JIF-VERSION" value="${jif.version}"/>
+    <java classname="VersionInfo" outputproperty="jif.version">
+      <arg value="jif"/>
+      <classpath>
+        <pathelement location="${tmp}"/>
+        <path refid="jif.classpath"/>
+      </classpath>
+    </java>
   </target>
 
   <!--
@@ -618,6 +653,8 @@
     </tstamp>
     <filter token="YEAR" value="${this-year}"/>
     <filter token="VERSION" value="${fabric.version}"/>
+    <filter token="POLYGLOT-VERSION" value="${polyglot.version}"/>
+    <filter token="JIF-VERSION" value="${jif.version}"/>
   </target>
 
   <!--
@@ -967,6 +1004,13 @@ public class Version {
       <param name="name" value="fabric" />
       <param name="root" value="${svn.root.fabric}" />
     </antcall>
+
+    <!-- Configure the scratch copy. -->
+    <concat destfile="${tmp}/fabric/config.properties" append="no">
+      jif.home=${tmp}/fabric
+      polyglot.home=${tmp}/fabric
+      jdk.home=${jdk.home}
+    </concat>
 
     <!-- Generate version information in the scratch copy. -->
     <antcall target="sub-ant-dist">
