@@ -26,7 +26,7 @@ public class Client {
   }
 
   public static void main(String[] args) throws IOException,
-  InterruptedException {
+      InterruptedException {
     if (args.length == 0) {
       System.err.println("Usage: Client hostname");
       return;

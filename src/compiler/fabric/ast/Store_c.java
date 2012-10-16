@@ -23,6 +23,7 @@ import fabric.types.FabricTypeSystem;
 public class Store_c extends Expr_c implements Store {
   protected Expr expr;
   protected boolean isLocal;
+
   @Override
   public Object copy() {
     Store s = (Store) super.copy();
@@ -92,7 +93,6 @@ public class Store_c extends Expr_c implements Store {
 
     return isLocalStore(ts.isTransient(t)).type(ts.Store());
   }
-
 
   @Override
   public List<Type> throwTypes(TypeSystem ts) {

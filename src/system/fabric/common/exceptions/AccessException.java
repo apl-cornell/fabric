@@ -20,7 +20,6 @@ public class AccessException extends FabricException {
     super(message);
   }
 
-
   public AccessException(Principal accessor, fabric.lang.Object accessee) {
     this("access", accessor, accessee);
   }

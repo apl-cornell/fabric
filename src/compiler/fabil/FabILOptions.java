@@ -117,8 +117,7 @@ public class FabILOptions extends polyglot.main.Options {
       }
     });
     flags.add(new OptFlag<List<URI>>(new String[] { "-classpath", "-cp" },
-        "<path>",
-        "where to find class files or mobile code to link against,"
+        "<path>", "where to find class files or mobile code to link against,"
             + " may contain <escaped> URIs of codebases") {
       @Override
       public Arg<List<URI>> handle(String[] args, int index) {
@@ -184,8 +183,8 @@ public class FabILOptions extends polyglot.main.Options {
         return createArg(index + 1, args[index]);
       }
     });
-    flags.add(new OptFlag<Pair<String, URI>>(new String[] {
-        "-codebase-alias", "-cb-alias" }, "<name>",
+    flags.add(new OptFlag<Pair<String, URI>>(new String[] { "-codebase-alias",
+        "-cb-alias" }, "<name>",
         "The the destination store for published classes.") {
       @Override
       public Arg<Pair<String, URI>> handle(String[] args, int index)
@@ -232,7 +231,8 @@ public class FabILOptions extends polyglot.main.Options {
     flags.add(new Switch("-generate-native-skeletons",
         "generate java bootstrap skeletons for each class"));
     flags.add(new Switch("-platform-mode", "build platform classes"));
-    flags.add(new IntFlag("-optlevel", "<num>", "perform level <num> optimizations", 0));
+    flags.add(new IntFlag("-optlevel", "<num>",
+        "perform level <num> optimizations", 0));
 
     super.populateFlags(flags);
   }
@@ -244,7 +244,7 @@ public class FabILOptions extends polyglot.main.Options {
       File f = new File(args[index]).getAbsoluteFile();
       u = NSUtil.file.resolve(f.toURI());
     }
-    Arg<URI> src = new Arg<URI>(index+1, u);
+    Arg<URI> src = new Arg<URI>(index + 1, u);
     arguments.add(src);
     return src.next();
   }
@@ -252,8 +252,7 @@ public class FabILOptions extends polyglot.main.Options {
   @Override
   protected void handleSourceArg(Arg<?> arg, Set<String> source) {
     URI uri = (URI) arg.value();
-    if (uri.getScheme().equals("fab"))
-      needWorker = true;
+    if (uri.getScheme().equals("fab")) needWorker = true;
     source.add(uri.toString());
   }
 
@@ -281,8 +280,8 @@ public class FabILOptions extends polyglot.main.Options {
       classpathURIs().addAll(uris);
 
     } else if (arg.flag().ids().contains("-sourcepath")) {
-      sourcepathURIs().addAll(this.<List<URI>, URI> sccast(arg.value(),
-          URI.class));
+      sourcepathURIs().addAll(
+          this.<List<URI>, URI> sccast(arg.value(), URI.class));
 
     } else if (arg.flag().ids().contains("-bootclasspath")) {
       List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);
@@ -320,18 +319,15 @@ public class FabILOptions extends polyglot.main.Options {
   @Override
   protected void postApplyArgs() {
     // Don't serialize types with skeletons
-    if (createSkeleton)
-      serialize_type_info = false;
+    if (createSkeleton) serialize_type_info = false;
 
     // We need a worker if any path entry or source file
     // is a remote URI
     for (URI loc : classpathURIs()) {
-      if (loc.getScheme().equals("fab"))
-        needWorker = true;
+      if (loc.getScheme().equals("fab")) needWorker = true;
     }
     for (URI loc : sourcepathURIs()) {
-      if (loc.getScheme().equals("fab"))
-        needWorker = true;
+      if (loc.getScheme().equals("fab")) needWorker = true;
     }
   }
 
@@ -415,7 +411,8 @@ public class FabILOptions extends polyglot.main.Options {
 
   @Override
   public String constructPostCompilerClasspath() {
-    StringBuilder sb = new StringBuilder(super.constructPostCompilerClasspath());
+    StringBuilder sb =
+        new StringBuilder(super.constructPostCompilerClasspath());
     for (File l : bootclasspathDirectories()) {
       sb.append(File.pathSeparator);
       sb.append(l.getPath());

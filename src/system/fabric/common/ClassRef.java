@@ -164,7 +164,7 @@ public abstract class ClassRef implements FastSerializable {
 
     @SuppressWarnings("unchecked")
     Class<? extends fabric.lang.Object> fabClass =
-    (Class<? extends fabric.lang.Object>) clazz;
+        (Class<? extends fabric.lang.Object>) clazz;
     return new FabricClassRef(fabClass);
   }
 
@@ -564,8 +564,7 @@ public abstract class ClassRef implements FastSerializable {
     @Override
     public final Class<? extends fabric.lang.Object> toClass() {
       try {
-        return
-            (Class<? extends Object>) Worker.getWorker().getClassLoader()
+        return (Class<? extends Object>) Worker.getWorker().getClassLoader()
             .loadClass(javaClassName());
       } catch (ClassNotFoundException e) {
         throw new InternalError(e);
@@ -719,7 +718,7 @@ public abstract class ClassRef implements FastSerializable {
     private static int storeNameLength(byte[] data, int pos) {
       int x =
           SerializationUtil
-          .unsignedShortAt(data, storeNameLengthPos(data, pos));
+              .unsignedShortAt(data, storeNameLengthPos(data, pos));
       return x;
     }
 

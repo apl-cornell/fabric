@@ -83,7 +83,7 @@ import java.util.Set;
  * @since 1.2
  */
 public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
-LongKeyMap<V>, Cloneable, Serializable {
+    LongKeyMap<V>, Cloneable, Serializable {
   /**
    * Default number of buckets. This is the value the JDK 1.3 uses. Some early
    * documentation specified this value as 101. That is incorrect. Package
@@ -471,40 +471,40 @@ LongKeyMap<V>, Cloneable, Serializable {
   @Override
   public LongSet keySet() {
     if (keys == null)
-      // Create an AbstractSet with custom implementations of those methods
-      // that can be overridden easily and efficiently.
+    // Create an AbstractSet with custom implementations of those methods
+    // that can be overridden easily and efficiently.
       keys = new AbstractLongSet() {
-      @Override
-      public int size() {
-        return size;
-      }
+        @Override
+        public int size() {
+          return size;
+        }
 
-      @Override
-      public LongIterator iterator() {
-        // Cannot create the iterator directly, because of LinkedHashMap.
-        return keyIterator();
-      }
+        @Override
+        public LongIterator iterator() {
+          // Cannot create the iterator directly, because of LinkedHashMap.
+          return keyIterator();
+        }
 
-      @Override
-      public void clear() {
-        LongKeyHashMap.this.clear();
-      }
+        @Override
+        public void clear() {
+          LongKeyHashMap.this.clear();
+        }
 
-      @Override
-      public boolean contains(long o) {
-        return containsKey(o);
-      }
+        @Override
+        public boolean contains(long o) {
+          return containsKey(o);
+        }
 
-      @Override
-      public boolean remove(long o) {
-        // Test against the size of the HashMap to determine if anything
-        // really got removed. This is necessary because the return value
-        // of HashMap.remove() is ambiguous in the null case.
-        int oldsize = size;
-        LongKeyHashMap.this.remove(o);
-        return oldsize != size;
-      }
-    };
+        @Override
+        public boolean remove(long o) {
+          // Test against the size of the HashMap to determine if anything
+          // really got removed. This is necessary because the return value
+          // of HashMap.remove() is ambiguous in the null case.
+          int oldsize = size;
+          LongKeyHashMap.this.remove(o);
+          return oldsize != size;
+        }
+      };
     return keys;
   }
 
@@ -520,25 +520,25 @@ LongKeyMap<V>, Cloneable, Serializable {
   @Override
   public Collection<V> values() {
     if (values == null)
-      // We don't bother overriding many of the optional methods, as doing so
-      // wouldn't provide any significant performance advantage.
+    // We don't bother overriding many of the optional methods, as doing so
+    // wouldn't provide any significant performance advantage.
       values = new AbstractCollection<V>() {
-      @Override
-      public int size() {
-        return size;
-      }
+        @Override
+        public int size() {
+          return size;
+        }
 
-      @Override
-      public Iterator<V> iterator() {
-        // Cannot create the iterator directly, because of LinkedHashMap.
-        return LongKeyHashMap.this.iterator(VALUES);
-      }
+        @Override
+        public Iterator<V> iterator() {
+          // Cannot create the iterator directly, because of LinkedHashMap.
+          return LongKeyHashMap.this.iterator(VALUES);
+        }
 
-      @Override
-      public void clear() {
-        LongKeyHashMap.this.clear();
-      }
-    };
+        @Override
+        public void clear() {
+          LongKeyHashMap.this.clear();
+        }
+      };
     return values;
   }
 
@@ -558,40 +558,40 @@ LongKeyMap<V>, Cloneable, Serializable {
   @Override
   public Set<LongKeyMap.Entry<V>> entrySet() {
     if (entries == null)
-      // Create an AbstractSet with custom implementations of those methods
-      // that can be overridden easily and efficiently.
+    // Create an AbstractSet with custom implementations of those methods
+    // that can be overridden easily and efficiently.
       entries = new AbstractSet<LongKeyMap.Entry<V>>() {
-      @Override
-      public int size() {
-        return size;
-      }
-
-      @Override
-      public Iterator<LongKeyMap.Entry<V>> iterator() {
-        // Cannot create the iterator directly, because of LinkedHashMap.
-        return LongKeyHashMap.this.iterator(ENTRIES);
-      }
-
-      @Override
-      public void clear() {
-        LongKeyHashMap.this.clear();
-      }
-
-      @Override
-      public boolean contains(Object o) {
-        return getEntry(o) != null;
-      }
-
-      @Override
-      public boolean remove(Object o) {
-        HashEntry<V> e = getEntry(o);
-        if (e != null) {
-          LongKeyHashMap.this.remove(e.key);
-          return true;
+        @Override
+        public int size() {
+          return size;
         }
-        return false;
-      }
-    };
+
+        @Override
+        public Iterator<LongKeyMap.Entry<V>> iterator() {
+          // Cannot create the iterator directly, because of LinkedHashMap.
+          return LongKeyHashMap.this.iterator(ENTRIES);
+        }
+
+        @Override
+        public void clear() {
+          LongKeyHashMap.this.clear();
+        }
+
+        @Override
+        public boolean contains(Object o) {
+          return getEntry(o) != null;
+        }
+
+        @Override
+        public boolean remove(Object o) {
+          HashEntry<V> e = getEntry(o);
+          if (e != null) {
+            LongKeyHashMap.this.remove(e.key);
+            return true;
+          }
+          return false;
+        }
+      };
     return entries;
   }
 
@@ -762,7 +762,7 @@ LongKeyMap<V>, Cloneable, Serializable {
    *             (Object) and a value (Object).
    */
   private void readObject(ObjectInputStream s) throws IOException,
-  ClassNotFoundException {
+      ClassNotFoundException {
     // Read the threshold and loadFactor fields.
     s.defaultReadObject();
 

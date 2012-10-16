@@ -73,7 +73,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Only translate if we're processing a Fabric class.
     if (!pr.typeSystem().isFabricClass(classDecl.type()))
-      // Tag for type serialization.
+    // Tag for type serialization.
       return classDecl.ext(shouldSerializeType(true));
 
     NodeFactory nf = pr.nodeFactory();

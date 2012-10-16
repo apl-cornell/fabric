@@ -1,9 +1,9 @@
 package fabric.lang.arrays;
 
-import fabric.worker.Store;
 import fabric.lang.Object;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
+import fabric.worker.Store;
 
 public interface intArray extends Object {
   int get(int i);
@@ -15,8 +15,10 @@ public interface intArray extends Object {
       super(store);
     }
 
+    @Override
     public native int get(int i);
 
+    @Override
     public native int set(int i, int value);
   }
 }

@@ -65,7 +65,7 @@ public final class SysUtil {
       try {
         @SuppressWarnings("unchecked")
         Class<? extends fabric.lang.Object> fabricClass =
-        (Class<? extends fabric.lang.Object>) c;
+            (Class<? extends fabric.lang.Object>) c;
         return classHashFieldValue(fabricClass);
       } catch (NoSuchFieldException e) {
       } catch (SecurityException e) {
@@ -149,22 +149,22 @@ public final class SysUtil {
     // Include declared interfaces, if any.
     Class<?>[] interfaces =
         hashing_Impl ? ifaceClass.getInterfaces() : c.getInterfaces();
-        for (Class<?> iface : interfaces) {
-          // Assume the interface is also a platform class.
-          digest.update(hashPlatformClass(iface));
-        }
+    for (Class<?> iface : interfaces) {
+      // Assume the interface is also a platform class.
+      digest.update(hashPlatformClass(iface));
+    }
 
-        result = digest.digest();
+    result = digest.digest();
 
-        classHashCache.put(className, result);
+    classHashCache.put(className, result);
 
-        if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
-          String hash = new BigInteger(1, result).toString(16);
-          Logging.log(CLASS_HASHING_LOGGER, Level.FINEST, "  Hash for {0} is {1}",
-              className, hash);
-        }
+    if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
+      String hash = new BigInteger(1, result).toString(16);
+      Logging.log(CLASS_HASHING_LOGGER, Level.FINEST, "  Hash for {0} is {1}",
+          className, hash);
+    }
 
-        return result;
+    return result;
   }
 
   /**
@@ -321,7 +321,7 @@ public final class SysUtil {
    * Turns an array of bytes into an object using Java serialization.
    */
   public static Object deserialize(byte[] bytes) throws IOException,
-  ClassNotFoundException {
+      ClassNotFoundException {
     ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
     ObjectInputStream ois = new ObjectInputStream(bais);
     return ois.readObject();

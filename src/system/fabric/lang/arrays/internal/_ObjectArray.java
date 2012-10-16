@@ -27,7 +27,7 @@ public interface _ObjectArray<T extends Object> extends Object {
   T get(int i);
 
   public static class _Impl<T extends Object> extends Object._Impl implements
-  _ObjectArray<T>, _InternalArrayImpl {
+      _ObjectArray<T>, _InternalArrayImpl {
     /**
      * The class representing the proxy type for the array elements.
      */
@@ -83,7 +83,7 @@ public interface _ObjectArray<T extends Object> extends Object {
           intraStoreRefs);
       proxyType =
           (Class<? extends Object._Proxy>) Worker.getWorker().getClassLoader()
-          .loadClass(in.readUTF());
+              .loadClass(in.readUTF());
       value = new Object[in.readInt()];
       for (int i = 0; i < value.length; i++) {
         value[i] =
@@ -93,7 +93,7 @@ public interface _ObjectArray<T extends Object> extends Object {
 
     private static final Map<Class<?>, Class<? extends fabric.lang.Object._Proxy>> proxyCache =
         Collections
-        .synchronizedMap(new HashMap<Class<?>, Class<? extends fabric.lang.Object._Proxy>>());
+            .synchronizedMap(new HashMap<Class<?>, Class<? extends fabric.lang.Object._Proxy>>());
 
     /**
      * Given a Fabric class, returns the corresponding _Proxy class. If the
@@ -110,7 +110,7 @@ public interface _ObjectArray<T extends Object> extends Object {
       if (c.getSimpleName().equals("_Proxy")) {
         @SuppressWarnings("unchecked")
         Class<? extends fabric.lang.Object._Proxy> proxyClass =
-        (Class<? extends fabric.lang.Object._Proxy>) c;
+            (Class<? extends fabric.lang.Object._Proxy>) c;
         result = proxyClass;
         proxyCache.put(c, result);
         return result;
@@ -121,7 +121,7 @@ public interface _ObjectArray<T extends Object> extends Object {
         if (c_.getSimpleName().equals("_Proxy")) {
           @SuppressWarnings("unchecked")
           Class<? extends fabric.lang.Object._Proxy> proxyClass =
-          (Class<? extends fabric.lang.Object._Proxy>) c_;
+              (Class<? extends fabric.lang.Object._Proxy>) c_;
           result = proxyClass;
           proxyCache.put(c, result);
           return result;
@@ -176,7 +176,7 @@ public interface _ObjectArray<T extends Object> extends Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-            throws IOException {
+        throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeUTF(proxyType.getName());
       out.writeInt(value.length);
@@ -192,7 +192,7 @@ public interface _ObjectArray<T extends Object> extends Object {
   }
 
   public static class _Proxy<T extends Object> extends Object._Proxy implements
-  _ObjectArray<T> {
+      _ObjectArray<T> {
 
     public _Proxy(Store store, long onum) {
       super(store, onum);

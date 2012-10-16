@@ -112,8 +112,8 @@ public interface _longArray extends Object {
         throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
-      for (int i = 0; i < value.length; i++)
-        out.writeLong(value[i]);
+      for (long element : value)
+        out.writeLong(element);
     }
 
     @Override

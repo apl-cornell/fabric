@@ -36,8 +36,7 @@ public class CBImportTable extends ImportTable {
   protected final Map<String, String> fromExternal;
   protected final CBJobExt jobExt;
 
-  public CBImportTable(CodebaseTypeSystem ts, URI ns, Package pkg,
-      Source source) {
+  public CBImportTable(CodebaseTypeSystem ts, URI ns, Package pkg, Source source) {
     super(ts, pkg, source.name());
     this.ts = ts;
     this.ns = ns;
@@ -53,11 +52,11 @@ public class CBImportTable extends ImportTable {
 
     if (isExternal(name)) {
       jobExt.addExternalDependency((CodebaseClassType) type, aliasFor(name));
-    }
-    else {
+    } else {
       jobExt.addDependency((CodebaseClassType) type);
     }
   }
+
   // /// The following methods are basically copied from the superclass, but
   // instead of
   // /// calling the toplevel system resolver directly, they use the namespace
@@ -222,8 +221,7 @@ public class CBImportTable extends ImportTable {
         // Check if this is an explicit codebase import
         String first = StringUtil.getFirstComponent(longName);
         if (aliases.contains(first)) {
-          URI u =
-              ts.namespaceResolver(ns).resolveCodebaseName(first);
+          URI u = ts.namespaceResolver(ns).resolveCodebaseName(first);
           if (u == null)
             throw new SemanticException("Unknown codebase \"" + first + "\"");
           import_ns = u;

@@ -108,8 +108,7 @@ public class SubSocket {
     }
 
     BufferedOutputStream getOutputStream() throws IOException {
-      throw new IOException("Cannot get an output stream: " + this,
-          cause);
+      throw new IOException("Cannot get an output stream: " + this, cause);
     }
 
     Principal getPrincipal() throws IOException {

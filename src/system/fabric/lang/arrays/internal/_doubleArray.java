@@ -115,8 +115,8 @@ public interface _doubleArray extends Object {
         throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
-      for (int i = 0; i < value.length; i++)
-        out.writeDouble(value[i]);
+      for (double element : value)
+        out.writeDouble(element);
     }
 
     @Override

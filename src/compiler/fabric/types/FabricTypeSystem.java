@@ -55,7 +55,6 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
 
   IntegPolicy representableIntegProjection(Label L);
 
-
   /**
    * Returns true if type extends fabric.lang.Object
    */

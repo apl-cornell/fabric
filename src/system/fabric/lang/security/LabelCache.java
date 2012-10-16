@@ -147,7 +147,7 @@ public class LabelCache {
    */
   private static final class Cache<K1 extends Object, K2 extends Object, P extends Object> {
     private static final class EntrySoftRef<K1 extends Object, K2 extends Object, P extends Object>
-    extends SoftReference<P> {
+        extends SoftReference<P> {
       final Cache<K1, K2, P> cache;
       final Key key;
 

@@ -47,41 +47,41 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
         final SubSocket connection = server.accept();
 
         Threading.getPool()
-        .submit(
-            new Threading.NamedRunnable(
-                "Fabric network message handler thread") {
-              @Override
-              protected void runImpl() {
-                try {
-                  // Handle the connection.
-                  DataInputStream in =
-                      new DataInputStream(connection.getInputStream());
-                  DataOutputStream out =
-                      new DataOutputStream(connection.getOutputStream());
-
-                  while (true) {
-                    Message<?, ?> message = Message.receive(in);
+            .submit(
+                new Threading.NamedRunnable(
+                    "Fabric network message handler thread") {
+                  @Override
+                  protected void runImpl() {
                     try {
-                      Message.Response response =
-                          message.dispatch(connection.getPrincipal(),
-                              AbstractMessageServer.this);
-                      message.respond(out, response);
-                    } catch (FabricException e) {
-                      message.respond(out, e);
-                    }
+                      // Handle the connection.
+                      DataInputStream in =
+                          new DataInputStream(connection.getInputStream());
+                      DataOutputStream out =
+                          new DataOutputStream(connection.getOutputStream());
 
-                    out.flush();
+                      while (true) {
+                        Message<?, ?> message = Message.receive(in);
+                        try {
+                          Message.Response response =
+                              message.dispatch(connection.getPrincipal(),
+                                  AbstractMessageServer.this);
+                          message.respond(out, response);
+                        } catch (FabricException e) {
+                          message.respond(out, e);
+                        }
+
+                        out.flush();
+                      }
+                    } catch (IOException e) {
+                      try {
+                        connection.close();
+                      } catch (IOException e1) {
+                      }
+                      logger.log(Level.WARNING,
+                          "Network error while handling request", e);
+                    }
                   }
-                } catch (IOException e) {
-                  try {
-                    connection.close();
-                  } catch (IOException e1) {
-                  }
-                  logger.log(Level.WARNING,
-                      "Network error while handling request", e);
-                }
-              }
-            });
+                });
       }
     } catch (final IOException e) {
       logger.log(Level.WARNING, name + " (" + getClass().getSimpleName()

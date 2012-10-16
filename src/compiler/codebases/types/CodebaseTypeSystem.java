@@ -29,8 +29,7 @@ public interface CodebaseTypeSystem extends TypeSystem {
 
   Package createPackage(URI ns, Package prefix, String name);
 
-  Package packageForName(URI ns, String name)
-      throws SemanticException;
+  Package packageForName(URI ns, String name) throws SemanticException;
 
   Codebase codebaseFromNS(URI namespace);
 

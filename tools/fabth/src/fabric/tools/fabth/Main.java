@@ -1,6 +1,5 @@
 package fabric.tools.fabth;
 
-
 import polyglot.pth.OutputController;
 
 public class Main extends polyglot.pth.Main {

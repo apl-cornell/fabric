@@ -103,11 +103,11 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
                 + "\", "
                 + "because the dynamic label check might leak information."
                 + "\nAlso, make sure the method you are trying to call is public and not static or abstract.",
-                c.position());
+            c.position());
       }
 
-      return c.remoteWorkerPrincipal(ts.exprToPrincipal(ts,
-          c.remoteWorker(), context));
+      return c.remoteWorkerPrincipal(ts.exprToPrincipal(ts, c.remoteWorker(),
+          context));
     }
 
     return c;

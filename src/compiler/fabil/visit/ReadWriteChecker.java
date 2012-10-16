@@ -294,7 +294,7 @@ public class ReadWriteChecker extends DataFlow<ReadWriteChecker.DataFlowItem> {
           if (e instanceof Local) {
             Local l = (Local) e;
             ((FieldAssignExt_c) a.ext())
-            .accessState(in.state(l.localInstance()));
+                .accessState(in.state(l.localInstance()));
           } else if (isThis(e)) {
             ((FieldAssignExt_c) a.ext()).accessState(in.state(null));
           }

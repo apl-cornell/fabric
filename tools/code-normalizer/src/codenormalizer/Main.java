@@ -87,7 +87,7 @@ public class Main {
       reader.close();
     } catch (IOException e) {
     }
-    
+
     if (sym.value == null) {
       System.err.println("Error parsing " + file);
       return;

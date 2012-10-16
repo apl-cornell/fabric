@@ -19,7 +19,7 @@ import fabric.lang.security.LabelUtil;
 import fabric.worker.Store;
 
 public class PathResolver extends NamespaceResolver_c implements
-NamespaceResolver {
+    NamespaceResolver {
   private static final Collection<String> TOPICS;
   static {
     TOPICS = new ArrayList<String>(2);

@@ -40,9 +40,9 @@ public class FabricSourceFileTest extends SourceFileTest {
     try {
       fabricMain.start(cmdLine, eq);
     } finally {
-       if (Main.options.shouldDeleteOutputFiles()) {
-       deleteDir(tmpdir);
-       }
+      if (Main.options.shouldDeleteOutputFiles()) {
+        deleteDir(tmpdir);
+      }
 
       setDestDir(null);
       if (Worker.isInitialized()) {

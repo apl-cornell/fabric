@@ -115,8 +115,8 @@ public interface _shortArray extends Object {
         throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
-      for (int i = 0; i < value.length; i++)
-        out.writeShort(value[i]);
+      for (short element : value)
+        out.writeShort(element);
     }
 
     @Override

@@ -134,7 +134,8 @@ public class FabricArrayInitExt_c extends AnnotatedExt_c {
     MethodInstance mi =
         ts.methodInstance(Position.compilerGenerated(),
             (ReferenceType) ts.Label(), Flags.PUBLIC, ts.ConfPolicy(),
-            "confPolicy", Collections.<Type> emptyList(), Collections.<Type> emptyList());
+            "confPolicy", Collections.<Type> emptyList(),
+            Collections.<Type> emptyList());
     policy = ((Call) policy).methodInstance(mi);
     return expr.accessPolicy(policy);
   }
