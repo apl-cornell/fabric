@@ -1033,26 +1033,34 @@ public class Version {
         keyword-filter">
     <delete dir="${fabric.home}/fabric-${fabric.version}" />
 
-    <!-- Process *.in to insert current year and version. -->
-    <copy todir="${fabric.home}" filtering="yes">
-      <fileset dir="${fabric.home}">
-        <include name="COPYING.in"/>
-        <include name="README.mkdn.in"/>
-      </fileset>
-      <mapper type="glob" from="*.in" to="*"/>
-    </copy>
-
     <!-- Process *.mkdn in top-level directory. -->
     <apply executable="${fabric.home}/tools/mkdn-stripper/bin/strip-mkdn"
         dir="${fabric.home}" dest="${fabric.home}">
       <srcfile/>
       <targetfile/>
-      <fileset dir="${fabric.home}" includes="*.mkdn"/>
-      <mapper type="glob" from="*.mkdn" to="*"/>
+      <fileset dir="${fabric.home}">
+        <include name="README.mkdn"/>
+        <include name="CHANGES.mkdn"/>
+        <include name="CREDITS.mkdn"/>
+      </fileset>
+      <mapper type="glob" from="*.mkdn" to="*.in"/>
     </apply>
 
+    <!-- Process *.in to insert current year and version. -->
+    <copy todir="${fabric.home}" filtering="yes">
+      <fileset dir="${fabric.home}">
+        <include name="README.in"/>
+        <include name="CHANGES.in"/>
+        <include name="COPYING.in"/>
+        <include name="CREDITS.in"/>
+      </fileset>
+      <mapper type="glob" from="*.in" to="*"/>
+    </copy>
+
     <!-- Clean up a bit. -->
-    <delete file="${fabric.home}/README.mkdn"/>
+    <delete file="${fabric.home}/README.in"/>
+    <delete file="${fabric.home}/CHANGES.in"/>
+    <delete file="${fabric.home}/CREDITS.in"/>
 
     <!-- Create actual tarball. -->
     <tar destfile="${fabric.home}/fabric-${fabric.version}.tar.gz"
