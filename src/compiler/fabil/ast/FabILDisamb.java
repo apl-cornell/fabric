@@ -1,5 +1,7 @@
 package fabil.ast;
 
+import java.net.URI;
+
 import polyglot.ast.Ambiguous;
 import polyglot.ast.Disamb;
 import polyglot.ast.Disamb_c;
@@ -26,10 +28,9 @@ import codebases.types.CodebaseClassType;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
 import fabil.types.FabILContext;
-import fabric.common.FabricLocation;
 
 public class FabILDisamb extends Disamb_c implements Disamb {
-  protected FabricLocation namespace;
+  protected URI namespace;
 
   /* Convenience fields */
   private CodebaseTypeSystem ts;
@@ -193,7 +194,7 @@ public class FabILDisamb extends Disamb_c implements Disamb {
       // Is it an explicit codebase?
       FabILContext ctx = (FabILContext) v.context();
 
-      FabricLocation ns = ctx.resolveCodebaseName(name.id());
+      URI ns = ctx.resolveCodebaseName(name.id());
       if (ns != null)
         return nf.CodebaseNode(pos, namespace, name.id(), ns);
       else

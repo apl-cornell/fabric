@@ -1,5 +1,7 @@
 package codebases.visit;
 
+import java.net.URI;
+
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.PackageNode;
@@ -12,14 +14,13 @@ import codebases.ast.CodebaseDecl;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CBImportTable;
 import codebases.types.CodebaseTypeSystem;
-import fabric.common.FabricLocation;
 
 /**
  * This class creates an import table for each source file and sets the source
  * reference for each package node.
  */
 public class InitCodebaseImports extends InitImportsVisitor {
-  protected FabricLocation ns;
+  protected URI ns;
   private final CodebaseTypeSystem ts;
 
   public InitCodebaseImports(Job job, CodebaseTypeSystem ts, NodeFactory nf) {

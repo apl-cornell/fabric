@@ -1,5 +1,6 @@
 package fabil.ast;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,7 +36,6 @@ import fabil.extension.FabILDelFactory;
 import fabil.extension.FabILDelFactory_c;
 import fabil.extension.FabILExtFactory;
 import fabil.extension.FabILExtFactory_c;
-import fabric.common.FabricLocation;
 
 /**
  * NodeFactory for FabIL extension.
@@ -58,14 +58,14 @@ FabILNodeFactory {
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, FabricLocation ns,
-      String name, FabricLocation externalNS) {
+  public CodebaseNode CodebaseNode(Position pos, URI ns,
+      String name, URI externalNS) {
     return CodebaseNode(pos, ns, name, externalNS, null);
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, FabricLocation ns,
-      String name, FabricLocation externalNS, Package package_) {
+  public CodebaseNode CodebaseNode(Position pos, URI ns,
+      String name, URI externalNS, Package package_) {
     CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, package_);
     n = (CodebaseNode) n.ext(extFactory().extCodebaseNode());
     n = (CodebaseNode) n.del(delFactory().delCodebaseNode());

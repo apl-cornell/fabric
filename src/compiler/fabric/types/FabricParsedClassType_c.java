@@ -1,5 +1,6 @@
 package fabric.types;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -30,7 +31,6 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseClassType;
-import fabric.common.FabricLocation;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements
 FabricParsedClassType {
@@ -38,7 +38,7 @@ FabricParsedClassType {
   private transient ConfPolicy accessPolicy = null;
   private transient boolean fieldLabelFound = false;
 
-  protected FabricLocation canonical_ns = null;
+  protected URI canonical_ns = null;
   protected Set<CodebaseClassType> namespaceDependencies;
 
   public FabricParsedClassType_c() {
@@ -249,12 +249,12 @@ FabricParsedClassType {
   }
 
   @Override
-  public void setCanonicalNamespace(FabricLocation ns) {
+  public void setCanonicalNamespace(URI ns) {
     this.canonical_ns = ns;
   }
 
   @Override
-  public FabricLocation canonicalNamespace() {
+  public URI canonicalNamespace() {
     // HACK superclass constructor accesses canonical namespace before it can be
     // initialized.
     if (canonical_ns == null)

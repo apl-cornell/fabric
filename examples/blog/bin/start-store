@@ -5,5 +5,5 @@ PATH="${PATH}:${APP_HOME}/../../bin"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab-store --debug --jvm-cp "${APP_HOME}/classes" --app-home "${FABRIC_HOME}" --name blog-store
+fab-store --jvm-cp "${APP_HOME}/classes" --app-home "${FABRIC_HOME}" --name blog-store
 

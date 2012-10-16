@@ -1,8 +1,9 @@
 Introduction {#index}
 ============
 Fabric is a language and runtime system that supports secure federated
-distributed computing. This document briefly describes the contents of
-the package and should get you started running some Fabric examples.
+distributed computing. This manual briefly describes the contents of the
+Fabric distribution package, and should get you started with running
+Fabric.
 For more information, see our paper "Fabric: A Platform for Secure
 Distributed Computation and Storage" published in SOSP 2009
 @cite fabric2009.
@@ -13,7 +14,7 @@ A PDF version of this manual <a href="../manual.pdf">is available</a>.
 @latexonly
 An HTML version of this manual
 \href
-  {http://www.cs.cornell.edu/projects/fabric/manual/0.2.0/html/}
+  {http://www.cs.cornell.edu/projects/fabric/manual/@VERSION@/html/}
   {\tt is available}.
 @endlatexonly
 
@@ -38,7 +39,8 @@ The Fabric distribution package contains the following directories:
 
   - `bin`:
       Scripts for invoking the compiler, runtime, and for configuration
-      tasks.
+      tasks. To get usage information for a script, run it with the
+      `--help` option.
 
   - `doc`:
       The Fabric manual, internal API documentation, and licenses.
@@ -53,11 +55,8 @@ The Fabric distribution package contains the following directories:
       - `doc/manual`:
 	  The Fabric user manual.
 
-  - `etc`:
-      Configuration files for Fabric.
-
-  - `lib`:
-      Other software that Fabric depends on.
+  - `examples`:
+      [Example Fabric programs](@ref examples).
 
   - `src`:
       Source code for the Fabric compiler and runtime, and some
@@ -80,8 +79,11 @@ The Fabric distribution package contains the following directories:
 	  port of the Servlets with Information Flow (SIF) library
 	  @cite sif2007.
 
-  - `examples`:
-      Fabric example programs (details [here](@ref examples)).
+  - `etc`:
+      Configuration files for Fabric.
+
+  - `lib`:
+      Library dependencies for Fabric.
 
   - `tools`:
       A browser to inspect the contents of a store. A useful aid in the

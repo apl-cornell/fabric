@@ -24,7 +24,7 @@ pre-configured. We briefly list the examples here.
 
   - `examples/auction`:
       A mobile bidding-agent program. This application demonstrates the
-      mobile-code support of Fabric (see @cite mobile-fabric-2012). It
+      mobile-code support of Fabric @cite mobile-fabric-2012. It
       models an auction in which participants submit confidential
       strategies for bidding and selling.
 
@@ -42,4 +42,4 @@ pre-configured. We briefly list the examples here.
   - `examples/blog`:
       This is a simple web application implemented in FabIL. It is
       similar in structure to the Course Management System that we used
-      for evaluating performance of Fabric (see @cite fabric2009).
+      for evaluating performance of Fabric @cite fabric2009.

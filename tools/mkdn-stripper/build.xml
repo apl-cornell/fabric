@@ -1,0 +1,60 @@
+<!--
+  This is the Apache Ant build file for the Markdown stripper.
+-->
+
+<project name="mkdn-stripper" default="build-all" basedir=".">
+  <description>
+    Build file for Markdown-stripper tool
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="mkdn-stripper.home" file="${ant.file.mkdn-stripper}" />
+  <path id="mkdn-stripper.classpath">
+    <path refid="polyglot.classpath" />
+  </path>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${mkdn-stripper.home}/classes" />
+  </target>
+
+  <target name="clobber" depends="clean"/>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build" description="Builds the Markdown stripper">
+    <mkdir dir="${mkdn-stripper.home}/classes" />
+
+    <javac source="1.6" target="1.6" srcdir="${mkdn-stripper.home}/src"
+        destdir="${mkdn-stripper.home}/classes" debug="on"
+        includes="**">
+      <classpath>
+        <path refid="mkdn-stripper.classpath" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

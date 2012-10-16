@@ -1,5 +1,6 @@
 package fabric.visit;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -24,7 +25,6 @@ import codebases.types.NamespaceResolver;
 import fabric.ExtensionInfo;
 import fabric.Topics;
 import fabric.ast.FabricNodeFactory;
-import fabric.common.FabricLocation;
 import fabric.types.FabricParsedClassType;
 import fabric.types.FabricTypeSystem;
 
@@ -43,7 +43,7 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
       CBJobExt jobExt = (CBJobExt) job.ext();
       CodebaseSource source = (CodebaseSource) job.source();
       FabricTypeSystem ts = (FabricTypeSystem) this.ts;
-      FabricLocation src_ns = source.canonicalNamespace();
+      URI src_ns = source.canonicalNamespace();
       NamespaceResolver resolver = ts.namespaceResolver(src_ns);
       NamespaceResolver completeNamespace = (NamespaceResolver) resolver.copy();
 

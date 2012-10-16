@@ -1,5 +1,6 @@
 package codebases.types;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -21,7 +22,6 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
 import codebases.frontend.CBJobExt;
-import fabric.common.FabricLocation;
 
 public class CBImportTable extends ImportTable {
   // NB: this field 'hides' a private superclass field that is used for the same
@@ -31,12 +31,12 @@ public class CBImportTable extends ImportTable {
 
   private final CodebaseTypeSystem ts;
 
-  protected final FabricLocation ns;
+  protected final URI ns;
   protected final Set<String> aliases;
   protected final Map<String, String> fromExternal;
   protected final CBJobExt jobExt;
 
-  public CBImportTable(CodebaseTypeSystem ts, FabricLocation ns, Package pkg,
+  public CBImportTable(CodebaseTypeSystem ts, URI ns, Package pkg,
       Source source) {
     super(ts, pkg, source.name());
     this.ts = ts;
@@ -218,11 +218,11 @@ public class CBImportTable extends ImportTable {
     for (int i = 0; i < lazyImports.size(); i++) {
       try {
         String longName = lazyImports.get(i);
-        FabricLocation import_ns = ns;
+        URI import_ns = ns;
         // Check if this is an explicit codebase import
         String first = StringUtil.getFirstComponent(longName);
         if (aliases.contains(first)) {
-          FabricLocation u =
+          URI u =
               ts.namespaceResolver(ns).resolveCodebaseName(first);
           if (u == null)
             throw new SemanticException("Unknown codebase \"" + first + "\"");
@@ -264,7 +264,7 @@ public class CBImportTable extends ImportTable {
   protected static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.resolver, Report.imports);
 
-  public FabricLocation namespace() {
+  public URI namespace() {
     return ns;
   }
 
@@ -295,7 +295,7 @@ public class CBImportTable extends ImportTable {
     else return null;
   }
 
-  public FabricLocation resolveCodebaseName(String name) {
+  public URI resolveCodebaseName(String name) {
     // Only resolve codebase names that were declared in this
     // sourcefile.
     // if (aliases.contains(name)) XXX: ?

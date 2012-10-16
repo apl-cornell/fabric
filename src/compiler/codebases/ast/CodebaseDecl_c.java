@@ -1,5 +1,7 @@
 package codebases.ast;
 
+import java.net.URI;
+
 import polyglot.ast.Id;
 import polyglot.ast.Node;
 import polyglot.ast.Node_c;
@@ -8,7 +10,6 @@ import polyglot.util.Position;
 import polyglot.visit.TypeBuilder;
 import codebases.types.CBImportTable;
 import codebases.types.CodebaseTypeSystem;
-import fabric.common.FabricLocation;
 
 public class CodebaseDecl_c extends Node_c implements CodebaseDecl {
   protected Id name;
@@ -27,8 +28,8 @@ public class CodebaseDecl_c extends Node_c implements CodebaseDecl {
   public Node buildTypes(TypeBuilder tb) throws SemanticException {
     CodebaseTypeSystem ts = (CodebaseTypeSystem) tb.typeSystem();
     CBImportTable it = (CBImportTable) tb.importTable();
-    FabricLocation ns = it.namespace();
-    FabricLocation cb = ts.namespaceResolver(ns).resolveCodebaseName(name.id());
+    URI ns = it.namespace();
+    URI cb = ts.namespaceResolver(ns).resolveCodebaseName(name.id());
 
     // If the name doesn't exist, a semantic error should have been thrown.
     if (cb == null) {

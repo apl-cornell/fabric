@@ -1,5 +1,7 @@
 package fabric.types;
 
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -86,7 +88,6 @@ import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.RemoteWorkerGetter;
-import fabric.common.FabricLocation;
 import fabric.lang.Codebase;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
@@ -104,13 +105,9 @@ FabricTypeSystem {
   private static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.resolver);
 
-  protected Map<FabricLocation, NamespaceResolver> namespaceResolvers;
-  protected List<NamespaceResolver> classpathResolvers;
-  protected List<NamespaceResolver> sourcepathResolvers;
-  protected List<NamespaceResolver> signatureResolvers;
-  protected List<NamespaceResolver> runtimeResolvers;
-
+  protected Map<URI, NamespaceResolver> namespaceResolvers;
   protected NamespaceResolver platformResolver;
+  protected NamespaceResolver applicationResolver;
 
   private fabric.ExtensionInfo extInfo;
   private final FabricDefaultSignature ds;
@@ -149,100 +146,20 @@ FabricTypeSystem {
     this.loadedResolver = null;
     this.systemResolver = null;
     this.extInfo = (fabric.ExtensionInfo) super.extInfo;
-    initResolvers();
+    try {
+      initResolvers();
+    } catch (IOException e) {
+      throw new SemanticException("Could not initialize resolvers", e);
+    }
   }
 
-  protected void initResolvers() {
-    List<FabricLocation> cp = extInfo.classpath();
-    List<FabricLocation> sp = extInfo.sourcepath();
-    List<FabricLocation> sigcp = extInfo.signaturepath();
-    List<FabricLocation> rtcp = extInfo.bootclasspath();
-
-    namespaceResolvers = new HashMap<FabricLocation, NamespaceResolver>();
-    signatureResolvers = new ArrayList<NamespaceResolver>();
-    classpathResolvers = new ArrayList<NamespaceResolver>();
-    sourcepathResolvers = new ArrayList<NamespaceResolver>();
-    runtimeResolvers = new ArrayList<NamespaceResolver>();
-
-    for (FabricLocation location : rtcp) {
-      if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing Fabric runtime resolver: " + location);
-
-      NamespaceResolver nsr = namespaceResolver(location);
-      nsr.loadEncodedClasses(true);
-      nsr.loadRawClasses(false);
-      nsr.loadSource(true);
-      runtimeResolvers.add(nsr);
-    }
-
-    for (FabricLocation location : sigcp) {
-      if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing Fabric signature resolver: " + location);
-      NamespaceResolver nsr = namespaceResolver(location);
-      nsr.loadEncodedClasses(true);
-      // A raw signature class is an oxymoron
-      nsr.loadRawClasses(false);
-      nsr.loadSource(true);
-      signatureResolvers.add(nsr);
-    }
-
+  protected void initResolvers() throws IOException {
+    namespaceResolvers = new HashMap<URI, NamespaceResolver>();
     platformResolver = namespaceResolver(extInfo.platformNamespace());
-    platformResolver.loadSource(true);
-    boolean src_in_cp = sp.isEmpty();
+    platformResolver.loadRawClasses(false);
 
-    for (FabricLocation location : cp) {
-      if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL classpath resolver: " + location);
-
-      NamespaceResolver nsr = namespaceResolver(location);
-      nsr.loadEncodedClasses(true);
-      nsr.loadRawClasses(true);
-      nsr.loadSource(src_in_cp);
-      classpathResolvers.add(nsr);
-    }
-
-    for (FabricLocation location : sp) {
-      if (Report.should_report(TOPICS, 2))
-        Report.report(2, "Initializing FabIL sourcepath resolver: " + location);
-
-      NamespaceResolver nsr = namespaceResolver(location);
-      nsr.loadEncodedClasses(true);
-      nsr.loadSource(true);
-
-      if (!classpathResolvers.contains(nsr)) nsr.loadEncodedClasses(false);
-      sourcepathResolvers.add(nsr);
-    }
-  }
-
-  @Override
-  public List<NamespaceResolver> signatureResolvers() {
-    if (signatureResolvers == null)
-      throw new InternalCompilerError("Must call initResolvers() first!");
-    return signatureResolvers;
-  }
-
-  @Override
-  public List<NamespaceResolver> classpathResolvers() {
-    if (classpathResolvers == null)
-      throw new InternalCompilerError("Must call initResolvers() first!");
-
-    return classpathResolvers;
-  }
-
-  @Override
-  public List<NamespaceResolver> sourcepathResolvers() {
-    if (sourcepathResolvers == null)
-      throw new InternalCompilerError("Must call initResolvers() first!");
-
-    return sourcepathResolvers;
-  }
-
-  @Override
-  public List<NamespaceResolver> runtimeResolvers() {
-    if (runtimeResolvers == null)
-      throw new InternalCompilerError("Must call initResolvers() first!");
-
-    return runtimeResolvers;
+    applicationResolver = namespaceResolver(extInfo.localNamespace());
+    applicationResolver.loadRawClasses(false);
   }
 
   @Override
@@ -256,7 +173,7 @@ FabricTypeSystem {
   // helped
   // identify the situations it is called in.
   @Override
-  public Package createPackage(FabricLocation ns, Package prefix,
+  public Package createPackage(URI ns, Package prefix,
       java.lang.String name) {
     if (prefix != null) {
       ns = ((CBPackage) prefix).namespace();
@@ -268,13 +185,13 @@ FabricTypeSystem {
    * @throws SemanticException
    */
   @Override
-  public Package packageForName(FabricLocation ns, Package prefix,
+  public Package packageForName(URI ns, Package prefix,
       java.lang.String name) throws SemanticException {
     return createPackage(ns, prefix, name);
   }
 
   @Override
-  public Package packageForName(FabricLocation ns, java.lang.String name)
+  public Package packageForName(URI ns, java.lang.String name)
       throws SemanticException {
     if (name == null || name.equals("")) {
       return null;
@@ -358,7 +275,7 @@ FabricTypeSystem {
   }
 
   @Override
-  public CBImportTable importTable(Source source, FabricLocation ns, Package pkg) {
+  public CBImportTable importTable(Source source, URI ns, Package pkg) {
     return new CBImportTable(this, ns, pkg, source);
   }
 
@@ -882,7 +799,7 @@ FabricTypeSystem {
   }
 
   @Override
-  public NamespaceResolver namespaceResolver(FabricLocation ns) {
+  public NamespaceResolver namespaceResolver(URI ns) {
     NamespaceResolver sr = namespaceResolvers.get(ns);
     if (sr == null) {
       sr = extInfo.createNamespaceResolver(ns);
@@ -899,12 +816,12 @@ FabricTypeSystem {
   }
 
   @Override
-  public boolean packageExists(FabricLocation ns, String name) {
+  public boolean packageExists(URI ns, String name) {
     return namespaceResolver(ns).packageExists(name);
   }
 
   @Override
-  public Named forName(FabricLocation ns, String name) throws SemanticException {
+  public Named forName(URI ns, String name) throws SemanticException {
     return forName(namespaceResolver(ns), name);
   }
 
@@ -919,7 +836,7 @@ FabricTypeSystem {
   }
 
   @Override
-  public Codebase codebaseFromNS(FabricLocation namespace) {
+  public Codebase codebaseFromNS(URI namespace) {
     // Worker must be running!
     if (!Worker.isInitialized())
       throw new InternalCompilerError("Worker is not initialized.");
@@ -944,7 +861,7 @@ FabricTypeSystem {
       }
       return new_codebase;
     } else if (extInfo.platformNamespace().equals(namespace)
-        || !namespace.isFabricReference()) {
+        || !namespace.getScheme().equals("fab")) {
       throw new InternalCompilerError("Cannot get codebase for " + namespace);
     } else {
       CodebaseResolver cr = (CodebaseResolver) namespaceResolver(namespace);
@@ -965,7 +882,7 @@ FabricTypeSystem {
       return LabelUtil._Impl.writerPolicyLabel(dest, Worker.getWorker()
           .getLocalStore().getTopPrincipal(), st);
     }
-    throw new InternalCompilerError("Whatt?!? W: " + w + " ST: " + st);
+    throw new InternalCompilerError("Error W: " + w + " ST: " + st);
   }
 
   @Override

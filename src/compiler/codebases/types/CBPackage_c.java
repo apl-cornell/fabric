@@ -1,27 +1,28 @@
 package codebases.types;
 
+import java.net.URI;
+
 import polyglot.types.Package;
 import polyglot.types.Package_c;
 import polyglot.types.Resolver;
 import polyglot.types.TypeSystem;
-import fabric.common.FabricLocation;
 
 public class CBPackage_c extends Package_c implements CBPackage {
-  protected FabricLocation namespace;
+  protected URI namespace;
 
   /** Used for deserializing types. */
   protected CBPackage_c() {
   }
 
-  public CBPackage_c(TypeSystem ts, FabricLocation ns) {
+  public CBPackage_c(TypeSystem ts, URI ns) {
     this(ts, ns, null, null);
   }
 
-  public CBPackage_c(TypeSystem ts, FabricLocation ns, String name) {
+  public CBPackage_c(TypeSystem ts, URI ns, String name) {
     this(ts, ns, null, name);
   }
 
-  public CBPackage_c(TypeSystem ts, FabricLocation ns, Package prefix,
+  public CBPackage_c(TypeSystem ts, URI ns, Package prefix,
       String name) {
     super(ts, prefix, name);
     this.namespace = ns;
@@ -37,7 +38,7 @@ public class CBPackage_c extends Package_c implements CBPackage {
   }
 
   @Override
-  public FabricLocation namespace() {
+  public URI namespace() {
     return namespace;
   }
 

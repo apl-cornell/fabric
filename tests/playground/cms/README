@@ -123,7 +123,7 @@ permission java.net.SocketPermission "*:3372", "connect";
 
 10) Open {fabric home}/etc/worker.properties and comment out the line starting 
 with (add a # at the start of the line):
-fabric.worker.fetchmanager=
+fabric.node.fetchmanager.class=
 
 11) Start a store:
 cd {fabric home}

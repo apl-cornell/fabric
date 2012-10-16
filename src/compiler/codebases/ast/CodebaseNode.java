@@ -1,13 +1,14 @@
 package codebases.ast;
 
+import java.net.URI;
+
 import polyglot.ast.PackageNode;
-import fabric.common.FabricLocation;
 
 public interface CodebaseNode extends PackageNode {
   /**
    * The namespace this alias occurs in.
    */
-  FabricLocation namespace();
+  URI namespace();
 
   /**
    * The name used to refer to the external namespace.
@@ -17,5 +18,5 @@ public interface CodebaseNode extends PackageNode {
   /**
    * The external namespace indicated by this node.
    */
-  FabricLocation externalNamespace();
+  URI externalNamespace();
 }

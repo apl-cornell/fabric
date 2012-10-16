@@ -1,0 +1,1 @@
+#include doc/manual/src/versions.mkdn

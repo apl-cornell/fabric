@@ -98,7 +98,13 @@ public class Threading {
       Thread current = Thread.currentThread();
       String oldName = current.getName();
       current.setName(this.name);
-      runImpl();
+      try {
+        runImpl();
+      } catch (RuntimeException e) {
+        e.printStackTrace();
+      } catch (Error e) {
+        e.printStackTrace();
+      }
       current.setName(oldName);
     }
 

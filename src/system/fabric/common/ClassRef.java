@@ -341,7 +341,8 @@ public abstract class ClassRef implements FastSerializable {
       } catch (ClassNotFoundException e) {
         throw new InternalError(e);
       }
-//      checkHash(classHash(data, pos));
+
+      checkHash(classHash(data, pos));
     }
 
     /**

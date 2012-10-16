@@ -1,5 +1,7 @@
 package codebases.ast;
 
+import java.net.URI;
+
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.PackageNode_c;
@@ -10,7 +12,6 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.types.CBPackage;
 import codebases.types.CodebaseTypeSystem;
-import fabric.common.FabricLocation;
 
 /**
  * A CodebaseNode is a qualifier to a type in another namespace. CodebaseNodes
@@ -21,12 +22,12 @@ import fabric.common.FabricLocation;
  */
 
 public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
-  protected FabricLocation namespace;
+  protected URI namespace;
   protected String alias;
-  protected FabricLocation externalNS;
+  protected URI externalNS;
 
-  public CodebaseNode_c(Position pos, FabricLocation namespace, String alias,
-      FabricLocation externalNS) {
+  public CodebaseNode_c(Position pos, URI namespace, String alias,
+      URI externalNS) {
     // XXX: PackageNode_c has an assertion that prevents package_ from being
     // null
     // but the implementation seems to allow it. For now, we ignore the
@@ -34,8 +35,8 @@ public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
     this(pos, namespace, alias, externalNS, null);
   }
 
-  public CodebaseNode_c(Position pos, FabricLocation namespace, String alias,
-      FabricLocation externalNS, Package package_) {
+  public CodebaseNode_c(Position pos, URI namespace, String alias,
+      URI externalNS, Package package_) {
     super(pos, package_);
     this.namespace = namespace;
     this.externalNS = externalNS;
@@ -57,7 +58,7 @@ public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
   }
 
   @Override
-  public FabricLocation namespace() {
+  public URI namespace() {
     return namespace;
   }
 
@@ -67,7 +68,7 @@ public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
   }
 
   @Override
-  public FabricLocation externalNamespace() {
+  public URI externalNamespace() {
     return externalNS;
   }
 

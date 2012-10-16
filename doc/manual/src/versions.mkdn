@@ -3,7 +3,7 @@ Version history {#versions}
 
 Version 0.2.0 (Oct 2012)
 -------------
-* Support for mobile code (see @cite mobile-fabric-2012)
+* Support for mobile code @cite mobile-fabric-2012
   * [Provider labels](@ref provider-labels)
   * [Access labels](@ref access-labels)
   * Type fingerprint checking for remote calls and objects
@@ -15,7 +15,7 @@ Version 0.2.0 (Oct 2012)
 * Workers have interactive consoles. These can be used to run Fabric
   programs or invoke the Fabric compiler from within the worker.
 
-* Workers listen for remote administrative connections. If a second
+* Workers listen for administrative connections. If a second
   instance of a worker is launched, it will attach to the first instance
   on the administrative port and execute commands within the first
   instance. This is a convenience feature to enable scripting of worker
@@ -32,4 +32,4 @@ Version 0.2.0 (Oct 2012)
 
 Version 0.1.0 (Sep 2010)
 -------------
-Initial release.
+Initial release. @cite fabric2009

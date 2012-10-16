@@ -1,5 +1,7 @@
 package codebases.types;
 
+import java.net.URI;
+
 import polyglot.types.ClassType;
 import polyglot.types.Named;
 import polyglot.types.NoClassException;
@@ -9,10 +11,9 @@ import polyglot.types.Resolver;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
-import fabric.common.FabricLocation;
 
 public class CBPackageContextResolver extends PackageContextResolver {
-  protected FabricLocation ns;
+  protected URI ns;
 
   public CBPackageContextResolver(CodebaseTypeSystem ts, Package p) {
     super(ts, p);

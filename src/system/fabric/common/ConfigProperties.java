@@ -95,13 +95,13 @@ public class ConfigProperties {
     this.certStoreName =
         Resources.relpathRewrite("var", "certs",
             removeProperty(p, "fabric.worker.certs", name + ".keystore"));
+    this.dissemClass =
+        removeProperty(p, "fabric.node.fetchmanager.class",
+            "fabric.dissemination.pastry.PastryFetchManager");
 
     /************************** Worker Properties *****************************/
     this.workerPort =
         Integer.parseInt(removeProperty(p, "fabric.worker.port", "3372"));
-    this.dissemClass =
-        removeProperty(p, "fabric.worker.fetchmanager.class",
-            "fabric.dissemination.pastry.PastryFetchManager");
     this.homeStore = removeProperty(p, "fabric.worker.homeStore", null);
     this.workerAdminPort =
         Integer.parseInt(removeProperty(p, "fabric.worker.adminPort", "3572"));

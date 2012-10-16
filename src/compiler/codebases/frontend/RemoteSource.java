@@ -1,23 +1,21 @@
 package codebases.frontend;
 
-import static fabric.common.FabricLocationFactory.getLocation;
-
 import java.io.IOException;
 import java.io.Reader;
+import java.net.URI;
 
 import javax.tools.FileObject;
 
 import jif.parse.UTF8FileSource;
 import polyglot.frontend.Source;
 import polyglot.util.InternalCompilerError;
-import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
-import fabric.filemanager.FabricSourceObject;
+import fabric.filemanager.FabricFileObject;
 import fabric.lang.FClass;
 import fabric.lang.security.Label;
 
 public class RemoteSource extends UTF8FileSource implements CodebaseSource {
-  protected final FabricLocation namespace;
+  protected final URI namespace;
   protected final FClass fcls;
   protected boolean publish;
 
@@ -32,7 +30,7 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
       boolean publish) throws IOException {
     super(fo, userSpecified);
     this.fcls = fcls;
-    this.namespace = getLocation(false, NSUtil.namespace(fcls.getCodebase()));
+    this.namespace = NSUtil.namespace(fcls.getCodebase());
     this.publish = publish;
   }
 
@@ -68,19 +66,19 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
   }
 
   @Override
-  public FabricLocation namespace() {
+  public URI namespace() {
     return namespace;
   }
 
   @Override
-  public FabricLocation canonicalNamespace() {
-    return getLocation(false, NSUtil.namespace(fcls.getCodebase()));
+  public URI canonicalNamespace() {
+    return NSUtil.namespace(fcls.getCodebase());
   }
 
   @Override
   public Source derivedSource(final String name) {
     try {
-      return new RemoteSource(new FabricSourceObject(fcls,
+      return new RemoteSource(new FabricFileObject(fcls,
           NSUtil.absoluteName(fcls), name), fcls, user_specified, false);
     } catch (IOException e) {
       throw new InternalCompilerError(e);
@@ -88,13 +86,13 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
   }
 
   @Override
-  public Source publishedSource(final FabricLocation ns, final String name) {
+  public Source publishedSource(final URI ns, final String name) {
     try {
-      return new RemoteSource(new FabricSourceObject(fcls,
+      return new RemoteSource(new FabricFileObject(fcls,
           NSUtil.absoluteName(fcls), name), fcls, user_specified, false) {
         @Override
         public String path() {
-          return ns.getUri().resolve(name).toString();
+          return ns.resolve(name).toString();
         }
       };
     } catch (IOException e) {

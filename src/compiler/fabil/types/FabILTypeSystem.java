@@ -1,7 +1,5 @@
 package fabil.types;
 
-import java.util.List;
-
 import polyglot.ast.TypeNode;
 import polyglot.types.ArrayType;
 import polyglot.types.ClassType;
@@ -9,11 +7,8 @@ import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 import codebases.types.CodebaseTypeSystem;
-import codebases.types.NamespaceResolver;
 
 public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
-
-  List<NamespaceResolver> javaruntimeResolvers();
 
   // TODO: fabric.worker or fabric.lang?
   /**

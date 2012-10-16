@@ -1,7 +1,6 @@
 package fabric.visit;
 
-import static fabric.common.FabricLocationFactory.getLocation;
-
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,7 +28,6 @@ import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
 import fabric.ExtensionInfo;
 import fabric.ast.FabricNodeFactory;
-import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.types.FabricContext;
@@ -66,7 +64,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
       // we should use the published namespace.
 
       Codebase cb = fab_ts.codebaseFromNS(src.canonicalNamespace());
-      FabricLocation published_ns = getLocation(false, NSUtil.namespace(cb));
+      URI published_ns = NSUtil.namespace(cb);
       derived = src.publishedSource(published_ns, newName);
     } else {
       // Otherwise, we just create a derived source with a new name

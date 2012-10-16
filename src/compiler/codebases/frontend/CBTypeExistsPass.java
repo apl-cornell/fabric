@@ -1,5 +1,7 @@
 package codebases.frontend;
 
+import java.net.URI;
+
 import polyglot.frontend.Pass;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.goals.TypeExists;
@@ -11,7 +13,6 @@ import polyglot.types.TypeSystem;
 import polyglot.util.ErrorInfo;
 import polyglot.util.ErrorQueue;
 import codebases.types.CodebaseTypeSystem;
-import fabric.common.FabricLocation;
 
 public class CBTypeExistsPass extends TypeExistsPass implements Pass {
 
@@ -24,7 +25,7 @@ public class CBTypeExistsPass extends TypeExistsPass implements Pass {
 
   @Override
   public boolean run() {
-    FabricLocation ns = ((CBTypeExists) goal).namespace();
+    URI ns = ((CBTypeExists) goal).namespace();
     String name = goal.typeName();
     try {
       // Try to resolve the type; this may throw a

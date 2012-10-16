@@ -1,5 +1,6 @@
 package codebases.ast;
 
+import java.net.URI;
 import java.util.List;
 
 import polyglot.ast.Id;
@@ -10,7 +11,6 @@ import polyglot.ast.SourceFile;
 import polyglot.ast.TopLevelDecl;
 import polyglot.types.Package;
 import polyglot.util.Position;
-import fabric.common.FabricLocation;
 
 public interface CodebaseNodeFactory extends NodeFactory {
   SourceFile SourceFile(Position pos, PackageNode packageName,
@@ -19,12 +19,10 @@ public interface CodebaseNodeFactory extends NodeFactory {
 
   CodebaseDecl CodebaseDecl(Position pos, Id name);
 
-  CodebaseNode CodebaseNode(Position pos, FabricLocation namespace,
-      String name, FabricLocation externalNS);
+  CodebaseNode CodebaseNode(Position pos, URI namespace,
+      String name, URI externalNS);
 
-  CodebaseNode CodebaseNode(Position pos, FabricLocation namespace,
-      String name, FabricLocation externalNS, Package package_);
+  CodebaseNode CodebaseNode(Position pos, URI namespace,
+      String name, URI externalNS, Package package_);
 
-  // CodebaseTypeNode CodebaseTypeNode(Position pos, String alias,
-  // FabricLocation externalNS, Type type);
 }

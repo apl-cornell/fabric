@@ -1,40 +1,53 @@
 package codebases.types;
 
 import java.io.File;
+import java.net.URI;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import polyglot.frontend.Source;
-import polyglot.frontend.SourceLoader;
 import polyglot.main.Report;
 import polyglot.types.BadSerializationException;
 import polyglot.types.Importable;
 import polyglot.types.NoClassException;
 import polyglot.types.SemanticException;
 import polyglot.types.reflect.ClassFile;
-import polyglot.types.reflect.ClassFileLoader;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.ExtensionInfo;
-import fabric.common.FabricLocation;
+import fabric.filemanager.FabricFileManager;
 
 public class SimpleResolver extends NamespaceResolver_c {
-  protected final ClassFileLoader classfileLoader;
-  protected final SourceLoader sourceLoader;
+//  protected final ClassFileLoader classfileLoader;
+//  protected final SourceLoader sourceLoader;
   protected final Set<String> noClassCache;
   protected boolean load_raw = false;
   protected boolean load_enc = true;
   protected boolean load_src = true;
   protected boolean ignore_mod_times;
+  protected FabricFileManager fileManager;
 
-  public SimpleResolver(ExtensionInfo extInfo, FabricLocation namespace) {
+  public SimpleResolver(ExtensionInfo extInfo, URI namespace) {
     this(extInfo, namespace, null);
   }
 
-  public SimpleResolver(ExtensionInfo extInfo, FabricLocation namespace,
+  public SimpleResolver(ExtensionInfo extInfo, URI namespace,
       NamespaceResolver parent) {
-    super(extInfo, namespace, parent);
-    this.classfileLoader = extInfo.classFileLoader();
-    this.sourceLoader = extInfo.sourceLoader();
+    this(extInfo, namespace, parent, Collections
+        .<String, URI> emptyMap());
+  }
+
+  /**
+   * @param extensionInfo
+   * @param ns
+   * @param codebaseAliases
+   */
+  public SimpleResolver(ExtensionInfo extInfo, URI namespace,
+      NamespaceResolver parent,
+      Map<String, URI> codebaseAliases) {
+    super(extInfo, namespace, parent, codebaseAliases);
+    fileManager = (FabricFileManager) extInfo.extFileManager();
     noClassCache = new HashSet<String>();
     this.ignore_mod_times = extInfo.getOptions().ignore_mod_times;
   }
@@ -59,9 +72,9 @@ public class SimpleResolver extends NamespaceResolver_c {
       }
       if (encodedClazz != null
           && !name.replace(".", File.separator).equals(encodedClazz.name())) {
-//        if (Report.should_report(report_topics, 3))
-//          Report.report(3, "Not using " + encodedClazz.name()
-//              + "(case-insensitive filesystem?)");
+        if (Report.should_report(REPORT_TOPICS, 3))
+          Report.report(3, "Not using " + encodedClazz.name()
+              + "(case-insensitive filesystem?)");
         encodedClazz = null;
         clazz = null;
       }
@@ -69,39 +82,40 @@ public class SimpleResolver extends NamespaceResolver_c {
 
     // Find source file
     Source source = null;
-    if (load_src) source = sourceLoader.classSource(namespace, name);
-      // Check if a job for the source already exists.
-      if (extInfo.scheduler().sourceHasJob(source)) {
-        if (Report.should_report(Report.loader, 4))
-          new Exception("Source has job " + source).printStackTrace();
+    if (load_src) source = fileManager.classSource(namespace, name);
+    // Check if a job for the source already exists.
+    if (extInfo.scheduler().sourceHasJob(source)) {
+      if (Report.should_report(Report.loader, 4))
+        new Exception("Source has job " + source).printStackTrace();
 
-        // the source has already been compiled; what are we doing here?
-        return getTypeFromSource(source, name);
-      } else if (load_enc && encodedClazz == null && source != null) {
-        // Found source, but no job. Check class cache of canonical NS
-        CodebaseSource cbsource = (CodebaseSource) source;
-        if (!cbsource.canonicalNamespace().isOpaque()
-            && !cbsource.canonicalNamespace().equals(namespace)) {
-          ClassFile homeClazz =
-              classfileLoader.loadFile(cbsource.canonicalNamespace(), name);
-          if (homeClazz != null) {
-            // Check for encoded type information.
-            if (homeClazz.encodedClassType(version) != null) {
-              if (Report.should_report(REPORT_TOPICS, 4))
-                Report.report(4, "Class " + name + " has encoded type info");
-              encodedClazz = homeClazz;
-            }
-            if (encodedClazz != null
-                && !name.replace(".", File.separator).equals(encodedClazz.name())) {
-//            if (Report.should_report(report_topics, 3))
-//              Report.report(3, "Not using " + encodedClazz.name()
-//                  + "(case-insensitive filesystem?)");
-              encodedClazz = null;
-              clazz = null;
-            }
+      // the source has already been compiled; what are we doing here?
+      return getTypeFromSource(source, name);
+    } else if (load_enc && encodedClazz == null && source != null) {
+      // Found source, but no job. Check class cache of canonical NS
+      CodebaseSource cbsource = (CodebaseSource) source;
+      if (!cbsource.canonicalNamespace().isOpaque()
+          && !cbsource.canonicalNamespace().equals(namespace)) {
+
+        ClassFile homeClazz =
+            fileManager.loadFile(cbsource.canonicalNamespace(), name);
+        if (homeClazz != null) {
+          // Check for encoded type information.
+          if (homeClazz.encodedClassType(version) != null) {
+            if (Report.should_report(REPORT_TOPICS, 4))
+              Report.report(4, "Class " + name + " has encoded type info");
+            encodedClazz = homeClazz;
+          }
+          if (encodedClazz != null
+              && !name.replace(".", File.separator).equals(encodedClazz.name())) {
+            if (Report.should_report(REPORT_TOPICS, 3))
+              Report.report(3, "Not using " + encodedClazz.name()
+                  + "(case-insensitive filesystem?)");
+            encodedClazz = null;
+            clazz = null;
           }
         }
       }
+    }
 
     if (Report.should_report(REPORT_TOPICS, 4)) {
       if (source == null)
@@ -177,7 +191,7 @@ public class SimpleResolver extends NamespaceResolver_c {
   protected ClassFile loadFile(String name) {
     if (noClassCache.contains(name)) return null;
     try {
-      ClassFile clazz = classfileLoader.loadFile(namespace, name);
+      ClassFile clazz = fileManager.loadFile(namespace, name);
 
       if (clazz == null) {
         if (Report.should_report(REPORT_TOPICS, 4)) {
@@ -204,7 +218,7 @@ public class SimpleResolver extends NamespaceResolver_c {
 
   @Override
   public boolean packageExistsImpl(String name) {
-    return sourceLoader.packageExists(namespace, name);
+    return fileManager.packageExists(namespace, name);
   }
 
   @Override
@@ -229,7 +243,7 @@ public class SimpleResolver extends NamespaceResolver_c {
   }
 
   @Override
-  public FabricLocation resolveCodebaseNameImpl(String name) {
+  public URI resolveCodebaseNameImpl(String name) {
     // if the name isn't in the cache,
     // then no codebase alias exists.
     return null;

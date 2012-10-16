@@ -1,12 +1,12 @@
 package codebases.types;
 
+import java.net.URI;
 import java.util.Map;
 
 import polyglot.types.Importable;
 import polyglot.types.SemanticException;
 import polyglot.types.TopLevelResolver;
 import polyglot.util.Copy;
-import fabric.common.FabricLocation;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 
@@ -43,18 +43,18 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
   void replace(String name, Importable q);
 
   /**
-   * The FabricLocation of this namespace
+   * The URI of this namespace
    */
-  FabricLocation namespace();
+  URI namespace();
 
   /**
-   * Get the FabricLocation of a codebase using a local alias.
+   * Get the URI of a codebase using a local alias.
    * 
    * @throws SemanticException
    */
-  FabricLocation resolveCodebaseName(String name);
+  URI resolveCodebaseName(String name);
 
-  Map<String, FabricLocation> codebaseAliases();
+  Map<String, URI> codebaseAliases();
 
   /**
    * Find a type object in this namespace by name.
@@ -118,5 +118,5 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
    */
   Label label();
 
-  FabricLocation resolveCodebaseNameImpl(String name);
+  URI resolveCodebaseNameImpl(String name);
 }

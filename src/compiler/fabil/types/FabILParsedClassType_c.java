@@ -1,6 +1,7 @@
 package fabil.types;
 
 import java.io.IOException;
+import java.net.URI;
 import java.security.MessageDigest;
 import java.util.List;
 
@@ -20,7 +21,7 @@ import fabil.ExtensionInfo;
 import fabil.visit.ClassHashGenerator;
 import fabil.visit.ProviderRewriter;
 import fabric.common.Crypto;
-import fabric.common.FabricLocation;
+import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
@@ -30,7 +31,7 @@ FabILParsedClassType {
   /**
    * The namespace used to resolve the dependencies of this class
    */
-  protected FabricLocation canonical_ns;
+  protected URI canonical_ns;
 
   /**
    * Memoizes a secure hash of the class. If this class-type information is
@@ -136,7 +137,7 @@ FabILParsedClassType {
     QQ qq = pr.qq();
     if (!canonical_ns.equals(extInfo.localNamespace())
         && !canonical_ns.equals(extInfo.platformNamespace())) {
-      Codebase codebase = canonical_ns.getCodebase();
+      Codebase codebase = NSUtil.fetch_codebase(canonical_ns);
       FClass fclass = codebase.resolveClassName(fullName());
       // Convert to an OID.
       String storeName = fclass.$getStore().name();
@@ -156,7 +157,7 @@ FabILParsedClassType {
   }
 
   @Override
-  public FabricLocation canonicalNamespace() {
+  public URI canonicalNamespace() {
     return canonical_ns;
   }
 

@@ -1,5 +1,6 @@
 package codebases.ast;
 
+import java.net.URI;
 import java.util.List;
 
 import polyglot.ast.Import;
@@ -18,7 +19,6 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeBuilder;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseTypeSystem;
-import fabric.common.FabricLocation;
 
 /**
  * An extension of SourceFiles that supports codebases.
@@ -48,7 +48,7 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
     if (package_ != null) {
       pkg = package_.package_();
     }
-    FabricLocation ns = ((CodebaseSource) source).canonicalNamespace();
+    URI ns = ((CodebaseSource) source).canonicalNamespace();
     ImportTable it = ts.importTable(source, ns, pkg);
     tb = tb.pushPackage(pkg);
     tb.setImportTable(it);

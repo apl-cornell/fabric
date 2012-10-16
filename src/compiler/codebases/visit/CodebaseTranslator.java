@@ -1,5 +1,7 @@
 package codebases.visit;
 
+import java.net.URI;
+
 import polyglot.ast.Import;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.SourceFile;
@@ -10,7 +12,6 @@ import polyglot.util.CodeWriter;
 import polyglot.visit.Translator;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.ExtensionInfo;
-import fabric.common.FabricLocation;
 
 public class CodebaseTranslator extends Translator {
   protected final ExtensionInfo extInfo;
@@ -21,7 +22,7 @@ public class CodebaseTranslator extends Translator {
     this.extInfo = (ExtensionInfo) job.extensionInfo();
   }
 
-  public String namespaceToJavaPackagePrefix(FabricLocation ns) {
+  public String namespaceToJavaPackagePrefix(URI ns) {
     return extInfo.namespaceToJavaPackagePrefix(ns);
   }
 
@@ -29,7 +30,7 @@ public class CodebaseTranslator extends Translator {
   protected void writeHeader(SourceFile sfn, CodeWriter w) {
     // XXX: HACK -- The translator hasn't entered the scope of the file yet,
     // so we basically are inlining what translate() would do.
-    FabricLocation ns = ((CodebaseSource) sfn.source()).canonicalNamespace();
+    URI ns = ((CodebaseSource) sfn.source()).canonicalNamespace();
     if (sfn.package_() != null) {
       w.write("package ");
       w.write(namespaceToJavaPackagePrefix(ns));

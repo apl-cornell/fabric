@@ -34,7 +34,7 @@ def main():
 
 	for size,hot in (("small", True), ("medium", False)):
 		print "===== Creating database  ====="
-		result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=fabric.dissemination.DummyFetchManager --name %s --time all OO7.Benchmark     fab://%s/OO7 %s 3" % (worker, store, size) )
+		result = sh( "bin/fab -j -Dfabric.node.fetchmanager.class=fabric.dissemination.DummyFetchManager --name %s --time all OO7.Benchmark     fab://%s/OO7 %s 3" % (worker, store, size) )
 
 		for traversal in ("T1", "T6"):
 			print "===== Executing %3s ===========" % traversal
@@ -126,7 +126,7 @@ def runTraversal(traversal, dissem, hot, repeat):
 	if repeat:
 		# run 3 times with timing on.
 		for i in range(3):
-			result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=%s --name %s --time all OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, worker, traversal, store, hotStr) )
+			result = sh( "bin/fab -j -Dfabric.node.fetchmanager.class=%s --name %s --time all OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, worker, traversal, store, hotStr) )
 			lines  = result.split("\n")
 
 			timed[coldname].append(TimedRun(lines[2:10]))
@@ -137,7 +137,7 @@ def runTraversal(traversal, dissem, hot, repeat):
 
 		# run 3 times with timing off, collect total time
 		for i in range(3):
-			result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=%s --name %s            OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, worker, traversal, store, hotStr) )
+			result = sh( "bin/fab -j -Dfabric.node.fetchmanager.class=%s --name %s            OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, worker, traversal, store, hotStr) )
 			lines  = result.split("\n")
 
 			match  = totExpr.match(lines[2])
@@ -148,7 +148,7 @@ def runTraversal(traversal, dissem, hot, repeat):
 				untimed[hotname ].append(int(match.group("time")))
 	else:
 		# run T2* only once
-		result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=%s --name %s --time all OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, worker, traversal, store, hotStr) )
+		result = sh( "bin/fab -j -Dfabric.node.fetchmanager.class=%s --name %s --time all OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, worker, traversal, store, hotStr) )
 		lines  = result.split("\n")
 
 		timed[coldname].append(TimedRun(lines[2:10]))
