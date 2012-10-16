@@ -65,11 +65,6 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   private transient final ObjectCache cache;
 
   /**
-   * Cache for interning labels and policies.
-   */
-  private transient final LabelCache labelCache;
-
-  /**
    * The set of fetch locks. Used to prevent threads from concurrently
    * attempting to fetch the same object.
    */
@@ -93,7 +88,6 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     super(name);
 
     this.cache = new ObjectCache(name);
-    this.labelCache = new LabelCache();
     this.fetchLocks = new LongKeyHashMap<FetchLock>();
     this.fresh_ids = new LinkedList<Long>();
     this.publicKey = null;
@@ -105,11 +99,6 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   protected RemoteStore(String name, PublicKey key) {
     this(name);
     this.publicKey = key;
-  }
-
-  @Override
-  public LabelCache labelCache() {
-    return labelCache;
   }
 
   @Override

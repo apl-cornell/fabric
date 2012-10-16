@@ -23,7 +23,7 @@ import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
 
 public class CastToFabilExt_c extends CastToJavaExt_c {
-  
+
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     Cast c = (Cast)node();
@@ -31,15 +31,15 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     FabricTypeSystem ts = (FabricTypeSystem)ffrw.jif_ts();
     FabILNodeFactory nf = (FabILNodeFactory)ffrw.java_nf();
-    if (ts.isPrincipal(castType) 
-     && (ts.typeEquals(ts.Worker(), exprType) 
-      || ts.typeEquals(ts.RemoteWorker(), exprType))
-      || ts.typeEquals(ts.Store(), exprType)) {
+    if (ts.isPrincipal(castType)
+        && (ts.typeEquals(ts.Worker(), exprType) || ts.typeEquals(
+            ts.RemoteWorker(), exprType))
+            || ts.typeEquals(ts.Store(), exprType)) {
       return nf.Call(c.position(), c.expr(), nf.Id(Position.compilerGenerated(), "getPrincipal"));
     }
-    
-    if (castType.isPrimitive() || !ts.isJifClass(castType)) {
-      return rw.java_nf().Cast(c.position(), c.castType(), c.expr());      
+
+    if (castType.isPrimitive() || !ts.isFabricClass(castType)) {
+      return rw.java_nf().Cast(c.position(), c.castType(), c.expr());
     }
 
     List<Expr> args = new ArrayList<Expr>();
@@ -56,10 +56,12 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
     args.add(c.expr());
 
     FabricClassType fct = (FabricClassType) castType;
-
-    String jifImplClass = fct.fullName();
+    String jifImplClass = fct.name();
     if (fct.flags().isInterface()) {
-      jifImplClass = ClassDeclToJavaExt_c.interfaceClassImplName(jifImplClass);
+      // use the full name for the interface, since the IMPL class
+      // will not be in the import table.
+      jifImplClass =
+          ClassDeclToJavaExt_c.interfaceClassImplName(fct.fullName());
     }
     return ffrw.qq().parseExpr(jifImplClass + ".%s(%LE)",
         ClassDeclToJavaExt_c.castMethodName(fct), args);

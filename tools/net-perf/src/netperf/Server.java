@@ -19,7 +19,8 @@ public class Server {
     final Random rand = new Random();
     Protocol protocol = new HandshakeUnauthenticated();
     NameService dns = new DNS();
-    SubServerSocketFactory sssf = new SubServerSocketFactory(protocol, dns);
+    SubServerSocketFactory sssf =
+        new SubServerSocketFactory(protocol, dns, null);
     SubServerSocket server = sssf.createServerSocket("localhost");
 
     while (true) {

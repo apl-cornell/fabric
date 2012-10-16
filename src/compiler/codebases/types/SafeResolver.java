@@ -1,9 +1,9 @@
 package codebases.types;
 
+import java.net.URI;
 import java.util.Arrays;
 
 import codebases.frontend.ExtensionInfo;
-import fabric.common.FabricLocation;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 
@@ -23,7 +23,7 @@ public class SafeResolver extends PathResolver implements NamespaceResolver {
   }
 
   @Override
-  public FabricLocation resolveCodebaseNameImpl(String name) {
+  public URI resolveCodebaseNameImpl(String name) {
     return inner.resolveCodebaseName(name);
   }
 

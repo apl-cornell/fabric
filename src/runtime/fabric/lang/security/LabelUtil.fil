@@ -1,6 +1,10 @@
 package fabric.lang.security;
 
-import fabric.worker.LabelCache;
+import java.util.HashSet;
+
+import fabric.common.exceptions.InternalError;
+import fabric.common.util.Pair;
+import fabric.common.util.Triple;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
@@ -157,12 +161,13 @@ public final class LabelUtil {
       Principal reader) {
 //    try {
 //      enterTiming();
-      LabelCache labelCache = store.labelCache();
-      ConfPolicy result = labelCache.readerPolicy(owner, reader);
+      SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
+      Triple triple = new Triple(owner, reader, store);
+      ConfPolicy result = cache.getReaderPolicy(triple);
       if (result != null) return result;
       
       result = (ReaderPolicy) new ReaderPolicy@store().fabric$lang$security$ReaderPolicy$(owner, reader);
-      labelCache.addReaderPolicy(owner, reader, result);
+      cache.putReaderPolicy(triple, result);
       return result;
 //    } finally {
 //      exitTiming();
@@ -261,12 +266,13 @@ public final class LabelUtil {
   public static IntegPolicy writerPolicy(Store store, Principal owner, Principal writer) {
 //    try {
 //      enterTiming();
-      LabelCache labelCache = store.labelCache();
-      IntegPolicy result = labelCache.writerPolicy(owner, writer);
+      SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
+      Triple triple = new Triple(owner, writer, store);
+      IntegPolicy result = cache.getWriterPolicy(triple);
       if (result != null) return result;
       
       result = (WriterPolicy) new WriterPolicy@store().fabric$lang$security$WriterPolicy$(owner, writer);
-      labelCache.addWriterPolicy(owner, writer, result);
+      cache.putWriterPolicy(triple, result);
       return result;
 //    } finally {
 //      exitTiming();
@@ -348,12 +354,14 @@ public final class LabelUtil {
 //      enterTiming();
       if (cPolicy == null || iPolicy == null)
         throw new NullPointerException@localStore();
-      LabelCache cache = store.labelCache();
-      Label result = cache.toLabel(cPolicy, iPolicy);
+      
+      Triple triple = new Triple(cPolicy, iPolicy, store);
+      SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
+      Label result = cache.getLabel(triple);
       if (result != null) return result;
       
       result = (Label) new PairLabel@store().fabric$lang$security$PairLabel$(cPolicy, iPolicy);
-      cache.addToLabel(cPolicy, iPolicy, result);
+      cache.putLabel(triple, result);
       return result;
 //    } finally {
 //      exitTiming();
@@ -395,29 +403,17 @@ public final class LabelUtil {
       if (l2 == null) return l1;
 
       if (l1 instanceof PairLabel && l2 instanceof PairLabel) {
-        SecurityCache.Pair pair = new SecurityCache.Pair(l1, l2);
-        Label result = cache.getLabelJoin(pair);
+        Triple triple = SecurityCache.canonicalize(l1, l2, store);
+        Label result = cache.getLabelJoin(triple);
 
         if (result == null) {
-          LabelCache labelCache = store.labelCache();
-          result = labelCache.join(l1, l2);
-          if (result == null) {
-            PairLabel pl1 = (PairLabel) l1;
-            PairLabel pl2 = (PairLabel) l2;
-            java.util.Set dependencies = new java.util.HashSet();
-            result =
-                (PairLabel) new PairLabel@store().fabric$lang$security$PairLabel$(pl1.confPolicy().join(store, pl2.confPolicy(), dependencies),
-                    pl1.integPolicy().join(store, pl2.integPolicy(), dependencies));
-            // add dependencies from delegations to the cache result
-            // i.e., what dependencies does this result rely on?
-            for (java.util.Iterator iter = dependencies.iterator(); iter.hasNext();) {
-              SecurityCache.DelegationPair del =
-                (SecurityCache.DelegationPair) iter.next();
-              cache.addLabelJoinDependency(del, pair);
-            }
-            cache.putLabelJoin(pair, result);
-            labelCache.addJoin(l1, l2, result);
-          }
+          PairLabel pl1 = (PairLabel) l1;
+          PairLabel pl2 = (PairLabel) l2;
+          java.util.Set dependencies = new java.util.HashSet();
+          result =
+              (PairLabel) new PairLabel@store().fabric$lang$security$PairLabel$(pl1.confPolicy().join(store, pl2.confPolicy(), dependencies),
+                  pl1.integPolicy().join(store, pl2.integPolicy(), dependencies));
+          cache.putLabelJoin(triple, result, dependencies);
         }
         return result;
 
@@ -446,29 +442,17 @@ public final class LabelUtil {
       if (l2 == null) return l1;
 
       if (l1 instanceof PairLabel && l2 instanceof PairLabel) {
-        SecurityCache.Pair pair = new SecurityCache.Pair(l1, l2);
-        Label result = cache.getLabelMeet(pair);
+        Triple triple = SecurityCache.canonicalize(l1, l2, store);
+        Label result = cache.getLabelMeet(triple);
 
         if (result == null) {
-          LabelCache labelCache = store.labelCache();
-          result = labelCache.meet(l1, l2);
-          if (result == null) {
-            PairLabel pl1 = (PairLabel) l1;
-            PairLabel pl2 = (PairLabel) l2;
-            java.util.Set dependencies = new java.util.HashSet();
-            result =
-                (PairLabel) new PairLabel@store().fabric$lang$security$PairLabel$(pl1.confPolicy().meet(store, pl2.confPolicy(), dependencies),
-                    pl1.integPolicy().meet(store, pl2.integPolicy(), dependencies));
-            // add dependencies from delegations to the cache result
-            // i.e., what dependencies does this result rely on?
-            for (java.util.Iterator iter = dependencies.iterator(); iter.hasNext();) {
-              SecurityCache.DelegationPair del =
-                (SecurityCache.DelegationPair) iter.next();
-              cache.addLabelMeetDependency(del, pair);
-            }
-            cache.putLabelMeet(pair, result);
-            labelCache.addMeet(l1, l2, result);
-          }
+          PairLabel pl1 = (PairLabel) l1;
+          PairLabel pl2 = (PairLabel) l2;
+          java.util.Set dependencies = new java.util.HashSet();
+          result =
+              (PairLabel) new PairLabel@store().fabric$lang$security$PairLabel$(pl1.confPolicy().meet(store, pl2.confPolicy(), dependencies),
+                  pl1.integPolicy().meet(store, pl2.integPolicy(), dependencies));
+          cache.putLabelMeet(triple, result, dependencies);
         }
         return result;
       }
@@ -481,24 +465,26 @@ public final class LabelUtil {
   }
 
   public static ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2) {
-//    try {
-//      enterTiming();
-      LabelCache labelCache = store.labelCache();
-      ConfPolicy result = labelCache.join(p1, p2);
-      if (result != null) return result;
-      
-      result = join(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
-      labelCache.addJoin(p1, p2, result);
-      return result;
+//  try {
+//  enterTiming();
+      return join(store, p1, p2, new java.util.HashSet());
 //    } finally {
-//      exitTiming();
-//    }
+//    exitTiming();
+//  }
   }
 
   protected static ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2,
       java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
+      SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
+      Triple triple = SecurityCache.canonicalize(p1, p2, store);
+      Pair cacheEntry = cache.getPolicyJoin(triple);
+      if (cacheEntry != null) {
+        s.addAll((java.util.Set) cacheEntry.second);
+        return (ConfPolicy) cacheEntry.first;
+      }
+      
       Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().fabric$util$LinkedHashSet$();
       if (p1 instanceof JoinConfPolicy) {
         comps.addAll(((JoinConfPolicy) p1).joinComponents());
@@ -510,12 +496,20 @@ public final class LabelUtil {
       } else {
         comps.add(p2);
       }
-      comps = simplifyJoin(store, comps, s);
+      java.util.Set/*<DelegationPair>*/ deps = new java.util.HashSet();
+      comps = simplifyJoin(store, comps, deps);
 
+      ConfPolicy result;
       if (comps.size() == 1) {
-        return (ConfPolicy) comps.iterator().next();
+        result = (ConfPolicy) comps.iterator().next();
+      } else {
+        result = new JoinConfPolicy@store().fabric$lang$security$JoinConfPolicy$(comps);
       }
-      return (JoinConfPolicy) new JoinConfPolicy@store().fabric$lang$security$JoinConfPolicy$(comps);
+      
+      cache.putPolicyJoin(triple, result, deps);
+      s.addAll(deps);
+      return result;
+      
 //    } finally {
 //      exitTiming();
 //    }
@@ -525,13 +519,7 @@ public final class LabelUtil {
   public static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2) {
 //    try {
 //      enterTiming();
-      LabelCache labelCache = store.labelCache();
-      IntegPolicy result = labelCache.join(p1, p2);
-      if (result != null) return result;
-      
-      result = join(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
-      labelCache.addJoin(p1, p2, result);
-      return result;
+      return join(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
 //    } finally {
 //      exitTiming();
 //    }
@@ -540,6 +528,14 @@ public final class LabelUtil {
   static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
+      SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
+      Triple triple = SecurityCache.canonicalize(p1, p2, store);
+      Pair cacheEntry = cache.getPolicyJoin(triple);
+      if (cacheEntry != null) {
+        s.addAll((java.util.Set) cacheEntry.second);
+        return (IntegPolicy) cacheEntry.first;
+      }
+
       Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().fabric$util$LinkedHashSet$();
       if (p1 instanceof JoinIntegPolicy) {
         comps.addAll(((JoinIntegPolicy) p1).joinComponents());
@@ -551,12 +547,19 @@ public final class LabelUtil {
       } else {
         comps.add(p2);
       }
-      comps = simplifyJoin(store, comps, s);
+      java.util.Set/*<DelegationPair>*/ deps = new java.util.HashSet();
+      comps = simplifyJoin(store, comps, deps);
 
+      IntegPolicy result;
       if (comps.size() == 1) {
-        return (IntegPolicy) comps.iterator().next();
+        result = (IntegPolicy) comps.iterator().next();
+      } else {
+        result = (JoinIntegPolicy) new JoinIntegPolicy@store().fabric$lang$security$JoinIntegPolicy$(comps);
       }
-      return (JoinIntegPolicy) new JoinIntegPolicy@store().fabric$lang$security$JoinIntegPolicy$(comps);
+      
+      cache.putPolicyJoin(triple, result, deps);
+      s.addAll(deps);
+      return result;
 //    } finally {
 //      exitTiming();
 //    }
@@ -566,13 +569,7 @@ public final class LabelUtil {
   public static ConfPolicy meetPol(Store store, ConfPolicy p1, ConfPolicy p2) {
 //    try {
 //      enterTiming();
-      LabelCache labelCache = store.labelCache();
-      ConfPolicy result = labelCache.meet(p1, p2);
-      if (result != null) return result;
-      
-      result = meet(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
-      labelCache.addMeet(p1, p2, result);
-      return result;
+      return meet(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
 //    } finally {
 //      exitTiming();
 //    }
@@ -582,6 +579,14 @@ public final class LabelUtil {
       java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
+      SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
+      Triple triple = SecurityCache.canonicalize(p1, p2, store);
+      Pair cacheEntry = cache.getPolicyMeet(triple);
+      if (cacheEntry != null) {
+        s.addAll((java.util.Set) cacheEntry.second);
+        return (ConfPolicy) cacheEntry.first;
+      }
+      
       Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().fabric$util$LinkedHashSet$();
       if (p1 instanceof MeetConfPolicy) {
         comps.addAll(((MeetConfPolicy) p1).meetComponents());
@@ -593,12 +598,19 @@ public final class LabelUtil {
       } else {
         comps.add(p2);
       }
-      comps = simplifyMeet(store, comps, s);
+      java.util.Set/*<DelegationPair>*/ deps = new java.util.HashSet();
+      comps = simplifyMeet(store, comps, deps);
 
+      ConfPolicy result;
       if (comps.size() == 1) {
-        return (ConfPolicy) comps.iterator().next();
+        result = (ConfPolicy) comps.iterator().next();
+      } else {
+        result = (MeetConfPolicy) new MeetConfPolicy@store().fabric$lang$security$MeetConfPolicy$(comps);
       }
-      return (MeetConfPolicy) new MeetConfPolicy@store().fabric$lang$security$MeetConfPolicy$(comps);
+      
+      cache.putPolicyMeet(triple, result, deps);
+      s.addAll(deps);
+      return result;
 //    } finally {
 //      exitTiming();
 //    }
@@ -607,13 +619,7 @@ public final class LabelUtil {
   public static IntegPolicy meetPol(Store store, IntegPolicy p1, IntegPolicy p2) {
 //    try {
 //      enterTiming();
-      LabelCache labelCache = store.labelCache();
-      IntegPolicy result = labelCache.meet(p1, p2);
-      if (result != null) return result;
-      
-      result = meet(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
-      labelCache.addMeet(p1, p2, result);
-      return result;
+      return meet(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
 //    } finally {
 //      exitTiming();
 //    }
@@ -622,6 +628,14 @@ public final class LabelUtil {
   static IntegPolicy meet(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
+      SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
+      Triple triple = SecurityCache.canonicalize(p1, p2, store);
+      Pair cacheEntry = cache.getPolicyMeet(triple);
+      if (cacheEntry != null) {
+        s.addAll((java.util.Set) cacheEntry.second);
+        return (IntegPolicy) cacheEntry.first;
+      }
+
       Set/* <Policy> */comps = (LinkedHashSet) new LinkedHashSet/* <Policy> */@store().fabric$util$LinkedHashSet$();
       if (p1 instanceof MeetIntegPolicy) {
         comps.addAll(((MeetIntegPolicy) p1).meetComponents());
@@ -633,12 +647,19 @@ public final class LabelUtil {
       } else {
         comps.add(p2);
       }
-      comps = simplifyMeet(store, comps, s);
+      java.util.Set/*<DelegationPair>*/ deps = new java.util.HashSet();
+      comps = simplifyMeet(store, comps, deps);
 
+      IntegPolicy result;
       if (comps.size() == 1) {
-        return (IntegPolicy) comps.iterator().next();
+        result = (IntegPolicy) comps.iterator().next();
+      } else {
+        result = (MeetIntegPolicy) new MeetIntegPolicy@store().fabric$lang$security$MeetIntegPolicy$(comps);
       }
-      return (MeetIntegPolicy) new MeetIntegPolicy@store().fabric$lang$security$MeetIntegPolicy$(comps);
+      
+      cache.putPolicyMeet(triple, result, deps);
+      s.addAll(deps);
+      return result;
 //    } finally {
 //      exitTiming();
 //    }
@@ -685,7 +706,7 @@ public final class LabelUtil {
       if (from == to || from.equals(to)) return true;
       
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
-      SecurityCache.Pair pair = new SecurityCache.Pair(from, to);
+      Pair pair = new Pair(from, to);
       if (cache.containsTrueLabelRelabel(pair)) return true;
       if (cache.containsFalseLabelRelabel(pair)) return false;
       
@@ -694,14 +715,7 @@ public final class LabelUtil {
       if (!result) {
         cache.addFalseLabelRelabel(pair);
       } else {
-        cache.addTrueLabelRelabel(pair);
-        // add dependencies from delegations to the cache result
-        // i.e., what dependencies does this result rely on?
-        for (java.util.Iterator iter = dependencies.iterator(); iter.hasNext();) {
-          SecurityCache.DelegationPair del =
-            (SecurityCache.DelegationPair) iter.next();
-          cache.addTrueLabelRelabelsDependency(del, pair);
-        }
+        cache.addTrueLabelRelabel(pair, dependencies);
       }
       return result;
 //    } finally {
@@ -744,7 +758,7 @@ public final class LabelUtil {
       if (from == to || from.equals(to)) return true;
       
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
-      SecurityCache.Pair pair = new SecurityCache.Pair(from, to);
+      Pair pair = new Pair(from, to);
       if (cache.containsTruePolicyRelabel(pair)) {
         s.addAll(cache.getTruePolicyRelabels(pair));
         return true;
@@ -757,13 +771,6 @@ public final class LabelUtil {
         cache.addFalsePolicyRelabel(pair);
       } else {
         cache.putTruePolicyRelabels(pair, dependencies);
-        // add dependencies from delegations to the cache result
-        // i.e., what dependencies does this result rely on?
-        for (java.util.Iterator/* <DelegationPair> */iter = dependencies.iterator(); iter.hasNext();) {
-          SecurityCache.DelegationPair del =
-            (SecurityCache.DelegationPair) iter.next();
-          cache.addTruePolicyRelabelsDependency(del, pair);
-        }
         s.addAll(dependencies);
       }
       return result;
@@ -859,53 +866,6 @@ public final class LabelUtil {
     // XXX for the moment, just clear out the caches.
     cache.clearFalseLabelRelabels();
     cache.clearFalsePolicyRelabels();
-
-    // the label meets and joins can be soundly left, they just
-    // may not be as simplified as they could be. However, to maintain
-    // compatability with previous behavior, we will clear the caches
-    cache.clearLabelJoins();
-    cache.clearLabelMeets();
-    cache.clearLabelJoinDependencies();
-    cache.clearLabelMeetDependencies();
-  }
-
-  static void notifyRevokeDelegation(Principal granter, Principal superior) {
-    SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
-    SecurityCache.DelegationPair del =
-      new SecurityCache.DelegationPair(superior, granter);
-    
-    java.util.Set/* <Pair> */deps =
-      (java.util.Set) cache.removeTrueLabelRelabelsDependencies(del);
-    if (deps != null) {
-      for (java.util.Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-        SecurityCache.Pair afp = (SecurityCache.Pair) iter.next();
-        cache.removeTrueLabelRelabel(afp);
-      }
-    }
-    
-    deps = (java.util.Set) cache.removeTruePolicyRelabelsDependencies(del);
-    if (deps != null) {
-      for (java.util.Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-        SecurityCache.Pair afp = (SecurityCache.Pair) iter.next();
-        cache.removeTruePolicyRelabel(afp);
-      }
-    }
-    
-    deps = (java.util.Set) cache.removeLabelJoinDependencies(del);
-    if (deps != null) {
-      for (java.util.Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-        SecurityCache.Pair afp = (SecurityCache.Pair) iter.next();
-        cache.removeLabelJoin(afp);
-      }
-    }
-    
-    deps = (java.util.Set) cache.removeLabelMeetDependencies(del);
-    if (deps != null) {
-      for (java.util.Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-        SecurityCache.Pair afp = (SecurityCache.Pair) iter.next();
-        cache.removeLabelMeet(afp);
-      }
-    }
   }
 
   /**
@@ -918,7 +878,8 @@ public final class LabelUtil {
         /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */
         o.fetch().$getStore().getPrincipal());
     if (!relabelsTo(accessLabel, storeLabel))
-      throw new InternalError("Illegal access to " + o.$getStore());
+      throw new InternalError("Illegal access to " + o.$getStore()
+          + ": access label is " + accessLabel.toString());
     else 
       return o;
   }

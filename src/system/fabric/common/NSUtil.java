@@ -1,7 +1,5 @@
 package fabric.common;
 
-import static fabric.common.FabricLocationFactory.getLocation;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,6 +29,10 @@ public final class NSUtil {
    * Convenience field for building filesystem URIs
    */
   public static URI file = URI.create("file:///");
+
+  public static boolean isRemoteNamespace(URI ns) {
+    return ns.getScheme().equals("fab") && !ns.isOpaque();
+  }
 
   /**
    * Creates a mangled Java package name from a Fabric codebase oid.
@@ -244,7 +246,7 @@ public final class NSUtil {
     FClass result = codebase.resolveClassName(className);
     if (result == null)
       throw new ClassNotFoundException("Failed to load " + className
-          + " in codebase " + codebase);
+          + " in codebase " + codebase + "[" + javaName + "]");
 
     return result;
   }
@@ -256,7 +258,7 @@ public final class NSUtil {
   // group 4: $_Impl or $_Proxy or ""
   private static final Pattern javaNameRegex =
       Pattern
-      .compile("(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)((?:\\$_Impl)|(?:\\$_Proxy)|)");
+      .compile("(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)([$.]_Static)?((?:[$.]_Impl)|(?:[$.]_Proxy)|)");
 
   /**
    * Return the namespace representing a codebase.
@@ -285,8 +287,8 @@ public final class NSUtil {
    * @param path the path-style string of URIs and directories, with URIs delimited by '<' and '>'
    * @return true if path contains any remote references
    */
-  public static List<FabricLocation> processPathString(String path) {
-    List<FabricLocation> locations = new ArrayList<FabricLocation>();
+  public static List<URI> processPathString(String path) {
+    List<URI> locations = new ArrayList<URI>();
     while (!path.isEmpty()) {
       String remaining = "";
       if (path.startsWith("@")) {
@@ -317,7 +319,7 @@ public final class NSUtil {
           if (!cb.endsWith("/")) cb += "/";
 
           URI u = URI.create(cb);
-          locations.add(getLocation(false, u));
+          locations.add(u);
 
 //          if (u.getScheme().equals("fab")) needWorker = true;
           idx = end + 1;
@@ -341,12 +343,11 @@ public final class NSUtil {
             URI u = URI.create(dir);
 
             if (u.isAbsolute())
-              locations.add(getLocation(false, u));
+              locations.add(u);
             else {
               File f = new File(dir);
               String suf = f.isDirectory() ? "/" : "";
-              locations.add(getLocation(false,
-                  file.resolve(f.getAbsolutePath() + suf)));
+              locations.add(file.resolve(f.getAbsolutePath() + suf));
             }
           }
         }

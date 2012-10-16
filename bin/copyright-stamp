@@ -16,9 +16,10 @@ while [[ -f "${TMP}" ]] ; do
 done
 
 # Output the copyright notice to the temporary file.
+YEAR="$(date +%Y)"
 cat > "${NOTICE}" <<EOF
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-${YEAR} Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *

@@ -12,14 +12,14 @@ import codebases.ast.CodebaseDecl;
 import codebases.ast.CodebaseNode;
 import codebases.types.NamespaceResolver;
 import polyglot.types.Package;
-import fabric.common.FabricLocation;
+import java.net.URI;
 
 parser Grm extends jif.parse.Grm {:
     public final FabricTypeSystem ts;
     public final FabricNodeFactory nf;
-	public final FabricLocation ns;
+	public final URI ns;
 
-    public Grm(Lexer l, FabricTypeSystem t, FabricNodeFactory n, ErrorQueue q, FabricLocation ns) {
+    public Grm(Lexer l, FabricTypeSystem t, FabricNodeFactory n, ErrorQueue q, URI ns) {
         super(l, t, n, q);
         ts = t;
         nf = n;
@@ -106,7 +106,7 @@ parser Grm extends jif.parse.Grm {:
             AmbExpr a = (AmbExpr) e;
             NamespaceResolver nr = ts.namespaceResolver(this.ns);
 	        //try to resolve name as a codebase alias
-            FabricLocation u = nr.resolveCodebaseName(a.name());
+            URI u = nr.resolveCodebaseName(a.name());
             if (u != null)
 	            return nf.CodebaseNode(pos(e), this.ns, a.name(), u);
             else
@@ -164,7 +164,7 @@ parser Grm extends jif.parse.Grm {:
             else if (ap == null) {
             	//If there is no prefix, see if there is a codebase alias for this name
             	NamespaceResolver nr = ts.namespaceResolver(this.ns);
-            	FabricLocation u = nr.resolveCodebaseName(a.name());
+            	URI u = nr.resolveCodebaseName(a.name());
             	if (u != null)
             	    return nf.CodebaseNode(pos(p), this.ns, a.name(), u);
             }
@@ -195,6 +195,27 @@ parser Grm extends jif.parse.Grm {:
         die(pos(e));
         return null;
     }
+    public Expr receiverToExpr(AmbReceiver r) throws Exception {
+	    Position pos = r.position();
+	    String name = r.name();
+	    
+        if (r.prefix() == null) {
+            if ("this".equals(name)) {
+                return nf.This(pos);
+            }
+            Id id = nf.Id(pos, name);
+            return nf.AmbExpr(pos, id);
+        }
+
+        Id id = nf.Id(pos, name);
+
+        Expr target = null;
+        if (r.prefix() instanceof AmbReceiver) {
+            target = receiverToExpr((AmbReceiver) r.prefix());
+        } else target = (Expr) r.prefix();
+
+        return nf.Field(pos, target, id);
+    }
     
 :};
 
@@ -203,6 +224,7 @@ terminal Token ATOMIC;
 terminal Token ABORT;
 terminal Token RETRY;
 terminal Token WORKER;
+terminal Token STORE;
 terminal Token NONFABRIC;
 terminal Token CODEBASE;
 
@@ -215,6 +237,8 @@ non terminal FabricArrayInit fabric_array_initializer;
 non terminal LabelNode access_label_opt;
 non terminal List codebase_declarations_opt, codebase_declarations;
 non terminal CodebaseDecl codebase_declaration;
+non terminal Store store_expr;
+non terminal Expr accesspath_expr;
 
 start with goal;
 
@@ -368,7 +392,7 @@ extend modifier ::=
 // Local and remote workers                                           //
 ////////////////////////////////////////////////////////////////////////
 
-local_worker ::=
+local_worker ::= 
                     // Worker
         WORKER:a
             {: RESULT = parser.nf.Worker(parser.pos(a)); :}
@@ -379,19 +403,50 @@ remote_worker ::=
         WORKER:a LPAREN expression:b RPAREN:c
             {: RESULT = parser.nf.RemoteWorkerGetter(parser.pos(a, c), b); :}
     ;
+    
+store_expr ::=
+        STORE:a
+              {: RESULT = parser.nf.Store(parser.pos(a), parser.nf.This(parser.pos(a))); :}        
+        | primary_no_new_array:a DOT STORE:b
+              {: RESULT = parser.nf.Store(parser.pos(a, b), a); :}
+    ;
 
 extend primary_no_new_array ::=
         local_worker:a
             {: RESULT = a; :}
     |   remote_worker:a
             {: RESULT = a; :}
-    ;
-
+    |   store_expr:a
+    		{: RESULT = a; :}
+	;
+	
+extend reftype_or_expr ::=
+	     reftype_or_expr:a DOT STORE:b
+              {: RESULT = new AmbStore(a, parser, parser.pos(a, b)); :}
+	;
 extend principal_base ::=
         local_worker:a
             {: RESULT = parser.nf.AmbPrincipalNode(parser.pos(a), a); :}
+    |   remote_worker:a
+            {: RESULT = parser.nf.AmbPrincipalNode(parser.pos(a), a); :}
     ;
 
+extend accesspath_no_id ::= 
+    	STORE:a
+            {: RESULT = parser.nf.Store(parser.pos(a), parser.nf.This(parser.pos(a))); :}    
+    |   accesspath_receiver:a DOT STORE:b
+            {: 
+              if (a instanceof Expr) {
+                RESULT = parser.nf.Store(parser.pos(a, b), (Expr)a);               
+              } else if (a instanceof AmbReceiver) {
+                // sigh.. convert back to expr              
+	            RESULT = parser.nf.Store(parser.pos(a, b), parser.receiverToExpr((AmbReceiver)a)); 
+	          } else {
+		        parser.die(parser.pos(a));
+	          }
+            :}
+	;
+	    
 ////////////////////////////////////////////////////////////////////////
 // Field Declarations now use an optional "access label"              //
 ////////////////////////////////////////////////////////////////////////
@@ -453,12 +508,20 @@ location_expr_opt ::=
             {: RESULT = null; :}
     |   AT name:a
             {: RESULT = a.toExpr(); :}
+    |   AT STORE:a
+            {: RESULT = parser.nf.Store(parser.pos(a), parser.nf.This(parser.pos(a))); :}        
+    |   AT name:a DOT STORE:b
+            {: RESULT = parser.nf.Store(parser.pos(a, b), a.toExpr()); :}
     ;
 
 location_expr ::=
                     // Expr
         AT name:a
             {: RESULT = a.toExpr(); :}
+    |   AT STORE:a
+            {: RESULT = parser.nf.Store(parser.pos(a), parser.nf.This(parser.pos(a))); :}        
+    |   AT name:a DOT STORE:b
+            {: RESULT = parser.nf.Store(parser.pos(a, b), a.toExpr()); :}
     ;
 
 override class_instance_creation_expression ::=

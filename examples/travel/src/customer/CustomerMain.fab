@@ -11,14 +11,13 @@ import sif.servlet.SessionPrincipal;
 import javax.servlet.ServletException;
 
 public final class CustomerMain extends Servlet[CustomerPrincipal] {
-  final Store{this}@{CustomerPrincipal->} localStore;
-  final Store{this}@{CustomerPrincipal->} brokerstore;
-  final principal{this}@{CustomerPrincipal->} broker;
+  final Store{this}@{⊤→} localStore;
+  final Store{this}@{⊤→} brokerstore;
+  final principal{this}@{⊤→} broker;
   
   public CustomerMain() throws ServletException {
     FabricWorker cl = FabricWorker.getWorker();
     Store lStore = null;
-    AbstractPrincipal customerPrincipal = null;
     if (cl != null) {
       lStore = cl.getLocalStore();
     }
@@ -29,16 +28,18 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
     if (brokerstore != null) {
         root = (Map) brokerstore.getRoot();
     }
-    if (root != null) {
-        Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
-        Object obj = root.get(Config.brokerMapKey);
-        if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
-            brokerInit =
-                (Broker[BankPrincipal, CustomerPrincipal])obj;
-    }
-    broker = brokerInit;
-    } else {
-        broker = null;
+    atomic {
+	if (root != null) {
+	    Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
+	    Object obj = root.get(Config.brokerMapKey);
+	    if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+		brokerInit =
+		    (Broker[BankPrincipal, CustomerPrincipal])obj;
+	}
+	broker = brokerInit;
+	} else {
+	    broker = null;
+	}
     }
     
   }
@@ -58,16 +59,15 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
   
   // TODO Provide default implementations for these 2 methods in Servlet.fab:
   // This method will only be called by the runtime
-  protected SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+  protected SessionState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
       String{*lbl} id, SessionPrincipal{*lbl} session) {
-    SessionState[lbl] toReturn = null;
     atomic {
       if (localStore != null && localStore equiv worker$ &&
 	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
-	toReturn = new SessionState[lbl]@localStore(id, session);
+	return new SessionState@localStore(id, session);
       }
     }
-    return toReturn;
+    return null;
   }
   
   // This method will only be called by the runtime

@@ -6,6 +6,7 @@ import jif.ast.JifNew_c;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
 import polyglot.ast.Term;
+import polyglot.ast.Term_c;
 import polyglot.ast.TypeNode;
 import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
@@ -20,7 +21,7 @@ public class FabricNew_c extends JifNew_c {
   }
 
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     FabricExt fabExt = FabricUtil.fabricExt(this);
     Expr location = ((LocatedExt_c) fabExt).location();
     if (qualifier != null) {
@@ -44,7 +45,8 @@ public class FabricNew_c extends JifNew_c {
       v.visitCFG(body(), this, EXIT);
     } else {
       if (!arguments.isEmpty()) {
-        v.visitCFG(last, listChild(arguments, null), ENTRY);
+        v.visitCFG(last, Term_c.<Expr, Expr, Expr> listChild(arguments, null),
+            ENTRY);
         v.visitCFGList(arguments, this, EXIT);
       } else {
         v.visitCFG(last, this, EXIT);

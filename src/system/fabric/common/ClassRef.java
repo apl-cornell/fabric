@@ -341,7 +341,8 @@ public abstract class ClassRef implements FastSerializable {
       } catch (ClassNotFoundException e) {
         throw new InternalError(e);
       }
-//      checkHash(classHash(data, pos));
+
+      checkHash(classHash(data, pos));
     }
 
     /**
@@ -490,7 +491,12 @@ public abstract class ClassRef implements FastSerializable {
      * assumed to refer to the same class object.
      * </p>
      */
-    private FClass._Proxy fClass;
+    private final FClass._Proxy fClass;
+
+    /**
+     * Whether this refers to the _Static class portion of the fClass.
+     */
+    private final boolean staticClassFlag;
 
     /**
      * The OID of the class's codebase, encapsulated as a proxy for the
@@ -501,7 +507,7 @@ public abstract class ClassRef implements FastSerializable {
      * assumed to refer to the same class object.
      * </p>
      */
-    private Codebase._Proxy codebase;
+    private final Codebase._Proxy codebase;
 
     /**
      * The Fabric name of the class, relative to <code>codebase</code>.
@@ -511,7 +517,7 @@ public abstract class ClassRef implements FastSerializable {
      * assumed to refer to the same class object.
      * </p>
      */
-    private String className;
+    private final String className;
 
     /**
      * @param clazz
@@ -526,27 +532,28 @@ public abstract class ClassRef implements FastSerializable {
       } catch (final ClassNotFoundException e) {
         throw new InternalError("failed to resolve existing class", e);
       }
+
+      // Done this way to ensure a compile error if the class name changes.
+      this.staticClassFlag =
+          clazz.getSimpleName().equals(Object._Static.class.getSimpleName());
+
       this.codebase = null;
       this.className = null;
     }
 
-    private FabricClassRef(Codebase._Proxy codebase, String className) {
-      super(ClassRefType.FABRIC);
-      this.fClass = null;
-      this.codebase = codebase;
-      this.className = className;
-    }
-
-    private FabricClassRef(FClass._Proxy fClass) {
+    private FabricClassRef(FClass._Proxy fClass, boolean staticClassFlag) {
       super(ClassRefType.FABRIC);
       this.fClass = fClass;
+      this.staticClassFlag = staticClassFlag;
       this.codebase = null;
       this.className = null;
     }
 
     @Override
     public String javaClassName() {
-      return NSUtil.javaClassName(getFClass());
+      String result = NSUtil.javaClassName(getFClass());
+      if (staticClassFlag) result += "$_Static";
+      return result;
     }
 
     @Override
@@ -563,6 +570,19 @@ public abstract class ClassRef implements FastSerializable {
       } catch (ClassNotFoundException e) {
         throw new InternalError(e);
       }
+    }
+
+    /**
+     * Returns the outermost class in which this class is declared. e.g.,
+     * if this class represents Foo._Static, then the class Foo is returned.
+     */
+    public final Class<? extends fabric.lang.Object> toDeclaringClass() {
+      Class<? extends fabric.lang.Object> result = toClass();
+      if (staticClassFlag) {
+        result = (Class<? extends Object>) result.getDeclaringClass();
+      }
+
+      return result;
     }
 
     private FClass._Proxy getFClass() {
@@ -584,6 +604,7 @@ public abstract class ClassRef implements FastSerializable {
      * <li>short length of class OID's store's name</li>
      * <li>byte[] class OID's store's name</li>
      * <li>long class OID's onum</li>
+     * <li>byte whether this is a reference to the _Static class</li>
      * <li>short class hash length</li>
      * <li>byte[] class hash</li>
      * </ul>
@@ -602,6 +623,7 @@ public abstract class ClassRef implements FastSerializable {
       out.writeShort(storeNameUTF.length);
       out.write(storeNameUTF);
       out.writeLong(onum);
+      out.writeBoolean(staticClassFlag);
       out.writeShort(hash.length);
       out.write(hash);
     }
@@ -614,7 +636,8 @@ public abstract class ClassRef implements FastSerializable {
      *          FabricClassRef object.
      */
     private FabricClassRef(byte[] data, int pos) {
-      this(new FClass._Proxy(store(data, pos), onum(data, pos)));
+      this(new FClass._Proxy(store(data, pos), onum(data, pos)),
+          staticClassFlag(data, pos));
       checkHash(classHash(data, pos));
     }
 
@@ -631,6 +654,7 @@ public abstract class ClassRef implements FastSerializable {
 
       long onum = in.readLong();
       this.fClass = new FClass._Proxy(store, onum);
+      this.staticClassFlag = in.readBoolean();
       this.codebase = null;
       this.className = null;
 
@@ -651,6 +675,9 @@ public abstract class ClassRef implements FastSerializable {
 
       long onum = in.readLong();
       out.writeLong(onum);
+
+      boolean staticClassFlag = in.readBoolean();
+      out.writeBoolean(staticClassFlag);
 
       int classHashLength = in.readShort();
       out.writeShort(classHashLength);
@@ -736,8 +763,7 @@ public abstract class ClassRef implements FastSerializable {
      *         array.
      */
     private static int onumPos(byte[] data, int pos) {
-      int x = storeNameLengthPos(data, pos) + 2 + storeNameLength(data, pos);
-      return x;
+      return storeNameLengthPos(data, pos) + 2 + storeNameLength(data, pos);
     }
 
     /**
@@ -751,6 +777,14 @@ public abstract class ClassRef implements FastSerializable {
       return SerializationUtil.longAt(data, onumPos(data, pos));
     }
 
+    private static int staticClassFlagPos(byte[] data, int pos) {
+      return onumPos(data, pos) + 8;
+    }
+
+    private static boolean staticClassFlag(byte[] data, int pos) {
+      return SerializationUtil.booleanAt(data, staticClassFlagPos(data, pos));
+    }
+
     /**
      * @param pos
      *          the starting position of a serialized representation of a
@@ -760,7 +794,7 @@ public abstract class ClassRef implements FastSerializable {
      *         array.
      */
     private static int classHashLengthPos(byte[] data, int pos) {
-      return onumPos(data, pos) + 8;
+      return staticClassFlagPos(data, pos) + 1;
     }
 
     /**

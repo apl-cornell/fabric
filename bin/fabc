@@ -13,7 +13,7 @@ while true; do
       vmargs="${vmargs} '$1'"
       shift
       ;;
-    -cp)
+    --jvm-cp)
       shift
       cp="${cp}:$1"
       shift
@@ -27,7 +27,7 @@ while true; do
   esac
 done
 
-classpath="${FABC_CP}:${cp}:${classpath}"
+classpath="${FABC_CP}:${cp}"
 
 # Jar files should always appear *after* their corresponding class directories.
 sigcp="${TOP}/sig-classes/fabric:${TOP}/lib/fabric-sig.jar:${sigcp}"

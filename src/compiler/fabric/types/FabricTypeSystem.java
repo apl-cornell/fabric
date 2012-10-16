@@ -1,8 +1,10 @@
 package fabric.types;
 
 import jif.types.Assertion;
+import jif.types.JifContext;
 import jif.types.JifTypeSystem;
 import jif.types.hierarchy.LabelEnv;
+import jif.types.label.AccessPath;
 import jif.types.label.ConfPolicy;
 import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
@@ -16,6 +18,8 @@ import polyglot.types.Type;
 import polyglot.util.Position;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseTypeSystem;
+import fabric.ast.RemoteWorkerGetter;
+import fabric.ast.Store;
 
 public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   ClassType FObject();
@@ -51,10 +55,20 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
 
   IntegPolicy representableIntegProjection(Label L);
 
+
+  /**
+   * Returns true if type extends fabric.lang.Object
+   */
+  boolean isPersistent(Type type);
+
+  /**
+   * Returns true if type does not extend fabric.lang.Object
+   */
+  public boolean isTransient(Type type);
+
   /**
    * Checks whether <code>type</code> is a Fabric class, that is, inherits
    * <code>fabric.lang.Object</code>.
-   * Returns false if <code>type</code> is an interface.
    * Returns false if <code>type</code> is an interface.
    */
   boolean isFabricClass(Type type);
@@ -124,7 +138,26 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    * @return
    * @throws SemanticException
    */
-  Principal storePrincipal(Expr expr, FabricContext context, Position pos)
+  Principal storePrincipal(Store store, FabricContext context, Position pos)
+      throws SemanticException;
+
+  /**
+   * @param worker
+   * @param context
+   * @param pos
+   * @return
+   * @throws SemanticException
+   */
+  Principal remoteWorkerPrincipal(RemoteWorkerGetter worker,
+      FabricContext context, Position pos) throws SemanticException;
+
+  /**
+   * @param ref
+   * @param context
+   * @return
+   * @throws SemanticException
+   */
+  AccessPath storeAccessPathFor(Expr ref, JifContext context)
       throws SemanticException;
 
 }

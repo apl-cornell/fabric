@@ -1,5 +1,7 @@
 package fabric.parse;
 
+import java.net.URI;
+
 import jif.parse.Amb;
 import polyglot.ast.Id;
 import polyglot.ast.PackageNode;
@@ -11,11 +13,10 @@ import codebases.ast.CodebaseNode;
 import codebases.ast.CodebaseNodeFactory;
 import codebases.types.CodebaseTypeSystem;
 import fabric.ast.FabricNodeFactory;
-import fabric.common.FabricLocation;
 
 public class Name extends jif.parse.Name {
   public final CodebaseTypeSystem ts;
-  public final FabricLocation ns;
+  public final URI ns;
 
   public Name(Grm parser, Position pos, Id name) throws Exception {
     this(parser, pos, name.id());
@@ -55,7 +56,7 @@ public class Name extends jif.parse.Name {
   public QualifierNode toQualifier() throws Exception {
     if (prefix == null) {
       FabricNodeFactory nf = (FabricNodeFactory) parser.nf;
-      FabricLocation cb = ts.namespaceResolver(ns).resolveCodebaseName(name);
+      URI cb = ts.namespaceResolver(ns).resolveCodebaseName(name);
       if (cb != null) {
         return nf.CodebaseNode(pos, ns, name, cb);
       } else {

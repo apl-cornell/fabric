@@ -1,5 +1,7 @@
 package codebases.types;
 
+import java.net.URI;
+
 import polyglot.frontend.MissingDependencyException;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.SchedulerException;
@@ -11,7 +13,6 @@ import polyglot.types.TypeObject;
 import polyglot.types.TypeSystem;
 import polyglot.util.CannotResolvePlaceHolderException;
 import codebases.frontend.CBScheduler;
-import fabric.common.FabricLocation;
 
 /**
  * This class is basically copied from the superclass with following additions:
@@ -21,7 +22,7 @@ import fabric.common.FabricLocation;
  * with calls to TypeExists(ns,name)
  */
 public class CBPlaceHolder_c extends PlaceHolder_c implements CBPlaceHolder {
-  protected FabricLocation namespace;
+  protected URI namespace;
 
   /** Used for deserializing types. */
   protected CBPlaceHolder_c() {
@@ -33,7 +34,7 @@ public class CBPlaceHolder_c extends PlaceHolder_c implements CBPlaceHolder {
   }
 
   @Override
-  public FabricLocation namespace() {
+  public URI namespace() {
     return namespace;
   }
 
@@ -42,7 +43,7 @@ public class CBPlaceHolder_c extends PlaceHolder_c implements CBPlaceHolder {
     return namespace.hashCode() ^ name.hashCode();
   }
 
-  public CBPlaceHolder_c(FabricLocation ns, String name) {
+  public CBPlaceHolder_c(URI ns, String name) {
     this.namespace = ns;
     this.name = name;
 

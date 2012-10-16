@@ -1,0 +1,42 @@
+package fabric.principals;
+
+import fabric.util.Map;
+import travel.Config;
+
+public class CustomerPrincipal extends ExternalPrincipal {
+  public CustomerPrincipal() {
+    super("customer");
+  }
+  
+  public static CustomerPrincipal{*!:} getInstance{*!:}() {
+    atomic {
+      FabricWorker cl = FabricWorker.getWorker();
+      if (cl != null) {
+        final Store brokerStore = cl.getStore(Config.brokerStoreName);
+        if (brokerStore != null) {
+          Map rootMap = brokerStore.getRoot();
+          if (rootMap != null) {
+            Object obj = rootMap.get(Config.customerPrincipalMapKey);
+            CustomerPrincipal customer = null;
+            if (obj instanceof CustomerPrincipal) {
+              customer = (CustomerPrincipal) obj;
+            } else {
+              customer = new CustomerPrincipal@brokerStore();
+              rootMap.put(Config.customerPrincipalMapKey, customer);
+            }
+            
+            return customer;
+          }
+        }
+      }
+      
+      return null;
+    }
+  }
+  
+  // Don't much care what store is, we're going to create it where we want
+  public static CustomerPrincipal{*!:} getInstance{*!:}(Store store) {
+      return getInstance();
+  }
+  
+}

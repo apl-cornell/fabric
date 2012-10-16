@@ -10,6 +10,7 @@
   -->
 
   <import file="../../../common.xml" />
+  <import file="${fabric.home}/src/lib/collections/common.xml" />
   <import file="common.xml" />
 
   <!-- signature source directory -->
@@ -29,13 +30,6 @@
 
   <!-- directory for signature classes -->
   <property name="sif.sig-classes" location="${sif.home}/sig-classes" />
-
-  <!-- the standard classpath -->
-  <path id="standard.classpath">
-    <path refid="lib.classpath" />
-    <path refid="fabric.classpath" />
-    <pathelement path="${fabric.home}/tests/playground/collections/classes" />
-  </path>
 
   <!--
   ****************************************************************************
@@ -83,7 +77,7 @@
           depends="build-sif-java, build-sif-fab, build-sif-fil, build-sif-sig"
           description="Builds the Fabric-Servlet" />
 
-  <target name="init">
+  <target name="init" depends="collections">
     <!-- Create the time stamp -->
     <tstamp />
     <!-- Create the build directory structures used by compile -->
@@ -100,46 +94,26 @@
            includeAntRuntime="false"
            debuglevel="lines,vars,source">
       <classpath>
-        <path refid="standard.classpath" />
-        <pathelement path="${fabric.home}/tests/playground/collections/classes" />
+        <path refid="lib.classpath" />
+        <path refid="fabric.classpath" />
+        <path refid="collections.classpath" />
       </classpath>
     </javac>
   </target>
 
   <target name="build-sif-fil">
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${sif.home}"
-           dest="${sif.classes}"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabric.home}/bin/filc"/>
-      <arg value="-d"          /> <arg value="${sif.classes}"/>
+    <filc dest="${sif.classes}">
       <arg value="-sourcepath" /> <arg value="${src}"/>
-      <arg value="-bootclasspath"         /> <arg pathref="standard.classpath" />
-      <srcfile />
-      <fileset dir="${fil-src}" includes="**/*.fil" />
-      <globmapper from="*.fil" to="*.class" />
-    </apply>
+      <arg value="-cp"/> <arg pathref="lib.classpath"/>
+      <arg value="-cp"/> <arg value="${sif.classes}"/>
+      <fileset dir="${fil-src}" includes="**/*.fil"/>
+    </filc>
   </target>
 
   <target name="build-sif-fab" depends="init">
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${sif.home}"
-           dest="${sif.classes}"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabric.home}/bin/fabc"/>
-      <arg value="-g"/>
-      <arg value="-d"          /> <arg value="${sif.classes}"/>
+    <fabc dest="${sif.classes}">
       <arg value="-sourcepath" /> <arg value="${fab-src}"/>
-      <arg value="-bootclasspath"         /> <arg pathref="standard.classpath" />
-      <arg value="-e" />
+      <arg value="-cp"/> <arg value="${sif.classes}"/>
       <arg value="-debugpositions"/>
       <arg value="-trusted-providers"/>
       <!--
@@ -149,35 +123,19 @@
         <arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>
         <arg value="-report"/> <arg value="frontend=1"/>
       -->
-      <srcfile />
       <fileset dir="${fab-src}" includes="**/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
+    </fabc>
   </target>
 
 
   <!-- The Fabric signatures for the standard Java classes -->
   <target name="build-sif-sig" depends="init">
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${sif.home}"
-           dest="${sif.sig-classes}"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabric.home}/bin/fabc" />
-      <arg value="-g"   />
-      <arg value="-bootclasspath"         /> <arg pathref="standard.classpath" />
-      <arg value="-sig" />
+    <fabsigc dest="${sif.sig-classes}">
+      <arg value="-cp"/> <arg pathref="collections.classpath" />
       <arg value="-trusted-providers" />
-      <arg value="-d"          /> <arg value="${sif.sig-classes}" />
-      <arg value="-addsigcp" /> <arg value="${sig-src}" />
       <arg value="-sourcepath" /> <arg value="${sig-src}" />
-      <srcfile />
       <fileset dir="${sig-src}" includes="**/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
+    </fabsigc>
   </target>
 
   <target name="all" depends="build-all" />

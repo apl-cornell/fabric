@@ -1,6 +1,6 @@
 body {font-size: "100%"; background-color: #ffffff; color: black; margin: 0 }
-div.top {background-color: #50a0c0}
-div.top td {font-family: "Trebuchet MS", "lucida sans", helvetica, sans-serif}
+div.top {background-color: #48C}
+div.top td {font-family: "Cronos Pro", "Trebuchet MS", "lucida sans", helvetica, sans-serif}
 div.top a {color: white }
 div.top a:hover {color: #ffff80 }
 div.top { text-shadow: #102010 2px 2px 2px}
@@ -12,18 +12,18 @@ table {font-family: "Times New Roman", times, serif}
 ul {font-family: "Times New Roman", times, serif}
 a {text-decoration: none; color: #558; font-weight: bold}
 a.email {font-family: System, helvetica, sans-serif}
-h1 {font-size: 300%; font-family: "Trebuchet MS", "lucida sans", helvetica, sans-serif; color: #508050}
+h1 {font-size: 300%; font-family: "Cronos Pro", "Trebuchet MS", "lucida sans", helvetica, sans-serif; color: #508050}
 div.top h1 { color: #ffffff }
-div.top h4 { color: #ffffff; font-family: "Trebuchet MS", helvetica, sans-serif }
-h2 {font-size: "150%"; font-family: "Trebuchet MS", helvetica, sans-serif; color: #669}
+div.top h4 { color: #ffffff; font-family: "Cronos Pro", "Trebuchet MS", helvetica, sans-serif }
+h2 {font-size: "150%"; font-family: "Cronos Pro", "Trebuchet MS", helvetica, sans-serif; color: #669}
 span.ampm {font-variant: small-caps}
-span.name {font-size: "150%"; font-weight: bold; font-family: "Trebuchet MS", helvetica, sans-serif; color: #508050}
+span.name {font-size: "150%"; font-weight: bold; font-family: "Cronos Pro", "Trebuchet MS", helvetica, sans-serif; color: #508050}
 
 table.twocolumn tr td { padding-top: 10; padding-left: 20; padding-right: 20 }
 
 div.download { margin: 5px; padding-top:5; padding-bottom: 5;  padding-left:
-10; padding-right: 10; background-color: #eed; border-style: outset;
-border-width: 2; float: right; width: 33%}
+    10; padding-right: 10; background-color: #eed; border-style: outset;
+    border-width: 2; float: right; width: 33%}
 
 ol > li {margin-bottom: 1ex}
 
@@ -35,12 +35,13 @@ border-width: 2; float: right; width: 50%}
 tr.projects { border-style: solid; border-width: 1; border-color: black }
 
 body.download {margin: 0; padding: 0}
-div.inset { padding: 10 }
+div.inset { padding: 5ex 6ex }
 div.content { margin: 0; padding: 0 }
 p.explanation { width: 80ex; padding: 25px}
 td.question {vertical-align: top; text-align: right; font-weight: bold }
 form.questionnaire {padding: 25px}
 form.download {margin: -2px -2px 0 -2px; display: inline}
+form.download-old {display: inline}
 form.download input {margin: -6px -4px 0 4em; padding: 0}
 input.download {
     color: #558;
@@ -49,8 +50,17 @@ input.download {
     font-family: "Times New Roman", times, serif
     padding-left: 6em;
 }
-input.download:hover {
-    color: #66f;
+input.download:hover, input.download-old:hover {
+    color: #48f;
+}
+input.download-old {
+    border: none;
+    background-color: transparent;
+    font-size: 100%;
+    font-weight: bold;
+    font-family: "Times New Roman", times, serif;
+    padding-right: 2em;
+    display: inline;
 }
 div.content h1 {
    color: white; background-color: #50a0c0;
@@ -72,8 +82,10 @@ form.questionnaire {
 h1 span.title { vertical-align: top }
 
 div.figure {
-    padding: 5ex 5ex 0 0; display: float; float: right
+    padding: 5ex 5ex 2ex 5ex; float: right
 }
+div.figure img { margin: 0 auto }
+
 div.downloads {
 }
 

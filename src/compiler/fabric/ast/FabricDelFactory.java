@@ -29,4 +29,9 @@ public interface FabricDelFactory extends JifDelFactory {
 
   JL delPrincipalExpr();
 
+  /**
+   * @return
+   */
+  JL delStore();
+
 }

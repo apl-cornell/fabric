@@ -32,7 +32,9 @@ class Hello {
   // In Fabric, all exceptions must be declared, because they represent a
   // possible information flow.  Here we are lazy and simply declare "throws Exception"
   //
-  public static void main{*provider}(principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  public static void main{*provider}(principal{p<-} p, String[] args):{p<-;p->}
+    throws Exception
+  {
     atomic {
       if (provider <= new label {p<-;p->} && Message.provider <= provider )
         run(p, args);
@@ -41,7 +43,9 @@ class Hello {
     }
   }
 
-  public static void run{p<-;p->}(principal{p<-;p->} p, String[] args):{p<-;p->} throws Exception where provider <= {p<-;p->},  Message.provider <= provider { 
+  public static void run{p<-;p->}(principal{p<-;p->} p, String[] args):{p<-;p->}
+    throws Exception where provider <= {p<-;p->},  Message.provider <= provider
+  { 
 
     // This is a fancy version of "hello, world", in that we create a
     // persistent object to store our message, and save it in the root map of
@@ -49,31 +53,33 @@ class Hello {
 
     atomic {
 
-      // get a reference to the store called "store"
+      // Get a reference to the store called "store".
       final Store store = worker$.getStore("store");
 
-      // get a reference to the runtime.  This is how fabric programs access the console.
-      Runtime[p] runtime = Runtime[p].getRuntime();
+      // Get a reference to the runtime.
+      // This is how Fabric programs access the console.
+      final Runtime[p] runtime = Runtime[p].getRuntime();
 
-      // because we're storing p's message on "store", we must ensure that p trusts store
-      if (store actsfor p) {
+      // We're storing p's message on "store", so we must ensure p trusts store.
+      if (runtime.store$ actsfor p) {
+        if (store actsfor p) {
 
-        // create an object there holding our important message
-        Message[p]{p->;p<-} h = new Message[p]@store("Hello World!  Fabric is coming for you...");
+          // Create an object at 'store' holding our important message
+          Message[p]{p->;p<-} h =
+            new Message[p]@store("Hello World!  Fabric is coming for you...");
 
-        // store a reference to our object in the store's root map
-        Map root = store.getRoot();
-        root.put("hello", h);
+          // Store a reference to our object in the store's root map.
+          Map root = store.getRoot();
+          root.put("hello", h);
 
-        // output the contents of the object
-        runtime.out().println(h.message);
+          // Output the contents of the object.
+          runtime.out().println(h.message);
 
-      } else {
-        runtime.out().println("store is not sufficiently trusted.");
+        } else {
+          runtime.out().println("store is not sufficiently trusted.");
+        }
       }
     }
   }
 }
-/*
-** vim: ts=2 sw=2 et syntax=java
-*/
+// vim: ts=2 sw=2 et syntax=java

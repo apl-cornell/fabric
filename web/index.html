@@ -14,7 +14,7 @@
 <table>
 <tr>
 <td style="width: 100%">
-    <h1>Fabric</h1>
+<img src="images/fabric-logo2.png" style="height: 86px"/>
 <td class=links>
     <a href="#downloads">Downloads</a><br>
     <a href="#publications">Publications</a><br>
@@ -29,7 +29,7 @@
 <div class="inset" style="margin-left: 5ex">
 <p>
     Fabric is a federated, distributed system for securely and reliably
-    storing, sharing, and computing information. It is under construction by
+    storing, sharing, and computing information. It is being developed by
     the Applied Programming Languages Group at Cornell University.
 </p>
 <p>
@@ -53,14 +53,40 @@ CCF-0964409, by ONR award N00014-09-1-0652, and by Air Force Research
 Laboratory award FA8750-08-2-0079.
 </p>
 
+<div>
+<h2>Documentation</h2>
+<p>
+<a href="manual/0.2.0/html/index.html">
+Fabric reference manual</a> (Version 0.2.0, October 2012) [ <a href="manual/0.2.0/manual.pdf">PDF</a> ]
+</p>
+
+
 <div class="downloads">
 <a name="downloads">
 <h2>Downloads</h2></a>
-<p>The initial release of Fabric is now available! (Fabric 0.1.0, September 2010)
-A second release is in the works, incorporating the support for mobile code
-described in our Oakland '12 paper.
+<p>The second release of Fabric is now available! (Fabric 0.2.0, October 2012).
+It incorporates the support for mobile code described in our Oakland '12 paper,
+along with many improvements to usability, performance, and reliability.
 </p>
 <form class="download" method="POST" 
+      action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
+      enctype="multipart/form-data">
+<input type="hidden" name="package" value="Fabric 0.2.0">
+<!-- <input type="hidden" name="logo" value='<img class="logo" src="http://www.cs.cornell.edu/Projects/fabric/images/fabric-arch2.png">'> -->
+<input type="hidden" name="style"
+	 value="http://www.cs.cornell.edu/Projects/fabric/style.css">
+<input type="hidden" name="url"
+    value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.0.tar.gz">
+<input class="download" type="submit" value="Download Fabric 0.2.0" />
+</span>
+</form>
+
+<p>
+The previous version is still available:
+</p>
+<ul>
+<li>
+<form class="download-old" method="POST" 
       action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
       enctype="multipart/form-data">
 <input type="hidden" name="package" value="Fabric 0.1.0">
@@ -69,9 +95,11 @@ described in our Oakland '12 paper.
 	 value="http://www.cs.cornell.edu/Projects/fabric/style.css">
 <input type="hidden" name="url"
     value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.1.0.tar.gz">
-<input class="download" type="submit" value="Download Fabric 0.1.0" />
+<input class="download-old" type="submit" value="Fabric 0.1.0" />
 </span>
 </form>
+(September 2010)
+</ul>
 </div>
 
 <h2>Mailing lists</h2>
@@ -86,7 +114,7 @@ to participate in discussions about Fabric.
 </p>
 
 <a name="publications">
-<h2>Related group publications</h2></a>
+<h2>Related peer-reviewed group publications</h2></a>
 <ol>
 <li><cite><a href="http://www.cs.cornell.edu/andru/papers/pltiming.html">
     Language-based control and mitigation of timing channels</a></cite><br>
@@ -149,14 +177,10 @@ Danfeng Zhang, Aslan Askarov, and Andrew C. Myers.
 <h2>Project members</h2></a>
 <ul>
 <li><a href="/andru">Andrew Myers</a> (faculty)</li>
-<li><a href="/fbs">Fred Schneider</a> (faculty)</li>
-<li><a href="/fbs">Nate Foster</a> (faculty)</li>
-<li><a href="/~liujed">Jed Liu</a></li>
-<li><a href="/~mdgeorge">Mike George</a></li>
-<li><a href="/~kvikram">K. Vikram</a></li>
-<li><a href="/~qixin">Xin Qi</a></li>
-<li><a href="http://www.cornell.edu">Lucas Waye</a></li>
 <li><a href="http://www.cornell.edu">Owen Arden</a></li>
+<li><a href="/~mdgeorge">Mike George</a></li>
+<li><a href="/~liujed">Jed Liu</a></li>
+<li><a href="/~kvikram">K. Vikram</a></li>
 <li><a href="http://www.cornell.edu">Danfeng Zhang</a></li>
 </ul>
 

@@ -1,183 +1,203 @@
 package fabric.filemanager;
 
-import static java.io.File.separatorChar;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 import javax.tools.FileObject;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 
+import polyglot.filemanager.ExtFileObject;
 import polyglot.frontend.FileSource;
-import polyglot.main.Options;
+import polyglot.frontend.Source;
 import polyglot.util.InternalCompilerError;
+import polyglot.util.StringUtil;
 import codebases.frontend.ExtensionInfo;
 import fabil.types.ClassFile;
-import fabric.common.FabricLocation;
-import fabric.common.FabricLocationFactory;
 import fabric.common.NSUtil;
+import fabric.lang.Codebase;
+import fabric.lang.FClass;
+import fabric.lang.WrappedJavaInlineable;
+import fabric.util.Iterator;
+import fabric.util.Map.Entry;
+import fabric.util.Set;
 
 /**
  * FileManager implementation for Fabric - a class that provides input and
  * output access to the local file system and input access to the codebase.
+ * 
+ * TODO: store output files in Fabric. Support bytecode sharing between
+ *      trusted principals
  */
 public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
+  protected final Map<Location, List<URI>> pathMap;
+  protected final Map<URI, Codebase> codebaseCache;
+//  protected final Map<URI, List<File>> dirCache;
+  protected final Map<URI, Location> nsClassLocation;
+  protected final Map<URI, Location> nsSrcLocation;
   private final ExtensionInfo extInfo;
-  private boolean noOutputToFS;
 
   public FabricFileManager(ExtensionInfo extInfo) {
     super(extInfo);
     this.extInfo = extInfo;
-    noOutputToFS = extInfo.getOptions().noOutputToFS;
+    pathMap = new HashMap<Location, List<URI>>();
+    codebaseCache = new HashMap<URI, Codebase>();
+//    dirCache = new HashMap<URI, List<File>>();
+    nsClassLocation = new HashMap<URI, JavaFileManager.Location>();
+    nsClassLocation.put(extInfo.platformNamespace(),
+        extInfo.getOptions().bootclasspath);
+    nsClassLocation.put(extInfo.localNamespace(),
+        extInfo.getOptions().classpath);
+
+    this.nsSrcLocation = new HashMap<URI, JavaFileManager.Location>();
+    nsSrcLocation.put(extInfo.platformNamespace(),
+        extInfo.getOptions().bootclasspath);
+    nsSrcLocation.put(extInfo.localNamespace(),
+        extInfo.getOptions().source_path);
   }
-  
+
   @Override
   public FileObject getFileForInput(Location location, String packageName,
       String relativeName) throws IOException {
-    if (location instanceof FabricLocation) {
-      FabricLocation loc = (FabricLocation) location;
-      if (loc.isFabricReference()) {
-        boolean hasExtension =
-            relativeName.endsWith(".fab") || relativeName.endsWith(".fil");
-        String clazz =
-            hasExtension ? relativeName.substring(0,
-                relativeName.lastIndexOf('.')) : relativeName;
-        String classname =
-            packageName.equals("") ? clazz : (packageName.replace('/', '.')
-                + "." + clazz);
-        return FileManagerUtil.getJavaFileObject(loc.getCodebase(), classname);
+    List<URI> locPath;
+    if (location instanceof CodebaseLocation) {
+      CodebaseLocation cbloc = (CodebaseLocation) location;
+      locPath = Collections.singletonList(cbloc.namespace());
+    } else locPath = pathMap.get(location);
+
+    if (locPath != null) {
+      boolean isSource =
+          relativeName.endsWith(".fab") || relativeName.endsWith(".fil");
+      String classname =
+          relativeName.substring(0, relativeName.lastIndexOf('.'));
+      classname =
+          packageName.equals("") ? classname : (packageName.replace('/', '.')
+              + "." + classname);
+
+      for (URI pathEntry : locPath) {
+        if (pathEntry.getScheme().equals("fab")) {
+          Codebase codebase = codebase(pathEntry);
+          if (isSource) {
+            // if we are looking for source, check the codebase
+            FClass obj = codebase.resolveClassName(classname);
+            if (obj != null) {
+              return new FabricFileObject(obj, NSUtil.namespace(
+                  obj.getCodebase()).resolve(classname), classname + ".fab");
+            }
+          }
+          else {
+            // otherwise, check the output directory for .class or .java
+            FileObject fo =
+                super.getFileForInput(extInfo.getOptions()
+                    .classOutputLocation(), packageName, relativeName);
+            if (fo != null) return fo;
+          }
+        } else {
+          if (pathEntry.getPath().endsWith(".jar")) {
+            final JarFile jar;
+            try {
+              jar = new JarFile(pathEntry.getPath());
+            } catch (FileNotFoundException e) {
+              continue;
+            } catch (java.util.zip.ZipException e) {
+              continue;
+            }
+
+            String entryName = fileKey(packageName, relativeName);
+            final ZipEntry entry = jar.getEntry(entryName);
+            if (entry != null) {
+              URI u =
+                  URI.create("file://" + pathEntry.getPath() + "!/"
+                      + entryName);
+              Kind k = isSource ? Kind.SOURCE : Kind.CLASS;
+              FileObject fo = new ExtFileObject(u, k) {
+                @Override
+                public InputStream openInputStream() throws IOException {
+                  return jar.getInputStream(entry);
+                }
+              };
+              return fo;
+            }
+          } else {
+            File dirEntry = new File(pathEntry);
+            File f = new File(dirEntry, fileKey(packageName, relativeName));
+            if (f.exists() && f.isFile()) {
+              for (JavaFileObject jfo : super.getJavaFileObjects(f))
+                return jfo;
+            }
+          }
+        }
       }
     }
     return super.getFileForInput(location, packageName, relativeName);
   }
 
-  @Override
-  public JavaFileObject getJavaFileForOutput(Location location,
-      String className, Kind kind, FileObject sibling) throws IOException {
-    if (noOutputToFS && kind.equals(Kind.CLASS)) {
-      Options options = extInfo.getOptions();
-      Location classOutputLoc = options.classOutputDirectory();
-      if (location == null || !classOutputLoc.equals(location)
-          || !javac_fm.hasLocation(classOutputLoc)) return null;
-      URI classUri, classParentUri;
-      if (sibling == null) {
-        File classdir = null;
-        for (File f : javac_fm.getLocation(classOutputLoc)) {
-          classdir = f;
-          break;
-        }
-        if (classdir == null)
-          throw new IOException("Class output directory is not set.");
-        File classfile =
-            new File(classdir, className.replace('.', separatorChar)
-                + kind.extension);
-        classUri = classfile.toURI();
-        classParentUri = classfile.getParentFile().toURI();
-      } else {
-        File classdir = new File(sibling.toUri()).getParentFile();
-        File classfile =
-            new File(classdir,
-                className.substring(className.lastIndexOf('.') + 1)
-                    + kind.extension);
-        classUri = classfile.toURI();
-        classParentUri = classfile.getParentFile().toURI();
-      }
-      JavaFileObject jfo = new ClassObject(classUri);
-      absPathObjMap.put(classUri, jfo);
-      if (pathObjectMap.containsKey(classParentUri))
-        pathObjectMap.get(classParentUri).add(jfo);
-      else {
-        Set<JavaFileObject> s = new HashSet<JavaFileObject>();
-        s.add(jfo);
-        pathObjectMap.put(classParentUri, s);
-      }
-      return jfo;
+  /**
+   * @param u
+   * @return
+   */
+  protected Codebase codebase(URI u) {
+    Codebase cb = codebaseCache.get(u);
+    if (cb == null) {
+      cb = NSUtil.fetch_codebase(u);
+      codebaseCache.put(u, cb);
     }
-    return super.getJavaFileForOutput(location, className, kind, sibling);
+    return cb;
   }
 
   @Override
   public boolean packageExists(Location location, String name) {
-    if (location instanceof FabricLocation) {
-      FabricLocation loc = (FabricLocation) location;
-      if (loc.isFabricReference())
-        return FileManagerUtil.packageExists(loc.getCodebase(), name);
-    }
-    return super.packageExists(location, name);
-  }
-
-  @Override
-  public ClassFile loadFile(Location location, String name) {
-    String className = name;
-    JavaFileObject jfo = null;
-    if (location instanceof FabricLocation) {
-      FabricLocation loc = (FabricLocation) location;
-      try {
-        if (loc.isFabricReference()) {
-          className = extInfo.namespaceToJavaPackagePrefix(loc) + name;
-          jfo =
-              getJavaFileForInput(extInfo.getOptions().classOutputDirectory(),
-                  className, Kind.CLASS);
-        } else jfo = getJavaFileForInput(loc, className, Kind.CLASS);
-      } catch (IOException e) {
-        throw new InternalCompilerError(e);
+    List<URI> locPath = pathMap.get(location);
+    if (locPath != null) {
+      for (URI pathEntry : locPath) {
+        if (pathEntry.getScheme().equals("fab")) {
+          Codebase codebase = codebase(pathEntry);
+          Set names = codebase.getClasses().entrySet();
+          for (Iterator it = names.iterator(); it.hasNext();) {
+            Entry entry = (Entry) it.next();
+            String classname =
+                (String) WrappedJavaInlineable.$unwrap(entry.getKey());
+            String pkgName = StringUtil.getPackageComponent(classname);
+            if (pkgName.startsWith(name)) return true;
+          }
+        } else {
+          String packageName = name.replace('.', File.separatorChar);
+          if (pathEntry.getPath().endsWith(".jar")) {
+            JarFile jar;
+            try {
+              jar = new JarFile(pathEntry.getPath());
+              final ZipEntry entry = jar.getEntry(packageName);
+              if (entry != null) {
+                return true;
+              }
+            } catch (IOException e) {
+            }
+          } else {
+            File dirEntry = new File(pathEntry);
+            File f = new File(dirEntry, packageName);
+            if (f.exists()) return true;
+          }
+        }
       }
-    } else try {
-      jfo = getJavaFileForInput(location, className, Kind.CLASS);
-    } catch (IOException e1) {
-      throw new InternalCompilerError(e1);
+      return false;
     }
-    try {
-      if (jfo != null) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        InputStream is = jfo.openInputStream();
-        byte buf[] = new byte[BUF_SIZE];
-        int len;
-        while ((len = is.read(buf, 0, BUF_SIZE)) != -1)
-          bos.write(buf, 0, len);
-        return extInfo.createClassFile(jfo, bos.toByteArray());
-      }
-    } catch (IOException e) {
-      throw new InternalCompilerError(e);
-    }
-    return null;
+    else return super.packageExists(location, name);
   }
 
-  @Override
-  public String inferBinaryName(Location location, JavaFileObject file) {
-    if (file instanceof FabricSourceObject) {
-      String className = ((FabricSourceObject) file).getName();
-      return className.substring(className.lastIndexOf('.') + 1);
-    }
-    return super.inferBinaryName(location, file);
-  }
-
-  @Override
-  public Iterable<JavaFileObject> list(Location location, String packageName,
-      Set<Kind> kinds, boolean recurse) throws IOException {
-    if (location instanceof FabricLocation) {
-      FabricLocation loc = (FabricLocation) location;
-      if (loc.isFabricReference())
-        return FileManagerUtil.getJavaFileObjects(loc.getCodebase(),
-            packageName, recurse);
-    }
-    return super.list(location, packageName, kinds, recurse);
-  }
 
   @Override
   public FileSource fileSource(String fileName) throws IOException {
-    URI u = URI.create(fileName);
-    if (!u.isAbsolute())
-      throw new InternalCompilerError("Expected absolute URI");
-    return fileSource(
-        FabricLocationFactory.getLocation(false, NSUtil.dirname(u)),
-        NSUtil.basename(u), false);
+    return fileSource(fileName, false);
   }
 
   @Override
@@ -186,13 +206,157 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
     URI u = URI.create(fileName);
     if (!u.isAbsolute())
       throw new InternalCompilerError("Expected absolute URI");
-    if (u.getScheme().equals("fab")) {
-      FabricLocation loc =
-          FabricLocationFactory.getLocation(false, NSUtil.dirname(u));
-      FileObject fo = getFileForInput(loc, "", NSUtil.basename(u));
-      return extInfo.createFileSource(fo, userSpecified);
-    } else {
-      return super.fileSource(u.getPath(), userSpecified);
+    JavaFileObject jfo = getJavaFileObject(u);
+    if (jfo == null) throw new FileNotFoundException(fileName);
+    return extInfo.createFileSource(jfo, userSpecified);
+  }
+
+  /**
+   * Associate a list of files with a location, removing any previous associations.
+   */
+  @Override
+  public void setLocation(Location location, Iterable<? extends File> path)
+      throws IOException {
+    super.setLocation(location, path);
+    // remove any URI associations.
+    pathMap.remove(location);
+  }
+
+  /**
+   * Associate a list of URIs with a location, removing any previous associations.
+   */
+  public void setLocation(Location location, List<URI> directories)
+      throws IOException {
+    if (location.isOutputLocation())
+      throw new InternalCompilerError(
+          "Configuring output locations via this method is "
+              + "currently unsupported.");
+    pathMap.put(location, directories);
+    // remove any file associations.
+    super.setLocation(location, Collections.<File> emptySet());
+  }
+
+  @Override
+  public Iterable<? extends File> getLocation(Location location) {
+    return super.getLocation(location);
+  }
+
+  public List<URI> getLocationURIs(Location location) {
+    return pathMap.get(location);
+  }
+
+  @Override
+  public boolean hasLocation(Location location) {
+    return super.hasLocation(location) || pathMap.containsKey(location);
+  }
+
+  /**
+   * @param namespace
+   * @param name
+   * @return
+   */
+  public ClassFile loadFile(URI namespace, String name) {
+    String className =  extInfo.namespaceToJavaPackagePrefix(namespace) + name;
+    JavaFileObject jfo = null;
+    if (!className.equals(name)) {
+      //className is a mangled name. Check class cache
+      try {
+        jfo =
+            getJavaFileForInput(extInfo.getOptions().classOutputLocation(),
+                className, Kind.CLASS);
+        if (jfo != null)
+          return extInfo.createClassFile(jfo, getBytes(jfo));
+
+      } catch (IOException e) {
+        throw new InternalCompilerError(
+            "Error while checking cache for class file "
+                + name, e);
+      }
+      return null;
     }
+    else {
+      Location location = nsClassLocation.get(namespace);
+      return (ClassFile) loadFile(location, className);
+    }
+  }
+
+  /**
+   * @param namespace
+   * @param name
+   * @return
+   */
+  public Source classSource(URI namespace, String name) {
+    Location location = nsSrcLocation.get(namespace);
+    if (location != null) {
+      return classSource(location, name);
+    } else {
+      if (namespace.isOpaque())
+        throw new InternalCompilerError("No location for " + namespace);
+      // namespace should be a Fabric reference
+      location = namespaceSourceLocation(namespace);
+      return classSource(location, name);
+    }
+  }
+
+  public JavaFileObject getJavaFileObject(URI uri) throws IOException {
+    if (uri.getScheme().equals("file")) {
+      for (JavaFileObject jfo : getJavaFileObjects(new File(uri)))
+        return jfo;
+      return null;
+    }
+    else {
+      if (uri.isOpaque())
+        throw new InternalCompilerError("Can't get file object for " + uri);
+
+      Location location = namespaceSourceLocation(NSUtil.dirname(uri));
+      String className = NSUtil.basename(uri);
+      return (JavaFileObject) getFileForInput(location, "", className + ".fab");
+    }
+  }
+
+  /**
+   * Returns the location associated with class files for this namespcae.
+   * For remote namespaces, the class location in always the class output directory.
+   */
+  public Location namespaceClassLocation(URI namespace) {
+    Location location = nsClassLocation.get(namespace);
+    if (location != null) {
+      return location;
+    } else {
+      if (namespace.isOpaque())
+        throw new InternalCompilerError("No location for " + namespace);
+      // namespace is a codebase.  Use the class cache.
+      return extInfo.getOptions().classOutputLocation();
+    }
+  }
+
+  /**
+   * Returns the location associated with source files for this namespcae.
+   */
+  public Location namespaceSourceLocation(URI namespace) {
+    Location location = nsSrcLocation.get(namespace);
+    if (location == null) {
+      if (namespace.isOpaque())
+        throw new InternalCompilerError("No location for " + namespace);
+      // namespace is a codebase.  Create a new Location.
+      location = createCodebaseLocation(namespace);
+      nsSrcLocation.put(namespace, location);
+    }
+    return location;
+  }
+
+  protected Location createCodebaseLocation(URI namespace) {
+    return new CodebaseLocation_c(namespace);
+  }
+
+  /**
+   * @param namespace
+   * @param name
+   * @return
+   */
+  public boolean packageExists(URI namespace, String name) {
+    Location classLoc = namespaceClassLocation(namespace);
+    Location srcLoc = namespaceSourceLocation(namespace);
+    return packageExists(classLoc, name) || packageExists(srcLoc, name);
   }
 }

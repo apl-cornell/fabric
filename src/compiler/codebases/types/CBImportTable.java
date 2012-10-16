@@ -1,5 +1,6 @@
 package codebases.types;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -20,7 +21,7 @@ import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
-import fabric.common.FabricLocation;
+import codebases.frontend.CBJobExt;
 
 public class CBImportTable extends ImportTable {
   // NB: this field 'hides' a private superclass field that is used for the same
@@ -30,19 +31,33 @@ public class CBImportTable extends ImportTable {
 
   private final CodebaseTypeSystem ts;
 
-  protected FabricLocation ns;
-  protected Set<String> aliases;
-  protected Map<String, String> fromExternal;
+  protected final URI ns;
+  protected final Set<String> aliases;
+  protected final Map<String, String> fromExternal;
+  protected final CBJobExt jobExt;
 
-  public CBImportTable(CodebaseTypeSystem ts, FabricLocation ns, Package pkg,
+  public CBImportTable(CodebaseTypeSystem ts, URI ns, Package pkg,
       Source source) {
     super(ts, pkg, source.name());
     this.ts = ts;
     this.ns = ns;
     this.aliases = new HashSet<String>();
     this.fromExternal = new HashMap<String, String>();
+    //XXX: this is a little sleazy.
+    this.jobExt = (CBJobExt) ts.extensionInfo().scheduler().currentJob().ext();
   }
 
+  void addLookup(String name, Named type) {
+    map.put(name, type);
+    if (type == NOT_FOUND) return;
+
+    if (isExternal(name)) {
+      jobExt.addExternalDependency((CodebaseClassType) type, aliasFor(name));
+    }
+    else {
+      jobExt.addDependency((CodebaseClassType) type);
+    }
+  }
   // /// The following methods are basically copied from the superclass, but
   // instead of
   // /// calling the toplevel system resolver directly, they use the namespace
@@ -56,7 +71,7 @@ public class CBImportTable extends ImportTable {
     }
 
     Named t = ts.namespaceResolver(ns).find(name);
-    map.put(name, t);
+    addLookup(name, t);
     return t;
   }
 
@@ -98,7 +113,7 @@ public class CBImportTable extends ImportTable {
                 + "): found in current package");
 
           // Memoize the result.
-          map.put(name, n);
+          addLookup(name, n);
           return n;
         }
       }
@@ -145,13 +160,13 @@ public class CBImportTable extends ImportTable {
       if (Report.should_report(TOPICS, 3))
         Report.report(3,
             this + ".find(" + name + "): found as " + resolved.fullName());
-      map.put(name, resolved);
+      addLookup(name, resolved);
       return resolved;
     } catch (NoClassException e) {
       // memoize the no class exception
       if (Report.should_report(TOPICS, 3))
         Report.report(3, this + ".find(" + name + "): didn't find it");
-      map.put(name, NOT_FOUND);
+      addLookup(name, NOT_FOUND);
       throw e;
     }
   }
@@ -169,11 +184,6 @@ public class CBImportTable extends ImportTable {
     } else {
       super.addPackageImport(pkgName);
     }
-  }
-
-  public void addExplicitCodebaseImport(String pkgName) {
-    // TODO Auto-generated method stub
-
   }
 
   @Override
@@ -208,11 +218,11 @@ public class CBImportTable extends ImportTable {
     for (int i = 0; i < lazyImports.size(); i++) {
       try {
         String longName = lazyImports.get(i);
-        FabricLocation import_ns = ns;
+        URI import_ns = ns;
         // Check if this is an explicit codebase import
         String first = StringUtil.getFirstComponent(longName);
         if (aliases.contains(first)) {
-          FabricLocation u =
+          URI u =
               ts.namespaceResolver(ns).resolveCodebaseName(first);
           if (u == null)
             throw new SemanticException("Unknown codebase \"" + first + "\"");
@@ -229,9 +239,14 @@ public class CBImportTable extends ImportTable {
         Importable t = ts.namespaceResolver(import_ns).find(longName);
 
         String shortName = StringUtil.getShortNameComponent(longName);
-        if (!import_ns.equals(ns)) fromExternal.put(shortName, first);
+        if (!import_ns.equals(ns)) {
+          fromExternal.put(shortName, first);
+          jobExt.addExternalDependency((CodebaseClassType) t, first);
+        } else {
+          jobExt.addDependency((CodebaseClassType) t);
+        }
 
-        map.put(shortName, t);
+        addLookup(shortName, t);
       } catch (SemanticException e) {
         if (e.position() == null) {
           Position p = lazyImportPositions.get(i);
@@ -249,7 +264,7 @@ public class CBImportTable extends ImportTable {
   protected static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.resolver, Report.imports);
 
-  public FabricLocation namespace() {
+  public URI namespace() {
     return ns;
   }
 
@@ -280,7 +295,7 @@ public class CBImportTable extends ImportTable {
     else return null;
   }
 
-  public FabricLocation resolveCodebaseName(String name) {
+  public URI resolveCodebaseName(String name) {
     // Only resolve codebase names that were declared in this
     // sourcefile.
     // if (aliases.contains(name)) XXX: ?

@@ -6,6 +6,7 @@ public class Message[principal p] where provider actsfor p {
 
   public Message(String{p->;p<-} message):{p<-;p->} {
     this.message = message;
+    super();
   }
 }
 

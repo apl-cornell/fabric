@@ -1,7 +1,7 @@
 Hello World
 ===========
 
-This is a Fabric port of every programmer's favorite program.  It stores the
+This is a Fabric port of every programmer's favorite program. It stores the
 string "Hello World" persistently, and then prints it out.
 
 This directory contains the following sub-directories:
@@ -10,21 +10,16 @@ This directory contains the following sub-directories:
   - bin: a collection of scripts for running the example
   - etc: configuration files for the example's store and worker
 
-Compiling
----------
-To build the example, run 'ant' in the hello example directory:
-
-  $ ant
-
 
 Using
 -----
 This example comes with a store named "store" for storing persistent data,
 and a worker named "worker" to run the computation.
 
-  0. Begin in the hello example directory:
+  0. Begin in the hello example directory and compile the example:
 
         $ cd $FABRIC/examples/hello
+        $ ant
 
   1. Start the store:
 

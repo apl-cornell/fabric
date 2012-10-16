@@ -1,5 +1,6 @@
 package fabric.common;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -390,6 +391,7 @@ public abstract class Options {
     "-version" }, null, "print version info") {
       @Override
       public int handle(String[] args, int index) {
+        System.out.println("Fabric version " + new Version());
         throw new TerminationException(0);
       }
     });
@@ -429,6 +431,16 @@ public abstract class Options {
       }
     });
 
+    flags.add(new Flag(Kind.SECRET, new String[] { "--addsigcp", "-addsigcp" },
+        "<path>", "additional path for Fabric signatures; prefixed to sigcp") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.sigcp =
+            args[index] + File.pathSeparator + Options.this.sigcp;
+        return index + 1;
+      }
+    });
+
     flags.add(new Flag(Kind.SECRET, new String[] { "--filsigcp", "-filsigcp" },
         "<path>", "path for FabIL signatures") {
       @Override
@@ -455,7 +467,20 @@ public abstract class Options {
         return index + 1;
       }
     });
-    flags.add(new Flag(Kind.SECRET, "-output-to-local-fs", "",
+
+    flags
+    .add(new Flag(Kind.SECRET, new String[] { "--addbootcp", "-addbootcp" },
+        "<path>",
+        "additional directory for Fabric runtime classes; prepended to bootclasspath") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.bootcp =
+            args[index] + File.pathSeparator + Options.this.bootcp;
+        return index + 1;
+      }
+    });
+
+    flags.add(new Flag(Kind.SECRET, "--output-to-fs", "",
         "A flag for putting .class files to the local file system") {
       @Override
       public int handle(String[] args, int index) {

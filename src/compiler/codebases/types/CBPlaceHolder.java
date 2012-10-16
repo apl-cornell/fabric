@@ -1,9 +1,10 @@
 package codebases.types;
 
+import java.net.URI;
+
 import polyglot.types.NamedPlaceHolder;
-import fabric.common.FabricLocation;
 
 public interface CBPlaceHolder extends NamedPlaceHolder {
-  public FabricLocation namespace();
+  public URI namespace();
 
 }

@@ -1,0 +1,7 @@
+# Extra configuration propreties for Fabric.
+#
+# These are APL-specific and are not visible to our users.
+
+# Name/location of doxygen executable.
+doxygen.executable = doxygen
+

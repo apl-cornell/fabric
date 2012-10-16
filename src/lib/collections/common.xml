@@ -1,0 +1,23 @@
+<project name="collections.common">
+  <description>
+    This is the include file for projects that build against the collections library.
+  </description>
+
+  <dirname property="collections.home" file="${ant.file.collections.common}" />
+
+  <property name="jar.collections" location="${fabric.home}/lib/fabric-collections.jar" />
+
+  <path id="collections.classpath">
+    <pathelement path="${jar.collections}" />
+  </path>
+
+  <target name="collections">
+    <subant target="jar">
+      <fileset dir="${collections.home}" includes="build.xml" />
+    </subant>
+  </target>
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

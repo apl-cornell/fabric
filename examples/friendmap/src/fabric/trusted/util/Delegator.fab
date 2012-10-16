@@ -21,6 +21,20 @@ public class Delegator extends AbstractPrincipal {
     this.name  = name;
     super(name);
   }
+  
+  public
+  Delegator
+  {      // side effects
+    this // TODO
+  }
+  (
+    String    {this} name,
+  )
+  {
+    this.owner = store$;
+    this.name  = name;
+    super(name);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // Principal methods                                                        //

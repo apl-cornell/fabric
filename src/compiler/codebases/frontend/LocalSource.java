@@ -2,40 +2,42 @@ package codebases.frontend;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.net.URI;
 
 import javax.tools.FileObject;
 
 import jif.parse.UTF8FileSource;
 import polyglot.frontend.Source;
 import polyglot.util.InternalCompilerError;
-import fabric.common.FabricLocation;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
 
 public class LocalSource extends UTF8FileSource implements CodebaseSource {
-  protected FabricLocation namespace;
+  protected URI namespace;
   protected boolean publish;
   protected Reader reader;
 
   public LocalSource(FileObject f, boolean userSpecified,
-      FabricLocation namespace) throws IOException {
+      URI namespace)
+          throws IOException {
     this(f, userSpecified, namespace, true);
   }
 
   public LocalSource(FileObject f, boolean userSpecified,
-      FabricLocation namespace, boolean publish) throws IOException {
+      URI namespace,
+      boolean publish) throws IOException {
     super(f, userSpecified);
     this.namespace = namespace;
     this.publish = publish;
   }
 
   @Override
-  public FabricLocation namespace() {
+  public URI namespace() {
     return namespace;
   }
 
   @Override
-  public FabricLocation canonicalNamespace() {
+  public URI canonicalNamespace() {
     return namespace;
   }
 
@@ -63,7 +65,7 @@ public class LocalSource extends UTF8FileSource implements CodebaseSource {
   }
 
   @Override
-  public Source publishedSource(FabricLocation namespace, String name) {
+  public Source publishedSource(URI namespace, String name) {
     // XXX: this is fudging it a little so we can have LocalSources equal
     // RemoteSources when we compile down to bytecode.
     // we define equality on name and NS only if path is null

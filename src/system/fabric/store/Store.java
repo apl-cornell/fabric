@@ -28,9 +28,9 @@ import fabric.common.net.handshake.HandshakeBogus;
 import fabric.common.net.handshake.HandshakeComposite;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 import fabric.common.net.handshake.Protocol;
-import fabric.common.net.naming.DefaultNameService;
-import fabric.common.net.naming.DefaultNameService.PortType;
+import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.net.naming.NameService;
+import fabric.common.net.naming.NameService.PortType;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
@@ -147,9 +147,9 @@ class Store extends MessageToStoreHandler {
 
       Protocol handshake =
           new HandshakeComposite(authProt, new HandshakeUnauthenticated());
-      NameService nameService = new DefaultNameService(PortType.STORE);
+      NameService nameService = new TransitionalNameService();
 
-      return new SubServerSocketFactory(handshake, nameService);
+      return new SubServerSocketFactory(handshake, nameService, PortType.STORE);
     } catch (final Exception e) {
       throw new InternalError("Failed to initialize store", e);
     }

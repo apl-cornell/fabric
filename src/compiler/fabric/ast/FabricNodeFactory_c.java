@@ -1,5 +1,6 @@
 package fabric.ast;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,7 +42,6 @@ import codebases.ast.CodebaseDecl;
 import codebases.ast.CodebaseDecl_c;
 import codebases.ast.CodebaseNode;
 import codebases.ast.CodebaseNode_c;
-import fabric.common.FabricLocation;
 import fabric.extension.FabricExt;
 import fabric.extension.LocatedExt_c;
 
@@ -74,14 +74,14 @@ FabricNodeFactory {
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, FabricLocation ns,
-      String name, FabricLocation externalNS) {
+  public CodebaseNode CodebaseNode(Position pos, URI ns,
+      String name, URI externalNS) {
     return CodebaseNode(pos, ns, name, externalNS, null);
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, FabricLocation ns,
-      String name, FabricLocation externalNS, Package package_) {
+  public CodebaseNode CodebaseNode(Position pos, URI ns,
+      String name, URI externalNS, Package package_) {
     CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, package_);
     n = (CodebaseNode) n.ext(fabricExtFactory().extCodebaseNode());
     n = (CodebaseNode) n.del(fabricDelFactory().delCodebaseNode());
@@ -143,9 +143,17 @@ FabricNodeFactory {
 
   @Override
   public Worker Worker(Position pos) {
-    Worker n = new Worker_c(pos, this);
+    Worker n = new Worker_c(pos, Id(pos, "worker$"));
     n = (Worker) n.ext(fabricExtFactory().extWorker());
     n = (Worker) n.del(fabricDelFactory().delWorker());
+    return n;
+  }
+
+  @Override
+  public Store Store(Position pos, Expr expr) {
+    Store n = new Store_c(pos, expr);
+    n = (Store) n.ext(fabricExtFactory().extStore());
+    n = (Store) n.del(fabricDelFactory().delStore());
     return n;
   }
 

@@ -1,5 +1,6 @@
 package fabil.types;
 
+import java.net.URI;
 import java.util.Collection;
 
 import polyglot.main.Report;
@@ -13,7 +14,6 @@ import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import codebases.types.CBImportTable;
 import codebases.types.CodebaseTypeSystem;
-import fabric.common.FabricLocation;
 
 /**
  * Codebase support for the FabIL typesystem. This class duplicates some of the
@@ -57,7 +57,7 @@ public class FabILContext_c extends Context_c implements FabILContext {
   }
 
   @Override
-  public FabricLocation namespace() {
+  public URI namespace() {
     if (isOuter()) throw new InternalCompilerError("No namespace!");
     return ((CBImportTable) it).namespace();
   }
@@ -69,7 +69,7 @@ public class FabILContext_c extends Context_c implements FabILContext {
   }
 
   @Override
-  public FabricLocation resolveCodebaseName(String name) {
+  public URI resolveCodebaseName(String name) {
     return ((CBImportTable) it).resolveCodebaseName(name);
   }
 }

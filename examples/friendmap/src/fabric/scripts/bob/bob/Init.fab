@@ -19,28 +19,28 @@ where
   public static void main {*←} (String[] args) {
     atomic {
       final Store store = worker$.getStore("snapp");
-      final Snapp snapp = (Snapp) store.getRoot().get("snapp");
+      final Snapp sn = (Snapp) store.getRoot().get("snapp");
 
-      if (store actsfor snapp
-      &&  snapp.store equiv store
-      &&  snapp.Snapp.provider <= new label {*←snapp}@store
+      if (store actsfor sn
+      &&  sn.store$ equiv store
+      &&  snapp.Snapp.provider <= new label {*←sn}@store
       ) {
 
-        final User[worker$,snapp]  userBob = snapp.createUser("Bob", worker$);
+        final User[worker$,sn]  userBob = sn.createUser("Bob", worker$);
 
-        if (userBob.p equiv new principal@store (worker$,snapp)
-        &&  new label {*←snapp}   <= userBob.locationLabel // TODO: store ≽ locLbl
-        &&  userBob.locationLabel <= new label {*→snapp}   //
+        if (userBob.p equiv new principal@store (worker$,sn)
+        &&  new label {*←sn}   <= userBob.locationLabel // TODO: store ≽ locLbl
+        &&  userBob.locationLabel <= new label {*→sn}   //
         &&  new label {*←userBob.p} <= userBob.locationLabel
         ) {
 
-          final UserWrapper[{*→snapp}] aw = new UserWrapper[{*→snapp}]@store (store, worker$, snapp, userBob);
+          final UserWrapper[{*→sn}] aw = new UserWrapper[{*→sn}]@store (store, worker$, sn, userBob);
           store.getRoot().put("bob", aw);
 
-          final MapServer mapserv = (MapServer) store.getRoot().get("mapserv");
+          //final MapServer serv = (MapServer) store.getRoot().get("mapserv");
           userBob.locationInfo.add(userBob.friends);
    
-          userBob.location = new Location[userBob.locationLabel, {*→snapp}]@store(3,3);
+          userBob.location = new Location[userBob.locationLabel, {*→sn}]@store(3,3);
         
         } else throw new AssertionFailedError("userBob.p equiv (bob worker, snapp)");
       } else throw new AssertionFailedError("store actsfor snapp");

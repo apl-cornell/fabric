@@ -35,7 +35,6 @@ import fabric.dissemination.pastry.messages.MessageType;
 import fabric.dissemination.pastry.messages.Replicate;
 import fabric.dissemination.pastry.messages.ReplicateInterval;
 import fabric.worker.RemoteStore;
-import fabric.worker.Store;
 import fabric.worker.Worker;
 
 /**
@@ -119,14 +118,14 @@ public class Disseminator implements Application {
 
   private static final Continuation<Object, Exception> halt =
       new Continuation<Object, Exception>() {
-        @Override
-        public void receiveException(Exception result) {
-        }
+    @Override
+    public void receiveException(Exception result) {
+    }
 
-        @Override
-        public void receiveResult(Object result) {
-        }
-      };
+    @Override
+    public void receiveResult(Object result) {
+    }
+  };
 
   /**
    * Schedules a task on the task processing thread. When messages are received,
@@ -357,7 +356,7 @@ public class Disseminator implements Application {
     rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
     OidKeyHashMap<Long> skip = new OidKeyHashMap<Long>();
 
-    for (Pair<Pair<Store, Long>, Long> k : cache.timestamps()) {
+    for (Pair<Pair<RemoteStore, Long>, Long> k : cache.timestamps()) {
       rice.pastry.Id id =
           (rice.pastry.Id) idf.buildId(k.first + "/" + k.second);
       boolean send = shouldReplicate(deciderId, me, id, level);
@@ -385,10 +384,10 @@ public class Disseminator implements Application {
 
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
 
-        Map<Pair<Store, Long>, Glob> globs =
-            new HashMap<Pair<Store, Long>, Glob>();
+        Map<Pair<RemoteStore, Long>, Glob> globs =
+            new HashMap<Pair<RemoteStore, Long>, Glob>();
 
-        for (Pair<Pair<Store, Long>, Long> k : cache.sortedTimestamps()) {
+        for (Pair<Pair<RemoteStore, Long>, Long> k : cache.sortedTimestamps()) {
           Long skipTimestamp = skip.get(k.first.first, k.first.second);
           if (skipTimestamp != null && skipTimestamp >= k.second) {
             continue;
@@ -399,7 +398,7 @@ public class Disseminator implements Application {
           boolean send = shouldReplicate(me, senderId, id, level);
 
           if (send) {
-            RemoteStore c = (RemoteStore) k.first.first;
+            RemoteStore c = k.first.first;
             Long onum = k.first.second;
             Glob g = cache.get(c, onum);
             if (g.level() > level) continue;
@@ -456,8 +455,9 @@ public class Disseminator implements Application {
     process(new Executable<Void, RuntimeException>() {
       @Override
       public Void execute() {
-        for (Map.Entry<Pair<Store, Long>, Glob> e : msg.globs().entrySet()) {
-          RemoteStore c = (RemoteStore) e.getKey().first;
+        for (Map.Entry<Pair<RemoteStore, Long>, Glob> e : msg.globs()
+            .entrySet()) {
+          RemoteStore c = e.getKey().first;
           long onum = e.getKey().second;
           Glob g = e.getValue();
           cache.put(c, onum, g);

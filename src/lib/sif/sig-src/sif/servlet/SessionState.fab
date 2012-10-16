@@ -5,22 +5,19 @@ import fabric.lang.security.Principal;
  * Global state for a single session.
  */
 
-public class SessionState[label T] {
+public class SessionState {
 
-    public SessionState(String{T} sessionId_, SessionPrincipal{T} session) {    }
+    public SessionState(String{this} sessionId_, SessionPrincipal{this} session) {    }
     
-    protected SessionState(SessionPrincipal{T} session) {    }
+    protected SessionState(SessionPrincipal{this} session) {    }
     
-    public SessionState(Principal{T} sp, String{T} si) {    }
+    public SessionState(Principal{this} sp, String{this} si) {    }
 
-    public final SessionPrincipal{T} sessionPrincipal;
-    public final String{T}           sessionId;
+    public final SessionPrincipal{this}@{this.store$→} sessionPrincipal;
+    public final String{this}@{this.store$→}           sessionId;
 
-    public native final String{T;this} getSessionId();
+    public native final String{this} getSessionId();
 
-    public native final SessionPrincipal{T;this} sessionPrincipal(); 
+    public native final SessionPrincipal{this} sessionPrincipal(); 
 
-    // XXX Can the access label also be declassified?
-    public native static SessionState[{P←}]{P←} declassifySS{P←}(SessionState[{P→;P←}]{P→;P←} ss_, principal{P←} P)
-    where caller(P);
 }

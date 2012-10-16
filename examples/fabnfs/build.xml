@@ -44,26 +44,11 @@
       <classpath refid="fabric.classpath" />
     </javac>
 
-    <apply executable="bash"
-        parallel="true"
-        failonerror="true"
-        dir="${fabnfs.home}"
-        dest="${fabnfs.home}/classes"
-        relative="false"
-        skipemptyfilesets="true"
-        vmlauncher="false">
-      <arg value="${filc}" />
-      <arg line="${debug.flag}" />
-      <arg value="-d" />
-      <arg value="classes" />
-      <arg value="-sourcepath" />
-      <arg value="src" />
-      <arg value="-cp" />
-      <arg value="classes" />
-      <srcfile />
+    <filc dest="${fabnfs.home}/classes">
+      <arg value="-sourcepath" /> <arg value="src" />
+      <arg value="-cp" /> <arg value="classes" />
       <fileset dir="src" includes="fabnfs/*.fil" />
-      <globmapper from="*.fil" to="*.class" />
-    </apply>
+    </filc>
   </target>
 
   <target name="build-all" depends="build" />

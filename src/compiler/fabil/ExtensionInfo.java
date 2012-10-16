@@ -1,21 +1,15 @@
 package fabil;
 
-import static fabric.common.FabricLocationFactory.getLocation;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.tools.FileObject;
-import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 
 import polyglot.ast.NodeFactory;
@@ -44,8 +38,6 @@ import codebases.types.CBTypeEncoder;
 import codebases.types.CodebaseResolver;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
-import codebases.types.PathResolver;
-import codebases.types.SafeResolver;
 import codebases.types.SimpleResolver;
 import fabil.ast.FabILNodeFactory;
 import fabil.ast.FabILNodeFactory_c;
@@ -56,10 +48,10 @@ import fabil.types.ClassFile;
 import fabil.types.ClassFile_c;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILTypeSystem_c;
-import fabric.common.FabricLocation;
+import fabric.LocalResolver;
 import fabric.common.NSUtil;
 import fabric.filemanager.FabricFileManager;
-import fabric.filemanager.FabricSourceObject;
+import fabric.filemanager.FabricFileObject;
 import fabric.lang.FClass;
 import fabric.lang.security.LabelUtil;
 import fabric.worker.Worker;
@@ -68,11 +60,9 @@ import fabric.worker.Worker;
  * Extension information for FabIL extension.
  */
 public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
-    codebases.frontend.ExtensionInfo {
-  protected static FabricLocation platform_ns = getLocation(false,
-      URI.create("fab:platform"));
-  protected static FabricLocation local_ns = getLocation(false,
-      URI.create("fab:local"));
+codebases.frontend.ExtensionInfo {
+  protected static URI platform_ns = URI.create("fab:platform");
+  protected static URI local_ns = URI.create("fab:local");
 
   static {
     // force Topics to load
@@ -92,18 +82,48 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   public FileManager createFileManager() {
     return new FabricFileManager(this);
   }
-  
+
   @Override
-  protected void configureFileManager() {
+  protected void configureFileManager() throws IOException {
     FabILOptions options = getOptions();
-    setFabricLocations(options.bootclasspath(), extFM);
-    setFabricLocations(options.classpath(), extFM);
-    setFabricLocations(options.signaturepath(), extFM);
-    setFabricLocations(options.sourcepath(), extFM);
-    setFabricLocations(Collections.singleton(options.outputLocation()), extFM);
-    setFabricLocations(Collections.singleton(options.classOutputDirectory()),
-        extFM);
-    setJavaClasspath(options, extFM);
+    ((FabricFileManager) extFM).setLocation(options.classpath,
+        options.classpathURIs());
+    ((FabricFileManager) extFM).setLocation(options.source_path,
+        options.sourcepathURIs());
+
+    extFM.setLocation(options.source_output,
+        Collections.singleton(options.sourceOutputDirectory()));
+    extFM.setLocation(options.class_output,
+        Collections.singleton(options.classOutputDirectory()));
+
+    List<File> platform_directories = new ArrayList<File>();
+    platform_directories.addAll(options.signaturepath());
+    platform_directories.addAll(options.bootclasspath());
+    extFM.setLocation(options.bootclasspath, platform_directories);
+  }
+
+  @Override
+  public void configureFileManagerForPostCompiler() throws IOException {
+    FabILOptions opt = getOptions();
+
+    extFM.setLocation(StandardLocation.PLATFORM_CLASS_PATH,
+        opt.defaultPlatformClasspath());
+
+    List<File> sourcepath =
+        Collections.singletonList(opt.sourceOutputDirectory());
+    extFM.setLocation(StandardLocation.SOURCE_PATH, sourcepath);
+
+    List<File> classpath = new ArrayList<File>();
+    classpath.addAll(opt.bootclasspathDirectories());
+    for (URI u : opt.classpathURIs()) {
+      if (u.getScheme().equals("file")) {
+        classpath.add(new File(u));
+      }
+    }
+    extFM.setLocation(StandardLocation.CLASS_PATH, classpath);
+
+    List<File> classout = Collections.singletonList(opt.classOutputDirectory());
+    extFM.setLocation(StandardLocation.CLASS_OUTPUT, classout);
   }
 
   @Override
@@ -120,7 +140,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   protected Scheduler createScheduler() {
     return new FabILScheduler(this);
   }
-  
+
   @Override
   public ClassFile createClassFile(FileObject classFileSource, byte[] code)
       throws IOException {
@@ -162,34 +182,6 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
     }
   }
 
-  private void setFabricLocations(Collection<FabricLocation> locations,
-      StandardJavaFileManager fm) {
-    for (FabricLocation location : locations) {
-      if (location.isFileReference()) {
-        try {
-          fm.setLocation(location,
-              Collections.singleton(new File(location.getUri())));
-        } catch (IOException e) {
-          throw new InternalCompilerError(e);
-        }
-      }
-    }
-  }
-
-  private void setJavaClasspath(FabILOptions options, StandardJavaFileManager fm) {
-    Set<File> s = new LinkedHashSet<File>();
-    s.addAll(options.javaClasspathDirs());
-    for (FabricLocation location : options.bootclasspath())
-      if (location.isFileReference()) s.add(new File(location.getUri()));
-    for (FabricLocation location : options.classpath())
-      if (location.isFileReference()) s.add(new File(location.getUri()));
-    try {
-      fm.setLocation(StandardLocation.CLASS_PATH, s);
-    } catch (IOException e) {
-      throw new InternalCompilerError(e);
-    }
-  }
-
   @Override
   public FabILTypeSystem typeSystem() {
     return (FabILTypeSystem) super.typeSystem();
@@ -218,8 +210,8 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   @Override
   public FileSource createFileSource(FileObject f, boolean user)
       throws IOException {
-    if (f instanceof FabricSourceObject) {
-      fabric.lang.Object obj = ((FabricSourceObject) f).getData();
+    if (f instanceof FabricFileObject) {
+      fabric.lang.Object obj = ((FabricFileObject) f).getData();
       if (!(obj instanceof FClass))
         throw new IOException(
             "Expected an FClass inside the FabricSourceObject instead of a "
@@ -236,8 +228,9 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
     } else {
       if (Report.should_report(Report.loader, 2))
         Report.report(2, "Creating filesource from " + f);
-
-      return new LocalSource(f, user, localNamespace());
+      URI ns =
+          getOptions().platformMode() ? platformNamespace() : localNamespace();
+          return new LocalSource(f, user, ns);
     }
   }
 
@@ -247,50 +240,33 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
    * @param ns
    * @return
    */
-  public NamespaceResolver createNamespaceResolver(FabricLocation ns) {
+  public NamespaceResolver createNamespaceResolver(URI ns) {
+    if (ns == null) throw new NullPointerException("Namespace is null");
     if (Report.should_report("resolver", 3))
       Report.report(3, "Creating namespace resolver for " + ns);
 
     FabILOptions opt = getOptions();
-    // XXX: Order is important here since the localnamespace may
-    // by the platform namespace when compiling the runtime
     if (ns.equals(platformNamespace())) {
-      // A platform resolver is really just a path resolver that is treated
-      // specially. Loading the appropriate platform classes and signatures
-      // is handled by the classpathloader and sourceloader
-
-      List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
-      path.addAll(typeSystem().signatureResolvers());
-      path.addAll(typeSystem().runtimeResolvers());
-      path.addAll(typeSystem().javaruntimeResolvers());
-      return new PathResolver(this, ns, path);
-    } else if (ns.equals(localNamespace())) {
-      List<NamespaceResolver> path = new ArrayList<NamespaceResolver>();
-      path.add(typeSystem().platformResolver());
-      path.addAll(typeSystem().classpathResolvers());
-      path.addAll(typeSystem().sourcepathResolvers());
-      return new PathResolver(this, ns, path, opt.codebaseAliases());
-
-    } else if (ns.isFabricReference()) {
-      // Codebases may never resolve platform types, so always resolve against
-      // the platformResolver first.
-      return new SafeResolver(this, new CodebaseResolver(this, ns));
-    } else if (ns.isFileReference()) {
       return new SimpleResolver(this, ns);
+    } else if (ns.equals(localNamespace())) {
+      return new LocalResolver(this, ns, null, opt.codebaseAliases());
+    } else if (ns.getScheme().equals("fab") && !ns.isOpaque()) {
+      return new CodebaseResolver(this, ns);
     } else throw new InternalCompilerError("Unexpected scheme in URI: " + ns);
+
   }
 
   // TODO: support multiple platform namespaces
 
   @Override
-  public FabricLocation platformNamespace() {
+  public URI platformNamespace() {
     return platform_ns;
   }
 
   // TODO: support multiple local namespaces
   @Override
-  public FabricLocation localNamespace() {
-    return getOptions().platformMode() ? platformNamespace() : local_ns;
+  public URI localNamespace() {
+    return local_ns;
   }
 
   @Override
@@ -302,45 +278,19 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   }
 
   @Override
-  public String namespaceToJavaPackagePrefix(FabricLocation ns) {
+  public String namespaceToJavaPackagePrefix(URI ns) {
     if (ns.equals(localNamespace()) || ns.equals(platformNamespace()))
       return "";
-    else if (ns.isFabricReference()) {
-      return NSUtil.javaPackageName(ns.getUri()) + ".";
+    else if (ns.getScheme().equals("fab")) {
+      return NSUtil.javaPackageName(ns) + ".";
     } else {
-      throw new InternalCompilerError("Cannot create Java package prefix for "
-          + ns);
+      throw new InternalCompilerError(
+          "Cannot create Java package prefix for " + ns);
     }
-
   }
 
   @Override
-  public List<FabricLocation> classpath() {
-    return getOptions().classpath();
-  }
-
-  @Override
-  public List<FabricLocation> sourcepath() {
-    return getOptions().sourcepath();
-  }
-
-//  @Override
-//  public List<FabricLocation> filsignaturepath() {
-//    return getFabILOptions().filsignaturepath();
-//  }
-//
-//  @Override
-//  public List<FabricLocation> filbootclasspath() {
-//    return getFabILOptions().filbootclasspath();
-//  }
-
-  @Override
-  public List<FabricLocation> bootclasspath() {
-    return getOptions().bootclasspath();
-  }
-
-  @Override
-  public Map<String, FabricLocation> codebaseAliases() {
+  public Map<String, URI> codebaseAliases() {
     return getOptions().codebaseAliases();
   }
 
@@ -369,4 +319,18 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
     else return super.getCompileGoal(job);
   }
 
+  @Override
+  public List<URI> classpath() {
+    return getOptions().classpathURIs();
+  }
+
+  @Override
+  public List<URI> sourcepath() {
+    return getOptions().sourcepathURIs();
+  }
+
+  @Override
+  public List<File> bootclasspath() {
+    return getOptions().bootclasspathDirectories();
+  }
 }

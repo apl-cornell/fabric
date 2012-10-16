@@ -5,7 +5,7 @@ import fabric.lang.security.SecurityCache;
 /**
  * A cache of acts-for relationships. This provides only the hooks needed for
  * the transaction manager to do its thing. All other functionality is provided
- * in fabric.lang.security.AuthorizationCache. Note that the methods implemented
+ * in fabric.lang.security.SecurityCache. Note that the methods implemented
  * here should all be final and package-protected. Any abstract methods should
  * be protected.
  */
@@ -20,4 +20,9 @@ public abstract class AbstractSecurityCache {
    * the given cache will no longer be used.
    */
   protected abstract void set(SecurityCache cache);
+
+  /**
+   * Merges this cache with the top-level LabelCache.
+   */
+  protected abstract void mergeWithTopLevel();
 }

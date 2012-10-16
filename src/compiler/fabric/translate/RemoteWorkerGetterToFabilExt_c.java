@@ -19,9 +19,7 @@ public class RemoteWorkerGetterToFabilExt_c extends ExprToJavaExt_c {
     RemoteWorkerGetter rcg = (RemoteWorkerGetter) node();
 
     return nf.Call(rcg.position(),
-        rw.qq().parseExpr("worker$"),
-        // nf.Local(Position.compilerGenerated(),
-        // nf.Id(Position.compilerGenerated(), "worker$")),
+        rw.qq().parseExpr("Worker.getWorker()"),
         nf.Id(Position.compilerGenerated(), "getWorker"),
         rcg.remoteWorkerName());
   }

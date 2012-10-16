@@ -1,5 +1,6 @@
 package fabric.types;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -12,9 +13,11 @@ import jif.types.JifConstructorInstance;
 import jif.types.JifMethodInstance;
 import jif.types.JifParsedPolyType_c;
 import jif.types.LabelLeAssertion;
+import jif.types.LabelSubstitution;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
+import jif.types.label.ThisLabel;
 import jif.types.principal.Principal;
 import polyglot.frontend.Source;
 import polyglot.types.ConstructorInstance;
@@ -22,12 +25,12 @@ import polyglot.types.DeserializedClassInitializer;
 import polyglot.types.FieldInstance;
 import polyglot.types.LazyClassInitializer;
 import polyglot.types.MethodInstance;
+import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseClassType;
-import fabric.common.FabricLocation;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements
 FabricParsedClassType {
@@ -35,7 +38,7 @@ FabricParsedClassType {
   private transient ConfPolicy accessPolicy = null;
   private transient boolean fieldLabelFound = false;
 
-  protected FabricLocation canonical_ns = null;
+  protected URI canonical_ns = null;
   protected Set<CodebaseClassType> namespaceDependencies;
 
   public FabricParsedClassType_c() {
@@ -83,11 +86,11 @@ FabricParsedClassType {
   @Override
   // XXX: These methods should be revisited post Oakland.
   public Label updateLabel() {
-    FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
+    final FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
 
     if (!fieldLabelFound) {
       if (ts.isFabricClass(this)) {
-        FabricClassType superType = (FabricClassType) superType();
+        final FabricClassType superType = (FabricClassType) superType();
 
         Label classLabel =
             ts.pairLabel(Position.compilerGenerated(),
@@ -104,6 +107,27 @@ FabricParsedClassType {
           if (ts.isLabeled(t)) {
             Label tslabel = ts.labelOfType(t);
             classLabel = trustUpperBound(classEnv, classLabel, tslabel);
+          }
+        }
+        if (superLabel != null) {
+          final FabricClassType subType = this;
+          LabelSubstitution replaceThis = new LabelSubstitution() {
+
+            @Override
+            public Label substLabel(Label L) throws SemanticException {
+              if (L instanceof ThisLabel) {
+                ThisLabel ths = (ThisLabel) L;
+                if (ths.classType().equals(superType))
+                  return ts.thisLabel(ths.position(), subType);
+              }
+              return L;
+            }
+
+          };
+          try {
+            superLabel = superLabel.subst(replaceThis);
+          } catch (SemanticException e) {
+            throw new InternalCompilerError(e);
           }
         }
         singleFieldLabel =
@@ -225,12 +249,12 @@ FabricParsedClassType {
   }
 
   @Override
-  public void setCanonicalNamespace(FabricLocation ns) {
+  public void setCanonicalNamespace(URI ns) {
     this.canonical_ns = ns;
   }
 
   @Override
-  public FabricLocation canonicalNamespace() {
+  public URI canonicalNamespace() {
     // HACK superclass constructor accesses canonical namespace before it can be
     // initialized.
     if (canonical_ns == null)

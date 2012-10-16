@@ -87,7 +87,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
     }
 
     // use the appropriate string for the constructor invocation.
-    if (ts.isJifClass(ct)) {
+    if (!ts.isSignature(ct)) {
       String name = ClassDeclToFabilExt_c.jifConstructorTranslatedName(ct);
       New newExpr =
           nf.New(n.position(), n.qualifier(), n.objectType(), loc, paramargs);

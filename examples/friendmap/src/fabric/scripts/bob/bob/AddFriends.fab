@@ -32,7 +32,7 @@ where
     final Snapp snappP = (Snapp) snappStore.getRoot().get("snapp");
     
     if (snappStore actsfor snappP
-            &&  snappP.store equiv snappStore
+            &&  snappP.store$ equiv snappStore
             &&  snapp.Snapp.provider <= new label {*←snappP}@snappStore
             ) {
     

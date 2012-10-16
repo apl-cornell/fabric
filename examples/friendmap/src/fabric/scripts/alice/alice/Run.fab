@@ -33,7 +33,7 @@ where
     final Snapp snappP = (Snapp) snappStore.getRoot().get("snapp");
     
     if (snappStore actsfor snappP
-            &&  snappP.store equiv snappStore
+            &&  snappP.store$ equiv snappStore
             &&  snapp.Snapp.provider <= new label {*←snappP}@snappStore
             ) {
 
@@ -42,7 +42,9 @@ where
 
         final User[aw.userOwner,aw.userNetwork] userAlice = aw.user;
 
-        if (userAlice.p equiv new principal (aw.userOwner, aw.userNetwork) && userAlice.p actsfor userAlice.friends
+        if (userAlice.p equiv new principal (aw.userOwner, aw.userNetwork) 
+                && new label {*->userAlice.p} <= new label {*->worker$}
+                && userAlice.p actsfor userAlice.friends
                 &&  worker$ actsfor aw.userOwner
                 &&  worker$ actsfor userAlice.friends
         ) {

@@ -1,0 +1,41 @@
+package fabric.principals;
+
+import fabric.util.Map;
+import fabric.Config;
+
+public class HelloServEP extends ExternalPrincipal {
+  
+  public HelloServEP() {
+    super("hello");
+  }
+  
+  public static HelloServEP{⊤←} getInstance{⊤←}() {
+    atomic {
+      FabricWorker cl = FabricWorker.getWorker();
+      if (cl != null) {
+        final Store helloStore = cl.getStore(Config.helloStoreName);
+        if (helloStore != null) {
+          Map rootMap = helloStore.getRoot();
+          if (rootMap != null) {
+            Object obj = rootMap.get(Config.helloServPrincipalMapKey);
+            HelloServEP helloEP = null;
+            if (obj instanceof HelloServEP) {
+              helloEP = (HelloServEP) obj;
+            } else {
+              helloEP = new HelloServEP@helloStore();
+              rootMap.put(Config.helloServPrincipalMapKey, helloEP);
+            }
+            return helloEP;
+          }
+        }
+      }
+      
+      return null;
+    }
+  }
+
+  // Don't much care what store is, we're going to create it where we want
+  public static HelloServEP{⊤←} getInstance{⊤←}(Store store) {
+      return getInstance();
+  }
+}

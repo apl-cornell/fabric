@@ -159,9 +159,9 @@ public final class RemoteWorker extends RemoteNode {
    */
   public Principal getPrincipal() {
     try {
-      SubSocket socket = subSocketFactory.createSocket(name);
+      SubSocket socket = getSocket(subSocketFactory);
       Principal principal = socket.getPrincipal();
-      socket.close();
+      recycle(subSocketFactory, socket);
       return principal;
     } catch (IOException e) {
       throw new NotImplementedException(e);

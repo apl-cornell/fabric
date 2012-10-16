@@ -172,7 +172,8 @@ public final class SysUtil {
    * FabricClassRef.
    */
   public static byte[] hashFClass(FabricClassRef fcr) {
-    Class<? extends fabric.lang.Object> clazz = fcr.toClass();
+    Class<? extends fabric.lang.Object> clazz = fcr.toDeclaringClass();
+
     try {
       return classHashFieldValue(clazz);
     } catch (NoSuchFieldException e) {

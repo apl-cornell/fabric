@@ -1,0 +1,81 @@
+<!--
+  This is the Apache Ant build file for the Fabric tree example
+-->
+
+<project name="tree" default="build-all" basedir=".">
+  <description>
+    Build a simple binary tree application
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../../common.xml" />
+  <import file="${fabric.home}/src/lib/sif/common.xml" />
+
+  <dirname property="tree.home" file="${ant.file.tree}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${tree.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${tree.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build-all" depends="build-tree" />
+  <target name="all" depends="build-all" />
+
+  <target name="build-tree" depends=""
+          description="Builds the tree example">
+    <fabc dest="${tree.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${tree.home}" />
+      <arg value="-cp"         /> <arg value="${tree.home}/classes" />
+      <arg value="-trusted-providers"/>
+<!--
+        <arg value="-report" /> <arg value="solver=5" />
+        <arg value="-debugpositions"/>
+        <arg value="-dump"   /> <arg value="FabricToFabilRewriter"/>
+        <arg value="-dump"   /> <arg value="PrincipalCastAdder"/>
+        <arg value="-report" /> <arg value="frontend=1"/>
+        <arg value="-report" /> <arg value="visit=2"/>
+        <arg value="-report" /> <arg value="labelEnv=5" />
+        <arg value="-print"  /> <arg value="RemoteCallWrapperUpdater"/>
+        <arg value="-print"  /> <arg value="FieldLabelResolver"/>
+        <arg value="-report" /> <arg value="error=5"/>
+        <arg value="-report" /> <arg value="errors=5"/>
+        <arg value="-report" /> <arg value="debug=5" />
+-->
+      <fileset dir="${tree.home}" includes="*.fab"/>
+    </fabc>
+
+    <!-- Uncomment this part to compile from the fabil code
+    <filc dest="${tree.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${tree.home}" />
+      <arg value="-cp"         /> <arg value="${tree.home}/classes" />
+      <fileset dir="${tree.home}" includes="*.fil" />
+    </filc>
+    -->
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

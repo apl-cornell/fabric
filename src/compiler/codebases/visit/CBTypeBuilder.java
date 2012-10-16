@@ -1,5 +1,7 @@
 package codebases.visit;
 
+import java.net.URI;
+
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.Job;
 import polyglot.types.ClassType;
@@ -12,11 +14,10 @@ import polyglot.visit.TypeBuilder;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
-import fabric.common.FabricLocation;
 
 public class CBTypeBuilder extends TypeBuilder {
   protected final CodebaseTypeSystem ts;
-  protected final FabricLocation ns;
+  protected final URI ns;
 
   public CBTypeBuilder(Job job, CodebaseTypeSystem ts, NodeFactory nf) {
     super(job, ts, nf);

@@ -19,6 +19,7 @@ import fabric.common.net.SubServerSocketFactory.Acceptor.ConnectionQueue;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.handshake.ShakenSocket;
 import fabric.common.net.naming.NameService;
+import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.SocketAddress;
 
 /**
@@ -41,8 +42,9 @@ public class SubServerSocketFactory {
    *          the ServerSocketFactory that will be used to create the
    *          ServerSockets used to implement SubServerSockets returned by this
    */
-  public SubServerSocketFactory(Protocol handshake, NameService nameService) {
-    this(handshake, nameService, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
+  public SubServerSocketFactory(Protocol handshake, NameService nameService,
+      PortType portType) {
+    this(handshake, nameService, portType, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
   }
 
   /**
@@ -54,9 +56,10 @@ public class SubServerSocketFactory {
    *          ServerSockets used to implement SubServerSockets returned by this
    */
   public SubServerSocketFactory(Protocol handshake, NameService nameService,
-      int maxOpenConnectionsPerChannel) {
+      PortType portType, int maxOpenConnectionsPerChannel) {
     this.handshake = handshake;
     this.nameService = nameService;
+    this.portType = portType;
     this.maxOpenConnectionsPerChannel = maxOpenConnectionsPerChannel;
 
     this.acceptors = new HashMap<SocketAddress, Acceptor>();
@@ -96,6 +99,7 @@ public class SubServerSocketFactory {
 
   private final Protocol handshake;
   private final NameService nameService;
+  private final PortType portType;
   private final Map<SocketAddress, Acceptor> acceptors;
   private final int maxOpenConnectionsPerChannel;
 
@@ -110,7 +114,7 @@ public class SubServerSocketFactory {
    */
   synchronized Acceptor.ConnectionQueue bind(String name, int backlog)
       throws IOException {
-    SocketAddress addr = nameService.localResolve(name);
+    SocketAddress addr = nameService.localResolve(name, portType);
 
     Acceptor a = acceptors.get(addr);
     if (a != null) {
@@ -183,6 +187,8 @@ public class SubServerSocketFactory {
       try {
         NETWORK_CONNECTION_LOGGER.log(Level.INFO,
             "receiving new connection from \"{0}\"", s.getInetAddress());
+
+        s.setTcpNoDelay(true);
 
         ShakenSocket conn = handshake.receive(s);
 

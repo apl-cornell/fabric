@@ -47,7 +47,7 @@ public interface Principal extends fabric.lang.Object {
   PrivateKeyObject getPrivateKeyObject();
 
   public static class _Proxy extends fabric.lang.Object._Proxy implements
-      Principal {
+  Principal {
 
     public _Proxy(Principal._Impl impl) {
       super(impl);
@@ -105,29 +105,20 @@ public interface Principal extends fabric.lang.Object {
     public PrivateKeyObject getPrivateKeyObject() {
       return ((Principal) fetch()).getPrivateKeyObject();
     }
-    
+
     public static Principal jif$cast$fabric_lang_security_Principal(Object o) {
       return Principal._Impl.jif$cast$fabric_lang_security_Principal(o);
     }
   }
 
   abstract public static class _Impl extends fabric.lang.Object._Impl implements
-      Principal {
+  Principal {
 
     private PublicKey publicKey;
     private PrivateKeyObject privateKeyObject;
 
     public _Impl(Store store) {
       super(store);
-
-      // Generate a new key pair for this principal.
-      KeyPair keyPair = Crypto.genKeyPair();
-      this.publicKey = keyPair.getPublic();
-
-      this.privateKeyObject =
-          new PrivateKeyObject._Impl(store)
-              .fabric$lang$security$PrivateKeyObject$((Principal) $getProxy(),
-                  keyPair.getPrivate());
     }
 
     @Override
@@ -152,6 +143,15 @@ public interface Principal extends fabric.lang.Object {
     @Override
     public Principal fabric$lang$security$Principal$() {
       fabric$lang$Object$();
+      // Generate a new key pair for this principal.
+      KeyPair keyPair = Crypto.genKeyPair();
+      this.publicKey = keyPair.getPublic();
+
+      this.privateKeyObject =
+          new PrivateKeyObject._Impl($getStore())
+      .fabric$lang$security$PrivateKeyObject$((Principal) $getProxy(),
+          keyPair.getPrivate());
+
       return (Principal) this.$getProxy();
     }
 
@@ -184,7 +184,7 @@ public interface Principal extends fabric.lang.Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-        throws IOException {
+            throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
     }
 
@@ -207,7 +207,7 @@ public interface Principal extends fabric.lang.Object {
       TransactionManager.getInstance().registerRead(this);
       return privateKeyObject;
     }
-    
+
     public static Principal jif$cast$fabric_lang_security_Principal(Object o) {
       //XXX: What is the right access label check??
       return (Principal)fabric.lang.Object._Proxy.$getProxy(o);
@@ -216,7 +216,7 @@ public interface Principal extends fabric.lang.Object {
 
   interface _Static extends fabric.lang.Object, Cloneable {
     final class _Proxy extends fabric.lang.Object._Proxy implements
-        Principal._Static {
+    Principal._Static {
 
       public _Proxy(Principal._Static._Impl impl) {
         super(impl);
@@ -231,19 +231,19 @@ public interface Principal extends fabric.lang.Object {
       static {
         Principal._Static._Impl impl =
             (Principal._Static._Impl) fabric.lang.Object._Static._Proxy
-                .$makeStaticInstance(Principal._Static._Impl.class);
+            .$makeStaticInstance(Principal._Static._Impl.class);
         $instance = (Principal._Static) impl.$getProxy();
         impl.$init();
       }
     }
 
     class _Impl extends fabric.lang.Object._Impl implements
-        fabric.lang.security.Principal._Static {
+    fabric.lang.security.Principal._Static {
 
       public _Impl(Store store) throws UnreachableNodeException {
         super(store);
       }
-      
+
       @Override
       protected fabric.lang.Object._Proxy $makeProxy() {
         return new fabric.lang.security.Principal._Static._Proxy(this);

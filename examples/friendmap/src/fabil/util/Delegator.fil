@@ -4,12 +4,10 @@ package util;
  * Convenience principal class the delegates to a single owner.
  */
 public class Delegator extends AbstractPrincipal {
-  protected Store      store;
   protected String     name;
   protected Principal  owner;
 
   public Delegator util$Delegator$(
-    Store      store,
     String     name,
     Principal  owner
   )
@@ -18,13 +16,25 @@ public class Delegator extends AbstractPrincipal {
     // and thus {owner←} ⊑ {this←}
     // we just can't convince the compiler of this fact.
 
-    this.fabric$lang$security$AbstractPrincipal$(name);
     this.owner = owner;
     this.name  = name;
-    this.store = store;
-
+    this.fabric$lang$security$AbstractPrincipal$(name);
     return this;
   }
+  
+  public Delegator util$Delegator$(
+      String     name
+    )
+    {
+      // these endorsements are safe, because owner ≽ this,
+      // and thus {owner←} ⊑ {this←}
+      // we just can't convince the compiler of this fact.
+
+      this.owner = this.$getStore().getPrincipal();
+      this.name  = name;
+      this.fabric$lang$security$AbstractPrincipal$(name);
+      return this;
+    }
 
   private void jif$init$() {}
 

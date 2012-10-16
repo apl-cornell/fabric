@@ -1,7 +1,6 @@
 package fabric.visit;
 
-import static fabric.common.FabricLocationFactory.getLocation;
-
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,7 +9,6 @@ import java.util.List;
 import jif.translate.JifToJavaRewriter;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.Expr;
-import polyglot.ast.Import;
 import polyglot.ast.Node;
 import polyglot.ast.SourceFile;
 import polyglot.ast.TopLevelDecl;
@@ -30,7 +28,6 @@ import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
 import fabric.ExtensionInfo;
 import fabric.ast.FabricNodeFactory;
-import fabric.common.FabricLocation;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.types.FabricContext;
@@ -46,7 +43,10 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     TOPICS.add("mobile");
   }
 
-  protected boolean principalExpected = false;
+  // protected boolean principalExpected = false;
+
+  /** An expression used to instantiate the 'this' principal in static contexts */
+  protected Expr staticThisExpr;
 
   public FabricToFabilRewriter(Job job, FabricTypeSystem fab_ts,
       FabricNodeFactory fab_nf, fabil.ExtensionInfo fabil_ext) {
@@ -64,7 +64,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
       // we should use the published namespace.
 
       Codebase cb = fab_ts.codebaseFromNS(src.canonicalNamespace());
-      FabricLocation published_ns = getLocation(false, NSUtil.namespace(cb));
+      URI published_ns = NSUtil.namespace(cb);
       derived = src.publishedSource(published_ns, newName);
     } else {
       // Otherwise, we just create a derived source with a new name
@@ -159,7 +159,8 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
         // cd is public, we will put it in its own source file.
         SourceFile sf =
             java_nf().SourceFile(Position.compilerGenerated(), n.package_(),
-                Collections.<Import> emptyList(), Collections.singletonList((TopLevelDecl) cd));
+//                Collections.<Import> emptyList(),
+                n.imports(), Collections.singletonList((TopLevelDecl) cd));
 
         String newName =
             cd.name() + "." + job.extensionInfo().defaultFileExtension();
@@ -177,6 +178,26 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
 
     this.additionalClassDecls.clear();
     return n.decls(l);
+  }
+
+  /**
+   * Provide an expression to instantiate "this" principals with in static contexts.
+   * This is primarily used to replace occurences of "this" in translated label
+   * expressions in the body of compiler-generated instanceof methods.
+   */
+  public void setStaticThisExpr(Expr e) {
+    staticThisExpr = e;
+  }
+
+  /**
+   * Clear "this" principal expression.
+   */
+  public void clearStaticThisExpr() {
+    staticThisExpr = null;
+  }
+
+  public Expr staticThisExpr() {
+    return staticThisExpr;
   }
 
 }

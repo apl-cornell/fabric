@@ -1,0 +1,9 @@
+#!/bin/bash
+
+APP_HOME="$(dirname $0)/.."
+BIN_DIR="$(dirname $0)"
+
+"${BIN_DIR}/start-worker" customer "${APP_HOME}/web/customer" --port 8080 &
+"${BIN_DIR}/start-worker" bankweb "${APP_HOME}/web/bank" --port 8081 &
+"${BIN_DIR}/start-worker" airlineweb "${APP_HOME}/web/airline" --port 8082 &
+

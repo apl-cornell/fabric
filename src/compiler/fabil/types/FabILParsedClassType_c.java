@@ -1,6 +1,7 @@
 package fabil.types;
 
 import java.io.IOException;
+import java.net.URI;
 import java.security.MessageDigest;
 import java.util.List;
 
@@ -20,17 +21,17 @@ import fabil.ExtensionInfo;
 import fabil.visit.ClassHashGenerator;
 import fabil.visit.ProviderRewriter;
 import fabric.common.Crypto;
-import fabric.common.FabricLocation;
+import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
 public class FabILParsedClassType_c extends ParsedClassType_c implements
-    FabILParsedClassType {
+FabILParsedClassType {
 
   /**
    * The namespace used to resolve the dependencies of this class
    */
-  protected FabricLocation canonical_ns;
+  protected URI canonical_ns;
 
   /**
    * Memoizes a secure hash of the class. If this class-type information is
@@ -97,19 +98,32 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
       if (package_() == null) {
         return extInfo.namespaceToJavaPackagePrefix(canonical_ns) + name();
       }
-
-      // XXX: Never use short name
-      // if (c != null && !Options.global.fully_qualified_names
-      // && codebase == null) {
-      // try {
-      // Named x = c.find(name());
-      //
-      // if (ts.equals(this, x)) {
-      // return name();
-      // }
-      // } catch (SemanticException e) {
-      // }
-      // }
+      //FIXME: To avoid codegen bugs where the package of a class
+      // conflicts with an in-scope variable, we should avoid generating
+      // fully qualified names whenever possible.
+      // Unfortunately, since the ProxyRewriter transforms our FabIL AST into
+      // java in-place, there are a lot of Ambiguous nodes in the tree,
+      // causing the Translator to set the context to null.
+      // When the context is null, the only option is to create a FQ name,
+      // so we can't avoid these kinds of naming conflicts.
+      // The best option would be to refactor the FabIL->Java phase
+      // into an ExtensionRewriter pass.
+      // TODO: Also -- there are some remaining issues regarding classes in the
+      // same Fabric package that are linked from different codebases.
+      // these need to either be emitted as FQ names, or an import statement
+      // needs to be added to the emitted Java source.
+//      if (c != null && !Options.global.fully_qualified_names
+//      // Have to be explicit about default imports
+//          && !ts.defaultPackageImports().contains(package_().fullName())) {
+//        try {
+//          Named x = c.find(name());
+//
+//          if (ts.equals(this, x)) {
+//            return name();
+//          }
+//        } catch (SemanticException e) {
+//        }
+//      }
 
       return extInfo.namespaceToJavaPackagePrefix(canonical_ns)
           + package_().translate(c) + "." + name();
@@ -123,7 +137,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
     QQ qq = pr.qq();
     if (!canonical_ns.equals(extInfo.localNamespace())
         && !canonical_ns.equals(extInfo.platformNamespace())) {
-      Codebase codebase = canonical_ns.getCodebase();
+      Codebase codebase = NSUtil.fetch_codebase(canonical_ns);
       FClass fclass = codebase.resolveClassName(fullName());
       // Convert to an OID.
       String storeName = fclass.$getStore().name();
@@ -143,7 +157,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
   }
 
   @Override
-  public FabricLocation canonicalNamespace() {
+  public URI canonicalNamespace() {
     return canonical_ns;
   }
 

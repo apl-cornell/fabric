@@ -1,5 +1,6 @@
 package fabil.frontend;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -60,7 +61,6 @@ import fabil.visit.StaticInitializerCollector;
 import fabil.visit.StoreGetterRewriter;
 import fabil.visit.ThreadRewriter;
 import fabil.visit.UpdatedVariableFinder;
-import fabric.common.FabricLocation;
 
 public class FabILScheduler extends JLScheduler implements CBScheduler {
   protected ExtensionInfo extInfo;
@@ -599,7 +599,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
   }
 
   @Override
-  public Goal TypeExists(FabricLocation ns, String name) {
+  public Goal TypeExists(URI ns, String name) {
     return CBTypeExists.create(this, ns, name);
   }
 

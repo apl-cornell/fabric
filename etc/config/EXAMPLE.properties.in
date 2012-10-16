@@ -1,40 +1,116 @@
 # This is an example node configuration file.
-# Copy this file to <node name>.properties and edit that file.
+#
+# Copy this file to APP_HOME/etc/config/NODE_NAME.properties and
+# edit that file.
 
 
-# File in ${FABRIC_HOME}/etc/keys that holds the node's private key store.
-# This is optional.  By default, this is <node name>.keystore.
+########################################################################
+#                          Common parameters                           #
+########################################################################
+
+# The password for the node's private keystore file.
+
+fabric.node.password = password
+
+
+# The file in the APP_HOME/etc/keys directory that holds the node's
+# private key store. This is optional.
+#
+# By default, this is NODE_NAME.keystore.
 #
 # Create the private key store with:
-#   ${FABRIC_HOME}/bin/genkey <node name>
+#   ${FABRIC_HOME}/bin/genkey --app-home APP_HOME NODE_NAME
 
-#fabric.node.keystore = node.name.example.keystore
-
-
-
-# The name of the worker's home store.
-# This is required for workers.  It specifies where the worker's principal
-# object is to be created.
-
-#fabric.worker.homeStore = store.name.example
+#fabric.node.keystore = fabric.example.net.keystore
 
 
+# The IP address or DNS name that this node can be reached at. This is
+# optional.
+#
+# By default, this is NODE_NAME.
 
-# The port for the worker to listen on for remote-call requests.
-# This is optional.
+#fabric.node.hostname = fabric.example.net
+
+
+# The name of the class for the dissemination-layer implementation to be
+# used. This is optional.
+#
+# Valid options:
+#   - fabric.dissemination.DummyFetchManager
+#   - fabric.dissemination.PastryFetchManager
+#
+# By default, this is fabric.dissemination.PastryFetchManager.
+
+# fabric.node.fetchmanager.class = fabric.dissemination.PastryFetchManager
+
+
+# The port for the worker to listen on for remote-call requests. This is
+# optional.
+#
+# By default, this is 3372.
 
 #fabric.worker.port    = 3372
 
 
-
-# The port for the store to listen on.
+# The port for the worker to listen on for administrative connections.
 # This is optional.
+#
+# By default, this is 3572.
+
+#fabric.worker.adminPort    = 3572
+
+
+########################################################################
+#                      Worker-specific parameters                      #
+########################################################################
+
+# The name of the worker's home store.
+#
+# This is required for workers. It specifies where the worker's
+# principal object is to be created.
+
+fabric.worker.homeStore = store.example.net
+
+
+########################################################################
+#                      Store-specific parameters                       #
+########################################################################
+
+# The port for the store to listen on. This is optional.
+#
+# By default, this is 3472.
 
 #fabric.store.port    = 3472
 
 
-# The IP address or DNS name that this node can be reached at.  This is
-# optional; the default is <node name>
+# The class for the store's back-end database implementation. This is
+# optional.
+#
+# Valid options:
+#   - fabric.store.db.BdbDB
+#   - fabric.store.db.MemoryDB
+#
+# By default, this is fabric.store.db.BdbDB.
 
-#fabric.node.hostname = fabric.example.net
+#fabric.store.db.class   = fabric.store.db.BdbDB
 
+
+########################################################################
+#                      Pastry-specific parameters                      #
+#                                                                      #
+# This section is only required when using the Pastry-based            #
+# dissemination layer.                                                 #
+########################################################################
+
+# The location of the Pastry bootstrap node.
+
+fabric.dissemination.pastry.bootstrap=localhost:13373
+
+
+# See FreePastry documentation for the remaining parameters.
+fabric.dissemination.pastry.firewall_test_policy=never
+fabric.dissemination.pastry.nat_search_policy=never
+fabric.dissemination.pastry.pastry_socket_allow_loopback=true
+fabric.dissemination.pastry.replication_interval=300000
+fabric.dissemination.pastry.aggregation_interval=600000
+fabric.dissemination.pastry.pastry_protocol_periodicLeafSet_lease_period = 8000

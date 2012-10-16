@@ -44,14 +44,15 @@ public class Account[principal bank]  { // on bank store and worker
     Account(principal{bank←} user_) {
         user = user_;
         balance = new Balance(); // @ bank store
+        super();
     }
     
-    public String{bank←} name() {
+    public String{bank←} name{⊥→}() {
         if (user == null) return "";
         return user.name();
     }
     
-    public float{bank←; bank→user} balance() {
+    public float{bank←; bank→user} balance{bank→}() {
         if (balance == null) return 0;
         return balance.value;
     }

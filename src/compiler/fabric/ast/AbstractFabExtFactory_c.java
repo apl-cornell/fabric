@@ -13,7 +13,7 @@ import polyglot.ast.ExtFactory;
  * @author mdgeorge
  */
 public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
-    FabricExtFactory {
+FabricExtFactory {
 
   public AbstractFabExtFactory_c() {
     super();
@@ -234,6 +234,26 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
 
   protected Ext extCodebaseDeclImpl() {
     return extNode();
+  }
+
+  @Override
+  public final Ext extStore() {
+    Ext e = extStoreImpl();
+    if (nextExtFactory() != null
+        && nextExtFactory() instanceof FabricExtFactory) {
+      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
+      Ext e2 = nextFac.extStore();
+      e = composeExts(e, e2);
+    }
+    return postExtStore(e);
+  }
+
+  protected Ext extStoreImpl() {
+    return extExprImpl();
+  }
+
+  protected Ext postExtStore(Ext e) {
+    return postExtExpr(e);
   }
 
 }

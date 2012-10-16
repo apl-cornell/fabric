@@ -1,10 +1,11 @@
 package codebases.types;
 
+import java.net.URI;
+
 import polyglot.types.Context;
-import fabric.common.FabricLocation;
 
 public interface CodebaseContext extends Context {
-  FabricLocation namespace();
+  URI namespace();
 
-  FabricLocation resolveCodebaseName(String id);
+  URI resolveCodebaseName(String id);
 }

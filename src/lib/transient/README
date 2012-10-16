@@ -1,7 +1,0 @@
-This package contains ``transient'' versions various Fabric libraries.  They
-are transient in that they extend from java.lang.Object, and are thus not
-persistable.
-
-Use of this package is strongly cautioned against.  They are mostly here
-because we haven't had a chance to fix them.
-

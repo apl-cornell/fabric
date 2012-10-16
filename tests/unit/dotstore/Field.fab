@@ -1,0 +1,3 @@
+public class Field {
+    public int{store$->} f;
+}
