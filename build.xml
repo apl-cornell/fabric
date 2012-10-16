@@ -1044,7 +1044,7 @@ public class Version {
 
     <!-- Process *.mkdn in top-level directory. -->
     <apply executable="${fabric.home}/tools/mkdn-stripper/bin/strip-mkdn"
-        dir="${fabric.home}">
+        dir="${fabric.home}" dest="${fabric.home}">
       <srcfile/>
       <targetfile/>
       <fileset dir="${fabric.home}" includes="*.mkdn"/>
