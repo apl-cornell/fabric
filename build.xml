@@ -1178,7 +1178,7 @@ public class Version {
 
       <!-- Include compiler and system sources. -->
       <tarfileset dir="${src}" prefix="fabric-${fabric.version}/src">
-        <include name="**/README" />
+        <include name="bootstrap/README" />
         <include name="bootstrap/**/*.java" />
         <include name="compiler/**/*.java" />
         <include name="compiler/**/package.html" />
@@ -1187,6 +1187,7 @@ public class Version {
         <include name="compiler/**/parse/*.ppg" />
         <include name="compiler/**/doc-files/**" />
         <include name="arrays/**/*.fil" />
+        <include name="runtime/README" />
         <include name="runtime/**/*.fil" />
         <include name="runtime/**/*.fab" />
         <include name="signatures/fabil/**/*.fil" />
@@ -1228,7 +1229,8 @@ public class Version {
         <include name="friendmap/README" />
         <include name="friendmap/build.xml" />
         <include name="friendmap/etc/**" />
-        <include name="friendmap/src/**" />
+        <include name="friendmap/src/**/*.fab" />
+        <include name="friendmap/src/**/*.fil" />
         <include name="hello/**" />
         <include name="OO7/**" />
         <include name="sif-hello/**" />
@@ -1236,6 +1238,7 @@ public class Version {
         <include name="travel/build.xml" />
         <include name="travel/etc/**" />
         <include name="travel/src/**" />
+        <include name="travel/web/**" />
         <!-- Exclude scripts.  These will be handled below. -->
         <exclude name="*/bin/*" />
       </tarfileset>
@@ -1254,6 +1257,7 @@ public class Version {
 
       <!-- Include library sources. -->
       <tarfileset dir="${libs}" prefix="fabric-${fabric.version}/src/lib">
+        <include name="README" />
         <include name="build.xml" />
 
         <!-- SIF -->
