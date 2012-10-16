@@ -38,9 +38,9 @@ import fabric.common.net.handshake.HandshakeBogus;
 import fabric.common.net.handshake.HandshakeComposite;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 import fabric.common.net.handshake.Protocol;
-import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
+import fabric.common.net.naming.TransitionalNameService;
 import fabric.dissemination.Cache;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
@@ -237,8 +237,7 @@ public final class Worker {
         new HandshakeComposite(new HandshakeUnauthenticated());
 
     this.authToStore =
-        new SubSocketFactory(authenticateProtocol, nameService,
-            PortType.STORE);
+        new SubSocketFactory(authenticateProtocol, nameService, PortType.STORE);
     this.authToWorker =
         new SubSocketFactory(authenticateProtocol, nameService, PortType.WORKER);
     this.unauthToStore =
@@ -255,7 +254,7 @@ public final class Worker {
     try {
       Constructor<FetchManager> fetchManagerConstructor =
           (Constructor<FetchManager>) Class.forName(config.dissemClass)
-          .getConstructor(Worker.class, Properties.class);
+              .getConstructor(Worker.class, Properties.class);
       this.fetchManager =
           fetchManagerConstructor.newInstance(this,
               config.disseminationProperties);
@@ -424,7 +423,7 @@ public final class Worker {
   }
 
   public static void initialize(String name) throws IllegalStateException,
-  IOException, InternalError, UsageError, GeneralSecurityException {
+      IOException, InternalError, UsageError, GeneralSecurityException {
     initialize(new ConfigProperties(name));
   }
 
@@ -681,7 +680,7 @@ public final class Worker {
 
         TransactionID currentTid = tm.getCurrentTid();
         if (e.tid.isDescendantOf(currentTid))
-          // Restart this transaction.
+        // Restart this transaction.
           continue;
 
         // Need to restart a parent transaction.
@@ -721,7 +720,7 @@ public final class Worker {
             TransactionID currentTid = tm.getCurrentTid();
             if (currentTid == null || e.tid.isDescendantOf(currentTid)
                 && !currentTid.equals(e.tid))
-              // Restart the transaction just we tried to commit.
+            // Restart the transaction just we tried to commit.
               continue;
 
             // Need to restart a parent transaction.

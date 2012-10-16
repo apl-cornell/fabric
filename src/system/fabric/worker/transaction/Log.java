@@ -311,17 +311,17 @@ public final class Log {
     if (store.isLocalStore()) {
       Iterable<_Impl> writesToExclude =
           includeModified ? Collections.<_Impl> emptyList() : localStoreWrites;
-          @SuppressWarnings("unchecked")
-          Iterable<_Impl> chain = SysUtil.chain(writesToExclude, localStoreCreates);
-          for (_Impl write : chain)
-            result.remove(write.$getOnum());
+      @SuppressWarnings("unchecked")
+      Iterable<_Impl> chain = SysUtil.chain(writesToExclude, localStoreCreates);
+      for (_Impl write : chain)
+        result.remove(write.$getOnum());
     } else {
       Iterable<_Impl> writesToExclude =
           includeModified ? Collections.<_Impl> emptyList() : writes;
-          @SuppressWarnings("unchecked")
-          Iterable<_Impl> chain = SysUtil.chain(writesToExclude, creates);
-          for (_Impl write : chain)
-            if (write.$getStore() == store) result.remove(write.$getOnum());
+      @SuppressWarnings("unchecked")
+      Iterable<_Impl> chain = SysUtil.chain(writesToExclude, creates);
+      for (_Impl write : chain)
+        if (write.$getStore() == store) result.remove(write.$getOnum());
     }
 
     return result;

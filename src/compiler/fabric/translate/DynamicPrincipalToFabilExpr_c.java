@@ -21,8 +21,9 @@ import fabric.visit.FabricToFabilRewriter;
 
 public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c {
   @Override
-  public Expr toJava(Principal principal, JifToJavaRewriter rw) throws SemanticException {
-    DynamicPrincipal dp = (DynamicPrincipal)principal;
+  public Expr toJava(Principal principal, JifToJavaRewriter rw)
+      throws SemanticException {
+    DynamicPrincipal dp = (DynamicPrincipal) principal;
     FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
     FabILNodeFactory nf = (FabILNodeFactory) frw.java_nf();
     FabricTypeSystem ts = (FabricTypeSystem) frw.jif_ts();
@@ -69,14 +70,12 @@ public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c 
     FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
 
     if (ap instanceof AccessPathThis) {
-      if (frw.staticThisExpr() != null
-          && frw.context().inStaticContext())
+      if (frw.staticThisExpr() != null && frw.context().inStaticContext())
         // replace "this" principal with its store.
         /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */
         return frw.qq().parseExpr("%E.fetch().$getStore().getPrincipal()",
             frw.staticThisExpr());
       else return nf.This(ap.position());
-    } else
-      return super.accessPathToExpr(frw, ap);
+    } else return super.accessPathToExpr(frw, ap);
   }
 }

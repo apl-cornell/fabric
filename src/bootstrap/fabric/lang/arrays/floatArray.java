@@ -1,9 +1,9 @@
 package fabric.lang.arrays;
 
-import fabric.worker.Store;
 import fabric.lang.Object;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
+import fabric.worker.Store;
 
 public interface floatArray extends Object {
   float get(int i);
@@ -15,8 +15,10 @@ public interface floatArray extends Object {
       super(store);
     }
 
+    @Override
     public native float get(int i);
 
+    @Override
     public native float set(int i, float value);
   }
 }

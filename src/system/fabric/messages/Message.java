@@ -157,7 +157,8 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    * @throws IOException
    *           if the provided <code>DataOutput</code> fails.
    */
-  public void respond(DataOutput out, Message.Response response) throws IOException {
+  public void respond(DataOutput out, Message.Response response)
+      throws IOException {
     // Signal that no error occurred.
     out.writeBoolean(false);
 

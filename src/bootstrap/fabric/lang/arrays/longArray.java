@@ -1,9 +1,9 @@
 package fabric.lang.arrays;
 
-import fabric.worker.Store;
 import fabric.lang.Object;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
+import fabric.worker.Store;
 
 public interface longArray extends Object {
   long get(int i);
@@ -15,8 +15,10 @@ public interface longArray extends Object {
       super(store);
     }
 
+    @Override
     public native long get(int i);
 
+    @Override
     public native long set(int i, long value);
   }
 }

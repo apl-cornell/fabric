@@ -48,7 +48,8 @@ public class DNS implements NameService {
     try {
       // Look up the port number in DNS.
       Hashtable<String, String> env = new Hashtable<String, String>(1);
-      env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
+      env.put("java.naming.factory.initial",
+          "com.sun.jndi.dns.DnsContextFactory");
       DirContext dirContext = new InitialDirContext(env);
       Attributes attrs = dirContext.getAttributes(name, new String[] { "TXT" });
       Attribute txt = attrs.get("TXT");
@@ -72,8 +73,7 @@ public class DNS implements NameService {
     } catch (NamingException e) {
       Logging.NAMING_LOGGER.log(Level.WARNING,
           "NamingException while looking up port info from DNS. Returning "
-              + "default port number.",
-              e);
+              + "default port number.", e);
     }
 
     return defaultPorts.get(portType);

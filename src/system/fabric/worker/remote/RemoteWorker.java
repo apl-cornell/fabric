@@ -61,7 +61,7 @@ public final class RemoteWorker extends RemoteNode {
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
-          throws UnreachableNodeException, RemoteCallException {
+      throws UnreachableNodeException, RemoteCallException {
     TransactionManager tm = TransactionManager.getInstance();
     tm.registerRemoteCall(this);
 
@@ -70,7 +70,7 @@ public final class RemoteWorker extends RemoteNode {
 
     Class<? extends fabric.lang.Object> receiverClass =
         (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
-        .getClass().getEnclosingClass();
+            .getClass().getEnclosingClass();
     ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
 
     RemoteCallMessage.Response response =
@@ -95,7 +95,7 @@ public final class RemoteWorker extends RemoteNode {
   }
 
   public void commitTransaction(long tid) throws UnreachableNodeException,
-  TransactionCommitFailedException {
+      TransactionCommitFailedException {
     send(new CommitTransactionMessage(tid));
   }
 
@@ -106,7 +106,7 @@ public final class RemoteWorker extends RemoteNode {
    *          the tid for the transaction that is aborting.
    */
   public void abortTransaction(TransactionID tid) throws AccessException,
-  UnreachableNodeException {
+      UnreachableNodeException {
     send(new AbortTransactionMessage(tid));
   }
 

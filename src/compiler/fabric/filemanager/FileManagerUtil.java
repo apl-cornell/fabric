@@ -1,6 +1,5 @@
 package fabric.filemanager;
 
-
 /**
  * FabricUtil provides helper methods
  */

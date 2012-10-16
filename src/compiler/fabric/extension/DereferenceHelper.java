@@ -64,7 +64,7 @@ public class DereferenceHelper {
    */
   public static void checkAccess(final Expr ref,
       final FabricReferenceType targetType, LabelChecker lc, Position pos)
-          throws SemanticException {
+      throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
 
     // if the ref is a null literal, then the access label check is not required
@@ -73,7 +73,8 @@ public class DereferenceHelper {
     // Dereferencing a reference with a transient type does not result in a fetch unless
     // 1) it is java.lang.Object (could refer to a fabric.lang.Object)
     // 2) it is an Interface (could be implemented by a fabric.lang.Object)
-    if (ts.isTransient(ref.type()) && !ref.type().equals(ts.Object())
+    if (ts.isTransient(ref.type())
+        && !ref.type().equals(ts.Object())
         && !(ref.type().isClass() && ref.type().toClass().flags().isInterface()))
       return;
 
@@ -87,8 +88,7 @@ public class DereferenceHelper {
         // this.store >= this holds true for all principals
         A.addActsFor(ts.dynamicPrincipal(pos, storeap),
             ts.dynamicPrincipal(pos, ts.exprToAccessPath(ref, A)));
-      }
-      else {
+      } else {
         // ref is not a final access path, so make an uninterpreted path instead
         A.addActsFor(ts.dynamicPrincipal(pos, storeap),
             ts.dynamicPrincipal(pos, new AccessPathUninterpreted(ref, pos)));
@@ -105,20 +105,20 @@ public class DereferenceHelper {
     lc.constrain(new NamedLabel("reference label", objLabel),
         LabelConstraint.LEQ, new NamedLabel("access label", instantiated),
         A.labelEnv(), pos, new ConstraintMessage() {
-      @Override
-      public String msg() {
-        return "Dereferencing " + ref + " may cause it to be "
-            + "fetched, revealing too much information to its " + "store";
-      }
-    });
+          @Override
+          public String msg() {
+            return "Dereferencing " + ref + " may cause it to be "
+                + "fetched, revealing too much information to its " + "store";
+          }
+        });
     lc.constrain(new NamedLabel("pc", pc), LabelConstraint.LEQ, new NamedLabel(
         "access label", instantiated), A.labelEnv(), pos,
         new ConstraintMessage() {
-      @Override
-      public String msg() {
-        return "Dereferencing " + ref + " may cause it to be "
-            + "fetched, revealing too much information to its " + "store";
-      }
-    });
+          @Override
+          public String msg() {
+            return "Dereferencing " + ref + " may cause it to be "
+                + "fetched, revealing too much information to its " + "store";
+          }
+        });
   }
 }

@@ -114,8 +114,8 @@ public interface _charArray extends Object {
         throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
-      for (int i = 0; i < value.length; i++)
-        out.writeChar(value[i]);
+      for (char element : value)
+        out.writeChar(element);
     }
 
     @Override

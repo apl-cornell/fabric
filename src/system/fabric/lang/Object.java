@@ -53,6 +53,7 @@ public interface Object {
 
   /** The label that protects this object at run time. */
   Label get$$updateLabel();
+
   Label set$$updateLabel(Label label);
 
   /**
@@ -60,6 +61,7 @@ public interface Object {
    * safe to use this object.
    */
   ConfPolicy get$$accessPolicy();
+
   ConfPolicy set$$accessPolicy(ConfPolicy policy);
 
   /**
@@ -229,7 +231,8 @@ public interface Object {
 
     @Override
     public final boolean idEquals(Object other) {
-      return this.$getStore() == other.$getStore() && this.$getOnum() == other.$getOnum();
+      return this.$getStore() == other.$getStore()
+          && this.$getOnum() == other.$getOnum();
     }
 
     @Override
@@ -313,7 +316,8 @@ public interface Object {
     /**
      * return true if o1 and o2 are objects with the same identity.
      */
-    public static final boolean idEquals(java.lang.Object o1, java.lang.Object o2) {
+    public static final boolean idEquals(java.lang.Object o1,
+        java.lang.Object o2) {
       if (o1 instanceof Object && o2 instanceof Object)
         return ((Object) o1).idEquals((Object) o2);
       return o1 == o2;
@@ -510,8 +514,7 @@ public interface Object {
      * @param store
      *          the location for the object
      */
-    public _Impl(Store store)
-        throws UnreachableNodeException {
+    public _Impl(Store store) throws UnreachableNodeException {
       this(store, store.createOnum(), 0, 0);
       store.cache(this);
 
@@ -660,8 +663,7 @@ public interface Object {
 
     @Override
     public final boolean idEquals(Object other) {
-      return $getStore() == other.$getStore()
-          && $getOnum() == other.$getOnum();
+      return $getStore() == other.$getStore() && $getOnum() == other.$getOnum();
     }
 
     @Override
@@ -736,9 +738,9 @@ public interface Object {
     public _Impl(Store store, long onum, int version, long expiry,
         long updateLabel, long accessPolicy, ObjectInput serializedInput,
         Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs)
-            throws IOException, ClassNotFoundException {
+        throws IOException, ClassNotFoundException {
       this(store, onum, version, expiry);
-      this.$updateLabel =  new Label._Proxy(store, updateLabel);
+      this.$updateLabel = new Label._Proxy(store, updateLabel);
       this.$accessPolicy = new ConfPolicy._Proxy(store, accessPolicy);
     }
 
@@ -747,7 +749,7 @@ public interface Object {
      */
     private static final Map<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>> constructorTable =
         Collections
-        .synchronizedMap(new HashMap<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>>());
+            .synchronizedMap(new HashMap<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>>());
 
     /**
      * A helper method for reading a pointer during object deserialization.
@@ -771,8 +773,8 @@ public interface Object {
      */
     protected static final Object $readRef(
         Class<? extends Object._Proxy> proxyClass, RefTypeEnum refType,
-            ObjectInput in, Store store, Iterator<Long> intraStoreRefs)
-                throws IOException, ClassNotFoundException {
+        ObjectInput in, Store store, Iterator<Long> intraStoreRefs)
+        throws IOException, ClassNotFoundException {
       switch (refType) {
       case NULL:
         return null;
@@ -789,8 +791,7 @@ public interface Object {
             constructorTable.put(proxyClass, constructor);
           }
 
-          return constructor.newInstance(
-              store, intraStoreRefs.next());
+          return constructor.newInstance(store, intraStoreRefs.next());
         } catch (Exception e) {
           throw new InternalError(e);
         }
@@ -851,7 +852,8 @@ public interface Object {
       }
 
       _Proxy p = (_Proxy) obj;
-      if (ONumConstants.isGlobalConstant(p.ref.onum) || p.ref.store.equals(store)) {
+      if (ONumConstants.isGlobalConstant(p.ref.onum)
+          || p.ref.store.equals(store)) {
         // Intra-store reference.
         refType.add(RefTypeEnum.ONUM);
         intraStoreRefs.add(p.ref.onum);
@@ -878,7 +880,8 @@ public interface Object {
         throw new InternalError(message);
       }
       refType.add(RefTypeEnum.REMOTE);
-      interStoreRefs.add(new Pair<String, Long>(p.ref.store.name(), p.ref.onum));
+      interStoreRefs
+          .add(new Pair<String, Long>(p.ref.store.name(), p.ref.onum));
     }
 
     /**
@@ -913,7 +916,6 @@ public interface Object {
       this.$ref.onum = onum;
       TransactionRegistry.renumberObject($ref.store, oldOnum, onum);
     }
-
 
     /**
      * A dummy method. This is a hack for working around reachability problems in
@@ -966,8 +968,7 @@ public interface Object {
                 return inst.fetch();
               } else throw new InternalError("Expected FClass for "
                   + o.toString() + " but got " + o.getClass());
-            }
-            else {
+            } else {
               store = Worker.getWorker().getLocalStore();
               Constructor<? extends Object._Impl> constr =
                   c.getConstructor(Store.class);
@@ -979,8 +980,7 @@ public interface Object {
     }
 
     public static class _Impl extends Object._Impl implements _Static {
-      public _Impl(Store store)
-          throws UnreachableNodeException {
+      public _Impl(Store store) throws UnreachableNodeException {
         super(store);
       }
 

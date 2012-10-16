@@ -52,8 +52,7 @@ public class TransitionalNameService implements NameService {
         for (PortType portType : PortType.values()) {
           int port = portType.getPort(props);
           this.entries.put(new Pair<String, NameService.PortType>(name,
-              portType), new SocketAddress(InetAddress.getByName(host),
-                  port));
+              portType), new SocketAddress(InetAddress.getByName(host), port));
         }
       }
 

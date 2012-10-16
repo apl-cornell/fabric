@@ -16,7 +16,7 @@ import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 
 public class CodebaseResolver extends SimpleResolver implements
-NamespaceResolver {
+    NamespaceResolver {
   private static final Collection<String> TOPICS;
   static {
     TOPICS = new ArrayList<String>(2);
@@ -26,6 +26,7 @@ NamespaceResolver {
 
   protected Codebase codebase;
   protected NamespaceResolver platform;
+
   public CodebaseResolver(ExtensionInfo extInfo, URI namespace) {
     super(extInfo, namespace, null);
     this.load_raw = false;
@@ -59,7 +60,6 @@ NamespaceResolver {
     }
     return ct;
   }
-
 
   @Override
   public Codebase codebase() {

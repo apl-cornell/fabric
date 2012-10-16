@@ -113,8 +113,8 @@ public interface _intArray extends Object {
         throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
-      for (int i = 0; i < value.length; i++)
-        out.writeInt(value[i]);
+      for (int element : value)
+        out.writeInt(element);
     }
 
     @Override

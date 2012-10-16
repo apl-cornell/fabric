@@ -34,8 +34,7 @@ public class SimpleResolver extends NamespaceResolver_c {
 
   public SimpleResolver(ExtensionInfo extInfo, URI namespace,
       NamespaceResolver parent) {
-    this(extInfo, namespace, parent, Collections
-        .<String, URI> emptyMap());
+    this(extInfo, namespace, parent, Collections.<String, URI> emptyMap());
   }
 
   /**
@@ -44,8 +43,7 @@ public class SimpleResolver extends NamespaceResolver_c {
    * @param codebaseAliases
    */
   public SimpleResolver(ExtensionInfo extInfo, URI namespace,
-      NamespaceResolver parent,
-      Map<String, URI> codebaseAliases) {
+      NamespaceResolver parent, Map<String, URI> codebaseAliases) {
     super(extInfo, namespace, parent, codebaseAliases);
     fileManager = (FabricFileManager) extInfo.extFileManager();
     noClassCache = new HashSet<String>();

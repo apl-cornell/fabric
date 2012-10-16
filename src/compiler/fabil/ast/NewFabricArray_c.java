@@ -22,7 +22,7 @@ import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
 public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
-Annotated {
+    Annotated {
 
   protected Expr label;
   protected Expr location;
@@ -129,7 +129,7 @@ Annotated {
     if (!ts.isFabricType(result.baseType)) {
       throw new SemanticException(
           "Non-Fabric objects cannot be stored in Fabric arrays.", node()
-          .position());
+              .position());
     }
 
     if (location != null) {

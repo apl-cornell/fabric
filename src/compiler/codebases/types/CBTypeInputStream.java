@@ -15,8 +15,7 @@ public class CBTypeInputStream extends TypeInputStream {
   private CodebaseTypeSystem ts;
 
   public CBTypeInputStream(InputStream in, TypeSystem ts,
-      Map<Object, Object> cache)
-      throws IOException {
+      Map<Object, Object> cache) throws IOException {
     super(in, ts, cache);
     this.ts = (CodebaseTypeSystem) ts;
   }

@@ -388,7 +388,7 @@ public abstract class Options {
     });
 
     flags.add(new Flag(Kind.VERSION, new String[] { "--version", "-v",
-    "-version" }, null, "print version info") {
+        "-version" }, null, "print version info") {
       @Override
       public int handle(String[] args, int index) {
         System.out.println("Fabric version " + new Version());
@@ -469,16 +469,16 @@ public abstract class Options {
     });
 
     flags
-    .add(new Flag(Kind.SECRET, new String[] { "--addbootcp", "-addbootcp" },
-        "<path>",
-        "additional directory for Fabric runtime classes; prepended to bootclasspath") {
-      @Override
-      public int handle(String[] args, int index) {
-        Options.this.bootcp =
-            args[index] + File.pathSeparator + Options.this.bootcp;
-        return index + 1;
-      }
-    });
+        .add(new Flag(Kind.SECRET,
+            new String[] { "--addbootcp", "-addbootcp" }, "<path>",
+            "additional directory for Fabric runtime classes; prepended to bootclasspath") {
+          @Override
+          public int handle(String[] args, int index) {
+            Options.this.bootcp =
+                args[index] + File.pathSeparator + Options.this.bootcp;
+            return index + 1;
+          }
+        });
 
     flags.add(new Flag(Kind.SECRET, "--output-to-fs", "",
         "A flag for putting .class files to the local file system") {
@@ -496,7 +496,8 @@ public abstract class Options {
         String param = args[index].toLowerCase();
         if (param.equals("true") || param.equals("y") || param.equals("yes")) {
           DEBUG_COMMIT_READS = true;
-        } else if (param.equals("false") || param.equals("n") || param.equals("no")) {
+        } else if (param.equals("false") || param.equals("n")
+            || param.equals("no")) {
           DEBUG_COMMIT_READS = false;
         } else {
           throw new UsageError("Invalid option parameter");

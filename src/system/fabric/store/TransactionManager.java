@@ -294,7 +294,6 @@ public class TransactionManager {
     }
   }
 
-
   /**
    * Checks that the worker principal has permissions to read/write the given
    * objects. If it doesn't, an AccessException is thrown.
@@ -567,7 +566,7 @@ public class TransactionManager {
             // create a promise
 
             if (database.isWritten(onum))
-              // object has been written - no promise for you!
+            // object has been written - no promise for you!
               return obj;
 
             // check to see if someone else has created a promise

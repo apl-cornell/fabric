@@ -94,8 +94,7 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
               return new FabricFileObject(obj, NSUtil.namespace(
                   obj.getCodebase()).resolve(classname), classname + ".fab");
             }
-          }
-          else {
+          } else {
             // otherwise, check the output directory for .class or .java
             FileObject fo =
                 super.getFileForInput(extInfo.getOptions()
@@ -117,8 +116,7 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
             final ZipEntry entry = jar.getEntry(entryName);
             if (entry != null) {
               URI u =
-                  URI.create("file://" + pathEntry.getPath() + "!/"
-                      + entryName);
+                  URI.create("file://" + pathEntry.getPath() + "!/" + entryName);
               Kind k = isSource ? Kind.SOURCE : Kind.CLASS;
               FileObject fo = new ExtFileObject(u, k) {
                 @Override
@@ -190,10 +188,8 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
         }
       }
       return false;
-    }
-    else return super.packageExists(location, name);
+    } else return super.packageExists(location, name);
   }
-
 
   @Override
   public FileSource fileSource(String fileName) throws IOException {
@@ -256,7 +252,7 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
    * @return
    */
   public ClassFile loadFile(URI namespace, String name) {
-    String className =  extInfo.namespaceToJavaPackagePrefix(namespace) + name;
+    String className = extInfo.namespaceToJavaPackagePrefix(namespace) + name;
     JavaFileObject jfo = null;
     if (!className.equals(name)) {
       //className is a mangled name. Check class cache
@@ -264,17 +260,14 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
         jfo =
             getJavaFileForInput(extInfo.getOptions().classOutputLocation(),
                 className, Kind.CLASS);
-        if (jfo != null)
-          return extInfo.createClassFile(jfo, getBytes(jfo));
+        if (jfo != null) return extInfo.createClassFile(jfo, getBytes(jfo));
 
       } catch (IOException e) {
         throw new InternalCompilerError(
-            "Error while checking cache for class file "
-                + name, e);
+            "Error while checking cache for class file " + name, e);
       }
       return null;
-    }
-    else {
+    } else {
       Location location = nsClassLocation.get(namespace);
       return (ClassFile) loadFile(location, className);
     }
@@ -303,8 +296,7 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
       for (JavaFileObject jfo : getJavaFileObjects(new File(uri)))
         return jfo;
       return null;
-    }
-    else {
+    } else {
       if (uri.isOpaque())
         throw new InternalCompilerError("Can't get file object for " + uri);
 

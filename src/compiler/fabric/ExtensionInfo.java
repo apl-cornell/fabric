@@ -59,7 +59,7 @@ import fabric.worker.Store;
  * Extension information for fabric extension.
  */
 public class ExtensionInfo extends jif.ExtensionInfo implements
-codebases.frontend.ExtensionInfo {
+    codebases.frontend.ExtensionInfo {
   /*
    * Note: jif.ExtensionInfo has a jif.OutputExtensionInfo field jlext. The only
    * unoverridden place this is used is in a call to initCompiler, so it should
@@ -144,8 +144,7 @@ codebases.frontend.ExtensionInfo {
     }
     extFM.setLocation(StandardLocation.CLASS_PATH, classpath);
 
-    List<File> classout =
-        Collections.singletonList(opt.classOutputDirectory());
+    List<File> classout = Collections.singletonList(opt.classOutputDirectory());
     extFM.setLocation(StandardLocation.CLASS_OUTPUT, classout);
   }
 
@@ -207,7 +206,6 @@ codebases.frontend.ExtensionInfo {
   protected FabricTypeSystem createTypeSystem() {
     return new FabricTypeSystem_c(filext.typeSystem());
   }
-
 
   @Override
   protected FabricOptions createOptions() {
@@ -281,13 +279,13 @@ codebases.frontend.ExtensionInfo {
     } else {
       URI ns =
           getOptions().platformMode() ? platformNamespace() : localNamespace();
-          LocalSource src = new LocalSource(f, user, ns);
-          // Publish all local source unless we're in platform mode.
-          // TODO: generalize and make this better. We should only publish
-          // source in the sourcepath. Plus, the user may be re-publishing remote
-          // source with a new codebase.
-          src.setPublish(getOptions().publish());
-          return src;
+      LocalSource src = new LocalSource(f, user, ns);
+      // Publish all local source unless we're in platform mode.
+      // TODO: generalize and make this better. We should only publish
+      // source in the sourcepath. Plus, the user may be re-publishing remote
+      // source with a new codebase.
+      src.setPublish(getOptions().publish());
+      return src;
     }
   }
 

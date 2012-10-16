@@ -143,8 +143,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
   }
 
   public boolean inSignatureMode() {
-    FabILOptions opts =
-        ((fabil.ExtensionInfo) java_ext).getOptions();
+    FabILOptions opts = ((fabil.ExtensionInfo) java_ext).getOptions();
     return opts.signatureMode();
   }
 

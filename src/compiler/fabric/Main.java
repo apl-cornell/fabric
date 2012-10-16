@@ -127,7 +127,7 @@ public class Main extends polyglot.main.Main {
       Collection<JavaFileObject> outputFiles = main.compiler.outputFiles();
       String[] suffixes =
           new String[] { "", "$_Impl", "$_Proxy", "$_Static", "$_Static$_Impl",
-      "$_Static$_Proxy" };
+              "$_Static$_Proxy" };
       Location classOutput = extInfo.getOptions().classOutputLocation();
       for (JavaFileObject jfo : outputFiles) {
         URI src = jfo.toUri();

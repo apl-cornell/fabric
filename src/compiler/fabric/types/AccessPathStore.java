@@ -43,6 +43,7 @@ public class AccessPathStore extends AccessPath {
   public boolean isCanonical() {
     return path.isCanonical();
   }
+
   @Override
   public boolean isUninterpreted() {
     return path.isUninterpreted();

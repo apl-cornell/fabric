@@ -256,7 +256,7 @@ public final class TransactionManager {
         case COMMITTED:
           // Too late to abort! We shouldn't really enter this situation.
           WORKER_TRANSACTION_LOGGER
-          .warning("Ignoring attempt to abort a committed transaction.");
+              .warning("Ignoring attempt to abort a committed transaction.");
           return;
 
         case ABORTING:
@@ -316,7 +316,7 @@ public final class TransactionManager {
    *           if the transaction was aborted and needs to be retried.
    */
   public void commitTransaction() throws AbortException,
-  TransactionRestartingException, TransactionAtomicityViolationException {
+      TransactionRestartingException, TransactionAtomicityViolationException {
     Timing.COMMIT.begin();
     try {
       commitTransactionAt(System.currentTimeMillis());
@@ -532,7 +532,7 @@ public final class TransactionManager {
       List<RemoteWorker> workers) {
     final Map<RemoteNode, TransactionPrepareFailedException> failures =
         Collections
-        .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
+            .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
 
     synchronized (current.commitState) {
       switch (current.commitState.value) {
@@ -803,9 +803,9 @@ public final class TransactionManager {
 
     if (!(unreachable.isEmpty() && failed.isEmpty())) {
       Logging
-      .log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
-          "{0} error committing: atomicity violation "
-              + "-- failed: {1} unreachable: {2}", current, failed,
+          .log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
+              "{0} error committing: atomicity violation "
+                  + "-- failed: {1} unreachable: {2}", current, failed,
               unreachable);
       throw new TransactionAtomicityViolationException(failed, unreachable);
     }
@@ -991,7 +991,7 @@ public final class TransactionManager {
           && !current.isDescendantOf(obj.$writeLockHolder)) {
         Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
             "{0} wants to write {1}/" + obj.$getOnum()
-            + " ({2}); waiting on writer {3}", current, obj.$getStore(),
+                + " ({2}); waiting on writer {3}", current, obj.$getStore(),
             obj.getClass(), obj.$writeLockHolder);
         hadToWait = true;
       } else {
@@ -1004,7 +1004,7 @@ public final class TransactionManager {
               if (!current.isDescendantOf(lock)) {
                 Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
                     "{0} wants to write {1}/" + obj.$getOnum()
-                    + " ({2}); aborting reader {3}", current,
+                        + " ({2}); aborting reader {3}", current,
                     obj.$getStore(), obj.getClass(), lock);
                 lock.flagRetry();
                 allReadersInAncestry = false;
@@ -1032,7 +1032,7 @@ public final class TransactionManager {
 
     if (hadToWait)
       WORKER_TRANSACTION_LOGGER
-      .log(Level.FINEST, "{0} got write lock", current);
+          .log(Level.FINEST, "{0} got write lock", current);
 
     if (obj.$writeLockHolder == current) return;
 

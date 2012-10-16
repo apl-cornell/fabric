@@ -222,16 +222,16 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
   public Goal InnerClassesRemoved(final Job job) {
     InnerClassRemover icr =
         new InnerClassRemover(job, extInfo.typeSystem(), extInfo.nodeFactory()) {
-      @Override
-      protected ContextVisitor localClassRemover() {
-        return new LocalClassRemover(job, ts, nf) {
           @Override
-          protected TypeNode defaultSuperType(Position pos) {
-            return null;
+          protected ContextVisitor localClassRemover() {
+            return new LocalClassRemover(job, ts, nf) {
+              @Override
+              protected TypeNode defaultSuperType(Position pos) {
+                return null;
+              }
+            };
           }
         };
-      }
-    };
     Goal g = internGoal(new VisitorGoal(job, icr) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler s) {
@@ -593,7 +593,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     long endTime = System.currentTimeMillis();
     if (Report.should_report(Topics.profile, 1)) {
       Report
-      .report(1, "FabIL passes complete: " + (endTime - startTime) + "ms");
+          .report(1, "FabIL passes complete: " + (endTime - startTime) + "ms");
     }
     return fil_complete;
   }

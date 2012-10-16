@@ -73,8 +73,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   // helped
   // identify the situations it is called in.
   @Override
-  public Package createPackage(URI ns, Package prefix,
-      java.lang.String name) {
+  public Package createPackage(URI ns, Package prefix, java.lang.String name) {
     if (prefix != null) {
       ns = ((CBPackage) prefix).namespace();
     }
@@ -86,8 +85,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
    *           subclasses may throw SemanticExceptions
    */
   @Override
-  public Package packageForName(URI ns, Package prefix,
-      java.lang.String name) throws SemanticException {
+  public Package packageForName(URI ns, Package prefix, java.lang.String name)
+      throws SemanticException {
     return createPackage(ns, prefix, name);
   }
 
@@ -239,8 +238,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @Override
   // XXX: Why is this method here?
-  protected List<? extends MethodInstance> findAcceptableMethods(ReferenceType container,
-      String name, List<? extends Type> argTypes,
+  protected List<? extends MethodInstance> findAcceptableMethods(
+      ReferenceType container, String name, List<? extends Type> argTypes,
       ClassType currClass) throws SemanticException {
     List<? extends MethodInstance> result =
         super.findAcceptableMethods(container, name, argTypes, currClass);
@@ -521,17 +520,16 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   protected void initResolvers() throws IOException {
     FabricFileManager fileManager =
         (FabricFileManager) extInfo.extFileManager();
-    List<File> platform_directories =
-        new ArrayList<File>();
+    List<File> platform_directories = new ArrayList<File>();
     platform_directories.addAll(extInfo.getOptions().signaturepath());
-    platform_directories.addAll( extInfo.bootclasspath());
+    platform_directories.addAll(extInfo.bootclasspath());
     fileManager.setLocation(extInfo.getOptions().bootclasspath,
         platform_directories);
     platformResolver = namespaceResolver(extInfo.platformNamespace());
     platformResolver.loadRawClasses(true);
 
     fileManager
-    .setLocation(extInfo.getOptions().classpath, extInfo.classpath());
+        .setLocation(extInfo.getOptions().classpath, extInfo.classpath());
 
     fileManager.setLocation(extInfo.getOptions().source_path,
         extInfo.sourcepath());

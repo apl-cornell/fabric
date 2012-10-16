@@ -26,16 +26,17 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
 
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    Cast c = (Cast)node();
+    Cast c = (Cast) node();
     Type exprType = c.expr().type();
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
-    FabricTypeSystem ts = (FabricTypeSystem)ffrw.jif_ts();
-    FabILNodeFactory nf = (FabILNodeFactory)ffrw.java_nf();
+    FabricTypeSystem ts = (FabricTypeSystem) ffrw.jif_ts();
+    FabILNodeFactory nf = (FabILNodeFactory) ffrw.java_nf();
     if (ts.isPrincipal(castType)
         && (ts.typeEquals(ts.Worker(), exprType) || ts.typeEquals(
             ts.RemoteWorker(), exprType))
-            || ts.typeEquals(ts.Store(), exprType)) {
-      return nf.Call(c.position(), c.expr(), nf.Id(Position.compilerGenerated(), "getPrincipal"));
+        || ts.typeEquals(ts.Store(), exprType)) {
+      return nf.Call(c.position(), c.expr(),
+          nf.Id(Position.compilerGenerated(), "getPrincipal"));
     }
 
     if (castType.isPrimitive() || !ts.isFabricClass(castType)) {

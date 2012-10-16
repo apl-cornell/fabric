@@ -49,6 +49,7 @@ public interface NameService {
     ;
 
     abstract String dnsKey();
+
     abstract int getPort(ConfigProperties p);
   }
 }
