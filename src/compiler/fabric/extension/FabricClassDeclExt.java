@@ -61,19 +61,19 @@ public class FabricClassDeclExt extends JifClassDeclExt {
         // of the principals that have authorized ct must act for pl.
         lc.constrain(authPrincipal, PrincipalConstraint.ACTSFOR, pl,
             A.labelEnv(), n.position(), new ConstraintMessage() {
-          @Override
-          public String msg() {
-            return "Superclass " + superType + " requires " + ct + " to "
-                + "have the authority of principal " + pl;
-          }
+              @Override
+              public String msg() {
+                return "Superclass " + superType + " requires " + ct + " to "
+                    + "have the authority of principal " + pl;
+              }
 
-          @Override
-          public String detailMsg() {
-            return "The class " + superType + " has the authority of the "
-                + "principal " + pl + ". To extend this class, " + ct
-                + " must also have the authority of " + pl + ".";
-          }
-        });
+              @Override
+              public String detailMsg() {
+                return "The class " + superType + " has the authority of the "
+                    + "principal " + pl + ". To extend this class, " + ct
+                    + " must also have the authority of " + pl + ".";
+              }
+            });
 
       }
     }
@@ -83,8 +83,7 @@ public class FabricClassDeclExt extends JifClassDeclExt {
     lc = lc.context(A);
 
     // Access label checks
-    Label classAccessLabel =
-        ts.toLabel(pct.accessPolicy());
+    Label classAccessLabel = ts.toLabel(pct.accessPolicy());
 
     // ({this} <= access label) holds true at all access sites
     A.addAssertionLE(ts.thisLabel(ct), classAccessLabel);
@@ -103,9 +102,9 @@ public class FabricClassDeclExt extends JifClassDeclExt {
               Position.compilerGenerated(),
               ts.bottomConfPolicy(Position.compilerGenerated()),
               ts.topIntegPolicy(Position.compilerGenerated()))),
-              LabelConstraint.LEQ,
-              new NamedLabel("access policy", classAccessLabel), A.labelEnv(),
-              n.position(), new ConstraintMessage() {
+          LabelConstraint.LEQ,
+          new NamedLabel("access policy", classAccessLabel), A.labelEnv(), n
+              .position(), new ConstraintMessage() {
             @Override
             public String msg() {
               return "The access policy should have no integrity component";
@@ -118,12 +117,12 @@ public class FabricClassDeclExt extends JifClassDeclExt {
           LabelConstraint.LEQ,
           new NamedLabel("access policy", classAccessLabel), A.labelEnv(),
           n.position(), new ConstraintMessage() {
-        @Override
-        public String msg() {
-          return "The access policy of a class should be at least as restrictive"
-              + " as its object label";
-        }
-      });
+            @Override
+            public String msg() {
+              return "The access policy of a class should be at least as restrictive"
+                  + " as its object label";
+            }
+          });
 
     }
 
@@ -134,17 +133,17 @@ public class FabricClassDeclExt extends JifClassDeclExt {
             + provider.classType().fullName(), provider);
     lc.constrain(namedProvider, authPrincipal, A.labelEnv(), n.position(),
         new ConstraintMessage() {
-      @Override
-      public String msg() {
-        return provider + " must act for " + authPrincipal;
-      }
+          @Override
+          public String msg() {
+            return provider + " must act for " + authPrincipal;
+          }
 
-      @Override
-      public String detailMsg() {
-        return provider + " is the provider of " + ct
-            + " but does not have authority to act for " + authPrincipal;
-      }
-    });
+          @Override
+          public String detailMsg() {
+            return provider + " is the provider of " + ct
+                + " but does not have authority to act for " + authPrincipal;
+          }
+        });
 
     // label check class conformance
     labelCheckClassConformance(ct, lc);

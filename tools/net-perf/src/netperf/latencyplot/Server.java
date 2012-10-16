@@ -34,11 +34,8 @@ public class Server {
       socket.close();
 
       socket = server.accept();
-      in =
-          new DataInputStream(socket.getInputStream());
-      out =
-          new DataOutputStream(
-              socket.getOutputStream());
+      in = new DataInputStream(socket.getInputStream());
+      out = new DataOutputStream(socket.getOutputStream());
       byte[] pingOut = new byte[Config.MAX_PACKET_SIZE];
       rand.nextBytes(pingOut);
 

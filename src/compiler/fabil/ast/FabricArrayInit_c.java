@@ -20,7 +20,7 @@ import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
 public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
-Annotated {
+    Annotated {
 
   protected Expr location;
   protected Expr label;

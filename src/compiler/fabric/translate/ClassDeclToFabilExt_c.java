@@ -36,7 +36,6 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     return ClassDeclToJavaExt_c.constructorTranslatedName(ct);
   }
 
-
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     ClassDecl cd = (ClassDecl) super.toJava(rw);
@@ -65,7 +64,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   }
 
   @Override
-  protected ClassMember produceInstanceOfMethod(JifPolyType jpt, JifToJavaRewriter rw, boolean useGetters) throws SemanticException {
+  protected ClassMember produceInstanceOfMethod(JifPolyType jpt,
+      JifToJavaRewriter rw, boolean useGetters) throws SemanticException {
 
     Context A = rw.context();
     FabricToFabilRewriter frw =
@@ -87,7 +87,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
     if (jifts.isSignature(jpt) || sigMode) {
       // just produce a header
-      return frw.qq().parseMember("static public native boolean %s(%LF);", INSTANCEOF_METHOD_NAME, formals);
+      return frw.qq().parseMember("static public native boolean %s(%LF);",
+          INSTANCEOF_METHOD_NAME, formals);
     }
 
     StringBuffer sb = new StringBuffer();
@@ -97,25 +98,26 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     // Add code that checks that the access label of jpt flows to o.store
     // proceed normally if it does, otherwise throw an InternalError
     if (!(jpt instanceof FabricParsedClassType_c))
-      throw new InternalCompilerError("Trying to produce an instanceof method for a non-fabric class");
+      throw new InternalCompilerError(
+          "Trying to produce an instanceof method for a non-fabric class");
 
     FabricParsedClassType_c fpct = (FabricParsedClassType_c) jpt;
     ConfPolicy cp = fpct.accessPolicy();
-    Label accessLabel = jifts.pairLabel(cp.position(), cp, jifts.topIntegPolicy(cp.position()));
+    Label accessLabel =
+        jifts.pairLabel(cp.position(), cp, jifts.topIntegPolicy(cp.position()));
     Expr accessLabelExpr = frw.labelToJava(accessLabel);
     Expr objectExpr = frw.qq().parseExpr("o");
     sb.append(frw.runtimeLabelUtil() + ".accessCheck(%E, %E);");
 
     if (jpt.params().isEmpty()) {
       sb.append("return (o instanceof %s);");
-    }
-    else {
+    } else {
       sb.append("if (o instanceof %s) { ");
       sb.append("%s c = (%s)o; ");
 
       // now test each of the params
       boolean moreThanOneParam = (jpt.params().size() > 1);
-      sb.append(moreThanOneParam?"boolean ok = true;":"");
+      sb.append(moreThanOneParam ? "boolean ok = true;" : "");
       for (ParamInstance pi : jpt.params()) {
         String paramFieldName = ParamToJavaExpr_c.paramFieldName(pi);
         String paramArgName = ParamToJavaExpr_c.paramArgName(pi);
@@ -124,7 +126,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
           comparison = "relabelsTo";
         }
 
-        sb.append(moreThanOneParam?"ok = ok && ":"return ");
+        sb.append(moreThanOneParam ? "ok = ok && " : "return ");
 
         String paramExpr = paramFieldName;
         if (useGetters) {
@@ -132,13 +134,12 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
         }
         if (pi.isPrincipal()) {
           // e.g., PrincipalUtil.equivTo(c.expr, paramArgName)
-          sb.append(jifts.PrincipalUtilClassName() + "."+comparison+
-              "(c."+paramExpr+","+paramArgName+");");
-        }
-        else {
+          sb.append(jifts.PrincipalUtilClassName() + "." + comparison + "(c."
+              + paramExpr + "," + paramArgName + ");");
+        } else {
           // e.g., LabelUtil.equivTo(paramArgName)
-          sb.append(frw.runtimeLabelUtil() + "."+comparison+
-              "(c."+paramExpr+","+paramArgName+");");
+          sb.append(frw.runtimeLabelUtil() + "." + comparison + "(c."
+              + paramExpr + "," + paramArgName + ");");
         }
       }
       if (moreThanOneParam) sb.append("return ok;");
@@ -148,8 +149,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     sb.append("}");
 
     frw.clearStaticThisExpr();
-    return frw.qq().parseMember(sb.toString(), INSTANCEOF_METHOD_NAME,
-        formals, accessLabelExpr, objectExpr, name, name, name);
+    return frw.qq().parseMember(sb.toString(), INSTANCEOF_METHOD_NAME, formals,
+        accessLabelExpr, objectExpr, name, name, name);
   }
 
   @Override
@@ -157,11 +158,9 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     FabricTypeSystem ts = (FabricTypeSystem) rw.typeSystem();
     if (ts.isTransient(jpt)) {
       return super.produceObjectFormal(jpt, rw);
-    }
-    else {
+    } else {
       TypeNode tn = rw.qq().parseType("fabric.lang.Object");
-      return rw.java_nf().Formal(Position.compilerGenerated(),
-          Flags.FINAL, tn,
+      return rw.java_nf().Formal(Position.compilerGenerated(), Flags.FINAL, tn,
           rw.java_nf().Id(Position.compilerGenerated(), "o"));
     }
   }
@@ -175,8 +174,6 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 //
 //    return args;
 //  }
-
-
 
   @Override
   protected ClassBody addInitializer(ClassBody cb, JifToJavaRewriter rw) {
@@ -199,7 +196,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
     //FIXME: why is rw.currentClass() null?
     ClassDecl n = (ClassDecl) node();
-    FabricClassType ct = (FabricClassType)n.type();
+    FabricClassType ct = (FabricClassType) n.type();
 
     if (!sigMode && ts.isFabricClass(ct)) {
 
@@ -212,19 +209,23 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
       }
 
       // locate labels at the same store as the object
-      rw = ((FabricToFabilRewriter) rw).pushLocation(rw.qq().parseExpr("this.$getStore()"));
+      rw =
+          ((FabricToFabilRewriter) rw).pushLocation(rw.qq().parseExpr(
+              "this.$getStore()"));
 
       Expr updateLabelExpr = rw.labelToJava(updateLabel);
 
-      Label accessLabel = ts.pairLabel(accessPolicy.position(), accessPolicy,
-          ts.topIntegPolicy(accessPolicy.position()));
+      Label accessLabel =
+          ts.pairLabel(accessPolicy.position(), accessPolicy,
+              ts.topIntegPolicy(accessPolicy.position()));
 
       Expr accessLabelExpr = rw.labelToJava(accessLabel);
 
       return cb.addMember(rw.qq().parseMember(
           "public Object %s() { " + "this.$updateLabel = %E;  "
               + "this.$accessPolicy = %E.confPolicy();" + "return this;" + "}",
-              FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr, accessLabelExpr));
+          FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr,
+          accessLabelExpr));
     }
 
     return cb;

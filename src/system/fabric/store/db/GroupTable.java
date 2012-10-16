@@ -40,8 +40,7 @@ public final class GroupTable {
     pair.second.value--;
   }
 
-  public synchronized void put(long globID, Entry groupContainer,
-      int pinCount) {
+  public synchronized void put(long globID, Entry groupContainer, int pinCount) {
     SoftRef ref = new SoftRef(globID, groupContainer, queue);
     Pair<SoftRef, MutableInteger> entry =
         new Pair<SoftRef, MutableInteger>(ref, new MutableInteger(pinCount));

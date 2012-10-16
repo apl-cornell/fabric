@@ -27,7 +27,7 @@ public class WorkerAdmin {
    *           if no worker is listening on the admin port.
    */
   public static void connect(int adminPort, String[] cmd) throws UsageError,
-  WorkerNotRunningException {
+      WorkerNotRunningException {
     Socket socket = null;
     try {
       socket = new Socket((String) null, adminPort);

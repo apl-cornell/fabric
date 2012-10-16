@@ -17,7 +17,7 @@ import fabric.worker.Worker;
  * Represents a request from a worker to read an object owned by another worker.
  */
 public class DirtyReadMessage extends
-Message<DirtyReadMessage.Response, AccessException> {
+    Message<DirtyReadMessage.Response, AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -72,7 +72,7 @@ Message<DirtyReadMessage.Response, AccessException> {
 
   @Override
   public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
-  AccessException {
+      AccessException {
     return h.handle(p, this);
   }
 

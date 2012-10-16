@@ -17,14 +17,12 @@ public class LocalSource extends UTF8FileSource implements CodebaseSource {
   protected boolean publish;
   protected Reader reader;
 
-  public LocalSource(FileObject f, boolean userSpecified,
-      URI namespace)
-          throws IOException {
+  public LocalSource(FileObject f, boolean userSpecified, URI namespace)
+      throws IOException {
     this(f, userSpecified, namespace, true);
   }
 
-  public LocalSource(FileObject f, boolean userSpecified,
-      URI namespace,
+  public LocalSource(FileObject f, boolean userSpecified, URI namespace,
       boolean publish) throws IOException {
     super(f, userSpecified);
     this.namespace = namespace;

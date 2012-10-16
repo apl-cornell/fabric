@@ -101,7 +101,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements
-FabricTypeSystem {
+    FabricTypeSystem {
   private static final Collection<String> TOPICS = CollectionUtil.list(
       Report.types, Report.resolver);
 
@@ -173,8 +173,7 @@ FabricTypeSystem {
   // helped
   // identify the situations it is called in.
   @Override
-  public Package createPackage(URI ns, Package prefix,
-      java.lang.String name) {
+  public Package createPackage(URI ns, Package prefix, java.lang.String name) {
     if (prefix != null) {
       ns = ((CBPackage) prefix).namespace();
     }
@@ -185,8 +184,8 @@ FabricTypeSystem {
    * @throws SemanticException
    */
   @Override
-  public Package packageForName(URI ns, Package prefix,
-      java.lang.String name) throws SemanticException {
+  public Package packageForName(URI ns, Package prefix, java.lang.String name)
+      throws SemanticException {
     return createPackage(ns, prefix, name);
   }
 
@@ -337,16 +336,15 @@ FabricTypeSystem {
           wli.position(),
           readerPolicy(wli.position(), workerLocalPrincipal,
               bottomPrincipal(wli.position())),
-              writerPolicy(wli.position(), workerLocalPrincipal,
-                  workerLocalPrincipal)));
+          writerPolicy(wli.position(), workerLocalPrincipal,
+              workerLocalPrincipal)));
     }
     return workerLocalPrincipal;
   }
 
   @Override
-  public Principal storePrincipal(fabric.ast.Store store, FabricContext context,
-      Position pos)
-          throws SemanticException {
+  public Principal storePrincipal(fabric.ast.Store store,
+      FabricContext context, Position pos) throws SemanticException {
     AccessPath ap = exprToAccessPath(store, context);
 //    AccessPathStore storeap = new AccessPathStore(ap, Store(), pos);
     return dynamicPrincipal(pos, ap);
@@ -358,7 +356,6 @@ FabricTypeSystem {
     AccessPath ap = exprToAccessPath(worker, context);
     return dynamicPrincipal(pos, ap);
   }
-
 
   @Override
   public ExternalPrincipal externalPrincipal(Position pos, String name) {
@@ -668,8 +665,7 @@ FabricTypeSystem {
     if (as instanceof LabelLeAssertion) {
       LabelLeAssertion leq = (LabelLeAssertion) as;
       return containsThisLabel(leq.lhs()) || containsThisLabel(leq.rhs());
-    }
-    else if (as instanceof ActsForConstraint) {
+    } else if (as instanceof ActsForConstraint) {
       ActsForConstraint<?, ?> afc = (ActsForConstraint<?, ?>) as;
       boolean hasThis = false;
 
@@ -761,8 +757,8 @@ FabricTypeSystem {
   @Override
   public FabricArrayType fabricArrayOf(Position pos, Type t) {
     return new FabricArrayType_c(this, pos, t,
-        /* isConst */false, /* isNonConst */true,
-        /* isNative */false);
+    /* isConst */false, /* isNonConst */true,
+    /* isNative */false);
   }
 
   @Override
@@ -780,8 +776,8 @@ FabricTypeSystem {
     }
 
     return new FabricArrayType_c(this, pos, type,
-        /* isConst */false, /* isNonConst */true,
-        /* isNative */true);
+    /* isConst */false, /* isNonConst */true,
+    /* isNative */true);
   }
 
   @Override
@@ -850,11 +846,11 @@ FabricTypeSystem {
         fabric.lang.security.Label lbl = defaultPublishingLabel();
         fabric.util.HashMap classes =
             new fabric.util.HashMap._Impl(dest).fabric$util$HashMap$(
-                /*
-                 * // XXX when HashMap becomes parameterized, these will be the
-                 * labels. , lbl, lbl.confPolicy()
-                 */
-                );
+            /*
+             * // XXX when HashMap becomes parameterized, these will be the
+             * labels. , lbl, lbl.confPolicy()
+             */
+            );
         new_codebase =
             new Codebase._Impl(dest).fabric$lang$Codebase$(lbl,
                 lbl.confPolicy(), classes);
@@ -1044,7 +1040,7 @@ FabricTypeSystem {
               if (cp instanceof ConfProjectionPolicy_c) {
                 ConfProjectionPolicy_c cpproj = (ConfProjectionPolicy_c) cp;
                 lifted
-                .add(join(cpproj.label().subst(this), noComponentsLabel()));
+                    .add(join(cpproj.label().subst(this), noComponentsLabel()));
               } else confpols.add(cp);
             }
             ConfPolicy new_jp = joinConfPolicy(jp.position(), confpols);

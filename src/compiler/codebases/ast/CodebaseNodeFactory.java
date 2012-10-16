@@ -19,10 +19,10 @@ public interface CodebaseNodeFactory extends NodeFactory {
 
   CodebaseDecl CodebaseDecl(Position pos, Id name);
 
-  CodebaseNode CodebaseNode(Position pos, URI namespace,
-      String name, URI externalNS);
+  CodebaseNode CodebaseNode(Position pos, URI namespace, String name,
+      URI externalNS);
 
-  CodebaseNode CodebaseNode(Position pos, URI namespace,
-      String name, URI externalNS, Package package_);
+  CodebaseNode CodebaseNode(Position pos, URI namespace, String name,
+      URI externalNS, Package package_);
 
 }

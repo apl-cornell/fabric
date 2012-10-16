@@ -9,7 +9,7 @@ import polyglot.types.MethodInstance;
 import codebases.types.CodebaseClassType;
 
 public interface FabricParsedClassType extends JifParsedPolyType,
-FabricClassType, CodebaseClassType {
+    FabricClassType, CodebaseClassType {
 
   void removeMethod(MethodInstance mi);
 

@@ -227,26 +227,26 @@ public class Cache {
 
   private final Comparator<Pair<Pair<RemoteStore, Long>, Long>> TIMESTAMP_COMPARATOR =
       new Comparator<Pair<Pair<RemoteStore, Long>, Long>>() {
-    @Override
-    public int compare(Pair<Pair<RemoteStore, Long>, Long> o1,
-        Pair<Pair<RemoteStore, Long>, Long> o2) {
-      Glob g1 = map.get(o1.first);
-      Glob g2 = map.get(o2.first);
+        @Override
+        public int compare(Pair<Pair<RemoteStore, Long>, Long> o1,
+            Pair<Pair<RemoteStore, Long>, Long> o2) {
+          Glob g1 = map.get(o1.first);
+          Glob g2 = map.get(o2.first);
 
-      if (g1 == g2) {
-        return 0;
-      }
+          if (g1 == g2) {
+            return 0;
+          }
 
-      if (g1 == null) {
-        return 1;
-      }
+          if (g1 == null) {
+            return 1;
+          }
 
-      if (g2 == null) {
-        return -1;
-      }
+          if (g2 == null) {
+            return -1;
+          }
 
-      return g2.frequency() - g1.frequency();
-    }
-  };
+          return g2.frequency() - g1.frequency();
+        }
+      };
 
 }

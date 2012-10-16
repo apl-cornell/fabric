@@ -877,7 +877,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
     @Override
     public void writeUTF(String s) throws IOException {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream(2+3*s.length());
+      ByteArrayOutputStream baos =
+          new ByteArrayOutputStream(2 + 3 * s.length());
       DataOutput out = new DataOutputStream(baos);
       out.writeUTF(s);
 
@@ -904,7 +905,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     long updateLabelOnum = updateLabel.$getOnum();
     boolean interStoreUpdateLabel =
         !ONumConstants.isGlobalConstant(updateLabelOnum)
-        && !impl.$getStore().equals(updateLabelStore);
+            && !impl.$getStore().equals(updateLabelStore);
 
     // Write out the object header.
     out.writeLong(impl.$getOnum());
@@ -928,7 +929,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
           message +=
               System.getProperty("line.separator")
-              + "A stack trace for the creation of the local object follows.";
+                  + "A stack trace for the creation of the local object follows.";
           for (StackTraceElement e : ((_Impl) updateLabel.fetch()).$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
         }
@@ -946,7 +947,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     long accessPolicyOnum = accessPolicy.$getOnum();
     boolean interStoreAccessLabel =
         !ONumConstants.isGlobalConstant(accessPolicyOnum)
-        && !impl.$getStore().equals(accessPolicyStore);
+            && !impl.$getStore().equals(accessPolicyStore);
 
     out.writeBoolean(interStoreAccessLabel);
     if (interStoreAccessLabel) {
@@ -964,7 +965,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
           message +=
               System.getProperty("line.separator")
-              + "A stack trace for the creation of the local object follows.";
+                  + "A stack trace for the creation of the local object follows.";
           for (StackTraceElement e : ((_Impl) updateLabel.fetch()).$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
         }
@@ -1116,7 +1117,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   private static final Map<Class<? extends _Impl>, Constructor<?>> constructorTable =
       Collections
-      .synchronizedMap(new HashMap<Class<? extends _Impl>, Constructor<?>>());
+          .synchronizedMap(new HashMap<Class<? extends _Impl>, Constructor<?>>());
 
   /**
    * Deserializes this object, traversing surrogates as necessary.

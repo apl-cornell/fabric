@@ -60,7 +60,6 @@ public class FabricOptions extends JifOptions {
   protected final List<URI> sourcepath_uris;
   protected final List<URI> classpath_uris;
 
-
   public FabricOptions(ExtensionInfo extension) {
     super(extension);
     sourcepath_uris = new ArrayList<URI>();
@@ -166,10 +165,9 @@ public class FabricOptions extends JifOptions {
     flags.add(new Switch("-no-fail-on-exception",
         "Force runtime exceptions to be caught or declared."));
 
-    flags.add(new OptFlag<List<URI>>(new String[] { "-classpath",
-    "-cp" }, "<path>",
-    "where to find class files or mobile code to link against,"
-        + " may contain <escaped> URIs of codebases") {
+    flags.add(new OptFlag<List<URI>>(new String[] { "-classpath", "-cp" },
+        "<path>", "where to find class files or mobile code to link against,"
+            + " may contain <escaped> URIs of codebases") {
       @Override
       public Arg<List<URI>> handle(String[] args, int index) {
         List<URI> path = NSUtil.processPathString(args[index]);
@@ -229,8 +227,8 @@ public class FabricOptions extends JifOptions {
         return createArg(index + 1, args[index]);
       }
     });
-    flags.add(new OptFlag<Pair<String, URI>>(new String[] {
-        "-codebase-alias", "-cb-alias" }, "<name>",
+    flags.add(new OptFlag<Pair<String, URI>>(new String[] { "-codebase-alias",
+        "-cb-alias" }, "<name>",
         "The the destination store for published classes.") {
       @Override
       public Arg<Pair<String, URI>> handle(String[] args, int index)
@@ -335,8 +333,8 @@ public class FabricOptions extends JifOptions {
       classpathURIs().addAll(uris);
 
     } else if (arg.flag().ids().contains("-sourcepath")) {
-      sourcepathURIs().addAll(this.<List<URI>, URI> sccast(arg.value(),
-          URI.class));
+      sourcepathURIs().addAll(
+          this.<List<URI>, URI> sccast(arg.value(), URI.class));
 
     } else if (arg.flag().ids().contains("-bootclasspath")) {
       List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);
@@ -393,6 +391,7 @@ public class FabricOptions extends JifOptions {
     }
     return files;
   }
+
   /**
    * Filter and add arguments for FabIL.
    * @param flags
@@ -475,7 +474,6 @@ public class FabricOptions extends JifOptions {
   public List<File> signaturepath() {
     return sigcp;
   }
-
 
   public Map<String, URI> codebaseAliases() {
     return codebase_aliases;

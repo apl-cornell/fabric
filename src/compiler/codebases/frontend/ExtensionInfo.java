@@ -47,7 +47,8 @@ public interface ExtensionInfo extends polyglot.frontend.ExtensionInfo {
   URI platformNamespace();
 
   @Override
-  ClassFile createClassFile(FileObject fo, byte[] code)throws IOException;
+  ClassFile createClassFile(FileObject fo, byte[] code) throws IOException;
+
   /**
    * Return the java package prefix for the given namespace. This prefix is
    * prepended to the names of published classes to obtain a unique Java name.

@@ -118,14 +118,14 @@ public class Disseminator implements Application {
 
   private static final Continuation<Object, Exception> halt =
       new Continuation<Object, Exception>() {
-    @Override
-    public void receiveException(Exception result) {
-    }
+        @Override
+        public void receiveException(Exception result) {
+        }
 
-    @Override
-    public void receiveResult(Object result) {
-    }
-  };
+        @Override
+        public void receiveResult(Object result) {
+        }
+      };
 
   /**
    * Schedules a task on the task processing thread. When messages are received,

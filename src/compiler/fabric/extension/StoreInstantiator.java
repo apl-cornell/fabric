@@ -112,8 +112,8 @@ public class StoreInstantiator extends JifInstantiator {
       Expr target, ReferenceType type, Label targetLabel,
       List<ArgLabel> formalLabels, List<? extends Type> formalTypes,
       List<Label> actualLabels, List<Expr> arguments,
-      List<Label> actualParamLabels,
-      AccessPath storeap) throws SemanticException {
+      List<Label> actualParamLabels, AccessPath storeap)
+      throws SemanticException {
     return JifInstantiator.instantiate(entryLabel, ctx, target, type,
         targetLabel, formalLabels, formalTypes, actualLabels, arguments,
         actualParamLabels);

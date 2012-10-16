@@ -377,7 +377,7 @@ public abstract class Options {
     });
 
     flags.add(new Flag(Kind.VERSION, new String[] { "--version", "-v",
-    "-version" }, null, "print version info") {
+        "-version" }, null, "print version info") {
       @Override
       public int handle(String[] args, int index) {
         System.out.println("Fabric version " + new Version());
@@ -458,8 +458,8 @@ public abstract class Options {
     });
 
     flags
-        .add(new Flag(Kind.SECRET, new String[] { "--addbootcp", "-addbootcp" },
-            "<path>",
+        .add(new Flag(Kind.SECRET,
+            new String[] { "--addbootcp", "-addbootcp" }, "<path>",
             "additional directory for Fabric runtime classes; prepended to bootclasspath") {
           @Override
           public int handle(String[] args, int index) {

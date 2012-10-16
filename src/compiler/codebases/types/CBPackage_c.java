@@ -22,8 +22,7 @@ public class CBPackage_c extends Package_c implements CBPackage {
     this(ts, ns, null, name);
   }
 
-  public CBPackage_c(TypeSystem ts, URI ns, Package prefix,
-      String name) {
+  public CBPackage_c(TypeSystem ts, URI ns, Package prefix, String name) {
     super(ts, prefix, name);
     this.namespace = ns;
   }

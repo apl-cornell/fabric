@@ -8,7 +8,7 @@ import codebases.types.CodebaseClassType;
 public interface FabILParsedClassType extends CodebaseClassType,
     ParsedClassType {
   public byte[] getClassHash();
-  
+
   @Override
   public List<FabILParsedClassType> interfaces();
 }

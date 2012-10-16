@@ -41,7 +41,7 @@ import fabil.extension.FabILExtFactory_c;
  * NodeFactory for FabIL extension.
  */
 public class FabILNodeFactory_c extends NodeFactory_c implements
-FabILNodeFactory {
+    FabILNodeFactory {
 
   public FabILNodeFactory_c() {
     super(new FabILExtFactory_c(), new FabILDelFactory_c());
@@ -58,14 +58,14 @@ FabILNodeFactory {
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, URI ns,
-      String name, URI externalNS) {
+  public CodebaseNode CodebaseNode(Position pos, URI ns, String name,
+      URI externalNS) {
     return CodebaseNode(pos, ns, name, externalNS, null);
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, URI ns,
-      String name, URI externalNS, Package package_) {
+  public CodebaseNode CodebaseNode(Position pos, URI ns, String name,
+      URI externalNS, Package package_) {
     CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, package_);
     n = (CodebaseNode) n.ext(extFactory().extCodebaseNode());
     n = (CodebaseNode) n.del(delFactory().delCodebaseNode());
@@ -128,8 +128,7 @@ FabILNodeFactory {
 
   @Override
   public ClassDecl ClassDecl(Position pos, Flags flags, Id name,
-      TypeNode superClass, List<TypeNode> interfaces,
-      ClassBody body) {
+      TypeNode superClass, List<TypeNode> interfaces, ClassBody body) {
     ClassDecl n =
         new ClassDecl_c(pos, flags, name, superClass,
             CollectionUtil.nonNullList(interfaces), body);

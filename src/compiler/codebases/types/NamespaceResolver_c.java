@@ -85,8 +85,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
   public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace,
       NamespaceResolver parent) {
-    this(extInfo, namespace, parent, Collections
-        .<String, URI> emptyMap());
+    this(extInfo, namespace, parent, Collections.<String, URI> emptyMap());
   }
 
   public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace,
@@ -343,8 +342,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
     }
     if (extInfo.extFileManager().caseInsensitive())
-      // Sigh... This source may have originally been enqueued under a
-      // case insensitive name.  Allow the TypeSystem to keep looking.
+    // Sigh... This source may have originally been enqueued under a
+    // case insensitive name.  Allow the TypeSystem to keep looking.
       throw new NoClassException(name);
 
     // The source has already been compiled, but the type was not created there.

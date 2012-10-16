@@ -1,9 +1,9 @@
 package fabric.lang.arrays;
 
-import fabric.worker.Store;
 import fabric.lang.Object;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
+import fabric.worker.Store;
 
 public interface booleanArray extends Object {
   boolean get(int i);
@@ -15,8 +15,10 @@ public interface booleanArray extends Object {
       super(store);
     }
 
+    @Override
     public native boolean get(int i);
 
+    @Override
     public native boolean set(int i, boolean value);
   }
 }

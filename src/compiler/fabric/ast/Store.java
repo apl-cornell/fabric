@@ -28,5 +28,4 @@ public interface Store extends Expr {
    */
   boolean isLocalStore();
 
-
 }

@@ -13,7 +13,7 @@ import polyglot.ast.ExtFactory;
  * @author mdgeorge
  */
 public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
-FabricExtFactory {
+    FabricExtFactory {
 
   public AbstractFabExtFactory_c() {
     super();

@@ -22,6 +22,7 @@ import codebases.visit.CodebaseTranslator;
 public class CodebaseImportDel_c extends JL_c {
   protected URI ns;
   protected ClassType ct;
+
   /** Check that imported classes and packages exist. */
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {

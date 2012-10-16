@@ -173,8 +173,9 @@ public class SubServerSocketFactory {
     ConnectionQueue makeQueue(String name, int size) throws IOException {
       synchronized (queues) {
         if (queues.containsKey(name))
-          throw new IOException("attempted to bind multiple SubServerSockets to "
-              + name + " @ " + address);
+          throw new IOException(
+              "attempted to bind multiple SubServerSockets to " + name + " @ "
+                  + address);
 
         ConnectionQueue queue = new ConnectionQueue(name, size);
         queues.put(name, queue);
@@ -319,8 +320,7 @@ public class SubServerSocketFactory {
        * @author mdgeorge
        */
       class ServerChannel extends Channel {
-        ServerChannel(ShakenSocket sock)
-            throws IOException {
+        ServerChannel(ShakenSocket sock) throws IOException {
           super(sock, maxOpenConnectionsPerChannel);
 
           setName("demultiplexer for " + toString());

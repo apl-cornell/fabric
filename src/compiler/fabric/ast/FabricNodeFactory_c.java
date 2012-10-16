@@ -49,7 +49,7 @@ import fabric.extension.LocatedExt_c;
  * NodeFactory for fabric extension.
  */
 public class FabricNodeFactory_c extends JifNodeFactory_c implements
-FabricNodeFactory {
+    FabricNodeFactory {
 
   // ////////////////////////////////////////////////////////////////////////////
   // public constructors //
@@ -74,14 +74,14 @@ FabricNodeFactory {
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, URI ns,
-      String name, URI externalNS) {
+  public CodebaseNode CodebaseNode(Position pos, URI ns, String name,
+      URI externalNS) {
     return CodebaseNode(pos, ns, name, externalNS, null);
   }
 
   @Override
-  public CodebaseNode CodebaseNode(Position pos, URI ns,
-      String name, URI externalNS, Package package_) {
+  public CodebaseNode CodebaseNode(Position pos, URI ns, String name,
+      URI externalNS, Package package_) {
     CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, package_);
     n = (CodebaseNode) n.ext(fabricExtFactory().extCodebaseNode());
     n = (CodebaseNode) n.del(fabricDelFactory().delCodebaseNode());
@@ -231,8 +231,7 @@ FabricNodeFactory {
 
   @Override
   public New New(Position pos, Expr outer, TypeNode objectType,
-      List<Expr> args,
-      ClassBody body) {
+      List<Expr> args, ClassBody body) {
     if (body != null)
       throw new InternalCompilerError("Fabric does not support inner classes.");
     if (outer != null)

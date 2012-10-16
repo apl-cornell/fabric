@@ -33,7 +33,7 @@ import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseClassType;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements
-FabricParsedClassType {
+    FabricParsedClassType {
   private transient Label singleFieldLabel = null;
   private transient ConfPolicy accessPolicy = null;
   private transient boolean fieldLabelFound = false;
@@ -163,7 +163,7 @@ FabricParsedClassType {
       if (constraint instanceof ActsForConstraint) {
         @SuppressWarnings("unchecked")
         ActsForConstraint<ActsForParam, ActsForParam> pi =
-        (ActsForConstraint<ActsForParam, ActsForParam>) constraint;
+            (ActsForConstraint<ActsForParam, ActsForParam>) constraint;
         ActsForParam actor = pi.actor();
         ActsForParam granter = pi.granter();
         if (actor instanceof Principal && granter instanceof Principal) {

@@ -17,9 +17,8 @@ import fabric.lang.security.Principal;
 import fabric.worker.remote.RemoteCallException;
 import fabric.worker.remote.WriterMap;
 
-public class RemoteCallMessage
-extends Message<RemoteCallMessage.Response, RemoteCallException>
-{
+public class RemoteCallMessage extends
+    Message<RemoteCallMessage.Response, RemoteCallException> {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
   //////////////////////////////////////////////////////////////////////////////
@@ -79,8 +78,8 @@ extends Message<RemoteCallMessage.Response, RemoteCallException>
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h)
-      throws ProtocolError, RemoteCallException {
+  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
+      RemoteCallException {
     return h.handle(p, this);
   }
 
@@ -173,8 +172,7 @@ extends Message<RemoteCallMessage.Response, RemoteCallException>
         receiverType.toProxyClass();
 
     if (proxyType == null) {
-      throw new InternalError(
-          "Unable to find _Proxy class for " + receiverType);
+      throw new InternalError("Unable to find _Proxy class for " + receiverType);
     }
 
     return proxyType.getMethod(methodName + "_remote", mangledParamTypes);
@@ -183,18 +181,16 @@ extends Message<RemoteCallMessage.Response, RemoteCallException>
   @Override
   protected Response readResponse(DataInput in) throws IOException {
 
-    Object    result;
+    Object result;
     WriterMap writerMap;
 
     if (in.readBoolean())
       result = Message.readRef(fabric.lang.Object.class, in);
-    else
-      result = readObject(in, Object.class);
+    else result = readObject(in, Object.class);
 
     if (in.readBoolean())
       writerMap = new WriterMap(in);
-    else
-      writerMap = null;
+    else writerMap = null;
 
     return new Response(result, writerMap);
   }

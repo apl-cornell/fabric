@@ -115,8 +115,8 @@ public interface _byteArray extends Object {
         throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
-      for (int i = 0; i < value.length; i++)
-        out.writeByte(value[i]);
+      for (byte element : value)
+        out.writeByte(element);
     }
 
     @Override

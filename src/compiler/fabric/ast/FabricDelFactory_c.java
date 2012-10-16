@@ -11,7 +11,7 @@ import fabric.extension.FabricPrincipalExprDel;
 
 /** Factory class for creating delegates for fabric types. */
 public class FabricDelFactory_c extends JifDelFactory_c implements
-FabricDelFactory {
+    FabricDelFactory {
 
   // ////////////////////////////////////////////////////////////////////////////
   // new ast methods //

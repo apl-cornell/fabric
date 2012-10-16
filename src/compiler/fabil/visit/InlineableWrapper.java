@@ -101,7 +101,8 @@ public class InlineableWrapper extends AscriptionVisitor {
           ts.methodInstance(CG, wrappedJavaInlineable,
               Flags.PUBLIC.set(Flags.STATIC).set(Flags.FINAL),
               wrappedJavaInlineable, "$wrap",
-              Collections.singletonList((Type) ts.Object()), Collections.<Type> emptyList());
+              Collections.singletonList((Type) ts.Object()),
+              Collections.<Type> emptyList());
       call = (Call) call.type(toType);
       return call.methodInstance(mi);
     }

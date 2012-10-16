@@ -82,6 +82,7 @@ public final class TransactionRegistry {
    * 
    * @deprecated
    */
+  @Deprecated
   public static void renumberObject(Store store, long onum, long newOnum) {
     for (Log log : registry.values()) {
       log.renumberObject(store, onum, newOnum);

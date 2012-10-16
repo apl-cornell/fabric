@@ -23,19 +23,20 @@ public class InstanceOfToFabilExt_c extends InstanceOfToJavaExt_c {
 
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    Instanceof io = (Instanceof)this.node();
+    Instanceof io = (Instanceof) this.node();
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     FabricTypeSystem ts = (FabricTypeSystem) ffrw.typeSystem();
     if (!ts.needsDynamicTypeMethods(compareType)) {
-      return rw.java_nf().Instanceof(io.position(), io.expr(), io.compareType());
+      return rw.java_nf()
+          .Instanceof(io.position(), io.expr(), io.compareType());
     }
 
     List<Expr> args = new ArrayList<Expr>();
     if (((JifInstanceOfDel) io.del()).isToSubstJifClass()) {
       // add all the actual param expressions to args
-      FabricSubstType t = (FabricSubstType)compareType;
-      JifSubst subst = (JifSubst)t.subst();
-      JifPolyType base = (JifPolyType)t.base();
+      FabricSubstType t = (FabricSubstType) compareType;
+      JifSubst subst = (JifSubst) t.subst();
+      JifPolyType base = (JifPolyType) t.base();
       for (ParamInstance pi : base.params()) {
         args.add(ffrw.paramToJava(subst.get(pi)));
       }
@@ -50,7 +51,9 @@ public class InstanceOfToFabilExt_c extends InstanceOfToJavaExt_c {
     if (fct.flags().isInterface()) {
       jifImplClass = ClassDeclToJavaExt_c.interfaceClassImplName(jifImplClass);
     }
-    return ffrw.qq().parseExpr(jifImplClass + "." + ClassDeclToJavaExt_c.INSTANCEOF_METHOD_NAME + "(%LE)", (Object)args);
+    return ffrw.qq().parseExpr(
+        jifImplClass + "." + ClassDeclToJavaExt_c.INSTANCEOF_METHOD_NAME
+            + "(%LE)", (Object) args);
   }
 
 }
