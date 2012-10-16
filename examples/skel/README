@@ -1,4 +1,4 @@
-This is a template for creating fabric examples.  Many of our examples have
+This is a template for creating fabric examples. Many of our examples have
 multiple versions - maybe the example is modeled in java and then ported to
 fabil, or modeled in jif and ported to fabric, and this directory layout and
 build file are designed for this scenario.
