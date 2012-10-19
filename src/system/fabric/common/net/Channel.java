@@ -6,6 +6,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -105,7 +106,6 @@ abstract class Channel extends Thread {
   }
 
   /** called on receipt of a channel close message */
-  @SuppressWarnings("unused")
   private void recvClose() {
     NETWORK_CHANNEL_LOGGER.log(Level.INFO,
         "cleaning up {0} after channel close", this);
@@ -169,6 +169,8 @@ abstract class Channel extends Thread {
 
         recvData(streamID, buf);
       }
+    } catch (final EOFException exc) {
+      recvClose();
     } catch (final IOException exc) {
       throw new NotImplementedException(exc);
     }
