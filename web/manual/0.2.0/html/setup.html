@@ -56,7 +56,7 @@ $(document).ready(function(){initNavTree('setup.html','');});
 <p>This Fabric distribution builds on Unix. Fabric 0.2.0 builds against Jif 3.4.0 and Polyglot 2.5.1, both included in the distribution. We recommend that you use Java 6 or later; we have experienced problems with older versions. <a href="http://www.openssl.org/">OpenSSL</a> is used to sign certificates. Fabric is compiled with the <a href="http://ant.apache.org/">Apache Ant build tool</a>.</p>
 <h2>Configuring</h2>
 <ol type="1">
-<li>Before using Fabric, you must specify the locations of the Polyglot and Jif distributions. Copy <code>config.properties.in</code> to <code>config.properties</code> and edit appropriately. On Mac OS you may also need to tell Fabric where to find the Java installation. <div class="fragment"><div class="line">$ cp config.properties.in config.properties</div>
+<li>Before using Fabric, you may need to specify the location of your JDK installation. If you are not using the pre-packaged Polyglot and Jif, you will also need to specify the locations of those. Copy <code>config.properties.in</code> to <code>config.properties</code> and edit appropriately. <div class="fragment"><div class="line">$ cp config.properties.in config.properties</div>
 <div class="line">$ vim config.properties</div>
 </div><!-- fragment --></li>
 <li>Configure the scripts in the <code>bin</code> directory. From the top-level directory, run: <div class="fragment"><div class="line">$ ant bin</div>
@@ -71,7 +71,7 @@ $(document).ready(function(){initNavTree('setup.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Oct 18 2012 20:28:07 for Fabric by
+    <li class="footer">Generated on Fri Oct 19 2012 18:42:11 for Fabric by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.2 </li>
   </ul>
