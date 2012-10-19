@@ -13,10 +13,10 @@ tool](http://ant.apache.org/).
 
 Configuring
 -----------
-1. Before using Fabric, you must specify the locations of the Polyglot
-   and Jif distributions. Copy `config.properties.in` to
-   `config.properties` and edit appropriately. On Mac OS you may also
-   need to tell Fabric where to find the Java installation.
+1. Before using Fabric, you may need to specify the location of your JDK
+   installation. If you are not using the pre-packaged Polyglot and Jif, you
+   will also need to specify the locations of those.  Copy
+   `config.properties.in` to `config.properties` and edit appropriately.
 ~~~
       $ cp config.properties.in config.properties
       $ vim config.properties

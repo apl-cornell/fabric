@@ -12,17 +12,8 @@
   <property file="${fabric.home}/extra.properties" />
 
   <!-- Polyglot installation location -->
-  <!-- If it is not defined in the properties file, use the environment
-       variable $POLYGLOT. -->
-  <condition property="polyglot.home" value="${env.POLYGLOT}">
-    <and>
-      <isset property="env.POLYGLOT" />
-      <not>
-        <isset property="polyglot.home" />
-      </not>
-    </and>
-  </condition>
-  <!-- As a last resort, try to use polyglot.jar from distribution -->
+  <!-- If polyglot.home is not defined in the properties file, try to use
+       polyglot.jar from the distribution -->
   <condition property="polyglot.home" value="${fabric.home}">
     <not><isset property="polyglot.home" /></not>
   </condition>
@@ -31,17 +22,8 @@
   <property file="${polyglot.home}/config.properties" prefix="polyglot" />
 
   <!-- Jif installation -->
-  <!-- If it is not defined in the properties file, use the environment
-       variable $JIF. -->
-  <condition property="jif.home" value="${env.JIF}">
-    <and>
-      <isset property="env.JIF" />
-      <not>
-        <isset property="jif.home" />
-      </not>
-    </and>
-  </condition>
-  <!-- As a last resort, try to use jif.jar from distribution -->
+  <!-- If jif.home is not defined in the properties file, try to use jif.jar
+       from the distribution -->
   <condition property="jif.home" value="${fabric.home}">
     <not><isset property="jif.home" /></not>
   </condition>
