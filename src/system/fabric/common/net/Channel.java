@@ -8,14 +8,13 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.ShakenSocket;
 import fabric.lang.security.Principal;
 
@@ -106,6 +105,7 @@ abstract class Channel extends Thread {
   }
 
   /** called on receipt of a channel close message */
+  @SuppressWarnings("unused")
   private void recvClose() {
     NETWORK_CHANNEL_LOGGER.log(Level.INFO,
         "cleaning up {0} after channel close", this);
@@ -170,7 +170,7 @@ abstract class Channel extends Thread {
         recvData(streamID, buf);
       }
     } catch (final IOException exc) {
-      recvClose();
+      throw new NotImplementedException(exc);
     }
   }
 
@@ -183,7 +183,7 @@ abstract class Channel extends Thread {
     /**
      * The application-facing input stream.
      */
-    final public PipedInputStream in;
+    final public CircularByteBuffer.InputStream in;
 
     /**
      * The application-facing output stream.
@@ -193,7 +193,7 @@ abstract class Channel extends Thread {
     /**
      * The output stream for sending data to the application.
      */
-    final public PipedOutputStream sink;
+    final public CircularByteBuffer.OutputStream sink;
 
     /**
      * Size of stream headers. Currently two ints: streamID and packet length.
@@ -214,9 +214,9 @@ abstract class Channel extends Thread {
           new BufferedOutputStream(new MuxedOutputStream(streamID),
               sock.getSendBufferSize() - STREAM_HEADER_SIZE);
 
-      this.in =
-          new PipedInputStream(sock.getReceiveBufferSize() - STREAM_HEADER_SIZE);
-      this.sink = new PipedOutputStream(in);
+      CircularByteBuffer buf = new CircularByteBuffer();
+      this.in = buf.getInputStream();
+      this.sink = buf.getOutputStream();
       synchronized (connections) {
         while (connections.size() >= maxOpenConnections) {
           try {
