@@ -81,8 +81,8 @@ persistent application data and the workers each host a web application.
 	User: airline
 	Pass: password
 
-  III. Exit the store with the "exit" command in its console (you can
-       also use CTRL-D).
+  III. Exit the stores with the "exit" command in each console (you can
+       also use CTRL-D). Exit the workers with CTRL-C.
 
        You can clean up the stores' persistent state by removing 'var'
        from the travel example directory:
