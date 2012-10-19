@@ -1,8 +1,8 @@
 OO7 Example Application
 =======================
 
-This is a simple implementation of the OO7 object-oriented database benchmark
-on top of Fabric. It is written using FabIL.
+This is a simple implementation of the OO7 object-oriented database
+benchmark on top of Fabric. It is written using FabIL.
 
 This directory contains the following sub-directories:
 
@@ -14,16 +14,28 @@ This directory contains the following sub-directories:
 
 Using
 -----
-This example comes with a store named "database" for storing the OO7 databases,
-and a worker named "worker" for creating OO7 databases and running the OO7
-traversals.
+This example comes with a store named "database" for storing the OO7
+databases, and a worker named "worker" for creating OO7 databases and
+running the OO7 traversals.
 
   0. Begin in the OO7 example directory and compile the example:
 
         $ cd $FABRIC/examples/OO7
         $ ant
 
-  1. Start the "database" store that will be holding the OO7 databases:
+  1. Start the "database" store that will be holding the OO7 database.
+     The 'start-all' script will start the store in a separate xterm
+     window:
+
+        $ bin/start-all
+
+     You can also use an xterm replacement (e.g., gnome-terminal or
+     konsole):
+
+        $ XTERM=gnome-terminal bin/start-all
+
+     Or, if you prefer, you can start the store separately in your
+     favourite terminal emulator:
 
 	$ bin/start-store
 
@@ -35,15 +47,19 @@ traversals.
 
 	$ bin/t1
 
-     The script will execute a traversal and print out timing information. To
-     execute a traversal against a "hot" worker cache, add the "--hot" option:
+     The script will execute a traversal and print out timing
+     information. To execute a traversal against a "hot" worker cache,
+     add the "--hot" option:
 
-       $ bin/t1 --hot
+        $ bin/t1 --hot
 
-     Similar scripts for running T2a, T2b, T2c, and T6 traversals are also
-     available in the 'bin' directory.
+     Similar scripts for running T2a, T2b, T2c, and T6 traversals are
+     also available in the 'bin' directory.
 
-  4. You can clean up the store's persistent state by removing the 'var'
+  4. Exit the store with the "exit" command in its console (you can also
+     use CTRL-D).
+
+     You can clean up the store's persistent state by removing the 'var'
      directory:
 
 	$ rm -rf var

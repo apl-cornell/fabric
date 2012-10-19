@@ -1,0 +1,7 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+"${BIN_DIR}/run-in-xterm" "Hello store" \
+  "${BIN_DIR}/start-store $@" &
+
