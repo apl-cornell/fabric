@@ -53,8 +53,8 @@ and "bob").
 
         $ bin/initialize
 
-  3. The 'friendmap' script will run the example. You should in alice's
-     console a 10x10 map showing Bob's location.
+  3. The 'friendmap' script will run the example. You should see in
+     alice's console a 10x10 map showing Bob's location.
 
         $ bin/friendmap
 
