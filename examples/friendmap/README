@@ -1,10 +1,14 @@
 Social Mashup Example
 =====================
 
-This is the FriendMap example program. It enables Alice, a user of a
-social network, to use a mapping service to create a map that displays
-the location of one of her friends, Bob, while maintaining his location
-privacy.
+This is the FriendMap example program. It enables Alice, a user of a social
+network, to use a mapping service to create a map that displays the location of
+one of her friends, Bob, while maintaining his location privacy. It
+demonstrates that it is possible to publish new code into Fabric and for other
+nodes to dynamically load it. This ability to load mobile code provides
+functionality similar that of JavaScript, but made more powerful because
+information flow control avoids the limitations imposed by overly restrictive
+same-origin policy.
 
 This directory contains the following sub-directories:
 
