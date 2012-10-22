@@ -1,0 +1,16 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+# Start the store.
+"${BIN_DIR}/run-in-xterm" "Blog store" "${BIN_DIR}/start-store" &
+
+# Wait for the store to start up.
+echo "Press ENTER when the store is ready."
+echo "You should see a console prompt, e.g., 'blog-store>'"
+read -r
+
+# Start the worker.
+"${BIN_DIR}/run-in-xterm" "Blog worker" \
+  "${BIN_DIR}/start-blog" &
+

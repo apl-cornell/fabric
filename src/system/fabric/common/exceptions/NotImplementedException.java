@@ -1,6 +1,6 @@
 package fabric.common.exceptions;
 
-public class NotImplementedException extends RuntimeException {
+public class NotImplementedException extends InternalError {
   public NotImplementedException() {
     super("method not yet implemented");
   }

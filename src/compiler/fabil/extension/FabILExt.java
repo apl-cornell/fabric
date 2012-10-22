@@ -9,6 +9,7 @@ import polyglot.types.SemanticException;
 import fabil.visit.AtomicRewriter;
 import fabil.visit.LabelAssigner;
 import fabil.visit.LocationAssigner;
+import fabil.visit.MemoizedMethodRewriter;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.StaticInitializerCollector;
@@ -63,4 +64,10 @@ public interface FabILExt extends Ext {
    * Used by <code>RemoteCallRewriter</code> to translate RMIs.
    */
   public Node rewriteRemoteCalls(RemoteCallRewriter rr);
+
+  /**
+   * Used by <code>MemoizedMethodRewriter</code> to add memo table lookups to
+   * memoized methods.
+   */
+  public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr);
 }

@@ -10,6 +10,18 @@ import codebases.types.CodebaseTypeSystem;
 
 public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
 
+  /**
+   * return the ClassType corresponding to
+   * fabric.worker.memoize.MemoCache
+   */
+  ClassType MemoCache();
+
+  /**
+   * return the ClassType corresponding to
+   * fabric.worker.memoize.CallTuple
+   */
+  ClassType CallTuple();
+
   // TODO: fabric.worker or fabric.lang?
   /**
    * return the ClassType corresponding to

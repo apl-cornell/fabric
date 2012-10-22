@@ -68,6 +68,7 @@ public class CallExt_c extends ExprExt_c {
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     Call call = node();
     MethodInstance mi = call.methodInstance();
+    
     Receiver target = call.target();
     Type targetType = target.type();
 

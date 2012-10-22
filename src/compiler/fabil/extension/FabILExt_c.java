@@ -6,6 +6,7 @@ import polyglot.types.SemanticException;
 import fabil.visit.AtomicRewriter;
 import fabil.visit.LabelAssigner;
 import fabil.visit.LocationAssigner;
+import fabil.visit.MemoizedMethodRewriter;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.StaticInitializerCollector;
@@ -57,6 +58,11 @@ public class FabILExt_c extends Ext_c implements FabILExt {
 
   @Override
   public Node rewriteRemoteCalls(RemoteCallRewriter rr) {
+    return node();
+  }
+
+  @Override
+  public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr) {
     return node();
   }
 

@@ -102,6 +102,7 @@ import java.math.BigInteger;
 	/* FabIL extension */
 	keywords.put("atomic",        new Integer(sym.ATOMIC));
 	keywords.put("abort",         new Integer(sym.ABORT));
+	keywords.put("memoized",      new Integer(sym.MEMOIZED));
 	keywords.put("retry",         new Integer(sym.RETRY));
 	keywords.put("nonfabric",     new Integer(sym.NONFABRIC));
     }

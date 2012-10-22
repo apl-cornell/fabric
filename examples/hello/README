@@ -1,8 +1,8 @@
 Hello World
 ===========
 
-This is a Fabric port of every programmer's favorite program. It stores the
-string "Hello World" persistently, and then prints it out.
+This is a Fabric port of every programmer's favorite program. It stores
+the string "Hello World" persistently, and then prints it out.
 
 This directory contains the following sub-directories:
 
@@ -13,15 +13,26 @@ This directory contains the following sub-directories:
 
 Using
 -----
-This example comes with a store named "store" for storing persistent data,
-and a worker named "worker" to run the computation.
+This example comes with a store named "store" for storing persistent
+data, and a worker named "worker" to run the computation.
 
   0. Begin in the hello example directory and compile the example:
 
         $ cd $FABRIC/examples/hello
         $ ant
 
-  1. Start the store:
+  1. Start the store. The 'start-all' script will start the store in a
+     separate xterm window:
+
+        $ bin/start-all
+
+     You can also use an xterm replacement (e.g., gnome-terminal or
+     konsole):
+
+        $ XTERM=gnome-terminal bin/start-all
+
+     Or, if you prefer, you can start the store separately in your
+     favourite terminal emulator:
 
         $ bin/start-store
 
@@ -29,7 +40,10 @@ and a worker named "worker" to run the computation.
 
         $ bin/say-hello
 
-  3. You can clean up the store's persistent state by removing the 'var'
+  3. Exit the store with the "exit" command in its console (you can also
+     use CTRL-D).
+
+     You can clean up the store's persistent state by removing the 'var'
      directory:
 
         $ rm -rf var

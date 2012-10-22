@@ -134,6 +134,16 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   @Override
+  public ClassType MemoCache() {
+    return load("fabric.worker.memoize.MemoCache");
+  }
+
+  @Override
+  public ClassType CallTuple() {
+    return load("fabric.worker.memoize.CallTuple");
+  }
+
+  @Override
   public ClassType TransactionManager() {
     return load("fabric.worker.transaction.TransactionManager");
   }
@@ -325,7 +335,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @Override
   public Flags legalMethodFlags() {
-    return super.legalMethodFlags().set(FabILFlags.ATOMIC);
+    return
+      super.legalMethodFlags().set(FabILFlags.ATOMIC).set(FabILFlags.MEMOIZED);
   }
 
   @Override

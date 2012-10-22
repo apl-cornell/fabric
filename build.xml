@@ -984,9 +984,15 @@ public class Version {
   <target name="dist" depends="dist-tarball"
       description="Generates the distribution">
     <!-- Output a checklist for verifying that the distribution is good. -->
-    <echo message="Examples build and run" />
-    <echo message="CHANGES file up-to-date" />
-    <echo message="Version bump" />
+    <echo message="Dist package created. Verify the following:" />
+    <echo message=" - Examples build and run" />
+    <echo message=" - CHANGES file up-to-date" />
+    <echo message=" - Version bump" />
+    <echo message="" />
+    <echo message="When satisfied, integrate the distribution package and" />
+    <echo message="manual into your working copy of the website:" />
+    <echo message="" />
+    <echo message="  bin/ship-dist fabric-${fabric.version}.tar.gz" />
   </target>
 
   <!--

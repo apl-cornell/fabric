@@ -65,7 +65,7 @@ class Hello {
         if (store actsfor p) {
 
           // Create an object at 'store' holding our important message
-          Message[p]{p->;p<-} h =
+          Message[p] h =
             new Message[p]@store("Hello World!  Fabric is coming for you...");
 
           // Store a reference to our object in the store's root map.

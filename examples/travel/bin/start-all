@@ -7,8 +7,10 @@ BIN_DIR="$(dirname $0)"
 "${BIN_DIR}/run-in-xterm" "Airline store" "${BIN_DIR}/start-store airline" &
 "${BIN_DIR}/run-in-xterm" "Bank store" "${BIN_DIR}/start-store bank" &
 
-# Wait a bit for the stores to start up.
-sleep 3
+# Wait for the stores to start up.
+echo "Press ENTER when the stores are ready."
+echo "You should see console prompts in each window, e.g., 'bank>'"
+read -r
 
 # Start the workers.
 "${BIN_DIR}/run-in-xterm" "Customer webapp worker" \

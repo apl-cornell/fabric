@@ -42,7 +42,7 @@ public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
     super();
   }
     
-  public void initialize{AirlinePrincipal:;AirlinePrincipal!:}()
+  public void initialize{AirlinePrincipal→;AirlinePrincipal←}()
       throws ServletException {
       addStartAction(new FrontPage(this));
   }
@@ -83,9 +83,9 @@ public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
   /**
    * Look up a User from a given user id
    */
-  public principal{p:;p!:;p} lookupUserID{p:; p!:}(
-          String{p:; p!:} userID,
-          principal{p:; p!:} p)
+  public principal{p→;p←;p} lookupUserID{p→; p←}(
+          String{p→; p←} userID,
+          principal{p→; p←} p)
           where caller(p) {
       if (userID == null) return null;
       if (userID.equals("airline")) return AirlinePrincipal;
