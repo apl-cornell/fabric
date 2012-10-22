@@ -1,0 +1,6 @@
+TODO Items:
+	- Handle static methods
+	- Determine when to invalidate
+	- Evaluation
+	- Handle primitive return types
+	- Remote calls?
