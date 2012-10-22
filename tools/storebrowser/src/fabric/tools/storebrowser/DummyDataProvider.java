@@ -9,16 +9,18 @@ public class DummyDataProvider implements DataProvider {
   public Object getRoot() {
     return "fab://store0";
   }
-  
+
+  @Override
   public List<Object> getChildrenForNode(Object obj) {
     if (obj.equals("fab://store0")) {
-      return Arrays.asList(new Object[] {"one", "two", "three"});
+      return Arrays.asList(new Object[] { "one", "two", "three" });
     }
-    return Arrays.asList(new Object[] {"blah", "fang"});
+    return Arrays.asList(new Object[] { "blah", "fang" });
   }
-  
+
+  @Override
   public String getDescriptionForNode(Object obj) {
-	  return "info";
+    return "info";
   }
-  
+
 }
