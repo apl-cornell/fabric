@@ -54,7 +54,7 @@ persistent application data and the workers each host a web application.
     2. If you are starting from fresh stores, you will need to
        initialize the application state. Otherwise, skip to II below.
 
-    3. Run the Create.fil program to initialize state on all stores. You
+       Run the Create.fil program to initialize state on all stores. You
        can do this by running the 'init-state' script:
 
 	  $ bin/init-state
@@ -84,8 +84,13 @@ persistent application data and the workers each host a web application.
   III. Exit the stores with the "exit" command in each console (you can
        also use CTRL-D). Exit the workers with CTRL-C.
 
-       You can clean up the stores' persistent state by removing 'var'
-       from the travel example directory:
+       After exiting the nodes, you can demonstrate the application's
+       persistent state by starting up the nodes and running the
+       application again (steps I.1 and II).
+
+       While the nodes are shut down, you can clean up the stores'
+       persistent state by removing 'var' from the travel example
+       directory:
 
 	  $ rm -rf var
 
