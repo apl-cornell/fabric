@@ -1,11 +1,9 @@
 Blog Webapp Example
 ===================
 
-This is a blogging web application implemented on top of Fabric. It is a
-simple webapp that also has benchmarking tools. It is standalone, so it
-can be started without any extra programs. It has two components: the
-blog webapp (written in FabIL) and another webapp, called the client
-(written in Java), which can stress test the blog server.
+This example implements a blogging web application on top of Fabric.
+There are two components: the blog webapp server (written in FabIL) and
+a benchmarking client (written in Java) for stress-testing the server.
 
 This directory contains the following sub-directories:
 
@@ -49,7 +47,8 @@ data, and a worker named "blog-worker" for running the web frontend.
 
   2. Access the blog by browsing to http://localhost:8080/web
 
-  3. You can start a client by using the 'start-client' script:
+  3. You can start a benchmarking client by using the 'start-client'
+     script:
 
 	$ bin/start-client
 
@@ -61,9 +60,10 @@ data, and a worker named "blog-worker" for running the web frontend.
      the URL http://localhost:8080
 
      Once the client is connected to the blog, you can run stress tests
-     using the "Debug" interface on the blog's webpage. (You may need to
-     refresh the page to see any newly connected clients.) Refresh the
-     client's webpage to see the status of any benchmark that you start.
+     using the "Debug" interface, in the lower-right corner of the
+     blog's webpage. (You may need to refresh the page to see any newly
+     connected clients.) Refresh the client's webpage to see the status
+     of any benchmark that you start.
 
      You can run multiple clients simultaneously by specifying different
      port numbers. The client runs on port 9000 by default.
