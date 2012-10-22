@@ -5,10 +5,10 @@ Requirements
 ------------
 This Fabric distribution builds on Unix. Fabric @VERSION@ builds against Jif
 @JIF-VERSION@ and Polyglot @POLYGLOT-VERSION@, both included in the
-distribution. We recommend that you use Java 6 or later; we have experienced
-problems with older versions. [OpenSSL](http://www.openssl.org/) is used to
-sign certificates. Fabric is compiled with the [Apache Ant build
-tool](http://ant.apache.org/).
+distribution. We recommend that you use Oracle JDK 6 or later; we have
+experienced problems with OpenJDK and with older versions of Java.
+[OpenSSL](http://www.openssl.org/) is used to sign certificates. Fabric is
+compiled with the [Apache Ant build tool](http://ant.apache.org/).
 
 
 Configuring
