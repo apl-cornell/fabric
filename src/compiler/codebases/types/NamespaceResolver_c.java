@@ -293,20 +293,6 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     cache.put(name, q);
   }
 
-  // @Override
-  protected void ensureInitialized() {
-    for (Importable q : cache.values()) {
-      if (q instanceof ParsedTypeObject) {
-        if (!((ParsedTypeObject) q).initializer().isTypeObjectInitialized()) {
-          if (Report.should_report(TOPICS, 2))
-            Report.report(3, "[" + namespace + "] Found uninitialized class: "
-                + q);
-          throw new InternalCompilerError(q + " is uninitialized");
-        }
-      } else throw new InternalCompilerError(q + " is not a ParsedClassObject");
-    }
-  }
-
   @Override
   public URI namespace() {
     return namespace;
@@ -400,8 +386,6 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
         Report.report(2, "Returning serialized ClassType for " + clazz.name()
             + ".");
 
-      // XXX: Is this really necessary? (I don't think it is)
-      // ensureInitialized();
       return ct;
     } else {
       throw new SemanticException("Class " + name + " not found in "
