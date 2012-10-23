@@ -307,6 +307,7 @@
       depends="init,bootstrap,fabil-compiler,bin,native"
       description="Compiles the FabIL signature clasess">
     <filsigc dest="${signatures.fabil.classes}">
+      <arg value="-platform-mode" /> 
       <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg value="-nooutput" />
