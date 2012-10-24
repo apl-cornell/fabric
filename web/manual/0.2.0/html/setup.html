@@ -55,13 +55,9 @@ $(document).ready(function(){initNavTree('setup.html','');});
 <div class="textblock"><h2>Requirements</h2>
 <p>This Fabric distribution builds on Unix. Fabric 0.2.0 builds against Jif 3.4.0 and Polyglot 2.5.1, both included in the distribution. We recommend that you use Oracle JDK 6 or later; we have experienced problems with OpenJDK and with older versions of Java. <a href="http://www.openssl.org/">OpenSSL</a> is used to sign certificates. Fabric is compiled with the <a href="http://ant.apache.org/">Apache Ant build tool</a>.</p>
 <h2>Configuring</h2>
-<ol type="1">
-<li>Before using Fabric, you may need to specify the location of your JDK installation. If you are not using the pre-packaged Polyglot and Jif, you will also need to specify the locations of those. Copy <code>config.properties.in</code> to <code>config.properties</code> and edit appropriately. <div class="fragment"><div class="line">$ cp config.properties.in config.properties</div>
-<div class="line">$ vim config.properties</div>
-</div><!-- fragment --></li>
-<li>Configure the scripts in the <code>bin</code> directory. From the top-level directory, run: <div class="fragment"><div class="line">$ ant bin</div>
-</div><!-- fragment --></li>
-</ol>
+<p>Before using Fabric, you must configure the scripts in the <code>bin</code> directory. From the top-level directory, run: </p>
+<div class="fragment"><div class="line">$ ant bin</div>
+</div><!-- fragment --><p> If the configurator is unable to find the JDK, Polyglot, or Jif, it will prompt you to set the appropriate properties in <code>config.properties</code>.</p>
 <h2>Building</h2>
 <p>Fabric comes pre-compiled as Jar files in the <code>lib</code> directory. If you wish to rebuild Fabric, run <code>ant</code> from the top-level directory: </p>
 <div class="fragment"><div class="line">$ ant</div>
@@ -71,7 +67,7 @@ $(document).ready(function(){initNavTree('setup.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Wed Oct 24 2012 05:12:28 for Fabric by
+    <li class="footer">Generated on Wed Oct 24 2012 18:42:38 for Fabric by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.2 </li>
   </ul>
