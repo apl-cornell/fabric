@@ -301,7 +301,11 @@
       <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
     </fabsigc>
 
-    <!-- Clean out classes that happened to be pulled in as dependencies. -->
+    <!--
+      Clean out classes that happened to be pulled in as dependencies.
+      This ensures that the classes left in the sig-classes directory is the
+      same regardless of whether the Fabric jars are present when building.
+    -->
     <delete>
       <fileset dir="${signatures.fabric.classes}" includes="**">
         <present present="srconly" targetdir="${signatures.fabric.src}">
@@ -329,7 +333,11 @@
       <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
     </filsigc>
 
-    <!-- Clean out classes that happened to be pulled in as dependencies. -->
+    <!--
+      Clean out classes that happened to be pulled in as dependencies.
+      This ensures that the classes left in the sig-classes directory is the
+      same regardless of whether the Fabric jars are present when building.
+    -->
     <delete>
       <fileset dir="${signatures.fabil.classes}" includes="**">
         <present present="srconly" targetdir="${signatures.fabil.src}">
