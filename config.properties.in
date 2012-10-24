@@ -7,12 +7,14 @@
 # order of precedence:
 #
 #   1. The jdk.home property from config.properties in Jif's source
-#      tree.
+#      tree. (This does not exist when using Jif from a jar file.)
 #
 #   2. The JAVA_HOME environment variable.
 #
-# The commented example below uses Ant's built-in java.home property,
-# which on some systems points to the JRE, and not the JDK.
+#   3. Ant's built-in java.home property (on some systems, this points
+#      to the JRE, and not the JDK).
+#
+# The commented example below uses Ant's built-in java.home property.
 
 #jdk.home=${java.home}
 

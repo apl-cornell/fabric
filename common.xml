@@ -35,6 +35,7 @@
   <!-- First  choice: jdk.home in config.properties
        Second choice: jdk.home in ${jif.home}/config.properties
        Third  choice: JAVA_HOME environment variable
+       Fourth choice: Ant's built-in java.home
   -->
   <condition property="jdk.home" value="${jif.jdk.home}">
     <and>
@@ -48,9 +49,14 @@
     <and>
       <isset property="env.JAVA_HOME" />
       <not>
-        <isset property="jif.jdk.home" />
+        <isset property="jdk.home" />
       </not>
     </and>
+  </condition>
+  <condition property="jdk.home" value="${java.home}">
+    <not>
+      <isset property="jdk.home" />
+    </not>
   </condition>
 
 
