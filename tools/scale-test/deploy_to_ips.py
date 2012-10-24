@@ -18,32 +18,39 @@ worker_sh_tmpl='''#!/bin/bash
 APP_HOME="$$(dirname $$0)/.."
 PATH="$${PATH}:$fabric/bin"
 export FABRIC_HOME="$fabric"
-fab --jvm-cp "$${APP_HOME}/classes" --app-home "$${APP_HOME}" --name "$name" --commit-reads "$commit" readwritemix.ReadWriteMix01 "$worker"'''
+fab --app-home "$${APP_HOME}" --name "$name" --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMix01 1000 100 $store'''
+
+#fab --app-home "$${APP_HOME}" --name "$name" --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMix01 "$worker"'''
 
 # bin/start-store
 start_store_sh_tmpl='''#!/bin/bash
 APP_HOME="$$(dirname $$0)/.."
 PATH="$${PATH}:$fabric/bin"
 export FABRIC_HOME="$fabric"
-fab-store --jvm-cp "$${APP_HOME}/classes" --app-home "$${APP_HOME}" --name $store "$$@"'''
+fab-store  --app-home "$${APP_HOME}" --name $store --jvm-cp "$${APP_HOME}/classes" '''
+#fab-store --jvm-cp "$${APP_HOME}/classes" --app-home "$${APP_HOME}" --name $store "$$@"'''
+
 
 # bin/create-db
 create_db_sh_tmpl='''#!/bin/bash
 APP_HOME="$$(dirname $$0)/.."
 PATH="$${PATH}:$fabric/bin"
 export FABRIC_HOME="$fabric"
-NAME=$$1 ; shift 2 ;
-fab --jvm-cp "$${APP_HOME}/classes" --app-home "$${APP_HOME}" --name "$${NAME}" reedwritemix.ReadWreMixCreate01 fab://$server/$store "$$@"'''
+fab  --app-home "$${APP_HOME}" --name $store --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMixCreate01 1000 $store'''
+# NAME=$$1 ; shift 2 ;
+#fab --jvm-cp "$${APP_HOME}/classes" --app-home "$${APP_HOME}" --name "$${NAME}" reedwritemix.ReadWreMixCreate01 fab://$server/$store "$$@"'''
+
+
 
 
 # etc/config/worker0.properties
 worker_properies_tmpl='''fabric.node.hostname  = $host
 fabric.node.fetchmanager.class = fabric.dissemination.DummyFetchManager
-fabric.worker.homeStore = store0'''
+fabric.worker.homeStore = $store'''
 
 # etc/config/store0.properties
 store_properties_tmpl='''fabric.node.hostname  = $host
-fabric.worker.homeStore = store0'''
+fabric.worker.homeStore = $name'''
 
 # etc/keys/store0.keystore
 # etc/keys/worker0.keystore
@@ -90,22 +97,22 @@ def mk_start_store_sh(worker_bin_dir, store_name, distro):
         print exp
         f.write(exp)
 
-def mk_worker_sh(worker_bin_dir, worker_name, distro):
+def mk_worker_sh(worker_bin_dir, worker_name, store_name, distro):
     # bin/worker
     worker_sh = worker_bin_dir + "/worker"
     with open(worker_sh, 'w') as f:
         s=string.Template(worker_sh_tmpl)
-        exp = s.substitute(name=worker_name, commit='n', worker=worker_name, fabric='~/' + distro)
+        exp = s.substitute(name=worker_name, commit='n', worker=worker_name, fabric='~/' + distro, store=store_name)
         print exp
         f.write(exp)
 
 
-def mk_worker_prop(worker_config_dir, worker_name, ip):
+def mk_worker_prop(worker_config_dir, worker_name, store_name, ip):
     # etc/config/worker.properties
     worker_prop = worker_config_dir + "/" + worker_name + ".properties"   
     with open(worker_prop, 'w') as f:
         s=string.Template(worker_properies_tmpl)
-        exp = s.substitute(host=ip)
+        exp = s.substitute(host=ip, store=store_name)
         print exp
         f.write(exp)
 
@@ -114,7 +121,7 @@ def mk_store_prop(worker_config_dir, store_name, ip):
     store_prop = worker_config_dir + "/" + store_name + ".properties"   
     with open(store_prop, 'w') as f:
         s=string.Template(store_properties_tmpl)
-        exp = s.substitute(host=ip)
+        exp = s.substitute(host=ip, name=store_name)
         print exp
         f.write(exp)
 
@@ -147,10 +154,10 @@ def mk_worker(worker_name, app_name, store_name, server, distro):
     mkdir(worker_config_dir)
     mkdir(worker_keys_dir)
     cp_app(app_name, worker_root_dir) 
-    mk_worker_sh(worker_bin_dir, worker_name, distro)
+    mk_worker_sh(worker_bin_dir, worker_name, store_name, distro)
     mk_start_store_sh(worker_bin_dir, store_name, distro)
     mk_create_db_sh(worker_bin_dir, store_name, server, distro)
-    mk_worker_prop(worker_config_dir, worker_name, server)
+    mk_worker_prop(worker_config_dir, worker_name, store_name, server)
     mk_keystore_file(server, key_file)
     shutil.copy2(store_root_dir + '/etc/config/' + store_name + '.properties',  worker_config_dir)
     shutil.copy2(worker_config_dir + '/' + worker_name + '.properties',  store_root_dir + '/etc/config/')
@@ -161,17 +168,19 @@ def mk_store(store_name, app_name, server, distro):
     store_etc_dir = store_root_dir + '/' + "etc"
     store_config_dir = store_etc_dir + '/' + "config"
     store_keys_dir =  store_etc_dir + '/' + "keys"
-    key_file =  store_keys_dir + '/' + 'store0' + '.keystore'  
+    key_file =  store_keys_dir + '/' + store_name + '.keystore'  
     mkdir(store_root_dir)
     cp_app(app_name, store_name) 
     mkdir(store_bin_dir)
     mkdir(store_etc_dir)
     mkdir(store_config_dir)
     mkdir(store_keys_dir)
+    mk_worker_sh(store_bin_dir, store_name, store_name, distro)
     mk_start_store_sh(store_bin_dir, store_name, distro)
     mk_create_db_sh(store_bin_dir, store_name, server, distro)
+    # mk_keystore_file(store_name, key_file)
     mk_keystore_file(server, key_file)
-    mk_store_prop(store_config_dir, store_name, server)
+    mk_store_prop(store_config_dir, server, server)
 
 def tgz(dir):
     # tar config
@@ -222,6 +231,15 @@ def cleanup(dir):
     print cmd
     child = pexpect.spawn (cmd, timeout=None)
     child.expect(pexpect.EOF)
+
+def init_fab(user, pw, ip, distro):
+    cmd = 'ssh ' + user  + '@' + ip + ' \'cd ' + distro + '; ant bin\'' 
+    print cmd
+    child = pexpect.spawn (cmd)
+    child.expect ('.*password:')
+    child.sendline (pw)
+    child.expect(pexpect.EOF)
+   
     
 def main():
     args = parse_args()
@@ -235,10 +253,11 @@ def main():
     expand(app_name)
     pw = getpass.getpass()
 
-    store_name = 'store0'
+    # store_name = 'store0'
     worker_id = 0
 
-    store_ip = '128.84.154.167'    
+    store_ip = '128.84.154.167'
+    store_name = store_ip
     mk_store(store_name, app_name, store_ip, distro)
 
     # setup the workers
@@ -251,15 +270,18 @@ def main():
             mkdir(worker_name)
             mk_worker(worker_name, app_name, store_name, server, distro)
             tgz(worker_name)
-            cp_expand(worker_name, args.user, pw, server)
-            cp_expand(distro, args.user, pw, server)
-            cleanup(worker_name)
+            #cp_expand(worker_name, args.user, pw, server)
+            #cp_expand(distro, args.user, pw, server)
+            #init_fab(args.user, pw, server, distro)
+            #cleanup(worker_name)
             worker_id += 1
 
     # cp the store
     tgz(store_name)
-    cp_expand(store_name, args.user, pw, store_ip)
-    cleanup(store_name)
+    #cp_expand(store_name, args.user, pw, store_ip)
+    #cp_expand(distro, args.user, pw, store_ip)
+    #init_fab(args.user, pw, store_ip, distro)
+    #cleanup(store_name)
 
 if __name__ == "__main__":
     main()
