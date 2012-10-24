@@ -300,6 +300,17 @@
       <arg value="${signatures.fabric.src}" />
       <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
     </fabsigc>
+
+    <!-- Clean out classes that happened to be pulled in as dependencies. -->
+    <delete>
+      <fileset dir="${signatures.fabric.classes}" includes="**">
+        <present present="srconly" targetdir="${signatures.fabric.src}">
+          <mapper type="regexp"
+              from="^([^$$]*?)(|\$$.*|_JIF_IMPL)\.(java|class)$$"
+              to="\1.fab"/>
+        </present>
+      </fileset>
+    </delete>
   </target>
 
   <!-- Compiles the FabIL signatures -->
@@ -317,6 +328,17 @@
       <arg value="${signatures.fabil.src}:${runtime.src}" />
       <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
     </filsigc>
+
+    <!-- Clean out classes that happened to be pulled in as dependencies. -->
+    <delete>
+      <fileset dir="${signatures.fabil.classes}" includes="**">
+        <present present="srconly" targetdir="${signatures.fabil.src}">
+          <mapper type="regexp"
+              from="^([^$$]*?)(|\$$.*|_JIF_IMPL)\.(java|class)$$"
+              to="\1.fil"/>
+        </present>
+      </fileset>
+    </delete>
   </target>
 
   <!-- Compiles the Fabric tools -->
