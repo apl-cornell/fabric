@@ -75,7 +75,7 @@ def parse_args():
     return parser.parse_args()
 
 def mkdir(name):
-    print 'mkdir called on ' + name
+    #print 'mkdir called on ' + name
     if not os.path.exists(name):
         os.makedirs(name)
 
@@ -85,7 +85,7 @@ def mk_create_db_sh(worker_bin_dir, store_name, server, distro):
     with open(create_db_sh, 'w') as f:
         s=string.Template(create_db_sh_tmpl)
         exp = s.substitute(store=store_name, server=server, fabric='~/' + distro)
-        print exp
+        #print exp
         f.write(exp)
 
 # bin/start-store
@@ -94,7 +94,7 @@ def mk_start_store_sh(worker_bin_dir, store_name, distro):
     with open(start_store_sh, 'w') as f:
         s=string.Template(start_store_sh_tmpl)
         exp = s.substitute(store=store_name, fabric='~/' + distro)
-        print exp
+        #print exp
         f.write(exp)
 
 def mk_worker_sh(worker_bin_dir, worker_name, store_name, distro):
@@ -103,7 +103,7 @@ def mk_worker_sh(worker_bin_dir, worker_name, store_name, distro):
     with open(worker_sh, 'w') as f:
         s=string.Template(worker_sh_tmpl)
         exp = s.substitute(name=worker_name, commit='n', worker=worker_name, fabric='~/' + distro, store=store_name)
-        print exp
+        #print exp
         f.write(exp)
 
 
@@ -113,7 +113,7 @@ def mk_worker_prop(worker_config_dir, worker_name, store_name, ip):
     with open(worker_prop, 'w') as f:
         s=string.Template(worker_properies_tmpl)
         exp = s.substitute(host=ip, store=store_name)
-        print exp
+        #print exp
         f.write(exp)
 
 def mk_store_prop(worker_config_dir, store_name, ip):
@@ -122,13 +122,13 @@ def mk_store_prop(worker_config_dir, store_name, ip):
     with open(store_prop, 'w') as f:
         s=string.Template(store_properties_tmpl)
         exp = s.substitute(host=ip, name=store_name)
-        print exp
+        #print exp
         f.write(exp)
 
 def mk_keystore_file(host_name, key_file):
     s=string.Template(worker_keystore_tmpl)
     exp = s.substitute(fabric_home=fabric_home, hostname=host_name, keyfile=key_file)
-    print exp
+    #print exp
     child = pexpect.spawn (exp)
     child.expect ('Trust this certificate?.*:')
     child.sendline ('yes')
@@ -214,7 +214,7 @@ def cp_expand(dir, user, pw, ip):
     child.expect ('^.*password:')
     child.sendline (pw)
     child.expect(pexpect.EOF)
-    print dir + '.tar.gz copied to ' +  ip + '.'
+    #print dir + '.tar.gz copied to ' +  ip + '.'
     
     # expand
     cmd = 'ssh ' + user  + '@' + ip + ' \'gunzip ' + dir + '.tar.gz; tar -xf ' + dir + '.tar\'' 
@@ -223,7 +223,7 @@ def cp_expand(dir, user, pw, ip):
     child.expect ('.*password:')
     child.sendline (pw)
     child.expect(pexpect.EOF)
-    print dir + '.tar.gz expanded to worker on ' + ip + '.'
+    #print dir + '.tar.gz expanded to worker on ' + ip + '.'
 
 def cleanup(dir):    
     # cleanup
@@ -270,18 +270,18 @@ def main():
             mkdir(worker_name)
             mk_worker(worker_name, app_name, store_name, server, distro)
             tgz(worker_name)
-            #cp_expand(worker_name, args.user, pw, server)
-            #cp_expand(distro, args.user, pw, server)
-            #init_fab(args.user, pw, server, distro)
-            #cleanup(worker_name)
+            cp_expand(worker_name, args.user, pw, server)
+            cp_expand(distro, args.user, pw, server)
+            init_fab(args.user, pw, server, distro)
+            cleanup(worker_name)
             worker_id += 1
 
     # cp the store
     tgz(store_name)
-    #cp_expand(store_name, args.user, pw, store_ip)
-    #cp_expand(distro, args.user, pw, store_ip)
-    #init_fab(args.user, pw, store_ip, distro)
-    #cleanup(store_name)
+    cp_expand(store_name, args.user, pw, store_ip)
+    cp_expand(distro, args.user, pw, store_ip)
+    init_fab(args.user, pw, store_ip, distro)
+    cleanup(store_name)
 
 if __name__ == "__main__":
     main()
