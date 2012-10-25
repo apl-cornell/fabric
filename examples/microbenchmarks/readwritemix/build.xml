@@ -1,0 +1,75 @@
+<!--
+  This is the Apache Ant build file for the Fabric readwritemix implementation.
+-->
+
+<project name="readwritemix" default="build-all" basedir=".">
+  <description>
+    Fabric readwritemix build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../../common.xml" />
+
+  <dirname property="readwritemix.home" file="${ant.file.readwritemix}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${readwritemix.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${readwritemix.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+      description="Builds the Fabric readwritemix implementation">
+    <mkdir dir="${readwritemix.home}/classes" />
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${readwritemix.home}"
+        dest="${readwritemix.home}/classes"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${filc}" />
+      <arg line="${debug.flag}" />
+      <arg value="-d" />
+      <arg value="classes" />
+      <arg value="-sourcepath" />
+      <arg value="src/fabil" />
+      <arg value="-cp" />
+      <arg value="classes" />
+      <srcfile />
+      <fileset dir="src/fabil">
+        <include name="readwritemix/*.fil" />
+      </fileset>
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

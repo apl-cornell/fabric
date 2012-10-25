@@ -1,6 +1,7 @@
 package fabric.worker.memoize;
 
 import java.util.*;
+//import fabric.lang.Object;
 
 /**
  * Item to represent the tuple (m, c, a) where m is the method name, c is either
