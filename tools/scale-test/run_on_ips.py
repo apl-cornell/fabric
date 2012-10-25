@@ -42,14 +42,17 @@ class ThreadClass(threading.Thread):
         self.pw = pw
     def run(self):
         cmd = 'ssh %s@%s /home/fabric/%s/readwritemix/bin/worker'  % (self.user, self.worker, self.worker)
-        child = pexpect.spawn (cmd)
+        child = pexpect.spawn (cmd, timeout=None)
+        print cmd
         child.expect ('.*password:')
+        print 'got password from ' + self.worker
         child.sendline (self.pw)
-        exp = '\s*Total:\s*(\d+)\s*ms'
-        child.expect(pexpect.EOF)
+        # exp = '\s*Total:\s*(\d+)\s*ms'
+        child.expect(pexpect.EOF, timeout=None)
         # child.expect (exp)
         print self.worker + ' : ' + child.before
         text = child.before
+        
         # ssh = 'ssh'
         # user = 'fabric@%s' % self.host
         # cmd = '/home/fabric/%s/readwritemix/bin/worker'  % (self.worker)
@@ -76,15 +79,17 @@ def mean_and_dev(l):
         
 def create_db(user, pw, store_ip, size):
     cmd = 'ssh %s@%s /home/fabric/%s/readwritemix/bin/create-db'  % (user, store_ip, store_ip)
+    child = pexpect.spawn (cmd, timeout=None)
     child.expect ('.*password:')
     child.sendline (pw)
-    child = pexpect.spawn (cmd)
-    child.expect ('done.*')
+    child.expect(pexpect.EOF, timeout=None)
+    #child.expect ('done.*')
     print "database created..."
      
 def start_store(user, pw, store_ip):
     cmd = 'ssh %s@%s /home/fabric/%s/readwritemix/bin/start-store'  % (user, store_ip, store_ip)
-    child = pexpect.spawn (cmd)
+    print cmd
+    child = pexpect.spawn (cmd, timeout=None)
     child.expect ('.*password:')
     child.sendline (pw)
     exp = '%s>.*'  % (store_ip)
@@ -123,10 +128,12 @@ def test_warm(worker_names, size, percentage,user, pw, store_ip):
     fdata = './' + splot + '.dat'
     with open(fdata, 'w') as f:
         store = start_store(user, pw, store_ip)
+        print "populating the store..."
+        create_db(user, pw, store_ip, size)
         # run once to warm the store
         print "warming store..."
         (worker, host) = worker_names[0]
-        t = ThreadClass(host, worker, False, size, percentage, user, pw)
+        t = ThreadClass(host, worker, False, size, percentage, user, pw)    
         t.start()
         t.join()
         print "beginning test..."
@@ -173,6 +180,8 @@ def test_cold(worker_names, size, percentage, user, pw, store_ip):
             commit_time = 0.0
             commit_dev = 0.0
             store = start_store(user, pw, store_ip)
+            print "populating the store..."
+            create_db(user, pw, store_ip, size)            
             # start all the workers...
             times = []
             for (worker, host) in workers:              
