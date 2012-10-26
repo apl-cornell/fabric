@@ -79,9 +79,11 @@ def mean_and_dev(l):
         
 def create_db(user, pw, store_ip, size):
     cmd = 'ssh %s@%s /home/fabric/%s/readwritemix/bin/create-db'  % (user, store_ip, store_ip)
+    print cmd
     child = pexpect.spawn (cmd, timeout=None)
     child.expect ('.*password:')
     child.sendline (pw)
+    print 'got passwd'
     child.expect(pexpect.EOF, timeout=None)
     #child.expect ('done.*')
     print "database created..."
@@ -99,9 +101,6 @@ def start_store(user, pw, store_ip):
 def stop_store(child):
     print "store stopping..."
     child.sendline ('exit')
-
-class Configs:
-    static, dynamic = range(2)
 
 def plot(name):
     data = name + ".dat"
@@ -121,7 +120,7 @@ def plot(name):
     os.system('ps2pdf ' + ps)
 
 
-def test_warm(worker_names, size, percentage,user, pw, store_ip):
+def test_warm(worker_names, size, percentage,user, pw, store_ip, num_runs):
     threads = []
     global times
     splot = 'warm-%d-%d' % (size, percentage)
@@ -140,33 +139,35 @@ def test_warm(worker_names, size, percentage,user, pw, store_ip):
         s = '#%s\t%s\t%s' % ( 'workers', 'commit_time', 'commit_dev')
         print s
         f.write(s + '\n')
-        for num_workers in range(1,3):
-            workers = worker_names[0:num_workers]
-            commit_time = 0.0
-            commit_dev = 0.0
-
-            # start all the workers...
-            times = []
-            for (worker, host) in workers:              
-                t = ThreadClass(host, worker, False, size, percentage, user, pw)
-                t.start()
-                threads.append(t)
-                # wait for the workers to finish
-            for t in threads:
-                t.join()
-            (average, dev) = mean_and_dev(times)                
-            print "workers =" + str(num_workers) + ", average=" + str(average) + ", dev=" + str(dev)
-            
-            commit_time = average
-            commit_dev = dev
+        for num_workers in range(1,len(worker_names)+1):
+            run_times = []
+            for runs in range(num_runs):
+                workers = worker_names[0:num_workers]
+                commit_time = 0.0
+                commit_dev = 0.0
+                # start all the workers...
+                times = []
+                for (worker, host) in workers:              
+                    t = ThreadClass(host, worker, False, size, percentage, user, pw)
+                    t.start()
+                    threads.append(t)
+                    # wait for the workers to finish
+                for t in threads:
+                    t.join()
+                (average, dev) = mean_and_dev(times)                
+                print "workers =" + str(num_workers) + ", average=" + str(average) + ", dev=" + str(dev)
+                run_times.append(int(average))
+            (runs_average, runs_dev) = mean_and_dev(run_times) 
+            commit_time = runs_average
+            commit_dev = runs_dev
             s = '%d\t%0.2f\t%0.2f' % (num_workers, commit_time, commit_dev)
             print s
             f.write(s + '\n')
         stop_store(store)
-        plot(splot)
+    plot(splot)
         
 
-def test_cold(worker_names, size, percentage, user, pw, store_ip):
+def test_cold(worker_names, size, percentage, user, pw, store_ip, num_runs):
     threads = []
     global times
     splot = 'cold-%d-%d' % (size, percentage)
@@ -175,39 +176,44 @@ def test_cold(worker_names, size, percentage, user, pw, store_ip):
         s = '#%s\t%s\t%s' % ( 'workers', 'commit_time', 'commit_dev')
         print s
         f.write(s + '\n')
-        for num_workers in range(1,3):
-            workers = worker_names[0:num_workers]
-            commit_time = 0.0
-            commit_dev = 0.0
-            store = start_store(user, pw, store_ip)
-            print "populating the store..."
-            create_db(user, pw, store_ip, size)            
-            # start all the workers...
-            times = []
-            for (worker, host) in workers:              
-                t = ThreadClass(host, worker, False, size, percentage, user, pw)
-                t.start()
-                threads.append(t)
-                # wait for the workers to finish
-            for t in threads:
-                t.join()
-            (average, dev) = mean_and_dev(times)
-            print "workers =" + str(num_workers) + ", average=" + str(average) + ", dev=" + str(dev)
-            stop_store(store)
-            commit_time = average
-            commit_dev = dev
+        for num_workers in range(1,len(worker_names)+1):
+            run_times = []
+            for runs in range(num_runs):
+                workers = worker_names[0:num_workers]
+                commit_time = 0.0
+                commit_dev = 0.0
+                store = start_store(user, pw, store_ip)
+                print "populating the store..."
+                create_db(user, pw, store_ip, size)            
+                # start all the workers...
+                times = []
+                for (worker, host) in workers:              
+                    t = ThreadClass(host, worker, False, size, percentage, user, pw)
+                    t.start()
+                    threads.append(t)
+                    # wait for the workers to finish
+                for t in threads:
+                    t.join()
+                (average, dev) = mean_and_dev(times)
+                print "workers =" + str(num_workers) + ", average=" + str(average) + ", dev=" + str(dev)
+                run_times.append(int(average))
+                stop_store(store)
+            (runs_average, runs_dev) = mean_and_dev(run_times) 
+            commit_time = runs_average
+            commit_dev = runs_dev
             s = '%d\t%0.2f\t%0.2f' % (num_workers, commit_time, commit_dev)
             print s
-            f.write(s + '\n')
+            f.write(s + '\n')                              
     plot(splot)
         
 def main():
-
+  
     args = parse_args()
     pw = getpass.getpass()
     user = args.user
     store_ip = '128.84.154.167'
     worker_names = []
+    num_runs = 3
 
     with open(args.file, 'r') as f:
         for line in f:
@@ -215,8 +221,8 @@ def main():
             worker_names.append((server, server))  
 
     print worker_names
-    test_warm(worker_names, 1000, 100, user, pw, store_ip)
-    #test_cold(worker_names, 1000, 100, user, pw, store_ip)
+    test_warm(worker_names, 1000, 100, user, pw, store_ip, num_runs)
+    #test_cold(worker_names, 100, 100, user, pw, store_ip, num_runs)
 
 
 if __name__ == "__main__":
