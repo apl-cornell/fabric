@@ -1,0 +1,30 @@
+We are pleased to announce the release of version 0.2.0 of the Fabric language
+and system for secure federated computing. The new version of Fabric has many
+substantial improvements over the original release, including:
+
+    * Support for securely publishing and using mobile code, as described in our
+      Oakland 2012 paper. Other new features accompanying mobile code include:
+
+	- Access labels, which control covert read channels.
+        - Provider labels, which prevent mobile code from causing damage.
+	- Codebases, a new language feature supporting code and data evolution.
+
+    * Fabric nodes are now easier to set up and to control. Worker nodes now
+      have a console for convenient control over the node. This can be used to run
+      Fabric programs and to invoke the Fabric compiler. Scripting of worker
+      commands is also supported.
+
+    * The new version comes with several new examples of Fabric applications,
+      including web applications and applications that use mobile code.
+
+    * Many improvements have been made to the performance and reliability of
+      Fabric.
+
+The Fabric software is freely available for download at the Fabric web site,
+http://www.cs.cornell.edu/projects/fabric.
+
+
+Fabric was developed at Cornell University under the supervision of Prof.
+Andrew C. Myers. The current Fabric developers include Jed Liu, Owen Arden,
+Michael D. George, and K. Vikram. This release of the software was managed by
+Jed Liu.

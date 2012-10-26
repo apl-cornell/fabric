@@ -1,12 +1,13 @@
 Airline Travel Webapp Example
 =============================
 
-This is a suite of web applications implemented on top of Fabric. It consists
-of three simple webapps: one for a customer to purchase airline tickets, one
-for an airline agent to examine the number of tickets sold, and one for a bank
-manager to examine account balances.
+This is a suite of web applications implemented on top of Fabric. It
+consists of three simple webapps: one for a customer to purchase airline
+tickets, one for an airline agent to examine the number of tickets sold,
+and one for a bank manager to examine account balances.
 
-These webapps are standalone, so they can be started without any extra programs.
+These webapps are standalone, so they can be started without any extra
+programs.
 
 This directory contains the following sub-directories:
 
@@ -18,9 +19,9 @@ This directory contains the following sub-directories:
 
 Using
 -----
-This example uses three stores ("bank", "airline", and "broker") and three
-workers ("customer", "bankweb" and "airlineweb"). The stores have persistent
-application data and the workers each host a web application.
+This example uses three stores ("bank", "airline", and "broker") and
+three workers ("customer", "bankweb" and "airlineweb"). The stores have
+persistent application data and the workers each host a web application.
 
   0. Start in the travel example directory and compile the example:
 
@@ -29,13 +30,14 @@ application data and the workers each host a web application.
 
   I. Start all the nodes and, if necessary, initialize their state:
 
-    1. Start up the broker store, airline store, bank store, customer worker,
-       bankweb worker, and airlineweb worker. The 'start-all' script will start
-       each node in a separate xterm window:
+    1. Start up the broker store, airline store, bank store, customer
+       worker, bankweb worker, and airlineweb worker. The 'start-all'
+       script will start each node in a separate xterm window:
 
 	  $ bin/start-all
 
-       You can also use an xterm replacement (e.g., gnome-terminal or konsole):
+       You can also use an xterm replacement (e.g., gnome-terminal or
+       konsole):
 
 	  $ XTERM=gnome-terminal bin/start-all
 
@@ -49,11 +51,11 @@ application data and the workers each host a web application.
 	  $ bin/start-worker bankweb
 	  $ bin/start-worker airlineweb
 
-    2. If you are starting from fresh stores, you will need to initialize the
-       application state. Otherwise, skip to II below.
+    2. If you are starting from fresh stores, you will need to
+       initialize the application state. Otherwise, skip to II below.
 
-    3. Run the Create.fil program to initialize state on all stores. You can do
-       this by running the 'init-state' script:
+       Run the Create.fil program to initialize state on all stores. You
+       can do this by running the 'init-state' script:
 
 	  $ bin/init-state
 
@@ -62,22 +64,33 @@ application data and the workers each host a web application.
 	  $ bin/start-webapps
 
       The customer application can be accessed at:
+       
 	http://localhost:8080/customer
 
       The bank application can be accessed at:
+
 	http://localhost:8081/bank
 
 	User: bank
 	Pass: password
 
       The airline application can be accessed at:
+
 	http://localhost:8082/airline
 
 	User: airline
 	Pass: password
 
-  III. You can clean up the stores' persistent state by removing 'var' from the
-       travel example directory:
+  III. Exit the stores with the "exit" command in each console (you can
+       also use CTRL-D). Exit the workers with CTRL-C.
+
+       After exiting the nodes, you can demonstrate the application's
+       persistent state by starting up the nodes and running the
+       application again (steps I.1 and II).
+
+       While the nodes are shut down, you can clean up the stores'
+       persistent state by removing 'var' from the travel example
+       directory:
 
 	  $ rm -rf var
 

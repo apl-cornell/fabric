@@ -7,6 +7,8 @@ The current Fabric developers are:
   * Michael D. George
   * [K. Vikram](http://www.cs.cornell.edu/~kvikram/)
 
+Tom Magrino helped test this release.
+
 The Fabric project group is supervised by [Prof. Andrew C.
 Myers](http://www.cs.cornell.edu/andru/) at the [Cornell
 University](http://www.cornell.edu/) [Computer
@@ -31,7 +33,8 @@ Sponsors
 The development of the Fabric project has been supported by a number
 of funding sources, including:
 
-  * National Science Foundation grants 0430161, 0627649, and 0964409
+  * National Science Foundation grants 0430161, 0541217, 0627649, and
+    0964409
   * Microsoft Corporation
   * AF-TRUST, which receives support from the DAF Air Force Office
     of Scientific Research (FA9550-06-1-0244) and the NSF (0424422)

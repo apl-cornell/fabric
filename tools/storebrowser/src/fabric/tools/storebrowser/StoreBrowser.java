@@ -8,7 +8,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.*;
+import javax.swing.JEditorPane;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTree;
+import javax.swing.UIManager;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -31,10 +39,10 @@ public class StoreBrowser extends JFrame implements TreeSelectionListener {
 
     // Create the nodes.
     Object root = dataProvider.getRoot();
-    
+
     DefaultMutableTreeNode top = new DefaultMutableTreeNode(root);
     addChildren(top);
-    
+
     // Create a tree that allows one selection at a time.
     tree = new JTree(top);
     tree.getSelectionModel().setSelectionMode(
@@ -96,6 +104,7 @@ public class StoreBrowser extends JFrame implements TreeSelectionListener {
 
   public static void main(final String[] args) {
     javax.swing.SwingUtilities.invokeLater(new Runnable() {
+      @Override
       public void run() {
         createAndShowGUI(args);
       }
@@ -105,7 +114,8 @@ public class StoreBrowser extends JFrame implements TreeSelectionListener {
   private void addChildren(DefaultMutableTreeNode n) {
     if (!childrenEnumerated.contains(n)) {
       childrenEnumerated.add(n);
-      List<Object> children = dataProvider.getChildrenForNode(n.getUserObject());
+      List<Object> children =
+          dataProvider.getChildrenForNode(n.getUserObject());
       for (Object obj : children)
         n.add(new DefaultMutableTreeNode(obj));
     }
@@ -124,27 +134,25 @@ public class StoreBrowser extends JFrame implements TreeSelectionListener {
       }
     }
 
-    String clientName = null, storeName = null;
+    String workerName = null, storeName = null;
     long onum = -1;
-    if (args.length > 0)
-    	clientName = args[0];
-    if (args.length > 1)
-    	storeName = args[1];
-    if (args.length > 2)
-    	onum = Long.parseLong(args[2]);
-    if (clientName == null) {
-    	clientName = JOptionPane.showInputDialog("Please enter client name");
-    } 
-    if (storeName == null) {
-    	storeName = JOptionPane.showInputDialog("Please enter store name");
+    if (args.length > 0) workerName = args[0];
+    if (args.length > 1) storeName = args[1];
+    if (args.length > 2) onum = Long.parseLong(args[2]);
+    if (workerName == null) {
+      workerName = JOptionPane.showInputDialog("Please enter worker name");
     }
-    
+    if (storeName == null) {
+      storeName = JOptionPane.showInputDialog("Please enter store name");
+    }
+
     // Create and set up the window.
     JFrame frame;
     if (onum > 0) {
-    	frame = new StoreBrowser(new FabricDataProvider(clientName, storeName, onum));
+      frame =
+          new StoreBrowser(new FabricDataProvider(workerName, storeName, onum));
     } else {
-    	frame = new StoreBrowser(new FabricDataProvider(clientName, storeName));
+      frame = new StoreBrowser(new FabricDataProvider(workerName, storeName));
     }
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -152,10 +160,13 @@ public class StoreBrowser extends JFrame implements TreeSelectionListener {
     frame.setVisible(true);
   }
 
+  @Override
   public void valueChanged(TreeSelectionEvent e) {
-    DefaultMutableTreeNode selected = (DefaultMutableTreeNode)e.getPath().getLastPathComponent();
+    DefaultMutableTreeNode selected =
+        (DefaultMutableTreeNode) e.getPath().getLastPathComponent();
     addChildren(selected);
-    infoPane.setText(dataProvider.getDescriptionForNode(selected.getUserObject()));
+    infoPane.setText(dataProvider.getDescriptionForNode(selected
+        .getUserObject()));
   }
 
 }

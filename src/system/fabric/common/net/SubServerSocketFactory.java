@@ -3,6 +3,7 @@ package fabric.common.net;
 import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -234,6 +235,9 @@ public class SubServerSocketFactory {
             recvException(e);
           }
         }
+      } catch (BindException e) {
+        System.err.println("WARNING: Unable to listen on " + address + ". "
+            + e.getMessage() + ". Is the node already running?");
       } catch (IOException exc) {
         // TODO
         throw new NotImplementedException(exc);

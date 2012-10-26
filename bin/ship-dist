@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Integrates a distribution package into the working copy of the website (in
+# the 'web' directory).
+
+source "$(dirname "$0")/defs"
+
+function usage() {
+  echo "Usage: $(basename "$0") fabric-x.y.z.tar.gz"
+  echo
+  echo "  Integrates a Fabric distribution package into the working copy of"
+  echo "  the website (in the 'web' directory)."
+  echo
+  echo "  Assumes the package is named fabric-x.y.z.tar.gz,"
+  echo "  where x.y.z is the version number being released."
+  echo
+  echo "  The package is copied into 'web/releases' and the"
+  echo "  manual is extracted into 'web/manual/x.y.z'."
+  exit 1
+}
+
+[[ $# == 1 ]] || usage
+[[ -f "$1" ]] || { echo "No such file: $1" ; usage ; }
+
+FILE="$1"
+BASENAME="$(basename "${FILE}")"
+VERSION="$(echo "${FILE}" | sed 's/^fabric-\(.*\).tar.gz/\1/')"
+
+if [[ -f "${TOP}/web/releases/${BASENAME}" ]] ; then
+  while true ; do
+    echo -n "web/releases/${BASENAME} already exists. Overwrite? "
+    read -r INPUT
+    case "${INPUT}" in
+      [Yy])
+	echo
+	break
+	;;
+      [Nn])
+	exit 1
+	;;
+      *)
+	continue
+	;;
+    esac
+  done
+
+  # Clean out existing copy.
+  rm "${TOP}/web/releases/${BASENAME}"
+  rm -rf "${TOP}/web/manual/${VERSION}"
+fi
+
+# Copy into releases directory.
+cp "${FILE}" "${TOP}/web/releases"
+
+# Extract manual into web/manual.
+mkdir -p "${TOP}/web/manual/${VERSION}"
+tar xf "${FILE}" \
+  -C "${TOP}/web/manual/${VERSION}" \
+  --strip-components=3 \
+  "fabric-${VERSION}/doc/manual"
+
+echo Files for release "${VERSION}" integrated into "${TOP}/web".
+echo Sanity check the changes in that directory before checking them in.

@@ -1,11 +1,12 @@
 Bidding Agent Mobile Code Example
 =================================
 
-This is the auction example program. It is intended to model a complex auction
-in which sellers submit confidential sales strategies, and a buyer submits a
-confidential purchasing strategy. Each seller may make an offer based on the
-buyer, and the buyer may then choose among these options. At the end of the
-auction, the identity of the winner is revealed to all participants.
+This is the auction example program. It is intended to model a complex
+auction in which sellers submit confidential sales strategies, and a
+buyer submits a confidential purchasing strategy. Each seller may make
+an offer based on the buyer, and the buyer may then choose among these
+options. At the end of the auction, the identity of the winner is
+revealed to all participants.
 
 This directory contains the following sub-directories:
 
@@ -16,48 +17,54 @@ This directory contains the following sub-directories:
 
 Using
 -----
-This example uses four stores ("brokerStore", "airlineAStore", "airlineBStore",
-and "userStore").
+This example uses four stores ("brokerStore", "airlineAStore",
+"airlineBStore", and "userStore").
 
-  0. Start in the auction example directory and build the initialization code
-     for setting up the principal hierarchy:
+  0. Start in the auction example directory and build the initialization
+     code for setting up the principal hierarchy:
 
-      $ cd $FABRIC/examples/auction
-      $ ant
+        $ cd $FABRIC/examples/auction
+        $ ant
 
   1. Start up instances of the broker, airline, and user stores. The
-     'start-all' script will start each store in a separate xterm window:
+     'start-all' script will start each store in a separate xterm
+     window:
 
-      $ bin/start-all
+        $ bin/start-all
 
-     You can also use an xterm replacement (e.g., gnome-terminal or konsole):
+     You can also use an xterm replacement (e.g., gnome-terminal or
+     konsole):
 
-      $ XTERM=gnome-terminal bin/start-all
+        $ XTERM=gnome-terminal bin/start-all
 
-     Or, if you prefer, you can start each store individually in your favourite
-     terminal emulator:
+     Or, if you prefer, you can start each store individually in your
+     favourite terminal emulator:
 
-      $ bin/start-store brokerStore
-      $ bin/start-store airlineAStore
-      $ bin/start-store airlineBStore
-      $ bin/start-store userStore
+        $ bin/start-store brokerStore
+        $ bin/start-store airlineAStore
+        $ bin/start-store airlineBStore
+        $ bin/start-store userStore
 
-  2. If you are starting from fresh stores, you will need to initialize the
-     application state. Otherwise, skip to step 3 below.
+  2. If you are starting from fresh stores, you will need to initialize
+     the application state. Otherwise, skip to step 3 below.
 
-     Run the 'initialize' script to initialize the stores' state. This will
-     initialize the principal hierarchy, publish the example's code to the
-     stores, and initialize the application's state.
+     Run the 'initialize' script to initialize the stores' state. This
+     will initialize the principal hierarchy, publish the example's code
+     to the stores, and initialize the application's state.
 
-      $ bin/initialize
+        $ bin/initialize
 
-  3. The 'auction' script will run the example. You should see output in the
-     broker store's console, indicating that Airline B has won the auction.
+  3. The 'auction' script will run the example. You should see output in
+     the broker store's console, indicating that Airline B has won the
+     auction.
 
-      $ bin/auction
+        $ bin/auction
 
-  4. You can clean up the stores' persistent state by removing 'var' from the
-     auction example directory:
+  4. Exit the stores with the "exit" command in each console (you can
+     also use CTRL-D).
 
-      $ rm -rf var
+     You can clean up the stores' persistent state by removing 'var'
+     from the auction example directory:
+
+        $ rm -rf var
 

@@ -5,27 +5,22 @@ Requirements
 ------------
 This Fabric distribution builds on Unix. Fabric @VERSION@ builds against Jif
 @JIF-VERSION@ and Polyglot @POLYGLOT-VERSION@, both included in the
-distribution. We recommend that you use Java 6 or later; we have experienced
-problems with older versions. [OpenSSL](http://www.openssl.org/) is used to
-sign certificates. Fabric is compiled with the [Apache Ant build
-tool](http://ant.apache.org/).
+distribution. We recommend that you use Oracle JDK 6 or later; we have
+experienced problems with OpenJDK and with older versions of Java.
+[OpenSSL](http://www.openssl.org/) is used to sign certificates. Fabric is
+compiled with the [Apache Ant build tool](http://ant.apache.org/).
 
 
 Configuring
 -----------
-1. Before using Fabric, you must specify the locations of the Polyglot
-   and Jif distributions. Copy `config.properties.in` to
-   `config.properties` and edit appropriately. On Mac OS you may also
-   need to tell Fabric where to find the Java installation.
-~~~
-      $ cp config.properties.in config.properties
-      $ vim config.properties
-~~~
-2. Configure the scripts in the `bin` directory. From the top-level
-   directory, run:
+Before using Fabric, you must configure the scripts in the `bin`
+directory.  From the top-level directory, run:
 ~~~
       $ ant bin
 ~~~
+If the configurator is unable to find the JDK, Polyglot, or Jif, it will
+prompt you to set the appropriate properties in `config.properties`.
+
 
 Building
 --------

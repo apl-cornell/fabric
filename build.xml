@@ -101,7 +101,8 @@
 
   <!-- Main configuration target. -->
   <target name="configure" description="Configures Fabric"
-      depends="configure-buildstring" unless="configure.up-to-date">
+      depends="configure-buildstring,config.properties"
+      unless="configure.up-to-date">
 
     <echo message="java version is ${java.version}"/>
     <echo message="current directory is ${user.dir}"/>
@@ -109,6 +110,82 @@
     <echo message="Polyglot home directory is ${polyglot.home}"/>
     <echo message="Jif home directory is ${jif.home}" />
     <echo message="Fabric version is ${fabric.version.build}" />
+
+    <!--
+    ________________________________________________________________________
+    Check configuration.
+    -->
+
+    <property file="config.properties" prefix="config" />
+
+    <!-- Check for presence of JDK. -->
+    <condition property="jdk.exists" value="true">
+      <available file="${jdk.home}/bin/javac" />
+    </condition>
+
+    <!-- Check for presence of Polyglot. -->
+    <condition property="polyglot.exists" value="true">
+      <available classname="polyglot.main.Version"
+          classpathref="polyglot.classpath" />
+    </condition>
+
+    <!-- Check for presence of Jif. -->
+    <condition property="jif.exists" value="true">
+      <available classname="jif.Version"
+          classpathref="jif.classpath" />
+    </condition>
+
+    <!-- Error handling: JDK not found and jdk.home not set. -->
+    <fail message="Failed to find javac. Edit 'config.properties' and set the 'jdk.home' property.">
+      <condition>
+        <and>
+          <isfalse value="${jdk.exists}"/>
+          <not><isset property="config.jdk.home"/></not>
+        </and>
+      </condition>
+    </fail>
+
+    <!-- Error handling: JDK not found. -->
+    <fail message="Failed to find javac. Ensure the 'jdk.home' property is correct in 'config.properties'.">
+      <condition>
+        <isfalse value="${jdk.exists}"/>
+      </condition>
+    </fail>
+
+    <!-- Error handling: Polyglot not found and polyglot.home not set. -->
+    <fail message="Failed to find pre-packaged Polyglot (lib/polyglot.jar). If you wish to use a dev copy of Polyglot, edit 'config.properties' and set the 'polyglot.home' property.">
+      <condition>
+        <and>
+          <isfalse value="${polyglot.exists}"/>
+          <not><isset property="config.polyglot.home"/></not>
+        </and>
+      </condition>
+    </fail>
+
+    <!-- Error handling: Polyglot not found. -->
+    <fail message="Failed to find Polyglot. Ensure the 'polyglot.home' property is correct in 'config.properties' and make sure Polyglot is built.">
+      <condition>
+        <isfalse value="${polyglot.exists}"/>
+      </condition>
+    </fail>
+
+    <!-- Error handling: Jif not found and jif.home not set. -->
+    <fail message="Failed to find pre-packaged Jif (lib/jif.jar). If you wish to use a dev copy of Jif, edit 'config.properties' and set the 'jif.home' property.">
+      <condition>
+        <and>
+          <isfalse value="${jif.exists}" />
+          <not><isset property="config.jif.home"/></not>
+        </and>
+      </condition>
+    </fail>
+
+    <!-- Error handling: Jif not found. -->
+    <fail message="Failed to find Jif. Ensure the 'jif.home' property is correct in 'config.properties' and make sure Jif is built.">
+      <condition>
+        <isfalse value="${jif.exists}" />
+      </condition>
+    </fail>
+
 
     <property name="configure.up-to-date" value="true"/>
   </target>
@@ -132,31 +209,7 @@
   <!-- Configures the executables in the bin directory. -->
   <target name="bin" depends="configure,bin-check" unless="bin.up-to-date"
       description="Configures the executables in the bin directory">
-    <fail message="Failed to find Polyglot.  Make sure that your POLYGLOT environment variable is set, and that you have built Polyglot.">
-      <condition>
-        <not>
-          <and>
-            <isset property="polyglot.home" />
-            <available classname="polyglot.main.Version"
-                classpathref="polyglot.classpath" />
-          </and>
-        </not>
-      </condition>
-    </fail>
-
-    <fail message="Failed to find Jif.  Make sure that your JIF environment variable is set and that you have built Jif.">
-      <condition>
-        <not>
-          <and>
-            <isset property="jif.home" />
-            <available classname="jif.Version"
-                classpathref="jif.classpath" />
-          </and>
-        </not>
-      </condition>
-    </fail>
-
-    <copy file="${bin}/defs.in" tofile="${bin}/defs">
+    <copy file="${bin}/defs.in" tofile="${bin}/defs" overwrite="true">
       <filterset>
         <filter token="JAVA_HOME" value="${jdk.home}"    />
         <filter token="TOP"       value="${fabric.home}"      />
@@ -170,6 +223,12 @@
   ____________________________________________________________________________
     Configuration helper targets.
   -->
+
+  <!-- Ensures config.properties exists. -->
+  <target name="config.properties" depends="config.properties-check"
+      unless="config.properties.exists">
+    <copy file="config.properties.in" tofile="config.properties"/>
+  </target>
 
   <target name="configure-buildstring" depends="configure-version"
       unless="fabric.version.build">
@@ -185,14 +244,24 @@
     <property name="fabric.version" value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}" />
   </target>
 
+  <target name="config.properties-check">
+    <condition property="config.properties.exists" value="true">
+      <resourceexists>
+        <file file="config.properties"/>
+      </resourceexists>
+    </condition>
+  </target>
+
   <target name="eclipse-check">
     <uptodate property="eclipse.up-to-date" targetfile=".classpath"
         srcfile="eclipse-classpath.in" />
   </target>
 
   <target name="bin-check">
-    <uptodate property="bin.up-to-date" srcfile="bin/defs.in"
-        targetfile="bin/defs" />
+    <uptodate property="bin.up-to-date" targetfile="bin/defs">
+      <srcfiles file="bin/defs.in"/>
+      <srcfiles file="config.properties"/>
+    </uptodate>
   </target>
 
   <!--
@@ -300,6 +369,21 @@
       <arg value="${signatures.fabric.src}" />
       <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
     </fabsigc>
+
+    <!--
+      Clean out classes that happened to be pulled in as dependencies.
+      This ensures that the classes left in the sig-classes directory is the
+      same regardless of whether the Fabric jars are present when building.
+    -->
+    <delete>
+      <fileset dir="${signatures.fabric.classes}" includes="**">
+        <present present="srconly" targetdir="${signatures.fabric.src}">
+          <mapper type="regexp"
+              from="^([^$$]*?)(|\$$.*|_JIF_IMPL)\.(java|class)$$"
+              to="\1.fab"/>
+        </present>
+      </fileset>
+    </delete>
   </target>
 
   <!-- Compiles the FabIL signatures -->
@@ -307,6 +391,7 @@
       depends="init,bootstrap,fabil-compiler,bin,native"
       description="Compiles the FabIL signature clasess">
     <filsigc dest="${signatures.fabil.classes}">
+      <arg value="-platform-mode" /> 
       <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg value="-nooutput" />
@@ -316,6 +401,21 @@
       <arg value="${signatures.fabil.src}:${runtime.src}" />
       <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
     </filsigc>
+
+    <!--
+      Clean out classes that happened to be pulled in as dependencies.
+      This ensures that the classes left in the sig-classes directory is the
+      same regardless of whether the Fabric jars are present when building.
+    -->
+    <delete>
+      <fileset dir="${signatures.fabil.classes}" includes="**">
+        <present present="srconly" targetdir="${signatures.fabil.src}">
+          <mapper type="regexp"
+              from="^([^$$]*?)(|\$$.*|_JIF_IMPL)\.(java|class)$$"
+              to="\1.fil"/>
+        </present>
+      </fileset>
+    </delete>
   </target>
 
   <!-- Compiles the Fabric tools -->
@@ -984,9 +1084,15 @@ public class Version {
   <target name="dist" depends="dist-tarball"
       description="Generates the distribution">
     <!-- Output a checklist for verifying that the distribution is good. -->
-    <echo message="Examples build and run" />
-    <echo message="CHANGES file up-to-date" />
-    <echo message="Version bump" />
+    <echo message="Dist package created. Verify the following:" />
+    <echo message=" - Examples build and run" />
+    <echo message=" - CHANGES file up-to-date" />
+    <echo message=" - Version bump" />
+    <echo message="" />
+    <echo message="When satisfied, integrate the distribution package and" />
+    <echo message="manual into your working copy of the website:" />
+    <echo message="" />
+    <echo message="  bin/ship-dist fabric-${fabric.version}.tar.gz" />
   </target>
 
   <!--
