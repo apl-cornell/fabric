@@ -31,17 +31,18 @@ def parse_args():
 
 
 class ThreadClass(threading.Thread):
-    def __init__(self, h, w, t, s, p, user, pw):
+    def __init__(self, h, w, c, t, s, p, user, pw):
         threading.Thread.__init__(self)
         self.host = h
         self.worker = w
+        self.commit = c
         self.hot = t
         self.size = s
         self.percentage = p
         self.user = user
         self.pw = pw
     def run(self):
-        cmd = 'ssh %s@%s /home/fabric/%s/readwritemix/bin/worker'  % (self.user, self.worker, self.worker)
+        cmd = 'ssh %s@%s /home/fabric/%s/readwritemix/bin/worker %s %d %d'  % (self.user, self.worker, self.worker, self.commit, self.size, self.percentage)
         child = pexpect.spawn (cmd, timeout=None)
         print cmd
         child.expect ('.*password:')
@@ -108,7 +109,9 @@ def plot(name):
     ps = "./" + name + ".ps"
     cmd = "plot "
     cmd +=  "\"" + data + "\" u 1:2 t \'commit\' w linespoints, "
-    cmd += "\"\" u 1:2:3 notitle w yerrorbars "    
+    cmd += "\"\" u 1:2:3 notitle w yerrorbars, "    
+    cmd +=  "\"" + data + "\" u 1:4 t \'nocommit\' w linespoints, "
+    cmd += "\"\" u 1:4:5 notitle w yerrorbars"  
     with open(gnu, 'w') as f:
         f.write('set terminal postscript\n')
         f.write('set output \"' + ps + '\"\n')
@@ -132,7 +135,7 @@ def test_warm(worker_names, size, percentage,user, pw, store_ip, num_runs):
         # run once to warm the store
         print "warming store..."
         (worker, host) = worker_names[0]
-        t = ThreadClass(host, worker, False, size, percentage, user, pw)    
+        t = ThreadClass(host, worker, 'n', False, size, percentage, user, pw)    
         t.start()
         t.join()
         print "beginning test..."
@@ -140,27 +143,35 @@ def test_warm(worker_names, size, percentage,user, pw, store_ip, num_runs):
         print s
         f.write(s + '\n')
         for num_workers in range(1,len(worker_names)+1):
-            run_times = []
-            for runs in range(num_runs):
-                workers = worker_names[0:num_workers]
-                commit_time = 0.0
-                commit_dev = 0.0
-                # start all the workers...
-                times = []
-                for (worker, host) in workers:              
-                    t = ThreadClass(host, worker, False, size, percentage, user, pw)
-                    t.start()
-                    threads.append(t)
-                    # wait for the workers to finish
-                for t in threads:
-                    t.join()
-                (average, dev) = mean_and_dev(times)                
-                print "workers =" + str(num_workers) + ", average=" + str(average) + ", dev=" + str(dev)
-                run_times.append(int(average))
-            (runs_average, runs_dev) = mean_and_dev(run_times) 
-            commit_time = runs_average
-            commit_dev = runs_dev
-            s = '%d\t%0.2f\t%0.2f' % (num_workers, commit_time, commit_dev)
+            commit_run_times = []
+            nocommit_run_times = []
+            for commit in ['y', 'n']:
+                for runs in range(num_runs):
+                    workers = worker_names[0:num_workers]
+                    commit_time = 0.0
+                    commit_dev = 0.0
+                    # start all the workers...
+                    times = []
+                    for (worker, host) in workers:              
+                        t = ThreadClass(host, worker, commit, False, size, percentage, user, pw)
+                        t.start()
+                        threads.append(t)
+                        # wait for the workers to finish
+                    for t in threads:
+                        t.join()
+                    (average, dev) = mean_and_dev(times)
+                    print "workers =" + str(num_workers) + ", commit=" + commit + ", average=" + str(average) + ", dev=" + str(dev)
+                    if commit == 'y':
+                        commit_time = average
+                        commit_dev = dev
+                        commit_run_times.append(int(average))
+                    else:
+                        nocommit_time = average
+                        nocommit_dev = dev
+                        nocommit_run_times.append(int(average))                           
+            (commit_time, commit_dev) = mean_and_dev(commit_run_times)
+            (nocommit_time, nocommit_dev) = mean_and_dev(nocommit_run_times)         
+            s = '%d\t%0.2f\t%0.2f\t%0.2f\t%0.2f' % (num_workers, commit_time, commit_dev, nocommit_time, nocommit_dev)           
             print s
             f.write(s + '\n')
         stop_store(store)
@@ -177,31 +188,41 @@ def test_cold(worker_names, size, percentage, user, pw, store_ip, num_runs):
         print s
         f.write(s + '\n')
         for num_workers in range(1,len(worker_names)+1):
-            run_times = []
-            for runs in range(num_runs):
-                workers = worker_names[0:num_workers]
-                commit_time = 0.0
-                commit_dev = 0.0
-                store = start_store(user, pw, store_ip)
-                print "populating the store..."
-                create_db(user, pw, store_ip, size)            
-                # start all the workers...
-                times = []
-                for (worker, host) in workers:              
-                    t = ThreadClass(host, worker, False, size, percentage, user, pw)
-                    t.start()
-                    threads.append(t)
-                    # wait for the workers to finish
-                for t in threads:
-                    t.join()
-                (average, dev) = mean_and_dev(times)
-                print "workers =" + str(num_workers) + ", average=" + str(average) + ", dev=" + str(dev)
-                run_times.append(int(average))
-                stop_store(store)
-            (runs_average, runs_dev) = mean_and_dev(run_times) 
-            commit_time = runs_average
-            commit_dev = runs_dev
-            s = '%d\t%0.2f\t%0.2f' % (num_workers, commit_time, commit_dev)
+            commit_run_times = []
+            nocommit_run_times = []
+            for commit in ['y', 'n']:
+                for runs in range(num_runs):
+                    workers = worker_names[0:num_workers]
+                    commit_time = 0.0
+                    commit_dev = 0.0
+                    nocommit_time = 0.0
+                    nocommit_dev = 0.0
+                    store = start_store(user, pw, store_ip)
+                    print "populating the store..."
+                    create_db(user, pw, store_ip, size)            
+                    # start all the workers...
+                    times = []
+                    for (worker, host) in workers:              
+                        t = ThreadClass(host, worker, commit, False, size, percentage, user, pw)
+                        t.start()
+                        threads.append(t)
+                        # wait for the workers to finish
+                    for t in threads:
+                        t.join()
+                    (average, dev) = mean_and_dev(times)
+                    print "workers =" + str(num_workers) + ", commit=" + commit + ", average=" + str(average) + ", dev=" + str(dev)
+                    if commit == 'y':
+                        commit_time = average
+                        commit_dev = dev
+                        commit_run_times.append(int(average))
+                    else:
+                        nocommit_time = average
+                        nocommit_dev = dev
+                        nocommit_run_times.append(int(average))
+                    stop_store(store)                
+            (commit_time, commit_dev) = mean_and_dev(commit_run_times)
+            (nocommit_time, nocommit_dev) = mean_and_dev(nocommit_run_times)         
+            s = '%d\t%0.2f\t%0.2f\t%0.2f\t%0.2f' % (num_workers, commit_time, commit_dev, nocommit_time, nocommit_dev)
             print s
             f.write(s + '\n')                              
     plot(splot)
