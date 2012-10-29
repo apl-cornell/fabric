@@ -14,9 +14,9 @@ public class ReadWriteMixCreate01 {
   public static void main(String[] args) {
 
     atomic {
-      int size = Integer.parseInt(args[0]);
+      int size = Integer.parseInt(args[1]);
       // Store store = Worker.getWorker().getStore("store0");
-      Store store = Worker.getWorker().getStore(args[1]);
+      Store store = Worker.getWorker().getStore(args[0]);
       ReadWriteMix01[] objs = new ReadWriteMix01[size]@store;
       for (int j = 0; j < size; j++) {
           objs[j]= new ReadWriteMix01@store().system$ReadWriteMix01$();

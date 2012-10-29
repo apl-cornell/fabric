@@ -15,12 +15,12 @@ public class ReadWriteMix01 {
   public static void main(String[] args) {
 
 
-    int size = Integer.parseInt(args[0]);
-    float percentReads = Float.parseFloat(args[1]);
+    int size = Integer.parseInt(args[1]);
+    float percentReads = Float.parseFloat(args[2]);
     int reads = (int)((percentReads) / 100 * size);
 
     Timing.reset();
-    Store store = Worker.getWorker().getStore(args[2]);
+    Store store = Worker.getWorker().getStore(args[0]);
     Map root = (Map) store.getRoot();
     ReadWriteMix01[] objs = (ReadWriteMix01[])root.get("testKey");
 
