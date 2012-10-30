@@ -1,9 +1,17 @@
 TODO Items:
 	- Evaluation
 	- Rigorous Testing
+	- Design Decisions to revisit:
+		- Remembering values read if call ends with a runtime
+		  exception.
+		- Not checking for updates on non-fabric objects.
+		- Various uses of hashing feel fishy, am I setting myself up
+		  for collisions hell?
 	- Remote calls?
 		- Are we currently handling them correctly, probably depends on
 		  whether we transform memoization before or after remote calls
 		  are rewritten...  Although, wouldn't the resulting call be
 		  more or less equivalent?
+		- Do we currently risk not invalidating calls on remote hosts?
 	- Avoiding unnecessary invalidation?
+	- Attempt to detect and warn about side effects?

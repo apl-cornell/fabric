@@ -54,16 +54,24 @@ public class MemoCache {
   /**
    * Invalidates a memoized call.
    *
-   * If that call is not in the table, do nothing.
+   * Removes memoized value from table if it exists.  Removes all items in the
+   * dependencies listing for this call and removes this call from each read
+   * item's dependentCalls listing.
    *
    * @param key Call to be invalidated.
    */
   public synchronized void invalidateCall(CallTuple key) {
     if (table.containsKey(key)) {
+      /* Remove the memoized value */
       table.remove(key);
     }
 
     if (dependencies.containsKey(key)) {
+      /* Other read items don't need to invalidate this call anymore. */
+      for (fabric.lang.Object readItem : dependencies.get(key)) {
+        dependentCalls.get(readItem).remove(key);
+      }
+      /* Clear out items read using this call. */
       dependencies.get(key).clear();
     }
   }
@@ -78,10 +86,12 @@ public class MemoCache {
   public synchronized void invalidateCallsUsing(fabric.lang.Object o) {
     if (dependentCalls.containsKey(o)) {
       Set<CallTuple> callSet = dependentCalls.get(o);
-      CallTuple[] calls = (CallTuple[]) callSet.toArray();
+      Set<CallTuple> calls = new HashSet<CallTuple>(callSet);
       for (CallTuple c : calls) {
-        callSet.remove(c);
-        invalidateCall(c);
+        /* Don't invalidate if we're computing it! */
+        if (callStack.search(c) == -1) {
+          invalidateCall(c);
+        }
       }
     }
   }
