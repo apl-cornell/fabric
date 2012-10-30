@@ -1,6 +1,9 @@
 TODO Items:
 	- Handle static methods
-	- Determine when to invalidate
 	- Evaluation
-	- Handle primitive return types
 	- Remote calls?
+		- Are we currently handling them correctly, probably depends on
+		  whether we transform memoization before or after remote calls
+		  are rewritten...  Although, wouldn't the resulting call be
+		  more or less equivalent?
+	- Avoiding unnecessary invalidation?

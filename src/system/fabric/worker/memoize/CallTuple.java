@@ -9,14 +9,26 @@ import java.util.*;
  * passed to the method.
  */
 public class CallTuple {
-  private String method;
-  private Object callee;
-  private List<Object> args;
+  public final String method;
+  public final fabric.lang.Object callee;
+  public final List<Object> args;
 
-  public CallTuple(String methodName, Object callee, List<Object> args) {
+  public CallTuple(String methodName, fabric.lang.Object callee, List<Object> args) {
     this.method = methodName;
     this.callee = callee;
     this.args = args;
+  }
+
+  /**
+   * HashCode is the xor of callee and args hashcodes.
+   */
+  @Override
+  public int hashCode() {
+    int ret = callee.hashCode();
+    for (Object arg : args) {
+      ret ^= arg.hashCode();
+    }
+    return ret;
   }
 
   /**
@@ -24,24 +36,50 @@ public class CallTuple {
    * fields which are equal.
    */
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(java.lang.Object o) {
     if (o instanceof CallTuple) {
       CallTuple other = (CallTuple) o;
-      return this.method.equals(other.method) &&
-        this.callee.equals(other.callee) && this.args.equals(other.args);
+
+      if (!this.method.equals(other.method) ||
+          !this.callee.idEquals(other.callee) ||
+          this.args.size() != other.args.size()) {
+        return false;
+      }
+
+      for (int i = 0; i < this.args.size(); i++) {
+        Object thisItem = this.args.get(i);
+        Object otherItem = other.args.get(i);
+        if ((thisItem instanceof fabric.lang.Object) && (otherItem instanceof
+              fabric.lang.Object)) {
+          fabric.lang.Object tItem  = (fabric.lang.Object) thisItem;
+          fabric.lang.Object oItem  = (fabric.lang.Object) otherItem;
+          if (!tItem.idEquals(oItem)) {
+            return false;
+          }
+        } else if (!thisItem.equals(otherItem)) {
+          return false;
+        }
+      }
+
+      return true;
     }
+
     return false;
   }
 
-  public String getMethod() {
-    return method;
-  }
-
-  public Object getCallee() {
-    return callee;
-  }
-
-  public List<Object> getArgs() {
-    return args;
+  @Override
+  public String toString() {
+    String callStr = (callee.toString()) + "." + method + "(";
+    boolean first = true;
+    for (Object arg : args) {
+      if (first) {
+        first = false;
+      } else {
+        callStr += ", ";
+      }
+      callStr += arg.toString();
+    }
+    callStr += ")";
+    return callStr;
   }
 }

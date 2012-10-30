@@ -1,29 +1,37 @@
 package fabil.visit;
 
-
+import java.util.Stack;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
-import polyglot.util.SimpleCodeWriter;
+import polyglot.types.PrimitiveType;
+import polyglot.types.SemanticException;
 import polyglot.visit.NodeVisitor;
 import fabil.ExtensionInfo;
 import fabil.extension.FabILExt;
 import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
 
+/**
+ * NodeVisitor for rewriting methods that are marked to be memoized.
+ */
 public class MemoizedMethodRewriter extends NodeVisitor {
   protected QQ qq;
   protected NodeFactory nf;
   protected FabILTypeSystem ts;
-  private boolean inMemoizedMethod = false;
-  private TypeNode returnType = null;
+  /* Keep a stack of each memoized method's return type.  These might (?) be
+   * nested if an anonymous class with a memoized method is created in the
+   * source program.
+   */
+  private Stack<TypeNode> returnTypeStack;
 
   public MemoizedMethodRewriter(ExtensionInfo extInfo) {
     this.qq = new QQ(extInfo);
     this.nf = extInfo.nodeFactory();
     this.ts = extInfo.typeSystem();
+    this.returnTypeStack = new Stack<TypeNode>();
   }
 
   protected FabILExt ext(Node n) {
@@ -35,9 +43,7 @@ public class MemoizedMethodRewriter extends NodeVisitor {
     if (n instanceof MethodDecl) {
       MethodDecl m = (MethodDecl) n;
       if (m.flags().contains(FabILFlags.MEMOIZED)) {
-        /* This currently assumes you don't have memoized methods nested */
-        inMemoizedMethod = true;
-        returnType = m.returnType();
+        returnTypeStack.push(m.returnType());
       }
     }
     return this;
@@ -47,18 +53,29 @@ public class MemoizedMethodRewriter extends NodeVisitor {
   public Node leave(Node old, Node n, NodeVisitor v) {
     Node newN = ext(n).rewriteMemoizedMethods(this);
     if (n instanceof MethodDecl) {
-      inMemoizedMethod = false;
-      returnType = null;
+      MethodDecl method = (MethodDecl) n;
+      if (method.flags().contains(FabILFlags.MEMOIZED)) {
+        returnTypeStack.pop();
+      }
     }
     return newN;
   }
 
   public TypeNode methodReturnType() {
+    TypeNode returnType = returnTypeStack.peek();
+    if (returnType.type().isPrimitive()) {
+      PrimitiveType p = returnType.type().toPrimitive();
+      try {
+        return returnType.type(ts.typeForName(p.wrapperTypeString(ts)));
+      } catch (SemanticException e) {
+        System.out.println("Couldn't find wrapper type!");
+      }
+    }
     return returnType;
   }
 
   public boolean rewriteReturns() {
-    return inMemoizedMethod;
+    return !returnTypeStack.empty();
   }
 
   /**
