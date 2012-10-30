@@ -18,7 +18,7 @@ worker_sh_tmpl='''#!/bin/bash
 APP_HOME="$$(dirname $$0)/.."
 PATH="$${PATH}:$fabric/bin"
 export FABRIC_HOME="$fabric"
-fab --app-home "$${APP_HOME}" --name "$name" --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMix01 100 100 $store'''
+fab --app-home "$${APP_HOME}" --name "$name" --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMix01 1000 100 $store'''
 
 #fab --app-home "$${APP_HOME}" --name "$name" --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMix01 "$worker"'''
 
@@ -36,7 +36,7 @@ create_db_sh_tmpl='''#!/bin/bash
 APP_HOME="$$(dirname $$0)/.."
 PATH="$${PATH}:$fabric/bin"
 export FABRIC_HOME="$fabric"
-fab  --app-home "$${APP_HOME}" --name $store --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMixCreate01 100 $store'''
+fab  --app-home "$${APP_HOME}" --name $store --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMixCreate01 1000 $store'''
 # NAME=$$1 ; shift 2 ;
 #fab --jvm-cp "$${APP_HOME}/classes" --app-home "$${APP_HOME}" --name "$${NAME}" reedwritemix.ReadWreMixCreate01 fab://$server/$store "$$@"'''
 
