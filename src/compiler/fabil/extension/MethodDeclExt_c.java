@@ -102,6 +102,13 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
       }
       args += arg.name();
     }
+
+    String callee = "this";
+    String ctType = "CallTuple";
+    if (method.flags().contains(FabILFlags.STATIC)) {
+      callee = "\"" + method.memberInstance().container().toString() + "\"";
+      ctType = "StaticCallTuple";
+    }
       
     /* TODO: Handle RuntimeExceptions.  Currently this will cause the
      * MemoCache's call stack to become inconsistent.
@@ -110,8 +117,8 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
      */
     return method.body(nf.Block(CG, qq.parseStmt("{\n"
           + "fabric.worker.memoize.CallTuple $memoCallTup ="
-          + " new fabric.worker.memoize.CallTuple(\"" + method.name() + "\","
-          + " this,"
+          + " new fabric.worker.memoize." + ctType + "(\"" + method.name()
+          +   "\", " + callee + ","
           + " java.util.Arrays.asList(new java.lang.Object[]"
           + " {" + args + "}));\n"
           + "fabric.worker.memoize.MemoCache $memoCache =" 

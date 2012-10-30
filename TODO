@@ -1,6 +1,6 @@
 TODO Items:
-	- Handle static methods
 	- Evaluation
+	- Rigorous Testing
 	- Remote calls?
 		- Are we currently handling them correctly, probably depends on
 		  whether we transform memoization before or after remote calls

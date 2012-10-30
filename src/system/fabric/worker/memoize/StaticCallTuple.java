@@ -2,28 +2,21 @@ package fabric.worker.memoize;
 
 import java.util.List;
 
-/**
- * Item to represent the tuple (m, c, a) where m is the method name, c is either
- * the object or class the method was called on, and a is a list of arguments
- * passed to the method.
- */
-public class CallTuple {
-  public final String method;
-  public final fabric.lang.Object callee;
-  public final List<Object> args;
+public class StaticCallTuple extends CallTuple {
 
-  public CallTuple(String methodName, fabric.lang.Object callee, List<Object> args) {
-    this.method = methodName;
-    this.callee = callee;
-    this.args = args;
+  public final String className;
+
+  public StaticCallTuple(String methodName, String className, List<Object> args) {
+    super(methodName, null, args);
+    this.className = className;
   }
 
   /**
-   * HashCode is the xor of method's name, callee, and args hashcodes.
+   * HashCode is the xor of method's name, callee name, and args hashcodes.
    */
   @Override
   public int hashCode() {
-    int ret = callee.hashCode() ^ method.hashCode();
+    int ret = className.hashCode() ^ method.hashCode();
     for (Object arg : args) {
       ret ^= arg.hashCode();
     }
@@ -36,11 +29,11 @@ public class CallTuple {
    */
   @Override
   public boolean equals(java.lang.Object o) {
-    if (o instanceof CallTuple) {
-      CallTuple other = (CallTuple) o;
+    if (o instanceof StaticCallTuple) {
+      StaticCallTuple other = (StaticCallTuple) o;
 
       if (!this.method.equals(other.method) ||
-          !this.callee.idEquals(other.callee) ||
+          !this.className.equals(other.className) ||
           this.args.size() != other.args.size()) {
         return false;
       }
@@ -68,7 +61,7 @@ public class CallTuple {
 
   @Override
   public String toString() {
-    String callStr = (callee.toString()) + "." + method + "(";
+    String callStr = className + "." + method + "(";
     boolean first = true;
     for (Object arg : args) {
       if (first) {
