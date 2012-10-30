@@ -79,7 +79,7 @@ def mean_and_dev(l):
     return (mean, dev)
         
 def create_db(user, pw, store_ip, size):
-    cmd = 'ssh %s@%s /home/fabric/%s/readwritemix/bin/create-db'  % (user, store_ip, store_ip)
+    cmd = 'ssh %s@%s /home/fabric/%s/readwritemix/bin/create-db %d'  % (user, store_ip, store_ip, size)
     print cmd
     child = pexpect.spawn (cmd, timeout=None)
     child.expect ('.*password:')
