@@ -16,16 +16,19 @@ import string
 # bin/worker
 worker_sh_tmpl='''#!/bin/bash
 APP_HOME="$$(dirname $$0)/.."
-PATH="$${PATH}:$fabric/bin"
+export ANT_HOME=/opt/apach-ant-1.8.4
+export PATH=/opt/apache-ant-1.8.4/bin:$fabric/bin:$$PATH
 export FABRIC_HOME="$fabric"
-fab --app-home "$${APP_HOME}" --name "$name" --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMix01 1000 100 $store'''
-
+COMMIT=$$1 ; shift 1 ;
+fab --app-home "$${APP_HOME}" --name "$name" --commit-reads "$${COMMIT}" --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMix01 $store "$$@"'''
+#fab --app-home "$${APP_HOME}" --name "$name" --commit-reads "${COMMIT}" --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMix01 1000 100 $store'''
 #fab --app-home "$${APP_HOME}" --name "$name" --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMix01 "$worker"'''
 
 # bin/start-store
 start_store_sh_tmpl='''#!/bin/bash
 APP_HOME="$$(dirname $$0)/.."
-PATH="$${PATH}:$fabric/bin"
+export ANT_HOME=/opt/apach-ant-1.8.4
+export PATH=/opt/apache-ant-1.8.4/bin:$fabric/bin:$$PATH
 export FABRIC_HOME="$fabric"
 fab-store  --app-home "$${APP_HOME}" --name $store --jvm-cp "$${APP_HOME}/classes" '''
 #fab-store --jvm-cp "$${APP_HOME}/classes" --app-home "$${APP_HOME}" --name $store "$$@"'''
@@ -34,9 +37,11 @@ fab-store  --app-home "$${APP_HOME}" --name $store --jvm-cp "$${APP_HOME}/classe
 # bin/create-db
 create_db_sh_tmpl='''#!/bin/bash
 APP_HOME="$$(dirname $$0)/.."
-PATH="$${PATH}:$fabric/bin"
+export ANT_HOME=/opt/apach-ant-1.8.4
+export PATH=/opt/apache-ant-1.8.4/bin:$fabric/bin:$$PATH
 export FABRIC_HOME="$fabric"
-fab  --app-home "$${APP_HOME}" --name $store --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMixCreate01 1000 $store'''
+fab  --app-home "$${APP_HOME}" --name $store --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMixCreate01 $store "$$@"'''
+#fab  --app-home "$${APP_HOME}" --name $store --jvm-cp "$${APP_HOME}/classes" readwritemix.ReadWriteMixCreate01 1000 $store'''
 # NAME=$$1 ; shift 2 ;
 #fab --jvm-cp "$${APP_HOME}/classes" --app-home "$${APP_HOME}" --name "$${NAME}" reedwritemix.ReadWreMixCreate01 fab://$server/$store "$$@"'''
 
@@ -68,7 +73,7 @@ def parse_args():
                         help='The ip address for the store')
     parser.add_argument('--file', metavar='FILENAME', type=str,  default='./ips.txt',
                         help='The name of the file that contains the i.p. addresses of available hosts.')
-    parser.add_argument('--distro', metavar='DISTRO', type=str,  default='fabric-0.2.0',
+    parser.add_argument('--distro', metavar='DISTRO', type=str,  default='fabric',
                         help='The fabric distribution to copy.')
     parser.add_argument('--app', metavar='APP', type=str,  default='./readwritemix',
                         help='The application for the experiment.')
@@ -232,15 +237,7 @@ def cleanup(dir):
     child = pexpect.spawn (cmd, timeout=None)
     child.expect(pexpect.EOF)
 
-def init_fab(user, pw, ip, distro):
-    cmd = 'ssh ' + user  + '@' + ip + ' \'cd ' + distro + '; ant bin\'' 
-    print cmd
-    child = pexpect.spawn (cmd)
-    child.expect ('.*password:')
-    child.sendline (pw)
-    child.expect(pexpect.EOF)
-   
-    
+       
 def main():
     args = parse_args()
    
@@ -271,16 +268,12 @@ def main():
             mk_worker(worker_name, app_name, store_name, server, distro)
             tgz(worker_name)
             cp_expand(worker_name, args.user, pw, server)
-            cp_expand(distro, args.user, pw, server)
-            init_fab(args.user, pw, server, distro)
             cleanup(worker_name)
             worker_id += 1
 
     # cp the store
     tgz(store_name)
     cp_expand(store_name, args.user, pw, store_ip)
-    cp_expand(distro, args.user, pw, store_ip)
-    init_fab(args.user, pw, store_ip, distro)
     cleanup(store_name)
 
 if __name__ == "__main__":
