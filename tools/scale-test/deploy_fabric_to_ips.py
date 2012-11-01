@@ -12,6 +12,8 @@ import getpass
 import pexpect
 import shutil 
 import string
+import threading
+
 
 fabric_home = '/Users/soule/workspace/fabric/'
 
@@ -35,7 +37,7 @@ def cp_expand(dir, user, pw, ip):
     child.expect ('^.*password:')
     child.sendline (pw)
     child.expect(pexpect.EOF)
-    #print dir + '.tar.gz copied to ' +  ip + '.'
+    print dir + '.tar.gz copied to ' +  ip + '.'
     
     # expand
     cmd = 'ssh ' + user  + '@' + ip + ' \'gunzip ' + dir + '.tar.gz; tar -xf ' + dir + '.tar\'' 
@@ -53,24 +55,50 @@ def init_fab(user, pw, ip, distro):
     child.expect ('.*password:')
     child.sendline (pw)
     child.expect(pexpect.EOF)
-   
+
+
+class ThreadClass(threading.Thread):
+    def __init__(self, distro, user, pw, ip):
+        threading.Thread.__init__(self)
+        self.distro = distro
+        self.user = user
+        self.pw = pw
+        self.ip = ip
+    def run(self):
+        print self.ip + ' running...'
+        cp_expand(self.distro, self.user, self.pw, self.ip)
+        init_fab(self.user, self.pw, self.ip, self.distro)
     
 def main():
     args = parse_args()
     distro = args.distro
     pw = getpass.getpass()
 
-    # cp the store
-    store_ip = '128.84.154.167'
-    #cp_expand(distro, args.user, pw, store_ip)
-    init_fab(args.user, pw, store_ip, distro)
+    if not os.path.exists(distro  + '.tar.gz'):
+          print 'File does not exist: ' + distro
+          os.sys.exit(0)
+
+    stores = ['128.84.154.167']
+    threads = []
+    # cp to the stores
+    for store in stores:
+        t = ThreadClass(distro, args.user, pw, store)
+        t.start()
+        threads.append(t)
 
     # setup the workers
-    with open(args.file, 'r') as f:
-        for line in f:
-            server = line.rstrip()
-            #cp_expand(distro, args.user, pw, server)
-            init_fab(args.user, pw, server, distro)
+    try:
+        with open(args.file, 'r') as f:        
+            for line in f:
+                server = line.rstrip()
+                t = ThreadClass(distro, args.user, pw, server)
+                t.start()
+                threads.append(t)              
+    except IOError as e:
+        print 'File does not exist: ' + args.file
+                
+    for t in threads:
+        t.join()
 
 if __name__ == "__main__":
     main()

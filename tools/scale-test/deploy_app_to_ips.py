@@ -237,6 +237,25 @@ def cleanup(dir):
     child = pexpect.spawn (cmd, timeout=None)
     child.expect(pexpect.EOF)
 
+
+
+class ThreadClass(threading.Thread):
+    def __init__(self, worker_name, app_name, store_name, server, distro, user, pw):
+        threading.Thread.__init__(self)
+        self.worker_name = worker_name
+        self.app_name = app_name
+        self.store_name = store_name
+        self.server = server
+        self.distro = distro
+        self.user = user
+        self.pw = pw              
+    def run(self):      
+        mkdir(self.worker_name)
+        mk_worker(self.worker_name, self.app_name, self.store_name, self.server, self.distro)
+        tgz(self.worker_name)
+        cp_expand(self.worker_name, self.user, self.pw, self.server)
+        cleanup(self.worker_name)
+      
        
 def main():
     args = parse_args()
@@ -250,27 +269,23 @@ def main():
     expand(app_name)
     pw = getpass.getpass()
 
-    # store_name = 'store0'
-    worker_id = 0
-
     store_ip = '128.84.154.167'
     store_name = store_ip
     mk_store(store_name, app_name, store_ip, distro)
-
+    threads = []
     # setup the workers
-    with open(args.file, 'r') as f:
-        for line in f:
-            server = line.rstrip()
-            # worker_name = 'w%0.6d' % worker_id
-            worker_name = server
-            print 'server=' + server
-            mkdir(worker_name)
-            mk_worker(worker_name, app_name, store_name, server, distro)
-            tgz(worker_name)
-            cp_expand(worker_name, args.user, pw, server)
-            cleanup(worker_name)
-            worker_id += 1
-
+    try:
+        with open(args.file, 'r') as f:
+            for line in f:
+                server = line.rstrip()
+                t = ThreadClass(server, app_name, store_name, server, distro, args.user, pw)
+                t.start()
+                threads.append(t)
+    except IOError as e:
+        print 'File does not exist: ' + args.file
+     for t in threads:
+        t.join()   
+          
     # cp the store
     tgz(store_name)
     cp_expand(store_name, args.user, pw, store_ip)
