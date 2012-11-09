@@ -1,9 +1,7 @@
 package fabric.types;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -51,7 +49,6 @@ import polyglot.ast.Expr;
 import polyglot.ext.param.types.Subst;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
-import polyglot.main.Report;
 import polyglot.types.AccessControlResolver;
 import polyglot.types.CachingResolver;
 import polyglot.types.ClassType;
@@ -73,7 +70,6 @@ import polyglot.types.TypeObject;
 import polyglot.types.TypeSystem;
 import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassFileLazyClassInitializer;
-import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
@@ -102,9 +98,6 @@ import fabric.worker.Worker;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements
     FabricTypeSystem {
-  private static final Collection<String> TOPICS = CollectionUtil.list(
-      Report.types, Report.resolver);
-
   protected Map<URI, NamespaceResolver> namespaceResolvers;
   protected NamespaceResolver platformResolver;
   protected NamespaceResolver applicationResolver;
@@ -146,14 +139,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     this.loadedResolver = null;
     this.systemResolver = null;
     this.extInfo = (fabric.ExtensionInfo) super.extInfo;
-    try {
-      initResolvers();
-    } catch (IOException e) {
-      throw new SemanticException("Could not initialize resolvers", e);
-    }
+    initResolvers();
   }
 
-  protected void initResolvers() throws IOException {
+  protected void initResolvers() {
     namespaceResolvers = new HashMap<URI, NamespaceResolver>();
     platformResolver = namespaceResolver(extInfo.platformNamespace());
     platformResolver.loadRawClasses(false);

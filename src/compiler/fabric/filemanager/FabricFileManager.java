@@ -112,19 +112,24 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
               continue;
             }
 
-            String entryName = fileKey(packageName, relativeName);
-            final ZipEntry entry = jar.getEntry(entryName);
-            if (entry != null) {
-              URI u =
-                  URI.create("file://" + pathEntry.getPath() + "!/" + entryName);
-              Kind k = isSource ? Kind.SOURCE : Kind.CLASS;
-              FileObject fo = new ExtFileObject(u, k) {
-                @Override
-                public InputStream openInputStream() throws IOException {
-                  return jar.getInputStream(entry);
-                }
-              };
-              return fo;
+            try {
+              String entryName = fileKey(packageName, relativeName);
+              final ZipEntry entry = jar.getEntry(entryName);
+              if (entry != null) {
+                URI u =
+                    URI.create("file://" + pathEntry.getPath() + "!/"
+                        + entryName);
+                Kind k = isSource ? Kind.SOURCE : Kind.CLASS;
+                FileObject fo = new ExtFileObject(u, k) {
+                  @Override
+                  public InputStream openInputStream() throws IOException {
+                    return jar.getInputStream(entry);
+                  }
+                };
+                return fo;
+              }
+            } finally {
+              jar.close();
             }
           } else {
             File dirEntry = new File(pathEntry);
