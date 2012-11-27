@@ -222,6 +222,8 @@ parser Grm extends jif.parse.Grm {:
 terminal Token AT;
 terminal Token ATOMIC;
 terminal Token ABORT;
+terminal Token REF_LOWER;
+terminal Token REF_UPPER;
 terminal Token RETRY;
 terminal Token WORKER;
 terminal Token STORE;
@@ -239,6 +241,11 @@ non terminal List codebase_declarations_opt, codebase_declarations;
 non terminal CodebaseDecl codebase_declaration;
 non terminal Store store_expr;
 non terminal Expr accesspath_expr;
+non terminal LabelNode type_label, short_label, full_label;
+
+terminal SHORT_LABEL, FULL_LABEL;
+precedence nonassoc SHORT_LABEL;
+precedence nonassoc FULL_LABEL;
 
 start with goal;
 
@@ -607,3 +614,61 @@ extend method_invocation ::=
                                        parser.nf.Id(parser.pos(b), b.getIdentifier()), 
                                        c, d); :}
     ;
+
+////////////////////////////////////////////////////////////////////////
+// Referential-authority labels                                       //
+////////////////////////////////////////////////////////////////////////
+
+drop { type ::= primitive_array_type label; }
+extend type ::=
+        primitive_array_type:a type_label:b
+	    {: RESULT = parser.nf.LabeledTypeNode(parser.pos(a,b), a, b); :}
+    ;
+
+drop { reftype_or_expr ::= reftype_or_expr label; }
+extend reftype_or_expr ::=
+        reftype_or_expr:a type_label:b
+	    {: RESULT = new LabeledExpr(parser, parser.pos(a,b), a, b);
+	       parser.countAnnotation(parser.TYPE_ANNOTATION, parser.pos(a,b));
+	    :}
+    ;
+
+type_label ::=
+	label:lbl
+	    {: RESULT = lbl;
+	    :}
+	%prec SHORT_LABEL
+    |   label:lbl REF_UPPER label:upper REF_LOWER label:lower
+	    {: RESULT = lbl;
+	    :}
+        %prec FULL_LABEL
+    ;
+
+override constructor_declaration ::=
+                    // ConstructorDecl
+        modifiers_opt:a reftype_or_expr:q
+        LPAREN 
+        formal_parameter_list_opt:c RPAREN:y return_label_opt:r
+        throws_opt:d procedure_constraints_opt:w 
+        constructor_body:e
+        {: Id b; LabelNode i;
+               // Pick apart the reftype_or_expr node.
+               // It can be either an identifier "a" or an
+               // identifier and label "a{L}".
+               if (q instanceof LabeledExpr) {
+		   LabeledExpr le = (LabeledExpr) q;
+// XXX Uncomment when LabeledExpr is ready.
+//		   if (le.authUpperBound != null) die(pos(le.authUpperBound));
+//		   if (le.authLowerBound != null) die(pos(le.authLowerBound));
+                   b = le.prefix.toIdentifier();
+                   i = le.label;
+               }
+               else {
+                   b = q.toIdentifier();
+                   i = null;
+               }
+           RESULT = parser.nf.JifConstructorDecl(parser.pos(q, y),
+                             a, b, i, r, c, d, w, e); 
+        :}
+    ;
+
