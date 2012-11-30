@@ -1,8 +1,11 @@
 package fabric.ast;
 
+import jif.translate.CannotToJavaExt_c;
+import jif.translate.CanonicalLabelNodeToJavaExt_c;
 import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
 import fabric.extension.FabricExt;
+import fabric.extension.LabelNodeExt_c;
 import fabric.extension.NewExt_c;
 import fabric.extension.NewFabricArrayExt_c;
 import fabric.extension.NewLabelExt_c;
@@ -48,5 +51,15 @@ public class FabricFabExtFactory_c extends AbstractFabExtFactory_c {
   @Override
   protected Ext extPrincipalExprImpl() {
     return new PrincipalExprExt_c();
+  }
+
+  @Override
+  protected Ext extLabelNodeImpl() {
+    return new LabelNodeExt_c(new CannotToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extCanonicalLabelNodeImpl() {
+    return new LabelNodeExt_c(new CanonicalLabelNodeToJavaExt_c());
   }
 }

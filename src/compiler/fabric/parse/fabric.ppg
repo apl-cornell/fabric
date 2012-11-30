@@ -5,6 +5,7 @@ package fabric.parse;
 
 import fabric.ast.*;
 import jif.parse.*;
+import fabric.extension.LabelNodeExt;
 import fabric.types.FabricTypeSystem;
 import fabric.types.FabricFlags;
 import fabric.parse.Name;
@@ -242,10 +243,6 @@ non terminal CodebaseDecl codebase_declaration;
 non terminal Store store_expr;
 non terminal Expr accesspath_expr;
 non terminal LabelNode type_label, short_label, full_label;
-
-terminal SHORT_LABEL, FULL_LABEL;
-precedence nonassoc SHORT_LABEL;
-precedence nonassoc FULL_LABEL;
 
 start with goal;
 
@@ -637,11 +634,13 @@ type_label ::=
 	label:lbl
 	    {: RESULT = lbl;
 	    :}
-	%prec SHORT_LABEL
     |   label:lbl REF_UPPER label:upper REF_LOWER label:lower
-	    {: RESULT = lbl;
+	    {: Jif_c ext1 = (Jif_c) lbl.ext();
+	       LabelNodeExt ext2 = (LabelNodeExt) ext1.ext();
+	       ext2 = ext2.refAuthUpperBound(upper.label().integProjection());
+	       ext2 = ext2.refAuthLowerBound(lower.label().integProjection());
+	       RESULT = (LabelNode) lbl.ext(ext1.ext(ext2));
 	    :}
-        %prec FULL_LABEL
     ;
 
 override constructor_declaration ::=
@@ -657,9 +656,11 @@ override constructor_declaration ::=
                // identifier and label "a{L}".
                if (q instanceof LabeledExpr) {
 		   LabeledExpr le = (LabeledExpr) q;
-// XXX Uncomment when LabeledExpr is ready.
-//		   if (le.authUpperBound != null) die(pos(le.authUpperBound));
-//		   if (le.authLowerBound != null) die(pos(le.authLowerBound));
+		   LabelNodeExt ext = (LabelNodeExt) le.label.ext().ext();
+		   if (ext.refAuthUpperBound() != null)
+		       parser.die(ext.refAuthUpperBound().position());
+		   if (ext.refAuthLowerBound() != null)
+		       parser.die(ext.refAuthLowerBound().position());
                    b = le.prefix.toIdentifier();
                    i = le.label;
                }
