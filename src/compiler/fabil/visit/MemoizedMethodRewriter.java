@@ -74,7 +74,7 @@ public class MemoizedMethodRewriter extends NodeVisitor {
     return returnType;
   }
 
-  public boolean rewriteReturns() {
+  public boolean inMemoizedMethod() {
     return !returnTypeStack.empty();
   }
 

@@ -10,7 +10,7 @@ public class ReturnExt_c extends FabILExt_c {
   @Override
   public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr) {
     Return r = node();
-    if (mmr.rewriteReturns()) {
+    if (mmr.inMemoizedMethod()) {
       QQ qq = mmr.qq();
       return qq.parseStmt("{ $memoCache.endMemoRecord(%E); return; }", r.expr());
     }
