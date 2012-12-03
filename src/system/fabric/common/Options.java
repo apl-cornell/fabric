@@ -54,11 +54,6 @@ public abstract class Options {
    */
   public static boolean DEBUG_NO_SSL = false;
 
-  /**
-   * Whether to turn on promises for debugging purposes.
-   */
-  public static boolean DEBUG_ENABLE_PROMISES = false;
-
   public static abstract class Flag implements Comparable<Flag> {
     protected final Kind kind;
     protected final Set<String> ids;
@@ -499,23 +494,6 @@ public abstract class Options {
         } else if (param.equals("false") || param.equals("n")
             || param.equals("no")) {
           DEBUG_COMMIT_READS = false;
-        } else {
-          throw new UsageError("Invalid option parameter");
-        }
-        return index + 1;
-      }
-    });
-
-    flags.add(new Flag(Kind.SECRET, "--enable-promises", "<y|n>",
-        "whether to enable promises", "yes") {
-      @Override
-      public int handle(String[] args, int index) throws UsageError {
-        String param = args[index].toLowerCase();
-        if (param.equals("true") || param.equals("y") || param.equals("yes")) {
-          DEBUG_ENABLE_PROMISES = true;
-        } else if (param.equals("false") || param.equals("n")
-            || param.equals("no")) {
-          DEBUG_ENABLE_PROMISES = false;
         } else {
           throw new UsageError("Invalid option parameter");
         }

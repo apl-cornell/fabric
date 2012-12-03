@@ -2,7 +2,6 @@ package fabric.worker.remote;
 
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
-import java.util.logging.Level;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.TransactionID;
@@ -14,8 +13,6 @@ import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
-import fabric.messages.BeginTransactionMessage;
-import fabric.messages.BeginTransactionMessage.Response;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DirtyReadMessage;
 import fabric.messages.InterWorkerStalenessMessage;
@@ -191,7 +188,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry
-        .getInnermostLog(commitTransactionMessage.transactionID);
+            .getInnermostLog(commitTransactionMessage.transactionID);
     if (log == null) {
       // If no log exists, assume that another worker in the transaction has
       // already committed the requested transaction.
@@ -323,14 +320,5 @@ public class RemoteCallManager extends MessageToWorkerHandler {
 
     tm.associateLog(null);
     return new InterWorkerStalenessMessage.Response(result);
-  }
-
-  @Override
-  public Response handle(Principal p,
-      BeginTransactionMessage beginTransactionMessage) {
-    logger.log(Level.FINE,
-        "TODO: RemoteCallManager.handle(p, beginTransactionMessage)");
-
-    return new BeginTransactionMessage.Response();
   }
 }

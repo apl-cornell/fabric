@@ -37,8 +37,6 @@ import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
-import fabric.messages.BeginTransactionMessage;
-import fabric.messages.BeginTransactionMessage.Response;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
@@ -330,18 +328,5 @@ class Store extends MessageToStoreHandler {
   private String nameOf(Principal p) {
     return p == null ? "BOTTOM" : ("fab://" + p.$getStore().name() + "/" + p
         .$getOnum());
-  }
-
-  @Override
-  public Response handle(Principal p,
-      BeginTransactionMessage beginTransactionMessage) {
-    Logging
-    .log(
-        STORE_REQUEST_LOGGER,
-        Level.SEVERE,
-        "TODO: Implement Store.handle(Principal, BeginTransactionMessage) method from {0}.",
-        nameOf(p));
-
-    return new BeginTransactionMessage.Response();
   }
 }

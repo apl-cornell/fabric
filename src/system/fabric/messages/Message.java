@@ -216,12 +216,6 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
         return new ReadMessage(in);
       }
     },
-    BEGIN_TRANSACTION {
-      @Override
-      BeginTransactionMessage parse(DataInput in) throws IOException {
-        return new BeginTransactionMessage(in);
-      }
-    },
     PREPARE_TRANSACTION {
       @Override
       PrepareTransactionMessage parse(DataInput in) throws IOException {
