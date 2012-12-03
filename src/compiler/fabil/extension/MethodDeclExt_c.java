@@ -131,7 +131,6 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
           + "      }\n"
           + "    };\n"
           + "    $memoCache.storeComputation($memoCallTup, computeMethod);\n"
-          + "    computeMethod.run();\n"
           + "  }\n"
           + "  return (%T) $memoCache.reuseCall($memoCallTup);\n"
           + "}", method.body(), mmr.methodReturnType())));

@@ -13,36 +13,18 @@ import fabric.common.util.OidKeyHashMap;
 public class MemoCache {
 
   /* The lookup table itself. */
-  private final Map<CallTuple, Object> table;
+  private final Map<CallTuple, MemoizedCall> table;
 
   /* Map each object to the various memo entries that depend on it */
   private final OidKeyHashMap<Set<CallTuple>> dependentCalls;
 
-  /* Map each call to the objects that it read when computed. */
-  private final Map<CallTuple, Set<fabric.lang.Object>> dependencies;
-
-  /* Map each call to the memoized subcalls it used. */
-  private final Map<CallTuple, Set<CallTuple>> subCalls;
-
-  /* Map each call to the memoized calls that used this as a subcall. */
-  private final Map<CallTuple, Set<CallTuple>> parentCalls;
-
   /* Stack of currently computing calls that are to be memoized. */
   private final Stack<CallTuple> callStack;
 
-  /* Map each call tuple to a Runnable for recomputing and storing the value of
-   * the call.
-   */
-  private final Map<CallTuple, Runnable> computations;
-
   public MemoCache() {
-    table = new HashMap<CallTuple, Object>();
+    table = new HashMap<CallTuple, MemoizedCall>();
     dependentCalls = new OidKeyHashMap<Set<CallTuple>>();
-    dependencies = new HashMap<CallTuple, Set<fabric.lang.Object>>();
-    subCalls = new HashMap<CallTuple, Set<CallTuple>>();
-    parentCalls = new HashMap<CallTuple, Set<CallTuple>>();
     callStack = new Stack<CallTuple>();
-    computations = new HashMap<CallTuple, Runnable>();
   }
 
   /**
@@ -53,8 +35,8 @@ public class MemoCache {
    * for the given call.
    */
   public synchronized Object reuseCall(CallTuple key) {
-    noteMemoSubcall(key);
-    return table.get(key);
+    noteMemoCall(key);
+    return table.get(key).getValue();
   }
 
   /**
@@ -74,25 +56,13 @@ public class MemoCache {
    * @param key Call to be invalidated.
    */
   public synchronized void invalidateCall(CallTuple key) {
-    if (dependencies.containsKey(key)) {
-      /* Other read items don't need to invalidate this call anymore. */
-      for (fabric.lang.Object readItem : dependencies.get(key)) {
-        dependentCalls.get(readItem).remove(key);
-      }
-      /* Clear out items read using this call. */
-      dependencies.get(key).clear();
-    }
-
-    if (subCalls.containsKey(key)) {
-      /* Forget subCalls used in the computation. */
-      subCalls.get(key).clear();
+    /* Other read items don't need to invalidate this call anymore. */
+    for (fabric.lang.Object readItem : table.get(key).reads()) {
+      dependentCalls.get(readItem).remove(key);
     }
 
     if (table.containsKey(key)) {
-      ///* Remove the memoized value */
-      //table.remove(key);
-      /* Recompute the memoized value */
-      recomputeCall(key);
+      table.get(key).invalidate();
     }
   }
 
@@ -124,11 +94,6 @@ public class MemoCache {
    * @param call The call we are beginning to compute a memoized value for.
    */
   public synchronized void beginMemoRecord(CallTuple call) {
-    if (!dependencies.containsKey(call)) {
-      dependencies.put(call, new HashSet<fabric.lang.Object>());
-    } else {
-      dependencies.get(call).clear();
-    }
     callStack.push(call);
   }
 
@@ -139,7 +104,7 @@ public class MemoCache {
    */
   private synchronized CallTuple leaveMemoRecord() {
     CallTuple call = callStack.pop();
-    noteMemoSubcall(call);
+    noteMemoCall(call);
     return call;
   }
 
@@ -154,7 +119,7 @@ public class MemoCache {
    */
   public synchronized Object endMemoRecord(Object val) {
     CallTuple call = leaveMemoRecord();
-    table.put(call, val);
+    table.get(call).setValue(val);
     return val;
   }
 
@@ -178,7 +143,7 @@ public class MemoCache {
    */
   public synchronized void noteReadDependency(fabric.lang.Object itemRead) {
     if (!callStack.empty()) {
-      dependencies.get(callStack.peek()).add(itemRead);
+      table.get(callStack.peek()).noteRead(itemRead);
 
       if (!dependentCalls.containsKey(itemRead)) {
         dependentCalls.put(itemRead, new HashSet<CallTuple>());
@@ -194,37 +159,27 @@ public class MemoCache {
    *
    * @param subcall The subcall that we're using a memoized value for.
    */
-  public synchronized void noteMemoSubcall(CallTuple subcall) {
+  public synchronized void noteMemoCall(CallTuple subcall) {
     if (!callStack.empty()) {
       CallTuple parentCall = callStack.peek();
-
-      /* XXX For now, we don't try the "bubble up recomputations" bit, instead
-       * just propogate up dependencies and handle each
-       * invalidation/recomputation independently.  This will change later but
-       * might be worth comparing these two approaches.
-       */
-      dependencies.get(parentCall).addAll(dependencies.get(subcall));
-
-      /* Link this and the parent call */
-      if (!parentCalls.containsKey(subcall)) {
-        parentCalls.put(subcall, new HashSet<CallTuple>());
-      }
-      parentCalls.get(subcall).add(parentCall);
-
-      if (!subCalls.containsKey(parentCall)) {
-        subCalls.put(parentCall, new HashSet<CallTuple>());
-      }
-      subCalls.get(parentCall).add(subcall);
+      table.get(parentCall).noteMemoizedSubCall(subcall);
     }
   }
 
   public void storeComputation(CallTuple call, Runnable computation) {
-    computations.put(call, computation);
+    table.put(call, new MemoizedCall(call, computation, this));
   }
 
-  public void recomputeCall(CallTuple call) {
-    if (computations.containsKey(call)) {
-      computations.get(call).run();
+  public void computeCall(CallTuple call) {
+    if (table.containsKey(call)) {
+      table.get(call).compute();
     }
+  }
+
+  /**
+   * Get the MemoizedCall object associated with the given CallTuple.
+   */
+  synchronized MemoizedCall getMemoizedCall(CallTuple call) {
+    return table.get(call);
   }
 }
