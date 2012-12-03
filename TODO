@@ -1,6 +1,6 @@
 TODO Items:
-	- Evaluation
 	- Rigorous Testing
+	- Evaluation
 	- Design Decisions to revisit:
 		- Remembering values read if call ends with a runtime
 		  exception.
@@ -15,3 +15,7 @@ TODO Items:
 		- Do we currently risk not invalidating calls on remote hosts?
 	- Avoiding unnecessary invalidation?
 	- Attempt to detect and warn about side effects?
+		- This might be difficult if the side effect isn't a write
+		- Even if it's a write, there's plenty of cases where a write
+		  happens in a subroutine and is completely okay (and probably
+		  better) to not redo...

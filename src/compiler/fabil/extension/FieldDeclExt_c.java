@@ -173,6 +173,8 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
               + "boolean transactionCreated = tm.registerWrite(this);"
               + "this." + name + " = val;"
               + "if (transactionCreated) tm.commitTransaction();"
+              /* Added for memoization work. XXX: It's basically a hack */
+              + "fabric.worker.Worker.getWorker().getMemoCache().invalidateCallsUsing(this);"
               + "return val; }", typeNode, typeNode));
 
       // Add post-incrementer and post-decrementer if type is numeric.

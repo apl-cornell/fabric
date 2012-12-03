@@ -857,9 +857,6 @@ public final class TransactionManager {
     if (needTransaction) startTransaction();
 
     synchronized (obj) {
-      /* Added for memoization work. */
-      Worker.getWorker().getMemoCache().invalidateCallsUsing(obj);
-
       if (obj.$writer == current
           && obj.writerMapVersion == current.writerMap.version && obj.$isOwned)
         return needTransaction;

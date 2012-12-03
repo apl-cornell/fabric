@@ -9,11 +9,11 @@ import polyglot.ast.ClassMember;
 import polyglot.ast.Formal;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
-import polyglot.ast.NodeFactory;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.util.Position;
+import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILFlags;
 import fabil.visit.MemoizedMethodRewriter;
 import fabil.visit.ProxyRewriter;
@@ -88,7 +88,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     /* Memoized flag not necessary after this transformation */
     method = method.flags(method.flags().clear(FabILFlags.MEMOIZED));
 
-    NodeFactory nf = mmr.nodeFactory();
+    FabILNodeFactory nf = mmr.nodeFactory();
     Position CG = Position.compilerGenerated();
     QQ qq = mmr.qq();
 
@@ -110,31 +110,31 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
       ctType = "StaticCallTuple";
     }
       
-    /* TODO: Handle RuntimeExceptions.  Currently this will cause the
-     * MemoCache's call stack to become inconsistent.
-     *
-     * TODO: Handle static methods.
-     */
     return method.body(nf.Block(CG, qq.parseStmt("{\n"
-          + "fabric.worker.memoize.CallTuple $memoCallTup ="
-          + " new fabric.worker.memoize." + ctType + "(\"" + method.name()
-          +   "\", " + callee + ","
-          + " java.util.Arrays.asList(new java.lang.Object[]"
-          + " {" + args + "}));\n"
-          + "fabric.worker.memoize.MemoCache $memoCache =" 
-          + " fabric.worker.Worker.getWorker().getMemoCache();\n"
-          + "if ($memoCache.containsCall($memoCallTup)) {\n"
-          + "  return (%T) $memoCache.reuseCall($memoCallTup);\n"
-          + "} else {\n"
-          + "  $memoCache.beginMemoRecord($memoCallTup);\n"
-          + "  try {\n"
-          + "    %S\n"
-          + "  } catch (RuntimeException e) {\n"
-          + "    $memoCache.abruptEndMemoRecord();\n"
-          + "    throw e;\n"
+          + "  final fabric.worker.memoize.CallTuple $memoCallTup = "
+          +   "new fabric.worker.memoize." + ctType + "(\"" + method.name()
+          +     "\", " + callee + ", "
+          +     "java.util.Arrays.asList(new java.lang.Object[]"
+          +     "{" + args + "}));\n"
+          + "  final fabric.worker.memoize.MemoCache $memoCache = " 
+          +   "fabric.worker.Worker.getWorker().getMemoCache();\n"
+          + "  if (!$memoCache.containsCall($memoCallTup)) {\n"
+          + "    Runnable computeMethod = new Runnable() {\n"
+          + "      public void run() {\n"
+          + "        $memoCache.beginMemoRecord($memoCallTup);\n"
+          + "        try {\n"
+          + "          %S\n"
+          + "        } catch (RuntimeException e) {\n"
+          + "          $memoCache.abruptEndMemoRecord();\n"
+          + "          throw e;\n"
+          + "        }\n"
+          + "      }\n"
+          + "    };\n"
+          + "    $memoCache.storeComputation($memoCallTup, computeMethod);\n"
+          + "    computeMethod.run();\n"
           + "  }\n"
-          + "}\n"
-          + "}", mmr.methodReturnType(), method.body())));
+          + "  return (%T) $memoCache.reuseCall($memoCallTup);\n"
+          + "}", method.body(), mmr.methodReturnType())));
   }
 
   @Override

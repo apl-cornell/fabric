@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-//import fabric.lang.Object;
 import fabric.common.util.OidKeyHashMap;
 
 /**
@@ -22,14 +21,28 @@ public class MemoCache {
   /* Map each call to the objects that it read when computed. */
   private final Map<CallTuple, Set<fabric.lang.Object>> dependencies;
 
+  /* Map each call to the memoized subcalls it used. */
+  private final Map<CallTuple, Set<CallTuple>> subCalls;
+
+  /* Map each call to the memoized calls that used this as a subcall. */
+  private final Map<CallTuple, Set<CallTuple>> parentCalls;
+
   /* Stack of currently computing calls that are to be memoized. */
   private final Stack<CallTuple> callStack;
+
+  /* Map each call tuple to a Runnable for recomputing and storing the value of
+   * the call.
+   */
+  private final Map<CallTuple, Runnable> computations;
 
   public MemoCache() {
     table = new HashMap<CallTuple, Object>();
     dependentCalls = new OidKeyHashMap<Set<CallTuple>>();
     dependencies = new HashMap<CallTuple, Set<fabric.lang.Object>>();
+    subCalls = new HashMap<CallTuple, Set<CallTuple>>();
+    parentCalls = new HashMap<CallTuple, Set<CallTuple>>();
     callStack = new Stack<CallTuple>();
+    computations = new HashMap<CallTuple, Runnable>();
   }
 
   /**
@@ -61,11 +74,6 @@ public class MemoCache {
    * @param key Call to be invalidated.
    */
   public synchronized void invalidateCall(CallTuple key) {
-    if (table.containsKey(key)) {
-      /* Remove the memoized value */
-      table.remove(key);
-    }
-
     if (dependencies.containsKey(key)) {
       /* Other read items don't need to invalidate this call anymore. */
       for (fabric.lang.Object readItem : dependencies.get(key)) {
@@ -73,6 +81,18 @@ public class MemoCache {
       }
       /* Clear out items read using this call. */
       dependencies.get(key).clear();
+    }
+
+    if (subCalls.containsKey(key)) {
+      /* Forget subCalls used in the computation. */
+      subCalls.get(key).clear();
+    }
+
+    if (table.containsKey(key)) {
+      ///* Remove the memoized value */
+      //table.remove(key);
+      /* Recompute the memoized value */
+      recomputeCall(key);
     }
   }
 
@@ -89,6 +109,7 @@ public class MemoCache {
       Set<CallTuple> calls = new HashSet<CallTuple>(callSet);
       for (CallTuple c : calls) {
         /* Don't invalidate if we're computing it! */
+        /* TODO: Is that right? */
         if (callStack.search(c) == -1) {
           invalidateCall(c);
         }
@@ -118,14 +139,7 @@ public class MemoCache {
    */
   private synchronized CallTuple leaveMemoRecord() {
     CallTuple call = callStack.pop();
-
-    if (!callStack.empty()) {
-      /* The call that used this as a subroutine depends on any objects that
-       * were read during this call.
-       */
-      dependencies.get(callStack.peek()).addAll(dependencies.get(call));
-    }
-
+    noteMemoSubcall(call);
     return call;
   }
 
@@ -182,7 +196,35 @@ public class MemoCache {
    */
   public synchronized void noteMemoSubcall(CallTuple subcall) {
     if (!callStack.empty()) {
-      dependencies.get(callStack.peek()).addAll(dependencies.get(subcall));
+      CallTuple parentCall = callStack.peek();
+
+      /* XXX For now, we don't try the "bubble up recomputations" bit, instead
+       * just propogate up dependencies and handle each
+       * invalidation/recomputation independently.  This will change later but
+       * might be worth comparing these two approaches.
+       */
+      dependencies.get(parentCall).addAll(dependencies.get(subcall));
+
+      /* Link this and the parent call */
+      if (!parentCalls.containsKey(subcall)) {
+        parentCalls.put(subcall, new HashSet<CallTuple>());
+      }
+      parentCalls.get(subcall).add(parentCall);
+
+      if (!subCalls.containsKey(parentCall)) {
+        subCalls.put(parentCall, new HashSet<CallTuple>());
+      }
+      subCalls.get(parentCall).add(subcall);
+    }
+  }
+
+  public void storeComputation(CallTuple call, Runnable computation) {
+    computations.put(call, computation);
+  }
+
+  public void recomputeCall(CallTuple call) {
+    if (computations.containsKey(call)) {
+      computations.get(call).run();
     }
   }
 }

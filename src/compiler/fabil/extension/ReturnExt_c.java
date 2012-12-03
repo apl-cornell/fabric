@@ -12,8 +12,7 @@ public class ReturnExt_c extends FabILExt_c {
     Return r = node();
     if (mmr.rewriteReturns()) {
       QQ qq = mmr.qq();
-      return r.expr(qq.parseExpr("(%T) $memoCache.endMemoRecord(%E)",
-            mmr.methodReturnType().type(), r.expr()));
+      return qq.parseStmt("{ $memoCache.endMemoRecord(%E); return; }", r.expr());
     }
     return node();
   }

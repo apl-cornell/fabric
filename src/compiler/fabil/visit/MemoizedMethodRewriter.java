@@ -3,12 +3,12 @@ package fabil.visit;
 import java.util.Stack;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
-import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
 import polyglot.types.PrimitiveType;
 import polyglot.types.SemanticException;
 import polyglot.visit.NodeVisitor;
+import fabil.ast.FabILNodeFactory;
 import fabil.ExtensionInfo;
 import fabil.extension.FabILExt;
 import fabil.types.FabILFlags;
@@ -19,7 +19,7 @@ import fabil.types.FabILTypeSystem;
  */
 public class MemoizedMethodRewriter extends NodeVisitor {
   protected QQ qq;
-  protected NodeFactory nf;
+  protected FabILNodeFactory nf;
   protected FabILTypeSystem ts;
   /* Keep a stack of each memoized method's return type.  These might (?) be
    * nested if an anonymous class with a memoized method is created in the
@@ -85,7 +85,7 @@ public class MemoizedMethodRewriter extends NodeVisitor {
     return qq;
   }
 
-  public NodeFactory nodeFactory() {
+  public FabILNodeFactory nodeFactory() {
     return nf;
   }
 

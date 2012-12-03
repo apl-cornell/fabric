@@ -512,9 +512,9 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         if (!extInfo.getOptions().signatureMode()) {
           l.add(RewriteProxies(job));
           l.add(RewriteProviders(job));
-          l.add(RewriteAtomic(job));
           l.add(RewriteRemoteCalls(job));
           l.add(RewriteMemoizedMethods(job));
+          l.add(RewriteAtomic(job));
           l.add(Memoized(job));
           l.add(ClassesHashed(job));
           l.add(InstrumentThreads(job));
