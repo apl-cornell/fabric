@@ -109,6 +109,17 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
       callee = "\"" + method.memberInstance().container().toString() + "\"";
       ctType = "StaticCallTuple";
     }
+
+    String finalInits = "";
+    String unpackFinals = "";
+    if (!method.flags().contains(FabILFlags.STATIC)) {
+      finalInits += "final " + method.memberInstance().container() + " $memoCallObj = this;\n";
+    }
+    int argCounter = 0;
+    for (Formal arg : method.formals()) {
+      finalInits += "final " + arg.type().type() + " $memoArg" + argCounter + " = " + arg.name() + ";\n";
+      unpackFinals += arg.type().type().toString() + " " + arg.name() + " = $memoArg" + argCounter + ";\n";
+    }
       
     return method.body(nf.Block(CG, qq.parseStmt("{\n"
           + "  final fabric.worker.memoize.CallTuple $memoCallTup = "
@@ -118,11 +129,13 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
           +     "{" + args + "}));\n"
           + "  final fabric.worker.memoize.MemoCache $memoCache = " 
           +   "fabric.worker.Worker.getWorker().getMemoCache();\n"
+          + finalInits
           + "  if (!$memoCache.containsCall($memoCallTup)) {\n"
           + "    Runnable computeMethod = new Runnable() {\n"
           + "      public void run() {\n"
           + "        $memoCache.beginMemoRecord($memoCallTup);\n"
           + "        try {\n"
+          + unpackFinals
           + "          %S\n"
           + "        } catch (RuntimeException e) {\n"
           + "          $memoCache.abruptEndMemoRecord();\n"
