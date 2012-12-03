@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +12,6 @@ import java.util.Set;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
-import polyglot.main.Report;
 import polyglot.types.AccessControlResolver;
 import polyglot.types.ArrayType;
 import polyglot.types.CachingResolver;
@@ -38,7 +36,6 @@ import polyglot.types.TypeObject;
 import polyglot.types.TypeSystem_c;
 import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassFileLazyClassInitializer;
-import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
@@ -55,9 +52,6 @@ import fabric.lang.Codebase;
 import fabric.worker.Worker;
 
 public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
-  private static final Collection<String> TOPICS = CollectionUtil.list(
-      Report.types, Report.resolver);
-
   private fabil.ExtensionInfo extInfo;
   protected Map<URI, NamespaceResolver> namespaceResolvers;
   protected NamespaceResolver platformResolver;
