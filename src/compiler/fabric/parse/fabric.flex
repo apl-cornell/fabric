@@ -127,6 +127,7 @@ import java.math.BigInteger;
        	keywords.put("store$",       new Integer(sym.STORE));        
         keywords.put("nonfabric",     new Integer(sym.NONFABRIC));
         keywords.put("codebase",     new Integer(sym.CODEBASE));        
+	keywords.put("soft",          new Integer(sym.SOFT));
     }
 
     public String file() {

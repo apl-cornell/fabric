@@ -230,6 +230,7 @@ terminal Token WORKER;
 terminal Token STORE;
 terminal Token NONFABRIC;
 terminal Token CODEBASE;
+terminal Token SOFT;
 
 non terminal Atomic atomic_statement;
 non terminal Expr   location_expr_opt, location_expr;
@@ -672,4 +673,15 @@ override constructor_declaration ::=
                              a, b, i, r, c, d, w, e); 
         :}
     ;
+
+////////////////////////////////////////////////////////////////////////
+// Soft references
+////////////////////////////////////////////////////////////////////////
+
+extend unary_expression_not_plus_minus ::=
+        SOFT:b unary_expression:a
+            {: RESULT = a; :}
+    ;
+
+// need to modify types and cast exprs to add 'soft' annotation
 
