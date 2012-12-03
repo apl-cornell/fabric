@@ -105,7 +105,9 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
           if (pathEntry.getPath().endsWith(".jar")) {
             final JarFile jar;
             try {
-              jar = new JarFile(pathEntry.getPath());
+              @SuppressWarnings("resource")
+              JarFile jarFile = new JarFile(pathEntry.getPath());
+              jar = jarFile;
             } catch (FileNotFoundException e) {
               continue;
             } catch (java.util.zip.ZipException e) {
