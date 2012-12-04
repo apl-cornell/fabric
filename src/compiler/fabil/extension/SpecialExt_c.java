@@ -30,14 +30,6 @@ public class SpecialExt_c extends ExprExt_c {
   }
 
   @Override
-  public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr) {
-    if (mmr.inMemoizedMethod() && node().kind() == Special.THIS) {
-      return mmr.qq().parseExpr("$memoCallObj");
-    }
-    return node();
-  }
-
-  @Override
   public Special node() {
     return (Special) super.node();
   }

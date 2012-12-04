@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
-import fabric.common.util.OidKeyHashMap;
 
 /**
  * A cache for memoized method calls.
@@ -16,15 +14,15 @@ public class MemoCache {
   private final Map<CallTuple, MemoizedCall> table;
 
   /* Map each object to the various memo entries that depend on it */
-  private final OidKeyHashMap<Set<CallTuple>> dependentCalls;
+  private final Map<Long,Set<CallTuple>> dependentCalls;
 
   /* Stack of currently computing calls that are to be memoized. */
-  private final Stack<CallTuple> callStack;
+  private final Set<CallTuple> computingCalls;
 
   public MemoCache() {
     table = new HashMap<CallTuple, MemoizedCall>();
-    dependentCalls = new OidKeyHashMap<Set<CallTuple>>();
-    callStack = new Stack<CallTuple>();
+    dependentCalls = new HashMap<Long,Set<CallTuple>>();
+    computingCalls = new HashSet<CallTuple>();
   }
 
   /**
@@ -34,16 +32,23 @@ public class MemoCache {
    * @return Last computed value of the call or null if there is no value stored
    * for the given call.
    */
-  public synchronized Object reuseCall(CallTuple key) {
+  public Object reuseCall(CallTuple key) {
     noteMemoCall(key);
-    return table.get(key).getValue();
+    MemoizedCall call;
+    synchronized (this) {
+      call = table.get(key);
+    }
+    return call.getValue();
   }
 
   /**
    * Returns true if the call has an entry and false otherwise.
    */
   public synchronized boolean containsCall(CallTuple key) {
-    return table.containsKey(key);
+    if (table.containsKey(key)) {
+      return table.get(key).isValid();
+    }
+    return false;
   }
 
   /**
@@ -57,7 +62,7 @@ public class MemoCache {
    */
   public synchronized void invalidateCall(CallTuple key) {
     /* Other read items don't need to invalidate this call anymore. */
-    for (fabric.lang.Object readItem : table.get(key).reads()) {
+    for (long readItem : table.get(key).reads()) {
       dependentCalls.get(readItem).remove(key);
     }
 
@@ -73,14 +78,13 @@ public class MemoCache {
    *
    * @param o The object that was updated.
    */
-  public synchronized void invalidateCallsUsing(fabric.lang.Object o) {
+  public synchronized void invalidateCallsUsing(long o) {
     if (dependentCalls.containsKey(o)) {
       Set<CallTuple> callSet = dependentCalls.get(o);
       Set<CallTuple> calls = new HashSet<CallTuple>(callSet);
       for (CallTuple c : calls) {
         /* Don't invalidate if we're computing it! */
-        /* TODO: Is that right? */
-        if (callStack.search(c) == -1) {
+        if (!computingCalls.contains(c)) {
           invalidateCall(c);
         }
       }
@@ -94,7 +98,8 @@ public class MemoCache {
    * @param call The call we are beginning to compute a memoized value for.
    */
   public synchronized void beginMemoRecord(CallTuple call) {
-    callStack.push(call);
+    table.put(call, new MemoizedCall(call, this));
+    computingCalls.add(call);
   }
 
   /**
@@ -102,10 +107,10 @@ public class MemoCache {
    *
    * @return The call that we are leaving (based on the MemoCache's call stack).
    */
-  private synchronized CallTuple leaveMemoRecord() {
-    CallTuple call = callStack.pop();
-    noteMemoCall(call);
-    return call;
+  private synchronized void leaveMemoRecord(CallTuple call) {
+    computingCalls.remove(call);
+    //noteMemoCall(call);
+    return;
   }
 
   /**
@@ -117,8 +122,8 @@ public class MemoCache {
    * @return The result of the memoized call.  This allows us to rewrite returns
    * without adding an additional statement.  It is a bit of a "hack."
    */
-  public synchronized Object endMemoRecord(Object val) {
-    CallTuple call = leaveMemoRecord();
+  public synchronized Object endMemoRecord(CallTuple call, Object val) {
+    leaveMemoRecord(call);
     table.get(call).setValue(val);
     return val;
   }
@@ -127,11 +132,11 @@ public class MemoCache {
    * Abruptly end the computation of a memoized call in the event of an
    * Exception or Error.
    */
-  public synchronized void abruptEndMemoRecord() {
+  public synchronized void abruptEndMemoRecord(CallTuple call) {
     /* XXX: Not sure if should remember reads on abrupt exit from method, but I
      * think this is the right thing to do.
      */
-    leaveMemoRecord();
+    leaveMemoRecord(call);
   }
 
   /**
@@ -141,14 +146,13 @@ public class MemoCache {
    *
    * @param itemRead The item that has been read.
    */
-  public synchronized void noteReadDependency(fabric.lang.Object itemRead) {
-    if (!callStack.empty()) {
-      table.get(callStack.peek()).noteRead(itemRead);
-
-      if (!dependentCalls.containsKey(itemRead)) {
-        dependentCalls.put(itemRead, new HashSet<CallTuple>());
-      }
-      dependentCalls.get(itemRead).add(callStack.peek());
+  public synchronized void noteReadDependency(long itemRead) {
+    if (!dependentCalls.containsKey(itemRead)) {
+      dependentCalls.put(itemRead, new HashSet<CallTuple>());
+    }
+    for (CallTuple call : computingCalls) {
+      table.get(call).noteRead(itemRead);
+      dependentCalls.get(itemRead).add(call);
     }
   }
 
@@ -160,21 +164,19 @@ public class MemoCache {
    * @param subcall The subcall that we're using a memoized value for.
    */
   public synchronized void noteMemoCall(CallTuple subcall) {
+    /* For now, this isn't working, so we're doing away with it.
     if (!callStack.empty()) {
       CallTuple parentCall = callStack.peek();
       table.get(parentCall).noteMemoizedSubCall(subcall);
-    }
+    }*/
   }
 
-  public void storeComputation(CallTuple call, Runnable computation) {
-    table.put(call, new MemoizedCall(call, computation, this));
-  }
-
-  public void computeCall(CallTuple call) {
-    if (table.containsKey(call)) {
-      table.get(call).compute();
+  /*public void storeComputation(CallTuple call, Runnable computation) {
+    MemoizedCall memCall = new MemoizedCall(call, computation, this);
+    synchronized (this) {
+      table.put(call, memCall);
     }
-  }
+  }*/
 
   /**
    * Get the MemoizedCall object associated with the given CallTuple.

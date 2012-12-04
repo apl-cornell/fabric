@@ -32,9 +32,9 @@ public class AtomicMethodRewriter extends NodeVisitor {
       Flags f = md.flags();
 
       /* Added for memoization. */
-      if (f.contains(FabILFlags.MEMOIZED)) {
-        f = f.set(FabILFlags.ATOMIC);
-      }
+      //if (f.contains(FabILFlags.MEMOIZED)) {
+        //f = f.set(FabILFlags.ATOMIC);
+      //}
 
       if (f.contains(FabILFlags.ATOMIC)) {
         f = f.clear(FabILFlags.ATOMIC);

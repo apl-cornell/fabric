@@ -786,9 +786,6 @@ public final class TransactionManager {
 
   public void registerRead(_Impl obj) {
     synchronized (obj) {
-      /* Added for memoization work. */
-      Worker.getWorker().getMemoCache().noteReadDependency(obj);
-
       if (obj.$reader == current
           && obj.writerMapVersion == current.writerMap.version) return;
 
