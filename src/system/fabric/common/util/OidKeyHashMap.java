@@ -3,6 +3,7 @@ package fabric.common.util;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import fabric.lang.Object;
@@ -55,6 +56,14 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   public boolean containsKey(Store store, long onum) {
     LongKeyMap<V> submap = map.get(store);
     return submap != null && submap.containsKey(onum);
+  }
+
+  /**
+   * @return
+   *     an entry set for the map. Omits the null-keyed entry.
+   */
+  public Set<Entry<Store, LongKeyMap<V>>> nonNullEntrySet() {
+    return map.entrySet();
   }
 
   public V get(Object obj) {

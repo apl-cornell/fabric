@@ -15,19 +15,19 @@ public final class ReadMapEntry {
    * The object to which this entry corresponds.
    */
   FabricSoftRef obj;
-  
+
   /**
    * The object's version number.
    */
   int versionNumber;
-  
+
   /**
    * A list of logs for transactions that have read this version of the object
    * (as specified by obj and versionNumber).
    */
   List<Log> readLocks;
-  
-  long promise;
+
+  long warranty;
 
   /**
    * The number of _Impls that have a reference to this object.
@@ -38,8 +38,12 @@ public final class ReadMapEntry {
     this.obj = obj.$ref;
     this.readLocks = new ArrayList<Log>();
     this.versionNumber = obj.$version;
-    this.promise = expiry;
+    this.warranty = expiry;
     this.pinCount = 1;
+  }
+
+  public synchronized long warranty() {
+    return warranty;
   }
 
   /**

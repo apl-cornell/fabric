@@ -6,8 +6,10 @@ import java.io.IOException;
 
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
+import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.Principal;
 import fabric.worker.Store;
@@ -45,7 +47,7 @@ public class DirtyReadMessage extends
      */
     public final Store store;
 
-    public final SerializedObject obj;
+    public final Pair<SerializedObject, VersionWarranty> obj;
 
     public Response(_Impl obj) {
       if (obj == null) {
@@ -56,11 +58,13 @@ public class DirtyReadMessage extends
 
         @SuppressWarnings("deprecation")
         SerializedObject serialized = new SerializedObject(obj);
-        this.obj = serialized;
+        VersionWarranty warranty = obj.$versionWarranty();
+        this.obj =
+            new Pair<SerializedObject, VersionWarranty>(serialized, warranty);
       }
     }
 
-    public Response(Store store, SerializedObject obj) {
+    public Response(Store store, Pair<SerializedObject, VersionWarranty> obj) {
       this.store = store;
       this.obj = obj;
     }
@@ -98,7 +102,8 @@ public class DirtyReadMessage extends
     if (r.obj != null) {
       out.writeBoolean(true);
       out.writeUTF(store.name());
-      r.obj.write(out);
+      r.obj.first.write(out);
+      out.writeLong(r.obj.second.expiry());
     } else {
       out.writeBoolean(false);
     }
@@ -112,8 +117,10 @@ public class DirtyReadMessage extends
 
     Store store = Worker.getWorker().getStore(in.readUTF());
     SerializedObject serialized = new SerializedObject(in);
+    VersionWarranty warranty = new VersionWarranty(in.readLong());
 
-    return new Response(store, serialized);
+    return new Response(store, new Pair<SerializedObject, VersionWarranty>(
+        serialized, warranty));
   }
 
 }

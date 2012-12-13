@@ -8,26 +8,22 @@ import java.util.Collection;
 import java.util.Collections;
 
 import fabric.common.SerializedObject;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.Principal;
 import fabric.worker.TransactionPrepareFailedException;
 
 /**
- * A <code>PrepareTransactionMessage</code> represents a transaction request to
- * a store.
+ * A <code>PrepareTransactionWritesMessage</code> represents a transaction
+ * PREPARE_WRITES request to a remote node.
  */
-public class PrepareTransactionMessage
+public class PrepareTransactionWritesMessage
     extends
-    Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException> {
+    Message<PrepareTransactionWritesMessage.Response, TransactionPrepareFailedException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
 
   public final long tid;
-  public final long commitTime;
-  public final LongKeyMap<Integer> reads;
 
   /**
    * The objects created during the transaction, unserialized. This will only be
@@ -60,23 +56,20 @@ public class PrepareTransactionMessage
   /**
    * Used to prepare transactions at remote workers.
    */
-  public PrepareTransactionMessage(long tid, long commitTime) {
-    this(tid, commitTime, null, null, null);
+  public PrepareTransactionWritesMessage(long tid) {
+    this(tid, null, null);
   }
 
   /**
    * Only used by the worker.
    */
-  public PrepareTransactionMessage(long tid, long commitTime,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+  public PrepareTransactionWritesMessage(long tid, Collection<_Impl> toCreate,
       Collection<_Impl> writes) {
-    super(MessageType.PREPARE_TRANSACTION,
+    super(MessageType.PREPARE_TRANSACTION_WRITES,
         TransactionPrepareFailedException.class);
 
     this.tid = tid;
-    this.commitTime = commitTime;
     this.creates = toCreate;
-    this.reads = reads;
     this.writes = writes;
     this.serializedCreates = null;
     this.serializedWrites = null;
@@ -87,23 +80,13 @@ public class PrepareTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
-    /**
-     * If the remote node is a store, this will indicate whether the worker
-     * should send a commit/abort message to the store's worker to commit/abort
-     * a sub-transaction. (This happens when Statistics objects are created
-     * during transaction prepare.)
-     */
-    public final boolean subTransactionCreated;
+    public final long minCommitTime;
 
     /**
      * Creates a Response indicating a successful prepare.
      */
-    public Response() {
-      this(false);
-    }
-
-    public Response(boolean subTransactionCreated) {
-      this.subTransactionCreated = subTransactionCreated;
+    public Response(long minCommitTime) {
+      this.minCommitTime = minCommitTime;
     }
   }
 
@@ -126,20 +109,6 @@ public class PrepareTransactionMessage
     // Serialize tid.
     out.writeLong(tid);
 
-    // Serialize commitTime
-    out.writeLong(commitTime);
-
-    // Serialize reads.
-    if (reads == null) {
-      out.writeInt(0);
-    } else {
-      out.writeInt(reads.size());
-      for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
-        out.writeLong(entry.getKey());
-        out.writeInt(entry.getValue());
-      }
-    }
-
     // Serialize creates.
     if (creates == null) {
       out.writeInt(0);
@@ -160,28 +129,17 @@ public class PrepareTransactionMessage
   }
 
   /* readMessage */
-  protected PrepareTransactionMessage(DataInput in) throws IOException {
-    super(MessageType.PREPARE_TRANSACTION,
+  protected PrepareTransactionWritesMessage(DataInput in) throws IOException {
+    super(MessageType.PREPARE_TRANSACTION_WRITES,
         TransactionPrepareFailedException.class);
     this.creates = null;
     this.writes = null;
 
     // Read the TID.
     this.tid = in.readLong();
-    this.commitTime = in.readLong();
-
-    // Read reads.
-    int size = in.readInt();
-    if (size == 0) {
-      reads = new LongKeyHashMap<Integer>();
-    } else {
-      reads = new LongKeyHashMap<Integer>(size);
-      for (int i = 0; i < size; i++)
-        reads.put(in.readLong(), in.readInt());
-    }
 
     // Read creates.
-    size = in.readInt();
+    int size = in.readInt();
     if (size == 0) {
       serializedCreates = Collections.emptyList();
     } else {
@@ -203,12 +161,12 @@ public class PrepareTransactionMessage
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
-    out.writeBoolean(r.subTransactionCreated);
+    out.writeLong(r.minCommitTime);
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    boolean subTransactionCreated = in.readBoolean();
-    return new Response(subTransactionCreated);
+    long minCommitTime = in.readLong();
+    return new Response(minCommitTime);
   }
 }

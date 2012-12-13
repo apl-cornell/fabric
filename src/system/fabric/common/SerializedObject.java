@@ -41,7 +41,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * <ul>
    * <li>long onum</li>
    * <li>int version number</li>
-   * <li>long promise expiration</li>
    * <li>byte[] update label pointer, consisting of:<ul>
    *   <li>byte whether the update label pointer is an inter-store ref</li>
    *   <li>short update label's store's name length (only present if inter-store)</li>
@@ -81,14 +80,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
   private static final int VERSION_OFFSET = ONUM_OFFSET + ONUM_LENGTH;
   private static final int VERSION_LENGTH = 4; // int
 
-  /** Index in objectData for object's promise-expiration time. */
-  private static final int PROMISE_EXPIRY_OFFSET = VERSION_OFFSET
-      + VERSION_LENGTH;
-  private static final int PROMISE_EXPIRY_LENGTH = 8; // long
-
   /** Index in objectData for update-label pointer. */
-  private static final int UPDATE_LABEL_OFFSET = PROMISE_EXPIRY_OFFSET
-      + PROMISE_EXPIRY_LENGTH;
+  private static final int UPDATE_LABEL_OFFSET = VERSION_OFFSET
+      + VERSION_LENGTH;
 
   //////////////////////////////////////////////////////////////////////////
   //
@@ -190,9 +184,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
       // Version number.
       out.writeInt(0);
 
-      // Promise expiry
-      out.writeLong(0);
-
       // Update label reference.
       out.writeBoolean(false);
       out.writeLong(updateLabel);
@@ -287,30 +278,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public void setVersion(final int version) {
     SerializationUtil.setIntAt(objectData, versionPos(), version);
-  }
-
-  /**
-   * @return the offset in objectData representing the start of the promise
-   *         expiry
-   */
-  private final int expiryPos() {
-    return PROMISE_EXPIRY_OFFSET;
-  }
-
-  /**
-   * @return the serialized object's promise expiration time
-   */
-  public long getExpiry() {
-    return SerializationUtil.longAt(objectData, expiryPos());
-  }
-
-  /**
-   * Modifies the serialized object's promise expiry
-   * 
-   * @param expiry
-   */
-  public void setExpiry(long expiry) {
-    SerializationUtil.setLongAt(objectData, expiryPos(), expiry);
   }
 
   /**
@@ -690,7 +657,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       int numIntraStoreRefs = getNumIntraStoreRefs();
       Iterator<Long> intraStoreRefIt = intraStoreRefs.iterator();
 
-      // Write onum, version number, and promise expiry.
+      // Write onum, version number, and warranty expiry.
       out.write(objectData, 0, isInterStoreUpdateLabelPos());
 
       // Write the update label reference.
@@ -910,7 +877,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
     // Write out the object header.
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
-    out.writeLong(0);
 
     // Write the update label
     out.writeBoolean(interStoreUpdateLabel);
@@ -1053,7 +1019,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     // The buffer for copying stuff.
     byte[] buf = new byte[SerializationUtil.BUF_LEN];
 
-    // Copy the onum, version number, and promise expiry.
+    // Copy the onum and version number.
     in.readFully(buf, 0, UPDATE_LABEL_OFFSET);
     out.write(buf, 0, UPDATE_LABEL_OFFSET);
 
@@ -1128,8 +1094,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @throws ClassNotFoundException
    *           Thrown when the class for this object is unavailable.
    */
-  public _Impl deserialize(Store store) {
-    return deserialize(store, true);
+  public _Impl deserialize(Store store, VersionWarranty warranty) {
+    return deserialize(store, warranty, true);
   }
 
   /**
@@ -1143,7 +1109,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @throws ClassNotFoundException
    *           Thrown when the class for this object is unavailable.
    */
-  public _Impl deserialize(Store store, boolean chaseSurrogates) {
+  public _Impl deserialize(Store store, VersionWarranty warranty,
+      boolean chaseSurrogates) {
     try {
       Class<? extends _Impl> implClass = getClassRef().toImplClass();
 
@@ -1159,7 +1126,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       _Impl result =
           (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
-              getExpiry(), getUpdateLabelOnum(), getAccessPolicyOnum(),
+              warranty.expiry(), getUpdateLabelOnum(), getAccessPolicyOnum(),
               new ObjectInputStream(getSerializedDataStream()),
               getRefTypeIterator(), getIntraStoreRefIterator());
 

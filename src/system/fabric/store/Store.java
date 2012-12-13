@@ -42,7 +42,8 @@ import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
 import fabric.messages.MakePrincipalMessage;
 import fabric.messages.MessageToStoreHandler;
-import fabric.messages.PrepareTransactionMessage;
+import fabric.messages.PrepareTransactionReadsMessage;
+import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
 import fabric.store.db.ObjectDB;
@@ -196,23 +197,34 @@ class Store extends MessageToStoreHandler {
   }
 
   /**
-   * Processes the given PREPARE request.
+   * Processes the given PREPARE_WRITES request.
    */
   @Override
-  public PrepareTransactionMessage.Response handle(Principal p,
-      PrepareTransactionMessage msg) throws TransactionPrepareFailedException {
+  public PrepareTransactionWritesMessage.Response handle(Principal p,
+      PrepareTransactionWritesMessage msg)
+      throws TransactionPrepareFailedException {
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+        "Handling Prepare-Writes Message, worker={0}, tid={1}", nameOf(p),
+        msg.tid);
+
+    long minCommitTime =
+        prepareTransactionWrites(p, msg.tid, msg.serializedCreates,
+            msg.serializedWrites);
+    return new PrepareTransactionWritesMessage.Response(minCommitTime);
+  }
+
+  /**
+   * Processes the given PREPARE_READS request.
+   */
+  @Override
+  public PrepareTransactionReadsMessage.Response handle(Principal p,
+      PrepareTransactionReadsMessage msg)
+      throws TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Prepare Message, worker={0}, tid={1}", nameOf(p), msg.tid);
 
-    // TODO Consider delaying writes in the presence of promises
-    Logging.log(STORE_REQUEST_LOGGER, Level.FINE,
-        "TODO: Consider delaying writes in the presence of promises, tid={1}",
-        msg.tid);
-
-    boolean subTransactionCreated =
-        prepareTransaction(p, msg.tid, msg.commitTime, msg.serializedCreates,
-            msg.serializedWrites, msg.reads);
-    return new PrepareTransactionMessage.Response(subTransactionCreated);
+    prepareTransactionReads(p, msg.tid, msg.reads);
+    return new PrepareTransactionReadsMessage.Response();
   }
 
   /**
@@ -306,23 +318,24 @@ class Store extends MessageToStoreHandler {
   }
 
   /**
-   * @return true iff a subtransaction was created for making Statistics
-   *         objects.
+   * @return the transaction's minimum commit time.
    */
-  private boolean prepareTransaction(Principal p, long tid, long commitTime,
+  private long prepareTransactionWrites(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
-      Collection<SerializedObject> serializedWrites, LongKeyMap<Integer> reads)
+      Collection<SerializedObject> serializedWrites)
       throws TransactionPrepareFailedException {
 
-    PrepareRequest req =
-        new PrepareRequest(tid, commitTime, serializedCreates,
-            serializedWrites, reads);
+    PrepareWritesRequest req =
+        new PrepareWritesRequest(tid, serializedCreates, serializedWrites);
 
     sm.createSurrogates(req);
 
-    boolean subTransactionCreated = tm.prepare(p, req);
+    return tm.prepareWrites(p, req);
+  }
 
-    return subTransactionCreated;
+  private void prepareTransactionReads(Principal p, long tid,
+      LongKeyMap<Integer> reads) throws TransactionPrepareFailedException {
+    tm.prepareReads(p, tid, reads);
   }
 
   private String nameOf(Principal p) {

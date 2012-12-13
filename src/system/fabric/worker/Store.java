@@ -5,8 +5,10 @@ import java.util.Collection;
 
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
@@ -28,15 +30,23 @@ public interface Store extends Serializable {
   public boolean isLocalStore();
 
   /**
-   * Notifies the store that the transaction is entering the Prepare phase.
+   * Notifies the store that the transaction is entering the write-prepare phase.
+   * 
+   * @return whether a subtransaction was created on the store as a result of
+   *         the prepare, and a minimum commit time.
+   */
+  long prepareTransactionWrites(long tid, Collection<_Impl> toCreate,
+      Collection<_Impl> writes) throws UnreachableNodeException,
+      TransactionPrepareFailedException;
+
+  /**
+   * Notifies the store that the transaction is entering the read-prepare phase.
    * 
    * @return whether a subtransaction was created on the store as a result of
    *         the prepare.
    */
-  boolean prepareTransaction(long tid, long commitTime,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<_Impl> writes) throws UnreachableNodeException,
-      TransactionPrepareFailedException;
+  void prepareTransactionReads(long tid, LongKeyMap<Integer> reads)
+      throws UnreachableNodeException, TransactionPrepareFailedException;
 
   /**
    * Returns the cache entry for the given onum. If the object is not resident,
@@ -124,6 +134,6 @@ public interface Store extends Serializable {
    * 
    * @return the resulting cache entry.
    */
-  public ObjectCache.Entry cache(SerializedObject obj);
+  public ObjectCache.Entry cache(Pair<SerializedObject, VersionWarranty> obj);
 
 }

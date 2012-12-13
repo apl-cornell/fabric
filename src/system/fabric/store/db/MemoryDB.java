@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -42,9 +43,14 @@ public class MemoryDB extends ObjectDB {
   private long nextOnum;
 
   /**
-   * Maps 48-bit object numbers to SerializedObjects.
+   * Maps onums to SerializedObjects.
    */
   private LongKeyMap<SerializedObject> objectTable;
+
+  /**
+   * Maps onums to VersionWarranties.
+   */
+  private LongKeyMap<VersionWarranty> warrantyTable;
 
   /**
    * The next free glob ID.
@@ -86,6 +92,14 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
+  protected PendingTransaction reopenPreparedTransaction(long tid,
+      Principal worker) {
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    if (submap == null) return null;
+    return submap.get(worker);
+  }
+
+  @Override
   public void finishPrepare(long tid, Principal worker) {
   }
 
@@ -111,6 +125,16 @@ public class MemoryDB extends ObjectDB {
   @Override
   public SerializedObject read(long onum) {
     return objectTable.get(onum);
+  }
+
+  @Override
+  public VersionWarranty getWarranty(long onum) {
+    return warrantyTable.get(onum);
+  }
+
+  @Override
+  protected void putWarranty(long onum, VersionWarranty warranty) {
+    warrantyTable.put(onum, warranty);
   }
 
   @Override

@@ -18,7 +18,8 @@ import fabric.messages.DirtyReadMessage;
 import fabric.messages.InterWorkerStalenessMessage;
 import fabric.messages.MessageToWorkerHandler;
 import fabric.messages.ObjectUpdateMessage;
-import fabric.messages.PrepareTransactionMessage;
+import fabric.messages.PrepareTransactionReadsMessage;
+import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
 import fabric.worker.TransactionAtomicityViolationException;
@@ -150,12 +151,39 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public PrepareTransactionMessage.Response handle(Principal p,
-      PrepareTransactionMessage prepareTransactionMessage)
+  public PrepareTransactionWritesMessage.Response handle(Principal p,
+      PrepareTransactionWritesMessage message)
       throws TransactionPrepareFailedException {
     // XXX TODO Security checks.
-    Log log =
-        TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
+    Log log = TransactionRegistry.getInnermostLog(message.tid);
+    if (log == null)
+      throw new TransactionPrepareFailedException("No such transaction");
+
+    // Commit up to the top level.
+    TransactionManager tm = TransactionManager.getInstance();
+    TransactionID topTid = log.getTid();
+    while (topTid.depth > 0)
+      topTid = topTid.parent;
+    tm.associateAndSyncLog(log, topTid);
+
+    long minCommitTime;
+    try {
+      minCommitTime = tm.sendPrepareWriteMessages();
+    } catch (TransactionRestartingException e) {
+      throw new TransactionPrepareFailedException(e);
+    } finally {
+      tm.associateLog(null);
+    }
+
+    return new PrepareTransactionWritesMessage.Response(minCommitTime);
+  }
+
+  @Override
+  public PrepareTransactionReadsMessage.Response handle(Principal p,
+      PrepareTransactionReadsMessage message)
+      throws TransactionPrepareFailedException {
+    // XXX TODO Security checks.
+    Log log = TransactionRegistry.getInnermostLog(message.tid);
     if (log == null)
       throw new TransactionPrepareFailedException("No such transaction");
 
@@ -167,14 +195,14 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     tm.associateAndSyncLog(log, topTid);
 
     try {
-      tm.sendPrepareMessages(prepareTransactionMessage.commitTime);
+      tm.sendPrepareReadMessages(message.commitTime);
     } catch (TransactionRestartingException e) {
       throw new TransactionPrepareFailedException(e);
     } finally {
       tm.associateLog(null);
     }
 
-    return new PrepareTransactionMessage.Response();
+    return new PrepareTransactionReadsMessage.Response();
   }
 
   /**

@@ -12,6 +12,7 @@ import java.util.Set;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
@@ -49,13 +50,17 @@ public final class LocalStore implements Store, Serializable {
   private Set<Pair<Principal, Principal>> localDelegates;
 
   @Override
-  public boolean prepareTransaction(long tid, long commitTime,
-      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<Object._Impl> writes) {
+  public long prepareTransactionWrites(long tid,
+      Collection<Object._Impl> toCreate, Collection<Object._Impl> writes) {
+    WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing writes");
+    return 0;
+  }
+
+  @Override
+  public void prepareTransactionReads(long tid, LongKeyMap<Integer> reads) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
-    WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
-    return false;
+    WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing reads");
   }
 
   @Override
@@ -216,7 +221,7 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public ObjectCache.Entry cache(SerializedObject obj) {
+  public ObjectCache.Entry cache(Pair<SerializedObject, VersionWarranty> obj) {
     throw new InternalError(
         "Unexpected attempt to cache a serialized local-store object.");
   }

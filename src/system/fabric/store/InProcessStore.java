@@ -7,10 +7,12 @@ import java.util.List;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionCommitFailedException;
@@ -60,8 +62,7 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public boolean prepareTransaction(long tid, long commitTime,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+  public long prepareTransactionWrites(long tid, Collection<_Impl> toCreate,
       Collection<_Impl> writes) throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<SerializedObject>(toCreate.size());
@@ -80,14 +81,19 @@ public class InProcessStore extends RemoteStore {
       serializedWrites.add(serialized);
     }
 
-    PrepareRequest req =
-        new PrepareRequest(tid, commitTime, serializedCreates,
-            serializedWrites, reads);
+    PrepareWritesRequest req =
+        new PrepareWritesRequest(tid, serializedCreates, serializedWrites);
 
     // Swizzle remote pointers.
     sm.createSurrogates(req);
 
-    return tm.prepare(Worker.getWorker().getPrincipal(), req);
+    return tm.prepareWrites(Worker.getWorker().getPrincipal(), req);
+  }
+
+  @Override
+  public void prepareTransactionReads(long tid, LongKeyMap<Integer> reads)
+      throws TransactionPrepareFailedException {
+    tm.prepareReads(Worker.getWorker().getPrincipal(), tid, reads);
   }
 
   @Override
@@ -96,11 +102,15 @@ public class InProcessStore extends RemoteStore {
     SerializedObject obj = tm.read(onum);
     if (obj == null) throw new AccessException(this, onum);
     map.put(onum, obj);
-    return new ObjectGroup(map);
+
+    ObjectGroup result = new ObjectGroup(map);
+    result.refreshWarranties(tm);
+    return result;
   }
 
   @Override
-  protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
+  protected List<Pair<SerializedObject, VersionWarranty>> getStaleObjects(
+      LongKeyMap<Integer> reads) {
     try {
       return tm.checkForStaleObjects(getPrincipal(), reads);
     } catch (AccessException e) {

@@ -1,13 +1,9 @@
 package fabric.messages;
 
 import fabric.common.Logging;
-import fabric.common.exceptions.AccessException;
-import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.Principal;
 import fabric.messages.ObjectUpdateMessage.Response;
-import fabric.worker.TransactionCommitFailedException;
-import fabric.worker.TransactionPrepareFailedException;
 
 /**
  * This abstract class acts as a visitor for MessagesToStore. It also documents
@@ -26,42 +22,6 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
   public MessageToStoreHandler(String name) {
     super(name, Logging.STORE_LOGGER);
   }
-
-  @Override
-  public abstract AbortTransactionMessage.Response handle(Principal p,
-      AbortTransactionMessage msg) throws AccessException;
-
-  @Override
-  public abstract AllocateMessage.Response handle(Principal p,
-      AllocateMessage msg) throws AccessException;
-
-  @Override
-  public abstract CommitTransactionMessage.Response handle(Principal p,
-      CommitTransactionMessage msg) throws TransactionCommitFailedException;
-
-  @Override
-  public abstract DissemReadMessage.Response handle(Principal p,
-      DissemReadMessage msg) throws AccessException;
-
-  @Override
-  public abstract GetCertChainMessage.Response handle(Principal p,
-      GetCertChainMessage msg);
-
-  @Override
-  public abstract PrepareTransactionMessage.Response handle(Principal p,
-      PrepareTransactionMessage msg) throws TransactionPrepareFailedException;
-
-  @Override
-  public abstract ReadMessage.Response handle(Principal p, ReadMessage msg)
-      throws AccessException;
-
-  @Override
-  public abstract MakePrincipalMessage.Response handle(Principal p,
-      MakePrincipalMessage msg) throws FabricGeneralSecurityException;
-
-  @Override
-  public abstract StalenessCheckMessage.Response handle(Principal p,
-      StalenessCheckMessage msg) throws AccessException;
 
   @Override
   public final Response handle(Principal p, ObjectUpdateMessage msg)

@@ -7,10 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fabric.common.SerializedObject;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.lang.security.Principal;
 
 /**
@@ -36,9 +38,9 @@ public final class StalenessCheckMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
-    public final List<SerializedObject> staleObjects;
+    public final List<Pair<SerializedObject, VersionWarranty>> staleObjects;
 
-    public Response(List<SerializedObject> staleObjects) {
+    public Response(List<Pair<SerializedObject, VersionWarranty>> staleObjects) {
       this.staleObjects = staleObjects;
     }
   }
@@ -85,17 +87,22 @@ public final class StalenessCheckMessage extends
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     out.writeInt(r.staleObjects.size());
-    for (SerializedObject obj : r.staleObjects) {
-      obj.write(out);
+    for (Pair<SerializedObject, VersionWarranty> obj : r.staleObjects) {
+      obj.first.write(out);
+      out.writeLong(obj.second.expiry());
     }
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     int size = in.readInt();
-    List<SerializedObject> staleObjects = new ArrayList<SerializedObject>(size);
+    List<Pair<SerializedObject, VersionWarranty>> staleObjects =
+        new ArrayList<Pair<SerializedObject, VersionWarranty>>(size);
     for (int i = 0; i < size; i++) {
-      staleObjects.add(new SerializedObject(in));
+      SerializedObject obj = new SerializedObject(in);
+      VersionWarranty warranty = new VersionWarranty(in.readLong());
+      staleObjects.add(new Pair<SerializedObject, VersionWarranty>(obj,
+          warranty));
     }
 
     return new Response(staleObjects);

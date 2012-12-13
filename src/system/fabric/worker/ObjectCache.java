@@ -9,12 +9,14 @@ import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.common.util.Pair;
 import fabric.lang.FClass;
 import fabric.lang.Object;
 import fabric.lang.security.ConfPolicy;
@@ -51,7 +53,7 @@ public final class ObjectCache {
   public static final class Entry {
     private Object._Impl impl;
     private Store store;
-    private SerializedObject serialized;
+    private Pair<SerializedObject, VersionWarranty> serialized;
 
     private Entry next;
 
@@ -69,10 +71,13 @@ public final class ObjectCache {
     /**
      * Constructs an <code>Entry</code> object in <b>serialized</b> state.
      */
-    private Entry(Store store, SerializedObject obj) {
+    private Entry(Store store, Pair<SerializedObject, VersionWarranty> obj) {
       this.impl = null;
 
       this.store = store;
+      if (obj.second == null) {
+        new InternalError();
+      }
       this.serialized = obj;
       this.next = null;
     }
@@ -114,14 +119,16 @@ public final class ObjectCache {
 
       // This entry is in serialized state. Deserialize.
       // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
-      boolean fclass = FClass.class.getName().equals(serialized.getClassName());
+      boolean fclass =
+          FClass.class.getName().equals(serialized.first.getClassName());
       if (fclass) {
         Logging.TIMING_LOGGER.fine("Start deserializing FClass ("
-            + serialized.size() + " bytes)");
+            + serialized.first.size() + " bytes)");
       }
       try {
         // XXX END HACK FOR OAKLAND 2012 TIMING STUFF
-        next = serialized.deserialize(store).$cacheEntry;
+        next =
+            serialized.first.deserialize(store, serialized.second).$cacheEntry;
         store = null;
         serialized = null;
         snapNextLinks();
@@ -154,8 +161,9 @@ public final class ObjectCache {
 
         Surrogate surrogate = (Surrogate) impl;
         next = new Object._Proxy(surrogate.store, surrogate.onum).fetchEntry();
-      } else if (serialized.isSurrogate()) {
-        next = serialized.deserialize(store, false).$cacheEntry;
+      } else if (serialized.first.isSurrogate()) {
+        next =
+            serialized.first.deserialize(store, serialized.second, false).$cacheEntry;
       } else {
         return;
       }
@@ -207,7 +215,7 @@ public final class ObjectCache {
       resolveSurrogates();
 
       if (next != null) return next.getLabel();
-      return new Label._Proxy(store, serialized.getUpdateLabelOnum());
+      return new Label._Proxy(store, serialized.first.getUpdateLabelOnum());
     }
 
     /**
@@ -224,7 +232,8 @@ public final class ObjectCache {
       resolveSurrogates();
 
       if (next != null) return next.getAccessPolicy();
-      return new ConfPolicy._Proxy(store, serialized.getAccessPolicyOnum());
+      return new ConfPolicy._Proxy(store,
+          serialized.first.getAccessPolicyOnum());
     }
 
     /**
@@ -243,11 +252,11 @@ public final class ObjectCache {
       if (next != null) return next.getProxy();
 
       Class<? extends Object._Proxy> proxyClass =
-          serialized.getClassRef().toProxyClass();
+          serialized.first.getClassRef().toProxyClass();
       try {
         Constructor<? extends Object._Proxy> constructor =
             proxyClass.getConstructor(Store.class, long.class);
-        return constructor.newInstance(store, serialized.getOnum());
+        return constructor.newInstance(store, serialized.first.getOnum());
       } catch (NoSuchMethodException e) {
         throw new InternalError(e);
       } catch (SecurityException e) {
@@ -285,11 +294,12 @@ public final class ObjectCache {
       if (entry.impl != null) {
         this.onum = entry.impl.$getOnum();
       } else {
-        this.onum = entry.serialized.getOnum();
+        this.onum = entry.serialized.first.getOnum();
       }
     }
 
-    private EntrySoftRef(Store store, SerializedObject obj) {
+    private EntrySoftRef(Store store,
+        Pair<SerializedObject, VersionWarranty> obj) {
       this(new Entry(store, obj));
     }
 
@@ -436,12 +446,13 @@ public final class ObjectCache {
     }
   }
 
-  Entry put(Store store, SerializedObject obj) {
+  Entry put(Store store, Pair<SerializedObject, VersionWarranty> obj) {
     return put(store, obj, false);
   }
 
-  private Entry put(Store store, SerializedObject obj, boolean silenceConflicts) {
-    long onum = obj.getOnum();
+  private Entry put(Store store, Pair<SerializedObject, VersionWarranty> obj,
+      boolean silenceConflicts) {
+    long onum = obj.first.getOnum();
 
     synchronized (entries) {
       EntrySoftRef existingRef = entries.get(onum);
@@ -463,7 +474,8 @@ public final class ObjectCache {
 
   void put(Store store, ObjectGroup group) {
     synchronized (entries) {
-      for (SerializedObject obj : group.objects().values()) {
+      for (Pair<SerializedObject, VersionWarranty> obj : group.objects()
+          .values()) {
         put(store, obj, true);
       }
     }
@@ -476,9 +488,9 @@ public final class ObjectCache {
    * 
    * @return true iff an object with the given onum was evicted from cache.
    */
-  boolean update(Store store, SerializedObject update) {
+  boolean update(Store store, Pair<SerializedObject, VersionWarranty> update) {
     synchronized (entries) {
-      boolean evicted = evict(update.getOnum());
+      boolean evicted = evict(update.first.getOnum());
 
       if (evicted) put(store, update);
       return evicted;

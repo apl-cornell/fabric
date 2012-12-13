@@ -30,6 +30,7 @@ import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
@@ -51,6 +52,12 @@ public class BdbDB extends ObjectDB {
    * Database containing the actual serialized Fabric objects.
    */
   private Database db;
+
+  /**
+   * Database containing warranties for Fabric objects.
+   */
+  private Database warranty;
+
   private Database prepared;
 
   private final DatabaseEntry initializationStatus;
@@ -70,6 +77,12 @@ public class BdbDB extends ObjectDB {
    * in BDB.
    */
   private final LongKeyCache<Integer> cachedVersions;
+
+  /**
+   * Cache: maps onums to version warranties for objects that are currently
+   * stored in BDB.
+   */
+  private final LongKeyCache<VersionWarranty> cachedVersionWarranties;
 
   /**
    * Cache: maps BDB keys to prepared-transaction records.
@@ -101,6 +114,7 @@ public class BdbDB extends ObjectDB {
       dbconf.setAllowCreate(true);
       dbconf.setTransactional(true);
       db = env.openDatabase(null, "store", dbconf);
+      warranty = env.openDatabase(null, "warranties", dbconf);
       prepared = env.openDatabase(null, "prepared", dbconf);
       meta = env.openDatabase(null, "meta", dbconf);
 
@@ -123,6 +137,7 @@ public class BdbDB extends ObjectDB {
     this.nextOnum = -1;
     this.lastReservedOnum = -2;
     this.cachedVersions = new LongKeyCache<Integer>();
+    this.cachedVersionWarranties = new LongKeyCache<VersionWarranty>();
     this.preparedTransactions = new Cache<ByteArray, PendingTransaction>();
   }
 
@@ -149,12 +164,29 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
+  protected PendingTransaction reopenPreparedTransaction(long tid,
+      Principal worker) {
+    STORE_DB_LOGGER.finer("Bdb re-open begin tid " + tid);
+    try {
+      Transaction txn = env.beginTransaction(null, null);
+      PendingTransaction pending = remove(worker, txn, tid, false);
+
+      STORE_DB_LOGGER.finer("Bdb re-open success tid " + tid);
+      txn.commit();
+      return pending;
+    } catch (DatabaseException e) {
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in re-open: ", e);
+      throw new InternalError(e);
+    }
+  }
+
+  @Override
   public void commit(long tid, Principal workerPrincipal, SubscriptionManager sm) {
     STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
 
     try {
       Transaction txn = env.beginTransaction(null, null);
-      PendingTransaction pending = remove(workerPrincipal, txn, tid);
+      PendingTransaction pending = remove(workerPrincipal, txn, tid, true);
 
       if (pending != null) {
         for (SerializedObject o : pending.modData) {
@@ -193,7 +225,7 @@ public class BdbDB extends ObjectDB {
 
     try {
       Transaction txn = env.beginTransaction(null, null);
-      remove(worker, txn, tid);
+      remove(worker, txn, tid, true);
       txn.commit();
       STORE_DB_LOGGER.finer("Bdb rollback success tid " + tid);
     } catch (DatabaseException e) {
@@ -223,6 +255,44 @@ public class BdbDB extends ObjectDB {
     }
 
     return null;
+  }
+
+  @Override
+  public VersionWarranty getWarranty(long onum) {
+    VersionWarranty curWarranty = cachedVersionWarranties.get(onum);
+    if (curWarranty != null) return curWarranty;
+
+    STORE_DB_LOGGER.finest("Bdb read warranty for onum " + onum);
+    DatabaseEntry key = new DatabaseEntry(toBytes(onum));
+    DatabaseEntry data = new DatabaseEntry();
+
+    try {
+      if (warranty.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
+        return new VersionWarranty(toLong(data.getData()));
+      }
+    } catch (DatabaseException e) {
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in read: ", e);
+      throw new InternalError(e);
+    }
+
+    return null;
+  }
+
+  @Override
+  protected void putWarranty(long onum, VersionWarranty warranty) {
+    try {
+      STORE_DB_LOGGER.finest("Bdb put warranty for onum " + onum);
+      Transaction txn = env.beginTransaction(null, null);
+      DatabaseEntry key = new DatabaseEntry(toBytes(onum));
+      DatabaseEntry data = new DatabaseEntry(toBytes(warranty.expiry()));
+      this.warranty.put(txn, key, data);
+      txn.commit();
+
+      cachedVersionWarranties.put(onum, warranty);
+    } catch (DatabaseException e) {
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in putWarranty: ", e);
+      throw new InternalError(e);
+    }
   }
 
   @Override
@@ -297,6 +367,7 @@ public class BdbDB extends ObjectDB {
   public void close() {
     try {
       if (db != null) db.close();
+      if (warranty != null) warranty.close();
       if (prepared != null) prepared.close();
       if (meta != null) meta.close();
       if (env != null) env.close();
@@ -357,12 +428,14 @@ public class BdbDB extends ObjectDB {
    *          retrieval.
    * @param tid
    *          the transaction id.
-   * @return the PrepareRequest corresponding to tid
+   * @param unpin
+   *          whether to release the transaction's read/write locks.
+   * @return the PendingTransaction corresponding to tid
    * @throws DatabaseException
    *           if a database error occurs
    */
-  private PendingTransaction remove(Principal worker, Transaction txn, long tid)
-      throws DatabaseException {
+  private PendingTransaction remove(Principal worker, Transaction txn,
+      long tid, boolean unpin) throws DatabaseException {
     byte[] key = toBytes(tid, worker);
     DatabaseEntry bdbKey = new DatabaseEntry(key);
     DatabaseEntry data = new DatabaseEntry();
@@ -377,7 +450,7 @@ public class BdbDB extends ObjectDB {
     if (pending == null) return null;
     prepared.delete(txn, bdbKey);
 
-    unpin(pending);
+    if (unpin) unpin(pending);
     return pending;
   }
 

@@ -216,10 +216,16 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
         return new ReadMessage(in);
       }
     },
-    PREPARE_TRANSACTION {
+    PREPARE_TRANSACTION_WRITES {
       @Override
-      PrepareTransactionMessage parse(DataInput in) throws IOException {
-        return new PrepareTransactionMessage(in);
+      PrepareTransactionWritesMessage parse(DataInput in) throws IOException {
+        return new PrepareTransactionWritesMessage(in);
+      }
+    },
+    PREPARE_TRANSACTION_READS {
+      @Override
+      PrepareTransactionReadsMessage parse(DataInput in) throws IOException {
+        return new PrepareTransactionReadsMessage(in);
       }
     },
     COMMIT_TRANSACTION {

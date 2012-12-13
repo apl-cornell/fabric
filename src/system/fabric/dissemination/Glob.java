@@ -1,5 +1,7 @@
 package fabric.dissemination;
 
+import static fabric.common.Logging.NETWORK_MESSAGE_RECEIVE_LOGGER;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -32,8 +34,6 @@ import fabric.lang.security.SecretKeyObject;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
-
-import static fabric.common.Logging.NETWORK_MESSAGE_RECEIVE_LOGGER;
 
 /**
  * A glob is an ObjectGroup that has been encrypted and signed.
@@ -178,7 +178,7 @@ public class Glob implements FastSerializable {
 
   private Label getLabel(Store store, ObjectGroup group) {
     SerializedObject obj =
-        group.objects().entrySet().iterator().next().getValue();
+        group.objects().entrySet().iterator().next().getValue().first;
     return new Label._Proxy(store, obj.getUpdateLabelOnum());
   }
 

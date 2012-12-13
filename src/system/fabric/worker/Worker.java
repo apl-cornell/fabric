@@ -28,6 +28,7 @@ import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.Version;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
@@ -41,6 +42,7 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
+import fabric.common.util.Pair;
 import fabric.dissemination.Cache;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
@@ -391,7 +393,7 @@ public final class Worker {
    */
   public boolean updateCache(RemoteStore store, ObjectGroup group) {
     boolean result = false;
-    for (SerializedObject obj : group.objects().values()) {
+    for (Pair<SerializedObject, VersionWarranty> obj : group.objects().values()) {
       result |= store.updateCache(obj);
     }
 

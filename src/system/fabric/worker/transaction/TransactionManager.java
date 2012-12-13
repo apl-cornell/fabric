@@ -16,21 +16,23 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 
 import fabric.common.FabricThread;
 import fabric.common.Logging;
-import fabric.common.Options;
 import fabric.common.SerializedObject;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
+import fabric.common.VersionWarranty;
+import fabric.common.Warranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -108,6 +110,12 @@ public final class TransactionManager {
   public static boolean TRACE_WRITE_LOCKS = false;
 
   /**
+   * An estimation of the maximum time (in milliseconds) required to prepare
+   * reads.
+   */
+  private static final long PREPARE_LATENCY = 1000;
+
+  /**
    * A map from OIDs to <code>ReadMapEntry</code>s. Each ReadMapEntry
    * encapsulates a version number and a list of logs for transactions that have
    * read that version of the object. For each transaction tx, an object o is in
@@ -146,7 +154,7 @@ public final class TransactionManager {
 
           result.obj = impl.$ref;
           result.pinCount++;
-          result.promise = result.promise > expiry ? result.promise : expiry;
+          result.warranty = result.warranty > expiry ? result.warranty : expiry;
           int ver = impl.$getVersion();
           if (ver == result.versionNumber) return result;
 
@@ -219,8 +227,6 @@ public final class TransactionManager {
    *          already know about the abort.
    */
   private void abortTransaction(Set<RemoteNode> abortedNodes) {
-    Set<Store> storesToContact;
-    List<RemoteWorker> workersToContact;
     if (current.tid.depth == 0) {
       // Aborting a top-level transaction. Make sure no other thread is working
       // on this transaction.
@@ -235,15 +241,11 @@ public final class TransactionManager {
         switch (current.commitState.value) {
         case UNPREPARED:
           current.commitState.value = ABORTING;
-          storesToContact = Collections.emptySet();
-          workersToContact = current.workersCalled;
           break;
 
         case PREPARE_FAILED:
         case PREPARED:
           current.commitState.value = ABORTING;
-          storesToContact = current.storesToContact();
-          workersToContact = current.workersCalled;
           break;
 
         case PREPARING:
@@ -267,11 +269,6 @@ public final class TransactionManager {
           throw new InternalError();
         }
       }
-    } else {
-      // Aborting a nested transaction. Only need to abort at the workers we've
-      // called.
-      storesToContact = Collections.emptySet();
-      workersToContact = current.workersCalled;
     }
 
     WORKER_TRANSACTION_LOGGER.warning(current + " aborting");
@@ -283,7 +280,7 @@ public final class TransactionManager {
     // Wait for all other threads to finish.
     current.waitForThreads();
 
-    sendAbortMessages(storesToContact, workersToContact, abortedNodes);
+    sendAbortMessages(abortedNodes);
     current.abort();
     WORKER_TRANSACTION_LOGGER.warning(current + " aborted");
 
@@ -318,7 +315,7 @@ public final class TransactionManager {
       TransactionRestartingException, TransactionAtomicityViolationException {
     Timing.COMMIT.begin();
     try {
-      commitTransactionAt(System.currentTimeMillis());
+      commitTransaction(false);
     } finally {
       Timing.COMMIT.end();
     }
@@ -328,15 +325,7 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  public void commitTransactionAt(long commitTime) {
-    commitTransactionAt(commitTime, false);
-  }
-
-  /**
-   * @throws TransactionRestartingException
-   *           if the prepare fails.
-   */
-  public void commitTransactionAt(long commitTime, boolean ignoreRetrySignal) {
+  private void commitTransaction(boolean ignoreRetrySignal) {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
     // Assume only one thread will be executing this.
@@ -408,44 +397,40 @@ public final class TransactionManager {
 
     // Commit top-level transaction.
 
-    // Remove and unlock reads that have valid promises on them
-    current.removePromisedReads(commitTime);
+    // Send prepare-write messages to our cohorts. If the prepare fails, this
+    // will abort our portion of the transaction and throw a
+    // TransactionRestartingException.
+    long commitTime = sendPrepareWriteMessages();
 
-    // Go through the transaction log and figure out the stores we need to
-    // contact.
-    Set<Store> stores = current.storesToContact();
-    List<RemoteWorker> workers = current.workersCalled;
+    // Send prepare-read messages to our cohorts. If the prepare fails, this
+    // will abort our portion of the transaction and throw a
+    // TransactionRestartingException.
+    while (true) {
+      sendPrepareReadMessages(commitTime);
 
-    // Send prepare messages to our cohorts. This will also abort our portion of
-    // the transaction if the prepare fails.
-    sendPrepareMessages(commitTime, stores, workers);
+      long currentTime = System.currentTimeMillis();
+      if (currentTime > commitTime - Warranty.CLOCK_SKEW) {
+        commitTime = currentTime + PREPARE_LATENCY;
+      } else {
+        break;
+      }
+    }
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(stores, workers);
+    sendCommitMessagesAndCleanUp();
   }
 
   /**
-   * Sends prepare messages to the cohorts. Also sends abort messages if any
-   * cohort fails to prepare.
+   * Sends prepare-write messages to the cohorts. If any cohort fails to
+   * prepare, abort messages will be sent, and the local portion of the
+   * transaction is rolled back.
    * 
+   * @return a proposed commit time, based on the outstanding warranties for
+   *           objects modified by the transaction.
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  public void sendPrepareMessages(long commitTime) {
-    sendPrepareMessages(commitTime, current.storesToContact(),
-        current.workersCalled);
-  }
-
-  /**
-   * Sends prepare messages to the given set of stores and workers. If the
-   * prepare fails, the local portion and given branch of the transaction is
-   * rolled back.
-   * 
-   * @throws TransactionRestartingException
-   *           if the prepare fails.
-   */
-  private void sendPrepareMessages(final long commitTime, Set<Store> stores,
-      List<RemoteWorker> workers) {
+  public long sendPrepareWriteMessages() {
     final Map<RemoteNode, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
@@ -458,17 +443,14 @@ public final class TransactionManager {
 
       case PREPARING:
       case PREPARED:
-        return;
+        return current.commitState.commitTime;
 
       case COMMITTING:
       case COMMITTED:
-        WORKER_TRANSACTION_LOGGER.log(Level.FINE,
-            "Ignoring prepare request (transaction state = {0})",
-            current.commitState.value);
-        return;
-
       case PREPARE_FAILED:
-        throw new InternalError();
+        throw new InternalError(
+            "Got a prepare-write request, but transaction state is "
+                + current.commitState.value);
 
       case ABORTING:
       case ABORTED:
@@ -476,16 +458,22 @@ public final class TransactionManager {
       }
     }
 
-    List<Thread> threads =
-        new ArrayList<Thread>(stores.size() + workers.size());
+    List<Thread> threads = new ArrayList<Thread>();
+
+    // A ref cell containing the max commit time.
+    final long[] commitTime = new long[1];
+    commitTime[0] = 0;
 
     // Go through each worker and send prepare messages in parallel.
-    for (final RemoteWorker worker : workers) {
-      Thread thread = new Thread("worker prepare to " + worker.name()) {
+    for (final RemoteWorker worker : current.workersCalled) {
+      Thread thread = new Thread("worker write-prepare to " + worker.name()) {
         @Override
         public void run() {
           try {
-            worker.prepareTransaction(current.tid.topTid, commitTime);
+            long response = worker.prepareTransactionWrites(current.tid.topTid);
+            synchronized (commitTime) {
+              if (response > commitTime[0]) commitTime[0] = response;
+            }
           } catch (UnreachableNodeException e) {
             failures.put(worker, new TransactionPrepareFailedException(
                 "Unreachable worker"));
@@ -504,35 +492,30 @@ public final class TransactionManager {
     }
 
     // Go through each store and send prepare messages in parallel.
-    final Worker worker = Worker.getWorker();
-    for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
+    Set<Store> storesWritten = current.storesWritten();
+    current.commitState.storesContacted.addAll(storesWritten);
+    for (Iterator<Store> storeIt = storesWritten.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
       Runnable runnable = new Runnable() {
         @Override
         public void run() {
           try {
             Collection<_Impl> creates = current.getCreatesForStore(store);
-            LongKeyMap<Integer> reads =
-                Options.DEBUG_COMMIT_READS ? current.getReadsForStore(store,
-                    false) : new LongKeyHashMap<Integer>();
             Collection<_Impl> writes = current.getWritesForStore(store);
 
             if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
               Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE, "Preparing "
-                  + "transaction {0} to {1}: {2} created, {3} read, "
-                  + "{4} modified", current.tid.topTid, store, creates.size(),
-                  reads.size(), writes.size());
+                  + "writes for transaction {0} to {1}: {2} created, "
+                  + "{3} modified", current.tid.topTid, store, creates.size(),
+                  writes.size());
             }
 
-            boolean subTransactionCreated =
-                store.prepareTransaction(current.tid.topTid, commitTime,
-                    creates, reads, writes);
+            long response =
+                store.prepareTransactionWrites(current.tid.topTid, creates,
+                    writes);
 
-            if (subTransactionCreated) {
-              RemoteWorker storeWorker = worker.getWorker(store.name());
-              synchronized (current.workersCalled) {
-                current.workersCalled.add(storeWorker);
-              }
+            synchronized (commitTime) {
+              if (response > commitTime[0]) commitTime[0] = response;
             }
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) store, e);
@@ -548,7 +531,7 @@ public final class TransactionManager {
       if (!(store instanceof InProcessStore || store.isLocalStore())
           && storeIt.hasNext()) {
         Thread thread =
-            new Thread(runnable, "worker prepare to " + store.name());
+            new Thread(runnable, "worker write-prepare to " + store.name());
         threads.add(thread);
         thread.start();
       } else {
@@ -570,17 +553,198 @@ public final class TransactionManager {
     // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
       String logMessage =
-          "Transaction tid=" + current.tid.topTid + ":  prepare failed.";
+          "Transaction tid=" + current.tid.topTid + ":  write-prepare failed.";
 
       for (Map.Entry<RemoteNode, TransactionPrepareFailedException> entry : failures
           .entrySet()) {
         if (entry.getKey() instanceof RemoteStore) {
           // Remove old objects from our cache.
           RemoteStore store = (RemoteStore) entry.getKey();
-          LongKeyMap<SerializedObject> versionConflicts =
+          LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
-            for (SerializedObject obj : versionConflicts.values())
+            for (Pair<SerializedObject, VersionWarranty> obj : versionConflicts
+                .values())
+              store.updateCache(obj);
+          }
+        }
+
+        if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+          logMessage +=
+              "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
+        }
+      }
+      WORKER_TRANSACTION_LOGGER.fine(logMessage);
+
+      synchronized (current.commitState) {
+        current.commitState.value = PREPARE_FAILED;
+        current.commitState.notifyAll();
+      }
+
+      TransactionID tid = current.tid;
+
+      TransactionPrepareFailedException e =
+          new TransactionPrepareFailedException(failures);
+      Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
+          "{0} error committing: prepare failed exception: {1}", current, e);
+
+      abortTransaction(failures.keySet());
+      throw new TransactionRestartingException(tid);
+
+    } else {
+      synchronized (current.commitState) {
+        current.commitState.value = PREPARED;
+        current.commitState.notifyAll();
+        return commitTime[0];
+      }
+    }
+  }
+
+  /**
+   * Sends prepare-read messages to the cohorts. If any cohort fails to
+   * prepare, abort messages will be sent, and the local portion of the
+   * transaction is rolled back.
+   * 
+   * @throws TransactionRestartingException
+   *           if the prepare fails.
+   */
+  public void sendPrepareReadMessages(final long commitTime) {
+    final Map<RemoteNode, TransactionPrepareFailedException> failures =
+        Collections
+            .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
+
+    synchronized (current.commitState) {
+      while (current.commitState.value == PREPARING) {
+        if (current.commitState.commitTime >= commitTime) return;
+
+        try {
+          current.commitState.wait();
+        } catch (InterruptedException e) {
+        }
+      }
+
+      switch (current.commitState.value) {
+      case UNPREPARED:
+        current.commitState.value = PREPARING;
+        break;
+
+      case PREPARING:
+        // We should've taken care of this case already in the 'while' loop
+        // above.
+        throw new InternalError();
+
+      case PREPARED:
+        if (current.commitState.commitTime >= commitTime) return;
+        current.commitState.value = PREPARING;
+        break;
+
+      case COMMITTING:
+      case COMMITTED:
+      case PREPARE_FAILED:
+        throw new InternalError(
+            "Got a prepare-read request, but transaction state is "
+                + current.commitState.value);
+
+      case ABORTING:
+      case ABORTED:
+        throw new TransactionRestartingException(current.tid);
+      }
+    }
+
+    List<Thread> threads = new ArrayList<Thread>();
+
+    // Go through each worker and send prepare messages in parallel.
+    for (final RemoteWorker worker : current.workersCalled) {
+      Thread thread = new Thread("worker read-prepare to " + worker.name()) {
+        @Override
+        public void run() {
+          try {
+            worker.prepareTransactionReads(current.tid.topTid, commitTime);
+          } catch (UnreachableNodeException e) {
+            failures.put(worker, new TransactionPrepareFailedException(
+                "Unreachable worker"));
+          } catch (TransactionPrepareFailedException e) {
+            failures.put(worker,
+                new TransactionPrepareFailedException(e.getMessage()));
+          } catch (TransactionRestartingException e) {
+            failures.put(worker, new TransactionPrepareFailedException(
+                "transaction restarting"));
+          }
+        }
+      };
+      thread.start();
+      threads.add(thread);
+
+    }
+
+    // Go through each store and send prepare messages in parallel.
+    Map<Store, LongKeyMap<Integer>> storesRead = current.storesRead(commitTime);
+    current.commitState.storesContacted.addAll(storesRead.keySet());
+    current.commitState.commitTime = commitTime;
+    for (Iterator<Entry<Store, LongKeyMap<Integer>>> entryIt =
+        storesRead.entrySet().iterator(); entryIt.hasNext();) {
+      Entry<Store, LongKeyMap<Integer>> entry = entryIt.next();
+      final Store store = entry.getKey();
+      final LongKeyMap<Integer> reads = entry.getValue();
+      Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+          try {
+            if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+              Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE, "Preparing "
+                  + "reads for transaction {0} to {1}: {2} version warranties "
+                  + "will expire", current.tid.topTid, store, reads.size());
+            }
+
+            store.prepareTransactionReads(current.tid.topTid, reads);
+          } catch (TransactionPrepareFailedException e) {
+            failures.put((RemoteNode) store, e);
+          } catch (UnreachableNodeException e) {
+            failures.put((RemoteNode) store,
+                new TransactionPrepareFailedException("Unreachable store"));
+          }
+        }
+      };
+
+      // Optimization: only start in a new thread if there are more stores to
+      // contact and if it's a truly remote store (i.e., not in-process).
+      if (!(store instanceof InProcessStore || store.isLocalStore())
+          && entryIt.hasNext()) {
+        Thread thread =
+            new Thread(runnable, "worker read-prepare to " + store.name());
+        threads.add(thread);
+        thread.start();
+      } else {
+        runnable.run();
+      }
+    }
+
+    // Wait for replies.
+    for (Thread thread : threads) {
+      while (true) {
+        try {
+          thread.join();
+          break;
+        } catch (InterruptedException e) {
+        }
+      }
+    }
+
+    // Check for conflicts and unreachable stores/workers.
+    if (!failures.isEmpty()) {
+      String logMessage =
+          "Transaction tid=" + current.tid.topTid + ":  read-prepare failed.";
+
+      for (Map.Entry<RemoteNode, TransactionPrepareFailedException> entry : failures
+          .entrySet()) {
+        if (entry.getKey() instanceof RemoteStore) {
+          // Remove old objects from our cache.
+          RemoteStore store = (RemoteStore) entry.getKey();
+          LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
+              entry.getValue().versionConflicts;
+          if (versionConflicts != null) {
+            for (Pair<SerializedObject, VersionWarranty> obj : versionConflicts
+                .values())
               store.updateCache(obj);
           }
         }
@@ -620,15 +784,6 @@ public final class TransactionManager {
    */
   public void sendCommitMessagesAndCleanUp()
       throws TransactionAtomicityViolationException {
-    sendCommitMessagesAndCleanUp(current.storesToContact(),
-        current.workersCalled);
-  }
-
-  /**
-   * Sends commit messages to the given set of stores and workers.
-   */
-  private void sendCommitMessagesAndCleanUp(Set<Store> stores,
-      List<RemoteWorker> workers) throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
@@ -656,10 +811,11 @@ public final class TransactionManager {
     final List<RemoteNode> failed =
         Collections.synchronizedList(new ArrayList<RemoteNode>());
     List<Thread> threads =
-        new ArrayList<Thread>(stores.size() + workers.size());
+        new ArrayList<Thread>(current.commitState.storesContacted.size()
+            + current.workersCalled.size());
 
     // Send commit messages to the workers in parallel.
-    for (final RemoteWorker worker : workers) {
+    for (final RemoteWorker worker : current.workersCalled) {
       Thread thread = new Thread("worker commit to " + worker) {
         @Override
         public void run() {
@@ -677,7 +833,8 @@ public final class TransactionManager {
     }
 
     // Send commit messages to the stores in parallel.
-    for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
+    for (Iterator<Store> storeIt =
+        current.commitState.storesContacted.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
       Runnable runnable = new Runnable() {
         @Override
@@ -751,9 +908,8 @@ public final class TransactionManager {
    * @param fails
    *          the set of nodes that have reported failure.
    */
-  private void sendAbortMessages(Set<Store> stores, List<RemoteWorker> workers,
-      Set<RemoteNode> fails) {
-    for (Store store : stores)
+  private void sendAbortMessages(Set<RemoteNode> fails) {
+    for (Store store : current.commitState.storesContacted)
       if (!fails.contains(store)) {
         try {
           store.abortTransaction(current.tid);
@@ -763,7 +919,7 @@ public final class TransactionManager {
         }
       }
 
-    for (RemoteWorker worker : workers)
+    for (RemoteWorker worker : current.workersCalled)
       if (!fails.contains(worker)) {
         try {
           worker.abortTransaction(current.tid);
@@ -1062,7 +1218,7 @@ public final class TransactionManager {
       Runnable runnable = new Runnable() {
         @Override
         public void run() {
-          LongKeyMap<Integer> reads = current.getReadsForStore(store, true);
+          LongKeyMap<Integer> reads = current.getReadsForStore(store);
           if (store.checkForStaleObjects(reads))
             nodesWithStaleObjects.add((RemoteNode) store);
         }
@@ -1240,7 +1396,7 @@ public final class TransactionManager {
     // transaction manager.
     TransactionID commonAncestor = log.getTid().getLowestCommonAncestor(tid);
     for (int i = log.getTid().depth; i > commonAncestor.depth; i--)
-      commitTransactionAt(System.currentTimeMillis());
+      commitTransaction();
 
     // Start new transactions if necessary.
     if (commonAncestor.depth != tid.depth) startTransaction(tid, true);

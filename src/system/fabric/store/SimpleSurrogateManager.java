@@ -26,7 +26,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
   }
 
   @Override
-  public void createSurrogates(PrepareRequest req) {
+  public void createSurrogates(PrepareWritesRequest req) {
     Map<ComparablePair<String, Long>, Long> cache =
         new TreeMap<ComparablePair<String, Long>, Long>();
     Collection<SerializedObject> surrogates = new ArrayList<SerializedObject>();

@@ -14,6 +14,7 @@ import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
@@ -53,6 +54,13 @@ import fabric.worker.Worker;
  * </p>
  */
 public abstract class ObjectDB {
+
+  public static enum ReadMode {
+    /**
+     * Renews the warranty if it has expired.
+     */
+    REFRESH_WARRANTY, CURRENT_WARRANTY
+  }
 
   protected final String name;
   private long nextGlobID;
@@ -202,23 +210,32 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Opens a new transaction.
+   * Opens a transaction so it can be prepared.
    * 
    * @param worker
    *          the worker under whose authority the transaction is running.
-   * @throws AccessException
-   *           if the worker has insufficient privileges.
    */
-  public final void beginTransaction(long tid, Principal worker)
-      throws AccessException {
+  public final void beginPrepare(long tid, Principal worker) {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
       submap = new OidKeyHashMap<PendingTransaction>();
       pendingByTid.put(tid, submap);
     }
 
-    submap.put(worker, new PendingTransaction(tid, worker));
+    PendingTransaction pending = reopenPreparedTransaction(tid, worker);
+    if (pending == null) pending = new PendingTransaction(tid, worker);
+    submap.put(worker, pending);
   }
+
+  /**
+   * Re-opens a transaction so it can be further prepared.
+   * 
+   * @param worker
+   *          the worker under whose authority the transaction is running.
+   * @return the pending transaction if it exists; otherwise, null.
+   */
+  protected abstract PendingTransaction reopenPreparedTransaction(long tid,
+      Principal worker);
 
   /**
    * Registers that a transaction has read an object.
@@ -336,13 +353,64 @@ public abstract class ObjectDB {
       throws AccessException;
 
   /**
-   * Return the object stored at a particular onum.
+   * Returns the object stored at a particular onum.
    * 
    * @param onum
    *          the identifier
    * @return the object or null if no object exists at the given onum
    */
   public abstract SerializedObject read(long onum);
+
+  /**
+   * Returns the version warranty for the object stored at the given onum.
+   * 
+   * @return the version warranty or null if no warranty has been issued.
+   */
+  protected abstract VersionWarranty getWarranty(long onum);
+
+  /**
+   * Stores a version warranty for the object stored at the given onum.
+   */
+  protected abstract void putWarranty(long onum, VersionWarranty warranty);
+
+  /**
+   * Returns the version warranty for the object stored at a particular onum.
+   */
+  public final VersionWarranty getWarranty(long onum, ReadMode readMode) {
+    VersionWarranty curWarranty = getWarranty(onum);
+
+    // Create/renew warranty if necessary.
+    VersionWarranty result = curWarranty;
+    if (result == null) result = new VersionWarranty(0);
+    if (readMode == ReadMode.REFRESH_WARRANTY && result.expired()
+        && !isWritten(onum)) {
+      result = makeWarranty(onum);
+    }
+
+    if (curWarranty != result) {
+      // New warranty was created. Store it in the database.
+      putWarranty(onum, result);
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns a new version warranty for the object stored at the given onum. The
+   * object must not be write-prepared by a transaction; otherwise, the
+   * resulting warranty may be violated if the transaction commits.
+   */
+  private VersionWarranty makeWarranty(long onum) {
+    // TODO Make this smarter. Currently, warranties last for a minute.
+    return new VersionWarranty(System.currentTimeMillis() + 60000);
+  }
+
+  public Pair<SerializedObject, VersionWarranty> read(long onum,
+      ReadMode readMode) {
+    SerializedObject obj = read(onum);
+    VersionWarranty warranty = getWarranty(onum, readMode);
+    return new Pair<SerializedObject, VersionWarranty>(obj, warranty);
+  }
 
   /**
    * Returns the version number on the object stored at a particular onum.
@@ -354,7 +422,7 @@ public abstract class ObjectDB {
     SerializedObject obj = read(onum);
     if (obj == null) throw new AccessException(name, onum);
 
-    return read(onum).getVersion();
+    return obj.getVersion();
   }
 
   /**

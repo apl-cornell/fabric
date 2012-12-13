@@ -36,8 +36,13 @@ public interface MessageHandler {
   public GetCertChainMessage.Response handle(Principal p,
       GetCertChainMessage msg) throws ProtocolError;
 
-  public PrepareTransactionMessage.Response handle(Principal p,
-      PrepareTransactionMessage msg) throws TransactionPrepareFailedException;
+  public PrepareTransactionWritesMessage.Response handle(Principal p,
+      PrepareTransactionWritesMessage msg)
+      throws TransactionPrepareFailedException;
+
+  public PrepareTransactionReadsMessage.Response handle(Principal p,
+      PrepareTransactionReadsMessage msg)
+      throws TransactionPrepareFailedException;
 
   public ReadMessage.Response handle(Principal p, ReadMessage msg)
       throws ProtocolError, AccessException;

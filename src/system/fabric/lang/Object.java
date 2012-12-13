@@ -16,6 +16,7 @@ import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
 import fabric.common.SerializedObject;
 import fabric.common.Timing;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.RuntimeFetchException;
@@ -103,11 +104,6 @@ public interface Object {
   void $forceRenumber(long onum);
 
   /**
-   * Creates a Statistics object to determine promises for this Object.
-   */
-  Statistics createStatistics();
-
-  /**
    * _Proxy objects behave like regular objects by delegating to _Impl objects,
    * pointed to by a soft reference. This class abstracts away the code for
    * maintaining that soft reference.
@@ -193,7 +189,7 @@ public interface Object {
           }
 
           // Fetch from the worker.
-          Pair<Store, SerializedObject> serialized =
+          Pair<Store, Pair<SerializedObject, VersionWarranty>> serialized =
               worker.readObject(tm.getCurrentTid(), ref.store, ref.onum);
           result = serialized.first.cache(serialized.second);
         } else if (this instanceof SecretKeyObject
@@ -374,11 +370,6 @@ public interface Object {
       fetch().$forceRenumber(onum);
     }
 
-    @Override
-    public Statistics createStatistics() {
-      return fetch().createStatistics();
-    }
-
     /**
      * A dummy method. This is a hack for working around reachability problems in
      * generated code.
@@ -499,6 +490,10 @@ public interface Object {
       if (TRACE_OBJECTS)
         this.$stackTrace = Thread.currentThread().getStackTrace();
       else this.$stackTrace = null;
+    }
+
+    public final VersionWarranty $versionWarranty() {
+      return new VersionWarranty($readMapEntry.warranty());
     }
 
     /**
@@ -669,11 +664,6 @@ public interface Object {
     @Override
     public final _Impl fetch() {
       return this;
-    }
-
-    @Override
-    public Statistics createStatistics() {
-      return DefaultStatistics.instance;
     }
 
     /**

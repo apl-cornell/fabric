@@ -2,15 +2,15 @@ package fabric.worker.transaction;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 
-import fabric.common.Options;
 import fabric.common.SysUtil;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
@@ -160,6 +160,18 @@ public final class Log {
     }
 
     public Values value = Values.UNPREPARED;
+
+    /**
+     * The transaction's proposed commit time. In the PREPARING or PREPARED
+     * state, objects whose warranties expire before this time are (being)
+     * read-prepared.
+     */
+    public long commitTime = 0;
+
+    /**
+     * The set of stores that have been contacted by the commit protocol.
+     */
+    public final Set<Store> storesContacted = new HashSet<Store>();
   }
 
   public final AbstractSecurityCache securityCache;
@@ -246,15 +258,57 @@ public final class Log {
   }
 
   /**
-   * Returns a set of stores affected by this transaction. This is the set of
-   * stores to contact when preparing and committing a transaction.
+   * Returns a mapping of stores to (mappings of onums to version numbers),
+   * indicating those objects read (but not modified) by this transaction, whose
+   * version warranties expire between commitState.commitTime (exclusive) and
+   * the given commitTime (inclusive).
    */
-  Set<Store> storesToContact() {
-    Set<Store> result = new HashSet<Store>();
+  Map<Store, LongKeyMap<Integer>> storesRead(long commitTime) {
+    Map<Store, LongKeyMap<Integer>> result =
+        new HashMap<Store, LongKeyMap<Integer>>();
+    for (Entry<Store, LongKeyMap<ReadMapEntry>> entry : reads.nonNullEntrySet()) {
+      Store store = entry.getKey();
+      LongKeyMap<Integer> submap = new LongKeyHashMap<Integer>();
+      for (LongKeyMap.Entry<ReadMapEntry> subEntry : filterModifiedReads(store,
+          entry.getValue()).entrySet()) {
+        long onum = subEntry.getKey();
+        ReadMapEntry rme = subEntry.getValue();
+        if (commitState.commitTime < rme.warranty && rme.warranty <= commitTime) {
+          submap.put(onum, rme.versionNumber);
+        }
+      }
 
-    if (Options.DEBUG_COMMIT_READS) {
-      result.addAll(reads.storeSet());
+      if (!submap.isEmpty()) result.put(store, submap);
     }
+
+    return result;
+  }
+
+  private <V> LongKeyMap<V> filterModifiedReads(Store store, LongKeyMap<V> map) {
+    map = new LongKeyHashMap<V>(map);
+
+    if (store.isLocalStore()) {
+      @SuppressWarnings("unchecked")
+      Iterable<_Impl> chain =
+          SysUtil.chain(localStoreWrites, localStoreCreates);
+      for (_Impl write : chain)
+        map.remove(write.$getOnum());
+    } else {
+      @SuppressWarnings("unchecked")
+      Iterable<_Impl> chain = SysUtil.chain(writes, creates);
+      for (_Impl write : chain)
+        if (write.$getStore() == store) map.remove(write.$getOnum());
+    }
+
+    return map;
+  }
+
+  /**
+   * Returns a set of stores on which objects were modified or created by this
+   * transaction.
+   */
+  Set<Store> storesWritten() {
+    Set<Store> result = new HashSet<Store>();
 
     for (_Impl obj : writes) {
       if (obj.$isOwned) result.add(obj.$getStore());
@@ -291,7 +345,7 @@ public final class Log {
    * @param includeModified
    *          whether to include reads on modified objects.
    */
-  LongKeyMap<Integer> getReadsForStore(Store store, boolean includeModified) {
+  LongKeyMap<Integer> getReadsForStore(Store store) {
     LongKeyMap<Integer> result = new LongKeyHashMap<Integer>();
     LongKeyMap<ReadMapEntry> submap = reads.get(store);
     if (submap == null) return result;
@@ -306,22 +360,6 @@ public final class Log {
           result.put(entry.obj.onum, entry.versionNumber);
         }
       }
-    }
-
-    if (store.isLocalStore()) {
-      Iterable<_Impl> writesToExclude =
-          includeModified ? Collections.<_Impl> emptyList() : localStoreWrites;
-      @SuppressWarnings("unchecked")
-      Iterable<_Impl> chain = SysUtil.chain(writesToExclude, localStoreCreates);
-      for (_Impl write : chain)
-        result.remove(write.$getOnum());
-    } else {
-      Iterable<_Impl> writesToExclude =
-          includeModified ? Collections.<_Impl> emptyList() : writes;
-      @SuppressWarnings("unchecked")
-      Iterable<_Impl> chain = SysUtil.chain(writesToExclude, creates);
-      for (_Impl write : chain)
-        if (write.$getStore() == store) result.remove(write.$getOnum());
     }
 
     return result;
@@ -724,31 +762,6 @@ public final class Log {
 
   public Log getChild() {
     return child;
-  }
-
-  void removePromisedReads(long commitTime) {
-    // Generics. Ugh.
-
-    Iterator<LongKeyMap<ReadMapEntry>> outer = reads.iterator();
-    while (outer.hasNext()) {
-      Collection<ReadMapEntry> values = outer.next().values();
-
-      Iterator<ReadMapEntry> inner = values.iterator();
-      while (inner.hasNext()) {
-        ReadMapEntry entry = inner.next();
-
-        if (entry.promise > commitTime) {
-          entry.releaseLock(this);
-          inner.remove();
-        }
-      }
-
-      if (values.isEmpty()) outer.remove();
-    }
-
-    // sanity check
-    if (!readsReadByParent.isEmpty())
-      throw new InternalError("something was read by a non-existent parent");
   }
 
   /**

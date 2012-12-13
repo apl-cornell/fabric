@@ -10,12 +10,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.Random;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
@@ -25,11 +25,11 @@ import fabric.common.util.LongKeyMap.Entry;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
-import fabric.lang.Statistics;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
+import fabric.store.db.ObjectDB.ReadMode;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -40,8 +40,6 @@ public class TransactionManager {
 
   private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
   private static final int MIN_GROUP_SIZE = 75;
-
-  private static final Random rand = new Random();
 
   /**
    * The object database of the store for which we're managing transactions.
@@ -54,20 +52,14 @@ public class TransactionManager {
    */
   private final SubscriptionManager sm;
 
-  // protected final ReadHistory readHistory;
-
   /**
    * The key to use when signing objects.
    */
   private final PrivateKey signingKey;
 
-  private final LongKeyMap<Statistics> objectStats;
-
   public TransactionManager(ObjectDB database, PrivateKey signingKey) {
     this.database = database;
     this.signingKey = signingKey;
-    this.objectStats = new LongKeyHashMap<Statistics>();
-    // this.readHistory = new ReadHistory();
 
     this.sm = new SubscriptionManager(database.getName(), this);
   }
@@ -103,110 +95,77 @@ public class TransactionManager {
   }
 
   /**
-   * <p>
-   * Execute the prepare phase of two phase commit. Validates the transaction to
-   * make sure that no conflicts would occur if this transaction were committed.
-   * Once prepare returns successfully, the corresponding transaction can only
-   * fail if the coordinator aborts it.
-   * </p>
-   * <p>
-   * The prepare method must check a large number of conditions:
-   * <ul>
-   * <li>Neither creates, updates, nor reads can have pending commits, i.e. none
-   * of them can contain objects for which other transactions have been prepared
-   * but not committed or aborted.</li>
-   * <li>The worker has appropriate permissions to read/write/create</li>
-   * <li>Created objects don't already exist</li>
-   * <li>Updated objects cannot have been read since the proposed commit time.</li>
-   * <li>Updated objects do not have valid outstanding promises</li>
-   * <li>Modified and read objects do exist</li>
-   * <li>Read objects are still valid (version numbers match)</li>
-   * <li>TODO: duplicate objects within sets / between sets?</li>
-   * </ul>
-   * </p>
+   * Executes the PREPARE_WRITES phase of the three-phase commit.
    * 
-   * @param worker
-   *          The worker requesting the prepare
-   * @return whether a subtransaction was created for making Statistics objects.
+   * @return a minimum commit time, specifying a time after which the warranties
+   *     on all modified objects will expire.
    * @throws TransactionPrepareFailedException
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public boolean prepare(Principal worker, PrepareRequest req)
+  public long prepareWrites(Principal worker, PrepareWritesRequest req)
       throws TransactionPrepareFailedException {
     final long tid = req.tid;
-    boolean result = false;
+    VersionWarranty longestWarranty = null;
 
-    // First, check read and write permissions. We do this before we attempt to
-    // do the actual prepare because we want to run the permissions check in a
+    // First, check write permissions. We do this before we attempt to do the
+    // actual prepare because we want to run the permissions check in a
     // transaction outside of the worker's transaction.
     Store store = Worker.getWorker().getStore(database.getName());
     if (worker == null || worker.$getStore() != store
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
       try {
-        checkPerms(worker, req.reads.keySet(), req.writes);
+        checkPerms(worker, LongSet.EMPTY, req.writes);
       } catch (AccessException e) {
         throw new TransactionPrepareFailedException(e.getMessage());
       }
     }
 
     synchronized (database) {
-      try {
-        database.beginTransaction(tid, worker);
-      } catch (final AccessException e) {
-        throw new TransactionPrepareFailedException("Insufficient privileges");
-      }
+      database.beginPrepare(tid, worker);
     }
 
     try {
       // This will store the set of onums of objects that were out of date.
-      LongKeyMap<SerializedObject> versionConflicts =
-          new LongKeyHashMap<SerializedObject>();
+      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
+          new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
 
-      // Check writes and update version numbers
+      // Check writes and update version numbers.
       for (SerializedObject o : req.writes) {
-        // Make sure no one else has used the object and fetch the old copy
-        // from the store.
         long onum = o.getOnum();
-        SerializedObject storeCopy;
+        int storeVersion;
+        VersionWarranty warranty;
         synchronized (database) {
+          // Make sure no one else has used the object.
           if (database.isPrepared(onum, tid))
-            throw new TransactionPrepareFailedException("Object " + onum
-                + " has been locked by an uncommitted transaction");
+            throw new TransactionPrepareFailedException(versionConflicts,
+                "Object " + onum + " has been locked by an uncommitted "
+                    + "transaction");
 
-          storeCopy = database.read(onum);
+          // Fetch old copy from store and check version numbers.
+          SerializedObject storeCopy = database.read(onum);
+          storeVersion = storeCopy.getVersion();
+          int workerVersion = o.getVersion();
+          if (storeVersion != workerVersion) {
+            warranty = database.getWarranty(onum, ReadMode.REFRESH_WARRANTY);
+            versionConflicts
+                .put(onum, new Pair<SerializedObject, VersionWarranty>(
+                    storeCopy, warranty));
+            continue;
+          }
 
           // Register the update with the database.
           database.registerUpdate(tid, worker, o);
+
+          // Obtain existing warranty.
+          warranty = database.getWarranty(onum, ReadMode.CURRENT_WARRANTY);
         }
-
-        // check promises
-        if (storeCopy.getExpiry() > req.commitTime) {
-          throw new TransactionPrepareFailedException("Update to object" + onum
-              + " violates an outstanding promise");
-        }
-
-        // Check version numbers.
-        int storeVersion = storeCopy.getVersion();
-        int workerVersion = o.getVersion();
-        if (storeVersion != workerVersion) {
-          versionConflicts.put(onum, storeCopy);
-          continue;
-        }
-
-        // // Check against read history
-        // if (!readHistory.check(onum, req.commitTime)) {
-        // throw new TransactionPrepareFailedException("Object " + onum
-        // + " has been read since it's proposed commit time.");
-        // }
-
-        // Update promise statistics
-        Pair<Statistics, Boolean> pair = ensureStatistics(onum, req.tid);
-        pair.first.commitWrote();
-        result |= pair.second;
 
         // Update the version number on the prepared copy of the object.
         o.setVersion(storeVersion + 1);
+
+        if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
+          longestWarranty = warranty;
       }
 
       // Check creates.
@@ -233,8 +192,68 @@ public class TransactionManager {
         }
       }
 
+      if (!versionConflicts.isEmpty()) {
+        throw new TransactionPrepareFailedException(versionConflicts);
+      }
+
+      synchronized (database) {
+        database.finishPrepare(tid, worker);
+      }
+
+      STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
+
+      return longestWarranty == null ? 0 : longestWarranty.expiry();
+    } catch (TransactionPrepareFailedException e) {
+      synchronized (database) {
+        database.abortPrepare(tid, worker);
+        throw e;
+      }
+    } catch (RuntimeException e) {
+      synchronized (database) {
+        e.printStackTrace();
+        database.abortPrepare(tid, worker);
+        throw e;
+      }
+    }
+  }
+
+  /**
+   * Executes the PREPARE_READS phase of the three-phase commit.
+   * 
+   * @param worker
+   *          The worker requesting the prepare
+   * @throws TransactionPrepareFailedException
+   *           If the transaction would cause a conflict or if the worker is
+   *           insufficiently privileged to execute the transaction.
+   */
+  public void prepareReads(Principal worker, long tid, LongKeyMap<Integer> reads)
+      throws TransactionPrepareFailedException {
+
+    // First, check read permissions. We do this before we attempt to do the
+    // actual prepare because we want to run the permissions check in a
+    // transaction outside of the worker's transaction.
+    Store store = Worker.getWorker().getStore(database.getName());
+    if (worker == null || worker.$getStore() != store
+        || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
+      try {
+        checkPerms(worker, reads.keySet(),
+            Collections.<SerializedObject> emptyList());
+      } catch (AccessException e) {
+        throw new TransactionPrepareFailedException(e.getMessage());
+      }
+    }
+
+    synchronized (database) {
+      database.beginPrepare(tid, worker);
+    }
+
+    try {
+      // This will store the set of onums of objects that were out of date.
+      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
+          new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
+
       // Check reads
-      for (LongKeyMap.Entry<Integer> entry : req.reads.entrySet()) {
+      for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
         long onum = entry.getKey();
         int version = entry.getValue().intValue();
 
@@ -254,14 +273,12 @@ public class TransactionManager {
                 e.getMessage());
           }
           if (curVersion != version) {
-            versionConflicts.put(onum, database.read(onum));
+            versionConflicts.put(onum,
+                database.read(onum, ReadMode.REFRESH_WARRANTY));
             continue;
           }
 
           // inform the object statistics of the read
-          Pair<Statistics, Boolean> pair = ensureStatistics(onum, req.tid);
-          pair.first.commitRead();
-          result |= pair.second;
 
           // Register the read with the database.
           database.registerRead(tid, worker, onum);
@@ -272,14 +289,11 @@ public class TransactionManager {
         throw new TransactionPrepareFailedException(versionConflicts);
       }
 
-      // readHistory.record(req);
       synchronized (database) {
         database.finishPrepare(tid, worker);
       }
 
       STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
-
-      return result;
     } catch (TransactionPrepareFailedException e) {
       synchronized (database) {
         database.abortPrepare(tid, worker);
@@ -368,6 +382,8 @@ public class TransactionManager {
       if (container != null) {
         // if (subscriber != null)
         // sm.subscribe(onum, subscriber, dissemSubscribe);
+
+        container.refreshWarranties(this);
         return container;
       }
 
@@ -375,6 +391,7 @@ public class TransactionManager {
       GroupContainer group = makeGroup(onum);
       if (group == null) throw new AccessException(database.getName(), onum);
 
+      group.refreshWarranties(this);
       return group;
     }
   }
@@ -547,95 +564,20 @@ public class TransactionManager {
    * here.
    */
   SerializedObject read(long onum) {
-    SerializedObject obj;
     synchronized (database) {
-      obj = database.read(onum);
+      return database.read(onum);
     }
-
-    if (obj == null) return null;
-
-    // create promise if necessary.
-    long now = System.currentTimeMillis();
-    if (obj.getExpiry() < now) {
-      Statistics history = getStatistics(onum);
-      if (history != null) {
-        int promise = history.generatePromise();
-        if (promise > 0) {
-          Principal worker = Worker.getWorker().getPrincipal();
-          synchronized (database) {
-            // create a promise
-
-            if (database.isWritten(onum))
-            // object has been written - no promise for you!
-              return obj;
-
-            // check to see if someone else has created a promise
-            SerializedObject newObj = database.read(onum);
-            long time = newObj.getExpiry();
-
-            if (time < now + promise) {
-              try {
-                // update the promise
-                newObj.setExpiry(now + promise);
-                long tid = rand.nextLong();
-                database.beginTransaction(tid, worker);
-                database.registerUpdate(tid, worker, newObj);
-                database.finishPrepare(tid, worker);
-                database.commit(tid, worker, sm);
-              } catch (AccessException exc) {
-                // TODO: this should probably use the store principal instead of
-                // the worker principal, and AccessExceptions should be
-                // impossible
-                return obj;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    return obj;
   }
 
-  /**
-   * Return the statistics object associated with onum, or null if there isn't
-   * one
-   */
-  private Statistics getStatistics(long onum) {
-    synchronized (objectStats) {
-      return objectStats.get(onum);
+  public VersionWarranty getWarranty(long onum, ReadMode readMode) {
+    synchronized (database) {
+      return database.getWarranty(onum, readMode);
     }
   }
 
   /**
-   * Return the statistics object associated with onum, creating one if it
-   * doesn't exist already. Also returns a boolean indicating whether the
-   * Statistics object is freshly created.
+   * Refreshes the warranty for the object
    */
-  private Pair<Statistics, Boolean> ensureStatistics(long onum, long tnum) {
-    // Disabled statistics generation for now. -MJL
-    return new Pair<Statistics, Boolean>(
-        fabric.lang.DefaultStatistics.instance, false);
-
-    // synchronized (objectStats) {
-    // Statistics stats = getStatistics(onum);
-    // boolean fresh = stats == null;
-    // if (fresh) {
-    // // set up to run as a sub-transaction of the current transaction.
-    // TransactionID tid = new TransactionID(tnum);
-    // Store local = Worker.getWorker().getStore(database.getName());
-    // final fabric.lang.Object._Proxy object =
-    // new fabric.lang.Object._Proxy(local, onum);
-    // stats = Worker.runInTransaction(tid, new Worker.Code<Statistics>() {
-    // public Statistics run() {
-    // return object.createStatistics();
-    // }
-    // });
-    // objectStats.put(onum, stats);
-    // }
-    // return new Pair<Statistics, Boolean>(stats, fresh);
-    // }
-  }
 
   /**
    * @throws AccessException
@@ -661,8 +603,8 @@ public class TransactionManager {
    * Checks the given set of objects for staleness and returns a list of updates
    * for any stale objects found.
    */
-  List<SerializedObject> checkForStaleObjects(Principal worker,
-      LongKeyMap<Integer> versions) throws AccessException {
+  List<Pair<SerializedObject, VersionWarranty>> checkForStaleObjects(
+      Principal worker, LongKeyMap<Integer> versions) throws AccessException {
     // First, check read and write permissions.
     Store store = Worker.getWorker().getStore(database.getName());
     if (worker == null || worker.$getStore() != store
@@ -671,7 +613,8 @@ public class TransactionManager {
           Collections.<SerializedObject> emptyList());
     }
 
-    List<SerializedObject> result = new ArrayList<SerializedObject>();
+    List<Pair<SerializedObject, VersionWarranty>> result =
+        new ArrayList<Pair<SerializedObject, VersionWarranty>>();
     for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
       long onum = entry.getKey();
       int version = entry.getValue();
@@ -679,7 +622,7 @@ public class TransactionManager {
       synchronized (database) {
         int curVersion = database.getVersion(onum);
         if (curVersion != version) {
-          result.add(database.read(onum));
+          result.add(database.read(onum, ReadMode.REFRESH_WARRANTY));
         }
       }
     }

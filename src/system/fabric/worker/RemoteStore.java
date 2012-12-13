@@ -17,6 +17,7 @@ import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.FabricRuntimeException;
@@ -25,6 +26,7 @@ import fabric.common.exceptions.NotImplementedException;
 import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
@@ -36,7 +38,8 @@ import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
 import fabric.messages.MakePrincipalMessage;
 import fabric.messages.Message.NoException;
-import fabric.messages.PrepareTransactionMessage;
+import fabric.messages.PrepareTransactionReadsMessage;
+import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
 import fabric.net.RemoteNode;
@@ -108,19 +111,22 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     return fresh_ids.poll();
   }
 
-  /**
-   * Sends a PREPARE message to the store.
-   */
   @Override
-  public boolean prepareTransaction(long tid, long commitTime,
-      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<Object._Impl> writes)
+  public long prepareTransactionWrites(long tid,
+      Collection<Object._Impl> toCreate, Collection<Object._Impl> writes)
       throws TransactionPrepareFailedException, UnreachableNodeException {
-    PrepareTransactionMessage.Response response =
-        send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
-            commitTime, toCreate, reads, writes));
+    PrepareTransactionWritesMessage.Response respone =
+        send(Worker.getWorker().authToStore,
+            new PrepareTransactionWritesMessage(tid, toCreate, writes));
 
-    return response.subTransactionCreated;
+    return respone.minCommitTime;
+  }
+
+  @Override
+  public void prepareTransactionReads(long tid, LongKeyMap<Integer> reads)
+      throws TransactionPrepareFailedException, UnreachableNodeException {
+    send(Worker.getWorker().authToStore, new PrepareTransactionReadsMessage(
+        tid, reads));
   }
 
   @Override
@@ -296,10 +302,11 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
 
   @Override
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
-    List<SerializedObject> staleObjects = getStaleObjects(reads);
+    List<Pair<SerializedObject, VersionWarranty>> staleObjects =
+        getStaleObjects(reads);
 
-    for (SerializedObject obj : staleObjects)
-      updateCache(obj);
+    for (Pair<SerializedObject, VersionWarranty> pair : staleObjects)
+      updateCache(pair);
 
     return !staleObjects.isEmpty();
   }
@@ -307,7 +314,8 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   /**
    * Helper for checkForStaleObjects.
    */
-  protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
+  protected List<Pair<SerializedObject, VersionWarranty>> getStaleObjects(
+      LongKeyMap<Integer> reads) {
     try {
       return send(Worker.getWorker().authToStore, new StalenessCheckMessage(
           reads)).staleObjects;
@@ -353,7 +361,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * 
    * @return true iff an object with the given onum was evicted from cache.
    */
-  public boolean updateCache(SerializedObject update) {
+  public boolean updateCache(Pair<SerializedObject, VersionWarranty> update) {
     return cache.update(this, update);
   }
 
@@ -367,7 +375,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public ObjectCache.Entry cache(SerializedObject obj) {
+  public ObjectCache.Entry cache(Pair<SerializedObject, VersionWarranty> obj) {
     return cache.put(this, obj);
   }
 

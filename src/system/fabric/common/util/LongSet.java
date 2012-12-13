@@ -27,6 +27,8 @@
 
 package fabric.common.util;
 
+import java.util.NoSuchElementException;
+
 /**
  * A collection that contains no duplicates. In other words, for two set
  * elements e1 and e2, <code>e1.equals(e2)</code> returns false. There are
@@ -47,6 +49,91 @@ package fabric.common.util;
  * @since 1.2
  */
 public interface LongSet extends LongCollection {
+  public static final LongSet EMPTY = new LongSet() {
+
+    @Override
+    public boolean add(long o) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean addAll(LongCollection c) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clear() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean contains(long o) {
+      return false;
+    }
+
+    @Override
+    public boolean containsAll(LongCollection c) {
+      return c.isEmpty();
+    }
+
+    @Override
+    public boolean isEmpty() {
+      return true;
+    }
+
+    @Override
+    public LongIterator iterator() {
+      return new LongIterator() {
+
+        @Override
+        public boolean hasNext() {
+          return false;
+        }
+
+        @Override
+        public long next() {
+          throw new NoSuchElementException();
+        }
+
+        @Override
+        public void remove() {
+          throw new UnsupportedOperationException();
+
+        }
+      };
+    }
+
+    @Override
+    public boolean remove(long o) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean removeAll(LongCollection c) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean retainAll(LongCollection c) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int size() {
+      return 0;
+    }
+
+    @Override
+    public long[] toArray() {
+      return new long[0];
+    }
+
+    @Override
+    public long[] toArray(long[] a) {
+      return a;
+    }
+  };
+
   /**
    * Adds the specified element to the set if it is not already present
    * (optional operation). In particular, the comparison algorithm is
