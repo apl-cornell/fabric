@@ -27,7 +27,6 @@ import fabric.common.SerializedObject;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
-import fabric.common.Warranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
@@ -108,12 +107,6 @@ public final class TransactionManager {
    * to the node.
    */
   public static boolean TRACE_WRITE_LOCKS = false;
-
-  /**
-   * An estimation of the maximum time (in milliseconds) required to prepare
-   * reads.
-   */
-  private static final long PREPARE_LATENCY = 1000;
 
   /**
    * A map from OIDs to <code>ReadMapEntry</code>s. Each ReadMapEntry
@@ -405,16 +398,7 @@ public final class TransactionManager {
     // Send prepare-read messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
     // TransactionRestartingException.
-    while (true) {
-      sendPrepareReadMessages(commitTime);
-
-      long currentTime = System.currentTimeMillis();
-      if (currentTime > commitTime - Warranty.CLOCK_SKEW) {
-        commitTime = currentTime + PREPARE_LATENCY;
-      } else {
-        break;
-      }
-    }
+    sendPrepareReadMessages(commitTime);
 
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp();
