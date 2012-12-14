@@ -330,7 +330,7 @@ public final class TransactionManager {
         current);
     // Assume only one thread will be executing this.
 
-    // XXX This is a long and ugly method. Refactor?
+    // XXX This is a long and ugly method. Re-factor?
 
     // Wait for all sub-transactions to finish.
     current.waitForThreads();
@@ -426,7 +426,9 @@ public final class TransactionManager {
    * transaction is rolled back.
    * 
    * @return a proposed commit time, based on the outstanding warranties for
-   *           objects modified by the transaction.
+   *           objects modified by the transaction. The returned commit time is
+   *           guaranteed to be no earlier than the time at which this method is
+   *           called.
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
@@ -460,9 +462,10 @@ public final class TransactionManager {
 
     List<Thread> threads = new ArrayList<Thread>();
 
-    // A ref cell containing the max commit time.
+    // A ref cell containing the max commit time. Using a ref cell so we can
+    // synchronize on it.
     final long[] commitTime = new long[1];
-    commitTime[0] = 0;
+    commitTime[0] = System.currentTimeMillis();
 
     // Go through each worker and send prepare messages in parallel.
     for (final RemoteWorker worker : current.workersCalled) {
