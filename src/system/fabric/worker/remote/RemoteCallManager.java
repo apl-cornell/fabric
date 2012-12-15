@@ -226,7 +226,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     TransactionManager tm = TransactionManager.getInstance();
     tm.associateLog(log);
     try {
-      tm.sendCommitMessagesAndCleanUp();
+      tm.sendCommitMessagesAndCleanUp(commitTransactionMessage.commitTime);
     } catch (TransactionAtomicityViolationException e) {
       tm.associateLog(null);
       throw new TransactionCommitFailedException("Atomicity violation");

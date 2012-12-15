@@ -9,8 +9,10 @@ import java.io.ObjectOutputStream;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
+import fabric.common.Threading;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
@@ -104,17 +106,28 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  public void commit(long tid, Principal workerPrincipal, SubscriptionManager sm)
-      throws AccessException {
-    PendingTransaction tx = remove(workerPrincipal, tid);
+  public void commit(final long tid, long commitTime,
+      final Principal workerPrincipal, final SubscriptionManager sm) {
+    Threading.scheduleAt(commitTime, new Runnable() {
+      @Override
+      public void run() {
+        synchronized (MemoryDB.this) {
+          try {
+            PendingTransaction tx = remove(workerPrincipal, tid);
 
-    // merge in the objects
-    for (SerializedObject o : tx.modData) {
-      objectTable.put(o.getOnum(), o);
+            // merge in the objects
+            for (SerializedObject o : tx.modData) {
+              objectTable.put(o.getOnum(), o);
 
-      // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum());
-    }
+              // Remove any cached globs containing the old version of this object.
+              notifyCommittedUpdate(sm, o.getOnum());
+            }
+          } catch (AccessException e) {
+            throw new InternalError(e);
+          }
+        }
+      }
+    });
   }
 
   @Override

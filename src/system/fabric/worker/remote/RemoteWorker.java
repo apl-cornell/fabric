@@ -103,9 +103,9 @@ public final class RemoteWorker extends RemoteNode {
     send(new PrepareTransactionReadsMessage(tid, commitTime));
   }
 
-  public void commitTransaction(long tid) throws UnreachableNodeException,
-      TransactionCommitFailedException {
-    send(new CommitTransactionMessage(tid));
+  public void commitTransaction(long tid, long commitTime)
+      throws UnreachableNodeException, TransactionCommitFailedException {
+    send(new CommitTransactionMessage(tid, commitTime));
   }
 
   /**

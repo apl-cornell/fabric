@@ -329,15 +329,15 @@ public abstract class ObjectDB {
    * 
    * @param tid
    *          the transaction id
+   * @param commitTime
+   *          the time after which the commit should take effect. 
    * @param workerNode
    *          the remote worker that is performing the commit
    * @param workerPrincipal
    *          the principal requesting the commit
-   * @throws AccessException
-   *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid, Principal workerPrincipal,
-      SubscriptionManager sm) throws AccessException;
+  public abstract void commit(long tid, long commitTime,
+      Principal workerPrincipal, SubscriptionManager sm);
 
   /**
    * Cause the objects prepared in transaction [tid] to be discarded.

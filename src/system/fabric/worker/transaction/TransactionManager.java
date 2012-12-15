@@ -401,7 +401,7 @@ public final class TransactionManager {
     sendPrepareReadMessages(commitTime);
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp();
+    sendCommitMessagesAndCleanUp(commitTime);
   }
 
   /**
@@ -769,7 +769,7 @@ public final class TransactionManager {
   /**
    * Sends commit messages to the cohorts.
    */
-  public void sendCommitMessagesAndCleanUp()
+  public void sendCommitMessagesAndCleanUp(final long commitTime)
       throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
@@ -807,7 +807,7 @@ public final class TransactionManager {
         @Override
         public void run() {
           try {
-            worker.commitTransaction(current.tid.topTid);
+            worker.commitTransaction(current.tid.topTid, commitTime);
           } catch (UnreachableNodeException e) {
             unreachable.add(worker);
           } catch (TransactionCommitFailedException e) {
@@ -827,7 +827,7 @@ public final class TransactionManager {
         @Override
         public void run() {
           try {
-            store.commitTransaction(current.tid.topTid);
+            store.commitTransaction(current.tid.topTid, commitTime);
           } catch (TransactionCommitFailedException e) {
             failed.add((RemoteStore) store);
           } catch (UnreachableNodeException e) {
@@ -873,7 +873,7 @@ public final class TransactionManager {
     // Update data structures to reflect successful commit.
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST,
         "{0} committed at stores...updating data structures", current);
-    current.commitTopLevel();
+    current.commitTopLevel(commitTime);
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committed", current);
 
     synchronized (current.commitState) {

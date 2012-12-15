@@ -91,12 +91,14 @@ public interface Store extends Serializable {
    * Notifies the Store that the transaction should be committed.
    * 
    * @param transactionID
-   *          the ID of the transaction to commit
+   *          the ID of the transaction to commit.
+   * @param commitTime
+   *          the time after which the commit should take effect.
    * @throws UnreachableNodeException
    * @throws TransactionCommitFailedException
    */
-  void commitTransaction(long transactionID) throws UnreachableNodeException,
-      TransactionCommitFailedException;
+  void commitTransaction(long transactionID, long commitTime)
+      throws UnreachableNodeException, TransactionCommitFailedException;
 
   /**
    * Determines whether the given set of objects are stale.

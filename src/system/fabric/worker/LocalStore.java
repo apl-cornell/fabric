@@ -69,7 +69,7 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public void commitTransaction(long transactionID) {
+  public void commitTransaction(long transactionID, long commitTime) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction committing");
   }
 

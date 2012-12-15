@@ -15,11 +15,13 @@ public class CommitTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   public final long transactionID;
+  public final long commitTime;
 
-  public CommitTransactionMessage(long transactionID) {
+  public CommitTransactionMessage(long transactionID, long commitTime) {
     super(MessageType.COMMIT_TRANSACTION,
         TransactionCommitFailedException.class);
     this.transactionID = transactionID;
+    this.commitTime = commitTime;
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -46,11 +48,12 @@ public class CommitTransactionMessage
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
     out.writeLong(transactionID);
+    out.writeLong(commitTime);
   }
 
   /* readMessage */
   protected CommitTransactionMessage(DataInput in) throws IOException {
-    this(in.readLong());
+    this(in.readLong(), in.readLong());
   }
 
   @Override

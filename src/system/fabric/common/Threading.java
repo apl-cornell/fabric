@@ -5,6 +5,9 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -21,33 +24,50 @@ import fabric.common.exceptions.InternalError;
 public class Threading {
   private static ExecutorService pool = newCachedThreadPool();
 
+  private static ScheduledExecutorService scheduledThreadPool =
+      newScheduledThreadPool();
+
   /**
    * create an ExecutorService that creates threads on demand and caches them
    * for one minute.
    */
   private static ExecutorService newCachedThreadPool() {
     return new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-        new SynchronousQueue<Runnable>(), new FabricThreadFactory()) {
+        new SynchronousQueue<Runnable>(), FabricThreadFactory.INSTANCE) {
       @Override
       protected void afterExecute(Runnable r, Throwable t) {
         super.afterExecute(r, t);
-        if (t == null && r instanceof Future<?>) {
-          try {
-            ((Future<?>) r).get();
-          } catch (CancellationException ce) {
-            t = ce;
-          } catch (ExecutionException ee) {
-            t = ee.getCause();
-          } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt(); // ignore/reset
-          }
-        }
-
-        if (t != null)
-          Logging.MISC_LOGGER.log(Level.SEVERE, "Thread exited with exception",
-              t);
+        Threading.afterExecute(r, t);
       }
     };
+  }
+
+  private static ScheduledExecutorService newScheduledThreadPool() {
+    return new ScheduledThreadPoolExecutor(20, FabricThreadFactory.INSTANCE) {
+      @Override
+      protected void afterExecute(Runnable r, Throwable t) {
+        super.afterExecute(r, t);
+        Threading.afterExecute(r, t);
+      }
+
+    };
+  }
+
+  private static void afterExecute(Runnable r, Throwable t) {
+    if (t == null && r instanceof Future<?>) {
+      try {
+        ((Future<?>) r).get();
+      } catch (CancellationException ce) {
+        t = ce;
+      } catch (ExecutionException ee) {
+        t = ee.getCause();
+      } catch (InterruptedException ie) {
+        Thread.currentThread().interrupt(); // ignore/reset
+      }
+    }
+
+    if (t != null)
+      Logging.MISC_LOGGER.log(Level.SEVERE, "Thread exited with exception", t);
   }
 
   /**
@@ -64,10 +84,40 @@ public class Threading {
   }
 
   /**
+   * Get the scheduled-thread pool.
+   * 
+   * @throws InternalError
+   *           if the scheduled-thread pool is not initialized.
+   */
+  public static ScheduledExecutorService getScheduledThreadPool()
+      throws InternalError {
+    if (Threading.scheduledThreadPool == null)
+      throw new InternalError("Threading not initialized");
+
+    return Threading.scheduledThreadPool;
+  }
+
+  /**
+   * Schedules a one-off task to execute after a given time.
+   * 
+   * @param timeMillis
+   *          the time, in milliseconds since the epoch, after which the task
+   *          should be executed.
+   * @param task
+   *          the task to be execute.
+   */
+  public static ScheduledFuture<?> scheduleAt(long timeMillis, Runnable task) {
+    return getScheduledThreadPool().schedule(task,
+        System.currentTimeMillis() - timeMillis, TimeUnit.MILLISECONDS);
+  }
+
+  /**
    * A ThreadFactory that creates FabricThread.Impls.
    */
   private static class FabricThreadFactory implements ThreadFactory {
     private int nextID = 1;
+
+    static final FabricThreadFactory INSTANCE = new FabricThreadFactory();
 
     @Override
     public synchronized Thread newThread(Runnable r) {

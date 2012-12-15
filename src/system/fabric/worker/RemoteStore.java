@@ -294,10 +294,10 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public void commitTransaction(long transactionID)
+  public void commitTransaction(long transactionID, long commitTime)
       throws UnreachableNodeException, TransactionCommitFailedException {
     send(Worker.getWorker().authToStore, new CommitTransactionMessage(
-        transactionID));
+        transactionID, commitTime));
   }
 
   @Override

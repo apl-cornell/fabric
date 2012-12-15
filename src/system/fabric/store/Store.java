@@ -190,9 +190,9 @@ class Store extends MessageToStoreHandler {
   public CommitTransactionMessage.Response handle(Principal p,
       CommitTransactionMessage message) throws TransactionCommitFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Commit Message from {0} for tid={1}", nameOf(p),
-        message.transactionID);
-    tm.commitTransaction(p, message.transactionID);
+        "Handling Commit Message from {0} for tid={1}, commitTime={2}",
+        nameOf(p), message.transactionID, message.commitTime);
+    tm.commitTransaction(p, message.transactionID, message.commitTime);
     return new CommitTransactionMessage.Response();
   }
 

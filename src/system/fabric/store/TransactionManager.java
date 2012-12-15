@@ -65,7 +65,7 @@ public class TransactionManager {
   }
 
   /**
-   * Instruct the transaction manager that the given transaction is aborting
+   * Instructs the transaction manager that the given transaction is aborting
    */
   public void abortTransaction(Principal worker, long transactionID)
       throws AccessException {
@@ -76,16 +76,14 @@ public class TransactionManager {
   }
 
   /**
-   * Execute the commit phase of two phase commit.
+   * Executes the COMMIT phase of the three-phase commit.
    */
-  public void commitTransaction(Principal workerPrincipal, long transactionID)
-      throws TransactionCommitFailedException {
+  public void commitTransaction(Principal workerPrincipal, long transactionID,
+      long commitTime) throws TransactionCommitFailedException {
     synchronized (database) {
       try {
-        database.commit(transactionID, workerPrincipal, sm);
+        database.commit(transactionID, commitTime, workerPrincipal, sm);
         STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
-      } catch (final AccessException e) {
-        throw new TransactionCommitFailedException("Insufficient Authorization");
       } catch (final RuntimeException e) {
         throw new TransactionCommitFailedException(
             "something went wrong; store experienced a runtime exception during "

@@ -2,6 +2,7 @@ package fabric.worker.transaction;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -11,7 +12,9 @@ import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 
+import fabric.common.Logging;
 import fabric.common.SysUtil;
+import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
@@ -608,68 +611,84 @@ public final class Log {
   }
 
   /**
-   * Updates logs and data structures in <code>_Impl</code>s to commit this
-   * transaction. Assumes this is a top-level transaction. All locks held by
-   * this transaction are released.
+   * Spawns a thread that will wait until the given commit time before updating
+   * logs and data structures in <code>_Impl</code>s to commit this transaction.
+   * Assumes this is a top-level transaction. All locks held by this transaction
+   * will be released after the given commit time.
    */
-  void commitTopLevel() {
-    // Release read locks.
-    for (LongKeyMap<ReadMapEntry> submap : reads) {
-      for (ReadMapEntry entry : submap.values()) {
-        entry.releaseLock(this);
+  void commitTopLevel(long commitTime) {
+    Logging.WORKER_TRANSACTION_LOGGER.finer("Scheduled commit for tid " + tid
+        + " to run at " + new Date(commitTime) + " (in "
+        + (commitTime - System.currentTimeMillis()) + " ms)");
+    Threading.scheduleAt(commitTime, new Runnable() {
+      @Override
+      public void run() {
+        Logging.WORKER_TRANSACTION_LOGGER
+            .finer("Updating data structures for commit of tid " + tid);
+        // Release read locks.
+        for (LongKeyMap<ReadMapEntry> submap : reads) {
+          for (ReadMapEntry entry : submap.values()) {
+            entry.releaseLock(Log.this);
+          }
+        }
+
+        // sanity check
+        if (!readsReadByParent.isEmpty())
+          throw new InternalError("something was read by a non-existent parent");
+
+        // Release write locks and ownerships; update version numbers.
+        @SuppressWarnings("unchecked")
+        Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
+        for (_Impl obj : chain) {
+          if (!obj.$isOwned) {
+            // The cached object is out-of-date. Evict it.
+            obj.$ref.evict();
+            continue;
+          }
+
+          synchronized (obj) {
+            obj.$writer = null;
+            obj.$writeLockHolder = null;
+            obj.$writeLockStackTrace = null;
+            obj.$version++;
+            obj.$readMapEntry.versionNumber++;
+            obj.$isOwned = false;
+
+            // Discard one layer of history.
+            obj.$history = obj.$history.$history;
+
+            // Signal any waiting readers/writers.
+            if (obj.$numWaiting > 0) obj.notifyAll();
+          }
+        }
+
+        // Release write locks on created objects and set version numbers.
+        @SuppressWarnings("unchecked")
+        Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
+        for (_Impl obj : chain2) {
+          if (!obj.$isOwned) {
+            // The cached object is out-of-date. Evict it.
+            obj.$ref.evict();
+            continue;
+          }
+
+          synchronized (obj) {
+            obj.$writer = null;
+            obj.$writeLockHolder = null;
+            obj.$writeLockStackTrace = null;
+            obj.$version = 1;
+            obj.$readMapEntry.versionNumber = 1;
+            obj.$isOwned = false;
+
+            // Signal any waiting readers/writers.
+            if (obj.$numWaiting > 0) obj.notifyAll();
+          }
+        }
+
+        // Merge the security cache into the top-level label cache.
+        securityCache.mergeWithTopLevel();
       }
-    }
-
-    // sanity check
-    if (!readsReadByParent.isEmpty())
-      throw new InternalError("something was read by a non-existent parent");
-
-    // Release write locks and ownerships; update version numbers.
-    @SuppressWarnings("unchecked")
-    Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
-    for (_Impl obj : chain) {
-      if (!obj.$isOwned) {
-        // The cached object is out-of-date. Evict it.
-        obj.$ref.evict();
-        continue;
-      }
-
-      synchronized (obj) {
-        obj.$writer = null;
-        obj.$writeLockHolder = null;
-        obj.$writeLockStackTrace = null;
-        obj.$version++;
-        obj.$readMapEntry.versionNumber++;
-        obj.$isOwned = false;
-
-        // Discard one layer of history.
-        obj.$history = obj.$history.$history;
-
-        // Signal any waiting readers/writers.
-        if (obj.$numWaiting > 0) obj.notifyAll();
-      }
-    }
-
-    // Release write locks on created objects and set version numbers.
-    @SuppressWarnings("unchecked")
-    Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
-    for (_Impl obj : chain2) {
-      if (!obj.$isOwned) {
-        // The cached object is out-of-date. Evict it.
-        obj.$ref.evict();
-        continue;
-      }
-
-      obj.$writer = null;
-      obj.$writeLockHolder = null;
-      obj.$writeLockStackTrace = null;
-      obj.$version = 1;
-      obj.$readMapEntry.versionNumber = 1;
-      obj.$isOwned = false;
-    }
-
-    // Merge the security cache into the top-level label cache.
-    securityCache.mergeWithTopLevel();
+    });
   }
 
   /**

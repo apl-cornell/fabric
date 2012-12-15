@@ -12,6 +12,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.logging.Level;
 
 import com.sleepycat.je.Cursor;
@@ -30,6 +31,7 @@ import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
+import fabric.common.Threading;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
@@ -181,42 +183,54 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void commit(long tid, Principal workerPrincipal, SubscriptionManager sm) {
-    STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
+  public void commit(final long tid, long commitTime,
+      final Principal workerPrincipal, final SubscriptionManager sm) {
+    STORE_DB_LOGGER.finer("Scheduled Bdb commit for tid " + tid + " to run at "
+        + new Date(commitTime) + " (in "
+        + (commitTime - System.currentTimeMillis()) + " ms)");
+    Threading.scheduleAt(commitTime, new Runnable() {
+      @Override
+      public void run() {
+        synchronized (BdbDB.this) {
+          STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
 
-    try {
-      Transaction txn = env.beginTransaction(null, null);
-      PendingTransaction pending = remove(workerPrincipal, txn, tid, true);
+          try {
+            Transaction txn = env.beginTransaction(null, null);
+            PendingTransaction pending =
+                remove(workerPrincipal, txn, tid, true);
 
-      if (pending != null) {
-        for (SerializedObject o : pending.modData) {
-          long onum = o.getOnum();
-          STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
-          DatabaseEntry onumData = new DatabaseEntry(toBytes(onum));
-          DatabaseEntry objData = new DatabaseEntry(toBytes(o));
-          db.put(txn, onumData, objData);
+            if (pending != null) {
+              for (SerializedObject o : pending.modData) {
+                long onum = o.getOnum();
+                STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
+                DatabaseEntry onumData = new DatabaseEntry(toBytes(onum));
+                DatabaseEntry objData = new DatabaseEntry(toBytes(o));
+                db.put(txn, onumData, objData);
 
-          // Remove any cached globs containing the old version of this object.
-          notifyCommittedUpdate(sm, toLong(onumData.getData()));
+                // Remove any cached globs containing the old version of this object.
+                notifyCommittedUpdate(sm, toLong(onumData.getData()));
 
-          // Update the version-number cache.
-          cachedVersions.put(onum, o.getVersion());
+                // Update the version-number cache.
+                cachedVersions.put(onum, o.getVersion());
+              }
+
+              txn.commit();
+              STORE_DB_LOGGER.finer("Bdb commit success tid " + tid);
+            } else {
+              txn.abort();
+              STORE_DB_LOGGER.warning("Bdb commit not found tid " + tid);
+              throw new InternalError("Unknown transaction id " + tid);
+            }
+          } catch (DatabaseException e) {
+            // Problem. Clear out cached versions.
+            cachedVersions.clear();
+
+            STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in commit: ", e);
+            throw new InternalError(e);
+          }
         }
-
-        txn.commit();
-        STORE_DB_LOGGER.finer("Bdb commit success tid " + tid);
-      } else {
-        txn.abort();
-        STORE_DB_LOGGER.warning("Bdb commit not found tid " + tid);
-        throw new InternalError("Unknown transaction id " + tid);
       }
-    } catch (DatabaseException e) {
-      // Problem. Clear out cached versions.
-      cachedVersions.clear();
-
-      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in commit: ", e);
-      throw new InternalError(e);
-    }
+    });
   }
 
   @Override
