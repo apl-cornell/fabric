@@ -1,6 +1,8 @@
 package fabric.store;
 
 import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
+import static fabric.store.db.ObjectDB.UpdateType.CREATE;
+import static fabric.store.db.ObjectDB.UpdateType.WRITE;
 
 import java.security.PrivateKey;
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
+import fabric.store.db.ObjectDB.ExtendWarrantyStatus;
 import fabric.store.db.ObjectDB.ReadMode;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
@@ -70,7 +73,7 @@ public class TransactionManager {
   public void abortTransaction(Principal worker, long transactionID)
       throws AccessException {
     synchronized (database) {
-      database.rollback(transactionID, worker);
+      database.abort(transactionID, worker);
       STORE_TRANSACTION_LOGGER.fine("Aborted transaction " + transactionID);
     }
   }
@@ -120,7 +123,7 @@ public class TransactionManager {
     }
 
     synchronized (database) {
-      database.beginPrepare(tid, worker);
+      database.beginPrepareWrites(tid, worker);
     }
 
     try {
@@ -134,8 +137,8 @@ public class TransactionManager {
         int storeVersion;
         VersionWarranty warranty;
         synchronized (database) {
-          // Make sure no one else has used the object.
-          if (database.isPrepared(onum, tid))
+          // Make sure no one else has written to the object.
+          if (database.isWritten(onum))
             throw new TransactionPrepareFailedException(versionConflicts,
                 "Object " + onum + " has been locked by an uncommitted "
                     + "transaction");
@@ -153,7 +156,7 @@ public class TransactionManager {
           }
 
           // Register the update with the database.
-          database.registerUpdate(tid, worker, o);
+          database.registerUpdate(tid, worker, o, WRITE);
 
           // Obtain existing warranty.
           warranty = database.getWarranty(onum, ReadMode.CURRENT_WARRANTY);
@@ -173,7 +176,7 @@ public class TransactionManager {
 
           // Make sure no one else has claimed the object number in an
           // uncommitted transaction.
-          if (database.isPrepared(onum, tid))
+          if (database.isWritten(onum))
             throw new TransactionPrepareFailedException(versionConflicts,
                 "Object " + onum + " has been locked by an "
                     + "uncommitted transaction");
@@ -186,7 +189,7 @@ public class TransactionManager {
           // Set the initial version number and register the update with the
           // database.
           o.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
-          database.registerUpdate(tid, worker, o);
+          database.registerUpdate(tid, worker, o, CREATE);
         }
       }
 
@@ -195,7 +198,7 @@ public class TransactionManager {
       }
 
       synchronized (database) {
-        database.finishPrepare(tid, worker);
+        database.finishPrepareWrites(tid, worker);
       }
 
       STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
@@ -203,13 +206,13 @@ public class TransactionManager {
       return longestWarranty == null ? 0 : longestWarranty.expiry();
     } catch (TransactionPrepareFailedException e) {
       synchronized (database) {
-        database.abortPrepare(tid, worker);
+        database.abortPrepareWrites(tid, worker);
         throw e;
       }
     } catch (RuntimeException e) {
       synchronized (database) {
         e.printStackTrace();
-        database.abortPrepare(tid, worker);
+        database.abortPrepareWrites(tid, worker);
         throw e;
       }
     }
@@ -224,7 +227,8 @@ public class TransactionManager {
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public void prepareReads(Principal worker, long tid, LongKeyMap<Integer> reads)
+  public void prepareReads(Principal worker, long tid,
+      LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
 
     // First, check read permissions. We do this before we attempt to do the
@@ -241,10 +245,6 @@ public class TransactionManager {
       }
     }
 
-    synchronized (database) {
-      database.beginPrepare(tid, worker);
-    }
-
     try {
       // This will store the set of onums of objects that were out of date.
       LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
@@ -256,30 +256,27 @@ public class TransactionManager {
         int version = entry.getValue().intValue();
 
         synchronized (database) {
-          // Make sure no one else is using the object.
-          if (database.isWritten(onum))
-            throw new TransactionPrepareFailedException(versionConflicts,
-                "Object " + onum + " has been locked by an uncommitted "
-                    + "transaction");
-
-          // Check version numbers.
-          int curVersion;
+          // Attempt to extend the object's warranty.
           try {
-            curVersion = database.getVersion(onum);
+            ExtendWarrantyStatus status =
+                database.extendWarranty(worker, onum, version, commitTime);
+            switch (status) {
+            case OK:
+              break;
+
+            case BAD_VERSION:
+              versionConflicts.put(onum,
+                  database.read(onum, ReadMode.REFRESH_WARRANTY));
+              continue;
+
+            case DENIED:
+              throw new TransactionPrepareFailedException(versionConflicts,
+                  "Unable to extend warranty for object " + onum);
+            }
           } catch (AccessException e) {
             throw new TransactionPrepareFailedException(versionConflicts,
                 e.getMessage());
           }
-          if (curVersion != version) {
-            versionConflicts.put(onum,
-                database.read(onum, ReadMode.REFRESH_WARRANTY));
-            continue;
-          }
-
-          // inform the object statistics of the read
-
-          // Register the read with the database.
-          database.registerRead(tid, worker, onum);
         }
       }
 
@@ -287,22 +284,10 @@ public class TransactionManager {
         throw new TransactionPrepareFailedException(versionConflicts);
       }
 
-      synchronized (database) {
-        database.finishPrepare(tid, worker);
-      }
-
       STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
-    } catch (TransactionPrepareFailedException e) {
-      synchronized (database) {
-        database.abortPrepare(tid, worker);
-        throw e;
-      }
     } catch (RuntimeException e) {
-      synchronized (database) {
-        e.printStackTrace();
-        database.abortPrepare(tid, worker);
-        throw e;
-      }
+      e.printStackTrace();
+      throw e;
     }
   }
 

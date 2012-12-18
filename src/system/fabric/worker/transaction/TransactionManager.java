@@ -256,10 +256,6 @@ public final class TransactionManager {
         case ABORTING:
         case ABORTED:
           return;
-
-        default:
-          // All cases should have been specified above.
-          throw new InternalError();
         }
       }
     }
@@ -666,7 +662,6 @@ public final class TransactionManager {
 
     // Go through each store and send prepare messages in parallel.
     Map<Store, LongKeyMap<Integer>> storesRead = current.storesRead(commitTime);
-    current.commitState.storesContacted.addAll(storesRead.keySet());
     current.commitState.commitTime = commitTime;
     for (Iterator<Entry<Store, LongKeyMap<Integer>>> entryIt =
         storesRead.entrySet().iterator(); entryIt.hasNext();) {
@@ -683,13 +678,17 @@ public final class TransactionManager {
                   + "will expire", current.tid.topTid, store, reads.size());
             }
 
-            store.prepareTransactionReads(current.tid.topTid, reads);
+            store
+                .prepareTransactionReads(current.tid.topTid, reads, commitTime);
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) store, e);
           } catch (UnreachableNodeException e) {
             failures.put((RemoteNode) store,
                 new TransactionPrepareFailedException("Unreachable store"));
           }
+
+          // Prepare was successful. Update the objects' warranties.
+          current.updateVersionWarranties(store, reads.keySet(), commitTime);
         }
       };
 

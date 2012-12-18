@@ -16,6 +16,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Pair;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
 
@@ -94,19 +95,11 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  protected PendingTransaction reopenPreparedTransaction(long tid,
-      Principal worker) {
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    if (submap == null) return null;
-    return submap.get(worker);
+  public void finishPrepareWrites(long tid, Principal worker) {
   }
 
   @Override
-  public void finishPrepare(long tid, Principal worker) {
-  }
-
-  @Override
-  public void commit(final long tid, long commitTime,
+  public void scheduleCommit(final long tid, long commitTime,
       final Principal workerPrincipal, final SubscriptionManager sm) {
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
@@ -116,7 +109,8 @@ public class MemoryDB extends ObjectDB {
             PendingTransaction tx = remove(workerPrincipal, tid);
 
             // merge in the objects
-            for (SerializedObject o : tx.modData) {
+            for (Pair<SerializedObject, UpdateType> update : tx.modData) {
+              SerializedObject o = update.first;
               objectTable.put(o.getOnum(), o);
 
               // Remove any cached globs containing the old version of this object.

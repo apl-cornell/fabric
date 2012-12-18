@@ -38,6 +38,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Pair;
 import fabric.lang.FClass;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
@@ -144,7 +145,7 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void finishPrepare(long tid, Principal worker) {
+  public void finishPrepareWrites(long tid, Principal worker) {
     // Copy the transaction data into BDB.
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     PendingTransaction pending = submap.remove(worker);
@@ -166,24 +167,7 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  protected PendingTransaction reopenPreparedTransaction(long tid,
-      Principal worker) {
-    STORE_DB_LOGGER.finer("Bdb re-open begin tid " + tid);
-    try {
-      Transaction txn = env.beginTransaction(null, null);
-      PendingTransaction pending = remove(worker, txn, tid, false);
-
-      STORE_DB_LOGGER.finer("Bdb re-open success tid " + tid);
-      txn.commit();
-      return pending;
-    } catch (DatabaseException e) {
-      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in re-open: ", e);
-      throw new InternalError(e);
-    }
-  }
-
-  @Override
-  public void commit(final long tid, long commitTime,
+  public void scheduleCommit(final long tid, long commitTime,
       final Principal workerPrincipal, final SubscriptionManager sm) {
     STORE_DB_LOGGER.finer("Scheduled Bdb commit for tid " + tid + " to run at "
         + new Date(commitTime) + " (in "
@@ -200,7 +184,8 @@ public class BdbDB extends ObjectDB {
                 remove(workerPrincipal, txn, tid, true);
 
             if (pending != null) {
-              for (SerializedObject o : pending.modData) {
+              for (Pair<SerializedObject, UpdateType> update : pending.modData) {
+                SerializedObject o = update.first;
                 long onum = o.getOnum();
                 STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
                 DatabaseEntry onumData = new DatabaseEntry(toBytes(onum));

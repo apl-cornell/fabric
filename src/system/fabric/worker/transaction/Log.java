@@ -17,8 +17,10 @@ import fabric.common.SysUtil;
 import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
@@ -285,6 +287,16 @@ public final class Log {
     }
 
     return result;
+  }
+
+  void updateVersionWarranties(Store store, LongSet onums, long commitTime) {
+    if (store.isLocalStore()) return;
+
+    for (LongIterator it = onums.iterator(); it.hasNext();) {
+      long onum = it.next();
+      ReadMapEntry entry = reads.get(store, onum);
+      entry.warranty = commitTime;
+    }
   }
 
   private <V> LongKeyMap<V> filterModifiedReads(Store store, LongKeyMap<V> map) {

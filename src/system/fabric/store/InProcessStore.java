@@ -92,9 +92,9 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void prepareTransactionReads(long tid, LongKeyMap<Integer> reads)
-      throws TransactionPrepareFailedException {
-    tm.prepareReads(Worker.getWorker().getPrincipal(), tid, reads);
+  public void prepareTransactionReads(long tid, LongKeyMap<Integer> reads,
+      long commitTime) throws TransactionPrepareFailedException {
+    tm.prepareReads(Worker.getWorker().getPrincipal(), tid, reads, commitTime);
   }
 
   @Override

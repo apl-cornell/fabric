@@ -16,10 +16,12 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongKeyMap.Entry;
+import fabric.common.util.LongSet;
 import fabric.common.util.MutableInteger;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -79,6 +81,10 @@ public abstract class ObjectDB {
    */
   private final GroupTable globTable;
 
+  public static enum UpdateType {
+    CREATE, WRITE
+  }
+
   /**
    * The data stored for a partially prepared transaction.
    */
@@ -91,13 +97,13 @@ public abstract class ObjectDB {
     /**
      * Objects that have been modified or created.
      */
-    public final Collection<SerializedObject> modData;
+    public final Collection<Pair<SerializedObject, UpdateType>> modData;
 
     PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
       this.owner = owner;
       this.reads = new ArrayList<Long>();
-      this.modData = new ArrayList<SerializedObject>();
+      this.modData = new ArrayList<Pair<SerializedObject, UpdateType>>();
     }
 
     /**
@@ -119,9 +125,13 @@ public abstract class ObjectDB {
         reads.add(in.readLong());
 
       size = in.readInt();
-      this.modData = new ArrayList<SerializedObject>(size);
-      for (int i = 0; i < size; i++)
-        modData.add(new SerializedObject(in));
+      this.modData = new ArrayList<Pair<SerializedObject, UpdateType>>(size);
+      for (int i = 0; i < size; i++) {
+        SerializedObject obj = new SerializedObject(in);
+        UpdateType updateType =
+            in.readBoolean() ? UpdateType.CREATE : UpdateType.WRITE;
+        modData.add(new Pair<SerializedObject, UpdateType>(obj, updateType));
+      }
     }
 
     /**
@@ -131,7 +141,8 @@ public abstract class ObjectDB {
     public Iterator<Long> iterator() {
       return new Iterator<Long>() {
         private Iterator<Long> readIt = reads.iterator();
-        private Iterator<SerializedObject> modIt = modData.iterator();
+        private Iterator<Pair<SerializedObject, UpdateType>> modIt = modData
+            .iterator();
 
         @Override
         public boolean hasNext() {
@@ -141,7 +152,7 @@ public abstract class ObjectDB {
         @Override
         public Long next() {
           if (readIt.hasNext()) return readIt.next();
-          return modIt.next().getOnum();
+          return modIt.next().first.getOnum();
         }
 
         @Override
@@ -169,8 +180,10 @@ public abstract class ObjectDB {
         out.writeLong(onum);
 
       out.writeInt(modData.size());
-      for (SerializedObject obj : modData)
-        obj.write(out);
+      for (Pair<SerializedObject, UpdateType> obj : modData) {
+        obj.first.write(out);
+        out.writeBoolean(obj.second == UpdateType.CREATE);
+      }
     }
   }
 
@@ -200,49 +213,64 @@ public abstract class ObjectDB {
    */
   protected final LongKeyMap<Pair<Long, LongKeyMap<MutableInteger>>> rwLocks;
 
+  /**
+   * <p>
+   * Tracks the set of onums written by each transaction that has been prepared,
+   * but for which a commit message has yet to be received.
+   * </p>
+   * <p>
+   * Maps TIDs to principal oids to sets of onums.
+   * </p>
+   * <p>
+   * This should be recomputed from the set of prepared transactions when
+   * restoring from stable storage.
+   * </p>
+   */
+  protected final LongKeyMap<OidKeyHashMap<LongSet>> writtenOnumsByTid;
+
   protected ObjectDB(String name) {
     this.name = name;
     this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
     this.rwLocks = new LongKeyHashMap<Pair<Long, LongKeyMap<MutableInteger>>>();
+    this.writtenOnumsByTid = new LongKeyHashMap<OidKeyHashMap<LongSet>>();
     this.globIDByOnum = new LongKeyHashMap<Long>();
     this.globTable = new GroupTable();
     this.nextGlobID = 0;
   }
 
   /**
-   * Opens a transaction so it can be prepared.
+   * Opens a transaction so it can be write-prepared.
    * 
    * @param worker
    *          the worker under whose authority the transaction is running.
    */
-  public final void beginPrepare(long tid, Principal worker) {
+  public final void beginPrepareWrites(long tid, Principal worker) {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
       submap = new OidKeyHashMap<PendingTransaction>();
       pendingByTid.put(tid, submap);
     }
 
-    PendingTransaction pending = reopenPreparedTransaction(tid, worker);
-    if (pending == null) pending = new PendingTransaction(tid, worker);
-    submap.put(worker, pending);
+    submap.put(worker, new PendingTransaction(tid, worker));
+  }
+
+  public static enum ExtendWarrantyStatus {
+    OK, BAD_VERSION, DENIED
   }
 
   /**
-   * Re-opens a transaction so it can be further prepared.
+   * Attempts to extend the warranty on a particular version of an object.
    * 
-   * @param worker
-   *          the worker under whose authority the transaction is running.
-   * @return the pending transaction if it exists; otherwise, null.
+   * @throws AccessException if no object exists at the given onum.
    */
-  protected abstract PendingTransaction reopenPreparedTransaction(long tid,
-      Principal worker);
+  public final ExtendWarrantyStatus extendWarranty(Principal worker, long onum,
+      int version, long commitTime) throws AccessException {
+    if (version != getVersion(onum)) return ExtendWarrantyStatus.BAD_VERSION;
 
-  /**
-   * Registers that a transaction has read an object.
-   */
-  public final void registerRead(long tid, Principal worker, long onum) {
-    addReadLock(onum, tid);
-    pendingByTid.get(tid).get(worker).reads.add(onum);
+    VersionWarranty newWarranty =
+        extendWarranty(onum, commitTime, ExtendWarrantyMode.STRICT);
+    return newWarranty == null ? ExtendWarrantyStatus.DENIED
+        : ExtendWarrantyStatus.OK;
   }
 
   /**
@@ -254,32 +282,30 @@ public abstract class ObjectDB {
    *          the identifier for the transaction.
    * @param obj
    *          the updated object.
+   * @param create
+   *          whether the object was newly created by the transaction.
    */
   public final void registerUpdate(long tid, Principal worker,
-      SerializedObject obj) {
+      SerializedObject obj, UpdateType updateType) {
     addWriteLock(obj.getOnum(), tid);
-    pendingByTid.get(tid).get(worker).modData.add(obj);
-  }
+    pendingByTid.get(tid).get(worker).modData
+        .add(new Pair<SerializedObject, UpdateType>(obj, updateType));
 
-  /**
-   * Acquires a read lock on the given onum for the given transaction.
-   */
-  private void addReadLock(long onum, long tid) {
-    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-    if (locks == null) {
-      locks =
-          new Pair<Long, LongKeyMap<MutableInteger>>(null,
-              new LongKeyHashMap<MutableInteger>());
-      rwLocks.put(onum, locks);
+    if (updateType == UpdateType.WRITE) {
+      // Register the update.
+      OidKeyHashMap<LongSet> submap = writtenOnumsByTid.get(tid);
+      if (submap == null) {
+        submap = new OidKeyHashMap<LongSet>();
+        writtenOnumsByTid.put(tid, submap);
+      }
+
+      LongSet set = submap.get(worker);
+      if (set == null) {
+        set = new LongHashSet();
+        submap.put(worker, set);
+      }
+      set.add(obj.getOnum());
     }
-
-    MutableInteger pinCount = locks.second.get(tid);
-    if (pinCount == null) {
-      pinCount = new MutableInteger(0);
-      locks.second.put(tid, pinCount);
-    }
-
-    pinCount.value++;
   }
 
   /**
@@ -299,12 +325,18 @@ public abstract class ObjectDB {
 
   /**
    * Rolls back a partially prepared transaction. (i.e., one for which
-   * finishPrepare() has yet to be called.)
+   * finishPrepareWrites() has yet to be called.)
    */
-  public final void abortPrepare(long tid, Principal worker) {
+  public final void abortPrepareWrites(long tid, Principal worker) {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     unpin(submap.remove(worker));
     if (submap.isEmpty()) pendingByTid.remove(tid);
+
+    OidKeyHashMap<LongSet> writtenOnumsSubmap = writtenOnumsByTid.get(tid);
+    if (writtenOnumsSubmap != null) {
+      writtenOnumsSubmap.remove(worker);
+      if (writtenOnumsSubmap.isEmpty()) writtenOnumsByTid.remove(tid);
+    }
   }
 
   /**
@@ -312,7 +344,7 @@ public abstract class ObjectDB {
    * Notifies the database that the given transaction is finished preparing. The
    * transaction is not considered to be prepared until this is called. After
    * calling this method, there should not be any further calls to
-   * registerRead() or registerUpdate() for the given transaction. This method
+   * registerUpdate() for the given transaction. This method
    * MUST be called before calling commit().
    * </p>
    * <p>
@@ -321,11 +353,11 @@ public abstract class ObjectDB {
    * failure.
    * </p>
    */
-  public abstract void finishPrepare(long tid, Principal worker);
+  public abstract void finishPrepareWrites(long tid, Principal worker);
 
   /**
-   * Cause the objects prepared in transaction [tid] to be committed. The
-   * changes will hereafter be visible to read.
+   * Causes the objects prepared in transaction [tid] to be committed. The
+   * changes will be visible to read after the given commit time.
    * 
    * @param tid
    *          the transaction id
@@ -336,11 +368,41 @@ public abstract class ObjectDB {
    * @param workerPrincipal
    *          the principal requesting the commit
    */
-  public abstract void commit(long tid, long commitTime,
+  public final void commit(long tid, long commitTime,
+      Principal workerPrincipal, SubscriptionManager sm) {
+    // Extend the version warranties for the updated objects.
+    OidKeyHashMap<LongSet> submap = writtenOnumsByTid.get(tid);
+    if (submap != null) {
+      LongSet onums = submap.remove(workerPrincipal);
+      if (submap.isEmpty()) writtenOnumsByTid.remove(tid);
+      if (onums != null) {
+        for (LongIterator it = onums.iterator(); it.hasNext();) {
+          long onum = it.next();
+          extendWarranty(onum, commitTime, ExtendWarrantyMode.FORCE);
+        }
+      }
+    }
+
+    scheduleCommit(tid, commitTime, workerPrincipal, sm);
+  }
+
+  /**
+   * Schedules a transaction for commit.
+   * 
+   * @param tid
+   *          the transaction id
+   * @param commitTime
+   *          the time after which the commit should take effect. 
+   * @param workerNode
+   *          the remote worker that is performing the commit
+   * @param workerPrincipal
+   *          the principal requesting the commit
+   */
+  protected abstract void scheduleCommit(long tid, long commitTime,
       Principal workerPrincipal, SubscriptionManager sm);
 
   /**
-   * Cause the objects prepared in transaction [tid] to be discarded.
+   * Causes the objects prepared in transaction [tid] to be discarded.
    * 
    * @param tid
    *          the transaction id
@@ -349,7 +411,17 @@ public abstract class ObjectDB {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void rollback(long tid, Principal worker)
+  public final void abort(long tid, Principal worker) throws AccessException {
+    rollback(tid, worker);
+
+    OidKeyHashMap<LongSet> submap = writtenOnumsByTid.get(tid);
+    if (submap != null) {
+      submap.remove(worker);
+      if (submap.isEmpty()) writtenOnumsByTid.remove(tid);
+    }
+  }
+
+  protected abstract void rollback(long tid, Principal worker)
       throws AccessException;
 
   /**
@@ -377,32 +449,99 @@ public abstract class ObjectDB {
    * Returns the version warranty for the object stored at a particular onum.
    */
   public final VersionWarranty getWarranty(long onum, ReadMode readMode) {
-    VersionWarranty curWarranty = getWarranty(onum);
+    VersionWarranty result;
 
-    // Create/renew warranty if necessary.
-    VersionWarranty result = curWarranty;
-    if (result == null) result = new VersionWarranty(0);
-    if (readMode == ReadMode.REFRESH_WARRANTY && result.expired()
-        && !isWritten(onum)) {
-      result = makeWarranty(onum);
+    switch (readMode) {
+    case REFRESH_WARRANTY:
+      result = refreshWarranty(onum);
+      break;
+
+    case CURRENT_WARRANTY:
+      result = getWarranty(onum);
+      break;
+
+    default:
+      throw new InternalError("Shouldn't get here.");
     }
 
-    if (curWarranty != result) {
-      // New warranty was created. Store it in the database.
-      putWarranty(onum, result);
-    }
-
+    if (result == null) return new VersionWarranty(0);
     return result;
   }
 
+  private static enum ExtendWarrantyMode {
+    STRICT, NON_STRICT, FORCE
+  }
+
   /**
-   * Returns a new version warranty for the object stored at the given onum. The
-   * object must not be write-prepared by a transaction; otherwise, the
-   * resulting warranty may be violated if the transaction commits.
+   * Extends the version warranty of an object, if necessary and possible. The
+   * object's resulting warranty is returned. This will return null in STRICT
+   * mode if the object's warranty expires before the requested expiry time, and
+   * the warranty could not be extended to the requested time.
+   * <p>
+   * In NON_STRICT mode, a new warranty is created only if the existing warranty
+   * has expired and the object is not write-locked. The new warranty may expire
+   * before the requested expiry time. The object's resulting warranty is
+   * returned.
+   * </p>
+   * <p>
+   * In STRICT mode, a new warranty is created only if the existing warranty
+   * expires before the requested expiry time, and the object is not
+   * write-locked. A null value is returned if the object's warranty cannot be
+   * extended to the requested expiry time. Otherwise, the object's resulting
+   * warranty is returned.
+   * </p>
+   * <p>
+   * FORCE mode is like STRICT mode, except write locks are ignored.
+   * </p>
    */
-  private VersionWarranty makeWarranty(long onum) {
-    // TODO Make this smarter. Currently, warranties last for a minute.
-    return new VersionWarranty(System.currentTimeMillis() + 60000);
+  private VersionWarranty extendWarranty(long onum, long expiry,
+      ExtendWarrantyMode mode) {
+    // Get the object's current warranty and determine whether it needs to be
+    // extended.
+    VersionWarranty curWarranty = getWarranty(onum);
+    if (curWarranty != null) {
+      switch (mode) {
+      case STRICT:
+      case FORCE:
+        if (curWarranty.expiresAfter(expiry)) return curWarranty;
+        break;
+
+      case NON_STRICT:
+        if (!curWarranty.expired()) return curWarranty;
+        break;
+      }
+    }
+
+    // Need to extend warranty.
+    if (mode != ExtendWarrantyMode.FORCE && isWritten(onum)) {
+      // Unable to extend warranty.
+      switch (mode) {
+      case STRICT:
+        return null;
+
+      case NON_STRICT:
+        return curWarranty;
+
+      case FORCE:
+        throw new InternalError("Shouldn't reach here.");
+      }
+    }
+
+    // Extend the object's warranty.
+    VersionWarranty newWarranty = new VersionWarranty(expiry);
+    putWarranty(onum, newWarranty);
+    return newWarranty;
+  }
+
+  /**
+   * Attempts to create and return a new version warranty for the object stored
+   * at the given onum. If the object is write-locked, then a new warranty
+   * cannot be created, and the existing one is returned.
+   */
+  private VersionWarranty refreshWarranty(long onum) {
+    // TODO Make this smarter. Currently, warranties last for at most a minute.
+    return extendWarranty(onum, System.currentTimeMillis() + 60000,
+        ExtendWarrantyMode.NON_STRICT);
   }
 
   public Pair<SerializedObject, VersionWarranty> read(long onum,
@@ -571,26 +710,6 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Determines whether an onum has an outstanding uncommitted conflicting
-   * change or read. Outstanding uncommitted changes are always considered
-   * conflicting. Outstanding uncommitted reads are considered conflicting if
-   * they are by transactions whose tid is different from the one given.
-   * 
-   * @param onum
-   *          the object number in question
-   */
-  public final boolean isPrepared(long onum, long tid) {
-    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-    if (locks == null) return false;
-
-    if (locks.first != null) return true;
-
-    if (locks.second.isEmpty()) return false;
-    if (locks.second.size() > 1) return true;
-    return !locks.second.containsKey(tid);
-  }
-
-  /**
    * Determine whether an onum has outstanding uncommitted changes.
    * 
    * @param onum
@@ -621,8 +740,8 @@ public abstract class ObjectDB {
         rwLocks.remove(readOnum);
     }
 
-    for (SerializedObject update : tx.modData) {
-      long onum = update.getOnum();
+    for (Pair<SerializedObject, UpdateType> update : tx.modData) {
+      long onum = update.first.getOnum();
       Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
       if (locks.first != null && locks.first == tx.tid) locks.first = null;
 

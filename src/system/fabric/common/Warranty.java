@@ -40,4 +40,8 @@ public abstract class Warranty {
   public boolean expiresAfter(Warranty warranty) {
     return expiry > warranty.expiry;
   }
+
+  public boolean expiresAfter(long time) {
+    return expiry > time + CLOCK_SKEW;
+  }
 }

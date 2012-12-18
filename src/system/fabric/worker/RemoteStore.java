@@ -123,10 +123,11 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public void prepareTransactionReads(long tid, LongKeyMap<Integer> reads)
-      throws TransactionPrepareFailedException, UnreachableNodeException {
+  public void prepareTransactionReads(long tid, LongKeyMap<Integer> reads,
+      long commitTime) throws TransactionPrepareFailedException,
+      UnreachableNodeException {
     send(Worker.getWorker().authToStore, new PrepareTransactionReadsMessage(
-        tid, reads));
+        tid, reads, commitTime));
   }
 
   @Override

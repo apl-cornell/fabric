@@ -45,8 +45,9 @@ public interface Store extends Serializable {
    * @return whether a subtransaction was created on the store as a result of
    *         the prepare.
    */
-  void prepareTransactionReads(long tid, LongKeyMap<Integer> reads)
-      throws UnreachableNodeException, TransactionPrepareFailedException;
+  void prepareTransactionReads(long tid, LongKeyMap<Integer> reads,
+      long commitTime) throws UnreachableNodeException,
+      TransactionPrepareFailedException;
 
   /**
    * Returns the cache entry for the given onum. If the object is not resident,

@@ -21,7 +21,7 @@ public class PrepareTransactionReadsMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   public final long tid;
-  public final Long commitTime;
+  public final long commitTime;
   public final LongKeyMap<Integer> reads;
 
   /**
@@ -34,11 +34,12 @@ public class PrepareTransactionReadsMessage
   /**
    * Only used by the worker.
    */
-  public PrepareTransactionReadsMessage(long tid, LongKeyMap<Integer> reads) {
-    this(tid, null, reads);
+  public PrepareTransactionReadsMessage(long tid, LongKeyMap<Integer> reads,
+      long commitTime) {
+    this(tid, commitTime, reads);
   }
 
-  private PrepareTransactionReadsMessage(long tid, Long commitTime,
+  private PrepareTransactionReadsMessage(long tid, long commitTime,
       LongKeyMap<Integer> reads) {
     super(MessageType.PREPARE_TRANSACTION_READS,
         TransactionPrepareFailedException.class);
@@ -73,12 +74,9 @@ public class PrepareTransactionReadsMessage
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
-    // Serialize tid.
+    // Serialize tid and commit time.
     out.writeLong(tid);
-
-    // Serialize commitTime
-    out.writeBoolean(commitTime != null);
-    if (commitTime != null) out.writeLong(commitTime);
+    out.writeLong(commitTime);
 
     // Serialize reads.
     if (reads == null) {
@@ -97,11 +95,9 @@ public class PrepareTransactionReadsMessage
     super(MessageType.PREPARE_TRANSACTION_READS,
         TransactionPrepareFailedException.class);
 
-    // Read the TID.
+    // Read the TID and commit time.
     this.tid = in.readLong();
-    if (in.readBoolean())
-      this.commitTime = in.readLong();
-    else this.commitTime = null;
+    this.commitTime = in.readLong();
 
     // Read reads.
     int size = in.readInt();

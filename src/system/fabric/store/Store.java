@@ -223,7 +223,7 @@ class Store extends MessageToStoreHandler {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Prepare Message, worker={0}, tid={1}", nameOf(p), msg.tid);
 
-    prepareTransactionReads(p, msg.tid, msg.reads);
+    prepareTransactionReads(p, msg.tid, msg.reads, msg.commitTime);
     return new PrepareTransactionReadsMessage.Response();
   }
 
@@ -334,8 +334,9 @@ class Store extends MessageToStoreHandler {
   }
 
   private void prepareTransactionReads(Principal p, long tid,
-      LongKeyMap<Integer> reads) throws TransactionPrepareFailedException {
-    tm.prepareReads(p, tid, reads);
+      LongKeyMap<Integer> reads, long commitTime)
+      throws TransactionPrepareFailedException {
+    tm.prepareReads(p, tid, reads, commitTime);
   }
 
   private String nameOf(Principal p) {
