@@ -19,6 +19,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
+import fabric.store.TransactionManager;
 
 /**
  * <p>
@@ -96,6 +97,7 @@ public class MemoryDB extends ObjectDB {
 
   @Override
   public void finishPrepareWrites(long tid, Principal worker) {
+    // TODO Implement me!
   }
 
   @Override
@@ -161,7 +163,7 @@ public class MemoryDB extends ObjectDB {
 
   @Override
   public void close() throws IOException {
-    // XXX TODO Save prepared txs to stable storage, implement finishPrepare().
+    // XXX TODO Save prepared txs to stable storage, implement finishPrepareWrites().
 
     ObjectOutputStream oout =
         new ObjectOutputStream(Resources.writeFile("var", name));
@@ -208,6 +210,11 @@ public class MemoryDB extends ObjectDB {
   @Override
   protected void setInitialized() {
     this.isInitialized = true;
+  }
+
+  @Override
+  protected void recoverState(TransactionManager tm) {
+    // TODO Implement me!
   }
 
 }

@@ -28,6 +28,7 @@ import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.store.PartialObjectGroup;
 import fabric.store.SubscriptionManager;
+import fabric.store.TransactionManager;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -37,11 +38,11 @@ import fabric.worker.Worker;
  * for storing and retrieving objects, and also for checking permissions.
  * </p>
  * <p>
- * The ObjectDB interface is designed to support a two-phase commit protocol.
+ * The ObjectDB interface is designed to support a three-phase commit protocol.
  * Consequently to insert or modify an object, users must first call the
- * prepare() method, passing in the set of objects to update. These objects will
- * be stored, but will remain unavailable until the commit() method is called
- * with the returned transaction identifier.
+ * beginPrepareWrites() method, registerUpdate() for each inserted or modified
+ * object, followed by finishPrepareWrites(). These objects will be stored, but
+ * will remain unavailable until after the commit() method is called.
  * </p>
  * <p>
  * In general, implementations of ObjectDB are not thread-safe. Only
@@ -259,8 +260,8 @@ public abstract class ObjectDB {
 
   /**
    * Registers that a transaction has created or written to an object. This
-   * update will not become visible in the store until commit() is called for
-   * the transaction.
+   * update will not become visible in the store until after commit() is called
+   * for the transaction.
    * 
    * @param tid
    *          the identifier for the transaction.
@@ -277,19 +278,32 @@ public abstract class ObjectDB {
 
     if (updateType == UpdateType.WRITE) {
       // Register the update.
-      OidKeyHashMap<LongSet> submap = writtenOnumsByTid.get(tid);
-      if (submap == null) {
-        submap = new OidKeyHashMap<LongSet>();
-        writtenOnumsByTid.put(tid, submap);
-      }
-
-      LongSet set = submap.get(worker);
-      if (set == null) {
-        set = new LongHashSet();
-        submap.put(worker, set);
-      }
-      set.add(obj.getOnum());
+      addWrittenOnumByTid(tid, worker, obj.getOnum());
     }
+  }
+
+  protected void addWrittenOnumByTid(long tid, Principal worker, long onum) {
+    OidKeyHashMap<LongSet> submap = writtenOnumsByTid.get(tid);
+    if (submap == null) {
+      submap = new OidKeyHashMap<LongSet>();
+      writtenOnumsByTid.put(tid, submap);
+    }
+
+    LongSet set = submap.get(worker);
+    if (set == null) {
+      set = new LongHashSet();
+      submap.put(worker, set);
+    }
+    set.add(onum);
+  }
+
+  private LongSet removeWrittenOnumsByTid(long tid, Principal worker) {
+    OidKeyHashMap<LongSet> writtenOnumsSubmap = writtenOnumsByTid.get(tid);
+    if (writtenOnumsSubmap == null) return null;
+
+    LongSet result = writtenOnumsSubmap.remove(worker);
+    if (writtenOnumsSubmap.isEmpty()) writtenOnumsByTid.remove(tid);
+    return result;
   }
 
   /**
@@ -308,11 +322,7 @@ public abstract class ObjectDB {
     unpin(submap.remove(worker));
     if (submap.isEmpty()) pendingByTid.remove(tid);
 
-    OidKeyHashMap<LongSet> writtenOnumsSubmap = writtenOnumsByTid.get(tid);
-    if (writtenOnumsSubmap != null) {
-      writtenOnumsSubmap.remove(worker);
-      if (writtenOnumsSubmap.isEmpty()) writtenOnumsByTid.remove(tid);
-    }
+    removeWrittenOnumsByTid(tid, worker);
   }
 
   /**
@@ -347,15 +357,11 @@ public abstract class ObjectDB {
   public final void commit(long tid, long commitTime,
       Principal workerPrincipal, SubscriptionManager sm) {
     // Extend the version warranties for the updated objects.
-    OidKeyHashMap<LongSet> submap = writtenOnumsByTid.get(tid);
-    if (submap != null) {
-      LongSet onums = submap.remove(workerPrincipal);
-      if (submap.isEmpty()) writtenOnumsByTid.remove(tid);
-      if (onums != null) {
-        for (LongIterator it = onums.iterator(); it.hasNext();) {
-          long onum = it.next();
-          extendWarranty(onum, commitTime, ExtendWarrantyMode.FORCE);
-        }
+    LongSet onums = removeWrittenOnumsByTid(tid, workerPrincipal);
+    if (onums != null) {
+      for (LongIterator it = onums.iterator(); it.hasNext();) {
+        long onum = it.next();
+        extendWarranty(onum, commitTime, ExtendWarrantyMode.FORCE);
       }
     }
 
@@ -389,12 +395,7 @@ public abstract class ObjectDB {
    */
   public final void abort(long tid, Principal worker) throws AccessException {
     rollback(tid, worker);
-
-    OidKeyHashMap<LongSet> submap = writtenOnumsByTid.get(tid);
-    if (submap != null) {
-      submap.remove(worker);
-      if (submap.isEmpty()) writtenOnumsByTid.remove(tid);
-    }
+    removeWrittenOnumsByTid(tid, worker);
   }
 
   protected abstract void rollback(long tid, Principal worker)
@@ -698,8 +699,8 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Adjusts rwLocks to account for the fact that the given transaction is about
-   * to be committed or aborted.
+   * Adjusts writeLocks to account for the fact that the given transaction is
+   * about to be committed or aborted.
    */
   protected final void unpin(PendingTransaction tx) {
     for (Pair<SerializedObject, UpdateType> update : tx.modData) {
@@ -765,8 +766,11 @@ public abstract class ObjectDB {
    * creates, for example, the name-service map and the store's principal, if
    * they do not already exist in the database.
    */
-  public final void ensureInit() {
-    if (isInitialized()) return;
+  public final void ensureInit(TransactionManager tm) {
+    if (isInitialized()) {
+      recoverState(tm);
+      return;
+    }
 
     final Store store = Worker.getWorker().getStore(name);
 
@@ -795,5 +799,10 @@ public abstract class ObjectDB {
 
     setInitialized();
   }
+
+  /**
+   * Recovers the object database's in-memory state from stable storage.
+   */
+  protected abstract void recoverState(TransactionManager tm);
 
 }

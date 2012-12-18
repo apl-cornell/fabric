@@ -5,14 +5,20 @@ import static fabric.common.Logging.STORE_DB_LOGGER;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.logging.Level;
 
 import com.sleepycat.je.Cursor;
@@ -42,6 +48,9 @@ import fabric.common.util.Pair;
 import fabric.lang.FClass;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
+import fabric.store.TransactionManager;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * An ObjectDB backed by a Berkeley Database.
@@ -61,7 +70,16 @@ public class BdbDB extends ObjectDB {
    */
   private Database warranty;
 
+  /**
+   * Database containing data for prepared but uncommitted transactions.
+   */
   private Database prepared;
+
+  /**
+   * Database containing the commit times for confirmed transactions
+   * (uncommitted transactions for which COMMIT messages have been received).
+   */
+  private Database commitTimes;
 
   private final DatabaseEntry initializationStatus;
   private final DatabaseEntry onumCounter;
@@ -119,9 +137,8 @@ public class BdbDB extends ObjectDB {
       db = env.openDatabase(null, "store", dbconf);
       warranty = env.openDatabase(null, "warranties", dbconf);
       prepared = env.openDatabase(null, "prepared", dbconf);
+      commitTimes = env.openDatabase(null, "commitTimes", dbconf);
       meta = env.openDatabase(null, "meta", dbconf);
-
-      initRwCount();
 
       STORE_DB_LOGGER.info("Bdb databases opened");
     } catch (DatabaseException e) {
@@ -167,11 +184,39 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void scheduleCommit(final long tid, long commitTime,
-      final Principal workerPrincipal, final SubscriptionManager sm) {
-    STORE_DB_LOGGER.finer("Scheduled Bdb commit for tid " + tid + " to run at "
-        + new Date(commitTime) + " (in "
-        + (commitTime - System.currentTimeMillis()) + " ms)");
+  public void scheduleCommit(long tid, long commitTime,
+      Principal workerPrincipal, SubscriptionManager sm) {
+    scheduleCommit(tid, commitTime, workerPrincipal, sm, true);
+  }
+
+  /**
+   * @param logCommitTime
+   *          whether to log the commit time to stable storage for recovery
+   *          purposes.
+   */
+  private void scheduleCommit(final long tid, long commitTime,
+      final Principal workerPrincipal, final SubscriptionManager sm,
+      boolean logCommitTime) {
+    long commitDelay = commitTime - System.currentTimeMillis();
+    STORE_DB_LOGGER
+        .finer("Scheduling Bdb commit for tid " + tid + " to run at "
+            + new Date(commitTime) + " (in " + commitDelay + " ms)");
+
+    // Record the commit time in BDB.
+    final DatabaseEntry tidBdbKey =
+        new DatabaseEntry(toBytes(tid, workerPrincipal));
+    if (logCommitTime) {
+      try {
+        Transaction txn = env.beginTransaction(null, null);
+        DatabaseEntry data = new DatabaseEntry(toBytes(commitTime));
+        commitTimes.put(txn, tidBdbKey, data);
+        txn.commit();
+      } catch (DatabaseException e) {
+        STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in scheduleCommit: ", e);
+        throw new InternalError(e);
+      }
+    }
+
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
@@ -180,8 +225,12 @@ public class BdbDB extends ObjectDB {
 
           try {
             Transaction txn = env.beginTransaction(null, null);
-            PendingTransaction pending =
-                remove(workerPrincipal, txn, tid, true);
+
+            // Remove the commit time from BDB.
+            commitTimes.delete(txn, tidBdbKey);
+
+            // Obtain the transaction record.
+            PendingTransaction pending = remove(workerPrincipal, txn, tid);
 
             if (pending != null) {
               for (Pair<SerializedObject, UpdateType> update : pending.modData) {
@@ -224,7 +273,7 @@ public class BdbDB extends ObjectDB {
 
     try {
       Transaction txn = env.beginTransaction(null, null);
-      remove(worker, txn, tid, true);
+      remove(worker, txn, tid);
       txn.commit();
       STORE_DB_LOGGER.finer("Bdb rollback success tid " + tid);
     } catch (DatabaseException e) {
@@ -368,6 +417,7 @@ public class BdbDB extends ObjectDB {
       if (db != null) db.close();
       if (warranty != null) warranty.close();
       if (prepared != null) prepared.close();
+      if (commitTimes != null) commitTimes.close();
       if (meta != null) meta.close();
       if (env != null) env.close();
     } catch (DatabaseException e) {
@@ -412,8 +462,67 @@ public class BdbDB extends ObjectDB {
     }
   }
 
-  private void initRwCount() {
-    // TODO Recover rwCount info from prepared
+  @Override
+  protected void recoverState(TransactionManager tm) {
+    STORE_DB_LOGGER.fine("Bdb recovering state");
+
+    try {
+      // Scan through the database of prepares to recover writeLocks and
+      // writtenOnumsByTid.
+      Transaction txn = env.beginTransaction(null, null);
+      Cursor preparedCursor = prepared.openCursor(txn, null);
+      DatabaseEntry key = new DatabaseEntry();
+      DatabaseEntry data = new DatabaseEntry();
+      while (preparedCursor.getNext(key, data, null) != OperationStatus.NOTFOUND) {
+        PendingTransaction pending = toPendingTransaction(data.getData());
+        long tid = pending.tid;
+        Principal owner = pending.owner;
+
+        // Loop through the updates for the current transaction.
+        for (Pair<SerializedObject, UpdateType> update : pending.modData) {
+          long onum = update.first.getOnum();
+
+          // Recover the transaction's write lock for the current update.
+          writeLocks.put(onum, tid);
+
+          if (update.second == UpdateType.WRITE) {
+            addWrittenOnumByTid(tid, owner, onum);
+          }
+        }
+      }
+
+      // Scan through the commitTimes database and build a commit schedule.
+      SortedMap<Long, List<Pair<Long, Principal>>> commitSchedule =
+          new TreeMap<Long, List<Pair<Long, Principal>>>();
+      Cursor commitTimesCursor = commitTimes.openCursor(txn, null);
+      while (commitTimesCursor.getNext(key, data, null) != OperationStatus.NOTFOUND) {
+        Pair<Long, Principal> tid = toTid(key.getData());
+        long commitTime = toLong(data.getData());
+
+        List<Pair<Long, Principal>> toCommit = commitSchedule.get(commitTime);
+        if (toCommit == null) {
+          toCommit = new ArrayList<Pair<Long, Principal>>(2);
+          commitSchedule.put(commitTime, toCommit);
+        }
+
+        toCommit.add(tid);
+      }
+
+      txn.commit();
+
+      // Re-schedule commits.
+      SubscriptionManager sm = tm.subscriptionManager();
+      for (Entry<Long, List<Pair<Long, Principal>>> entry : commitSchedule
+          .entrySet()) {
+        long commitTime = entry.getKey();
+        for (Pair<Long, Principal> tid : entry.getValue()) {
+          scheduleCommit(tid.first, commitTime, tid.second, sm, false);
+        }
+      }
+    } catch (DatabaseException e) {
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in recoverState: ", e);
+      throw new InternalError(e);
+    }
   }
 
   /**
@@ -427,14 +536,12 @@ public class BdbDB extends ObjectDB {
    *          retrieval.
    * @param tid
    *          the transaction id.
-   * @param unpin
-   *          whether to release the transaction's read/write locks.
    * @return the PendingTransaction corresponding to tid
    * @throws DatabaseException
    *           if a database error occurs
    */
-  private PendingTransaction remove(Principal worker, Transaction txn,
-      long tid, boolean unpin) throws DatabaseException {
+  private PendingTransaction remove(Principal worker, Transaction txn, long tid)
+      throws DatabaseException {
     byte[] key = toBytes(tid, worker);
     DatabaseEntry bdbKey = new DatabaseEntry(key);
     DatabaseEntry data = new DatabaseEntry();
@@ -449,7 +556,7 @@ public class BdbDB extends ObjectDB {
     if (pending == null) return null;
     prepared.delete(txn, bdbKey);
 
-    if (unpin) unpin(pending);
+    unpin(pending);
     return pending;
   }
 
@@ -486,6 +593,22 @@ public class BdbDB extends ObjectDB {
       return bos.toByteArray();
     } catch (IOException e) {
       throw new InternalError(e);
+    }
+  }
+
+  private static Pair<Long, Principal> toTid(byte[] data) {
+    try {
+      ByteArrayInputStream bis = new ByteArrayInputStream(data);
+      DataInputStream dis = new DataInputStream(bis);
+      long tid = dis.readLong();
+
+      if (data.length < 10) return new Pair<Long, Principal>(tid, null);
+      Store store = Worker.getWorker().getStore(dis.readUTF());
+      long onum = dis.readLong();
+      Principal owner = new Principal._Proxy(store, onum);
+      return new Pair<Long, Principal>(tid, owner);
+    } catch (IOException e) {
+      throw new InternalError();
     }
   }
 
@@ -574,7 +697,6 @@ public class BdbDB extends ObjectDB {
       } catch (IOException e) {
         e.printStackTrace();
       } catch (ClassNotFoundException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
       }
       System.out.println(onum + "," + className + "," + version + ","

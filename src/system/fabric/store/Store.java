@@ -109,7 +109,7 @@ class Store extends MessageToStoreHandler {
 
   public void initialize() {
     // Ensure each store's object database has been properly initialized.
-    os.ensureInit();
+    os.ensureInit(tm);
   }
 
   @Override

@@ -67,6 +67,10 @@ public class TransactionManager {
     this.sm = new SubscriptionManager(database.getName(), this);
   }
 
+  public final SubscriptionManager subscriptionManager() {
+    return sm;
+  }
+
   /**
    * Instructs the transaction manager that the given transaction is aborting
    */
