@@ -146,7 +146,7 @@ public class MemoryDB extends ObjectDB {
 
   @Override
   public boolean exists(long onum) {
-    return rwLocks.get(onum) != null || objectTable.containsKey(onum);
+    return writeLocks.get(onum) != null || objectTable.containsKey(onum);
   }
 
   @Override

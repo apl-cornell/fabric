@@ -22,7 +22,6 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongKeyMap.Entry;
 import fabric.common.util.LongSet;
-import fabric.common.util.MutableInteger;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
@@ -92,7 +91,6 @@ public abstract class ObjectDB {
       Iterable<Long> {
     public final long tid;
     public final Principal owner;
-    public final Collection<Long> reads;
 
     /**
      * Objects that have been modified or created.
@@ -102,7 +100,6 @@ public abstract class ObjectDB {
     PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
       this.owner = owner;
-      this.reads = new ArrayList<Long>();
       this.modData = new ArrayList<Pair<SerializedObject, UpdateType>>();
     }
 
@@ -120,11 +117,6 @@ public abstract class ObjectDB {
       }
 
       int size = in.readInt();
-      this.reads = new ArrayList<Long>(size);
-      for (int i = 0; i < size; i++)
-        reads.add(in.readLong());
-
-      size = in.readInt();
       this.modData = new ArrayList<Pair<SerializedObject, UpdateType>>(size);
       for (int i = 0; i < size; i++) {
         SerializedObject obj = new SerializedObject(in);
@@ -140,18 +132,16 @@ public abstract class ObjectDB {
     @Override
     public Iterator<Long> iterator() {
       return new Iterator<Long>() {
-        private Iterator<Long> readIt = reads.iterator();
         private Iterator<Pair<SerializedObject, UpdateType>> modIt = modData
             .iterator();
 
         @Override
         public boolean hasNext() {
-          return readIt.hasNext() || modIt.hasNext();
+          return modIt.hasNext();
         }
 
         @Override
         public Long next() {
-          if (readIt.hasNext()) return readIt.next();
           return modIt.next().first.getOnum();
         }
 
@@ -175,10 +165,6 @@ public abstract class ObjectDB {
         out.writeLong(owner.$getOnum());
       }
 
-      out.writeInt(reads.size());
-      for (Long onum : reads)
-        out.writeLong(onum);
-
       out.writeInt(modData.size());
       for (Pair<SerializedObject, UpdateType> obj : modData) {
         obj.first.write(out);
@@ -201,17 +187,15 @@ public abstract class ObjectDB {
 
   /**
    * <p>
-   * Tracks the read/write locks for each onum. Maps each onum to a pair. The
-   * first component of the pair is the tid for the write-lock holder. The
-   * second component is a map from the of tids for the read-lock holders to the
-   * number of workers in the transaction that have read locks on the onum.
+   * Tracks the write locks for each onum. Maps each onum to the tid for the
+   * lock holder.
    * </p>
    * <p>
    * This should be recomputed from the set of prepared transactions when
    * restoring from stable storage.
    * </p>
    */
-  protected final LongKeyMap<Pair<Long, LongKeyMap<MutableInteger>>> rwLocks;
+  protected final LongKeyMap<Long> writeLocks;
 
   /**
    * <p>
@@ -231,7 +215,7 @@ public abstract class ObjectDB {
   protected ObjectDB(String name) {
     this.name = name;
     this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
-    this.rwLocks = new LongKeyHashMap<Pair<Long, LongKeyMap<MutableInteger>>>();
+    this.writeLocks = new LongKeyHashMap<Long>();
     this.writtenOnumsByTid = new LongKeyHashMap<OidKeyHashMap<LongSet>>();
     this.globIDByOnum = new LongKeyHashMap<Long>();
     this.globTable = new GroupTable();
@@ -312,15 +296,7 @@ public abstract class ObjectDB {
    * Acquires a write lock on the given onum for the given transaction.
    */
   private void addWriteLock(long onum, long tid) {
-    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-    if (locks == null) {
-      locks =
-          new Pair<Long, LongKeyMap<MutableInteger>>(null,
-              new LongKeyHashMap<MutableInteger>());
-      rwLocks.put(onum, locks);
-    }
-
-    locks.first = tid;
+    writeLocks.put(onum, tid);
   }
 
   /**
@@ -718,8 +694,7 @@ public abstract class ObjectDB {
    *         been committed or rolled back.
    */
   public final boolean isWritten(long onum) {
-    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-    return locks != null && locks.first != null;
+    return writeLocks.get(onum) != null;
   }
 
   /**
@@ -727,25 +702,9 @@ public abstract class ObjectDB {
    * to be committed or aborted.
    */
   protected final void unpin(PendingTransaction tx) {
-    for (long readOnum : tx.reads) {
-      Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(readOnum);
-
-      MutableInteger pinCount = locks.second.get(tx.tid);
-      if (pinCount != null) {
-        pinCount.value--;
-        if (pinCount.value == 0) locks.second.remove(tx.tid);
-      }
-
-      if (locks.first == null && locks.second.isEmpty())
-        rwLocks.remove(readOnum);
-    }
-
     for (Pair<SerializedObject, UpdateType> update : tx.modData) {
       long onum = update.first.getOnum();
-      Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-      if (locks.first != null && locks.first == tx.tid) locks.first = null;
-
-      if (locks.first == null && locks.second.isEmpty()) rwLocks.remove(onum);
+      writeLocks.remove(onum);
     }
   }
 

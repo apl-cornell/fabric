@@ -308,7 +308,7 @@ public class BdbDB extends ObjectDB {
     DatabaseEntry data = new DatabaseEntry();
 
     try {
-      if (rwLocks.get(onum) != null
+      if (writeLocks.get(onum) != null
           || db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
         return true;
       }
