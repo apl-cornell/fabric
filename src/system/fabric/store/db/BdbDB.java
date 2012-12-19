@@ -43,6 +43,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.FClass;
@@ -306,7 +307,7 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public VersionWarranty getWarranty(long onum) {
+  protected VersionWarranty getWarrantyFromStableStorage(long onum) {
     VersionWarranty curWarranty = cachedVersionWarranties.get(onum);
     if (curWarranty != null) return curWarranty;
 
@@ -327,16 +328,31 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  protected void putWarranty(long onum, VersionWarranty warranty) {
+  public void flushWarranties() {
     try {
-      STORE_DB_LOGGER.finest("Bdb put warranty for onum " + onum);
       Transaction txn = env.beginTransaction(null, null);
-      DatabaseEntry key = new DatabaseEntry(toBytes(onum));
-      DatabaseEntry data = new DatabaseEntry(toBytes(warranty.expiry()));
-      this.warranty.put(txn, key, data);
+      DatabaseEntry key = new DatabaseEntry();
+      DatabaseEntry data = new DatabaseEntry();
+
+      for (LongKeyMap.Entry<VersionWarranty> entry : versionWarrantyWriteCache
+          .entrySet()) {
+        long onum = entry.getKey();
+        VersionWarranty warranty = entry.getValue();
+
+        long expiry = warranty.expiry();
+        long length = expiry - System.currentTimeMillis();
+        STORE_DB_LOGGER.finest("Bdb put warranty for onum " + onum
+            + "; expiry=" + expiry + " (in " + length + " ms)");
+
+        key.setData(toBytes(onum));
+        data.setData(toBytes(warranty.expiry()));
+        this.warranty.put(txn, key, data);
+        cachedVersionWarranties.put(onum, warranty);
+      }
+
       txn.commit();
 
-      cachedVersionWarranties.put(onum, warranty);
+      versionWarrantyWriteCache.clear();
     } catch (DatabaseException e) {
       STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in putWarranty: ", e);
       throw new InternalError(e);

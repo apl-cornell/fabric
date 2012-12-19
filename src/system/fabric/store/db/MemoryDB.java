@@ -137,13 +137,14 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  public VersionWarranty getWarranty(long onum) {
+  protected VersionWarranty getWarrantyFromStableStorage(long onum) {
     return warrantyTable.get(onum);
   }
 
   @Override
-  protected void putWarranty(long onum, VersionWarranty warranty) {
-    warrantyTable.put(onum, warranty);
+  public void flushWarranties() {
+    warrantyTable.putAll(versionWarrantyWriteCache);
+    versionWarrantyWriteCache.clear();
   }
 
   @Override

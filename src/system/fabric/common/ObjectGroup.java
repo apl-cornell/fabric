@@ -9,7 +9,6 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongKeyMap.Entry;
 import fabric.common.util.Pair;
 import fabric.store.TransactionManager;
-import fabric.store.db.ObjectDB.ReadMode;
 
 /**
  * Holds a set of related, unencrypted, serialized objects.
@@ -22,15 +21,18 @@ public class ObjectGroup {
    */
   private VersionWarranty expiry;
 
+  private static final VersionWarranty DUMMY_WARRANTY = new VersionWarranty(0);
+
   public ObjectGroup(LongKeyMap<SerializedObject> objects) {
     this.objects =
         new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>(
             objects.size());
-    this.expiry = null;
+    this.expiry = DUMMY_WARRANTY;
 
     for (Entry<SerializedObject> entry : objects.entrySet()) {
       this.objects.put(entry.getKey(),
-          new Pair<SerializedObject, VersionWarranty>(entry.getValue(), null));
+          new Pair<SerializedObject, VersionWarranty>(entry.getValue(),
+              DUMMY_WARRANTY));
     }
   }
 
@@ -80,18 +82,8 @@ public class ObjectGroup {
   }
 
   public void refreshWarranties(TransactionManager tm) {
-    if (expiry != null && !expiry.expired()) return;
+    if (!expiry.expired()) return;
 
-    expiry = null;
-    for (Entry<Pair<SerializedObject, VersionWarranty>> entry : objects
-        .entrySet()) {
-      Pair<SerializedObject, VersionWarranty> value = entry.getValue();
-      VersionWarranty warranty =
-          value.second =
-              tm.getWarranty(entry.getKey(), ReadMode.REFRESH_WARRANTY);
-
-      if (expiry == null || warranty != null && expiry.expiresAfter(warranty))
-        expiry = warranty;
-    }
+    expiry = tm.refreshWarranties(objects.values());
   }
 }

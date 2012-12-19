@@ -104,9 +104,7 @@ public class InProcessStore extends RemoteStore {
     if (obj == null) throw new AccessException(this, onum);
     map.put(onum, obj);
 
-    ObjectGroup result = new ObjectGroup(map);
-    result.refreshWarranties(tm);
-    return result;
+    return new ObjectGroup(map);
   }
 
   @Override
