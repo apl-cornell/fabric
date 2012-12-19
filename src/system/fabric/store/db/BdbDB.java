@@ -107,6 +107,11 @@ public class BdbDB extends ObjectDB {
   private final LongKeyCache<VersionWarranty> cachedVersionWarranties;
 
   /**
+   * Cache: objects.
+   */
+  private final LongKeyCache<SerializedObject> cachedObjects;
+
+  /**
    * Cache: maps BDB keys to prepared-transaction records.
    */
   private final Cache<ByteArray, PendingTransaction> preparedTransactions;
@@ -159,6 +164,7 @@ public class BdbDB extends ObjectDB {
     this.lastReservedOnum = -2;
     this.cachedVersions = new LongKeyCache<Integer>();
     this.cachedVersionWarranties = new LongKeyCache<VersionWarranty>();
+    this.cachedObjects = new LongKeyCache<SerializedObject>();
     this.preparedTransactions = new Cache<ByteArray, PendingTransaction>();
   }
 
@@ -245,8 +251,9 @@ public class BdbDB extends ObjectDB {
                 // Remove any cached globs containing the old version of this object.
                 notifyCommittedUpdate(sm, toLong(onumData.getData()));
 
-                // Update the version-number cache.
+                // Update caches.
                 cachedVersions.put(onum, o.getVersion());
+                cachedObjects.put(onum, o);
               }
 
               txn.commit();
@@ -257,8 +264,9 @@ public class BdbDB extends ObjectDB {
               throw new InternalError("Unknown transaction id " + tid);
             }
           } catch (DatabaseException e) {
-            // Problem. Clear out cached versions.
+            // Problem. Clear out caches.
             cachedVersions.clear();
+            cachedObjects.clear();
 
             STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in commit: ", e);
             throw new InternalError(e);
@@ -285,6 +293,8 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public SerializedObject read(long onum) {
+    if (cachedObjects.containsKey(onum)) return cachedObjects.get(onum);
+
     STORE_DB_LOGGER.finest("Bdb read onum " + onum);
     DatabaseEntry key = new DatabaseEntry(toBytes(onum));
     DatabaseEntry data = new DatabaseEntry();
@@ -294,6 +304,7 @@ public class BdbDB extends ObjectDB {
         SerializedObject result = toSerializedObject(data.getData());
         if (result != null) {
           cachedVersions.put(onum, result.getVersion());
+          cachedObjects.put(onum, result);
         }
 
         return result;
@@ -308,8 +319,8 @@ public class BdbDB extends ObjectDB {
 
   @Override
   protected VersionWarranty getWarrantyFromStableStorage(long onum) {
-    VersionWarranty curWarranty = cachedVersionWarranties.get(onum);
-    if (curWarranty != null) return curWarranty;
+    if (cachedVersionWarranties.containsKey(onum))
+      return cachedVersionWarranties.get(onum);
 
     STORE_DB_LOGGER.finest("Bdb read warranty for onum " + onum);
     DatabaseEntry key = new DatabaseEntry(toBytes(onum));
@@ -317,13 +328,16 @@ public class BdbDB extends ObjectDB {
 
     try {
       if (warranty.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
-        return new VersionWarranty(toLong(data.getData()));
+        VersionWarranty result = new VersionWarranty(toLong(data.getData()));
+        cachedVersionWarranties.put(onum, result);
+        return result;
       }
     } catch (DatabaseException e) {
       STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in read: ", e);
       throw new InternalError(e);
     }
 
+    cachedVersionWarranties.put(onum, null);
     return null;
   }
 
@@ -341,6 +355,8 @@ public class BdbDB extends ObjectDB {
 
         long expiry = warranty.expiry();
         long length = expiry - System.currentTimeMillis();
+        if (length < 0) continue;
+
         STORE_DB_LOGGER.finest("Bdb put warranty for onum " + onum
             + "; expiry=" + expiry + " (in " + length + " ms)");
 
