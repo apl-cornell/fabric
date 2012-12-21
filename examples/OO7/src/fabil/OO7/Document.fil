@@ -21,10 +21,9 @@ public class Document {
     this.id = db.newId();
     db.documentsById.put(new Integer(id()), this);
 
-    // TODO: generate different strings, and index
-    Label label = Worker.getWorker().getLocalStore().getEmptyLabel();
-    this.text = new char[size]~label;
-    return this;
+	 this.title = db.randomString(16);
+	 this.text = db.randomChars(size);
+     return this;
   }
 
   public void setTitle(String title) {
@@ -46,6 +45,10 @@ public class Document {
   public char[] text() {
     return this.text;
   }
+
+	public void setPart(CompositePart part) {
+		this.part = part;
+	}
 }
 
 /*
