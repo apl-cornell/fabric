@@ -95,7 +95,7 @@ public final class GroupContainer extends GroupTable.Entry {
    * called by the store.
    */
   public synchronized void refreshWarranties(TransactionManager tm) {
-    if (warranty != null && !warranty.expired()) return;
+    if (warranty != null && !warranty.expired(true)) return;
 
     // Ensure group is decrypted.
     if (group == null) {

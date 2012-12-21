@@ -3,6 +3,7 @@ package fabric.worker.transaction;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabric.common.VersionWarranty;
 import fabric.lang.Object._Impl;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.ObjectCache;
@@ -27,14 +28,14 @@ public final class ReadMapEntry {
    */
   List<Log> readLocks;
 
-  long warranty;
+  VersionWarranty warranty;
 
   /**
    * The number of _Impls that have a reference to this object.
    */
   int pinCount;
 
-  ReadMapEntry(_Impl obj, long expiry) {
+  ReadMapEntry(_Impl obj, VersionWarranty expiry) {
     this.obj = obj.$ref;
     this.readLocks = new ArrayList<Log>();
     this.versionNumber = obj.$version;
@@ -42,7 +43,7 @@ public final class ReadMapEntry {
     this.pinCount = 1;
   }
 
-  public synchronized long warranty() {
+  public synchronized VersionWarranty warranty() {
     return warranty;
   }
 

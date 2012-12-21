@@ -43,7 +43,6 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
-import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.FClass;
@@ -67,11 +66,6 @@ public class BdbDB extends ObjectDB {
   private Database db;
 
   /**
-   * Database containing warranties for Fabric objects.
-   */
-  private Database warranty;
-
-  /**
    * Database containing data for prepared but uncommitted transactions.
    */
   private Database prepared;
@@ -84,6 +78,11 @@ public class BdbDB extends ObjectDB {
 
   private final DatabaseEntry initializationStatus;
   private final DatabaseEntry onumCounter;
+
+  /**
+   * The BDB key under which the longest warranty is stored.
+   */
+  private final DatabaseEntry longestWarrantyEntry;
 
   private long nextOnum;
 
@@ -99,12 +98,6 @@ public class BdbDB extends ObjectDB {
    * in BDB.
    */
   private final LongKeyCache<Integer> cachedVersions;
-
-  /**
-   * Cache: maps onums to version warranties for objects that are currently
-   * stored in BDB.
-   */
-  private final LongKeyCache<VersionWarranty> cachedVersionWarranties;
 
   /**
    * Cache: objects.
@@ -141,7 +134,6 @@ public class BdbDB extends ObjectDB {
       dbconf.setAllowCreate(true);
       dbconf.setTransactional(true);
       db = env.openDatabase(null, "store", dbconf);
-      warranty = env.openDatabase(null, "warranties", dbconf);
       prepared = env.openDatabase(null, "prepared", dbconf);
       commitTimes = env.openDatabase(null, "commitTimes", dbconf);
       meta = env.openDatabase(null, "meta", dbconf);
@@ -156,6 +148,8 @@ public class BdbDB extends ObjectDB {
       initializationStatus =
           new DatabaseEntry("initialization_status".getBytes("UTF-8"));
       onumCounter = new DatabaseEntry("onum_counter".getBytes("UTF-8"));
+      longestWarrantyEntry =
+          new DatabaseEntry("longest_warranty".getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
       throw new InternalError(e);
     }
@@ -163,9 +157,24 @@ public class BdbDB extends ObjectDB {
     this.nextOnum = -1;
     this.lastReservedOnum = -2;
     this.cachedVersions = new LongKeyCache<Integer>();
-    this.cachedVersionWarranties = new LongKeyCache<VersionWarranty>();
     this.cachedObjects = new LongKeyCache<SerializedObject>();
     this.preparedTransactions = new Cache<ByteArray, PendingTransaction>();
+  }
+
+  @Override
+  protected void saveLongestWarranty() {
+    STORE_DB_LOGGER.fine("Bdb saving longest warranty");
+
+    try {
+      Transaction txn = env.beginTransaction(null, null);
+      DatabaseEntry data = new DatabaseEntry(toBytes(longestWarranty.expiry()));
+      meta.put(txn, longestWarrantyEntry, data);
+      txn.commit();
+    } catch (DatabaseException e) {
+      STORE_DB_LOGGER
+          .log(Level.SEVERE, "Bdb error in saveLongestWarranty: ", e);
+      throw new InternalError(e);
+    }
   }
 
   @Override
@@ -318,64 +327,6 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  protected VersionWarranty getWarrantyFromStableStorage(long onum) {
-    if (cachedVersionWarranties.containsKey(onum))
-      return cachedVersionWarranties.get(onum);
-
-    STORE_DB_LOGGER.finest("Bdb read warranty for onum " + onum);
-    DatabaseEntry key = new DatabaseEntry(toBytes(onum));
-    DatabaseEntry data = new DatabaseEntry();
-
-    try {
-      if (warranty.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
-        VersionWarranty result = new VersionWarranty(toLong(data.getData()));
-        cachedVersionWarranties.put(onum, result);
-        return result;
-      }
-    } catch (DatabaseException e) {
-      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in read: ", e);
-      throw new InternalError(e);
-    }
-
-    cachedVersionWarranties.put(onum, null);
-    return null;
-  }
-
-  @Override
-  public void flushWarranties() {
-    try {
-      Transaction txn = env.beginTransaction(null, null);
-      DatabaseEntry key = new DatabaseEntry();
-      DatabaseEntry data = new DatabaseEntry();
-
-      for (LongKeyMap.Entry<VersionWarranty> entry : versionWarrantyWriteCache
-          .entrySet()) {
-        long onum = entry.getKey();
-        VersionWarranty warranty = entry.getValue();
-
-        long expiry = warranty.expiry();
-        long length = expiry - System.currentTimeMillis();
-        if (length < 0) continue;
-
-        STORE_DB_LOGGER.finest("Bdb put warranty for onum " + onum
-            + "; expiry=" + expiry + " (in " + length + " ms)");
-
-        key.setData(toBytes(onum));
-        data.setData(toBytes(warranty.expiry()));
-        this.warranty.put(txn, key, data);
-        cachedVersionWarranties.put(onum, warranty);
-      }
-
-      txn.commit();
-
-      versionWarrantyWriteCache.clear();
-    } catch (DatabaseException e) {
-      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in putWarranty: ", e);
-      throw new InternalError(e);
-    }
-  }
-
-  @Override
   public int getVersion(long onum) throws AccessException {
     Integer ver = cachedVersions.get(onum);
     if (ver != null) return ver;
@@ -447,7 +398,6 @@ public class BdbDB extends ObjectDB {
   public void close() {
     try {
       if (db != null) db.close();
-      if (warranty != null) warranty.close();
       if (prepared != null) prepared.close();
       if (commitTimes != null) commitTimes.close();
       if (meta != null) meta.close();
@@ -502,42 +452,55 @@ public class BdbDB extends ObjectDB {
       // Scan through the database of prepares to recover writeLocks and
       // writtenOnumsByTid.
       Transaction txn = env.beginTransaction(null, null);
-      Cursor preparedCursor = prepared.openCursor(txn, null);
       DatabaseEntry key = new DatabaseEntry();
       DatabaseEntry data = new DatabaseEntry();
-      while (preparedCursor.getNext(key, data, null) != OperationStatus.NOTFOUND) {
-        PendingTransaction pending = toPendingTransaction(data.getData());
-        long tid = pending.tid;
-        Principal owner = pending.owner;
+      {
+        Cursor preparedCursor = prepared.openCursor(txn, null);
+        while (preparedCursor.getNext(key, data, null) != OperationStatus.NOTFOUND) {
+          PendingTransaction pending = toPendingTransaction(data.getData());
+          long tid = pending.tid;
+          Principal owner = pending.owner;
 
-        // Loop through the updates for the current transaction.
-        for (Pair<SerializedObject, UpdateType> update : pending.modData) {
-          long onum = update.first.getOnum();
+          // Loop through the updates for the current transaction.
+          for (Pair<SerializedObject, UpdateType> update : pending.modData) {
+            long onum = update.first.getOnum();
 
-          // Recover the transaction's write lock for the current update.
-          writeLocks.put(onum, tid);
+            // Recover the transaction's write lock for the current update.
+            writeLocks.put(onum, tid);
 
-          if (update.second == UpdateType.WRITE) {
-            addWrittenOnumByTid(tid, owner, onum);
+            if (update.second == UpdateType.WRITE) {
+              addWrittenOnumByTid(tid, owner, onum);
+            }
           }
         }
+        preparedCursor.close();
       }
 
       // Scan through the commitTimes database and build a commit schedule.
       SortedMap<Long, List<Pair<Long, Principal>>> commitSchedule =
           new TreeMap<Long, List<Pair<Long, Principal>>>();
-      Cursor commitTimesCursor = commitTimes.openCursor(txn, null);
-      while (commitTimesCursor.getNext(key, data, null) != OperationStatus.NOTFOUND) {
-        Pair<Long, Principal> tid = toTid(key.getData());
-        long commitTime = toLong(data.getData());
+      {
+        Cursor commitTimesCursor = commitTimes.openCursor(txn, null);
+        while (commitTimesCursor.getNext(key, data, null) != OperationStatus.NOTFOUND) {
+          Pair<Long, Principal> tid = toTid(key.getData());
+          long commitTime = toLong(data.getData());
 
-        List<Pair<Long, Principal>> toCommit = commitSchedule.get(commitTime);
-        if (toCommit == null) {
-          toCommit = new ArrayList<Pair<Long, Principal>>(2);
-          commitSchedule.put(commitTime, toCommit);
+          List<Pair<Long, Principal>> toCommit = commitSchedule.get(commitTime);
+          if (toCommit == null) {
+            toCommit = new ArrayList<Pair<Long, Principal>>(2);
+            commitSchedule.put(commitTime, toCommit);
+          }
+
+          toCommit.add(tid);
         }
+        commitTimesCursor.close();
+      }
 
-        toCommit.add(tid);
+      // Recover the longest warranty issued and use that as the default
+      // warranty.
+      if (meta.get(txn, longestWarrantyEntry, data, LockMode.DEFAULT) == SUCCESS) {
+        longestWarranty = new VersionWarranty(toLong(data.getData()));
+        versionWarrantyTable.setDefaultWarranty(longestWarranty);
       }
 
       txn.commit();

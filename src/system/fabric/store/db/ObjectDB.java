@@ -1,7 +1,5 @@
 package fabric.store.db;
 
-import static fabric.common.Logging.STORE_DB_LOGGER;
-
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -182,10 +180,19 @@ public abstract class ObjectDB {
   protected final LongKeyMap<OidKeyHashMap<PendingTransaction>> pendingByTid;
 
   /**
-   * The set of warranties that have yet to be written to stable storage. These
-   * can be written to stable storage by calling flushWarranties().
+   * <p>
+   * A warranty that will expire after all warranties issued thus far.
+   * </p>
+   * <p>
+   * This should be saved to stable storage and restored when starting up.
+   * </p>
    */
-  protected final LongKeyMap<VersionWarranty> versionWarrantyWriteCache;
+  protected VersionWarranty longestWarranty;
+
+  /**
+   * The table containing the version warranties that we've issued.
+   */
+  protected final VersionWarrantyTable versionWarrantyTable;
 
   /**
    * <p>
@@ -219,10 +226,11 @@ public abstract class ObjectDB {
     this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
     this.writeLocks = new LongKeyHashMap<Long>();
     this.writtenOnumsByTid = new LongKeyHashMap<OidKeyHashMap<LongSet>>();
-    this.versionWarrantyWriteCache = new LongKeyHashMap<VersionWarranty>();
     this.globIDByOnum = new LongKeyHashMap<Long>();
     this.globTable = new GroupTable();
     this.nextGlobID = 0;
+    this.longestWarranty = new VersionWarranty(0);
+    this.versionWarrantyTable = new VersionWarrantyTable();
   }
 
   /**
@@ -246,9 +254,7 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Attempts to extend the warranty on a particular version of an object. If
-   * the warranty is extended, the extended warranty will not be written to
-   * stable storage until flushWarranties() is called.
+   * Attempts to extend the warranty on a particular version of an object.
    * 
    * @throws AccessException if no object exists at the given onum.
    */
@@ -367,8 +373,6 @@ public abstract class ObjectDB {
         long onum = it.next();
         extendWarranty(onum, commitTime, ExtendWarrantyMode.FORCE);
       }
-
-      flushWarranties();
     }
 
     scheduleCommit(tid, commitTime, workerPrincipal, sm);
@@ -423,31 +427,30 @@ public abstract class ObjectDB {
    *       warranty will be returned.
    */
   public final VersionWarranty getWarranty(long onum) {
-    VersionWarranty warranty = versionWarrantyWriteCache.get(onum);
-    if (warranty == null) warranty = getWarrantyFromStableStorage(onum);
-    if (warranty == null) warranty = new VersionWarranty(0);
-    return warranty;
+    return versionWarrantyTable.get(onum);
   }
 
-  protected abstract VersionWarranty getWarrantyFromStableStorage(long onum);
+  private static final long FIVE_MINUTES = 5 * 60 * 1000;
 
   /**
-   * Stores a version warranty for the object stored at the given onum. The new
-   * warranty will not be written to stable storage until flushWarranties() is
-   * called.
+   * Stores a version warranty for the object stored at the given onum.
    */
   protected final void putWarranty(long onum, VersionWarranty warranty) {
-    long expiry = warranty.expiry();
-    long length = expiry - System.currentTimeMillis();
-    STORE_DB_LOGGER.finest("Adding warranty for onum " + onum + "; expiry="
-        + expiry + " (in " + length + " ms)");
-    versionWarrantyWriteCache.put(onum, warranty);
+    versionWarrantyTable.put(onum, warranty);
+
+    if (warranty.expiresAfter(longestWarranty)) {
+      // Fudge longestWarranty so we don't continually touch disk when we create
+      // a sequence of warranties whose expiries increase with real time.
+      longestWarranty = new VersionWarranty(warranty.expiry() + FIVE_MINUTES);
+      saveLongestWarranty();
+    }
   }
 
   /**
-   * Flushes the warranty write-cache to stable storage.
+   * Saves the warranty in <code>longestWarranty</code> to stable storage. On
+   * recovery, this value will be used as the default warranty.
    */
-  public abstract void flushWarranties();
+  protected abstract void saveLongestWarranty();
 
   private static enum ExtendWarrantyMode {
     STRICT, NON_STRICT, FORCE
@@ -455,8 +458,7 @@ public abstract class ObjectDB {
 
   /**
    * Extends the version warranty of an object, if necessary and possible. The
-   * object's resulting warranty is returned. If the warranty is extended, it
-   * will not be written to stable storage until flushWarranties() is called.
+   * object's resulting warranty is returned.
    * <p>
    * This method will return null in STRICT mode if the object's warranty
    * expires before the requested expiry time, and the warranty could not be
@@ -483,15 +485,15 @@ public abstract class ObjectDB {
       ExtendWarrantyMode mode) {
     // Get the object's current warranty and determine whether it needs to be
     // extended.
-    VersionWarranty curWarranty = getWarranty(onum);
+    VersionWarranty curWarranty = versionWarrantyTable.get(onum);
     switch (mode) {
     case STRICT:
     case FORCE:
-      if (curWarranty.expiresAfter(expiry)) return curWarranty;
+      if (curWarranty.expiresAfter(expiry, false)) return curWarranty;
       break;
 
     case NON_STRICT:
-      if (!curWarranty.expired()) return curWarranty;
+      if (!curWarranty.expired(true)) return curWarranty;
       break;
     }
 
@@ -519,9 +521,7 @@ public abstract class ObjectDB {
   /**
    * Attempts to create and return a new version warranty for the object stored
    * at the given onum. If the object is write-locked, then a new warranty
-   * cannot be created, and the existing one is returned. Any new warranties
-   * created will not be written to stable storage until flushWarranties() is
-   * called.
+   * cannot be created, and the existing one is returned.
    */
   public VersionWarranty refreshWarranty(long onum) {
     // TODO Make this smarter. Currently, warranties last for at most a minute.

@@ -482,7 +482,8 @@ public interface Object {
       this.$numWaiting = 0;
       this.$ref = new FabricSoftRef(store, onum, this);
       this.$cacheEntry = new ObjectCache.Entry(this);
-      this.$readMapEntry = TransactionManager.getReadMapEntry(this, expiry);
+      this.$readMapEntry =
+          TransactionManager.getReadMapEntry(this, new VersionWarranty(expiry));
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
       this.writerMapVersion = -1;
@@ -493,7 +494,7 @@ public interface Object {
     }
 
     public final VersionWarranty $versionWarranty() {
-      return new VersionWarranty($readMapEntry.warranty());
+      return $readMapEntry.warranty();
     }
 
     /**

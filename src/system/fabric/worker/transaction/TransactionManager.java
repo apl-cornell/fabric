@@ -122,19 +122,20 @@ public final class TransactionManager {
   static final OidKeyHashMap<ReadMapEntry> readMap =
       new OidKeyHashMap<ReadMapEntry>();
 
-  public static ReadMapEntry getReadMapEntry(_Impl impl, long expiry) {
+  public static ReadMapEntry getReadMapEntry(_Impl impl,
+      VersionWarranty warranty) {
     FabricSoftRef ref = impl.$ref;
 
     // Optimization: if the impl lives on the local store, it will never be
     // evicted, so no need to store the entry in the read map.
-    if (ref.store.isLocalStore()) return new ReadMapEntry(impl, expiry);
+    if (ref.store.isLocalStore()) return new ReadMapEntry(impl, warranty);
 
     while (true) {
       ReadMapEntry result;
       synchronized (readMap) {
         result = readMap.get(ref.store, ref.onum);
         if (result == null) {
-          result = new ReadMapEntry(impl, expiry);
+          result = new ReadMapEntry(impl, warranty);
           readMap.put(ref.store, ref.onum, result);
           return result;
         }
@@ -147,7 +148,9 @@ public final class TransactionManager {
 
           result.obj = impl.$ref;
           result.pinCount++;
-          result.warranty = result.warranty > expiry ? result.warranty : expiry;
+          result.warranty =
+              result.warranty.expiresAfter(warranty) ? result.warranty
+                  : warranty;
           int ver = impl.$getVersion();
           if (ver == result.versionNumber) return result;
 

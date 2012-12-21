@@ -1,6 +1,6 @@
 package fabric.common;
 
-public abstract class Warranty {
+public abstract class Warranty implements Comparable<Warranty> {
   /**
    * Assumed maximum clock skew, in milliseconds.
    */
@@ -31,17 +31,51 @@ public abstract class Warranty {
   }
 
   /**
-   * @return true iff the warranty has expired.
+   * Determines whether a warranty has expired.
+   * 
+   * @param defaultResult
+   *         the value to return if the current time is within CLOCK_SKEW of
+   *         the warranty's expiry.
    */
-  public boolean expired() {
-    return expiry < System.currentTimeMillis() + CLOCK_SKEW;
+  public boolean expired(boolean defaultResult) {
+    return expiresBefore(System.currentTimeMillis(), defaultResult);
   }
 
   public boolean expiresAfter(Warranty warranty) {
     return expiry > warranty.expiry;
   }
 
-  public boolean expiresAfter(long time) {
-    return expiry > time + CLOCK_SKEW;
+  /**
+   * Determines whether a warranty expires before a certain time.
+   * 
+   * @param defaultResult
+   *         the value to return if the time given is within CLOCK_SKEW of the
+   *         warranty's expiry.
+   */
+  public boolean expiresBefore(long time, boolean defaultResult) {
+    return !expiresAfter(time, !defaultResult);
+  }
+
+  /**
+   * Determines whether a warranty expires after a certain time.
+   * 
+   * @param defaultResult
+   *         the value to return if the time given is within CLOCK_SKEW of the
+   *         warranty's expiry.
+   */
+  public boolean expiresAfter(long time, boolean defaultResult) {
+    if (expiry < time - CLOCK_SKEW) return false;
+    if (time + CLOCK_SKEW < expiry) return true;
+    return defaultResult;
+  }
+
+  /**
+   * Orders by expiry time.
+   */
+  @Override
+  public int compareTo(Warranty o) {
+    if (expiry > o.expiry) return 1;
+    if (expiry < o.expiry) return -1;
+    return 0;
   }
 }

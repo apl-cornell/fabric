@@ -17,6 +17,7 @@ import fabric.common.SysUtil;
 import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
+import fabric.common.VersionWarranty;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -278,7 +279,8 @@ public final class Log {
           entry.getValue()).entrySet()) {
         long onum = subEntry.getKey();
         ReadMapEntry rme = subEntry.getValue();
-        if (commitState.commitTime < rme.warranty && rme.warranty <= commitTime) {
+        if (rme.warranty.expiresAfter(commitState.commitTime, true)
+            && rme.warranty.expiresBefore(commitTime, true)) {
           submap.put(onum, rme.versionNumber);
         }
       }
@@ -292,10 +294,12 @@ public final class Log {
   void updateVersionWarranties(Store store, LongSet onums, long commitTime) {
     if (store.isLocalStore()) return;
 
+    VersionWarranty warranty = new VersionWarranty(commitTime);
+
     for (LongIterator it = onums.iterator(); it.hasNext();) {
       long onum = it.next();
       ReadMapEntry entry = reads.get(store, onum);
-      entry.warranty = commitTime;
+      entry.warranty = warranty;
     }
   }
 

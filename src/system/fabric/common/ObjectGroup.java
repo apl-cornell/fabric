@@ -21,7 +21,8 @@ public class ObjectGroup {
    */
   private VersionWarranty expiry;
 
-  private static final VersionWarranty DUMMY_WARRANTY = new VersionWarranty(0);
+  private static final VersionWarranty DUMMY_WARRANTY =
+      VersionWarranty.EXPIRED_WARRANTY;
 
   public ObjectGroup(LongKeyMap<SerializedObject> objects) {
     this.objects =
@@ -82,7 +83,7 @@ public class ObjectGroup {
   }
 
   public void refreshWarranties(TransactionManager tm) {
-    if (!expiry.expired()) return;
+    if (!expiry.expired(true)) return;
 
     expiry = tm.refreshWarranties(objects.values());
   }

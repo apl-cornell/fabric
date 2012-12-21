@@ -10,7 +10,6 @@ import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
-import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
@@ -50,11 +49,6 @@ public class MemoryDB extends ObjectDB {
    * Maps onums to SerializedObjects.
    */
   private LongKeyMap<SerializedObject> objectTable;
-
-  /**
-   * Maps onums to VersionWarranties.
-   */
-  private LongKeyMap<VersionWarranty> warrantyTable;
 
   /**
    * The next free glob ID.
@@ -137,17 +131,6 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  protected VersionWarranty getWarrantyFromStableStorage(long onum) {
-    return warrantyTable.get(onum);
-  }
-
-  @Override
-  public void flushWarranties() {
-    warrantyTable.putAll(versionWarrantyWriteCache);
-    versionWarrantyWriteCache.clear();
-  }
-
-  @Override
   public boolean exists(long onum) {
     return writeLocks.get(onum) != null || objectTable.containsKey(onum);
   }
@@ -211,6 +194,11 @@ public class MemoryDB extends ObjectDB {
   @Override
   protected void setInitialized() {
     this.isInitialized = true;
+  }
+
+  @Override
+  protected void saveLongestWarranty() {
+    // TODO Implement me!
   }
 
   @Override

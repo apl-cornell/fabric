@@ -134,50 +134,43 @@ public class TransactionManager {
       LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
           new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
 
-      // Check writes and update version numbers.
       synchronized (database) {
-        try {
-          for (SerializedObject o : req.writes) {
-            long onum = o.getOnum();
-            // Make sure no one else has written to the object.
-            if (database.isWritten(onum))
-              throw new TransactionPrepareFailedException(versionConflicts,
-                  "Object " + onum + " has been locked by an uncommitted "
-                      + "transaction");
+        // Check writes and update version numbers.
+        for (SerializedObject o : req.writes) {
+          long onum = o.getOnum();
+          // Make sure no one else has written to the object.
+          if (database.isWritten(onum))
+            throw new TransactionPrepareFailedException(versionConflicts,
+                "Object " + onum + " has been locked by an uncommitted "
+                    + "transaction");
 
-            // Fetch old copy from store and check version numbers.
-            SerializedObject storeCopy = database.read(onum);
-            int storeVersion = storeCopy.getVersion();
-            int workerVersion = o.getVersion();
-            VersionWarranty warranty;
-            if (storeVersion != workerVersion) {
-              warranty = database.refreshWarranty(onum);
-              versionConflicts.put(onum,
-                  new Pair<SerializedObject, VersionWarranty>(storeCopy,
-                      warranty));
-              continue;
-            }
-
-            // Register the update with the database.
-            database.registerUpdate(tid, worker, o, WRITE);
-
-            // Obtain existing warranty.
-            warranty = database.getWarranty(onum);
-
-            // Update the version number on the prepared copy of the object.
-            o.setVersion(storeVersion + 1);
-
-            if (longestWarranty == null
-                || warranty.expiresAfter(longestWarranty))
-              longestWarranty = warranty;
+          // Fetch old copy from store and check version numbers.
+          SerializedObject storeCopy = database.read(onum);
+          int storeVersion = storeCopy.getVersion();
+          int workerVersion = o.getVersion();
+          VersionWarranty warranty;
+          if (storeVersion != workerVersion) {
+            warranty = database.refreshWarranty(onum);
+            versionConflicts
+                .put(onum, new Pair<SerializedObject, VersionWarranty>(
+                    storeCopy, warranty));
+            continue;
           }
-        } finally {
-          database.flushWarranties();
-        }
-      }
 
-      // Check creates.
-      synchronized (database) {
+          // Register the update with the database.
+          database.registerUpdate(tid, worker, o, WRITE);
+
+          // Obtain existing warranty.
+          warranty = database.getWarranty(onum);
+
+          // Update the version number on the prepared copy of the object.
+          o.setVersion(storeVersion + 1);
+
+          if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
+            longestWarranty = warranty;
+        }
+
+        // Check creates.
         for (SerializedObject o : req.creates) {
           long onum = o.getOnum();
 
@@ -252,56 +245,47 @@ public class TransactionManager {
       }
     }
 
-    try {
-      // This will store the set of onums of objects that were out of date.
-      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
-          new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
+    // This will store the set of onums of objects that were out of date.
+    LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
+        new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
 
-      // Check reads
-      synchronized (database) {
+    // Check reads
+    synchronized (database) {
+      for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
+        long onum = entry.getKey();
+        int version = entry.getValue().intValue();
+
+        // Attempt to extend the object's warranty.
         try {
-          for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
-            long onum = entry.getKey();
-            int version = entry.getValue().intValue();
+          ExtendWarrantyStatus status =
+              database.extendWarranty(worker, onum, version, commitTime);
+          switch (status) {
+          case OK:
+            break;
 
-            // Attempt to extend the object's warranty.
-            try {
-              ExtendWarrantyStatus status =
-                  database.extendWarranty(worker, onum, version, commitTime);
-              switch (status) {
-              case OK:
-                break;
+          case BAD_VERSION:
+            SerializedObject obj = database.read(onum);
+            VersionWarranty warranty = database.refreshWarranty(onum);
+            versionConflicts.put(onum,
+                new Pair<SerializedObject, VersionWarranty>(obj, warranty));
+            continue;
 
-              case BAD_VERSION:
-                SerializedObject obj = database.read(onum);
-                VersionWarranty warranty = database.refreshWarranty(onum);
-                versionConflicts.put(onum,
-                    new Pair<SerializedObject, VersionWarranty>(obj, warranty));
-                continue;
-
-              case DENIED:
-                throw new TransactionPrepareFailedException(versionConflicts,
-                    "Unable to extend warranty for object " + onum);
-              }
-            } catch (AccessException e) {
-              throw new TransactionPrepareFailedException(versionConflicts,
-                  e.getMessage());
-            }
+          case DENIED:
+            throw new TransactionPrepareFailedException(versionConflicts,
+                "Unable to extend warranty for object " + onum);
           }
-        } finally {
-          database.flushWarranties();
+        } catch (AccessException e) {
+          throw new TransactionPrepareFailedException(versionConflicts,
+              e.getMessage());
         }
       }
-
-      if (!versionConflicts.isEmpty()) {
-        throw new TransactionPrepareFailedException(versionConflicts);
-      }
-
-      STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
-    } catch (RuntimeException e) {
-      e.printStackTrace();
-      throw e;
     }
+
+    if (!versionConflicts.isEmpty()) {
+      throw new TransactionPrepareFailedException(versionConflicts);
+    }
+
+    STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
   }
 
   /**
@@ -573,20 +557,15 @@ public class TransactionManager {
   public VersionWarranty refreshWarranties(
       Collection<Pair<SerializedObject, VersionWarranty>> objects) {
     synchronized (database) {
-      try {
-        VersionWarranty result = null;
-        for (Pair<SerializedObject, VersionWarranty> entry : objects) {
-          VersionWarranty warranty =
-              entry.second = database.refreshWarranty(entry.first.getOnum());
-          if (result == null || result.expiresAfter(warranty))
-            result = warranty;
-        }
-
-        if (result == null) result = new VersionWarranty(0);
-        return result;
-      } finally {
-        database.flushWarranties();
+      VersionWarranty result = null;
+      for (Pair<SerializedObject, VersionWarranty> entry : objects) {
+        VersionWarranty warranty =
+            entry.second = database.refreshWarranty(entry.first.getOnum());
+        if (result == null || result.expiresAfter(warranty)) result = warranty;
       }
+
+      if (result == null) result = new VersionWarranty(0);
+      return result;
     }
   }
 
@@ -627,21 +606,17 @@ public class TransactionManager {
     List<Pair<SerializedObject, VersionWarranty>> result =
         new ArrayList<Pair<SerializedObject, VersionWarranty>>();
     synchronized (database) {
-      try {
-        for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
-          long onum = entry.getKey();
-          int version = entry.getValue();
+      for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
+        long onum = entry.getKey();
+        int version = entry.getValue();
 
-          int curVersion = database.getVersion(onum);
-          if (curVersion != version) {
-            SerializedObject obj = database.read(onum);
-            VersionWarranty warranty = database.refreshWarranty(onum);
-            result.add(new Pair<SerializedObject, VersionWarranty>(obj,
-                warranty));
-          }
+        int curVersion = database.getVersion(onum);
+        if (curVersion != version) {
+          SerializedObject obj = database.read(onum);
+          VersionWarranty warranty = database.refreshWarranty(onum);
+          result
+              .add(new Pair<SerializedObject, VersionWarranty>(obj, warranty));
         }
-      } finally {
-        database.flushWarranties();
       }
     }
 
