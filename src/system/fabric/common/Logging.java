@@ -65,6 +65,11 @@ public final class Logging {
       .getLogger("fabric.worker.transactions");
 
   /**
+   * For HOTOS Logging.
+   */
+  public static final Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
+
+  /**
    * For local-store events on the worker.
    */
   public static final Logger WORKER_LOCAL_STORE_LOGGER = Logger

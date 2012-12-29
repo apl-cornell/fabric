@@ -1,5 +1,6 @@
 package fabric.worker.transaction;
 
+import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTED;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTING;
@@ -264,6 +265,9 @@ public final class TransactionManager {
     }
 
     WORKER_TRANSACTION_LOGGER.warning(current + " aborting");
+
+    HOTOS_LOGGER.log(Level.INFO, "aborting {0}", current);
+
     // Assume only one thread will be executing this.
 
     // Set the retry flag in all our children.
@@ -275,6 +279,7 @@ public final class TransactionManager {
     sendAbortMessages(abortedNodes);
     current.abort();
     WORKER_TRANSACTION_LOGGER.warning(current + " aborted");
+    HOTOS_LOGGER.log(Level.INFO, "aborted {0}", current);
 
     synchronized (current.commitState) {
       // The commit state reflects the state of the top-level transaction, so
@@ -320,6 +325,8 @@ public final class TransactionManager {
   private void commitTransaction(boolean ignoreRetrySignal) {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
+    HOTOS_LOGGER.log(Level.INFO, "preparing {0}", current);
+
     // Assume only one thread will be executing this.
 
     // XXX This is a long and ugly method. Re-factor?
@@ -348,6 +355,8 @@ public final class TransactionManager {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committing", current);
 
     Log parent = current.parent;
+    Log HOTOS_current = current;
+
     if (current.tid.parent != null) {
       try {
         Timing.SUBTX.begin();
@@ -401,6 +410,7 @@ public final class TransactionManager {
 
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(commitTime);
+    HOTOS_LOGGER.log(Level.INFO, "committed {0}", HOTOS_current);
   }
 
   /**
@@ -1266,6 +1276,7 @@ public final class TransactionManager {
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
           "{0} started subtx {1} in thread {2}", current.parent, current,
           Thread.currentThread());
+      HOTOS_LOGGER.log(Level.INFO, "started {0}", current);
     } finally {
       Timing.BEGIN.end();
     }
