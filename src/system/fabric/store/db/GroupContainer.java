@@ -6,6 +6,7 @@ import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
 import fabric.dissemination.Glob;
 import fabric.lang.security.Principal;
@@ -74,5 +75,10 @@ public final class GroupContainer extends GroupTable.Entry {
       }
       return glob;
     }
+  }
+
+  @Override
+  protected LongIterator onums() {
+    return onums.iterator();
   }
 }
