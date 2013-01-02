@@ -302,7 +302,10 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public SerializedObject read(long onum) {
-    if (cachedObjects.containsKey(onum)) return cachedObjects.get(onum);
+    if (cachedObjects.containsKey(onum)) {
+      SerializedObject cached = cachedObjects.get(onum);
+      if (cached != null) return cached;
+    }
 
     STORE_DB_LOGGER.finest("Bdb read onum " + onum);
     DatabaseEntry key = new DatabaseEntry(toBytes(onum));
