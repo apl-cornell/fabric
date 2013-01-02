@@ -398,6 +398,7 @@ public final class ObjectCache {
       if (entrySoftRef == null) return null;
 
       Entry entry = entrySoftRef.get();
+      if (entry == null) return null;
 
       synchronized (entry) {
         if (entry.isEvicted()) {
