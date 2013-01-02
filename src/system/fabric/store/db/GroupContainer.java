@@ -7,6 +7,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
@@ -105,5 +106,10 @@ public final class GroupContainer extends GroupTable.Entry {
 
     group.refreshWarranties(tm);
     warranty = group.expiry();
+  }
+
+  @Override
+  protected LongIterator onums() {
+    return onums.iterator();
   }
 }

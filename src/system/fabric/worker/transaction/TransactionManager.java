@@ -356,7 +356,6 @@ public final class TransactionManager {
 
     Log parent = current.parent;
     Log HOTOS_current = current;
-
     if (current.tid.parent != null) {
       try {
         Timing.SUBTX.begin();
