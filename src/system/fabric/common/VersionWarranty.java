@@ -1,6 +1,8 @@
 package fabric.common;
 
-public class VersionWarranty extends Warranty {
+import java.io.Serializable;
+
+public class VersionWarranty extends Warranty implements Serializable {
   public static VersionWarranty EXPIRED_WARRANTY = new VersionWarranty(0);
 
   /**
@@ -8,5 +10,10 @@ public class VersionWarranty extends Warranty {
    */
   public VersionWarranty(long expiry) {
     super(expiry);
+  }
+
+  // Deserialization constructor.
+  @SuppressWarnings("unused")
+  private VersionWarranty() {
   }
 }

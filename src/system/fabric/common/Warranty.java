@@ -23,6 +23,11 @@ public abstract class Warranty implements Comparable<Warranty> {
     this.expiry = expiry;
   }
 
+  // Deserialization constructor.
+  protected Warranty() {
+    this.expiry = 0;
+  }
+
   /**
    * @return the expiry time, in milliseconds since the epoch.
    */
