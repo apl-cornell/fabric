@@ -9,6 +9,7 @@ import fabric.common.SerializedObject;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.MutableInteger;
 import fabric.common.util.Pair;
 import fabric.store.PartialObjectGroup;
@@ -36,7 +37,7 @@ public final class GroupTable {
   private final ReferenceQueue<Entry> queue;
 
   public static abstract class Entry {
-    protected abstract LongIterator onums();
+    protected abstract LongSet onums();
   }
 
   public GroupTable() {
@@ -117,24 +118,27 @@ public final class GroupTable {
     Pair<SoftRef, MutableInteger> entry = table.remove(globID);
     if (entry == null) return null;
 
-    Entry result = entry.first.get();
-    if (result == null) return null;
-
     // Clean out entries in globIDByOnum that refer to the entry we're removing.
-    for (LongIterator it = result.onums(); it.hasNext();) {
+    for (LongIterator it = entry.first.onums.iterator(); it.hasNext();) {
       globIDByOnum.remove(it.next());
     }
 
-    return result;
+    return entry.first.get();
   }
 
   private static class SoftRef extends SoftReference<Entry> {
     final long globId;
 
+    /**
+     * The set of onums associated with this entry.
+     */
+    final LongSet onums;
+
     public SoftRef(long globID, Entry group, ReferenceQueue<Entry> queue) {
       super(group, queue);
 
       this.globId = globID;
+      this.onums = group.onums();
     }
   }
 
