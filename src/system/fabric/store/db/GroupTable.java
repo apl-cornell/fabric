@@ -120,7 +120,10 @@ public final class GroupTable {
 
     // Clean out entries in globIDByOnum that refer to the entry we're removing.
     for (LongIterator it = entry.first.onums.iterator(); it.hasNext();) {
-      globIDByOnum.remove(it.next());
+      long onum = it.next();
+      Long otherGlobID = globIDByOnum.get(onum);
+      if (otherGlobID != null && otherGlobID == globID)
+        globIDByOnum.remove(onum);
     }
 
     return entry.first.get();
