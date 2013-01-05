@@ -230,9 +230,15 @@ public class SubServerSocketFactory {
                 InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }));
         while (true) {
           try {
-            recvConnection(sock.accept());
-          } catch (IOException e) {
-            recvException(e);
+            try {
+              recvConnection(sock.accept());
+            } catch (IOException e) {
+              recvException(e);
+            }
+          } catch (NotImplementedException e) {
+            // Something wasn't implemented. Dump a stack trace and continue
+            // listening.
+            e.printStackTrace();
           }
         }
       } catch (BindException e) {

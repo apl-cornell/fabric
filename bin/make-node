@@ -54,6 +54,10 @@ Options:
   --days n
       number of days to certify the certificate for. Default: ${DEFAULT_DAYS}
 
+  --trust-ca-cert
+      If specified, the CA's certificate will be trusted without prompting the
+      user.
+
   The following are optional. If not specified, they will be left blank.
 
   --c country
@@ -130,6 +134,10 @@ while true; do
       shift
       DAYS="$1"
       shift || noArg days
+      ;;
+    --trust-ca-cert)
+      shift
+      TRUST_CA_CERT_OPT="--trust-ca-cert"
       ;;
     --c)
       shift
@@ -251,7 +259,7 @@ rm "${CSR}"
 
 # Import the certificate into the key store.
 "${TOP}"/bin/import-cert --ca "${CA}"/ca.crt --keystore "${KEYSTORE}" \
-  --pass "${PASSWD}" "${CERT}" || {
+  --pass "${PASSWD}" ${TRUST_CA_CERT_OPT} "${CERT}" || {
     rm "${CERT}"
     exit 1
   }
