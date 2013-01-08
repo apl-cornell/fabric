@@ -47,7 +47,7 @@ public class VersionWarrantyTable {
   final synchronized void put(long onum, VersionWarranty warranty) {
     if (defaultWarranty.expiresAfter(warranty)) {
       throw new InternalError("Attempted to insert a warranty that expires "
-          + "after the default warranty. This should not happen.");
+          + "before the default warranty. This should not happen.");
     }
 
     long expiry = warranty.expiry();
