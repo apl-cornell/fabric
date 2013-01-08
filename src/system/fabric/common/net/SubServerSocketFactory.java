@@ -7,6 +7,7 @@ import java.net.BindException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -205,6 +206,13 @@ public class SubServerSocketFactory {
         }
 
         queue.open(conn);
+      } catch (SocketException e) {
+        if ("Connection reset".equalsIgnoreCase(e.getMessage())) {
+          // Silently ignore connections that are reset.
+          return;
+        }
+
+        throw new NotImplementedException(e);
       } catch (IOException e) {
         // TODO: failed to initiate, close s.
         throw new NotImplementedException(e);
