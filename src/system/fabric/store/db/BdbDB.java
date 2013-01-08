@@ -470,6 +470,10 @@ public class BdbDB extends ObjectDB {
           VersionWarranty warranty =
               new VersionWarranty(toLong(data.getData()));
 
+          STORE_DB_LOGGER.finer("Recoving state for tid=" + tid + ", owner="
+              + owner.$getStore() + "/" + owner.$getOnum() + " (commit time="
+              + new Date(warranty.expiry()) + ")");
+
           // Loop through the updates for the current transaction.
           for (Pair<SerializedObject, UpdateType> update : pending.modData) {
             long onum = update.first.getOnum();
@@ -478,10 +482,13 @@ public class BdbDB extends ObjectDB {
             writeLocks.put(onum, tid);
 
             if (update.second == UpdateType.WRITE) {
+              STORE_DB_LOGGER.finest("Recovered write to " + onum);
               addWrittenOnumByTid(tid, owner, onum);
 
               // Restore the object's warranty.
               versionWarrantyTable.put(onum, warranty);
+            } else {
+              STORE_DB_LOGGER.finest("Recovered create for " + onum);
             }
           }
         }
