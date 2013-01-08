@@ -419,8 +419,6 @@ public abstract class ObjectDB {
     return versionWarrantyTable.get(onum);
   }
 
-  private static final long FIVE_MINUTES = 5 * 60 * 1000;
-
   /**
    * Stores a version warranty for the object stored at the given onum.
    */
@@ -430,7 +428,7 @@ public abstract class ObjectDB {
     if (warranty.expiresAfter(longestWarranty)) {
       // Fudge longestWarranty so we don't continually touch disk when we create
       // a sequence of warranties whose expiries increase with real time.
-      longestWarranty = new VersionWarranty(warranty.expiry() + FIVE_MINUTES);
+      longestWarranty = new VersionWarranty(warranty.expiry() + 30*1000);
       saveLongestWarranty();
     }
   }
