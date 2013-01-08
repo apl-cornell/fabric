@@ -108,7 +108,7 @@ public class Threading {
    */
   public static ScheduledFuture<?> scheduleAt(long timeMillis, Runnable task) {
     return getScheduledThreadPool().schedule(task,
-        System.currentTimeMillis() - timeMillis, TimeUnit.MILLISECONDS);
+        timeMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
   }
 
   /**
