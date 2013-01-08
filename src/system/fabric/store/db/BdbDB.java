@@ -43,6 +43,8 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.FClass;
@@ -452,11 +454,43 @@ public class BdbDB extends ObjectDB {
     STORE_DB_LOGGER.fine("Bdb recovering state");
 
     try {
-      // Scan through the database of prepares to recover writeLocks and
-      // writtenOnumsByTid.
       Transaction txn = env.beginTransaction(null, null);
       DatabaseEntry key = new DatabaseEntry();
       DatabaseEntry data = new DatabaseEntry();
+
+      // Scan through the commitTimes database and build a commit schedule.
+      SortedMap<Long, List<Pair<Long, Principal>>> commitSchedule =
+          new TreeMap<Long, List<Pair<Long, Principal>>>();
+      LongKeyMap<OidKeyHashMap<VersionWarranty>> commitTimesByTid =
+          new LongKeyHashMap<OidKeyHashMap<VersionWarranty>>();
+      {
+        Cursor commitTimesCursor = commitTimes.openCursor(txn, null);
+        while (commitTimesCursor.getNext(key, data, null) != OperationStatus.NOTFOUND) {
+          Pair<Long, Principal> tid = toTid(key.getData());
+          long commitTime = toLong(data.getData());
+
+          // Insert into commitSchedule.
+          List<Pair<Long, Principal>> toCommit = commitSchedule.get(commitTime);
+          if (toCommit == null) {
+            toCommit = new ArrayList<Pair<Long, Principal>>(2);
+            commitSchedule.put(commitTime, toCommit);
+          }
+          toCommit.add(tid);
+
+          // Insert into commitTimesByTid.
+          OidKeyHashMap<VersionWarranty> entry =
+              commitTimesByTid.get(tid.first);
+          if (entry == null) {
+            entry = new OidKeyHashMap<VersionWarranty>();
+            commitTimesByTid.put(tid.first, entry);
+          }
+          entry.put(tid.second, new VersionWarranty(commitTime));
+        }
+        commitTimesCursor.close();
+      }
+
+      // Scan through the database of prepares to recover writeLocks,
+      // writtenOnumsByTid, and warranties for written objects.
       {
         Cursor preparedCursor = prepared.openCursor(txn, null);
         while (preparedCursor.getNext(key, data, null) != OperationStatus.NOTFOUND) {
@@ -473,30 +507,13 @@ public class BdbDB extends ObjectDB {
 
             if (update.second == UpdateType.WRITE) {
               addWrittenOnumByTid(tid, owner, onum);
+              OidKeyHashMap<VersionWarranty> entry = commitTimesByTid.get(tid);
+              VersionWarranty warranty = entry.get(owner);
+              versionWarrantyTable.put(onum, warranty);
             }
           }
         }
         preparedCursor.close();
-      }
-
-      // Scan through the commitTimes database and build a commit schedule.
-      SortedMap<Long, List<Pair<Long, Principal>>> commitSchedule =
-          new TreeMap<Long, List<Pair<Long, Principal>>>();
-      {
-        Cursor commitTimesCursor = commitTimes.openCursor(txn, null);
-        while (commitTimesCursor.getNext(key, data, null) != OperationStatus.NOTFOUND) {
-          Pair<Long, Principal> tid = toTid(key.getData());
-          long commitTime = toLong(data.getData());
-
-          List<Pair<Long, Principal>> toCommit = commitSchedule.get(commitTime);
-          if (toCommit == null) {
-            toCommit = new ArrayList<Pair<Long, Principal>>(2);
-            commitSchedule.put(commitTime, toCommit);
-          }
-
-          toCommit.add(tid);
-        }
-        commitTimesCursor.close();
       }
 
       // Recover the longest warranty issued and use that as the default
