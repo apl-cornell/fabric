@@ -55,6 +55,7 @@ import fabric.worker.Worker;
  */
 public abstract class ObjectDB {
 
+  private final WarrantyIssuer warrantyIssuer;
   protected final String name;
   private long nextGlobID;
 
@@ -220,6 +221,7 @@ public abstract class ObjectDB {
     this.nextGlobID = 0;
     this.longestWarranty = new VersionWarranty(0);
     this.versionWarrantyTable = new VersionWarrantyTable();
+    this.warrantyIssuer = new WarrantyIssuer(100, 1000, 10000, 500);
   }
 
   /**
@@ -271,13 +273,15 @@ public abstract class ObjectDB {
    */
   public final void registerUpdate(long tid, Principal worker,
       SerializedObject obj, UpdateType updateType) {
-    addWriteLock(obj.getOnum(), tid);
+    long onum = obj.getOnum();
+    addWriteLock(onum, tid);
     pendingByTid.get(tid).get(worker).modData
         .add(new Pair<SerializedObject, UpdateType>(obj, updateType));
 
     if (updateType == UpdateType.WRITE) {
       // Register the update.
-      addWrittenOnumByTid(tid, worker, obj.getOnum());
+      addWrittenOnumByTid(tid, worker, onum);
+      warrantyIssuer.notifyWritePrepare(onum);
     }
   }
 
@@ -428,7 +432,7 @@ public abstract class ObjectDB {
     if (warranty.expiresAfter(longestWarranty)) {
       // Fudge longestWarranty so we don't continually touch disk when we create
       // a sequence of warranties whose expiries increase with real time.
-      longestWarranty = new VersionWarranty(warranty.expiry() + 30*1000);
+      longestWarranty = new VersionWarranty(warranty.expiry() + 30 * 1000);
       saveLongestWarranty();
     }
   }
@@ -511,9 +515,12 @@ public abstract class ObjectDB {
    * cannot be created, and the existing one is returned.
    */
   public VersionWarranty refreshWarranty(long onum) {
-    // TODO Make this smarter. Currently, warranties last for at most a minute.
-    return extendWarranty(onum, System.currentTimeMillis() + 60000,
-        ExtendWarrantyMode.NON_STRICT);
+    Long newExpiry = warrantyIssuer.suggestWarranty(onum);
+    if (newExpiry == null) {
+      return versionWarrantyTable.get(onum);
+    }
+
+    return extendWarranty(onum, newExpiry, ExtendWarrantyMode.NON_STRICT);
   }
 
   /**
@@ -623,6 +630,8 @@ public abstract class ObjectDB {
       }
     }
 
+    // Notify the warranty issuer.
+    warrantyIssuer.notifyWriteCommit(onum);
   }
 
   /**
