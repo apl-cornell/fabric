@@ -12,12 +12,14 @@ import fabric.common.util.LongKeyMap;
 public class WarrantyIssuer {
   private static class HistoryEntry {
     Long lastEventTime;
-    long lastDefaultLengthSuggested;
+    long lastDefaultSuggestion;
+    long lastDefaultSuggestionLength;
     final PrepareIntervalHistory history;
 
     public HistoryEntry(int maxHistoryLength) {
       this.lastEventTime = null;
-      this.lastDefaultLengthSuggested = 0;
+      this.lastDefaultSuggestion = 0;
+      this.lastDefaultSuggestionLength = 0;
       this.history = new PrepareIntervalHistory(maxHistoryLength);
     }
   }
@@ -186,7 +188,7 @@ public class WarrantyIssuer {
         long suggestion = prediction - writeWindowPadding;
         if (suggestion > latestPossible) suggestion = latestPossible;
         synchronized (entry) {
-          entry.lastDefaultLengthSuggested = 0;
+          entry.lastDefaultSuggestionLength = 0;
         }
         return suggestion;
       }
@@ -194,10 +196,13 @@ public class WarrantyIssuer {
 
     // No more predicted writes. Just issue the default warranty.
     synchronized (entry) {
-      long length = entry.lastDefaultLengthSuggested * 2;
+      // If a previously issued default has yet to expire, keep it.
+      if (now < entry.lastDefaultSuggestion) return null;
+
+      long length = entry.lastDefaultSuggestionLength * 2;
       if (length < minWarrantyLength) length = minWarrantyLength;
       if (length > maxWarrantyLength) length = maxWarrantyLength;
-      entry.lastDefaultLengthSuggested = length;
+      entry.lastDefaultSuggestionLength = length;
       return now + length;
     }
   }
