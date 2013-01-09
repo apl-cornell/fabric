@@ -4,16 +4,21 @@ import java.util.Arrays;
 
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.Pair;
 
 /**
  * A warranty issuer is notified of write events and uses this information to
  * decide how long issued warranties should last.
  */
 public class WarrantyIssuer {
-  private static class HistoryEntry extends Pair<Long, PrepareIntervalHistory> {
+  private static class HistoryEntry {
+    Long lastEventTime;
+    long lastDefaultLengthSuggested;
+    final PrepareIntervalHistory history;
+
     public HistoryEntry(int maxHistoryLength) {
-      super(null, new PrepareIntervalHistory(maxHistoryLength));
+      this.lastEventTime = null;
+      this.lastDefaultLengthSuggested = 0;
+      this.history = new PrepareIntervalHistory(maxHistoryLength);
     }
   }
 
@@ -65,13 +70,6 @@ public class WarrantyIssuer {
   protected final long maxWarrantyLength;
 
   /**
-   * If there is insufficient data to make a prediction on the next write
-   * prepare, the issued warranty will be valid for this amount of time (in
-   * milliseconds).
-   */
-  protected final long defaultWarrantyLength;
-
-  /**
    * The amount of time around a predicted write for which no warranties will
    * be issued.
    */
@@ -97,27 +95,21 @@ public class WarrantyIssuer {
    *         the maximum length of time (in milliseconds) for which each issued
    *         warranty should be valid.
    *         
-   * @param defaultWarrantyLength
-   *         if there is insufficient data to make a prediction, the issued
-   *         warranty will be valid for this amount of time (in milliseconds).
-   *         
    * @param writeWindowPadding
    *         the amount of time around a predicted write for which no warranties
    *         will be issued.
    */
   protected WarrantyIssuer(int historyLength, long minWarrantyLength,
-      long maxWarrantyLength, long defaultWarrantyLength,
-      long writeWindowPadding) {
+      long maxWarrantyLength, long writeWindowPadding) {
     this.maxHistoryLength = historyLength;
     this.minWarrantyLength = minWarrantyLength;
     this.maxWarrantyLength = maxWarrantyLength;
-    this.defaultWarrantyLength = defaultWarrantyLength;
     this.writeWindowPadding = writeWindowPadding;
     this.history = new LongKeyHashMap<HistoryEntry>();
 
     // Sanity check.
-    if (defaultWarrantyLength < minWarrantyLength)
-      throw new InternalError("defaultWarrantyLength < minWarrantyLength");
+    if (minWarrantyLength > maxWarrantyLength)
+      throw new InternalError("minWarrantyLength > maxWarrantyLength");
   }
 
   private HistoryEntry getEntry(long onum) {
@@ -135,7 +127,7 @@ public class WarrantyIssuer {
    * writes to be prepared.
    */
   public synchronized void notifyWriteCommit(long onum) {
-    getEntry(onum).first = System.currentTimeMillis();
+    getEntry(onum).lastEventTime = System.currentTimeMillis();
   }
 
   /**
@@ -147,11 +139,11 @@ public class WarrantyIssuer {
     HistoryEntry entry = getEntry(onum);
     long now = System.currentTimeMillis();
 
-    if (entry.first != null) {
-      long interval = now - entry.first;
-      entry.second.add(interval);
+    if (entry.lastEventTime != null) {
+      long interval = now - entry.lastEventTime;
+      entry.history.add(interval);
     }
-    entry.first = now;
+    entry.lastEventTime = now;
   }
 
   /**
@@ -159,12 +151,13 @@ public class WarrantyIssuer {
    * write-prepare is predicted to arrive.
    */
   public Long suggestWarranty(long onum) {
+    HistoryEntry entry;
     long[] predictedWrites;
     synchronized (this) {
-      HistoryEntry entry = getEntry(onum);
-      predictedWrites = new long[entry.second.size];
+      entry = getEntry(onum);
+      predictedWrites = new long[entry.history.size];
       for (int i = 0; i < predictedWrites.length; i++) {
-        predictedWrites[i] = entry.first + entry.second.data[i];
+        predictedWrites[i] = entry.lastEventTime + entry.history.data[i];
       }
     }
     Arrays.sort(predictedWrites);
@@ -192,11 +185,20 @@ public class WarrantyIssuer {
         long latestPossible = now + maxWarrantyLength;
         long suggestion = prediction - writeWindowPadding;
         if (suggestion > latestPossible) suggestion = latestPossible;
+        synchronized (entry) {
+          entry.lastDefaultLengthSuggested = 0;
+        }
         return suggestion;
       }
     }
 
     // No more predicted writes. Just issue the default warranty.
-    return now + defaultWarrantyLength;
+    synchronized (entry) {
+      long length = entry.lastDefaultLengthSuggested * 2;
+      if (length < minWarrantyLength) length = minWarrantyLength;
+      if (length > maxWarrantyLength) length = maxWarrantyLength;
+      entry.lastDefaultLengthSuggested = length;
+      return now + length;
+    }
   }
 }
