@@ -189,7 +189,10 @@ public class WarrantyIssuer {
     for (long prediction : predictedWrites) {
       if (now < prediction) {
         // Have a predicted write that is in the future. Suggest a warranty.
-        return prediction - writeWindowPadding;
+        long latestPossible = now + maxWarrantyLength;
+        long suggestion = prediction - writeWindowPadding;
+        if (suggestion > latestPossible) suggestion = latestPossible;
+        return suggestion;
       }
     }
 
