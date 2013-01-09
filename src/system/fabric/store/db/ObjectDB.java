@@ -221,7 +221,7 @@ public abstract class ObjectDB {
     this.nextGlobID = 0;
     this.longestWarranty = new VersionWarranty(0);
     this.versionWarrantyTable = new VersionWarrantyTable();
-    this.warrantyIssuer = new WarrantyIssuer(100, 1000, 10000, 500);
+    this.warrantyIssuer = new WarrantyIssuer(100, 1000, 10000, 10000, 500);
   }
 
   /**

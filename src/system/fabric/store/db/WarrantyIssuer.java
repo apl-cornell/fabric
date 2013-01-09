@@ -59,6 +59,12 @@ public class WarrantyIssuer {
   protected final long minWarrantyLength;
 
   /**
+   * The maximum length of time (in milliseconds) for which each issued warranty
+   * should be valid.
+   */
+  protected final long maxWarrantyLength;
+
+  /**
    * If there is insufficient data to make a prediction on the next write
    * prepare, the issued warranty will be valid for this amount of time (in
    * milliseconds).
@@ -87,6 +93,10 @@ public class WarrantyIssuer {
    *         the minimum length of time (in milliseconds) for which each issued
    *         warranty should be valid.
    *         
+   * @param maxWarrantyLength
+   *         the maximum length of time (in milliseconds) for which each issued
+   *         warranty should be valid.
+   *         
    * @param defaultWarrantyLength
    *         if there is insufficient data to make a prediction, the issued
    *         warranty will be valid for this amount of time (in milliseconds).
@@ -96,9 +106,11 @@ public class WarrantyIssuer {
    *         will be issued.
    */
   protected WarrantyIssuer(int historyLength, long minWarrantyLength,
-      long defaultWarrantyLength, long writeWindowPadding) {
+      long maxWarrantyLength, long defaultWarrantyLength,
+      long writeWindowPadding) {
     this.maxHistoryLength = historyLength;
     this.minWarrantyLength = minWarrantyLength;
+    this.maxWarrantyLength = maxWarrantyLength;
     this.defaultWarrantyLength = defaultWarrantyLength;
     this.writeWindowPadding = writeWindowPadding;
     this.history = new LongKeyHashMap<HistoryEntry>();
@@ -134,9 +146,12 @@ public class WarrantyIssuer {
   public synchronized void notifyWritePrepare(long onum) {
     HistoryEntry entry = getEntry(onum);
     long now = System.currentTimeMillis();
-    long interval = now - entry.first;
+
+    if (entry.first != null) {
+      long interval = now - entry.first;
+      entry.second.add(interval);
+    }
     entry.first = now;
-    entry.second.add(interval);
   }
 
   /**
