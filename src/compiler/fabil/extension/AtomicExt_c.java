@@ -109,6 +109,16 @@ public class AtomicExt_c extends FabILExt_c {
             + " *= 2;\n"
             + "    "
             + flag
+            + " = true;\n"
+            + "    %S\n"
+            + "    try {\n"
+            + "      %LS\n"
+            + "    }\n"
+            + "    catch (final fabric.worker.RetryException "
+            + e
+            + ") {\n"
+            + "      "
+            + flag
             + " = false;"
             + "      continue "
             + label
