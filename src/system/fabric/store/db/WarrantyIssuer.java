@@ -1,9 +1,9 @@
 package fabric.store.db;
 
+import java.lang.ref.SoftReference;
 import java.util.Arrays;
 
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongKeyCache;
 
 /**
  * A warranty issuer is notified of write events and uses this information to
@@ -14,13 +14,28 @@ public class WarrantyIssuer {
     Long lastEventTime;
     long lastDefaultSuggestion;
     long lastDefaultSuggestionLength;
-    final PrepareIntervalHistory history;
+
+    SoftReference<PrepareIntervalHistory> history;
+    final int maxHistoryLength;
 
     public HistoryEntry(int maxHistoryLength) {
       this.lastEventTime = null;
       this.lastDefaultSuggestion = 0;
       this.lastDefaultSuggestionLength = 0;
-      this.history = new PrepareIntervalHistory(maxHistoryLength);
+
+      this.history =
+          new SoftReference<PrepareIntervalHistory>(new PrepareIntervalHistory(
+              maxHistoryLength));
+      this.maxHistoryLength = maxHistoryLength;
+    }
+
+    public PrepareIntervalHistory getHistory() {
+      PrepareIntervalHistory result = history.get();
+      if (result == null) {
+        result = new PrepareIntervalHistory(maxHistoryLength);
+        history = new SoftReference<PrepareIntervalHistory>(result);
+      }
+      return result;
     }
   }
 
@@ -83,7 +98,7 @@ public class WarrantyIssuer {
    * between a prepare and its immediately preceding reported event (either a
    * prepare or a commit).
    */
-  protected final LongKeyMap<HistoryEntry> history;
+  protected final LongKeyCache<HistoryEntry> history;
 
   /**
    * @param historyLength
@@ -107,7 +122,7 @@ public class WarrantyIssuer {
     this.minWarrantyLength = minWarrantyLength;
     this.maxWarrantyLength = maxWarrantyLength;
     this.writeWindowPadding = writeWindowPadding;
-    this.history = new LongKeyHashMap<HistoryEntry>();
+    this.history = new LongKeyCache<HistoryEntry>();
 
     // Sanity check.
     if (minWarrantyLength > maxWarrantyLength)
@@ -143,7 +158,7 @@ public class WarrantyIssuer {
 
     if (entry.lastEventTime != null) {
       long interval = now - entry.lastEventTime;
-      entry.history.add(interval);
+      entry.getHistory().add(interval);
     }
     entry.lastEventTime = now;
   }
@@ -157,9 +172,10 @@ public class WarrantyIssuer {
     long[] predictedWrites;
     synchronized (this) {
       entry = getEntry(onum);
-      predictedWrites = new long[entry.history.size];
+      PrepareIntervalHistory history = entry.getHistory();
+      predictedWrites = new long[history.size];
       for (int i = 0; i < predictedWrites.length; i++) {
-        predictedWrites[i] = entry.lastEventTime + entry.history.data[i];
+        predictedWrites[i] = entry.lastEventTime + history.data[i];
       }
     }
     Arrays.sort(predictedWrites);
