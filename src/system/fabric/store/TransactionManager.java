@@ -19,6 +19,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
@@ -231,61 +232,71 @@ public class TransactionManager {
       LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
 
-    // First, check read permissions. We do this before we attempt to do the
-    // actual prepare because we want to run the permissions check in a
-    // transaction outside of the worker's transaction.
-    Store store = Worker.getWorker().getStore(database.getName());
-    if (worker == null || worker.$getStore() != store
-        || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
-      try {
-        checkPerms(worker, reads.keySet(),
-            Collections.<SerializedObject> emptyList());
-      } catch (AccessException e) {
-        throw new TransactionPrepareFailedException(e.getMessage());
-      }
-    }
-
-    // This will store the set of onums of objects that were out of date.
-    LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
-        new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
-
-    // Check reads
-    synchronized (database) {
-      for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
-        long onum = entry.getKey();
-        int version = entry.getValue().intValue();
-
-        // Attempt to extend the object's warranty.
+    try {
+      // First, check read permissions. We do this before we attempt to do the
+      // actual prepare because we want to run the permissions check in a
+      // transaction outside of the worker's transaction.
+      Store store = Worker.getWorker().getStore(database.getName());
+      if (worker == null || worker.$getStore() != store
+          || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
         try {
-          ExtendWarrantyStatus status =
-              database.extendWarranty(worker, onum, version, commitTime);
-          switch (status) {
-          case OK:
-            break;
-
-          case BAD_VERSION:
-            SerializedObject obj = database.read(onum);
-            VersionWarranty warranty = database.refreshWarranty(onum);
-            versionConflicts.put(onum,
-                new Pair<SerializedObject, VersionWarranty>(obj, warranty));
-            continue;
-
-          case DENIED:
-            throw new TransactionPrepareFailedException(versionConflicts,
-                "Unable to extend warranty for object " + onum);
-          }
+          checkPerms(worker, reads.keySet(),
+              Collections.<SerializedObject> emptyList());
         } catch (AccessException e) {
-          throw new TransactionPrepareFailedException(versionConflicts,
-              e.getMessage());
+          throw new TransactionPrepareFailedException(e.getMessage());
         }
       }
-    }
 
-    if (!versionConflicts.isEmpty()) {
-      throw new TransactionPrepareFailedException(versionConflicts);
-    }
+      // This will store the set of onums of objects that were out of date.
+      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
+          new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
 
-    STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
+      // Check reads
+      synchronized (database) {
+        for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
+          long onum = entry.getKey();
+          int version = entry.getValue().intValue();
+
+          // Attempt to extend the object's warranty.
+          try {
+            ExtendWarrantyStatus status =
+                database.extendWarranty(worker, onum, version, commitTime);
+            switch (status) {
+            case OK:
+              break;
+
+            case BAD_VERSION:
+              SerializedObject obj = database.read(onum);
+              VersionWarranty warranty = database.refreshWarranty(onum);
+              versionConflicts.put(onum,
+                  new Pair<SerializedObject, VersionWarranty>(obj, warranty));
+              continue;
+
+            case DENIED:
+              throw new TransactionPrepareFailedException(versionConflicts,
+                  "Unable to extend warranty for object " + onum);
+            }
+          } catch (AccessException e) {
+            throw new TransactionPrepareFailedException(versionConflicts,
+                e.getMessage());
+          }
+        }
+      }
+
+      if (!versionConflicts.isEmpty()) {
+        throw new TransactionPrepareFailedException(versionConflicts);
+      }
+
+      STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
+    } catch (TransactionPrepareFailedException e) {
+      // Roll back the transaction.
+      try {
+        abortTransaction(worker, tid);
+      } catch (AccessException ae) {
+        throw new InternalError(ae);
+      }
+      throw e;
+    }
   }
 
   /**
