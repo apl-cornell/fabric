@@ -1,9 +1,12 @@
 package fabric.worker.memoize;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
+import java.util.WeakHashMap;
 
 /**
  * A cache for memoized method calls.
@@ -11,18 +14,33 @@ import java.util.Set;
 public class MemoCache {
 
   /* The lookup table itself. */
-  private final Map<CallTuple, MemoizedCall> table;
+  private static final Map<CallTuple, MemoizedCall> table =
+    Collections.synchronizedMap(new HashMap<CallTuple, MemoizedCall>());
 
   /* Map each object to the various memo entries that depend on it */
-  private final Map<Long,Set<CallTuple>> dependentCalls;
+  private static final Map<Long, Set<CallTuple>> dependentCalls =
+    Collections.synchronizedMap(new HashMap<Long,Set<CallTuple>>());
 
-  /* Stack of currently computing calls that are to be memoized. */
-  private final Set<CallTuple> computingCalls;
+  /* Currently computing calls that are to be memoized. */
+  private static final Set<CallTuple> computingCalls =
+    Collections.synchronizedSet(new HashSet<CallTuple>());
 
-  public MemoCache() {
-    table = new HashMap<CallTuple, MemoizedCall>();
-    dependentCalls = new HashMap<Long,Set<CallTuple>>();
-    computingCalls = new HashSet<CallTuple>();
+  /* Mapping of Threads to MemoCaches backing them. */
+  private static final Map<Thread, MemoCache> threadsMap =
+    Collections.synchronizedMap(new WeakHashMap<Thread, MemoCache>());
+
+  /* Thread specific stack of memoized calls. */
+  private final Stack<CallTuple> callStack;
+
+  private MemoCache() {
+    callStack = new Stack<CallTuple>();
+
+    Thread curThread = Thread.currentThread();
+    if (threadsMap.containsKey(curThread)) {
+      MemoCache parent = threadsMap.get(curThread);
+      if (!parent.callStack.empty())
+        callStack.push(parent.callStack.peek());
+    }
   }
 
   /**
@@ -34,21 +52,22 @@ public class MemoCache {
    */
   public Object reuseCall(CallTuple key) {
     noteMemoCall(key);
-    MemoizedCall call;
-    synchronized (this) {
-      call = table.get(key);
-    }
-    return call.getValue();
+    return table.get(key).getValue();
   }
 
   /**
    * Returns true if the call has an entry and false otherwise.
    */
-  public synchronized boolean containsCall(CallTuple key) {
-    if (table.containsKey(key)) {
-      return table.get(key).isValid();
+  public static boolean containsCall(CallTuple key) {
+    synchronized (computingCalls) {
+      try {
+        while (computingCalls.contains(key)) computingCalls.wait();
+      } catch (InterruptedException e) {
+        System.err.println("Interrupted while waiting for a computing call: " + e);
+      }
     }
-    return false;
+
+    return table.containsKey(key) && table.get(key).isValid();
   }
 
   /**
@@ -60,15 +79,13 @@ public class MemoCache {
    *
    * @param key Call to be invalidated.
    */
-  public synchronized void invalidateCall(CallTuple key) {
+  public static void invalidateCall(CallTuple key) {
     /* Other read items don't need to invalidate this call anymore. */
-    for (long readItem : table.get(key).reads()) {
+    for (long readItem : table.get(key).reads())
       dependentCalls.get(readItem).remove(key);
-    }
 
-    if (table.containsKey(key)) {
+    if (table.containsKey(key))
       table.get(key).invalidate();
-    }
   }
 
   /**
@@ -78,16 +95,13 @@ public class MemoCache {
    *
    * @param o The object that was updated.
    */
-  public synchronized void invalidateCallsUsing(long o) {
+  public static void invalidateCallsUsing(long o) {
     if (dependentCalls.containsKey(o)) {
       Set<CallTuple> callSet = dependentCalls.get(o);
       Set<CallTuple> calls = new HashSet<CallTuple>(callSet);
-      for (CallTuple c : calls) {
-        /* Don't invalidate if we're computing it! */
-        if (!computingCalls.contains(c)) {
+      for (CallTuple c : calls)
+        if (!computingCalls.contains(c))
           invalidateCall(c);
-        }
-      }
     }
   }
 
@@ -97,9 +111,11 @@ public class MemoCache {
    *
    * @param call The call we are beginning to compute a memoized value for.
    */
-  public synchronized void beginMemoRecord(CallTuple call) {
-    table.put(call, new MemoizedCall(call, this));
+  public void beginMemoRecord(CallTuple call) {
+    table.put(call, new MemoizedCall(call));
+    noteMemoCall(call);
     computingCalls.add(call);
+    callStack.push(call);
   }
 
   /**
@@ -107,10 +123,12 @@ public class MemoCache {
    *
    * @return The call that we are leaving (based on the MemoCache's call stack).
    */
-  private synchronized void leaveMemoRecord(CallTuple call) {
-    computingCalls.remove(call);
-    //noteMemoCall(call);
-    return;
+  private void leaveMemoRecord(CallTuple call) {
+    assert call == callStack.pop() : "Calls not consistent in a thread specific call stack!";
+    synchronized (computingCalls) {
+      computingCalls.remove(call);
+      computingCalls.notifyAll();
+    }
   }
 
   /**
@@ -122,9 +140,9 @@ public class MemoCache {
    * @return The result of the memoized call.  This allows us to rewrite returns
    * without adding an additional statement.  It is a bit of a "hack."
    */
-  public synchronized Object endMemoRecord(CallTuple call, Object val) {
+  public Object endMemoRecord(CallTuple call, Object val) {
     leaveMemoRecord(call);
-    table.get(call).setValue(val);
+    getMemoizedCall(call).setValue(val);
     return val;
   }
 
@@ -132,7 +150,7 @@ public class MemoCache {
    * Abruptly end the computation of a memoized call in the event of an
    * Exception or Error.
    */
-  public synchronized void abruptEndMemoRecord(CallTuple call) {
+  public void abruptEndMemoRecord(CallTuple call) {
     /* XXX: Not sure if should remember reads on abrupt exit from method, but I
      * think this is the right thing to do.
      */
@@ -146,13 +164,15 @@ public class MemoCache {
    *
    * @param itemRead The item that has been read.
    */
-  public synchronized void noteReadDependency(long itemRead) {
-    if (!dependentCalls.containsKey(itemRead)) {
-      dependentCalls.put(itemRead, new HashSet<CallTuple>());
-    }
-    for (CallTuple call : computingCalls) {
-      table.get(call).noteRead(itemRead);
-      dependentCalls.get(itemRead).add(call);
+  public void noteReadDependency(long itemRead) {
+    if (!callStack.empty()) {
+      CallTuple curCall = callStack.peek();
+
+      if (!dependentCalls.containsKey(itemRead))
+        dependentCalls.put(itemRead, new HashSet<CallTuple>());
+      dependentCalls.get(itemRead).add(curCall);
+
+      getMemoizedCall(curCall).noteRead(itemRead);
     }
   }
 
@@ -163,25 +183,39 @@ public class MemoCache {
    *
    * @param subcall The subcall that we're using a memoized value for.
    */
-  public synchronized void noteMemoCall(CallTuple subcall) {
-    /* For now, this isn't working, so we're doing away with it.
+  public void noteMemoCall(CallTuple subcall) {
     if (!callStack.empty()) {
       CallTuple parentCall = callStack.peek();
-      table.get(parentCall).noteMemoizedSubCall(subcall);
-    }*/
-  }
-
-  /*public void storeComputation(CallTuple call, Runnable computation) {
-    MemoizedCall memCall = new MemoizedCall(call, computation, this);
-    synchronized (this) {
-      table.put(call, memCall);
+      getMemoizedCall(parentCall).noteMemoizedSubCall(subcall);
     }
-  }*/
+  }
 
   /**
    * Get the MemoizedCall object associated with the given CallTuple.
    */
-  synchronized MemoizedCall getMemoizedCall(CallTuple call) {
+  static MemoizedCall getMemoizedCall(CallTuple call) {
     return table.get(call);
+  }
+
+  /**
+   * Register the given thread which will be starting at this point.
+   */
+  public static void registerThread(Thread t) {
+    threadsMap.put(t, new MemoCache());
+  }
+
+  /**
+   * Get the currently active instance of MemoCache for this thread.
+   */
+  public static MemoCache getInstance() {
+    Thread curThread = Thread.currentThread();
+    synchronized (threadsMap) {
+      MemoCache mc = threadsMap.get(curThread);
+      if (mc == null) {
+        mc = new MemoCache();
+        threadsMap.put(curThread, mc);
+      }
+      return mc;
+    }
   }
 }

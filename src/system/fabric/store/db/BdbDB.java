@@ -14,6 +14,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.logging.Level;
 
+import com.sleepycat.bind.tuple.BooleanBinding;
+import com.sleepycat.bind.tuple.LongBinding;
 import com.sleepycat.je.Cursor;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
@@ -157,15 +159,20 @@ public class BdbDB extends ObjectDB {
       PendingTransaction pending = remove(workerPrincipal, txn, tid);
 
       if (pending != null) {
+        Serializer serializer = new Serializer();
         for (SerializedObject o : pending.modData) {
           long onum = o.getOnum();
           STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
-          DatabaseEntry onumData = new DatabaseEntry(toBytes(onum));
-          DatabaseEntry objData = new DatabaseEntry(toBytes(o));
+
+          DatabaseEntry onumData = new DatabaseEntry();
+          LongBinding.longToEntry(onum, onumData);
+
+          DatabaseEntry objData = new DatabaseEntry(serializer.toBytes(o));
+
           db.put(txn, onumData, objData);
 
           // Remove any cached globs containing the old version of this object.
-          notifyCommittedUpdate(sm, toLong(onumData.getData()));
+          notifyCommittedUpdate(sm, onum);
 
           // Update the version-number cache.
           cachedVersions.put(onum, o.getVersion());
@@ -205,7 +212,9 @@ public class BdbDB extends ObjectDB {
   @Override
   public SerializedObject read(long onum) {
     STORE_DB_LOGGER.finest("Bdb read onum " + onum);
-    DatabaseEntry key = new DatabaseEntry(toBytes(onum));
+    DatabaseEntry key = new DatabaseEntry();
+    LongBinding.longToEntry(onum, key);
+
     DatabaseEntry data = new DatabaseEntry();
 
     try {
@@ -235,7 +244,9 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public boolean exists(long onum) {
-    DatabaseEntry key = new DatabaseEntry(toBytes(onum));
+    DatabaseEntry key = new DatabaseEntry();
+    LongBinding.longToEntry(onum, key);
+
     DatabaseEntry data = new DatabaseEntry();
 
     try {
@@ -267,12 +278,12 @@ public class BdbDB extends ObjectDB {
           nextOnum = ONumConstants.FIRST_UNRESERVED;
 
           if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
-            nextOnum = toLong(data.getData());
+            nextOnum = LongBinding.entryToLong(data);
           }
 
           lastReservedOnum = nextOnum + ONUM_RESERVE_SIZE + num - i - 1;
 
-          data.setData(toBytes(lastReservedOnum + 1));
+          LongBinding.longToEntry(lastReservedOnum + 1, data);
           meta.put(txn, onumCounter, data);
           txn.commit();
 
@@ -315,7 +326,7 @@ public class BdbDB extends ObjectDB {
       boolean result = false;
 
       if (meta.get(txn, initializationStatus, data, LockMode.DEFAULT) == SUCCESS) {
-        result = toBoolean(data.getData());
+        result = BooleanBinding.entryToBoolean(data);
       }
 
       txn.commit();
@@ -333,7 +344,8 @@ public class BdbDB extends ObjectDB {
 
     try {
       Transaction txn = env.beginTransaction(null, null);
-      DatabaseEntry data = new DatabaseEntry(toBytes(true));
+      DatabaseEntry data = new DatabaseEntry();
+      BooleanBinding.booleanToEntry(true, data);
       meta.put(txn, initializationStatus, data);
       txn.commit();
     } catch (DatabaseException e) {
@@ -381,26 +393,6 @@ public class BdbDB extends ObjectDB {
     return pending;
   }
 
-  private static byte[] toBytes(boolean b) {
-    byte[] result = { (byte) (b ? 1 : 0) };
-    return result;
-  }
-
-  private static boolean toBoolean(byte[] data) {
-    return data[0] == 1;
-  }
-
-  private static byte[] toBytes(long i) {
-    byte[] data = new byte[8];
-
-    for (int j = 0; j < 8; j++) {
-      data[7 - j] = (byte) (i & 0xff);
-      i = i >>> 8;
-    }
-
-    return data;
-  }
-
   private static byte[] toBytes(long tid, Principal worker) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -417,27 +409,8 @@ public class BdbDB extends ObjectDB {
     }
   }
 
-  private static long toLong(byte[] data) {
-    long i = 0;
-
-    for (int j = 0; j < 8; j++) {
-      i = i << 8;
-      i = i | (data[j] & 0xff);
-    }
-
-    return i;
-  }
-
   private static byte[] toBytes(FastSerializable obj) {
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      ObjectOutputStream oos = new ObjectOutputStream(bos);
-      obj.write(oos);
-      oos.flush();
-      return bos.toByteArray();
-    } catch (IOException e) {
-      throw new InternalError(e);
-    }
+    return new Serializer().toBytes(obj);
   }
 
   private static PendingTransaction toPendingTransaction(byte[] data) {
@@ -457,6 +430,52 @@ public class BdbDB extends ObjectDB {
       return new SerializedObject(ois);
     } catch (IOException e) {
       throw new InternalError(e);
+    }
+  }
+
+  /**
+   * Utility class for serializing FastSerializable objects. This avoids
+   * creating a new ObjectOutputStream for each object serialized, while
+   * maintaining the illusion that each object is serialized with a fresh
+   * ObjectOutputStream. This allows each object to be deserialized separately.
+   */
+  private static class Serializer {
+    private final ByteArrayOutputStream bos;
+    private final ObjectOutputStream oos;
+    private static final byte[] HEADER;
+
+    static {
+      // Save the header that ObjectOutputStream writes upon its initialization.
+      try {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.flush();
+        HEADER = bos.toByteArray();
+      } catch (IOException e) {
+        throw new InternalError(e);
+      }
+    }
+
+    public Serializer() {
+      try {
+        this.bos = new ByteArrayOutputStream();
+        this.oos = new ObjectOutputStream(bos);
+        oos.flush();
+      } catch (IOException e) {
+        throw new InternalError(e);
+      }
+    }
+
+    public byte[] toBytes(FastSerializable obj) {
+      try {
+        bos.reset();
+        bos.write(HEADER);
+        obj.write(oos);
+        oos.flush();
+        return bos.toByteArray();
+      } catch (IOException e) {
+        throw new InternalError(e);
+      }
     }
   }
 

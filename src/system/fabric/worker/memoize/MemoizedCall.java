@@ -26,20 +26,16 @@ public class MemoizedCall {
   /* MemoizedCalls which have this call as a subcall. */
   private final Set<CallTuple> parentCalls;
 
-  /* The MemoCache that this MemoizedCall belongs to. */
-  private MemoCache memo;
-
   /**
    * Create a new MemoizedCall.
    */
-  public MemoizedCall(CallTuple call, MemoCache memo) {
+  public MemoizedCall(CallTuple call) {
     this.call = call;
     this.value = null;
     this.valid = false;
     this.itemsRead = new HashSet<Long>();
     this.subCalls = new HashSet<CallTuple>();
     this.parentCalls = new HashSet<CallTuple>();
-    this.memo = memo;
   }
 
   /**
@@ -70,11 +66,11 @@ public class MemoizedCall {
   public synchronized void invalidate() {
     valid = false;
     itemsRead.clear();
-    for (CallTuple child : subCalls)
-      memo.getMemoizedCall(child).removeParent(call);
+    for (CallTuple child : new HashSet<CallTuple>(subCalls))
+      MemoCache.getMemoizedCall(child).removeParent(call);
     subCalls.clear();
-    for (CallTuple parent : parentCalls)
-      memo.invalidateCall(parent);
+    for (CallTuple parent : new HashSet<CallTuple>(parentCalls))
+      MemoCache.invalidateCall(parent);
   }
 
   /**
@@ -82,9 +78,7 @@ public class MemoizedCall {
    * is currently computing, return an empty Set.
    */
   public synchronized Set<Long> reads() {
-    if (!valid)
-      return new HashSet<Long>();
-    return new HashSet<Long>(itemsRead);
+    return (!valid) ? new HashSet<Long>() : new HashSet<Long>(itemsRead);
   }
 
   /**
@@ -101,7 +95,7 @@ public class MemoizedCall {
    */
   public synchronized void noteMemoizedSubCall(CallTuple subCall) {
     subCalls.add(subCall);
-    memo.getMemoizedCall(subCall).addParent(this.call);
+    MemoCache.getMemoizedCall(subCall).addParent(this.call);
   }
   
   /**

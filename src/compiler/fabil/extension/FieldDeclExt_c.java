@@ -162,7 +162,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     String regRead =
         finalField ? ""
             : "fabric.worker.transaction.TransactionManager.getInstance().registerRead(this);"
-              + "fabric.worker.Worker.getWorker().getMemoCache().noteReadDependency(this.$getOnum());";
+              + "fabric.worker.memoize.MemoCache.getInstance().noteReadDependency(this.$getOnum());";
     members.add(qq.parseMember(flags + " %T get$" + name + "() {" + regRead
         + "return this." + name + "; }", typeNode));
 
@@ -175,7 +175,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
               + "this." + name + " = val;"
               + "if (transactionCreated) tm.commitTransaction();"
               /* Added for memoization work. XXX: It's basically a hack */
-              + "fabric.worker.Worker.getWorker().getMemoCache().invalidateCallsUsing(this.$getOnum());"
+              + "fabric.worker.memoize.MemoCache.getInstance().invalidateCallsUsing(this.$getOnum());"
               + "return val; }", typeNode, typeNode));
 
       // Add post-incrementer and post-decrementer if type is numeric.

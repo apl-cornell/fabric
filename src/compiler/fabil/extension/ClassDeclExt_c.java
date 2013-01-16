@@ -633,12 +633,27 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
                 + "setTransactionManager(fabric.worker.transaction.TransactionManager tm) "
                 + "{$tm = tm;}"));
 
+    /* Added for memoization work.  Add MemoCache field and accessors. */
+    body =
+        body.addMember(qq
+            .parseMember("private fabric.worker.memoize.MemoCache $mc;"));
+    body =
+        body.addMember(qq
+            .parseMember("public final fabric.worker.memoize.MemoCache "
+                + "getMemoCache() { return $mc; }"));
+    body =
+        body.addMember(qq
+            .parseMember("public final void "
+                + "setMemoCache(fabric.worker.memoize.MemoCache mc) "
+                + "{$mc = mc;}"));
+
     // Add the start() method if one doesn't yet exist.
     if (type.methods("start", Collections.<Type> emptyList()).isEmpty()) {
       body =
-          body.addMember(qq.parseMember("public void start() {"
+          body.addMember(qq.parseMember("public void start() {\n"
               + "fabric.worker.transaction.TransactionManager.getInstance()"
-              + ".registerThread(this); super.start();}"));
+              + ".registerThread(this);\n"
+              + "super.start();\n}"));
     }
     result = result.body(body);
 

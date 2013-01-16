@@ -2,6 +2,7 @@ package fabric.store;
 
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.store.db.GroupTable;
 
 /**
@@ -46,6 +47,11 @@ public class PartialObjectGroup extends GroupTable.Entry {
    */
   public int size() {
     return size;
+  }
+
+  @Override
+  protected LongSet onums() {
+    return objects.keySet();
   }
 
   public void mergeFrom(PartialObjectGroup from) {

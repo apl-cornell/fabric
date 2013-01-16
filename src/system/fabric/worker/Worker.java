@@ -56,7 +56,6 @@ import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.admin.WorkerAdmin;
 import fabric.worker.admin.WorkerNotRunningException;
-import fabric.worker.memoize.MemoCache;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.shell.ChainedCommandSource;
@@ -138,9 +137,6 @@ public final class Worker {
   // force Timing to load.
   @SuppressWarnings("unused")
   private static final Timing t = Timing.APP;
-
-  /** The global memo cache. */
-  private final MemoCache memoCache;
 
   /**
    * Initializes the Fabric <code>Worker</code>. When connecting to a store, the
@@ -268,8 +264,6 @@ public final class Worker {
 
     this.labelCache = new LabelCache();
 
-    this.memoCache = new MemoCache();
-
     this.principal =
         initializePrincipal(config.homeStore, principalOnum,
             this.config.getKeyMaterial());
@@ -366,13 +360,6 @@ public final class Worker {
    */
   public FetchManager fetchManager() {
     return fetchManager;
-  }
-
-  /**
-   * @return the worker node's memo cache.
-   */
-  public MemoCache getMemoCache() {
-    return memoCache;
   }
 
   /**

@@ -1,6 +1,7 @@
 package fabric.common;
 
 import fabric.worker.transaction.TransactionManager;
+import fabric.worker.memoize.MemoCache;
 
 /**
  * A FabricThread is a thread that has an associated TransactionManager. This

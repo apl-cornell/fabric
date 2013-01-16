@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -204,6 +205,13 @@ public class SubServerSocketFactory {
         }
 
         queue.open(conn);
+      } catch (SocketException e) {
+        if ("Connection reset".equalsIgnoreCase(e.getMessage())) {
+          // Silently ignore connections that are reset.
+          return;
+        }
+
+        throw new NotImplementedException(e);
       } catch (IOException e) {
         // TODO: failed to initiate, close s.
         throw new NotImplementedException(e);
@@ -227,9 +235,15 @@ public class SubServerSocketFactory {
         sock = new ServerSocket(address.getPort(), 0, address.getAddress());
         while (true) {
           try {
-            recvConnection(sock.accept());
-          } catch (IOException e) {
-            recvException(e);
+            try {
+              recvConnection(sock.accept());
+            } catch (IOException e) {
+              recvException(e);
+            }
+          } catch (NotImplementedException e) {
+            // Something wasn't implemented. Dump a stack trace and continue
+            // listening.
+            e.printStackTrace();
           }
         }
       } catch (IOException exc) {

@@ -3,7 +3,7 @@
 # Wrapper script for fabric.store.Main, the Fabric store.
 source "$(dirname $0)/defs"
 
-debug_opts="-Xdebug -Xrunjdwp:transport=dt_socket,server=y"
+debug_opts="-Xprof -Xdebug -Xrunjdwp:transport=dt_socket,server=y"
 debug_port=3370
 
 # default app home is Fabric root

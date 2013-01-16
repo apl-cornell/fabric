@@ -10,6 +10,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -171,6 +172,13 @@ abstract class Channel extends Thread {
       }
     } catch (final EOFException exc) {
       recvClose();
+    } catch (final SocketException e) {
+      if ("Connection reset".equalsIgnoreCase(e.getMessage())) {
+        NETWORK_CHANNEL_LOGGER.log(Level.FINE, "Connection reset", e);
+        recvClose();
+      } else {
+        throw new NotImplementedException(e);
+      }
     } catch (final IOException exc) {
       throw new NotImplementedException(exc);
     }

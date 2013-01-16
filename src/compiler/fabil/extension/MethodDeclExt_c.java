@@ -76,6 +76,19 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
             .parseStmt("fabric.worker.transaction.TransactionManager"
                 + ".getInstance().registerThread(this);"));
 
+    /* Added for memoization work */
+    body =
+      body.prepend(qq.
+          parseStmt("if (Thread.currentThread() instanceof "
+              + "fabric.common.FabricThread) {\n"
+              + "  fabric.common.FabricThread $curThread = "
+              + "(fabric.common.FabricThread) Thread.currentThread();\n"
+              + "  $mc = new "
+              + "fabric.worker.memoize.MemoCache($curThread.getMemoCache());\n"
+              + "} else {\n"
+              + "  $mc = new fabric.worker.memoize.MemoCache();\n"
+              + "}\n"));
+
     return method.body(body);
   }
 
@@ -113,13 +126,14 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     return method.body(nf.Block(CG, qq.parseStmt("{\n"
           + "  final fabric.worker.memoize.CallTuple $memoCallTup = "
           +   "new fabric.worker.memoize." + ctType + "(\"" + method.name()
-          +     "\", " + callee + ", "
+          +     "\", %s, "
           +     "java.util.Arrays.asList(new java.lang.Object[]"
           +     "{" + args + "}));\n"
           + "  final fabric.worker.memoize.MemoCache $memoCache = " 
-          +   "fabric.worker.Worker.getWorker().getMemoCache();\n"
-          + "  synchronized ($memoCache) {\n"
-          + "    if ($memoCache.containsCall($memoCallTup))\n"
+          +   "fabric.worker.memoize.MemoCache.getInstance();\n"
+          + "  synchronized (fabric.worker.memoize.MemoCache.class) {\n"
+          + "    if "
+          + "(fabric.worker.memoize.MemoCache.containsCall($memoCallTup))\n"
           + "      return (%T) $memoCache.reuseCall($memoCallTup);\n"
           + "  }\n"
           + "  $memoCache.beginMemoRecord($memoCallTup);\n"
@@ -129,7 +143,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
           + "    $memoCache.abruptEndMemoRecord($memoCallTup);\n"
           + "    throw e;\n"
           + "  }\n"
-          + "}", mmr.methodReturnType(), method.body())));
+          + "}", callee, mmr.methodReturnType(), method.body())));
   }
 
   @Override

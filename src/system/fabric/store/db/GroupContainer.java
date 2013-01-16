@@ -75,4 +75,9 @@ public final class GroupContainer extends GroupTable.Entry {
       return glob;
     }
   }
+
+  @Override
+  protected LongSet onums() {
+    return onums;
+  }
 }

@@ -79,6 +79,8 @@ public final class ReadMapEntry {
       if (this.obj.store.isLocalStore()) return;
 
       ObjectCache.Entry entry = this.obj.store.readFromCache(this.obj.onum);
+      if (entry == null) return;
+
       obj = entry.getImpl(false);
       if (obj == null) return;
 

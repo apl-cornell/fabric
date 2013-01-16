@@ -71,11 +71,15 @@ public class AtomicExt_c extends FabILExt_c {
     String e = "$e" + (freshTid++);
     String currentTid = "$currentTid" + (freshTid++);
     String tm = "$tm" + (freshTid++);
+    String backoff = "$backoff" + (freshTid++);
 
     String block =
         "{\n" + "  %LS\n" + "  fabric.worker.transaction.TransactionManager "
             + tm
             + " = fabric.worker.transaction.TransactionManager.getInstance();\n"
+            + "  int "
+            + backoff
+            + " = 1;\n"
             + "  "
             + label
             + ": for (boolean "
@@ -83,6 +87,26 @@ public class AtomicExt_c extends FabILExt_c {
             + " = false; !"
             + flag
             + "; ) {\n"
+            + "    if ("
+            + backoff
+            + " > 32) {\n"
+            + "      while (true) {\n"
+            + "        try {\n"
+            + "          java.lang.Thread.sleep("
+            + backoff
+            + ");\n"
+            + "          break;\n"
+            + "        } catch (java.lang.InterruptedException "
+            + e
+            + ") {\n"
+            + "        }\n"
+            + "      }\n"
+            + "    }\n"
+            + "    if ("
+            + backoff
+            + " < 5000) "
+            + backoff
+            + " *= 2;\n"
             + "    "
             + flag
             + " = true;\n"

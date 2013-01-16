@@ -3,7 +3,7 @@
 # Wrapper script for fabric.worker.Worker, the Fabric worker.
 source "$(dirname $0)/defs"
 
-debug_opts="-Xdebug -Xrunjdwp:transport=dt_socket,server=y"
+debug_opts="-Xprof -Xdebug -Xrunjdwp:transport=dt_socket,server=y"
 debug_port=3371
 debug_suspend=
 
