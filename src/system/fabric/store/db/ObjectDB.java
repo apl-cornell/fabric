@@ -102,8 +102,10 @@ public abstract class ObjectDB {
 
       size = in.readInt();
       this.modData = new ArrayList<SerializedObject>(size);
-      for (int i = 0; i < size; i++)
-        modData.add(new SerializedObject(in));
+      if (in.readBoolean()) {
+        for (int i = 0; i < size; i++)
+          modData.add(new SerializedObject(in));
+      }
     }
 
     /**
@@ -138,6 +140,30 @@ public abstract class ObjectDB {
      */
     @Override
     public void write(DataOutput out) throws IOException {
+      writeCommon(out);
+
+      // Indicate that contents of modData will follow.
+      out.writeBoolean(true);
+
+      for (SerializedObject obj : modData)
+        obj.write(out);
+    }
+
+    /**
+     * Serializes this PendingTransaction out to the given output stream, whilst
+     * omitting data about the objects that have been modified or created.
+     */
+    void writeNoModData(DataOutput out) throws IOException {
+      writeCommon(out);
+
+      // Indicate that contents of modData will not follow.
+      out.writeBoolean(false);
+    }
+
+    /**
+     * Writes everything but contents of modData.
+     */
+    private void writeCommon(DataOutput out) throws IOException {
       out.writeLong(tid);
 
       out.writeBoolean(owner != null);
@@ -151,8 +177,6 @@ public abstract class ObjectDB {
         out.writeLong(onum);
 
       out.writeInt(modData.size());
-      for (SerializedObject obj : modData)
-        obj.write(out);
     }
   }
 
