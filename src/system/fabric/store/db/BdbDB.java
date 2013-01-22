@@ -249,12 +249,13 @@ public class BdbDB extends ObjectDB {
             PendingTransaction pending = remove(workerPrincipal, txn, tid);
 
             if (pending != null) {
+              Serializer serializer = new Serializer();
               for (Pair<SerializedObject, UpdateType> update : pending.modData) {
                 SerializedObject o = update.first;
                 long onum = o.getOnum();
                 STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
                 DatabaseEntry onumData = new DatabaseEntry(toBytes(onum));
-                DatabaseEntry objData = new DatabaseEntry(toBytes(o));
+                DatabaseEntry objData = new DatabaseEntry(serializer.toBytes(o));
                 db.put(txn, onumData, objData);
 
                 // Remove any cached globs containing the old version of this object.
@@ -638,15 +639,7 @@ public class BdbDB extends ObjectDB {
   }
 
   private static byte[] toBytes(FastSerializable obj) {
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      ObjectOutputStream oos = new ObjectOutputStream(bos);
-      obj.write(oos);
-      oos.flush();
-      return bos.toByteArray();
-    } catch (IOException e) {
-      throw new InternalError(e);
-    }
+    return new Serializer().toBytes(obj);
   }
 
   private static PendingTransaction toPendingTransaction(byte[] data) {
@@ -666,6 +659,52 @@ public class BdbDB extends ObjectDB {
       return new SerializedObject(ois);
     } catch (IOException e) {
       throw new InternalError(e);
+    }
+  }
+
+  /**
+   * Utility class for serializing FastSerializable objects. This avoids
+   * creating a new ObjectOutputStream for each object serialized, while
+   * maintaining the illusion that each object is serialized with a fresh
+   * ObjectOutputStream. This allows each object to be deserialized separately.
+   */
+  private static class Serializer {
+    private final ByteArrayOutputStream bos;
+    private final ObjectOutputStream oos;
+    private static final byte[] HEADER;
+
+    static {
+      // Save the header that ObjectOutputStream writes upon its initialization.
+      try {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.flush();
+        HEADER = bos.toByteArray();
+      } catch (IOException e) {
+        throw new InternalError(e);
+      }
+    }
+
+    public Serializer() {
+      try {
+        this.bos = new ByteArrayOutputStream();
+        this.oos = new ObjectOutputStream(bos);
+        oos.flush();
+      } catch (IOException e) {
+        throw new InternalError(e);
+      }
+    }
+
+    public byte[] toBytes(FastSerializable obj) {
+      try {
+        bos.reset();
+        bos.write(HEADER);
+        obj.write(oos);
+        oos.flush();
+        return bos.toByteArray();
+      } catch (IOException e) {
+        throw new InternalError(e);
+      }
     }
   }
 
