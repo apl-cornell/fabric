@@ -439,6 +439,7 @@ public class TransactionManager {
   private GroupContainer makeGroup(long onum) {
     // Obtain a partial group for the object.
     PartialObjectGroup partialGroup = readPartialGroup(onum);
+    if (partialGroup == null) return null;
 
     for (Entry<SerializedObject> entry : partialGroup.frontier.entrySet()) {
       long frontierOnum = entry.getKey();
