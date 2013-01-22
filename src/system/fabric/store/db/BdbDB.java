@@ -73,6 +73,11 @@ public class BdbDB extends ObjectDB {
   private Database prepared;
 
   /**
+   * Database containing objects modified by prepared transactions.
+   */
+  private Database preparedWrites;
+
+  /**
    * Database containing the commit times for confirmed transactions
    * (uncommitted transactions for which COMMIT messages have been received).
    */
@@ -140,6 +145,9 @@ public class BdbDB extends ObjectDB {
       commitTimes = env.openDatabase(null, "commitTimes", dbconf);
       meta = env.openDatabase(null, "meta", dbconf);
 
+      dbconf.setSortedDuplicates(true);
+      preparedWrites = env.openDatabase(null, "preparedWrites", dbconf);
+
       STORE_DB_LOGGER.info("Bdb databases opened");
     } catch (DatabaseException e) {
       STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in <init>: ", e);
@@ -191,12 +199,18 @@ public class BdbDB extends ObjectDB {
 
     try {
       Transaction txn = env.beginTransaction(null, null);
-      byte[] key = toBytes(tid, worker);
-      DatabaseEntry data = new DatabaseEntry(toBytes(pending));
-      prepared.put(txn, new DatabaseEntry(key), data);
+      DatabaseEntry key = new DatabaseEntry(toBytes(tid, worker));
+      DatabaseEntry data = new DatabaseEntry(toBytesNoModData(pending));
+      prepared.put(txn, key, data);
+
+      ModDataSerializer serializer = new ModDataSerializer();
+      for (Pair<SerializedObject, UpdateType> obj : pending.modData) {
+        data.setData(serializer.toBytes(obj));
+        preparedWrites.put(txn, key, data);
+      }
       txn.commit();
 
-      preparedTransactions.put(new ByteArray(key), pending);
+      preparedTransactions.put(new ByteArray(key.getData()), pending);
       STORE_DB_LOGGER.finer("Bdb prepare success tid " + tid);
     } catch (DatabaseException e) {
       STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in finishPrepare: ", e);
@@ -257,7 +271,8 @@ public class BdbDB extends ObjectDB {
             PendingTransaction pending = remove(workerPrincipal, txn, tid);
 
             if (pending != null) {
-              Serializer serializer = new Serializer();
+              FSSerializer<SerializedObject> serializer =
+                  new FSSerializer<SerializedObject>();
               for (Pair<SerializedObject, UpdateType> update : pending.modData) {
                 SerializedObject o = update.first;
                 long onum = o.getOnum();
@@ -420,6 +435,7 @@ public class BdbDB extends ObjectDB {
     try {
       if (db != null) db.close();
       if (prepared != null) prepared.close();
+      if (preparedWrites != null) preparedWrites.close();
       if (commitTimes != null) commitTimes.close();
       if (meta != null) meta.close();
       if (env != null) env.close();
@@ -583,11 +599,20 @@ public class BdbDB extends ObjectDB {
         preparedTransactions.remove(new ByteArray(key));
 
     if (pending == null
-        && prepared.get(txn, bdbKey, data, LockMode.DEFAULT) == SUCCESS)
+        && prepared.get(txn, bdbKey, data, LockMode.DEFAULT) == SUCCESS) {
       pending = toPendingTransaction(data.getData());
+
+      Cursor cursor = preparedWrites.openCursor(txn, null);
+      for (OperationStatus result = cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
+          cursor.getNextDup(bdbKey, data, null)) {
+        pending.modData.add(toModData(data.getData()));
+      }
+      cursor.close();
+    }
 
     if (pending == null) return null;
     prepared.delete(txn, bdbKey);
+    preparedWrites.delete(txn, bdbKey);
 
     unpin(pending);
     return pending;
@@ -625,8 +650,14 @@ public class BdbDB extends ObjectDB {
     }
   }
 
-  private static byte[] toBytes(FastSerializable obj) {
-    return new Serializer().toBytes(obj);
+  private static byte[] toBytesNoModData(PendingTransaction pending) {
+    return new Serializer<PendingTransaction>() {
+      @Override
+      public void write(PendingTransaction pending, ObjectOutputStream out)
+          throws IOException {
+        pending.writeNoModData(out);
+      }
+    }.toBytes(pending);
   }
 
   private static PendingTransaction toPendingTransaction(byte[] data) {
@@ -650,12 +681,12 @@ public class BdbDB extends ObjectDB {
   }
 
   /**
-   * Utility class for serializing FastSerializable objects. This avoids
-   * creating a new ObjectOutputStream for each object serialized, while
-   * maintaining the illusion that each object is serialized with a fresh
-   * ObjectOutputStream. This allows each object to be deserialized separately.
+   * Utility class for serializing objects. This avoids creating a new
+   * ObjectOutputStream for each object serialized, while maintaining the
+   * illusion that each object is serialized with a fresh ObjectOutputStream.
+   * This illusion allows each object to be deserialized separately.
    */
-  private static class Serializer {
+  private static abstract class Serializer<T> {
     private final ByteArrayOutputStream bos;
     private final ObjectOutputStream oos;
     private static final byte[] HEADER;
@@ -682,16 +713,58 @@ public class BdbDB extends ObjectDB {
       }
     }
 
-    public byte[] toBytes(FastSerializable obj) {
+    public final byte[] toBytes(T obj) {
       try {
         bos.reset();
         bos.write(HEADER);
-        obj.write(oos);
+        write(obj, oos);
         oos.flush();
         return bos.toByteArray();
       } catch (IOException e) {
         throw new InternalError(e);
       }
+    }
+
+    public abstract void write(T obj, ObjectOutputStream out)
+        throws IOException;
+  }
+
+  /**
+   * Utility class for serializing FastSerializable objects. This avoids
+   * creating a new ObjectOutputStream for each object serialized, while
+   * maintaining the illusion that each object is serialized with a fresh
+   * ObjectOutputStream. This allows each object to be deserialized separately.
+   */
+  private static class FSSerializer<FS extends FastSerializable> extends
+      Serializer<FS> {
+    @Override
+    public void write(FS obj, ObjectOutputStream out) throws IOException {
+      obj.write(out);
+    }
+  }
+
+  private static class ModDataSerializer extends
+      Serializer<Pair<SerializedObject, UpdateType>> {
+    @Override
+    public void write(Pair<SerializedObject, UpdateType> obj,
+        ObjectOutputStream out) throws IOException {
+      obj.first.write(out);
+      out.writeBoolean(obj.second == UpdateType.CREATE);
+    }
+  }
+
+  private static Pair<SerializedObject, UpdateType> toModData(byte[] data) {
+    try {
+      ByteArrayInputStream bis = new ByteArrayInputStream(data);
+      ObjectInputStream ois = new ObjectInputStream(bis);
+
+      SerializedObject obj = new SerializedObject(ois);
+      UpdateType updateType =
+          ois.readBoolean() ? UpdateType.CREATE : UpdateType.WRITE;
+
+      return new Pair<SerializedObject, UpdateType>(obj, updateType);
+    } catch (IOException e) {
+      throw new InternalError(e);
     }
   }
 

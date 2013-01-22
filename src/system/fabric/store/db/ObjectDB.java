@@ -103,11 +103,13 @@ public abstract class ObjectDB {
 
       int size = in.readInt();
       this.modData = new ArrayList<Pair<SerializedObject, UpdateType>>(size);
-      for (int i = 0; i < size; i++) {
-        SerializedObject obj = new SerializedObject(in);
-        UpdateType updateType =
-            in.readBoolean() ? UpdateType.CREATE : UpdateType.WRITE;
-        modData.add(new Pair<SerializedObject, UpdateType>(obj, updateType));
+      if (in.readBoolean()) {
+        for (int i = 0; i < size; i++) {
+          SerializedObject obj = new SerializedObject(in);
+          UpdateType updateType =
+              in.readBoolean() ? UpdateType.CREATE : UpdateType.WRITE;
+          modData.add(new Pair<SerializedObject, UpdateType>(obj, updateType));
+        }
       }
     }
 
@@ -142,6 +144,32 @@ public abstract class ObjectDB {
      */
     @Override
     public void write(DataOutput out) throws IOException {
+      writeCommon(out);
+
+      // Indicate that contents of modData will follow.
+      out.writeBoolean(true);
+
+      for (Pair<SerializedObject, UpdateType> obj : modData) {
+        obj.first.write(out);
+        out.writeBoolean(obj.second == UpdateType.CREATE);
+      }
+    }
+
+    /**
+     * Serializes this PendingTransaction out to the given output stream, whilst
+     * omitting data about the objects that have been modified or created.
+     */
+    void writeNoModData(DataOutput out) throws IOException {
+      writeCommon(out);
+
+      // Indicate that contents of modData will not follow.
+      out.writeBoolean(false);
+    }
+
+    /**
+     * Writes everything but contents of modData.
+     */
+    private void writeCommon(DataOutput out) throws IOException {
       out.writeLong(tid);
 
       out.writeBoolean(owner != null);
@@ -151,10 +179,6 @@ public abstract class ObjectDB {
       }
 
       out.writeInt(modData.size());
-      for (Pair<SerializedObject, UpdateType> obj : modData) {
-        obj.first.write(out);
-        out.writeBoolean(obj.second == UpdateType.CREATE);
-      }
     }
   }
 
