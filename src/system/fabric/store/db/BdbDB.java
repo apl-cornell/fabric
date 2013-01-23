@@ -53,7 +53,16 @@ public class BdbDB extends ObjectDB {
    * Database containing the actual serialized Fabric objects.
    */
   private Database db;
+
+  /**
+   * Database containing prepared transactions.
+   */
   private Database prepared;
+
+  /**
+   * Database containing objects modified by prepared transactions.
+   */
+  private Database preparedWrites;
 
   private final DatabaseEntry initializationStatus;
   private final DatabaseEntry onumCounter;
@@ -95,6 +104,8 @@ public class BdbDB extends ObjectDB {
       EnvironmentConfig conf = new EnvironmentConfig();
       conf.setAllowCreate(true);
       conf.setTransactional(true);
+      conf.setCachePercent(40);
+      conf.setSharedCache(true);
       env = new Environment(new File(path), conf);
 
       STORE_DB_LOGGER.info("Bdb env opened");
@@ -105,6 +116,9 @@ public class BdbDB extends ObjectDB {
       db = env.openDatabase(null, "store", dbconf);
       prepared = env.openDatabase(null, "prepared", dbconf);
       meta = env.openDatabase(null, "meta", dbconf);
+
+      dbconf.setSortedDuplicates(true);
+      preparedWrites = env.openDatabase(null, "preparedWrites", dbconf);
 
       initRwCount();
 
@@ -137,12 +151,19 @@ public class BdbDB extends ObjectDB {
 
     try {
       Transaction txn = env.beginTransaction(null, null);
-      byte[] key = toBytes(tid, worker);
-      DatabaseEntry data = new DatabaseEntry(toBytes(pending));
-      prepared.put(txn, new DatabaseEntry(key), data);
+      DatabaseEntry key = new DatabaseEntry(toBytes(tid, worker));
+      DatabaseEntry data = new DatabaseEntry(toBytesNoModData(pending));
+      prepared.put(txn, key, data);
+
+      Serializer<SerializedObject> serializer =
+          new Serializer<SerializedObject>();
+      for (SerializedObject obj : pending.modData) {
+        data.setData(serializer.toBytes(obj));
+        preparedWrites.put(txn, key, data);
+      }
       txn.commit();
 
-      preparedTransactions.put(new ByteArray(key), pending);
+      preparedTransactions.put(new ByteArray(key.getData()), pending);
       STORE_DB_LOGGER.finer("Bdb prepare success tid " + tid);
     } catch (DatabaseException e) {
       STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in finishPrepare: ", e);
@@ -159,7 +180,8 @@ public class BdbDB extends ObjectDB {
       PendingTransaction pending = remove(workerPrincipal, txn, tid);
 
       if (pending != null) {
-        Serializer serializer = new Serializer();
+        Serializer<SerializedObject> serializer =
+            new Serializer<SerializedObject>();
         for (SerializedObject o : pending.modData) {
           long onum = o.getOnum();
           STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
@@ -309,6 +331,7 @@ public class BdbDB extends ObjectDB {
     try {
       if (db != null) db.close();
       if (prepared != null) prepared.close();
+      if (preparedWrites != null) preparedWrites.close();
       if (meta != null) meta.close();
       if (env != null) env.close();
     } catch (DatabaseException e) {
@@ -383,11 +406,20 @@ public class BdbDB extends ObjectDB {
         preparedTransactions.remove(new ByteArray(key));
 
     if (pending == null
-        && prepared.get(txn, bdbKey, data, LockMode.DEFAULT) == SUCCESS)
+        && prepared.get(txn, bdbKey, data, LockMode.DEFAULT) == SUCCESS) {
       pending = toPendingTransaction(data.getData());
+
+      Cursor cursor = preparedWrites.openCursor(txn, null);
+      for (OperationStatus result = cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
+          cursor.getNextDup(bdbKey, data, null)) {
+        pending.modData.add(toSerializedObject(data.getData()));
+      }
+      cursor.close();
+    }
 
     if (pending == null) return null;
     prepared.delete(txn, bdbKey);
+    preparedWrites.delete(txn, bdbKey);
 
     unpin(pending);
     return pending;
@@ -409,8 +441,14 @@ public class BdbDB extends ObjectDB {
     }
   }
 
-  private static byte[] toBytes(FastSerializable obj) {
-    return new Serializer().toBytes(obj);
+  private static byte[] toBytesNoModData(PendingTransaction pending) {
+    return new Serializer<PendingTransaction>() {
+      @Override
+      public void write(PendingTransaction pending, ObjectOutputStream out)
+          throws IOException {
+        pending.writeNoModData(out);
+      }
+    }.toBytes(pending);
   }
 
   private static PendingTransaction toPendingTransaction(byte[] data) {
@@ -439,7 +477,7 @@ public class BdbDB extends ObjectDB {
    * maintaining the illusion that each object is serialized with a fresh
    * ObjectOutputStream. This allows each object to be deserialized separately.
    */
-  private static class Serializer {
+  private static class Serializer<FS extends FastSerializable> {
     private final ByteArrayOutputStream bos;
     private final ObjectOutputStream oos;
     private static final byte[] HEADER;
@@ -466,16 +504,20 @@ public class BdbDB extends ObjectDB {
       }
     }
 
-    public byte[] toBytes(FastSerializable obj) {
+    public final byte[] toBytes(FS obj) {
       try {
         bos.reset();
         bos.write(HEADER);
-        obj.write(oos);
+        write(obj, oos);
         oos.flush();
         return bos.toByteArray();
       } catch (IOException e) {
         throw new InternalError(e);
       }
+    }
+
+    public void write(FS obj, ObjectOutputStream out) throws IOException {
+      obj.write(out);
     }
   }
 
