@@ -104,6 +104,8 @@ public class BdbDB extends ObjectDB {
       EnvironmentConfig conf = new EnvironmentConfig();
       conf.setAllowCreate(true);
       conf.setTransactional(true);
+      conf.setCachePercent(40);
+      conf.setSharedCache(true);
       env = new Environment(new File(path), conf);
 
       STORE_DB_LOGGER.info("Bdb env opened");
