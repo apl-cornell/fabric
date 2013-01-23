@@ -1,8 +1,5 @@
 package fabric.store.db;
 
-import java.lang.ref.SoftReference;
-import java.util.Arrays;
-
 import fabric.common.util.LongKeyCache;
 
 /**
@@ -11,86 +8,91 @@ import fabric.common.util.LongKeyCache;
  */
 public class WarrantyIssuer {
   private static class HistoryEntry {
-    Long lastEventTime;
-    long lastDefaultSuggestion;
-    long lastDefaultSuggestionLength;
+    /**
+     * Weight to use when calculating exponential moving average.
+     */
+    final double alpha;
 
-    SoftReference<PrepareIntervalHistory> history;
-    final int maxHistoryLength;
+    /**
+     * Time of last commit or prepare request.
+     */
+    long lastEventTime;
 
-    public HistoryEntry(int maxHistoryLength) {
-      this.lastEventTime = null;
+    /**
+     * Predicted interval between commit or prepare events.
+     */
+    int predictedInterval;
+
+    int lastDefaultSuggestion;
+    int lastDefaultSuggestionLength;
+
+    /**
+     * @param alpha weight for exponential moving average.
+     */
+    public HistoryEntry(double alpha) {
+      this.alpha = alpha;
+      this.lastEventTime = 0;
+      this.predictedInterval = -1;
       this.lastDefaultSuggestion = 0;
       this.lastDefaultSuggestionLength = 0;
-
-      this.history =
-          new SoftReference<PrepareIntervalHistory>(new PrepareIntervalHistory(
-              maxHistoryLength));
-      this.maxHistoryLength = maxHistoryLength;
     }
 
-    public PrepareIntervalHistory getHistory() {
-      PrepareIntervalHistory result = history.get();
-      if (result == null) {
-        result = new PrepareIntervalHistory(maxHistoryLength);
-        history = new SoftReference<PrepareIntervalHistory>(result);
+    /**
+     * Notifies of a commit event.
+     */
+    void notifyWriteCommit() {
+      lastEventTime = System.currentTimeMillis();
+    }
+
+    /**
+     * Notifies of a prepare event.
+     */
+    void notifyWritePrepare() {
+      long now = System.currentTimeMillis();
+
+      if (lastEventTime != 0) {
+        int interval = (int) (now - lastEventTime);
+        if (predictedInterval == -1) {
+          predictedInterval = interval;
+        } else {
+          // Compute exponential moving average.
+          predictedInterval =
+              (int) (alpha * interval + (1.0 - alpha) * predictedInterval);
+        }
       }
-      return result;
-    }
-  }
 
-  protected static class PrepareIntervalHistory {
-    /**
-     * Contains the actual interval history data.
-     */
-    private long[] data;
-
-    /**
-     * The number of entries in the history.
-     */
-    private int size;
-
-    /**
-     * Points to the oldest entry in the history. This is also the entry that
-     * will be overwritten next.
-     */
-    private int oldest;
-
-    PrepareIntervalHistory(int maxLength) {
-      this.data = new long[maxLength];
-      this.size = 0;
-      this.oldest = 0;
+      lastEventTime = now;
     }
 
-    public void add(long interval) {
-      if (size < data.length) size++;
-      data[oldest++] = interval;
-      oldest %= data.length;
+    long predictWrite() {
+      if (predictedInterval == -1) return 0;
+
+      return lastEventTime + predictedInterval;
     }
   }
 
   /**
-   * The maximum history length for each onum.
+   * Weight to use when calculating exponential moving average.
    */
-  protected final int maxHistoryLength;
+  final double alpha;
 
   /**
    * The minimum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  protected final long minWarrantyLength;
+  protected final int minWarrantyLength;
 
   /**
    * The maximum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  protected final long maxWarrantyLength;
+  protected final int maxWarrantyLength;
 
   /**
    * The amount of time around a predicted write for which no warranties will
    * be issued.
    */
-  protected final long writeWindowPadding;
+  protected final int writeWindowPadding;
 
   /**
    * Maps onums to a pair containing the time of the last notified event and
@@ -101,8 +103,11 @@ public class WarrantyIssuer {
   protected final LongKeyCache<HistoryEntry> history;
 
   /**
-   * @param historyLength
-   *         the maximum history length for each onum.
+   * @param alpha
+   *         predictions are made based on an exponential moving average of the
+   *         elapsed time between events. Alpha ranges between 0 and 1, and is
+   *         the weight to use when computing this average. Values closer to 1
+   *         will bias predictions towards more recent observed behaviour.
    *         
    * @param minWarrantyLength
    *         the minimum length of time (in milliseconds) for which each issued
@@ -116,9 +121,9 @@ public class WarrantyIssuer {
    *         the amount of time around a predicted write for which no warranties
    *         will be issued.
    */
-  protected WarrantyIssuer(int historyLength, long minWarrantyLength,
-      long maxWarrantyLength, long writeWindowPadding) {
-    this.maxHistoryLength = historyLength;
+  protected WarrantyIssuer(double alpha, int minWarrantyLength,
+      int maxWarrantyLength, int writeWindowPadding) {
+    this.alpha = alpha;
     this.minWarrantyLength = minWarrantyLength;
     this.maxWarrantyLength = maxWarrantyLength;
     this.writeWindowPadding = writeWindowPadding;
@@ -132,7 +137,7 @@ public class WarrantyIssuer {
   private HistoryEntry getEntry(long onum) {
     HistoryEntry entry = history.get(onum);
     if (entry == null) {
-      entry = new HistoryEntry(maxHistoryLength);
+      entry = new HistoryEntry(alpha);
       history.put(onum, entry);
     }
 
@@ -144,7 +149,7 @@ public class WarrantyIssuer {
    * writes to be prepared.
    */
   public synchronized void notifyWriteCommit(long onum) {
-    getEntry(onum).lastEventTime = System.currentTimeMillis();
+    getEntry(onum).notifyWriteCommit();
   }
 
   /**
@@ -153,14 +158,7 @@ public class WarrantyIssuer {
    * aborts.
    */
   public synchronized void notifyWritePrepare(long onum) {
-    HistoryEntry entry = getEntry(onum);
-    long now = System.currentTimeMillis();
-
-    if (entry.lastEventTime != null) {
-      long interval = now - entry.lastEventTime;
-      entry.getHistory().add(interval);
-    }
-    entry.lastEventTime = now;
+    getEntry(onum).notifyWritePrepare();
   }
 
   /**
@@ -169,53 +167,35 @@ public class WarrantyIssuer {
    */
   public Long suggestWarranty(long onum) {
     HistoryEntry entry;
-    long[] predictedWrites;
+    long now = System.currentTimeMillis();
+    long predictedWrite;
     synchronized (this) {
       entry = getEntry(onum);
-      PrepareIntervalHistory history = entry.getHistory();
-      predictedWrites = new long[history.size];
-      for (int i = 0; i < predictedWrites.length; i++) {
-        predictedWrites[i] = entry.lastEventTime + history.data[i];
-      }
+      predictedWrite = entry.predictWrite();
     }
-    Arrays.sort(predictedWrites);
-
-    long now = System.currentTimeMillis();
 
     // Make sure we are not too close to a predicted write.
-    for (long prediction : predictedWrites) {
-      if (now + minWarrantyLength < prediction - writeWindowPadding) {
-        // This prediction is far into the future, and so will be the remaining
-        // predictions.
-        break;
-      }
-
-      if (now <= prediction + writeWindowPadding) {
-        // Too close to a predicted write.
-        return null;
-      }
+    if (now <= predictedWrite + writeWindowPadding) {
+      return null;
     }
 
-    // Find the next predicted write.
-    for (long prediction : predictedWrites) {
-      if (now < prediction) {
-        // Have a predicted write that is in the future. Suggest a warranty.
-        long latestPossible = now + maxWarrantyLength;
-        long suggestion = prediction - writeWindowPadding;
-        if (suggestion > latestPossible) suggestion = latestPossible;
-        synchronized (entry) {
-          entry.lastDefaultSuggestionLength = 0;
-        }
-        return suggestion;
+    if (now < predictedWrite) {
+      // Have a predicted write that is in the future. Suggest a warranty.
+      long latestPossible = now + maxWarrantyLength;
+      long suggestion = predictedWrite - writeWindowPadding;
+      if (suggestion > latestPossible) suggestion = latestPossible;
+      synchronized (entry) {
+        entry.lastDefaultSuggestionLength = 0;
       }
+      return suggestion;
     }
 
-    // No more predicted writes. Just issue the default warranty.
+    // Predicted write has already passed. Just issue the default warranty.
     synchronized (entry) {
       // If a previously issued default has yet to expire, keep it.
       if (now < entry.lastDefaultSuggestion) return null;
 
-      long length = entry.lastDefaultSuggestionLength * 2;
+      int length = entry.lastDefaultSuggestionLength * 2;
       if (length < minWarrantyLength) length = minWarrantyLength;
       if (length > maxWarrantyLength) length = maxWarrantyLength;
       entry.lastDefaultSuggestionLength = length;
