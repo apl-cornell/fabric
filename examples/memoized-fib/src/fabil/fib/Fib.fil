@@ -1,0 +1,68 @@
+package fib;
+
+import fabric.util.Map;
+import fabric.common.Timing;
+
+public class Fib {
+
+  private static long invalidatingVar = 0l;
+
+  public memoized long fibSingleInvalidation(Integer n) {
+    if (n.intValue() == 0)
+      return invalidatingVar;
+    if (n.intValue() == 1)
+      return 1l;
+    return fibSingleInvalidation(new Integer(n.intValue() - 1))
+            + fibSingleInvalidation(new Integer(n.intValue() - 2));
+  }
+
+  public memoized long fibManyInvalidation(Integer n) {
+    long zeroReturn = invalidatingVar;
+    if (n.intValue() == 0)
+      return zeroReturn;
+    if (n.intValue() == 1)
+      return 1l;
+    return fibManyInvalidation(new Integer(n.intValue() - 1))
+            + fibManyInvalidation(new Integer(n.intValue() - 2));
+  }
+
+  public static void invalidate() {
+    invalidatingVar = invalidatingVar == 0l ? 1l : 0l;
+  }
+
+  public static void main(String[] args) {
+    atomic {
+      Fib testFib = new Fib();
+      System.out.println("Starting single invalidation version of test.");
+      System.out.print("Testing first call of fib(80): ");
+      System.out.flush();
+      System.out.println(testFib.fibSingleInvalidation(new Integer(80)));
+      System.out.print("Testing second call of fib(80): ");
+      System.out.flush();
+      System.out.println(testFib.fibSingleInvalidation(new Integer(80)));
+      System.out.print("Invalidating just the first call and setting fib(0) = 1 instead of 0... ");
+      System.out.flush();
+      invalidate();
+      System.out.println("Done");
+      System.out.print("Testing call of fib(80) after invalidation: ");
+      System.out.flush();
+      System.out.println(testFib.fibSingleInvalidation(new Integer(80)));
+      System.out.println("Starting many invalidations version of test.");
+      System.out.print("Testing first call of fib(80): ");
+      System.out.flush();
+      System.out.println(testFib.fibManyInvalidation(new Integer(80)));
+      System.out.print("Testing second call of fib(80): ");
+      System.out.flush();
+      System.out.println(testFib.fibManyInvalidation(new Integer(80)));
+      System.out.print("Invalidating just the first call and setting fib(0) = 0 instead of 1... ");
+      System.out.flush();
+      invalidate();
+      System.out.println("Done");
+      System.out.print("Testing call of fib(80) after invalidation: ");
+      System.out.flush();
+      System.out.println(testFib.fibManyInvalidation(new Integer(80)));
+    }
+  }
+
+}
+
