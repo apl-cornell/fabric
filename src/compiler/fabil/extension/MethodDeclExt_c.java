@@ -6,16 +6,12 @@ import java.util.List;
 import polyglot.ast.Block;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
-import polyglot.ast.Formal;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
-import polyglot.util.Position;
-import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILFlags;
-import fabil.visit.MemoizedMethodRewriter;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ThreadRewriter;
 
@@ -90,60 +86,6 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
               + "}\n"));
 
     return method.body(body);
-  }
-
-  @Override
-  public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr) {
-    MethodDecl method = node();
-    if (!method.flags().contains(FabILFlags.MEMOIZED))
-      return super.rewriteMemoizedMethods(mmr);
-
-    /* Memoized flag not necessary after this transformation */
-    method = method.flags(method.flags().clear(FabILFlags.MEMOIZED));
-
-    FabILNodeFactory nf = mmr.nodeFactory();
-    Position CG = Position.compilerGenerated();
-    QQ qq = mmr.qq();
-
-    String args = "";
-    boolean first = true;
-    for (Formal arg : method.formals()) {
-      if (first) {
-        first = false;
-      } else {
-        args += ", ";
-      }
-      args += arg.name();
-    }
-
-    String callee = "this";
-    String ctType = "CallTuple";
-    if (method.flags().contains(FabILFlags.STATIC)) {
-      callee = "\"" + method.memberInstance().container().toString() + "\"";
-      ctType = "StaticCallTuple";
-    }
-      
-    return method.body(nf.Block(CG, qq.parseStmt("{\n"
-          + "  final fabric.worker.memoize.CallTuple $memoCallTup = "
-          +   "new fabric.worker.memoize." + ctType + "(\"" + method.name()
-          +     "\", %s, "
-          +     "java.util.Arrays.asList(new java.lang.Object[]"
-          +     "{" + args + "}));\n"
-          + "  final fabric.worker.memoize.MemoCache $memoCache = " 
-          +   "fabric.worker.memoize.MemoCache.getInstance();\n"
-          + "  synchronized (fabric.worker.memoize.MemoCache.class) {\n"
-          + "    if "
-          + "(fabric.worker.memoize.MemoCache.containsCall($memoCallTup))\n"
-          + "      return (%T) $memoCache.reuseCall($memoCallTup);\n"
-          + "  }\n"
-          + "  $memoCache.beginMemoRecord($memoCallTup);\n"
-          + "  try {\n"
-          + "    %S\n"
-          + "  } catch (RuntimeException e) {\n"
-          + "    $memoCache.abruptEndMemoRecord($memoCallTup);\n"
-          + "    throw e;\n"
-          + "  }\n"
-          + "}", callee, mmr.methodReturnType(), method.body())));
   }
 
   @Override

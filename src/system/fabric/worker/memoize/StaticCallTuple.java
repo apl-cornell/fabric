@@ -1,13 +1,14 @@
 package fabric.worker.memoize;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 public class StaticCallTuple extends CallTuple {
 
   public final String className;
 
-  public StaticCallTuple(String methodName, String className, List<Object> args) {
-    super(methodName, null, args);
+  public StaticCallTuple(String method, String className, List<Object> args) {
+    super(method, null, args);
     this.className = className;
   }
 
@@ -73,5 +74,27 @@ public class StaticCallTuple extends CallTuple {
     }
     callStr += ")";
     return callStr;
+  }
+
+  @Override
+  public Object call() {
+    try {
+      return Class.forName(className).getMethod("$memoizedCaller",
+                                                String.class,
+                                                Object[].class).invoke(callee,
+                                                                        method,
+                                                                        args.toArray());
+    } catch (ClassNotFoundException e) {
+      System.err.println("Memoized call class not found!");
+    } catch (NoSuchMethodException e) {
+      System.err.println("Memoized call method not found!");
+    } catch (SecurityException e) {
+      System.err.println("Memoized call method security error!");
+    } catch (IllegalAccessException e) {
+      System.err.println("Memoized call method illegal access!");
+    } catch (InvocationTargetException e) {
+      System.err.println("Memoized call method bad invocation target!");
+    }
+    return null;
   }
 }

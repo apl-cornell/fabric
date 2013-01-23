@@ -44,6 +44,13 @@ public class MemoizedCall {
    * it starts a recomputation itself.
    */
   public synchronized Object getValue() {
+    while (!valid) {
+      try {
+        wait();
+      } catch (InterruptedException e) {
+        System.err.println("Interrupted waiting for recompute of " + call + "!");
+      }
+    }
     return value;
   }
 
@@ -58,19 +65,33 @@ public class MemoizedCall {
   public synchronized void setValue(Object val) {
     value = val;
     valid = true;
+    notifyAll();
   }
 
   /**
    * Invalidate this call's value.
    */
   public synchronized void invalidate() {
+    if (!valid) return;
     valid = false;
+
     itemsRead.clear();
     for (CallTuple child : new HashSet<CallTuple>(subCalls))
       MemoCache.getMemoizedCall(child).removeParent(call);
     subCalls.clear();
+
     for (CallTuple parent : new HashSet<CallTuple>(parentCalls))
       MemoCache.invalidateCall(parent);
+    recompute();
+  }
+
+  /**
+   * Recompute this call's value if it's currently invalid.
+   */
+  public synchronized void recompute() {
+    /* No need to recompute if we have a valid entry, right? */
+    if (valid) return;
+    call.call();
   }
 
   /**

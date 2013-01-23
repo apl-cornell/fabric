@@ -1,6 +1,5 @@
 package fabil.visit;
 
-import java.util.Stack;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.ast.TypeNode;
@@ -11,7 +10,6 @@ import polyglot.visit.NodeVisitor;
 import fabil.ast.FabILNodeFactory;
 import fabil.ExtensionInfo;
 import fabil.extension.FabILExt;
-import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
 
 /**
@@ -21,17 +19,11 @@ public class MemoizedMethodRewriter extends NodeVisitor {
   protected QQ qq;
   protected FabILNodeFactory nf;
   protected FabILTypeSystem ts;
-  /* Keep a stack of each memoized method's return type.  These might (?) be
-   * nested if an anonymous class with a memoized method is created in the
-   * source program.
-   */
-  private Stack<TypeNode> returnTypeStack;
 
   public MemoizedMethodRewriter(ExtensionInfo extInfo) {
     this.qq = new QQ(extInfo);
     this.nf = extInfo.nodeFactory();
     this.ts = extInfo.typeSystem();
-    this.returnTypeStack = new Stack<TypeNode>();
   }
 
   protected FabILExt ext(Node n) {
@@ -39,30 +31,16 @@ public class MemoizedMethodRewriter extends NodeVisitor {
   }
 
   @Override
-  public NodeVisitor enter(Node n) {
-    if (n instanceof MethodDecl) {
-      MethodDecl m = (MethodDecl) n;
-      if (m.flags().contains(FabILFlags.MEMOIZED)) {
-        returnTypeStack.push(m.returnType());
-      }
-    }
-    return this;
-  }
-
-  @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
-    Node newN = ext(n).rewriteMemoizedMethods(this);
-    if (n instanceof MethodDecl) {
-      MethodDecl method = (MethodDecl) n;
-      if (method.flags().contains(FabILFlags.MEMOIZED)) {
-        returnTypeStack.pop();
-      }
-    }
-    return newN;
+    return ext(n).rewriteMemoizedMethods(this);
   }
 
-  public TypeNode methodReturnType() {
-    TypeNode returnType = returnTypeStack.peek();
+  /**
+   * Utility method for figuring out the correct cast for grabbing a value from
+   * the memoization cache.
+   */
+  public TypeNode methodReturnType(MethodDecl md) {
+    TypeNode returnType = md.returnType();
     if (returnType.type().isPrimitive()) {
       PrimitiveType p = returnType.type().toPrimitive();
       try {
@@ -72,10 +50,6 @@ public class MemoizedMethodRewriter extends NodeVisitor {
       }
     }
     return returnType;
-  }
-
-  public boolean inMemoizedMethod() {
-    return !returnTypeStack.empty();
   }
 
   /**

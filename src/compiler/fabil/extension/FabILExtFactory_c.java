@@ -234,11 +234,6 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
-  protected Ext extReturnImpl() {
-    return new ReturnExt_c();
-  }
-
-  @Override
   protected Ext extSpecialImpl() {
     return new SpecialExt_c();
   }

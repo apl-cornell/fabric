@@ -32,8 +32,10 @@ import polyglot.types.MethodInstance;
 import polyglot.types.PrimitiveType;
 import polyglot.types.Type;
 import polyglot.util.Position;
+import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
+import fabil.visit.MemoizedMethodRewriter;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.ThreadRewriter;
@@ -809,6 +811,177 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     }
 
     return cd.body(nf.ClassBody(Position.compilerGenerated(), members));
+  }
+
+  /**
+   * Make a MethodDecl for calling some static memoized method with a given set
+   * of arguments.
+   */
+  private ClassMember makeStaticMemoizedCaller(MemoizedMethodRewriter mmr,
+      List<MethodDecl> methods) {
+    QQ qq = mmr.qq();
+
+    /* TODO: Change default case */
+    Stmt body = qq.parseStmt("System.err.println(\"Unknown memoized!\");");
+    for (MethodDecl method : methods) {
+      String argsList = "";
+      boolean first = true;
+      for (int count = 0; count < method.formals().size(); count++) {
+        Formal formal = method.formals().get(count);
+        if (!first) {
+          argsList += ", ";
+        }
+        first = false;
+        argsList += "(" + formal.type() + ") arguments[" + count + "]";
+      }
+
+      body = qq.parseStmt("if (methodName == \"" + method.name() +"\") {\n"
+                        + "  return " + method.name() + "$NonMemoized(" + argsList + ");\n"
+                        + "} else {\n"
+                        + "  %S\n"
+                        + "}", body);
+    }
+
+    return qq.parseMember("public java.lang.Object $memoizedStaticCaller(String methodName, java.lang.Object[] arguments) {\n"
+                        + "  %S\n"
+                        + "  return null;\n"
+                        + "}", body);
+  }
+
+  /**
+   * Make a MethodDecl for calling some instance memoized method with a given
+   * callee and set of arguments.
+   */
+  private ClassMember makeInstanceMemoizedCaller(MemoizedMethodRewriter mmr,
+      List<MethodDecl> methods) {
+    QQ qq = mmr.qq();
+
+    /* TODO: Change default case */
+    Stmt body = qq.parseStmt("System.err.println(\"Unknown memoized!\");");
+    for (MethodDecl method : methods) {
+      String argsList = "";
+      boolean first = true;
+      for (int count = 0; count < method.formals().size(); count++) {
+        Formal formal = method.formals().get(count);
+        if (!first) {
+          argsList += ", ";
+        }
+        first = false;
+        argsList += "(" + formal.type() + ") arguments[" + count + "]";
+        /* TODO: Do check for number of arguments. */
+      }
+
+      body = qq.parseStmt("if (methodName == \"" + method.name() +"\") {\n"
+                        + "  return this." + method.name() + "$NonMemoized(" + argsList + ");\n"
+                        + "} else {\n"
+                        + "  %S\n"
+                        + "}", body);
+    }
+
+    return qq.parseMember("public java.lang.Object $memoizedCaller(String methodName, java.lang.Object[] arguments) {\n"
+                        + "  %S\n"
+                        + "  return null;\n"
+                        + "}", body);
+  }
+
+  /**
+   * Make the copy of the original method which checks the cache before
+   * computing and storing the result.
+   */
+  private MethodDecl memoizedMethod(MemoizedMethodRewriter mmr, MethodDecl md) {
+    FabILNodeFactory nf = mmr.nodeFactory();
+    Position CG = Position.compilerGenerated();
+    QQ qq = mmr.qq();
+
+    String args = "";
+    boolean first = true;
+    for (Formal arg : md.formals()) {
+      if (first) {
+        first = false;
+      } else {
+        args += ", ";
+      }
+      args += arg.name();
+    }
+
+    String callee = "this";
+    String ctType = "CallTuple";
+    String className = md.memberInstance().container().toString();
+    if (md.flags().contains(FabILFlags.STATIC)) {
+      callee = "\"" + className + "\"";
+      ctType = "StaticCallTuple";
+    }
+
+    return (MethodDecl) md.body(nf.Block(CG, qq.parseStmt("{\n"
+          + "  final fabric.worker.memoize.CallTuple $memoCallTup = "
+          +   "new fabric.worker.memoize." + ctType + "(\"" + md.name()
+          +     "\", %s, "
+          +     "java.util.Arrays.asList(new java.lang.Object[]"
+          +     "{" + args + "}));\n"
+          + "  final fabric.worker.memoize.MemoCache $memoCache = " 
+          +   "fabric.worker.memoize.MemoCache.getInstance();\n"
+          + "  synchronized (fabric.worker.memoize.MemoCache.class) {\n"
+          + "    if "
+          + "(fabric.worker.memoize.MemoCache.containsCall($memoCallTup))\n"
+          + "      return (%T) $memoCache.reuseCall($memoCallTup);\n"
+          + "  }\n"
+          + "  $memoCache.beginMemoRecord($memoCallTup);\n"
+          + "  try {\n"
+          + "    return (%T) $memoCache.endMemoRecord($memoCallTup, " + md.name() + "$NonMemoized(" + args + "));\n"
+          + "  } catch (RuntimeException e) {\n"
+          + "    $memoCache.abruptEndMemoRecord($memoCallTup);\n"
+          + "    throw e;\n"
+          + "  }\n"
+          + "}", callee, mmr.methodReturnType(md), mmr.methodReturnType(md))));
+  }
+
+  @Override
+  public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr) {
+    ClassDecl cd = node();
+    QQ qq = mmr.qq();
+
+    /* Gather all memoized methods (static or not) */
+    List<MethodDecl> memoizedMethods =
+      new ArrayList<MethodDecl>(cd.body().members().size());
+    List<MethodDecl> staticMemoizedMethods =
+      new ArrayList<MethodDecl>(cd.body().members().size());
+    List<ClassMember> allMembers =
+      new ArrayList<ClassMember>(cd.body().members().size() + 2);
+    for (ClassMember cm : cd.body().members()) {
+      if (!(cm instanceof MethodDecl)) {
+        allMembers.add(cm);
+      } else {
+        MethodDecl method = (MethodDecl) cm;
+        if (method.flags().contains(FabILFlags.MEMOIZED)) {
+          method = method.flags(method.flags().clear(FabILFlags.MEMOIZED));
+
+          allMembers.add(memoizedMethod(mmr, method));
+
+          if (method.flags().contains(FabILFlags.STATIC)) {
+            staticMemoizedMethods.add(method);
+          } else {
+            memoizedMethods.add(method);
+          }
+          method = method.name(method.name() + "$NonMemoized");
+        }
+        allMembers.add(method);
+      }
+    }
+
+    /* Make methods for calling memoized methods */
+    ClassMember staticCaller;
+    ClassMember instanceCaller;
+    if (cd.flags().isInterface()) {
+      staticCaller = qq.parseMember("public java.lang.Object $memoizedStaticCaller(String methodName, java.lang.Object[] arguments);");
+      instanceCaller = qq.parseMember("public java.lang.Object $memoizedCaller(String methodName, java.lang.Object[] arguments);");
+    } else {
+      staticCaller = makeStaticMemoizedCaller(mmr, staticMemoizedMethods);
+      instanceCaller = makeInstanceMemoizedCaller(mmr, memoizedMethods);
+    }
+    allMembers.add(staticCaller);
+    allMembers.add(instanceCaller);
+
+    return cd.body(cd.body().members(allMembers));
   }
 
   @Override

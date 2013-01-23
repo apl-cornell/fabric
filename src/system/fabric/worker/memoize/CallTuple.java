@@ -1,19 +1,21 @@
 package fabric.worker.memoize;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Item to represent the tuple (m, c, a) where m is the method name, c is either
  * the object or class the method was called on, and a is a list of arguments
  * passed to the method.
  */
-public class CallTuple {
+public class CallTuple implements Callable<Object> {
   public final String method;
   public final fabric.lang.Object callee;
   public final List<Object> args;
 
-  public CallTuple(String methodName, fabric.lang.Object callee, List<Object> args) {
-    this.method = methodName;
+  public CallTuple(String method, fabric.lang.Object callee, List<Object> args) {
+    this.method= method;
     this.callee = callee;
     this.args = args;
   }
@@ -68,7 +70,7 @@ public class CallTuple {
 
   @Override
   public String toString() {
-    String callStr = (callee.toString()) + "." + method + "(";
+    String callStr = (callee.toString()) + "." + method+ "(";
     boolean first = true;
     for (Object arg : args) {
       if (first) {
@@ -80,5 +82,25 @@ public class CallTuple {
     }
     callStr += ")";
     return callStr;
+  }
+
+  @Override
+  public Object call() {
+    try {
+      return callee.getClass().getMethod("$memoizedCaller",
+                                          String.class,
+                                          Object[].class).invoke(callee,
+                                                                  method,
+                                                                  args.toArray());
+    } catch (NoSuchMethodException e) {
+      System.err.println("Memoized call method not found: " + this);
+    } catch (SecurityException e) {
+      System.err.println("Memoized call method security error: " + this);
+    } catch (IllegalAccessException e) {
+      System.err.println("Memoized call method illegal access: " + this);
+    } catch (InvocationTargetException e) {
+      System.err.println("Memoized call method bad target invocation: " + this);
+    }
+    return null;
   }
 }

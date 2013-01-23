@@ -79,13 +79,15 @@ public class MemoCache {
    *
    * @param key Call to be invalidated.
    */
-  public static void invalidateCall(CallTuple key) {
+  public synchronized static void invalidateCall(CallTuple key) {
     /* Other read items don't need to invalidate this call anymore. */
     for (long readItem : table.get(key).reads())
       dependentCalls.get(readItem).remove(key);
 
-    if (table.containsKey(key))
-      table.get(key).invalidate();
+    if (table.containsKey(key)) {
+      MemoizedCall mc = table.get(key);
+      mc.invalidate();
+    }
   }
 
   /**

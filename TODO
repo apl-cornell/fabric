@@ -1,9 +1,13 @@
 TODO Items:
+	- BUGS:
+		- Fix issues with primitive argument types in recomputing code.
+		- Possible race condition if an invalidation arrives while call
+		  is in the middle of recomputation.
 	- Rigorous Testing
-	- Evaluation
+	- More Evaluation
 	- Design Decisions to revisit:
 		- Remembering values read if call ends with a runtime
-		  exception.
+		  exception?
 		- Not checking for updates on non-fabric objects.
 		- Various uses of hashing feel fishy, am I setting myself up
 		  for collisions hell?
@@ -12,13 +16,27 @@ TODO Items:
 		  whether we transform memoization before or after remote calls
 		  are rewritten...  Although, wouldn't the resulting call be
 		  more or less equivalent?
-		- Do we currently risk not invalidating calls on remote hosts?
-	- Avoiding unnecessary invalidation?
+		- Right now we have the data stored on a host by host basis, so
+		  that might be a problem if not every host sees the
+		  invalidation.
+	- Avoiding unnecessary invalidation & recompute invalidated calls in
+	  the background.
+		- Recomputing started but we need to separate the original body
+		  from the memoized-version for re-use.
+		- Might want to push all of the recomputation work into a
+		  separate thread.
 	- Attempt to detect and warn about side effects?
 		- This might be difficult if the side effect isn't a write
+			- Core issue mostly whether the effect is idempotent
 		- Even if it's a write, there's plenty of cases where a write
 		  happens in a subroutine and is completely okay (and probably
 		  better) to not redo...
-	- Get invalidated calls to be recomputed in the background instead of
-	  on the next call.
-	- Get non-static calls working again.
+			- Eg. Logging in the blog example code.
+	- Clean up, clean up, clean up, CLEAN UP
+		- Code is ugly, fix that.
+		- Parts of code aren't clear after not looking at it for a month.
+		- Mostly worried about boundaries and such, might want to see
+		  if we can roll some of the more general code back into the
+		  transaction code.
+		- Might be useful to have someone perform a code review when
+		  it's eventually stable?
