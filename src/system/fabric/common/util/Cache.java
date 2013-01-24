@@ -22,7 +22,7 @@ public class Cache<K, V> {
     final Cache<K, V> cache;
 
     public ValueSoftRef(Cache<K, V> cache, K key, V value) {
-      super(value);
+      super(value, queue);
       this.key = key;
       this.cache = cache;
     }

@@ -17,7 +17,7 @@ public class LongKeyCache<V> {
     final LongKeyCache<V> cache;
 
     public ValueSoftRef(LongKeyCache<V> cache, long key, V value) {
-      super(value);
+      super(value, queue);
       this.key = key;
       this.cache = cache;
     }
@@ -73,8 +73,6 @@ public class LongKeyCache<V> {
   }
 
   private static final class Collector extends Thread {
-    private boolean destroyed;
-
     private Collector() {
       super("Cache entry collector");
       setDaemon(true);
@@ -82,7 +80,7 @@ public class LongKeyCache<V> {
 
     @Override
     public void run() {
-      while (!destroyed) {
+      while (true) {
         try {
           ValueSoftRef<?> ref = (ValueSoftRef<?>) queue.remove();
           synchronized (ref.cache) {

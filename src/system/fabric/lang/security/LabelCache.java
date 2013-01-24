@@ -152,14 +152,14 @@ public class LabelCache {
       final Key key;
 
       private EntrySoftRef(Cache<K1, K2, P> cache, Key key, P value) {
-        super(value);
+        super(value, queue);
         this.cache = cache;
         this.key = key;
       }
     }
 
-    private static final ReferenceQueue<EntrySoftRef<?, ?, ?>> queue =
-        new ReferenceQueue<EntrySoftRef<?, ?, ?>>();
+    private static final ReferenceQueue<Object> queue =
+        new ReferenceQueue<Object>();
 
     static {
       new Collector().start();
