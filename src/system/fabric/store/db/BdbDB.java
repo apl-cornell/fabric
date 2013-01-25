@@ -36,6 +36,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
+import fabric.common.util.MutableInteger;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.FClass;
 import fabric.lang.security.Principal;
@@ -78,9 +79,10 @@ public class BdbDB extends ObjectDB {
 
   /**
    * Cache: maps onums to object versions of objects that are currently stored
-   * in BDB.
+   * in BDB. Because Integers are interned, it doesn't make much sense to have
+   * SoftReferences to Integers, so we use MutableIntegers instead.
    */
-  private final LongKeyCache<Integer> cachedVersions;
+  private final LongKeyCache<MutableInteger> cachedVersions;
 
   /**
    * Cache: maps BDB keys to prepared-transaction records.
@@ -138,7 +140,7 @@ public class BdbDB extends ObjectDB {
 
     this.nextOnum = -1;
     this.lastReservedOnum = -2;
-    this.cachedVersions = new LongKeyCache<Integer>();
+    this.cachedVersions = new LongKeyCache<MutableInteger>();
     this.preparedTransactions = new Cache<ByteArray, PendingTransaction>();
   }
 
@@ -197,7 +199,7 @@ public class BdbDB extends ObjectDB {
           notifyCommittedUpdate(sm, onum);
 
           // Update the version-number cache.
-          cachedVersions.put(onum, o.getVersion());
+          cacheVersionNumber(onum, o.getVersion());
         }
 
         txn.commit();
@@ -243,7 +245,7 @@ public class BdbDB extends ObjectDB {
       if (db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
         SerializedObject result = toSerializedObject(data.getData());
         if (result != null) {
-          cachedVersions.put(onum, result.getVersion());
+          cacheVersionNumber(onum, result.getVersion());
         }
 
         return result;
@@ -258,8 +260,8 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public int getVersion(long onum) throws AccessException {
-    Integer ver = cachedVersions.get(onum);
-    if (ver != null) return ver;
+    MutableInteger ver = cachedVersions.get(onum);
+    if (ver != null) return ver.value;
 
     return super.getVersion(onum);
   }
@@ -423,6 +425,16 @@ public class BdbDB extends ObjectDB {
 
     unpin(pending);
     return pending;
+  }
+
+  private void cacheVersionNumber(long onum, int versionNumber) {
+    MutableInteger entry = cachedVersions.get(onum);
+    if (entry == null) {
+      entry = new MutableInteger(versionNumber);
+      cachedVersions.put(onum, entry);
+    } else {
+      entry.value = versionNumber;
+    }
   }
 
   private static byte[] toBytes(long tid, Principal worker) {
