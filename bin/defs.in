@@ -80,13 +80,16 @@ fi
 classpath="$(unixpath "${CLASSPATH}")"
 
 # Give the JVM more memory.
-#
-# Also enable compressed oops (-XX:+UseCompressedOops). The JVM already enables
-# this by default for 64-bit JVMs with heaps smaller than 32 GB; however,
-# according to the BDB JavaDoc, we need to specify this here so that BDB can
-# pick up this setting and adjust its cache size appropriately. (See JavaDoc
-# for EnvironmentMutableConfig.setCachePercent().)
-vmargs="-Xmx1024M -Xms256M -Dfile.encoding=UTF-8 -XX:+UseCompressedOops"
+vmargs="-Xmx1024M -Xms256M -Dfile.encoding=UTF-8"
+
+# Also enable compressed oops. The JVM already enables this by default for
+# 64-bit JVMs with heaps smaller than 32 GB; however, we need to specify this
+# here so that BDB can pick up this setting and adjust its cache size
+# appropriately.
+vmargs="${vmargs} -XX:+UseCompressedOops"
+
+# If we run out of memory, dump the heap so we can debug any memory issues.
+vmargs="${vmargs} -XX:+HeapDumpOnOutOfMemoryError"
 
 ####################
 
