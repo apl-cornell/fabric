@@ -49,7 +49,12 @@ public final class GroupTable {
   }
 
   public synchronized Long getGlobIDByOnum(long onum) {
-    return globIDByOnum.get(onum);
+    Long result = globIDByOnum.get(onum);
+    if (result == null) return null;
+
+    // Make sure the result is still valid.
+    if (getContainer(result) == null) return null;
+    return result;
   }
 
   public synchronized Entry getContainer(long globID) {
@@ -156,7 +161,10 @@ public final class GroupTable {
       while (true) {
         try {
           SoftRef ref = (SoftRef) queue.remove();
-          remove(ref.globId);
+          synchronized (GroupTable.this) {
+            Pair<SoftRef, MutableInteger> entry = table.get(ref.globId);
+            if (entry != null && entry.first == ref) remove(ref.globId);
+          }
         } catch (InterruptedException e) {
         }
       }
