@@ -1,6 +1,7 @@
 package fabric.dissemination;
 
 import static fabric.common.Logging.NETWORK_MESSAGE_RECEIVE_LOGGER;
+import static fabric.common.ONumConstants.EMPTY_LABEL;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,7 +29,9 @@ import fabric.common.FastSerializable;
 import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.Pair;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
 import fabric.worker.Store;
@@ -85,7 +88,8 @@ public class Glob implements FastSerializable {
   public Glob(Store store, ObjectGroup group, PrivateKey key) {
     this.timestamp = System.currentTimeMillis();
 
-    this.keyObject = getLabel(store, group).keyObject();
+    Label label = getLabel(store, group);
+    this.keyObject = label.keyObject();
     if (keyObject == null) {
       this.iv = null;
     } else {
@@ -107,11 +111,15 @@ public class Glob implements FastSerializable {
       cos.close();
       this.data = bos.toByteArray();
 
-      // Sign things.
-      Signature signer = Crypto.signatureInstance();
-      signer.initSign(key);
-      updateSignature(signer);
-      this.signature = signer.sign();
+      if (label.$getOnum() == EMPTY_LABEL) {
+        this.signature = new byte[0];
+      } else {
+        // Sign things.
+        Signature signer = Crypto.signatureInstance();
+        signer.initSign(key);
+        updateSignature(signer);
+        this.signature = signer.sign();
+      }
     } catch (IOException e) {
       throw new InternalError(e);
     } catch (GeneralSecurityException e) {
@@ -231,12 +239,23 @@ public class Glob implements FastSerializable {
 
   public void verifySignature(PublicKey key) throws SignatureException,
       InvalidKeyException {
-    // Check the signature.
-    Signature verifier = Crypto.signatureInstance();
-    verifier.initVerify(key);
-    updateSignature(verifier);
-    if (!verifier.verify(signature))
-      throw new SignatureException("Failed to verify signature");
+    if (signature.length == 0) {
+      // No signature received. Verify that none was required.
+      // XXX This is rather inefficient.
+      ObjectGroup group = decrypt();
+      for (Pair<SerializedObject, VersionWarranty> pair : group.objects()
+          .values()) {
+        if (pair.first.getUpdateLabelOnum() != EMPTY_LABEL)
+          throw new SignatureException("Failed to verify signature");
+      }
+    } else {
+      // Check the signature.
+      Signature verifier = Crypto.signatureInstance();
+      verifier.initVerify(key);
+      updateSignature(verifier);
+      if (!verifier.verify(signature))
+        throw new SignatureException("Failed to verify signature");
+    }
   }
 
   /** Serializer. */
@@ -267,10 +286,6 @@ public class Glob implements FastSerializable {
 
   /**
    * Deserializer.
-   * 
-   * @param key
-   *          The public key for verifying the signature. (If null, signature
-   *          verification is bypassed.)
    */
   public Glob(DataInput in) throws IOException {
     this.timestamp = in.readLong();
@@ -294,11 +309,7 @@ public class Glob implements FastSerializable {
     in.readFully(this.signature);
   }
 
-  /**
-   * @param store
-   *          The store that this glob came from.
-   */
-  public ObjectGroup decrypt(Store store) {
+  public ObjectGroup decrypt() {
     try {
       Cipher cipher = makeCipher(keyObject, Cipher.DECRYPT_MODE, iv);
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
@@ -309,8 +320,8 @@ public class Glob implements FastSerializable {
       ObjectGroup result = new ObjectGroup(in);
       if (NETWORK_MESSAGE_RECEIVE_LOGGER.isLoggable(Level.FINE)) {
         Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
-            "Decrypted object group from {0} containing {1} objects", store,
-            result.objects().size());
+            "Decrypted object group containing {0} objects", result.objects()
+                .size());
       }
       return result;
     } catch (IOException e) {

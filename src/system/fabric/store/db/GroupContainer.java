@@ -79,7 +79,7 @@ public final class GroupContainer extends GroupTable.Entry {
     }
 
     if (group != null) return group;
-    return glob.decrypt(store);
+    return glob.decrypt();
   }
 
   public synchronized Glob getGlob() {
@@ -99,7 +99,7 @@ public final class GroupContainer extends GroupTable.Entry {
 
     // Ensure group is decrypted.
     if (group == null) {
-      group = glob.decrypt(store);
+      group = glob.decrypt();
       glob = null;
     }
 
