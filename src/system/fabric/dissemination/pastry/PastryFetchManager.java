@@ -49,7 +49,7 @@ public class PastryFetchManager implements FetchManager {
       return fallback.fetch(c, onum);
     }
 
-    return glob.decrypt(c);
+    return glob.decrypt();
   }
 
   @Override

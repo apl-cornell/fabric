@@ -62,7 +62,7 @@ public final class GroupContainer extends GroupTable.Entry {
     }
 
     if (group != null) return group;
-    return glob.decrypt(store);
+    return glob.decrypt();
   }
 
   public Glob getGlob() {

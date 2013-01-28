@@ -1,5 +1,7 @@
 package fabric.dissemination;
 
+import static fabric.common.ONumConstants.EMPTY_LABEL;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -81,7 +83,8 @@ public class Glob implements FastSerializable {
   public Glob(Store store, ObjectGroup group, PrivateKey key) {
     this.timestamp = System.currentTimeMillis();
 
-    this.keyObject = getLabel(store, group).keyObject();
+    Label label = getLabel(store, group);
+    this.keyObject = label.keyObject();
     if (keyObject == null) {
       this.iv = null;
     } else {
@@ -103,11 +106,15 @@ public class Glob implements FastSerializable {
       cos.close();
       this.data = bos.toByteArray();
 
-      // Sign things.
-      Signature signer = Crypto.signatureInstance();
-      signer.initSign(key);
-      updateSignature(signer);
-      this.signature = signer.sign();
+      if (label.$getOnum() == EMPTY_LABEL) {
+        this.signature = new byte[0];
+      } else {
+        // Sign things.
+        Signature signer = Crypto.signatureInstance();
+        signer.initSign(key);
+        updateSignature(signer);
+        this.signature = signer.sign();
+      }
     } catch (IOException e) {
       throw new InternalError(e);
     } catch (GeneralSecurityException e) {
@@ -227,12 +234,22 @@ public class Glob implements FastSerializable {
 
   public void verifySignature(PublicKey key) throws SignatureException,
       InvalidKeyException {
-    // Check the signature.
-    Signature verifier = Crypto.signatureInstance();
-    verifier.initVerify(key);
-    updateSignature(verifier);
-    if (!verifier.verify(signature))
-      throw new SignatureException("Failed to verify signature");
+    if (signature.length == 0) {
+      // No signature received. Verify that none was required.
+      // XXX This is rather inefficient.
+      ObjectGroup group = decrypt();
+      for (SerializedObject obj : group.objects().values()) {
+        if (obj.getUpdateLabelOnum() != EMPTY_LABEL)
+          throw new SignatureException("Failed to verify signature");
+      }
+    } else {
+      // Check the signature.
+      Signature verifier = Crypto.signatureInstance();
+      verifier.initVerify(key);
+      updateSignature(verifier);
+      if (!verifier.verify(signature))
+        throw new SignatureException("Failed to verify signature");
+    }
   }
 
   /** Serializer. */
@@ -263,10 +280,6 @@ public class Glob implements FastSerializable {
 
   /**
    * Deserializer.
-   * 
-   * @param key
-   *          The public key for verifying the signature. (If null, signature
-   *          verification is bypassed.)
    */
   public Glob(DataInput in) throws IOException {
     this.timestamp = in.readLong();
@@ -290,11 +303,7 @@ public class Glob implements FastSerializable {
     in.readFully(this.signature);
   }
 
-  /**
-   * @param store
-   *          The store that this glob came from.
-   */
-  public ObjectGroup decrypt(Store store) {
+  public ObjectGroup decrypt() {
     try {
       Cipher cipher = makeCipher(keyObject, Cipher.DECRYPT_MODE, iv);
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
