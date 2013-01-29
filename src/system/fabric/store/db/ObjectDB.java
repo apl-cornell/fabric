@@ -561,7 +561,7 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Given the ID of the group to which the given onum belongs. Null is returned
+   * Gives the ID of the group to which the given onum belongs. Null is returned
    * if no such group exists.
    */
   public final Long getCachedGroupID(long onum) {
@@ -659,7 +659,7 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Determine whether an onum has outstanding uncommitted changes.
+   * Determines whether an onum has outstanding uncommitted changes.
    * 
    * @param onum
    *          the object number in question
@@ -683,7 +683,7 @@ public abstract class ObjectDB {
 
   /**
    * <p>
-   * Return a set of onums that aren't currently occupied. The ObjectDB may
+   * Returns a set of onums that aren't currently occupied. The ObjectDB may
    * return the same onum more than once from this method, althogh doing so
    * would encourage collisions. There is no assumption of unpredictability or
    * randomness about the returned ids.
@@ -717,7 +717,7 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Gracefully shutdown the object database.
+   * Gracefully shuts down the object database.
    * 
    * @throws IOException
    */
