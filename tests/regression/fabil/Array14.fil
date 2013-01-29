@@ -1,0 +1,9 @@
+public class Array14 {
+  public static void main(String[] args) {
+    atomic {
+        Object [] a = new Object [2];
+        System.err.println("Array: " + a);
+    }
+  }
+}
+
