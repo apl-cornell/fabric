@@ -1,6 +1,8 @@
 package fabric.store;
 
 import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
+import static fabric.store.db.ObjectDB.UpdateMode.CREATE;
+import static fabric.store.db.ObjectDB.UpdateMode.WRITE;
 
 import java.security.PrivateKey;
 import java.util.ArrayList;
@@ -10,7 +12,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.Random;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
@@ -23,9 +24,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongKeyMap.Entry;
 import fabric.common.util.LongSet;
-import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
-import fabric.lang.Statistics;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
@@ -38,10 +37,7 @@ import fabric.worker.Worker.Code;
 
 public class TransactionManager {
 
-  private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
   private static final int MIN_GROUP_SIZE = 75;
-
-  private static final Random rand = new Random();
 
   /**
    * The object database of the store for which we're managing transactions.
@@ -61,14 +57,9 @@ public class TransactionManager {
    */
   private final PrivateKey signingKey;
 
-  private final LongKeyMap<Statistics> objectStats;
-
   public TransactionManager(ObjectDB database, PrivateKey signingKey) {
     this.database = database;
     this.signingKey = signingKey;
-    this.objectStats = new LongKeyHashMap<Statistics>();
-    // this.readHistory = new ReadHistory();
-
     this.sm = new SubscriptionManager(database.getName(), this);
   }
 
@@ -77,10 +68,8 @@ public class TransactionManager {
    */
   public void abortTransaction(Principal worker, long transactionID)
       throws AccessException {
-    synchronized (database) {
-      database.rollback(transactionID, worker);
-      STORE_TRANSACTION_LOGGER.fine("Aborted transaction " + transactionID);
-    }
+    database.rollback(transactionID, worker);
+    STORE_TRANSACTION_LOGGER.fine("Aborted transaction " + transactionID);
   }
 
   /**
@@ -88,17 +77,15 @@ public class TransactionManager {
    */
   public void commitTransaction(Principal workerPrincipal, long transactionID)
       throws TransactionCommitFailedException {
-    synchronized (database) {
-      try {
-        database.commit(transactionID, workerPrincipal, sm);
-        STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
-      } catch (final AccessException e) {
-        throw new TransactionCommitFailedException("Insufficient Authorization");
-      } catch (final RuntimeException e) {
-        throw new TransactionCommitFailedException(
-            "something went wrong; store experienced a runtime exception during "
-                + "commit: " + e.getMessage(), e);
-      }
+    try {
+      database.commit(transactionID, workerPrincipal, sm);
+      STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
+    } catch (final AccessException e) {
+      throw new TransactionCommitFailedException("Insufficient Authorization");
+    } catch (final RuntimeException e) {
+      throw new TransactionCommitFailedException(
+          "something went wrong; store experienced a runtime exception during "
+              + "commit: " + e.getMessage(), e);
     }
   }
 
@@ -150,12 +137,10 @@ public class TransactionManager {
       }
     }
 
-    synchronized (database) {
-      try {
-        database.beginTransaction(tid, worker);
-      } catch (final AccessException e) {
-        throw new TransactionPrepareFailedException("Insufficient privileges");
-      }
+    try {
+      database.beginTransaction(tid, worker);
+    } catch (final AccessException e) {
+      throw new TransactionPrepareFailedException("Insufficient privileges");
     }
 
     try {
@@ -163,74 +148,14 @@ public class TransactionManager {
       LongKeyMap<SerializedObject> versionConflicts =
           new LongKeyHashMap<SerializedObject>();
 
-      // Check writes and update version numbers
+      // Prepare writes.
       for (SerializedObject o : req.writes) {
-        // Make sure no one else has used the object and fetch the old copy
-        // from the store.
-        long onum = o.getOnum();
-        SerializedObject storeCopy;
-        synchronized (database) {
-          if (database.isPrepared(onum, tid))
-            throw new TransactionPrepareFailedException("Object " + onum
-                + " has been locked by an uncommitted transaction");
-
-          storeCopy = database.read(onum);
-
-          // Register the update with the database.
-          database.registerUpdate(tid, worker, o);
-        }
-
-        // check promises
-        if (storeCopy.getExpiry() > req.commitTime) {
-          throw new TransactionPrepareFailedException("Update to object" + onum
-              + " violates an outstanding promise");
-        }
-
-        // Check version numbers.
-        int storeVersion = storeCopy.getVersion();
-        int workerVersion = o.getVersion();
-        if (storeVersion != workerVersion) {
-          versionConflicts.put(onum, storeCopy);
-          continue;
-        }
-
-        // // Check against read history
-        // if (!readHistory.check(onum, req.commitTime)) {
-        // throw new TransactionPrepareFailedException("Object " + onum
-        // + " has been read since it's proposed commit time.");
-        // }
-
-        // Update promise statistics
-        Pair<Statistics, Boolean> pair = ensureStatistics(onum, req.tid);
-        pair.first.commitWrote();
-        result |= pair.second;
-
-        // Update the version number on the prepared copy of the object.
-        o.setVersion(storeVersion + 1);
+        database.prepareUpdate(tid, worker, o, versionConflicts, WRITE);
       }
 
-      // Check creates.
-      synchronized (database) {
-        for (SerializedObject o : req.creates) {
-          long onum = o.getOnum();
-
-          // Make sure no one else has claimed the object number in an
-          // uncommitted transaction.
-          if (database.isPrepared(onum, tid))
-            throw new TransactionPrepareFailedException(versionConflicts,
-                "Object " + onum + " has been locked by an "
-                    + "uncommitted transaction");
-
-          // Make sure the onum doesn't already exist in the database.
-          if (database.exists(onum))
-            throw new TransactionPrepareFailedException(versionConflicts,
-                "Object " + onum + " already exists");
-
-          // Set the initial version number and register the update with the
-          // database.
-          o.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
-          database.registerUpdate(tid, worker, o);
-        }
+      // Prepare creates.
+      for (SerializedObject o : req.creates) {
+        database.prepareUpdate(tid, worker, o, versionConflicts, CREATE);
       }
 
       // Check reads
@@ -238,34 +163,7 @@ public class TransactionManager {
         long onum = entry.getKey();
         int version = entry.getValue().intValue();
 
-        synchronized (database) {
-          // Make sure no one else is using the object.
-          if (database.isWritten(onum))
-            throw new TransactionPrepareFailedException(versionConflicts,
-                "Object " + onum + " has been locked by an uncommitted "
-                    + "transaction");
-
-          // Check version numbers.
-          int curVersion;
-          try {
-            curVersion = database.getVersion(onum);
-          } catch (AccessException e) {
-            throw new TransactionPrepareFailedException(versionConflicts,
-                e.getMessage());
-          }
-          if (curVersion != version) {
-            versionConflicts.put(onum, database.read(onum));
-            continue;
-          }
-
-          // inform the object statistics of the read
-          Pair<Statistics, Boolean> pair = ensureStatistics(onum, req.tid);
-          pair.first.commitRead();
-          result |= pair.second;
-
-          // Register the read with the database.
-          database.registerRead(tid, worker, onum);
-        }
+        database.prepareRead(tid, worker, onum, version, versionConflicts);
       }
 
       if (!versionConflicts.isEmpty()) {
@@ -273,24 +171,18 @@ public class TransactionManager {
       }
 
       // readHistory.record(req);
-      synchronized (database) {
-        database.finishPrepare(tid, worker);
-      }
+      database.finishPrepare(tid, worker);
 
       STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
 
       return result;
     } catch (TransactionPrepareFailedException e) {
-      synchronized (database) {
-        database.abortPrepare(tid, worker);
-        throw e;
-      }
+      database.abortPrepare(tid, worker);
+      throw e;
     } catch (RuntimeException e) {
-      synchronized (database) {
-        e.printStackTrace();
-        database.abortPrepare(tid, worker);
-        throw e;
-      }
+      e.printStackTrace();
+      database.abortPrepare(tid, worker);
+      throw e;
     }
   }
 
@@ -351,8 +243,6 @@ public class TransactionManager {
    * ensures that the worker will not reveal information when dereferencing
    * surrogates.
    * 
-   * @param handler
-   *          Used to track read statistics. Can be null.
    * @param subscriber
    *          If non-null, then the given worker will be subscribed to the
    *          object.
@@ -365,13 +255,12 @@ public class TransactionManager {
     GroupContainer container;
     synchronized (database) {
       container = database.getCachedGroupContainer(onum);
+      // if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
+
       if (container != null) {
-        // if (subscriber != null)
-        // sm.subscribe(onum, subscriber, dissemSubscribe);
         return container;
       }
 
-      // if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
       GroupContainer group = makeGroup(onum);
       if (group == null) throw new AccessException(database.getName(), onum);
 
@@ -387,8 +276,6 @@ public class TransactionManager {
    * @param subscriber
    *          If non-null, then the given worker will be subscribed to the
    *          object as a dissemination node.
-   * @param handler
-   *          Used to track read statistics.
    */
   public Glob getGlob(long onum) throws AccessException {
     return getGroupContainerAndSubscribe(onum).getGlob();
@@ -548,94 +435,7 @@ public class TransactionManager {
    * here.
    */
   SerializedObject read(long onum) {
-    SerializedObject obj;
-    synchronized (database) {
-      obj = database.read(onum);
-    }
-
-    if (obj == null) return null;
-
-    // create promise if necessary.
-    long now = System.currentTimeMillis();
-    if (obj.getExpiry() < now) {
-      Statistics history = getStatistics(onum);
-      if (history != null) {
-        int promise = history.generatePromise();
-        if (promise > 0) {
-          Principal worker = Worker.getWorker().getPrincipal();
-          synchronized (database) {
-            // create a promise
-
-            if (database.isWritten(onum))
-            // object has been written - no promise for you!
-              return obj;
-
-            // check to see if someone else has created a promise
-            SerializedObject newObj = database.read(onum);
-            long time = newObj.getExpiry();
-
-            if (time < now + promise) {
-              try {
-                // update the promise
-                newObj.setExpiry(now + promise);
-                long tid = rand.nextLong();
-                database.beginTransaction(tid, worker);
-                database.registerUpdate(tid, worker, newObj);
-                database.finishPrepare(tid, worker);
-                database.commit(tid, worker, sm);
-              } catch (AccessException exc) {
-                // TODO: this should probably use the store principal instead of
-                // the worker principal, and AccessExceptions should be
-                // impossible
-                return obj;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    return obj;
-  }
-
-  /**
-   * Return the statistics object associated with onum, or null if there isn't
-   * one
-   */
-  private Statistics getStatistics(long onum) {
-    synchronized (objectStats) {
-      return objectStats.get(onum);
-    }
-  }
-
-  /**
-   * Return the statistics object associated with onum, creating one if it
-   * doesn't exist already. Also returns a boolean indicating whether the
-   * Statistics object is freshly created.
-   */
-  private Pair<Statistics, Boolean> ensureStatistics(long onum, long tnum) {
-    // Disabled statistics generation for now. -MJL
-    return new Pair<Statistics, Boolean>(
-        fabric.lang.DefaultStatistics.instance, false);
-
-    // synchronized (objectStats) {
-    // Statistics stats = getStatistics(onum);
-    // boolean fresh = stats == null;
-    // if (fresh) {
-    // // set up to run as a sub-transaction of the current transaction.
-    // TransactionID tid = new TransactionID(tnum);
-    // Store local = Worker.getWorker().getStore(database.getName());
-    // final fabric.lang.Object._Proxy object =
-    // new fabric.lang.Object._Proxy(local, onum);
-    // stats = Worker.runInTransaction(tid, new Worker.Code<Statistics>() {
-    // public Statistics run() {
-    // return object.createStatistics();
-    // }
-    // });
-    // objectStats.put(onum, stats);
-    // }
-    // return new Pair<Statistics, Boolean>(stats, fresh);
-    // }
+    return database.read(onum);
   }
 
   /**
@@ -643,9 +443,7 @@ public class TransactionManager {
    *           if the principal is not allowed to create objects on this store.
    */
   public long[] newOnums(Principal worker, int num) throws AccessException {
-    synchronized (database) {
-      return database.newOnums(num);
-    }
+    return database.newOnums(num);
   }
 
   /**
@@ -653,9 +451,7 @@ public class TransactionManager {
    * store.
    */
   long[] newOnums(int num) {
-    synchronized (database) {
-      return database.newOnums(num);
-    }
+    return database.newOnums(num);
   }
 
   /**
@@ -677,11 +473,9 @@ public class TransactionManager {
       long onum = entry.getKey();
       int version = entry.getValue();
 
-      synchronized (database) {
-        int curVersion = database.getVersion(onum);
-        if (curVersion != version) {
-          result.add(database.read(onum));
-        }
+      int curVersion = database.getVersion(onum);
+      if (curVersion != version) {
+        result.add(database.read(onum));
       }
     }
 

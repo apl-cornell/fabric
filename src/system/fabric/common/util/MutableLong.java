@@ -1,13 +1,13 @@
 package fabric.common.util;
 
-public class MutableInteger {
-  public int value;
+public class MutableLong {
+  public long value;
 
-  public MutableInteger() {
+  public MutableLong() {
     this(0);
   }
 
-  public MutableInteger(int value) {
+  public MutableLong(long value) {
     this.value = value;
   }
 

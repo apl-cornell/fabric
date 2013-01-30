@@ -37,6 +37,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.MutableInteger;
+import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.FClass;
 import fabric.lang.security.Principal;
@@ -68,14 +69,14 @@ public class BdbDB extends ObjectDB {
   private final DatabaseEntry initializationStatus;
   private final DatabaseEntry onumCounter;
 
-  private long nextOnum;
+  private final MutableLong nextOnum;
 
   /**
    * To prevent touching BDB on every onum reservation request, we keep a bunch
    * of onums in reserve. If nextOnum > lastReservedOnum, it's time to touch BDB
    * again to reserve more onums.
    */
-  private long lastReservedOnum;
+  private final MutableLong lastReservedOnum;
 
   /**
    * Cache: maps onums to object versions of objects that are currently stored
@@ -138,8 +139,8 @@ public class BdbDB extends ObjectDB {
       throw new InternalError(e);
     }
 
-    this.nextOnum = -1;
-    this.lastReservedOnum = -2;
+    this.nextOnum = new MutableLong(-1);
+    this.lastReservedOnum = new MutableLong(-2);
     this.cachedVersions = new LongKeyCache<MutableInteger>();
     this.preparedTransactions = new Cache<ByteArray, PendingTransaction>();
   }
@@ -147,9 +148,14 @@ public class BdbDB extends ObjectDB {
   @Override
   public void finishPrepare(long tid, Principal worker) {
     // Copy the transaction data into BDB.
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    PendingTransaction pending = submap.remove(worker);
-    if (submap.isEmpty()) pendingByTid.remove(tid);
+    PendingTransaction pending;
+    synchronized (pendingByTid) {
+      OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+      synchronized (submap) {
+        pending = submap.remove(worker);
+        if (submap.isEmpty()) pendingByTid.remove(tid);
+      }
+    }
 
     try {
       Transaction txn = env.beginTransaction(null, null);
@@ -274,8 +280,7 @@ public class BdbDB extends ObjectDB {
     DatabaseEntry data = new DatabaseEntry();
 
     try {
-      if (rwLocks.get(onum) != null
-          || db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
+      if (db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
         return true;
       }
     } catch (DatabaseException e) {
@@ -294,28 +299,33 @@ public class BdbDB extends ObjectDB {
 
     try {
       long[] onums = new long[num];
-      for (int i = 0; i < num; i++) {
-        if (nextOnum > lastReservedOnum) {
-          // Reserve more onums from BDB.
-          Transaction txn = env.beginTransaction(null, null);
-          DatabaseEntry data = new DatabaseEntry();
-          nextOnum = ONumConstants.FIRST_UNRESERVED;
+      synchronized (nextOnum) {
+        synchronized (lastReservedOnum) {
+          for (int i = 0; i < num; i++) {
+            if (nextOnum.value > lastReservedOnum.value) {
+              // Reserve more onums from BDB.
+              Transaction txn = env.beginTransaction(null, null);
+              DatabaseEntry data = new DatabaseEntry();
+              nextOnum.value = ONumConstants.FIRST_UNRESERVED;
 
-          if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
-            nextOnum = LongBinding.entryToLong(data);
+              if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
+                nextOnum.value = LongBinding.entryToLong(data);
+              }
+
+              lastReservedOnum.value =
+                  nextOnum.value + ONUM_RESERVE_SIZE + num - i - 1;
+
+              LongBinding.longToEntry(lastReservedOnum.value + 1, data);
+              meta.put(txn, onumCounter, data);
+              txn.commit();
+
+              STORE_DB_LOGGER.fine("Bdb reserved onums " + nextOnum + "--"
+                  + lastReservedOnum);
+            }
+
+            onums[i] = nextOnum.value++;
           }
-
-          lastReservedOnum = nextOnum + ONUM_RESERVE_SIZE + num - i - 1;
-
-          LongBinding.longToEntry(lastReservedOnum + 1, data);
-          meta.put(txn, onumCounter, data);
-          txn.commit();
-
-          STORE_DB_LOGGER.fine("Bdb reserved onums " + nextOnum + "--"
-              + lastReservedOnum);
         }
-
-        onums[i] = nextOnum++;
       }
 
       return onums;
@@ -428,12 +438,14 @@ public class BdbDB extends ObjectDB {
   }
 
   private void cacheVersionNumber(long onum, int versionNumber) {
-    MutableInteger entry = cachedVersions.get(onum);
-    if (entry == null) {
-      entry = new MutableInteger(versionNumber);
-      cachedVersions.put(onum, entry);
-    } else {
-      entry.value = versionNumber;
+    synchronized (cachedVersions) {
+      MutableInteger entry = cachedVersions.get(onum);
+      if (entry == null) {
+        entry = new MutableInteger(versionNumber);
+        cachedVersions.put(onum, entry);
+      } else {
+        entry.value = versionNumber;
+      }
     }
   }
 

@@ -18,13 +18,14 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.MutableInteger;
+import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.store.PartialObjectGroup;
 import fabric.store.SubscriptionManager;
 import fabric.worker.Store;
+import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 
 /**
@@ -51,15 +52,20 @@ import fabric.worker.Worker;
  * </p>
  */
 public abstract class ObjectDB {
+  private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
 
   protected final String name;
-  private long nextGlobID;
+  private final MutableLong nextGlobID;
 
   /**
    * Maps globIDs to entries (either GroupContainers or PartialObjectGroups) and
    * the number of times the entry is referenced in globIDByOnum.
    */
   private final GroupTable globTable;
+
+  public static enum UpdateMode {
+    CREATE, WRITE
+  }
 
   /**
    * The data stored for a partially prepared transaction.
@@ -204,14 +210,14 @@ public abstract class ObjectDB {
    * restoring from stable storage.
    * </p>
    */
-  protected final LongKeyMap<Pair<Long, LongKeyMap<MutableInteger>>> rwLocks;
+  protected final LongKeyMap<ObjectLocks> rwLocks;
 
   protected ObjectDB(String name) {
     this.name = name;
     this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
-    this.rwLocks = new LongKeyHashMap<Pair<Long, LongKeyMap<MutableInteger>>>();
+    this.rwLocks = new LongKeyHashMap<ObjectLocks>();
     this.globTable = new GroupTable();
-    this.nextGlobID = 0;
+    this.nextGlobID = new MutableLong(0);
   }
 
   /**
@@ -224,73 +230,165 @@ public abstract class ObjectDB {
    */
   public final void beginTransaction(long tid, Principal worker)
       throws AccessException {
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    if (submap == null) {
-      submap = new OidKeyHashMap<PendingTransaction>();
-      pendingByTid.put(tid, submap);
+    OidKeyHashMap<PendingTransaction> submap;
+    synchronized (pendingByTid) {
+      submap = pendingByTid.get(tid);
+      if (submap == null) {
+        submap = new OidKeyHashMap<PendingTransaction>();
+        pendingByTid.put(tid, submap);
+      }
     }
 
-    submap.put(worker, new PendingTransaction(tid, worker));
+    synchronized (submap) {
+      submap.put(worker, new PendingTransaction(tid, worker));
+    }
   }
 
   /**
-   * Registers that a transaction has read an object.
-   */
-  public final void registerRead(long tid, Principal worker, long onum) {
-    addReadLock(onum, tid);
-    pendingByTid.get(tid).get(worker).reads.add(onum);
-  }
-
-  /**
-   * Registers that a transaction has created or written to an object. This
-   * update will not become visible in the store until commit() is called for
-   * the transaction.
+   * Prepares a read against the database.
    * 
    * @param tid
-   *          the identifier for the transaction.
+   *          the identifier for the transaction preparing the read.
+   * @param worker
+   *          the worker preparing the read.
+   * @param onum
+   *          the object number that was read.
+   * @param version
+   *          the version that was read.
+   * @param versionConflicts
+   *          a map containing the transaction's version-conflict information.
+   *          If the object read was out of date, then a new entry will be added
+   *          to this map, binding the object's onum to its current version.
+   */
+  public final void prepareRead(long tid, Principal worker, long onum,
+      int version, LongKeyMap<SerializedObject> versionConflicts)
+      throws TransactionPrepareFailedException {
+    // First, lock the object.
+    try {
+      objectLocksFor(onum).lockForRead(tid);
+    } catch (UnableToLockException e) {
+      throw new TransactionPrepareFailedException(versionConflicts, "Object "
+          + onum + " has been locked by an uncommitted transaction.");
+    }
+
+    // Register that the transaction has locked the object.
+    OidKeyHashMap<PendingTransaction> submap;
+    synchronized (pendingByTid) {
+      submap = pendingByTid.get(tid);
+    }
+
+    synchronized (submap) {
+      submap.get(worker).reads.add(onum);
+    }
+
+    // Check version numbers.
+    int curVersion;
+    try {
+      curVersion = getVersion(onum);
+    } catch (AccessException e) {
+      throw new TransactionPrepareFailedException(versionConflicts,
+          e.getMessage());
+    }
+
+    if (curVersion != version) {
+      versionConflicts.put(onum, read(onum));
+    }
+  }
+
+  /**
+   * Prepares a create/write against the database.
+   * 
+   * @param tid
+   *          the identifier for the transaction preparing the create/write.
+   * @param worker
+   *          the worker preparing the create/write.
    * @param obj
-   *          the updated object.
+   *          the modified object.
+   * @param versionConflicts
+   *          a map containing the transaction's version-conflict information.
+   *          If the object modified was out of date, then a new entry will be
+   *          added to this map, binding the object's onum to its current
+   *          version.
    */
-  public final void registerUpdate(long tid, Principal worker,
-      SerializedObject obj) {
-    addWriteLock(obj.getOnum(), tid);
-    pendingByTid.get(tid).get(worker).modData.add(obj);
+  public final void prepareUpdate(long tid, Principal worker,
+      SerializedObject obj, LongKeyMap<SerializedObject> versionConflicts,
+      UpdateMode mode) throws TransactionPrepareFailedException {
+    long onum = obj.getOnum();
+
+    // First, lock the object.
+    try {
+      objectLocksFor(onum).lockForWrite(tid);
+    } catch (UnableToLockException e) {
+      throw new TransactionPrepareFailedException(versionConflicts, "Object "
+          + onum + " has been locked by an uncommitted transaction.");
+    }
+
+    // Record the updated object. Doing so will also register that the
+    // transaction has locked the object.
+    OidKeyHashMap<PendingTransaction> submap;
+    synchronized (pendingByTid) {
+      submap = pendingByTid.get(tid);
+    }
+
+    synchronized (submap) {
+      submap.get(worker).modData.add(obj);
+    }
+
+    switch (mode) {
+    case CREATE:
+      // Make sure the onum doesn't already exist in the database.
+      if (exists(onum)) {
+        throw new TransactionPrepareFailedException(versionConflicts, "Object "
+            + onum + " already exists.");
+      }
+
+      // Set the object's initial version number.
+      obj.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
+      break;
+
+    case WRITE:
+      // Read the old copy from the database.
+      SerializedObject storeCopy = read(onum);
+
+      // Check version numbers.
+      int storeVersion = storeCopy.getVersion();
+      int workerVersion = obj.getVersion();
+      if (storeVersion != workerVersion) {
+        versionConflicts.put(onum, storeCopy);
+        return;
+      }
+
+      // Update the version number on the prepared copy of the object.
+      obj.setVersion(storeVersion + 1);
+      break;
+
+    default:
+      throw new InternalError("Unknown update mode.");
+    }
   }
 
   /**
-   * Acquires a read lock on the given onum for the given transaction.
+   * Obtains the ObjectLocks for a given onum, creating one if it doesn't
+   * already exist.
    */
-  private void addReadLock(long onum, long tid) {
-    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-    if (locks == null) {
-      locks =
-          new Pair<Long, LongKeyMap<MutableInteger>>(null,
-              new LongKeyHashMap<MutableInteger>());
-      rwLocks.put(onum, locks);
-    }
-
-    MutableInteger pinCount = locks.second.get(tid);
-    if (pinCount == null) {
-      pinCount = new MutableInteger(0);
-      locks.second.put(tid, pinCount);
-    }
-
-    pinCount.value++;
+  private ObjectLocks objectLocksFor(long onum) {
+    return objectLocksFor(onum, true);
   }
 
   /**
-   * Acquires a write lock on the given onum for the given transaction.
+   * @param create
+   *         whether to create an entry if one does not exist.
    */
-  private void addWriteLock(long onum, long tid) {
-    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-    if (locks == null) {
-      locks =
-          new Pair<Long, LongKeyMap<MutableInteger>>(null,
-              new LongKeyHashMap<MutableInteger>());
-      rwLocks.put(onum, locks);
-    }
+  private ObjectLocks objectLocksFor(long onum, boolean create) {
+    synchronized (rwLocks) {
+      ObjectLocks result = rwLocks.get(onum);
+      if (result == null && create) {
+        result = new ObjectLocks();
+        rwLocks.put(onum, result);
+      }
 
-    locks.first = tid;
+      return result;
+    }
   }
 
   /**
@@ -298,9 +396,14 @@ public abstract class ObjectDB {
    * finishPrepare() has yet to be called.)
    */
   public final void abortPrepare(long tid, Principal worker) {
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    unpin(submap.remove(worker));
-    if (submap.isEmpty()) pendingByTid.remove(tid);
+    synchronized (pendingByTid) {
+      OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+
+      synchronized (submap) {
+        unpin(submap.remove(worker));
+        if (submap.isEmpty()) pendingByTid.remove(tid);
+      }
+    }
   }
 
   /**
@@ -367,7 +470,7 @@ public abstract class ObjectDB {
     SerializedObject obj = read(onum);
     if (obj == null) throw new AccessException(name, onum);
 
-    return read(onum).getVersion();
+    return obj.getVersion();
   }
 
   /**
@@ -375,13 +478,17 @@ public abstract class ObjectDB {
    * if no such group exists.
    */
   public final Long getCachedGroupID(long onum) {
-    return globTable.getGlobIDByOnum(onum);
+    synchronized (globTable) {
+      return globTable.getGlobIDByOnum(onum);
+    }
   }
 
   private final GroupTable.Entry getGroupTableEntry(long onum) {
-    Long groupID = getCachedGroupID(onum);
-    if (groupID == null) return null;
-    return globTable.getContainer(groupID);
+    synchronized (globTable) {
+      Long groupID = getCachedGroupID(onum);
+      if (groupID == null) return null;
+      return globTable.getContainer(groupID);
+    }
   }
 
   /**
@@ -409,10 +516,15 @@ public abstract class ObjectDB {
    */
   public final void cachePartialGroup(PartialObjectGroup partialGroup) {
     // Get a new ID for the partial group.
-    long groupID = nextGlobID++;
+    long groupID;
+    synchronized (nextGlobID) {
+      groupID = nextGlobID.value++;
+    }
     partialGroup.setID(groupID);
 
-    globTable.put(partialGroup);
+    synchronized (globTable) {
+      globTable.put(partialGroup);
+    }
   }
 
   /**
@@ -420,13 +532,17 @@ public abstract class ObjectDB {
    */
   public void coalescePartialGroups(PartialObjectGroup from,
       PartialObjectGroup to) {
-    globTable.coalescePartialGroups(from, to);
+    synchronized (globTable) {
+      globTable.coalescePartialGroups(from, to);
+    }
   }
 
   public GroupContainer promotePartialGroup(PrivateKey signingKey,
       PartialObjectGroup partialGroup) {
-    return globTable.promotePartialGroup(
-        Worker.getWorker().getStore(getName()), signingKey, partialGroup);
+    synchronized (globTable) {
+      return globTable.promotePartialGroup(
+          Worker.getWorker().getStore(getName()), signingKey, partialGroup);
+    }
   }
 
   /**
@@ -441,29 +557,31 @@ public abstract class ObjectDB {
    */
   protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum) {
     // Remove from the glob table the glob associated with the onum.
-    Long globID = globTable.getGlobIDByOnum(onum);
+    Long globID;
     GroupContainer group = null;
-    if (globID != null) {
-      GroupTable.Entry entry = globTable.remove(globID);
-      if (entry instanceof GroupContainer) {
-        group = (GroupContainer) entry;
+    synchronized (globTable) {
+      globID = globTable.getGlobIDByOnum(onum);
+      if (globID != null) {
+        GroupTable.Entry entry = globTable.remove(globID);
+        if (entry instanceof GroupContainer) {
+          group = (GroupContainer) entry;
+        }
       }
-    }
 
-    // Notify the subscription manager that the group has been updated.
-    // sm.notifyUpdate(onum, worker);
-    if (group != null) {
-      for (LongIterator onumIt = group.onums.iterator(); onumIt.hasNext();) {
-        long relatedOnum = onumIt.next();
-        if (relatedOnum == onum) continue;
+      // Notify the subscription manager that the group has been updated.
+      // sm.notifyUpdate(onum, worker);
+      if (group != null) {
+        for (LongIterator onumIt = group.onums.iterator(); onumIt.hasNext();) {
+          long relatedOnum = onumIt.next();
+          if (relatedOnum == onum) continue;
 
-        Long relatedGlobId = globTable.getGlobIDByOnum(relatedOnum);
-        if (relatedGlobId != null && relatedGlobId == globID) {
-          // sm.notifyUpdate(relatedOnum, worker);
+          Long relatedGlobId = globTable.getGlobIDByOnum(relatedOnum);
+          if (relatedGlobId != null && relatedGlobId == globID) {
+            // sm.notifyUpdate(relatedOnum, worker);
+          }
         }
       }
     }
-
   }
 
   /**
@@ -476,14 +594,20 @@ public abstract class ObjectDB {
    *          the object number in question
    */
   public final boolean isPrepared(long onum, long tid) {
-    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
+    ObjectLocks locks;
+    synchronized (rwLocks) {
+      locks = rwLocks.get(onum);
+    }
+
     if (locks == null) return false;
 
-    if (locks.first != null) return true;
+    synchronized (locks) {
+      if (locks.writeLock != null) return true;
 
-    if (locks.second.isEmpty()) return false;
-    if (locks.second.size() > 1) return true;
-    return !locks.second.containsKey(tid);
+      if (locks.readLocks.isEmpty()) return false;
+      if (locks.readLocks.size() > 1) return true;
+      return !locks.readLocks.containsKey(tid);
+    }
   }
 
   /**
@@ -495,8 +619,16 @@ public abstract class ObjectDB {
    *         been committed or rolled back.
    */
   public final boolean isWritten(long onum) {
-    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-    return locks != null && locks.first != null;
+    ObjectLocks locks;
+    synchronized (rwLocks) {
+      locks = rwLocks.get(onum);
+    }
+
+    if (locks == null) return false;
+
+    synchronized (locks) {
+      return locks.writeLock != null;
+    }
   }
 
   /**
@@ -504,25 +636,34 @@ public abstract class ObjectDB {
    * to be committed or aborted.
    */
   protected final void unpin(PendingTransaction tx) {
-    for (long readOnum : tx.reads) {
-      Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(readOnum);
+    synchronized (rwLocks) {
+      for (long readOnum : tx.reads) {
+        ObjectLocks locks = rwLocks.get(readOnum);
 
-      MutableInteger pinCount = locks.second.get(tx.tid);
-      if (pinCount != null) {
-        pinCount.value--;
-        if (pinCount.value == 0) locks.second.remove(tx.tid);
+        synchronized (locks) {
+          MutableInteger pinCount = locks.readLocks.get(tx.tid);
+          if (pinCount != null) {
+            pinCount.value--;
+            if (pinCount.value == 0) locks.readLocks.remove(tx.tid);
+          }
+
+          if (locks.writeLock == null && locks.readLocks.isEmpty())
+            rwLocks.remove(readOnum);
+        }
       }
 
-      if (locks.first == null && locks.second.isEmpty())
-        rwLocks.remove(readOnum);
-    }
+      for (SerializedObject update : tx.modData) {
+        long onum = update.getOnum();
+        ObjectLocks locks = rwLocks.get(onum);
 
-    for (SerializedObject update : tx.modData) {
-      long onum = update.getOnum();
-      Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-      if (locks.first != null && locks.first == tx.tid) locks.first = null;
+        synchronized (locks) {
+          if (locks.writeLock != null && locks.writeLock == tx.tid)
+            locks.writeLock = null;
 
-      if (locks.first == null && locks.second.isEmpty()) rwLocks.remove(onum);
+          if (locks.writeLock == null && locks.readLocks.isEmpty())
+            rwLocks.remove(onum);
+        }
+      }
     }
   }
 
