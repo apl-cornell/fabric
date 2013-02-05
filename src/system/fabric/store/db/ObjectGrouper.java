@@ -36,9 +36,9 @@ public final class ObjectGrouper {
   private final PrivateKey signingKey;
 
   /**
-   * Maps onums to <code>Entry</code>s.
+   * Maps onums to SoftRefs.
    */
-  private final LongKeyMap<Entry> table;
+  private final LongKeyMap<SoftRef> table;
 
   /**
    * The set of group locks. Used to prevent threads from concurrently
@@ -47,55 +47,6 @@ public final class ObjectGrouper {
   private final LongKeyMap<GroupLock> groupLocks;
 
   private final ReferenceQueue<AbstractGroup> queue;
-
-  /**
-   * An entry either points to a group (GroupContainer, PartialObjectGroup) or
-   * has a forwarding pointer to another entry. Forwarding pointers occur when
-   * partial groups are coalesced together.
-   */
-  private class Entry {
-    private SoftRef group;
-    private Entry forward;
-
-    Entry(AbstractGroup group) {
-      this.group = new SoftRef(group);
-      this.forward = null;
-    }
-
-    /**
-     * @return the Entry at the end of the forwarding chain of entries.
-     */
-    synchronized Entry getExactEntry() {
-      if (forward != null) {
-        // Snap forwarding links.
-        return forward = forward.getExactEntry();
-      }
-
-      return this;
-    }
-
-    /**
-     * @return the group at the end of the forwarding chain of entries.
-     */
-    SoftRef getSoftRef() {
-      // Lock table to prevent other threads from changing what this entry
-      // points to.
-      synchronized (table) {
-        return getExactEntry().group;
-      }
-    }
-
-    /**
-     * @return the group at the end of the forwarding chain of entries.
-     */
-    AbstractGroup getGroup() {
-      // Lock table to prevent other threads from changing what this entry
-      // points to.
-      synchronized (table) {
-        return getExactEntry().group.get();
-      }
-    }
-  }
 
   /**
    * Either a GroupContainer, a PartialObjectGroup, or a Placeholder.
@@ -107,7 +58,7 @@ public final class ObjectGrouper {
   public ObjectGrouper(ObjectDB database, PrivateKey signingKey) {
     this.database = database;
     this.signingKey = signingKey;
-    this.table = new LongKeyHashMap<Entry>();
+    this.table = new LongKeyHashMap<SoftRef>();
     this.groupLocks = new LongKeyHashMap<GroupLock>();
     this.queue = new ReferenceQueue<AbstractGroup>();
 
@@ -119,9 +70,9 @@ public final class ObjectGrouper {
     GroupLock lock;
     synchronized (groupLocks) {
       synchronized (table) {
-        Entry entry = table.get(onum);
-        if (entry != null) {
-          AbstractGroup group = entry.getGroup();
+        SoftRef ref = table.get(onum);
+        if (ref != null) {
+          AbstractGroup group = ref.get();
           if (group instanceof GroupContainer) return (GroupContainer) group;
         }
       }
@@ -261,17 +212,17 @@ public final class ObjectGrouper {
     }
 
     synchronized (table) {
-      Entry entry = table.get(onum);
-      if (entry == null) return null;
+      SoftRef ref = table.get(onum);
+      if (ref == null) return null;
 
-      AbstractGroup result = entry.getGroup();
+      AbstractGroup result = ref.get();
       if (result == null) return null;
 
       // Remove the group from the table.
       for (LongIterator it = result.onums().iterator(); it.hasNext();) {
         long memberOnum = it.next();
-        Entry memberEntry = table.get(memberOnum);
-        if (memberEntry == null || memberEntry.getGroup() != result) continue;
+        SoftRef memberRef = table.get(memberOnum);
+        if (memberRef == null || memberRef.get() != result) continue;
         table.remove(memberOnum);
       }
 
@@ -289,7 +240,7 @@ public final class ObjectGrouper {
         SerializedObject obj = entry.getValue();
         if (obj.isSurrogate()) continue;
 
-        table.put(entry.getKey(), new Entry(group));
+        table.put(entry.getKey(), new SoftRef(group));
       }
     }
   }
@@ -330,9 +281,9 @@ public final class ObjectGrouper {
       SerializedObject obj) {
     // Check the cache.
     synchronized (table) {
-      Entry entry = table.get(onum);
-      if (entry != null) {
-        AbstractGroup group = entry.getGroup();
+      SoftRef ref = table.get(onum);
+      if (ref != null) {
+        AbstractGroup group = ref.get();
         if (group instanceof PartialObjectGroup) {
           PartialObjectGroup result = (PartialObjectGroup) group;
           result.locks.add(lock);
@@ -432,9 +383,9 @@ public final class ObjectGrouper {
       if (lock == null) {
         // No existing group lock. Check to see if there's a cached group.
         synchronized (table) {
-          Entry entry = table.get(onum);
-          if (entry != null) {
-            AbstractGroup group = entry.getGroup();
+          SoftRef ref = table.get(onum);
+          if (ref != null) {
+            AbstractGroup group = ref.get();
             if (!ignorePartialGroups && group != null
                 || group instanceof GroupContainer) return null;
           }
@@ -520,8 +471,8 @@ public final class ObjectGrouper {
           synchronized (table) {
             for (LongIterator it = ref.onums.iterator(); it.hasNext();) {
               long onum = it.next();
-              Entry entry = table.get(onum);
-              if (entry.getSoftRef() == ref) {
+              SoftRef entry = table.get(onum);
+              if (entry == ref) {
                 table.remove(onum);
               }
             }
