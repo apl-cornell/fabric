@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.security.PrivateKey;
 import java.util.Arrays;
 import java.util.logging.Level;
 
@@ -97,8 +98,8 @@ public class BdbDB extends ObjectDB {
    * @param name
    *          name of store to create store for.
    */
-  public BdbDB(String name) {
-    super(name);
+  public BdbDB(String name, PrivateKey privateKey) {
+    super(name, privateKey);
 
     String path = Resources.relpathRewrite("var", "bdb", name);
     new File(path).mkdirs(); // create path if it does not exist
@@ -556,7 +557,7 @@ public class BdbDB extends ObjectDB {
       return;
     }
 
-    BdbDB db = new BdbDB(args[0]);
+    BdbDB db = new BdbDB(args[0], null);
     Cursor cursor = db.db.openCursor(null, null);
     DatabaseEntry key = new DatabaseEntry();
     DatabaseEntry value = new DatabaseEntry();

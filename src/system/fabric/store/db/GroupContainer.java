@@ -15,7 +15,7 @@ import fabric.worker.Store;
  * A group container contains a group or a glob, and supports converting between
  * them. This class is thread-safe.
  */
-public final class GroupContainer extends GroupTable.Entry {
+public final class GroupContainer extends ObjectGrouper.AbstractGroup {
   private final Store store;
   private final long labelOnum;
   private final PrivateKey signingKey;

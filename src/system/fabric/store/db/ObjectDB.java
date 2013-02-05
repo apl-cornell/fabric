@@ -18,12 +18,11 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.MutableInteger;
-import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
-import fabric.store.PartialObjectGroup;
 import fabric.store.SubscriptionManager;
+import fabric.store.db.ObjectGrouper.AbstractGroup;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
@@ -47,21 +46,22 @@ import fabric.worker.Worker;
  * </p>
  * <p>
  * All ObjectDB implementations should provide a constructor which takes the
- * name of the store and opens the appropriate back-end database if it exists,
- * or creates it if it doesn't exist.
+ * name of the store and its private key, and opens the appropriate back-end
+ * database if it exists, or creates it if it doesn't exist.
  * </p>
  */
 public abstract class ObjectDB {
   private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
 
+  /**
+   * The store's name.
+   */
   protected final String name;
-  private final MutableLong nextGlobID;
 
   /**
-   * Maps globIDs to entries (either GroupContainers or PartialObjectGroups) and
-   * the number of times the entry is referenced in globIDByOnum.
+   * The store's object grouper.
    */
-  private final GroupTable globTable;
+  private final ObjectGrouper objectGrouper;
 
   public static enum UpdateMode {
     CREATE, WRITE
@@ -212,12 +212,11 @@ public abstract class ObjectDB {
    */
   protected final LongKeyMap<ObjectLocks> rwLocks;
 
-  protected ObjectDB(String name) {
+  protected ObjectDB(String name, PrivateKey privateKey) {
     this.name = name;
     this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
     this.rwLocks = new LongKeyHashMap<ObjectLocks>();
-    this.globTable = new GroupTable();
-    this.nextGlobID = new MutableLong(0);
+    this.objectGrouper = new ObjectGrouper(this, privateKey);
   }
 
   /**
@@ -461,6 +460,13 @@ public abstract class ObjectDB {
   public abstract SerializedObject read(long onum);
 
   /**
+   * Returns a GroupContainer for the object stored at a particular onum.
+   */
+  public final GroupContainer readGroup(long onum) {
+    return objectGrouper.getGroup(onum);
+  }
+
+  /**
    * Returns the version number on the object stored at a particular onum.
    * 
    * @throws AccessException
@@ -471,78 +477,6 @@ public abstract class ObjectDB {
     if (obj == null) throw new AccessException(name, onum);
 
     return obj.getVersion();
-  }
-
-  /**
-   * Gives the ID of the group to which the given onum belongs. Null is returned
-   * if no such group exists.
-   */
-  public final Long getCachedGroupID(long onum) {
-    synchronized (globTable) {
-      return globTable.getGlobIDByOnum(onum);
-    }
-  }
-
-  private final GroupTable.Entry getGroupTableEntry(long onum) {
-    synchronized (globTable) {
-      Long groupID = getCachedGroupID(onum);
-      if (groupID == null) return null;
-      return globTable.getContainer(groupID);
-    }
-  }
-
-  /**
-   * Gives the cached partial group for the given onum. Null is returned if no
-   * such partial group exists.
-   */
-  public final PartialObjectGroup getCachedPartialGroup(long onum) {
-    GroupTable.Entry entry = getGroupTableEntry(onum);
-    if (entry instanceof PartialObjectGroup) return (PartialObjectGroup) entry;
-    return null;
-  }
-
-  /**
-   * Returns the cached GroupContainer containing the given onum. Null is
-   * returned if no such GroupContainer exists.
-   */
-  public final GroupContainer getCachedGroupContainer(long onum) {
-    GroupTable.Entry entry = getGroupTableEntry(onum);
-    if (entry instanceof GroupContainer) return (GroupContainer) entry;
-    return null;
-  }
-
-  /**
-   * Inserts the given partial group into the cache.
-   */
-  public final void cachePartialGroup(PartialObjectGroup partialGroup) {
-    // Get a new ID for the partial group.
-    long groupID;
-    synchronized (nextGlobID) {
-      groupID = nextGlobID.value++;
-    }
-    partialGroup.setID(groupID);
-
-    synchronized (globTable) {
-      globTable.put(partialGroup);
-    }
-  }
-
-  /**
-   * Coalesces one partial group into another.
-   */
-  public void coalescePartialGroups(PartialObjectGroup from,
-      PartialObjectGroup to) {
-    synchronized (globTable) {
-      globTable.coalescePartialGroups(from, to);
-    }
-  }
-
-  public GroupContainer promotePartialGroup(PrivateKey signingKey,
-      PartialObjectGroup partialGroup) {
-    synchronized (globTable) {
-      return globTable.promotePartialGroup(
-          Worker.getWorker().getStore(getName()), signingKey, partialGroup);
-    }
   }
 
   /**
@@ -557,29 +491,16 @@ public abstract class ObjectDB {
    */
   protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum) {
     // Remove from the glob table the glob associated with the onum.
-    Long globID;
-    GroupContainer group = null;
-    synchronized (globTable) {
-      globID = globTable.getGlobIDByOnum(onum);
-      if (globID != null) {
-        GroupTable.Entry entry = globTable.remove(globID);
-        if (entry instanceof GroupContainer) {
-          group = (GroupContainer) entry;
-        }
-      }
+    AbstractGroup group = objectGrouper.removeGroup(onum);
 
-      // Notify the subscription manager that the group has been updated.
-      // sm.notifyUpdate(onum, worker);
-      if (group != null) {
-        for (LongIterator onumIt = group.onums.iterator(); onumIt.hasNext();) {
-          long relatedOnum = onumIt.next();
-          if (relatedOnum == onum) continue;
+    // Notify the subscription manager that the group has been updated.
+//    sm.notifyUpdate(onum, worker);
+    if (group != null) {
+      for (LongIterator onumIt = group.onums().iterator(); onumIt.hasNext();) {
+        long relatedOnum = onumIt.next();
+        if (relatedOnum == onum) continue;
 
-          Long relatedGlobId = globTable.getGlobIDByOnum(relatedOnum);
-          if (relatedGlobId != null && relatedGlobId == globID) {
-            // sm.notifyUpdate(relatedOnum, worker);
-          }
-        }
+//        sm.notifyUpdate(relatedOnum, worker);
       }
     }
   }
