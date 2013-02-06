@@ -239,28 +239,29 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public SerializedObject read(long onum) {
+  public SerializedObject read(final long onum) {
     STORE_DB_LOGGER.finest("Bdb read onum " + onum);
-    DatabaseEntry key = new DatabaseEntry();
-    LongBinding.longToEntry(onum, key);
 
-    DatabaseEntry data = new DatabaseEntry();
+    return runInBdbTransaction(new Code<SerializedObject, RuntimeException>() {
+      @Override
+      public SerializedObject run(Transaction txn) throws RuntimeException {
+        DatabaseEntry key = new DatabaseEntry();
+        LongBinding.longToEntry(onum, key);
 
-    try {
-      if (db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
-        SerializedObject result = toSerializedObject(data.getData());
-        if (result != null) {
-          cacheVersionNumber(onum, result.getVersion());
+        DatabaseEntry data = new DatabaseEntry();
+
+        if (db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
+          SerializedObject result = toSerializedObject(data.getData());
+          if (result != null) {
+            cacheVersionNumber(onum, result.getVersion());
+          }
+
+          return result;
         }
 
-        return result;
+        return null;
       }
-    } catch (DatabaseException e) {
-      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in read: ", e);
-      throw new InternalError(e);
-    }
-
-    return null;
+    });
   }
 
   @Override
@@ -272,22 +273,21 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public boolean exists(long onum) {
-    DatabaseEntry key = new DatabaseEntry();
-    LongBinding.longToEntry(onum, key);
+  public boolean exists(final long onum) {
+    return runInBdbTransaction(new Code<Boolean, RuntimeException>() {
+      @Override
+      public Boolean run(Transaction txn) throws RuntimeException {
+        DatabaseEntry key = new DatabaseEntry();
+        LongBinding.longToEntry(onum, key);
 
-    DatabaseEntry data = new DatabaseEntry();
+        DatabaseEntry data = new DatabaseEntry();
+        if (db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
+          return true;
+        }
 
-    try {
-      if (db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
-        return true;
+        return false;
       }
-    } catch (DatabaseException e) {
-      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in exists: ", e);
-      throw new InternalError(e);
-    }
-
-    return false;
+    });
   }
 
   private final long ONUM_RESERVE_SIZE = 10240;
