@@ -12,7 +12,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.PrivateKey;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 
 import com.sleepycat.bind.tuple.BooleanBinding;
@@ -445,10 +448,18 @@ public class BdbDB extends ObjectDB {
   }
 
   private static int MAX_TX_RETRIES = 20;
+  private static int MAX_TX_WAIT_AVG = 5000;
+  private static final Random RAND = new Random();
+
+  private static int randInt(int max) {
+    synchronized (RAND) {
+      return RAND.nextInt(max);
+    }
+  }
 
   /**
    * Executes the given code from within a BDB transaction, automatically
-   * retrying as necessary with an exponential back-off. If the given code
+   * retrying as necessary with a random exponential back-off. If the given code
    * throws an exception, the transaction will be aborted.
    */
   private <T, E extends Exception> T runInBdbTransaction(Code<T, E> code)
@@ -456,18 +467,25 @@ public class BdbDB extends ObjectDB {
     // This code is adapted from the JavaDoc for LockConflictException.
     boolean success = false;
     int backoff = 1;
+    List<LockConflictException> conflicts =
+        new ArrayList<LockConflictException>(MAX_TX_RETRIES);
     for (int i = 0; i < MAX_TX_RETRIES; i++) {
-      if (backoff > 32) {
+      int waitTime = randInt(backoff);
+      if (waitTime > 0) {
         while (true) {
           try {
-            Thread.sleep(backoff);
+            Thread.sleep(waitTime);
             break;
           } catch (InterruptedException e) {
           }
         }
       }
 
-      if (backoff < 5000) backoff *= 2;
+      if (backoff < MAX_TX_WAIT_AVG) {
+        backoff *= 2;
+      } else {
+        backoff = 2 * MAX_TX_WAIT_AVG;
+      }
 
       Transaction txn = null;
       try {
@@ -477,6 +495,7 @@ public class BdbDB extends ObjectDB {
         success = true;
         return result;
       } catch (LockConflictException e) {
+        conflicts.add(e);
         continue;
       } catch (DatabaseException e) {
         STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error: ", e);
@@ -486,7 +505,9 @@ public class BdbDB extends ObjectDB {
       }
     }
 
-    throw new InternalError("BDB transaction failed too many times.");
+    throw new InternalError(
+        "BDB transaction failed too many times. List of LockConflictExceptions "
+            + "we got: " + conflicts);
   }
 
   private static interface Code<T, E extends Exception> {
