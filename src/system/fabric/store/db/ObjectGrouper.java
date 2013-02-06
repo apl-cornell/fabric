@@ -54,27 +54,17 @@ public final class ObjectGrouper {
       this.group = null;
     }
 
-    synchronized void setGroup(AbstractGroup group) {
-      if (group instanceof GroupContainer)
-        setGroup((GroupContainer) group);
-      else setGroup((PartialObjectGroup) group);
-    }
-
-    synchronized void setGroup(GroupContainer group) {
-      // TODO remove debug checks
-      if (getGroup() instanceof GroupContainer) throw new InternalError();
-
-      this.group = new SoftRef(group);
-      this.lock = null;
-    }
-
-    synchronized void setGroup(PartialObjectGroup group) {
+    synchronized void setRef(SoftRef ref) {
       // TODO remove debug checks
       AbstractGroup curGroup = getGroup();
       if (curGroup instanceof GroupContainer) throw new InternalError();
-      if (getLock() != getExactLock(group.lock)) throw new InternalError();
 
-      this.group = new SoftRef(group);
+      AbstractGroup group = ref.get();
+      if (group instanceof PartialObjectGroup
+          && getLock() != getExactLock(((PartialObjectGroup) group).lock))
+        throw new InternalError();
+
+      this.group = ref;
       this.lock = null;
     }
 
@@ -309,12 +299,13 @@ public final class ObjectGrouper {
    */
   private void cacheGroup(LongKeyMap<SerializedObject> groupObjects,
       AbstractGroup group) {
+    SoftRef ref = new SoftRef(group);
     synchronized (table) {
       for (LongKeyMap.Entry<SerializedObject> entry : groupObjects.entrySet()) {
         SerializedObject obj = entry.getValue();
         if (obj.isSurrogate()) continue;
 
-        table.get(entry.getKey()).setGroup(group);
+        table.get(entry.getKey()).setRef(ref);
       }
     }
   }
@@ -524,7 +515,6 @@ public final class ObjectGrouper {
 
     Status status;
     GroupContainer group;
-    final LongSet onums;
 
     /**
      * If the status is DEFUNCT, then this is the replacement GroupLock.
@@ -534,8 +524,6 @@ public final class ObjectGrouper {
     GroupLock(long onum) {
       this.status = Status.UNCLAIMED;
       this.group = null;
-      this.onums = new LongHashSet();
-      this.onums.add(onum);
       this.replacement = null;
     }
   }
