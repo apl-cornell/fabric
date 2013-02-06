@@ -3,10 +3,8 @@ package fabric.store.db;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.security.PrivateKey;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 import fabric.common.ObjectGroup;
@@ -21,6 +19,8 @@ import fabric.worker.Worker;
 
 /**
  * Constructs and caches object groups. This class is thread-safe.
+ * <p>
+ * Locking order: table → individual entries → individual group locks.
  */
 public final class ObjectGrouper {
   private static final int MIN_GROUP_SIZE = 75;
@@ -36,15 +36,84 @@ public final class ObjectGrouper {
   private final PrivateKey signingKey;
 
   /**
-   * Maps onums to SoftRefs.
+   * Maps onums to <code>Entry</code>s.
    */
-  private final LongKeyMap<SoftRef> table;
+  private final LongKeyMap<Entry> table;
 
   /**
-   * The set of group locks. Used to prevent threads from concurrently
-   * attempting to group the same object.
+   * Either a SoftRef or a GroupLock. A GroupLock entry indicates that the group
+   * is actively being constructed; the associated GroupLock object is used to
+   * prevent threads from concurrently attempting to group the same object.
    */
-  private final LongKeyMap<GroupLock> groupLocks;
+  private final class Entry {
+    private SoftRef group;
+    private GroupLock lock;
+
+    Entry(GroupLock lock) {
+      this.lock = lock;
+      this.group = null;
+    }
+
+    synchronized void setGroup(AbstractGroup group) {
+      if (group instanceof GroupContainer)
+        setGroup((GroupContainer) group);
+      else setGroup((PartialObjectGroup) group);
+    }
+
+    synchronized void setGroup(GroupContainer group) {
+      // TODO remove debug checks
+      if (getGroup() instanceof GroupContainer) throw new InternalError();
+
+      this.group = new SoftRef(group);
+      this.lock = null;
+    }
+
+    synchronized void setGroup(PartialObjectGroup group) {
+      // TODO remove debug checks
+      AbstractGroup curGroup = getGroup();
+      if (curGroup instanceof GroupContainer) throw new InternalError();
+      if (getLock() != getExactLock(group.lock)) throw new InternalError();
+
+      this.group = new SoftRef(group);
+      this.lock = null;
+    }
+
+    /**
+     * @return the AbstractGroup associated with this entry.
+     */
+    synchronized AbstractGroup getGroup() {
+      if (group == null) return null;
+      return group.get();
+    }
+
+    /**
+     * @return the GroupLock for this entry. If this entry contains a
+     *          PartialObjectGroup, then its GroupLock is returned.
+     */
+    synchronized GroupLock getLock() {
+      if (lock != null) return getExactLock(lock);
+
+      AbstractGroup group = getGroup();
+      if (group instanceof PartialObjectGroup)
+        return getExactLock(((PartialObjectGroup) group).lock);
+
+      return null;
+    }
+
+    private GroupLock getExactLock(GroupLock lock) {
+      synchronized (lock) {
+        if (lock.status == GroupLock.Status.DEFUNCT) {
+          return lock.replacement = getExactLock(lock.replacement);
+        }
+
+        return lock;
+      }
+    }
+
+    synchronized SoftRef getRef() {
+      return group;
+    }
+  }
 
   private final ReferenceQueue<AbstractGroup> queue;
 
@@ -58,8 +127,7 @@ public final class ObjectGrouper {
   public ObjectGrouper(ObjectDB database, PrivateKey signingKey) {
     this.database = database;
     this.signingKey = signingKey;
-    this.table = new LongKeyHashMap<SoftRef>();
-    this.groupLocks = new LongKeyHashMap<GroupLock>();
+    this.table = new LongKeyHashMap<Entry>();
     this.queue = new ReferenceQueue<AbstractGroup>();
 
     new Collector().start();
@@ -67,49 +135,54 @@ public final class ObjectGrouper {
 
   GroupContainer getGroup(long onum) {
     // Check the cache.
-    GroupLock lock;
-    synchronized (groupLocks) {
-      synchronized (table) {
-        SoftRef ref = table.get(onum);
-        if (ref != null) {
-          AbstractGroup group = ref.get();
+    GroupLock lock = null;
+    synchronized (table) {
+      Entry entry = table.get(onum);
+      if (entry != null) {
+        synchronized (entry) {
+          AbstractGroup group = entry.getGroup();
           if (group instanceof GroupContainer) return (GroupContainer) group;
+
+          lock = entry.getLock();
         }
       }
 
-      // Need to construct group.
-      lock = getGroupLock(onum);
-
-      // Set the lock's needFullGroup flag.
-      synchronized (lock) {
-        if (lock.status == GroupLock.Status.CLAIMED_FOR_PARTIAL_GROUP) {
-          lock.needFullGroup = true;
-        }
+      if (lock == null) {
+        lock = new GroupLock(onum);
+        table.put(onum, new Entry(lock));
       }
     }
 
-    synchronized (lock) {
-      while (true) {
-        switch (lock.status) {
-        case UNCLAIMED:
-          // Claim the lock.
-          lock.status = GroupLock.Status.CLAIMED_FOR_FULL_GROUP;
-          break;
+    // Loop in case the lock gets replaced so we synchronize on the correct lock.
+    OUTER: while (true) {
+      synchronized (lock) {
+        // Condition-variable loop.
+        while (true) {
+          switch (lock.status) {
+          case UNCLAIMED:
+            // Claim the lock.
+            lock.status = GroupLock.Status.CLAIMED_FOR_FULL_GROUP;
+            break OUTER;
 
-        case CLAIMED_FOR_PARTIAL_GROUP:
-        case CLAIMED_FOR_FULL_GROUP:
-          // Wait for a signal.
-          try {
-            lock.wait();
-          } catch (InterruptedException e) {
+          case CLAIMED_FOR_PARTIAL_GROUP:
+          case CLAIMED_FOR_FULL_GROUP:
+            // Wait for a signal.
+            try {
+              lock.wait();
+            } catch (InterruptedException e) {
+            }
+            continue;
+
+          case READY:
+            return lock.group;
+
+          case DEFUNCT:
+            lock = lock.replacement;
+            continue OUTER;
           }
-          continue;
 
-        case READY:
-          return lock.group;
+          throw new InternalError("Unknown lock status: " + lock.status);
         }
-
-        break;
       }
     }
 
@@ -125,7 +198,8 @@ public final class ObjectGrouper {
 
       // Make sure the frontier object isn't already in a (non-partial) group
       // and attempt to obtain a lock on the frontier object.
-      GroupLock frontierLock = attemptLockForPartialGroup(frontierOnum, true);
+      GroupLock frontierLock =
+          attemptLockForPartialGroup(frontierOnum, null, true);
       if (frontierLock == null) continue;
 
       // Lock obtained. Get a partial group for the frontier object.
@@ -136,16 +210,10 @@ public final class ObjectGrouper {
         // Frontier group is large enough to hold its own. Add it to the cache.
         cacheGroup(frontierGroup.objects, frontierGroup);
 
-        // Unlock the locks it holds.
-        synchronized (groupLocks) {
-          for (GroupLock groupLock : frontierGroup.locks) {
-            synchronized (groupLock) {
-              groupLock.status = GroupLock.Status.UNCLAIMED;
-              groupLock.notifyAll();
-
-              if (!groupLock.needFullGroup) groupLocks.remove(groupLock.onum);
-            }
-          }
+        // Unlock the frontier group.
+        synchronized (frontierLock) {
+          frontierLock.status = GroupLock.Status.UNCLAIMED;
+          frontierLock.notifyAll();
         }
 
         continue;
@@ -153,7 +221,11 @@ public final class ObjectGrouper {
 
       // Group on the frontier isn't big enough. Coalesce it with the group
       // we're creating.
-      partialGroup.mergeFrom(frontierGroup);
+      synchronized (table) {
+        partialGroup.mergeFrom(frontierGroup);
+
+        cacheGroup(frontierGroup.objects, partialGroup);
+      }
     }
 
     Store store = Worker.getWorker().getStore(database.getName());
@@ -165,17 +237,10 @@ public final class ObjectGrouper {
     cacheGroup(partialGroup.objects, result);
 
     // Unlock and notify any waiting threads.
-    for (GroupLock groupLock : partialGroup.locks) {
-      synchronized (groupLock) {
-        groupLock.group = result;
-        groupLock.status = GroupLock.Status.READY;
-        groupLock.notifyAll();
-      }
-
-      // Remove the lock from groupLocks.
-      synchronized (groupLocks) {
-        groupLocks.remove(groupLock.onum);
-      }
+    synchronized (lock) {
+      lock.group = result;
+      lock.status = GroupLock.Status.READY;
+      lock.notifyAll();
     }
 
     return result;
@@ -183,51 +248,60 @@ public final class ObjectGrouper {
 
   AbstractGroup removeGroup(long onum) {
     // If there is a thread working on a group for this object, let it finish.
-    while (true) {
-      GroupLock lock;
-      synchronized (groupLocks) {
-        lock = groupLocks.get(onum);
+    OUTER: while (true) {
+      GroupLock lock = null;
+      synchronized (table) {
+        Entry entry = table.get(onum);
+        if (entry != null) lock = entry.getLock();
       }
 
-      if (lock == null) break;
+      if (lock == null) lock = new GroupLock(onum);
 
-      synchronized (lock) {
-        switch (lock.status) {
-        case UNCLAIMED:
-        case READY:
-          break;
+      // Loop in case the lock gets replaced so we synchronize on the correct
+      // lock.
+      while (true) {
+        synchronized (lock) {
+          switch (lock.status) {
+          case UNCLAIMED:
+          case READY:
+            synchronized (table) {
+              Entry entry = table.get(onum);
+              if (entry == null) return null;
 
-        case CLAIMED_FOR_PARTIAL_GROUP:
-        case CLAIMED_FOR_FULL_GROUP:
-          // Wait for other thread to finish.
-          try {
-            lock.wait();
-          } catch (InterruptedException e) {
+              AbstractGroup result = entry.getGroup();
+              if (result == null) return null;
+
+              // Remove the group from the table.
+              for (LongIterator it = result.onums().iterator(); it.hasNext();) {
+                long memberOnum = it.next();
+                Entry memberEntry = table.get(memberOnum);
+                if (memberEntry == null || memberEntry.getGroup() != result)
+                  continue;
+                table.remove(memberOnum);
+              }
+
+              return result;
+            }
+
+          case CLAIMED_FOR_PARTIAL_GROUP:
+          case CLAIMED_FOR_FULL_GROUP:
+            // Wait for other thread to finish.
+            try {
+              lock.wait();
+            } catch (InterruptedException e) {
+            }
+            continue OUTER;
+
+          case DEFUNCT:
+            lock = lock.replacement;
+            continue;
           }
-          continue;
+
+          throw new InternalError("Unknown lock status: " + lock.status);
         }
       }
-
-      break;
     }
 
-    synchronized (table) {
-      SoftRef ref = table.get(onum);
-      if (ref == null) return null;
-
-      AbstractGroup result = ref.get();
-      if (result == null) return null;
-
-      // Remove the group from the table.
-      for (LongIterator it = result.onums().iterator(); it.hasNext();) {
-        long memberOnum = it.next();
-        SoftRef memberRef = table.get(memberOnum);
-        if (memberRef == null || memberRef.get() != result) continue;
-        table.remove(memberOnum);
-      }
-
-      return result;
-    }
   }
 
   /**
@@ -240,22 +314,8 @@ public final class ObjectGrouper {
         SerializedObject obj = entry.getValue();
         if (obj.isSurrogate()) continue;
 
-        table.put(entry.getKey(), new SoftRef(group));
+        table.get(entry.getKey()).setGroup(group);
       }
-    }
-  }
-
-  /**
-   * Returns the GroupLock for the given onum.
-   */
-  private GroupLock getGroupLock(long onum) {
-    synchronized (groupLocks) {
-      GroupLock lock = groupLocks.get(onum);
-      if (lock == null) {
-        lock = new GroupLock(onum);
-        groupLocks.put(onum, lock);
-      }
-      return lock;
     }
   }
 
@@ -281,12 +341,14 @@ public final class ObjectGrouper {
       SerializedObject obj) {
     // Check the cache.
     synchronized (table) {
-      SoftRef ref = table.get(onum);
-      if (ref != null) {
-        AbstractGroup group = ref.get();
+      Entry entry = table.get(onum);
+      if (entry != null) {
+        AbstractGroup group = entry.getGroup();
         if (group instanceof PartialObjectGroup) {
           PartialObjectGroup result = (PartialObjectGroup) group;
-          result.locks.add(lock);
+          // TODO remove debug check
+          if (entry.getLock() != lock)
+            throw new InternalError("Broken invariant");
           return result;
         }
       }
@@ -301,7 +363,6 @@ public final class ObjectGrouper {
         new LongKeyHashMap<SerializedObject>(MIN_GROUP_SIZE);
     LongKeyMap<SerializedObject> frontier =
         new LongKeyHashMap<SerializedObject>();
-    List<GroupLock> groupLocks = new ArrayList<GroupLock>();
 
     // Number of non-surrogate objects in the group.
     int groupSize = 0;
@@ -331,14 +392,11 @@ public final class ObjectGrouper {
       }
 
       // Attempt to claim a lock on curOnum.
-      GroupLock curLock =
-          curOnum == onum ? lock : attemptLockForPartialGroup(curOnum, false);
-      if (curLock == null) continue;
+      if (attemptLockForPartialGroup(curOnum, lock, false) == null) continue;
 
       // Add object to partial group.
       group.put(curOnum, curObject);
       groupSize++;
-      groupLocks.add(curLock);
 
       // Visit links outgoing from the object.
       for (Iterator<Long> it = curObject.getIntraStoreRefIterator(); it
@@ -360,49 +418,83 @@ public final class ObjectGrouper {
       }
     }
 
-    return new PartialObjectGroup(groupSize, group, frontier, groupLocks);
+    return new PartialObjectGroup(groupSize, group, frontier, lock);
   }
 
   /**
    * Attempts to lock an onum for creating a partial group.
    *
+   * @param groupLock
+   *         The lock to use. If non-null and the locking operation is
+   *         successful, the given lock will replace any existing lock.
    * @param ignorePartialGroups
-   *          If false, an attempt will only be made if the onum is not already
-   *          in a group (partial or otherwise). If true, an attempt will be
-   *          made even if the onum is already in a partial group.
+   *         If false, an attempt will only be made if the onum is not already
+   *         in a group (partial or otherwise). If true, an attempt will be made
+   *         even if the onum is already in a partial group.
    *          
-   * @return the GroupLock if successful, otherwise null.
+   * @return the group's lock, if successful; otherwise, null.
    */
-  private GroupLock attemptLockForPartialGroup(long onum,
+  private GroupLock attemptLockForPartialGroup(long onum, GroupLock groupLock,
       boolean ignorePartialGroups) {
-    GroupLock lock;
+    GroupLock curLock = null;
 
-    synchronized (groupLocks) {
-      // First look for an existing group lock.
-      lock = groupLocks.get(onum);
-      if (lock == null) {
-        // No existing group lock. Check to see if there's a cached group.
-        synchronized (table) {
-          SoftRef ref = table.get(onum);
-          if (ref != null) {
-            AbstractGroup group = ref.get();
-            if (!ignorePartialGroups && group != null
-                || group instanceof GroupContainer) return null;
+    synchronized (table) {
+      // First look for an existing table entry.
+      Entry entry = table.get(onum);
+      if (entry != null) {
+        synchronized (entry) {
+          AbstractGroup group = entry.getGroup();
+          if (!ignorePartialGroups && group != null
+              || group instanceof GroupContainer) {
+            // Group already exists.
+            return null;
           }
+
+          curLock = entry.getLock();
         }
-
-        // No cached group. Create the lock.
-        lock = getGroupLock(onum);
-      }
-    }
-
-    synchronized (lock) {
-      if (lock.status == GroupLock.Status.UNCLAIMED) {
-        lock.status = GroupLock.Status.CLAIMED_FOR_PARTIAL_GROUP;
-        return lock;
       }
 
-      return null;
+      if (curLock == null) {
+        // No existing entry (or existing entry is about to be GCed) so create a
+        // new one.
+        if (groupLock == null) {
+          // Create a new groupLock.
+          curLock = new GroupLock(onum);
+          table.put(onum, new Entry(curLock));
+        } else {
+          // Bind the onum to the groupLock.
+          table.put(onum, new Entry(groupLock));
+          return groupLock;
+        }
+      }
+
+      while (true) {
+        if (curLock == groupLock) return groupLock;
+
+        synchronized (curLock) {
+          if (curLock.status == GroupLock.Status.DEFUNCT) {
+            curLock = curLock.replacement;
+            continue;
+          }
+
+          if (curLock.status != GroupLock.Status.UNCLAIMED) {
+            return null;
+          }
+
+          if (groupLock == null) {
+            // Use the existing lock.
+            curLock.status = GroupLock.Status.CLAIMED_FOR_PARTIAL_GROUP;
+            return curLock;
+          }
+
+          // Mark the curLock as defunct and replace it with the groupLock.
+          curLock.status = GroupLock.Status.DEFUNCT;
+          curLock.replacement = groupLock;
+          curLock.notifyAll();
+
+          return groupLock;
+        }
+      }
     }
   }
 
@@ -423,25 +515,28 @@ public final class ObjectGrouper {
        * Indicates that a full group has been created and is referenced by the
        * lock's <code>group</code> field.
        */
-      READY
+      READY,
+      /**
+       * Indicates that the lock has been replaced with another one.
+       */
+      DEFUNCT
     }
 
     Status status;
     GroupContainer group;
-    final long onum;
+    final LongSet onums;
 
     /**
-     * If the lock has been claimed by a thread that is creating a partial
-     * group, this flag is a signal that another thread is waiting to create a
-     * full group.
+     * If the status is DEFUNCT, then this is the replacement GroupLock.
      */
-    boolean needFullGroup;
+    GroupLock replacement;
 
     GroupLock(long onum) {
       this.status = Status.UNCLAIMED;
       this.group = null;
-      this.needFullGroup = false;
-      this.onum = onum;
+      this.onums = new LongHashSet();
+      this.onums.add(onum);
+      this.replacement = null;
     }
   }
 
@@ -471,9 +566,13 @@ public final class ObjectGrouper {
           synchronized (table) {
             for (LongIterator it = ref.onums.iterator(); it.hasNext();) {
               long onum = it.next();
-              SoftRef entry = table.get(onum);
-              if (entry == ref) {
-                table.remove(onum);
+              Entry entry = table.get(onum);
+              if (entry != null) {
+                synchronized (entry) {
+                  if (entry.getRef() == ref) {
+                    table.remove(onum);
+                  }
+                }
               }
             }
           }

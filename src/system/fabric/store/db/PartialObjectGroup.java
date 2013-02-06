@@ -1,7 +1,6 @@
 package fabric.store.db;
 
-import java.util.List;
-
+import static fabric.store.db.ObjectGrouper.GroupLock.Status.DEFUNCT;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
@@ -27,20 +26,20 @@ public class PartialObjectGroup extends ObjectGrouper.AbstractGroup {
   public final LongKeyMap<SerializedObject> frontier;
 
   /**
-   * A list of GroupLocks being held. This is non-empty while the group is
+   * The GroupLock for this group. This is non-null exactly while the group is
    * constructed.
    */
-  public final List<GroupLock> locks;
+  GroupLock lock;
 
   /**
    * @param size the number of non-surrogate objects in the group.
    */
   public PartialObjectGroup(int size, LongKeyMap<SerializedObject> objects,
-      LongKeyMap<SerializedObject> frontier, List<GroupLock> locks) {
+      LongKeyMap<SerializedObject> frontier, GroupLock lock) {
     this.size = size;
     this.objects = objects;
     this.frontier = frontier;
-    this.locks = locks;
+    this.lock = lock;
   }
 
   /**
@@ -59,6 +58,13 @@ public class PartialObjectGroup extends ObjectGrouper.AbstractGroup {
     size += from.size;
     objects.putAll(from.objects);
     frontier.putAll(from.frontier);
-    locks.addAll(from.locks);
+
+    synchronized (from.lock) {
+      from.lock.status = DEFUNCT;
+      from.lock.replacement = this.lock;
+      from.lock.notifyAll();
+    }
+
+    from.lock = lock;
   }
 }
