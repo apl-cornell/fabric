@@ -14,7 +14,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 
 /**
- * A table containing version warranties, keyed by onum.
+ * A thread-safe table containing version warranties, keyed by onum.
  */
 public class VersionWarrantyTable {
   /**
