@@ -20,6 +20,7 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
@@ -28,6 +29,7 @@ import fabric.store.PartialObjectGroup;
 import fabric.store.SubscriptionManager;
 import fabric.store.TransactionManager;
 import fabric.worker.Store;
+import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 
 /**
@@ -54,10 +56,11 @@ import fabric.worker.Worker;
  * </p>
  */
 public abstract class ObjectDB {
+  private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
 
   private final WarrantyIssuer warrantyIssuer;
   protected final String name;
-  private long nextGlobID;
+  private final MutableLong nextGlobID;
 
   /**
    * Maps globIDs to entries (either GroupContainers or PartialObjectGroups) and
@@ -196,13 +199,14 @@ public abstract class ObjectDB {
 
   /**
    * <p>
-   * A warranty that will expire after all warranties issued thus far.
+   * A ref cell containing a warranty that will expire after all warranties
+   * issued thus far. The ref cell is used as a mutex for accessing its value.
    * </p>
    * <p>
    * This should be saved to stable storage and restored when starting up.
    * </p>
    */
-  protected VersionWarranty longestWarranty;
+  protected final VersionWarranty[] longestWarranty;
 
   /**
    * The table containing the version warranties that we've issued.
@@ -242,8 +246,8 @@ public abstract class ObjectDB {
     this.writeLocks = new LongKeyHashMap<Long>();
     this.writtenOnumsByTid = new LongKeyHashMap<OidKeyHashMap<LongSet>>();
     this.globTable = new GroupTable();
-    this.nextGlobID = 0;
-    this.longestWarranty = new VersionWarranty(0);
+    this.nextGlobID = new MutableLong(0);
+    this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
     this.versionWarrantyTable = new VersionWarrantyTable();
     this.warrantyIssuer = new WarrantyIssuer(0.5, 250, 10000, 250);
   }
@@ -255,13 +259,18 @@ public abstract class ObjectDB {
    *          the worker under whose authority the transaction is running.
    */
   public final void beginPrepareWrites(long tid, Principal worker) {
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    if (submap == null) {
-      submap = new OidKeyHashMap<PendingTransaction>();
-      pendingByTid.put(tid, submap);
+    OidKeyHashMap<PendingTransaction> submap;
+    synchronized (pendingByTid) {
+      submap = pendingByTid.get(tid);
+      if (submap == null) {
+        submap = new OidKeyHashMap<PendingTransaction>();
+        pendingByTid.put(tid, submap);
+      }
     }
 
-    submap.put(worker, new PendingTransaction(tid, worker));
+    synchronized (submap) {
+      submap.put(worker, new PendingTransaction(tid, worker));
+    }
   }
 
   public static enum ExtendWarrantyStatus {
@@ -289,55 +298,143 @@ public abstract class ObjectDB {
    * for the transaction.
    * 
    * @param tid
-   *          the identifier for the transaction.
+   *          the identifier for the transaction preparing the create/write.
+   * @param worker
+   *          the worker preparing the create/write.
    * @param obj
-   *          the updated object.
+   *          the modified object.
+   * @param versionConflicts
+   *          a map containing the transaction's version-conflict information.
+   *          If the object modified was out of date, then a new entry will be
+   *          added to this map, binding the object's onum to its current
+   *          version.
    * @param create
    *          whether the object was newly created by the transaction.
    */
-  public final void registerUpdate(long tid, Principal worker,
-      SerializedObject obj, UpdateType updateType) {
+  public final VersionWarranty registerUpdate(long tid, Principal worker,
+      SerializedObject obj,
+      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts,
+      UpdateType updateType) throws TransactionPrepareFailedException {
     long onum = obj.getOnum();
-    addWriteLock(onum, tid);
-    pendingByTid.get(tid).get(worker).modData
-        .add(new Pair<SerializedObject, UpdateType>(obj, updateType));
 
-    if (updateType == UpdateType.WRITE) {
+    // First, lock the object.
+    try {
+      lockForWrite(onum, tid);
+    } catch (UnableToLockException e) {
+      throw new TransactionPrepareFailedException(versionConflicts, "Object "
+          + onum + " has been locked by an uncommitted transaction.");
+    }
+
+    // Record the updated object. Doing so will also register that the
+    // transaction has updated the object.
+    OidKeyHashMap<PendingTransaction> submap;
+    synchronized (pendingByTid) {
+      submap = pendingByTid.get(tid);
+    }
+
+    synchronized (submap) {
+      submap.get(worker).modData.add(new Pair<SerializedObject, UpdateType>(
+          obj, updateType));
+    }
+
+    switch (updateType) {
+    case CREATE:
+      // Make sure the onum doesn't already exist in the database.
+      if (exists(onum)) {
+        throw new TransactionPrepareFailedException(versionConflicts, "Object "
+            + onum + " already exists.");
+      }
+
+      // Set the object's initial version number.
+      obj.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
+      return VersionWarranty.EXPIRED_WARRANTY;
+
+    case WRITE:
       // Register the update.
       addWrittenOnumByTid(tid, worker, onum);
+
+      // Read the old copy from the database.
+      SerializedObject storeCopy = read(onum);
+
+      // Check version numbers.
+      int storeVersion = storeCopy.getVersion();
+      int workerVersion = obj.getVersion();
+      VersionWarranty warranty;
+      if (storeVersion != workerVersion) {
+        warranty = refreshWarranty(onum);
+        versionConflicts.put(onum, new Pair<SerializedObject, VersionWarranty>(
+            storeCopy, warranty));
+        return VersionWarranty.EXPIRED_WARRANTY;
+      }
+
+      // Obtain existing warranty.
+      warranty = getWarranty(onum);
+
+      // Update the version number on the prepared copy of the object.
+      obj.setVersion(storeVersion + 1);
+
+      // Notify the warranty issuer.
       warrantyIssuer.notifyWritePrepare(onum);
+
+      return warranty;
     }
+
+    throw new InternalError("Unknown update type: " + updateType);
   }
 
   protected void addWrittenOnumByTid(long tid, Principal worker, long onum) {
-    OidKeyHashMap<LongSet> submap = writtenOnumsByTid.get(tid);
-    if (submap == null) {
-      submap = new OidKeyHashMap<LongSet>();
-      writtenOnumsByTid.put(tid, submap);
+    OidKeyHashMap<LongSet> submap;
+    synchronized (writtenOnumsByTid) {
+      submap = writtenOnumsByTid.get(tid);
+
+      if (submap == null) {
+        submap = new OidKeyHashMap<LongSet>();
+        writtenOnumsByTid.put(tid, submap);
+      }
     }
 
-    LongSet set = submap.get(worker);
-    if (set == null) {
-      set = new LongHashSet();
-      submap.put(worker, set);
+    LongSet set;
+    synchronized (submap) {
+      set = submap.get(worker);
+      if (set == null) {
+        set = new LongHashSet();
+        submap.put(worker, set);
+      }
     }
-    set.add(onum);
+
+    synchronized (set) {
+      set.add(onum);
+    }
   }
 
   private LongSet removeWrittenOnumsByTid(long tid, Principal worker) {
-    OidKeyHashMap<LongSet> writtenOnumsSubmap = writtenOnumsByTid.get(tid);
+    OidKeyHashMap<LongSet> writtenOnumsSubmap;
+    synchronized (writtenOnumsByTid) {
+      writtenOnumsSubmap = writtenOnumsByTid.get(tid);
+    }
+
     if (writtenOnumsSubmap == null) return null;
 
-    LongSet result = writtenOnumsSubmap.remove(worker);
-    if (writtenOnumsSubmap.isEmpty()) writtenOnumsByTid.remove(tid);
+    LongSet result;
+    synchronized (writtenOnumsSubmap) {
+      result = writtenOnumsSubmap.remove(worker);
+      if (writtenOnumsSubmap.isEmpty()) writtenOnumsByTid.remove(tid);
+    }
+
     return result;
   }
 
   /**
-   * Acquires a write lock on the given onum for the given transaction.
+   * Registers a write lock for the given TID.
+   * 
+   * @throws UnableToLockException
+   *          when a conflicting lock is held.
    */
-  private void addWriteLock(long onum, long tid) {
-    writeLocks.put(onum, tid);
+  private void lockForWrite(long onum, long tid) throws UnableToLockException {
+    synchronized (writeLocks) {
+      if (writeLocks.get(onum) != null) throw new UnableToLockException();
+      writeLocks.put(onum, tid);
+    }
   }
 
   /**
@@ -345,9 +442,14 @@ public abstract class ObjectDB {
    * finishPrepareWrites() has yet to be called.)
    */
   public final void abortPrepareWrites(long tid, Principal worker) {
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    unpin(submap.remove(worker));
-    if (submap.isEmpty()) pendingByTid.remove(tid);
+    synchronized (pendingByTid) {
+      OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+
+      synchronized (submap) {
+        unpin(submap.remove(worker));
+        if (submap.isEmpty()) pendingByTid.remove(tid);
+      }
+    }
 
     removeWrittenOnumsByTid(tid, worker);
   }
@@ -453,11 +555,13 @@ public abstract class ObjectDB {
   protected final void putWarranty(long onum, VersionWarranty warranty) {
     versionWarrantyTable.put(onum, warranty);
 
-    if (warranty.expiresAfter(longestWarranty)) {
-      // Fudge longestWarranty so we don't continually touch disk when we create
-      // a sequence of warranties whose expiries increase with real time.
-      longestWarranty = new VersionWarranty(warranty.expiry() + 30 * 1000);
-      saveLongestWarranty();
+    synchronized (longestWarranty) {
+      if (warranty.expiresAfter(longestWarranty[0])) {
+        // Fudge longestWarranty so we don't continually touch disk when we create
+        // a sequence of warranties whose expiries increase with real time.
+        longestWarranty[0] = new VersionWarranty(warranty.expiry() + 30 * 1000);
+        saveLongestWarranty();
+      }
     }
   }
 
@@ -498,39 +602,41 @@ public abstract class ObjectDB {
    */
   private VersionWarranty extendWarranty(long onum, long expiry,
       ExtendWarrantyMode mode) {
-    // Get the object's current warranty and determine whether it needs to be
-    // extended.
-    VersionWarranty curWarranty = versionWarrantyTable.get(onum);
-    switch (mode) {
-    case STRICT:
-    case FORCE:
-      if (curWarranty.expiresAfter(expiry, false)) return curWarranty;
-      break;
-
-    case NON_STRICT:
-      if (!curWarranty.expired(true)) return curWarranty;
-      break;
-    }
-
-    // Need to extend warranty.
-    if (mode != ExtendWarrantyMode.FORCE && isWritten(onum)) {
-      // Unable to extend warranty.
+    synchronized (versionWarrantyTable) {
+      // Get the object's current warranty and determine whether it needs to be
+      // extended.
+      VersionWarranty curWarranty = versionWarrantyTable.get(onum);
       switch (mode) {
       case STRICT:
-        return null;
+      case FORCE:
+        if (curWarranty.expiresAfter(expiry, false)) return curWarranty;
+        break;
 
       case NON_STRICT:
-        return curWarranty;
-
-      case FORCE:
-        throw new InternalError("Shouldn't reach here.");
+        if (!curWarranty.expired(true)) return curWarranty;
+        break;
       }
-    }
 
-    // Extend the object's warranty.
-    VersionWarranty newWarranty = new VersionWarranty(expiry);
-    if (expiry > System.currentTimeMillis()) putWarranty(onum, newWarranty);
-    return newWarranty;
+      // Need to extend warranty.
+      if (mode != ExtendWarrantyMode.FORCE && isWritten(onum)) {
+        // Unable to extend warranty.
+        switch (mode) {
+        case STRICT:
+          return null;
+
+        case NON_STRICT:
+          return curWarranty;
+
+        case FORCE:
+          throw new InternalError("Shouldn't reach here.");
+        }
+      }
+
+      // Extend the object's warranty.
+      VersionWarranty newWarranty = new VersionWarranty(expiry);
+      if (expiry > System.currentTimeMillis()) putWarranty(onum, newWarranty);
+      return newWarranty;
+    }
   }
 
   /**
@@ -565,13 +671,17 @@ public abstract class ObjectDB {
    * if no such group exists.
    */
   public final Long getCachedGroupID(long onum) {
-    return globTable.getGlobIDByOnum(onum);
+    synchronized (globTable) {
+      return globTable.getGlobIDByOnum(onum);
+    }
   }
 
   private final GroupTable.Entry getGroupTableEntry(long onum) {
-    Long groupID = getCachedGroupID(onum);
-    if (groupID == null) return null;
-    return globTable.getContainer(groupID);
+    synchronized (globTable) {
+      Long groupID = getCachedGroupID(onum);
+      if (groupID == null) return null;
+      return globTable.getContainer(groupID);
+    }
   }
 
   /**
@@ -599,10 +709,15 @@ public abstract class ObjectDB {
    */
   public final void cachePartialGroup(PartialObjectGroup partialGroup) {
     // Get a new ID for the partial group.
-    long groupID = nextGlobID++;
+    long groupID;
+    synchronized (nextGlobID) {
+      groupID = nextGlobID.value++;
+    }
     partialGroup.setID(groupID);
 
-    globTable.put(partialGroup);
+    synchronized (globTable) {
+      globTable.put(partialGroup);
+    }
   }
 
   /**
@@ -610,13 +725,17 @@ public abstract class ObjectDB {
    */
   public void coalescePartialGroups(PartialObjectGroup from,
       PartialObjectGroup to) {
-    globTable.coalescePartialGroups(from, to);
+    synchronized (globTable) {
+      globTable.coalescePartialGroups(from, to);
+    }
   }
 
   public GroupContainer promotePartialGroup(PrivateKey signingKey,
       PartialObjectGroup partialGroup) {
-    return globTable.promotePartialGroup(
-        Worker.getWorker().getStore(getName()), signingKey, partialGroup);
+    synchronized (globTable) {
+      return globTable.promotePartialGroup(
+          Worker.getWorker().getStore(getName()), signingKey, partialGroup);
+    }
   }
 
   /**
@@ -631,29 +750,31 @@ public abstract class ObjectDB {
    */
   protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum) {
     // Remove from the glob table the glob associated with the onum.
-    Long globID = globTable.getGlobIDByOnum(onum);
+    Long globID;
     GroupContainer group = null;
-    if (globID != null) {
-      GroupTable.Entry entry = globTable.remove(globID);
-      if (entry instanceof GroupContainer) {
-        group = (GroupContainer) entry;
+    synchronized (globTable) {
+      globID = globTable.getGlobIDByOnum(onum);
+      if (globID != null) {
+        GroupTable.Entry entry = globTable.remove(globID);
+        if (entry instanceof GroupContainer) {
+          group = (GroupContainer) entry;
+        }
       }
-    }
 
-    // Notify the subscription manager that the group has been updated.
-    // sm.notifyUpdate(onum, worker);
-    if (group != null) {
-      for (LongIterator onumIt = group.onums.iterator(); onumIt.hasNext();) {
-        long relatedOnum = onumIt.next();
-        if (relatedOnum == onum) continue;
+      // Notify the subscription manager that the group has been updated.
+      // sm.notifyUpdate(onum, worker);
+      if (group != null) {
+        for (LongIterator onumIt = group.onums.iterator(); onumIt.hasNext();) {
+          long relatedOnum = onumIt.next();
+          if (relatedOnum == onum) continue;
 
-        Long relatedGlobId = globTable.getGlobIDByOnum(relatedOnum);
-        if (relatedGlobId != null && relatedGlobId == globID) {
-          // sm.notifyUpdate(relatedOnum, worker);
+          Long relatedGlobId = globTable.getGlobIDByOnum(relatedOnum);
+          if (relatedGlobId != null && relatedGlobId == globID) {
+            // sm.notifyUpdate(relatedOnum, worker);
+          }
         }
       }
     }
-
     // Notify the warranty issuer.
     warrantyIssuer.notifyWriteCommit(onum);
   }
@@ -667,7 +788,9 @@ public abstract class ObjectDB {
    *         been committed or rolled back.
    */
   public final boolean isWritten(long onum) {
-    return writeLocks.get(onum) != null;
+    synchronized (writeLocks) {
+      return writeLocks.get(onum) != null;
+    }
   }
 
   /**
@@ -675,9 +798,11 @@ public abstract class ObjectDB {
    * about to be committed or aborted.
    */
   protected final void unpin(PendingTransaction tx) {
-    for (Pair<SerializedObject, UpdateType> update : tx.modData) {
-      long onum = update.first.getOnum();
-      writeLocks.remove(onum);
+    synchronized (writeLocks) {
+      for (Pair<SerializedObject, UpdateType> update : tx.modData) {
+        long onum = update.first.getOnum();
+        writeLocks.remove(onum);
+      }
     }
   }
 

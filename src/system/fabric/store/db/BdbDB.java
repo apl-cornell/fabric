@@ -46,6 +46,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.MutableInteger;
+import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.FClass;
@@ -92,14 +93,14 @@ public class BdbDB extends ObjectDB {
    */
   private final DatabaseEntry longestWarrantyEntry;
 
-  private long nextOnum;
+  private final MutableLong nextOnum;
 
   /**
    * To prevent touching BDB on every onum reservation request, we keep a bunch
    * of onums in reserve. If nextOnum > lastReservedOnum, it's time to touch BDB
    * again to reserve more onums.
    */
-  private long lastReservedOnum;
+  private final MutableLong lastReservedOnum;
 
   /**
    * Cache: maps onums to object versions of objects that are currently stored
@@ -168,8 +169,8 @@ public class BdbDB extends ObjectDB {
       throw new InternalError(e);
     }
 
-    this.nextOnum = -1;
-    this.lastReservedOnum = -2;
+    this.nextOnum = new MutableLong(-1);
+    this.lastReservedOnum = new MutableLong(-2);
     this.cachedVersions = new LongKeyCache<MutableInteger>();
     this.cachedObjects = new LongKeyCache<SerializedObject>();
     this.preparedTransactions = new Cache<ByteArray, PendingTransaction>();
@@ -183,7 +184,7 @@ public class BdbDB extends ObjectDB {
       Transaction txn = env.beginTransaction(null, null);
 
       DatabaseEntry data = new DatabaseEntry();
-      LongBinding.longToEntry(longestWarranty.expiry(), data);
+      LongBinding.longToEntry(longestWarranty[0].expiry(), data);
 
       meta.put(txn, longestWarrantyEntry, data);
       txn.commit();
@@ -197,9 +198,14 @@ public class BdbDB extends ObjectDB {
   @Override
   public void finishPrepareWrites(long tid, Principal worker) {
     // Copy the transaction data into BDB.
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    PendingTransaction pending = submap.remove(worker);
-    if (submap.isEmpty()) pendingByTid.remove(tid);
+    PendingTransaction pending;
+    synchronized (pendingByTid) {
+      OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+      synchronized (submap) {
+        pending = submap.remove(worker);
+        if (submap.isEmpty()) pendingByTid.remove(tid);
+      }
+    }
 
     try {
       Transaction txn = env.beginTransaction(null, null);
@@ -262,57 +268,61 @@ public class BdbDB extends ObjectDB {
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
-        synchronized (BdbDB.this) {
-          STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
+        STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
 
-          try {
-            Transaction txn = env.beginTransaction(null, null);
+        try {
+          Transaction txn = env.beginTransaction(null, null);
 
-            // Remove the commit time from BDB.
-            commitTimes.delete(txn, tidBdbKey);
+          // Remove the commit time from BDB.
+          commitTimes.delete(txn, tidBdbKey);
 
-            // Obtain the transaction record.
-            PendingTransaction pending = remove(workerPrincipal, txn, tid);
+          // Obtain the transaction record.
+          PendingTransaction pending = remove(workerPrincipal, txn, tid);
 
-            if (pending != null) {
-              FSSerializer<SerializedObject> serializer =
-                  new FSSerializer<SerializedObject>();
-              for (Pair<SerializedObject, UpdateType> update : pending.modData) {
-                SerializedObject o = update.first;
-                long onum = o.getOnum();
-                STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
+          if (pending != null) {
+            FSSerializer<SerializedObject> serializer =
+                new FSSerializer<SerializedObject>();
+            for (Pair<SerializedObject, UpdateType> update : pending.modData) {
+              SerializedObject o = update.first;
+              long onum = o.getOnum();
+              STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
 
-                DatabaseEntry onumData = new DatabaseEntry();
-                LongBinding.longToEntry(onum, onumData);
+              DatabaseEntry onumData = new DatabaseEntry();
+              LongBinding.longToEntry(onum, onumData);
 
-                DatabaseEntry objData =
-                    new DatabaseEntry(serializer.toBytes(o));
+              DatabaseEntry objData = new DatabaseEntry(serializer.toBytes(o));
 
-                db.put(txn, onumData, objData);
+              db.put(txn, onumData, objData);
 
-                // Remove any cached globs containing the old version of this object.
-                notifyCommittedUpdate(sm, onum);
+              // Remove any cached globs containing the old version of this object.
+              notifyCommittedUpdate(sm, onum);
 
-                // Update caches.
-                cacheVersionNumber(onum, o.getVersion());
+              // Update caches.
+              cacheVersionNumber(onum, o.getVersion());
+              synchronized (cachedObjects) {
                 cachedObjects.put(onum, o);
               }
-
-              txn.commit();
-              STORE_DB_LOGGER.finer("Bdb commit success tid " + tid);
-            } else {
-              txn.abort();
-              STORE_DB_LOGGER.warning("Bdb commit not found tid " + tid);
-              throw new InternalError("Unknown transaction id " + tid);
             }
-          } catch (DatabaseException e) {
-            // Problem. Clear out caches.
-            cachedVersions.clear();
-            cachedObjects.clear();
 
-            STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in commit: ", e);
-            throw new InternalError(e);
+            txn.commit();
+            STORE_DB_LOGGER.finer("Bdb commit success tid " + tid);
+          } else {
+            txn.abort();
+            STORE_DB_LOGGER.warning("Bdb commit not found tid " + tid);
+            throw new InternalError("Unknown transaction id " + tid);
           }
+        } catch (DatabaseException e) {
+          // Problem. Clear out caches.
+          synchronized (cachedVersions) {
+            cachedVersions.clear();
+          }
+
+          synchronized (cachedObjects) {
+            cachedObjects.clear();
+          }
+
+          STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in commit: ", e);
+          throw new InternalError(e);
         }
       }
     });
@@ -335,7 +345,7 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public SerializedObject read(long onum) {
-    if (cachedObjects.containsKey(onum)) {
+    synchronized (cachedObjects) {
       SerializedObject cached = cachedObjects.get(onum);
       if (cached != null) return cached;
     }
@@ -351,7 +361,9 @@ public class BdbDB extends ObjectDB {
         SerializedObject result = toSerializedObject(data.getData());
         if (result != null) {
           cacheVersionNumber(onum, result.getVersion());
-          cachedObjects.put(onum, result);
+          synchronized (cachedObjects) {
+            cachedObjects.put(onum, result);
+          }
         }
 
         return result;
@@ -366,10 +378,16 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public int getVersion(long onum) throws AccessException {
-    MutableInteger ver = cachedVersions.get(onum);
-    if (ver != null) return ver.value;
+    MutableInteger ver;
+    synchronized (cachedVersions) {
+      ver = cachedVersions.get(onum);
+    }
 
-    return super.getVersion(onum);
+    if (ver == null) return super.getVersion(onum);
+
+    synchronized (ver) {
+      return ver.value;
+    }
   }
 
   @Override
@@ -380,8 +398,7 @@ public class BdbDB extends ObjectDB {
     DatabaseEntry data = new DatabaseEntry();
 
     try {
-      if (writeLocks.get(onum) != null
-          || db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
+      if (db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
         return true;
       }
     } catch (DatabaseException e) {
@@ -400,28 +417,33 @@ public class BdbDB extends ObjectDB {
 
     try {
       long[] onums = new long[num];
-      for (int i = 0; i < num; i++) {
-        if (nextOnum > lastReservedOnum) {
-          // Reserve more onums from BDB.
-          Transaction txn = env.beginTransaction(null, null);
-          DatabaseEntry data = new DatabaseEntry();
-          nextOnum = ONumConstants.FIRST_UNRESERVED;
+      synchronized (nextOnum) {
+        synchronized (lastReservedOnum) {
+          for (int i = 0; i < num; i++) {
+            if (nextOnum.value > lastReservedOnum.value) {
+              // Reserve more onums from BDB.
+              Transaction txn = env.beginTransaction(null, null);
+              DatabaseEntry data = new DatabaseEntry();
+              nextOnum.value = ONumConstants.FIRST_UNRESERVED;
 
-          if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
-            nextOnum = LongBinding.entryToLong(data);
+              if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
+                nextOnum.value = LongBinding.entryToLong(data);
+              }
+
+              lastReservedOnum.value =
+                  nextOnum.value + ONUM_RESERVE_SIZE + num - i - 1;
+
+              LongBinding.longToEntry(lastReservedOnum.value + 1, data);
+              meta.put(txn, onumCounter, data);
+              txn.commit();
+
+              STORE_DB_LOGGER.fine("Bdb reserved onums " + nextOnum + "--"
+                  + lastReservedOnum);
+            }
+
+            onums[i] = nextOnum.value++;
           }
-
-          lastReservedOnum = nextOnum + ONUM_RESERVE_SIZE + num - i - 1;
-
-          LongBinding.longToEntry(lastReservedOnum + 1, data);
-          meta.put(txn, onumCounter, data);
-          txn.commit();
-
-          STORE_DB_LOGGER.fine("Bdb reserved onums " + nextOnum + "--"
-              + lastReservedOnum);
         }
-
-        onums[i] = nextOnum++;
       }
 
       return onums;
@@ -557,8 +579,8 @@ public class BdbDB extends ObjectDB {
       // Recover the longest warranty issued and use that as the default
       // warranty.
       if (meta.get(txn, longestWarrantyEntry, data, LockMode.DEFAULT) == SUCCESS) {
-        longestWarranty = new VersionWarranty(LongBinding.entryToLong(data));
-        versionWarrantyTable.setDefaultWarranty(longestWarranty);
+        longestWarranty[0] = new VersionWarranty(LongBinding.entryToLong(data));
+        versionWarrantyTable.setDefaultWarranty(longestWarranty[0]);
       }
 
       txn.commit();
@@ -623,11 +645,17 @@ public class BdbDB extends ObjectDB {
   }
 
   private void cacheVersionNumber(long onum, int versionNumber) {
-    MutableInteger entry = cachedVersions.get(onum);
-    if (entry == null) {
-      entry = new MutableInteger(versionNumber);
-      cachedVersions.put(onum, entry);
-    } else {
+    MutableInteger entry;
+    synchronized (cachedVersions) {
+      entry = cachedVersions.get(onum);
+      if (entry == null) {
+        entry = new MutableInteger(versionNumber);
+        cachedVersions.put(onum, entry);
+        return;
+      }
+    }
+
+    synchronized (entry) {
       entry.value = versionNumber;
     }
   }

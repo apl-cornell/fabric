@@ -41,7 +41,6 @@ import fabric.worker.Worker.Code;
 
 public class TransactionManager {
 
-  private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
   private static final int MIN_GROUP_SIZE = 75;
 
   /**
@@ -63,7 +62,6 @@ public class TransactionManager {
   public TransactionManager(ObjectDB database, PrivateKey signingKey) {
     this.database = database;
     this.signingKey = signingKey;
-
     this.sm = new SubscriptionManager(database.getName(), this);
   }
 
@@ -76,10 +74,8 @@ public class TransactionManager {
    */
   public void abortTransaction(Principal worker, long transactionID)
       throws AccessException {
-    synchronized (database) {
-      database.abort(transactionID, worker);
-      STORE_TRANSACTION_LOGGER.fine("Aborted transaction " + transactionID);
-    }
+    database.abort(transactionID, worker);
+    STORE_TRANSACTION_LOGGER.fine("Aborted transaction " + transactionID);
   }
 
   /**
@@ -87,15 +83,13 @@ public class TransactionManager {
    */
   public void commitTransaction(Principal workerPrincipal, long transactionID,
       long commitTime) throws TransactionCommitFailedException {
-    synchronized (database) {
-      try {
-        database.commit(transactionID, commitTime, workerPrincipal, sm);
-        STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
-      } catch (final RuntimeException e) {
-        throw new TransactionCommitFailedException(
-            "something went wrong; store experienced a runtime exception during "
-                + "commit: " + e.getMessage(), e);
-      }
+    try {
+      database.commit(transactionID, commitTime, workerPrincipal, sm);
+      STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
+    } catch (final RuntimeException e) {
+      throw new TransactionCommitFailedException(
+          "something went wrong; store experienced a runtime exception during "
+              + "commit: " + e.getMessage(), e);
     }
   }
 
@@ -110,6 +104,7 @@ public class TransactionManager {
    */
   public long prepareWrites(Principal worker, PrepareWritesRequest req)
       throws TransactionPrepareFailedException {
+    // XXX - marker
     final long tid = req.tid;
     VersionWarranty longestWarranty = null;
 
@@ -126,15 +121,22 @@ public class TransactionManager {
       }
     }
 
-    synchronized (database) {
-      database.beginPrepareWrites(tid, worker);
-    }
+    database.beginPrepareWrites(tid, worker);
 
     try {
       // This will store the set of onums of objects that were out of date.
       LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
           new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
 
+      // Prepare writes.
+      for (SerializedObject o : req.writes) {
+        VersionWarranty warranty =
+            database.registerUpdate(tid, worker, o, versionConflicts, WRITE);
+        if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
+          longestWarranty = warranty;
+      }
+
+      /*
       synchronized (database) {
         // Check writes and update version numbers.
         for (SerializedObject o : req.writes) {
@@ -170,37 +172,42 @@ public class TransactionManager {
           if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
             longestWarranty = warranty;
         }
+        */
 
-        // Check creates.
-        for (SerializedObject o : req.creates) {
-          long onum = o.getOnum();
-
-          // Make sure no one else has claimed the object number in an
-          // uncommitted transaction.
-          if (database.isWritten(onum))
-            throw new TransactionPrepareFailedException(versionConflicts,
-                "Object " + onum + " has been locked by an "
-                    + "uncommitted transaction");
-
-          // Make sure the onum doesn't already exist in the database.
-          if (database.exists(onum))
-            throw new TransactionPrepareFailedException(versionConflicts,
-                "Object " + onum + " already exists");
-
-          // Set the initial version number and register the update with the
-          // database.
-          o.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
-          database.registerUpdate(tid, worker, o, CREATE);
-        }
+      // Prepare creates.
+      for (SerializedObject o : req.creates) {
+        database.registerUpdate(tid, worker, o, versionConflicts, CREATE);
       }
+
+      /*
+      for (SerializedObject o : req.creates) {
+        long onum = o.getOnum();
+
+        // Make sure no one else has claimed the object number in an
+        // uncommitted transaction.
+        if (database.isWritten(onum))
+          throw new TransactionPrepareFailedException(versionConflicts,
+              "Object " + onum + " has been locked by an "
+                  + "uncommitted transaction");
+
+        // Make sure the onum doesn't already exist in the database.
+        if (database.exists(onum))
+          throw new TransactionPrepareFailedException(versionConflicts,
+              "Object " + onum + " already exists");
+
+        // Set the initial version number and register the update with the
+        // database.
+        o.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
+        database.registerUpdate(tid, worker, o, CREATE);
+      }
+      }
+      */
 
       if (!versionConflicts.isEmpty()) {
         throw new TransactionPrepareFailedException(versionConflicts);
       }
 
-      synchronized (database) {
-        database.finishPrepareWrites(tid, worker);
-      }
+      database.finishPrepareWrites(tid, worker);
 
       STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
 
@@ -231,7 +238,7 @@ public class TransactionManager {
   public void prepareReads(Principal worker, long tid,
       LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
-
+    // XXX - marker
     try {
       // First, check read permissions. We do this before we attempt to do the
       // actual prepare because we want to run the permissions check in a
@@ -252,34 +259,32 @@ public class TransactionManager {
           new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
 
       // Check reads
-      synchronized (database) {
-        for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
-          long onum = entry.getKey();
-          int version = entry.getValue().intValue();
+      for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
+        long onum = entry.getKey();
+        int version = entry.getValue().intValue();
 
-          // Attempt to extend the object's warranty.
-          try {
-            ExtendWarrantyStatus status =
-                database.extendWarranty(worker, onum, version, commitTime);
-            switch (status) {
-            case OK:
-              break;
+        // Attempt to extend the object's warranty.
+        try {
+          ExtendWarrantyStatus status =
+              database.extendWarranty(worker, onum, version, commitTime);
+          switch (status) {
+          case OK:
+            break;
 
-            case BAD_VERSION:
-              SerializedObject obj = database.read(onum);
-              VersionWarranty warranty = database.refreshWarranty(onum);
-              versionConflicts.put(onum,
-                  new Pair<SerializedObject, VersionWarranty>(obj, warranty));
-              continue;
+          case BAD_VERSION:
+            SerializedObject obj = database.read(onum);
+            VersionWarranty warranty = database.refreshWarranty(onum);
+            versionConflicts.put(onum,
+                new Pair<SerializedObject, VersionWarranty>(obj, warranty));
+            continue;
 
-            case DENIED:
-              throw new TransactionPrepareFailedException(versionConflicts,
-                  "Unable to extend warranty for object " + onum);
-            }
-          } catch (AccessException e) {
+          case DENIED:
             throw new TransactionPrepareFailedException(versionConflicts,
-                e.getMessage());
+                "Unable to extend warranty for object " + onum);
           }
+        } catch (AccessException e) {
+          throw new TransactionPrepareFailedException(versionConflicts,
+              e.getMessage());
         }
       }
 
@@ -356,8 +361,6 @@ public class TransactionManager {
    * ensures that the worker will not reveal information when dereferencing
    * surrogates.
    * 
-   * @param handler
-   *          Used to track read statistics. Can be null.
    * @param subscriber
    *          If non-null, then the given worker will be subscribed to the
    *          object.
@@ -370,15 +373,13 @@ public class TransactionManager {
     GroupContainer container;
     synchronized (database) {
       container = database.getCachedGroupContainer(onum);
-      if (container != null) {
-        // if (subscriber != null)
-        // sm.subscribe(onum, subscriber, dissemSubscribe);
+      // if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
 
+      if (container != null) {
         container.refreshWarranties(this);
         return container;
       }
 
-      // if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
       GroupContainer group = makeGroup(onum);
       if (group == null) throw new AccessException(database.getName(), onum);
 
@@ -395,8 +396,6 @@ public class TransactionManager {
    * @param subscriber
    *          If non-null, then the given worker will be subscribed to the
    *          object as a dissemination node.
-   * @param handler
-   *          Used to track read statistics.
    */
   public Glob getGlob(long onum) throws AccessException {
     return getGroupContainerAndSubscribe(onum).getGlob();
@@ -556,9 +555,7 @@ public class TransactionManager {
    * here.
    */
   SerializedObject read(long onum) {
-    synchronized (database) {
-      return database.read(onum);
-    }
+    return database.read(onum);
   }
 
   /**
@@ -568,17 +565,16 @@ public class TransactionManager {
    */
   public VersionWarranty refreshWarranties(
       Collection<Pair<SerializedObject, VersionWarranty>> objects) {
-    synchronized (database) {
-      VersionWarranty result = null;
-      for (Pair<SerializedObject, VersionWarranty> entry : objects) {
-        VersionWarranty warranty =
-            entry.second = database.refreshWarranty(entry.first.getOnum());
-        if (result == null || result.expiresAfter(warranty)) result = warranty;
-      }
-
-      if (result == null) result = new VersionWarranty(0);
-      return result;
+    // XXX - marker
+    VersionWarranty result = null;
+    for (Pair<SerializedObject, VersionWarranty> entry : objects) {
+      VersionWarranty warranty =
+          entry.second = database.refreshWarranty(entry.first.getOnum());
+      if (result == null || result.expiresAfter(warranty)) result = warranty;
     }
+
+    if (result == null) result = new VersionWarranty(0);
+    return result;
   }
 
   /**
@@ -586,9 +582,7 @@ public class TransactionManager {
    *           if the principal is not allowed to create objects on this store.
    */
   public long[] newOnums(Principal worker, int num) throws AccessException {
-    synchronized (database) {
-      return database.newOnums(num);
-    }
+    return database.newOnums(num);
   }
 
   /**
@@ -596,9 +590,7 @@ public class TransactionManager {
    * store.
    */
   long[] newOnums(int num) {
-    synchronized (database) {
-      return database.newOnums(num);
-    }
+    return database.newOnums(num);
   }
 
   /**
