@@ -269,10 +269,16 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public int getVersion(long onum) throws AccessException {
-    MutableInteger ver = cachedVersions.get(onum);
-    if (ver != null) return ver.value;
+    MutableInteger ver;
+    synchronized (cachedVersions) {
+      ver = cachedVersions.get(onum);
+    }
 
-    return super.getVersion(onum);
+    if (ver == null) return super.getVersion(onum);
+
+    synchronized (ver) {
+      return ver.value;
+    }
   }
 
   @Override
@@ -436,14 +442,18 @@ public class BdbDB extends ObjectDB {
   }
 
   private void cacheVersionNumber(long onum, int versionNumber) {
+    MutableInteger entry;
     synchronized (cachedVersions) {
-      MutableInteger entry = cachedVersions.get(onum);
+      entry = cachedVersions.get(onum);
       if (entry == null) {
         entry = new MutableInteger(versionNumber);
         cachedVersions.put(onum, entry);
-      } else {
-        entry.value = versionNumber;
+        return;
       }
+    }
+
+    synchronized (entry) {
+      entry.value = versionNumber;
     }
   }
 
