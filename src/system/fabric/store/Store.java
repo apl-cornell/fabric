@@ -99,7 +99,7 @@ class Store extends MessageToStoreHandler {
 
     this.node = node;
     this.os = loadStore();
-    this.tm = new TransactionManager(this.os, this.privateKey);
+    this.tm = new TransactionManager(this.os);
     this.sm = new SimpleSurrogateManager(tm);
   }
 
@@ -128,8 +128,10 @@ class Store extends MessageToStoreHandler {
     try {
       // construct ObjectDB with class specified by properties file
       final Class<?> osClass = Class.forName(config.backendClass);
-      final Constructor<?> osCons = osClass.getConstructor(String.class);
-      final ObjectDB os = (ObjectDB) osCons.newInstance(config.name);
+      final Constructor<?> osCons =
+          osClass.getConstructor(String.class, PrivateKey.class);
+      final ObjectDB os =
+          (ObjectDB) osCons.newInstance(config.name, this.privateKey);
 
       return os;
     } catch (Exception exc) {

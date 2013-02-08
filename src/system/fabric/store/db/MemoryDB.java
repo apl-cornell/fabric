@@ -5,6 +5,7 @@ import static fabric.common.Logging.STORE_DB_LOGGER;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.security.PrivateKey;
 
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
@@ -58,8 +59,8 @@ public class MemoryDB extends ObjectDB {
    * @param name
    *          name of store to create database for.
    */
-  public MemoryDB(String name) {
-    super(name);
+  public MemoryDB(String name, PrivateKey privateKey) {
+    super(name, privateKey);
     this.isInitialized = false;
     long nextOnum = ONumConstants.FIRST_UNRESERVED;
 

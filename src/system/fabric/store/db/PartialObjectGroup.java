@@ -1,16 +1,15 @@
-package fabric.store;
+package fabric.store.db;
 
+import static fabric.store.db.ObjectGrouper.GroupLock.Status.DEFUNCT;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
-import fabric.store.db.GroupTable;
+import fabric.store.db.ObjectGrouper.GroupLock;
 
 /**
  * A partially assembled object group.
  */
-public class PartialObjectGroup extends GroupTable.Entry {
-  private long groupID;
-
+public class PartialObjectGroup extends ObjectGrouper.AbstractGroup {
   /**
    * The number of non-surrogate objects in the group.
    */
@@ -26,20 +25,21 @@ public class PartialObjectGroup extends GroupTable.Entry {
    */
   public final LongKeyMap<SerializedObject> frontier;
 
+  /**
+   * The GroupLock for this group. This is non-null exactly while the group is
+   * constructed.
+   */
+  GroupLock lock;
+
+  /**
+   * @param size the number of non-surrogate objects in the group.
+   */
   public PartialObjectGroup(int size, LongKeyMap<SerializedObject> objects,
-      LongKeyMap<SerializedObject> frontier) {
-    this.groupID = -1;
+      LongKeyMap<SerializedObject> frontier, GroupLock lock) {
     this.size = size;
     this.objects = objects;
     this.frontier = frontier;
-  }
-
-  public void setID(long groupID) {
-    this.groupID = groupID;
-  }
-
-  public long groupID() {
-    return groupID;
+    this.lock = lock;
   }
 
   /**
@@ -58,5 +58,13 @@ public class PartialObjectGroup extends GroupTable.Entry {
     size += from.size;
     objects.putAll(from.objects);
     frontier.putAll(from.frontier);
+
+    synchronized (from.lock) {
+      from.lock.status = DEFUNCT;
+      from.lock.replacement = this.lock;
+      from.lock.notifyAll();
+    }
+
+    from.lock = lock;
   }
 }
