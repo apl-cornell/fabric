@@ -2,20 +2,21 @@ package fabric.common.util;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
- * A thread-safe map with soft references to its values. When a value in the map
- * is garbage collected by the JVM, its corresponding key is removed from the
- * map.
+ * A map that has soft references to its values and supports concurrent
+ * accesses. When a value in the map is garbage collected by the JVM, its
+ * corresponding key is removed from the map. Null values are not supported
+ * because the underlying ConcurrentMap does not support them.
  */
 public class Cache<K, V> {
 
   // The underlying map.
-  private final Map<K, ValueSoftRef<K, V>> map;
+  private final ConcurrentMap<K, ValueSoftRef<K, V>> map;
 
   private static final class ValueSoftRef<K, V> extends SoftReference<V> {
     final K key;
@@ -43,35 +44,79 @@ public class Cache<K, V> {
   }
 
   public Cache() {
-    this.map = new HashMap<K, ValueSoftRef<K, V>>();
+    this.map = new ConcurrentHashMap<K, ValueSoftRef<K, V>>();
   }
 
-  public synchronized void clear() {
+  public void clear() {
     map.clear();
   }
 
-  public synchronized boolean containsKey(K key) {
+  public boolean containsKey(K key) {
     return map.containsKey(key);
   }
 
-  public synchronized V get(K key) {
+  public V get(K key) {
     ValueSoftRef<K, V> ref = map.get(key);
     if (ref == null) return null;
     return ref.get();
   }
 
-  public synchronized V put(K key, V value) {
-    ValueSoftRef<K, V> ref = null;
-    if (value != null) {
-      ref = new ValueSoftRef<K, V>(this, key, value);
-    }
-
-    ref = map.put(key, ref);
+  public V put(K key, V value) {
+    ValueSoftRef<K, V> ref =
+        map.put(key, new ValueSoftRef<K, V>(this, key, value));
     if (ref == null) return null;
     return ref.get();
   }
 
-  public synchronized V remove(Object key) {
+  /**
+   * If the specified key is not already associated with a value, associate it
+   * with the given value. This is equivalent to
+   * <code>
+   *   if (!cache.containsKey(key)) return map.put(key, value);
+   *   else return map.get(key);
+   * </code>
+   * except that the action is performed atomically.
+   * 
+   * @return the previous value associated with the specified key, or null if
+   *          there was no mapping for the key.
+   */
+  public V putIfAbsent(K key, V value) {
+    ValueSoftRef<K, V> ref =
+        map.putIfAbsent(key, new ValueSoftRef<K, V>(this, key, value));
+    if (ref == null) return null;
+    return ref.get();
+  }
+
+  /**
+   * Replaces the entry for a key only if currently mapped to a given value.
+   * This is equivalent to
+   * <code>
+   *   if (cache.containsKey(key) && cache.get(key).equals(oldValue)) {
+   *     cache.put(key, newValue);
+   *     return true;
+   *   } else return false;
+   * </code>
+   * except that the action is performed atomically.
+   * 
+   * @param key key with which the specified value is associated.
+   * @param oldValue value expected to be associated with the specified key.
+   * @param newValue value to be associated with the specified key.
+   * @return true iff the value was replaced.
+   */
+  public boolean replace(K key, V oldValue, V newValue) {
+    ValueSoftRef<K, V> curRef = map.get(key);
+    V curValue = curRef == null ? null : curRef.get();
+    if (oldValue == null) {
+      if (curValue != oldValue) return false;
+      return putIfAbsent(key, newValue) == null;
+    }
+
+    if (oldValue != curValue && !oldValue.equals(curValue)) return false;
+    return map
+        .replace(key, curRef, new ValueSoftRef<K, V>(this, key, newValue));
+  }
+
+  public V remove(Object key) {
     ValueSoftRef<K, V> ref = map.remove(key);
     if (ref == null) return null;
     return ref.get();
@@ -98,13 +143,11 @@ public class Cache<K, V> {
       while (true) {
         try {
           ValueSoftRef<?, ?> ref = (ValueSoftRef<?, ?>) queue.remove();
-          synchronized (ref.cache) {
-            ValueSoftRef<?, ?> curRef = ref.cache.map.get(ref.key);
-            if (ref == curRef) ref.cache.remove(ref.key);
-          }
+          ref.cache.map.remove(ref.key, ref);
         } catch (InterruptedException e) {
         }
       }
     }
   }
+
 }

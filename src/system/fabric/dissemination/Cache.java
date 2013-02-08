@@ -69,10 +69,8 @@ public class Cache {
   public Glob get(RemoteStore store, long onum, boolean fetch) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
-    synchronized (map) {
-      Glob g = map.get(key);
-      if (g != null || !fetch) return g;
-    }
+    Glob g = map.get(key);
+    if (g != null || !fetch) return g;
 
     // Need to fetch. Check the object table in case some other thread fetched
     // the object while we weren't looking. Use fetchLocks as a mutex to
@@ -135,12 +133,19 @@ public class Cache {
     }
 
     if (g != null) {
-      Glob old = get(store, onum);
+      while (true) {
+        Glob old = get(store, onum);
 
-      if (old == null || old.isOlderThan(g)) {
-        map.put(oid, g);
-      } else {
-        g = old;
+        if (old == null || old.isOlderThan(g)) {
+          if (!map.replace(oid, old, g)) {
+            // Value got replaced while we weren't looking. Try again.
+            continue;
+          }
+        } else {
+          g = old;
+        }
+
+        break;
       }
     }
 
@@ -160,12 +165,17 @@ public class Cache {
   public void put(RemoteStore store, long onum, Glob g) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
-    synchronized (map) {
+    while (true) {
       Glob old = get(store, onum);
 
       if (old == null || old.isOlderThan(g)) {
-        map.put(key, g);
+        if (map.replace(key, old, g)) break;
+
+        // Value got replaced while we weren't looking. Try again.
+        continue;
       }
+
+      break;
     }
   }
 
@@ -178,13 +188,18 @@ public class Cache {
   public boolean updateEntry(RemoteStore store, long onum, Glob g) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
-    synchronized (map) {
+    while (true) {
       Glob old = get(store, onum);
       if (old == null) return false;
 
       if (old.isOlderThan(g)) {
-        map.put(key, g);
+        if (map.replace(key, old, g)) break;
+
+        // Value got replaced while we weren't looking. Try again.
+        continue;
       }
+
+      break;
     }
 
     return true;
