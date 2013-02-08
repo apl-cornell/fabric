@@ -189,39 +189,48 @@ public class BdbDB extends ObjectDB {
       final SubscriptionManager sm) {
     STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
 
-    runInBdbTransaction(new Code<Void, RuntimeException>() {
-      @Override
-      public Void run(Transaction txn) throws RuntimeException {
-        PendingTransaction pending = remove(workerPrincipal, txn, tid);
+    PendingTransaction pending =
+        runInBdbTransaction(new Code<PendingTransaction, RuntimeException>() {
+          @Override
+          public PendingTransaction run(Transaction txn)
+              throws RuntimeException {
+            PendingTransaction pending = remove(workerPrincipal, txn, tid);
 
-        if (pending != null) {
-          Serializer<SerializedObject> serializer =
-              new Serializer<SerializedObject>();
-          for (SerializedObject o : pending.modData) {
-            long onum = o.getOnum();
-            STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
+            if (pending != null) {
+              Serializer<SerializedObject> serializer =
+                  new Serializer<SerializedObject>();
+              for (SerializedObject o : pending.modData) {
+                long onum = o.getOnum();
+                STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
 
-            DatabaseEntry onumData = new DatabaseEntry();
-            LongBinding.longToEntry(onum, onumData);
+                DatabaseEntry onumData = new DatabaseEntry();
+                LongBinding.longToEntry(onum, onumData);
 
-            DatabaseEntry objData = new DatabaseEntry(serializer.toBytes(o));
+                DatabaseEntry objData =
+                    new DatabaseEntry(serializer.toBytes(o));
 
-            db.put(txn, onumData, objData);
+                db.put(txn, onumData, objData);
+              }
 
-            // Remove any cached globs containing the old version of this object.
-            notifyCommittedUpdate(sm, onum);
-
-            // Update the version-number cache.
-            cacheVersionNumber(onum, o.getVersion());
+              return pending;
+            } else {
+              STORE_DB_LOGGER.warning("Bdb commit not found tid " + tid);
+              throw new InternalError("Unknown transaction id " + tid);
+            }
           }
+        });
 
-          return null;
-        } else {
-          STORE_DB_LOGGER.warning("Bdb commit not found tid " + tid);
-          throw new InternalError("Unknown transaction id " + tid);
-        }
-      }
-    });
+    // Fix up caches.
+    for (SerializedObject o : pending.modData) {
+      long onum = o.getOnum();
+
+      // Remove any cached globs containing the old version of this object.
+      notifyCommittedUpdate(sm, onum);
+
+      // Update the version-number cache.
+      cacheVersionNumber(onum, o.getVersion());
+
+    }
 
     STORE_DB_LOGGER.finer("Bdb commit success tid " + tid);
   }
