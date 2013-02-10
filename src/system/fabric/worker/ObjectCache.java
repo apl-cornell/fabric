@@ -363,11 +363,8 @@ public final class ObjectCache {
           // An entry object has been GCed. Remove the corresponding element
           // from the entry table.
           synchronized (entries) {
-            EntrySoftRef removed = entries.remove(ref.onum);
-            if (removed != ref) {
-              // Entry had been replaced since it was put on the ReferenceQueue.
-              // Undo the remove.
-              entries.put(ref.onum, removed);
+            if (entries.get(ref.onum) == ref) {
+              entries.remove(ref.onum);
             }
           }
         }
