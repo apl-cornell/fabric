@@ -294,7 +294,7 @@ public final class ObjectCache {
     }
 
     private EntrySoftRef(Object._Impl obj) {
-      this(new Entry(obj));
+      this(obj.$cacheEntry);
     }
 
     /**
