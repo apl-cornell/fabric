@@ -14,6 +14,7 @@ import fabric.common.util.LongKeyCache;
 import fabric.common.util.LongSet;
 import fabric.lang.FClass;
 import fabric.lang.Object;
+import fabric.lang.Object._Impl;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 
@@ -117,10 +118,11 @@ public final class ObjectCache {
       }
       try {
         // XXX END HACK FOR OAKLAND 2012 TIMING STUFF
-        next = serialized.deserialize(store).$cacheEntry;
+        _Impl impl = serialized.deserialize(store);
+        next = impl.$cacheEntry;
         store = null;
         serialized = null;
-        snapNextLinks();
+        impl.$getStore().cache(impl);
         // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
       } finally {
         if (fclass) {
