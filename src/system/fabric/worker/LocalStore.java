@@ -211,9 +211,8 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public boolean evict(long onum) {
+  public void evict(long onum) {
     // nothing to do
-    return false;
   }
 
   @Override

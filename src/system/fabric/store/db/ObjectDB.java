@@ -538,7 +538,7 @@ public abstract class ObjectDB {
    * @return the object or null if no object exists at the given onum
    */
   public abstract SerializedObject read(long onum);
-  
+
   /**
    * Returns a GroupContainer for the object stored at a particular onum.
    */
@@ -723,7 +723,10 @@ public abstract class ObjectDB {
     synchronized (writeLocks) {
       for (Pair<SerializedObject, UpdateType> update : tx.modData) {
         long onum = update.first.getOnum();
-        writeLocks.remove(onum);
+        Long lock = writeLocks.get(onum);
+        if (lock != null && lock == tx.tid) {
+          writeLocks.remove(onum);
+        }
       }
     }
   }

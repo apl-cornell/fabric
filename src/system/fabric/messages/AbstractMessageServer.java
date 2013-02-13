@@ -79,6 +79,11 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                       }
                       logger.log(Level.WARNING,
                           "Network error while handling request", e);
+                    } catch (RuntimeException e) {
+                      logger.log(
+                          Level.SEVERE,
+                          "Message-handler thread exited with exception: "
+                              + e.getMessage(), e);
                     }
                   }
                 });

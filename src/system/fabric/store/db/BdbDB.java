@@ -269,49 +269,58 @@ public class BdbDB extends ObjectDB {
       public void run() {
         STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
 
-        runInBdbTransaction(new Code<Void, RuntimeException>() {
-          @Override
-          public Void run(Transaction txn) throws RuntimeException {
-            // Remove the commit time from BDB.
-            commitTimes.delete(txn, tidBdbKey);
+        PendingTransaction pending =
+            runInBdbTransaction(new Code<PendingTransaction, RuntimeException>() {
+              @Override
+              public PendingTransaction run(Transaction txn)
+                  throws RuntimeException {
+                // Remove the commit time from BDB.
+                commitTimes.delete(txn, tidBdbKey);
 
-            // Obtain the transaction record.
-            PendingTransaction pending = remove(workerPrincipal, txn, tid);
+                // Obtain the transaction record.
+                PendingTransaction pending = remove(workerPrincipal, txn, tid);
 
-            if (pending != null) {
-              FSSerializer<SerializedObject> serializer =
-                  new FSSerializer<SerializedObject>();
-              for (Pair<SerializedObject, UpdateType> update : pending.modData) {
-                SerializedObject o = update.first;
-                long onum = o.getOnum();
-                STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
+                if (pending != null) {
+                  FSSerializer<SerializedObject> serializer =
+                      new FSSerializer<SerializedObject>();
+                  for (Pair<SerializedObject, UpdateType> update : pending.modData) {
+                    SerializedObject o = update.first;
+                    long onum = o.getOnum();
+                    STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
 
-                DatabaseEntry onumData = new DatabaseEntry();
-                LongBinding.longToEntry(onum, onumData);
+                    DatabaseEntry onumData = new DatabaseEntry();
+                    LongBinding.longToEntry(onum, onumData);
 
-                DatabaseEntry objData =
-                    new DatabaseEntry(serializer.toBytes(o));
+                    DatabaseEntry objData =
+                        new DatabaseEntry(serializer.toBytes(o));
 
-                db.put(txn, onumData, objData);
+                    db.put(txn, onumData, objData);
+                  }
 
-                // Remove any cached globs containing the old version of this object.
-                notifyCommittedUpdate(sm, onum);
-
-                // Update caches.
-                cacheVersionNumber(onum, o.getVersion());
-                synchronized (cachedObjects) {
-                  cachedObjects.put(onum, o);
+                  return pending;
+                } else {
+                  STORE_DB_LOGGER.warning("Bdb commit not found tid " + tid);
+                  throw new InternalError("Unknown transaction id " + tid);
                 }
               }
+            });
 
-              STORE_DB_LOGGER.finer("Bdb commit success tid " + tid);
-              return null;
-            } else {
-              STORE_DB_LOGGER.warning("Bdb commit not found tid " + tid);
-              throw new InternalError("Unknown transaction id " + tid);
-            }
+        // Fix up caches.
+        for (Pair<SerializedObject, UpdateType> update : pending.modData) {
+          SerializedObject o = update.first;
+          long onum = o.getOnum();
+
+          // Remove any cached globs containing the old version of this object.
+          notifyCommittedUpdate(sm, onum);
+
+          // Update caches.
+          cacheVersionNumber(onum, o.getVersion());
+          synchronized (cachedObjects) {
+            cachedObjects.put(onum, o);
           }
-        });
+        }
+
+        STORE_DB_LOGGER.finer("Bdb commit success tid " + tid);
       }
     });
   }
@@ -368,10 +377,7 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public int getVersion(long onum) throws AccessException {
-    MutableInteger ver;
-    synchronized (cachedVersions) {
-      ver = cachedVersions.get(onum);
-    }
+    MutableInteger ver = cachedVersions.get(onum);
 
     if (ver == null) return super.getVersion(onum);
 
@@ -635,18 +641,13 @@ public class BdbDB extends ObjectDB {
   }
 
   private void cacheVersionNumber(long onum, int versionNumber) {
-    MutableInteger entry;
-    synchronized (cachedVersions) {
-      entry = cachedVersions.get(onum);
-      if (entry == null) {
-        entry = new MutableInteger(versionNumber);
-        cachedVersions.put(onum, entry);
-        return;
-      }
-    }
+    MutableInteger curEntry =
+        cachedVersions.putIfAbsent(onum, new MutableInteger(versionNumber));
 
-    synchronized (entry) {
-      entry.value = versionNumber;
+    if (curEntry != null) {
+      synchronized (curEntry) {
+        curEntry.value = versionNumber;
+      }
     }
   }
 

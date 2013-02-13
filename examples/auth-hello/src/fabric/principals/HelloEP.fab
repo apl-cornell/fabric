@@ -1,0 +1,35 @@
+package fabric.principals;
+
+import hello.Config;
+import fabric.util.Map;
+
+public class HelloEP extends ExternalPrincipal {
+	public HelloEP() {
+		super("hello");
+	}
+
+
+	public static HelloEP{*!:} getInstance{*!:}() {
+		atomic {
+			FabricWorker cl = FabricWorker.getWorker();
+			if (cl != null) {
+				final Store helloStore = cl.getStore(Config.helloStoreName);
+				if (helloStore != null) {
+					Map rootMap = helloStore.getRoot();
+					if (rootMap != null) {
+						Object obj = rootMap.get(Config.helloPrincipalMapKey);
+						HelloEP helloPrin = null;
+						if (obj instanceof HelloEP){
+							helloPrin = (HelloEP) obj;
+						} else {
+							helloPrin = new HelloEP@helloStore();
+							rootMap.put(Config.helloPrincipalMapKey, helloPrin);
+						}
+						return helloPrin;
+					}
+				}
+			}
+		}
+		return null;
+	}
+}

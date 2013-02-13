@@ -1,0 +1,39 @@
+package auth;
+
+import auth.util.UserComparator;
+import fabricated.util.Comparator;
+
+public class User extends AbstractPrincipal {
+	
+	private final String{this}@{this.store$->} password; // XXX should be a secure hash of it 
+
+	public User(String{this} name, String{this} password) where authority (this) {
+		this.password = password;
+		super(name);        
+	}
+
+	// XXX Can we label this method any which way we want, since it won't
+	// be invoked from Fabric code??
+	// XXX Where will the declassification w.r.t. password happen?
+	public boolean{authPrf; closure; lb; *lb; executeNow; this; this→; this←}
+	isAuthorized{⊥→; this←}(java.lang.Object{this→} authPrf, 
+			fabric.lang.security.Closure[this, lb]{this→} closure,
+			label{this→} lb,
+			boolean{this→} executeNow) where authority (this) 
+	{
+		if (closure instanceof LoginClosure[this] && authPrf instanceof String) {
+			String proof = (String)authPrf;
+
+			if (this.password == proof || (this.password != null && this.password.equals(proof))) {
+				// password supplied agrees with this password!
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static Comparator[lbl]{*lbl} getComparator{*lbl}(label{*lbl} lbl) {
+		return new UserComparator[lbl]();
+	}
+
+}
