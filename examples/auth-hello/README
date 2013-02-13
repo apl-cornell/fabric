@@ -1,0 +1,61 @@
+auth-hello Webapp Example
+==========================
+
+This is a simple web service example, built using Fabric, the Fabric
+port of the Servlets with Information Flow (SIF) library [1], and the 
+library for password authentication.
+
+This directory contains the following sub-directories:
+
+  - src: source code for the example, written in Fabric and FabIL
+  - bin: a collection of scripts for running the example
+  - etc: configuration files for the example's store and worker
+  - web: web server configuration information
+
+
+Using
+-----
+This example comes with a store named "hello" for storing persistent
+data, and a worker named "helloweb" that provides the web-based user
+interface.
+
+  0. Begin in the auth-hello example directory and compile the example:
+
+        $ cd $FABRIC/examples/auth-hello
+        $ ant
+
+  1. Start the "hello" store. The 'start-all' script will start the
+     store in a separate xterm window:
+
+        $ bin/start-all
+
+     You can also use an xterm replacement (e.g., gnome-terminal or
+     konsole):
+
+        $ XTERM=gnome-terminal bin/start-all
+
+     Or, if you prefer, you can start the store separately in your
+     favourite terminal emulator:
+
+        $ bin/start-store hello
+
+  2. Start the web server:
+
+        $ bin/start-webapp
+
+  3. Point your favorite web browser to http://localhost:8080/hello
+
+  4. Exit the store with the "exit" command in its console (you can also
+     use CTRL-D).
+
+     You can clean up the store's persistent state by removing the 'var'
+     directory:
+
+        $ rm -rf var
+
+
+References
+----------
+[1] Stephen Chong, K. Vikram, Andrew C. Myers. SIF: Enforcing
+    Confidentiality and Integrity in Web Applications. Proc. USENIX
+    Security Symposium 2007, pages 1–16, August 2007.

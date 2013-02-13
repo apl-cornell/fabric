@@ -1,0 +1,55 @@
+package hello;
+
+import auth.*;
+import sif.servlet.*;
+import sif.html.*;
+
+import javax.servlet.ServletException;
+
+public class FrontPage extends AuthenticatedAction[HelloEP] {
+
+	public FrontPage (Servlet[HelloEP] m) {
+		super("frontPage", m);
+	}
+
+	public void invokeImpl{*lbl}(label{*lbl} lbl,
+                                      Request[HelloEP]{*lbl} req,
+                                      AuthServlet[HelloEP]{*lbl} servlet,
+                                      AuthSessState{*lbl} state,
+                                      principal{*lbl} currentUser) 
+        throws (ServletException{*lbl;req.session←})
+		where caller(req.session),
+			  lbl <= {⊤→req.session},
+			  req.session equiv state.sessionPrincipal,
+			  req.session actsfor currentUser
+	{
+		if (lbl <= new label {state.store$->}) {
+			if (req == null || servlet == null || state == null || !(servlet instanceof HelloServlet) ||
+					!(state instanceof AuthSessState) || !(currentUser instanceof User)) {
+				throw new ServletException("invalid args");
+			}
+
+			final HelloServlet helloServlet = (HelloServlet) servlet;
+			final AuthSessState helloSessState = (AuthSessState) state;
+			final User cu = (User) currentUser;
+			
+			atomic {
+				String username = "";
+				if (lbl <= new label {cu.store$->}) {
+					username = cu.name();
+				}
+				
+				NodeList content = new NodeList(lbl, lbl, new Paragraph(lbl, lbl, new Text("Username: "+username)));
+				Action[HelloEP] logoff = servlet.findStartAction(req, "logoff");
+				TRow iconBar = TRow.create( new NodeList(new Hyperlink(logoff, new Img("LogoffIcon.gif", "icon"))));
+				TRow textBar = TRow.create( new NodeList(new Text("Logoff")));
+				Table optionBar = new Table("viewOptions", null, new NodeList(iconBar, textBar));
+				content = content==null ? null : content.append(lbl, lbl, new Paragraph(optionBar));
+				servlet.createPage(req, "auth-hello webapp", lbl, lbl, 
+						new NodeList[lbl,lbl](lbl, lbl, createBanner(lbl, "Welcome"), lbl, lbl, createBody(lbl, lbl, content)));
+			}
+		}
+	}
+
+}
+

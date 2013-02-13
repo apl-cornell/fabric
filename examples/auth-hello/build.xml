@@ -1,0 +1,91 @@
+<!--
+  This is the Apache Ant build file for the Fabric auth-hello example
+-->
+
+<project name="auth-hello" default="build-all" basedir=".">
+  <description>
+    Build Fabric port of the SIF auth-hello example
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+  <import file="${fabric.home}/src/lib/sif/common.xml" />
+  <import file="${fabric.home}/src/lib/collections/common.xml" />
+  <import file="${fabric.home}/examples/auth/common.xml" />
+
+  <dirname property="auth-hello.home" file="${ant.file.auth-hello}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${auth-hello.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${auth-hello.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build-all" depends="build-auth-hello" />
+  <target name="all" depends="build-all" />
+
+  <target name="build-auth-hello" depends="sif, auth"
+          description="Builds the SIF auth-hello example">
+    <fabc dest="${auth-hello.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${auth-hello.home}/src" />
+      <arg value="-sourcepath" /> <arg pathref="auth.sourcepath" />
+      <arg value="-cp"         /> <arg pathref="sif.classpath" />
+      <arg value="-cp"         /> <arg pathref="collections.classpath" />
+      <arg value="-cp"         /> <arg pathref="lib.classpath" />
+      <arg value="-cp"         /> <arg value="${auth-hello.home}/classes" />
+      <arg value="-addsigcp"   /> <arg pathref="sif.sigcp"/>
+      <arg value="-trusted-providers"/>
+      <!--
+        <arg value="-rdebug"/>
+        <arg value="-debugpositions"/>
+      <arg value="-rdebug" />
+        <arg value="-report" /> <arg value="frontend=1"/>
+        <arg value="-report" /> <arg value="solver=5" />
+        <arg value="-dump"   /> <arg value="FabricToFabilRewriter"/>
+        <arg value="-dump"   /> <arg value="PrincipalCastAdder"/>
+        <arg value="-report" /> <arg value="visit=2"/>
+        <arg value="-report" /> <arg value="labelEnv=5" />
+        <arg value="-print"  /> <arg value="RemoteCallWrapperUpdater"/>
+        <arg value="-print"  /> <arg value="FieldLabelResolver"/>
+        <arg value="-report" /> <arg value="error=5"/>
+        <arg value="-report" /> <arg value="errors=5"/>
+        <arg value="-report" /> <arg value="debug=5" />
+      -->
+
+      <fileset dir="${auth-hello.home}/src" includes="**/*.fab" />
+    </fabc>
+
+    <filc dest="${auth-hello.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${auth-hello.home}/src" />
+      <arg value="-cp"         /> <arg value="${auth-hello.home}/classes" />
+      <arg value="-cp"         /> <arg pathref="collections.classpath" />
+
+      <fileset dir="${auth-hello.home}/src" includes="**/*.fil" />
+    </filc>
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

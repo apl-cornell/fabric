@@ -1,0 +1,69 @@
+<!--
+  This is the Apache Ant build file for the Fabric authentication example
+-->
+
+<project name="auth" default="build-all" basedir=".">
+  <description>
+    Build SIF auth library
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+  <import file="${fabric.home}/src/lib/sif/common.xml" />
+  <import file="${fabric.home}/src/lib/collections/common.xml" />
+
+  <dirname property="auth.home" file="${ant.file.auth}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${auth.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${auth.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build-all" depends="build-auth" />
+  <target name="all" depends="build-all" />
+
+  <target name="build-auth" depends="sif"
+          description="Builds the SIF auth library">
+    <fabc dest="${auth.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${auth.home}/src" />
+      <arg value="-cp"/> <arg pathref="collections.classpath"/>
+      <arg value="-cp"/> <arg pathref="sif.classpath"/>
+      <arg value="-cp"/> <arg pathref="lib.classpath"/>
+      <arg value="-cp"/> <arg value="${auth.home}/classes"/>
+      <arg value="-addsigcp"/> <arg pathref="sif.sigcp"/>
+      <arg value="-trusted-providers"/>
+      <fileset dir="${auth.home}/src" includes="**/*.fab"/>
+    </fabc>
+
+    <filc dest="${auth.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${auth.home}/src" />
+      <arg value="-cp"/> <arg value="${auth.home}/classes"/>
+      <fileset dir="${auth.home}/src" includes="**/*.fil" />
+    </filc>
+  </target>
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->
