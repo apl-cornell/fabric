@@ -17,7 +17,6 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.MutableInteger;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
@@ -199,16 +198,8 @@ public abstract class ObjectDB {
   protected final LongKeyMap<OidKeyHashMap<PendingTransaction>> pendingByTid;
 
   /**
-   * <p>
-   * Tracks the read/write locks for each onum. Maps each onum to a pair. The
-   * first component of the pair is the tid for the write-lock holder. The
-   * second component is a map from the of tids for the read-lock holders to the
-   * number of workers in the transaction that have read locks on the onum.
-   * </p>
-   * <p>
-   * This should be recomputed from the set of prepared transactions when
-   * restoring from stable storage.
-   * </p>
+   * Maps onums to ObjectLocks. This should be recomputed from the set of
+   * prepared transactions when restoring from stable storage.
    */
   protected final LongKeyMap<ObjectLocks> rwLocks;
 
@@ -264,7 +255,7 @@ public abstract class ObjectDB {
       throws TransactionPrepareFailedException {
     // First, lock the object.
     try {
-      objectLocksFor(onum).lockForRead(tid);
+      objectLocksFor(onum).lockForRead(tid, worker);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts, "Object "
           + onum + " has been locked by an uncommitted transaction.");
@@ -560,29 +551,24 @@ public abstract class ObjectDB {
     synchronized (rwLocks) {
       for (long readOnum : tx.reads) {
         ObjectLocks locks = rwLocks.get(readOnum);
+        if (locks != null) {
+          synchronized (locks) {
+            locks.unlockForRead(tx.tid, tx.owner);
 
-        synchronized (locks) {
-          MutableInteger pinCount = locks.readLocks.get(tx.tid);
-          if (pinCount != null) {
-            pinCount.value--;
-            if (pinCount.value == 0) locks.readLocks.remove(tx.tid);
+            if (!locks.isLocked()) rwLocks.remove(readOnum);
           }
-
-          if (locks.writeLock == null && locks.readLocks.isEmpty())
-            rwLocks.remove(readOnum);
         }
       }
 
       for (SerializedObject update : tx.modData) {
         long onum = update.getOnum();
         ObjectLocks locks = rwLocks.get(onum);
+        if (locks != null) {
+          synchronized (locks) {
+            locks.unlockForWrite(tx.tid);
 
-        synchronized (locks) {
-          if (locks.writeLock != null && locks.writeLock == tx.tid)
-            locks.writeLock = null;
-
-          if (locks.writeLock == null && locks.readLocks.isEmpty())
-            rwLocks.remove(onum);
+            if (!locks.isLocked()) rwLocks.remove(onum);
+          }
         }
       }
     }
