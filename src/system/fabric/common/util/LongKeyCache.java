@@ -23,13 +23,6 @@ public class LongKeyCache<V> {
       this.key = key;
       this.cache = cache;
     }
-
-    @Override
-    public boolean equals(Object obj) {
-      V val = get();
-      if (val == null) return false;
-      return val.equals(obj);
-    }
   }
 
   private static final ReferenceQueue<Object> queue =
@@ -49,6 +42,10 @@ public class LongKeyCache<V> {
 
   public boolean containsKey(long key) {
     return map.containsKey(key);
+  }
+
+  public LongSet keySet() {
+    return map.keySet();
   }
 
   public V get(long key) {
@@ -72,8 +69,8 @@ public class LongKeyCache<V> {
    * If the specified key is not already associated with a value, associate it
    * with the given value. This is equivalent to
    * <code>
-   *   if (!cache.containsKey(key)) return map.put(key, value);
-   *   else return map.get(key);
+   *   if (!cache.containsKey(key)) return cache.put(key, value);
+   *   else return cache.get(key);
    * </code>
    * except that the action is performed atomically.
    * 
@@ -85,6 +82,34 @@ public class LongKeyCache<V> {
         map.putIfAbsent(key, new ValueSoftRef<V>(this, key, value));
     if (ref == null) return null;
     return ref.get();
+  }
+
+  /**
+   * Replaces the entry for a key only if currently mapped to some value. This
+   * is equivalent to
+   * <code>
+   *   if (cache.containsKey(key)) {
+   *     return cache.put(key, value);
+   *   } else return null;
+   * </code>
+   * except that the action is performed atomically.
+   * 
+   * @param key key with which the specified value is associated.
+   * @param value value to be associated with the specified key.
+   * @return the previous value associated with the specified key, or null if
+   *          there was no mapping for the key.
+   */
+  public V replace(long key, V value) {
+    while (true) {
+      ValueSoftRef<V> curRef = map.get(key);
+      V curValue = null;
+      if (curRef != null) curValue = curRef.get();
+      if (curValue == null) return null;
+
+      if (map.replace(key, curRef, new ValueSoftRef<V>(this, key, value))) {
+        return curValue;
+      }
+    }
   }
 
   /**
@@ -119,6 +144,33 @@ public class LongKeyCache<V> {
     ValueSoftRef<V> ref = map.remove(key);
     if (ref == null) return null;
     return ref.get();
+  }
+
+  /**
+   * Removes the entry for a key only if currently mapped to a given value.
+   * This is equivalent to
+   * <code>
+   *   if (cache.containsKey(key) && cache.get(key).equals(value)) {
+   *     cache.remove(key);
+   *     return true;
+   *   } else return false;
+   * </code>
+   * except that the action is performed atomically.
+   * 
+   * @param key key with which the specified value is associated.
+   * @param value value expected to be associated with the specified key.
+   * @return true iff the value was removed.
+   */
+  public boolean remove(long key, V value) {
+    ValueSoftRef<V> curRef = map.get(key);
+    V curValue = curRef == null ? null : curRef.get();
+    if (value == null) {
+      if (curValue != value) return false;
+      return map.remove(key, null);
+    }
+
+    if (value != curValue && !value.equals(curValue)) return false;
+    return map.remove(key, curRef);
   }
 
   private static final class Collector extends Thread {

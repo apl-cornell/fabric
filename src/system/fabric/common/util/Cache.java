@@ -27,13 +27,6 @@ public class Cache<K, V> {
       this.key = key;
       this.cache = cache;
     }
-
-    @Override
-    public boolean equals(Object obj) {
-      V val = get();
-      if (val == null) return false;
-      return val.equals(obj);
-    }
   }
 
   private static final ReferenceQueue<Object> queue =
@@ -53,6 +46,10 @@ public class Cache<K, V> {
 
   public boolean containsKey(K key) {
     return map.containsKey(key);
+  }
+
+  public Set<K> keySet() {
+    return map.keySet();
   }
 
   public V get(K key) {
@@ -88,6 +85,33 @@ public class Cache<K, V> {
   }
 
   /**
+   * Replaces the entry for a key only if currently mapped to some value. This
+   * is equivalent to
+   * <code>
+   *   if (cache.containsKey(key)) {
+   *     return cache.put(key, value);
+   *   } else return null;
+   * </code>
+   * except that the action is performed atomically.
+   * 
+   * @param key key with which the specified value is associated.
+   * @param value value to be associated with the specified key.
+   * @return the previous value associated with the specified key, or null if
+   *          there was no mapping for the key.
+   */
+  public V replace(K key, V value) {
+    while (true) {
+      ValueSoftRef<K, V> curRef = map.get(key);
+      V curValue = null;
+      if (curRef != null) curValue = curRef.get();
+
+      if (map.replace(key, curRef, new ValueSoftRef<K, V>(this, key, value))) {
+        return curValue;
+      }
+    }
+  }
+
+  /**
    * Replaces the entry for a key only if currently mapped to a given value.
    * This is equivalent to
    * <code>
@@ -116,10 +140,37 @@ public class Cache<K, V> {
         .replace(key, curRef, new ValueSoftRef<K, V>(this, key, newValue));
   }
 
-  public V remove(Object key) {
+  public V remove(K key) {
     ValueSoftRef<K, V> ref = map.remove(key);
     if (ref == null) return null;
     return ref.get();
+  }
+
+  /**
+   * Removes the entry for a key only if currently mapped to a given value.
+   * This is equivalent to
+   * <code>
+   *   if (cache.containsKey(key) && cache.get(key).equals(value)) {
+   *     cache.remove(key);
+   *     return true;
+   *   } else return false;
+   * </code>
+   * except that the action is performed atomically.
+   * 
+   * @param key key with which the specified value is associated.
+   * @param value value expected to be associated with the specified key.
+   * @return true iff the value was removed.
+   */
+  public boolean remove(K key, V value) {
+    ValueSoftRef<K, V> curRef = map.get(key);
+    V curValue = curRef == null ? null : curRef.get();
+    if (value == null) {
+      if (curValue != value) return false;
+      return map.remove(key, null);
+    }
+
+    if (value != curValue && !value.equals(curValue)) return false;
+    return map.remove(key, curRef);
   }
 
   /**
@@ -128,7 +179,7 @@ public class Cache<K, V> {
    * cache, they will not be reflected by the set returned. However, no
    * synchronization is needed for working with the set.
    */
-  public synchronized Set<K> keys() {
+  public Set<K> keys() {
     return new HashSet<K>(map.keySet());
   }
 
