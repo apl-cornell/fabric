@@ -18,8 +18,7 @@ import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 
 /**
- * A per-store object cache. This class is thread safe. Lock hierarchy:
- * ObjectCache.entries → EntrySoftRef → Entry
+ * A per-store object cache. This class is thread safe.
  */
 public final class ObjectCache {
   /**
@@ -324,8 +323,8 @@ public final class ObjectCache {
 
       if (entry.next != null) {
         // Snap the link to the overriding entry.
+        entries.replace(onum, entry, entry.next);
         entry = entry.next;
-        entries.put(onum, entry);
       }
     }
 
@@ -335,10 +334,16 @@ public final class ObjectCache {
   void put(Object._Impl impl) {
     long onum = impl.$getOnum();
 
-    Entry existingEntry = entries.get(onum);
-    if (impl.$cacheEntry == existingEntry) return;
-    if (entries.putIfAbsent(onum, new Entry(impl)) != null)
-      throw new InternalError("Conflicting cache entry");
+    while (true) {
+      Entry existingEntry = entries.putIfAbsent(onum, impl.$cacheEntry);
+      if (existingEntry == null) return;
+
+      if (existingEntry.getImpl(false) != impl) {
+        throw new InternalError("Conflicting cache entry");
+      }
+
+      if (entries.replace(onum, existingEntry, impl.$cacheEntry)) return;
+    }
   }
 
   /**
