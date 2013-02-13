@@ -211,8 +211,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
       g = readObjectFromStore(onum);
     }
 
-    cache.put(this, g);
-    return cache.get(onum);
+    return cache.put(this, g, onum);
   }
 
   /**
@@ -342,8 +341,8 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public boolean evict(long onum) {
-    return cache.evict(onum);
+  public void evict(long onum) {
+    cache.evict(onum);
   }
 
   /**

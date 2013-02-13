@@ -28,11 +28,9 @@ public class FabricSoftRef extends SoftReference<_Impl> {
   /**
    * Evicts the _Impl associated with this soft reference from the worker's
    * cache.
-   * 
-   * @return true iff the _Impl was found in cache.
    */
-  public boolean evict() {
-    return store.evict(onum);
+  public void evict() {
+    store.evict(onum);
   }
 
   /**

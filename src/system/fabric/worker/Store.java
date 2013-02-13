@@ -109,10 +109,8 @@ public interface Store extends Serializable {
 
   /**
    * Evicts the object with the given onum from cache.
-   * 
-   * @return true iff the onum was found in cache.
    */
-  public boolean evict(long onum);
+  public void evict(long onum);
 
   /**
    * Adds the given object to the cache.
