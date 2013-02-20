@@ -13,7 +13,6 @@ import polyglot.types.Type;
 import polyglot.util.CodeWriter;
 import polyglot.util.StringUtil;
 import polyglot.visit.PrettyPrinter;
-import polyglot.visit.Translator;
 import polyglot.visit.TypeChecker;
 import codebases.types.CodebaseContext;
 import codebases.types.CodebaseTypeSystem;
@@ -72,7 +71,8 @@ public class CodebaseImportDel_c extends JL_c {
   /** Write the import to an output file. */
   @Override
   public void prettyPrint(CodeWriter w, PrettyPrinter tr) {
-    if (!Options.global.fully_qualified_names && (tr instanceof Translator)) {
+    if (!Options.global.fully_qualified_names
+        && (tr instanceof CodebaseTranslator)) {
       Import im = (Import) node();
       CodebaseTranslator cbtr = (CodebaseTranslator) tr;
       w.write("import ");
@@ -87,6 +87,8 @@ public class CodebaseImportDel_c extends JL_c {
 
       w.write(";");
       w.newline(0);
+    } else {
+      super.prettyPrint(w, tr);
     }
   }
 
