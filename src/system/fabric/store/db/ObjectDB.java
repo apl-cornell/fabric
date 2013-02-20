@@ -14,14 +14,15 @@ import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
-import fabric.store.db.ObjectGrouper.AbstractGroup;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
@@ -195,18 +196,19 @@ public abstract class ObjectDB {
    * Maps tids to principal oids to PendingTransactions.
    * </p>
    */
-  protected final LongKeyMap<OidKeyHashMap<PendingTransaction>> pendingByTid;
+  protected final ConcurrentLongKeyMap<OidKeyHashMap<PendingTransaction>> pendingByTid;
 
   /**
    * Maps onums to ObjectLocks. This should be recomputed from the set of
    * prepared transactions when restoring from stable storage.
    */
-  protected final LongKeyMap<ObjectLocks> rwLocks;
+  protected final ConcurrentLongKeyMap<ObjectLocks> rwLocks;
 
   protected ObjectDB(String name, PrivateKey privateKey) {
     this.name = name;
-    this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
-    this.rwLocks = new LongKeyHashMap<ObjectLocks>();
+    this.pendingByTid =
+        new ConcurrentLongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
+    this.rwLocks = new ConcurrentLongKeyHashMap<ObjectLocks>();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
   }
 
@@ -220,14 +222,12 @@ public abstract class ObjectDB {
    */
   public final void beginTransaction(long tid, Principal worker)
       throws AccessException {
-    OidKeyHashMap<PendingTransaction> submap;
-    synchronized (pendingByTid) {
-      submap = pendingByTid.get(tid);
-      if (submap == null) {
-        submap = new OidKeyHashMap<PendingTransaction>();
-        pendingByTid.put(tid, submap);
-      }
-    }
+    // Ensure pendingByTid has a submap for the given TID.
+    OidKeyHashMap<PendingTransaction> submap =
+        new OidKeyHashMap<PendingTransaction>();
+    OidKeyHashMap<PendingTransaction> existingSubmap =
+        pendingByTid.putIfAbsent(tid, submap);
+    if (existingSubmap != null) submap = existingSubmap;
 
     synchronized (submap) {
       submap.put(worker, new PendingTransaction(tid, worker));
@@ -262,10 +262,7 @@ public abstract class ObjectDB {
     }
 
     // Register that the transaction has locked the object.
-    OidKeyHashMap<PendingTransaction> submap;
-    synchronized (pendingByTid) {
-      submap = pendingByTid.get(tid);
-    }
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
 
     synchronized (submap) {
       submap.get(worker).reads.add(onum);
@@ -315,10 +312,7 @@ public abstract class ObjectDB {
 
     // Record the updated object. Doing so will also register that the
     // transaction has locked the object.
-    OidKeyHashMap<PendingTransaction> submap;
-    synchronized (pendingByTid) {
-      submap = pendingByTid.get(tid);
-    }
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
 
     synchronized (submap) {
       submap.get(worker).modData.add(obj);
@@ -362,23 +356,10 @@ public abstract class ObjectDB {
    * already exist.
    */
   private ObjectLocks objectLocksFor(long onum) {
-    return objectLocksFor(onum, true);
-  }
-
-  /**
-   * @param create
-   *         whether to create an entry if one does not exist.
-   */
-  private ObjectLocks objectLocksFor(long onum, boolean create) {
-    synchronized (rwLocks) {
-      ObjectLocks result = rwLocks.get(onum);
-      if (result == null && create) {
-        result = new ObjectLocks();
-        rwLocks.put(onum, result);
-      }
-
-      return result;
-    }
+    ObjectLocks newLocks = new ObjectLocks();
+    ObjectLocks curLocks = rwLocks.putIfAbsent(onum, newLocks);
+    if (curLocks != null) return curLocks;
+    return newLocks;
   }
 
   /**
@@ -386,13 +367,11 @@ public abstract class ObjectDB {
    * finishPrepare() has yet to be called.)
    */
   public final void abortPrepare(long tid, Principal worker) {
-    synchronized (pendingByTid) {
-      OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
 
-      synchronized (submap) {
-        unpin(submap.remove(worker));
-        if (submap.isEmpty()) pendingByTid.remove(tid);
-      }
+    synchronized (submap) {
+      unpin(submap.remove(worker));
+      if (submap.isEmpty()) pendingByTid.remove(tid, submap);
     }
   }
 
@@ -482,12 +461,12 @@ public abstract class ObjectDB {
    */
   protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum) {
     // Remove from the glob table the glob associated with the onum.
-    AbstractGroup group = objectGrouper.removeGroup(onum);
+    LongSet groupOnums = objectGrouper.removeGroup(onum);
 
     // Notify the subscription manager that the group has been updated.
 //    sm.notifyUpdate(onum, worker);
-    if (group != null) {
-      for (LongIterator onumIt = group.onums().iterator(); onumIt.hasNext();) {
+    if (groupOnums != null) {
+      for (LongIterator onumIt = groupOnums.iterator(); onumIt.hasNext();) {
         long relatedOnum = onumIt.next();
         if (relatedOnum == onum) continue;
 
@@ -506,10 +485,7 @@ public abstract class ObjectDB {
    *          the object number in question
    */
   public final boolean isPrepared(long onum, long tid) {
-    ObjectLocks locks;
-    synchronized (rwLocks) {
-      locks = rwLocks.get(onum);
-    }
+    ObjectLocks locks = rwLocks.get(onum);
 
     if (locks == null) return false;
 
@@ -531,10 +507,7 @@ public abstract class ObjectDB {
    *         been committed or rolled back.
    */
   public final boolean isWritten(long onum) {
-    ObjectLocks locks;
-    synchronized (rwLocks) {
-      locks = rwLocks.get(onum);
-    }
+    ObjectLocks locks = rwLocks.get(onum);
 
     if (locks == null) return false;
 
@@ -548,27 +521,25 @@ public abstract class ObjectDB {
    * to be committed or aborted.
    */
   protected final void unpin(PendingTransaction tx) {
-    synchronized (rwLocks) {
-      for (long readOnum : tx.reads) {
-        ObjectLocks locks = rwLocks.get(readOnum);
-        if (locks != null) {
-          synchronized (locks) {
-            locks.unlockForRead(tx.tid, tx.owner);
+    for (long readOnum : tx.reads) {
+      ObjectLocks locks = rwLocks.get(readOnum);
+      if (locks != null) {
+        synchronized (locks) {
+          locks.unlockForRead(tx.tid, tx.owner);
 
-            if (!locks.isLocked()) rwLocks.remove(readOnum);
-          }
+          if (!locks.isLocked()) rwLocks.remove(readOnum, locks);
         }
       }
+    }
 
-      for (SerializedObject update : tx.modData) {
-        long onum = update.getOnum();
-        ObjectLocks locks = rwLocks.get(onum);
-        if (locks != null) {
-          synchronized (locks) {
-            locks.unlockForWrite(tx.tid);
+    for (SerializedObject update : tx.modData) {
+      long onum = update.getOnum();
+      ObjectLocks locks = rwLocks.get(onum);
+      if (locks != null) {
+        synchronized (locks) {
+          locks.unlockForWrite(tx.tid);
 
-            if (!locks.isLocked()) rwLocks.remove(onum);
-          }
+          if (!locks.isLocked()) rwLocks.remove(onum, locks);
         }
       }
     }

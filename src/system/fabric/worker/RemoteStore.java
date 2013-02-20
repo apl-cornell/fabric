@@ -23,7 +23,8 @@ import fabric.common.exceptions.FabricRuntimeException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.exceptions.RuntimeFetchException;
-import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
@@ -65,7 +66,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * The set of fetch locks. Used to prevent threads from concurrently
    * attempting to fetch the same object.
    */
-  private transient final LongKeyMap<FetchLock> fetchLocks;
+  private transient final ConcurrentLongKeyMap<FetchLock> fetchLocks;
 
   /**
    * The store's public SSL key. Used for verifying signatures on object groups.
@@ -74,8 +75,8 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   private transient PublicKey publicKey;
 
   private class FetchLock {
-    private ObjectCache.Entry object;
-    private AccessException error;
+    private volatile ObjectCache.Entry object;
+    private volatile AccessException error;
   }
 
   /**
@@ -85,7 +86,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     super(name);
 
     this.cache = new ObjectCache(name);
-    this.fetchLocks = new LongKeyHashMap<FetchLock>();
+    this.fetchLocks = new ConcurrentLongKeyHashMap<FetchLock>();
     this.fresh_ids = new LinkedList<Long>();
     this.publicKey = null;
   }
@@ -99,13 +100,15 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public synchronized long createOnum() throws UnreachableNodeException {
-    try {
-      reserve(1);
-    } catch (AccessException e) {
-      throw new FabricRuntimeException(e);
+  public long createOnum() throws UnreachableNodeException {
+    synchronized (fresh_ids) {
+      try {
+        reserve(1);
+      } catch (AccessException e) {
+        throw new FabricRuntimeException(e);
+      }
+      return fresh_ids.poll();
     }
-    return fresh_ids.poll();
   }
 
   /**
@@ -136,42 +139,41 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
 
   private final ObjectCache.Entry readObject(boolean useDissem, long onum)
       throws AccessException {
-    // Check object table in case some other thread fetched the object while we
-    // weren't looking. Use fetchLocks as a mutex to atomically check the cache
-    // and create a mutex for the object fetch in the event of a cache miss.
-    FetchLock fetchLock;
-    boolean needToFetch = false;
-    synchronized (fetchLocks) {
-      ObjectCache.Entry result = readFromCache(onum);
-      if (result != null) return result;
-
-      // Object not found in cache. Get/create a mutex for fetching the object.
-      fetchLock = fetchLocks.get(onum);
-      if (fetchLock == null) {
-        needToFetch = true;
-        fetchLock = new FetchLock();
-        fetchLocks.put(onum, fetchLock);
-      }
+    // Get/create a mutex for fetching the object.
+    FetchLock fetchLock = new FetchLock();
+    FetchLock existingFetchLock = fetchLocks.putIfAbsent(onum, fetchLock);
+    boolean needToFetch = true;
+    if (existingFetchLock != null) {
+      fetchLock = existingFetchLock;
+      needToFetch = false;
     }
 
-    synchronized (fetchLock) {
-      if (needToFetch) {
-        // We are responsible for fetching the object.
+    if (needToFetch) {
+      // We are responsible for fetching the object.
+
+      // Check object table in case some other thread had just finished
+      // fetching the object while we weren't looking.
+      fetchLock.object = readFromCache(onum);
+
+      if (fetchLock.object == null) {
+        // Really need to fetch.
         try {
           fetchLock.object = fetchObject(useDissem, onum);
         } catch (AccessException e) {
           fetchLock.error = e;
         }
+      }
 
-        // Object now cached. Remove our mutex from fetchLocks.
-        synchronized (fetchLocks) {
-          fetchLocks.remove(onum);
-        }
+      // Object now cached. Remove our mutex from fetchLocks.
+      fetchLocks.remove(onum, fetchLock);
 
-        // Signal any other threads that might be waiting for our fetch.
+      // Signal any other threads that might be waiting for our fetch.
+      synchronized (fetchLock) {
         fetchLock.notifyAll();
-      } else {
-        // Wait for another thread to fetch the object for us.
+      }
+    } else {
+      // Wait for another thread to fetch the object for us.
+      synchronized (fetchLock) {
         while (fetchLock.object == null && fetchLock.error == null) {
           try {
             fetchLock.wait();
@@ -180,10 +182,10 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
           }
         }
       }
-
-      if (fetchLock.error != null) throw fetchLock.error;
-      return fetchLock.object;
     }
+
+    if (fetchLock.error != null) throw fetchLock.error;
+    return fetchLock.object;
   }
 
   @Override
@@ -270,14 +272,16 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    */
   protected void reserve(int num) throws AccessException,
       UnreachableNodeException {
-    while (fresh_ids.size() < num) {
-      // log.info("Requesting new onums, storeid=" + storeID);
-      if (num < 512) num = 512;
-      AllocateMessage.Response response =
-          send(Worker.getWorker().authToStore, new AllocateMessage(num));
+    synchronized (fresh_ids) {
+      while (fresh_ids.size() < num) {
+        // log.info("Requesting new onums, storeid=" + storeID);
+        if (num < 512) num = 512;
+        AllocateMessage.Response response =
+            send(Worker.getWorker().authToStore, new AllocateMessage(num));
 
-      for (long oid : response.oids)
-        fresh_ids.add(oid);
+        for (long oid : response.oids)
+          fresh_ids.add(oid);
+      }
     }
   }
 
