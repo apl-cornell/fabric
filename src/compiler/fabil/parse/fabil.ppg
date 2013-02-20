@@ -57,6 +57,7 @@ parser Grm extends polyglot.parse.Grm {:
 terminal Token AT;
 terminal Token ATOMIC;
 terminal Token ABORT;
+terminal Token MEMOIZED;
 terminal Token RETRY;
 terminal Token NONFABRIC;
 
@@ -122,6 +123,8 @@ retry_stmt ::=
 extend modifier ::=
         ATOMIC:a
             {: RESULT = FabILFlags.ATOMIC; :}
+    |   MEMOIZED:a
+    		{: RESULT = FabILFlags.MEMOIZED; :}
     |   NONFABRIC:a
     		{: RESULT = FabILFlags.NONFABRIC; :}
     ;

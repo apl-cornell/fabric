@@ -9,6 +9,7 @@ import polyglot.types.SemanticException;
 import fabil.visit.AtomicRewriter;
 import fabil.visit.LabelAssigner;
 import fabil.visit.LocationAssigner;
+import fabil.visit.MemoizedMethodRewriter;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.StaticInitializerCollector;
@@ -52,6 +53,12 @@ public interface FabILExt extends Ext {
    * <code>atomic</code> statements.
    */
   public Node rewriteAtomic(AtomicRewriter ar);
+
+  /**
+   * Used by <code>MemoizedMethodRewriter</code> to rewrite the AST to eliminate
+   * <code>memoized</code> flags from methods.
+   */
+  public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr);
 
   /**
    * Used by <code>ThreadRewriter</code> to hook Threads into the worker's

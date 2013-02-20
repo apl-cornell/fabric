@@ -11,6 +11,7 @@ import polyglot.ast.Node;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
+import fabil.visit.MemoizedMethodRewriter;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ThreadRewriter;
 
@@ -53,6 +54,12 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     // type, not on the methods declared. This handles the case where interfaces
     // and abstract classes don't explicitly declare all of their methods.
     return Collections.emptyList();
+  }
+
+  @Override
+  public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr) {
+    // XXX: Place Holder
+    return node();
   }
 
   @Override
