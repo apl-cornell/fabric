@@ -180,14 +180,11 @@ public class MemoryDB extends ObjectDB {
    */
   private PendingTransaction remove(Principal worker, long tid)
       throws AccessException {
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     PendingTransaction tx;
-    synchronized (pendingByTid) {
-      OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-
-      synchronized (submap) {
-        tx = submap.remove(worker);
-        if (submap.isEmpty()) pendingByTid.remove(tid);
-      }
+    synchronized (submap) {
+      tx = submap.remove(worker);
+      if (submap.isEmpty()) pendingByTid.remove(tid, submap);
     }
 
     if (tx == null)
