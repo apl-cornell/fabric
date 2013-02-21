@@ -26,7 +26,7 @@ import fabil.frontend.FabILScheduler;
  */
 public class OutputExtensionInfo extends fabil.ExtensionInfo {
 
-  protected fabric.ExtensionInfo fabext;
+  protected ExtensionInfo parent;
 
   @Override
   public Scheduler createScheduler() {
@@ -37,7 +37,7 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
   //  protected Options createOptions() {
   //    // we share the options with fabric, which in turn delegates to a
   //    // FabILOptions object for the fabil options handling.
-  //    return fabext.getOptions();
+  //    return parent.getOptions();
   //  }
 
   static protected class FabILOutputOptions extends FabILOptions {
@@ -57,11 +57,15 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
 
   @Override
   protected Options createOptions() {
-    FabricOptions parentOpts = fabext.getOptions();
+    Options parentOpts = parent.getOptions();
     FabILOutputOptions opt = new FabILOutputOptions(this);
     // filter the parent's options by the ones this extension understands
     try {
-      List<Arg<?>> arguments = parentOpts.fabilArgs(opt.flags());
+      List<Arg<?>> arguments;
+      if (parentOpts instanceof FabricOptions)
+        arguments = ((FabricOptions) parentOpts).fabilArgs(opt.flags());
+      else arguments = parentOpts.filterArgs(opt.flags());
+
       opt.processArguments(arguments, Collections.<String> emptySet());
     } catch (UsageError e) {
       throw new InternalCompilerError(
@@ -70,8 +74,8 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
     return opt;
   }
 
-  public OutputExtensionInfo(fabric.ExtensionInfo fabext) {
-    this.fabext = fabext;
+  public OutputExtensionInfo(ExtensionInfo fabext) {
+    this.parent = fabext;
   }
 
   protected static class OutputScheduler extends FabILScheduler {
@@ -139,7 +143,7 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
   //  // path during the FabIL compilation phase
   //  @Override
   //  public List<FabricLocation> filsignaturepath() {
-  //    return fabext.filsignaturepath();
+  //    return parent.filsignaturepath();
   //  }
 
 }

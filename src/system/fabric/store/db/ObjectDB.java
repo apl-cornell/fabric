@@ -15,9 +15,10 @@ import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
@@ -26,7 +27,6 @@ import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
 import fabric.store.TransactionManager;
-import fabric.store.db.ObjectGrouper.AbstractGroup;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
@@ -196,7 +196,7 @@ public abstract class ObjectDB {
    * Maps tids to principal oids to PendingTransactions.
    * </p>
    */
-  protected final LongKeyMap<OidKeyHashMap<PendingTransaction>> pendingByTid;
+  protected final ConcurrentLongKeyMap<OidKeyHashMap<PendingTransaction>> pendingByTid;
 
   /**
    * <p>
@@ -224,7 +224,7 @@ public abstract class ObjectDB {
    * restoring from stable storage.
    * </p>
    */
-  protected final LongKeyMap<Long> writeLocks;
+  protected final ConcurrentLongKeyMap<Long> writeLocks;
 
   /**
    * <p>
@@ -239,13 +239,15 @@ public abstract class ObjectDB {
    * restoring from stable storage.
    * </p>
    */
-  protected final LongKeyMap<OidKeyHashMap<LongSet>> writtenOnumsByTid;
+  protected final ConcurrentLongKeyMap<OidKeyHashMap<LongSet>> writtenOnumsByTid;
 
   protected ObjectDB(String name, PrivateKey privateKey) {
     this.name = name;
-    this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
-    this.writeLocks = new LongKeyHashMap<Long>();
-    this.writtenOnumsByTid = new LongKeyHashMap<OidKeyHashMap<LongSet>>();
+    this.pendingByTid =
+        new ConcurrentLongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
+    this.writeLocks = new ConcurrentLongKeyHashMap<Long>();
+    this.writtenOnumsByTid =
+        new ConcurrentLongKeyHashMap<OidKeyHashMap<LongSet>>();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
     this.versionWarrantyTable = new VersionWarrantyTable();
@@ -259,14 +261,12 @@ public abstract class ObjectDB {
    *          the worker under whose authority the transaction is running.
    */
   public final void beginPrepareWrites(long tid, Principal worker) {
-    OidKeyHashMap<PendingTransaction> submap;
-    synchronized (pendingByTid) {
-      submap = pendingByTid.get(tid);
-      if (submap == null) {
-        submap = new OidKeyHashMap<PendingTransaction>();
-        pendingByTid.put(tid, submap);
-      }
-    }
+    // Ensure pendingByTid has a submap for the given TID.
+    OidKeyHashMap<PendingTransaction> submap =
+        new OidKeyHashMap<PendingTransaction>();
+    OidKeyHashMap<PendingTransaction> existingSubmap =
+        pendingByTid.putIfAbsent(tid, submap);
+    if (existingSubmap != null) submap = existingSubmap;
 
     synchronized (submap) {
       submap.put(worker, new PendingTransaction(tid, worker));
@@ -327,10 +327,7 @@ public abstract class ObjectDB {
 
     // Record the updated object. Doing so will also register that the
     // transaction has updated the object.
-    OidKeyHashMap<PendingTransaction> submap;
-    synchronized (pendingByTid) {
-      submap = pendingByTid.get(tid);
-    }
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
 
     synchronized (submap) {
       submap.get(worker).modData.add(new Pair<SerializedObject, UpdateType>(
@@ -383,15 +380,12 @@ public abstract class ObjectDB {
   }
 
   protected void addWrittenOnumByTid(long tid, Principal worker, long onum) {
-    OidKeyHashMap<LongSet> submap;
-    synchronized (writtenOnumsByTid) {
-      submap = writtenOnumsByTid.get(tid);
-
-      if (submap == null) {
-        submap = new OidKeyHashMap<LongSet>();
-        writtenOnumsByTid.put(tid, submap);
-      }
-    }
+    // Get the submap corresponding to the given TID, creating the submap if
+    // necessary.
+    OidKeyHashMap<LongSet> submap = new OidKeyHashMap<LongSet>();
+    OidKeyHashMap<LongSet> existingSubmap =
+        writtenOnumsByTid.putIfAbsent(tid, submap);
+    if (existingSubmap != null) submap = existingSubmap;
 
     LongSet set;
     synchronized (submap) {
@@ -408,17 +402,15 @@ public abstract class ObjectDB {
   }
 
   private LongSet removeWrittenOnumsByTid(long tid, Principal worker) {
-    OidKeyHashMap<LongSet> writtenOnumsSubmap;
-    synchronized (writtenOnumsByTid) {
-      writtenOnumsSubmap = writtenOnumsByTid.get(tid);
-    }
-
+    OidKeyHashMap<LongSet> writtenOnumsSubmap = writtenOnumsByTid.get(tid);
     if (writtenOnumsSubmap == null) return null;
 
     LongSet result;
     synchronized (writtenOnumsSubmap) {
       result = writtenOnumsSubmap.remove(worker);
-      if (writtenOnumsSubmap.isEmpty()) writtenOnumsByTid.remove(tid);
+      if (writtenOnumsSubmap.isEmpty()) {
+        writtenOnumsByTid.remove(tid, writtenOnumsSubmap);
+      }
     }
 
     return result;
@@ -431,9 +423,8 @@ public abstract class ObjectDB {
    *          when a conflicting lock is held.
    */
   private void lockForWrite(long onum, long tid) throws UnableToLockException {
-    synchronized (writeLocks) {
-      if (writeLocks.get(onum) != null) throw new UnableToLockException();
-      writeLocks.put(onum, tid);
+    if (writeLocks.putIfAbsent(onum, tid) != null) {
+      throw new UnableToLockException();
     }
   }
 
@@ -442,13 +433,11 @@ public abstract class ObjectDB {
    * finishPrepareWrites() has yet to be called.)
    */
   public final void abortPrepareWrites(long tid, Principal worker) {
-    synchronized (pendingByTid) {
-      OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
 
-      synchronized (submap) {
-        unpin(submap.remove(worker));
-        if (submap.isEmpty()) pendingByTid.remove(tid);
-      }
+    synchronized (submap) {
+      unpin(submap.remove(worker));
+      if (submap.isEmpty()) pendingByTid.remove(tid, submap);
     }
 
     removeWrittenOnumsByTid(tid, worker);
@@ -685,12 +674,12 @@ public abstract class ObjectDB {
    */
   protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum) {
     // Remove from the glob table the glob associated with the onum.
-    AbstractGroup group = objectGrouper.removeGroup(onum);
+    LongSet groupOnums = objectGrouper.removeGroup(onum);
 
     // Notify the subscription manager that the group has been updated.
 //    sm.notifyUpdate(onum, worker);
-    if (group != null) {
-      for (LongIterator onumIt = group.onums().iterator(); onumIt.hasNext();) {
+    if (groupOnums != null) {
+      for (LongIterator onumIt = groupOnums.iterator(); onumIt.hasNext();) {
         long relatedOnum = onumIt.next();
         if (relatedOnum == onum) continue;
 
@@ -710,9 +699,7 @@ public abstract class ObjectDB {
    *         been committed or rolled back.
    */
   public final boolean isWritten(long onum) {
-    synchronized (writeLocks) {
-      return writeLocks.get(onum) != null;
-    }
+    return writeLocks.get(onum) != null;
   }
 
   /**
@@ -720,14 +707,9 @@ public abstract class ObjectDB {
    * about to be committed or aborted.
    */
   protected final void unpin(PendingTransaction tx) {
-    synchronized (writeLocks) {
-      for (Pair<SerializedObject, UpdateType> update : tx.modData) {
-        long onum = update.first.getOnum();
-        Long lock = writeLocks.get(onum);
-        if (lock != null && lock == tx.tid) {
-          writeLocks.remove(onum);
-        }
-      }
+    for (Pair<SerializedObject, UpdateType> update : tx.modData) {
+      long onum = update.first.getOnum();
+      writeLocks.remove(onum, tx.tid);
     }
   }
 
