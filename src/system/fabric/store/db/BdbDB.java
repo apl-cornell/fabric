@@ -153,13 +153,11 @@ public class BdbDB extends ObjectDB {
   @Override
   public void finishPrepare(final long tid, final Principal worker) {
     // Copy the transaction data into BDB.
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     final PendingTransaction pending;
-    synchronized (pendingByTid) {
-      OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-      synchronized (submap) {
-        pending = submap.remove(worker);
-        if (submap.isEmpty()) pendingByTid.remove(tid);
-      }
+    synchronized (submap) {
+      pending = submap.remove(worker);
+      if (submap.isEmpty()) pendingByTid.remove(tid, submap);
     }
 
     final DatabaseEntry key = new DatabaseEntry(toBytes(tid, worker));
