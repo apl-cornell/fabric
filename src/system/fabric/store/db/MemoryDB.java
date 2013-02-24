@@ -115,8 +115,6 @@ public class MemoryDB extends ObjectDB {
 
   @Override
   public boolean exists(long onum) {
-    if (rwLocks.get(onum) != null) return true;
-
     synchronized (objectTable) {
       return objectTable.containsKey(onum);
     }
