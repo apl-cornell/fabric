@@ -54,8 +54,5 @@
   <target name="all" depends="build-all" />
 </project>
 <!--
-     /bin/jpa2fab -sourcepath ../../../jpacms/src ../../../jpacms/src/cms/model/*.java -classpath ../../../jpacms/lib/commons-fileupload-1.2.1.jar:../../../jpacms/lib/ostermillerutils_1_05_00_for_java_1_4.jar:../../../jpacms/lib/commons-io-1.4.jar  --output-fabil  -d test-classes/
--->
-<!--
 vim: ts=2 sw=2 ai et
 -->
