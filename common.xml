@@ -76,6 +76,9 @@
   <!-- fabc-in-worker executable -->
   <property name="fabc-in-worker" location="${bin}/fabc-in-worker" />
 
+  <!-- jpa2fab executable -->
+  <property name="jpa2fab" location="${fabric.home}/tools/jpa2fab/bin/jpa2fab" />
+
   <!-- filc executable -->
   <property name="filc" location="${bin}/filc" />
 
@@ -229,6 +232,29 @@
       </filc>
     </sequential>
   </macrodef>
+
+  <macrodef name="jpa2fab">
+    <attribute name="destdir" default="classes"/>
+    <element name="extra-args" implicit="true"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dest="@{destdir}"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${jpa2fab}"/>
+        <arg line="${debug.flag}"/>
+        <arg value="-d"/> <arg value="@{destdir}"/>
+        <arg value="-output-fabil"/>
+        <extra-args/>
+        <srcfile/>
+        <globmapper from="*.java" to="*.fil"/>
+      </apply>
+    </sequential>
+  </macrodef>
+
 </project>
 
 

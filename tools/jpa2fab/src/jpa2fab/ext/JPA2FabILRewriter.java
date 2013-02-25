@@ -1,5 +1,8 @@
 package jpa2fab.ext;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import polyglot.ast.Expr;
 import polyglot.ast.FieldDecl;
 import polyglot.ast.TypeNode;
@@ -14,6 +17,7 @@ import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
+import polyglot.util.StringUtil;
 import fabil.types.FabILTypeSystem;
 
 public class JPA2FabILRewriter extends JL5ToJLRewriter {
@@ -30,8 +34,7 @@ public class JPA2FabILRewriter extends JL5ToJLRewriter {
 
   @Override
   public TypeNode typeToJava(Type t, Position pos) throws SemanticException {
-    if (t.isClass() && t.toClass().package_() != null
-        && t.toClass().package_().fullName().equals("java.util")) {
+    if (isCollection(t)) {
       t = jl5ts.erasureType(t);
       if (t instanceof LubType) t = ((LubType) t).calculateLub();
 
@@ -43,7 +46,12 @@ public class JPA2FabILRewriter extends JL5ToJLRewriter {
   }
 
   public String fabricUtilNameFor(ClassType ct) {
-    return "fabric.util." + ct.toClass().name();
+    String cls = ct.name();
+    while (ct.outer() != null) {
+      cls = ct.outer().name() + "." + cls;
+      ct = ct.outer();
+    }
+    return "fabric.util." + cls;
   }
 
   public boolean inConstructor() {
@@ -101,9 +109,55 @@ public class JPA2FabILRewriter extends JL5ToJLRewriter {
     return isEntity(ct) || isMappedSuperclass(ct);
   }
 
-  public boolean isCollection(ClassType ct) {
+  private static Set<String> convert = new HashSet<String>();
+  static {
+    convert.add("AbstractCollection");
+    convert.add("AbstractList");
+    convert.add("AbstractMap");
+    convert.add("AbstractSequentialList");
+    convert.add("AbstractSet");
+    convert.add("ArrayList");
+    convert.add("Arrays");
+    convert.add("Collection");
+    convert.add("Collections");
+    convert.add("Comparator");
+    convert.add("ConcurrentModificationException");
+    convert.add("Enumeration");
+    convert.add("HashMap");
+    convert.add("HashSet");
+    convert.add("Iterable");
+    convert.add("Iterator");
+    convert.add("LinkedHashMap");
+    convert.add("LinkedHashSet");
+    convert.add("LinkedList");
+    convert.add("List");
+    convert.add("ListIterator");
+    convert.add("Map");
+    convert.add("NoSuchElementException");
+    convert.add("Random");
+    convert.add("RandomAccess");
+    convert.add("Set");
+    convert.add("SortedMap");
+    convert.add("SortedSet");
+    convert.add("TreeMap");
+    convert.add("TreeSet");
+
+    //
+    convert.add("Entry");
+
+  }
+
+  public boolean isCollection(Type t) {
+    if (!t.isClass()) return false;
+    ClassType ct = t.toClass();
     return ct.package_() != null
-        && ct.package_().fullName().equals("java.util");
+        && ct.package_().fullName().equals("java.util")
+        && convert.contains(ct.name());
+  }
+
+  public boolean isCollection(String className) {
+    return className.startsWith("java.util")
+        && convert.contains(StringUtil.getShortNameComponent(className));
   }
 
   public Expr createLocationExpr() {
