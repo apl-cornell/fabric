@@ -8,9 +8,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import polyglot.frontend.Source;
 import polyglot.main.Report;
+import polyglot.types.ClassType;
 import polyglot.types.ImportTable;
 import polyglot.types.Importable;
 import polyglot.types.Named;
@@ -234,17 +236,24 @@ public class CBImportTable extends ImportTable {
         if (Report.should_report(TOPICS, 2))
           Report.report(2, this + ": import " + longName);
 
-        Importable t = ts.namespaceResolver(import_ns).find(longName);
+        try {
+          Importable t = ts.namespaceResolver(import_ns).find(longName);
 
-        String shortName = StringUtil.getShortNameComponent(longName);
-        if (!import_ns.equals(ns)) {
-          fromExternal.put(shortName, first);
-          jobExt.addExternalDependency((CodebaseClassType) t, first);
-        } else {
-          jobExt.addDependency((CodebaseClassType) t);
+          String shortName = StringUtil.getShortNameComponent(longName);
+          if (!import_ns.equals(ns)) {
+            fromExternal.put(shortName, first);
+            jobExt.addExternalDependency((CodebaseClassType) t, first);
+          } else {
+            jobExt.addDependency((CodebaseClassType) t);
+          }
+
+          addLookup(shortName, t);
+        } catch (NoClassException e) {
+          // didn't find it
         }
+        // The class may be a static member class of another, 
+        lazyImportLongNameStaticMember(import_ns, first, longName);
 
-        addLookup(shortName, t);
       } catch (SemanticException e) {
         if (e.position() == null) {
           Position p = lazyImportPositions.get(i);
@@ -257,6 +266,102 @@ public class CBImportTable extends ImportTable {
 
     lazyImports = new ArrayList<String>();
     lazyImportPositions = new ArrayList<Position>();
+  }
+
+  /**
+   * The class longName may be a static nested class. Try to import it.
+   * @param longName
+   * @throws SemanticException
+   */
+  protected void lazyImportLongNameStaticMember(URI import_ns, String alias,
+      String longName) throws SemanticException {
+    // Try to find the shortest prefix of longName that is a class
+
+    StringTokenizer st = new StringTokenizer(longName, ".");
+    StringBuffer name = new StringBuffer();
+
+    Named t = null;
+    while (st.hasMoreTokens()) {
+      String s = st.nextToken();
+      if (name.length() > 0) {
+        name.append(".");
+      }
+      name.append(s);
+
+      try {
+        t = ts.namespaceResolver(import_ns).find(name.toString());
+      } catch (NoClassException e) {
+        if (!st.hasMoreTokens()) {
+          // no more types to try to find.
+          throw e;
+        }
+      }
+      if (t != null) {
+        // we found a type t!
+        if (!st.hasMoreTokens()) {
+          // this is the one we were looking for!
+          break;
+        }
+
+        // We now have a type t, and we need to navigate to the appropriate nested class
+        while (st.hasMoreTokens()) {
+          String n = st.nextToken();
+
+          if (t instanceof ClassType) {
+            // If we find a class that is further qualfied,
+            // search for member classes of that class.
+            ClassType ct = (ClassType) t;
+            t = ct.resolver().find(n);
+            if (t instanceof ClassType) {
+              // map.put(n, t); SC: no need to make n to the type.
+            } else {
+              // In JL, the result must be a class.
+              throw new NoClassException(n, ct);
+            }
+          } else if (t instanceof Package) {
+            Package p = (Package) t;
+            t = p.resolver().find(n);
+            if (t instanceof ClassType) {
+              // map.put(n, p); SC: no need to map n to the type
+            }
+          } else {
+            // t, whatever it is, is further qualified, but 
+            // should be, at least in Java, a ClassType.
+            throw new InternalCompilerError("Qualified type \"" + t
+                + "\" is not a class type.", sourcePos);
+          }
+
+        }
+      }
+    }
+
+    if (t == null) {
+      // couldn't find it, so throw an exception by executing the find again.
+      t = ts.namespaceResolver(import_ns).find(name.toString());
+    }
+
+    // at this point, we found it, and it is in t!
+    String shortName = StringUtil.getShortNameComponent(longName);
+
+    if (Report.should_report(TOPICS, 2))
+      Report.report(2, this + ": import " + shortName + " as " + t);
+
+    if (map.containsKey(shortName)) {
+      Named s = map.get(shortName);
+
+      if (!ts.equals(s, t)) {
+        throw new SemanticException("Class " + shortName
+            + " already defined as " + map.get(shortName), sourcePos);
+      }
+    }
+
+    if (!import_ns.equals(ns)) {
+      fromExternal.put(shortName, alias);
+      jobExt.addExternalDependency((CodebaseClassType) t, alias);
+    } else {
+      jobExt.addDependency((CodebaseClassType) t);
+    }
+    addLookup(shortName, t);
   }
 
   protected static final Collection<String> TOPICS = CollectionUtil.list(

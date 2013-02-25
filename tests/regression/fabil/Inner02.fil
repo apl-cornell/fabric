@@ -1,0 +1,7 @@
+package fabil;
+
+public interface Inner02 {
+  void m(final int x);
+  interface Inner02_I {}
+}
+
