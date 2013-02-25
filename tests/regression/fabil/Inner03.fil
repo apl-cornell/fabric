@@ -1,0 +1,9 @@
+package fabil;
+import fabil.Inner02.Inner02_I;
+public class Inner03 {
+  void m(Inner02_I i) {
+    Inner02_I j = new Inner02_I() { };
+
+  }
+}
+

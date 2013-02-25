@@ -40,8 +40,9 @@ public class ClassDeclToFabIL_c extends ClassDeclToExt_c implements Ext {
     JPA2FabILRewriter j2f = (JPA2FabILRewriter) rw;
     ClassDecl cd = (ClassDecl) node();
     TypeNode superClass = cd.superClass();
-    if (!j2f.isPersistent(cd.type())) {
-      // not a persistent type. extend java.lang.Object explicitly.      
+    if (!superClass.type().equals(rw.from_ts().Object())
+        && !j2f.isPersistent(cd.type()) && !cd.type().flags().isInterface()) {
+      // not a persistent type. extend java.lang.Object explicitly.            
       superClass =
           rw.to_nf().CanonicalTypeNode(cd.position(), rw.to_ts().Object());
     }
