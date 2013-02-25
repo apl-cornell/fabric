@@ -80,7 +80,7 @@ public class JPA2FabILRewriter extends JL5ToJLRewriter {
 
   public boolean isEntity(ClassType ct) throws SemanticException {
     JL5ClassType jl5ct = (JL5ClassType) ct;
-    return jl5ct.retainedAnnotations().hasAnnotationType(Entity());
+    return jl5ct.annotations().hasAnnotationType(Entity());
   }
 
   public void checkInheritence(JL5ParsedClassType type)
@@ -97,12 +97,12 @@ public class JPA2FabILRewriter extends JL5ToJLRewriter {
               + sup.fullName()
               + "(isPersistent: "
               + isPersistent(sup)
-              + ")" + sup.retainedAnnotations());
+              + ")" + sup.annotations());
   }
 
   public boolean isMappedSuperclass(ClassType ct) throws SemanticException {
     JL5ClassType jl5ct = (JL5ClassType) ct;
-    return jl5ct.retainedAnnotations().hasAnnotationType(MappedSuperclass());
+    return jl5ct.annotations().hasAnnotationType(MappedSuperclass());
   }
 
   public boolean isPersistent(ClassType ct) throws SemanticException {
