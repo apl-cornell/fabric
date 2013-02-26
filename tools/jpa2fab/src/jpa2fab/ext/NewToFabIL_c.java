@@ -42,6 +42,12 @@ public class NewToFabIL_c extends NewToExt_c {
       String name =
           j2f.isCollection(jl5Type) ? j2f.fabricUtilNameFor(jl5Type) : jl5Type
               .fullName();
+      if (jl5Type.flags().isInterface()) {
+        // creating an anonymous class from an interface.
+        // use fabric.lang.Object's method
+        name = "fabric.lang.Object";
+        //XXX: also need a cast here!
+      }
       return rw.qq().parseExpr("%E.%s(%LE)", defCtor,
           name.replace(".", "$") + "$", n.arguments());
     } else {
