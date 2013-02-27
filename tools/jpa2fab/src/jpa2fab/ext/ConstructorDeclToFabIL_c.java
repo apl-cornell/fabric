@@ -49,6 +49,8 @@ public class ConstructorDeclToFabIL_c extends JL5ConstructorDeclToJL_c
     if (!j2f.isPersistent(ct)) return super.toExt(rw);
 
     Block body = n.body();
+    boolean returnThis = body.reachable();
+
     List<Stmt> inits = new ArrayList<Stmt>(3);
 
     if (body.statements().isEmpty()
@@ -86,9 +88,8 @@ public class ConstructorDeclToFabIL_c extends JL5ConstructorDeclToJL_c
 
       inits.add(body);
     }
-
     // Add an explicit return to the body.
-    inits.add(nf.Return(n.position(), nf.This(n.position())));
+    if (returnThis) inits.add(nf.Return(n.position(), nf.This(n.position())));
 
     body = nf.Block(n.position(), inits);
 

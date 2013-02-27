@@ -34,7 +34,8 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     FabILTypeSystem ts = la.typeSystem();
     QQ qq = la.qq();
 
-    if (!ts.isFabricReference(expr.type())) return expr;
+    if (!ts.isFabricReference(expr.type()) || ts.isJavaInlineable(expr.type()))
+      return expr;
 
     // Need a location. By default, we colocate with the context.
     Context context = la.context();

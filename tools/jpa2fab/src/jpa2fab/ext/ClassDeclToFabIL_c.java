@@ -1,6 +1,8 @@
 package jpa2fab.ext;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
@@ -46,8 +48,12 @@ public class ClassDeclToFabIL_c extends ClassDeclToExt_c implements Ext {
       superClass =
           rw.to_nf().CanonicalTypeNode(cd.position(), rw.to_ts().Object());
     }
-    ClassBody body = cd.body().addMember(produceDefaultConstructor(rw));
-    body = cd.body().addMember(j2f.createStoreFieldDecl());
+    ClassBody body = cd.body();
+    List<ClassMember> members = new ArrayList<ClassMember>();
+    members.add(j2f.createStoreFieldDecl());
+    members.add(produceDefaultConstructor(rw));
+    members.addAll(body.members());
+    body = body.members(members);
 
     return rw.to_nf().ClassDecl(cd.position(), cd.flags(), cd.id(), superClass,
         cd.interfaces(), body);
