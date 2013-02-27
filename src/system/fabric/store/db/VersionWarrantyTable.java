@@ -125,7 +125,7 @@ public class VersionWarrantyTable {
         for (int timeWaited = 0; timeWaited < waitTime; timeWaited +=
             MIN_WAIT_TIME) {
           try {
-            VersionWarrantyTable.this.wait(MIN_WAIT_TIME);
+            Thread.sleep(MIN_WAIT_TIME);
           } catch (InterruptedException e) {
           }
 
