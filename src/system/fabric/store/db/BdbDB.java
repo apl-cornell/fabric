@@ -313,9 +313,7 @@ public class BdbDB extends ObjectDB {
 
           // Update caches.
           cacheVersionNumber(onum, o.getVersion());
-          synchronized (cachedObjects) {
-            cachedObjects.put(onum, o);
-          }
+          cachedObjects.put(onum, o);
         }
 
         STORE_DB_LOGGER.finer("Bdb commit success tid " + tid);
@@ -340,10 +338,8 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public SerializedObject read(final long onum) {
-    synchronized (cachedObjects) {
-      SerializedObject cached = cachedObjects.get(onum);
-      if (cached != null) return cached;
-    }
+    SerializedObject cached = cachedObjects.get(onum);
+    if (cached != null) return cached;
 
     STORE_DB_LOGGER.finest("Bdb read onum " + onum);
 
@@ -357,14 +353,8 @@ public class BdbDB extends ObjectDB {
 
         if (db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
           SerializedObject result = toSerializedObject(data.getData());
-          if (result != null) {
-            cacheVersionNumber(onum, result.getVersion());
-          }
-
-          synchronized (cachedObjects) {
-            cachedObjects.put(onum, result);
-          }
-
+          cacheVersionNumber(onum, result.getVersion());
+          cachedObjects.put(onum, result);
           return result;
         }
 
