@@ -282,4 +282,10 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   public Ext extCodebaseTypeNode() {
     return extCanonicalTypeNode();
   }
+
+  @Override
+  protected Ext extCaseImpl() {
+    return new CaseExt_c();
+  }
+
 }
