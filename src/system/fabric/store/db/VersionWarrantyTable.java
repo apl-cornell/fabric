@@ -65,7 +65,13 @@ public class VersionWarrantyTable {
     LongSet set = new LongHashSet();
     LongSet existingSet = reverseTable.putIfAbsent(warranty, set);
     if (existingSet != null) set = existingSet;
-    set.add(onum);
+    synchronized (set) {
+      set.add(onum);
+
+      // Make sure the reverse table has an entry for the warranty, in case it
+      // was removed by the Collector thread.
+      reverseTable.put(warranty, set);
+    }
 
     // Signal the collector thread that we have a new warranty.
     collector.signalNewWarranty();
@@ -114,8 +120,10 @@ public class VersionWarrantyTable {
           } else {
             // Warranty expired. Remove relevant entries from table.
             LongSet onums = entry.getValue();
-            table.keySet().removeAll(onums);
-            it.remove();
+            synchronized (onums) {
+              table.keySet().removeAll(onums);
+              it.remove();
+            }
           }
         }
 
