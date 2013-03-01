@@ -58,6 +58,7 @@ import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.admin.WorkerAdmin;
 import fabric.worker.admin.WorkerNotRunningException;
+import fabric.worker.memoize.CallInstance;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.shell.ChainedCommandSource;
@@ -631,6 +632,27 @@ public final class Worker {
     } finally {
       tm.associateLog(oldLog);
     }
+  }
+
+  /**
+   * Executes the given code from within a Fabric transaction to create a new
+   * SemanticWarranty request.
+   * 
+   * @param tid
+   *          The parent transaction for the subtransaction that will be
+   *          created.
+   * @param code
+   *          Code to run in transaction.
+   * @param autoRetry
+   *          whether the transaction should be automatically retried if it
+   *          fails during commit
+   * @param call
+   *          CallInstance we are computing the value of for the request.
+   */
+  public static <T> T runInSemanticWarrantyTransaction(TransactionID tid,
+      Code<T> code, boolean autoRetry, CallInstance call) {
+    /* XXX: Actually implement */
+    return null;
   }
 
   /**

@@ -24,6 +24,7 @@ import java.util.logging.Level;
 
 import fabric.common.FabricThread;
 import fabric.common.Logging;
+import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
@@ -50,6 +51,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
+import fabric.worker.memoize.CallInstance;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -971,6 +973,23 @@ public final class TransactionManager {
   }
 
   /**
+   * Registers the use of a pre-existing SemanticWarranty's value.
+   */
+  public void registerSemanticWarrantyUse(SemanticWarranty sw) {
+    /* TODO: Implement */
+  }
+
+  /**
+   * Sets the value of the currently ongoing semantic warranty request
+   * transaction.  This should be called right before ending the transaction and
+   * should NOT be called if the current log does not have a call associated
+   * with it (so it's not a SemanticWarranty request).
+   */
+  public void setSemanticWarrantyValue(Object v) {
+    /* TODO: Implement */
+  }
+
+  /**
    * Ensures the current transaction has a read lock for the given object,
    * blocking if necessary. This method assumes we are synchronized on the
    * object.
@@ -1279,6 +1298,14 @@ public final class TransactionManager {
     } finally {
       Timing.BEGIN.end();
     }
+  }
+
+  /**
+   * Starts a new transaction with the given tid for requesting a
+   * SemanticWarranty for the given CallInstance.
+   */
+  public void startTransaction(TransactionID tid, CallInstance call) {
+    /* TODO: Implement */
   }
 
   /**

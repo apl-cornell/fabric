@@ -12,14 +12,14 @@ import java.util.Map;
  */
 public final class CallCache {
 
-  private Map<CallTuple, Pair<Object, SemanticWarranty>> callTable;
+  private Map<CallInstance, Pair<Object, SemanticWarranty>> callTable;
 
   public CallCache() {
     callTable = Collections.synchronizedMap(
-        new HashMap<CallTuple, Pair<Object, SemanticWarranty>>());
+        new HashMap<CallInstance, Pair<Object, SemanticWarranty>>());
   }
 
-  public Pair<Object, SemanticWarranty> get(CallTuple call) {
+  public Pair<Object, SemanticWarranty> get(CallInstance call) {
     synchronized (callTable) {
       Pair<Object, SemanticWarranty> result = callTable.get(call);
       if (result == null) {
@@ -34,7 +34,7 @@ public final class CallCache {
     }
   }
 
-  public void put(CallTuple call, Object value, SemanticWarranty warranty) {
+  public void put(CallInstance call, Object value, SemanticWarranty warranty) {
     callTable.put(call, new Pair<Object, SemanticWarranty>(value, warranty));
   }
 }

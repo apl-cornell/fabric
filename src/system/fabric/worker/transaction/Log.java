@@ -29,6 +29,7 @@ import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.memoize.CallInstance;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -96,6 +97,46 @@ public final class Log {
    * are not tracked here.
    */
   protected final List<_Impl> creates;
+
+  /**
+   * A call for which this transaction will represent a request for a
+   * SemanticWarranty on the call.  This is only for the current transaction,
+   * not a subtransaction.
+   */
+  protected final CallInstance semanticWarrantyCall;
+
+  /**
+   * The value of the call for which this log represents a semantic warranty
+   * request.  This is only for the current transaction, not a subtransaction.
+   */
+  protected Object semanticWarrantyValue;
+
+  /**
+   * List representing semantic warranty requests of subtransactions.
+   */
+  protected final List<CallInstance> semanticWarrantyRequests;
+
+  /**
+   * Map from CallInstance IDs to the log for the request.
+   *
+   * TODO: Maybe make a separate class for maps from CallInstance to other
+   * stuff?
+   */
+  protected final LongKeyMap<Log> semanticWarrantyLogs;
+
+  /**
+   * Map from CallInstance IDs to the value of the call for all warranty
+   * requests.
+   *
+   * TODO: Maybe make a separate class for maps from CallInstances to
+   * other stuff?
+   */
+  protected final LongKeyMap<Object> semanticWarrantyValues;
+
+  /**
+   * List of CallInstances for semantic warranties used during this transaction.
+   */
+  protected final List<CallInstance> semanticWarrantiesUsed;
 
   /**
    * Tracks objects created on local store. See <code>creates</code>.
@@ -185,9 +226,21 @@ public final class Log {
   /**
    * Creates a new log with the given parent and the given transaction ID. The
    * TID for the parent and the given TID are assumed to be consistent. If the
-   * given TID is null, a random tid is generated for the subtransaction.
+   * given TID is null, a random tid is generated for the subtransaction.  This
+   * transaction does not generate a SemanticWarranty request itself.
    */
   Log(Log parent, TransactionID tid) {
+    this(parent, tid, null);
+  }
+
+  /**
+   * Creates a new log with the given parent, the given transaction ID, and
+   * CallInstance for a SemanticWarranty request. The TID for the parent and the
+   * given TID are assumed to be consistent. If the given TID is null, a random
+   * tid is generated for the subtransaction.  If the given CallInstance is
+   * null, it is assumed that this transaction does not make a request.
+   */
+  Log(Log parent, TransactionID tid, CallInstance semanticWarrantyCall) {
     this.parent = parent;
     if (tid == null) {
       if (parent == null) {
@@ -209,6 +262,11 @@ public final class Log {
     this.writes = new ArrayList<_Impl>();
     this.localStoreWrites = new WeakReferenceArrayList<_Impl>();
     this.workersCalled = new ArrayList<RemoteWorker>();
+    this.semanticWarrantyCall = semanticWarrantyCall;
+    this.semanticWarrantyRequests = new ArrayList<CallInstance>();
+    this.semanticWarrantyLogs = new LongKeyHashMap<Log>();
+    this.semanticWarrantyValues = new LongKeyHashMap<Object>();
+    this.semanticWarrantiesUsed = new ArrayList<CallInstance>();
 
     if (parent != null) {
       try {
