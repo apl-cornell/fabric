@@ -12,8 +12,8 @@ import fabric.common.Resources;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
-import fabric.common.exceptions.InternalError;
-import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
@@ -23,17 +23,12 @@ import fabric.store.SubscriptionManager;
 import fabric.store.TransactionManager;
 
 /**
- * <p>
  * An in-memory implementation of the ObjectDB. This class assumes there will be
  * no failures and hopefully will provide very high performance at the cost of
- * no fault tolerance whatsoever. This class does have a simple facility for
- * loading and saving the database to a file.
- * </p>
- * <p>
- * This class is not thread-safe. Only the <code>TransactionManager</code>
- * should directly interact with this class. The <code>TransactionManager</code>
- * 's thread safety ensures safe usage of this class.
- * </p>
+ * no fault tolerance whatsoever. This class has a simple facility for loading
+ * and saving the database to a file. During the save process, no workers should
+ * be actively preparing or committing transactions, and all prepared
+ * transactions should have been either committed or aborted.
  */
 public class MemoryDB extends ObjectDB {
 
@@ -50,7 +45,7 @@ public class MemoryDB extends ObjectDB {
   /**
    * Maps onums to SerializedObjects.
    */
-  private LongKeyMap<SerializedObject> objectTable;
+  private ConcurrentLongKeyMap<SerializedObject> objectTable;
 
   /**
    * Opens the store contained in file "var/storeName" if it exists, or an empty
@@ -73,12 +68,12 @@ public class MemoryDB extends ObjectDB {
       nextOnum = oin.readLong();
 
       int size = oin.readInt();
-      this.objectTable = new LongKeyHashMap<SerializedObject>(size);
+      this.objectTable = new ConcurrentLongKeyHashMap<SerializedObject>(size);
       for (int i = 0; i < size; i++)
         this.objectTable.put(oin.readLong(), new SerializedObject(oin));
     } catch (Exception e) {
       // TODO: distinguish invalid files from nonexistent
-      this.objectTable = new LongKeyHashMap<SerializedObject>();
+      this.objectTable = new ConcurrentLongKeyHashMap<SerializedObject>();
     }
 
     this.nextOnum = new MutableLong(nextOnum);
@@ -96,21 +91,15 @@ public class MemoryDB extends ObjectDB {
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
-        try {
-          PendingTransaction tx = remove(workerPrincipal, tid);
+        PendingTransaction tx = remove(workerPrincipal, tid);
 
-          // merge in the objects
-          for (Pair<SerializedObject, UpdateType> update : tx.modData) {
-            SerializedObject o = update.first;
-            synchronized (objectTable) {
-              objectTable.put(o.getOnum(), o);
-            }
+        // merge in the objects
+        for (Pair<SerializedObject, UpdateType> update : tx.modData) {
+          SerializedObject o = update.first;
+          objectTable.put(o.getOnum(), o);
 
-            // Remove any cached globs containing the old version of this object.
-            notifyCommittedUpdate(sm, o.getOnum());
-          }
-        } catch (AccessException e) {
-          throw new InternalError(e);
+          // Remove any cached globs containing the old version of this object.
+          notifyCommittedUpdate(sm, o.getOnum());
         }
       }
     });
@@ -123,20 +112,12 @@ public class MemoryDB extends ObjectDB {
 
   @Override
   public SerializedObject read(long onum) {
-    synchronized (objectTable) {
-      return objectTable.get(onum);
-    }
+    return objectTable.get(onum);
   }
 
   @Override
   public boolean exists(long onum) {
-    synchronized (writeLocks) {
-      if (writeLocks.get(onum) != null) return true;
-    }
-
-    synchronized (objectTable) {
-      return objectTable.containsKey(onum);
-    }
+    return objectTable.containsKey(onum);
   }
 
   @Override
@@ -160,15 +141,13 @@ public class MemoryDB extends ObjectDB {
     oout.writeBoolean(isInitialized);
 
     synchronized (nextOnum) {
-      synchronized (objectTable) {
-        oout.writeLong(nextOnum.value);
+      oout.writeLong(nextOnum.value);
 
-        oout.writeInt(this.objectTable.size());
-        for (LongKeyMap.Entry<SerializedObject> entry : this.objectTable
-            .entrySet()) {
-          oout.writeLong(entry.getKey());
-          entry.getValue().write(oout);
-        }
+      oout.writeInt(this.objectTable.size());
+      for (LongKeyMap.Entry<SerializedObject> entry : this.objectTable
+          .entrySet()) {
+        oout.writeLong(entry.getKey());
+        entry.getValue().write(oout);
       }
     }
 
@@ -180,20 +159,17 @@ public class MemoryDB extends ObjectDB {
    * Helper method to check permissions and update the pending object table for
    * a commit or roll-back.
    */
-  private PendingTransaction remove(Principal worker, long tid)
-      throws AccessException {
-    PendingTransaction tx;
-    synchronized (pendingByTid) {
-      OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+  private PendingTransaction remove(Principal worker, long tid) {
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    if (submap == null) return null;
 
-      synchronized (submap) {
-        tx = submap.remove(worker);
-        if (submap.isEmpty()) pendingByTid.remove(tid);
-      }
+    PendingTransaction tx;
+    synchronized (submap) {
+      tx = submap.remove(worker);
+      if (submap.isEmpty()) pendingByTid.remove(tid, submap);
     }
 
-    if (tx == null)
-      throw new AccessException("Invalid transaction id: " + tid);
+    if (tx == null) return null;
 
     // XXX Check if the worker acts for the owner.
 

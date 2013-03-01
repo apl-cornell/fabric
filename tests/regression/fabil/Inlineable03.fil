@@ -1,0 +1,5 @@
+public class Inlineable03 extends java.lang.Object {
+    public void foo(float f) {
+        Float fobj  = new java.lang.Float(f);
+    }
+}

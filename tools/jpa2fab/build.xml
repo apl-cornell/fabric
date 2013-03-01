@@ -1,0 +1,58 @@
+<!--
+  This is the Apache Ant build file for the JPA to Fabric tool.
+-->
+
+<project name="jpa2fab" default="build-all" basedir=".">
+  <description>
+    JPA to Fabric converter
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="jpa2fab.home" file="${ant.file.fabth}" />
+  <path id="jpa2fab.classpath">
+    <path refid="fabric.classpath" />
+    <path refid="jif.classpath" />
+    <path refid="polyglot.classpath" />
+  </path>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${jpa2fab.home}/classes" />
+  </target>
+
+  <target name="clobber" depends="clean">
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build" description="Builds the JPA to Fabric converter">
+    <mkdir dir="${jpa2fab.home}/classes" />
+    <javac source="1.6" target="1.6" srcdir="${jpa2fab.home}/src" destdir="${jpa2fab.home}/classes" debug="on" includes="**/*.java">
+      <classpath>
+        <path refid="jpa2fab.classpath" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+</project>
+<!--
+vim: ts=2 sw=2 ai et
+-->

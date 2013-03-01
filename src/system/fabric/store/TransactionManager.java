@@ -27,6 +27,7 @@ import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.store.db.ObjectDB.ExtendWarrantyStatus;
+import fabric.worker.AbortException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -103,6 +104,8 @@ public class TransactionManager {
       try {
         checkPerms(worker, LongSet.EMPTY, req.writes);
       } catch (AccessException e) {
+        throw new TransactionPrepareFailedException(e.getMessage());
+      } catch (AbortException e) {
         throw new TransactionPrepareFailedException(e.getMessage());
       }
     }

@@ -12,8 +12,10 @@ import polyglot.ast.Call;
 import polyglot.ast.Cast;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
+import polyglot.ast.DelFactory;
 import polyglot.ast.Disamb;
 import polyglot.ast.Expr;
+import polyglot.ast.ExtFactory;
 import polyglot.ast.Id;
 import polyglot.ast.Import;
 import polyglot.ast.NodeFactory_c;
@@ -44,7 +46,11 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     FabILNodeFactory {
 
   public FabILNodeFactory_c() {
-    super(new FabILExtFactory_c(), new FabILDelFactory_c());
+    this(new FabILExtFactory_c(), new FabILDelFactory_c());
+  }
+
+  public FabILNodeFactory_c(ExtFactory extFactory, DelFactory delFactory) {
+    super(extFactory, delFactory);
   }
 
   @Override

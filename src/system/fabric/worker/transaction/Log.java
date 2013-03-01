@@ -439,6 +439,18 @@ public final class Log {
       }
     }
 
+    Log curLog = this;
+    while (curLog != null) {
+      if (store.isLocalStore()) {
+        for (_Impl create : curLog.localStoreCreates)
+          result.remove(create.$getOnum());
+      } else {
+        for (_Impl create : curLog.creates)
+          if (create.$getStore() == store) result.remove(create.$getOnum());
+      }
+      curLog = curLog.parent;
+    }
+
     return result;
   }
 

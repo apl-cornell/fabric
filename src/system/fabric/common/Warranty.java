@@ -36,7 +36,7 @@ public abstract class Warranty implements Comparable<Warranty> {
   }
 
   /**
-   * Determines whether a warranty has expired.
+   * Determines whether this warranty has expired.
    * 
    * @param defaultResult
    *         the value to return if the current time is within CLOCK_SKEW of
@@ -46,12 +46,18 @@ public abstract class Warranty implements Comparable<Warranty> {
     return expiresBefore(System.currentTimeMillis(), defaultResult);
   }
 
+  /**
+   * Determines whether this warranty expires after the given warranty. Because
+   * warranties can be directly compared with one another, clock skew is not
+   * taken into account (nor does it need to be).
+   */
   public boolean expiresAfter(Warranty warranty) {
-    return expiry > warranty.expiry;
+    return expiresAfterStrict(warranty.expiry);
   }
 
   /**
-   * Determines whether a warranty expires before a certain time.
+   * Determines whether this warranty expires before a certain time, taking
+   * clock skew into account.
    * 
    * @param defaultResult
    *         the value to return if the time given is within CLOCK_SKEW of the
@@ -62,7 +68,8 @@ public abstract class Warranty implements Comparable<Warranty> {
   }
 
   /**
-   * Determines whether a warranty expires after a certain time.
+   * Determines whether this warranty expires after a certain time, taking
+   * clock skew into account.
    * 
    * @param defaultResult
    *         the value to return if the time given is within CLOCK_SKEW of the
@@ -72,6 +79,14 @@ public abstract class Warranty implements Comparable<Warranty> {
     if (expiry < time - CLOCK_SKEW) return false;
     if (time + CLOCK_SKEW < expiry) return true;
     return defaultResult;
+  }
+
+  /**
+   * Determines whether the warranty expires after a certain time. Clock skew is
+   * <i>not</i> taken into account.
+   */
+  public boolean expiresAfterStrict(long time) {
+    return expiry > time;
   }
 
   /**

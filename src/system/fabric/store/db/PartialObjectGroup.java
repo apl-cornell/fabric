@@ -1,6 +1,6 @@
 package fabric.store.db;
 
-import static fabric.store.db.ObjectGrouper.GroupLock.Status.DEFUNCT;
+import static fabric.store.db.ObjectGrouper.GroupLock.Status.REPLACED;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
@@ -54,13 +54,25 @@ public class PartialObjectGroup extends ObjectGrouper.AbstractGroup {
     return objects.keySet();
   }
 
+  /**
+   * Adds a surrogate object to the group. The caller is responsible for
+   * ensuring that the given arguments are consistent, and the given
+   * SerializedObject represents a surrogate object.
+   * 
+   * @param onum the surrogate object's onum.
+   * @param obj the surrogate object.
+   */
+  void addSurrogate(long onum, SerializedObject obj) {
+    objects.put(onum, obj);
+  }
+
   public void mergeFrom(PartialObjectGroup from) {
     size += from.size;
     objects.putAll(from.objects);
     frontier.putAll(from.frontier);
 
     synchronized (from.lock) {
-      from.lock.status = DEFUNCT;
+      from.lock.status = REPLACED;
       from.lock.replacement = this.lock;
       from.lock.notifyAll();
     }
