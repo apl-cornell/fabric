@@ -15,6 +15,7 @@ import java.util.Queue;
 import fabric.common.Crypto;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
+import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
@@ -46,6 +47,7 @@ import fabric.messages.StalenessCheckMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
+import fabric.worker.memoize.CallInstance;
 
 /**
  * Encapsulates a Store. This class maintains two connections to the store (one
@@ -198,6 +200,12 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   @Override
   public ObjectCache.Entry readFromCache(long onum) {
     return cache.get(onum);
+  }
+
+  @Override
+  public Pair<java.lang.Object, SemanticWarranty> lookupCall(CallInstance call) {
+    /* TODO: Implement */
+    return null;
   }
 
   /**

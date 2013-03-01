@@ -3,6 +3,7 @@ package fabric.worker;
 import java.io.Serializable;
 import java.util.Collection;
 
+import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
@@ -12,6 +13,7 @@ import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
+import fabric.worker.memoize.CallInstance;
 
 public interface Store extends Serializable {
   /**
@@ -77,6 +79,11 @@ public interface Store extends Serializable {
    * @return The entry if it exists in the object cache; otherwise, null.
    */
   ObjectCache.Entry readFromCache(long onum);
+
+  /**
+   * Returns the pair of SemanticWarranty and value for the given CallInstance.
+   */
+  Pair<Object, SemanticWarranty> lookupCall(CallInstance call);
 
   /**
    * Notifies the store that the transaction is being Aborted.

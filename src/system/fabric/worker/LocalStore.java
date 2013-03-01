@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import fabric.common.ONumConstants;
+import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
@@ -27,6 +28,7 @@ import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.util.HashMap;
 import fabric.util.Map;
+import fabric.worker.memoize.CallInstance;
 
 public final class LocalStore implements Store, Serializable {
 
@@ -124,6 +126,12 @@ public final class LocalStore implements Store, Serializable {
   @Override
   public ObjectCache.Entry readFromCache(long onum) {
     return cache.get(onum);
+  }
+
+  @Override
+  public Pair<java.lang.Object, SemanticWarranty> lookupCall(CallInstance call) {
+    /* TODO: Implement */
+    return null;
   }
 
   @Override
