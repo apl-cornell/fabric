@@ -12,7 +12,6 @@ import fabric.common.Resources;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
-import fabric.common.exceptions.InternalError;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
@@ -92,19 +91,15 @@ public class MemoryDB extends ObjectDB {
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
-        try {
-          PendingTransaction tx = remove(workerPrincipal, tid);
+        PendingTransaction tx = remove(workerPrincipal, tid);
 
-          // merge in the objects
-          for (Pair<SerializedObject, UpdateType> update : tx.modData) {
-            SerializedObject o = update.first;
-            objectTable.put(o.getOnum(), o);
+        // merge in the objects
+        for (Pair<SerializedObject, UpdateType> update : tx.modData) {
+          SerializedObject o = update.first;
+          objectTable.put(o.getOnum(), o);
 
-            // Remove any cached globs containing the old version of this object.
-            notifyCommittedUpdate(sm, o.getOnum());
-          }
-        } catch (AccessException e) {
-          throw new InternalError(e);
+          // Remove any cached globs containing the old version of this object.
+          notifyCommittedUpdate(sm, o.getOnum());
         }
       }
     });
@@ -164,17 +159,17 @@ public class MemoryDB extends ObjectDB {
    * Helper method to check permissions and update the pending object table for
    * a commit or roll-back.
    */
-  private PendingTransaction remove(Principal worker, long tid)
-      throws AccessException {
+  private PendingTransaction remove(Principal worker, long tid) {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    if (submap == null) return null;
+
     PendingTransaction tx;
     synchronized (submap) {
       tx = submap.remove(worker);
       if (submap.isEmpty()) pendingByTid.remove(tid, submap);
     }
 
-    if (tx == null)
-      throw new AccessException("Invalid transaction id: " + tid);
+    if (tx == null) return null;
 
     // XXX Check if the worker acts for the owner.
 
