@@ -550,7 +550,10 @@ public abstract class ObjectDB {
    */
   protected final void putWarranty(long onum, VersionWarranty warranty) {
     versionWarrantyTable.put(onum, warranty);
+    updateLongestWarranty(warranty);
+  }
 
+  private void updateLongestWarranty(VersionWarranty warranty) {
     synchronized (longestWarranty) {
       if (warranty.expiresAfter(longestWarranty[0])) {
         // Fudge longestWarranty so we don't continually touch disk when we create
@@ -598,14 +601,14 @@ public abstract class ObjectDB {
    */
   private VersionWarranty extendWarranty(long onum, long expiry,
       ExtendWarrantyMode mode) {
-    synchronized (versionWarrantyTable) {
+    while (true) {
       // Get the object's current warranty and determine whether it needs to be
       // extended.
       VersionWarranty curWarranty = versionWarrantyTable.get(onum);
       switch (mode) {
       case STRICT:
       case FORCE:
-        if (curWarranty.expiresAfter(expiry, false)) return curWarranty;
+        if (curWarranty.expiresAfterStrict(expiry)) return curWarranty;
         break;
 
       case NON_STRICT:
@@ -630,7 +633,13 @@ public abstract class ObjectDB {
 
       // Extend the object's warranty.
       VersionWarranty newWarranty = new VersionWarranty(expiry);
-      if (expiry > System.currentTimeMillis()) putWarranty(onum, newWarranty);
+      if (expiry > System.currentTimeMillis()) {
+        if (!versionWarrantyTable.extend(onum, curWarranty, newWarranty))
+          continue;
+
+        updateLongestWarranty(newWarranty);
+      }
+
       return newWarranty;
     }
   }
