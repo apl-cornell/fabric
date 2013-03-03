@@ -7,11 +7,6 @@ public abstract class Warranty implements Comparable<Warranty> {
   public static final long CLOCK_SKEW = 100;
 
   /**
-   * Promise length, in milliseconds.
-   */
-  protected static final long PROMISE_LENGTH = 60000;
-
-  /**
    * Expiry time, in milliseconds since the epoch.
    */
   private final long expiry;
