@@ -282,6 +282,11 @@ public final class TransactionManager {
     WORKER_TRANSACTION_LOGGER.warning(current + " aborted");
     HOTOS_LOGGER.log(Level.INFO, "aborted {0}", current);
 
+    if (current.tid.depth == 0) {
+      // Aborted a top-level transaction. Remove from the transaction registry.
+      TransactionRegistry.remove(current.tid.topTid);
+    }
+
     synchronized (current.commitState) {
       // The commit state reflects the state of the top-level transaction, so
       // only set the flag if a top-level transaction is being aborted.

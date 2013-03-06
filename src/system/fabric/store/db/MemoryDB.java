@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.PrivateKey;
+import java.util.Date;
 
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
@@ -88,6 +89,10 @@ public class MemoryDB extends ObjectDB {
   @Override
   public void scheduleCommit(final long tid, long commitTime,
       final Principal workerPrincipal, final SubscriptionManager sm) {
+    long commitDelay = commitTime - System.currentTimeMillis();
+    STORE_DB_LOGGER.finer("Scheduling commit for tid " + tid + " to run at "
+        + new Date(commitTime) + " (in " + commitDelay + " ms)");
+
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {

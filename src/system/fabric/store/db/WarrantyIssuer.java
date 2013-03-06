@@ -23,7 +23,7 @@ public class WarrantyIssuer {
      */
     int predictedInterval;
 
-    int lastDefaultSuggestion;
+    long lastDefaultSuggestion;
     int lastDefaultSuggestionLength;
 
     /**
@@ -199,7 +199,7 @@ public class WarrantyIssuer {
       if (length < minWarrantyLength) length = minWarrantyLength;
       if (length > maxWarrantyLength) length = maxWarrantyLength;
       entry.lastDefaultSuggestionLength = length;
-      return now + length;
+      return entry.lastDefaultSuggestion = now + length;
     }
   }
 }
