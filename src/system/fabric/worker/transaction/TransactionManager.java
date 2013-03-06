@@ -24,7 +24,6 @@ import java.util.logging.Level;
 
 import fabric.common.FabricThread;
 import fabric.common.Logging;
-import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
@@ -973,10 +972,10 @@ public final class TransactionManager {
   }
 
   /**
-   * Registers the use of a pre-existing SemanticWarranty's value.
+   * Registers the use of a pre-cached CallInstance's value.
    */
-  public void registerSemanticWarrantyUse(SemanticWarranty sw) {
-    /* TODO: Implement */
+  public void registerSemanticWarrantyUse(CallInstance call) {
+    current.semanticWarrantiesUsed.add(call.id());
   }
 
   /**
@@ -986,7 +985,7 @@ public final class TransactionManager {
    * with it (so it's not a SemanticWarranty request).
    */
   public void setSemanticWarrantyValue(Object v) {
-    /* TODO: Implement */
+    current.semanticWarrantyValue = v;
   }
 
   /**
@@ -1142,6 +1141,9 @@ public final class TransactionManager {
       }
     }
 
+    /* Invalidate semantic warranty requests of parent log. */
+    current.invalidateDependentRequests(obj.$getOnum());
+
     if (obj.$reader != current) {
       // Clear the read stamp -- the reader's read condition no longer holds.
       obj.$reader = Log.NO_READER;
@@ -1273,7 +1275,15 @@ public final class TransactionManager {
    * the caller.
    */
   public void startTransaction() {
-    startTransaction(null);
+    startTransaction((TransactionID) null);
+  }
+
+  /**
+   * Starts a new transaction for computing a CallInstance's value and
+   * submitting a request for a SemanticWarranty.
+   */
+  public void startTransaction(CallInstance call) {
+    startTransaction(null, false, call);
   }
 
   /**
@@ -1282,15 +1292,20 @@ public final class TransactionManager {
    * tid is generated for the sub-transaction.
    */
   public void startTransaction(TransactionID tid) {
-    startTransaction(tid, false);
+    startTransaction(tid, false, null);
   }
 
-  private void startTransaction(TransactionID tid, boolean ignoreRetrySignal) {
+  public void startTransaction(TransactionID tid, boolean ignoreRetrySignal) {
+    startTransaction(tid, ignoreRetrySignal, null);
+  }
+
+  private void startTransaction(TransactionID tid, boolean ignoreRetrySignal,
+      CallInstance call) {
     if (current != null && !ignoreRetrySignal) checkRetrySignal();
 
     try {
       Timing.BEGIN.begin();
-      current = new Log(current, tid);
+      current = new Log(current, tid, call);
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
           "{0} started subtx {1} in thread {2}", current.parent, current,
           Thread.currentThread());
@@ -1305,7 +1320,7 @@ public final class TransactionManager {
    * SemanticWarranty for the given CallInstance.
    */
   public void startTransaction(TransactionID tid, CallInstance call) {
-    /* TODO: Implement */
+    startTransaction(tid, false, call);
   }
 
   /**

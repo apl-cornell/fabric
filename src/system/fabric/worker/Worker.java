@@ -608,6 +608,26 @@ public final class Worker {
   }
 
   /**
+   * Executes a transaction which computes the value of the given
+   * <code>CallInstance</code> and requests a <code>SemanticWarranty</code> from
+   * the store.
+   */
+  public static <T> T runInSemanticWarrantyTransaction(TransactionID tid,
+      Code<T> code, boolean autoRetry, CallInstance call) {
+    TransactionManager tm = TransactionManager.getInstance();
+    Log oldLog = tm.getCurrentLog();
+
+    Log log = TransactionRegistry.getOrCreateInnermostLog(tid);
+    tm.associateAndSyncLog(log, tid);
+
+    try {
+      return runInSubTransaction(code, autoRetry, call);
+    } finally {
+      tm.associateLog(oldLog);
+    }
+  }
+
+  /**
    * Executes the given code from within a Fabric transaction. Should not be
    * called by generated code. This is here to abstract away the details of
    * starting and finishing transactions.
@@ -635,27 +655,6 @@ public final class Worker {
   }
 
   /**
-   * Executes the given code from within a Fabric transaction to create a new
-   * SemanticWarranty request.
-   * 
-   * @param tid
-   *          The parent transaction for the subtransaction that will be
-   *          created.
-   * @param code
-   *          Code to run in transaction.
-   * @param autoRetry
-   *          whether the transaction should be automatically retried if it
-   *          fails during commit
-   * @param call
-   *          CallInstance we are computing the value of for the request.
-   */
-  public static <T> T runInSemanticWarrantyTransaction(TransactionID tid,
-      Code<T> code, boolean autoRetry, CallInstance call) {
-    /* XXX: Actually implement */
-    return null;
-  }
-
-  /**
    * Executes the given code from within a Fabric subtransaction of the current
    * transaction. Should not be called by generated code. This is here to
    * abstract away the details of starting and finishing transactions.
@@ -664,6 +663,10 @@ public final class Worker {
     return runInSubTransaction(code, true);
   }
 
+  private static <T> T runInSubTransaction(Code<T> code, boolean autoRetry) {
+    return runInSubTransaction(code, autoRetry, null);
+  }
+
   /**
    * Executes the given code from within a Fabric subtransaction of the current
    * transaction. Should not be called by generated code. This is here to
@@ -672,8 +675,14 @@ public final class Worker {
    * @param autoRetry
    *          whether the transaction should be automatically retried if it
    *          fails during commit
+   * @param call
+   *          <code>CallInstance</code> representing the call for which we are
+   *          computing and requesting a <code>SemanticWarranty</code> for.  If
+   *          the transaction does not represent a request for a
+   *          <code>SemanticWarranty</code>, this value should be null.
    */
-  private static <T> T runInSubTransaction(Code<T> code, boolean autoRetry) {
+  private static <T> T runInSubTransaction(Code<T> code, boolean autoRetry,
+      CallInstance call) {
     TransactionManager tm = TransactionManager.getInstance();
 
     boolean success = false;
@@ -692,7 +701,7 @@ public final class Worker {
       if (backoff < 5000) backoff *= 2;
 
       success = true;
-      tm.startTransaction();
+      tm.startTransaction(call);
 
       try {
         return code.run();

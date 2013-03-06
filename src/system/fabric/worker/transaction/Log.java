@@ -18,6 +18,7 @@ import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -33,6 +34,11 @@ import fabric.worker.memoize.CallInstance;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
+/* TODO:
+ *      - Add support for sending requests and other information in the prepare
+ *      phase.
+ *      - Double check code for merging a completed transaction
+ */
 /**
  * Stores per-transaction information. Records the objects that are created,
  * read, and written during a single nested transaction.
@@ -99,46 +105,6 @@ public final class Log {
   protected final List<_Impl> creates;
 
   /**
-   * A call for which this transaction will represent a request for a
-   * SemanticWarranty on the call.  This is only for the current transaction,
-   * not a subtransaction.
-   */
-  protected final CallInstance semanticWarrantyCall;
-
-  /**
-   * The value of the call for which this log represents a semantic warranty
-   * request.  This is only for the current transaction, not a subtransaction.
-   */
-  protected Object semanticWarrantyValue;
-
-  /**
-   * List representing semantic warranty requests of subtransactions.
-   */
-  protected final List<CallInstance> semanticWarrantyRequests;
-
-  /**
-   * Map from CallInstance IDs to the log for the request.
-   *
-   * TODO: Maybe make a separate class for maps from CallInstance to other
-   * stuff?
-   */
-  protected final LongKeyMap<Log> semanticWarrantyLogs;
-
-  /**
-   * Map from CallInstance IDs to the value of the call for all warranty
-   * requests.
-   *
-   * TODO: Maybe make a separate class for maps from CallInstances to
-   * other stuff?
-   */
-  protected final LongKeyMap<Object> semanticWarrantyValues;
-
-  /**
-   * List of CallInstances for semantic warranties used during this transaction.
-   */
-  protected final List<CallInstance> semanticWarrantiesUsed;
-
-  /**
    * Tracks objects created on local store. See <code>creates</code>.
    */
   protected final WeakReferenceArrayList<_Impl> localStoreCreates;
@@ -162,6 +128,51 @@ public final class Log {
    * sub-transactions.
    */
   public final List<RemoteWorker> workersCalled;
+
+  /**
+   * A call for which this transaction will represent a request for a
+   * SemanticWarranty on the call.  This is only for the current transaction,
+   * not a subtransaction.
+   */
+  protected final CallInstance semanticWarrantyCall;
+
+  /**
+   * The value of the call for which this log represents a semantic warranty
+   * request.  This is only for the current transaction, not a subtransaction.
+   */
+  protected Object semanticWarrantyValue;
+
+  /**
+   * Map from CallInstance IDs to the log for the request.
+   *
+   * TODO: Maybe make a separate class for maps from CallInstance to other
+   * stuff?
+   */
+  protected final LongKeyMap<Log> semanticWarrantyLogs;
+
+  /**
+   * Map from CallInstance IDs to the value of the call for all warranty
+   * requests.
+   *
+   * TODO: Maybe make a separate class for maps from CallInstances to
+   * other stuff?
+   */
+  protected final LongKeyMap<Object> semanticWarrantyValues;
+
+  /**
+   * Mapping from onums to CallInstances we're requesting semantic warranties
+   * for.
+   */
+  protected final LongKeyMap<LongSet> readDependencies;
+
+  /**
+   * Set of CallInstance ids for semantic warranties used during this
+   * transaction.
+   */
+  protected final LongSet semanticWarrantiesUsed;
+  /* TODO: What if we have two threads in the same transaction (is that
+   * possible?) attempting the same memoized call?
+   */
 
   /**
    * Indicates the state of commit for the top-level transaction.
@@ -263,10 +274,10 @@ public final class Log {
     this.localStoreWrites = new WeakReferenceArrayList<_Impl>();
     this.workersCalled = new ArrayList<RemoteWorker>();
     this.semanticWarrantyCall = semanticWarrantyCall;
-    this.semanticWarrantyRequests = new ArrayList<CallInstance>();
     this.semanticWarrantyLogs = new LongKeyHashMap<Log>();
     this.semanticWarrantyValues = new LongKeyHashMap<Object>();
-    this.semanticWarrantiesUsed = new ArrayList<CallInstance>();
+    this.semanticWarrantiesUsed = new LongHashSet();
+    this.readDependencies = new LongKeyHashMap<LongSet>();
 
     if (parent != null) {
       try {
@@ -319,6 +330,36 @@ public final class Log {
    */
   boolean isDescendantOf(Log log) {
     return tid.isDescendantOf(log.tid);
+  }
+
+  /**
+   * Handles invalidation of all semantic warranty requests made previously by
+   * the parent that read the given onum.
+   */
+  public void invalidateDependentRequests(long onum) {
+    LongSet dependencies = readDependencies.get(onum);
+    if (dependencies == null) return;
+    LongIterator it = dependencies.iterator();
+    while (it.hasNext()) {
+      long callId = it.next();
+      removeRequest(callId);
+    }
+  }
+
+  /**
+   * Remove a semantic warranty request created by a subtransaction along with
+   * all associated book keeping.
+   */
+  private void removeRequest(long callId) {
+    semanticWarrantyValues.remove(callId);
+    Log reqLog = semanticWarrantyLogs.get(callId);
+    for (LongKeyMap<ReadMapEntry> submap : reqLog.reads) {
+      for (ReadMapEntry entry : submap.values()) {
+        readDependencies.remove(entry.obj.onum);
+      }
+    }
+    semanticWarrantyLogs.remove(callId);
+    semanticWarrantiesUsed.remove(callId);
   }
 
   /**
@@ -691,6 +732,33 @@ public final class Log {
       parent.writerMap.putAll(writerMap);
     }
 
+    // Handle merging of semantic warranty request information.
+    
+    // Handle merging of this request (if there is one)
+    if (semanticWarrantyCall != null) {
+      // Add call to readDependencies
+      for (LongKeyMap<ReadMapEntry> submap : reads) {
+        for (ReadMapEntry entry : submap.values()) {
+          LongSet dependencies = parent.readDependencies.get(entry.obj.onum);
+          if (dependencies == null) {
+            dependencies = new LongHashSet();
+            parent.readDependencies.put(entry.obj.onum, dependencies);
+          }
+          dependencies.add(semanticWarrantyCall.id());
+        }
+      }
+
+      // Add call to maps for value and logs
+      parent.semanticWarrantyValues.put(semanticWarrantyCall.id(),
+          semanticWarrantyValue);
+      parent.semanticWarrantyLogs.put(semanticWarrantyCall.id(), this);
+    }
+
+    // Merge all child requests
+    parent.semanticWarrantyLogs.putAll(semanticWarrantyLogs);
+    parent.semanticWarrantyValues.putAll(semanticWarrantyValues);
+    parent.semanticWarrantiesUsed.addAll(semanticWarrantiesUsed);
+
     synchronized (parent) {
       parent.child = null;
     }
@@ -702,6 +770,7 @@ public final class Log {
    * Assumes this is a top-level transaction. All locks held by this transaction
    * will be released after the given commit time.
    */
+  /* TODO: Add in semantic warranties code */
   void commitTopLevel(long commitTime) {
     Logging.WORKER_TRANSACTION_LOGGER.finer("Scheduled commit for tid " + tid
         + " to run at " + new Date(commitTime) + " (in "

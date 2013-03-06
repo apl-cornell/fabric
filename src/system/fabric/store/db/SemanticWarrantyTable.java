@@ -14,6 +14,7 @@ import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
+import fabric.common.util.Pair;
 
 /**
  * A table containing semantic warranties, keyed by CallInstance id, and
@@ -26,31 +27,32 @@ public class SemanticWarrantyTable {
    */
   private volatile SemanticWarranty defaultWarranty;
 
-  private final ConcurrentLongKeyMap<SemanticWarranty> table;
+  private final ConcurrentLongKeyMap<Pair<Object, SemanticWarranty>> table;
 
   private final Collector collector;
 
   /**
    * Reverse mapping: maps semantic warranties to corresponding ids.
+   *
+   * Primarily used for sweeping away expired entries.
    */
   private final ConcurrentMap<SemanticWarranty, LongSet> reverseTable;
 
   SemanticWarrantyTable() {
     defaultWarranty = new SemanticWarranty(0);
-    table = new ConcurrentLongKeyHashMap<SemanticWarranty>();
+    table = new ConcurrentLongKeyHashMap<Pair<Object, SemanticWarranty>>();
     reverseTable = new ConcurrentHashMap<SemanticWarranty, LongSet>();
 
     collector = new Collector();
     collector.start();
   }
 
-  final SemanticWarranty get(long id) {
-    SemanticWarranty result = table.get(id);
-    if (result == null) return defaultWarranty;
-    return result;
+  final Pair<Object, SemanticWarranty> get(long id) {
+    return table.get(id);
   }
 
-  final void put(long id, SemanticWarranty warranty) {
+  final void put(long id, Pair<Object, SemanticWarranty> valueAndWarranty) {
+    SemanticWarranty warranty = valueAndWarranty.second;
     if (defaultWarranty.expiresAfter(warranty)) {
       throw new InternalError("Attempted to insert a warranty that expires "
           + "before the default warranty. This should not happen.");
@@ -61,7 +63,7 @@ public class SemanticWarrantyTable {
     STORE_DB_LOGGER.finest("Adding warranty for call " + id + "; expiry="
         + expiry + " (in " + length + " ms)");
 
-    table.put(id, warranty);
+    table.put(id, valueAndWarranty);
 
     LongSet set = new LongHashSet();
     LongSet existingSet = reverseTable.putIfAbsent(warranty, set);
@@ -96,12 +98,21 @@ public class SemanticWarrantyTable {
           "Attempted to extend a warranty with one that expires sooner.");
     }
 
+    /*
     boolean success = false;
     if (oldWarranty == defaultWarranty) {
       success = table.putIfAbsent(id, newWarranty) == null;
     }
 
     if (!success) success = table.replace(id, oldWarranty, newWarranty);
+    */
+
+    boolean success = false;
+    Pair<Object, SemanticWarranty> oldEntry = table.get(id);
+    if (oldEntry.second.equals(oldWarranty)) {
+      success = true;
+      oldEntry.second = newWarranty;
+    }
 
     if (success) {
       long expiry = newWarranty.expiry();

@@ -51,7 +51,7 @@ public class CallInstance {
 
   /**
    * ID number to uniquely represent this call signature.  This is
-   * deterministically computed based on the callee, methodName, and arguments.
+   * deterministically computed based on the target, methodName, and arguments.
    * This should be usable wherever one could use a object ID while not
    * conflicting with any OIDs in the system.
    */
