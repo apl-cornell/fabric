@@ -1,0 +1,9 @@
+package fabil;
+
+public class Array13 {
+  void m() {
+    Object native [][] a = new Object native [2][];
+    a[0] = new Object native[3];
+  }
+}
+

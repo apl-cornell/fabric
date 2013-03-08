@@ -34,7 +34,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
     FabILTypeSystem ts = pr.typeSystem();
     if (!ts.isFabricArray(newArray.type())) return newArray;
 
-    if (newArray.dims().size() > 1)
+    if (newArray.numDims() > 1)
       throw new InternalCompilerError("Multidimensional arrays not supported.");
 
     if (newArray.dims().size() < 1)
