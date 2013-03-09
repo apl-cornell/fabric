@@ -57,6 +57,8 @@ import fabric.worker.Worker;
 public abstract class ObjectDB {
   private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
 
+  private static final int MAX_WARRANTY_LENGTH = 1000;
+
   private final WarrantyIssuer warrantyIssuer;
 
   /**
@@ -251,7 +253,7 @@ public abstract class ObjectDB {
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
     this.versionWarrantyTable = new VersionWarrantyTable();
-    this.warrantyIssuer = new WarrantyIssuer(0.5, 250, 10000, 250);
+    this.warrantyIssuer = new WarrantyIssuer(250, MAX_WARRANTY_LENGTH, 250);
   }
 
   /**
@@ -642,6 +644,13 @@ public abstract class ObjectDB {
 
       return newWarranty;
     }
+  }
+
+  /**
+   * Notifies the warranty issuer of a read prepare.
+   */
+  public void notifyReadPrepare(long onum) {
+    warrantyIssuer.notifyReadPrepare(onum);
   }
 
   /**
