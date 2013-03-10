@@ -1,6 +1,6 @@
 package fabric.common;
 
-import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.ConcurrentOidKeyHashMap;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.Principal;
@@ -15,8 +15,8 @@ public class AuthorizationUtil {
    * read according to the label. We're not using the caches in LabelUtil
    * because the transaction management is too slow (!!).
    */
-  private static final OidKeyHashMap<OidKeyHashMap<Void>> cachedReadAuthorizations =
-      new OidKeyHashMap<OidKeyHashMap<Void>>();
+  private static final ConcurrentOidKeyHashMap<ConcurrentOidKeyHashMap<Void>> cachedReadAuthorizations =
+      new ConcurrentOidKeyHashMap<ConcurrentOidKeyHashMap<Void>>();
 
   /**
    * This is the cache for authorizing writes. The keys in this map are label
@@ -24,42 +24,28 @@ public class AuthorizationUtil {
    * the label. We're not using the caches in LabelUtil because the transaction
    * management is too slow (!!).
    */
-  private static final OidKeyHashMap<OidKeyHashMap<Void>> cachedWriteAuthorizations =
-      new OidKeyHashMap<OidKeyHashMap<Void>>();
+  private static final ConcurrentOidKeyHashMap<ConcurrentOidKeyHashMap<Void>> cachedWriteAuthorizations =
+      new ConcurrentOidKeyHashMap<ConcurrentOidKeyHashMap<Void>>();
 
   /**
    * Return true if cache[label][<code>principal</code>] exists, where label is
    * given by the Oid (<code>store</code>,<code>labelOnum</code>).
    */
   private static boolean checkAuthorizationCache(
-      OidKeyHashMap<OidKeyHashMap<Void>> cache, Principal principal,
-      Store store, long labelOnum) {
-    OidKeyHashMap<Void> submap;
-    synchronized (cache) {
-      submap = cache.get(store, labelOnum);
-      if (submap == null) return false;
-    }
-
-    synchronized (submap) {
-      return submap.containsKey(principal);
-    }
+      ConcurrentOidKeyHashMap<ConcurrentOidKeyHashMap<Void>> cache,
+      Principal principal, Store store, long labelOnum) {
+    ConcurrentOidKeyHashMap<Void> submap = cache.get(store, labelOnum);
+    return submap != null && submap.containsKey(principal);
   }
 
   private static void cacheAuthorization(
-      OidKeyHashMap<OidKeyHashMap<Void>> cache, Principal principal,
-      Store store, long labelOnum) {
-    OidKeyHashMap<Void> submap;
-    synchronized (cache) {
-      submap = cache.get(store, labelOnum);
-      if (submap == null) {
-        submap = new OidKeyHashMap<Void>();
-        cache.put(store, labelOnum, submap);
-      }
-    }
-
-    synchronized (submap) {
-      submap.put(principal, null);
-    }
+      ConcurrentOidKeyHashMap<ConcurrentOidKeyHashMap<Void>> cache,
+      Principal principal, Store store, long labelOnum) {
+    ConcurrentOidKeyHashMap<Void> submap = new ConcurrentOidKeyHashMap<Void>();
+    ConcurrentOidKeyHashMap<Void> existing =
+        cache.putIfAbsent(store, labelOnum, submap);
+    if (existing != null) submap = existing;
+    submap.put(principal, null);
   }
 
   /**
