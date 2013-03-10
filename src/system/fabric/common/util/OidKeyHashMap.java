@@ -121,7 +121,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   }
 
   public int size() {
-    int result = 0;
+    int result = hasNullEntry ? 1 : 0;
 
     for (LongKeyMap<V> submap : this)
       result += submap.size();
