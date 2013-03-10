@@ -1,0 +1,114 @@
+package fabric.lang.arrays;
+
+
+import fabric.worker.Store;
+import fabric.lang.arrays.ObjectArray;
+import fabric.lang.arrays.internal._ObjectArray;
+
+/**
+ * <p>
+ * Implements a multi-dimensional object array by representing it as an array
+ * of arrays of arrays ... depending on the number of dimensions
+ * 
+ * Uses ObjectArray to represent each individual array
+ * </p>
+ * 
+ * @author kvikram
+ */
+
+public final class MultiObjectArray {
+    
+    private int dims;
+    
+    private int[] lengths;
+    
+    private ObjectArray firstDim;
+    
+    private Class proxyType;
+    private int CHUNK_SIZE_LOG2;
+
+  public MultiObjectArray(Label updateLabel, ConfPolicy accessPolicy, Class proxyType, int dims, int[] lengths) {
+    // Default chunk size is 256.
+    this(updateLabel, accessPolicy, proxyType, dims, lengths, 8);
+  }
+
+  public MultiObjectArray(Label updateLabel, ConfPolicy accessPolicy, Class proxyType, int dims, int[] lengths, int CHUNK_SIZE_LOG2) {
+
+    this.$updateLabel = updateLabel;
+    this.$accessPolicy = accessPolicy;
+    this.proxyType = proxyType;
+    this.CHUNK_SIZE_LOG2 = CHUNK_SIZE_LOG2;
+    
+    this.dims = dims;
+    this.lengths = lengths;
+    
+    if (lengths.length < 1) {
+        throw new RuntimeException("Missing array dimension. NewFabricArrayExt_c should not have let this happen.");
+    }
+    
+    firstDim = new ObjectArray(updateLabel, accessPolicy, proxyType, lengths[0], CHUNK_SIZE_LOG2);
+    
+    // now allocate the remaining dimensions
+    for (int depth = 0; depth < lengths.length - 1; depth++) {
+        /**
+         * Go until depth in the tree of arrays-of-arrays and add a layer of
+         * arrays of appropriate length
+         */
+        int range = 1;
+        for (int i = 0; i < depth; i++) {
+            range = range * lengths[i];
+        }
+        
+        ObjectArray traverse;
+        for (int j = 0; j < range; j++) {
+            // break up index i into its components
+            // traverse the arrays-of-arrays until depth-1
+            int nextInd = 0;
+            int divisor = range;
+            traverse = firstDim;
+            for (int i = 0; i < depth; i++) {
+                divisor = divisor/lengths[i];
+                nextInd = j/divisor;
+                traverse = (ObjectArray)traverse.get(nextInd);
+            }
+            // now allocate an array in each cell of traverse
+            for (int k = 0; k < lengths[depth]; k++) {
+                traverse.set(k,
+                        new ObjectArray(this.$updateLabel, 
+                                this.$accessPolicy, 
+                                proxyType, 
+                                lengths[depth+1], 
+                                this.CHUNK_SIZE_LOG2));
+            }
+        }
+    }
+
+  }
+  
+  public Object $initLabels() {
+    //handled by constructor
+    return this;
+  }
+
+  public int[] getLengths() {
+    return lengths;
+  }
+  
+  public Object get(int[] index) {
+      ObjectArray traverse = firstDim;
+      for (int i = 0; i < index.length - 1; i++) {
+          traverse = (ObjectArray)traverse.get(index[i]);
+      }
+      return traverse.get(index[index.length - 1]);
+  }
+
+  public Object set(int[] index, Object data) {
+      ObjectArray traverse = firstDim;
+      for (int i = 0; i < index.length - 1; i++) {
+          traverse = (ObjectArray)traverse.get(index[i]);
+      }
+      return traverse.set(index[index.length - 1], data);
+  }
+}
+
+
