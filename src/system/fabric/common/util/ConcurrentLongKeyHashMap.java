@@ -877,7 +877,10 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
   public V putIfAbsent(long key, V value) {
     if (value == null) throw new NullPointerException();
     int hash = hash(hashCode(key));
-    return segmentFor(hash).put(key, hash, value, true);
+    Segment<V> segment = segmentFor(hash);
+    V existing = segment.get(key, hash);
+    if (existing != null) return existing;
+    return segment.put(key, hash, value, true);
   }
 
   /**
