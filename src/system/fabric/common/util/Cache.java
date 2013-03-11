@@ -78,10 +78,25 @@ public class Cache<K, V> {
    *          there was no mapping for the key.
    */
   public V putIfAbsent(K key, V value) {
-    ValueSoftRef<K, V> ref =
-        map.putIfAbsent(key, new ValueSoftRef<K, V>(this, key, value));
-    if (ref == null) return null;
-    return ref.get();
+    while (true) {
+      // First use get to avoid acquiring a lock.
+      ValueSoftRef<K, V> ref = map.get(key);
+      if (ref == null) {
+        // Didn't get anything, attempt to put.
+        ref = map.putIfAbsent(key, new ValueSoftRef<K, V>(this, key, value));
+        if (ref == null) return null;
+      }
+
+      // Found an existing entry. See if the soft ref is still valid.
+      V result = ref.get();
+      if (result != null) return result;
+
+      // Found a broken soft ref. Attempt to replace.
+      if (map.replace(key, ref, new ValueSoftRef<K, V>(this, key, value)))
+        return null;
+
+      // Replacement failed. Start over.
+    }
   }
 
   /**

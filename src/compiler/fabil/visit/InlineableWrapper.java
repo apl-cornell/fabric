@@ -5,7 +5,6 @@ import java.util.Collections;
 import polyglot.ast.ArrayAccess;
 import polyglot.ast.Assign;
 import polyglot.ast.Call;
-import polyglot.ast.Cast;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.frontend.Job;
@@ -116,12 +115,24 @@ public class InlineableWrapper extends AscriptionVisitor {
     MethodInstance mi =
         ts.methodInstance(CG, wrappedJavaInlineable,
             Flags.PUBLIC.set(Flags.STATIC).set(Flags.FINAL), ts.Object(),
-            "$unwrap", Collections.singletonList((Type) ts.FObject()),
+            "$unwrap", Collections.<Type> singletonList(ts.FObject()),
             Collections.<Type> emptyList());
-
-    Cast result =
-        nf.Cast(CG, nf.CanonicalTypeNode(CG, toType), call.methodInstance(mi));
-    result = (Cast) result.type(toType);
+    Expr result;
+    if (!ts.String().equals(toType)) {
+      result =
+          nf.Cast(CG, nf.CanonicalTypeNode(CG, toType), call.methodInstance(mi));
+      result = result.type(toType);
+    } else {
+      MethodInstance valueOfMI =
+          ts.methodInstance(CG, ts.String(), Flags.PUBLIC.set(Flags.STATIC)
+              .set(Flags.FINAL), ts.String(), "valueOf", Collections
+              .<Type> singletonList(ts.Object()), Collections
+              .<Type> emptyList());
+      Call valueOf =
+          nf.Call(CG, nf.CanonicalTypeNode(CG, ts.String()),
+              nf.Id(CG, "valueOf"), call.methodInstance(mi));
+      result = valueOf.methodInstance(valueOfMI).type(ts.String());
+    }
     return result;
   }
 }

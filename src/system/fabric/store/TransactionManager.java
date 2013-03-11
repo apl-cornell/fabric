@@ -274,6 +274,8 @@ public class TransactionManager {
       // Check reads
       for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
         long onum = entry.getKey();
+        database.notifyReadPrepare(onum);
+
         int version = entry.getValue().intValue();
 
         // Attempt to extend the object's warranty.
