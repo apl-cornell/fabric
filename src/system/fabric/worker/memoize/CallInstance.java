@@ -7,9 +7,9 @@ import java.util.Arrays;
  */
 public class CallInstance {
 
-  protected final fabric.lang.Object target;
-  protected final String method;
-  protected final Object[] arguments;
+  public final fabric.lang.Object target;
+  public final String method;
+  public final Object[] arguments;
 
   public CallInstance(fabric.lang.Object target, String method, Object...
       arguments) {

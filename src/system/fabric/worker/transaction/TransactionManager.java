@@ -702,8 +702,8 @@ public final class TransactionManager {
             // appropriate requests and calls for each individual store.
             store
                 .prepareTransactionReadsAndRequests(current.tid.topTid, reads,
-                    current.semanticWarrantiesUsed, new
-                    HashSet<SemanticWarrantyRequest>(current.requests.values()),
+                    current.getCallsForStore(store),
+                    current.getRequestsForStore(store),
                     commitTime);
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) store, e);
@@ -987,7 +987,7 @@ public final class TransactionManager {
    * Registers the use of a pre-cached CallInstance's value.
    */
   public void registerSemanticWarrantyUse(CallInstance call) {
-    current.semanticWarrantiesUsed.add(call.id());
+    current.semanticWarrantiesUsed.add(call);
   }
 
   /**

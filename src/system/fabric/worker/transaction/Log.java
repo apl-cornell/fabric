@@ -38,9 +38,6 @@ import fabric.worker.remote.WriterMap;
 /* TODO:
  *      - Add support for sending requests and other information in the prepare
  *      phase.
- *      - Check that requests are entirely kept to one store.
- *              + Allow for selecting the set of requests for a specific store,
- *              so that we don't send ALL requests to every store.
  *      - Handle top-level semantic warranty request transactions
  *      - Double check code for merging a completed subtransaction
  *              + Might want to think about whether writes and creates of
@@ -158,13 +155,16 @@ public final class Log {
   protected final LongKeyMap<LongSet> readDependencies;
 
   /**
+   * Mapping from call ids to CallInstances we're requesting semantic warranties
+   * for.
+   */
+  protected final LongKeyMap<LongSet> callDependencies;
+
+  /**
    * Set of CallInstance ids for semantic warranties used during this
    * transaction.
    */
-  protected final LongSet semanticWarrantiesUsed;
-  /* TODO: What if we have two threads in the same transaction (is that
-   * possible?) attempting the same memoized call?
-   */
+  protected final Set<CallInstance> semanticWarrantiesUsed;
 
   /**
    * Map from call ID to SemanticWarrantyRequests made by subtransactions.
@@ -271,8 +271,9 @@ public final class Log {
     this.localStoreWrites = new WeakReferenceArrayList<_Impl>();
     this.workersCalled = new ArrayList<RemoteWorker>();
     this.semanticWarrantyCall = semanticWarrantyCall;
-    this.semanticWarrantiesUsed = new LongHashSet();
+    this.semanticWarrantiesUsed = new HashSet<CallInstance>();
     this.readDependencies = new LongKeyHashMap<LongSet>();
+    this.callDependencies = new LongKeyHashMap<LongSet>();
     this.requests = new LongKeyHashMap<SemanticWarrantyRequest>();
 
     if (parent != null) {
@@ -353,10 +354,17 @@ public final class Log {
    */
   private void removeRequest(long callId) {
     SemanticWarrantyRequest req = requests.get(callId);
-    LongIterator it = req.reads.iterator();
-    while (it.hasNext()) {
-      readDependencies.remove(it.next());
+
+    LongIterator it1 = req.reads.iterator();
+    while (it1.hasNext()) {
+      readDependencies.remove(it1.next());
     }
+
+    LongIterator it2 = req.calls.iterator();
+    while (it2.hasNext()) {
+      callDependencies.remove(it1.next());
+    }
+
     requests.remove(callId);
   }
 
@@ -544,6 +552,28 @@ public final class Log {
   }
 
   /**
+   * Returns the set of requests that will be stored on the given store.
+   */
+  Set<SemanticWarrantyRequest> getRequestsForStore(Store store) {
+    Set<SemanticWarrantyRequest> reqSet = new HashSet<SemanticWarrantyRequest>();
+    for (SemanticWarrantyRequest r : requests.values())
+      if (r.store == store)
+        reqSet.add(r);
+    return reqSet;
+  }
+
+  /**
+   * Returns the set of call ids used from a given store
+   */
+  LongSet getCallsForStore(Store store) {
+    LongSet callSet = new LongHashSet();
+    for (CallInstance c : semanticWarrantiesUsed)
+      if (c.target.$getStore() == store)
+        callSet.add(c.id());
+    return callSet;
+  }
+
+  /**
    * Sets the retry flag on this and the logs of all sub-transactions.
    */
   public void flagRetry() {
@@ -618,6 +648,65 @@ public final class Log {
       if (retrySignal != null) {
         synchronized (this) {
           if (retrySignal.equals(tid)) retrySignal = null;
+        }
+      }
+    }
+  }
+
+  /**
+   * Does all the manipulation to create the semantic warranty request at the
+   * current log (if possible).  Should only be called when committing the log.
+   */
+  private void createCurrentRequest() {
+    if (semanticWarrantyCall != null) {
+      // Add call to readDependencies and build up reads set.
+      LongSet readSet = new LongHashSet();
+      for (LongKeyMap<ReadMapEntry> submap : reads) {
+        for (ReadMapEntry entry : submap.values()) {
+          readSet.add(entry.obj.onum);
+
+          LongSet dependencies = parent.readDependencies.get(entry.obj.onum);
+          if (dependencies == null) {
+            dependencies = new LongHashSet();
+            readDependencies.put(entry.obj.onum, dependencies);
+          }
+          dependencies.add(semanticWarrantyCall.id());
+        }
+      }
+
+      LongSet callSet = new LongHashSet();
+      for (CallInstance c : semanticWarrantiesUsed) {
+        callSet.add(c.id());
+        LongSet dependencies = parent.callDependencies.get(c.id());
+        if (dependencies == null) {
+          dependencies = new LongHashSet();
+          callDependencies.put(c.id(), dependencies);
+        }
+        dependencies.add(semanticWarrantyCall.id());
+      }
+
+      Store targetStore = semanticWarrantyCall.target.$getStore();
+      LongSet readsForTargetStore = getReadsForStore(targetStore).keySet();
+      LongSet callsForTargetStore = getCallsForStore(targetStore);
+
+      if (readsForTargetStore.containsAll(readSet) &&
+          callsForTargetStore.containsAll(callSet)) {
+        // Create the request object only if we keep all of the reads and call
+        // reuses on a single store (the same as where we're storing the target
+        // of the call).
+        requests.put(semanticWarrantyCall.id(),
+            new SemanticWarrantyRequest(semanticWarrantyCall,
+              semanticWarrantyValue, readSet, callSet, targetStore));
+      } else {
+        // Otherwise, remove the dependency mappings in the parent.
+        LongIterator it1 = readSet.iterator();
+        while (it1.hasNext()) {
+          parent.readDependencies.get(it1.next()).remove(semanticWarrantyCall.id());
+        }
+
+        LongIterator it2 = callSet.iterator();
+        while (it2.hasNext()) {
+          parent.callDependencies.get(it2.next()).remove(semanticWarrantyCall.id());
         }
       }
     }
@@ -731,37 +820,32 @@ public final class Log {
       parent.writerMap.putAll(writerMap);
     }
 
-    // Handle merging of semantic warranty request information.
-    
-    // Handle merging of this request (if there is one)
-    if (semanticWarrantyCall != null) {
-      // Add call to readDependencies and build up reads set.
-      //
-      // TODO: Double check that the SemanticWarrantyRequest doesn't span more
-      // than one store.
-      LongSet readSet = new LongHashSet();
+    // Create this SemanticWarranty request (if there is one)
+    createCurrentRequest();
 
-      for (LongKeyMap<ReadMapEntry> submap : reads) {
-        for (ReadMapEntry entry : submap.values()) {
-          readSet.add(entry.obj.onum);
+    // Merge all child requests and dependencies
+    parent.semanticWarrantiesUsed.addAll(semanticWarrantiesUsed);
+    parent.requests.putAll(requests);
 
-          LongSet dependencies = parent.readDependencies.get(entry.obj.onum);
-          if (dependencies == null) {
-            dependencies = new LongHashSet();
-            parent.readDependencies.put(entry.obj.onum, dependencies);
-          }
-          dependencies.add(semanticWarrantyCall.id());
-        }
+    LongIterator readDependenciesIt = readDependencies.keySet().iterator();
+    while (readDependenciesIt.hasNext()) {
+      long curRead = readDependenciesIt.next();
+      if (parent.readDependencies.containsKey(curRead)) {
+        parent.readDependencies.get(curRead).addAll(readDependencies.get(curRead));
+      } else {
+        parent.readDependencies.put(curRead, readDependencies.get(curRead));
       }
-
-      // Create the request object and add it to the 
-      parent.requests.put(semanticWarrantyCall.id(),
-          new SemanticWarrantyRequest(semanticWarrantyCall,
-            semanticWarrantyValue, readSet, semanticWarrantiesUsed));
     }
 
-    // Merge all child requests
-    parent.semanticWarrantiesUsed.addAll(semanticWarrantiesUsed);
+    LongIterator callDependenciesIt = callDependencies.keySet().iterator();
+    while (callDependenciesIt.hasNext()) {
+      long curCall = callDependenciesIt.next();
+      if (parent.callDependencies.containsKey(curCall)) {
+        parent.callDependencies.get(curCall).addAll(callDependencies.get(curCall));
+      } else {
+        parent.callDependencies.put(curCall, callDependencies.get(curCall));
+      }
+    }
 
     synchronized (parent) {
       parent.child = null;

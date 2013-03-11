@@ -1,6 +1,7 @@
 package fabric.worker.memoize;
 
 import fabric.common.util.LongSet;
+import fabric.worker.Store;
 
 /**
  * Represents all the data needed for a request for a SemanticWarranty.  Should
@@ -13,12 +14,14 @@ public class SemanticWarrantyRequest {
   public final Object value;
   public final LongSet reads;
   public final LongSet calls;
+  public final Store store;
 
   public SemanticWarrantyRequest(CallInstance call, Object value, LongSet reads,
-      LongSet calls) {
+      LongSet calls, Store store) {
     this.call = call;
     this.value = value;
     this.reads = reads;
     this.calls = calls;
+    this.store = store;
   }
 }
