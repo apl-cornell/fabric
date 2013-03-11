@@ -110,6 +110,7 @@ public class SemanticWarrantyDependencies {
    * Update a call with a new set of read and call dependencies in the table.
    */
   public void updateCall(long id, LongSet reads, LongSet calls) {
+    /* TODO: This is probably not threadsafe? */
     removeCall(id);
     addCall(id, reads, calls);
   }

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,7 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -696,8 +698,13 @@ public final class TransactionManager {
                   + "will expire", current.tid.topTid, store, reads.size());
             }
 
+            // XXX: This needs to change so that we only send off the
+            // appropriate requests and calls for each individual store.
             store
-                .prepareTransactionReads(current.tid.topTid, reads, commitTime);
+                .prepareTransactionReadsAndRequests(current.tid.topTid, reads,
+                    current.semanticWarrantiesUsed, new
+                    HashSet<SemanticWarrantyRequest>(current.requests.values()),
+                    commitTime);
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) store, e);
           } catch (UnreachableNodeException e) {

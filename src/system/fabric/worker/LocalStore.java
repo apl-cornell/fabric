@@ -16,6 +16,7 @@ import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
@@ -29,6 +30,7 @@ import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.util.HashMap;
 import fabric.util.Map;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.SemanticWarrantyRequest;
 
 public final class LocalStore implements Store, Serializable {
 
@@ -59,8 +61,9 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public void prepareTransactionReads(long tid, LongKeyMap<Integer> reads,
-      long commitTime) {
+  public void prepareTransactionReadsAndRequests(long tid,
+      LongKeyMap<Integer> reads, LongSet calls,
+      Set<SemanticWarrantyRequest> requests, long commitTime) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing reads");

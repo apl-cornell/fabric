@@ -31,13 +31,22 @@ import fabric.lang.security.SecurityCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
 /* TODO:
  *      - Add support for sending requests and other information in the prepare
  *      phase.
- *      - Double check code for merging a completed transaction
+ *      - Check that requests are entirely kept to one store.
+ *              + Allow for selecting the set of requests for a specific store,
+ *              so that we don't send ALL requests to every store.
+ *      - Handle top-level semantic warranty request transactions
+ *      - Double check code for merging a completed subtransaction
+ *              + Might want to think about whether writes and creates of
+ *              requests should appear in the TL transaction. 
+ *      - Store away results given by re-used calls so they can be checked by
+ *      the transaction.
  */
 /**
  * Stores per-transaction information. Records the objects that are created,
@@ -143,23 +152,6 @@ public final class Log {
   protected Object semanticWarrantyValue;
 
   /**
-   * Map from CallInstance IDs to the log for the request.
-   *
-   * TODO: Maybe make a separate class for maps from CallInstance to other
-   * stuff?
-   */
-  protected final LongKeyMap<Log> semanticWarrantyLogs;
-
-  /**
-   * Map from CallInstance IDs to the value of the call for all warranty
-   * requests.
-   *
-   * TODO: Maybe make a separate class for maps from CallInstances to
-   * other stuff?
-   */
-  protected final LongKeyMap<Object> semanticWarrantyValues;
-
-  /**
    * Mapping from onums to CallInstances we're requesting semantic warranties
    * for.
    */
@@ -173,6 +165,11 @@ public final class Log {
   /* TODO: What if we have two threads in the same transaction (is that
    * possible?) attempting the same memoized call?
    */
+
+  /**
+   * Map from call ID to SemanticWarrantyRequests made by subtransactions.
+   */
+  protected final LongKeyMap<SemanticWarrantyRequest> requests;
 
   /**
    * Indicates the state of commit for the top-level transaction.
@@ -274,10 +271,9 @@ public final class Log {
     this.localStoreWrites = new WeakReferenceArrayList<_Impl>();
     this.workersCalled = new ArrayList<RemoteWorker>();
     this.semanticWarrantyCall = semanticWarrantyCall;
-    this.semanticWarrantyLogs = new LongKeyHashMap<Log>();
-    this.semanticWarrantyValues = new LongKeyHashMap<Object>();
     this.semanticWarrantiesUsed = new LongHashSet();
     this.readDependencies = new LongKeyHashMap<LongSet>();
+    this.requests = new LongKeyHashMap<SemanticWarrantyRequest>();
 
     if (parent != null) {
       try {
@@ -336,13 +332,18 @@ public final class Log {
    * Handles invalidation of all semantic warranty requests made previously by
    * the parent that read the given onum.
    */
+  /* TODO: Possibly do this just at the end of the invalidating subtransaction
+   * rather than immediately on the write.
+   *
+   * Issue is that we need to avoid accidentally invalidating based on writes
+   * that happened BEFORE the request was computed...
+   */
   public void invalidateDependentRequests(long onum) {
     LongSet dependencies = readDependencies.get(onum);
     if (dependencies == null) return;
     LongIterator it = dependencies.iterator();
     while (it.hasNext()) {
-      long callId = it.next();
-      removeRequest(callId);
+      removeRequest(it.next());
     }
   }
 
@@ -351,15 +352,12 @@ public final class Log {
    * all associated book keeping.
    */
   private void removeRequest(long callId) {
-    semanticWarrantyValues.remove(callId);
-    Log reqLog = semanticWarrantyLogs.get(callId);
-    for (LongKeyMap<ReadMapEntry> submap : reqLog.reads) {
-      for (ReadMapEntry entry : submap.values()) {
-        readDependencies.remove(entry.obj.onum);
-      }
+    SemanticWarrantyRequest req = requests.get(callId);
+    LongIterator it = req.reads.iterator();
+    while (it.hasNext()) {
+      readDependencies.remove(it.next());
     }
-    semanticWarrantyLogs.remove(callId);
-    semanticWarrantiesUsed.remove(callId);
+    requests.remove(callId);
   }
 
   /**
@@ -631,6 +629,7 @@ public final class Log {
    * merged into the parent's log and any locks held are transferred to the
    * parent.
    */
+  /* TODO: Should I not merge writes/creates of semantic warranty requests? */
   void commitNested() {
     // TODO See if lazy merging of logs helps performance.
 
@@ -736,9 +735,16 @@ public final class Log {
     
     // Handle merging of this request (if there is one)
     if (semanticWarrantyCall != null) {
-      // Add call to readDependencies
+      // Add call to readDependencies and build up reads set.
+      //
+      // TODO: Double check that the SemanticWarrantyRequest doesn't span more
+      // than one store.
+      LongSet readSet = new LongHashSet();
+
       for (LongKeyMap<ReadMapEntry> submap : reads) {
         for (ReadMapEntry entry : submap.values()) {
+          readSet.add(entry.obj.onum);
+
           LongSet dependencies = parent.readDependencies.get(entry.obj.onum);
           if (dependencies == null) {
             dependencies = new LongHashSet();
@@ -748,15 +754,13 @@ public final class Log {
         }
       }
 
-      // Add call to maps for value and logs
-      parent.semanticWarrantyValues.put(semanticWarrantyCall.id(),
-          semanticWarrantyValue);
-      parent.semanticWarrantyLogs.put(semanticWarrantyCall.id(), this);
+      // Create the request object and add it to the 
+      parent.requests.put(semanticWarrantyCall.id(),
+          new SemanticWarrantyRequest(semanticWarrantyCall,
+            semanticWarrantyValue, readSet, semanticWarrantiesUsed));
     }
 
     // Merge all child requests
-    parent.semanticWarrantyLogs.putAll(semanticWarrantyLogs);
-    parent.semanticWarrantyValues.putAll(semanticWarrantyValues);
     parent.semanticWarrantiesUsed.addAll(semanticWarrantiesUsed);
 
     synchronized (parent) {

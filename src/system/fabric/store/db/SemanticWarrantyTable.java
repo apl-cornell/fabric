@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import fabric.common.SemanticWarranty;
+import fabric.common.Warranty;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
@@ -16,6 +17,11 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 
+/*
+ * TODO:
+ *      - Get a more sane approach to assigning warranty lengths to new call
+ *      entries.
+ */
 /**
  * A table containing semantic warranties, keyed by CallInstance id, and
  * supporting concurrent accesses.
@@ -38,21 +44,65 @@ public class SemanticWarrantyTable {
    */
   private final ConcurrentMap<SemanticWarranty, LongSet> reverseTable;
 
-  SemanticWarrantyTable() {
+  /**
+   * Table for looking up dependencies of calls on various reads and calls
+   */
+  private final SemanticWarrantyDependencies dependencyTable;
+
+  /**
+   * ObjectDB for which calls are reading items from.
+   */
+  private final ObjectDB database;
+
+  public SemanticWarrantyTable(ObjectDB database) {
     defaultWarranty = new SemanticWarranty(0);
     table = new ConcurrentLongKeyHashMap<Pair<Object, SemanticWarranty>>();
     reverseTable = new ConcurrentHashMap<SemanticWarranty, LongSet>();
+    dependencyTable = new SemanticWarrantyDependencies();
+    this.database = database;
 
     collector = new Collector();
     collector.start();
   }
 
-  final Pair<Object, SemanticWarranty> get(long id) {
+  public final Pair<Object, SemanticWarranty> get(long id) {
     return table.get(id);
   }
 
-  final void put(long id, Pair<Object, SemanticWarranty> valueAndWarranty) {
-    SemanticWarranty warranty = valueAndWarranty.second;
+  /* Create a warranty with a suggested time for the given call with the
+   * associated reads and calls.
+   *
+   * XXX THIS IS CURRENTLY NOT A VERY GOOD ALGORITHM AT _ALL_
+   */
+  private SemanticWarranty warrantyForCall(long id, LongSet reads, LongSet
+      calls) {
+    Warranty minWarranty = new SemanticWarranty(Long.MAX_VALUE);
+    LongIterator it1 = reads.iterator();
+    while (it1.hasNext()) {
+      Warranty readWarranty = database.refreshWarranty(it1.next());
+      if (readWarranty.compareTo(minWarranty) < 0) {
+        minWarranty = readWarranty;
+      }
+    }
+
+    //XXX THIS IS ALMOST CERTAINLY WRONG IF WE MAKE MORE THAN ONE SEMANTIC
+    //WARRANTY REQUEST IN A TRANSACTION AND ONE WAS NESTED IN THE OTHER.
+    LongIterator it2 = calls.iterator();
+    while (it2.hasNext()) {
+      Warranty callWarranty = get(it2.next()).second;
+      if (callWarranty.compareTo(minWarranty) < 0) {
+        minWarranty = callWarranty;
+      }
+    }
+
+    return new SemanticWarranty(minWarranty.expiry());
+  }
+
+  public final SemanticWarranty put(long id, LongSet reads, LongSet calls,
+      Object value) {
+    SemanticWarranty warranty = warrantyForCall(id, reads, calls);
+    Pair<Object, SemanticWarranty> valueAndWarranty =
+      new Pair<Object, SemanticWarranty>(value, warranty);
     if (defaultWarranty.expiresAfter(warranty)) {
       throw new InternalError("Attempted to insert a warranty that expires "
           + "before the default warranty. This should not happen.");
@@ -76,8 +126,13 @@ public class SemanticWarrantyTable {
       reverseTable.put(warranty, set);
     }
 
+    // Add the warranty dependencies to the dependencyTable
+    dependencyTable.addCall(id, reads, calls);
+
     // Signal the collector thread that we have a new warranty.
     collector.signalNewWarranty();
+
+    return warranty;
   }
 
   /**
@@ -86,7 +141,7 @@ public class SemanticWarrantyTable {
    * 
    * @return true iff the warranty was replaced.
    */
-  final boolean extend(long id, SemanticWarranty oldWarranty,
+  public final boolean extend(long id, SemanticWarranty oldWarranty,
       SemanticWarranty newWarranty) {
     if (defaultWarranty.expiresAfter(newWarranty)) {
       throw new InternalError("Attempted to insert a warranty that expires "
@@ -141,8 +196,44 @@ public class SemanticWarrantyTable {
   /**
    * Sets the default warranty for ids that aren't yet in the table.
    */
-  void setDefaultWarranty(SemanticWarranty warranty) {
+  public void setDefaultWarranty(SemanticWarranty warranty) {
     defaultWarranty = warranty;
+  }
+
+  /**
+   * Provides the longest SemanticWarranty that read the given onum.
+   */
+  public SemanticWarranty longestReadDependency(long onum) {
+    SemanticWarranty longest = new SemanticWarranty(0);
+
+    LongSet readers = dependencyTable.getReaders(onum);
+    LongIterator it = readers.iterator();
+    while (it.hasNext()) {
+      SemanticWarranty cur = get(it.next()).second;
+      if (cur.expiresAfter(longest)) {
+        longest = cur;
+      }
+    }
+
+    return longest;
+  }
+
+  /**
+   * Provides the longest SemanticWarranty that called the given callId.
+   */
+  public SemanticWarranty longestCallDependency(long callId) {
+    SemanticWarranty longest = new SemanticWarranty(0);
+
+    LongSet callers = dependencyTable.getCallers(callId);
+    LongIterator it = callers.iterator();
+    while (it.hasNext()) {
+      SemanticWarranty cur = get(it.next()).second;
+      if (cur.expiresAfter(longest)) {
+        longest = cur;
+      }
+    }
+
+    return longest;
   }
 
   /**

@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
 import fabric.common.Crypto;
 import fabric.common.ONumConstants;
@@ -28,6 +29,7 @@ import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
@@ -48,6 +50,7 @@ import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.SemanticWarrantyRequest;
 
 /**
  * Encapsulates a Store. This class maintains two connections to the store (one
@@ -128,11 +131,12 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public void prepareTransactionReads(long tid, LongKeyMap<Integer> reads,
+  public void prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer>
+      reads, LongSet calls, Set<SemanticWarrantyRequest> requests,
       long commitTime) throws TransactionPrepareFailedException,
-      UnreachableNodeException {
+         UnreachableNodeException {
     send(Worker.getWorker().authToStore, new PrepareTransactionReadsMessage(
-        tid, reads, commitTime));
+        tid, reads, calls, requests, commitTime));
   }
 
   @Override

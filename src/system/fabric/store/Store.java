@@ -11,6 +11,7 @@ import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.logging.Level;
+import java.util.Set;
 
 import fabric.common.ConfigProperties;
 import fabric.common.Crypto;
@@ -32,6 +33,7 @@ import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
@@ -47,6 +49,7 @@ import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
 import fabric.store.db.ObjectDB;
+import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
@@ -226,6 +229,8 @@ class Store extends MessageToStoreHandler {
         "Handling Prepare Message, worker={0}, tid={1}", nameOf(p), msg.tid);
 
     prepareTransactionReads(p, msg.tid, msg.reads, msg.commitTime);
+    prepareTransactionCalls(p, msg.tid, msg.calls, msg.commitTime);
+    prepareTransactionRequests(p, msg.tid, msg.requests, msg.commitTime);
     return new PrepareTransactionReadsMessage.Response();
   }
 
@@ -339,6 +344,21 @@ class Store extends MessageToStoreHandler {
       LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
     tm.prepareReads(p, tid, reads, commitTime);
+  }
+
+  private void prepareTransactionCalls(Principal p, long tid,
+      LongSet calls, long commitTime)
+    throws TransactionPrepareFailedException {
+    tm.prepareCalls(p, tid, calls, commitTime);
+  }
+
+  /**
+   * Handles the <code>SemanticWarrantyRequest</code> for a transaction.
+   */
+  private void prepareTransactionRequests(Principal p, long tid,
+      Set<SemanticWarrantyRequest> requests, long commitTime) {
+      /* throws TransactionPrepareFailedException { */
+    tm.prepareRequests(p, tid, requests, commitTime);
   }
 
   private String nameOf(Principal p) {

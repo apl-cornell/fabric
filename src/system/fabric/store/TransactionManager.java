@@ -7,11 +7,14 @@ import static fabric.store.db.ObjectDB.UpdateType.WRITE;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
+import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
@@ -27,13 +30,22 @@ import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.store.db.ObjectDB.ExtendWarrantyStatus;
+import fabric.store.db.SemanticWarrantyTable;
 import fabric.worker.AbortException;
+import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.CallInstance;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 
+/* TODO:
+ *      - Change the defense mechanism for SemanticWarranties to check if the
+ *      call value changed.
+ *      - Double check that the re-use of a semantic warranty value has the same
+ *      result as what's in the table.
+ */
 public class TransactionManager {
 
   /**
@@ -47,9 +59,15 @@ public class TransactionManager {
    */
   private final SubscriptionManager sm;
 
+  /**
+   * Data for maintaining semantic warranties.
+   */
+  private final SemanticWarrantyTable semanticWarranties;
+
   public TransactionManager(ObjectDB database) {
     this.database = database;
     this.sm = new SubscriptionManager(database.getName(), this);
+    this.semanticWarranties = new SemanticWarrantyTable(database);
   }
 
   public final SubscriptionManager subscriptionManager() {
@@ -123,6 +141,12 @@ public class TransactionManager {
             database.registerUpdate(tid, worker, o, versionConflicts, WRITE);
         if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
           longestWarranty = warranty;
+
+        // Block all writes to objects read by an existing SemanticWarranty
+        SemanticWarranty callWarranty =
+          semanticWarranties.longestReadDependency(o.getOnum());
+        if (callWarranty.expiresAfter(longestWarranty))
+          longestWarranty = new VersionWarranty(callWarranty.expiry());
       }
 
       /*
@@ -291,6 +315,53 @@ public class TransactionManager {
       }
       throw e;
     }
+  }
+
+  /**
+   * Executes the calls piece of the PREPARE_READS phase of the three-phase
+   * commit.
+   * 
+   * @param worker
+   *          The worker requesting the prepare
+   * @throws TransactionPrepareFailedException
+   *           If the transaction could not successfully extend the
+   *           SemanticWarranty on any of the calls
+   */
+  public void prepareCalls(Principal worker, long tid,
+      LongSet calls, long commitTime)
+      throws TransactionPrepareFailedException {
+    LongIterator it = calls.iterator();
+    while (it.hasNext()) {
+      long callId = it.next();
+      if (!semanticWarranties.extend(callId,
+            semanticWarranties.get(callId).second,
+            new SemanticWarranty(commitTime))) {
+        throw new TransactionPrepareFailedException(
+            "Could not extend warranty for call" + callId);
+      }
+    }
+  }
+
+  /**
+   * Executes the requests piece of the PREPARE_READS phase of the three-phase
+   * commit.
+   * 
+   * @param worker
+   *          The worker requesting the prepare
+   */
+  public void prepareRequests(Principal worker, long tid,
+      Set<SemanticWarrantyRequest> requests, long commitTime) {
+    /* Create the associated warranties and add these calls to the warranties
+     * table.
+     */ 
+    Set<Pair<CallInstance, SemanticWarranty>> warranties = new
+      HashSet<Pair<CallInstance, SemanticWarranty>>();
+    for (SemanticWarrantyRequest r : requests) {
+      /* XXX: Should I be failing on some possible issue here? */
+      warranties.add(new Pair<CallInstance, SemanticWarranty>(r.call,
+            semanticWarranties.put(r.call.id(), r.reads, r.calls, r.value)));
+    }
+    /* TODO: Return the warranties created to the worker. */
   }
 
   /**
