@@ -374,6 +374,9 @@ public final class Log {
    * version warranties expire between commitState.commitTime (exclusive) and
    * the given commitTime (inclusive).
    */
+  /* TODO: This doesn't necessarily include stores that have calls used or
+   * requests made.
+   */
   Map<Store, LongKeyMap<Integer>> storesRead(long commitTime) {
     Map<Store, LongKeyMap<Integer>> result =
         new HashMap<Store, LongKeyMap<Integer>>();
@@ -858,7 +861,7 @@ public final class Log {
    * Assumes this is a top-level transaction. All locks held by this transaction
    * will be released after the given commit time.
    */
-  /* TODO: Add in semantic warranties code */
+  /* TODO: Add in semantic warranties code? */
   void commitTopLevel(long commitTime) {
     Logging.WORKER_TRANSACTION_LOGGER.finer("Scheduled commit for tid " + tid
         + " to run at " + new Date(commitTime) + " (in "

@@ -3,6 +3,8 @@ package fabric.dissemination;
 import java.util.Properties;
 
 import fabric.common.ObjectGroup;
+import fabric.common.SemanticWarranty;
+import fabric.common.util.Pair;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 
@@ -20,6 +22,12 @@ public class DummyFetchManager implements FetchManager {
   @Override
   public ObjectGroup fetch(RemoteStore store, long onum) {
     return cache.get(store, onum, true).decrypt();
+  }
+
+  @Override
+  public Pair<Object, SemanticWarranty> fetchCall(RemoteStore store, long callId) {
+    /* TODO: Implement */
+    return null;
   }
 
   @Override

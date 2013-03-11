@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.Properties;
 
 import fabric.common.ObjectGroup;
+import fabric.common.SemanticWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.Pair;
 import fabric.dissemination.DummyFetchManager;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
@@ -50,6 +52,12 @@ public class PastryFetchManager implements FetchManager {
     }
 
     return glob.decrypt();
+  }
+
+  @Override
+  public Pair<Object, SemanticWarranty> fetchCall(RemoteStore store, long callId) {
+    /* TODO: Implement */
+    return null;
   }
 
   @Override

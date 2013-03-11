@@ -2,6 +2,8 @@ package fabric.dissemination;
 
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
+import fabric.common.SemanticWarranty;
+import fabric.common.util.Pair;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.RemoteStore;
 
@@ -24,6 +26,20 @@ public interface FetchManager {
    * @throws UnreachableNodeException
    */
   public ObjectGroup fetch(RemoteStore store, long onum) throws AccessException;
+
+  /**
+   * Fetches the glob identified by the given callId, located at the given
+   * store.
+   * 
+   * @param store
+   *          the store.
+   * @param callId
+   *          the call identifier.
+   * @return the requested glob if fetch was successful.
+   * @throws AccessException
+   * @throws UnreachableNodeException
+   */
+  public Pair<Object, SemanticWarranty> fetchCall(RemoteStore store, long callId) throws AccessException;
 
   /**
    * Called to destroy and clean up the fetch manager.

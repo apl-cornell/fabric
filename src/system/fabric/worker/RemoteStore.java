@@ -49,6 +49,7 @@ import fabric.messages.StalenessCheckMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
+import fabric.worker.memoize.CallCache;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 
@@ -69,6 +70,11 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * The object table: locally resident objects.
    */
   private transient final ObjectCache cache;
+
+  /**
+   * Local cache of semantic warranties and values stored on the remote store.
+   */
+  private transient final CallCache callCache;
 
   /**
    * The set of fetch locks. Used to prevent threads from concurrently
@@ -94,6 +100,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     super(name);
 
     this.cache = new ObjectCache(name);
+    this.callCache = new CallCache();
     this.fetchLocks = new ConcurrentLongKeyHashMap<FetchLock>();
     this.fresh_ids = new LinkedList<Long>();
     this.publicKey = null;
@@ -208,8 +215,10 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
 
   @Override
   public Pair<java.lang.Object, SemanticWarranty> lookupCall(CallInstance call) {
-    /* TODO: Implement */
-    return null;
+    Pair<java.lang.Object, SemanticWarranty> valueAndWarranty = callCache.get(call);
+    /* TODO: Check dissemination layer. */
+    /* TODO: Go to the store. */
+    return valueAndWarranty;
   }
 
   /**
