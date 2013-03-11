@@ -472,8 +472,26 @@ public abstract class ClassRef implements FastSerializable {
           + classHashLength(data, pos));
     }
 
+    private static final byte[] SURROGATE_CLASS_NAME_UTF8;
+    static {
+      try {
+        SURROGATE_CLASS_NAME_UTF8 = Surrogate.class.getName().getBytes("UTF-8");
+      } catch (UnsupportedEncodingException e) {
+        throw new InternalError(e);
+      }
+    }
+
     static boolean isSurrogate(byte[] data, int pos) {
-      return className(data, pos).equals(Surrogate.class.getName());
+      if (classNameLength(data, pos) != SURROGATE_CLASS_NAME_UTF8.length)
+        return false;
+
+      int nameDataPos = classNameLengthPos(data, pos) + 2;
+      for (int i = 0; i < SURROGATE_CLASS_NAME_UTF8.length; i++) {
+        if (data[nameDataPos + i] != SURROGATE_CLASS_NAME_UTF8[i])
+          return false;
+      }
+
+      return true;
     }
   }
 
