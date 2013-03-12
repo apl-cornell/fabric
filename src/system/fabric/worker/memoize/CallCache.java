@@ -1,7 +1,5 @@
 package fabric.worker.memoize;
 
-import fabric.common.SemanticWarranty;
-import fabric.common.util.Pair;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,19 +10,19 @@ import java.util.Map;
  */
 public final class CallCache {
 
-  private Map<CallInstance, Pair<Object, SemanticWarranty>> callTable;
+  private Map<CallInstance, CallResult> callTable;
 
   public CallCache() {
     callTable = Collections.synchronizedMap(
-        new HashMap<CallInstance, Pair<Object, SemanticWarranty>>());
+        new HashMap<CallInstance, CallResult>());
   }
 
-  public Pair<Object, SemanticWarranty> get(CallInstance call) {
+  public CallResult get(CallInstance call) {
     synchronized (callTable) {
-      Pair<Object, SemanticWarranty> result = callTable.get(call);
+      CallResult result = callTable.get(call);
       if (result == null) {
         return null;
-      } else if (result.second.expired(true)) {
+      } else if (result.warranty.expired(true)) {
         callTable.remove(call);
         return null;
       } else {
@@ -34,7 +32,7 @@ public final class CallCache {
     }
   }
 
-  public void put(CallInstance call, Object value, SemanticWarranty warranty) {
-    callTable.put(call, new Pair<Object, SemanticWarranty>(value, warranty));
+  public void put(CallInstance call, CallResult result) {
+    callTable.put(call, result);
   }
 }

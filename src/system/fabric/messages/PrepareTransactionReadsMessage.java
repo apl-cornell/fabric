@@ -3,8 +3,12 @@ package fabric.messages;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 
+import fabric.common.SemanticWarranty;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
@@ -62,7 +66,11 @@ public class PrepareTransactionReadsMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
-    public Response() {
+
+    LongKeyMap<SemanticWarranty> requestResults;
+
+    public Response(LongKeyMap<SemanticWarranty> requestResults) {
+      this.requestResults = requestResults;
     }
   }
 
@@ -96,7 +104,23 @@ public class PrepareTransactionReadsMessage extends
         out.writeInt(entry.getValue());
       }
     }
-    /* TODO: Write out calls and requests */
+
+    if (calls == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(calls.size());
+      LongIterator it = calls.iterator();
+      while (it.hasNext())
+        out.writeLong(it.next());
+    }
+
+    if (requests == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(requests.size());
+      for (SemanticWarrantyRequest r : requests)
+        r.write(out);
+    }
   }
 
   /* readMessage */
@@ -117,17 +141,35 @@ public class PrepareTransactionReadsMessage extends
       for (int i = 0; i < size; i++)
         reads.put(in.readLong(), in.readInt());
     }
-    /* TODO: Read in calls and requests */
-    this.calls = null;
-    this.requests = null;
+
+    int callSize = in.readInt();
+    calls = new LongHashSet();
+    for (int i = 0; i < callSize; i++)
+      calls.add(in.readLong());
+
+    int requestsSize = in.readInt();
+    requests = new HashSet<SemanticWarrantyRequest>(requestsSize);
+    for (int i = 0; i < requestsSize; i++)
+      requests.add(new SemanticWarrantyRequest(in));
   }
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
+    out.writeInt(r.requestResults.size());
+    for (LongKeyMap.Entry<SemanticWarranty> e : r.requestResults.entrySet()) {
+      out.writeLong(e.getKey());
+      out.writeLong(e.getValue().expiry());
+    }
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    return new Response();
+    int numResponses = in.readInt();
+    LongKeyMap<SemanticWarranty> responses =
+      new LongKeyHashMap<SemanticWarranty>(numResponses);
+    for (int i = 0; i < numResponses; i++) {
+      responses.put(in.readLong(), new SemanticWarranty(in.readLong()));
+    }
+    return new Response(responses);
   }
 }

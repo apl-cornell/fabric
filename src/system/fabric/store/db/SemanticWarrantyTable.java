@@ -9,13 +9,14 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import fabric.common.SemanticWarranty;
+import fabric.common.SerializedObject;
 import fabric.common.Warranty;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
-import fabric.common.util.Pair;
+import fabric.worker.memoize.CallResult;
 
 /*
  * TODO:
@@ -33,7 +34,7 @@ public class SemanticWarrantyTable {
    */
   private volatile SemanticWarranty defaultWarranty;
 
-  private final ConcurrentLongKeyMap<Pair<Object, SemanticWarranty>> table;
+  private final ConcurrentLongKeyMap<CallResult> table;
 
   private final Collector collector;
 
@@ -56,7 +57,7 @@ public class SemanticWarrantyTable {
 
   public SemanticWarrantyTable(ObjectDB database) {
     defaultWarranty = new SemanticWarranty(0);
-    table = new ConcurrentLongKeyHashMap<Pair<Object, SemanticWarranty>>();
+    table = new ConcurrentLongKeyHashMap<CallResult>();
     reverseTable = new ConcurrentHashMap<SemanticWarranty, LongSet>();
     dependencyTable = new SemanticWarrantyDependencies();
     this.database = database;
@@ -65,7 +66,7 @@ public class SemanticWarrantyTable {
     collector.start();
   }
 
-  public final Pair<Object, SemanticWarranty> get(long id) {
+  public final CallResult get(long id) {
     return table.get(id);
   }
 
@@ -89,7 +90,7 @@ public class SemanticWarrantyTable {
     //WARRANTY REQUEST IN A TRANSACTION AND ONE WAS NESTED IN THE OTHER.
     LongIterator it2 = calls.iterator();
     while (it2.hasNext()) {
-      Warranty callWarranty = get(it2.next()).second;
+      Warranty callWarranty = get(it2.next()).warranty;
       if (callWarranty.compareTo(minWarranty) < 0) {
         minWarranty = callWarranty;
       }
@@ -99,10 +100,9 @@ public class SemanticWarrantyTable {
   }
 
   public final SemanticWarranty put(long id, LongSet reads, LongSet calls,
-      Object value) {
+      SerializedObject value) {
     SemanticWarranty warranty = warrantyForCall(id, reads, calls);
-    Pair<Object, SemanticWarranty> valueAndWarranty =
-      new Pair<Object, SemanticWarranty>(value, warranty);
+    CallResult result = new CallResult(value, warranty);
     if (defaultWarranty.expiresAfter(warranty)) {
       throw new InternalError("Attempted to insert a warranty that expires "
           + "before the default warranty. This should not happen.");
@@ -113,7 +113,7 @@ public class SemanticWarrantyTable {
     STORE_DB_LOGGER.finest("Adding warranty for call " + id + "; expiry="
         + expiry + " (in " + length + " ms)");
 
-    table.put(id, valueAndWarranty);
+    table.put(id, result);
 
     LongSet set = new LongHashSet();
     LongSet existingSet = reverseTable.putIfAbsent(warranty, set);
@@ -163,10 +163,10 @@ public class SemanticWarrantyTable {
     */
 
     boolean success = false;
-    Pair<Object, SemanticWarranty> oldEntry = table.get(id);
-    if (oldEntry.second.equals(oldWarranty)) {
+    CallResult oldEntry = table.get(id);
+    if (oldEntry.warranty.equals(oldWarranty)) {
       success = true;
-      oldEntry.second = newWarranty;
+      table.put(id, new CallResult(oldEntry.value, newWarranty));
     }
 
     if (success) {
@@ -209,7 +209,7 @@ public class SemanticWarrantyTable {
     LongSet readers = dependencyTable.getReaders(onum);
     LongIterator it = readers.iterator();
     while (it.hasNext()) {
-      SemanticWarranty cur = get(it.next()).second;
+      SemanticWarranty cur = get(it.next()).warranty;
       if (cur.expiresAfter(longest)) {
         longest = cur;
       }
@@ -227,7 +227,7 @@ public class SemanticWarrantyTable {
     LongSet callers = dependencyTable.getCallers(callId);
     LongIterator it = callers.iterator();
     while (it.hasNext()) {
-      SemanticWarranty cur = get(it.next()).second;
+      SemanticWarranty cur = get(it.next()).warranty;
       if (cur.expiresAfter(longest)) {
         longest = cur;
       }

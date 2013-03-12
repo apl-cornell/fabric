@@ -19,6 +19,7 @@ import fabric.common.KeyMaterial;
 import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.SemanticWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.InternalError;
@@ -39,6 +40,7 @@ import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
+import fabric.messages.CallMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
@@ -49,6 +51,7 @@ import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
 import fabric.store.db.ObjectDB;
+import fabric.worker.memoize.CallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -230,8 +233,22 @@ class Store extends MessageToStoreHandler {
 
     prepareTransactionReads(p, msg.tid, msg.reads, msg.commitTime);
     prepareTransactionCalls(p, msg.tid, msg.calls, msg.commitTime);
-    prepareTransactionRequests(p, msg.tid, msg.requests, msg.commitTime);
-    return new PrepareTransactionReadsMessage.Response();
+    LongKeyMap<SemanticWarranty> responses = prepareTransactionRequests(p,
+        msg.tid, msg.requests, msg.commitTime);
+    return new PrepareTransactionReadsMessage.Response(responses);
+  }
+
+  /**
+   * Processes the given call request.
+   */
+  @Override
+  public CallMessage.Response handle(Principal p, CallMessage msg)
+      throws AccessException {
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+        "Handling Call Message from {0}, id={1}", nameOf(p), msg.id);
+
+    CallResult result = tm.getCall(p, msg.id);
+    return new CallMessage.Response(result);
   }
 
   /**
@@ -355,10 +372,10 @@ class Store extends MessageToStoreHandler {
   /**
    * Handles the <code>SemanticWarrantyRequest</code> for a transaction.
    */
-  private void prepareTransactionRequests(Principal p, long tid,
-      Set<SemanticWarrantyRequest> requests, long commitTime) {
+  private LongKeyMap<SemanticWarranty> prepareTransactionRequests(Principal p,
+      long tid, Set<SemanticWarrantyRequest> requests, long commitTime) {
       /* throws TransactionPrepareFailedException { */
-    tm.prepareRequests(p, tid, requests, commitTime);
+    return tm.prepareRequests(p, tid, requests, commitTime);
   }
 
   private String nameOf(Principal p) {

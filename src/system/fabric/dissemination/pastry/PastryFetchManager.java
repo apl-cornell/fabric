@@ -4,13 +4,12 @@ import java.io.IOException;
 import java.util.Properties;
 
 import fabric.common.ObjectGroup;
-import fabric.common.SemanticWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.Pair;
 import fabric.dissemination.DummyFetchManager;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
+import fabric.worker.memoize.CallResult;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 
@@ -55,7 +54,7 @@ public class PastryFetchManager implements FetchManager {
   }
 
   @Override
-  public Pair<Object, SemanticWarranty> fetchCall(RemoteStore store, long callId) {
+  public CallResult fetchCall(RemoteStore store, long callId) {
     /* TODO: Implement */
     return null;
   }

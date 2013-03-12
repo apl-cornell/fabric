@@ -16,7 +16,6 @@ import java.util.Set;
 import fabric.common.Crypto;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
-import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
@@ -37,6 +36,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
+import fabric.messages.CallMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
@@ -51,6 +51,7 @@ import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
 import fabric.worker.memoize.CallCache;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.CallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 
 /**
@@ -213,14 +214,6 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     return cache.get(onum);
   }
 
-  @Override
-  public Pair<java.lang.Object, SemanticWarranty> lookupCall(CallInstance call) {
-    Pair<java.lang.Object, SemanticWarranty> valueAndWarranty = callCache.get(call);
-    /* TODO: Check dissemination layer. */
-    /* TODO: Go to the store. */
-    return valueAndWarranty;
-  }
-
   /**
    * Fetches the object from the store. Places the object in the object cache
    * and returns the resulting cache entry.
@@ -311,6 +304,29 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
           fresh_ids.add(oid);
       }
     }
+  }
+
+  @Override
+  public CallResult lookupCall(CallInstance call) throws AccessException {
+    CallResult result = callCache.get(call);
+    /* TODO: Check dissemination layer. */
+    if (result == null) result = reuseCallFromStore(call.id());
+    return result;
+  }
+
+  /**
+   * Goes to the store to get object.
+   * 
+   * @param onum
+   *          The object number to fetch
+   * @return An ObjectGroup whose head object is the requested object.
+   * @throws FetchException
+   *           if there was an error while fetching the object from the store.
+   */
+  public CallResult reuseCallFromStore(long id) throws AccessException {
+    CallMessage.Response response =
+        send(Worker.getWorker().authToStore, new CallMessage(id));
+    return response.result;
   }
 
   @Override

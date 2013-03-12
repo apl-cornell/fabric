@@ -146,7 +146,7 @@ public final class Log {
    * The value of the call for which this log represents a semantic warranty
    * request.  This is only for the current transaction, not a subtransaction.
    */
-  protected Object semanticWarrantyValue;
+  protected _Impl semanticWarrantyValue;
 
   /**
    * Mapping from onums to CallInstances we're requesting semantic warranties
@@ -170,6 +170,11 @@ public final class Log {
    * Map from call ID to SemanticWarrantyRequests made by subtransactions.
    */
   protected final LongKeyMap<SemanticWarrantyRequest> requests;
+
+  /**
+   * Map from call ID to the store where the request will go.
+   */
+  protected final LongKeyMap<Store> requestLocations;
 
   /**
    * Indicates the state of commit for the top-level transaction.
@@ -275,6 +280,7 @@ public final class Log {
     this.readDependencies = new LongKeyHashMap<LongSet>();
     this.callDependencies = new LongKeyHashMap<LongSet>();
     this.requests = new LongKeyHashMap<SemanticWarrantyRequest>();
+    this.requestLocations = new LongKeyHashMap<Store>();
 
     if (parent != null) {
       try {
@@ -353,6 +359,7 @@ public final class Log {
    * all associated book keeping.
    */
   private void removeRequest(long callId) {
+    /* TODO: Invalidate other calls that depend on this */
     SemanticWarrantyRequest req = requests.get(callId);
 
     LongIterator it1 = req.reads.iterator();
@@ -560,7 +567,7 @@ public final class Log {
   Set<SemanticWarrantyRequest> getRequestsForStore(Store store) {
     Set<SemanticWarrantyRequest> reqSet = new HashSet<SemanticWarrantyRequest>();
     for (SemanticWarrantyRequest r : requests.values())
-      if (r.store == store)
+      if (requestLocations.get(r.call) == store)
         reqSet.add(r);
     return reqSet;
   }
@@ -660,7 +667,7 @@ public final class Log {
    * Does all the manipulation to create the semantic warranty request at the
    * current log (if possible).  Should only be called when committing the log.
    */
-  private void createCurrentRequest() {
+  public void createCurrentRequest() {
     if (semanticWarrantyCall != null) {
       // Add call to readDependencies and build up reads set.
       LongSet readSet = new LongHashSet();
@@ -699,7 +706,7 @@ public final class Log {
         // of the call).
         requests.put(semanticWarrantyCall.id(),
             new SemanticWarrantyRequest(semanticWarrantyCall,
-              semanticWarrantyValue, readSet, callSet, targetStore));
+              semanticWarrantyValue, readSet, callSet));
       } else {
         // Otherwise, remove the dependency mappings in the parent.
         LongIterator it1 = readSet.iterator();

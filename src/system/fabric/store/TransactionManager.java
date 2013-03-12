@@ -7,8 +7,9 @@ import static fabric.store.db.ObjectDB.UpdateType.WRITE;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import fabric.common.AuthorizationUtil;
@@ -33,7 +34,7 @@ import fabric.store.db.ObjectDB.ExtendWarrantyStatus;
 import fabric.store.db.SemanticWarrantyTable;
 import fabric.worker.AbortException;
 import fabric.worker.memoize.SemanticWarrantyRequest;
-import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.CallResult;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -336,7 +337,7 @@ public class TransactionManager {
     while (it.hasNext()) {
       long callId = it.next();
       if (!semanticWarranties.extend(callId,
-            semanticWarranties.get(callId).second,
+            semanticWarranties.get(callId).warranty,
             new SemanticWarranty(commitTime))) {
         throw new TransactionPrepareFailedException(
             "Could not extend warranty for call" + callId);
@@ -351,18 +352,19 @@ public class TransactionManager {
    * @param worker
    *          The worker requesting the prepare
    */
-  public void prepareRequests(Principal worker, long tid,
-      Set<SemanticWarrantyRequest> requests, long commitTime) {
+  public LongKeyMap<SemanticWarranty> prepareRequests(Principal worker,
+      long tid, Set<SemanticWarrantyRequest> requests, long commitTime) {
     /* Create the associated warranties and add these calls to the warranties
      * table.
      */ 
-    Set<Pair<CallInstance, SemanticWarranty>> warranties = new
-      HashSet<Pair<CallInstance, SemanticWarranty>>();
+    LongKeyMap<SemanticWarranty> warranties =
+      new LongKeyHashMap<SemanticWarranty>();
     for (SemanticWarrantyRequest r : requests) {
       /* XXX: Should I be failing on some possible issue here? */
-      warranties.add(new Pair<CallInstance, SemanticWarranty>(r.call,
-            semanticWarranties.put(r.call.id(), r.reads, r.calls, r.value)));
+      warranties.put(r.call,
+          semanticWarranties.put(r.call, r.reads, r.calls, r.value));
     }
+    return warranties;
     /* TODO: Return the warranties created to the worker. */
   }
 
@@ -451,6 +453,21 @@ public class TransactionManager {
    */
   public Glob getGlob(long onum) throws AccessException {
     return getGroupContainerAndSubscribe(onum).getGlob();
+  }
+
+  /**
+   * Returns an CallResult containing the specified call's value and warranty.
+   * 
+   * @param principal
+   *          The principal performing the read.
+   * @param id
+   *          The id for the call instance.
+   */
+  public CallResult getCall(Principal principal, long id)
+      throws AccessException {
+    CallResult result = semanticWarranties.get(id);
+    if (result == null) throw new AccessException(database.getName(), id);
+    return result;
   }
 
   /**

@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +51,6 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.memoize.CallInstance;
-import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -404,6 +402,9 @@ public final class TransactionManager {
     }
 
     // Commit top-level transaction.
+     
+    // Create top level SemanticWarrantyRequest, if any.
+    current.createCurrentRequest();
 
     // Send prepare-write messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
@@ -996,7 +997,7 @@ public final class TransactionManager {
    * should NOT be called if the current log does not have a call associated
    * with it (so it's not a SemanticWarranty request).
    */
-  public void setSemanticWarrantyValue(Object v) {
+  public void setSemanticWarrantyValue(_Impl v) {
     current.semanticWarrantyValue = v;
   }
 

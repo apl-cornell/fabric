@@ -4,10 +4,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 
 import fabric.common.AuthorizationUtil;
+import fabric.common.SemanticWarranty;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
+import fabric.common.util.LongKeyHashMap;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -202,7 +204,11 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       tm.associateLog(null);
     }
 
-    return new PrepareTransactionReadsMessage.Response();
+    /* TODO: Figure out if I should actually be passing back the results of
+     * requests to the remote caller... I don't think so?
+     */
+    return new PrepareTransactionReadsMessage.Response(
+        new LongKeyHashMap<SemanticWarranty>());
   }
 
   /**

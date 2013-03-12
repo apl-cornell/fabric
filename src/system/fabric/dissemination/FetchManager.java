@@ -2,9 +2,8 @@ package fabric.dissemination;
 
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
-import fabric.common.SemanticWarranty;
-import fabric.common.util.Pair;
 import fabric.net.UnreachableNodeException;
+import fabric.worker.memoize.CallResult;
 import fabric.worker.RemoteStore;
 
 /**
@@ -39,7 +38,7 @@ public interface FetchManager {
    * @throws AccessException
    * @throws UnreachableNodeException
    */
-  public Pair<Object, SemanticWarranty> fetchCall(RemoteStore store, long callId) throws AccessException;
+  public CallResult fetchCall(RemoteStore store, long callId) throws AccessException;
 
   /**
    * Called to destroy and clean up the fetch manager.

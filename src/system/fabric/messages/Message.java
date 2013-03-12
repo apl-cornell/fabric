@@ -216,6 +216,12 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
         return new ReadMessage(in);
       }
     },
+    REUSE_CALL {
+      @Override
+      CallMessage parse(DataInput in) throws IOException {
+        return new CallMessage(in);
+      }
+    },
     PREPARE_TRANSACTION_WRITES {
       @Override
       PrepareTransactionWritesMessage parse(DataInput in) throws IOException {

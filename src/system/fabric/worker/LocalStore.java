@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import fabric.common.ONumConstants;
-import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
@@ -30,6 +29,7 @@ import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.util.HashMap;
 import fabric.util.Map;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.CallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 
 public final class LocalStore implements Store, Serializable {
@@ -132,7 +132,7 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public Pair<java.lang.Object, SemanticWarranty> lookupCall(CallInstance call) {
+  public CallResult lookupCall(CallInstance call) {
     /* TODO: Implement */
     return null;
   }

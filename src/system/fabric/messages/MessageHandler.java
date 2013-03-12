@@ -44,6 +44,9 @@ public interface MessageHandler {
       PrepareTransactionReadsMessage msg)
       throws TransactionPrepareFailedException;
 
+  public CallMessage.Response handle(Principal p, CallMessage msg)
+      throws ProtocolError, AccessException;
+
   public ReadMessage.Response handle(Principal p, ReadMessage msg)
       throws ProtocolError, AccessException;
 
