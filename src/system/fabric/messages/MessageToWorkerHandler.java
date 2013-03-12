@@ -42,8 +42,8 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
   }
 
   @Override
-  public fabric.messages.CallMessage.Response handle(Principal p,
-      CallMessage msg) throws ProtocolError {
+  public fabric.messages.ReuseCallMessage.Response handle(Principal p,
+      ReuseCallMessage msg) throws ProtocolError {
     throw error(msg);
   }
 

@@ -67,10 +67,14 @@ public class PrepareTransactionReadsMessage extends
 
   public static class Response implements Message.Response {
 
-    LongKeyMap<SemanticWarranty> requestResults;
+    private LongKeyMap<SemanticWarranty> requestResults;
 
     public Response(LongKeyMap<SemanticWarranty> requestResults) {
       this.requestResults = requestResults;
+    }
+
+    public LongKeyMap<SemanticWarranty> getResults() {
+      return requestResults;
     }
   }
 

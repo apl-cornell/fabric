@@ -16,6 +16,7 @@ import java.util.Set;
 import fabric.common.Crypto;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
+import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
@@ -36,7 +37,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
-import fabric.messages.CallMessage;
+import fabric.messages.ReuseCallMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
@@ -139,12 +140,13 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public void prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer>
-      reads, LongSet calls, Set<SemanticWarrantyRequest> requests,
-      long commitTime) throws TransactionPrepareFailedException,
-         UnreachableNodeException {
-    send(Worker.getWorker().authToStore, new PrepareTransactionReadsMessage(
-        tid, reads, calls, requests, commitTime));
+  public LongKeyMap<SemanticWarranty> prepareTransactionReadsAndRequests(
+      long tid, LongKeyMap<Integer> reads, LongSet calls,
+      Set<SemanticWarrantyRequest> requests, long commitTime) throws
+  TransactionPrepareFailedException, UnreachableNodeException {
+    return send(Worker.getWorker().authToStore,
+        new PrepareTransactionReadsMessage( tid, reads, calls, requests,
+          commitTime)).getResults();
   }
 
   @Override
@@ -310,8 +312,15 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   public CallResult lookupCall(CallInstance call) throws AccessException {
     CallResult result = callCache.get(call);
     /* TODO: Check dissemination layer. */
-    if (result == null) result = reuseCallFromStore(call.id());
+    /* XXX: What to do on expired warranties? */
+    if (result == null)
+      result = reuseCallFromStore(call.id());
     return result;
+  }
+
+  @Override
+  public void insertResult(CallInstance call, CallResult result) {
+    callCache.put(call, result);
   }
 
   /**
@@ -324,8 +333,8 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    *           if there was an error while fetching the object from the store.
    */
   public CallResult reuseCallFromStore(long id) throws AccessException {
-    CallMessage.Response response =
-        send(Worker.getWorker().authToStore, new CallMessage(id));
+    ReuseCallMessage.Response response =
+        send(Worker.getWorker().authToStore, new ReuseCallMessage(id));
     return response.result;
   }
 

@@ -40,7 +40,7 @@ import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
-import fabric.messages.CallMessage;
+import fabric.messages.ReuseCallMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
@@ -242,13 +242,13 @@ class Store extends MessageToStoreHandler {
    * Processes the given call request.
    */
   @Override
-  public CallMessage.Response handle(Principal p, CallMessage msg)
+  public ReuseCallMessage.Response handle(Principal p, ReuseCallMessage msg)
       throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Call Message from {0}, id={1}", nameOf(p), msg.id);
 
     CallResult result = tm.getCall(p, msg.id);
-    return new CallMessage.Response(result);
+    return new ReuseCallMessage.Response(result);
   }
 
   /**

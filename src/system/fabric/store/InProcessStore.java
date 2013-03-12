@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import fabric.common.ObjectGroup;
+import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
@@ -95,11 +96,11 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
+  public LongKeyMap<SemanticWarranty> prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
       LongSet calls, Set<SemanticWarrantyRequest> requests, long commitTime) throws TransactionPrepareFailedException {
     tm.prepareReads(Worker.getWorker().getPrincipal(), tid, reads, commitTime);
     tm.prepareCalls(Worker.getWorker().getPrincipal(), tid, calls, commitTime);
-    tm.prepareRequests(Worker.getWorker().getPrincipal(), tid, requests, commitTime);
+    return tm.prepareRequests(Worker.getWorker().getPrincipal(), tid, requests, commitTime);
   }
 
   @Override

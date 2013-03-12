@@ -10,10 +10,11 @@ import fabric.lang.security.Principal;
 import fabric.worker.memoize.CallResult;
 
 /**
- * A <code>CallMessage</code> represents a request from a worker to reuse a
+ * A <code>ReuseCallMessage</code> represents a request from a worker to reuse a
  * value of a previously computed call at a store.
  */
-public class CallMessage extends Message<CallMessage.Response, AccessException> {
+public class ReuseCallMessage extends Message<ReuseCallMessage.Response,
+       AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -21,7 +22,7 @@ public class CallMessage extends Message<CallMessage.Response, AccessException> 
   /** The id of the call to reuse. */
   public final long id;
 
-  public CallMessage(long id) {
+  public ReuseCallMessage(long id) {
     super(MessageType.REUSE_CALL, AccessException.class);
     this.id = id;
   }
@@ -60,7 +61,7 @@ public class CallMessage extends Message<CallMessage.Response, AccessException> 
   }
 
   /* readMessage */
-  protected CallMessage(DataInput in) throws IOException {
+  protected ReuseCallMessage(DataInput in) throws IOException {
     this(in.readLong());
   }
 

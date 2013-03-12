@@ -24,12 +24,14 @@ import java.util.logging.Level;
 
 import fabric.common.FabricThread;
 import fabric.common.Logging;
+import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -699,13 +701,16 @@ public final class TransactionManager {
                   + "will expire", current.tid.topTid, store, reads.size());
             }
 
-            // XXX: This needs to change so that we only send off the
-            // appropriate requests and calls for each individual store.
-            store
-                .prepareTransactionReadsAndRequests(current.tid.topTid, reads,
-                    current.getCallsForStore(store),
-                    current.getRequestsForStore(store),
-                    commitTime);
+            // TODO: This needs to change so that we only send off the
+            // appropriate requests and calls for each individual store.  Right
+            // now, the stores we contact aren't necessarily correct.
+            LongKeyMap<SemanticWarranty> replies =
+              store.prepareTransactionReadsAndRequests(current.tid.topTid,
+                  reads, current.getCallsForStore(store),
+                  current.getRequestsForStore(store), commitTime);
+            for (LongKeyMap.Entry<SemanticWarranty> e : replies.entrySet()) {
+              current.requestReplies.put(e.getKey(), e.getValue());
+            }
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) store, e);
           } catch (UnreachableNodeException e) {

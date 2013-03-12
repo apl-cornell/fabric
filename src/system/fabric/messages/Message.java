@@ -218,8 +218,8 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
     },
     REUSE_CALL {
       @Override
-      CallMessage parse(DataInput in) throws IOException {
-        return new CallMessage(in);
+      ReuseCallMessage parse(DataInput in) throws IOException {
+        return new ReuseCallMessage(in);
       }
     },
     PREPARE_TRANSACTION_WRITES {

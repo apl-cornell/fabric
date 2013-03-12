@@ -7,9 +7,7 @@ import static fabric.store.db.ObjectDB.UpdateType.WRITE;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import fabric.common.AuthorizationUtil;
@@ -45,7 +43,7 @@ import fabric.worker.Worker.Code;
  *      - Change the defense mechanism for SemanticWarranties to check if the
  *      call value changed.
  *      - Double check that the re-use of a semantic warranty value has the same
- *      result as what's in the table.
+ *      result as what's in the table?
  */
 public class TransactionManager {
 
@@ -365,7 +363,6 @@ public class TransactionManager {
           semanticWarranties.put(r.call, r.reads, r.calls, r.value));
     }
     return warranties;
-    /* TODO: Return the warranties created to the worker. */
   }
 
   /**

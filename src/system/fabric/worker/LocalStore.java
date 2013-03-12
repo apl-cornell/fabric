@@ -10,10 +10,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import fabric.common.ONumConstants;
+import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
@@ -28,6 +30,7 @@ import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.util.HashMap;
 import fabric.util.Map;
+import fabric.worker.memoize.CallCache;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.CallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
@@ -51,6 +54,11 @@ public final class LocalStore implements Store, Serializable {
    */
   private final ObjectCache cache;
 
+  /**
+   * Used to obtain locally stored call results
+   */
+  private final CallCache callCache;
+
   private Set<Pair<Principal, Principal>> localDelegates;
 
   @Override
@@ -61,12 +69,14 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public void prepareTransactionReadsAndRequests(long tid,
+  public LongKeyMap<SemanticWarranty> prepareTransactionReadsAndRequests(long tid,
       LongKeyMap<Integer> reads, LongSet calls,
       Set<SemanticWarrantyRequest> requests, long commitTime) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
+    // TODO: Currently we don't handle local memoized calls.
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing reads");
+    return new LongKeyHashMap<SemanticWarranty>();
   }
 
   @Override
@@ -133,8 +143,12 @@ public final class LocalStore implements Store, Serializable {
 
   @Override
   public CallResult lookupCall(CallInstance call) {
-    /* TODO: Implement */
-    return null;
+    return callCache.get(call);
+  }
+
+  @Override
+  public void insertResult(CallInstance call, CallResult result) {
+    callCache.put(call, result);
   }
 
   @Override
@@ -149,6 +163,7 @@ public final class LocalStore implements Store, Serializable {
    */
   protected LocalStore() {
     this.cache = new ObjectCache(name());
+    this.callCache = new CallCache();
   }
 
   @Override

@@ -14,10 +14,13 @@ import java.util.Set;
 
 import fabric.common.Logging;
 import fabric.common.SysUtil;
+import fabric.common.SemanticWarranty;
 import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
@@ -31,6 +34,7 @@ import fabric.lang.security.SecurityCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.CallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
@@ -172,9 +176,20 @@ public final class Log {
   protected final LongKeyMap<SemanticWarrantyRequest> requests;
 
   /**
+   * Map from call ID to SemanticWarrantyRequests made by subtransactions.
+   */
+  protected final LongKeyMap<CallInstance> requestInstances;
+
+  /**
    * Map from call ID to the store where the request will go.
    */
   protected final LongKeyMap<Store> requestLocations;
+
+  /**
+   * Map from call ID to the store's CallResult response which will be stored on
+   * successfully finishing the commit phase.
+   */
+  protected final ConcurrentLongKeyMap<SemanticWarranty> requestReplies;
 
   /**
    * Indicates the state of commit for the top-level transaction.
@@ -280,7 +295,9 @@ public final class Log {
     this.readDependencies = new LongKeyHashMap<LongSet>();
     this.callDependencies = new LongKeyHashMap<LongSet>();
     this.requests = new LongKeyHashMap<SemanticWarrantyRequest>();
+    this.requestInstances = new LongKeyHashMap<CallInstance>();
     this.requestLocations = new LongKeyHashMap<Store>();
+    this.requestReplies = new ConcurrentLongKeyHashMap<SemanticWarranty>();
 
     if (parent != null) {
       try {
@@ -372,6 +389,8 @@ public final class Log {
       callDependencies.remove(it1.next());
     }
 
+    requestLocations.remove(callId);
+    requestInstances.remove(callId);
     requests.remove(callId);
   }
 
@@ -707,6 +726,8 @@ public final class Log {
         requests.put(semanticWarrantyCall.id(),
             new SemanticWarrantyRequest(semanticWarrantyCall,
               semanticWarrantyValue, readSet, callSet));
+        requestLocations.put(semanticWarrantyCall.id(), targetStore);
+        requestInstances.put(semanticWarrantyCall.id(), semanticWarrantyCall);
       } else {
         // Otherwise, remove the dependency mappings in the parent.
         LongIterator it1 = readSet.iterator();
@@ -878,6 +899,15 @@ public final class Log {
       public void run() {
         Logging.WORKER_TRANSACTION_LOGGER
             .finer("Updating data structures for commit of tid " + tid);
+
+        // Insert memoized calls into the local call cache
+        for (LongKeyMap.Entry<SemanticWarrantyRequest> e
+          : requests.entrySet()) {
+          long id = e.getKey();
+          requestLocations.get(id).insertResult(requestInstances.get(id),
+            new CallResult(e.getValue().value, requestReplies.get(id)));
+        }
+
         // Release read locks.
         for (LongKeyMap<ReadMapEntry> submap : reads) {
           for (ReadMapEntry entry : submap.values()) {

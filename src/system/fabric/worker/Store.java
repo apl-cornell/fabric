@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Set;
 
+import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
@@ -50,9 +51,10 @@ public interface Store extends Serializable {
    * @return whether a subtransaction was created on the store as a result of
    *         the prepare.
    */
-  void prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
-      LongSet calls, Set<SemanticWarrantyRequest> requests, long commitTime)
-    throws UnreachableNodeException, TransactionPrepareFailedException;
+  LongKeyMap<SemanticWarranty> prepareTransactionReadsAndRequests(long tid,
+      LongKeyMap<Integer> reads, LongSet calls, Set<SemanticWarrantyRequest>
+      requests, long commitTime) throws UnreachableNodeException,
+    TransactionPrepareFailedException;
 
   /**
    * Returns the cache entry for the given onum. If the object is not resident,
@@ -87,6 +89,11 @@ public interface Store extends Serializable {
    * Returns the pair of SemanticWarranty and value for the given CallInstance.
    */
   CallResult lookupCall(CallInstance call) throws AccessException;
+
+  /**
+   * Insert a CallResult into the CallCache.
+   */
+  void insertResult(CallInstance call, CallResult result);
 
   /**
    * Notifies the store that the transaction is being Aborted.
