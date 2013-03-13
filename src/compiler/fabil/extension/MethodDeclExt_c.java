@@ -1,19 +1,27 @@
 package fabil.extension;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import polyglot.ast.Block;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
+import polyglot.ast.Formal;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
+import polyglot.ast.Stmt;
+import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
+import fabil.types.FabILFlags;
 import fabil.visit.MemoizedMethodRewriter;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ThreadRewriter;
+
+import polyglot.util.Position;
 
 public class MethodDeclExt_c extends ClassMemberExt_c {
 
@@ -58,8 +66,68 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
 
   @Override
   public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr) {
-    /* TODO: Implement */
-    return node();
+    MethodDecl md = node();
+    if (!md.flags().contains(FabILFlags.MEMOIZED)) return md;
+    md = md.flags(md.flags().clear(FabILFlags.MEMOIZED));
+    if (md.body() == null) return md;
+    QQ qq = mmr.qq();
+    NodeFactory nf = mmr.nodeFactory();
+    Position CG = Position.compilerGenerated();
+
+    TypeNode callInstanceType = nf.TypeNodeFromQualifiedName(CG,
+        "fabric.worker.memoize.CallInstance");
+    TypeNode callResultType = nf.TypeNodeFromQualifiedName(CG,
+        "fabric.worker.memoize.CallResult");
+
+    boolean first = true;
+    int count = 0;
+    String argList = "";
+    List<Stmt> finals = new ArrayList<Stmt>(md.formals().size());
+    List<Stmt> unpacks = new ArrayList<Stmt>(md.formals().size());
+    for (Formal f : md.formals()) {
+      if (first) {
+        first = false;
+      } else {
+        argList += ", ";
+      }
+      argList += f.name();
+      finals.add(qq.parseStmt("final %T $arg" + count + " = %s;", f.type(), f.name()));
+      unpacks.add(qq.parseStmt("%T %s = $arg" + count + ";", f.type(), f.name()));
+      count++;
+    }
+    finals.add(qq.parseStmt("final %T $oldThis = this;",
+          md.memberInstance().container()));
+
+    Stmt resultCreate = qq.parseStmt("%T $result;", md.returnType());
+    Stmt callCreate = qq.parseStmt("final %T $call = new %T(this, \""
+        + md.methodInstance().signature() + "\", " + argList + ");",
+        callInstanceType, callInstanceType);
+    Stmt callLookup = qq.parseStmt(
+        "%T $resultObj = this.$getStore().lookupCall($call);", callResultType);
+    Stmt callUnpack = qq.parseStmt(
+        "%T $cacheResult = (%T) $resultObj.value.deserialize(this.$getStore(),"
+        + " new fabric.common.VersionWarranty(0));", md.returnType(),
+        md.returnType());
+    Stmt checkLookup = qq.parseStmt("if ($resultObj != null) {\n"
+        + "  %S\n"
+        + "  fabric.worker.transaction.TransactionManager.getInstance().registerSemanticWarrantyUse($call, $resultObj);\n"
+        + "  return $cacheResult;\n"
+        + "}", callUnpack);
+    //System.out.println(md.toString());
+    //System.out.println(md.body());
+    Stmt buildWarranty = qq.parseStmt(
+        "{%LS\n"
+      + "return (%T) fabric.worker.Worker.runInSemanticWarrantyTransaction("
+      + "fabric.worker.transaction.TransactionManager.getInstance().getCurrentTid(),\n"
+      + "new fabric.worker.Worker.Code() {\n"
+      + "  public %T run() {\n"
+      + "    %LS\n"
+      + "    %S\n"
+      + "    %S\n"
+      + "  }\n"
+      + "}, true, $call);}", finals, md.returnType(), md.returnType(), unpacks,
+      resultCreate, md.body());
+    return md.body(nf.Block(CG, callCreate, callLookup, checkLookup, buildWarranty));
   }
 
   @Override

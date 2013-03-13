@@ -308,12 +308,15 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public CallResult lookupCall(CallInstance call) throws AccessException {
+  public CallResult lookupCall(CallInstance call) {
     CallResult result = callCache.get(call);
     /* TODO: Check dissemination layer. */
     /* XXX: What to do on expired warranties? */
-    if (result == null)
-      result = reuseCallFromStore(call.id());
+    try {
+      if (result == null)
+        result = reuseCallFromStore(call.id());
+    } catch (AccessException e) {
+    }
     return result;
   }
 

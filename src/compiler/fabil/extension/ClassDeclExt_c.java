@@ -290,6 +290,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Since the method will be implementing part of an interface, make the
     // method public and non-abstract.
     Flags flags = ProxyRewriter.toPublic(mi.flags()).clearAbstract();
+    flags = flags.clear(FabILFlags.MEMOIZED);
     methodDecl.append(flags + " ");
 
     Type returnType = mi.returnType();

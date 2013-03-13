@@ -319,7 +319,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
 
   @Override
   public Flags legalMethodFlags() {
-    return super.legalMethodFlags().set(FabILFlags.ATOMIC);
+    return
+      super.legalMethodFlags().set(FabILFlags.ATOMIC).set(FabILFlags.MEMOIZED);
   }
 
   @Override

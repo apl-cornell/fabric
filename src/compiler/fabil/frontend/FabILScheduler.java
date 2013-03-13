@@ -49,6 +49,7 @@ import fabil.visit.InlineableWrapper;
 import fabil.visit.JavaSkeletonCreator;
 import fabil.visit.LabelAssigner;
 import fabil.visit.LocationAssigner;
+import fabil.visit.MemoizedMethodRewriter;
 import fabil.visit.Memoizer;
 import fabil.visit.PrincipalDelegator;
 import fabil.visit.ProviderRewriter;
@@ -365,6 +366,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         List<Goal> l = new ArrayList<Goal>();
         l.add(WrapInlineables(job));
         l.add(RewriteStoreGetters(job));
+        //l.add(RewriteMemoizedMethods(job));
         // l.add(LocationsAssigned(job));
         // l.add(LabelsAssigned(job));
         l.add(PrincipalsDelegated(job));
@@ -442,6 +444,20 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     return g;
   }
 
+  public Goal RewriteMemoizedMethods(final Job job) {
+    Goal g =
+        internGoal(new VisitorGoal(job, new MemoizedMethodRewriter(
+            (ExtensionInfo) job.extensionInfo())) {
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler s) {
+            List<Goal> l = new ArrayList<Goal>();
+            l.add(RewriteProxies(job));
+            return l;
+          }
+        });
+    return g;
+  }
+
   public Goal Memoized(final Job job) {
     TypeSystem ts = extInfo.typeSystem();
     NodeFactory nf = extInfo.nodeFactory();
@@ -498,6 +514,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
           l.add(RewriteProviders(job));
           l.add(RewriteAtomic(job));
           l.add(RewriteRemoteCalls(job));
+          l.add(RewriteMemoizedMethods(job));
           l.add(Memoized(job));
           l.add(ClassesHashed(job));
           l.add(InstrumentThreads(job));

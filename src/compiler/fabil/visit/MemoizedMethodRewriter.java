@@ -1,7 +1,9 @@
 package fabil.visit;
 
+import java.util.Stack;
 import polyglot.ast.Expr;
 import polyglot.ast.IntLit;
+import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.Receiver;
@@ -12,6 +14,7 @@ import polyglot.visit.NodeVisitor;
 import fabil.ExtensionInfo;
 import fabil.extension.FabILExt;
 import fabil.types.FabILTypeSystem;
+import fabil.types.FabILFlags;
 
 /**
  * Rewrites the <code>atomic</code> construct.
@@ -22,6 +25,8 @@ public class MemoizedMethodRewriter extends NodeVisitor {
   protected FabILTypeSystem ts;
   protected Receiver tm;
 
+  private Stack<MethodDecl> memoizedMethods;
+
   public MemoizedMethodRewriter(ExtensionInfo extInfo) {
     this.qq = new QQ(extInfo);
     this.nf = extInfo.nodeFactory();
@@ -31,6 +36,8 @@ public class MemoizedMethodRewriter extends NodeVisitor {
     this.tm =
         nf.Call(CG, nf.CanonicalTypeNode(CG, ts.TransactionManager()),
             nf.Id(CG, "getInstance"));
+
+    this.memoizedMethods = new Stack<MethodDecl>();
   }
 
   protected FabILExt ext(Node n) {
@@ -38,7 +45,21 @@ public class MemoizedMethodRewriter extends NodeVisitor {
   }
 
   @Override
+  public NodeVisitor enter(Node n) {
+    if (n instanceof MethodDecl)
+      memoizedMethods.push((MethodDecl) n);
+    return this;
+  }
+
+  @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
+    if (old instanceof MethodDecl) {
+      MethodDecl md = memoizedMethods.pop();
+      if (md != old) {
+        throw new RuntimeException(
+            "Memoized Method Rewriting Stack in inconsistent state!");
+      }
+    }
     Node result = ext(n).rewriteMemoizedMethods(this);
 
     /*
@@ -116,5 +137,20 @@ public class MemoizedMethodRewriter extends NodeVisitor {
     } else {
       return nf.NullLit(Position.compilerGenerated());
     }
+  }
+
+  /**
+   * Are we currently in a memoized method?
+   */
+  public boolean inMemoizedMethod() {
+    if (memoizedMethods.empty()) return false;
+    return memoizedMethods.peek().flags().contains(FabILFlags.MEMOIZED);
+  }
+
+  /**
+   * What's the current Method?
+   */
+  public MethodDecl currentMethod() {
+    return memoizedMethods.peek();
   }
 }

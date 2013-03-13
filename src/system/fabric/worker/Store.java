@@ -88,7 +88,7 @@ public interface Store extends Serializable {
   /**
    * Returns the pair of SemanticWarranty and value for the given CallInstance.
    */
-  CallResult lookupCall(CallInstance call) throws AccessException;
+  CallResult lookupCall(CallInstance call);
 
   /**
    * Insert a CallResult into the CallCache.

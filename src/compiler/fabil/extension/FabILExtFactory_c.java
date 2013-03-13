@@ -288,4 +288,8 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
     return new CaseExt_c();
   }
 
+  @Override
+  public Ext extReturnImpl() {
+    return new ReturnExt_c();
+  }
 }
