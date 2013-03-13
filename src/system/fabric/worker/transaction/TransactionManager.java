@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
@@ -35,7 +34,6 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongHashSet;
-import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
@@ -690,7 +688,7 @@ public final class TransactionManager {
 
     // Go through each store and send prepare messages in parallel.
     Map<Store, LongKeyMap<Integer>> storesRead = current.storesRead(commitTime);
-    Map<Store, LongSet> storesCalled = current.storesCalled(commitTime);
+    Map<Store, Set<byte[]>> storesCalled = current.storesCalled(commitTime);
     Set<Store> storesRequested = current.storesRequested();
 
     Set<Store> storesToContact = new HashSet<Store>(storesRequested);
@@ -703,7 +701,7 @@ public final class TransactionManager {
       count++;
       final Store s = store;
       final LongKeyMap<Integer> reads = storesRead.get(new LongKeyHashMap<Integer>());
-      final LongSet calls = storesCalled.get(new LongHashSet());
+      final Set<byte[]> calls = storesCalled.get(new LongHashSet());
       final Set<SemanticWarrantyRequest> requests = current.getRequestsForStore(s);
       Runnable runnable = new Runnable() {
         @Override
@@ -718,10 +716,10 @@ public final class TransactionManager {
             // TODO: This needs to change so that we only send off the
             // appropriate requests and calls for each individual s.  Right
             // now, the ss we contact aren't necessarily correct.
-            LongKeyMap<SemanticWarranty> replies =
+            Map<byte[], SemanticWarranty> replies =
               s.prepareTransactionReadsAndRequests(current.tid.topTid, reads,
                   calls, requests, commitTime);
-            for (LongKeyMap.Entry<SemanticWarranty> e : replies.entrySet()) {
+            for (Map.Entry<byte[], SemanticWarranty> e : replies.entrySet()) {
               current.requestReplies.put(e.getKey(), e.getValue());
             }
           } catch (TransactionPrepareFailedException e) {

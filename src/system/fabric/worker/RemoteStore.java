@@ -29,7 +29,6 @@ import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
@@ -140,13 +139,13 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public LongKeyMap<SemanticWarranty> prepareTransactionReadsAndRequests(
-      long tid, LongKeyMap<Integer> reads, LongSet calls,
-      Set<SemanticWarrantyRequest> requests, long commitTime) throws
-  TransactionPrepareFailedException, UnreachableNodeException {
-    return send(Worker.getWorker().authToStore,
-        new PrepareTransactionReadsMessage( tid, reads, calls, requests,
-          commitTime)).getResults();
+  public java.util.Map<byte[], SemanticWarranty>
+  prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
+      Set<byte[]> calls, Set<SemanticWarrantyRequest> requests, long commitTime)
+  throws TransactionPrepareFailedException, UnreachableNodeException {
+    return send(Worker.getWorker().authToStore, new
+        PrepareTransactionReadsMessage(tid,
+          reads, calls, requests, commitTime)).getResults();
   }
 
   @Override
@@ -332,7 +331,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @throws FetchException
    *           if there was an error while fetching the object from the store.
    */
-  public CallResult reuseCallFromStore(long id) throws AccessException {
+  public CallResult reuseCallFromStore(byte[] id) throws AccessException {
     ReuseCallMessage.Response response =
         send(Worker.getWorker().authToStore, new ReuseCallMessage(id));
     return response.result;

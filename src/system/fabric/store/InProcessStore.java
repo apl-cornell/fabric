@@ -3,6 +3,7 @@ package fabric.store;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import fabric.common.ObjectGroup;
@@ -14,7 +15,6 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.worker.memoize.SemanticWarrantyRequest;
@@ -96,8 +96,9 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public LongKeyMap<SemanticWarranty> prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
-      LongSet calls, Set<SemanticWarrantyRequest> requests, long commitTime) throws TransactionPrepareFailedException {
+  public Map<byte[], SemanticWarranty> prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
+      Set<byte[]> calls, Set<SemanticWarrantyRequest> requests, long commitTime)
+  throws TransactionPrepareFailedException {
     tm.prepareReads(Worker.getWorker().getPrincipal(), tid, reads, commitTime);
     tm.prepareCalls(Worker.getWorker().getPrincipal(), tid, calls, commitTime);
     return tm.prepareRequests(Worker.getWorker().getPrincipal(), tid, requests, commitTime);

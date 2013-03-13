@@ -3,13 +3,14 @@ package fabric.worker.memoize;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Set;
+import java.util.HashSet;
 
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
 import fabric.common.SerializedObject;
 import fabric.lang.Object;
-import fabric.worker.Store;
 
 /**
  * Represents all the data needed for a request for a SemanticWarranty.  Should
@@ -18,13 +19,13 @@ import fabric.worker.Store;
  */
 public class SemanticWarrantyRequest {
 
-  public final long call;
+  public final byte[] call;
   public final SerializedObject value;
   public final LongSet reads;
-  public final LongSet calls;
+  public final Set<byte[]> calls;
 
   public SemanticWarrantyRequest(CallInstance call, Object._Impl value,
-      LongSet reads, LongSet calls) {
+      LongSet reads, Set<byte[]> calls) {
     this.call = call.id();
     this.value = new SerializedObject(value);
     this.reads = reads;
@@ -32,7 +33,10 @@ public class SemanticWarrantyRequest {
   }
 
   public SemanticWarrantyRequest(DataInput in) throws IOException {
-    this.call = in.readLong();
+    int callIdLen = in.readInt();
+    this.call = new byte[callIdLen];
+    in.readFully(this.call);
+
     this.value = new SerializedObject(in);
 
     this.reads = new LongHashSet();
@@ -40,14 +44,19 @@ public class SemanticWarrantyRequest {
     for (int i = 0; i < readsLen; i++)
       this.reads.add(in.readLong());
 
-    this.calls = new LongHashSet();
+    this.calls = new HashSet<byte[]>();
     int callsLen = in.readInt();
-    for (int i = 0; i < callsLen; i++)
-      this.calls.add(in.readLong());
+    for (int i = 0; i < callsLen; i++) {
+      int callUsedIdLen = in.readInt();
+      byte[] callId = new byte[callUsedIdLen];
+      in.readFully(callId);
+      this.calls.add(callId);
+    }
   }
 
   public void write(DataOutput out) throws IOException {
-    out.writeLong(call);
+    out.writeInt(call.length);
+    out.write(call);
     value.write(out);
 
     out.writeInt(reads.size());
@@ -56,8 +65,9 @@ public class SemanticWarrantyRequest {
       out.writeLong(readsIt.next());
 
     out.writeInt(calls.size());
-    LongIterator callsIt = calls.iterator();
-    while (callsIt.hasNext())
-      out.writeLong(callsIt.next());
+    for (byte[] callId : calls) {
+      out.writeInt(callId.length);
+      out.write(callId);
+    }
   }
 }

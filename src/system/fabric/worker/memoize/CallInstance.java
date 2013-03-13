@@ -1,6 +1,12 @@
 package fabric.worker.memoize;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+
+import fabric.lang.Object;
 
 /**
  * Represents a unique memoizable call in the Fabric system.
@@ -10,12 +16,25 @@ public class CallInstance {
   public final fabric.lang.Object target;
   public final String method;
   public final Object[] arguments;
+  private byte[] id;
 
-  public CallInstance(fabric.lang.Object target, String method, Object...
-      arguments) {
+  public CallInstance(Object target, String method, Object...  arguments) {
     this.target = target;
     this.method = method;
     this.arguments = arguments;
+
+    try {
+      MessageDigest algorithm = MessageDigest.getInstance("MD5");
+      algorithm.reset();
+      algorithm.update(method.getBytes("UTF-8"));
+      algorithm.update(ByteBuffer.allocate(8).putLong(target.$getOnum()).array());
+      for (Object arg : arguments) {
+        algorithm.update(ByteBuffer.allocate(8).putLong(arg.$getOnum()).array());
+      }
+      this.id = algorithm.digest();
+    } catch (NoSuchAlgorithmException e) {
+    } catch (UnsupportedEncodingException e) {
+    }
   }
 
   @Override
@@ -34,7 +53,7 @@ public class CallInstance {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(java.lang.Object o) {
     if (o instanceof CallInstance) {
       CallInstance oCallTup = (CallInstance) o;
       return (target == oCallTup.target)
@@ -55,8 +74,7 @@ public class CallInstance {
    * This should be usable wherever one could use a object ID while not
    * conflicting with any OIDs in the system.
    */
-  public long id() {
-    /* TODO: Actually implement */
-    return 0l;
+  public byte[] id() {
+    return id;
   }
 }

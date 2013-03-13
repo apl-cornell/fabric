@@ -58,7 +58,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
 
   @Override
   public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr) {
-    // XXX: Place Holder
+    /* TODO: Implement */
     return node();
   }
 

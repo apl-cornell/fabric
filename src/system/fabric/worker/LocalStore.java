@@ -15,9 +15,7 @@ import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
@@ -69,14 +67,15 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public LongKeyMap<SemanticWarranty> prepareTransactionReadsAndRequests(long tid,
-      LongKeyMap<Integer> reads, LongSet calls,
-      Set<SemanticWarrantyRequest> requests, long commitTime) {
+  public java.util.Map<byte[], SemanticWarranty>
+  prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
+      Set<byte[]> calls, Set<SemanticWarrantyRequest> requests,
+      long commitTime) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
-    // TODO: Currently we don't handle local memoized calls.
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing reads");
-    return new LongKeyHashMap<SemanticWarranty>();
+    // TODO: Currently we don't handle local memoized calls.
+    return new java.util.HashMap<byte[], SemanticWarranty>();
   }
 
   @Override

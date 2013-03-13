@@ -7,7 +7,9 @@ import static fabric.store.db.ObjectDB.UpdateType.WRITE;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import fabric.common.AuthorizationUtil;
@@ -328,12 +330,9 @@ public class TransactionManager {
    *           If the transaction could not successfully extend the
    *           SemanticWarranty on any of the calls
    */
-  public void prepareCalls(Principal worker, long tid,
-      LongSet calls, long commitTime)
-      throws TransactionPrepareFailedException {
-    LongIterator it = calls.iterator();
-    while (it.hasNext()) {
-      long callId = it.next();
+  public void prepareCalls(Principal worker, long tid, Set<byte[]> calls,
+      long commitTime) throws TransactionPrepareFailedException {
+    for (byte[] callId : calls) {
       if (!semanticWarranties.extend(callId,
             semanticWarranties.get(callId).warranty,
             new SemanticWarranty(commitTime))) {
@@ -350,13 +349,13 @@ public class TransactionManager {
    * @param worker
    *          The worker requesting the prepare
    */
-  public LongKeyMap<SemanticWarranty> prepareRequests(Principal worker,
+  public Map<byte[], SemanticWarranty> prepareRequests(Principal worker,
       long tid, Set<SemanticWarrantyRequest> requests, long commitTime) {
     /* Create the associated warranties and add these calls to the warranties
      * table.
      */ 
-    LongKeyMap<SemanticWarranty> warranties =
-      new LongKeyHashMap<SemanticWarranty>();
+    Map<byte[], SemanticWarranty> warranties =
+      new HashMap<byte[], SemanticWarranty>();
     for (SemanticWarrantyRequest r : requests) {
       /* XXX: Should I be failing on some possible issue here? */
       warranties.put(r.call,
@@ -460,10 +459,11 @@ public class TransactionManager {
    * @param id
    *          The id for the call instance.
    */
-  public CallResult getCall(Principal principal, long id)
+  public CallResult getCall(Principal principal, byte[] id)
       throws AccessException {
     CallResult result = semanticWarranties.get(id);
-    if (result == null) throw new AccessException(database.getName(), id);
+    if (result == null) throw new AccessException(
+        "AccessDenied, could not find call id " + id.toString());
     return result;
   }
 

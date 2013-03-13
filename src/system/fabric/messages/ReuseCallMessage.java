@@ -20,9 +20,9 @@ public class ReuseCallMessage extends Message<ReuseCallMessage.Response,
   // ////////////////////////////////////////////////////////////////////////////
 
   /** The id of the call to reuse. */
-  public final long id;
+  public final byte[] id;
 
-  public ReuseCallMessage(long id) {
+  public ReuseCallMessage(byte[] id) {
     super(MessageType.REUSE_CALL, AccessException.class);
     this.id = id;
   }
@@ -57,12 +57,16 @@ public class ReuseCallMessage extends Message<ReuseCallMessage.Response,
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
-    out.writeLong(id);
+    out.writeInt(id.length);
+    out.write(id);
   }
 
   /* readMessage */
   protected ReuseCallMessage(DataInput in) throws IOException {
-    this(in.readLong());
+    super(MessageType.REUSE_CALL, AccessException.class);
+    byte[] call = new byte[in.readInt()];
+    in.readFully(call);
+    this.id = call;
   }
 
   @Override

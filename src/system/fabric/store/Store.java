@@ -11,6 +11,7 @@ import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.logging.Level;
+import java.util.Map;
 import java.util.Set;
 
 import fabric.common.ConfigProperties;
@@ -34,7 +35,6 @@ import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
@@ -233,7 +233,7 @@ class Store extends MessageToStoreHandler {
 
     prepareTransactionReads(p, msg.tid, msg.reads, msg.commitTime);
     prepareTransactionCalls(p, msg.tid, msg.calls, msg.commitTime);
-    LongKeyMap<SemanticWarranty> responses = prepareTransactionRequests(p,
+    Map<byte[], SemanticWarranty> responses = prepareTransactionRequests(p,
         msg.tid, msg.requests, msg.commitTime);
     return new PrepareTransactionReadsMessage.Response(responses);
   }
@@ -364,7 +364,7 @@ class Store extends MessageToStoreHandler {
   }
 
   private void prepareTransactionCalls(Principal p, long tid,
-      LongSet calls, long commitTime)
+      Set<byte[]> calls, long commitTime)
     throws TransactionPrepareFailedException {
     tm.prepareCalls(p, tid, calls, commitTime);
   }
@@ -372,7 +372,7 @@ class Store extends MessageToStoreHandler {
   /**
    * Handles the <code>SemanticWarrantyRequest</code> for a transaction.
    */
-  private LongKeyMap<SemanticWarranty> prepareTransactionRequests(Principal p,
+  private Map<byte[], SemanticWarranty> prepareTransactionRequests(Principal p,
       long tid, Set<SemanticWarrantyRequest> requests, long commitTime) {
       /* throws TransactionPrepareFailedException { */
     return tm.prepareRequests(p, tid, requests, commitTime);

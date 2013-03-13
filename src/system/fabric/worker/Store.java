@@ -2,6 +2,7 @@ package fabric.worker;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 import fabric.common.SemanticWarranty;
@@ -10,7 +11,6 @@ import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
@@ -51,8 +51,8 @@ public interface Store extends Serializable {
    * @return whether a subtransaction was created on the store as a result of
    *         the prepare.
    */
-  LongKeyMap<SemanticWarranty> prepareTransactionReadsAndRequests(long tid,
-      LongKeyMap<Integer> reads, LongSet calls, Set<SemanticWarrantyRequest>
+  Map<byte[], SemanticWarranty> prepareTransactionReadsAndRequests(long tid,
+      LongKeyMap<Integer> reads, Set<byte[]> calls, Set<SemanticWarrantyRequest>
       requests, long commitTime) throws UnreachableNodeException,
     TransactionPrepareFailedException;
 
