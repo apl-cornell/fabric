@@ -13,6 +13,7 @@ import static fabric.worker.transaction.Log.CommitState.Values.PREPARING;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -31,8 +32,10 @@ import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.ConcurrentLongKeyMap;
+import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
@@ -53,6 +56,8 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.CallResult;
+import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -685,12 +690,21 @@ public final class TransactionManager {
 
     // Go through each store and send prepare messages in parallel.
     Map<Store, LongKeyMap<Integer>> storesRead = current.storesRead(commitTime);
+    Map<Store, LongSet> storesCalled = current.storesCalled(commitTime);
+    Set<Store> storesRequested = current.storesRequested();
+
+    Set<Store> storesToContact = new HashSet<Store>(storesRequested);
+    storesToContact.addAll(storesCalled.keySet());
+    storesToContact.addAll(storesRead.keySet());
+
     current.commitState.commitTime = commitTime;
-    for (Iterator<Entry<Store, LongKeyMap<Integer>>> entryIt =
-        storesRead.entrySet().iterator(); entryIt.hasNext();) {
-      Entry<Store, LongKeyMap<Integer>> entry = entryIt.next();
-      final Store store = entry.getKey();
-      final LongKeyMap<Integer> reads = entry.getValue();
+    int count = 0;
+    for (Store store : storesToContact) {
+      count++;
+      final Store s = store;
+      final LongKeyMap<Integer> reads = storesRead.get(new LongKeyHashMap<Integer>());
+      final LongSet calls = storesCalled.get(new LongHashSet());
+      final Set<SemanticWarrantyRequest> requests = current.getRequestsForStore(s);
       Runnable runnable = new Runnable() {
         @Override
         public void run() {
@@ -698,37 +712,36 @@ public final class TransactionManager {
             if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
               Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE, "Preparing "
                   + "reads for transaction {0} to {1}: {2} version warranties "
-                  + "will expire", current.tid.topTid, store, reads.size());
+                  + "will expire", current.tid.topTid, s, reads.size());
             }
 
             // TODO: This needs to change so that we only send off the
-            // appropriate requests and calls for each individual store.  Right
-            // now, the stores we contact aren't necessarily correct.
+            // appropriate requests and calls for each individual s.  Right
+            // now, the ss we contact aren't necessarily correct.
             LongKeyMap<SemanticWarranty> replies =
-              store.prepareTransactionReadsAndRequests(current.tid.topTid,
-                  reads, current.getCallsForStore(store),
-                  current.getRequestsForStore(store), commitTime);
+              s.prepareTransactionReadsAndRequests(current.tid.topTid, reads,
+                  calls, requests, commitTime);
             for (LongKeyMap.Entry<SemanticWarranty> e : replies.entrySet()) {
               current.requestReplies.put(e.getKey(), e.getValue());
             }
           } catch (TransactionPrepareFailedException e) {
-            failures.put((RemoteNode) store, e);
+            failures.put((RemoteNode) s, e);
           } catch (UnreachableNodeException e) {
-            failures.put((RemoteNode) store,
-                new TransactionPrepareFailedException("Unreachable store"));
+            failures.put((RemoteNode) s,
+                new TransactionPrepareFailedException("Unreachable s"));
           }
 
           // Prepare was successful. Update the objects' warranties.
-          current.updateVersionWarranties(store, reads.keySet(), commitTime);
+          current.updateVersionWarranties(s, reads.keySet(), commitTime);
         }
       };
 
-      // Optimization: only start in a new thread if there are more stores to
-      // contact and if it's a truly remote store (i.e., not in-process).
-      if (!(store instanceof InProcessStore || store.isLocalStore())
-          && entryIt.hasNext()) {
+      // Optimization: only start in a new thread if there are more ss to
+      // contact and if it's a truly remote s (i.e., not in-process).
+      if (!(s instanceof InProcessStore || s.isLocalStore())
+          && count == storesToContact.size()) {
         Thread thread =
-            new Thread(runnable, "worker read-prepare to " + store.name());
+            new Thread(runnable, "worker read-prepare to " + s.name());
         threads.add(thread);
         thread.start();
       } else {
@@ -992,8 +1005,9 @@ public final class TransactionManager {
   /**
    * Registers the use of a pre-cached CallInstance's value.
    */
-  public void registerSemanticWarrantyUse(CallInstance call) {
-    current.semanticWarrantiesUsed.add(call);
+  public void registerSemanticWarrantyUse(CallInstance call,
+      CallResult result) {
+    current.semanticWarrantiesUsed.put(call, result);
   }
 
   /**

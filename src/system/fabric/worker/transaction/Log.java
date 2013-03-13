@@ -168,7 +168,7 @@ public final class Log {
    * Set of CallInstance ids for semantic warranties used during this
    * transaction.
    */
-  protected final Set<CallInstance> semanticWarrantiesUsed;
+  protected final Map<CallInstance, CallResult> semanticWarrantiesUsed;
 
   /**
    * Map from call ID to SemanticWarrantyRequests made by subtransactions.
@@ -291,7 +291,7 @@ public final class Log {
     this.localStoreWrites = new WeakReferenceArrayList<_Impl>();
     this.workersCalled = new ArrayList<RemoteWorker>();
     this.semanticWarrantyCall = semanticWarrantyCall;
-    this.semanticWarrantiesUsed = new HashSet<CallInstance>();
+    this.semanticWarrantiesUsed = new HashMap<CallInstance, CallResult>();
     this.readDependencies = new LongKeyHashMap<LongSet>();
     this.callDependencies = new LongKeyHashMap<LongSet>();
     this.requests = new LongKeyHashMap<SemanticWarrantyRequest>();
@@ -400,9 +400,6 @@ public final class Log {
    * version warranties expire between commitState.commitTime (exclusive) and
    * the given commitTime (inclusive).
    */
-  /* TODO: This doesn't necessarily include stores that have calls used or
-   * requests made.
-   */
   Map<Store, LongKeyMap<Integer>> storesRead(long commitTime) {
     Map<Store, LongKeyMap<Integer>> result =
         new HashMap<Store, LongKeyMap<Integer>>();
@@ -423,6 +420,36 @@ public final class Log {
     }
 
     return result;
+  }
+
+  /**
+   * Returns a mapping of stores to call IDs, indicating those calls reused by
+   * this transaction, whose semantic warranties expire between
+   * commitState.commitTime (exclusive) and the given commitTime (inclusive).
+   */
+  Map<Store, LongSet> storesCalled(long commitTime) {
+    Map<Store, LongSet> result = new HashMap<Store, LongSet>();
+    for (Entry<CallInstance, CallResult> e
+        : semanticWarrantiesUsed.entrySet()) {
+      Store store = e.getKey().target.$getStore();
+      CallResult callRes = e.getValue();
+      if (callRes.warranty.expiresBefore(commitTime, true)) {
+        LongSet requestsAtStore = result.get(store);
+        if (requestsAtStore == null) {
+          requestsAtStore = new LongHashSet();
+          result.put(store, requestsAtStore);
+        }
+        requestsAtStore.add(e.getKey().id());
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Returns a set of Stores we are making requests at.
+   */
+  Set<Store> storesRequested() {
+    return new HashSet<Store>(requestLocations.values());
   }
 
   void updateVersionWarranties(Store store, LongSet onums, long commitTime) {
@@ -596,7 +623,7 @@ public final class Log {
    */
   LongSet getCallsForStore(Store store) {
     LongSet callSet = new LongHashSet();
-    for (CallInstance c : semanticWarrantiesUsed)
+    for (CallInstance c : semanticWarrantiesUsed.keySet())
       if (c.target.$getStore() == store)
         callSet.add(c.id());
     return callSet;
@@ -704,7 +731,7 @@ public final class Log {
       }
 
       LongSet callSet = new LongHashSet();
-      for (CallInstance c : semanticWarrantiesUsed) {
+      for (CallInstance c : semanticWarrantiesUsed.keySet()) {
         callSet.add(c.id());
         LongSet dependencies = parent.callDependencies.get(c.id());
         if (dependencies == null) {
@@ -855,7 +882,7 @@ public final class Log {
     createCurrentRequest();
 
     // Merge all child requests and dependencies
-    parent.semanticWarrantiesUsed.addAll(semanticWarrantiesUsed);
+    parent.semanticWarrantiesUsed.putAll(semanticWarrantiesUsed);
     parent.requests.putAll(requests);
 
     LongIterator readDependenciesIt = readDependencies.keySet().iterator();
