@@ -122,8 +122,7 @@ public interface Object {
     private transient final _Impl anchor;
 
     public _Proxy(Store store, long onum) {
-      if (store.isLocalStore() && onum != ONumConstants.EMPTY_LABEL
-          && onum != ONumConstants.PUBLIC_READONLY_LABEL)
+      if (store.isLocalStore() && !ONumConstants.isGlobalConstant(onum))
         throw new InternalError(
             "Attempted to create unresolved reference to a local object (onum="
                 + onum + ").");
