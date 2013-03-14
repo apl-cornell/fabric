@@ -24,6 +24,7 @@ import fabric.messages.PrepareTransactionReadsMessage;
 import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
+import fabric.worker.memoize.CallID;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -208,7 +209,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
      * requests to the remote caller... I don't think so?
      */
     return new PrepareTransactionReadsMessage.Response(
-        new HashMap<byte[], SemanticWarranty>());
+        new HashMap<CallID, SemanticWarranty>());
   }
 
   /**

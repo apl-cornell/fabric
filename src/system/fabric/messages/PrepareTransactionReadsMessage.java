@@ -12,6 +12,7 @@ import fabric.common.SemanticWarranty;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.security.Principal;
+import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.TransactionPrepareFailedException;
 
@@ -29,7 +30,7 @@ public class PrepareTransactionReadsMessage extends
   public final long tid;
   public final long commitTime;
   public final LongKeyMap<Integer> reads;
-  public final Set<byte[]> calls;
+  public final Set<CallID> calls;
   public final Set<SemanticWarrantyRequest> requests;
 
   /**
@@ -43,13 +44,13 @@ public class PrepareTransactionReadsMessage extends
    * Only used by the worker.
    */
   public PrepareTransactionReadsMessage(long tid, LongKeyMap<Integer> reads,
-      Set<byte[]> calls, Set<SemanticWarrantyRequest> requests,
+      Set<CallID> calls, Set<SemanticWarrantyRequest> requests,
       long commitTime) {
     this(tid, commitTime, reads, calls, requests);
   }
 
   private PrepareTransactionReadsMessage(long tid, long commitTime,
-      LongKeyMap<Integer> reads, Set<byte[]> calls,
+      LongKeyMap<Integer> reads, Set<CallID> calls,
       Set<SemanticWarrantyRequest> requests) {
     super(MessageType.PREPARE_TRANSACTION_READS,
         TransactionPrepareFailedException.class);
@@ -67,13 +68,13 @@ public class PrepareTransactionReadsMessage extends
 
   public static class Response implements Message.Response {
 
-    private Map<byte[], SemanticWarranty> requestResults;
+    private Map<CallID, SemanticWarranty> requestResults;
 
-    public Response(Map<byte[], SemanticWarranty> requestResults) {
+    public Response(Map<CallID, SemanticWarranty> requestResults) {
       this.requestResults = requestResults;
     }
 
-    public Map<byte[], SemanticWarranty> getResults() {
+    public Map<CallID, SemanticWarranty> getResults() {
       return requestResults;
     }
   }
@@ -113,9 +114,9 @@ public class PrepareTransactionReadsMessage extends
       out.writeInt(0);
     } else {
       out.writeInt(calls.size());
-      for (byte[] id : calls) {
-        out.writeInt(id.length);
-        out.write(id);
+      for (CallID id : calls) {
+        out.writeInt(id.id().length);
+        out.write(id.id());
       }
     }
 
@@ -148,11 +149,11 @@ public class PrepareTransactionReadsMessage extends
     }
 
     int callSize = in.readInt();
-    calls = new HashSet<byte[]>();
+    calls = new HashSet<CallID>();
     for (int i = 0; i < callSize; i++) {
-      byte[] call = new byte[in.readInt()];
-      in.readFully(call);
-      calls.add(call);
+      byte[] callBytes = new byte[in.readInt()];
+      in.readFully(callBytes);
+      calls.add(new CallID(callBytes));
     }
 
     int requestsSize = in.readInt();
@@ -164,9 +165,9 @@ public class PrepareTransactionReadsMessage extends
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     out.writeInt(r.requestResults.size());
-    for (Map.Entry<byte[], SemanticWarranty> e : r.requestResults.entrySet()) {
-      out.writeInt(e.getKey().length);
-      out.write(e.getKey());
+    for (Map.Entry<CallID, SemanticWarranty> e : r.requestResults.entrySet()) {
+      out.writeInt(e.getKey().id().length);
+      out.write(e.getKey().id());
       out.writeLong(e.getValue().expiry());
     }
   }
@@ -174,12 +175,12 @@ public class PrepareTransactionReadsMessage extends
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     int numResponses = in.readInt();
-    Map<byte[], SemanticWarranty> responses =
-      new HashMap<byte[], SemanticWarranty>(numResponses);
+    Map<CallID, SemanticWarranty> responses =
+      new HashMap<CallID, SemanticWarranty>(numResponses);
     for (int i = 0; i < numResponses; i++) {
-      byte[] call = new byte[in.readInt()];
-      in.readFully(call);
-      responses.put(call, new SemanticWarranty(in.readLong()));
+      byte[] callBytes = new byte[in.readInt()];
+      in.readFully(callBytes);
+      responses.put(new CallID(callBytes), new SemanticWarranty(in.readLong()));
     }
     return new Response(responses);
   }

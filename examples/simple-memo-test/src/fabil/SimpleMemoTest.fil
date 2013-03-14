@@ -1,0 +1,44 @@
+public class SimpleMemoTest {
+
+  /**
+   * Needed for making remote copies of SimpleMemoTests.
+   */
+  public SimpleMemoTest SimpleMemoTest$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
+  public static class Msg {
+    public final int id;
+    public Msg SimpleMemoTest$Msg$() {
+      fabric$lang$Object$();
+      return this;
+    }
+
+    public Msg(int id) {
+      this.id = id;
+    }
+  }
+
+  public memoized Msg dumbestTestEver(Msg m) {
+    try { Thread.sleep(15000); } catch (InterruptedException e) { }
+    return m;
+  }
+
+  public static void main(String[] args) {
+    SimpleMemoTest testSimpleMemoTest = null;
+    Msg m = null;
+    atomic {
+      Store s = Worker.getWorker().getStore("store");
+      testSimpleMemoTest = new SimpleMemoTest@s().SimpleMemoTest$().SimpleMemoTest$();
+      m = new Msg@s(20).SimpleMemoTest$Msg$().SimpleMemoTest$Msg$();
+      System.out.println(testSimpleMemoTest.dumbestTestEver(m));
+    }
+    //try { Thread.sleep(1000); } catch (InterruptedException e) { }
+    atomic {
+      System.out.println(testSimpleMemoTest.dumbestTestEver(m));
+    }
+  }
+
+}
+

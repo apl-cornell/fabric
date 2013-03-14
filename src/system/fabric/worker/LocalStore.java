@@ -29,9 +29,11 @@ import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.util.HashMap;
 import fabric.util.Map;
 import fabric.worker.memoize.CallCache;
+import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.CallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.transaction.TransactionManager;
 
 public final class LocalStore implements Store, Serializable {
 
@@ -67,15 +69,15 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public java.util.Map<byte[], SemanticWarranty>
+  public java.util.Map<CallID, SemanticWarranty>
   prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
-      Set<byte[]> calls, Set<SemanticWarrantyRequest> requests,
+      Set<CallID> calls, Set<SemanticWarrantyRequest> requests,
       long commitTime) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing reads");
     // TODO: Currently we don't handle local memoized calls.
-    return new java.util.HashMap<byte[], SemanticWarranty>();
+    return new java.util.HashMap<CallID, SemanticWarranty>();
   }
 
   @Override
@@ -142,7 +144,10 @@ public final class LocalStore implements Store, Serializable {
 
   @Override
   public CallResult lookupCall(CallInstance call) {
-    return callCache.get(call);
+    CallResult result =
+      TransactionManager.getInstance().getCurrentLog().getRequestResult(call);
+    if (result == null) result = callCache.get(call);
+    return result;
   }
 
   @Override

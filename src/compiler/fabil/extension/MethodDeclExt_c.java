@@ -113,8 +113,6 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
         + "  fabric.worker.transaction.TransactionManager.getInstance().registerSemanticWarrantyUse($call, $resultObj);\n"
         + "  return $cacheResult;\n"
         + "}", callUnpack);
-    //System.out.println(md.toString());
-    //System.out.println(md.body());
     Stmt buildWarranty = qq.parseStmt(
         "{%LS\n"
       + "return (%T) fabric.worker.Worker.runInSemanticWarrantyTransaction("

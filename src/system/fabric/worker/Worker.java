@@ -614,17 +614,7 @@ public final class Worker {
    */
   public static <T> T runInSemanticWarrantyTransaction(TransactionID tid,
       Code<T> code, boolean autoRetry, CallInstance call) {
-    TransactionManager tm = TransactionManager.getInstance();
-    Log oldLog = tm.getCurrentLog();
-
-    Log log = TransactionRegistry.getOrCreateInnermostLog(tid);
-    tm.associateAndSyncLog(log, tid);
-
-    try {
-      return runInSubTransaction(code, autoRetry, call);
-    } finally {
-      tm.associateLog(oldLog);
-    }
+    return runInSubTransaction(code, autoRetry, call);
   }
 
   /**

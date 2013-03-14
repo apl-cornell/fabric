@@ -17,6 +17,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
+import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionCommitFailedException;
@@ -96,8 +97,8 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public Map<byte[], SemanticWarranty> prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
-      Set<byte[]> calls, Set<SemanticWarrantyRequest> requests, long commitTime)
+  public Map<CallID, SemanticWarranty> prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
+      Set<CallID> calls, Set<SemanticWarrantyRequest> requests, long commitTime)
   throws TransactionPrepareFailedException {
     tm.prepareReads(Worker.getWorker().getPrincipal(), tid, reads, commitTime);
     tm.prepareCalls(Worker.getWorker().getPrincipal(), tid, calls, commitTime);

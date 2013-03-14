@@ -50,9 +50,11 @@ import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
 import fabric.worker.memoize.CallCache;
+import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.CallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * Encapsulates a Store. This class maintains two connections to the store (one
@@ -139,9 +141,9 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public java.util.Map<byte[], SemanticWarranty>
+  public java.util.Map<CallID, SemanticWarranty>
   prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
-      Set<byte[]> calls, Set<SemanticWarrantyRequest> requests, long commitTime)
+      Set<CallID> calls, Set<SemanticWarrantyRequest> requests, long commitTime)
   throws TransactionPrepareFailedException, UnreachableNodeException {
     return send(Worker.getWorker().authToStore, new
         PrepareTransactionReadsMessage(tid,
@@ -309,7 +311,9 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
 
   @Override
   public CallResult lookupCall(CallInstance call) {
-    CallResult result = callCache.get(call);
+    CallResult result =
+      TransactionManager.getInstance().getCurrentLog().getRequestResult(call);
+    if (result == null) result = callCache.get(call);
     /* TODO: Check dissemination layer. */
     /* XXX: What to do on expired warranties? */
     try {
@@ -334,7 +338,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @throws FetchException
    *           if there was an error while fetching the object from the store.
    */
-  public CallResult reuseCallFromStore(byte[] id) throws AccessException {
+  public CallResult reuseCallFromStore(CallID id) throws AccessException {
     ReuseCallMessage.Response response =
         send(Worker.getWorker().authToStore, new ReuseCallMessage(id));
     return response.result;

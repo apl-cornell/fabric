@@ -10,16 +10,16 @@ import java.util.Map;
  */
 public final class CallCache {
 
-  private Map<CallInstance, CallResult> callTable;
+  private Map<CallID, CallResult> callTable;
 
   public CallCache() {
     callTable = Collections.synchronizedMap(
-        new HashMap<CallInstance, CallResult>());
+        new HashMap<CallID, CallResult>());
   }
 
   public CallResult get(CallInstance call) {
     synchronized (callTable) {
-      CallResult result = callTable.get(call);
+      CallResult result = callTable.get(call.id());
       if (result == null) {
         return null;
       } else if (result.warranty.expired(true)) {
@@ -33,6 +33,6 @@ public final class CallCache {
   }
 
   public void put(CallInstance call, CallResult result) {
-    callTable.put(call, result);
+    callTable.put(call.id(), result);
   }
 }

@@ -33,7 +33,6 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongHashSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
@@ -53,6 +52,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
+import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.CallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
@@ -688,7 +688,7 @@ public final class TransactionManager {
 
     // Go through each store and send prepare messages in parallel.
     Map<Store, LongKeyMap<Integer>> storesRead = current.storesRead(commitTime);
-    Map<Store, Set<byte[]>> storesCalled = current.storesCalled(commitTime);
+    Map<Store, Set<CallID>> storesCalled = current.storesCalled(commitTime);
     Set<Store> storesRequested = current.storesRequested();
 
     Set<Store> storesToContact = new HashSet<Store>(storesRequested);
@@ -699,9 +699,13 @@ public final class TransactionManager {
     int count = 0;
     for (Store store : storesToContact) {
       count++;
+      LongKeyMap<Integer> tmpReads = storesRead.get(store);
+      Set<CallID> tmpCalls = storesCalled.get(store);
+
       final Store s = store;
-      final LongKeyMap<Integer> reads = storesRead.get(new LongKeyHashMap<Integer>());
-      final Set<byte[]> calls = storesCalled.get(new LongHashSet());
+      final LongKeyMap<Integer> reads = tmpReads != null ? tmpReads : new
+        LongKeyHashMap<Integer>();
+      final Set<CallID> calls = tmpCalls != null ? tmpCalls : new HashSet<CallID>();
       final Set<SemanticWarrantyRequest> requests = current.getRequestsForStore(s);
       Runnable runnable = new Runnable() {
         @Override
@@ -716,10 +720,10 @@ public final class TransactionManager {
             // TODO: This needs to change so that we only send off the
             // appropriate requests and calls for each individual s.  Right
             // now, the ss we contact aren't necessarily correct.
-            Map<byte[], SemanticWarranty> replies =
+            Map<CallID, SemanticWarranty> replies =
               s.prepareTransactionReadsAndRequests(current.tid.topTid, reads,
                   calls, requests, commitTime);
-            for (Map.Entry<byte[], SemanticWarranty> e : replies.entrySet()) {
+            for (Map.Entry<CallID, SemanticWarranty> e : replies.entrySet()) {
               current.requestReplies.put(e.getKey(), e.getValue());
             }
           } catch (TransactionPrepareFailedException e) {

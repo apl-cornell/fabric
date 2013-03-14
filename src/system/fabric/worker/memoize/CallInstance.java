@@ -16,7 +16,7 @@ public class CallInstance {
   public final fabric.lang.Object target;
   public final String method;
   public final Object[] arguments;
-  private byte[] id;
+  private CallID id;
 
   public CallInstance(Object target, String method, Object...  arguments) {
     this.target = target;
@@ -31,7 +31,7 @@ public class CallInstance {
       for (Object arg : arguments) {
         algorithm.update(ByteBuffer.allocate(8).putLong(arg.$getOnum()).array());
       }
-      this.id = algorithm.digest();
+      this.id = new CallID(algorithm.digest());
     } catch (NoSuchAlgorithmException e) {
     } catch (UnsupportedEncodingException e) {
     }
@@ -65,7 +65,7 @@ public class CallInstance {
 
   @Override
   public int hashCode() {
-    return target.hashCode() ^ method.hashCode() ^ Arrays.hashCode(arguments);
+    return id.hashCode();
   }
 
   /**
@@ -74,7 +74,7 @@ public class CallInstance {
    * This should be usable wherever one could use a object ID while not
    * conflicting with any OIDs in the system.
    */
-  public byte[] id() {
+  public CallID id() {
     return id;
   }
 }

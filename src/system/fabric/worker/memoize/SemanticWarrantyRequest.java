@@ -10,6 +10,7 @@ import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
 import fabric.common.SerializedObject;
+import fabric.common.VersionWarranty;
 import fabric.lang.Object;
 
 /**
@@ -19,13 +20,13 @@ import fabric.lang.Object;
  */
 public class SemanticWarrantyRequest {
 
-  public final byte[] call;
+  public final CallID call;
   public final SerializedObject value;
   public final LongSet reads;
-  public final Set<byte[]> calls;
+  public final Set<CallID> calls;
 
   public SemanticWarrantyRequest(CallInstance call, Object._Impl value,
-      LongSet reads, Set<byte[]> calls) {
+      LongSet reads, Set<CallID> calls) {
     this.call = call.id();
     this.value = new SerializedObject(value);
     this.reads = reads;
@@ -34,8 +35,9 @@ public class SemanticWarrantyRequest {
 
   public SemanticWarrantyRequest(DataInput in) throws IOException {
     int callIdLen = in.readInt();
-    this.call = new byte[callIdLen];
-    in.readFully(this.call);
+    byte[] callBytes = new byte[callIdLen];
+    in.readFully(callBytes);
+    this.call = new CallID(callBytes);
 
     this.value = new SerializedObject(in);
 
@@ -44,19 +46,19 @@ public class SemanticWarrantyRequest {
     for (int i = 0; i < readsLen; i++)
       this.reads.add(in.readLong());
 
-    this.calls = new HashSet<byte[]>();
+    this.calls = new HashSet<CallID>();
     int callsLen = in.readInt();
     for (int i = 0; i < callsLen; i++) {
       int callUsedIdLen = in.readInt();
       byte[] callId = new byte[callUsedIdLen];
       in.readFully(callId);
-      this.calls.add(callId);
+      this.calls.add(new CallID(callId));
     }
   }
 
   public void write(DataOutput out) throws IOException {
-    out.writeInt(call.length);
-    out.write(call);
+    out.writeInt(call.id().length);
+    out.write(call.id());
     value.write(out);
 
     out.writeInt(reads.size());
@@ -65,9 +67,9 @@ public class SemanticWarrantyRequest {
       out.writeLong(readsIt.next());
 
     out.writeInt(calls.size());
-    for (byte[] callId : calls) {
-      out.writeInt(callId.length);
-      out.write(callId);
+    for (CallID callId : calls) {
+      out.writeInt(callId.id().length);
+      out.write(callId.id());
     }
   }
 }

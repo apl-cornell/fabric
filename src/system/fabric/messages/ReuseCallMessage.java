@@ -7,6 +7,7 @@ import java.io.IOException;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.Principal;
+import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallResult;
 
 /**
@@ -20,9 +21,9 @@ public class ReuseCallMessage extends Message<ReuseCallMessage.Response,
   // ////////////////////////////////////////////////////////////////////////////
 
   /** The id of the call to reuse. */
-  public final byte[] id;
+  public final CallID id;
 
-  public ReuseCallMessage(byte[] id) {
+  public ReuseCallMessage(CallID id) {
     super(MessageType.REUSE_CALL, AccessException.class);
     this.id = id;
   }
@@ -57,16 +58,16 @@ public class ReuseCallMessage extends Message<ReuseCallMessage.Response,
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
-    out.writeInt(id.length);
-    out.write(id);
+    out.writeInt(id.id().length);
+    out.write(id.id());
   }
 
   /* readMessage */
   protected ReuseCallMessage(DataInput in) throws IOException {
     super(MessageType.REUSE_CALL, AccessException.class);
-    byte[] call = new byte[in.readInt()];
-    in.readFully(call);
-    this.id = call;
+    byte[] callBytes = new byte[in.readInt()];
+    in.readFully(callBytes);
+    this.id = new CallID(callBytes);
   }
 
   @Override

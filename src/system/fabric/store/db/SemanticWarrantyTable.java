@@ -16,6 +16,7 @@ import fabric.common.SerializedObject;
 import fabric.common.Warranty;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
+import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallResult;
 
 /*
@@ -34,7 +35,7 @@ public class SemanticWarrantyTable {
    */
   private volatile SemanticWarranty defaultWarranty;
 
-  private final Map<byte[], CallResult> table;
+  private final Map<CallID, CallResult> table;
 
   private final Collector collector;
 
@@ -43,7 +44,7 @@ public class SemanticWarrantyTable {
    *
    * Primarily used for sweeping away expired entries.
    */
-  private final ConcurrentMap<SemanticWarranty, Set<byte[]>> reverseTable;
+  private final ConcurrentMap<SemanticWarranty, Set<CallID>> reverseTable;
 
   /**
    * Table for looking up dependencies of calls on various reads and calls
@@ -57,8 +58,8 @@ public class SemanticWarrantyTable {
 
   public SemanticWarrantyTable(ObjectDB database) {
     defaultWarranty = new SemanticWarranty(0);
-    table = new ConcurrentHashMap<byte[], CallResult>();
-    reverseTable = new ConcurrentHashMap<SemanticWarranty, Set<byte[]>>();
+    table = new ConcurrentHashMap<CallID, CallResult>();
+    reverseTable = new ConcurrentHashMap<SemanticWarranty, Set<CallID>>();
     dependencyTable = new SemanticWarrantyDependencies();
     this.database = database;
 
@@ -66,7 +67,7 @@ public class SemanticWarrantyTable {
     collector.start();
   }
 
-  public final CallResult get(byte[] id) {
+  public final CallResult get(CallID id) {
     return table.get(id);
   }
 
@@ -75,7 +76,7 @@ public class SemanticWarrantyTable {
    *
    * XXX THIS IS CURRENTLY NOT A VERY GOOD ALGORITHM AT _ALL_
    */
-  private SemanticWarranty warrantyForCall(byte[] id, LongSet reads, Set<byte[]>
+  private SemanticWarranty warrantyForCall(CallID id, LongSet reads, Set<CallID>
       calls) {
     Warranty minWarranty = new SemanticWarranty(Long.MAX_VALUE);
     LongIterator it1 = reads.iterator();
@@ -88,7 +89,7 @@ public class SemanticWarrantyTable {
 
     //XXX THIS IS ALMOST CERTAINLY WRONG IF WE MAKE MORE THAN ONE SEMANTIC
     //WARRANTY REQUEST IN A TRANSACTION AND ONE WAS NESTED IN THE OTHER.
-    for (byte[] call : calls) {
+    for (CallID call : calls) {
       Warranty callWarranty = get(call).warranty;
       if (callWarranty.compareTo(minWarranty) < 0) {
         minWarranty = callWarranty;
@@ -96,9 +97,10 @@ public class SemanticWarrantyTable {
     }
 
     return new SemanticWarranty(minWarranty.expiry());
+    //return new SemanticWarranty(System.currentTimeMillis() + 5000);
   }
 
-  public final SemanticWarranty put(byte[] id, LongSet reads, Set<byte[]> calls,
+  public final SemanticWarranty put(CallID id, LongSet reads, Set<CallID> calls,
       SerializedObject value) {
     SemanticWarranty warranty = warrantyForCall(id, reads, calls);
     CallResult result = new CallResult(value, warranty);
@@ -114,8 +116,8 @@ public class SemanticWarrantyTable {
 
     table.put(id, result);
 
-    Set<byte[]> set = new HashSet<byte[]>();
-    Set<byte[]> existingSet = reverseTable.putIfAbsent(warranty, set);
+    Set<CallID> set = new HashSet<CallID>();
+    Set<CallID> existingSet = reverseTable.putIfAbsent(warranty, set);
     if (existingSet != null) set = existingSet;
     synchronized (set) {
       set.add(id);
@@ -140,7 +142,7 @@ public class SemanticWarrantyTable {
    * 
    * @return true iff the warranty was replaced.
    */
-  public final boolean extend(byte[] id, SemanticWarranty oldWarranty,
+  public final boolean extend(CallID id, SemanticWarranty oldWarranty,
       SemanticWarranty newWarranty) {
     if (defaultWarranty.expiresAfter(newWarranty)) {
       throw new InternalError("Attempted to insert a warranty that expires "
@@ -174,8 +176,8 @@ public class SemanticWarrantyTable {
       STORE_DB_LOGGER.finest("Extended warranty for id " + id + "; expiry="
           + expiry + " (in " + length + " ms)");
 
-      Set<byte[]> set = new HashSet<byte[]>();
-      Set<byte[]> existingSet = reverseTable.putIfAbsent(newWarranty, set);
+      Set<CallID> set = new HashSet<CallID>();
+      Set<CallID> existingSet = reverseTable.putIfAbsent(newWarranty, set);
       if (existingSet != null) set = existingSet;
       synchronized (set) {
         set.add(id);
@@ -205,8 +207,8 @@ public class SemanticWarrantyTable {
   public SemanticWarranty longestReadDependency(long onum) {
     SemanticWarranty longest = new SemanticWarranty(0);
 
-    Set<byte[]> readers = dependencyTable.getReaders(onum);
-    for (byte[] call : readers) {
+    Set<CallID> readers = dependencyTable.getReaders(onum);
+    for (CallID call : readers) {
       SemanticWarranty cur = get(call).warranty;
       if (cur.expiresAfter(longest)) {
         longest = cur;
@@ -219,11 +221,11 @@ public class SemanticWarrantyTable {
   /**
    * Provides the longest SemanticWarranty that called the given callId.
    */
-  public SemanticWarranty longestCallDependency(byte[] callId) {
+  public SemanticWarranty longestCallDependency(CallID callId) {
     SemanticWarranty longest = new SemanticWarranty(0);
 
-    Set<byte[]> callers = dependencyTable.getCallers(callId);
-    for (byte[] call : callers) {
+    Set<CallID> callers = dependencyTable.getCallers(callId);
+    for (CallID call : callers) {
       SemanticWarranty cur = get(call).warranty;
       if (cur.expiresAfter(longest)) {
         longest = cur;
@@ -257,9 +259,9 @@ public class SemanticWarrantyTable {
         long now = System.currentTimeMillis();
 
         long nextExpiryTime = Long.MAX_VALUE;
-        for (Iterator<Entry<SemanticWarranty, Set<byte[]>>> it =
+        for (Iterator<Entry<SemanticWarranty, Set<CallID>>> it =
             reverseTable.entrySet().iterator(); it.hasNext();) {
-          Entry<SemanticWarranty, Set<byte[]>> entry = it.next();
+          Entry<SemanticWarranty, Set<CallID>> entry = it.next();
           SemanticWarranty warranty = entry.getKey();
 
           if (warranty.expiresAfter(now, true)) {
@@ -268,9 +270,9 @@ public class SemanticWarrantyTable {
             if (nextExpiryTime > expiry) nextExpiryTime = expiry;
           } else {
             // Warranty expired. Remove relevant entries from table.
-            Set<byte[]> ids = entry.getValue();
+            Set<CallID> ids = entry.getValue();
             synchronized (ids) {
-              for (byte[] call : ids) {
+              for (CallID call : ids) {
                 table.remove(call);
               }
 

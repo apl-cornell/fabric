@@ -34,6 +34,7 @@ import fabric.store.db.ObjectDB.ExtendWarrantyStatus;
 import fabric.store.db.SemanticWarrantyTable;
 import fabric.worker.AbortException;
 import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallResult;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
@@ -330,9 +331,9 @@ public class TransactionManager {
    *           If the transaction could not successfully extend the
    *           SemanticWarranty on any of the calls
    */
-  public void prepareCalls(Principal worker, long tid, Set<byte[]> calls,
+  public void prepareCalls(Principal worker, long tid, Set<CallID> calls,
       long commitTime) throws TransactionPrepareFailedException {
-    for (byte[] callId : calls) {
+    for (CallID callId : calls) {
       if (!semanticWarranties.extend(callId,
             semanticWarranties.get(callId).warranty,
             new SemanticWarranty(commitTime))) {
@@ -349,13 +350,13 @@ public class TransactionManager {
    * @param worker
    *          The worker requesting the prepare
    */
-  public Map<byte[], SemanticWarranty> prepareRequests(Principal worker,
+  public Map<CallID, SemanticWarranty> prepareRequests(Principal worker,
       long tid, Set<SemanticWarrantyRequest> requests, long commitTime) {
     /* Create the associated warranties and add these calls to the warranties
      * table.
      */ 
-    Map<byte[], SemanticWarranty> warranties =
-      new HashMap<byte[], SemanticWarranty>();
+    Map<CallID, SemanticWarranty> warranties =
+      new HashMap<CallID, SemanticWarranty>();
     for (SemanticWarrantyRequest r : requests) {
       /* XXX: Should I be failing on some possible issue here? */
       warranties.put(r.call,
@@ -459,7 +460,7 @@ public class TransactionManager {
    * @param id
    *          The id for the call instance.
    */
-  public CallResult getCall(Principal principal, byte[] id)
+  public CallResult getCall(Principal principal, CallID id)
       throws AccessException {
     CallResult result = semanticWarranties.get(id);
     if (result == null) throw new AccessException(

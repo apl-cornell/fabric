@@ -51,6 +51,7 @@ import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
 import fabric.store.db.ObjectDB;
+import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.TransactionCommitFailedException;
@@ -233,7 +234,7 @@ class Store extends MessageToStoreHandler {
 
     prepareTransactionReads(p, msg.tid, msg.reads, msg.commitTime);
     prepareTransactionCalls(p, msg.tid, msg.calls, msg.commitTime);
-    Map<byte[], SemanticWarranty> responses = prepareTransactionRequests(p,
+    Map<CallID, SemanticWarranty> responses = prepareTransactionRequests(p,
         msg.tid, msg.requests, msg.commitTime);
     return new PrepareTransactionReadsMessage.Response(responses);
   }
@@ -364,7 +365,7 @@ class Store extends MessageToStoreHandler {
   }
 
   private void prepareTransactionCalls(Principal p, long tid,
-      Set<byte[]> calls, long commitTime)
+      Set<CallID> calls, long commitTime)
     throws TransactionPrepareFailedException {
     tm.prepareCalls(p, tid, calls, commitTime);
   }
@@ -372,7 +373,7 @@ class Store extends MessageToStoreHandler {
   /**
    * Handles the <code>SemanticWarrantyRequest</code> for a transaction.
    */
-  private Map<byte[], SemanticWarranty> prepareTransactionRequests(Principal p,
+  private Map<CallID, SemanticWarranty> prepareTransactionRequests(Principal p,
       long tid, Set<SemanticWarrantyRequest> requests, long commitTime) {
       /* throws TransactionPrepareFailedException { */
     return tm.prepareRequests(p, tid, requests, commitTime);

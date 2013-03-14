@@ -15,6 +15,7 @@ import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
+import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.CallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
@@ -51,8 +52,8 @@ public interface Store extends Serializable {
    * @return whether a subtransaction was created on the store as a result of
    *         the prepare.
    */
-  Map<byte[], SemanticWarranty> prepareTransactionReadsAndRequests(long tid,
-      LongKeyMap<Integer> reads, Set<byte[]> calls, Set<SemanticWarrantyRequest>
+  Map<CallID, SemanticWarranty> prepareTransactionReadsAndRequests(long tid,
+      LongKeyMap<Integer> reads, Set<CallID> calls, Set<SemanticWarrantyRequest>
       requests, long commitTime) throws UnreachableNodeException,
     TransactionPrepareFailedException;
 
