@@ -10,6 +10,7 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 import fabric.common.Threading;
 import fabric.common.exceptions.InternalError;
@@ -130,6 +131,11 @@ public class WorkerAdmin {
                 socket.getOutputStream().write(0);
                 socket.getOutputStream().flush();
                 socket.close();
+              } catch (SocketException e) {
+                if ("Connection reset".equalsIgnoreCase(e.getMessage())) {
+                  // Silently ignore connections that are reset.
+                  return;
+                }
               } catch (IOException e) {
                 throw new InternalError(e);
               }
