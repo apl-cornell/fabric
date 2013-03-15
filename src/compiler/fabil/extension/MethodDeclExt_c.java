@@ -90,7 +90,11 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
       } else {
         argList += ", ";
       }
-      argList += f.name();
+      if (f.type().type().isPrimitive()) {
+        argList += "fabric.lang.WrappedJavaInlineable.$wrap(" + f.name() + ")";
+      } else {
+        argList += f.name();
+      }
       finals.add(qq.parseStmt("final %T $arg" + count + " = %s;", f.type(), f.name()));
       unpacks.add(qq.parseStmt("%T %s = $arg" + count + ";", f.type(), f.name()));
       count++;

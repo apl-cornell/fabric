@@ -37,6 +37,12 @@ public final class Logging {
       .getLogger("fabric.store.requests");
 
   /**
+   * For events related to semantic warranties
+   */
+  public static final Logger SEMANTIC_WARRANTY_LOGGER = Logger
+      .getLogger("SEMANTIC_WARRANTIES");
+
+  /**
    * For transaction events on the store.
    */
   public static final Logger STORE_TRANSACTION_LOGGER = Logger

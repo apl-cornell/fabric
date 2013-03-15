@@ -1,5 +1,7 @@
 package fabric.worker.transaction;
 
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -8,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
@@ -40,12 +43,9 @@ import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
 /* TODO:
- *      - Add support for sending requests and other information in the prepare
- *      phase.
- *      - Handle top-level semantic warranty request transactions
  *      - Double check code for merging a completed subtransaction
- *              + Might want to think about whether writes and creates of
- *              requests should appear in the TL transaction. 
+ *              + Might want to think about whether writes of requests should
+ *              appear in the TL transaction. 
  *      - Store away results given by re-used calls so they can be checked by
  *      the transaction.
  */
@@ -364,6 +364,9 @@ public final class Log {
    * that happened BEFORE the request was computed...
    */
   public void invalidateDependentRequests(long onum) {
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Onum {0} written, dropping semantic warranties "
+        + "earlier in transaction that use it.", onum);
     Set<CallID> dependencies = readDependencies.get(onum);
     if (dependencies == null) return;
     for (CallID id : dependencies)
@@ -377,6 +380,9 @@ public final class Log {
   private void removeRequest(CallID callId) {
     /* TODO: Invalidate other calls that depend on this */
     SemanticWarrantyRequest req = requests.get(callId);
+  
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Call {0} warranty request dropped", req.call.toString());
 
     LongIterator it = req.reads.iterator();
     while (it.hasNext()) {
@@ -754,13 +760,25 @@ public final class Log {
 
       Store targetStore = semanticWarrantyCall.target.$getStore();
       LongSet readsForTargetStore = getReadsForStore(targetStore).keySet();
+      Collection<_Impl> createsForTargetStore = getCreatesForStore(targetStore);
       Set<CallID> callsForTargetStore = getCallsForStore(targetStore);
 
       if (readsForTargetStore.containsAll(readSet) &&
-          callsForTargetStore.containsAll(callSet)) {
+          callsForTargetStore.containsAll(callSet) &&
+          createsForTargetStore.containsAll(creates)) {
         // Create the request object only if we keep all of the reads and call
         // reuses on a single store (the same as where we're storing the target
         // of the call).
+        //
+        // Include creates as part of the group of things I have to defend.
+        if (readsForTargetStore.isEmpty()) {
+          // Because apparently the set might be an empty set which can't have
+          // items added...
+          readsForTargetStore = new LongHashSet();
+        }
+        for (_Impl createdObj : createsForTargetStore) {
+          readsForTargetStore.add(createdObj.$getOnum());
+        }
         SemanticWarrantyRequest req = new
           SemanticWarrantyRequest(semanticWarrantyCall, semanticWarrantyValue,
               readSet, callSet);
@@ -789,7 +807,7 @@ public final class Log {
    * merged into the parent's log and any locks held are transferred to the
    * parent.
    */
-  /* TODO: Should I not merge writes/creates of semantic warranty requests? */
+  /* TODO: Should I not merge writes of semantic warranty requests? */
   void commitNested() {
     // TODO See if lazy merging of logs helps performance.
 
@@ -929,7 +947,6 @@ public final class Log {
    * Assumes this is a top-level transaction. All locks held by this transaction
    * will be released after the given commit time.
    */
-  /* TODO: Add in semantic warranties code? */
   void commitTopLevel(long commitTime) {
     Logging.WORKER_TRANSACTION_LOGGER.finer("Scheduled commit for tid " + tid
         + " to run at " + new Date(commitTime) + " (in "
@@ -944,8 +961,13 @@ public final class Log {
         for (Map.Entry<CallID, SemanticWarrantyRequest> e
           : requests.entrySet()) {
           CallID id = e.getKey();
-          requestLocations.get(id).insertResult(requestInstances.get(id),
-            new CallResult(e.getValue().value, requestReplies.get(id)));
+          // If we got a warranty, then place it in the local cache.
+          // XXX: AFAIK, the only time you don't get a warranty is when you
+          // use the local store.
+          if (requestReplies.get(id) != null) {
+            requestLocations.get(id).insertResult(requestInstances.get(id),
+              new CallResult(e.getValue().value, requestReplies.get(id)));
+          }
         }
 
         // Release read locks.

@@ -33,6 +33,9 @@ public final class CallCache {
   }
 
   public void put(CallInstance call, CallResult result) {
+    if (result.warranty == null) {
+      new Exception().printStackTrace();
+    }
     callTable.put(call.id(), result);
   }
 }

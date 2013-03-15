@@ -7,13 +7,14 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import fabric.lang.Object;
+import fabric.lang.WrappedJavaInlineable;
 
 /**
  * Represents a unique memoizable call in the Fabric system.
  */
 public class CallInstance {
 
-  public final fabric.lang.Object target;
+  public final Object target;
   public final String method;
   public final Object[] arguments;
   private CallID id;
@@ -27,9 +28,17 @@ public class CallInstance {
       MessageDigest algorithm = MessageDigest.getInstance("MD5");
       algorithm.reset();
       algorithm.update(method.getBytes("UTF-8"));
-      algorithm.update(ByteBuffer.allocate(8).putLong(target.$getOnum()).array());
+      algorithm.update(ByteBuffer.allocate(8).putLong(target.$getOnum()));
       for (Object arg : arguments) {
-        algorithm.update(ByteBuffer.allocate(8).putLong(arg.$getOnum()).array());
+        if (arg instanceof WrappedJavaInlineable) {
+          algorithm.update((byte) 0);
+          //TODO: I need to double check that this is the same across all
+          //instances of any primitive's wrapper type.
+          algorithm.update(arg.$unwrap().toString().getBytes("UTF-8"));
+        } else {
+          algorithm.update((byte) 1);
+          algorithm.update(ByteBuffer.allocate(8).putLong(arg.$getOnum()));
+        }
       }
       this.id = new CallID(algorithm.digest());
     } catch (NoSuchAlgorithmException e) {
