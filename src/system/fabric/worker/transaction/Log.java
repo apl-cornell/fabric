@@ -727,7 +727,13 @@ public final class Log {
    * current log (if possible).  Should only be called when committing the log.
    */
   public void createCurrentRequest() {
-    if (semanticWarrantyCall != null) {
+    if (semanticWarrantyCall != null && writes.size() > 0) {
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Semantic warranty request for {0} "
+          + "aborted due to writes during the call!",
+          semanticWarrantyCall.toString());
+    }
+    if (semanticWarrantyCall != null && writes.size() == 0) {
       // Add call to readDependencies and build up reads set.
       LongSet readSet = new LongHashSet();
       for (LongKeyMap<ReadMapEntry> submap : reads) {
