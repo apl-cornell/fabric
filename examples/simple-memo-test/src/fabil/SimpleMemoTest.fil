@@ -37,6 +37,10 @@ public class SimpleMemoTest {
     return new Msg(n).SimpleMemoTest$Msg$().SimpleMemoTest$Msg$();
   }
 
+  public memoized long wat() {
+    return 0l;
+  }
+
   public static void main(String[] args) {
     SimpleMemoTest testSimpleMemoTest = null;
     SimpleMemoTest localSimpleMemoTest = null;

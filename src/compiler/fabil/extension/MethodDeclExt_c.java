@@ -79,17 +79,12 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     TypeNode callResultType = nf.TypeNodeFromQualifiedName(CG,
         "fabric.worker.memoize.CallResult");
 
-    boolean first = true;
     int count = 0;
     String argList = "";
     List<Stmt> finals = new ArrayList<Stmt>(md.formals().size());
     List<Stmt> unpacks = new ArrayList<Stmt>(md.formals().size());
     for (Formal f : md.formals()) {
-      if (first) {
-        first = false;
-      } else {
-        argList += ", ";
-      }
+      argList += ", ";
       if (f.type().type().isPrimitive()) {
         argList += "fabric.lang.WrappedJavaInlineable.$wrap(" + f.name() + ")";
       } else {
@@ -104,7 +99,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
 
     Stmt resultCreate = qq.parseStmt("%T $result;", md.returnType());
     Stmt callCreate = qq.parseStmt("final %T $call = new %T(this, \""
-        + md.methodInstance().signature() + "\", " + argList + ");",
+        + md.methodInstance().signature() + "\"" + argList + ");",
         callInstanceType, callInstanceType);
     Stmt callLookup = qq.parseStmt(
         "%T $resultObj = this.$getStore().lookupCall($call);", callResultType);
