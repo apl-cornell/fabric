@@ -1,6 +1,7 @@
 package fabric.store.db;
 
 import static fabric.common.Logging.STORE_DB_LOGGER;
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,7 +11,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.Warranty;
@@ -96,6 +99,9 @@ public class SemanticWarrantyTable {
       }
     }
 
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Issuing SemanticWarranty of {0} for CallID {1}", minWarranty.expiry(),
+        id.id());
     return new SemanticWarranty(minWarranty.expiry());
     //return new SemanticWarranty(System.currentTimeMillis() + 5000);
   }

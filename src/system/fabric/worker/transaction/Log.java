@@ -445,8 +445,10 @@ public final class Log {
     for (Entry<CallInstance, CallResult> e
         : semanticWarrantiesUsed.entrySet()) {
       Store store = e.getKey().target.$getStore();
+      CallID call = e.getKey().id();
       CallResult callRes = e.getValue();
-      if (callRes.warranty.expiresBefore(commitTime, true)) {
+      if (callRes.warranty.expiresBefore(commitTime, true)
+          && !requests.containsKey(call)) {
         Set<CallID> requestsAtStore = result.get(store);
         if (requestsAtStore == null) {
           requestsAtStore = new HashSet<CallID>();
@@ -635,9 +637,12 @@ public final class Log {
    * Returns the set of call ids used from a given store
    */
   Set<CallID> getCallsForStore(Store store) {
+    Set<CallID> requestsSet = new HashSet<CallID>();
+    for (SemanticWarrantyRequest req : getRequestsForStore(store))
+      requestsSet.add(req.call);
     Set<CallID> callSet = new HashSet<CallID>();
     for (CallInstance c : semanticWarrantiesUsed.keySet())
-      if (c.target.$getStore() == store)
+      if (c.target.$getStore() == store && !requestsSet.contains(c.id()))
         callSet.add(c.id());
     return callSet;
   }
