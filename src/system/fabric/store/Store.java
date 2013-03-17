@@ -52,7 +52,7 @@ import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
 import fabric.store.db.ObjectDB;
 import fabric.worker.memoize.CallID;
-import fabric.worker.memoize.CallResult;
+import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -248,7 +248,7 @@ class Store extends MessageToStoreHandler {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Call Message from {0}, id={1}", nameOf(p), msg.id);
 
-    CallResult result = tm.getCall(p, msg.id);
+    WarrantiedCallResult result = tm.getCall(p, msg.id);
     return new ReuseCallMessage.Response(result);
   }
 

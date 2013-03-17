@@ -37,8 +37,12 @@ public class SimpleMemoTest {
     return new Msg(n).SimpleMemoTest$Msg$().SimpleMemoTest$Msg$();
   }
 
-  public memoized long wat() {
-    return 0l;
+  public memoized long fib(int n) {
+    //System.out.println("Computing fib(" + n + ")");
+    try { Thread.sleep(100); } catch (InterruptedException e) { }
+    if (n == 0) return 0l;
+    if (n == 1) return 1l;
+    return fib(n - 1) + fib(n - 2);
   }
 
   public static void main(String[] args) {
@@ -50,7 +54,7 @@ public class SimpleMemoTest {
       localSimpleMemoTest = new SimpleMemoTest();
       m = new Msg@s(20).SimpleMemoTest$Msg$().SimpleMemoTest$Msg$();
       System.out.println(testSimpleMemoTest.dumbestTestEver(m));
-      for (int i = 0; i < 30; i++) {
+      for (int i = 0; i < 10; i++) {
         System.out.println("testSimpleMemoTest.foo(" + i + "): " + testSimpleMemoTest.foo(i));
         // Tests reuse within the same transaction it was created
         System.out.println("testSimpleMemoTest.foo(" + i + "): " + testSimpleMemoTest.foo(i));
@@ -58,15 +62,22 @@ public class SimpleMemoTest {
         // Tests reuse within the same transaction it was created
         System.out.println("localSimpleMemoTest.localFoo(" + i + "): " + localSimpleMemoTest.localFoo(i));
       }
+      System.out.println("FIB(50): " + testSimpleMemoTest.fib(50));
+      System.out.println("FIB(50): " + testSimpleMemoTest.fib(50));
     }
     atomic {
       System.out.println(testSimpleMemoTest.dumbestTestEver(m));
-      for (int i = 0; i < 30; i++) {
-        System.out.println("After commit testSimpleMemoTest.foo(" + i + "): " + testSimpleMemoTest.foo(i));
-        System.out.println("After commit localSimpleMemoTest.localFoo(" + i + "): " + localSimpleMemoTest.localFoo(i));
+      for (int i = 0; i < 10; i++) {
+        System.out.println("testSimpleMemoTest.foo(" + i + "): " + testSimpleMemoTest.foo(i));
+        // Tests reuse within the same transaction it was created
+        System.out.println("testSimpleMemoTest.foo(" + i + "): " + testSimpleMemoTest.foo(i));
+        System.out.println("localSimpleMemoTest.localFoo(" + i + "): " + localSimpleMemoTest.localFoo(i));
+        // Tests reuse within the same transaction it was created
+        System.out.println("localSimpleMemoTest.localFoo(" + i + "): " + localSimpleMemoTest.localFoo(i));
       }
+      System.out.println("FIB(50): " + testSimpleMemoTest.fib(50));
+      System.out.println("FIB(50): " + testSimpleMemoTest.fib(50));
     }
   }
-
 }
 

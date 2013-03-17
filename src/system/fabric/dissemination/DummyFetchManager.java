@@ -3,7 +3,7 @@ package fabric.dissemination;
 import java.util.Properties;
 
 import fabric.common.ObjectGroup;
-import fabric.worker.memoize.CallResult;
+import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 
@@ -24,7 +24,7 @@ public class DummyFetchManager implements FetchManager {
   }
 
   @Override
-  public CallResult fetchCall(RemoteStore store, long callId) {
+  public WarrantiedCallResult fetchCall(RemoteStore store, long callId) {
     /* TODO: Implement */
     return null;
   }

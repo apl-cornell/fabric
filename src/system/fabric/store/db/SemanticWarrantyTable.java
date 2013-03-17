@@ -15,12 +15,11 @@ import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.SemanticWarranty;
-import fabric.common.SerializedObject;
 import fabric.common.Warranty;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
 import fabric.worker.memoize.CallID;
-import fabric.worker.memoize.CallResult;
+import fabric.worker.memoize.WarrantiedCallResult;
 
 /*
  * TODO:
@@ -38,7 +37,7 @@ public class SemanticWarrantyTable {
    */
   private volatile SemanticWarranty defaultWarranty;
 
-  private final Map<CallID, CallResult> table;
+  private final Map<CallID, WarrantiedCallResult> table;
 
   private final Collector collector;
 
@@ -61,7 +60,7 @@ public class SemanticWarrantyTable {
 
   public SemanticWarrantyTable(ObjectDB database) {
     defaultWarranty = new SemanticWarranty(0);
-    table = new ConcurrentHashMap<CallID, CallResult>();
+    table = new ConcurrentHashMap<CallID, WarrantiedCallResult>();
     reverseTable = new ConcurrentHashMap<SemanticWarranty, Set<CallID>>();
     dependencyTable = new SemanticWarrantyDependencies();
     this.database = database;
@@ -70,7 +69,7 @@ public class SemanticWarrantyTable {
     collector.start();
   }
 
-  public final CallResult get(CallID id) {
+  public final WarrantiedCallResult get(CallID id) {
     return table.get(id);
   }
 
@@ -107,9 +106,9 @@ public class SemanticWarrantyTable {
   }
 
   public final SemanticWarranty put(CallID id, LongSet reads, Set<CallID> calls,
-      SerializedObject value) {
+      fabric.lang.Object value) {
     SemanticWarranty warranty = warrantyForCall(id, reads, calls);
-    CallResult result = new CallResult(value, warranty);
+    WarrantiedCallResult result = new WarrantiedCallResult(value, warranty);
     if (defaultWarranty.expiresAfter(warranty)) {
       throw new InternalError("Attempted to insert a warranty that expires "
           + "before the default warranty. This should not happen.");
@@ -170,10 +169,10 @@ public class SemanticWarrantyTable {
     */
 
     boolean success = false;
-    CallResult oldEntry = table.get(id);
+    WarrantiedCallResult oldEntry = table.get(id);
     if (oldEntry.warranty.equals(oldWarranty)) {
       success = true;
-      table.put(id, new CallResult(oldEntry.value, newWarranty));
+      table.put(id, new WarrantiedCallResult(oldEntry.value, newWarranty));
     }
 
     if (success) {

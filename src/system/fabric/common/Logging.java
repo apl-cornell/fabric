@@ -40,7 +40,7 @@ public final class Logging {
    * For events related to semantic warranties
    */
   public static final Logger SEMANTIC_WARRANTY_LOGGER = Logger
-      .getLogger("SEMANTIC_WARRANTIES");
+      .getLogger("fabric.worker.memoize");
 
   /**
    * For transaction events on the store.

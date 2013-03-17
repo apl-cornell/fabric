@@ -1,5 +1,6 @@
 package fabric.store;
 
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
 import static fabric.store.db.ObjectDB.UpdateType.CREATE;
 import static fabric.store.db.ObjectDB.UpdateType.WRITE;
@@ -7,10 +8,13 @@ import static fabric.store.db.ObjectDB.UpdateType.WRITE;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
@@ -20,6 +24,7 @@ import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.Logging;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -35,7 +40,7 @@ import fabric.store.db.SemanticWarrantyTable;
 import fabric.worker.AbortException;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.memoize.CallID;
-import fabric.worker.memoize.CallResult;
+import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -357,11 +362,49 @@ public class TransactionManager {
      */ 
     Map<CallID, SemanticWarranty> warranties =
       new HashMap<CallID, SemanticWarranty>();
+
+    // Have to do a topologically sorted order of requests (so call dependencies
+    // have warranties already).
+    Map<CallID, Set<CallID>> simplifiedDepMap = new HashMap<CallID, Set<CallID>>();
+    Map<CallID, SemanticWarrantyRequest> reqMap = new HashMap<CallID,
+      SemanticWarrantyRequest>(requests.size());
     for (SemanticWarrantyRequest r : requests) {
-      /* XXX: Should I be failing on some possible issue here? */
+      reqMap.put(r.call, r);
+    }
+    for (SemanticWarrantyRequest r : requests) {
+      Set<CallID> depsInTable = new HashSet<CallID>();
+      for (CallID c : r.calls)
+        if (reqMap.containsKey(c))
+          depsInTable.add(c);
+      simplifiedDepMap.put(r.call, depsInTable);
+    }
+
+    LinkedList<CallID> fringe = new LinkedList<CallID>();
+    Set<CallID> nonfringe = new HashSet<CallID>();
+    for (CallID k : simplifiedDepMap.keySet())
+      if (simplifiedDepMap.get(k).isEmpty())
+        fringe.add(k);
+      else
+        nonfringe.add(k);
+
+    while (!fringe.isEmpty()) {
+      SemanticWarrantyRequest r = reqMap.get(fringe.poll());
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Getting SemanticWarranty for CallID {1}, which has {0} dependencies",
+          r.calls.size(), r.call);
       warranties.put(r.call,
           semanticWarranties.put(r.call, r.reads, r.calls, r.value));
+      
+      //Update fringe
+      for (CallID c : new HashSet<CallID>(nonfringe)) {
+        simplifiedDepMap.get(c).remove(r.call);
+        if (simplifiedDepMap.get(c).isEmpty()) {
+          nonfringe.remove(c);
+          fringe.add(c);
+        }
+      }
     }
+
     return warranties;
   }
 
@@ -460,9 +503,9 @@ public class TransactionManager {
    * @param id
    *          The id for the call instance.
    */
-  public CallResult getCall(Principal principal, CallID id)
+  public WarrantiedCallResult getCall(Principal principal, CallID id)
       throws AccessException {
-    CallResult result = semanticWarranties.get(id);
+    WarrantiedCallResult result = semanticWarranties.get(id);
     if (result == null) throw new AccessException(
         "AccessDenied, could not find call id " + id.toString());
     return result;

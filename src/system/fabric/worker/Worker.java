@@ -1,5 +1,6 @@
 package fabric.worker;
 
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 import static fabric.common.Logging.TIMING_LOGGER;
 import static fabric.common.Logging.WORKER_LOGGER;
 
@@ -20,6 +21,7 @@ import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
 import fabric.common.KeyMaterial;
+import fabric.common.Logging;
 import fabric.common.NSUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;

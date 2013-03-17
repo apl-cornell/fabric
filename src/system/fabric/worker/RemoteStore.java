@@ -1,5 +1,7 @@
 package fabric.worker;
 
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
@@ -12,8 +14,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Level;
 
 import fabric.common.Crypto;
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SemanticWarranty;
@@ -52,7 +56,7 @@ import fabric.util.Map;
 import fabric.worker.memoize.CallCache;
 import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallInstance;
-import fabric.worker.memoize.CallResult;
+import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.transaction.TransactionManager;
 
@@ -310,10 +314,16 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public CallResult lookupCall(CallInstance call) {
-    CallResult result =
+  public WarrantiedCallResult lookupCall(CallInstance call) {
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Looking up {0}...", call.toString());
+    WarrantiedCallResult result =
       TransactionManager.getInstance().getCurrentLog().getRequestResult(call);
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "\tResult after checking current log was {0}", result);
     if (result == null) result = callCache.get(call);
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "\tResult after checking locally was {0}", result);
     /* TODO: Check dissemination layer. */
     /* XXX: What to do on expired warranties? */
     try {
@@ -321,11 +331,13 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
         result = reuseCallFromStore(call.id());
     } catch (AccessException e) {
     }
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "\tResult after checking remotely was {0}", result);
     return result;
   }
 
   @Override
-  public void insertResult(CallInstance call, CallResult result) {
+  public void insertResult(CallInstance call, WarrantiedCallResult result) {
     callCache.put(call, result);
   }
 
@@ -338,7 +350,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @throws FetchException
    *           if there was an error while fetching the object from the store.
    */
-  public CallResult reuseCallFromStore(CallID id) throws AccessException {
+  public WarrantiedCallResult reuseCallFromStore(CallID id) throws AccessException {
     ReuseCallMessage.Response response =
         send(Worker.getWorker().authToStore, new ReuseCallMessage(id));
     return response.result;

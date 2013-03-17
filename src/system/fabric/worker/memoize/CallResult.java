@@ -1,44 +1,68 @@
 package fabric.worker.memoize;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.logging.Level;
 
-import fabric.common.SemanticWarranty;
-import fabric.common.SerializedObject;
+import fabric.common.Logging;
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 import fabric.lang.Object;
+import fabric.lang.WrappedJavaInlineable;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
- * Wrapper for the stored value and warranty on a call in the system.  Basically
- * just a nicer way of representing things than Pair<Object, SemanticWarranty>.
+ * Union type for primitives and references to Fabric objects.  Meant to be used
+ * for sending a call's result across the network.
  */
 public class CallResult {
-  
-  public final SerializedObject value;
-  public final SemanticWarranty warranty;
+  public final Object value;
 
-  public CallResult(Object._Impl value, SemanticWarranty warranty) {
-    this(new SerializedObject(value), warranty);
-  }
-
-  public CallResult(SerializedObject value, SemanticWarranty warranty) {
+  public CallResult(Object value) {
     this.value = value;
-    this.warranty = warranty;
   }
 
-  /**
-   * Deserialization constructor.
-   */
   public CallResult(DataInput in) throws IOException {
-    warranty = new SemanticWarranty(in.readLong());
-    value = new SerializedObject(in);
+    boolean primitiveValue = in.readBoolean();
+    Object value = null;
+    if (primitiveValue) {
+      byte[] inlinedData = new byte[in.readInt()];
+      in.readFully(inlinedData);
+      try {
+        value = WrappedJavaInlineable.$wrap((new ObjectInputStream(new
+                ByteArrayInputStream(inlinedData))).readObject());
+      } catch (ClassNotFoundException e) {
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "Couldn't read in supposedly inlineable object: {0}", e);
+      }
+    } else {
+      Store s = Worker.getWorker().getStore(in.readUTF());
+      value = new Object._Proxy(s, in.readLong());
+    }
+    this.value = value;
   }
 
-  /**
-   * Serializes the result into the given output stream.
-   */
   public void write(DataOutput out) throws IOException {
-    out.writeLong(warranty.expiry());
-    value.write(out);
+    if (value instanceof WrappedJavaInlineable) {
+      out.writeBoolean(true);
+
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      ObjectOutputStream objOut = new ObjectOutputStream(bos);
+      objOut.writeObject(this.value.$unwrap());
+      objOut.flush();
+      bos.flush();
+      byte[] objData = bos.toByteArray();
+      out.writeInt(objData.length);
+      out.write(objData);
+    } else {
+      out.writeBoolean(false);
+      out.writeUTF(value.$getStore().name());
+      out.writeLong(value.$getOnum());
+    }
   }
 }

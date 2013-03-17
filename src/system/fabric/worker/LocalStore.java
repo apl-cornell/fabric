@@ -31,7 +31,7 @@ import fabric.util.Map;
 import fabric.worker.memoize.CallCache;
 import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallInstance;
-import fabric.worker.memoize.CallResult;
+import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.transaction.TransactionManager;
 
@@ -143,15 +143,15 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public CallResult lookupCall(CallInstance call) {
-    CallResult result =
+  public WarrantiedCallResult lookupCall(CallInstance call) {
+    WarrantiedCallResult result =
       TransactionManager.getInstance().getCurrentLog().getRequestResult(call);
     if (result == null) result = callCache.get(call);
     return result;
   }
 
   @Override
-  public void insertResult(CallInstance call, CallResult result) {
+  public void insertResult(CallInstance call, WarrantiedCallResult result) {
     callCache.put(call, result);
   }
 

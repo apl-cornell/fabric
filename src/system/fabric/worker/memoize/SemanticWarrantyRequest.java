@@ -9,9 +9,8 @@ import java.util.HashSet;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
-import fabric.common.SerializedObject;
-import fabric.common.VersionWarranty;
 import fabric.lang.Object;
+import fabric.worker.memoize.CallResult;
 
 /**
  * Represents all the data needed for a request for a SemanticWarranty.  Should
@@ -21,14 +20,14 @@ import fabric.lang.Object;
 public class SemanticWarrantyRequest {
 
   public final CallID call;
-  public final SerializedObject value;
+  public final Object value;
   public final LongSet reads;
   public final Set<CallID> calls;
 
-  public SemanticWarrantyRequest(CallInstance call, Object._Impl value,
+  public SemanticWarrantyRequest(CallInstance call, Object value,
       LongSet reads, Set<CallID> calls) {
     this.call = call.id();
-    this.value = new SerializedObject(value);
+    this.value = value;
     this.reads = reads;
     this.calls = calls;
   }
@@ -39,7 +38,7 @@ public class SemanticWarrantyRequest {
     in.readFully(callBytes);
     this.call = new CallID(callBytes);
 
-    this.value = new SerializedObject(in);
+    this.value = new CallResult(in).value;
 
     this.reads = new LongHashSet();
     int readsLen = in.readInt();
@@ -59,7 +58,7 @@ public class SemanticWarrantyRequest {
   public void write(DataOutput out) throws IOException {
     out.writeInt(call.id().length);
     out.write(call.id());
-    value.write(out);
+    (new CallResult(value)).write(out);
 
     out.writeInt(reads.size());
     LongIterator readsIt = reads.iterator();

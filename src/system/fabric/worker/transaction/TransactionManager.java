@@ -54,7 +54,7 @@ import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallInstance;
-import fabric.worker.memoize.CallResult;
+import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
@@ -1008,7 +1008,7 @@ public final class TransactionManager {
    * Registers the use of a pre-cached CallInstance's value.
    */
   public void registerSemanticWarrantyUse(CallInstance call,
-      CallResult result) {
+      WarrantiedCallResult result) {
     current.semanticWarrantiesUsed.put(call, result);
   }
 
@@ -1018,7 +1018,7 @@ public final class TransactionManager {
    * should NOT be called if the current log does not have a call associated
    * with it (so it's not a SemanticWarranty request).
    */
-  public void setSemanticWarrantyValue(_Impl v) {
+  public void setSemanticWarrantyValue(fabric.lang.Object v) {
     current.semanticWarrantyValue = v;
   }
 

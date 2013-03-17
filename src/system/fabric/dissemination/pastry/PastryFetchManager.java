@@ -9,7 +9,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.dissemination.DummyFetchManager;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
-import fabric.worker.memoize.CallResult;
+import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 
@@ -54,7 +54,7 @@ public class PastryFetchManager implements FetchManager {
   }
 
   @Override
-  public CallResult fetchCall(RemoteStore store, long callId) {
+  public WarrantiedCallResult fetchCall(RemoteStore store, long callId) {
     /* TODO: Implement */
     return null;
   }

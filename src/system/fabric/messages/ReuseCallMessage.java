@@ -8,7 +8,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.lang.security.Principal;
 import fabric.worker.memoize.CallID;
-import fabric.worker.memoize.CallResult;
+import fabric.worker.memoize.WarrantiedCallResult;
 
 /**
  * A <code>ReuseCallMessage</code> represents a request from a worker to reuse a
@@ -34,9 +34,9 @@ public class ReuseCallMessage extends Message<ReuseCallMessage.Response,
 
   public static class Response implements Message.Response {
 
-    public final CallResult result;
+    public final WarrantiedCallResult result;
 
-    public Response(CallResult result) {
+    public Response(WarrantiedCallResult result) {
       this.result = result;
     }
 
@@ -80,7 +80,7 @@ public class ReuseCallMessage extends Message<ReuseCallMessage.Response,
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    CallResult result = in.readBoolean() ? new CallResult(in) : null;
+    WarrantiedCallResult result = in.readBoolean() ? new WarrantiedCallResult(in) : null;
     return new Response(result);
   }
 }

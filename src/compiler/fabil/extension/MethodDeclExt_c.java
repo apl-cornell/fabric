@@ -16,7 +16,11 @@ import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
+import polyglot.types.PrimitiveType;
+import polyglot.types.SemanticException;
+import polyglot.types.Type;
 import fabil.types.FabILFlags;
+import fabil.types.FabILTypeSystem;
 import fabil.visit.MemoizedMethodRewriter;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ThreadRewriter;
@@ -72,12 +76,23 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     if (md.body() == null) return md;
     QQ qq = mmr.qq();
     NodeFactory nf = mmr.nodeFactory();
+    FabILTypeSystem ts = mmr.typeSystem();
     Position CG = Position.compilerGenerated();
 
     TypeNode callInstanceType = nf.TypeNodeFromQualifiedName(CG,
         "fabric.worker.memoize.CallInstance");
     TypeNode callResultType = nf.TypeNodeFromQualifiedName(CG,
-        "fabric.worker.memoize.CallResult");
+        "fabric.worker.memoize.WarrantiedCallResult");
+    Type returnType = md.returnType().type();
+    Type wrappedReturnType = returnType;
+    if (returnType.isPrimitive()) {
+      try {
+        wrappedReturnType = ts.typeForName(ts.wrapperTypeString((PrimitiveType)
+              returnType));
+      } catch (SemanticException e) {
+        System.err.println("Tried to wrap type " + returnType);
+      }
+    }
 
     int count = 0;
     String argList = "";
@@ -97,33 +112,41 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     finals.add(qq.parseStmt("final %T $oldThis = this;",
           md.memberInstance().container()));
 
-    Stmt resultCreate = qq.parseStmt("%T $result;", md.returnType());
     Stmt callCreate = qq.parseStmt("final %T $call = new %T(this, \""
         + md.methodInstance().signature() + "\"" + argList + ");",
         callInstanceType, callInstanceType);
+
+    /* Handle lookup before computing */
     Stmt callLookup = qq.parseStmt(
         "%T $resultObj = this.$getStore().lookupCall($call);", callResultType);
     Stmt callUnpack = qq.parseStmt(
-        "%T $cacheResult = (%T) $resultObj.value.deserialize(this.$getStore(),"
-        + " new fabric.common.VersionWarranty(0));", md.returnType(),
-        md.returnType());
+        "%T $cacheResult = (%T) $resultObj.value.fetch();", wrappedReturnType,
+        wrappedReturnType);
+    if (returnType.isPrimitive()) {
+      callUnpack = qq.parseStmt("%T $cacheResult = (%T) "
+          + "fabric.lang.WrappedJavaInlineable.$unwrap($resultObj.value);",
+          wrappedReturnType, wrappedReturnType);
+    }
     Stmt checkLookup = qq.parseStmt("if ($resultObj != null) {\n"
         + "  %S\n"
         + "  fabric.worker.transaction.TransactionManager.getInstance().registerSemanticWarrantyUse($call, $resultObj);\n"
         + "  return $cacheResult;\n"
         + "}", callUnpack);
+
+    /* Compute otherwise */
+    Stmt resultCreate = qq.parseStmt("fabric.lang.Object $result;");
     Stmt buildWarranty = qq.parseStmt(
         "{%LS\n"
       + "return (%T) fabric.worker.Worker.runInSemanticWarrantyTransaction("
       + "fabric.worker.transaction.TransactionManager.getInstance().getCurrentTid(),\n"
       + "new fabric.worker.Worker.Code() {\n"
-      + "  public %T run() {\n"
+      + "  public java.lang.Object run() {\n"
       + "    %LS\n"
       + "    %S\n"
       + "    %S\n"
       + "  }\n"
-      + "}, true, $call);}", finals, md.returnType(), md.returnType(), unpacks,
-      resultCreate, md.body());
+      + "}, true, $call);}", finals, wrappedReturnType, unpacks, resultCreate,
+      md.body());
     return md.body(nf.Block(CG, callCreate, callLookup, checkLookup, buildWarranty));
   }
 

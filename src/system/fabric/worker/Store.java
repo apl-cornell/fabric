@@ -17,7 +17,7 @@ import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallInstance;
-import fabric.worker.memoize.CallResult;
+import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 
 public interface Store extends Serializable {
@@ -89,12 +89,12 @@ public interface Store extends Serializable {
   /**
    * Returns the pair of SemanticWarranty and value for the given CallInstance.
    */
-  CallResult lookupCall(CallInstance call);
+  WarrantiedCallResult lookupCall(CallInstance call);
 
   /**
    * Insert a CallResult into the CallCache.
    */
-  void insertResult(CallInstance call, CallResult result);
+  void insertResult(CallInstance call, WarrantiedCallResult result);
 
   /**
    * Notifies the store that the transaction is being Aborted.
