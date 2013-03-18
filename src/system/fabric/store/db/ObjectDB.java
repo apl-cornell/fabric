@@ -356,10 +356,14 @@ public abstract class ObjectDB {
    * already exist.
    */
   private ObjectLocks objectLocksFor(long onum) {
-    ObjectLocks newLocks = new ObjectLocks();
-    ObjectLocks curLocks = rwLocks.putIfAbsent(onum, newLocks);
-    if (curLocks != null) return curLocks;
-    return newLocks;
+    ObjectLocks curLocks = rwLocks.get(onum);
+    if (curLocks == null) {
+      ObjectLocks newLocks = new ObjectLocks();
+      curLocks = rwLocks.putIfAbsent(onum, newLocks);
+      if (curLocks == null) return newLocks;
+    }
+
+    return curLocks;
   }
 
   /**
