@@ -12,16 +12,21 @@ public class ReturnExt_c extends FabILExt_c {
     Return rtn = node();
     if (mmr.inMemoizedMethod()) {
       QQ qq = mmr.qq();
-      String resultExpr = "%E";
       //Wrap it up for the value to be stored, if it's an inlineable
       //XXX: This isn't currently handling Strings...
-      if (mmr.currentMethod().returnType().type().isPrimitive())
-        resultExpr = "fabric.lang.WrappedJavaInlineable.$wrap(%E)";
-      return qq.parseStmt("{\n"
-          + "  $result = " + resultExpr + ";\n"
-          + "  fabric.worker.transaction.TransactionManager.getInstance().setSemanticWarrantyValue((fabric.lang.Object) $result.fetch());\n"
-          + "  return fabric.lang.WrappedJavaInlineable.$unwrap($result);\n"
-          + "}", rtn.expr());
+      if (mmr.currentMethod().returnType().type().isPrimitive()) {
+        return qq.parseStmt("{\n"
+            + "  $result = fabric.lang.WrappedJavaInlineable.$wrap((%T) %E);\n"
+            + "  fabric.worker.transaction.TransactionManager.getInstance().setSemanticWarrantyValue((fabric.lang.Object) $result.fetch());\n"
+            + "  return fabric.lang.WrappedJavaInlineable.$unwrap($result);\n"
+            + "}", mmr.currentMethod().returnType(), rtn.expr());
+      } else {
+        return qq.parseStmt("{\n"
+            + "  $result = %E;\n"
+            + "  fabric.worker.transaction.TransactionManager.getInstance().setSemanticWarrantyValue((fabric.lang.Object) $result.fetch());\n"
+            + "  return fabric.lang.WrappedJavaInlineable.$unwrap($result);\n"
+            + "}", rtn.expr());
+      }
     }
     return rtn;
   }

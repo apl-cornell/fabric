@@ -40,8 +40,8 @@ public class SimpleMemoTest {
   public memoized long fib(int n) {
     //System.out.println("Computing fib(" + n + ")");
     try { Thread.sleep(100); } catch (InterruptedException e) { }
-    if (n == 0) return 0l;
-    if (n == 1) return 1l;
+    if (n == 0) return 0;
+    if (n == 1) return 1;
     return fib(n - 1) + fib(n - 2);
   }
 
