@@ -145,13 +145,11 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public java.util.Map<CallID, SemanticWarranty>
-  prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
-      Set<CallID> calls, Set<SemanticWarrantyRequest> requests, long commitTime)
-  throws TransactionPrepareFailedException, UnreachableNodeException {
-    return send(Worker.getWorker().authToStore, new
-        PrepareTransactionReadsMessage(tid,
-          reads, calls, requests, commitTime)).getResults();
+  public void prepareTransactionReads(long tid, LongKeyMap<Integer> reads,
+      Set<CallID> calls, long commitTime) throws
+  TransactionPrepareFailedException, UnreachableNodeException {
+    send(Worker.getWorker().authToStore, new PrepareTransactionReadsMessage(tid,
+          reads, calls, commitTime));
   }
 
   @Override
@@ -325,7 +323,6 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
         "\tResult after checking locally was {0}", result);
     /* TODO: Check dissemination layer. */
-    /* XXX: What to do on expired warranties? */
     try {
       if (result == null)
         result = reuseCallFromStore(call.id());
@@ -362,10 +359,12 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public void commitTransaction(long transactionID, long commitTime)
-      throws UnreachableNodeException, TransactionCommitFailedException {
-    send(Worker.getWorker().authToStore, new CommitTransactionMessage(
-        transactionID, commitTime));
+  public java.util.Map<CallID, SemanticWarranty> commitTransaction(
+      long transactionID, long commitTime, Set<SemanticWarrantyRequest>
+      requests) throws UnreachableNodeException,
+         TransactionCommitFailedException {
+    return send(Worker.getWorker().authToStore, new CommitTransactionMessage(
+          transactionID, commitTime, requests)).getResults();
   }
 
   @Override

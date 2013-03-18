@@ -208,8 +208,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     /* TODO: Figure out if I should actually be passing back the results of
      * requests to the remote caller... I don't think so?
      */
-    return new PrepareTransactionReadsMessage.Response(
-        new HashMap<CallID, SemanticWarranty>());
+    return new PrepareTransactionReadsMessage.Response();
   }
 
   /**
@@ -227,7 +226,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     if (log == null) {
       // If no log exists, assume that another worker in the transaction has
       // already committed the requested transaction.
-      return new CommitTransactionMessage.Response();
+      return new CommitTransactionMessage.Response(new HashMap<CallID,
+          SemanticWarranty>());
     }
 
     TransactionManager tm = TransactionManager.getInstance();
@@ -239,7 +239,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       throw new TransactionCommitFailedException("Atomicity violation");
     }
 
-    return new CommitTransactionMessage.Response();
+    return new CommitTransactionMessage.Response(new HashMap<CallID,
+        SemanticWarranty>());
   }
 
   @Override

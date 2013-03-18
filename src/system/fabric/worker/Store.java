@@ -52,10 +52,9 @@ public interface Store extends Serializable {
    * @return whether a subtransaction was created on the store as a result of
    *         the prepare.
    */
-  Map<CallID, SemanticWarranty> prepareTransactionReadsAndRequests(long tid,
-      LongKeyMap<Integer> reads, Set<CallID> calls, Set<SemanticWarrantyRequest>
-      requests, long commitTime) throws UnreachableNodeException,
-    TransactionPrepareFailedException;
+  void prepareTransactionReads(long tid, LongKeyMap<Integer> reads, Set<CallID>
+      calls, long commitTime) throws UnreachableNodeException,
+       TransactionPrepareFailedException;
 
   /**
    * Returns the cache entry for the given onum. If the object is not resident,
@@ -116,8 +115,9 @@ public interface Store extends Serializable {
    * @throws UnreachableNodeException
    * @throws TransactionCommitFailedException
    */
-  void commitTransaction(long transactionID, long commitTime)
-      throws UnreachableNodeException, TransactionCommitFailedException;
+  Map<CallID, SemanticWarranty> commitTransaction(long transactionID,
+      long commitTime, Set<SemanticWarrantyRequest> requests) throws
+    UnreachableNodeException, TransactionCommitFailedException;
 
   /**
    * Determines whether the given set of objects are stale.

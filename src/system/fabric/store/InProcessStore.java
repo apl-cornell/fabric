@@ -52,10 +52,15 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void commitTransaction(long transactionID, long commitTime)
-      throws TransactionCommitFailedException {
+  public Map<CallID, SemanticWarranty> commitTransaction(long transactionID,
+      long commitTime, Set<SemanticWarrantyRequest> requests) throws
+  TransactionCommitFailedException {
+    Map<CallID, SemanticWarranty> replies =
+      tm.prepareRequests(Worker.getWorker().getPrincipal(), transactionID,
+          requests, commitTime);
     tm.commitTransaction(Worker.getWorker().getPrincipal(), transactionID,
         commitTime);
+    return replies;
   }
 
   @Override
@@ -97,12 +102,11 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public Map<CallID, SemanticWarranty> prepareTransactionReadsAndRequests(long tid, LongKeyMap<Integer> reads,
-      Set<CallID> calls, Set<SemanticWarrantyRequest> requests, long commitTime)
-  throws TransactionPrepareFailedException {
+  public void prepareTransactionReads(long tid, LongKeyMap<Integer> reads,
+      Set<CallID> calls, long commitTime) throws
+  TransactionPrepareFailedException {
     tm.prepareReads(Worker.getWorker().getPrincipal(), tid, reads, commitTime);
     tm.prepareCalls(Worker.getWorker().getPrincipal(), tid, calls, commitTime);
-    return tm.prepareRequests(Worker.getWorker().getPrincipal(), tid, requests, commitTime);
   }
 
   @Override

@@ -201,8 +201,10 @@ class Store extends MessageToStoreHandler {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Commit Message from {0} for tid={1}, commitTime={2}",
         nameOf(p), message.transactionID, message.commitTime);
+    Map<CallID, SemanticWarranty> replies = prepareTransactionRequests(p,
+        message.transactionID, message.requests, message.commitTime);
     tm.commitTransaction(p, message.transactionID, message.commitTime);
-    return new CommitTransactionMessage.Response();
+    return new CommitTransactionMessage.Response(replies);
   }
 
   /**
@@ -234,9 +236,7 @@ class Store extends MessageToStoreHandler {
 
     prepareTransactionReads(p, msg.tid, msg.reads, msg.commitTime);
     prepareTransactionCalls(p, msg.tid, msg.calls, msg.commitTime);
-    Map<CallID, SemanticWarranty> responses = prepareTransactionRequests(p,
-        msg.tid, msg.requests, msg.commitTime);
-    return new PrepareTransactionReadsMessage.Response(responses);
+    return new PrepareTransactionReadsMessage.Response();
   }
 
   /**

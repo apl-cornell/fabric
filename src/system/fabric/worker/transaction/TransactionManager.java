@@ -55,7 +55,6 @@ import fabric.worker.Worker;
 import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
-import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -706,7 +705,6 @@ public final class TransactionManager {
       final LongKeyMap<Integer> reads = tmpReads != null ? tmpReads : new
         LongKeyHashMap<Integer>();
       final Set<CallID> calls = tmpCalls != null ? tmpCalls : new HashSet<CallID>();
-      final Set<SemanticWarrantyRequest> requests = current.getRequestsForStore(s);
       Runnable runnable = new Runnable() {
         @Override
         public void run() {
@@ -720,12 +718,8 @@ public final class TransactionManager {
             // TODO: This needs to change so that we only send off the
             // appropriate requests and calls for each individual s.  Right
             // now, the ss we contact aren't necessarily correct.
-            Map<CallID, SemanticWarranty> replies =
-              s.prepareTransactionReadsAndRequests(current.tid.topTid, reads,
-                  calls, requests, commitTime);
-            for (Map.Entry<CallID, SemanticWarranty> e : replies.entrySet()) {
-              current.requestReplies.put(e.getKey(), e.getValue());
-            }
+            s.prepareTransactionReads(current.tid.topTid, reads, calls,
+                commitTime);
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) s, e);
           } catch (UnreachableNodeException e) {
@@ -872,7 +866,11 @@ public final class TransactionManager {
         @Override
         public void run() {
           try {
-            store.commitTransaction(current.tid.topTid, commitTime);
+            Map<CallID, SemanticWarranty> replies =
+              store.commitTransaction(current.tid.topTid, commitTime,
+                  current.getRequestsForStore(store));
+            current.requestReplies.putAll(replies);
+            //TODO: Take care of requests!
           } catch (TransactionCommitFailedException e) {
             failed.add((RemoteStore) store);
           } catch (UnreachableNodeException e) {
