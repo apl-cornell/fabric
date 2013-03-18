@@ -392,8 +392,16 @@ public class TransactionManager {
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
           "Getting SemanticWarranty for CallID {1}, which has {0} dependencies",
           r.calls.size(), r.call);
-      warranties.put(r.call,
-          semanticWarranties.put(r.call, r.reads, r.calls, r.value));
+
+      // Get a proposal for a warranty
+      SemanticWarranty proposed = semanticWarranties.proposeWarranty(r.call,
+          r.reads, r.calls, r.value, warranties);
+      // Add it to the response set
+      warranties.put(r.call, proposed);
+      // Schedule to add it at commitTime
+      semanticWarranties.putAt(commitTime, r.call, r.reads, r.calls, r.value,
+          proposed);
+
       
       //Update fringe
       for (CallID c : new HashSet<CallID>(nonfringe)) {

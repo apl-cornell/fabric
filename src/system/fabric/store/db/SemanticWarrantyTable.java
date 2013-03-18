@@ -15,6 +15,7 @@ import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.SemanticWarranty;
+import fabric.common.Threading;
 import fabric.common.Warranty;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
@@ -78,8 +79,9 @@ public class SemanticWarrantyTable {
    *
    * XXX THIS IS CURRENTLY NOT A VERY GOOD ALGORITHM AT _ALL_
    */
-  private SemanticWarranty warrantyForCall(CallID id, LongSet reads, Set<CallID>
-      calls) {
+  public SemanticWarranty proposeWarranty(CallID id, LongSet reads, Set<CallID>
+      calls, fabric.lang.Object value,
+      Map<CallID, SemanticWarranty> relatedProposals) {
     Warranty minWarranty = new SemanticWarranty(Long.MAX_VALUE);
     LongIterator it1 = reads.iterator();
     while (it1.hasNext()) {
@@ -92,22 +94,52 @@ public class SemanticWarrantyTable {
     //XXX THIS IS ALMOST CERTAINLY WRONG IF WE MAKE MORE THAN ONE SEMANTIC
     //WARRANTY REQUEST IN A TRANSACTION AND ONE WAS NESTED IN THE OTHER.
     for (CallID call : calls) {
-      Warranty callWarranty = get(call).warranty;
-      if (callWarranty.compareTo(minWarranty) < 0) {
-        minWarranty = callWarranty;
+      if (relatedProposals.get(call) != null) {
+        Warranty callWarranty = relatedProposals.get(call);
+        if (callWarranty.compareTo(minWarranty) < 0) {
+          minWarranty = callWarranty;
+        }
+      } else {
+        if (get(call) == null) {
+          throw new InternalError("Attempted to propose a warranty without "
+              + "warranties for all dependencies!");
+        }
+        Warranty callWarranty = get(call).warranty;
+        if (callWarranty.compareTo(minWarranty) < 0) {
+          minWarranty = callWarranty;
+        }
       }
     }
 
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "Issuing SemanticWarranty of {0} for CallID {1}", minWarranty.expiry(),
-        id.id());
+        "Suggesting SemanticWarranty of {0} for CallID {1}",
+        minWarranty.expiry(), id.id());
     return new SemanticWarranty(minWarranty.expiry());
     //return new SemanticWarranty(System.currentTimeMillis() + 5000);
   }
 
-  public final SemanticWarranty put(CallID id, LongSet reads, Set<CallID> calls,
-      fabric.lang.Object value) {
-    SemanticWarranty warranty = warrantyForCall(id, reads, calls);
+  /**
+   * Schedule to perform a put with all the arguments at the given time.
+   */
+  public void putAt(long commitTime, final CallID id, final LongSet reads,
+      final Set<CallID> calls, final fabric.lang.Object value,
+      final SemanticWarranty warranty) {
+    Threading.scheduleAt(commitTime, new Runnable() {
+      @Override
+      public void run() {
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Adding warranty of {0} for call {1}", warranty.expiry(), id);
+        put(id, reads, calls, value, warranty);
+      }
+    });
+  }
+
+  /**
+   * Add a new call, with the result and all the reads, calls, and creates, into
+   * the table with the provided warranty.
+   */
+  public final void put(CallID id, LongSet reads, Set<CallID> calls,
+      fabric.lang.Object value, SemanticWarranty warranty) {
     WarrantiedCallResult result = new WarrantiedCallResult(value, warranty);
     if (defaultWarranty.expiresAfter(warranty)) {
       throw new InternalError("Attempted to insert a warranty that expires "
@@ -137,8 +169,6 @@ public class SemanticWarrantyTable {
 
     // Signal the collector thread that we have a new warranty.
     collector.signalNewWarranty();
-
-    return warranty;
   }
 
   /**
