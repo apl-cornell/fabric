@@ -113,6 +113,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
           md.memberInstance().container()));
 
     Stmt callCreate = qq.parseStmt("final %T $call = new %T(this, \""
+        + md.memberInstance().container().toString() + "."
         + md.methodInstance().signature() + "\"" + argList + ");",
         callInstanceType, callInstanceType);
 
