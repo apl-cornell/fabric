@@ -13,8 +13,10 @@ public class ReturnExt_c extends FabILExt_c {
     if (mmr.inMemoizedMethod()) {
       QQ qq = mmr.qq();
       //Wrap it up for the value to be stored, if it's an inlineable
-      //XXX: This isn't currently handling Strings...
+      //XXX: This isn't currently handling Strings... does that matter?
       if (mmr.currentMethod().returnType().type().isPrimitive()) {
+        // TODO: Verify that the cast is valid before blindly adding it in to
+        // the generated code.
         return qq.parseStmt("{\n"
             + "  $result = fabric.lang.WrappedJavaInlineable.$wrap((%T) %E);\n"
             + "  fabric.worker.transaction.TransactionManager.getInstance().setSemanticWarrantyValue((fabric.lang.Object) $result.fetch());\n"

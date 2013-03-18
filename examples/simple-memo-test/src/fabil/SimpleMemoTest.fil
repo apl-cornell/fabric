@@ -52,6 +52,8 @@ public class SimpleMemoTest {
     atomic {
       testSimpleMemoTest = new SimpleMemoTest@s().SimpleMemoTest$().SimpleMemoTest$();
       localSimpleMemoTest = new SimpleMemoTest();
+      System.out.println(testSimpleMemoTest);
+      System.out.println(localSimpleMemoTest);
       m = new Msg@s(20).SimpleMemoTest$Msg$().SimpleMemoTest$Msg$();
       System.out.println(testSimpleMemoTest.dumbestTestEver(m));
       for (int i = 0; i < 10; i++) {

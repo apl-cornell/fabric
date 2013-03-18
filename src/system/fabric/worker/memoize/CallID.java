@@ -26,6 +26,15 @@ public class CallID {
     return Arrays.equals(id, other.id);
   }
 
+  @Override
+  public String toString() {
+    String rtn = "";
+    for (byte b : id) {
+      rtn += String.format("%x", b);
+    }
+    return rtn;
+  }
+
   public byte[] id() {
     return id;
   }

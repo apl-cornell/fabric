@@ -314,7 +314,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   @Override
   public WarrantiedCallResult lookupCall(CallInstance call) {
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "Looking up {0}...", call.toString());
+        "Looking up {0}...", call.id().toString());
     WarrantiedCallResult result =
       TransactionManager.getInstance().getCurrentLog().getRequestResult(call);
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
@@ -335,6 +335,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
 
   @Override
   public void insertResult(CallInstance call, WarrantiedCallResult result) {
+    SEMANTIC_WARRANTY_LOGGER.finest("Putting call id :" + call.id().toString() + " -> " + result.value);
     callCache.put(call, result);
   }
 

@@ -28,7 +28,7 @@ public class CallInstance {
       MessageDigest algorithm = MessageDigest.getInstance("MD5");
       algorithm.reset();
       algorithm.update(method.getBytes("UTF-8"));
-      algorithm.update(ByteBuffer.allocate(8).putLong(target.$getOnum()));
+      algorithm.update(ByteBuffer.allocate(8).putLong(target.$getOnum()).array());
       for (Object arg : arguments) {
         if (arg instanceof WrappedJavaInlineable) {
           algorithm.update((byte) 0);
@@ -37,7 +37,7 @@ public class CallInstance {
           algorithm.update(arg.$unwrap().toString().getBytes("UTF-8"));
         } else {
           algorithm.update((byte) 1);
-          algorithm.update(ByteBuffer.allocate(8).putLong(arg.$getOnum()));
+          algorithm.update(ByteBuffer.allocate(8).putLong(arg.$getOnum()).array());
         }
       }
       this.id = new CallID(algorithm.digest());

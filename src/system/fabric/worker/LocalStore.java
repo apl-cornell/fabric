@@ -1,6 +1,7 @@
 package fabric.worker;
 
 import static fabric.common.Logging.WORKER_LOCAL_STORE_LOGGER;
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 
 import java.io.NotSerializableException;
 import java.io.ObjectStreamException;
@@ -143,6 +144,7 @@ public final class LocalStore implements Store, Serializable {
 
   @Override
   public WarrantiedCallResult lookupCall(CallInstance call) {
+    SEMANTIC_WARRANTY_LOGGER.finest("Looking up call id :" + call.id().toString());
     WarrantiedCallResult result =
       TransactionManager.getInstance().getCurrentLog().getRequestResult(call);
     if (result == null) result = callCache.get(call);
@@ -151,6 +153,7 @@ public final class LocalStore implements Store, Serializable {
 
   @Override
   public void insertResult(CallInstance call, WarrantiedCallResult result) {
+    SEMANTIC_WARRANTY_LOGGER.finest("Putting call id :" + call.id().toString() + " -> " + result.value);
     callCache.put(call, result);
   }
 
