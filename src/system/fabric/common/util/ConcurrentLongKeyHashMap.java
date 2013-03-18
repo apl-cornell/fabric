@@ -160,11 +160,13 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
    * differ in lower bits.
    */
   private static int hash(int h) {
-    // This function ensures that hashCodes that differ only by
-    // constant multiples at each bit position have a bounded
-    // number of collisions (approximately 8 at default load factor).
-    h ^= (h >>> 20) ^ (h >>> 12);
-    return h ^ (h >>> 7) ^ (h >>> 4);
+    // Borrowed from Java collections. The one in GNU Classpath kinda sucks.
+    h += (h << 15) ^ 0xffffcd7d;
+    h ^= (h >>> 10);
+    h += (h << 3);
+    h ^= (h >>> 6);
+    h += (h << 2) + (h << 14);
+    return h ^ (h >>> 16);
   }
 
   /**
