@@ -201,8 +201,8 @@ public class SemanticWarrantyTable {
     boolean success = false;
     WarrantiedCallResult oldEntry = table.get(id);
     if (oldEntry.warranty.equals(oldWarranty)) {
-      success = true;
       table.put(id, new WarrantiedCallResult(oldEntry.value, newWarranty));
+      success = true;
     }
 
     if (success) {
@@ -309,6 +309,7 @@ public class SemanticWarrantyTable {
             synchronized (ids) {
               for (CallID call : ids) {
                 table.remove(call);
+                dependencyTable.removeCall(call);
               }
 
               it.remove();
