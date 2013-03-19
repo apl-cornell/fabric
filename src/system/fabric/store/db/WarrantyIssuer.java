@@ -70,7 +70,7 @@ public class WarrantyIssuer {
      */
     void notifyReadPrepare() {
       // Do nothing if some other thread is already doing this.
-      if (!notifyReadPrepareFlag.compareAndSet(false, true)) return;
+      if (notifyReadPrepareFlag.getAndSet(true)) return;
 
       synchronized (this) {
         updateWriteHistory();
