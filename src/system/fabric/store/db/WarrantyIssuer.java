@@ -25,6 +25,11 @@ public class WarrantyIssuer {
     long writeHistoryTime;
 
     /**
+     * An object for obtaining exclusive access to writeHistory.
+     */
+    final Object writeHistoryMutex;
+
+    /**
      * The expiry time for the warranty last suggested.
      */
     long lastSuggestionExpiry;
@@ -51,18 +56,21 @@ public class WarrantyIssuer {
       this.lastSuggestionLength = minWarrantyLength;
       this.nextSuggestionLength = minWarrantyLength;
       this.notifyReadPrepareFlag = new AtomicBoolean();
+      this.writeHistoryMutex = new Object();
     }
 
     /**
      * Updates the writeHistory as necessary to account for the passage of time.
      */
-    private synchronized void updateWriteHistory() {
-      long now = System.currentTimeMillis();
-      int shiftAmount = (int) (now - writeHistoryTime) / 60000;
-      if (shiftAmount == 0) return;
+    private void updateWriteHistory() {
+      synchronized (writeHistoryMutex) {
+        long now = System.currentTimeMillis();
+        int shiftAmount = (int) (now - writeHistoryTime) / 60000;
+        if (shiftAmount == 0) return;
 
-      writeHistory <<= shiftAmount;
-      writeHistoryTime = now;
+        writeHistory <<= shiftAmount;
+        writeHistoryTime = now;
+      }
     }
 
     /**
@@ -73,8 +81,6 @@ public class WarrantyIssuer {
       if (notifyReadPrepareFlag.getAndSet(true)) return;
 
       synchronized (this) {
-        updateWriteHistory();
-
         // Ignore this if we're already issuing the maximum-length warranty.
         if (nextSuggestionLength >= maxWarrantyLength) return;
 
@@ -95,15 +101,17 @@ public class WarrantyIssuer {
     /**
      * Notifies of a commit event.
      */
-    synchronized void notifyWriteCommit() {
+    void notifyWriteCommit() {
     }
 
     /**
      * Notifies of a prepare event.
      */
-    synchronized void notifyWritePrepare() {
-      updateWriteHistory();
-      writeHistory |= 0x0001;
+    void notifyWritePrepare() {
+      synchronized (writeHistoryMutex) {
+        updateWriteHistory();
+        writeHistory |= 0x0001;
+      }
     }
 
     /**
@@ -112,6 +120,12 @@ public class WarrantyIssuer {
      * @return the time at which the warranty should expire.
      */
     synchronized Long suggestWarranty() {
+      int writeHistory;
+      synchronized (writeHistoryMutex) {
+        updateWriteHistory();
+        writeHistory = this.writeHistory;
+      }
+
       // Use the writeHistory's Hamming weight to determine the maximum length
       // of the suggested warranty.
       int weight = Integer.bitCount(writeHistory & 0xffff);
