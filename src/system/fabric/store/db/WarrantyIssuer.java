@@ -1,5 +1,7 @@
 package fabric.store.db;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import fabric.common.util.LongKeyCache;
 
 /**
@@ -37,12 +39,18 @@ public class WarrantyIssuer {
      */
     int nextSuggestionLength;
 
+    /**
+     * Flag for notifying read prepares.
+     */
+    final AtomicBoolean notifyReadPrepareFlag;
+
     public HistoryEntry() {
       this.writeHistoryTime = System.currentTimeMillis();
       this.writeHistory = 0;
       this.lastSuggestionExpiry = 0;
       this.lastSuggestionLength = minWarrantyLength;
       this.nextSuggestionLength = minWarrantyLength;
+      this.notifyReadPrepareFlag = new AtomicBoolean();
     }
 
     /**
@@ -60,21 +68,28 @@ public class WarrantyIssuer {
     /**
      * Notifies of a read-prepare event.
      */
-    synchronized void notifyReadPrepare() {
-      updateWriteHistory();
+    void notifyReadPrepare() {
+      // Do nothing if some other thread is already doing this.
+      if (!notifyReadPrepareFlag.compareAndSet(false, true)) return;
 
-      // Ignore this if we're already issuing the maximum-length warranty.
-      if (nextSuggestionLength >= maxWarrantyLength) return;
+      synchronized (this) {
+        updateWriteHistory();
 
-      // Ignore this if the last-suggested warranty hasn't expired.
-      long now = System.currentTimeMillis();
-      if (lastSuggestionExpiry > now) return;
+        // Ignore this if we're already issuing the maximum-length warranty.
+        if (nextSuggestionLength >= maxWarrantyLength) return;
 
-      // If this prepare could have been avoided if the last-suggested warranty
-      // were twice as long, then double the suggestion length.
-      if (lastSuggestionExpiry + lastSuggestionLength > now) {
-        nextSuggestionLength = 2 * lastSuggestionLength;
+        // Ignore this if the last-suggested warranty hasn't expired.
+        long now = System.currentTimeMillis();
+        if (lastSuggestionExpiry > now) return;
+
+        // If this prepare could have been avoided if the last-suggested warranty
+        // were twice as long, then double the suggestion length.
+        if (lastSuggestionExpiry + lastSuggestionLength > now) {
+          nextSuggestionLength = 2 * lastSuggestionLength;
+        }
       }
+
+      notifyReadPrepareFlag.set(false);
     }
 
     /**
