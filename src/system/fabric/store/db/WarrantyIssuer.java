@@ -45,7 +45,13 @@ public class WarrantyIssuer {
     int nextSuggestionLength;
 
     /**
-     * Flag for notifying read prepares.
+     * Flag for signalling that the next suggestion length is already double the
+     * current suggestion length.
+     */
+    final AtomicBoolean nextSuggestionDoubled;
+
+    /**
+     * Flag for signalling that a read-prepare notification is being processed.
      */
     final AtomicBoolean notifyReadPrepareFlag;
 
@@ -55,7 +61,8 @@ public class WarrantyIssuer {
       this.lastSuggestionExpiry = 0;
       this.lastSuggestionLength = minWarrantyLength;
       this.nextSuggestionLength = minWarrantyLength;
-      this.notifyReadPrepareFlag = new AtomicBoolean();
+      this.nextSuggestionDoubled = new AtomicBoolean(false);
+      this.notifyReadPrepareFlag = new AtomicBoolean(false);
       this.writeHistoryMutex = new Object();
     }
 
@@ -77,8 +84,10 @@ public class WarrantyIssuer {
      * Notifies of a read-prepare event.
      */
     void notifyReadPrepare() {
-      // Do nothing if some other thread is already doing this.
-      if (notifyReadPrepareFlag.getAndSet(true)) return;
+      // Do nothing if the next suggestion has already been doubled or if some
+      // other thread is already processing a read-prepare notification.
+      if (nextSuggestionDoubled.get() || notifyReadPrepareFlag.getAndSet(true))
+        return;
 
       synchronized (this) {
         // Ignore this if we're already issuing the maximum-length warranty.
@@ -92,6 +101,7 @@ public class WarrantyIssuer {
         // were twice as long, then double the suggestion length.
         if (lastSuggestionExpiry + lastSuggestionLength > now) {
           nextSuggestionLength = 2 * lastSuggestionLength;
+          nextSuggestionDoubled.set(true);
         }
       }
 
@@ -135,6 +145,7 @@ public class WarrantyIssuer {
         lastSuggestionExpiry = 0;
         lastSuggestionLength = minWarrantyLength;
         nextSuggestionLength = minWarrantyLength;
+        nextSuggestionDoubled.set(false);
         return null;
       }
 
@@ -142,6 +153,7 @@ public class WarrantyIssuer {
           (nextSuggestionLength < maxSuggestionLength) ? nextSuggestionLength
               : maxSuggestionLength;
       lastSuggestionExpiry = System.currentTimeMillis() + lastSuggestionLength;
+      nextSuggestionDoubled.set(false);
       return lastSuggestionExpiry;
     }
   }
