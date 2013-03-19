@@ -1,5 +1,7 @@
 package fabric.store.db;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import fabric.common.util.LongKeyCache;
 
 /**
@@ -23,6 +25,11 @@ public class WarrantyIssuer {
     long writeHistoryTime;
 
     /**
+     * An object for obtaining exclusive access to writeHistory.
+     */
+    final Object writeHistoryMutex;
+
+    /**
      * The expiry time for the warranty last suggested.
      */
     long lastSuggestionExpiry;
@@ -37,58 +44,84 @@ public class WarrantyIssuer {
      */
     int nextSuggestionLength;
 
+    /**
+     * Flag for signalling that the next suggestion length is already double the
+     * current suggestion length.
+     */
+    final AtomicBoolean nextSuggestionDoubled;
+
+    /**
+     * Flag for signalling that a read-prepare notification is being processed.
+     */
+    final AtomicBoolean notifyReadPrepareFlag;
+
     public HistoryEntry() {
       this.writeHistoryTime = System.currentTimeMillis();
       this.writeHistory = 0;
       this.lastSuggestionExpiry = 0;
       this.lastSuggestionLength = minWarrantyLength;
       this.nextSuggestionLength = minWarrantyLength;
+      this.nextSuggestionDoubled = new AtomicBoolean(false);
+      this.notifyReadPrepareFlag = new AtomicBoolean(false);
+      this.writeHistoryMutex = new Object();
     }
 
     /**
      * Updates the writeHistory as necessary to account for the passage of time.
      */
-    private synchronized void updateWriteHistory() {
-      long now = System.currentTimeMillis();
-      int shiftAmount = (int) (now - writeHistoryTime) / 60000;
-      if (shiftAmount == 0) return;
+    private void updateWriteHistory() {
+      synchronized (writeHistoryMutex) {
+        long now = System.currentTimeMillis();
+        int shiftAmount = (int) (now - writeHistoryTime) / 60000;
+        if (shiftAmount == 0) return;
 
-      writeHistory <<= shiftAmount;
-      writeHistoryTime = now;
+        writeHistory <<= shiftAmount;
+        writeHistoryTime = now;
+      }
     }
 
     /**
      * Notifies of a read-prepare event.
      */
-    synchronized void notifyReadPrepare() {
-      updateWriteHistory();
+    void notifyReadPrepare() {
+      // Do nothing if the next suggestion has already been doubled or if some
+      // other thread is already processing a read-prepare notification.
+      if (nextSuggestionDoubled.get() || notifyReadPrepareFlag.getAndSet(true))
+        return;
 
-      // Ignore this if we're already issuing the maximum-length warranty.
-      if (nextSuggestionLength >= maxWarrantyLength) return;
+      synchronized (this) {
+        // Ignore this if we're already issuing the maximum-length warranty.
+        if (nextSuggestionLength >= maxWarrantyLength) return;
 
-      // Ignore this if the last-suggested warranty hasn't expired.
-      long now = System.currentTimeMillis();
-      if (lastSuggestionExpiry > now) return;
+        // Ignore this if the last-suggested warranty hasn't expired.
+        long now = System.currentTimeMillis();
+        if (lastSuggestionExpiry > now) return;
 
-      // If this prepare could have been avoided if the last-suggested warranty
-      // were twice as long, then double the suggestion length.
-      if (lastSuggestionExpiry + lastSuggestionLength > now) {
-        nextSuggestionLength = 2 * lastSuggestionLength;
+        // If this prepare could have been avoided if the last-suggested warranty
+        // were twice as long, then double the suggestion length.
+        if (lastSuggestionExpiry + lastSuggestionLength > now) {
+          nextSuggestionLength = 2 * lastSuggestionLength;
+          nextSuggestionDoubled.set(true);
+        }
       }
+
+      notifyReadPrepareFlag.set(false);
     }
 
     /**
      * Notifies of a commit event.
      */
-    synchronized void notifyWriteCommit() {
+    void notifyWriteCommit() {
     }
 
     /**
      * Notifies of a prepare event.
      */
-    synchronized void notifyWritePrepare() {
-      updateWriteHistory();
-      writeHistory |= 0x0001;
+    void notifyWritePrepare() {
+      synchronized (writeHistoryMutex) {
+        updateWriteHistory();
+        writeHistory |= 0x0001;
+      }
     }
 
     /**
@@ -97,6 +130,12 @@ public class WarrantyIssuer {
      * @return the time at which the warranty should expire.
      */
     synchronized Long suggestWarranty() {
+      int writeHistory;
+      synchronized (writeHistoryMutex) {
+        updateWriteHistory();
+        writeHistory = this.writeHistory;
+      }
+
       // Use the writeHistory's Hamming weight to determine the maximum length
       // of the suggested warranty.
       int weight = Integer.bitCount(writeHistory & 0xffff);
@@ -106,6 +145,7 @@ public class WarrantyIssuer {
         lastSuggestionExpiry = 0;
         lastSuggestionLength = minWarrantyLength;
         nextSuggestionLength = minWarrantyLength;
+        nextSuggestionDoubled.set(false);
         return null;
       }
 
@@ -113,6 +153,7 @@ public class WarrantyIssuer {
           (nextSuggestionLength < maxSuggestionLength) ? nextSuggestionLength
               : maxSuggestionLength;
       lastSuggestionExpiry = System.currentTimeMillis() + lastSuggestionLength;
+      nextSuggestionDoubled.set(false);
       return lastSuggestionExpiry;
     }
   }
