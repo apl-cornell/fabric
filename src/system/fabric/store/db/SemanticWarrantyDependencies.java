@@ -120,13 +120,15 @@ public class SemanticWarrantyDependencies {
    * Get the set of call ids that depend on the given call.
    */
   public Set<CallID> getCallers(CallID id) {
-    return callUsers.get(id);
+    Set<CallID> inTable = callUsers.get(id);
+    return inTable == null ? new HashSet<CallID>() : inTable;
   }
 
   /**
    * Get the set of call ids that depend on the given object onum.
    */
   public Set<CallID> getReaders(long onum) {
-    return objectReaders.get(onum);
+    Set<CallID> inTable = objectReaders.get(onum);
+    return inTable == null ? new HashSet<CallID>() : inTable;
   }
 }

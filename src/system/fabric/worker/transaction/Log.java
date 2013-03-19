@@ -713,6 +713,14 @@ public final class Log {
       localStoreWrites.clear();
       workersCalled.clear();
       securityCache.reset();
+      // Clear out semantic warranty state.
+      semanticWarrantiesUsed.clear();
+      readDependencies.clear();
+      callDependencies.clear();
+      requests.clear();
+      requestInstances.clear();
+      requestLocations.clear();
+      requestReplies.clear();
 
       if (parent != null) {
         writerMap = new WriterMap(parent.writerMap);
@@ -733,13 +741,16 @@ public final class Log {
    * current log (if possible).  Should only be called when committing the log.
    */
   public void createCurrentRequest() {
-    if (semanticWarrantyCall != null && writes.size() > 0) {
+    Set<_Impl> writeSet = new HashSet<_Impl>();
+    for (Store store : storesWritten())
+      writeSet.addAll(getWritesForStore(store));
+    if (semanticWarrantyCall != null && writeSet.size() > 0) {
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
           "Semantic warranty request for {0} "
           + "aborted due to writes during the call!",
           semanticWarrantyCall.toString());
     }
-    if (semanticWarrantyCall != null && writes.size() == 0) {
+    if (semanticWarrantyCall != null && writeSet.size() == 0) {
       // Add call to readDependencies and build up reads set.
       LongSet readSet = new LongHashSet();
       for (LongKeyMap<ReadMapEntry> submap : reads) {
@@ -797,8 +808,6 @@ public final class Log {
         requests.put(semanticWarrantyCall.id(), req);
         requestLocations.put(semanticWarrantyCall.id(), targetStore);
         requestInstances.put(semanticWarrantyCall.id(), semanticWarrantyCall);
-        //targetStore.insertResult(semanticWarrantyCall, new CallResult(req.value,
-              //new SemanticWarranty(0)));
       } else if (parent != null) {
         // Otherwise, remove the dependency mappings in the parent.
         LongIterator it = readSet.iterator();
