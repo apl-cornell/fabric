@@ -296,7 +296,7 @@ public final class Log {
       }
 
       if (!submap.isEmpty()) {
-        numReadsToPrepare += submap.size();
+        if (isRemoteStore) numReadsToPrepare += submap.size();
         result.put(store, submap);
       }
     }
