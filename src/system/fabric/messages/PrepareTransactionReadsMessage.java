@@ -9,7 +9,7 @@ import java.util.Set;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.security.Principal;
-import fabric.worker.memoize.CallID;
+import fabric.worker.memoize.CallInstance;
 import fabric.worker.TransactionPrepareFailedException;
 
 /**
@@ -26,7 +26,7 @@ public class PrepareTransactionReadsMessage extends
   public final long tid;
   public final long commitTime;
   public final LongKeyMap<Integer> reads;
-  public final Set<CallID> calls;
+  public final Set<CallInstance> calls;
 
   /**
    * Used to prepare transactions at remote workers.
@@ -39,12 +39,12 @@ public class PrepareTransactionReadsMessage extends
    * Only used by the worker.
    */
   public PrepareTransactionReadsMessage(long tid, LongKeyMap<Integer> reads,
-      Set<CallID> calls, long commitTime) {
+      Set<CallInstance> calls, long commitTime) {
     this(tid, commitTime, reads, calls);
   }
 
   private PrepareTransactionReadsMessage(long tid, long commitTime,
-      LongKeyMap<Integer> reads, Set<CallID> calls) {
+      LongKeyMap<Integer> reads, Set<CallInstance> calls) {
     super(MessageType.PREPARE_TRANSACTION_READS,
         TransactionPrepareFailedException.class);
 
@@ -96,9 +96,8 @@ public class PrepareTransactionReadsMessage extends
       out.writeInt(0);
     } else {
       out.writeInt(calls.size());
-      for (CallID id : calls) {
-        out.writeInt(id.id().length);
-        out.write(id.id());
+      for (CallInstance call : calls) {
+        call.write(out);
       }
     }
   }
@@ -123,11 +122,9 @@ public class PrepareTransactionReadsMessage extends
     }
 
     int callSize = in.readInt();
-    calls = new HashSet<CallID>();
+    calls = new HashSet<CallInstance>();
     for (int i = 0; i < callSize; i++) {
-      byte[] callBytes = new byte[in.readInt()];
-      in.readFully(callBytes);
-      calls.add(new CallID(callBytes));
+      calls.add(new CallInstance(in));
     }
   }
 

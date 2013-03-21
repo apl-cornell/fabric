@@ -54,7 +54,6 @@ import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
 import fabric.worker.memoize.CallCache;
-import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
@@ -146,7 +145,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
 
   @Override
   public void prepareTransactionReads(long tid, LongKeyMap<Integer> reads,
-      Set<CallID> calls, long commitTime) throws
+      Set<CallInstance> calls, long commitTime) throws
   TransactionPrepareFailedException, UnreachableNodeException {
     send(Worker.getWorker().authToStore, new PrepareTransactionReadsMessage(tid,
           reads, calls, commitTime));
@@ -314,7 +313,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   @Override
   public WarrantiedCallResult lookupCall(CallInstance call) {
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "Looking up {0}...", call.id().toString());
+        "Looking up {0}...", call.toString());
     WarrantiedCallResult result =
       TransactionManager.getInstance().getCurrentLog().getRequestResult(call);
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
@@ -325,7 +324,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     /* TODO: Check dissemination layer. */
     try {
       if (result == null)
-        result = reuseCallFromStore(call.id());
+        result = reuseCallFromStore(call);
     } catch (AccessException e) {
     }
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
@@ -335,7 +334,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
 
   @Override
   public void insertResult(CallInstance call, WarrantiedCallResult result) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Putting call id :" + call.id().toString() + " -> " + result.value);
+    SEMANTIC_WARRANTY_LOGGER.finest("Putting call id :" + call.toString() + " -> " + result.value);
     callCache.put(call, result);
   }
 
@@ -348,7 +347,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @throws FetchException
    *           if there was an error while fetching the object from the store.
    */
-  public WarrantiedCallResult reuseCallFromStore(CallID id) throws AccessException {
+  public WarrantiedCallResult reuseCallFromStore(CallInstance id) throws AccessException {
     ReuseCallMessage.Response response =
         send(Worker.getWorker().authToStore, new ReuseCallMessage(id));
     return response.result;
@@ -360,7 +359,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   @Override
-  public java.util.Map<CallID, SemanticWarranty> commitTransaction(
+  public java.util.Map<CallInstance, SemanticWarranty> commitTransaction(
       long transactionID, long commitTime, Set<SemanticWarrantyRequest>
       requests) throws UnreachableNodeException,
          TransactionCommitFailedException {

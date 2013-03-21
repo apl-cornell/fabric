@@ -51,7 +51,7 @@ import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
 import fabric.store.db.ObjectDB;
-import fabric.worker.memoize.CallID;
+import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.TransactionCommitFailedException;
@@ -201,7 +201,7 @@ class Store extends MessageToStoreHandler {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Commit Message from {0} for tid={1}, commitTime={2}",
         nameOf(p), message.transactionID, message.commitTime);
-    Map<CallID, SemanticWarranty> replies = prepareTransactionRequests(p,
+    Map<CallInstance, SemanticWarranty> replies = prepareTransactionRequests(p,
         message.transactionID, message.requests, message.commitTime);
     tm.commitTransaction(p, message.transactionID, message.commitTime);
     return new CommitTransactionMessage.Response(replies);
@@ -246,9 +246,9 @@ class Store extends MessageToStoreHandler {
   public ReuseCallMessage.Response handle(Principal p, ReuseCallMessage msg)
       throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Call Message from {0}, id={1}", nameOf(p), msg.id);
+        "Handling Call Message from {0}, id={1}", nameOf(p), msg.call);
 
-    WarrantiedCallResult result = tm.getCall(p, msg.id);
+    WarrantiedCallResult result = tm.getCall(p, msg.call);
     return new ReuseCallMessage.Response(result);
   }
 
@@ -365,7 +365,7 @@ class Store extends MessageToStoreHandler {
   }
 
   private void prepareTransactionCalls(Principal p, long tid,
-      Set<CallID> calls, long commitTime)
+      Set<CallInstance> calls, long commitTime)
     throws TransactionPrepareFailedException {
     tm.prepareCalls(p, tid, calls, commitTime);
   }
@@ -373,7 +373,7 @@ class Store extends MessageToStoreHandler {
   /**
    * Handles the <code>SemanticWarrantyRequest</code> for a transaction.
    */
-  private Map<CallID, SemanticWarranty> prepareTransactionRequests(Principal p,
+  private Map<CallInstance, SemanticWarranty> prepareTransactionRequests(Principal p,
       long tid, Set<SemanticWarrantyRequest> requests, long commitTime) {
       /* throws TransactionPrepareFailedException { */
     return tm.prepareRequests(p, tid, requests, commitTime);

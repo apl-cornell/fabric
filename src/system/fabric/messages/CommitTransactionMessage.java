@@ -10,7 +10,7 @@ import java.util.Set;
 
 import fabric.common.SemanticWarranty;
 import fabric.lang.security.Principal;
-import fabric.worker.memoize.CallID;
+import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.TransactionCommitFailedException;
 
@@ -44,13 +44,13 @@ public class CommitTransactionMessage
 
   public static class Response implements Message.Response {
 
-    private Map<CallID, SemanticWarranty> requestResults;
+    private Map<CallInstance, SemanticWarranty> requestResults;
 
-    public Response(Map<CallID, SemanticWarranty> requestResults) {
+    public Response(Map<CallInstance, SemanticWarranty> requestResults) {
       this.requestResults = requestResults;
     }
 
-    public Map<CallID, SemanticWarranty> getResults() {
+    public Map<CallInstance, SemanticWarranty> getResults() {
       return requestResults;
     }
   }
@@ -100,9 +100,8 @@ public class CommitTransactionMessage
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     out.writeInt(r.requestResults.size());
-    for (Map.Entry<CallID, SemanticWarranty> e : r.requestResults.entrySet()) {
-      out.writeInt(e.getKey().id().length);
-      out.write(e.getKey().id());
+    for (Map.Entry<CallInstance, SemanticWarranty> e : r.requestResults.entrySet()) {
+      e.getKey().write(out);
       out.writeLong(e.getValue().expiry());
     }
   }
@@ -110,12 +109,11 @@ public class CommitTransactionMessage
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     int numResponses = in.readInt();
-    Map<CallID, SemanticWarranty> responses =
-      new HashMap<CallID, SemanticWarranty>(numResponses);
+    Map<CallInstance, SemanticWarranty> responses =
+      new HashMap<CallInstance, SemanticWarranty>(numResponses);
     for (int i = 0; i < numResponses; i++) {
-      byte[] callBytes = new byte[in.readInt()];
-      in.readFully(callBytes);
-      responses.put(new CallID(callBytes), new SemanticWarranty(in.readLong()));
+      CallInstance call = new CallInstance(in);
+      responses.put(call, new SemanticWarranty(in.readLong()));
     }
     return new Response(responses);
   }

@@ -19,24 +19,21 @@ import fabric.worker.memoize.CallResult;
  */
 public class SemanticWarrantyRequest {
 
-  public final CallID call;
+  public final CallInstance call;
   public final Object value;
   public final LongSet reads;
-  public final Set<CallID> calls;
+  public final Set<CallInstance> calls;
 
   public SemanticWarrantyRequest(CallInstance call, Object value,
-      LongSet reads, Set<CallID> calls) {
-    this.call = call.id();
+      LongSet reads, Set<CallInstance> calls) {
+    this.call = call;
     this.value = value;
     this.reads = reads;
     this.calls = calls;
   }
 
   public SemanticWarrantyRequest(DataInput in) throws IOException {
-    int callIdLen = in.readInt();
-    byte[] callBytes = new byte[callIdLen];
-    in.readFully(callBytes);
-    this.call = new CallID(callBytes);
+    this.call = new CallInstance(in);
 
     this.value = new CallResult(in).value;
 
@@ -45,19 +42,15 @@ public class SemanticWarrantyRequest {
     for (int i = 0; i < readsLen; i++)
       this.reads.add(in.readLong());
 
-    this.calls = new HashSet<CallID>();
+    this.calls = new HashSet<CallInstance>();
     int callsLen = in.readInt();
     for (int i = 0; i < callsLen; i++) {
-      int callUsedIdLen = in.readInt();
-      byte[] callId = new byte[callUsedIdLen];
-      in.readFully(callId);
-      this.calls.add(new CallID(callId));
+      this.calls.add(new CallInstance(in));
     }
   }
 
   public void write(DataOutput out) throws IOException {
-    out.writeInt(call.id().length);
-    out.write(call.id());
+    call.write(out);
     (new CallResult(value)).write(out);
 
     out.writeInt(reads.size());
@@ -66,9 +59,8 @@ public class SemanticWarrantyRequest {
       out.writeLong(readsIt.next());
 
     out.writeInt(calls.size());
-    for (CallID callId : calls) {
-      out.writeInt(callId.id().length);
-      out.write(callId.id());
+    for (CallInstance subcall : calls) {
+      subcall.write(out);
     }
   }
 }

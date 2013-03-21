@@ -9,7 +9,7 @@ import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
-import fabric.worker.memoize.CallID;
+import fabric.worker.memoize.CallInstance;
 
 /**
  * Represents the various read and call dependencies of each CallInstance we are
@@ -21,31 +21,31 @@ public class SemanticWarrantyDependencies {
    * Mapping from a CallInstance's id to the set of onums of object read during
    * that computation.
    */
-  private final ConcurrentMap<CallID, LongSet> objectsRead;
+  private final ConcurrentMap<CallInstance, LongSet> objectsRead;
   
   /**
    * Mapping from a CallInstance's id to the set of ids CallInstance used during
    * that computation.
    */
-  private final ConcurrentMap<CallID, Set<CallID>> callsUsed;
+  private final ConcurrentMap<CallInstance, Set<CallInstance>> callsUsed;
 
   /**
    * Reverse mapping from an object's onum to the set of ids of CallInstances
    * that read the object.
    */
-  private final ConcurrentLongKeyMap<Set<CallID>> objectReaders;
+  private final ConcurrentLongKeyMap<Set<CallInstance>> objectReaders;
 
   /**
    * Reverse mapping from a CallInstance's id to the set of ids of CallInstances
    * that use the call.
    */
-  private final ConcurrentMap<CallID, Set<CallID>> callUsers;
+  private final ConcurrentMap<CallInstance, Set<CallInstance>> callUsers;
 
   public SemanticWarrantyDependencies() {
-    objectsRead = new ConcurrentHashMap<CallID, LongSet>();
-    callsUsed = new ConcurrentHashMap<CallID, Set<CallID>>();
-    objectReaders = new ConcurrentLongKeyHashMap<Set<CallID>>();
-    callUsers = new ConcurrentHashMap<CallID, Set<CallID>>();
+    objectsRead = new ConcurrentHashMap<CallInstance, LongSet>();
+    callsUsed = new ConcurrentHashMap<CallInstance, Set<CallInstance>>();
+    objectReaders = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
+    callUsers = new ConcurrentHashMap<CallInstance, Set<CallInstance>>();
   }
 
   /**
@@ -53,25 +53,25 @@ public class SemanticWarrantyDependencies {
    *
    * This does <b>not</b> clear out old state if the call was inserted before.
    */
-  public void addCall(CallID id, LongSet reads, Set<CallID> calls) {
+  public void addCall(CallInstance id, LongSet reads, Set<CallInstance> calls) {
     objectsRead.put(id, reads);
     callsUsed.put(id, calls);
 
     LongIterator readsIt = reads.iterator();
     while (readsIt.hasNext()) {
       long onum = readsIt.next();
-      Set<CallID> readers = objectReaders.get(onum);
+      Set<CallInstance> readers = objectReaders.get(onum);
       if (readers == null) {
-        readers = new HashSet<CallID>();
+        readers = new HashSet<CallInstance>();
         objectReaders.put(onum, readers);
       }
       readers.add(id);
     }
 
-    for (CallID callId : calls) {
-      Set<CallID> users = callUsers.get(callId);
+    for (CallInstance callId : calls) {
+      Set<CallInstance> users = callUsers.get(callId);
       if (users == null) {
-        users = new HashSet<CallID>();
+        users = new HashSet<CallInstance>();
         callUsers.put(callId, users);
       }
       users.add(id);
@@ -81,26 +81,26 @@ public class SemanticWarrantyDependencies {
   /**
    * Remove a call and it's dependencies from the table.
    */
-  public void removeCall(CallID id) {
+  public void removeCall(CallInstance id) {
     LongSet objects = objectsRead.get(id);
     objectsRead.remove(id);
 
-    Set<CallID> calls = callsUsed.get(id);
+    Set<CallInstance> calls = callsUsed.get(id);
     callsUsed.remove(id);
 
     if (objects != null) {
       LongIterator objectsIt = objects.iterator();
       while (objectsIt.hasNext()) {
         long object = objectsIt.next();
-        Set<CallID> readers = objectReaders.get(object);
+        Set<CallInstance> readers = objectReaders.get(object);
         if (readers == null) continue;
         readers.remove(id);
       }
     }
 
     if (calls != null) {
-      for (CallID call : calls) {
-        Set<CallID> users = callUsers.get(call);
+      for (CallInstance call : calls) {
+        Set<CallInstance> users = callUsers.get(call);
         if (users == null) continue;
         users.remove(id);
       }
@@ -110,7 +110,7 @@ public class SemanticWarrantyDependencies {
   /**
    * Update a call with a new set of read and call dependencies in the table.
    */
-  public void updateCall(CallID id, LongSet reads, Set<CallID> calls) {
+  public void updateCall(CallInstance id, LongSet reads, Set<CallInstance> calls) {
     /* TODO: This is probably not threadsafe? */
     removeCall(id);
     addCall(id, reads, calls);
@@ -119,16 +119,16 @@ public class SemanticWarrantyDependencies {
   /**
    * Get the set of call ids that depend on the given call.
    */
-  public Set<CallID> getCallers(CallID id) {
-    Set<CallID> inTable = callUsers.get(id);
-    return inTable == null ? new HashSet<CallID>() : inTable;
+  public Set<CallInstance> getCallers(CallInstance id) {
+    Set<CallInstance> inTable = callUsers.get(id);
+    return inTable == null ? new HashSet<CallInstance>() : inTable;
   }
 
   /**
    * Get the set of call ids that depend on the given object onum.
    */
-  public Set<CallID> getReaders(long onum) {
-    Set<CallID> inTable = objectReaders.get(onum);
-    return inTable == null ? new HashSet<CallID>() : inTable;
+  public Set<CallInstance> getReaders(long onum) {
+    Set<CallInstance> inTable = objectReaders.get(onum);
+    return inTable == null ? new HashSet<CallInstance>() : inTable;
   }
 }

@@ -24,7 +24,7 @@ import fabric.messages.PrepareTransactionReadsMessage;
 import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
-import fabric.worker.memoize.CallID;
+import fabric.worker.memoize.CallInstance;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -226,7 +226,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     if (log == null) {
       // If no log exists, assume that another worker in the transaction has
       // already committed the requested transaction.
-      return new CommitTransactionMessage.Response(new HashMap<CallID,
+      return new CommitTransactionMessage.Response(new HashMap<CallInstance,
           SemanticWarranty>());
     }
 
@@ -239,7 +239,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       throw new TransactionCommitFailedException("Atomicity violation");
     }
 
-    return new CommitTransactionMessage.Response(new HashMap<CallID,
+    return new CommitTransactionMessage.Response(new HashMap<CallInstance,
         SemanticWarranty>());
   }
 

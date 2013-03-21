@@ -52,7 +52,6 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
-import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.remote.RemoteWorker;
@@ -687,7 +686,7 @@ public final class TransactionManager {
 
     // Go through each store and send prepare messages in parallel.
     Map<Store, LongKeyMap<Integer>> storesRead = current.storesRead(commitTime);
-    Map<Store, Set<CallID>> storesCalled = current.storesCalled(commitTime);
+    Map<Store, Set<CallInstance>> storesCalled = current.storesCalled(commitTime);
     Set<Store> storesRequested = current.storesRequested();
 
     Set<Store> storesToContact = new HashSet<Store>(storesRequested);
@@ -699,12 +698,12 @@ public final class TransactionManager {
     for (Store store : storesToContact) {
       count++;
       LongKeyMap<Integer> tmpReads = storesRead.get(store);
-      Set<CallID> tmpCalls = storesCalled.get(store);
+      Set<CallInstance> tmpCalls = storesCalled.get(store);
 
       final Store s = store;
       final LongKeyMap<Integer> reads = tmpReads != null ? tmpReads : new
         LongKeyHashMap<Integer>();
-      final Set<CallID> calls = tmpCalls != null ? tmpCalls : new HashSet<CallID>();
+      final Set<CallInstance> calls = tmpCalls != null ? tmpCalls : new HashSet<CallInstance>();
       Runnable runnable = new Runnable() {
         @Override
         public void run() {
@@ -866,7 +865,7 @@ public final class TransactionManager {
         @Override
         public void run() {
           try {
-            Map<CallID, SemanticWarranty> replies =
+            Map<CallInstance, SemanticWarranty> replies =
               store.commitTransaction(current.tid.topTid, commitTime,
                   current.getRequestsForStore(store));
             current.requestReplies.putAll(replies);

@@ -34,6 +34,7 @@ import polyglot.types.Type;
 import polyglot.util.Position;
 import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
+import fabil.visit.MemoizedMethodRewriter;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.ThreadRewriter;
@@ -794,6 +795,61 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     }
 
     return cd.body(nf.ClassBody(Position.compilerGenerated(), members));
+  }
+
+  private MethodDecl makeNonMemoizedCaller(MemoizedMethodRewriter mmr,
+      List<MethodDecl> methods) {
+    // TODO: Fill out
+    return null;
+  }
+
+  private MethodDecl makeMemoizedMethod(MemoizedMethodRewriter mmr,
+      MethodDecl md) {
+    // TODO: Fill out
+    return null;
+  }
+
+  @Override
+  public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr) {
+    /*
+    ClassDecl cd = node();
+    QQ qq = mmr.qq();
+
+    // Gather all memoized methods (static or not)
+    List<MethodDecl> memoizedMethods =
+      new ArrayList<MethodDecl>(cd.body().members().size());
+    List<ClassMember> allMembers =
+      new ArrayList<ClassMember>(cd.body().members().size() + 2);
+    for (ClassMember cm : cd.body().members()) {
+      if (!(cm instanceof MethodDecl)) {
+        allMembers.add(cm);
+      } else {
+        MethodDecl method = (MethodDecl) cm;
+        if (method.flags().contains(FabILFlags.MEMOIZED)) {
+          // TODO: Error on static method explaining we don't do that yet.
+          method = method.flags(method.flags().clear(FabILFlags.MEMOIZED));
+          allMembers.add(makeMemoizedMethod(mmr, method));
+          memoizedMethods.add(method);
+          method = method.name(method.name() + "$NonMemoized");
+        }
+        allMembers.add(method);
+      }
+    }
+
+    // Make methods for calling memoized methods
+    if (memoizedMethods.size() > 0) {
+      ClassMember instanceCaller;
+      if (cd.flags().isInterface()) {
+        instanceCaller = qq.parseMember("public java.lang.Object $memoizedCaller(String methodName, java.lang.Object[] arguments);");
+      } else {
+        instanceCaller = makeNonMemoizedCaller(mmr, memoizedMethods);
+      }
+      allMembers.add(instanceCaller);
+    }
+
+    return cd.body(cd.body().members(allMembers));
+    */
+    return node();
   }
 
   @Override

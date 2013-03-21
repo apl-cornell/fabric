@@ -35,7 +35,6 @@ import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
-import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
@@ -156,13 +155,13 @@ public final class Log {
    * Mapping from onums to CallInstances we're requesting semantic warranties
    * for.
    */
-  protected final LongKeyMap<Set<CallID>> readDependencies;
+  protected final LongKeyMap<Set<CallInstance>> readDependencies;
 
   /**
    * Mapping from call ids to CallInstances we're requesting semantic warranties
    * for.
    */
-  protected final Map<CallID, Set<CallID>> callDependencies;
+  protected final Map<CallInstance, Set<CallInstance>> callDependencies;
 
   /**
    * Set of CallInstance ids for semantic warranties used during this
@@ -173,23 +172,23 @@ public final class Log {
   /**
    * Map from call ID to SemanticWarrantyRequests made by subtransactions.
    */
-  protected final Map<CallID, SemanticWarrantyRequest> requests;
+  protected final Map<CallInstance, SemanticWarrantyRequest> requests;
 
   /**
    * Map from call ID to SemanticWarrantyRequests made by subtransactions.
    */
-  protected final Map<CallID, CallInstance> requestInstances;
+  protected final Map<CallInstance, CallInstance> requestInstances;
 
   /**
    * Map from call ID to the store where the request will go.
    */
-  protected final Map<CallID, Store> requestLocations;
+  protected final Map<CallInstance, Store> requestLocations;
 
   /**
    * Map from call ID to the store's CallResult response which will be stored on
    * successfully finishing the commit phase.
    */
-  protected final Map<CallID, SemanticWarranty> requestReplies;
+  protected final Map<CallInstance, SemanticWarranty> requestReplies;
 
   /**
    * Indicates the state of commit for the top-level transaction.
@@ -292,13 +291,13 @@ public final class Log {
     this.workersCalled = new ArrayList<RemoteWorker>();
     this.semanticWarrantyCall = semanticWarrantyCall;
     this.semanticWarrantiesUsed = new HashMap<CallInstance, WarrantiedCallResult>();
-    this.readDependencies = new LongKeyHashMap<Set<CallID>>();
-    this.callDependencies = new HashMap<CallID, Set<CallID>>();
-    this.requests = new HashMap<CallID, SemanticWarrantyRequest>();
-    this.requestInstances = new HashMap<CallID, CallInstance>();
-    this.requestLocations = new HashMap<CallID, Store>();
+    this.readDependencies = new LongKeyHashMap<Set<CallInstance>>();
+    this.callDependencies = new HashMap<CallInstance, Set<CallInstance>>();
+    this.requests = new HashMap<CallInstance, SemanticWarrantyRequest>();
+    this.requestInstances = new HashMap<CallInstance, CallInstance>();
+    this.requestLocations = new HashMap<CallInstance, Store>();
     this.requestReplies = Collections.synchronizedMap(
-        new HashMap<CallID, SemanticWarranty>());
+        new HashMap<CallInstance, SemanticWarranty>());
 
     if (parent != null) {
       try {
@@ -367,9 +366,9 @@ public final class Log {
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
         "Onum {0} written, dropping semantic warranties "
         + "earlier in transaction that use it.", onum);
-    Set<CallID> dependencies = readDependencies.get(onum);
+    Set<CallInstance> dependencies = readDependencies.get(onum);
     if (dependencies == null) return;
-    for (CallID id : dependencies)
+    for (CallInstance id : dependencies)
       removeRequest(id);
   }
 
@@ -377,7 +376,7 @@ public final class Log {
    * Remove a semantic warranty request created by a subtransaction along with
    * all associated book keeping.
    */
-  private void removeRequest(CallID callId) {
+  private void removeRequest(CallInstance callId) {
     /* TODO: Invalidate other calls that depend on this */
     SemanticWarrantyRequest req = requests.get(callId);
   
@@ -389,7 +388,7 @@ public final class Log {
       readDependencies.remove(it.next());
     }
 
-    for (CallID call : req.calls) {
+    for (CallInstance call : req.calls) {
       callDependencies.remove(call);
     }
 
@@ -402,7 +401,7 @@ public final class Log {
    * Gets a result, if any, for a request we haven't pushed to the store yet
    */
   public WarrantiedCallResult getRequestResult(CallInstance call) {
-    SemanticWarrantyRequest req = requests.get(call.id());
+    SemanticWarrantyRequest req = requests.get(call);
     if (req != null) return new WarrantiedCallResult(req.value, new SemanticWarranty(0));
     if (req == null && parent != null) return parent.getRequestResult(call);
     return null;
@@ -441,21 +440,21 @@ public final class Log {
    * this transaction, whose semantic warranties expire between
    * commitState.commitTime (exclusive) and the given commitTime (inclusive).
    */
-  Map<Store, Set<CallID>> storesCalled(long commitTime) {
-    Map<Store, Set<CallID>> result = new HashMap<Store, Set<CallID>>();
+  Map<Store, Set<CallInstance>> storesCalled(long commitTime) {
+    Map<Store, Set<CallInstance>> result = new HashMap<Store, Set<CallInstance>>();
     for (Entry<CallInstance, WarrantiedCallResult> e
         : semanticWarrantiesUsed.entrySet()) {
       Store store = e.getKey().target.$getStore();
-      CallID call = e.getKey().id();
+      CallInstance call = e.getKey();
       WarrantiedCallResult callRes = e.getValue();
       if (callRes.warranty.expiresBefore(commitTime, true)
           && !requests.containsKey(call)) {
-        Set<CallID> requestsAtStore = result.get(store);
+        Set<CallInstance> requestsAtStore = result.get(store);
         if (requestsAtStore == null) {
-          requestsAtStore = new HashSet<CallID>();
+          requestsAtStore = new HashSet<CallInstance>();
           result.put(store, requestsAtStore);
         }
-        requestsAtStore.add(e.getKey().id());
+        requestsAtStore.add(e.getKey());
       }
     }
     return result;
@@ -637,14 +636,14 @@ public final class Log {
   /**
    * Returns the set of call ids used from a given store
    */
-  Set<CallID> getCallsForStore(Store store) {
-    Set<CallID> requestsSet = new HashSet<CallID>();
+  Set<CallInstance> getCallsForStore(Store store) {
+    Set<CallInstance> requestsSet = new HashSet<CallInstance>();
     for (SemanticWarrantyRequest req : getRequestsForStore(store))
       requestsSet.add(req.call);
-    Set<CallID> callSet = new HashSet<CallID>();
+    Set<CallInstance> callSet = new HashSet<CallInstance>();
     for (CallInstance c : semanticWarrantiesUsed.keySet())
-      if (c.target.$getStore() == store && !requestsSet.contains(c.id()))
-        callSet.add(c.id());
+      if (c.target.$getStore() == store && !requestsSet.contains(c))
+        callSet.add(c);
     return callSet;
   }
 
@@ -758,33 +757,33 @@ public final class Log {
           readSet.add(entry.obj.onum);
 
           if (parent != null) {
-            Set<CallID> dependencies = parent.readDependencies.get(entry.obj.onum);
+            Set<CallInstance> dependencies = parent.readDependencies.get(entry.obj.onum);
             if (dependencies == null) {
-              dependencies = new HashSet<CallID>();
+              dependencies = new HashSet<CallInstance>();
               parent.readDependencies.put(entry.obj.onum, dependencies);
             }
-            dependencies.add(semanticWarrantyCall.id());
+            dependencies.add(semanticWarrantyCall);
           }
         }
       }
 
-      Set<CallID> callSet = new HashSet<CallID>();
+      Set<CallInstance> callSet = new HashSet<CallInstance>();
       for (CallInstance c : semanticWarrantiesUsed.keySet()) {
-        callSet.add(c.id());
+        callSet.add(c);
         if (parent != null) {
-          Set<CallID> dependencies = parent.callDependencies.get(c.id());
+          Set<CallInstance> dependencies = parent.callDependencies.get(c);
           if (dependencies == null) {
-            dependencies = new HashSet<CallID>();
-            parent.callDependencies.put(c.id(), dependencies);
+            dependencies = new HashSet<CallInstance>();
+            parent.callDependencies.put(c, dependencies);
           }
-          dependencies.add(semanticWarrantyCall.id());
+          dependencies.add(semanticWarrantyCall);
         }
       }
 
       Store targetStore = semanticWarrantyCall.target.$getStore();
       LongSet readsForTargetStore = getReadsForStore(targetStore).keySet();
       Collection<_Impl> createsForTargetStore = getCreatesForStore(targetStore);
-      Set<CallID> callsForTargetStore = getCallsForStore(targetStore);
+      Set<CallInstance> callsForTargetStore = getCallsForStore(targetStore);
 
       if (readsForTargetStore.containsAll(readSet) &&
           callsForTargetStore.containsAll(callSet) &&
@@ -805,18 +804,18 @@ public final class Log {
         SemanticWarrantyRequest req = new
           SemanticWarrantyRequest(semanticWarrantyCall, semanticWarrantyValue,
               readSet, callSet);
-        requests.put(semanticWarrantyCall.id(), req);
-        requestLocations.put(semanticWarrantyCall.id(), targetStore);
-        requestInstances.put(semanticWarrantyCall.id(), semanticWarrantyCall);
+        requests.put(semanticWarrantyCall, req);
+        requestLocations.put(semanticWarrantyCall, targetStore);
+        requestInstances.put(semanticWarrantyCall, semanticWarrantyCall);
       } else if (parent != null) {
         // Otherwise, remove the dependency mappings in the parent.
         LongIterator it = readSet.iterator();
         while (it.hasNext()) {
-          parent.readDependencies.get(it.next()).remove(semanticWarrantyCall.id());
+          parent.readDependencies.get(it.next()).remove(semanticWarrantyCall);
         }
 
-        for (CallID call : callSet) {
-          parent.callDependencies.get(call).remove(semanticWarrantyCall.id());
+        for (CallInstance call : callSet) {
+          parent.callDependencies.get(call).remove(semanticWarrantyCall);
         }
       }
     }
@@ -949,7 +948,7 @@ public final class Log {
       }
     }
 
-    for (CallID call : callDependencies.keySet()) {
+    for (CallInstance call : callDependencies.keySet()) {
       if (parent.callDependencies.containsKey(call)) {
         parent.callDependencies.get(call).addAll(callDependencies.get(call));
       } else {
@@ -979,9 +978,9 @@ public final class Log {
             .finer("Updating data structures for commit of tid " + tid);
 
         // Insert memoized calls into the local call cache
-        for (Map.Entry<CallID, SemanticWarrantyRequest> e
+        for (Map.Entry<CallInstance, SemanticWarrantyRequest> e
           : requests.entrySet()) {
-          CallID id = e.getKey();
+          CallInstance id = e.getKey();
           // If we got a warranty, then place it in the local cache.
           // XXX: AFAIK, the only time you don't get a warranty is when you
           // use the local store.

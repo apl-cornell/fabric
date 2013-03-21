@@ -38,8 +38,8 @@ import fabric.store.db.ObjectDB;
 import fabric.store.db.ObjectDB.ExtendWarrantyStatus;
 import fabric.store.db.SemanticWarrantyTable;
 import fabric.worker.AbortException;
+import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
-import fabric.worker.memoize.CallID;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
@@ -336,14 +336,14 @@ public class TransactionManager {
    *           If the transaction could not successfully extend the
    *           SemanticWarranty on any of the calls
    */
-  public void prepareCalls(Principal worker, long tid, Set<CallID> calls,
+  public void prepareCalls(Principal worker, long tid, Set<CallInstance> calls,
       long commitTime) throws TransactionPrepareFailedException {
-    for (CallID callId : calls) {
-      if (!semanticWarranties.extend(callId,
-            semanticWarranties.get(callId).warranty,
+    for (CallInstance call : calls) {
+      if (!semanticWarranties.extend(call,
+            semanticWarranties.get(call).warranty,
             new SemanticWarranty(commitTime))) {
         throw new TransactionPrepareFailedException(
-            "Could not extend warranty for call" + callId);
+            "Could not extend warranty for call" + call);
       }
     }
   }
@@ -355,33 +355,34 @@ public class TransactionManager {
    * @param worker
    *          The worker requesting the prepare
    */
-  public Map<CallID, SemanticWarranty> prepareRequests(Principal worker,
+  public Map<CallInstance, SemanticWarranty> prepareRequests(Principal worker,
       long tid, Set<SemanticWarrantyRequest> requests, long commitTime) {
     /* Create the associated warranties and add these calls to the warranties
      * table.
      */ 
-    Map<CallID, SemanticWarranty> warranties =
-      new HashMap<CallID, SemanticWarranty>();
+    Map<CallInstance, SemanticWarranty> warranties =
+      new HashMap<CallInstance, SemanticWarranty>();
 
     // Have to do a topologically sorted order of requests (so call dependencies
     // have warranties already).
-    Map<CallID, Set<CallID>> simplifiedDepMap = new HashMap<CallID, Set<CallID>>();
-    Map<CallID, SemanticWarrantyRequest> reqMap = new HashMap<CallID,
-      SemanticWarrantyRequest>(requests.size());
+    Map<CallInstance, Set<CallInstance>> simplifiedDepMap = new
+      HashMap<CallInstance, Set<CallInstance>>();
+    Map<CallInstance, SemanticWarrantyRequest> reqMap = new
+      HashMap<CallInstance, SemanticWarrantyRequest>(requests.size());
     for (SemanticWarrantyRequest r : requests) {
       reqMap.put(r.call, r);
     }
     for (SemanticWarrantyRequest r : requests) {
-      Set<CallID> depsInTable = new HashSet<CallID>();
-      for (CallID c : r.calls)
+      Set<CallInstance> depsInTable = new HashSet<CallInstance>();
+      for (CallInstance c : r.calls)
         if (reqMap.containsKey(c))
           depsInTable.add(c);
       simplifiedDepMap.put(r.call, depsInTable);
     }
 
-    LinkedList<CallID> fringe = new LinkedList<CallID>();
-    Set<CallID> nonfringe = new HashSet<CallID>();
-    for (CallID k : simplifiedDepMap.keySet())
+    LinkedList<CallInstance> fringe = new LinkedList<CallInstance>();
+    Set<CallInstance> nonfringe = new HashSet<CallInstance>();
+    for (CallInstance k : simplifiedDepMap.keySet())
       if (simplifiedDepMap.get(k).isEmpty())
         fringe.add(k);
       else
@@ -390,7 +391,7 @@ public class TransactionManager {
     while (!fringe.isEmpty()) {
       SemanticWarrantyRequest r = reqMap.get(fringe.poll());
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-          "Getting SemanticWarranty for CallID {1}, which has {0} dependencies",
+          "Getting SemanticWarranty for CallInstance {1}, which has {0} dependencies",
           r.calls.size(), r.call);
 
       // Get a proposal for a warranty
@@ -404,7 +405,7 @@ public class TransactionManager {
 
       
       //Update fringe
-      for (CallID c : new HashSet<CallID>(nonfringe)) {
+      for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
         simplifiedDepMap.get(c).remove(r.call);
         if (simplifiedDepMap.get(c).isEmpty()) {
           nonfringe.remove(c);
@@ -504,14 +505,15 @@ public class TransactionManager {
   }
 
   /**
-   * Returns an CallResult containing the specified call's value and warranty.
+   * Returns a WarrantiedCallResult containing the specified call's value and
+   * warranty.
    * 
    * @param principal
    *          The principal performing the read.
    * @param id
    *          The id for the call instance.
    */
-  public WarrantiedCallResult getCall(Principal principal, CallID id)
+  public WarrantiedCallResult getCall(Principal principal, CallInstance id)
       throws AccessException {
     WarrantiedCallResult result = semanticWarranties.get(id);
     if (result == null) throw new AccessException(
