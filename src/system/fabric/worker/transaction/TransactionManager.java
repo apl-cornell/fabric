@@ -695,17 +695,18 @@ public final class TransactionManager {
                   + "will expire", current.tid.topTid, store, reads.size());
             }
 
-            store
-                .prepareTransactionReads(current.tid.topTid, reads, commitTime);
+            LongKeyMap<VersionWarranty> newWarranties =
+                store.prepareTransactionReads(current.tid.topTid, reads,
+                    commitTime);
+
+            // Prepare was successful. Update the objects' warranties.
+            current.updateVersionWarranties(store, newWarranties);
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) store, e);
           } catch (UnreachableNodeException e) {
             failures.put((RemoteNode) store,
                 new TransactionPrepareFailedException("Unreachable store"));
           }
-
-          // Prepare was successful. Update the objects' warranties.
-          current.updateVersionWarranties(store, reads.keySet(), commitTime);
         }
       };
 

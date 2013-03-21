@@ -223,7 +223,7 @@ public class TransactionManager {
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public void prepareReads(Principal worker, long tid,
+  public LongKeyMap<VersionWarranty> prepareReads(Principal worker, long tid,
       LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
     try {
@@ -241,6 +241,10 @@ public class TransactionManager {
         }
       }
 
+      // This will store the new warranties we get.
+      LongKeyMap<VersionWarranty> newWarranties =
+          new LongKeyHashMap<VersionWarranty>();
+
       // This will store the set of onums of objects that were out of date.
       LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
           new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
@@ -248,16 +252,16 @@ public class TransactionManager {
       // Check reads
       for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
         long onum = entry.getKey();
-        database.notifyReadPrepare(onum);
-
         int version = entry.getValue().intValue();
 
         // Attempt to extend the object's warranty.
         try {
-          ExtendWarrantyStatus status =
-              database.extendWarranty(worker, onum, version, commitTime);
-          switch (status) {
+          Pair<ExtendWarrantyStatus, VersionWarranty> status =
+              database.extendWarrantyForReadPrepare(worker, onum, version,
+                  commitTime);
+          switch (status.first) {
           case OK:
+            newWarranties.put(onum, status.second);
             break;
 
           case BAD_VERSION:
@@ -282,6 +286,7 @@ public class TransactionManager {
       }
 
       STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
+      return newWarranties;
     } catch (TransactionPrepareFailedException e) {
       // Roll back the transaction.
       try {

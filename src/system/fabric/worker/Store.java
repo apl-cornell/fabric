@@ -32,8 +32,7 @@ public interface Store extends Serializable {
   /**
    * Notifies the store that the transaction is entering the write-prepare phase.
    * 
-   * @return whether a subtransaction was created on the store as a result of
-   *         the prepare, and a minimum commit time.
+   * @return a minimum commit time.
    */
   long prepareTransactionWrites(long tid, Collection<_Impl> toCreate,
       Collection<_Impl> writes) throws UnreachableNodeException,
@@ -42,12 +41,11 @@ public interface Store extends Serializable {
   /**
    * Notifies the store that the transaction is entering the read-prepare phase.
    * 
-   * @return whether a subtransaction was created on the store as a result of
-   *         the prepare.
+   * @return the set of new version warranties.
    */
-  void prepareTransactionReads(long tid, LongKeyMap<Integer> reads,
-      long commitTime) throws UnreachableNodeException,
-      TransactionPrepareFailedException;
+  LongKeyMap<VersionWarranty> prepareTransactionReads(long tid,
+      LongKeyMap<Integer> reads, long commitTime)
+      throws UnreachableNodeException, TransactionPrepareFailedException;
 
   /**
    * Returns the cache entry for the given onum. If the object is not resident,

@@ -280,19 +280,32 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Attempts to extend the warranty on a particular version of an object.
+   * Attempts to extend the warranty on a particular version of an object, owing
+   * to a read prepare.
    * 
+   * @return a result status and the new warranty (if the status is OK).
    * @throws AccessException if no object exists at the given onum.
    */
-  public final ExtendWarrantyStatus extendWarranty(Principal worker, long onum,
-      int version, long commitTime) throws AccessException {
-    if (version != getVersion(onum)) return ExtendWarrantyStatus.BAD_VERSION;
-
+  public final Pair<ExtendWarrantyStatus, VersionWarranty> extendWarrantyForReadPrepare(
+      Principal worker, long onum, int version, long commitTime)
+      throws AccessException {
+    warrantyIssuer.notifyReadPrepare(onum);
     VersionWarranty newWarranty =
-        extendWarranty(onum, commitTime, ExtendWarrantyMode.STRICT);
-    return newWarranty == null ? ExtendWarrantyStatus.DENIED
-        : ExtendWarrantyStatus.OK;
+        extendWarranty(onum, commitTime, true, true, false);
+
+    if (newWarranty == null) return EXTEND_WARRANTY_DENIED;
+    if (version != getVersion(onum)) return EXTEND_WARRANTY_BAD_VERSION;
+    return new Pair<ExtendWarrantyStatus, VersionWarranty>(
+        ExtendWarrantyStatus.OK, newWarranty);
   }
+
+  private static Pair<ExtendWarrantyStatus, VersionWarranty> EXTEND_WARRANTY_DENIED =
+      new Pair<ExtendWarrantyStatus, VersionWarranty>(
+          ExtendWarrantyStatus.DENIED, null);
+
+  private static Pair<ExtendWarrantyStatus, VersionWarranty> EXTEND_WARRANTY_BAD_VERSION =
+      new Pair<ExtendWarrantyStatus, VersionWarranty>(
+          ExtendWarrantyStatus.BAD_VERSION, null);
 
   /**
    * Registers that a transaction has created or written to an object. This
@@ -481,7 +494,7 @@ public abstract class ObjectDB {
     if (onums != null) {
       for (LongIterator it = onums.iterator(); it.hasNext();) {
         long onum = it.next();
-        extendWarranty(onum, commitTime, ExtendWarrantyMode.FORCE);
+        extendWarranty(onum, commitTime, true, false, true);
       }
     }
 
@@ -572,68 +585,50 @@ public abstract class ObjectDB {
    */
   protected abstract void saveLongestWarranty();
 
-  private static enum ExtendWarrantyMode {
-    STRICT, NON_STRICT, FORCE
-  }
-
   /**
    * Extends the version warranty of an object, if necessary and possible. The
    * object's resulting warranty is returned.
-   * <p>
-   * This method will return null in STRICT mode if the object's warranty
-   * expires before the requested expiry time, and the warranty could not be
-   * extended to the requested time.
-   * </p>
-   * <p>
-   * In NON_STRICT mode, a new warranty is created only if the existing warranty
-   * has expired and the object is not write-locked. The new warranty may expire
-   * before the requested expiry time. The object's resulting warranty is
-   * returned.
-   * </p>
-   * <p>
-   * In STRICT mode, a new warranty is created only if the existing warranty
-   * expires before the requested expiry time, and the object is not
-   * write-locked. A null value is returned if the object's warranty cannot be
-   * extended to the requested expiry time. Otherwise, the object's resulting
-   * warranty is returned.
-   * </p>
-   * <p>
-   * FORCE mode is like STRICT mode, except write locks are ignored.
-   * </p>
+   * 
+   * @param onum the onum of the object whose warranty is to be extended.
+   * @param minExpiry if the existing warranty already extends beyond this time,
+   *          just return it without extending it.
+   * @param minExpiryStrict whether to use strict comparisons when comparing the
+   *          existing warranty with minExpiry. If this is false, clock skew
+   *          will be taken into account.
+   * @param extendBeyondMinExpiry if this is true and the existing warranty
+   *          isn't sufficiently long to cover minExpiry, then the warranty will
+   *          be extended beyond minExpiry, if possible, according to what the
+   *          warrantyIssuer gives us.
+   * @param ignoreWriteLocks if true, then write locks will be ignored when
+   *          determining whether it is possible to extend the warranty.
+   *          
+   * @return the resulting warranty. If the current warranty does not meet
+   *          minExpiry and could not be renewed, then null is returned.
    */
-  private VersionWarranty extendWarranty(long onum, long expiry,
-      ExtendWarrantyMode mode) {
+  private VersionWarranty extendWarranty(long onum, long minExpiry,
+      boolean minExpiryStrict, boolean extendBeyondMinExpiry,
+      boolean ignoreWriteLocks) {
     while (true) {
       // Get the object's current warranty and determine whether it needs to be
       // extended.
       VersionWarranty curWarranty = versionWarrantyTable.get(onum);
-      switch (mode) {
-      case STRICT:
-      case FORCE:
-        if (curWarranty.expiresAfterStrict(expiry)) return curWarranty;
-        break;
-
-      case NON_STRICT:
-        if (!curWarranty.expired(true)) return curWarranty;
-        break;
+      if (minExpiryStrict) {
+        if (curWarranty.expiresAfterStrict(minExpiry)) return curWarranty;
+      } else {
+        if (curWarranty.expiresAfter(minExpiry, false)) return curWarranty;
       }
 
       // Need to extend warranty.
-      if (mode != ExtendWarrantyMode.FORCE && isWritten(onum)) {
-        // Unable to extend warranty.
-        switch (mode) {
-        case STRICT:
-          return null;
-
-        case NON_STRICT:
-          return curWarranty;
-
-        case FORCE:
-          throw new InternalError("Shouldn't reach here.");
-        }
+      if (!ignoreWriteLocks && isWritten(onum)) {
+        // Unable to extend.
+        return null;
       }
 
       // Extend the object's warranty.
+      long expiry = minExpiry;
+      if (extendBeyondMinExpiry) {
+        expiry = warrantyIssuer.suggestWarranty(onum, minExpiry);
+      }
       VersionWarranty newWarranty = new VersionWarranty(expiry);
       if (expiry > System.currentTimeMillis()) {
         if (!versionWarrantyTable.extend(onum, curWarranty, newWarranty))
@@ -647,13 +642,6 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Notifies the warranty issuer of a read prepare.
-   */
-  public void notifyReadPrepare(long onum) {
-    warrantyIssuer.notifyReadPrepare(onum);
-  }
-
-  /**
    * Returns any existing version warranty on the object stored at the given
    * onum, if the warranty is still valid. Otherwise, attempts to create and
    * return a new version warranty for the object. If the object is
@@ -661,12 +649,13 @@ public abstract class ObjectDB {
    * is returned.
    */
   public VersionWarranty refreshWarranty(long onum) {
-    Long newExpiry = warrantyIssuer.suggestWarranty(onum);
-    if (newExpiry == null) {
+    VersionWarranty result =
+        extendWarranty(onum, System.currentTimeMillis(), false, true, false);
+    if (result == null) {
       return versionWarrantyTable.get(onum);
     }
 
-    return extendWarranty(onum, newExpiry, ExtendWarrantyMode.NON_STRICT);
+    return result;
   }
 
   /**
