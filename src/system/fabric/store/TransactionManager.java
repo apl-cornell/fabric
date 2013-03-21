@@ -149,11 +149,13 @@ public class TransactionManager {
         if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
           longestWarranty = warranty;
 
+        /*
         // Block all writes to objects read by an existing SemanticWarranty
         SemanticWarranty callWarranty =
           semanticWarranties.longestReadDependency(o.getOnum());
         if (callWarranty.expiresAfter(longestWarranty))
           longestWarranty = new VersionWarranty(callWarranty.expiry());
+          */
       }
 
       /*
@@ -229,8 +231,16 @@ public class TransactionManager {
 
       database.finishPrepareWrites(tid, worker);
 
+      // Double check calls.
+      SemanticWarranty longestCallWarranty =
+        semanticWarranties.longestReadDependency(req.writes,
+            (longestWarranty == null ? 0 : longestWarranty.expiry()));
+
       STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
 
+      if (longestCallWarranty != null) {
+        return longestCallWarranty.expiry();
+      }
       return longestWarranty == null ? 0 : longestWarranty.expiry();
     } catch (TransactionPrepareFailedException e) {
       synchronized (database) {

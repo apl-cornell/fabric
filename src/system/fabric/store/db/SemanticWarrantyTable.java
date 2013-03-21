@@ -3,10 +3,13 @@ package fabric.store.db;
 import static fabric.common.Logging.STORE_DB_LOGGER;
 import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -15,12 +18,21 @@ import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.SemanticWarranty;
+import fabric.common.SerializedObject;
 import fabric.common.Threading;
+import fabric.common.VersionWarranty;
 import fabric.common.Warranty;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
+import fabric.common.util.Pair;
+
+import fabric.worker.AbortException;
+import fabric.worker.Worker;
+import fabric.worker.Worker.Code;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
+
+import fabric.worker.transaction.TransactionManager;
 
 /*
  * TODO:
@@ -236,38 +248,69 @@ public class SemanticWarrantyTable {
   }
 
   /**
-   * Provides the longest SemanticWarranty that read the given onum.
+   * Provides the longest SemanticWarranty that depended on any of the given
+   * onums that is longer than the given commitTime.
    */
-  public SemanticWarranty longestReadDependency(long onum) {
-    SemanticWarranty longest = new SemanticWarranty(0);
+  public SemanticWarranty longestReadDependency(final
+      Collection<SerializedObject> objs, long commitTime) {
+    PriorityQueue<Pair<CallInstance, SemanticWarranty>> dependencies = new
+      PriorityQueue<Pair<CallInstance, SemanticWarranty>>(objs.size(), new
+          Comparator<Pair<CallInstance, SemanticWarranty>>() {
+        @Override
+        public int compare(Pair<CallInstance, SemanticWarranty> p1,
+          Pair<CallInstance, SemanticWarranty> p2) {
+          if (p1.second.expiry() == p2.second.expiry()) return 0;
+          return p1.second.expiry() > p2.second.expiry() ? -1 : 1;
+        }
+      });
 
-    Set<CallInstance> readers = dependencyTable.getReaders(onum);
-    for (CallInstance call : readers) {
-      SemanticWarranty cur = get(call).warranty;
-      if (cur.expiresAfter(longest)) {
-        longest = cur;
+    for (SerializedObject obj : objs)
+      for (CallInstance call : dependencyTable.getReaders(obj.getOnum()))
+        if (get(call).warranty.expiresAfter(commitTime, true))
+          dependencies.add(new Pair<CallInstance, SemanticWarranty>(call, get(call).warranty));
+
+    while (!dependencies.isEmpty()) {
+      Pair<CallInstance, SemanticWarranty> p = dependencies.poll();
+      final CallInstance call = p.first;
+      final fabric.lang.Object oldResult = get(call).value;
+      //TODO: Time out call if it lasts longer than it's warranty.
+      try {
+        Worker.runInTopLevelTransaction(new Code<Void>() {
+              @Override
+              public Void run() {
+                for (SerializedObject obj : objs) {
+                  TransactionManager.getInstance().registerWrite(obj.deserialize(Worker.getWorker().getLocalStore(),
+                      new VersionWarranty(0)));
+                }
+                if (!oldResult.equals(call.runCall()))
+                  throw new AbortException();
+                return null;
+              }
+            }, false);
+      } catch (AbortException e) {
+        return p.second;
       }
     }
-
-    return longest;
+    return null;
   }
 
-  /**
+  /*
    * Provides the longest SemanticWarranty that called the given callId.
-   */
-  public SemanticWarranty longestCallDependency(CallInstance callId) {
-    SemanticWarranty longest = new SemanticWarranty(0);
+  public Pair<CallInstance, SemanticWarranty>
+    longestCallDependency(CallInstance callId) {
+    Pair<CallInstance, SemanticWarranty> longest = null;
 
     Set<CallInstance> callers = dependencyTable.getCallers(callId);
     for (CallInstance call : callers) {
       SemanticWarranty cur = get(call).warranty;
-      if (cur.expiresAfter(longest)) {
-        longest = cur;
+      if (cur.expiresAfter(longest.second)) {
+        longest = new Pair<CallInstance, SemanticWarranty>(call, cur);
       }
     }
 
     return longest;
   }
+   */
 
   /**
    * GC thread for expired warranties.

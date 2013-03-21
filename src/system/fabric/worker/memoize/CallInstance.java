@@ -166,6 +166,7 @@ public class CallInstance {
     try {
       Method m = c.getMethod("$callNonMemoized", String.class,
           java.lang.Object[].class);
+
       java.lang.Object[] fetchedArgs = new java.lang.Object[arguments.length];
       for (int i = 0; i < arguments.length; i++) {
         fetchedArgs[i] = arguments[i].fetch();
@@ -173,6 +174,7 @@ public class CallInstance {
           fetchedArgs[i] = ((Object) fetchedArgs[i]).$unwrap();
         }
       }
+
       return m.invoke(target.fetch(), method, fetchedArgs);
     } catch (NoSuchMethodException e) {
       throw new InternalError("Error running call " + toString() + ": " +
