@@ -82,6 +82,10 @@ public class ObjectGroup {
     this.expiry = expiry;
   }
 
+  /**
+   * Refreshes warranties on the objects contained in the group. This is done by
+   * creating new warranties for any objects whose warranties has expired.
+   */
   public void refreshWarranties(TransactionManager tm) {
     if (!expiry.expired(true)) return;
 

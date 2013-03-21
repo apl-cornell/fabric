@@ -91,7 +91,6 @@ public class TransactionManager {
    */
   public long prepareWrites(Principal worker, PrepareWritesRequest req)
       throws TransactionPrepareFailedException {
-    // XXX - marker
     final long tid = req.tid;
     VersionWarranty longestWarranty = null;
 
@@ -227,7 +226,6 @@ public class TransactionManager {
   public void prepareReads(Principal worker, long tid,
       LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
-    // XXX - marker
     try {
       // First, check read permissions. We do this before we attempt to do the
       // actual prepare because we want to run the permissions check in a
@@ -414,13 +412,14 @@ public class TransactionManager {
   }
 
   /**
-   * Refreshes the warranties on a group of objects.
+   * Refreshes the warranties on a group of objects. This is done by creating
+   * new warranties for any objects whose warranties has expired.
+   * 
    * @return
    *         the warranty in the group that will expire soonest.
    */
   public VersionWarranty refreshWarranties(
       Collection<Pair<SerializedObject, VersionWarranty>> objects) {
-    // XXX - marker
     VersionWarranty result = null;
     for (Pair<SerializedObject, VersionWarranty> entry : objects) {
       VersionWarranty warranty =

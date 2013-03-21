@@ -654,9 +654,11 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Attempts to create and return a new version warranty for the object stored
-   * at the given onum. If the object is write-locked, then a new warranty
-   * cannot be created, and the existing one is returned.
+   * Returns any existing version warranty on the object stored at the given
+   * onum, if the warranty is still valid. Otherwise, attempts to create and
+   * return a new version warranty for the object. If the object is
+   * write-locked, then a new warranty cannot be created, and the existing one
+   * is returned.
    */
   public VersionWarranty refreshWarranty(long onum) {
     Long newExpiry = warrantyIssuer.suggestWarranty(onum);
