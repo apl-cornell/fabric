@@ -30,6 +30,7 @@ import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.MethodInstance;
 import polyglot.types.PrimitiveType;
+import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import fabil.types.FabILFlags;
@@ -797,21 +798,125 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     return cd.body(nf.ClassBody(Position.compilerGenerated(), members));
   }
 
+  /**
+   * Makes a method for calling any memoized method's nonmemoized body by name.
+   */
   private MethodDecl makeNonMemoizedCaller(MemoizedMethodRewriter mmr,
       List<MethodDecl> methods) {
-    // TODO: Fill out
-    return null;
+    QQ qq = mmr.qq();
+    FabILTypeSystem ts = mmr.typeSystem();
+
+    Stmt body = qq.parseStmt("throw new InternalError(\"Unknown memoized call!\");");
+    for (MethodDecl method : methods) {
+      String argsList = "";
+      boolean first = true;
+      /* TODO: Do check for number of arguments. */
+      for (int count = 0; count < method.formals().size(); count++) {
+        Formal formal = method.formals().get(count);
+        if (!first) {
+          argsList += ", ";
+        }
+        first = false;
+        if (formal.type().type().isPrimitive()) {
+          argsList += "(" + ts.wrapperTypeString((PrimitiveType) formal.type().type())
+            + ") arguments[" + count + "]";
+        } else {
+          argsList += "(" + formal.type() + ") arguments[" + count + "]";
+        }
+      }
+
+      body = qq.parseStmt("if (methodName == \"" + method.name() +"\") {\n"
+                        + "  return this." + method.name() + "$NonMemoized(" + argsList + ");\n"
+                        + "} else {\n"
+                        + "  %S\n"
+                        + "}", body);
+    }
+
+    return (MethodDecl)
+      qq.parseMember("public java.lang.Object $callNonMemoized(String methodName, java.lang.Object[] arguments) {\n"
+                        + "  %S\n"
+                        + "}", body);
   }
 
   private MethodDecl makeMemoizedMethod(MemoizedMethodRewriter mmr,
       MethodDecl md) {
-    // TODO: Fill out
-    return null;
+    if (md.body() == null) return md;
+    QQ qq = mmr.qq();
+    NodeFactory nf = mmr.nodeFactory();
+    FabILTypeSystem ts = mmr.typeSystem();
+    Position CG = Position.compilerGenerated();
+
+    TypeNode callInstanceType = nf.TypeNodeFromQualifiedName(CG,
+        "fabric.worker.memoize.CallInstance");
+    TypeNode callResultType = nf.TypeNodeFromQualifiedName(CG,
+        "fabric.worker.memoize.WarrantiedCallResult");
+    Type returnType = md.returnType().type();
+    Type wrappedReturnType = returnType;
+    if (returnType.isPrimitive()) {
+      try {
+        wrappedReturnType = ts.typeForName(ts.wrapperTypeString((PrimitiveType)
+              returnType));
+      } catch (SemanticException e) {
+        System.err.println("Tried to wrap type " + returnType);
+      }
+    }
+
+    int count = 0;
+    String argList = "";
+    String unwrappedArgList = "";
+    List<Stmt> finals = new ArrayList<Stmt>(md.formals().size());
+    List<Stmt> unpacks = new ArrayList<Stmt>(md.formals().size());
+    for (Formal f : md.formals()) {
+      argList += ", ";
+      if (f.type().type().isPrimitive()) {
+        argList += "fabric.lang.WrappedJavaInlineable.$wrap(" + f.name() + ")";
+      } else {
+        argList += f.name();
+      }
+
+      finals.add(qq.parseStmt("final %T $arg" + count + " = %s;", f.type(), f.name()));
+      unpacks.add(qq.parseStmt("%T %s = $arg" + count + ";", f.type(), f.name()));
+
+      if (count != 0) {
+        unwrappedArgList += ", ";
+      }
+      unwrappedArgList += f.name();
+
+      count++;
+    }
+    finals.add(qq.parseStmt("final %T $oldThis = this;",
+          md.memberInstance().container()));
+
+    Stmt callCreate = qq.parseStmt("final %T $call = new %T(this, \""
+        + md.memberInstance().container().toString() + "."
+        + md.methodInstance().signature() + "\"" + argList + ");",
+        callInstanceType, callInstanceType);
+
+    /* Handle lookup before computing */
+    Stmt callLookup = qq.parseStmt(
+        "%T $resultObj = this.$getStore().lookupCall($call);", callResultType);
+    Stmt callUnpack = qq.parseStmt(
+        "%T $cacheResult = (%T) $resultObj.value.fetch();", wrappedReturnType,
+        wrappedReturnType);
+    if (returnType.isPrimitive()) {
+      callUnpack = qq.parseStmt("%T $cacheResult = (%T) "
+          + "fabric.lang.WrappedJavaInlineable.$unwrap($resultObj.value);",
+          wrappedReturnType, wrappedReturnType);
+    }
+
+    Stmt checkLookup = qq.parseStmt("if ($resultObj != null) {\n"
+        + "  %S\n"
+        + "  fabric.worker.transaction.TransactionManager.getInstance().registerSemanticWarrantyUse($call, $resultObj);\n"
+        + "  return $cacheResult;\n"
+        + "} else {\n"
+        + "  return " + md.name() + "$NonMemoized(" + unwrappedArgList + ");\n"
+        + "}", callUnpack);
+
+    return (MethodDecl) md.body(nf.Block(CG, callCreate, callLookup, checkLookup));
   }
 
   @Override
   public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr) {
-    /*
     ClassDecl cd = node();
     QQ qq = mmr.qq();
 
@@ -828,28 +933,24 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         if (method.flags().contains(FabILFlags.MEMOIZED)) {
           // TODO: Error on static method explaining we don't do that yet.
           method = method.flags(method.flags().clear(FabILFlags.MEMOIZED));
-          allMembers.add(makeMemoizedMethod(mmr, method));
-          memoizedMethods.add(method);
-          method = method.name(method.name() + "$NonMemoized");
+          if (!cd.flags().isInterface()) {
+            allMembers.add(makeMemoizedMethod(mmr, method));
+            memoizedMethods.add(method);
+            method = method.name(method.name() + "$NonMemoized");
+          }
         }
         allMembers.add(method);
       }
     }
 
     // Make methods for calling memoized methods
-    if (memoizedMethods.size() > 0) {
+    if (memoizedMethods.size() > 0 && !cd.flags().isInterface()) {
       ClassMember instanceCaller;
-      if (cd.flags().isInterface()) {
-        instanceCaller = qq.parseMember("public java.lang.Object $memoizedCaller(String methodName, java.lang.Object[] arguments);");
-      } else {
-        instanceCaller = makeNonMemoizedCaller(mmr, memoizedMethods);
-      }
+      instanceCaller = makeNonMemoizedCaller(mmr, memoizedMethods);
       allMembers.add(instanceCaller);
     }
 
     return cd.body(cd.body().members(allMembers));
-    */
-    return node();
   }
 
   @Override

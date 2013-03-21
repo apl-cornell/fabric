@@ -72,7 +72,6 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
   public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr) {
     MethodDecl md = node();
     if (!md.flags().contains(FabILFlags.MEMOIZED)) return md;
-    md = md.flags(md.flags().clear(FabILFlags.MEMOIZED));
     if (md.body() == null) return md;
     QQ qq = mmr.qq();
     NodeFactory nf = mmr.nodeFactory();
@@ -81,8 +80,6 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
 
     TypeNode callInstanceType = nf.TypeNodeFromQualifiedName(CG,
         "fabric.worker.memoize.CallInstance");
-    TypeNode callResultType = nf.TypeNodeFromQualifiedName(CG,
-        "fabric.worker.memoize.WarrantiedCallResult");
     Type returnType = md.returnType().type();
     Type wrappedReturnType = returnType;
     if (returnType.isPrimitive()) {
@@ -117,23 +114,6 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
         + md.methodInstance().signature() + "\"" + argList + ");",
         callInstanceType, callInstanceType);
 
-    /* Handle lookup before computing */
-    Stmt callLookup = qq.parseStmt(
-        "%T $resultObj = this.$getStore().lookupCall($call);", callResultType);
-    Stmt callUnpack = qq.parseStmt(
-        "%T $cacheResult = (%T) $resultObj.value.fetch();", wrappedReturnType,
-        wrappedReturnType);
-    if (returnType.isPrimitive()) {
-      callUnpack = qq.parseStmt("%T $cacheResult = (%T) "
-          + "fabric.lang.WrappedJavaInlineable.$unwrap($resultObj.value);",
-          wrappedReturnType, wrappedReturnType);
-    }
-    Stmt checkLookup = qq.parseStmt("if ($resultObj != null) {\n"
-        + "  %S\n"
-        + "  fabric.worker.transaction.TransactionManager.getInstance().registerSemanticWarrantyUse($call, $resultObj);\n"
-        + "  return $cacheResult;\n"
-        + "}", callUnpack);
-
     /* Compute otherwise */
     Stmt resultCreate = qq.parseStmt("fabric.lang.Object $result;");
     Stmt buildWarranty = qq.parseStmt(
@@ -148,7 +128,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
       + "  }\n"
       + "}, true, $call);}", finals, wrappedReturnType, unpacks, resultCreate,
       md.body());
-    return md.body(nf.Block(CG, callCreate, callLookup, checkLookup, buildWarranty));
+    return md.body(nf.Block(CG, callCreate, buildWarranty));
   }
 
   @Override
