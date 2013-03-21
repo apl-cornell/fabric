@@ -461,7 +461,7 @@ public class LinkedList extends AbstractSequentialList
 
     // Link the new chain of entries into the list.
     modCount++;
-    size += csize;
+    size = size + csize;
     prev.next = after;
     if (after != null)
       after.previous = e;

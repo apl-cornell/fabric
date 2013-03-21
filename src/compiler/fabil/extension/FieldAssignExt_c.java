@@ -3,6 +3,7 @@ package fabil.extension;
 import java.util.ArrayList;
 import java.util.List;
 
+import polyglot.ast.Assign;
 import polyglot.ast.Expr;
 import polyglot.ast.Field;
 import polyglot.ast.FieldAssign;
@@ -73,6 +74,10 @@ public class FieldAssignExt_c extends ExprExt_c {
     subs.add(rhs);
 
     String setterName = "set$" + name;
+    if (!assign.operator().equals(Assign.ASSIGN))
+      throw new UnsupportedOperationException("Oooh fancy.. Sorry but "
+          + assign.operator() + " at " + assign.position()
+          + " is not supported yet.");
     if (target.type().isArray() && name.equals("length")) {
       // Changing the length of an array. The setter here is different.
       setterName = "setLength";
