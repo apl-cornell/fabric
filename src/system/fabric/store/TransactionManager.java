@@ -87,6 +87,7 @@ public class TransactionManager {
   public void abortTransaction(Principal worker, long transactionID)
       throws AccessException {
     database.abort(transactionID, worker);
+    semanticWarranties.abort(transactionID);
     STORE_TRANSACTION_LOGGER.fine("Aborted transaction " + transactionID);
   }
 
@@ -97,6 +98,7 @@ public class TransactionManager {
       long commitTime) throws TransactionCommitFailedException {
     try {
       database.commit(transactionID, commitTime, workerPrincipal, sm);
+      semanticWarranties.commit(transactionID, commitTime);
       STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
     } catch (final RuntimeException e) {
       throw new TransactionCommitFailedException(
@@ -148,14 +150,6 @@ public class TransactionManager {
             database.registerUpdate(tid, worker, o, versionConflicts, WRITE);
         if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
           longestWarranty = warranty;
-
-        /*
-        // Block all writes to objects read by an existing SemanticWarranty
-        SemanticWarranty callWarranty =
-          semanticWarranties.longestReadDependency(o.getOnum());
-        if (callWarranty.expiresAfter(longestWarranty))
-          longestWarranty = new VersionWarranty(callWarranty.expiry());
-          */
       }
 
       /*
@@ -233,7 +227,7 @@ public class TransactionManager {
 
       // Double check calls.
       SemanticWarranty longestCallWarranty =
-        semanticWarranties.longestReadDependency(req.writes,
+        semanticWarranties.longestReadDependency(req.writes, tid,
             (longestWarranty == null ? 0 : longestWarranty.expiry()));
 
       STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
@@ -349,6 +343,7 @@ public class TransactionManager {
   public void prepareCalls(Principal worker, long tid, Set<CallInstance> calls,
       long commitTime) throws TransactionPrepareFailedException {
     for (CallInstance call : calls) {
+      semanticWarranties.notifyReadPrepare(call);
       if (!semanticWarranties.extend(call,
             semanticWarranties.get(call).warranty,
             new SemanticWarranty(commitTime))) {
@@ -405,13 +400,11 @@ public class TransactionManager {
           r.calls.size(), r.call);
 
       // Get a proposal for a warranty
-      SemanticWarranty proposed = semanticWarranties.proposeWarranty(r.call,
-          r.reads, r.calls, r.value, warranties);
+      SemanticWarranty proposed = semanticWarranties.proposeWarranty(r.call);
       // Add it to the response set
       warranties.put(r.call, proposed);
       // Schedule to add it at commitTime
-      semanticWarranties.putAt(commitTime, r.call, r.reads, r.calls, r.value,
-          proposed);
+      semanticWarranties.putAt(commitTime, r, proposed);
 
       
       //Update fringe

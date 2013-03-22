@@ -408,6 +408,14 @@ public final class Log {
   }
 
   /**
+   * Gets the SemanticWarrantyRequest, if any, associated with the given call
+   * instance.
+   */
+  public SemanticWarrantyRequest getRequest(CallInstance call) { 
+    return requests.get(call);
+  }
+
+  /**
    * Returns a mapping of stores to (mappings of onums to version numbers),
    * indicating those objects read (but not modified) by this transaction, whose
    * version warranties expire between commitState.commitTime (exclusive) and

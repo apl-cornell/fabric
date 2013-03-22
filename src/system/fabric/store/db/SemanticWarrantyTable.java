@@ -21,17 +21,21 @@ import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.VersionWarranty;
-import fabric.common.Warranty;
-import fabric.common.util.LongIterator;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 
-import fabric.worker.AbortException;
+import fabric.lang.Object._Proxy;
+
+import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
+import fabric.worker.memoize.CallChangedException;
+import fabric.worker.memoize.CallUnchangedException;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.memoize.WarrantiedCallResult;
-
 import fabric.worker.transaction.TransactionManager;
 
 /*
@@ -44,6 +48,8 @@ import fabric.worker.transaction.TransactionManager;
  * supporting concurrent accesses.
  */
 public class SemanticWarrantyTable {
+  private static final int MAX_SEMANTIC_WARRANTY = 1000;
+
   /**
    * The default warranty for ids that aren't yet in the table. All warranties
    * in the table should expire after the default warranty.
@@ -67,16 +73,23 @@ public class SemanticWarrantyTable {
   private final SemanticWarrantyDependencies dependencyTable;
 
   /**
-   * ObjectDB for which calls are reading items from.
+   * WarrantyIssuer for semantic warranties.
    */
-  private final ObjectDB database;
+  private final WarrantyIssuer issuer;
+
+  /**
+   * Table mapping from transactionIDs for pending transactions to updates for
+   * semantic warranty dependencies.
+   */
+  private final ConcurrentLongKeyMap<Set<SemanticWarrantyRequest>> depUpdateMap;
 
   public SemanticWarrantyTable(ObjectDB database) {
     defaultWarranty = new SemanticWarranty(0);
     table = new ConcurrentHashMap<CallInstance, WarrantiedCallResult>();
     reverseTable = new ConcurrentHashMap<SemanticWarranty, Set<CallInstance>>();
     dependencyTable = new SemanticWarrantyDependencies();
-    this.database = database;
+    issuer = new WarrantyIssuer(250, MAX_SEMANTIC_WARRANTY, 250);
+    depUpdateMap = new ConcurrentLongKeyHashMap<Set<SemanticWarrantyRequest>>();
 
     collector = new Collector();
     collector.start();
@@ -88,47 +101,18 @@ public class SemanticWarrantyTable {
 
   /* Create a warranty with a suggested time for the given call with the
    * associated reads and calls.
-   *
-   * XXX THIS IS CURRENTLY NOT A VERY GOOD ALGORITHM AT _ALL_
    */
-  public SemanticWarranty proposeWarranty(CallInstance id, LongSet reads, Set<CallInstance>
-      calls, fabric.lang.Object value,
-      Map<CallInstance, SemanticWarranty> relatedProposals) {
-    Warranty minWarranty = new SemanticWarranty(Long.MAX_VALUE);
-    LongIterator it1 = reads.iterator();
-    while (it1.hasNext()) {
-      Warranty readWarranty = database.refreshWarranty(it1.next());
-      if (readWarranty.compareTo(minWarranty) < 0) {
-        minWarranty = readWarranty;
-      }
-    }
-
-    //XXX THIS IS ALMOST CERTAINLY WRONG IF WE MAKE MORE THAN ONE SEMANTIC
-    //WARRANTY REQUEST IN A TRANSACTION AND ONE WAS NESTED IN THE OTHER.
-    for (CallInstance call : calls) {
-      if (relatedProposals.get(call) != null) {
-        Warranty callWarranty = relatedProposals.get(call);
-        if (callWarranty.compareTo(minWarranty) < 0) {
-          minWarranty = callWarranty;
-        }
-      } else if (get(call) == null) {
-          throw new InternalError("Attempted to propose a warranty without "
-              + "warranties for dependency " + call.toString());
-      } else {
-        Warranty callWarranty = get(call).warranty;
-        if (callWarranty.compareTo(minWarranty) < 0) {
-          minWarranty = callWarranty;
-        }
-      }
-    }
-
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "Suggesting SemanticWarranty of {0} for CallInstance {1}",
-        minWarranty.expiry(), id);
-    return new SemanticWarranty(minWarranty.expiry());
-    //return new SemanticWarranty(System.currentTimeMillis() + 5000);
+  public SemanticWarranty proposeWarranty(CallInstance id) {
+    return new SemanticWarranty(issuer.suggestWarranty(id));
   }
 
+  /**
+   * Wrapper of the "more arguments" version of putAt.
+   */
+  public void putAt(long commitTime, SemanticWarrantyRequest req,
+      SemanticWarranty warranty) {
+    putAt(commitTime, req.call, req.reads, req.calls, req.value, warranty);
+  }
   /**
    * Schedule to perform a put with all the arguments at the given time.
    */
@@ -248,13 +232,23 @@ public class SemanticWarrantyTable {
   }
 
   /**
+   * Notifies the issuer of a read prepare extending the Semantic Warranty for
+   * the given call.
+   */
+  public void notifyReadPrepare(CallInstance call) {
+    issuer.notifyReadPrepare(call);
+  }
+
+  /**
    * Provides the longest SemanticWarranty that depended on any of the given
    * onums that is longer than the given commitTime.
    */
-  public SemanticWarranty longestReadDependency(final
-      Collection<SerializedObject> objs, long commitTime) {
+  public SemanticWarranty longestReadDependency(
+      final Collection<SerializedObject> writes, long transactionID,
+      long commitTime) {
+    int initCapacity = writes.size() >= 1 ? writes.size() : 1;
     PriorityQueue<Pair<CallInstance, SemanticWarranty>> dependencies = new
-      PriorityQueue<Pair<CallInstance, SemanticWarranty>>(objs.size(), new
+      PriorityQueue<Pair<CallInstance, SemanticWarranty>>(initCapacity, new
           Comparator<Pair<CallInstance, SemanticWarranty>>() {
         @Override
         public int compare(Pair<CallInstance, SemanticWarranty> p1,
@@ -264,7 +258,7 @@ public class SemanticWarrantyTable {
         }
       });
 
-    for (SerializedObject obj : objs)
+    for (SerializedObject obj : writes)
       for (CallInstance call : dependencyTable.getReaders(obj.getOnum()))
         if (get(call).warranty.expiresAfter(commitTime, true))
           dependencies.add(new Pair<CallInstance, SemanticWarranty>(call, get(call).warranty));
@@ -276,41 +270,52 @@ public class SemanticWarrantyTable {
       //TODO: Time out call if it lasts longer than it's warranty.
       try {
         Worker.runInTopLevelTransaction(new Code<Void>() {
-              @Override
-              public Void run() {
-                for (SerializedObject obj : objs) {
-                  TransactionManager.getInstance().registerWrite(obj.deserialize(Worker.getWorker().getLocalStore(),
-                      new VersionWarranty(0)));
-                }
-                if (!oldResult.equals(call.runCall()))
-                  throw new AbortException();
-                return null;
-              }
-            }, false);
-      } catch (AbortException e) {
+          @Override
+          public Void run() {
+            SEMANTIC_WARRANTY_LOGGER.finest("CHECKING CALL " + call);
+            Store localStore = Worker.getWorker().getLocalStore();
+            TransactionManager tm = TransactionManager.getInstance();
+            for (SerializedObject obj : writes) {
+              (new _Proxy(localStore,
+                          obj.getOnum())).fetch().$copyAppStateFrom(obj.deserialize(localStore,
+                          new VersionWarranty(0)));
+            }
+            if (!oldResult.equals(call.runCall()))
+              throw new CallChangedException();
+            // TODO: What if there's a write in the new evaluation and so
+            // there's no request?
+            throw new CallUnchangedException(tm.getCurrentLog().getRequest(call));
+          }
+        }, false);
+      } catch (CallChangedException e) {
+        issuer.notifyWritePrepare(call);
         return p.second;
+      } catch (CallUnchangedException e) {
+        depUpdateMap.putIfAbsent(transactionID, new HashSet<SemanticWarrantyRequest>());
+        depUpdateMap.get(transactionID).add(e.updatedReq);
       }
     }
     return null;
   }
 
-  /*
-   * Provides the longest SemanticWarranty that called the given callId.
-  public Pair<CallInstance, SemanticWarranty>
-    longestCallDependency(CallInstance callId) {
-    Pair<CallInstance, SemanticWarranty> longest = null;
-
-    Set<CallInstance> callers = dependencyTable.getCallers(callId);
-    for (CallInstance call : callers) {
-      SemanticWarranty cur = get(call).warranty;
-      if (cur.expiresAfter(longest.second)) {
-        longest = new Pair<CallInstance, SemanticWarranty>(call, cur);
-      }
-    }
-
-    return longest;
-  }
+  /**
+   * Remove any state associated with the given transactionID due to a
+   * transaction abort.
    */
+  public void abort(long transactionID) {
+    depUpdateMap.remove(transactionID);
+  }
+
+  /**
+   * Commit any state associated with the given transactionID at the given
+   * commitTime.
+   */
+  public void commit(long transactionID, long commitTime) {
+    if (depUpdateMap.get(transactionID) != null)
+      for (SemanticWarrantyRequest r : depUpdateMap.get(transactionID))
+        putAt(commitTime, r, get(r.call).warranty);
+    depUpdateMap.remove(transactionID);
+  }
 
   /**
    * GC thread for expired warranties.

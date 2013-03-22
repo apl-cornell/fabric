@@ -2,7 +2,7 @@ package fabric.store.db;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import fabric.common.util.LongKeyCache;
+import fabric.common.util.Cache;
 
 /**
  * A warranty issuer is notified of write events and read-prepares, and uses
@@ -171,9 +171,9 @@ public class WarrantyIssuer {
   private final int maxWarrantyLength;
 
   /**
-   * Maps onums to <code>HistoryEntry</code>s.
+   * Maps keys to <code>HistoryEntry</code>s.
    */
-  private final LongKeyCache<HistoryEntry> history;
+  private final Cache<Object, HistoryEntry> history;
 
   /**
    * @param minWarrantyLength
@@ -192,16 +192,16 @@ public class WarrantyIssuer {
       int writeWindowPadding) {
     this.minWarrantyLength = minWarrantyLength;
     this.maxWarrantyLength = maxWarrantyLength;
-    this.history = new LongKeyCache<HistoryEntry>();
+    this.history = new Cache<Object, HistoryEntry>();
 
     // Sanity check.
     if (minWarrantyLength > maxWarrantyLength)
       throw new InternalError("minWarrantyLength > maxWarrantyLength");
   }
 
-  private HistoryEntry getEntry(long onum) {
+  private HistoryEntry getEntry(Object key) {
     HistoryEntry entry = new HistoryEntry();
-    HistoryEntry existingEntry = history.putIfAbsent(onum, entry);
+    HistoryEntry existingEntry = history.putIfAbsent(key, entry);
     return existingEntry == null ? entry : existingEntry;
   }
 
@@ -209,16 +209,16 @@ public class WarrantyIssuer {
    * Notifies that a read has been prepared, signalling that perhaps the
    * warranties issued should be longer.
    */
-  public void notifyReadPrepare(long onum) {
-    getEntry(onum).notifyReadPrepare();
+  public void notifyReadPrepare(Object key) {
+    getEntry(key).notifyReadPrepare();
   }
 
   /**
    * Notifies that a write has been committed to the database, allowing new
    * writes to be prepared.
    */
-  public void notifyWriteCommit(long onum) {
-    getEntry(onum).notifyWriteCommit();
+  public void notifyWriteCommit(Object key) {
+    getEntry(key).notifyWriteCommit();
   }
 
   /**
@@ -226,14 +226,14 @@ public class WarrantyIssuer {
    * being prepared until the corresponding transaction either commits or
    * aborts.
    */
-  public void notifyWritePrepare(long onum) {
-    getEntry(onum).notifyWritePrepare();
+  public void notifyWritePrepare(Object key) {
+    getEntry(key).notifyWritePrepare();
   }
 
   /**
    * Suggests a warranty-expiry time.
    */
-  public Long suggestWarranty(long onum) {
-    return getEntry(onum).suggestWarranty();
+  public Long suggestWarranty(Object key) {
+    return getEntry(key).suggestWarranty();
   }
 }
