@@ -63,9 +63,13 @@ public class VersionWarrantyTable {
 
     table.put(onum, warranty);
 
-    LongSet set = new LongHashSet();
-    LongSet existingSet = reverseTable.putIfAbsent(warranty, set);
-    if (existingSet != null) set = existingSet;
+    LongSet set = reverseTable.get(warranty);
+    if (set == null) {
+      set = new LongHashSet();
+      LongSet existingSet = reverseTable.putIfAbsent(warranty, set);
+      if (existingSet != null) set = existingSet;
+    }
+
     synchronized (set) {
       set.add(onum);
 
@@ -109,9 +113,13 @@ public class VersionWarrantyTable {
       STORE_DB_LOGGER.finest("Extended warranty for onum " + onum + "; expiry="
           + expiry + " (in " + length + " ms)");
 
-      LongSet set = new LongHashSet();
-      LongSet existingSet = reverseTable.putIfAbsent(newWarranty, set);
-      if (existingSet != null) set = existingSet;
+      LongSet set = reverseTable.get(newWarranty);
+      if (set == null) {
+        set = new LongHashSet();
+        LongSet existingSet = reverseTable.putIfAbsent(newWarranty, set);
+        if (existingSet != null) set = existingSet;
+      }
+
       synchronized (set) {
         set.add(onum);
 
