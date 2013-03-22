@@ -94,7 +94,7 @@ public class WarrantyIssuer {
         return;
 
       synchronized (this) {
-        Logging.HOTOS_LOGGER.info("read prepare @" + onum
+        Logging.HOTOS_LOGGER.finer("read prepare @" + onum
             + " nextSuggestionLength=" + nextSuggestionLength
             + " maxWarrantyLength=" + maxWarrantyLength);
         // Ignore this if we're already issuing the maximum-length warranty.
@@ -103,7 +103,7 @@ public class WarrantyIssuer {
         // Ignore this if the last-suggested warranty hasn't expired.
         long now = System.currentTimeMillis();
         if (lastSuggestionExpiry > now) {
-          Logging.HOTOS_LOGGER.info("last suggestion not yet expired for @"
+          Logging.HOTOS_LOGGER.finer("last suggestion not yet expired for @"
               + onum);
           return;
         }
@@ -113,10 +113,10 @@ public class WarrantyIssuer {
         if (lastSuggestionExpiry + lastSuggestionLength > now) {
           nextSuggestionLength = 2 * lastSuggestionLength;
           nextSuggestionDoubled.set(true);
-          Logging.HOTOS_LOGGER.info("doubling next suggested length for @"
+          Logging.HOTOS_LOGGER.finer("doubling next suggested length for @"
               + onum);
         } else {
-          Logging.HOTOS_LOGGER.info("keeping next suggested length for @"
+          Logging.HOTOS_LOGGER.finer("keeping next suggested length for @"
               + onum);
         }
       }
@@ -137,7 +137,7 @@ public class WarrantyIssuer {
       synchronized (writeHistoryMutex) {
         updateWriteHistory();
         writeHistory |= 0x0001;
-        Logging.HOTOS_LOGGER.info("writing @" + onum);
+        Logging.HOTOS_LOGGER.finer("writing @" + onum);
       }
     }
 
@@ -156,10 +156,10 @@ public class WarrantyIssuer {
       // Use the writeHistory's Hamming weight to determine the maximum length
       // of the suggested warranty.
       int weight = Integer.bitCount(writeHistory & 0xffff);
-      Logging.HOTOS_LOGGER.info("@" + onum + " writeHistory=" + writeHistory
+      Logging.HOTOS_LOGGER.finer("@" + onum + " writeHistory=" + writeHistory
           + " weight=" + weight);
       int maxSuggestionLength = maxWarrantyLength >>> weight;
-      Logging.HOTOS_LOGGER.info("@" + onum + " maxSuggestionLength="
+      Logging.HOTOS_LOGGER.finer("@" + onum + " maxSuggestionLength="
           + maxSuggestionLength);
       if (maxSuggestionLength < minWarrantyLength) {
         // Writes occurring too frequently.
@@ -173,7 +173,7 @@ public class WarrantyIssuer {
       lastSuggestionLength =
           (nextSuggestionLength < maxSuggestionLength) ? nextSuggestionLength
               : maxSuggestionLength;
-      Logging.HOTOS_LOGGER.info("@" + onum + " suggesting "
+      Logging.HOTOS_LOGGER.finer("@" + onum + " suggesting "
           + lastSuggestionLength);
       lastSuggestionExpiry = expiry + lastSuggestionLength;
       nextSuggestionDoubled.set(false);
