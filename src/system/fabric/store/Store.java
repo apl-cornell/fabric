@@ -21,6 +21,7 @@ import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.SemanticWarranty;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.InternalError;
@@ -234,9 +235,10 @@ class Store extends MessageToStoreHandler {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Prepare Message, worker={0}, tid={1}", nameOf(p), msg.tid);
 
-    prepareTransactionReads(p, msg.tid, msg.reads, msg.commitTime);
+    LongKeyMap<VersionWarranty> newWarranties =
+        prepareTransactionReads(p, msg.tid, msg.reads, msg.commitTime);
     prepareTransactionCalls(p, msg.tid, msg.calls, msg.commitTime);
-    return new PrepareTransactionReadsMessage.Response();
+    return new PrepareTransactionReadsMessage.Response(newWarranties);
   }
 
   /**
@@ -358,10 +360,10 @@ class Store extends MessageToStoreHandler {
     return tm.prepareWrites(p, req);
   }
 
-  private void prepareTransactionReads(Principal p, long tid,
-      LongKeyMap<Integer> reads, long commitTime)
+  private LongKeyMap<VersionWarranty> prepareTransactionReads(Principal p,
+      long tid, LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
-    tm.prepareReads(p, tid, reads, commitTime);
+    return tm.prepareReads(p, tid, reads, commitTime);
   }
 
   private void prepareTransactionCalls(Principal p, long tid,

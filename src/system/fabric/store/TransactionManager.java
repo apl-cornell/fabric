@@ -118,7 +118,6 @@ public class TransactionManager {
    */
   public long prepareWrites(Principal worker, PrepareWritesRequest req)
       throws TransactionPrepareFailedException {
-    // XXX - marker
     final long tid = req.tid;
     VersionWarranty longestWarranty = null;
 
@@ -259,10 +258,9 @@ public class TransactionManager {
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public void prepareReads(Principal worker, long tid,
+  public LongKeyMap<VersionWarranty> prepareReads(Principal worker, long tid,
       LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
-    // XXX - marker
     try {
       // First, check read permissions. We do this before we attempt to do the
       // actual prepare because we want to run the permissions check in a
@@ -278,6 +276,10 @@ public class TransactionManager {
         }
       }
 
+      // This will store the new warranties we get.
+      LongKeyMap<VersionWarranty> newWarranties =
+          new LongKeyHashMap<VersionWarranty>();
+
       // This will store the set of onums of objects that were out of date.
       LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
           new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
@@ -285,16 +287,16 @@ public class TransactionManager {
       // Check reads
       for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
         long onum = entry.getKey();
-        database.notifyReadPrepare(onum);
-
         int version = entry.getValue().intValue();
 
         // Attempt to extend the object's warranty.
         try {
-          ExtendWarrantyStatus status =
-              database.extendWarranty(worker, onum, version, commitTime);
-          switch (status) {
+          Pair<ExtendWarrantyStatus, VersionWarranty> status =
+              database.extendWarrantyForReadPrepare(worker, onum, version,
+                  commitTime);
+          switch (status.first) {
           case OK:
+            newWarranties.put(onum, status.second);
             break;
 
           case BAD_VERSION:
@@ -319,6 +321,7 @@ public class TransactionManager {
       }
 
       STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
+      return newWarranties;
     } catch (TransactionPrepareFailedException e) {
       // Roll back the transaction.
       try {
@@ -556,13 +559,14 @@ public class TransactionManager {
   }
 
   /**
-   * Refreshes the warranties on a group of objects.
+   * Refreshes the warranties on a group of objects. This is done by creating
+   * new warranties for any objects whose warranties has expired.
+   * 
    * @return
    *         the warranty in the group that will expire soonest.
    */
   public VersionWarranty refreshWarranties(
       Collection<Pair<SerializedObject, VersionWarranty>> objects) {
-    // XXX - marker
     VersionWarranty result = null;
     for (Pair<SerializedObject, VersionWarranty> entry : objects) {
       VersionWarranty warranty =

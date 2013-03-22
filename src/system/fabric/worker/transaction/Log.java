@@ -424,21 +424,37 @@ public final class Log {
   Map<Store, LongKeyMap<Integer>> storesRead(long commitTime) {
     Map<Store, LongKeyMap<Integer>> result =
         new HashMap<Store, LongKeyMap<Integer>>();
+    int numReadsToPrepare = 0;
+    int numTotalReads = 0;
+
     for (Entry<Store, LongKeyMap<ReadMapEntry>> entry : reads.nonNullEntrySet()) {
       Store store = entry.getKey();
       LongKeyMap<Integer> submap = new LongKeyHashMap<Integer>();
-      for (LongKeyMap.Entry<ReadMapEntry> subEntry : filterModifiedReads(store,
-          entry.getValue()).entrySet()) {
+
+      boolean isRemoteStore = !store.isLocalStore();
+
+      LongKeyMap<ReadMapEntry> readOnly =
+          filterModifiedReads(store, entry.getValue());
+      if (isRemoteStore) numTotalReads += readOnly.size();
+
+      for (LongKeyMap.Entry<ReadMapEntry> subEntry : readOnly.entrySet()) {
         long onum = subEntry.getKey();
         ReadMapEntry rme = subEntry.getValue();
+
         if (rme.warranty.expiresAfter(commitState.commitTime, true)
             && rme.warranty.expiresBefore(commitTime, true)) {
           submap.put(onum, rme.versionNumber);
         }
       }
 
-      if (!submap.isEmpty()) result.put(store, submap);
+      if (!submap.isEmpty()) {
+        if (isRemoteStore) numReadsToPrepare += submap.size();
+        result.put(store, submap);
+      }
     }
+
+    Logging.HOTOS_LOGGER.info("Read-preparing " + numReadsToPrepare
+        + " out of " + numTotalReads + " objects");
 
     return result;
   }
@@ -475,15 +491,16 @@ public final class Log {
     return new HashSet<Store>(requestLocations.values());
   }
 
-  void updateVersionWarranties(Store store, LongSet onums, long commitTime) {
+  void updateVersionWarranties(Store store,
+      LongKeyMap<VersionWarranty> newWarranties) {
     if (store.isLocalStore()) return;
 
-    VersionWarranty warranty = new VersionWarranty(commitTime);
+    for (LongKeyMap.Entry<VersionWarranty> entry : newWarranties.entrySet()) {
+      long onum = entry.getKey();
+      VersionWarranty warranty = entry.getValue();
 
-    for (LongIterator it = onums.iterator(); it.hasNext();) {
-      long onum = it.next();
-      ReadMapEntry entry = reads.get(store, onum);
-      entry.warranty = warranty;
+      ReadMapEntry rme = reads.get(store, onum);
+      rme.warranty = warranty;
     }
   }
 
@@ -976,9 +993,12 @@ public final class Log {
    * will be released after the given commit time.
    */
   void commitTopLevel(long commitTime) {
-    Logging.WORKER_TRANSACTION_LOGGER.finer("Scheduled commit for tid " + tid
-        + " to run at " + new Date(commitTime) + " (in "
-        + (commitTime - System.currentTimeMillis()) + " ms)");
+    long commitDelay = commitTime - System.currentTimeMillis();
+    Logging.WORKER_TRANSACTION_LOGGER
+        .finer("Scheduled commit for tid " + tid + " to run at "
+            + new Date(commitTime) + " (in " + commitDelay + " ms)");
+    Logging.HOTOS_LOGGER.info("Commit delayed "
+        + (commitDelay < 0 ? 0 : commitDelay) + " ms");
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {

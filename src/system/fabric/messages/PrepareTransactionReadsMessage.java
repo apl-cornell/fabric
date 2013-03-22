@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import fabric.common.VersionWarranty;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.security.Principal;
@@ -59,6 +60,15 @@ public class PrepareTransactionReadsMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
+    public final LongKeyMap<VersionWarranty> newWarranties;
+
+    public Response() {
+      this.newWarranties = null;
+    }
+
+    public Response(LongKeyMap<VersionWarranty> newWarranties) {
+      this.newWarranties = newWarranties;
+    }
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -130,10 +140,32 @@ public class PrepareTransactionReadsMessage extends
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
+    if (r.newWarranties == null) {
+      out.writeBoolean(false);
+      return;
+    }
+
+    out.writeBoolean(true);
+    out.writeInt(r.newWarranties.size());
+    for (LongKeyMap.Entry<VersionWarranty> entry : r.newWarranties.entrySet()) {
+      out.writeLong(entry.getKey());
+      out.writeLong(entry.getValue().expiry());
+    }
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    return new Response();
+    if (!in.readBoolean()) {
+      return new Response();
+    }
+
+    int size = in.readInt();
+    LongKeyMap<VersionWarranty> newWarranties =
+        new LongKeyHashMap<VersionWarranty>(size);
+    for (int i = 0; i < size; i++) {
+      newWarranties.put(in.readLong(), new VersionWarranty(in.readLong()));
+    }
+
+    return new Response(newWarranties);
   }
 }

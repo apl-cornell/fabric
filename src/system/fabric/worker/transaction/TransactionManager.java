@@ -714,20 +714,18 @@ public final class TransactionManager {
                   + "will expire", current.tid.topTid, s, reads.size());
             }
 
-            // TODO: This needs to change so that we only send off the
-            // appropriate requests and calls for each individual s.  Right
-            // now, the ss we contact aren't necessarily correct.
-            s.prepareTransactionReads(current.tid.topTid, reads, calls,
-                commitTime);
+            LongKeyMap<VersionWarranty> newWarranties =
+                s.prepareTransactionReads(current.tid.topTid, reads, calls,
+                    commitTime);
+
+            // Prepare was successful. Update the objects' warranties.
+            current.updateVersionWarranties(s, newWarranties);
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) s, e);
           } catch (UnreachableNodeException e) {
             failures.put((RemoteNode) s,
                 new TransactionPrepareFailedException("Unreachable s"));
           }
-
-          // Prepare was successful. Update the objects' warranties.
-          current.updateVersionWarranties(s, reads.keySet(), commitTime);
         }
       };
 

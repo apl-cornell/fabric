@@ -91,8 +91,9 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
   }
 
   /**
-   * Refreshes the warranties for the objects in the group. Should only be
-   * called by the store.
+   * Refreshes the warranties for the objects in the group. This is done by
+   * creating new warranties for any objects whose warranties have expired.
+   * Should only be called by the store.
    */
   public synchronized void refreshWarranties(TransactionManager tm) {
     if (warranty != null && !warranty.expired(true)) return;
