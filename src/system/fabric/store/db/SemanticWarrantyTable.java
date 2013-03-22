@@ -265,7 +265,10 @@ public class SemanticWarrantyTable {
 
     while (!dependencies.isEmpty()) {
       Pair<CallInstance, SemanticWarranty> p = dependencies.poll();
+      if (p.second.expiresBefore(System.currentTimeMillis(), false)) break;
+
       final CallInstance call = p.first;
+      SEMANTIC_WARRANTY_LOGGER.finest("CHECKING CALL " + call);
       final fabric.lang.Object oldResult = get(call).value;
       //TODO: Time out call if it lasts longer than it's warranty.
       try {
@@ -284,6 +287,8 @@ public class SemanticWarrantyTable {
               throw new CallChangedException();
             // TODO: What if there's a write in the new evaluation and so
             // there's no request?
+            //
+            // I guess we cry.
             throw new CallUnchangedException(tm.getCurrentLog().getRequest(call));
           }
         }, false);
