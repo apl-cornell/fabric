@@ -334,7 +334,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
       int end = _index + csize;
       if (size > 0 && _index != size)
         Arrays.arraycopy(L, data, _index, data, end, size - _index);
-      size += csize;
+      size = size + csize;
       for ( ; _index < end; _index++)
         data[_index] = itr.next();
       return csize > 0;
@@ -359,7 +359,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
       {
         modCount++;
         Arrays.arraycopy(L, data, toIndex, data, fromIndex, size - toIndex);
-        size -= change;
+        size = size - change;
       }
     else if (change < 0)
       throw new IndexOutOfBoundsException();
@@ -419,7 +419,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
     for (j = i++; i < size; i++)
       if (! c.contains(data[i]))
         data[j++] = data[i];
-    size -= i - j;
+    size = size - (i - j);
     return true;
   }
 
@@ -446,7 +446,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
     for (j = i++; i < size; i++)
       if (c.contains(data[i]))
         data[j++] = data[i];
-    size -= i - j;
+    size = size - (i - j);
     return true;
   }
 
