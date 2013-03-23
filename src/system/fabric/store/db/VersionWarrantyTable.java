@@ -173,7 +173,7 @@ public class VersionWarrantyTable {
               for (LongIterator onumIt = onums.iterator(); onumIt.hasNext();) {
                 long onum = onumIt.next();
                 Warranty warranty = table.get(onum);
-                if (!warranty.expired(false)) continue;
+                if (warranty == null || !warranty.expired(false)) continue;
                 table.remove(onum, warranty);
               }
 
