@@ -838,6 +838,9 @@ public final class Log {
         requestLocations.put(semanticWarrantyCall, targetStore);
         requestInstances.put(semanticWarrantyCall, semanticWarrantyCall);
       } else if (parent != null) {
+        SEMANTIC_WARRANTY_LOGGER.finest(
+            "Semantic warranty request for " + semanticWarrantyCall
+            + " dropped.");
         // Otherwise, remove the dependency mappings in the parent.
         LongIterator it = readSet.iterator();
         while (it.hasNext()) {
