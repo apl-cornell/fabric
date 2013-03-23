@@ -808,14 +808,19 @@ public final class Log {
       Store targetStore = semanticWarrantyCall.target.$getStore();
       LongSet readsForTargetStore = getReadsForStore(targetStore).keySet();
       Collection<_Impl> createsForTargetStore = getCreatesForStore(targetStore);
+      Collection<_Impl> createsForTargetAndLocalStore =
+        getCreatesForStore(Worker.getWorker().getLocalStore());
+      createsForTargetAndLocalStore.addAll(createsForTargetStore);
       Set<CallInstance> callsForTargetStore = getCallsForStore(targetStore);
 
       if (readsForTargetStore.containsAll(readSet) &&
           callsForTargetStore.containsAll(callSet) &&
-          createsForTargetStore.containsAll(creates)) {
-        // Create the request object only if we keep all of the reads and call
-        // reuses on a single store (the same as where we're storing the target
-        // of the call).
+          createsForTargetAndLocalStore.containsAll(creates) &&
+          semanticWarrantyValue.$getStore().equals(targetStore)) {
+        // Create the request object only if we keep all of the reads, call
+        // reuses, and results on a single store (the same as where we're
+        // storing the target of the call).  Furthermore, only make the request
+        // if items created were either local or on that same store.
         //
         // Include creates as part of the group of things I have to defend.
         if (readsForTargetStore.isEmpty()) {

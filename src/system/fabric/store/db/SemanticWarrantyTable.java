@@ -1,5 +1,7 @@
 package fabric.store.db;
 
+import java.util.concurrent.Future;
+
 import static fabric.common.Logging.STORE_DB_LOGGER;
 import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 
@@ -11,8 +13,13 @@ import java.util.Map.Entry;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
@@ -113,6 +120,7 @@ public class SemanticWarrantyTable {
       SemanticWarranty warranty) {
     putAt(commitTime, req.call, req.reads, req.calls, req.value, warranty);
   }
+
   /**
    * Schedule to perform a put with all the arguments at the given time.
    */
@@ -265,39 +273,57 @@ public class SemanticWarrantyTable {
 
     while (!dependencies.isEmpty()) {
       Pair<CallInstance, SemanticWarranty> p = dependencies.poll();
-      if (p.second.expiresBefore(System.currentTimeMillis(), false)) break;
+      long currentTime = System.currentTimeMillis();
+      if (p.second.expiresBefore(currentTime, false)) break;
 
       final CallInstance call = p.first;
       SEMANTIC_WARRANTY_LOGGER.finest("CHECKING CALL " + call);
       final fabric.lang.Object oldResult = get(call).value;
       //TODO: Time out call if it lasts longer than it's warranty.
-      try {
-        Worker.runInTopLevelTransaction(new Code<Void>() {
-          @Override
-          public Void run() {
-            SEMANTIC_WARRANTY_LOGGER.finest("CHECKING CALL " + call);
-            Store localStore = Worker.getWorker().getLocalStore();
-            TransactionManager tm = TransactionManager.getInstance();
-            for (SerializedObject obj : writes) {
-              (new _Proxy(localStore,
-                          obj.getOnum())).fetch().$copyAppStateFrom(obj.deserialize(localStore,
-                          new VersionWarranty(0)));
+      Future<SemanticWarrantyRequest> checkHandler =
+        Executors.newSingleThreadExecutor().submit((new
+          Callable<SemanticWarrantyRequest>() {
+            @Override
+            public SemanticWarrantyRequest call() {
+              try {
+                Worker.runInTopLevelTransaction(new Code<Void>() {
+                  @Override
+                  public Void run() {
+                    SEMANTIC_WARRANTY_LOGGER.finest("CHECKING CALL " + call);
+                    Store localStore = Worker.getWorker().getLocalStore();
+                    TransactionManager tm = TransactionManager.getInstance();
+                    for (SerializedObject obj : writes) {
+                      (new _Proxy(localStore,
+                                  obj.getOnum())).fetch().$copyAppStateFrom(obj.deserialize(localStore,
+                                  new VersionWarranty(0)));
+                    }
+                    if (!oldResult.equals(call.runCall()))
+                      throw new CallChangedException();
+                    // TODO: What if there's a write in the new evaluation and so
+                    // there's no request?
+                    //
+                    // I guess we cry.
+                    throw new CallUnchangedException(tm.getCurrentLog().getRequest(call));
+                  }
+                }, false);
+              } catch (CallChangedException e) {
+              } catch (CallUnchangedException e) {
+                return e.updatedReq;
+              }
+              return null;
             }
-            if (!oldResult.equals(call.runCall()))
-              throw new CallChangedException();
-            // TODO: What if there's a write in the new evaluation and so
-            // there's no request?
-            //
-            // I guess we cry.
-            throw new CallUnchangedException(tm.getCurrentLog().getRequest(call));
-          }
-        }, false);
-      } catch (CallChangedException e) {
-        issuer.notifyWritePrepare(call);
-        return p.second;
-      } catch (CallUnchangedException e) {
+          }));
+      try {
+        SemanticWarrantyRequest updatedReq = checkHandler.get(p.second.expiry()
+            - currentTime, TimeUnit.MILLISECONDS);
         depUpdateMap.putIfAbsent(transactionID, new HashSet<SemanticWarrantyRequest>());
-        depUpdateMap.get(transactionID).add(e.updatedReq);
+        depUpdateMap.get(transactionID).add(updatedReq);
+      } catch (ExecutionException e) {
+        return p.second;
+      } catch (InterruptedException e) {
+        return p.second;
+      } catch (TimeoutException e) {
+        return p.second;
       }
     }
     return null;
