@@ -336,7 +336,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
 
   @Override
   public void insertResult(CallInstance call, WarrantiedCallResult result) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Putting call id :" + call.toString() + " -> " + result.value);
+    SEMANTIC_WARRANTY_LOGGER.finest("Putting call id :" + call.toString());
     callCache.put(call, result);
   }
 
