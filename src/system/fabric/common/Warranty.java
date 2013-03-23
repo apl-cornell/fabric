@@ -59,7 +59,7 @@ public abstract class Warranty implements Comparable<Warranty> {
    *         warranty's expiry.
    */
   public boolean expiresBefore(long time, boolean defaultResult) {
-    return !expiresAfter(time, !defaultResult);
+    return isBefore(expiry, time, defaultResult);
   }
 
   /**
@@ -71,9 +71,7 @@ public abstract class Warranty implements Comparable<Warranty> {
    *         warranty's expiry.
    */
   public boolean expiresAfter(long time, boolean defaultResult) {
-    if (expiry < time - CLOCK_SKEW) return false;
-    if (time + CLOCK_SKEW < expiry) return true;
-    return defaultResult;
+    return isAfter(expiry, time, defaultResult);
   }
 
   /**
@@ -92,5 +90,29 @@ public abstract class Warranty implements Comparable<Warranty> {
     if (expiry > o.expiry) return 1;
     if (expiry < o.expiry) return -1;
     return 0;
+  }
+
+  /**
+   * Determines whether time1 is before time2, taking clock skew into account.
+   * 
+   * @param defaultResult
+   *         the value to return if the given times are within CLOCK_SKEW of
+   *         each other.
+   */
+  public static boolean isBefore(long time1, long time2, boolean defaultResult) {
+    return isAfter(time2, time1, defaultResult);
+  }
+
+  /**
+   * Determines whether time1 is after time2, taking clock skew into account.
+   * 
+   * @param defaultResult
+   *         the value to return if the given times are within CLOCK_SKEW of
+   *         each other.
+   */
+  public static boolean isAfter(long time1, long time2, boolean defaultResult) {
+    if (time1 < time2 - CLOCK_SKEW) return false;
+    if (time2 + CLOCK_SKEW < time1) return true;
+    return defaultResult;
   }
 }

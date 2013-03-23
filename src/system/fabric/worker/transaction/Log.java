@@ -765,92 +765,96 @@ public final class Log {
    * current log (if possible).  Should only be called when committing the log.
    */
   public void createCurrentRequest() {
-    Set<_Impl> writeSet = new HashSet<_Impl>();
+    if (semanticWarrantyCall == null) return;
+
+    Store targetStore = semanticWarrantyCall.target.$getStore();
+    Store localStore = Worker.getWorker().getLocalStore();
+    LongSet readsForTargetStore = new LongHashSet(getReadsForStore(targetStore).keySet());
+    Collection<_Impl> createsForTargetStore = getCreatesForStore(targetStore);
+    Set<CallInstance> callsForTargetStore = getCallsForStore(targetStore);
+
+    // Check writes
+    int writeCount = 0;
     for (Store store : storesWritten())
-      writeSet.addAll(getWritesForStore(store));
-    if (semanticWarrantyCall != null && writeSet.size() > 0) {
+      for (_Impl _ : getWritesForStore(store))
+        writeCount++;
+
+    if (writeCount > 0) {
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
           "Semantic warranty request for {0} "
           + "aborted due to writes during the call!",
           semanticWarrantyCall.toString());
+      return;
     }
-    if (semanticWarrantyCall != null && writeSet.size() == 0) {
-      // Add call to readDependencies and build up reads set.
-      LongSet readSet = new LongHashSet();
-      for (LongKeyMap<ReadMapEntry> submap : reads) {
-        for (ReadMapEntry entry : submap.values()) {
-          readSet.add(entry.obj.onum);
 
-          if (parent != null) {
-            Set<CallInstance> dependencies = parent.readDependencies.get(entry.obj.onum);
-            if (dependencies == null) {
-              dependencies = new HashSet<CallInstance>();
-              parent.readDependencies.put(entry.obj.onum, dependencies);
-            }
-            dependencies.add(semanticWarrantyCall);
-          }
-        }
+    // Check reads
+    Set<Store> storesRead = new HashSet<Store>();
+    for (LongKeyMap<ReadMapEntry> submap : reads)
+      for (ReadMapEntry entry : submap.values())
+        if (!entry.obj.store.name().equals(localStore.name()))
+          storesRead.add(entry.obj.store);
+
+    if (storesRead.size() > 0 && !storesRead.contains(targetStore)) {
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Semantic warranty request for {0} "
+          + "aborted due to more than one remote store read during the call!",
+          semanticWarrantyCall.toString());
+      return;
+    }
+
+    // Check calls
+    Set<Store> storesCalled = new HashSet<Store>();
+    for (CallInstance call : semanticWarrantiesUsed.keySet())
+      if (!call.target.$getStore().name().equals(localStore.name()))
+        storesCalled.add(call.target.$getStore());
+
+    if (storesCalled.size() > 0 && !storesCalled.contains(targetStore)) {
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Semantic warranty request for {0} "
+          + "aborted due to more than one remote store called during the call!",
+          semanticWarrantyCall.toString());
+      return;
+    }
+
+    // Create the request object only if we keep all of the reads, call
+    // reuses, and results on a single store (the same as where we're
+    // storing the target of the call).  Furthermore, only make the request
+    // if items created were either local or on that same store.
+    //
+    // Include creates as part of the group of things I have to defend.
+    if (readsForTargetStore.isEmpty()) {
+      // Because apparently the set might be an empty set which can't have
+      // items added...
+      readsForTargetStore = new LongHashSet();
+    }
+    for (_Impl createdObj : createsForTargetStore) {
+      readsForTargetStore.add(createdObj.$getOnum());
+    }
+    SemanticWarrantyRequest req = new
+      SemanticWarrantyRequest(semanticWarrantyCall, semanticWarrantyValue,
+          readsForTargetStore, callsForTargetStore);
+    requests.put(semanticWarrantyCall, req);
+    requestLocations.put(semanticWarrantyCall, targetStore);
+    requestInstances.put(semanticWarrantyCall, semanticWarrantyCall);
+
+    LongIterator it = readsForTargetStore.iterator();
+    while (it.hasNext()) {
+      long onum = it.next();
+      Set<CallInstance> deps = readDependencies.get(onum);
+      if (deps == null) {
+        deps = new HashSet<CallInstance>();
+        readDependencies.put(onum, deps);
       }
+      deps.add(semanticWarrantyCall);
+    }
 
-      Set<CallInstance> callSet = new HashSet<CallInstance>();
-      for (CallInstance c : semanticWarrantiesUsed.keySet()) {
-        callSet.add(c);
-        if (parent != null) {
-          Set<CallInstance> dependencies = parent.callDependencies.get(c);
-          if (dependencies == null) {
-            dependencies = new HashSet<CallInstance>();
-            parent.callDependencies.put(c, dependencies);
-          }
-          dependencies.add(semanticWarrantyCall);
-        }
+    for (CallInstance call : callsForTargetStore) {
+      Set<CallInstance> deps = callDependencies.get(call);
+      if (deps == null) {
+        deps = new HashSet<CallInstance>();
+        callDependencies.put(call, deps);
       }
-
-      Store targetStore = semanticWarrantyCall.target.$getStore();
-      LongSet readsForTargetStore = getReadsForStore(targetStore).keySet();
-      Collection<_Impl> createsForTargetStore = getCreatesForStore(targetStore);
-      Collection<_Impl> createsForTargetAndLocalStore =
-        getCreatesForStore(Worker.getWorker().getLocalStore());
-      createsForTargetAndLocalStore.addAll(createsForTargetStore);
-      Set<CallInstance> callsForTargetStore = getCallsForStore(targetStore);
-
-      if (readsForTargetStore.containsAll(readSet) &&
-          callsForTargetStore.containsAll(callSet) &&
-          createsForTargetAndLocalStore.containsAll(creates) &&
-          semanticWarrantyValue.$getStore().equals(targetStore)) {
-        // Create the request object only if we keep all of the reads, call
-        // reuses, and results on a single store (the same as where we're
-        // storing the target of the call).  Furthermore, only make the request
-        // if items created were either local or on that same store.
-        //
-        // Include creates as part of the group of things I have to defend.
-        if (readsForTargetStore.isEmpty()) {
-          // Because apparently the set might be an empty set which can't have
-          // items added...
-          readsForTargetStore = new LongHashSet();
-        }
-        for (_Impl createdObj : createsForTargetStore) {
-          readsForTargetStore.add(createdObj.$getOnum());
-        }
-        SemanticWarrantyRequest req = new
-          SemanticWarrantyRequest(semanticWarrantyCall, semanticWarrantyValue,
-              readSet, callSet);
-        requests.put(semanticWarrantyCall, req);
-        requestLocations.put(semanticWarrantyCall, targetStore);
-        requestInstances.put(semanticWarrantyCall, semanticWarrantyCall);
-      } else if (parent != null) {
-        SEMANTIC_WARRANTY_LOGGER.finest(
-            "Semantic warranty request for " + semanticWarrantyCall
-            + " dropped.");
-        // Otherwise, remove the dependency mappings in the parent.
-        LongIterator it = readSet.iterator();
-        while (it.hasNext()) {
-          parent.readDependencies.get(it.next()).remove(semanticWarrantyCall);
-        }
-
-        for (CallInstance call : callSet) {
-          parent.callDependencies.get(call).remove(semanticWarrantyCall);
-        }
-      }
+      deps.add(semanticWarrantyCall);
     }
   }
 
