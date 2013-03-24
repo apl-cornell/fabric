@@ -321,7 +321,8 @@ public class TransactionManager {
           try {
             label = storeCopy.get$$updateLabel();
           } catch (RuntimeFetchException e) {
-            return new AccessException("read", worker, storeCopy);
+            return new AccessException("Object at onum " + onum
+                + " doesn't exist.");
           }
 
           // Check read permissions.
@@ -341,7 +342,8 @@ public class TransactionManager {
           try {
             label = storeCopy.get$$updateLabel();
           } catch (RuntimeFetchException e) {
-            return new AccessException("read", worker, storeCopy);
+            return new AccessException("Object at onum " + onum
+                + " doesn't exist.");
           }
 
           // Check write permissions.
