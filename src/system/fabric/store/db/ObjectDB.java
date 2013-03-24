@@ -253,7 +253,7 @@ public abstract class ObjectDB {
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
     this.versionWarrantyTable = new VersionWarrantyTable();
-    this.warrantyIssuer = new WarrantyIssuer(250, MAX_WARRANTY_LENGTH, 250);
+    this.warrantyIssuer = new WarrantyIssuer(250, MAX_WARRANTY_LENGTH);
   }
 
   /**

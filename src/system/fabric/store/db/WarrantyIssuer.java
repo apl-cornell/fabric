@@ -206,13 +206,8 @@ public class WarrantyIssuer {
    * @param maxWarrantyLength
    *         the maximum length of time (in milliseconds) for which each issued
    *         warranty should be valid.
-   *         
-   * @param writeWindowPadding
-   *         the amount of time around a predicted write for which no warranties
-   *         will be issued.
    */
-  protected WarrantyIssuer(int minWarrantyLength, int maxWarrantyLength,
-      int writeWindowPadding) {
+  protected WarrantyIssuer(int minWarrantyLength, int maxWarrantyLength) {
     this.minWarrantyLength = minWarrantyLength;
     this.maxWarrantyLength = maxWarrantyLength;
     this.history = new Cache<Object, HistoryEntry>();
