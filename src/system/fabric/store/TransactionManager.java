@@ -346,6 +346,11 @@ public class TransactionManager {
   public void prepareCalls(Principal worker, long tid, Set<CallInstance> calls,
       long commitTime) throws TransactionPrepareFailedException {
     for (CallInstance call : calls) {
+      if (semanticWarranties.get(call) == null) {
+        throw new TransactionPrepareFailedException(
+            "Could not extend warranty for call" + call + 
+            " because it doesn't exist in the table!");
+      }
       semanticWarranties.notifyReadPrepare(call);
       if (!semanticWarranties.extend(call,
             semanticWarranties.get(call).warranty,
@@ -406,9 +411,8 @@ public class TransactionManager {
       SemanticWarranty proposed = semanticWarranties.proposeWarranty(r.call);
       // Add it to the response set
       warranties.put(r.call, proposed);
-      // Schedule to add it at commitTime
-      semanticWarranties.putAt(commitTime, r, proposed);
-
+      // Schedule to add it at commitTime, WHAT IF THE TRANSACTION ABORTS? :(
+      semanticWarranties.addPendingWarranty(commitTime, r, proposed, tid);
       
       //Update fringe
       for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {

@@ -36,4 +36,12 @@ public class WarrantiedCallResult {
     out.writeLong(warranty.expiry());
     (new CallResult(value)).write(out);
   }
+
+  @Override
+  public boolean equals(java.lang.Object o) {
+    if (!(o instanceof WarrantiedCallResult)) return false;
+    WarrantiedCallResult other = (WarrantiedCallResult) o;
+    return other.value.equals(value)
+      && (other.warranty.expiry() == warranty.expiry());
+  }
 }

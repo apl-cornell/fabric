@@ -7,6 +7,7 @@ import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -55,7 +56,7 @@ import fabric.worker.transaction.TransactionManager;
  * supporting concurrent accesses.
  */
 public class SemanticWarrantyTable {
-  private static final int MAX_SEMANTIC_WARRANTY = 1000;
+  private static final int MAX_SEMANTIC_WARRANTY = 10000;
 
   /**
    * The default warranty for ids that aren't yet in the table. All warranties
@@ -85,18 +86,20 @@ public class SemanticWarrantyTable {
   private final WarrantyIssuer issuer;
 
   /**
-   * Table mapping from transactionIDs for pending transactions to updates for
-   * semantic warranty dependencies.
+   * Table mapping from transactionIDs for pending transactions to
+   * updates/additons for semantic warranty dependencies.
    */
-  private final ConcurrentLongKeyMap<Set<SemanticWarrantyRequest>> depUpdateMap;
+  private final ConcurrentLongKeyMap<Map<CallInstance,
+          Pair<SemanticWarrantyRequest, SemanticWarranty>>> pendingMap;
 
   public SemanticWarrantyTable(ObjectDB database) {
     defaultWarranty = new SemanticWarranty(0);
     table = new ConcurrentHashMap<CallInstance, WarrantiedCallResult>();
     reverseTable = new ConcurrentHashMap<SemanticWarranty, Set<CallInstance>>();
     dependencyTable = new SemanticWarrantyDependencies();
-    issuer = new WarrantyIssuer(250, MAX_SEMANTIC_WARRANTY, 250);
-    depUpdateMap = new ConcurrentLongKeyHashMap<Set<SemanticWarrantyRequest>>();
+    issuer = new WarrantyIssuer(10000, MAX_SEMANTIC_WARRANTY, 10000);
+    pendingMap = new ConcurrentLongKeyHashMap<Map<CallInstance,
+               Pair<SemanticWarrantyRequest, SemanticWarranty>>>();
 
     collector = new Collector();
     collector.start();
@@ -111,6 +114,17 @@ public class SemanticWarrantyTable {
    */
   public SemanticWarranty proposeWarranty(CallInstance id) {
     return new SemanticWarranty(issuer.suggestWarranty(id));
+  }
+
+  /**
+   * Adds a proposal to be inserted at commitTime.
+   */
+  public void addPendingWarranty(long commitTime, SemanticWarrantyRequest req,
+      SemanticWarranty war, long transactionID) {
+    pendingMap.putIfAbsent(transactionID, new HashMap<CallInstance,
+        Pair<SemanticWarrantyRequest, SemanticWarranty>>());
+    pendingMap.get(transactionID).put(req.call, new
+        Pair<SemanticWarrantyRequest, SemanticWarranty>(req, war));
   }
 
   /**
@@ -189,7 +203,8 @@ public class SemanticWarrantyTable {
 
     if (oldWarranty.expiresAfter(newWarranty)) {
       throw new InternalError(
-          "Attempted to extend a warranty with one that expires sooner.");
+          "Attempted to extend a warranty " + oldWarranty.expiry()
+          + " with one that expires sooner " + newWarranty.expiry() + ".");
     }
 
     /*
@@ -279,7 +294,6 @@ public class SemanticWarrantyTable {
       final CallInstance call = p.first;
       SEMANTIC_WARRANTY_LOGGER.finest("CHECKING CALL " + call);
       final fabric.lang.Object oldResult = get(call).value;
-      //TODO: Time out call if it lasts longer than it's warranty.
       Future<SemanticWarrantyRequest> checkHandler =
         Executors.newSingleThreadExecutor().submit((new
           Callable<SemanticWarrantyRequest>() {
@@ -316,8 +330,11 @@ public class SemanticWarrantyTable {
       try {
         SemanticWarrantyRequest updatedReq = checkHandler.get(p.second.expiry()
             - currentTime, TimeUnit.MILLISECONDS);
-        depUpdateMap.putIfAbsent(transactionID, new HashSet<SemanticWarrantyRequest>());
-        depUpdateMap.get(transactionID).add(updatedReq);
+        pendingMap.putIfAbsent(transactionID, new HashMap<CallInstance,
+            Pair<SemanticWarrantyRequest, SemanticWarranty>>());
+        pendingMap.get(transactionID).put(call, new
+            Pair<SemanticWarrantyRequest, SemanticWarranty>(updatedReq,
+              p.second));
       } catch (ExecutionException e) {
         return p.second;
       } catch (InterruptedException e) {
@@ -334,7 +351,10 @@ public class SemanticWarrantyTable {
    * transaction abort.
    */
   public void abort(long transactionID) {
-    depUpdateMap.remove(transactionID);
+    SEMANTIC_WARRANTY_LOGGER.finest(
+        String.format("Aborting semantic warranty updates from %x",
+          transactionID));
+    pendingMap.remove(transactionID);
   }
 
   /**
@@ -342,10 +362,16 @@ public class SemanticWarrantyTable {
    * commitTime.
    */
   public void commit(long transactionID, long commitTime) {
-    if (depUpdateMap.get(transactionID) != null)
-      for (SemanticWarrantyRequest r : depUpdateMap.get(transactionID))
-        putAt(commitTime, r, get(r.call).warranty);
-    depUpdateMap.remove(transactionID);
+    SEMANTIC_WARRANTY_LOGGER.finest(
+        String.format("Committing semantic warranty updates from %x",
+          transactionID));
+    if (pendingMap.get(transactionID) != null) {
+      Map<CallInstance, Pair<SemanticWarrantyRequest, SemanticWarranty>> m =
+        pendingMap.get(transactionID);
+      for (CallInstance call : m.keySet())
+        putAt(commitTime, m.get(call).first, m.get(call).second);
+    }
+    pendingMap.remove(transactionID);
   }
 
   /**
