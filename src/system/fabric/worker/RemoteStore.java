@@ -350,6 +350,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    *           if there was an error while fetching the object from the store.
    */
   public WarrantiedCallResult reuseCallFromStore(CallInstance id) throws AccessException {
+    SEMANTIC_WARRANTY_LOGGER.finest("Asking store " + name() + " for call " + id);
     ReuseCallMessage.Response response =
         send(Worker.getWorker().authToStore, new ReuseCallMessage(id));
     return response.result;

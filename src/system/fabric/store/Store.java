@@ -1,6 +1,7 @@
 package fabric.store;
 
 import static fabric.common.Logging.STORE_REQUEST_LOGGER;
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 import static fabric.common.ONumConstants.STORE_PRINCIPAL;
 
 import java.io.IOException;
@@ -247,8 +248,8 @@ class Store extends MessageToStoreHandler {
   @Override
   public ReuseCallMessage.Response handle(Principal p, ReuseCallMessage msg)
       throws AccessException {
-    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Call Message from {0}, id={1}", nameOf(p), msg.call);
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Handling Call Message from {0}, call={1}", nameOf(p), msg.call);
 
     WarrantiedCallResult result = tm.getCall(p, msg.call);
     return new ReuseCallMessage.Response(result);
@@ -351,6 +352,8 @@ class Store extends MessageToStoreHandler {
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites)
       throws TransactionPrepareFailedException {
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+        "Handling PrepareWrites Message from {0}, tid={1}", nameOf(p), tid);
 
     PrepareWritesRequest req =
         new PrepareWritesRequest(tid, serializedCreates, serializedWrites);
@@ -378,6 +381,8 @@ class Store extends MessageToStoreHandler {
   private Map<CallInstance, SemanticWarranty> prepareTransactionRequests(Principal p,
       long tid, Set<SemanticWarrantyRequest> requests, long commitTime) {
       /* throws TransactionPrepareFailedException { */
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+        "Handling PrepareRequests Message from {0}, tid={1}", nameOf(p), tid);
     return tm.prepareRequests(p, tid, requests, commitTime);
   }
 

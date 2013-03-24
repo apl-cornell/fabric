@@ -315,8 +315,11 @@ public class SemanticWarrantyTable {
                                   obj.getOnum())).fetch().$copyAppStateFrom(obj.deserialize(localStore,
                                   new VersionWarranty(0)));
                     }
-                    if (!oldResult.equals(call.runCall()))
+                    if (!oldResult.equals(call.runCall())) {
+                      SEMANTIC_WARRANTY_LOGGER.finest("DONE RECOMPUTING CALL " + call + " which changed!");
                       throw new CallChangedException();
+                    }
+                    SEMANTIC_WARRANTY_LOGGER.finest("DONE RECOMPUTING CALL " + call + " which didn't change!");
                     // TODO: What if there's a write in the new evaluation and so
                     // there's no request?
                     //
@@ -325,9 +328,7 @@ public class SemanticWarrantyTable {
                   }
                 }, false);
               } catch (CallChangedException e) {
-                SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " changed!");
               } catch (CallUnchangedException e) {
-                SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " unchanged!");
                 return e.updatedReq;
               }
               return null;
