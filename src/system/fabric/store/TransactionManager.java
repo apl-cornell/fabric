@@ -228,7 +228,8 @@ public class TransactionManager {
       // Double check calls.
       SemanticWarranty longestCallWarranty =
         semanticWarranties.longestReadDependency(req.writes, tid,
-            (longestWarranty == null ? 0 : longestWarranty.expiry()));
+            (longestWarranty == null ? 0 : longestWarranty.expiry()),
+            database.getName());
 
       STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
 

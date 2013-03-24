@@ -202,9 +202,13 @@ public class SemanticWarrantyTable {
     }
 
     if (oldWarranty.expiresAfter(newWarranty)) {
+      /*
       throw new InternalError(
           "Attempted to extend a warranty " + oldWarranty.expiry()
           + " with one that expires sooner " + newWarranty.expiry() + ".");
+          */
+      // Do nothing, as far as we're concerned, this is fine.
+      return true;
     }
 
     /*
@@ -268,7 +272,7 @@ public class SemanticWarrantyTable {
    */
   public SemanticWarranty longestReadDependency(
       final Collection<SerializedObject> writes, long transactionID,
-      long commitTime) {
+      long commitTime, final String storeName) {
     int initCapacity = writes.size() >= 1 ? writes.size() : 1;
     PriorityQueue<Pair<CallInstance, SemanticWarranty>> dependencies = new
       PriorityQueue<Pair<CallInstance, SemanticWarranty>>(initCapacity, new
@@ -304,7 +308,7 @@ public class SemanticWarrantyTable {
                   @Override
                   public Void run() {
                     SEMANTIC_WARRANTY_LOGGER.finest("CHECKING CALL " + call);
-                    Store localStore = Worker.getWorker().getLocalStore();
+                    Store localStore = Worker.getWorker().getStore(storeName);
                     TransactionManager tm = TransactionManager.getInstance();
                     for (SerializedObject obj : writes) {
                       (new _Proxy(localStore,
@@ -321,7 +325,9 @@ public class SemanticWarrantyTable {
                   }
                 }, false);
               } catch (CallChangedException e) {
+                SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " changed!");
               } catch (CallUnchangedException e) {
+                SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " unchanged!");
                 return e.updatedReq;
               }
               return null;
@@ -335,11 +341,22 @@ public class SemanticWarrantyTable {
         pendingMap.get(transactionID).put(call, new
             Pair<SemanticWarrantyRequest, SemanticWarranty>(updatedReq,
               p.second));
+        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " unaffected by " +
+            transactionID);
       } catch (ExecutionException e) {
+        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call
+            + " had an error in check :(");
+        SEMANTIC_WARRANTY_LOGGER.finest("\t" + e.getMessage());
         return p.second;
       } catch (InterruptedException e) {
+        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call
+            + " had interrupted in check :(");
         return p.second;
       } catch (TimeoutException e) {
+        // XXX NOT SURE IF RIGHT OR WRONG :(
+        //checkHandler.cancel(true);
+        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call
+            + " timed out in check :(");
         return p.second;
       }
     }

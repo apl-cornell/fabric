@@ -177,14 +177,14 @@ public class CallInstance {
 
       return m.invoke(target.fetch(), method, fetchedArgs);
     } catch (NoSuchMethodException e) {
-      throw new InternalError("Error running call " + toString() + ": " +
-          e.getMessage());
+      throw new InternalError("NoSuchMethodException running call " + toString()
+          + ": " + e.getMessage());
     } catch (IllegalAccessException e) {
-      throw new InternalError("Error running call " + toString() + ": " +
-          e.getMessage());
+      throw new InternalError("IllegalAccessException running call " +
+          toString() + ": " + e.getMessage());
     } catch (InvocationTargetException e) {
-      throw new InternalError("Error running call " + toString() + ": " +
-          e.getMessage());
+      throw new InternalError("InvocationTargetException running call " +
+          toString() + ":\n\t" + e.getTargetException() + "\n\t" + method + "\n\t" + c.getName());
     }
   }
 }

@@ -825,7 +825,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         }
       }
 
-      body = qq.parseStmt("if (methodName == \"" + method.name() +"\") {\n"
+      String methodName = method.memberInstance().container().toString() + "." +
+        method.methodInstance().signature();
+      body = qq.parseStmt("if (methodName.equals(\"" + methodName +"\")) {\n"
                         + "  return this." + method.name() + "$NonMemoized(" + argsList + ");\n"
                         + "} else {\n"
                         + "  %S\n"
