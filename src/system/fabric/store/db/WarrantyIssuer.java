@@ -108,17 +108,23 @@ public class WarrantyIssuer {
           return;
         }
 
-        // If this prepare could have been avoided if the last-suggested warranty
-        // were twice as long, then double the suggestion length.
-        if (lastSuggestionExpiry + lastSuggestionLength > now) {
-          nextSuggestionLength = 2 * lastSuggestionLength;
-          nextSuggestionDoubled.set(true);
-          Logging.HOTOS_LOGGER.finer("doubling next suggested length for @"
-              + onum);
-        } else {
-          Logging.HOTOS_LOGGER.finer("keeping next suggested length for @"
-              + onum);
-        }
+        // Double the suggestion length.
+        nextSuggestionLength = 2 * lastSuggestionLength;
+        nextSuggestionDoubled.set(true);
+        Logging.HOTOS_LOGGER.finer("doubling next suggested length for @"
+            + onum);
+
+//        // If this prepare could have been avoided if the last-suggested warranty
+//        // were twice as long, then double the suggestion length.
+//        if (lastSuggestionExpiry + lastSuggestionLength > now) {
+//          nextSuggestionLength = 2 * lastSuggestionLength;
+//          nextSuggestionDoubled.set(true);
+//          Logging.HOTOS_LOGGER.finer("doubling next suggested length for @"
+//              + onum);
+//        } else {
+//          Logging.HOTOS_LOGGER.finer("keeping next suggested length for @"
+//              + onum);
+//        }
       }
 
       notifyReadPrepareFlag.set(false);
