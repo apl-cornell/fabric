@@ -97,7 +97,7 @@ public class SemanticWarrantyTable {
     table = new ConcurrentHashMap<CallInstance, WarrantiedCallResult>();
     reverseTable = new ConcurrentHashMap<SemanticWarranty, Set<CallInstance>>();
     dependencyTable = new SemanticWarrantyDependencies();
-    issuer = new WarrantyIssuer(10000, MAX_SEMANTIC_WARRANTY, 10000);
+    issuer = new WarrantyIssuer(1000, MAX_SEMANTIC_WARRANTY);
     pendingMap = new ConcurrentLongKeyHashMap<Map<CallInstance,
                Pair<SemanticWarrantyRequest, SemanticWarranty>>>();
 

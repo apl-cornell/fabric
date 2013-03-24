@@ -25,6 +25,7 @@ import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.Logging;
+import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -97,8 +98,8 @@ public class TransactionManager {
   public void commitTransaction(Principal workerPrincipal, long transactionID,
       long commitTime) throws TransactionCommitFailedException {
     try {
-      database.commit(transactionID, commitTime, workerPrincipal, sm);
       semanticWarranties.commit(transactionID, commitTime);
+      database.commit(transactionID, commitTime, workerPrincipal, sm);
       STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
     } catch (final RuntimeException e) {
       throw new TransactionCommitFailedException(
@@ -404,7 +405,7 @@ public class TransactionManager {
     while (!fringe.isEmpty()) {
       SemanticWarrantyRequest r = reqMap.get(fringe.poll());
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-          "Getting SemanticWarranty for CallInstance {1}, which has {0} dependencies",
+          "Proposing SemanticWarranty for CallInstance {1}, which has {0} dependencies",
           r.calls.size(), r.call);
 
       // Get a proposal for a warranty
@@ -445,7 +446,12 @@ public class TransactionManager {
           fabric.lang.Object storeCopy =
               new fabric.lang.Object._Proxy(store, onum);
 
-          Label label = storeCopy.get$$updateLabel();
+          Label label;
+          try {
+            label = storeCopy.get$$updateLabel();
+          } catch (RuntimeFetchException e) {
+            return new AccessException("read", worker, storeCopy);
+          }
 
           // Check read permissions.
           if (!AuthorizationUtil.isReadPermitted(worker, label.$getStore(),
@@ -460,7 +466,12 @@ public class TransactionManager {
           fabric.lang.Object storeCopy =
               new fabric.lang.Object._Proxy(store, onum);
 
-          Label label = storeCopy.get$$updateLabel();
+          Label label;
+          try {
+            label = storeCopy.get$$updateLabel();
+          } catch (RuntimeFetchException e) {
+            return new AccessException("read", worker, storeCopy);
+          }
 
           // Check write permissions.
           if (!AuthorizationUtil.isWritePermitted(worker, label.$getStore(),
