@@ -406,6 +406,7 @@ public final class TransactionManager {
     }
 
     // Commit top-level transaction.
+    long commitStartTime = System.currentTimeMillis();
      
     // Create top level SemanticWarrantyRequest, if any.
     current.createCurrentRequest();
@@ -422,13 +423,53 @@ public final class TransactionManager {
 
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(commitTime);
+
+    commitTimeStats
+        .notifyCommitTime((short) (System.currentTimeMillis() - commitStartTime));
     HOTOS_LOGGER.log(Level.INFO, "committed {0}", HOTOS_current);
   }
 
   /**
-   * Sends prepare-write messages to the cohorts. If any cohort fails to
-   * prepare, abort messages will be sent, and the local portion of the
-   * transaction is rolled back.
+   * For SOSP 2013. Yuck.
+   */
+  private static final CommitTimeStats commitTimeStats = new CommitTimeStats();
+
+  /**
+   * For SOSP 2013. Yuck.
+   */
+  private static class CommitTimeStats {
+    short[] commitTimes;
+    short nextPos;
+    int sum;
+
+    CommitTimeStats() {
+      commitTimes = new short[500];
+      nextPos = 0;
+      sum = 0;
+    }
+
+    void notifyCommitTime(short commitTime) {
+      int sum;
+      synchronized (commitTimes) {
+        sum = this.sum = this.sum + commitTime - commitTimes[nextPos];
+        commitTimes[nextPos++] = commitTime;
+        nextPos %= commitTimes.length;
+      }
+
+      Worker worker = Worker.getWorker();
+
+      // Average commit rate (tx/s) multiplied by max number of threads.
+      double maxCommitRate =
+          worker.maxAppThreads * 1000.0 * commitTimes.length / sum;
+
+      // Exit if the max commit rate drops below 60% of target.
+      if (worker.targetCommitRate * 0.6 > maxCommitRate) System.exit(0);
+    }
+  }
+
+  /**
+   * Sends prepare messages to the cohorts. Also sends abort messages if any
+   * cohort fails to prepare.
    * 
    * @return a proposed commit time, based on the outstanding warranties for
    *           objects modified by the transaction. The returned commit time is

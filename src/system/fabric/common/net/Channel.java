@@ -14,6 +14,8 @@ import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
@@ -61,12 +63,12 @@ abstract class Channel extends Thread {
     this.remotePrincipal = s.principal;
 
     this.out =
-        new DataOutputStream(new BufferedOutputStream(
-            this.sock.getOutputStream(), sock.getSendBufferSize()));
+        new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(
+            this.sock.getOutputStream(), true), sock.getSendBufferSize()));
 
     this.in =
-        new DataInputStream(new BufferedInputStream(this.sock.getInputStream(),
-            sock.getReceiveBufferSize()));
+        new DataInputStream(new BufferedInputStream(new GZIPInputStream(
+            this.sock.getInputStream()), sock.getReceiveBufferSize()));
 
     this.connections = new HashMap<Integer, Connection>();
     this.maxOpenConnections = maxOpenConnections;
