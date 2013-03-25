@@ -87,7 +87,7 @@ public class WarrantyIssuer {
     /**
      * Notifies of a read-prepare event.
      */
-    void notifyReadPrepare() {
+    void notifyReadPrepare(long commitTime) {
       // Do nothing if the next suggestion has already been doubled or if some
       // other thread is already processing a read-prepare notification.
       if (nextSuggestionDoubled.get() || notifyReadPrepareFlag.getAndSet(true))
@@ -100,9 +100,8 @@ public class WarrantyIssuer {
         // Ignore this if we're already issuing the maximum-length warranty.
         if (nextSuggestionLength >= maxWarrantyLength) return;
 
-        // Ignore this if the last-suggested warranty hasn't expired.
-        long now = System.currentTimeMillis();
-        if (lastSuggestionExpiry > now) {
+        // Ignore this if the last-suggested warranty covers the commitTime.
+        if (lastSuggestionExpiry > commitTime) {
           Logging.HOTOS_LOGGER.finer("last suggestion not yet expired for @"
               + onum);
           return;
@@ -233,8 +232,8 @@ public class WarrantyIssuer {
    * Notifies that a read has been prepared, signalling that perhaps the
    * warranties issued should be longer.
    */
-  public void notifyReadPrepare(long onum) {
-    getEntry(onum).notifyReadPrepare();
+  public void notifyReadPrepare(long onum, long commitTime) {
+    getEntry(onum).notifyReadPrepare(commitTime);
   }
 
   /**
