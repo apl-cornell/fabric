@@ -402,7 +402,6 @@ public final class TransactionManager {
     }
 
     // Commit top-level transaction.
-    long commitStartTime = System.currentTimeMillis();
 
     // Send prepare-write messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
@@ -417,47 +416,7 @@ public final class TransactionManager {
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(commitTime);
 
-    commitTimeStats
-        .notifyCommitTime((short) (System.currentTimeMillis() - commitStartTime));
     HOTOS_LOGGER.log(Level.INFO, "committed {0}", HOTOS_current);
-  }
-
-  /**
-   * For SOSP 2013. Yuck.
-   */
-  private static final CommitTimeStats commitTimeStats = new CommitTimeStats();
-
-  /**
-   * For SOSP 2013. Yuck.
-   */
-  private static class CommitTimeStats {
-    short[] commitTimes;
-    short nextPos;
-    int sum;
-
-    CommitTimeStats() {
-      commitTimes = new short[500];
-      nextPos = 0;
-      sum = 0;
-    }
-
-    void notifyCommitTime(short commitTime) {
-      int sum;
-      synchronized (commitTimes) {
-        sum = this.sum = this.sum + commitTime - commitTimes[nextPos];
-        commitTimes[nextPos++] = commitTime;
-        nextPos %= commitTimes.length;
-      }
-
-      Worker worker = Worker.getWorker();
-
-      // Average commit rate (tx/s) multiplied by max number of threads.
-      double maxCommitRate =
-          worker.maxAppThreads * 1000.0 * commitTimes.length / sum;
-
-      // Exit if the max commit rate drops below 60% of target.
-      if (worker.targetCommitRate * 0.6 > maxCommitRate) System.exit(0);
-    }
   }
 
   /**
