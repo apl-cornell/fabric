@@ -22,9 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 
-import fabric.common.Logging;
 import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
@@ -78,7 +76,7 @@ public class SemanticWarrantyTable {
   /**
    * WarrantyIssuer for semantic warranties.
    */
-  private final WarrantyIssuer issuer;
+  private final WarrantyIssuer<CallInstance> issuer;
 
   /**
    * Table mapping from transactionIDs for pending transactions to
@@ -92,7 +90,7 @@ public class SemanticWarrantyTable {
     table = new ConcurrentHashMap<CallInstance, WarrantiedCallResult>();
     reverseTable = new ConcurrentHashMap<SemanticWarranty, Set<CallInstance>>();
     dependencyTable = new SemanticWarrantyDependencies();
-    issuer = new WarrantyIssuer(250, MAX_SEMANTIC_WARRANTY);
+    issuer = new WarrantyIssuer<CallInstance>(250, MAX_SEMANTIC_WARRANTY);
     pendingMap = new ConcurrentLongKeyHashMap<Map<CallInstance,
                Pair<SemanticWarrantyRequest, SemanticWarranty>>>();
 
@@ -255,9 +253,9 @@ public class SemanticWarrantyTable {
    * Notifies the issuer of a read prepare extending the Semantic Warranty for
    * the given call.
    */
-  public void notifyReadPrepare(CallInstance call) {
+  public void notifyReadPrepare(CallInstance call, long commitTime) {
     SEMANTIC_WARRANTY_LOGGER.finest("Notifying read prepare on " + call);
-    issuer.notifyReadPrepare(call);
+    issuer.notifyReadPrepare(call, commitTime);
   }
 
   /**

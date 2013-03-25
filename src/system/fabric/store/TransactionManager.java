@@ -49,10 +49,8 @@ import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 
 /* TODO:
- *      - Change the defense mechanism for SemanticWarranties to check if the
- *      call value changed.
  *      - Double check that the re-use of a semantic warranty value has the same
- *      result as what's in the table?
+ *      result as what's in the table
  */
 public class TransactionManager {
 
@@ -348,7 +346,7 @@ public class TransactionManager {
   public void prepareCalls(Principal worker, long tid, Set<CallInstance> calls,
       long commitTime) throws TransactionPrepareFailedException {
     for (CallInstance call : calls) {
-      semanticWarranties.notifyReadPrepare(call);
+      semanticWarranties.notifyReadPrepare(call, commitTime);
       // XXX We have a race condition here...
       if (semanticWarranties.get(call) == null) {
         throw new TransactionPrepareFailedException(
@@ -411,7 +409,7 @@ public class TransactionManager {
           r.calls.size(), r.call);
 
       // Get a proposal for a warranty
-      semanticWarranties.notifyReadPrepare(r.call);
+      //semanticWarranties.notifyReadPrepare(r.call);
       SemanticWarranty proposed = semanticWarranties.proposeWarranty(r.call);
       SEMANTIC_WARRANTY_LOGGER.finest(r.call.toString()
           + " was proposed a warranty to expire in " + (proposed.expiry() -

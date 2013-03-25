@@ -9,9 +9,9 @@ import fabric.common.util.Cache;
  * A warranty issuer is notified of write events and read-prepares, and uses
  * this information to decide how long issued warranties should last.
  */
-public class WarrantyIssuer {
+public class WarrantyIssuer<K> {
   private class HistoryEntry {
-    final Object key;
+    final K key;
 
     /**
      * A bit vector indicating write activity. The bit in the 2^n position
@@ -58,7 +58,7 @@ public class WarrantyIssuer {
      */
     final AtomicBoolean notifyReadPrepareFlag;
 
-    public HistoryEntry(Object key) {
+    public HistoryEntry(K key) {
       this.key = key;
       this.writeHistoryTime = System.currentTimeMillis();
       this.writeHistory = 0;
@@ -87,7 +87,7 @@ public class WarrantyIssuer {
     /**
      * Notifies of a read-prepare event.
      */
-    void notifyReadPrepare() {
+    void notifyReadPrepare(long commitTime) {
       // Do nothing if the next suggestion has already been doubled or if some
       // other thread is already processing a read-prepare notification.
       if (nextSuggestionDoubled.get() || notifyReadPrepareFlag.getAndSet(true))
@@ -100,25 +100,30 @@ public class WarrantyIssuer {
         // Ignore this if we're already issuing the maximum-length warranty.
         if (nextSuggestionLength >= maxWarrantyLength) return;
 
-        // Ignore this if the last-suggested warranty hasn't expired.
-        long now = System.currentTimeMillis();
-        if (lastSuggestionExpiry > now) {
+        // Ignore this if the last-suggested warranty covers the commitTime.
+        if (lastSuggestionExpiry > commitTime) {
           Logging.HOTOS_LOGGER.finer("last suggestion not yet expired for @"
               + key);
           return;
         }
 
-        // If this prepare could have been avoided if the last-suggested warranty
-        // were twice as long, then double the suggestion length.
-        if (lastSuggestionExpiry + lastSuggestionLength > now) {
-          nextSuggestionLength = 2 * lastSuggestionLength;
-          nextSuggestionDoubled.set(true);
-          Logging.HOTOS_LOGGER.finer("doubling next suggested length for @"
-              + key);
-        } else {
-          Logging.HOTOS_LOGGER.finer("keeping next suggested length for @"
-              + key);
-        }
+        // Double the suggestion length.
+        nextSuggestionLength = 2 * lastSuggestionLength;
+        nextSuggestionDoubled.set(true);
+        Logging.HOTOS_LOGGER
+            .finer("doubling next suggested length for @" + key);
+
+//        // If this prepare could have been avoided if the last-suggested warranty
+//        // were twice as long, then double the suggestion length.
+//        if (lastSuggestionExpiry + lastSuggestionLength > now) {
+//          nextSuggestionLength = 2 * lastSuggestionLength;
+//          nextSuggestionDoubled.set(true);
+//          Logging.HOTOS_LOGGER.finer("doubling next suggested length for @"
+//              + onum);
+//        } else {
+//          Logging.HOTOS_LOGGER.finer("keeping next suggested length for @"
+//              + onum);
+//        }
       }
 
       notifyReadPrepareFlag.set(false);
@@ -196,7 +201,7 @@ public class WarrantyIssuer {
   /**
    * Maps keys to <code>HistoryEntry</code>s.
    */
-  private final Cache<Object, HistoryEntry> history;
+  private final Cache<K, HistoryEntry> history;
 
   /**
    * @param minWarrantyLength
@@ -210,14 +215,14 @@ public class WarrantyIssuer {
   protected WarrantyIssuer(int minWarrantyLength, int maxWarrantyLength) {
     this.minWarrantyLength = minWarrantyLength;
     this.maxWarrantyLength = maxWarrantyLength;
-    this.history = new Cache<Object, HistoryEntry>();
+    this.history = new Cache<K, HistoryEntry>();
 
     // Sanity check.
     if (minWarrantyLength > maxWarrantyLength)
       throw new InternalError("minWarrantyLength > maxWarrantyLength");
   }
 
-  private HistoryEntry getEntry(Object key) {
+  private HistoryEntry getEntry(K key) {
     HistoryEntry entry = new HistoryEntry(key);
     HistoryEntry existingEntry = history.putIfAbsent(key, entry);
     return existingEntry == null ? entry : existingEntry;
@@ -227,15 +232,15 @@ public class WarrantyIssuer {
    * Notifies that a read has been prepared, signalling that perhaps the
    * warranties issued should be longer.
    */
-  public void notifyReadPrepare(Object key) {
-    getEntry(key).notifyReadPrepare();
+  public void notifyReadPrepare(K key, long commitTime) {
+    getEntry(key).notifyReadPrepare(commitTime);
   }
 
   /**
    * Notifies that a write has been committed to the database, allowing new
    * writes to be prepared.
    */
-  public void notifyWriteCommit(Object key) {
+  public void notifyWriteCommit(K key) {
     getEntry(key).notifyWriteCommit();
   }
 
@@ -244,21 +249,21 @@ public class WarrantyIssuer {
    * being prepared until the corresponding transaction either commits or
    * aborts.
    */
-  public void notifyWritePrepare(Object key) {
+  public void notifyWritePrepare(K key) {
     getEntry(key).notifyWritePrepare();
   }
 
   /**
    * Suggests a warranty-expiry time.
    */
-  public Long suggestWarranty(Object key) {
+  public Long suggestWarranty(K key) {
     return suggestWarranty(key, System.currentTimeMillis());
   }
 
   /**
    * Suggests a warranty-expiry time beyond the given expiry time.
    */
-  public long suggestWarranty(Object key, long minExpiry) {
+  public long suggestWarranty(K key, long minExpiry) {
     Long suggestion = getEntry(key).suggestWarranty(minExpiry);
     return suggestion == null ? minExpiry : suggestion;
   }

@@ -137,20 +137,6 @@ public final class Worker {
 
   private final RemoteCallManager remoteCallManager;
 
-  /**
-   * The maximum number of application threads, as provided by the application.
-   */
-  public volatile int maxAppThreads;
-
-  /**
-   * The target commit rate, as provided by the application. If the theoretical
-   * maximum commit rate (as calculated by a moving average of the time spent
-   * executing the commit protocol, multiplied by the number of application
-   * threads) drops below 60% of this target, then the worker will terminate by
-   * calling System.exit().
-   */
-  public volatile int targetCommitRate;
-
   public static final Random RAND = new Random();
 
   // force Timing to load.
@@ -464,26 +450,6 @@ public final class Worker {
     if (loader == null)
       loader = new FabricClassLoader(Worker.class.getClassLoader());
     return loader;
-  }
-
-  /**
-   * Notifies the worker of the maximum number of application threads.
-   */
-  public void setMaxAppThreads(int maxAppThreads) {
-    this.maxAppThreads = maxAppThreads;
-  }
-
-  /**
-   * Notifies the worker of a target commit rate. If the theoretical maximum
-   * commit rate (as calculated by a moving average of the time spent executing
-   * the commit protocol, multiplied by the number of application threads) drops
-   * below 60% of this target, then the worker will terminate by calling
-   * System.exit().
-   * 
-   * @param commitRate the target commit rate in transactions/sec.
-   */
-  public void setTargetCommitRate(int commitRate) {
-    this.targetCommitRate = commitRate;
   }
 
   public static void main(String[] args) throws Throwable {
