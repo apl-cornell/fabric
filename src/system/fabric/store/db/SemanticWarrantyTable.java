@@ -46,11 +46,6 @@ import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.transaction.TransactionManager;
 
-/*
- * TODO:
- *      - Get a more sane approach to assigning warranty lengths to new call
- *      entries.
- */
 /**
  * A table containing semantic warranties, keyed by CallInstance id, and
  * supporting concurrent accesses.

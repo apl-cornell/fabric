@@ -26,7 +26,6 @@ public final class CallCache {
         callTable.remove(call);
         return null;
       } else {
-        // XXX Note the read of the warranty in the transaction log?
         return result;
       }
     }
