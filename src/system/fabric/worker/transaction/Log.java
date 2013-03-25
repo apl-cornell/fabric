@@ -33,6 +33,7 @@ import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
+import fabric.lang.WrappedJavaInlineable;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.memoize.CallInstance;
@@ -830,6 +831,8 @@ public final class Log {
     for (_Impl createdObj : createsForTargetStore) {
       readsForTargetStore.add(createdObj.$getOnum());
     }
+    if (!(semanticWarrantyValue instanceof WrappedJavaInlineable))
+      readsForTargetStore.add(semanticWarrantyValue.$getOnum());
     SemanticWarrantyRequest req = new
       SemanticWarrantyRequest(semanticWarrantyCall, semanticWarrantyValue,
           readsForTargetStore, callsForTargetStore);

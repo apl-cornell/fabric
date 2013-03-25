@@ -97,7 +97,7 @@ public class SemanticWarrantyTable {
     table = new ConcurrentHashMap<CallInstance, WarrantiedCallResult>();
     reverseTable = new ConcurrentHashMap<SemanticWarranty, Set<CallInstance>>();
     dependencyTable = new SemanticWarrantyDependencies();
-    issuer = new WarrantyIssuer(1000, MAX_SEMANTIC_WARRANTY);
+    issuer = new WarrantyIssuer(250, MAX_SEMANTIC_WARRANTY);
     pendingMap = new ConcurrentLongKeyHashMap<Map<CallInstance,
                Pair<SemanticWarrantyRequest, SemanticWarranty>>>();
 
@@ -144,8 +144,6 @@ public class SemanticWarrantyTable {
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-          "Adding warranty of {0} for call {1}", warranty.expiry(), id);
         put(id, reads, calls, value, warranty);
       }
     });
@@ -165,8 +163,8 @@ public class SemanticWarrantyTable {
 
     long expiry = warranty.expiry();
     long length = expiry - System.currentTimeMillis();
-    STORE_DB_LOGGER.finest("Adding warranty for call " + id + "; expiry="
-        + expiry + " (in " + length + " ms)");
+    STORE_DB_LOGGER.finest("Adding warranty for call " + id + "=" + result
+        + "; expiry=" + expiry + " (in " + length + " ms)");
 
     table.put(id, result);
 
@@ -263,6 +261,7 @@ public class SemanticWarrantyTable {
    * the given call.
    */
   public void notifyReadPrepare(CallInstance call) {
+    SEMANTIC_WARRANTY_LOGGER.finest("Notifying read prepare on " + call);
     issuer.notifyReadPrepare(call);
   }
 
@@ -296,7 +295,6 @@ public class SemanticWarrantyTable {
       if (p.second.expiresBefore(currentTime, false)) break;
 
       final CallInstance call = p.first;
-      SEMANTIC_WARRANTY_LOGGER.finest("CHECKING CALL " + call);
       final fabric.lang.Object oldResult = get(call).value;
       Future<SemanticWarrantyRequest> checkHandler =
         Executors.newSingleThreadExecutor().submit((new
@@ -315,8 +313,11 @@ public class SemanticWarrantyTable {
                                   obj.getOnum())).fetch().$copyAppStateFrom(obj.deserialize(localStore,
                                   new VersionWarranty(0)));
                     }
-                    if (!oldResult.equals(call.runCall())) {
-                      SEMANTIC_WARRANTY_LOGGER.finest("DONE RECOMPUTING CALL " + call + " which changed!");
+                    Object newResult = call.runCall();
+                    if (!oldResult.equals(newResult)) {
+                      SEMANTIC_WARRANTY_LOGGER.finest("DONE RECOMPUTING CALL " +
+                        call + " which changed from " + oldResult + " to " +
+                        newResult + "!");
                       throw new CallChangedException();
                     }
                     SEMANTIC_WARRANTY_LOGGER.finest("DONE RECOMPUTING CALL " + call + " which didn't change!");
@@ -337,6 +338,13 @@ public class SemanticWarrantyTable {
       try {
         SemanticWarrantyRequest updatedReq = checkHandler.get(p.second.expiry()
             - currentTime, TimeUnit.MILLISECONDS);
+        if (updatedReq == null) {
+          SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " affected by " +
+              transactionID);
+          issuer.notifyWritePrepare(call);
+          return p.second;
+        }
+
         pendingMap.putIfAbsent(transactionID, new HashMap<CallInstance,
             Pair<SemanticWarrantyRequest, SemanticWarranty>>());
         pendingMap.get(transactionID).put(call, new
@@ -386,8 +394,10 @@ public class SemanticWarrantyTable {
     if (pendingMap.get(transactionID) != null) {
       Map<CallInstance, Pair<SemanticWarrantyRequest, SemanticWarranty>> m =
         pendingMap.get(transactionID);
-      for (CallInstance call : m.keySet())
+      for (CallInstance call : m.keySet()) {
+        SEMANTIC_WARRANTY_LOGGER.finest("Adding " + call + ": " + m.get(call).first + ", " + m.get(call).second);
         putAt(commitTime, m.get(call).first, m.get(call).second);
+      }
     }
     pendingMap.remove(transactionID);
   }

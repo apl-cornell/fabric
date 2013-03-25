@@ -876,7 +876,6 @@ public final class TransactionManager {
               store.commitTransaction(current.tid.topTid, commitTime,
                   current.getRequestsForStore(store));
             current.requestReplies.putAll(replies);
-            //TODO: Take care of requests!
           } catch (TransactionCommitFailedException e) {
             failed.add((RemoteStore) store);
           } catch (UnreachableNodeException e) {

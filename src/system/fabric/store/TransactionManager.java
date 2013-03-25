@@ -348,12 +348,13 @@ public class TransactionManager {
   public void prepareCalls(Principal worker, long tid, Set<CallInstance> calls,
       long commitTime) throws TransactionPrepareFailedException {
     for (CallInstance call : calls) {
+      semanticWarranties.notifyReadPrepare(call);
+      // XXX We have a race condition here...
       if (semanticWarranties.get(call) == null) {
         throw new TransactionPrepareFailedException(
             "Could not extend warranty for call" + call + 
             " because it doesn't exist in the table!");
       }
-      semanticWarranties.notifyReadPrepare(call);
       if (!semanticWarranties.extend(call,
             semanticWarranties.get(call).warranty,
             new SemanticWarranty(commitTime))) {
@@ -411,6 +412,9 @@ public class TransactionManager {
 
       // Get a proposal for a warranty
       SemanticWarranty proposed = semanticWarranties.proposeWarranty(r.call);
+      SEMANTIC_WARRANTY_LOGGER.finest(r.call.toString()
+          + " was proposed a warranty to expire in " + (proposed.expiry() -
+            System.currentTimeMillis()));
       // Add it to the response set
       warranties.put(r.call, proposed);
       // Schedule to add it at commitTime, WHAT IF THE TRANSACTION ABORTS? :(
