@@ -411,13 +411,14 @@ public class TransactionManager {
           r.calls.size(), r.call);
 
       // Get a proposal for a warranty
+      semanticWarranties.notifyReadPrepare(r.call);
       SemanticWarranty proposed = semanticWarranties.proposeWarranty(r.call);
       SEMANTIC_WARRANTY_LOGGER.finest(r.call.toString()
           + " was proposed a warranty to expire in " + (proposed.expiry() -
             System.currentTimeMillis()));
       // Add it to the response set
       warranties.put(r.call, proposed);
-      // Schedule to add it at commitTime, WHAT IF THE TRANSACTION ABORTS? :(
+      // Schedule to add it at commitTime
       semanticWarranties.addPendingWarranty(commitTime, r, proposed, tid);
       
       //Update fringe

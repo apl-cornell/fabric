@@ -1,0 +1,33 @@
+public class TwooterAccount {
+
+  public final String name;
+
+  private int numberFollowers;
+
+  public TwooterAccount(String name) {
+    this.name = name;
+    this.numberFollowers = 0;
+  }
+
+  public TwooterAccount(String name, int numberInitFollowers) {
+    this.name = name;
+    this.numberFollowers = numberInitFollowers;
+  }
+
+  public TwooterAccount TwooterAccount$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
+  public int numFollowers() {
+    return numberFollowers;
+  }
+
+  public void addFollower() {
+    numberFollowers++;
+  }
+
+  public void removeFollower() {
+    if (numberFollowers > 0) numberFollowers--;
+  }
+}

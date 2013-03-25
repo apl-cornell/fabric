@@ -356,16 +356,17 @@ public class SemanticWarrantyTable {
         SEMANTIC_WARRANTY_LOGGER.finest("Call " + call
             + " had an error in check :(");
         SEMANTIC_WARRANTY_LOGGER.finest("\t" + e.getMessage());
+        issuer.notifyWritePrepare(call);
         return p.second;
       } catch (InterruptedException e) {
         SEMANTIC_WARRANTY_LOGGER.finest("Call " + call
             + " had interrupted in check :(");
+        issuer.notifyWritePrepare(call);
         return p.second;
       } catch (TimeoutException e) {
-        // XXX NOT SURE IF RIGHT OR WRONG :(
-        //checkHandler.cancel(true);
         SEMANTIC_WARRANTY_LOGGER.finest("Call " + call
             + " timed out in check :(");
+        issuer.notifyWritePrepare(call);
         return p.second;
       }
     }

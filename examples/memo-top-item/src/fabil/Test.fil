@@ -1,0 +1,85 @@
+import fabric.util.LinkedList;
+import fabric.util.List;
+
+public class Test {
+
+  public Test Test$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
+  private void printList(List a) {
+    System.out.print("[");
+    for (int i = 0; i < a.size(); i++) {
+      System.out.print(" " + a.get(i) + " ");
+    }
+    System.out.print("]");
+  }
+
+  private List merge(int n, List a_orig, List b_orig) {
+    Store s = Config.STORE;
+    List merged = new LinkedList().fabric$util$LinkedList$();
+    List a = new LinkedList().fabric$util$LinkedList$(a_orig);
+    List b = new LinkedList().fabric$util$LinkedList$(b_orig);
+    for (int i = 0; i < n; i++) {
+      if (a.isEmpty() && b.isEmpty()) {
+        break;
+      } else if (a.isEmpty()
+          || (!b.isEmpty()
+            && (((TwooterAccount) b.get(0)).numFollowers() > ((TwooterAccount)
+                a.get(0)).numFollowers()))) {
+        merged.add(b.get(0));
+        b.remove(0);
+      } else {
+        merged.add(a.get(0));
+        a.remove(0);
+      }
+    }
+    return merged;
+  }
+
+  private memoized List topAccountsBetween(int n, int min, int max) {
+    Store s = Config.STORE;
+    List rtn = new LinkedList@s().fabric$util$LinkedList$(); 
+    if (max - min == 1) {
+      rtn.add((TwooterAccount) s.getRoot().get(new Integer(min)));
+    } else if (max > min) {
+      rtn.addAll(merge(n, topAccountsBetween(n, min, min + ((max - min) >> 1)),
+            topAccountsBetween(n, min + ((max - min) >> 1), max)));
+    }
+    return rtn;
+  }
+
+  public List topAccounts(int n) {
+    return topAccountsBetween(n, 0, Config.NUM_USERS);
+  }
+
+  public memoized int foo(int n) {
+    return 1;
+  }
+
+  public static void main(String[] args) {
+    if (args.length == 0) System.exit(1); // TODO: Usage!
+    Test t = null;
+    atomic {
+      Store s = Config.STORE;
+      t = new Test@s().Test$();
+    }
+    int n = Integer.parseInt(args[0]);
+    while (true) {
+      List top = null;
+      atomic {
+        top = t.topAccounts(n);
+      }
+      System.out.println("LOL " + top.size() + " ITEMS");
+      for (int j = 0; j < n && j < top.size(); j++) {
+        System.out.println(((TwooterAccount) top.get(j)));
+      }
+      /*
+      atomic {
+        t.foo(5);
+      }
+      */
+    }
+  }
+}

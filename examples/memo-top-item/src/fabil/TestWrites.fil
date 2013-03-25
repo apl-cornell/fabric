@@ -1,0 +1,17 @@
+import java.util.Random;
+
+public class TestWrites {
+  public static void main(String[] args) {
+    if (args.length == 0) System.exit(1); // TODO: Usage!!!
+    int msSleep = Integer.parseInt(args[0]);
+    Random rand = new Random(0xDEADBEEF);
+    while (true) {
+      try { Thread.sleep(msSleep); } catch (InterruptedException e) {}
+      atomic {
+        TwooterAccount t = (TwooterAccount) Config.STORE.getRoot().get(new Integer(rand.nextInt(Config.NUM_USERS)));
+        if (rand.nextBoolean()) t.addFollower();
+        else t.removeFollower();
+      }
+    }
+  }
+}
