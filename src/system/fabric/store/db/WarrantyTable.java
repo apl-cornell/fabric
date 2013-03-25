@@ -2,30 +2,30 @@ package fabric.store.db;
 
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import fabric.common.VersionWarranty;
 import fabric.common.Warranty;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
-import fabric.common.util.LongHashSet;
-import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap.Entry;
-import fabric.common.util.LongSet;
 
 /**
  * A table containing version warranties, keyed by onum, and supporting
  * concurrent accesses.
  */
-public class VersionWarrantyTable {
+public class WarrantyTable<K, V extends Warranty> {
   /**
    * The default warranty for onums that aren't yet in the table. All warranties
    * in the table should expire after the default warranty.
    */
-  private volatile VersionWarranty defaultWarranty;
+  private volatile V defaultWarranty;
 
-  private final ConcurrentLongKeyMap<VersionWarranty> table;
+  private final ConcurrentMap<K, V> table;
 
   private final Collector collector;
 
@@ -33,25 +33,25 @@ public class VersionWarrantyTable {
    * Reverse mapping: maps version warranty expiry times (in buckets according
    * to REVERSE_TABLE_BUCKET_SIZE) to corresponding onums.
    */
-  private final ConcurrentLongKeyMap<LongSet> reverseTable;
+  private final ConcurrentLongKeyMap<Set<K>> reverseTable;
   private final int REVERSE_TABLE_BUCKET_SIZE = 5000;
 
-  VersionWarrantyTable() {
-    defaultWarranty = new VersionWarranty(0);
-    table = new ConcurrentLongKeyHashMap<VersionWarranty>();
-    reverseTable = new ConcurrentLongKeyHashMap<LongSet>();
+  WarrantyTable(V defaultWarranty) {
+    this.defaultWarranty = defaultWarranty;
+    table = new ConcurrentHashMap<K, V>();
+    reverseTable = new ConcurrentLongKeyHashMap<Set<K>>();
 
     collector = new Collector();
     collector.start();
   }
 
-  final VersionWarranty get(long onum) {
-    VersionWarranty result = table.get(onum);
+  final V get(K key) {
+    V result = table.get(key);
     if (result == null) return defaultWarranty;
     return result;
   }
 
-  final void put(long onum, VersionWarranty warranty) {
+  final void put(K key, V warranty) {
     if (defaultWarranty.expiresAfter(warranty)) {
       throw new InternalError("Attempted to insert a warranty that expires "
           + "before the default warranty. This should not happen.");
@@ -59,27 +59,27 @@ public class VersionWarrantyTable {
 
     long expiry = warranty.expiry();
     long length = expiry - System.currentTimeMillis();
-    STORE_DB_LOGGER.finest("Adding warranty for onum " + onum + "; expiry="
-        + expiry + " (in " + length + " ms)");
+    STORE_DB_LOGGER.finest("Adding warranty for " + key + "; expiry=" + expiry
+        + " (in " + length + " ms)");
 
-    table.put(onum, warranty);
-    addReverseEntry(onum, warranty);
+    table.put(key, warranty);
+    addReverseEntry(key, warranty);
   }
 
-  private final void addReverseEntry(long onum, VersionWarranty warranty) {
+  private final void addReverseEntry(K key, V warranty) {
     long warrantyBucket = warranty.expiry();
     warrantyBucket +=
         REVERSE_TABLE_BUCKET_SIZE - warrantyBucket % REVERSE_TABLE_BUCKET_SIZE;
 
-    LongSet set = reverseTable.get(warrantyBucket);
+    Set<K> set = reverseTable.get(warrantyBucket);
     if (set == null) {
-      set = new LongHashSet();
-      LongSet existingSet = reverseTable.putIfAbsent(warrantyBucket, set);
+      set = new HashSet<K>();
+      Set<K> existingSet = reverseTable.putIfAbsent(warrantyBucket, set);
       if (existingSet != null) set = existingSet;
     }
 
     synchronized (set) {
-      set.add(onum);
+      set.add(key);
 
       // Make sure the reverse table has an entry for the warranty, in case it
       // was removed by the Collector thread.
@@ -96,8 +96,7 @@ public class VersionWarrantyTable {
    * 
    * @return true iff the warranty was replaced.
    */
-  final boolean extend(long onum, VersionWarranty oldWarranty,
-      VersionWarranty newWarranty) {
+  final boolean extend(K key, V oldWarranty, V newWarranty) {
     if (defaultWarranty.expiresAfter(newWarranty)) {
       throw new InternalError("Attempted to insert a warranty that expires "
           + "before the default warranty. This should not happen.");
@@ -110,18 +109,18 @@ public class VersionWarrantyTable {
 
     boolean success = false;
     if (oldWarranty == defaultWarranty) {
-      success = table.putIfAbsent(onum, newWarranty) == null;
+      success = table.putIfAbsent(key, newWarranty) == null;
     }
 
-    if (!success) success = table.replace(onum, oldWarranty, newWarranty);
+    if (!success) success = table.replace(key, oldWarranty, newWarranty);
 
     if (success) {
       long expiry = newWarranty.expiry();
       long length = expiry - System.currentTimeMillis();
-      STORE_DB_LOGGER.finest("Extended warranty for onum " + onum + "; expiry="
+      STORE_DB_LOGGER.finest("Extended warranty for " + key + "; expiry="
           + expiry + " (in " + length + " ms)");
 
-      addReverseEntry(onum, newWarranty);
+      addReverseEntry(key, newWarranty);
     }
 
     return success;
@@ -130,7 +129,7 @@ public class VersionWarrantyTable {
   /**
    * Sets the default warranty for onums that aren't yet in the table.
    */
-  void setDefaultWarranty(VersionWarranty warranty) {
+  void setDefaultWarranty(V warranty) {
     defaultWarranty = warranty;
   }
 
@@ -158,9 +157,9 @@ public class VersionWarrantyTable {
         long now = System.currentTimeMillis();
 
         long nextExpiryTime = Long.MAX_VALUE;
-        for (Iterator<Entry<LongSet>> it = reverseTable.entrySet().iterator(); it
+        for (Iterator<Entry<Set<K>>> it = reverseTable.entrySet().iterator(); it
             .hasNext();) {
-          Entry<LongSet> entry = it.next();
+          Entry<Set<K>> entry = it.next();
           long expiry = entry.getKey();
 
           if (Warranty.isAfter(expiry, now, true)) {
@@ -168,13 +167,12 @@ public class VersionWarrantyTable {
             if (nextExpiryTime > expiry) nextExpiryTime = expiry;
           } else {
             // Warranty expired. Remove relevant entries from table.
-            LongSet onums = entry.getValue();
-            synchronized (onums) {
-              for (LongIterator onumIt = onums.iterator(); onumIt.hasNext();) {
-                long onum = onumIt.next();
-                Warranty warranty = table.get(onum);
+            Set<K> keys = entry.getValue();
+            synchronized (keys) {
+              for (K key : keys) {
+                Warranty warranty = table.get(key);
                 if (warranty == null || !warranty.expired(false)) continue;
-                table.remove(onum, warranty);
+                table.remove(key, warranty);
               }
 
               it.remove();

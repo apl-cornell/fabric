@@ -3,15 +3,15 @@ package fabric.store.db;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import fabric.common.Logging;
-import fabric.common.util.LongKeyCache;
+import fabric.common.util.Cache;
 
 /**
  * A warranty issuer is notified of write events and read-prepares, and uses
  * this information to decide how long issued warranties should last.
  */
-public class WarrantyIssuer {
+public class WarrantyIssuer<K> {
   private class HistoryEntry {
-    final long onum;
+    final K key;
 
     /**
      * A bit vector indicating write activity. The bit in the 2^n position
@@ -58,8 +58,8 @@ public class WarrantyIssuer {
      */
     final AtomicBoolean notifyReadPrepareFlag;
 
-    public HistoryEntry(long onum) {
-      this.onum = onum;
+    public HistoryEntry(K key) {
+      this.key = key;
       this.writeHistoryTime = System.currentTimeMillis();
       this.writeHistory = 0;
       this.lastSuggestionExpiry = 0;
@@ -94,7 +94,7 @@ public class WarrantyIssuer {
         return;
 
       synchronized (this) {
-        Logging.HOTOS_LOGGER.finer("read prepare @" + onum
+        Logging.HOTOS_LOGGER.finer("read prepare @" + key
             + " nextSuggestionLength=" + nextSuggestionLength
             + " maxWarrantyLength=" + maxWarrantyLength);
         // Ignore this if we're already issuing the maximum-length warranty.
@@ -103,15 +103,15 @@ public class WarrantyIssuer {
         // Ignore this if the last-suggested warranty covers the commitTime.
         if (lastSuggestionExpiry > commitTime) {
           Logging.HOTOS_LOGGER.finer("last suggestion not yet expired for @"
-              + onum);
+              + key);
           return;
         }
 
         // Double the suggestion length.
         nextSuggestionLength = 2 * lastSuggestionLength;
         nextSuggestionDoubled.set(true);
-        Logging.HOTOS_LOGGER.finer("doubling next suggested length for @"
-            + onum);
+        Logging.HOTOS_LOGGER
+            .finer("doubling next suggested length for @" + key);
 
 //        // If this prepare could have been avoided if the last-suggested warranty
 //        // were twice as long, then double the suggestion length.
@@ -142,7 +142,7 @@ public class WarrantyIssuer {
       synchronized (writeHistoryMutex) {
         updateWriteHistory();
         writeHistory |= 0x0001;
-        Logging.HOTOS_LOGGER.finer("writing @" + onum);
+        Logging.HOTOS_LOGGER.finer("writing @" + key);
       }
     }
 
@@ -161,10 +161,10 @@ public class WarrantyIssuer {
       // Use the writeHistory's Hamming weight to determine the maximum length
       // of the suggested warranty.
       int weight = Integer.bitCount(writeHistory & 0xffff);
-      Logging.HOTOS_LOGGER.finer("@" + onum + " writeHistory=" + writeHistory
+      Logging.HOTOS_LOGGER.finer("@" + key + " writeHistory=" + writeHistory
           + " weight=" + weight);
       int maxSuggestionLength = maxWarrantyLength >>> weight;
-      Logging.HOTOS_LOGGER.finer("@" + onum + " maxSuggestionLength="
+      Logging.HOTOS_LOGGER.finer("@" + key + " maxSuggestionLength="
           + maxSuggestionLength);
       if (maxSuggestionLength < minWarrantyLength) {
         // Writes occurring too frequently.
@@ -178,7 +178,7 @@ public class WarrantyIssuer {
       lastSuggestionLength =
           (nextSuggestionLength < maxSuggestionLength) ? nextSuggestionLength
               : maxSuggestionLength;
-      Logging.HOTOS_LOGGER.finer("@" + onum + " suggesting "
+      Logging.HOTOS_LOGGER.finer("@" + key + " suggesting "
           + lastSuggestionLength);
       lastSuggestionExpiry = expiry + lastSuggestionLength;
       nextSuggestionDoubled.set(false);
@@ -201,7 +201,7 @@ public class WarrantyIssuer {
   /**
    * Maps onums to <code>HistoryEntry</code>s.
    */
-  private final LongKeyCache<HistoryEntry> history;
+  private final Cache<K, HistoryEntry> history;
 
   /**
    * @param minWarrantyLength
@@ -215,16 +215,16 @@ public class WarrantyIssuer {
   protected WarrantyIssuer(int minWarrantyLength, int maxWarrantyLength) {
     this.minWarrantyLength = minWarrantyLength;
     this.maxWarrantyLength = maxWarrantyLength;
-    this.history = new LongKeyCache<HistoryEntry>();
+    this.history = new Cache<K, HistoryEntry>();
 
     // Sanity check.
     if (minWarrantyLength > maxWarrantyLength)
       throw new InternalError("minWarrantyLength > maxWarrantyLength");
   }
 
-  private HistoryEntry getEntry(long onum) {
-    HistoryEntry entry = new HistoryEntry(onum);
-    HistoryEntry existingEntry = history.putIfAbsent(onum, entry);
+  private HistoryEntry getEntry(K key) {
+    HistoryEntry entry = new HistoryEntry(key);
+    HistoryEntry existingEntry = history.putIfAbsent(key, entry);
     return existingEntry == null ? entry : existingEntry;
   }
 
@@ -232,16 +232,16 @@ public class WarrantyIssuer {
    * Notifies that a read has been prepared, signalling that perhaps the
    * warranties issued should be longer.
    */
-  public void notifyReadPrepare(long onum, long commitTime) {
-    getEntry(onum).notifyReadPrepare(commitTime);
+  public void notifyReadPrepare(K key, long commitTime) {
+    getEntry(key).notifyReadPrepare(commitTime);
   }
 
   /**
    * Notifies that a write has been committed to the database, allowing new
    * writes to be prepared.
    */
-  public void notifyWriteCommit(long onum) {
-    getEntry(onum).notifyWriteCommit();
+  public void notifyWriteCommit(K key) {
+    getEntry(key).notifyWriteCommit();
   }
 
   /**
@@ -249,22 +249,22 @@ public class WarrantyIssuer {
    * being prepared until the corresponding transaction either commits or
    * aborts.
    */
-  public void notifyWritePrepare(long onum) {
-    getEntry(onum).notifyWritePrepare();
+  public void notifyWritePrepare(K key) {
+    getEntry(key).notifyWritePrepare();
   }
 
   /**
    * Suggests a warranty-expiry time.
    */
-  public Long suggestWarranty(long onum) {
-    return suggestWarranty(onum, System.currentTimeMillis());
+  public Long suggestWarranty(K key) {
+    return suggestWarranty(key, System.currentTimeMillis());
   }
 
   /**
    * Suggests a warranty-expiry time beyond the given expiry time.
    */
-  public long suggestWarranty(long onum, long minExpiry) {
-    Long suggestion = getEntry(onum).suggestWarranty(minExpiry);
+  public long suggestWarranty(K key, long minExpiry) {
+    Long suggestion = getEntry(key).suggestWarranty(minExpiry);
     return suggestion == null ? minExpiry : suggestion;
   }
 }
