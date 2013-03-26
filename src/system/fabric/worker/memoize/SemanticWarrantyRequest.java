@@ -4,13 +4,18 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import fabric.common.util.LongHashSet;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.common.util.OidKeyHashMap;
+import fabric.common.TransactionID;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.worker.transaction.ReadMapEntry;
+import fabric.worker.Store;
 
 /**
  * Represents all the data needed for a request for a SemanticWarranty.  Should
@@ -22,15 +27,25 @@ public class SemanticWarrantyRequest {
   public final CallInstance call;
   public final Object value;
 
-  public final Set<ReadMapEntry> reads;
-  public final Set<_Impl> creates;
+  public final OidKeyHashMap<ReadMapEntry> reads;
+  public final OidKeyHashMap<_Impl> creates;
 
   public final LongSet readOnums;
   public final LongSet createOnums;
   public final Set<CallInstance> calls;
 
+  public TransactionID id;
+
   public SemanticWarrantyRequest(CallInstance call, Object value,
-      Set<ReadMapEntry> reads, Set<_Impl> creates, Set<CallInstance> calls) {
+      OidKeyHashMap<ReadMapEntry> reads, OidKeyHashMap<_Impl> creates,
+      Set<CallInstance> calls, TransactionID id) {
+    this(call, value, reads, creates, calls);
+    this.id = id;
+  }
+
+  public SemanticWarrantyRequest(CallInstance call, Object value,
+      OidKeyHashMap<ReadMapEntry> reads, OidKeyHashMap<_Impl> creates,
+      Set<CallInstance> calls) {
     this.call = call;
     this.value = value;
     this.reads = reads;
@@ -71,12 +86,14 @@ public class SemanticWarrantyRequest {
     (new CallResult(value)).write(out);
 
     out.writeInt(reads.size());
-    for (ReadMapEntry read : reads)
-      out.writeLong(read.obj.onum);
+    for (Entry<Store, LongKeyMap<ReadMapEntry>> entry : reads.nonNullEntrySet())
+      for (ReadMapEntry read : entry.getValue().values())
+        out.writeLong(read.obj.onum);
 
     out.writeInt(creates.size());
-    for (_Impl create : creates)
-      out.writeLong(create.$getOnum());
+    for (Entry<Store, LongKeyMap<_Impl>> entry : creates.nonNullEntrySet())
+      for (_Impl create : entry.getValue().values())
+        out.writeLong(create.$getOnum());
 
     out.writeInt(calls.size());
     for (CallInstance subcall : calls) {

@@ -19,8 +19,13 @@ public class Test {
   private List merge(int n, List a_orig, List b_orig) {
     Store s = Config.STORE;
     List merged = new LinkedList().fabric$util$LinkedList$();
+    //System.out.print("a_orig: "); printList(a_orig);
     List a = new LinkedList().fabric$util$LinkedList$(a_orig);
+    //System.out.print("a: "); printList(a);
+    //System.out.print("b_orig: "); printList(b_orig);
     List b = new LinkedList().fabric$util$LinkedList$(b_orig);
+    //System.out.print("b: "); printList(b);
+    //System.out.println();
     for (int i = 0; i < n; i++) {
       if (a.isEmpty() && b.isEmpty()) {
         break;
@@ -42,11 +47,14 @@ public class Test {
     Store s = Config.STORE;
     List rtn = new LinkedList@s().fabric$util$LinkedList$(); 
     if (max - min == 1) {
-      rtn.add((TwooterAccount) s.getRoot().get(new Integer(min)));
+      TwooterAccount foo = (TwooterAccount) s.getRoot().get(new Integer(min));
+      //System.out.println("" + n + "=" + foo);
+      rtn.add(foo);
     } else if (max > min) {
       rtn.addAll(merge(n, topAccountsBetween(n, min, min + ((max - min) >> 1)),
             topAccountsBetween(n, min + ((max - min) >> 1), max)));
     }
+    //System.out.print("" + min + " <-" + n + "-> " + max + ": "); printList(rtn); System.out.println();
     return rtn;
   }
 
@@ -75,11 +83,6 @@ public class Test {
       for (int j = 0; j < n && j < top.size(); j++) {
         System.out.println(((TwooterAccount) top.get(j)));
       }
-      /*
-      atomic {
-        t.foo(5);
-      }
-      */
     }
   }
 }

@@ -6,15 +6,13 @@ import fabric.util.Map;
 
 public class Create {
   public static void populateUsers() {
-    Map m = null;
+    Map m = Config.STORE.getRoot();
     atomic {
-      m = Config.STORE.getRoot();
       if (m.containsKey("initialized")) return;
     }
     System.out.println(m.size());
-    Random rnd = null;
     atomic {
-      rnd = new Random(0xDEADBEEF);
+      Random rnd = new Random(0xDEADBEEF);
       for (int i = 0; i < Config.NUM_USERS; i++) {
         Store s = Config.STORE;
         m.put(new Integer(i), new TwooterAccount@s("UID" + i,

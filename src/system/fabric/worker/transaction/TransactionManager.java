@@ -2,6 +2,7 @@ package fabric.worker.transaction;
 
 import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTED;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTING;
 import static fabric.worker.transaction.Log.CommitState.Values.COMMITTED;
@@ -417,12 +418,24 @@ public final class TransactionManager {
         .entrySet()) {
       SemanticWarrantyRequest req = entry.getValue();
       // reads
-      for (ReadMapEntry read : req.reads)
-        current.reads.put(read.obj.store, read.obj.onum, read);
+      for (Entry<Store, LongKeyMap<ReadMapEntry>> readEntry : req.reads.nonNullEntrySet()) {
+        for (ReadMapEntry read : readEntry.getValue().values()) {
+          current.reads.put(read.obj.store, read.obj.onum, read);
+          SEMANTIC_WARRANTY_LOGGER.finest("Gathering read " + read.obj.onum + " from " + req.call + " " + req.id);
+        }
+      }
       // creates
-      for (_Impl create : req.creates)
-        current.creates.add(create);
+      for (Entry<Store, LongKeyMap<_Impl>> createEntry : req.creates.nonNullEntrySet()) {
+        for (_Impl create : createEntry.getValue().values()) {
+          current.creates.add(create);
+          SEMANTIC_WARRANTY_LOGGER.finest("Gathering create " + create.$getOnum() + " from " + req.call + " " + req.id);
+        }
+      }
     }
+
+    SEMANTIC_WARRANTY_LOGGER.finest("Creates:");
+    for (_Impl create : current.creates)
+      SEMANTIC_WARRANTY_LOGGER.finest("\tonum " + create.$getOnum());
 
     // Send prepare-write messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
@@ -744,7 +757,7 @@ public final class TransactionManager {
 
             // Prepare was successful. Update the objects' warranties.
             current.updateVersionWarranties(s, allNewWarranties.first);
-            // TODO: Update semantic warranties using response...
+            // TODO Update warranties on calls.
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) s, e);
           } catch (UnreachableNodeException e) {
@@ -1058,6 +1071,8 @@ public final class TransactionManager {
    * with it (so it's not a SemanticWarranty request).
    */
   public void setSemanticWarrantyValue(fabric.lang.Object v) {
+    SEMANTIC_WARRANTY_LOGGER.finest("Call: " + current.semanticWarrantyCall
+        + " gets value " + v.$getOnum());
     current.semanticWarrantyValue = v;
   }
 
@@ -1247,6 +1262,8 @@ public final class TransactionManager {
         }
       } else {
         synchronized (current.creates) {
+          if (current.semanticWarrantyCall != null)
+            SEMANTIC_WARRANTY_LOGGER.finest("" + current.semanticWarrantyCall + " CREATING " + obj.$getOnum());
           current.creates.add(obj);
         }
       }
@@ -1311,6 +1328,14 @@ public final class TransactionManager {
         @Override
         public void run() {
           LongKeyMap<Integer> reads = current.getReadsForStore(store);
+          // Because this could be during a subtransaction (and not at the top
+          // level after gathering all the warranty request information), filter
+          // reads for creates done by semantic warranty requests.
+          for (SemanticWarrantyRequest req : current.requests.values())
+            for (Entry<Store, LongKeyMap<_Impl>> entry : req.creates.nonNullEntrySet())
+              for (_Impl create : entry.getValue().values())
+                reads.remove(create.$getOnum());
+
           if (store.checkForStaleObjects(reads))
             nodesWithStaleObjects.add((RemoteNode) store);
         }
