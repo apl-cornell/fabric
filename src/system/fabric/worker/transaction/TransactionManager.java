@@ -722,13 +722,11 @@ public final class TransactionManager {
     for (Store store : storesToContact) {
       count++;
       LongKeyMap<Integer> tmpReads = storesRead.get(store);
-      Set<CallInstance> tmpCalls = storesCalled.get(store);
 
       final Store s = store;
       final LongKeyMap<Integer> reads =
           tmpReads != null ? tmpReads : new LongKeyHashMap<Integer>();
-      final Set<CallInstance> calls =
-          tmpCalls != null ? tmpCalls : new HashSet<CallInstance>();
+      final Map<CallInstance, WarrantiedCallResult> calls = current.getCallsForStore(store);
       Runnable runnable = new Runnable() {
         @Override
         public void run() {
@@ -739,12 +737,14 @@ public final class TransactionManager {
                   + "will expire", current.tid.topTid, s, reads.size());
             }
 
-            LongKeyMap<VersionWarranty> newWarranties =
+            Pair<LongKeyMap<VersionWarranty>, Map<CallInstance,
+              SemanticWarranty>> allNewWarranties =
                 s.prepareTransactionReads(current.tid.topTid, reads, calls,
                     commitTime);
 
             // Prepare was successful. Update the objects' warranties.
-            current.updateVersionWarranties(s, newWarranties);
+            current.updateVersionWarranties(s, allNewWarranties.first);
+            // TODO: Update semantic warranties using response...
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) s, e);
           } catch (UnreachableNodeException e) {

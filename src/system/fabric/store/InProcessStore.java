@@ -19,6 +19,7 @@ import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -103,14 +104,18 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public LongKeyMap<VersionWarranty> prepareTransactionReads(long tid,
-      LongKeyMap<Integer> reads, Set<CallInstance> calls, long commitTime) throws
+  public Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, SemanticWarranty>>
+  prepareTransactionReads(long tid, LongKeyMap<Integer> reads, Map<CallInstance,
+      WarrantiedCallResult> calls, long commitTime) throws
   TransactionPrepareFailedException {
     LongKeyMap<VersionWarranty> updates =
 	tm.prepareReads(Worker.getWorker().getPrincipal(), tid, reads,
                         commitTime);
-    tm.prepareCalls(Worker.getWorker().getPrincipal(), tid, calls, commitTime);
-    return updates;
+    Map<CallInstance, SemanticWarranty> semUpdates =
+      tm.prepareCalls(Worker.getWorker().getPrincipal(), tid, calls,
+          commitTime);
+    return new Pair<LongKeyMap<VersionWarranty>, Map<CallInstance,
+           SemanticWarranty>>(updates, semUpdates);
   }
 
   @Override

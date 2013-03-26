@@ -342,23 +342,23 @@ public class TransactionManager {
    *           If the transaction could not successfully extend the
    *           SemanticWarranty on any of the calls
    */
-  public void prepareCalls(Principal worker, long tid, Set<CallInstance> calls,
-      long commitTime) throws TransactionPrepareFailedException {
-    for (CallInstance call : calls) {
+  public Map<CallInstance, SemanticWarranty> prepareCalls(Principal worker, long
+      tid, Map<CallInstance, WarrantiedCallResult> calls, long commitTime)
+    throws TransactionPrepareFailedException {
+    Map<CallInstance, SemanticWarranty> updatedWars = new HashMap<CallInstance, SemanticWarranty>();
+    for (CallInstance call : calls.keySet()) {
       semanticWarranties.notifyReadPrepare(call, commitTime);
-      // XXX We have a race condition here...
-      if (semanticWarranties.get(call) == null) {
-        throw new TransactionPrepareFailedException(
-            "Could not extend warranty for call" + call + 
-            " because it doesn't exist in the table!");
-      }
-      if (!semanticWarranties.extend(call,
-            semanticWarranties.get(call).warranty,
-            new SemanticWarranty(commitTime))) {
+      SemanticWarranty newWar = new SemanticWarranty(commitTime);
+      boolean updated = semanticWarranties.extend(call, calls.get(call),
+          newWar);
+      if (!updated) {
+        //XXX: This should wait until we've attempted all calls.
         throw new TransactionPrepareFailedException(
             "Could not extend warranty for call" + call);
       }
+      updatedWars.put(call, newWar);
     }
+    return updatedWars;
   }
 
   /**

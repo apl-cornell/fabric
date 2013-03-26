@@ -49,9 +49,10 @@ public interface Store extends Serializable {
    * 
    * @return the set of new version warranties.
    */
-  LongKeyMap<VersionWarranty> prepareTransactionReads(long tid,
-      LongKeyMap<Integer> reads, Set<CallInstance> calls, long commitTime)
-      throws UnreachableNodeException, TransactionPrepareFailedException;
+  Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, SemanticWarranty>>
+    prepareTransactionReads(long tid, LongKeyMap<Integer> reads,
+        Map<CallInstance, WarrantiedCallResult> calls, long commitTime) throws
+    UnreachableNodeException, TransactionPrepareFailedException;
 
   /**
    * Returns the cache entry for the given onum. If the object is not resident,

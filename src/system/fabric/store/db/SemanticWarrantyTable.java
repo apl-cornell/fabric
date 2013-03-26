@@ -162,9 +162,21 @@ public class SemanticWarrantyTable {
    * 
    * @return true iff the warranty was replaced.
    */
-  public final boolean extend(CallInstance id, SemanticWarranty oldWarranty,
+  public final boolean extend(CallInstance id, WarrantiedCallResult oldValue,
       SemanticWarranty newWarranty) {
-    return warrantyTable.extend(id, oldWarranty, newWarranty);
+    if (oldValue.value.equals(valueTable.get(id)))
+      return warrantyTable.extend(id, oldValue.warranty, newWarranty);
+    return false;
+  }
+
+  /**
+   * Remove the call's associated value from the table.
+   */
+  public final void remove(CallInstance call) {
+    // We let the warranty die a natural death
+    // We remove the associated value
+    valueTable.remove(call);
+    dependencyTable.removeCall(call);
   }
 
   /**

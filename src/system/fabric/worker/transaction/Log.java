@@ -666,14 +666,15 @@ public final class Log {
   /**
    * Returns the set of call ids used from a given store
    */
-  Set<CallInstance> getCallsForStore(Store store) {
+  Map<CallInstance, WarrantiedCallResult> getCallsForStore(Store store) {
     Set<CallInstance> requestsSet = new HashSet<CallInstance>();
     for (SemanticWarrantyRequest req : getRequestsForStore(store))
       requestsSet.add(req.call);
-    Set<CallInstance> callSet = new HashSet<CallInstance>();
+    Map<CallInstance, WarrantiedCallResult> callSet = new
+      HashMap<CallInstance, WarrantiedCallResult>();
     for (CallInstance c : semanticWarrantiesUsed.keySet())
       if (c.target.$getStore() == store && !requestsSet.contains(c))
-        callSet.add(c);
+        callSet.put(c, semanticWarrantiesUsed.get(c));
     return callSet;
   }
 

@@ -239,8 +239,10 @@ class Store extends MessageToStoreHandler {
 
     LongKeyMap<VersionWarranty> newWarranties =
         prepareTransactionReads(p, msg.tid, msg.reads, msg.commitTime);
-    prepareTransactionCalls(p, msg.tid, msg.calls, msg.commitTime);
-    return new PrepareTransactionReadsMessage.Response(newWarranties);
+    Map<CallInstance, SemanticWarranty> newSemWarranties =
+      prepareTransactionCalls(p, msg.tid, msg.calls, msg.commitTime);
+    return new PrepareTransactionReadsMessage.Response(newWarranties,
+        newSemWarranties);
   }
 
   /**
@@ -370,10 +372,10 @@ class Store extends MessageToStoreHandler {
     return tm.prepareReads(p, tid, reads, commitTime);
   }
 
-  private void prepareTransactionCalls(Principal p, long tid,
-      Set<CallInstance> calls, long commitTime)
-    throws TransactionPrepareFailedException {
-    tm.prepareCalls(p, tid, calls, commitTime);
+  private Map<CallInstance, SemanticWarranty> prepareTransactionCalls(Principal
+      p, long tid, Map<CallInstance, WarrantiedCallResult> calls, long
+      commitTime) throws TransactionPrepareFailedException {
+    return tm.prepareCalls(p, tid, calls, commitTime);
   }
 
   /**

@@ -3,14 +3,18 @@ package fabric.messages;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
+import fabric.common.SemanticWarranty;
 import fabric.common.VersionWarranty;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.security.Principal;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.TransactionPrepareFailedException;
 
 /**
@@ -27,7 +31,7 @@ public class PrepareTransactionReadsMessage extends
   public final long tid;
   public final long commitTime;
   public final LongKeyMap<Integer> reads;
-  public final Set<CallInstance> calls;
+  public final Map<CallInstance, WarrantiedCallResult> calls;
 
   /**
    * Used to prepare transactions at remote workers.
@@ -40,12 +44,13 @@ public class PrepareTransactionReadsMessage extends
    * Only used by the worker.
    */
   public PrepareTransactionReadsMessage(long tid, LongKeyMap<Integer> reads,
-      Set<CallInstance> calls, long commitTime) {
+      Map<CallInstance, WarrantiedCallResult> calls, long commitTime) {
     this(tid, commitTime, reads, calls);
   }
 
   private PrepareTransactionReadsMessage(long tid, long commitTime,
-      LongKeyMap<Integer> reads, Set<CallInstance> calls) {
+      LongKeyMap<Integer> reads, Map<CallInstance, WarrantiedCallResult> calls)
+  {
     super(MessageType.PREPARE_TRANSACTION_READS,
         TransactionPrepareFailedException.class);
 
@@ -61,13 +66,17 @@ public class PrepareTransactionReadsMessage extends
 
   public static class Response implements Message.Response {
     public final LongKeyMap<VersionWarranty> newWarranties;
+    public final Map<CallInstance, SemanticWarranty> newSemWarranties;
 
     public Response() {
       this.newWarranties = null;
+      this.newSemWarranties = null;
     }
 
-    public Response(LongKeyMap<VersionWarranty> newWarranties) {
+    public Response(LongKeyMap<VersionWarranty> newWarranties, Map<CallInstance,
+        SemanticWarranty> newSemWarranties) {
       this.newWarranties = newWarranties;
+      this.newSemWarranties = newSemWarranties;
     }
   }
 
@@ -106,8 +115,9 @@ public class PrepareTransactionReadsMessage extends
       out.writeInt(0);
     } else {
       out.writeInt(calls.size());
-      for (CallInstance call : calls) {
+      for (CallInstance call : calls.keySet()) {
         call.write(out);
+        calls.get(call).write(out);
       }
     }
   }
@@ -132,33 +142,38 @@ public class PrepareTransactionReadsMessage extends
     }
 
     int callSize = in.readInt();
-    calls = new HashSet<CallInstance>();
+    calls = new HashMap<CallInstance, WarrantiedCallResult>();
     for (int i = 0; i < callSize; i++) {
-      calls.add(new CallInstance(in));
+      CallInstance key = new CallInstance(in);
+      calls.put(key, new WarrantiedCallResult(in));
     }
   }
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     if (r.newWarranties == null) {
-      out.writeBoolean(false);
-      return;
+      out.writeInt(0);
+    } else {
+      out.writeInt(r.newWarranties.size());
+      for (LongKeyMap.Entry<VersionWarranty> entry : r.newWarranties.entrySet()) {
+        out.writeLong(entry.getKey());
+        out.writeLong(entry.getValue().expiry());
+      }
     }
 
-    out.writeBoolean(true);
-    out.writeInt(r.newWarranties.size());
-    for (LongKeyMap.Entry<VersionWarranty> entry : r.newWarranties.entrySet()) {
-      out.writeLong(entry.getKey());
-      out.writeLong(entry.getValue().expiry());
+    if (r.newSemWarranties == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(r.newSemWarranties.size());
+      for (Map.Entry<CallInstance, SemanticWarranty> entry : r.newSemWarranties.entrySet()) {
+        entry.getKey().write(out);
+        out.writeLong(entry.getValue().expiry());
+      }
     }
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    if (!in.readBoolean()) {
-      return new Response();
-    }
-
     int size = in.readInt();
     LongKeyMap<VersionWarranty> newWarranties =
         new LongKeyHashMap<VersionWarranty>(size);
@@ -166,6 +181,14 @@ public class PrepareTransactionReadsMessage extends
       newWarranties.put(in.readLong(), new VersionWarranty(in.readLong()));
     }
 
-    return new Response(newWarranties);
+    int semSize = in.readInt();
+    Map<CallInstance, SemanticWarranty> newSemWarranties =
+        new HashMap<CallInstance, SemanticWarranty>(semSize);
+    for (int i = 0; i < semSize; i++) {
+      CallInstance key = new CallInstance(in);
+      newSemWarranties.put(key, new SemanticWarranty(in.readLong()));
+    }
+
+    return new Response(newWarranties, newSemWarranties);
   }
 }
