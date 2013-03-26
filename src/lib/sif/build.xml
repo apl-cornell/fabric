@@ -86,8 +86,8 @@
   </target>
 
   <target name="build-sif-java" depends="init, build-sif-fab">
-    <javac source="1.6"
-           target="1.6"
+    <javac source="1.7"
+           target="1.7"
            srcdir="${src}"
            destdir="${sif.classes}"
            debug="true"

@@ -26,9 +26,9 @@ public class Main extends polyglot.main.Main {
     List<String> result =
         new ArrayList<String>(super.getSystemJavacArgs(options));
     result.add("-source");
-    result.add("1.6");
+    result.add("1.7");
     result.add("-target");
-    result.add("1.6");
+    result.add("1.7");
     return result;
   }
 }
