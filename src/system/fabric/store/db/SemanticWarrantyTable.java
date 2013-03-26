@@ -39,6 +39,10 @@ import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.transaction.TransactionManager;
 
+/* TODO:
+ *      - It would be more reassuring if we associated calls in the dependencies
+ *      with the values we thought they had.
+ */
 /**
  * A table containing semantic warranties, keyed by CallInstance id, and
  * supporting concurrent accesses.
@@ -213,16 +217,42 @@ public class SemanticWarrantyTable {
   }
 
   /**
-   * Remove the call's associated value from the table.
+   * Remove the call's associated value from the table.  Returns the set of
+   * calls that used this value and are under valid warranties.
+   *
+   * Valid Warranty Calls that used this call
    */
-  public final void remove(CallInstance call) {
+  public final Set<CallInstance> remove(CallInstance call) {
+    Set<CallInstance> validCallers = new HashSet<CallInstance>();
     lockTable.putIfAbsent(call, new Object());
     synchronized (lockTable.get(call)) {
+      if (!warrantyTable.get(call).expired(true)) return validCallers;
       // We let the warranty die a natural death
       // Remove the associated value
       valueTable.remove(call);
+
+      // Update callers of the call to have the callers dependencies if they're
+      // still valid, otherwise remove them too.
+      Set<CallInstance> callsUsed = dependencyTable.getCalls(call);
+      LongSet readsUsed = dependencyTable.getReads(call);
+      Set<CallInstance> callers = new
+        HashSet<CallInstance>(dependencyTable.getCallers(call));
+      for (CallInstance caller : callers) {
+        if (get(caller).warranty.expired(true)) {
+          // Zap the caller if it's also stale and moldy
+          remove(caller);
+        } else {
+          // Update the dependency table so that the writes on the old call now
+          // are marked for defense of the still fresh caller.
+          dependencyTable.addDependenciesForCall(caller, readsUsed, callsUsed);
+          validCallers.add(caller);
+        }
+      }
+
       // Remove the dependencies
       dependencyTable.removeCall(call);
+
+      return validCallers;
     }
   }
 
@@ -264,7 +294,13 @@ public class SemanticWarrantyTable {
         } else if (dependentWarranty.expired(true)) {
           // ZZZZAP, value is (probably) out of date.
           // XXX notify write prepare here?
-          remove(call);
+          Set<CallInstance> validCallers = remove(call);
+          for (CallInstance caller : validCallers) {
+            SemanticWarranty callerWarranty = get(caller).warranty;
+            if (callerWarranty.expiresAfter(commitTime, true))
+              dependencies.add(new Pair<CallInstance, SemanticWarranty>(caller,
+                    callerWarranty));
+          }
         }
       }
     }

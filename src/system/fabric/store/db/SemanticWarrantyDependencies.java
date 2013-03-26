@@ -7,6 +7,7 @@ import java.util.Set;
 
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
 import fabric.worker.memoize.CallInstance;
@@ -117,11 +118,45 @@ public class SemanticWarrantyDependencies {
   }
 
   /**
+   * Add sets of additional reads and writes to an existing set of dependencies.
+   */
+  public void addDependenciesForCall(CallInstance call, LongSet reads,
+      Set<CallInstance> calls) {
+    if (reads != null) {
+      objectsRead.get(call).addAll(reads);
+      for (LongIterator it = reads.iterator(); it.hasNext();)
+        objectReaders.get(it.next()).add(call);
+    }
+
+    if (calls != null) {
+      callsUsed.get(call).addAll(calls);
+      for (CallInstance callee : calls)
+        callUsers.get(callee).add(call);
+    }
+  }
+
+  /**
    * Get the set of call ids that depend on the given call.
    */
   public Set<CallInstance> getCallers(CallInstance id) {
     Set<CallInstance> inTable = callUsers.get(id);
     return inTable == null ? new HashSet<CallInstance>() : inTable;
+  }
+
+  /**
+   * Get the set of call ids that the given call used
+   */
+  public Set<CallInstance> getCalls(CallInstance id) {
+    Set<CallInstance> inTable = callsUsed.get(id);
+    return inTable == null ? new HashSet<CallInstance>() : inTable;
+  }
+
+  /**
+   * Get the set of onums that the given call used
+   */
+  public LongSet getReads(CallInstance id) {
+    LongSet inTable = objectsRead.get(id);
+    return inTable == null ? new LongHashSet() : inTable;
   }
 
   /**
