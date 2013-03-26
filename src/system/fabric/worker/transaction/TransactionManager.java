@@ -13,11 +13,12 @@ import static fabric.worker.transaction.Log.CommitState.Values.PREPARING;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -54,6 +55,7 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
@@ -406,9 +408,21 @@ public final class TransactionManager {
     }
 
     // Commit top-level transaction.
-     
+
     // Create top level SemanticWarrantyRequest, if any.
     current.createCurrentRequest();
+
+    // Collect logs from nested semantic warranty requests
+    for (Entry<CallInstance, SemanticWarrantyRequest> entry : current.requests
+        .entrySet()) {
+      SemanticWarrantyRequest req = entry.getValue();
+      // reads
+      for (ReadMapEntry read : req.reads)
+        current.reads.put(read.obj.store, read.obj.onum, read);
+      // creates
+      for (_Impl create : req.creates)
+        current.creates.add(create);
+    }
 
     // Send prepare-write messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
@@ -697,7 +711,8 @@ public final class TransactionManager {
 
     // Go through each store and send prepare messages in parallel.
     Map<Store, LongKeyMap<Integer>> storesRead = current.storesRead(commitTime);
-    Map<Store, Set<CallInstance>> storesCalled = current.storesCalled(commitTime);
+    Map<Store, Set<CallInstance>> storesCalled =
+        current.storesCalled(commitTime);
 
     Set<Store> storesToContact = new HashSet<Store>(storesCalled.keySet());
     storesToContact.addAll(storesRead.keySet());
@@ -710,9 +725,10 @@ public final class TransactionManager {
       Set<CallInstance> tmpCalls = storesCalled.get(store);
 
       final Store s = store;
-      final LongKeyMap<Integer> reads = tmpReads != null ? tmpReads : new
-        LongKeyHashMap<Integer>();
-      final Set<CallInstance> calls = tmpCalls != null ? tmpCalls : new HashSet<CallInstance>();
+      final LongKeyMap<Integer> reads =
+          tmpReads != null ? tmpReads : new LongKeyHashMap<Integer>();
+      final Set<CallInstance> calls =
+          tmpCalls != null ? tmpCalls : new HashSet<CallInstance>();
       Runnable runnable = new Runnable() {
         @Override
         public void run() {
@@ -732,8 +748,8 @@ public final class TransactionManager {
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) s, e);
           } catch (UnreachableNodeException e) {
-            failures.put((RemoteNode) s,
-                new TransactionPrepareFailedException("Unreachable s"));
+            failures.put((RemoteNode) s, new TransactionPrepareFailedException(
+                "Unreachable s"));
           }
         }
       };

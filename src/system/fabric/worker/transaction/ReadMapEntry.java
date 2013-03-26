@@ -15,7 +15,7 @@ public final class ReadMapEntry {
   /**
    * The object to which this entry corresponds.
    */
-  FabricSoftRef obj;
+  public FabricSoftRef obj;
 
   /**
    * The object's version number.

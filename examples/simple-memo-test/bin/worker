@@ -1,8 +1,7 @@
 #!/bin/bash
-
 APP_HOME="$(dirname $0)/.."
-PATH="${PATH}:${APP_HOME}/../../bin"
+PATH="${APP_HOME}/../../bin:${PATH}"
 
 export FABRIC_HOME="${APP_HOME}"
-
+echo `which fab`
 fab --jvm-cp "${APP_HOME}/classes" --app-home "${APP_HOME}" --name worker SimpleMemoTest "$@"
