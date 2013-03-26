@@ -4,6 +4,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/* TODO:
+ *      - Maybe use a concurrent map rather than a synchronized map?
+ */
 /**
  * Represents a Cache of all the call values known to this worker along with the
  * semantic warranties for these calls.
@@ -18,23 +21,20 @@ public final class CallCache {
   }
 
   public WarrantiedCallResult get(CallInstance call) {
-    synchronized (callTable) {
-      WarrantiedCallResult result = callTable.get(call);
-      if (result == null) {
-        return null;
-      } else if (result.warranty.expired(true)) {
-        callTable.remove(call);
-        return null;
-      } else {
-        return result;
-      }
-    }
+    WarrantiedCallResult res = callTable.get(call);
+    if (res == null || res.warranty.expired(true))
+      return null;
+    return res;
   }
 
   public void put(CallInstance call, WarrantiedCallResult result) {
     if (result.warranty == null) {
-      new Exception().printStackTrace();
+      throw new InternalError("Tried to add a call with no warranty!");
     }
     callTable.put(call, result);
+  }
+
+  public void remove(CallInstance call) {
+    callTable.remove(call);
   }
 }

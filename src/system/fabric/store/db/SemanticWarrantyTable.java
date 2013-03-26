@@ -2,15 +2,11 @@ package fabric.store.db;
 
 import java.util.concurrent.Future;
 
-import static fabric.common.Logging.STORE_DB_LOGGER;
 import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map.Entry;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -21,7 +17,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
@@ -49,25 +44,19 @@ import fabric.worker.transaction.TransactionManager;
  * supporting concurrent accesses.
  */
 public class SemanticWarrantyTable {
+  private static final int MIN_SEMANTIC_WARRANTY = 250;
   private static final int MAX_SEMANTIC_WARRANTY = 10000;
 
   /**
-   * The default warranty for ids that aren't yet in the table. All warranties
-   * in the table should expire after the default warranty.
+   * Table for looking up warranties of calls.
    */
-  private volatile SemanticWarranty defaultWarranty;
-
-  private final Map<CallInstance, WarrantiedCallResult> table;
-
-  private final Collector collector;
+  private final WarrantyTable<CallInstance, SemanticWarranty> warrantyTable;
 
   /**
-   * Reverse mapping: maps semantic warranties to corresponding ids.
-   *
-   * Primarily used for sweeping away expired entries.
+   * Table for looking up call values.
    */
-  private final ConcurrentMap<SemanticWarranty, Set<CallInstance>> reverseTable;
-
+  private final ConcurrentMap<CallInstance, fabric.lang.Object> valueTable;
+  
   /**
    * Table for looking up dependencies of calls on various reads and calls
    */
@@ -86,20 +75,19 @@ public class SemanticWarrantyTable {
           Pair<SemanticWarrantyRequest, SemanticWarranty>>> pendingMap;
 
   public SemanticWarrantyTable(ObjectDB database) {
-    defaultWarranty = new SemanticWarranty(0);
-    table = new ConcurrentHashMap<CallInstance, WarrantiedCallResult>();
-    reverseTable = new ConcurrentHashMap<SemanticWarranty, Set<CallInstance>>();
+    warrantyTable = new WarrantyTable<CallInstance, SemanticWarranty>(new
+        SemanticWarranty(0));
+    valueTable = new ConcurrentHashMap<CallInstance, fabric.lang.Object>();
     dependencyTable = new SemanticWarrantyDependencies();
-    issuer = new WarrantyIssuer<CallInstance>(250, MAX_SEMANTIC_WARRANTY);
+    issuer = new WarrantyIssuer<CallInstance>(MIN_SEMANTIC_WARRANTY,
+        MAX_SEMANTIC_WARRANTY);
     pendingMap = new ConcurrentLongKeyHashMap<Map<CallInstance,
                Pair<SemanticWarrantyRequest, SemanticWarranty>>>();
-
-    collector = new Collector();
-    collector.start();
   }
 
   public final WarrantiedCallResult get(CallInstance id) {
-    return table.get(id);
+    if (valueTable.get(id) == null) return null;
+    return new WarrantiedCallResult(valueTable.get(id), warrantyTable.get(id));
   }
 
   /* Create a warranty with a suggested time for the given call with the
@@ -148,35 +136,14 @@ public class SemanticWarrantyTable {
    */
   public final void put(CallInstance id, LongSet reads, Set<CallInstance> calls,
       fabric.lang.Object value, SemanticWarranty warranty) {
-    WarrantiedCallResult result = new WarrantiedCallResult(value, warranty);
-    if (defaultWarranty.expiresAfter(warranty)) {
-      throw new InternalError("Attempted to insert a warranty that expires "
-          + "before the default warranty. This should not happen.");
-    }
+    // Add warranty to warranty table
+    warrantyTable.put(id, warranty);
 
-    long expiry = warranty.expiry();
-    long length = expiry - System.currentTimeMillis();
-    STORE_DB_LOGGER.finest("Adding warranty for call " + id + "=" + result
-        + "; expiry=" + expiry + " (in " + length + " ms)");
-
-    table.put(id, result);
-
-    Set<CallInstance> set = new HashSet<CallInstance>();
-    Set<CallInstance> existingSet = reverseTable.putIfAbsent(warranty, set);
-    if (existingSet != null) set = existingSet;
-    synchronized (set) {
-      set.add(id);
-
-      // Make sure the reverse table has an entry for the warranty, in case it
-      // was removed by the Collector thread.
-      reverseTable.put(warranty, set);
-    }
+    // Add result to value table
+    valueTable.put(id, value);
 
     // Add the warranty dependencies to the dependencyTable
     dependencyTable.addCall(id, reads, calls);
-
-    // Signal the collector thread that we have a new warranty.
-    collector.signalNewWarranty();
   }
 
   /**
@@ -187,66 +154,7 @@ public class SemanticWarrantyTable {
    */
   public final boolean extend(CallInstance id, SemanticWarranty oldWarranty,
       SemanticWarranty newWarranty) {
-    if (defaultWarranty.expiresAfter(newWarranty)) {
-      throw new InternalError("Attempted to insert a warranty that expires "
-          + "before the default warranty. This should not happen.");
-    }
-
-    if (oldWarranty.expiresAfter(newWarranty)) {
-      /*
-      throw new InternalError(
-          "Attempted to extend a warranty " + oldWarranty.expiry()
-          + " with one that expires sooner " + newWarranty.expiry() + ".");
-          */
-      // Do nothing, as far as we're concerned, this is fine.
-      return true;
-    }
-
-    /*
-    boolean success = false;
-    if (oldWarranty == defaultWarranty) {
-      success = table.putIfAbsent(id, newWarranty) == null;
-    }
-
-    if (!success) success = table.replace(id, oldWarranty, newWarranty);
-    */
-
-    boolean success = false;
-    WarrantiedCallResult oldEntry = table.get(id);
-    if (oldEntry.warranty.equals(oldWarranty)) {
-      table.put(id, new WarrantiedCallResult(oldEntry.value, newWarranty));
-      success = true;
-    }
-
-    if (success) {
-      long expiry = newWarranty.expiry();
-      long length = expiry - System.currentTimeMillis();
-      STORE_DB_LOGGER.finest("Extended warranty for id " + id + "; expiry="
-          + expiry + " (in " + length + " ms)");
-
-      Set<CallInstance> set = new HashSet<CallInstance>();
-      Set<CallInstance> existingSet = reverseTable.putIfAbsent(newWarranty, set);
-      if (existingSet != null) set = existingSet;
-      synchronized (set) {
-        set.add(id);
-
-        // Make sure the reverse table has an entry for the warranty, in case it
-        // was removed by the Collector thread.
-        reverseTable.put(newWarranty, set);
-      }
-
-      // Signal the collector thread that we have a new warranty.
-      collector.signalNewWarranty();
-    }
-
-    return success;
-  }
-
-  /**
-   * Sets the default warranty for ids that aren't yet in the table.
-   */
-  public void setDefaultWarranty(SemanticWarranty warranty) {
-    defaultWarranty = warranty;
+    return warrantyTable.extend(id, oldWarranty, newWarranty);
   }
 
   /**
@@ -394,70 +302,5 @@ public class SemanticWarrantyTable {
       }
     }
     pendingMap.remove(transactionID);
-  }
-
-  /**
-   * GC thread for expired warranties.
-   */
-  private final class Collector extends Thread {
-    private final long MIN_WAIT_TIME = 1000;
-    private final AtomicBoolean haveNewWarranty;
-
-    public Collector() {
-      super("Warranty GC");
-      setDaemon(true);
-
-      this.haveNewWarranty = new AtomicBoolean(false);
-    }
-
-    private void signalNewWarranty() {
-      haveNewWarranty.set(true);
-    }
-
-    @Override
-    public void run() {
-      while (true) {
-        long now = System.currentTimeMillis();
-
-        long nextExpiryTime = Long.MAX_VALUE;
-        for (Iterator<Entry<SemanticWarranty, Set<CallInstance>>> it =
-            reverseTable.entrySet().iterator(); it.hasNext();) {
-          Entry<SemanticWarranty, Set<CallInstance>> entry = it.next();
-          SemanticWarranty warranty = entry.getKey();
-
-          if (warranty.expiresAfter(now, true)) {
-            // Warranty still valid. Update nextExpiryTime as necessary.
-            long expiry = warranty.expiry();
-            if (nextExpiryTime > expiry) nextExpiryTime = expiry;
-          } else {
-            // Warranty expired. Remove relevant entries from table.
-            Set<CallInstance> ids = entry.getValue();
-            synchronized (ids) {
-              for (CallInstance call : ids) {
-                table.remove(call);
-                dependencyTable.removeCall(call);
-              }
-
-              it.remove();
-            }
-          }
-        }
-
-        // Wait until either the next warranty expires or we have more
-        // warranties.
-        long waitTime = nextExpiryTime - System.currentTimeMillis();
-        for (int timeWaited = 0; timeWaited < waitTime; timeWaited +=
-            MIN_WAIT_TIME) {
-          try {
-            Thread.sleep(MIN_WAIT_TIME);
-          } catch (InterruptedException e) {
-          }
-
-          if (haveNewWarranty.getAndSet(false)) {
-            break;
-          }
-        }
-      }
-    }
   }
 }
