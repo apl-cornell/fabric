@@ -11,6 +11,9 @@ public class HandshakeUnauthenticated implements Protocol {
   // client -> server : name
   //
 
+  /**
+   * @param name The name of the remote host.
+   */
   @Override
   public ShakenSocket initiate(String name, Socket s) throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
