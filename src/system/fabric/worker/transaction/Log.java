@@ -873,9 +873,14 @@ public final class Log {
         }
       }
     }
+
     // Merge localStore reads with parent.
-    if (parent != null) for (ReadMapEntry read : localReads)
-      parent.transferReadLock(this, read);
+    if (parent != null) {
+      for (ReadMapEntry read : localReads)
+        parent.transferReadLock(this, read);
+      for (ReadMapEntry read : readsForTargetStore)
+        parent.transferReadLock(this, read, false);
+    }
 
     // Check creates, collecting localStore creates
     Set<_Impl> createsForTargetStore = new HashSet<_Impl>();
@@ -905,6 +910,9 @@ public final class Log {
       synchronized (parentCreates) {
         for (_Impl obj : localCreates) {
           parentCreates.add(obj);
+          obj.$writeLockHolder = parent;
+        }
+        for (_Impl obj : createsForTargetStore) {
           obj.$writeLockHolder = parent;
         }
       }
@@ -1220,6 +1228,14 @@ public final class Log {
    * Transfers a read lock from a child transaction.
    */
   private void transferReadLock(Log child, ReadMapEntry readMapEntry) {
+    transferReadLock(child, readMapEntry, true);
+  }
+
+  /**
+   * Transfers a read lock from a child transaction.
+   */
+  private void transferReadLock(Log child, ReadMapEntry readMapEntry,
+      boolean record) {
     // If we already have a read lock, return; otherwise, register a read lock.
     boolean lockedByAncestor = false;
     synchronized (readMapEntry) {
@@ -1240,16 +1256,18 @@ public final class Log {
       readMapEntry.readLocks.add(this);
     }
 
-    // Only record the read in this transaction if none of our ancestors have
-    // read this object.
-    if (!lockedByAncestor) {
-      synchronized (reads) {
-        reads.put(readMapEntry.obj.store, readMapEntry.obj.onum, readMapEntry);
+    if (record) {
+      // Only record the read in this transaction if none of our ancestors have
+      // read this object.
+      if (!lockedByAncestor) {
+        synchronized (reads) {
+          reads
+              .put(readMapEntry.obj.store, readMapEntry.obj.onum, readMapEntry);
+        }
+      } else {
+        readsReadByParent.add(readMapEntry);
       }
-    } else {
-      readsReadByParent.add(readMapEntry);
     }
-
     // Signal any readers/writers and clear the $reader stamp.
     readMapEntry.signalObject();
   }
