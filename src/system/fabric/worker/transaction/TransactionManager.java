@@ -504,7 +504,7 @@ public final class TransactionManager {
 
     // Go through each store and send prepare messages in parallel.
     Set<Store> storesWritten = current.storesWritten();
-    storesWritten.addAll(current.storesRequested());
+
     current.commitState.storesContacted.addAll(storesWritten);
     for (Iterator<Store> storeIt = storesWritten.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();

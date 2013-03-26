@@ -96,7 +96,6 @@ public class TransactionManager {
   public void commitTransaction(Principal workerPrincipal, long transactionID,
       long commitTime) throws TransactionCommitFailedException {
     try {
-      semanticWarranties.commit(transactionID, commitTime);
       database.commit(transactionID, commitTime, workerPrincipal, sm);
       STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
     } catch (final RuntimeException e) {
@@ -429,6 +428,7 @@ public class TransactionManager {
       }
     }
 
+    semanticWarranties.commit(tid, commitTime);
     return warranties;
   }
 
