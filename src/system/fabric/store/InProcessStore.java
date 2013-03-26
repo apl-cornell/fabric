@@ -53,13 +53,14 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   public Map<CallInstance, SemanticWarranty> commitTransaction(long transactionID,
-      long commitTime, Set<SemanticWarrantyRequest> requests) throws
-  TransactionCommitFailedException {
+      long commitTime, Set<SemanticWarrantyRequest> requests, boolean readOnly)
+  throws TransactionCommitFailedException {
     Map<CallInstance, SemanticWarranty> replies =
       tm.prepareRequests(Worker.getWorker().getPrincipal(), transactionID,
           requests, commitTime);
-    tm.commitTransaction(Worker.getWorker().getPrincipal(), transactionID,
-        commitTime);
+    if (!readOnly)
+      tm.commitTransaction(Worker.getWorker().getPrincipal(), transactionID,
+          commitTime);
     return replies;
   }
 

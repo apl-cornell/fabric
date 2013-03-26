@@ -88,7 +88,8 @@ public final class LocalStore implements Store, Serializable {
 
   @Override
   public java.util.Map<CallInstance, SemanticWarranty> commitTransaction(long
-      transactionID, long commitTime, Set<SemanticWarrantyRequest> requests) {
+      transactionID, long commitTime, Set<SemanticWarrantyRequest> requests,
+      boolean readOnly) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction committing");
     // TODO: Currently we don't handle local memoized calls.
     return new java.util.HashMap<CallInstance, SemanticWarranty>();

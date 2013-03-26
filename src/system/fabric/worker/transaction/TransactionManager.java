@@ -865,16 +865,21 @@ public final class TransactionManager {
     }
 
     // Send commit messages to the stores in parallel.
-    for (Iterator<Store> storeIt =
-        current.commitState.storesContacted.iterator(); storeIt.hasNext();) {
-      final Store store = storeIt.next();
+    Set<Store> storesToCommit = current.storesRequested();
+    storesToCommit.addAll(current.commitState.storesContacted);
+
+    int count = 0;
+    for (Store s : storesToCommit) {
+      count++;
+      final Store store = s;
       Runnable runnable = new Runnable() {
         @Override
         public void run() {
           try {
             Map<CallInstance, SemanticWarranty> replies =
               store.commitTransaction(current.tid.topTid, commitTime,
-                  current.getRequestsForStore(store));
+                  current.getRequestsForStore(store),
+                  !current.commitState.storesContacted.contains(store));
             current.requestReplies.putAll(replies);
           } catch (TransactionCommitFailedException e) {
             failed.add((RemoteStore) store);
@@ -887,7 +892,7 @@ public final class TransactionManager {
       // Optimization: only start in a new thread if there are more stores to
       // contact and if it's a truly remote store (i.e., not in-process).
       if (!(store instanceof InProcessStore || store.isLocalStore())
-          && storeIt.hasNext()) {
+          && count == storesToCommit.size()) {
         Thread thread =
             new Thread(runnable, "worker commit to " + store.name());
         threads.add(thread);

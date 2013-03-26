@@ -23,19 +23,25 @@ public class CommitTransactionMessage
 
   public final long transactionID;
   public final long commitTime;
+  public final boolean readOnly;
   public final Set<SemanticWarrantyRequest> requests;
 
   public CommitTransactionMessage(long transactionID, long commitTime) {
-    this(transactionID, commitTime, null);
+    this(transactionID, commitTime, null, false);
+  }
+
+  public CommitTransactionMessage(long transactionID, long commitTime, boolean readOnly) {
+    this(transactionID, commitTime, null, readOnly);
   }
 
   public CommitTransactionMessage(long transactionID, long commitTime,
-      Set<SemanticWarrantyRequest> requests) {
+      Set<SemanticWarrantyRequest> requests, boolean readOnly) {
     super(MessageType.COMMIT_TRANSACTION,
         TransactionCommitFailedException.class);
     this.transactionID = transactionID;
     this.commitTime = commitTime;
     this.requests = requests;
+    this.readOnly = readOnly;
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -73,6 +79,7 @@ public class CommitTransactionMessage
   protected void writeMessage(DataOutput out) throws IOException {
     out.writeLong(transactionID);
     out.writeLong(commitTime);
+    out.writeBoolean(readOnly);
     
     if (requests == null) {
       out.writeInt(0);
@@ -90,6 +97,7 @@ public class CommitTransactionMessage
 
     this.transactionID = in.readLong();
     this.commitTime = in.readLong();
+    this.readOnly = in.readBoolean();
 
     int requestsSize = in.readInt();
     this.requests = new HashSet<SemanticWarrantyRequest>(requestsSize);

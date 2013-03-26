@@ -364,10 +364,10 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   @Override
   public java.util.Map<CallInstance, SemanticWarranty> commitTransaction(
       long transactionID, long commitTime, Set<SemanticWarrantyRequest>
-      requests) throws UnreachableNodeException,
+      requests, boolean readOnly) throws UnreachableNodeException,
          TransactionCommitFailedException {
     return send(Worker.getWorker().authToStore, new CommitTransactionMessage(
-          transactionID, commitTime, requests)).getResults();
+          transactionID, commitTime, requests, readOnly)).getResults();
   }
 
   @Override

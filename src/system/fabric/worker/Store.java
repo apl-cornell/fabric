@@ -113,8 +113,8 @@ public interface Store extends Serializable {
    * @throws TransactionCommitFailedException
    */
   Map<CallInstance, SemanticWarranty> commitTransaction(long transactionID,
-      long commitTime, Set<SemanticWarrantyRequest> requests) throws
-    UnreachableNodeException, TransactionCommitFailedException;
+      long commitTime, Set<SemanticWarrantyRequest> requests, boolean readOnly)
+    throws UnreachableNodeException, TransactionCommitFailedException;
 
   /**
    * Determines whether the given set of objects are stale.

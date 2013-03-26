@@ -205,7 +205,8 @@ class Store extends MessageToStoreHandler {
         nameOf(p), message.transactionID, message.commitTime);
     Map<CallInstance, SemanticWarranty> replies = prepareTransactionRequests(p,
         message.transactionID, message.requests, message.commitTime);
-    tm.commitTransaction(p, message.transactionID, message.commitTime);
+    if (!message.readOnly)
+      tm.commitTransaction(p, message.transactionID, message.commitTime);
     return new CommitTransactionMessage.Response(replies);
   }
 
