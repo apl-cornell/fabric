@@ -485,7 +485,7 @@
   <!-- Compiles the bootstrap classes. -->
   <target name="bootstrap" depends="init,bootstrap-check"
       unless="bootstrap.up-to-date">
-    <javac source="1.6" target="1.6"
+    <javac source="1.7" target="1.7"
         srcdir="${bootstrap.src}" destdir="${bootstrap.classes}"
         includeAntRuntime="false" debug="on">
       <include name="**/*.java" />
@@ -518,7 +518,7 @@
   <!-- Compiles the Fabric runtime classes that are implemented in Java -->
   <target name="native" depends="init,bootstrap,native-check"
       unless="native.up-to-date">
-    <javac source="1.6" target="1.6"
+    <javac source="1.7" target="1.7"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/lang/**" />
@@ -542,7 +542,7 @@
 
   <!-- Compiles the Fabric store -->
   <target name="store" depends="init,native,fabil-runtime">
-    <javac source="1.6" target="1.6"
+    <javac source="1.7" target="1.7"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/common/**" />
@@ -558,7 +558,7 @@
 
   <!-- Compiles the Fabric worker -->
   <target name="worker" depends="init,bootstrap,native,fabil-runtime">
-    <javac source="1.6" target="1.6"
+    <javac source="1.7" target="1.7"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/worker/**" />
@@ -575,7 +575,7 @@
 
   <!-- Compiles the Fabric dissemination node -->
   <target name="dissemination" depends="bootstrap,worker">
-    <javac source="1.6" target="1.6"
+    <javac source="1.7" target="1.7"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/dissemination/**" />
@@ -598,7 +598,7 @@
   -->
   <target name="fabric-arrays"
       depends="init,bin,bootstrap,fabil-compiler,fabil-signatures">
-    <javac source="1.6" target="1.6"
+    <javac source="1.7" target="1.7"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/worker/RetryException.java" />
@@ -1724,7 +1724,7 @@ public class Version {
   </target>
 
   <target name="compile-ext" depends="init,bootstrap">
-    <javac source="1.6" target="1.6" srcdir="${compiler.src}"
+    <javac source="1.7" target="1.7" srcdir="${compiler.src}"
         destdir="${classes}" debug="on" includeAntRuntime="false"
         includes="${ext.pkg}/**"
         excludes="**/package-info.java">
