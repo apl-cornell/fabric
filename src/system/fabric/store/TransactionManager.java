@@ -38,6 +38,7 @@ import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.store.db.ObjectDB.ExtendWarrantyStatus;
 import fabric.store.db.SemanticWarrantyTable;
+import fabric.store.db.SemanticWarrantyTable.SemanticExtendStatus;
 import fabric.worker.AbortException;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
@@ -224,7 +225,7 @@ public class TransactionManager {
 
       // Double check calls.
       SemanticWarranty longestCallWarranty =
-        semanticWarranties.longestReadDependency(req.writes, tid,
+        semanticWarranties.prepareWrites(req.writes, tid,
             (longestWarranty == null ? 0 : longestWarranty.expiry()),
             database.getName());
 
@@ -346,17 +347,28 @@ public class TransactionManager {
       tid, Map<CallInstance, WarrantiedCallResult> calls, long commitTime)
     throws TransactionPrepareFailedException {
     Map<CallInstance, SemanticWarranty> updatedWars = new HashMap<CallInstance, SemanticWarranty>();
+    Map<CallInstance, WarrantiedCallResult> conflictWars = new
+      HashMap<CallInstance, WarrantiedCallResult>();
+    Set<CallInstance> staleWars = new HashSet<CallInstance>();
     for (CallInstance call : calls.keySet()) {
       semanticWarranties.notifyReadPrepare(call, commitTime);
-      SemanticWarranty newWar = new SemanticWarranty(commitTime);
-      boolean updated = semanticWarranties.extend(call, calls.get(call),
-          newWar);
-      if (!updated) {
-        //XXX: This should wait until we've attempted all calls.
-        throw new TransactionPrepareFailedException(
-            "Could not extend warranty for call" + call);
+      Pair<SemanticExtendStatus, WarrantiedCallResult> extResult =
+        semanticWarranties.extend(call, calls.get(call), commitTime);
+      switch (extResult.first) {
+        case OK:
+          updatedWars.put(call, extResult.second.warranty);
+          break;
+        case BAD_VERSION:
+          if (extResult.second == null) staleWars.add(call);
+          else conflictWars.put(call, extResult.second);
+          break;
+        case DENIED:
+          throw new TransactionPrepareFailedException(conflictWars, staleWars,
+              "Could not extend a warranty which was not stale!");
       }
-      updatedWars.put(call, newWar);
+    }
+    if (conflictWars.size() + staleWars.size() > 0) {
+      throw new TransactionPrepareFailedException(conflictWars, staleWars);
     }
     return updatedWars;
   }

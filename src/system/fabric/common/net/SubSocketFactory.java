@@ -103,7 +103,10 @@ public final class SubSocketFactory {
    * @author mdgeorge
    */
   class ClientChannel extends Channel {
-    /* key for SubSocketFactory.this.channels */
+    /**
+     * The name of the remote endpoint. This is a key for
+     * SubSocketFactory.this.channels.
+     */
     private final String name;
 
     /* the next sequence number to be created */

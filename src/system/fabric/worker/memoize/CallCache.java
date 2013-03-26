@@ -21,10 +21,7 @@ public final class CallCache {
   }
 
   public WarrantiedCallResult get(CallInstance call) {
-    WarrantiedCallResult res = callTable.get(call);
-    if (res == null || res.warranty.expired(true))
-      return null;
-    return res;
+    return callTable.get(call);
   }
 
   public void put(CallInstance call, WarrantiedCallResult result) {

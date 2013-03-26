@@ -93,6 +93,11 @@ public class WarrantyIssuer<K> {
       if (nextSuggestionDoubled.get() || notifyReadPrepareFlag.getAndSet(true))
         return;
 
+      // Make sure the commit time is not in the past. (For read-only
+      // transactions, the commit time might be 0.)
+      long now = System.currentTimeMillis();
+      if (commitTime < now) commitTime = now;
+
       synchronized (this) {
         Logging.HOTOS_LOGGER.finer("read prepare @" + key
             + " nextSuggestionLength=" + nextSuggestionLength

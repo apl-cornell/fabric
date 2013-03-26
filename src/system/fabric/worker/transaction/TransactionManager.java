@@ -795,6 +795,21 @@ public final class TransactionManager {
                 .values())
               store.updateCache(obj);
           }
+
+          // Remove or update old calls in our cache.
+          Map<CallInstance, WarrantiedCallResult> callConflictUpdates =
+            entry.getValue().callConflictUpdates;
+          if (callConflictUpdates != null) {
+            for (Map.Entry<CallInstance, WarrantiedCallResult> update :
+                callConflictUpdates.entrySet())
+              store.insertResult(update.getKey(), update.getValue());
+          }
+
+          Set<CallInstance> callConflicts = entry.getValue().callConflicts;
+          if (callConflicts != null) {
+            for (CallInstance call : callConflicts)
+              store.removeResult(call);
+          }
         }
 
         if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
