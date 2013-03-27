@@ -14,10 +14,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
-import java.util.logging.Level;
 
 import fabric.common.Crypto;
-import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SemanticWarranty;
@@ -57,6 +55,7 @@ import fabric.worker.memoize.CallCache;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 
 /**
@@ -318,34 +317,48 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
 
   @Override
   public WarrantiedCallResult lookupCall(CallInstance call) {
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "Looking up {0}...", call.toString());
-    WarrantiedCallResult result =
-      TransactionManager.getInstance().getCurrentLog().getRequestResult(call);
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "\tResult after checking current log was {0}", result);
-    if (result == null) result = callCache.get(call);
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "\tResult after checking locally was {0}", result);
+    SEMANTIC_WARRANTY_LOGGER.finest("Looking up " + call + "...");
+
+    Log current = TransactionManager.getInstance().getCurrentLog();
+    WarrantiedCallResult result = current.getRequestResult(call);
+    if (result != null) {
+      SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found in transaction log: " + result);
+      return result;
+    }
+
+    if (current.blockedWarranties.contains(call)) {
+      SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " was blocked, probably for call checking!");
+      return null;
+    }
+
+    result = callCache.get(call);
+    if (result != null) {
+      SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found in local call cache: " + result);
+      return result;
+    }
+
     /* TODO: Check dissemination layer. */
+
     try {
-      if (result == null)
-        result = reuseCallFromStore(call);
+      result = reuseCallFromStore(call);
+      if (result != null) {
+        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found at store: " + result);
+        return result;
+      }
     } catch (AccessException e) {
     }
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "\tResult after checking remotely was {0}", result);
+
     return result;
   }
 
   @Override
   public void insertResult(CallInstance call, WarrantiedCallResult result) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Putting call id :" + call.toString());
+    SEMANTIC_WARRANTY_LOGGER.finest("Putting call:" + call.toString());
     callCache.put(call, result);
   }
 
   public void removeResult(CallInstance call) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Removing call id :" + call.toString());
+    SEMANTIC_WARRANTY_LOGGER.finest("Removing call:" + call.toString());
     callCache.remove(call);
   }
 

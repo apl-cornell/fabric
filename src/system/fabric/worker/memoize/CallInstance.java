@@ -183,6 +183,7 @@ public class CallInstance {
       throw new InternalError("IllegalAccessException running call " +
           toString() + ": " + e.getMessage());
     } catch (InvocationTargetException e) {
+      e.getTargetException().printStackTrace();
       throw new InternalError("InvocationTargetException running call " +
           toString() + ":\n\t" + e.getTargetException() + "\n\t" + method + "\n\t" + c.getName());
     }

@@ -137,6 +137,19 @@ public final class Log {
   public final List<RemoteWorker> workersCalled;
 
   /**
+   * Set of calls for which semantic warranties should _not_ be reused until it
+   * has been recomputed during the transaction.  This is used for call checking
+   * at the store.
+   */
+  public final Set<CallInstance> blockedWarranties;
+
+  /**
+   * Flag for whether we should optimistically reuse stale warranties.  This
+   * should be true only in the case of checking calls at the store.
+   */
+  public boolean useStaleWarranties;
+
+  /**
    * A call for which this transaction will represent a request for a
    * SemanticWarranty on the call.  This is only for the current transaction,
    * not a subtransaction.
@@ -181,6 +194,7 @@ public final class Log {
    * remove requests from earlier in the transaction and need to transfer over
    * their read locks.
    */
+  // XXX Pretty sure we don't need this now.
   protected final Map<CallInstance, Log> requestLogs;
 
   /**
@@ -299,8 +313,12 @@ public final class Log {
     this.requestReplies =
         Collections
             .synchronizedMap(new HashMap<CallInstance, SemanticWarranty>());
+    this.blockedWarranties = new HashSet<CallInstance>();
+    this.useStaleWarranties = true;
 
     if (parent != null) {
+      this.blockedWarranties.addAll(parent.blockedWarranties);
+      this.useStaleWarranties = parent.useStaleWarranties;
       try {
         Timing.SUBTX.begin();
         this.writerMap = new WriterMap(parent.writerMap);
