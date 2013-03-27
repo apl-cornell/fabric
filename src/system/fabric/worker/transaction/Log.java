@@ -393,7 +393,7 @@ public final class Log {
         readDependencies.remove(read.obj.onum);
 
     // This call no longer depends on its various subcalls
-    for (CallInstance call : req.calls) {
+    for (CallInstance call : req.calls.keySet()) {
       callDependencies.get(call).remove(callId);
     }
 
@@ -950,12 +950,15 @@ public final class Log {
     }
 
     // Check calls
-    Set<CallInstance> callsForTargetStore = new HashSet<CallInstance>();
-    for (CallInstance call : semanticWarrantiesUsed.keySet()) {
+    Map<CallInstance, WarrantiedCallResult> callsForTargetStore = new
+      HashMap<CallInstance, WarrantiedCallResult>();
+    for (Entry<CallInstance, WarrantiedCallResult> entry : semanticWarrantiesUsed.entrySet()) {
+      CallInstance call = entry.getKey();
+      WarrantiedCallResult result = entry.getValue();
       if (call.target.$getStore().equals(localStore))
         continue;
       else if (call.target.$getStore().equals(targetStore))
-        callsForTargetStore.add(call);
+        callsForTargetStore.put(call, result);
       else {
         Logging
             .log(
@@ -1007,7 +1010,7 @@ public final class Log {
       }
     }
 
-    for (CallInstance call : callsForTargetStore) {
+    for (CallInstance call : callsForTargetStore.keySet()) {
       Set<CallInstance> deps = callDependencies.get(call);
       if (deps == null) {
         deps = new HashSet<CallInstance>();
@@ -1023,7 +1026,6 @@ public final class Log {
    * merged into the parent's log and any locks held are transferred to the
    * parent.
    */
-  /* TODO: Should I not merge writes of semantic warranty requests? */
   void commitNested() {
     // TODO See if lazy merging of logs helps performance.
 
@@ -1036,14 +1038,31 @@ public final class Log {
     // Don't record the read in this transaction if the child is a semantic 
     // warranty (see also cleanupFailedRequest)
     if (semanticWarrantyCall == null) {
+      // Reads unique to this subtransaction
       for (LongKeyMap<ReadMapEntry> submap : reads) {
         for (ReadMapEntry entry : submap.values()) {
           parent.transferReadLock(this, entry);
         }
       }
+
+      // Reads that this subtransaction shared with the parent.
       for (ReadMapEntry entry : readsReadByParent) {
         entry.releaseLock(this);
       }
+    }
+
+    // Transfer read and write locks of requests (which should _not_ show up in
+    // the reads and creates of the parent transactions.
+    for (SemanticWarrantyRequest req : requests.values()) {
+      for (Entry<Store, LongKeyMap<ReadMapEntry>> entry :
+          req.reads.nonNullEntrySet())
+        for (ReadMapEntry read : entry.getValue().values())
+          parent.transferReadLock(this, read, false);
+      
+      for (Entry<Store, LongKeyMap<_Impl>> entry :
+          req.creates.nonNullEntrySet())
+        for (_Impl create : entry.getValue().values())
+          create.$writeLockHolder = parent;
     }
 
     // Merge writes and transfer write locks.
@@ -1137,10 +1156,12 @@ public final class Log {
     createCurrentRequest();
 
     // Merge all child requests and dependencies
-    parent.semanticWarrantiesUsed.putAll(semanticWarrantiesUsed);
-    for (Map.Entry<CallInstance, SemanticWarrantyRequest> entry : requests.entrySet()) {
-      parent.requests.put(entry.getKey(), entry.getValue());
+    // TODO: This shouldn't be blindly done.
+    if (semanticWarrantyCall == null) {
+      parent.semanticWarrantiesUsed.putAll(semanticWarrantiesUsed);
     }
+
+    parent.requests.putAll(requests);
     parent.requestLocations.putAll(requestLocations);
     parent.requestLogs.putAll(requestLogs);
 

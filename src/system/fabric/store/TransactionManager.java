@@ -399,7 +399,7 @@ public class TransactionManager {
     }
     for (SemanticWarrantyRequest r : requests) {
       Set<CallInstance> depsInTable = new HashSet<CallInstance>();
-      for (CallInstance c : r.calls)
+      for (CallInstance c : r.calls.keySet())
         if (reqMap.containsKey(c))
           depsInTable.add(c);
       simplifiedDepMap.put(r.call, depsInTable);

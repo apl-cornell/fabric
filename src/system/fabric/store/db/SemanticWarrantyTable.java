@@ -128,8 +128,8 @@ public class SemanticWarrantyTable {
    */
   public void putAt(long commitTime, SemanticWarrantyRequest req,
       SemanticWarranty warranty) {
-    putAt(commitTime, req.call, req.readOnums, req.createOnums, req.calls,
-        req.value, warranty);
+    putAt(commitTime, req.call, req.readOnums, req.createOnums,
+        new HashSet<CallInstance>(req.calls.keySet()), req.value, warranty);
   }
 
   /**

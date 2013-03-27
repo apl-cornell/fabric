@@ -3,9 +3,9 @@ package fabric.worker.memoize;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyMap;
@@ -32,20 +32,20 @@ public class SemanticWarrantyRequest {
 
   public final LongSet readOnums;
   public final LongSet createOnums;
-  public final Set<CallInstance> calls;
+  public final Map<CallInstance, WarrantiedCallResult> calls;
 
   public TransactionID id;
 
   public SemanticWarrantyRequest(CallInstance call, Object value,
       OidKeyHashMap<ReadMapEntry> reads, OidKeyHashMap<_Impl> creates,
-      Set<CallInstance> calls, TransactionID id) {
+      Map<CallInstance, WarrantiedCallResult> calls, TransactionID id) {
     this(call, value, reads, creates, calls);
     this.id = id;
   }
 
   public SemanticWarrantyRequest(CallInstance call, Object value,
       OidKeyHashMap<ReadMapEntry> reads, OidKeyHashMap<_Impl> creates,
-      Set<CallInstance> calls) {
+      Map<CallInstance, WarrantiedCallResult> calls) {
     this.call = call;
     this.value = value;
     this.reads = reads;
@@ -71,10 +71,12 @@ public class SemanticWarrantyRequest {
     for (int i = 0; i < createsLen; i++)
       this.createOnums.add(in.readLong());
 
-    this.calls = new HashSet<CallInstance>();
+    this.calls = new HashMap<CallInstance, WarrantiedCallResult>();
     int callsLen = in.readInt();
-    for (int i = 0; i < callsLen; i++)
-      this.calls.add(new CallInstance(in));
+    for (int i = 0; i < callsLen; i++) {
+      CallInstance subcall = new CallInstance(in);
+      this.calls.put(subcall, new WarrantiedCallResult(in));
+    }
 
     /* for worker use only */
     reads = null;
@@ -96,8 +98,9 @@ public class SemanticWarrantyRequest {
         out.writeLong(create.$getOnum());
 
     out.writeInt(calls.size());
-    for (CallInstance subcall : calls) {
-      subcall.write(out);
+    for (Entry<CallInstance, WarrantiedCallResult> entry : calls.entrySet()) {
+      entry.getKey().write(out);
+      entry.getValue().write(out);
     }
   }
 }

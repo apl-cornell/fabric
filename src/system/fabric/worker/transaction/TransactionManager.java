@@ -424,6 +424,7 @@ public final class TransactionManager {
           //SEMANTIC_WARRANTY_LOGGER.finest("Gathering read " + read.obj.onum + " from " + req.call + " " + req.id);
         }
       }
+
       // creates
       for (Entry<Store, LongKeyMap<_Impl>> createEntry : req.creates.nonNullEntrySet()) {
         for (_Impl create : createEntry.getValue().values()) {
@@ -431,6 +432,8 @@ public final class TransactionManager {
           //SEMANTIC_WARRANTY_LOGGER.finest("Gathering create " + create.$getOnum() + " from " + req.call + " " + req.id);
         }
       }
+
+      current.semanticWarrantiesUsed.putAll(req.calls);
     }
 
     SEMANTIC_WARRANTY_LOGGER.finest("Creates:");
