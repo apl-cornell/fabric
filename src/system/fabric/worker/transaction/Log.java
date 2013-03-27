@@ -41,11 +41,10 @@ import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
 /* TODO:
- *      - Double check code for merging a completed subtransaction
- *              + Might want to think about whether writes of requests should
- *              appear in the TL transaction. 
  *      - Store away results given by re-used calls so they can be checked by
  *      the transaction.
+ *      - Currently there's a problem with calls being passed up to parents even
+ *      in semantic warranty transactions.
  */
 /**
  * Stores per-transaction information. Records the objects that are created,
@@ -177,6 +176,14 @@ public final class Log {
   protected final Map<CallInstance, Store> requestLocations;
 
   /**
+   * Map from call instance to the log of the subtransaction that was
+   * responsible for creating it.  This is purely for convenience when trying to
+   * remove requests from earlier in the transaction and need to transfer over
+   * their read locks.
+   */
+  protected final Map<CallInstance, Log> requestLogs;
+
+  /**
    * Map from call ID to the store's CallResult response which will be stored on
    * successfully finishing the commit phase.
    */
@@ -288,6 +295,7 @@ public final class Log {
     this.callDependencies = new HashMap<CallInstance, Set<CallInstance>>();
     this.requests = new HashMap<CallInstance, SemanticWarrantyRequest>();
     this.requestLocations = new HashMap<CallInstance, Store>();
+    this.requestLogs = new HashMap<CallInstance, Log>();
     this.requestReplies =
         Collections
             .synchronizedMap(new HashMap<CallInstance, SemanticWarranty>());
@@ -370,7 +378,8 @@ public final class Log {
    * all associated book keeping.
    */
   private void removeRequest(CallInstance callId) {
-    /* TODO: Invalidate other calls that depend on this */
+    /* TODO: Currently broken, need to transfer over information to callers.
+     */
     SemanticWarrantyRequest req = requests.get(callId);
 
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
@@ -754,6 +763,7 @@ public final class Log {
       readDependencies.clear();
       callDependencies.clear();
       requests.clear();
+      requestLogs.clear();
       requestLocations.clear();
       requestReplies.clear();
 
@@ -804,7 +814,7 @@ public final class Log {
     // Merge reads
     for (Entry<Store, LongKeyMap<ReadMapEntry>> entry : req.reads.nonNullEntrySet())
       for (ReadMapEntry read : entry.getValue().values())
-        transferReadLock(this, read);
+        this.transferReadLock(requestLogs.get(req), read);
 
     // Merge creates and transfer write locks.
     for (Entry<Store, LongKeyMap<_Impl>> entry : req.creates.nonNullEntrySet()) {
@@ -870,6 +880,25 @@ public final class Log {
           cleanupFailedRequest();
           return;
         }
+      }
+    }
+    // Collect reads shared by the parent transaction.
+    for (ReadMapEntry entry : readsReadByParent) {
+      if (entry.obj.store.equals(localStore)) {
+        localReads.add(entry);
+      } else if (entry.obj.store.equals(targetStore)) {
+        readsForTargetStore.put(entry.obj.store, entry.obj.onum, entry);
+      } else {
+        Logging
+            .log(
+                SEMANTIC_WARRANTY_LOGGER,
+                Level.FINEST,
+                "Semantic warranty request for {0} "
+                    + "aborted due to more than one remote store read during the call!",
+                semanticWarrantyCall.toString());
+
+        cleanupFailedRequest();
+        return;
       }
     }
 
@@ -955,6 +984,7 @@ public final class Log {
     */
     requests.put(semanticWarrantyCall, req);
     requestLocations.put(semanticWarrantyCall, targetStore);
+    requestLogs.put(semanticWarrantyCall, this);
 
     // add reads to readDependency map
     for (Entry<Store, LongKeyMap<ReadMapEntry>> entry :
@@ -1011,10 +1041,9 @@ public final class Log {
           parent.transferReadLock(this, entry);
         }
       }
-    }
-
-    for (ReadMapEntry entry : readsReadByParent) {
-      entry.releaseLock(this);
+      for (ReadMapEntry entry : readsReadByParent) {
+        entry.releaseLock(this);
+      }
     }
 
     // Merge writes and transfer write locks.
@@ -1113,6 +1142,7 @@ public final class Log {
       parent.requests.put(entry.getKey(), entry.getValue());
     }
     parent.requestLocations.putAll(requestLocations);
+    parent.requestLogs.putAll(requestLogs);
 
     LongIterator readDependenciesIt = readDependencies.keySet().iterator();
     while (readDependenciesIt.hasNext()) {

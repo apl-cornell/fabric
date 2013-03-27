@@ -421,14 +421,14 @@ public final class TransactionManager {
       for (Entry<Store, LongKeyMap<ReadMapEntry>> readEntry : req.reads.nonNullEntrySet()) {
         for (ReadMapEntry read : readEntry.getValue().values()) {
           current.reads.put(read.obj.store, read.obj.onum, read);
-          SEMANTIC_WARRANTY_LOGGER.finest("Gathering read " + read.obj.onum + " from " + req.call + " " + req.id);
+          //SEMANTIC_WARRANTY_LOGGER.finest("Gathering read " + read.obj.onum + " from " + req.call + " " + req.id);
         }
       }
       // creates
       for (Entry<Store, LongKeyMap<_Impl>> createEntry : req.creates.nonNullEntrySet()) {
         for (_Impl create : createEntry.getValue().values()) {
           current.creates.add(create);
-          SEMANTIC_WARRANTY_LOGGER.finest("Gathering create " + create.$getOnum() + " from " + req.call + " " + req.id);
+          //SEMANTIC_WARRANTY_LOGGER.finest("Gathering create " + create.$getOnum() + " from " + req.call + " " + req.id);
         }
       }
     }
