@@ -150,72 +150,10 @@ public class TransactionManager {
           longestWarranty = warranty;
       }
 
-      /*
-      synchronized (database) {
-        // Check writes and update version numbers.
-        for (SerializedObject o : req.writes) {
-          long onum = o.getOnum();
-          // Make sure no one else has written to the object.
-          if (database.isWritten(onum))
-            throw new TransactionPrepareFailedException(versionConflicts,
-                "Object " + onum + " has been locked by an uncommitted "
-                    + "transaction");
-
-          // Fetch old copy from store and check version numbers.
-          SerializedObject storeCopy = database.read(onum);
-          int storeVersion = storeCopy.getVersion();
-          int workerVersion = o.getVersion();
-          VersionWarranty warranty;
-          if (storeVersion != workerVersion) {
-            warranty = database.refreshWarranty(onum);
-            versionConflicts
-                .put(onum, new Pair<SerializedObject, VersionWarranty>(
-                    storeCopy, warranty));
-            continue;
-          }
-
-          // Register the update with the database.
-          database.registerUpdate(tid, worker, o, WRITE);
-
-          // Obtain existing warranty.
-          warranty = database.getWarranty(onum);
-
-          // Update the version number on the prepared copy of the object.
-          o.setVersion(storeVersion + 1);
-
-          if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
-            longestWarranty = warranty;
-        }
-        */
-
       // Prepare creates.
       for (SerializedObject o : req.creates) {
         database.registerUpdate(tid, worker, o, versionConflicts, CREATE);
       }
-
-      /*
-      for (SerializedObject o : req.creates) {
-        long onum = o.getOnum();
-
-        // Make sure no one else has claimed the object number in an
-        // uncommitted transaction.
-        if (database.isWritten(onum))
-          throw new TransactionPrepareFailedException(versionConflicts,
-              "Object " + onum + " has been locked by an "
-                  + "uncommitted transaction");
-
-        // Make sure the onum doesn't already exist in the database.
-        if (database.exists(onum))
-          throw new TransactionPrepareFailedException(versionConflicts,
-              "Object " + onum + " already exists");
-
-        // Set the initial version number and register the update with the
-        // database.
-        o.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
-        database.registerUpdate(tid, worker, o, CREATE);
-      }
-      }
-      */
 
       if (!versionConflicts.isEmpty()) {
         throw new TransactionPrepareFailedException(versionConflicts);
