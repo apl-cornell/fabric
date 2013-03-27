@@ -34,6 +34,7 @@ import fabric.worker.memoize.CallCache;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 
 public final class LocalStore implements Store, Serializable {
@@ -154,8 +155,12 @@ public final class LocalStore implements Store, Serializable {
   @Override
   public WarrantiedCallResult lookupCall(CallInstance call) {
     SEMANTIC_WARRANTY_LOGGER.finest("Looking up call id :" + call.toString());
-    WarrantiedCallResult result =
-      TransactionManager.getInstance().getCurrentLog().getRequestResult(call);
+
+    WarrantiedCallResult result = null;
+    Log cur = TransactionManager.getInstance().getCurrentLog();
+    if (cur != null) {
+      result = cur.getRequestResult(call);
+    }
     if (result == null) result = callCache.get(call);
     return result;
   }

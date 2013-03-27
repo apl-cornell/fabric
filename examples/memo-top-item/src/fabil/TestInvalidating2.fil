@@ -73,6 +73,7 @@ public class TestInvalidating2 {
       Store s = Config.STORE;
       t = new TestInvalidating2@s().TestInvalidating2$();
     }
+    try { Thread.sleep(1000); } catch (InterruptedException e) {}
     int n = Integer.parseInt(args[0]);
     atomic {
       ((TwooterAccount) Config.STORE.getRoot().get(new Integer(0))).setNumberFollowers(5 * Config.NUM_USERS);
@@ -85,6 +86,7 @@ public class TestInvalidating2 {
       }
     //}
     atomic {
+      try { Thread.sleep(1000); } catch (InterruptedException e) {}
       ((TwooterAccount) Config.STORE.getRoot().get(new Integer(0))).setNumberFollowers(-5 * Config.NUM_USERS);
     }
   }

@@ -364,6 +364,29 @@ public final class Log {
   }
 
   /**
+   * Add a bunch of creates at once.  This should only be called from the call
+   * checking code on the store.
+   */
+  public void addCreates(Collection<_Impl> added) {
+    creates.addAll(added);
+  }
+
+  /**
+   * Get create for the given oid.  THIS SHOULD ONLY BE CALLED BY
+   * Object._Proxy.fetchEntry.
+   */
+  public _Impl getCreate(long oid) {
+    Log cur = this;
+    while (cur != null) {
+      for (_Impl create : cur.creates)
+        if (create.$getOnum() == oid)
+          return create;
+      cur = cur.parent;
+    }
+    return null;
+  }
+
+  /**
    * Returns true iff the given Log is in the ancestry of (or is the same as)
    * this log.
    */

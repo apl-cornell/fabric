@@ -319,22 +319,31 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   public WarrantiedCallResult lookupCall(CallInstance call) {
     SEMANTIC_WARRANTY_LOGGER.finest("Looking up " + call + "...");
 
-    Log current = TransactionManager.getInstance().getCurrentLog();
-    WarrantiedCallResult result = current.getRequestResult(call);
-    if (result != null) {
-      SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found in transaction log: " + result);
-      return result;
-    }
+    WarrantiedCallResult result = null;
 
-    if (current.blockedWarranties.contains(call)) {
-      SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " was blocked, probably for call checking!");
-      return null;
+    Log current = TransactionManager.getInstance().getCurrentLog();
+    if (current != null) {
+      result = current.getRequestResult(call);
+      if (result != null) {
+        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found in transaction log: " + result);
+        return result;
+      }
+
+      if (current.blockedWarranties.contains(call)) {
+        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " was blocked, probably for call checking!");
+        return null;
+      }
     }
 
     result = callCache.get(call);
     if (result != null) {
-      SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found in local call cache: " + result);
-      return result;
+      if (current == null || !result.warranty.expired(true) ||
+          current.useStaleWarranties) {
+        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found in local call cache: " + result);
+        return result;
+      } else {
+        result = null;
+      }
     }
 
     /* TODO: Check dissemination layer. */
@@ -342,8 +351,13 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     try {
       result = reuseCallFromStore(call);
       if (result != null) {
-        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found at store: " + result);
-        return result;
+        if (current == null || !result.warranty.expired(true) ||
+            current.useStaleWarranties) {
+          SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found at store: " + result);
+          return result;
+        } else {
+          result = null;
+        }
       }
     } catch (AccessException e) {
     }

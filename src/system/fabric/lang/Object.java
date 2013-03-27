@@ -157,6 +157,14 @@ public interface Object {
       _Impl impl = ref.get();
       if (impl != null) return impl.$cacheEntry;
 
+      // Check transaction log
+      Log cur = TransactionManager.getInstance().getCurrentLog();
+      if (cur != null) {
+        _Impl logImpl = cur.getCreate(ref.onum);
+        if (logImpl != null)
+          return logImpl.$cacheEntry;
+      }
+
       // Check anchor.
       if (anchor != null) return anchor.$cacheEntry;
 

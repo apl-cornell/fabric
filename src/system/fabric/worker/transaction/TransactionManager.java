@@ -38,6 +38,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
+import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -1076,6 +1077,7 @@ public final class TransactionManager {
   public void setSemanticWarrantyValue(fabric.lang.Object v) {
     SEMANTIC_WARRANTY_LOGGER.finest("Call: " + current.semanticWarrantyCall
         + " gets value " + v.$getOnum());
+    if (!(v instanceof WrappedJavaInlineable)) v = v.fetch();
     current.semanticWarrantyValue = v;
   }
 

@@ -168,9 +168,17 @@ public class TransactionManager {
       SEMANTIC_WARRANTY_LOGGER.finest(
           String.format("Checking calls for %x that would delay longer than %d ms",
             tid, currentProposedTime - currentTime));
-      SemanticWarranty longestCallWarranty =
-        semanticWarranties.prepareWrites(req.writes, tid, currentProposedTime,
-          database.getName());
+      Pair<SemanticWarranty, Collection<SerializedObject>> callPrepareResp =
+        semanticWarranties.prepareWrites(req.writes, req.creates, tid,
+            currentProposedTime, database.getName());
+
+      SemanticWarranty longestCallWarranty = callPrepareResp.first;
+      Collection<SerializedObject> additionalCreates = callPrepareResp.second;
+      // Prepare creates.
+      for (SerializedObject o : additionalCreates) {
+        database.registerUpdate(tid, worker, o, versionConflicts, CREATE);
+      }
+
 
       STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
 
