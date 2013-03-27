@@ -30,4 +30,8 @@ public class TwooterAccount {
   public void removeFollower() {
     if (numberFollowers > 0) numberFollowers--;
   }
+
+  public void setNumberFollowers(int n) {
+    numberFollowers = n;
+  }
 }
