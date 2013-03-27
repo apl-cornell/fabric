@@ -10,6 +10,7 @@ import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
@@ -30,11 +31,15 @@ public class InProcessStore extends RemoteStore {
 
   protected final TransactionManager tm;
   protected final SurrogateManager sm;
+  protected RemoteIdentity localWorkerIdentity;
 
   public InProcessStore(String name, Store c) {
     super(name, c.publicKey);
     tm = c.tm;
     sm = c.sm;
+
+    // This will be lazily populated.
+    localWorkerIdentity = null;
   }
 
   @Override
@@ -49,8 +54,13 @@ public class InProcessStore extends RemoteStore {
   @Override
   public void commitTransaction(long transactionID, long commitTime)
       throws TransactionCommitFailedException {
-    tm.commitTransaction(Worker.getWorker().getPrincipal(), transactionID,
-        commitTime);
+    if (localWorkerIdentity == null) {
+      Worker worker = Worker.getWorker();
+      localWorkerIdentity =
+          new RemoteIdentity(worker.getLocalWorker(), worker.getPrincipal());
+    }
+    
+    tm.commitTransaction(localWorkerIdentity, transactionID, commitTime);
   }
 
   @Override

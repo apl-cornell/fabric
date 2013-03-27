@@ -12,6 +12,7 @@ import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubSocket;
 import fabric.common.net.SubSocketFactory;
+import fabric.lang.security.Principal;
 import fabric.messages.Message;
 
 /**
@@ -19,7 +20,7 @@ import fabric.messages.Message;
  */
 public abstract class RemoteNode implements Serializable {
   /**
-   * The DNS hostname of the node.
+   * The node's Fabric node name. (Likely different from its DNS host name.)
    */
   public final String name;
 
@@ -42,6 +43,8 @@ public abstract class RemoteNode implements Serializable {
     return name;
   }
 
+  public abstract Principal getPrincipal();
+
   private Deque<SubSocket> getSocketDeque(SubSocketFactory factory) {
     synchronized (subSocketCache) {
       Deque<SubSocket> result = subSocketCache.get(factory);
@@ -57,7 +60,7 @@ public abstract class RemoteNode implements Serializable {
   protected SubSocket getSocket(SubSocketFactory factory) throws IOException {
     Deque<SubSocket> queue = getSocketDeque(factory);
     synchronized (queue) {
-      if (queue.isEmpty()) return factory.createSocket(name);
+      if (queue.isEmpty()) return factory.createSocket(this);
       return queue.pop();
     }
   }

@@ -170,6 +170,7 @@ public final class RemoteWorker extends RemoteNode {
   /**
    * @return the principal associated with the remote worker.
    */
+  @Override
   public Principal getPrincipal() {
     try {
       SubSocket socket = getSocket(subSocketFactory);

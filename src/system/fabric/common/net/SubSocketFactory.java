@@ -12,6 +12,7 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.SocketAddress;
+import fabric.net.RemoteNode;
 
 /**
  * A factory for creating SubSockets. The factory decorates a
@@ -63,32 +64,32 @@ public final class SubSocketFactory {
    * Convenience method. Resolves the name using the NameService and calls
    * createSocket.
    */
-  public SubSocket createSocket(String name) throws IOException {
+  public SubSocket createSocket(RemoteNode node) throws IOException {
     SubSocket result = createSocket();
-    result.connect(name);
+    result.connect(node);
     return result;
   }
 
   /**
-   * return a channel associated with the given address, creating it if
+   * return a channel associated with the given node, creating it if
    * necessary.
    */
-  ClientChannel getChannel(String name) throws IOException {
+  ClientChannel getChannel(RemoteNode node) throws IOException {
     synchronized (channels) {
-      ClientChannel result = channels.get(name);
+      ClientChannel result = channels.get(node.name);
       if (null == result) {
         NETWORK_CONNECTION_LOGGER.log(Level.INFO,
-            "establishing new connection to \"{0}\"", name);
-        SocketAddress addr = nameService.resolve(name, portType);
+            "establishing new connection to \"{0}\"", node.name);
+        SocketAddress addr = nameService.resolve(node.name, portType);
 
         Socket s = new Socket(addr.getAddress(), addr.getPort());
         s.setSoLinger(false, 0);
         s.setTcpNoDelay(true);
 
-        result = new ClientChannel(name, s, maxOpenConnectionsPerChannel);
-        channels.put(name, result);
+        result = new ClientChannel(node, s, maxOpenConnectionsPerChannel);
+        channels.put(node.name, result);
         NETWORK_CONNECTION_LOGGER.log(Level.INFO,
-            "connection to {0} established.", name);
+            "connection to {0} established.", node.name);
       }
 
       return result;
@@ -112,11 +113,14 @@ public final class SubSocketFactory {
     /* the next sequence number to be created */
     private int nextSequenceNumber;
 
-    public ClientChannel(String name, Socket s, int maxOpenConnections)
+    /**
+     * @param host the host at the remote endpoint.
+     */
+    public ClientChannel(RemoteNode host, Socket s, int maxOpenConnections)
         throws IOException {
-      super(protocol.initiate(name, s), maxOpenConnections);
+      super(protocol.initiate(host, s), maxOpenConnections);
 
-      this.name = name;
+      this.name = host.name;
       nextSequenceNumber = 1;
 
       setName("demultiplexer for " + toString());

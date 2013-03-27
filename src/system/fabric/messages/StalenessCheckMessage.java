@@ -10,10 +10,10 @@ import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
-import fabric.lang.security.Principal;
 
 /**
  * A <code>StalenessCheckMessage</code> represents a request to a store to check
@@ -50,9 +50,9 @@ public final class StalenessCheckMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
-      AccessException {
-    return h.handle(p, this);
+  public Response dispatch(RemoteIdentity client, MessageHandler h)
+      throws ProtocolError, AccessException {
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

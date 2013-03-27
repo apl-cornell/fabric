@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import fabric.common.ClassRef;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
+import fabric.common.net.RemoteIdentity;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
 import fabric.worker.remote.RemoteCallException;
@@ -78,9 +79,9 @@ public class RemoteCallMessage extends
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
-      RemoteCallException {
-    return h.handle(p, this);
+  public Response dispatch(RemoteIdentity client, MessageHandler h)
+      throws ProtocolError, RemoteCallException {
+    return h.handle(client, this);
   }
 
   //////////////////////////////////////////////////////////////////////////////

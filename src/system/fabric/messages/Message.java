@@ -20,9 +20,9 @@ import fabric.common.Logging;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubSocket;
 import fabric.lang.Object._Proxy;
-import fabric.lang.security.Principal;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -53,6 +53,8 @@ import fabric.worker.Worker;
  * multiple inheritance.
  * </p>
  * 
+ * @param <N>
+ *          The kind of node that can send messages of this type.
  * @param <R>
  *          The response type
  * @param <E>
@@ -114,13 +116,13 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
   /**
    * Visitor method.
    * 
-   * @param p
-   *          the principal of the node that is issuing the request.
+   * @param client
+   *          the node that is issuing the request.
    * @param handler
    *          the handler to which this message is to be dispatched.
    * @throws
    */
-  public abstract R dispatch(Principal p, MessageHandler handler)
+  public abstract R dispatch(RemoteIdentity client, MessageHandler handler)
       throws ProtocolError, E;
 
   /**

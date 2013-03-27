@@ -2,7 +2,7 @@ package fabric.messages;
 
 import fabric.common.Logging;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
 import fabric.messages.AllocateMessage.Response;
 
 /**
@@ -24,38 +24,38 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
   }
 
   @Override
-  public final Response handle(Principal p, AllocateMessage msg)
+  public final Response handle(RemoteIdentity client, AllocateMessage msg)
       throws ProtocolError {
     throw error(msg);
   }
 
   @Override
-  public final fabric.messages.DissemReadMessage.Response handle(Principal p,
-      DissemReadMessage msg) throws ProtocolError {
+  public final fabric.messages.DissemReadMessage.Response handle(
+      RemoteIdentity client, DissemReadMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
-  public fabric.messages.GetCertChainMessage.Response handle(Principal p,
-      GetCertChainMessage msg) throws ProtocolError {
+  public fabric.messages.GetCertChainMessage.Response handle(
+      RemoteIdentity client, GetCertChainMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
-  public fabric.messages.ReadMessage.Response handle(Principal p,
+  public fabric.messages.ReadMessage.Response handle(RemoteIdentity client,
       ReadMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
-  public fabric.messages.MakePrincipalMessage.Response handle(Principal p,
-      MakePrincipalMessage msg) throws ProtocolError {
+  public fabric.messages.MakePrincipalMessage.Response handle(
+      RemoteIdentity client, MakePrincipalMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
-  public fabric.messages.StalenessCheckMessage.Response handle(Principal p,
-      StalenessCheckMessage msg) throws ProtocolError {
+  public fabric.messages.StalenessCheckMessage.Response handle(
+      RemoteIdentity client, StalenessCheckMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
