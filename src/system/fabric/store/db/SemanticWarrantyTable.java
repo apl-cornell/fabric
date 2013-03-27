@@ -48,8 +48,8 @@ import fabric.worker.transaction.TransactionManager;
  * supporting concurrent accesses.
  */
 public class SemanticWarrantyTable {
-  private static final int MIN_SEMANTIC_WARRANTY = 250;
-  private static final int MAX_SEMANTIC_WARRANTY = 10000;
+  private static final int MIN_SEMANTIC_WARRANTY = 2000;
+  private static final int MAX_SEMANTIC_WARRANTY = 2000;
 
   /**
    * Table of objects to lock on for interacting with a certain call.
@@ -227,6 +227,7 @@ public class SemanticWarrantyTable {
     lockTable.putIfAbsent(call, new Object());
     synchronized (lockTable.get(call)) {
       if (!warrantyTable.get(call).expired(true)) return validCallers;
+      SEMANTIC_WARRANTY_LOGGER.finest("ZAPPPPPPP " + call);
       // We let the warranty die a natural death
       // Remove the associated value
       valueTable.remove(call);
@@ -285,10 +286,13 @@ public class SemanticWarrantyTable {
               }
             });
 
+    SEMANTIC_WARRANTY_LOGGER.finest(
+        String.format("Going through call dependencies of %x", transactionID));
     for (SerializedObject obj : writes) {
       for (CallInstance call : new HashSet<CallInstance>(dependencyTable.getReaders(obj.getOnum()))) {
         SemanticWarranty dependentWarranty = get(call).warranty;
         if (dependentWarranty.expiresAfter(commitTime, true)) {
+          SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " needs to be checked!");
           dependencies.add(new Pair<CallInstance, SemanticWarranty>(call,
                 dependentWarranty));
         } else if (dependentWarranty.expired(true)) {
@@ -302,6 +306,11 @@ public class SemanticWarrantyTable {
               dependencies.add(new Pair<CallInstance, SemanticWarranty>(caller,
                     callerWarranty));
           }
+        } else {
+          // TODO Need to invalidate the call on commit... we should mark this
+          // somewhere
+          SEMANTIC_WARRANTY_LOGGER.finest("Call warranty is in limbo: " + call +
+              " " + dependentWarranty.expiry());
         }
       }
     }

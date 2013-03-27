@@ -162,10 +162,15 @@ public class TransactionManager {
       database.finishPrepareWrites(tid, worker);
 
       // Double check calls.
+      long currentTime = System.currentTimeMillis();
+      long currentProposedTime =
+        (longestWarranty == null ? 0 : longestWarranty.expiry());
+      SEMANTIC_WARRANTY_LOGGER.finest(
+          String.format("Checking calls for %x that would delay longer than %d ms",
+            tid, currentProposedTime - currentTime));
       SemanticWarranty longestCallWarranty =
-        semanticWarranties.prepareWrites(req.writes, tid,
-            (longestWarranty == null ? 0 : longestWarranty.expiry()),
-            database.getName());
+        semanticWarranties.prepareWrites(req.writes, tid, currentProposedTime,
+          database.getName());
 
       STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
 
