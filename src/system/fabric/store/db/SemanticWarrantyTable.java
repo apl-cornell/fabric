@@ -294,6 +294,7 @@ public class SemanticWarrantyTable {
         } else if (dependentWarranty.expired(true)) {
           // ZZZZAP, value is (probably) out of date.
           // XXX notify write prepare here?
+          SEMANTIC_WARRANTY_LOGGER.finest("ZAPPING CALL " + call);
           Set<CallInstance> validCallers = remove(call);
           for (CallInstance caller : validCallers) {
             SemanticWarranty callerWarranty = get(caller).warranty;
