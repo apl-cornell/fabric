@@ -7,6 +7,7 @@ import java.util.concurrent.BlockingQueue;
 
 import fabric.common.FabricThread;
 import fabric.common.ObjectGroup;
+import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongIterator;
@@ -65,70 +66,76 @@ public class SubscriptionManager extends FabricThread.Impl {
   @Override
   public void run() {
     while (true) {
-      Pair<LongSet, RemoteWorker> updateEntry;
-      while (true) {
-        try {
-          updateEntry = updatedOnums.take();
-          break;
-        } catch (InterruptedException e1) {
-          e1.printStackTrace();
-        }
+      final Pair<LongSet, RemoteWorker> updateEntry;
+      try {
+        updateEntry = updatedOnums.take();
+      } catch (InterruptedException e1) {
+        continue;
       }
 
-      LongSet onums = updateEntry.first;
-      RemoteWorker updater = updateEntry.second;
+      Threading.getPool().submit(
+          new Threading.NamedRunnable(
+              "Fabric subscription manager object-update notifier") {
+            @Override
+            protected void runImpl() {
+              LongSet onums = updateEntry.first;
+              RemoteWorker updater = updateEntry.second;
 
-      for (LongIterator it = onums.iterator(); it.hasNext();) {
-        long onum = it.next();
+              for (LongIterator it = onums.iterator(); it.hasNext();) {
+                long onum = it.next();
 
-        // Get the list of subscribers.
-        Set<Pair<RemoteWorker, Boolean>> subscribers =
-            subscriptions.remove(onum);
-        if (subscribers == null) continue;
+                // Get the list of subscribers.
+                Set<Pair<RemoteWorker, Boolean>> subscribers =
+                    subscriptions.remove(onum);
+                if (subscribers == null) continue;
 
-        // Get the update.
-        GroupContainer groupContainer;
-        Glob glob;
-        try {
-          groupContainer = tm.getGroupContainer(onum);
-          glob = groupContainer.getGlob();
-        } catch (AccessException e) {
-          throw new InternalError(e);
-        }
-
-        // Notify subscribers of updates.
-        Set<Pair<RemoteWorker, Boolean>> newSubscribers =
-            new HashSet<Pair<RemoteWorker, Boolean>>();
-        synchronized (subscribers) {
-          for (Pair<RemoteWorker, Boolean> subscriber : subscribers) {
-            RemoteWorker node = subscriber.first;
-            boolean isDissem = subscriber.second;
-            // No need to notify the worker that issued the updates. Just
-            // resubscribe the worker.
-            boolean resubscribe;
-            if (node == updater && !isDissem)
-              resubscribe = true;
-            else {
-              try {
-                if (isDissem)
-                  resubscribe = node.notifyObjectUpdate(store, onum, glob);
-                else {
-                  ObjectGroup group =
-                      groupContainer.getGroup(node.getPrincipal());
-                  resubscribe =
-                      group != null && node.notifyObjectUpdate(onum, group);
+                // Get the update.
+                GroupContainer groupContainer;
+                Glob glob;
+                try {
+                  groupContainer = tm.getGroupContainer(onum);
+                  glob = groupContainer.getGlob();
+                } catch (AccessException e) {
+                  throw new InternalError(e);
                 }
-              } catch (UnreachableNodeException e) {
-                resubscribe = false;
+
+                // Notify subscribers of updates.
+                Set<Pair<RemoteWorker, Boolean>> newSubscribers =
+                    new HashSet<Pair<RemoteWorker, Boolean>>();
+                synchronized (subscribers) {
+                  for (Pair<RemoteWorker, Boolean> subscriber : subscribers) {
+                    RemoteWorker node = subscriber.first;
+                    boolean isDissem = subscriber.second;
+                    // No need to notify the worker that issued the updates. Just
+                    // resubscribe the worker.
+                    boolean resubscribe;
+                    if (node == updater && !isDissem)
+                      resubscribe = true;
+                    else {
+                      try {
+                        if (isDissem)
+                          resubscribe =
+                              node.notifyObjectUpdate(store, onum, glob);
+                        else {
+                          ObjectGroup group =
+                              groupContainer.getGroup(node.getPrincipal());
+                          resubscribe =
+                              group != null
+                                  && node.notifyObjectUpdate(onum, group);
+                        }
+                      } catch (UnreachableNodeException e) {
+                        resubscribe = false;
+                      }
+                    }
+
+                    if (resubscribe) newSubscribers.add(subscriber);
+                  }
+                }
+
+                subscribe(onum, newSubscribers);
               }
             }
-
-            if (resubscribe) newSubscribers.add(subscriber);
-          }
-        }
-
-        subscribe(onum, newSubscribers);
-      }
+          });
     }
   }
 
