@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import fabric.common.exceptions.NotImplementedException;
+import fabric.net.RemoteNode;
 
 public class HandshakeComposite implements Protocol {
 
@@ -24,10 +25,10 @@ public class HandshakeComposite implements Protocol {
   }
 
   @Override
-  public ShakenSocket initiate(String name, Socket s) throws IOException {
+  public ShakenSocket initiate(RemoteNode node, Socket s) throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
     out.writeUTF(outgoing.getClass().getName());
-    return outgoing.initiate(name, s);
+    return outgoing.initiate(node, s);
   }
 
   @Override

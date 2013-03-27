@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 import fabric.common.Threading;
 import fabric.common.exceptions.FabricException;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubSocket;
 
@@ -62,8 +63,10 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                       while (true) {
                         Message<?, ?> message = Message.receive(in);
                         try {
+                          RemoteIdentity client =
+                              connection.getRemoteIdentity();
                           Message.Response response =
-                              message.dispatch(connection.getPrincipal(),
+                              message.dispatch(client,
                                   AbstractMessageServer.this);
                           message.respond(out, response);
                         } catch (FabricException e) {

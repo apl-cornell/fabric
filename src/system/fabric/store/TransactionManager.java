@@ -14,6 +14,7 @@ import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -28,6 +29,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
+import fabric.worker.remote.RemoteWorker;
 
 public class TransactionManager {
 
@@ -61,10 +63,10 @@ public class TransactionManager {
   /**
    * Execute the commit phase of two phase commit.
    */
-  public void commitTransaction(Principal workerPrincipal, long transactionID)
-      throws TransactionCommitFailedException {
+  public void commitTransaction(RemoteIdentity workerIdentity,
+      long transactionID) throws TransactionCommitFailedException {
     try {
-      database.commit(transactionID, workerPrincipal, sm);
+      database.commit(transactionID, workerIdentity, sm);
       STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
     } catch (final AccessException e) {
       throw new TransactionCommitFailedException("Insufficient Authorization");
@@ -224,6 +226,13 @@ public class TransactionManager {
   }
 
   /**
+   * Returns a GroupContainer containing the specified object.
+   */
+  GroupContainer getGroupContainer(long onum) throws AccessException {
+    return getGroupContainerAndSubscribe(onum, null, false /* this argument doesn't matter */);
+  }
+
+  /**
    * Returns a GroupContainer containing the specified object. All surrogates
    * referenced by any object in the group will also be in the group. This
    * ensures that the worker will not reveal information when dereferencing
@@ -236,12 +245,12 @@ public class TransactionManager {
    *          True if the subscriber is a dissemination node; false if it's a
    *          worker.
    */
-  GroupContainer getGroupContainerAndSubscribe(long onum)
-      throws AccessException {
+  GroupContainer getGroupContainerAndSubscribe(long onum,
+      RemoteWorker subscriber, boolean dissemSubscribe) throws AccessException {
     GroupContainer result = database.readGroup(onum);
     if (result == null) throw new AccessException(database.getName(), onum);
 
-    // if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
+    if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
     return result;
   }
 
@@ -254,8 +263,9 @@ public class TransactionManager {
    *          If non-null, then the given worker will be subscribed to the
    *          object as a dissemination node.
    */
-  public Glob getGlob(long onum) throws AccessException {
-    return getGroupContainerAndSubscribe(onum).getGlob();
+  public Glob getGlob(long onum, RemoteWorker subscriber)
+      throws AccessException {
+    return getGroupContainerAndSubscribe(onum, subscriber, true).getGlob();
   }
 
   /**
@@ -274,9 +284,11 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  public ObjectGroup getGroup(Principal principal, long onum)
-      throws AccessException {
-    ObjectGroup group = getGroupContainerAndSubscribe(onum).getGroup(principal);
+  public ObjectGroup getGroup(Principal principal, RemoteWorker subscriber,
+      long onum) throws AccessException {
+    ObjectGroup group =
+        getGroupContainerAndSubscribe(onum, subscriber, false).getGroup(
+            principal);
     if (group == null) throw new AccessException(database.getName(), onum);
     return group;
   }

@@ -11,6 +11,7 @@ import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
@@ -18,6 +19,7 @@ import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * An in-memory implementation of the ObjectDB. This class assumes there will be
@@ -82,16 +84,16 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  public void commit(long tid, Principal workerPrincipal, SubscriptionManager sm)
-      throws AccessException {
-    PendingTransaction tx = remove(workerPrincipal, tid);
+  public void commit(long tid, RemoteIdentity workerIdentity,
+      SubscriptionManager sm) throws AccessException {
+    PendingTransaction tx = remove(workerIdentity.principal, tid);
 
     // merge in the objects
     for (SerializedObject o : tx.modData) {
       objectTable.put(o.getOnum(), o);
 
       // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum());
+      notifyCommittedUpdate(sm, o.getOnum(), (RemoteWorker) workerIdentity.node);
     }
   }
 

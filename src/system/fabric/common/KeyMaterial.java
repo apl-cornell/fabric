@@ -165,7 +165,8 @@ public class KeyMaterial {
     Principal subjectDN = principalChain[0].getSubjectX500Principal();
 
     String store = Crypto.getCN(issuerDN.getName());
-    long onum = Long.parseLong(Crypto.getCN(subjectDN.getName()));
+    String subjectCN = Crypto.getCN(subjectDN.getName());
+    long onum = SysUtil.getPrincipalOnum(subjectCN);
 
     // TODO Check that the principal is valid?
 

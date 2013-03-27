@@ -14,8 +14,10 @@ import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
@@ -26,6 +28,7 @@ import fabric.store.SubscriptionManager;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * <p>
@@ -398,14 +401,12 @@ public abstract class ObjectDB {
    * 
    * @param tid
    *          the transaction id
-   * @param workerNode
+   * @param workerIdentity
    *          the remote worker that is performing the commit
-   * @param workerPrincipal
-   *          the principal requesting the commit
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid, Principal workerPrincipal,
+  public abstract void commit(long tid, RemoteIdentity workerIdentity,
       SubscriptionManager sm) throws AccessException;
 
   /**
@@ -460,20 +461,24 @@ public abstract class ObjectDB {
    * @param worker
    *          the worker that performed the update.
    */
-  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum) {
+  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum,
+      RemoteWorker worker) {
     // Remove from the glob table the glob associated with the onum.
     LongSet groupOnums = objectGrouper.removeGroup(onum);
 
     // Notify the subscription manager that the group has been updated.
-//    sm.notifyUpdate(onum, worker);
+    LongSet updatedOnums = new LongHashSet();
+    updatedOnums.add(onum);
     if (groupOnums != null) {
       for (LongIterator onumIt = groupOnums.iterator(); onumIt.hasNext();) {
         long relatedOnum = onumIt.next();
         if (relatedOnum == onum) continue;
 
-//        sm.notifyUpdate(relatedOnum, worker);
+        updatedOnums.add(relatedOnum);
       }
     }
+
+    sm.notifyUpdate(updatedOnums, worker);
   }
 
   /**

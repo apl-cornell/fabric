@@ -4,7 +4,7 @@ import fabric.common.Logging;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
 import fabric.messages.ObjectUpdateMessage.Response;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -28,68 +28,72 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
   }
 
   @Override
-  public abstract AbortTransactionMessage.Response handle(Principal p,
-      AbortTransactionMessage msg) throws AccessException;
-
-  @Override
-  public abstract AllocateMessage.Response handle(Principal p,
-      AllocateMessage msg) throws AccessException;
-
-  @Override
-  public abstract CommitTransactionMessage.Response handle(Principal p,
-      CommitTransactionMessage msg) throws TransactionCommitFailedException;
-
-  @Override
-  public abstract DissemReadMessage.Response handle(Principal p,
-      DissemReadMessage msg) throws AccessException;
-
-  @Override
-  public abstract GetCertChainMessage.Response handle(Principal p,
-      GetCertChainMessage msg);
-
-  @Override
-  public abstract PrepareTransactionMessage.Response handle(Principal p,
-      PrepareTransactionMessage msg) throws TransactionPrepareFailedException;
-
-  @Override
-  public abstract ReadMessage.Response handle(Principal p, ReadMessage msg)
+  public abstract AbortTransactionMessage.Response handle(
+      RemoteIdentity client, AbortTransactionMessage msg)
       throws AccessException;
 
   @Override
-  public abstract MakePrincipalMessage.Response handle(Principal p,
+  public abstract AllocateMessage.Response handle(RemoteIdentity client,
+      AllocateMessage msg) throws AccessException;
+
+  @Override
+  public abstract CommitTransactionMessage.Response handle(
+      RemoteIdentity client, CommitTransactionMessage msg)
+      throws TransactionCommitFailedException;
+
+  @Override
+  public abstract DissemReadMessage.Response handle(RemoteIdentity client,
+      DissemReadMessage msg) throws AccessException;
+
+  @Override
+  public abstract GetCertChainMessage.Response handle(RemoteIdentity client,
+      GetCertChainMessage msg);
+
+  @Override
+  public abstract PrepareTransactionMessage.Response handle(
+      RemoteIdentity client, PrepareTransactionMessage msg)
+      throws TransactionPrepareFailedException;
+
+  @Override
+  public abstract ReadMessage.Response handle(RemoteIdentity client,
+      ReadMessage msg) throws AccessException;
+
+  @Override
+  public abstract MakePrincipalMessage.Response handle(RemoteIdentity client,
       MakePrincipalMessage msg) throws FabricGeneralSecurityException;
 
   @Override
-  public abstract StalenessCheckMessage.Response handle(Principal p,
+  public abstract StalenessCheckMessage.Response handle(RemoteIdentity client,
       StalenessCheckMessage msg) throws AccessException;
 
   @Override
-  public final Response handle(Principal p, ObjectUpdateMessage msg)
+  public final Response handle(RemoteIdentity client, ObjectUpdateMessage msg)
       throws ProtocolError {
     throw error(msg);
   }
 
   @Override
-  public final fabric.messages.DirtyReadMessage.Response handle(Principal p,
-      DirtyReadMessage msg) throws ProtocolError {
+  public final fabric.messages.DirtyReadMessage.Response handle(
+      RemoteIdentity client, DirtyReadMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
-  public final fabric.messages.RemoteCallMessage.Response handle(Principal p,
-      RemoteCallMessage msg) throws ProtocolError {
+  public final fabric.messages.RemoteCallMessage.Response handle(
+      RemoteIdentity client, RemoteCallMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.TakeOwnershipMessage.Response handle(
-      Principal p, TakeOwnershipMessage msg) throws ProtocolError {
+      RemoteIdentity client, TakeOwnershipMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.InterWorkerStalenessMessage.Response handle(
-      Principal p, InterWorkerStalenessMessage msg) throws ProtocolError {
+      RemoteIdentity client, InterWorkerStalenessMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 

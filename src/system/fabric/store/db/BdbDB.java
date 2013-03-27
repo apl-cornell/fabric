@@ -39,6 +39,7 @@ import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.MutableInteger;
@@ -47,6 +48,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.lang.FClass;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * An ObjectDB backed by a Berkeley Database.
@@ -183,7 +185,7 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void commit(final long tid, final Principal workerPrincipal,
+  public void commit(final long tid, final RemoteIdentity workerIdentity,
       final SubscriptionManager sm) {
     STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
 
@@ -192,7 +194,8 @@ public class BdbDB extends ObjectDB {
           @Override
           public PendingTransaction run(Transaction txn)
               throws RuntimeException {
-            PendingTransaction pending = remove(workerPrincipal, txn, tid);
+            PendingTransaction pending =
+                remove(workerIdentity.principal, txn, tid);
 
             if (pending != null) {
               Serializer<SerializedObject> serializer =
@@ -223,7 +226,7 @@ public class BdbDB extends ObjectDB {
       long onum = o.getOnum();
 
       // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, onum);
+      notifyCommittedUpdate(sm, onum, (RemoteWorker) workerIdentity.node);
 
       // Update the version-number cache.
       cacheVersionNumber(onum, o.getVersion());

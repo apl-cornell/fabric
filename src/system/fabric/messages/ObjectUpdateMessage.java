@@ -7,8 +7,8 @@ import java.io.IOException;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
+import fabric.common.net.RemoteIdentity;
 import fabric.dissemination.Glob;
-import fabric.lang.security.Principal;
 
 /**
  * Represents push notification that an object has been updated.
@@ -64,8 +64,9 @@ public class ObjectUpdateMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError {
-    return h.handle(p, this);
+  public Response dispatch(RemoteIdentity client, MessageHandler h)
+      throws ProtocolError {
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

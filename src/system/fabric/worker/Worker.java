@@ -234,7 +234,7 @@ public final class Worker {
 
     Protocol authenticateProtocol = new HandshakeComposite(authProt);
     Protocol nonAuthenticateProtocol =
-        new HandshakeComposite(new HandshakeUnauthenticated());
+        new HandshakeComposite(new HandshakeUnauthenticated(config.name));
 
     this.authToStore =
         new SubSocketFactory(authenticateProtocol, nameService, PortType.STORE);

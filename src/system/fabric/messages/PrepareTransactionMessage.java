@@ -8,10 +8,10 @@ import java.util.Collection;
 import java.util.Collections;
 
 import fabric.common.SerializedObject;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object._Impl;
-import fabric.lang.security.Principal;
 import fabric.worker.TransactionPrepareFailedException;
 
 /**
@@ -112,9 +112,9 @@ public class PrepareTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h)
+  public Response dispatch(RemoteIdentity client, MessageHandler h)
       throws TransactionPrepareFailedException {
-    return h.handle(p, this);
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
