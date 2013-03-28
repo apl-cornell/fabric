@@ -124,7 +124,8 @@ public final class TransactionManager {
       new OidKeyHashMap<ReadMapEntry>();
 
   public static void abortReaders(Store store, long onum) {
-    readMap.get(store, onum).abortReaders();
+    ReadMapEntry entry = readMap.get(store, onum);
+    if (entry != null) entry.abortReaders();
   }
 
   public static ReadMapEntry getReadMapEntry(_Impl impl, long expiry) {
