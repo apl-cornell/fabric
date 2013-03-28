@@ -373,7 +373,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   }
 
   public void removeResult(CallInstance call) {
-    SEMANTIC_WARRANTY_LOGGER.finer("Removing call:" + call.toString());
+    SEMANTIC_WARRANTY_LOGGER.finer("Removing call: " + call.toString());
     callCache.remove(call);
   }
 

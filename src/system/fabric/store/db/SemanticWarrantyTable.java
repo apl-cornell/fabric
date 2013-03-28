@@ -234,7 +234,7 @@ public class SemanticWarrantyTable {
       if (statusTable.get(id) == CallStatus.EXPIRING
           || valueTable.get(id) == null)
         return new Pair<SemanticExtendStatus,
-               WarrantiedCallResult>(SemanticExtendStatus.DENIED, null);
+               WarrantiedCallResult>(SemanticExtendStatus.BAD_VERSION, null);
 
       // BEHOLD MY CHECK OF DOOM
       //
