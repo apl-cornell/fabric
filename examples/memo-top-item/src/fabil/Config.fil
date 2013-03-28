@@ -1,4 +1,4 @@
 public class Config {
-  public static final int NUM_USERS = 100;
+  public static final int NUM_USERS = 1000;
   public static final Store STORE = Worker.getWorker().getStore("store");
 }

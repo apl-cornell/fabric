@@ -74,6 +74,7 @@ public class WarrantyRefreshMessage extends
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
     if (warranties == null) {
+      out.writeBoolean(true);
       out.writeUTF(store);
 
       // Write out warranty groups.
@@ -91,6 +92,7 @@ public class WarrantyRefreshMessage extends
         }
       }
     } else {
+      out.writeBoolean(false);
       out.writeInt(warranties.size());
       for (Binding update : warranties) {
         writeBinding(update, out);

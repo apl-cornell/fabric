@@ -5,4 +5,4 @@ PATH="${PATH}:${APP_HOME}/../../bin"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab --jvm-cp "${APP_HOME}/classes" --app-home "${APP_HOME}" --name worker Test "$@"
+fab -j -Xmx3000m --jvm-cp "${APP_HOME}/classes" --app-home "${APP_HOME}" --name worker Test "$@"

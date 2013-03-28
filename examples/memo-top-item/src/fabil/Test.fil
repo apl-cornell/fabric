@@ -1,5 +1,6 @@
 import fabric.util.LinkedList;
 import fabric.util.List;
+import java.io.IOException;
 
 public class Test {
 
@@ -71,10 +72,15 @@ public class Test {
     Test t = null;
     atomic {
       Store s = Config.STORE;
-      t = new Test@s().Test$();
+      t = (Test) s.getRoot().get("initialized");
     }
     int n = Integer.parseInt(args[0]);
     int msSleep = Integer.parseInt(args[1]);
+    atomic {
+      t.topAccounts(n);
+    }
+    System.out.println("PREHEATED:");
+    try { System.in.read(); } catch (IOException e) { System.exit(1); }
     while (true) {
       List top = null;
       try { Thread.sleep(msSleep); } catch (InterruptedException e) { break; }

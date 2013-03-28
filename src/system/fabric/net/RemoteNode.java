@@ -2,10 +2,10 @@ package fabric.net;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import fabric.common.KeyMaterial;
 import fabric.common.exceptions.FabricException;
@@ -24,7 +24,7 @@ public abstract class RemoteNode implements Serializable {
    */
   public final String name;
 
-  private transient final Map<SubSocketFactory, Deque<SubSocket>> subSocketCache;
+  private transient final ConcurrentMap<SubSocketFactory, BlockingDeque<SubSocket>> subSocketCache;
 
   /**
    * Maximum number of cached subsocket connections.
@@ -33,7 +33,8 @@ public abstract class RemoteNode implements Serializable {
 
   protected RemoteNode(String name) {
     this.name = name;
-    this.subSocketCache = new HashMap<SubSocketFactory, Deque<SubSocket>>(2);
+    this.subSocketCache =
+        new ConcurrentHashMap<SubSocketFactory, BlockingDeque<SubSocket>>(2);
   }
 
   /**
@@ -45,34 +46,31 @@ public abstract class RemoteNode implements Serializable {
 
   public abstract Principal getPrincipal();
 
-  private Deque<SubSocket> getSocketDeque(SubSocketFactory factory) {
-    synchronized (subSocketCache) {
-      Deque<SubSocket> result = subSocketCache.get(factory);
-      if (result == null) {
-        result = new ArrayDeque<SubSocket>();
-        subSocketCache.put(factory, result);
-      }
+  private BlockingDeque<SubSocket> getSocketDeque(SubSocketFactory factory) {
+    BlockingDeque<SubSocket> result = subSocketCache.get(factory);
+    if (result != null) return result;
 
-      return result;
-    }
+    result = new LinkedBlockingDeque<SubSocket>(MAX_QUEUE_SIZE);
+    BlockingDeque<SubSocket> existing =
+        subSocketCache.putIfAbsent(factory, result);
+
+    if (existing != null) return existing;
+    return result;
   }
 
   protected SubSocket getSocket(SubSocketFactory factory) throws IOException {
-    Deque<SubSocket> queue = getSocketDeque(factory);
-    synchronized (queue) {
-      if (queue.isEmpty()) return factory.createSocket(this);
-      return queue.pop();
-    }
+    BlockingDeque<SubSocket> queue = getSocketDeque(factory);
+
+    SubSocket result = queue.poll();
+    if (result != null) return result;
+
+    return factory.createSocket(this);
   }
 
   protected void recycle(SubSocketFactory factory, SubSocket socket)
       throws IOException {
-    Deque<SubSocket> queue = getSocketDeque(factory);
-    synchronized (queue) {
-      if (queue.size() < MAX_QUEUE_SIZE)
-        queue.addFirst(socket);
-      else socket.close();
-    }
+    BlockingDeque<SubSocket> queue = getSocketDeque(factory);
+    if (!queue.offer(socket)) socket.close();
   }
 
   protected <R extends Message.Response, E extends FabricException> R send(
