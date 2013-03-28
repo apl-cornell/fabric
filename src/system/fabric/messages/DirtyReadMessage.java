@@ -9,9 +9,9 @@ import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
-import fabric.lang.security.Principal;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -75,9 +75,9 @@ public class DirtyReadMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
-      AccessException {
-    return h.handle(p, this);
+  public Response dispatch(RemoteIdentity client, MessageHandler h)
+      throws ProtocolError, AccessException {
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

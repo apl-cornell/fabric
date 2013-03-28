@@ -10,6 +10,7 @@ import java.util.Set;
 
 import fabric.common.SemanticWarranty;
 import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.TransactionCommitFailedException;
@@ -66,9 +67,9 @@ public class CommitTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h)
+  public Response dispatch(RemoteIdentity client, MessageHandler h)
       throws TransactionCommitFailedException {
-    return h.handle(p, this);
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

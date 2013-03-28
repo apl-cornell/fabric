@@ -13,6 +13,7 @@ import fabric.common.Resources;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
@@ -22,6 +23,7 @@ import fabric.common.util.Pair;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
 import fabric.store.TransactionManager;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * An in-memory implementation of the ObjectDB. This class assumes there will be
@@ -88,7 +90,7 @@ public class MemoryDB extends ObjectDB {
 
   @Override
   public void scheduleCommit(final long tid, long commitTime,
-      final Principal workerPrincipal, final SubscriptionManager sm) {
+      final RemoteIdentity workerIdentity, final SubscriptionManager sm) {
     long commitDelay = commitTime - System.currentTimeMillis();
     STORE_DB_LOGGER.finer("Scheduling commit for tid " + tid + " to run at "
         + new Date(commitTime) + " (in " + commitDelay + " ms)");
@@ -96,7 +98,7 @@ public class MemoryDB extends ObjectDB {
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
-        PendingTransaction tx = remove(workerPrincipal, tid);
+        PendingTransaction tx = remove(workerIdentity.principal, tid);
 
         // merge in the objects
         for (Pair<SerializedObject, UpdateType> update : tx.modData) {
@@ -104,7 +106,8 @@ public class MemoryDB extends ObjectDB {
           objectTable.put(o.getOnum(), o);
 
           // Remove any cached globs containing the old version of this object.
-          notifyCommittedUpdate(sm, o.getOnum());
+          notifyCommittedUpdate(sm, o.getOnum(),
+              (RemoteWorker) workerIdentity.node);
         }
       }
     });

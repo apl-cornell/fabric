@@ -6,8 +6,8 @@ import java.io.IOException;
 
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
+import fabric.common.net.RemoteIdentity;
 import fabric.dissemination.Glob;
-import fabric.lang.security.Principal;
 
 /**
  * A <code>DissemReadMessage</code> represents a request from a dissemination
@@ -47,9 +47,9 @@ public final class DissemReadMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
-      AccessException {
-    return h.handle(p, this);
+  public Response dispatch(RemoteIdentity client, MessageHandler h)
+      throws ProtocolError, AccessException {
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

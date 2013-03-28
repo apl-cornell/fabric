@@ -1,15 +1,18 @@
 package fabric.store;
 
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import fabric.common.FabricThread;
 import fabric.common.ObjectGroup;
+import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyCache;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.net.UnreachableNodeException;
@@ -25,7 +28,7 @@ public class SubscriptionManager extends FabricThread.Impl {
    * A set of onums that have been updated, paired with the worker that issued
    * the update.
    */
-  private final Set<Pair<Long, RemoteWorker>> updatedOnums;
+  private final BlockingQueue<Pair<LongSet, RemoteWorker>> updatedOnums;
 
   /**
    * The set of nodes subscribed to each onum. The second component of each pair
@@ -53,7 +56,7 @@ public class SubscriptionManager extends FabricThread.Impl {
   public SubscriptionManager(String store, TransactionManager tm) {
     super("subscription manager for store " + store);
     this.store = store;
-    this.updatedOnums = new LinkedHashSet<Pair<Long, RemoteWorker>>();
+    this.updatedOnums = new ArrayBlockingQueue<Pair<LongSet, RemoteWorker>>(50);
     this.tm = tm;
     this.subscriptions = new LongKeyCache<Set<Pair<RemoteWorker, Boolean>>>();
 
@@ -63,72 +66,76 @@ public class SubscriptionManager extends FabricThread.Impl {
   @Override
   public void run() {
     while (true) {
-      // Obtain an entry from the list of updated onums.
-      Pair<Long, RemoteWorker> updateEntry;
-      synchronized (updatedOnums) {
-        if (updatedOnums.isEmpty()) {
-          try {
-            updatedOnums.wait();
-          } catch (InterruptedException e) {
-          }
-          continue;
-        }
-
-        Iterator<Pair<Long, RemoteWorker>> updates = updatedOnums.iterator();
-        updateEntry = updates.next();
-        updates.remove();
-      }
-
-      long onum = updateEntry.first;
-      RemoteWorker updater = updateEntry.second;
-
-      // Get the list of subscribers.
-      Set<Pair<RemoteWorker, Boolean>> subscribers;
-      synchronized (subscriptions) {
-        subscribers = subscriptions.remove(onum);
-      }
-
-      if (subscribers == null) continue;
-
-      // Get the update.
-      GroupContainer groupContainer;
-      Glob glob;
+      final Pair<LongSet, RemoteWorker> updateEntry;
       try {
-        groupContainer = tm.getGroupContainerAndSubscribe(onum);
-        glob = groupContainer.getGlob();
-      } catch (AccessException e) {
-        throw new InternalError(e);
+        updateEntry = updatedOnums.take();
+      } catch (InterruptedException e1) {
+        continue;
       }
 
-      // Notify subscribers of updates.
-      Set<Pair<RemoteWorker, Boolean>> newSubscribers =
-          new HashSet<Pair<RemoteWorker, Boolean>>();
-      for (Pair<RemoteWorker, Boolean> subscriber : subscribers) {
-        RemoteWorker node = subscriber.first;
-        boolean isDissem = subscriber.second;
-        // No need to notify the worker that issued the updates. Just
-        // resubscribe the worker.
-        boolean resubscribe;
-        if (node == updater && !isDissem)
-          resubscribe = true;
-        else {
-          try {
-            if (isDissem)
-              resubscribe = node.notifyObjectUpdate(store, onum, glob);
-            else {
-              ObjectGroup group = groupContainer.getGroup(node.getPrincipal());
-              resubscribe =
-                  group != null && node.notifyObjectUpdate(onum, group);
+      Threading.getPool().submit(
+          new Threading.NamedRunnable(
+              "Fabric subscription manager object-update notifier") {
+            @Override
+            protected void runImpl() {
+              LongSet onums = updateEntry.first;
+              RemoteWorker updater = updateEntry.second;
+
+              for (LongIterator it = onums.iterator(); it.hasNext();) {
+                long onum = it.next();
+
+                // Get the list of subscribers.
+                Set<Pair<RemoteWorker, Boolean>> subscribers =
+                    subscriptions.remove(onum);
+                if (subscribers == null) continue;
+
+                // Get the update.
+                GroupContainer groupContainer;
+                Glob glob;
+                try {
+                  groupContainer = tm.getGroupContainer(onum);
+                  glob = groupContainer.getGlob();
+                } catch (AccessException e) {
+                  throw new InternalError(e);
+                }
+
+                // Notify subscribers of updates.
+                Set<Pair<RemoteWorker, Boolean>> newSubscribers =
+                    new HashSet<Pair<RemoteWorker, Boolean>>();
+                synchronized (subscribers) {
+                  for (Pair<RemoteWorker, Boolean> subscriber : subscribers) {
+                    RemoteWorker node = subscriber.first;
+                    boolean isDissem = subscriber.second;
+                    // No need to notify the worker that issued the updates. Just
+                    // resubscribe the worker.
+                    boolean resubscribe;
+                    if (node == updater && !isDissem)
+                      resubscribe = true;
+                    else {
+                      try {
+                        if (isDissem)
+                          resubscribe =
+                              node.notifyObjectUpdate(store, onum, glob);
+                        else {
+                          ObjectGroup group =
+                              groupContainer.getGroup(node.getPrincipal());
+                          resubscribe =
+                              group != null
+                                  && node.notifyObjectUpdate(onum, group);
+                        }
+                      } catch (UnreachableNodeException e) {
+                        resubscribe = false;
+                      }
+                    }
+
+                    if (resubscribe) newSubscribers.add(subscriber);
+                  }
+                }
+
+                subscribe(onum, newSubscribers);
+              }
             }
-          } catch (UnreachableNodeException e) {
-            resubscribe = false;
-          }
-        }
-
-        if (resubscribe) newSubscribers.add(subscriber);
-      }
-
-      subscribe(onum, newSubscribers);
+          });
     }
   }
 
@@ -139,11 +146,13 @@ public class SubscriptionManager extends FabricThread.Impl {
       Set<Pair<RemoteWorker, Boolean>> newSubscribers) {
     if (newSubscribers.isEmpty()) return;
 
-    synchronized (subscriptions) {
-      Set<Pair<RemoteWorker, Boolean>> subscribers = subscriptions.get(onum);
-      if (subscribers == null) {
-        subscriptions.put(onum, newSubscribers);
-      } else {
+    Set<Pair<RemoteWorker, Boolean>> subscribers = subscriptions.get(onum);
+    if (subscribers == null) {
+      subscribers = subscriptions.putIfAbsent(onum, newSubscribers);
+    }
+
+    if (subscribers != null) {
+      synchronized (subscribers) {
         subscribers.addAll(newSubscribers);
       }
     }
@@ -157,25 +166,24 @@ public class SubscriptionManager extends FabricThread.Impl {
    *          dissemination node; otherwise it will be subscribed as a worker.
    */
   public void subscribe(long onum, RemoteWorker worker, boolean dissemSubscribe) {
-    synchronized (subscriptions) {
-      Set<Pair<RemoteWorker, Boolean>> subscribers = subscriptions.get(onum);
-      if (subscribers == null) {
-        subscribers = new HashSet<Pair<RemoteWorker, Boolean>>();
-        subscriptions.put(onum, subscribers);
-      }
+    Set<Pair<RemoteWorker, Boolean>> subscribers = subscriptions.get(onum);
+    if (subscribers == null) {
+      subscribers = new HashSet<Pair<RemoteWorker, Boolean>>();
+      Set<Pair<RemoteWorker, Boolean>> existing =
+          subscriptions.putIfAbsent(onum, subscribers);
+      if (existing != null) subscribers = existing;
+    }
 
+    synchronized (subscribers) {
       subscribers.add(new Pair<RemoteWorker, Boolean>(worker, dissemSubscribe));
     }
   }
 
   /**
-   * Notifies the subscription manager that an object has been updated by a
+   * Notifies the subscription manager that a set of objects has been updated by a
    * particular worker.
    */
-  public void notifyUpdate(long onum, RemoteWorker worker) {
-    synchronized (updatedOnums) {
-      updatedOnums.add(new Pair<Long, RemoteWorker>(onum, worker));
-      updatedOnums.notify();
-    }
+  public void notifyUpdate(LongSet onums, RemoteWorker worker) {
+    updatedOnums.offer(new Pair<LongSet, RemoteWorker>(onums, worker));
   }
 }

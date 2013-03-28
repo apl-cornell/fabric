@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.transaction.TakeOwnershipFailedException;
@@ -45,9 +45,9 @@ public class TakeOwnershipMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
-      TakeOwnershipFailedException {
-    return h.handle(p, this);
+  public Response dispatch(RemoteIdentity worker, MessageHandler h)
+      throws ProtocolError, TakeOwnershipFailedException {
+    return h.handle(worker, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

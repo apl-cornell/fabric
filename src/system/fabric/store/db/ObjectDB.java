@@ -15,6 +15,7 @@ import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
@@ -30,6 +31,7 @@ import fabric.store.TransactionManager;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * <p>
@@ -484,15 +486,15 @@ public abstract class ObjectDB {
    *          the transaction id
    * @param commitTime
    *          the time after which the commit should take effect. 
-   * @param workerNode
+   * @param workerIdentity
    *          the remote worker that is performing the commit
    * @param workerPrincipal
    *          the principal requesting the commit
    */
   public final void commit(long tid, long commitTime,
-      Principal workerPrincipal, SubscriptionManager sm) {
+      RemoteIdentity workerIdentity, SubscriptionManager sm) {
     // Extend the version warranties for the updated objects.
-    LongSet onums = removeWrittenOnumsByTid(tid, workerPrincipal);
+    LongSet onums = removeWrittenOnumsByTid(tid, workerIdentity.principal);
     if (onums != null) {
       for (LongIterator it = onums.iterator(); it.hasNext();) {
         long onum = it.next();
@@ -500,7 +502,7 @@ public abstract class ObjectDB {
       }
     }
 
-    scheduleCommit(tid, commitTime, workerPrincipal, sm);
+    scheduleCommit(tid, commitTime, workerIdentity, sm);
   }
 
   /**
@@ -510,13 +512,11 @@ public abstract class ObjectDB {
    *          the transaction id
    * @param commitTime
    *          the time after which the commit should take effect. 
-   * @param workerNode
+   * @param workerIdentity
    *          the remote worker that is performing the commit
-   * @param workerPrincipal
-   *          the principal requesting the commit
    */
   protected abstract void scheduleCommit(long tid, long commitTime,
-      Principal workerPrincipal, SubscriptionManager sm);
+      RemoteIdentity workerIdentity, SubscriptionManager sm);
 
   /**
    * Causes the objects prepared in transaction [tid] to be discarded.
@@ -683,22 +683,26 @@ public abstract class ObjectDB {
    * @param worker
    *          the worker that performed the update.
    */
-  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum) {
+  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum,
+      RemoteWorker worker) {
     // Remove from the glob table the glob associated with the onum.
     LongSet groupOnums = objectGrouper.removeGroup(onum);
 
     // Notify the subscription manager that the group has been updated.
-//    sm.notifyUpdate(onum, worker);
+    LongSet updatedOnums = new LongHashSet();
+    updatedOnums.add(onum);
     if (groupOnums != null) {
       for (LongIterator onumIt = groupOnums.iterator(); onumIt.hasNext();) {
         long relatedOnum = onumIt.next();
         if (relatedOnum == onum) continue;
 
-//        sm.notifyUpdate(relatedOnum, worker);
+        updatedOnums.add(relatedOnum);
       }
     }
+
     // Notify the warranty issuer.
     warrantyIssuer.notifyWriteCommit(onum);
+    sm.notifyUpdate(updatedOnums, worker);
   }
 
   /**

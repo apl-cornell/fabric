@@ -10,9 +10,9 @@ import java.util.Set;
 
 import fabric.common.SemanticWarranty;
 import fabric.common.VersionWarranty;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.lang.security.Principal;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.TransactionPrepareFailedException;
@@ -85,9 +85,9 @@ public class PrepareTransactionReadsMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h)
+  public Response dispatch(RemoteIdentity client, MessageHandler h)
       throws TransactionPrepareFailedException {
-    return h.handle(p, this);
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

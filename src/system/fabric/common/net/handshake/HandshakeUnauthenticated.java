@@ -5,28 +5,46 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+import fabric.common.net.RemoteIdentity;
+import fabric.net.RemoteNode;
+import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
+
 public class HandshakeUnauthenticated implements Protocol {
   //
   // an incredibly simple handshake:
   // client -> server : name
   //
+  private final String localName;
+
+  public HandshakeUnauthenticated(String localName) {
+    this.localName = localName;
+  }
 
   /**
-   * @param name The name of the remote host.
+   * @param remoteNode the node to connect to.
    */
   @Override
-  public ShakenSocket initiate(String name, Socket s) throws IOException {
+  public ShakenSocket initiate(RemoteNode remoteNode, Socket s)
+      throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
-    out.writeUTF(name);
+    out.writeUTF(remoteNode.name);
+    out.writeUTF(localName);
     out.flush();
-    return new ShakenSocket(name, null, s);
+    return new ShakenSocket(remoteNode.name, new RemoteIdentity(remoteNode,
+        null), s);
   }
 
   @Override
   public ShakenSocket receive(Socket s) throws IOException {
     DataInputStream in = new DataInputStream(s.getInputStream());
+
     String name = in.readUTF();
-    return new ShakenSocket(name, null, s);
+
+    String remoteWorkerName = in.readUTF();
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker(remoteWorkerName);
+
+    return new ShakenSocket(name, new RemoteIdentity(remoteWorker, null), s);
   }
 
 }

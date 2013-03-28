@@ -46,6 +46,7 @@ import fabric.common.Threading;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.MutableInteger;
@@ -58,6 +59,7 @@ import fabric.store.SubscriptionManager;
 import fabric.store.TransactionManager;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * An ObjectDB backed by a Berkeley Database.
@@ -229,8 +231,8 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public void scheduleCommit(long tid, long commitTime,
-      Principal workerPrincipal, SubscriptionManager sm) {
-    scheduleCommit(tid, commitTime, workerPrincipal, sm, true);
+      RemoteIdentity workerIdentity, SubscriptionManager sm) {
+    scheduleCommit(tid, commitTime, workerIdentity, sm, true);
   }
 
   /**
@@ -239,7 +241,7 @@ public class BdbDB extends ObjectDB {
    *          purposes.
    */
   private void scheduleCommit(final long tid, final long commitTime,
-      final Principal workerPrincipal, final SubscriptionManager sm,
+      final RemoteIdentity workerIdentity, final SubscriptionManager sm,
       boolean logCommitTime) {
     long commitDelay = commitTime - System.currentTimeMillis();
     STORE_DB_LOGGER
@@ -248,7 +250,7 @@ public class BdbDB extends ObjectDB {
 
     // Record the commit time in BDB.
     final DatabaseEntry tidBdbKey =
-        new DatabaseEntry(toBytes(tid, workerPrincipal));
+        new DatabaseEntry(toBytes(tid, workerIdentity.principal));
     if (logCommitTime) {
       runInBdbTransaction(new Code<Void, RuntimeException>() {
         @Override
@@ -276,7 +278,8 @@ public class BdbDB extends ObjectDB {
                 commitTimes.delete(txn, tidBdbKey);
 
                 // Obtain the transaction record.
-                PendingTransaction pending = remove(workerPrincipal, txn, tid);
+                PendingTransaction pending =
+                    remove(workerIdentity.principal, txn, tid);
 
                 if (pending != null) {
                   FSSerializer<SerializedObject> serializer =
@@ -309,7 +312,7 @@ public class BdbDB extends ObjectDB {
           long onum = o.getOnum();
 
           // Remove any cached globs containing the old version of this object.
-          notifyCommittedUpdate(sm, onum);
+          notifyCommittedUpdate(sm, onum, (RemoteWorker) workerIdentity.node);
 
           // Update caches.
           cacheVersionNumber(onum, o.getVersion());
@@ -579,7 +582,8 @@ public class BdbDB extends ObjectDB {
         .entrySet()) {
       long commitTime = entry.getKey();
       for (Pair<Long, Principal> tid : entry.getValue()) {
-        scheduleCommit(tid.first, commitTime, tid.second, sm, false);
+        scheduleCommit(tid.first, commitTime, new RemoteIdentity(null,
+            tid.second), sm, false);
       }
     }
   }

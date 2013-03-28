@@ -42,6 +42,26 @@ public final class SysUtil {
    */
   private static final int BUF_LEN = 4096;
 
+  public static String getNodeCN(String nodeName, long principalOnum) {
+    return principalOnum + ":" + nodeName;
+  }
+
+  public static long getPrincipalOnum(String nodeCN) {
+    try {
+      int idx = nodeCN.indexOf(':');
+      return Long.parseLong(nodeCN.substring(0, idx));
+    } catch (IndexOutOfBoundsException e) {
+      throw new IllegalArgumentException(e);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
+  public static String getNodeName(String nodeCN) {
+    int idx = nodeCN.indexOf(':');
+    return nodeCN.substring(idx + 1);
+  }
+
   /**
    * Generates a cryptographically secure hash of a platform class.
    * 

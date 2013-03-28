@@ -7,7 +7,7 @@ import java.io.IOException;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
 
 /**
  * A <code>ReadMessage</code> represents a request from a worker to read an
@@ -45,9 +45,9 @@ public class ReadMessage extends Message<ReadMessage.Response, AccessException> 
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
-      AccessException {
-    return h.handle(p, this);
+  public Response dispatch(RemoteIdentity client, MessageHandler h)
+      throws ProtocolError, AccessException {
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

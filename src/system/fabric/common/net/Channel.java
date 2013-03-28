@@ -20,7 +20,6 @@ import java.util.zip.GZIPOutputStream;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.ShakenSocket;
-import fabric.lang.security.Principal;
 
 /**
  * A channel manages a single socket, allowing it to be multiplexed across
@@ -44,7 +43,7 @@ abstract class Channel extends Thread {
    * Maximum size of <code>connections</code>.
    */
   private final int maxOpenConnections;
-  private final Principal remotePrincipal;
+  private final RemoteIdentity remoteIdentity;
 
   // channel protocol:
   //
@@ -60,7 +59,7 @@ abstract class Channel extends Thread {
     setDaemon(true);
 
     this.sock = s.sock;
-    this.remotePrincipal = s.principal;
+    this.remoteIdentity = s.remoteIdentity;
 
     this.out =
         new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(
@@ -246,8 +245,8 @@ abstract class Channel extends Thread {
       return "stream " + streamID + " on " + Channel.this.toString();
     }
 
-    public Principal getPrincipal() {
-      return Channel.this.remotePrincipal;
+    public RemoteIdentity getRemoteIdentity() {
+      return Channel.this.remoteIdentity;
     }
 
     /**

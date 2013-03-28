@@ -3,7 +3,7 @@ package fabric.messages;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.remote.RemoteCallException;
@@ -21,56 +21,57 @@ import fabric.worker.transaction.TakeOwnershipFailedException;
  * and there is one such method for each message type that can be handled.
  */
 public interface MessageHandler {
-  public AbortTransactionMessage.Response handle(Principal p,
+  public AbortTransactionMessage.Response handle(RemoteIdentity client,
       AbortTransactionMessage msg) throws AccessException;
 
-  public AllocateMessage.Response handle(Principal p, AllocateMessage msg)
-      throws ProtocolError, AccessException;
+  public AllocateMessage.Response handle(RemoteIdentity client,
+      AllocateMessage msg) throws ProtocolError, AccessException;
 
-  public CommitTransactionMessage.Response handle(Principal p,
+  public CommitTransactionMessage.Response handle(RemoteIdentity client,
       CommitTransactionMessage msg) throws TransactionCommitFailedException;
 
-  public DissemReadMessage.Response handle(Principal p, DissemReadMessage msg)
-      throws ProtocolError, AccessException;
+  public DissemReadMessage.Response handle(RemoteIdentity client,
+      DissemReadMessage msg) throws ProtocolError, AccessException;
 
-  public GetCertChainMessage.Response handle(Principal p,
+  public GetCertChainMessage.Response handle(RemoteIdentity client,
       GetCertChainMessage msg) throws ProtocolError;
 
-  public PrepareTransactionWritesMessage.Response handle(Principal p,
+  public PrepareTransactionWritesMessage.Response handle(RemoteIdentity client,
       PrepareTransactionWritesMessage msg)
       throws TransactionPrepareFailedException;
 
-  public PrepareTransactionReadsMessage.Response handle(Principal p,
+  public PrepareTransactionReadsMessage.Response handle(RemoteIdentity client,
       PrepareTransactionReadsMessage msg)
       throws TransactionPrepareFailedException;
 
-  public ReuseCallMessage.Response handle(Principal p, ReuseCallMessage msg)
+  public ReuseCallMessage.Response handle(RemoteIdentity client,
+      ReuseCallMessage msg)
       throws ProtocolError, AccessException;
 
-  public ReadMessage.Response handle(Principal p, ReadMessage msg)
+  public ReadMessage.Response handle(RemoteIdentity client, ReadMessage msg)
       throws ProtocolError, AccessException;
 
-  public MakePrincipalMessage.Response handle(Principal p,
+  public MakePrincipalMessage.Response handle(RemoteIdentity client,
       MakePrincipalMessage msg) throws ProtocolError,
       FabricGeneralSecurityException;
 
-  public StalenessCheckMessage.Response handle(Principal p,
+  public StalenessCheckMessage.Response handle(RemoteIdentity client,
       StalenessCheckMessage msg) throws ProtocolError, AccessException;
 
-  public ObjectUpdateMessage.Response handle(Principal p,
+  public ObjectUpdateMessage.Response handle(RemoteIdentity client,
       ObjectUpdateMessage msg) throws ProtocolError;
 
-  public DirtyReadMessage.Response handle(Principal p, DirtyReadMessage msg)
-      throws ProtocolError, AccessException;
+  public DirtyReadMessage.Response handle(RemoteIdentity client,
+      DirtyReadMessage msg) throws ProtocolError, AccessException;
 
-  public RemoteCallMessage.Response handle(Principal p, RemoteCallMessage msg)
-      throws ProtocolError, RemoteCallException;
+  public RemoteCallMessage.Response handle(RemoteIdentity client,
+      RemoteCallMessage msg) throws ProtocolError, RemoteCallException;
 
-  public TakeOwnershipMessage.Response handle(Principal p,
+  public TakeOwnershipMessage.Response handle(RemoteIdentity client,
       TakeOwnershipMessage msg) throws ProtocolError,
       TakeOwnershipFailedException;
 
-  public InterWorkerStalenessMessage.Response handle(Principal p,
+  public InterWorkerStalenessMessage.Response handle(RemoteIdentity client,
       InterWorkerStalenessMessage msg) throws ProtocolError;
 
 }

@@ -2,7 +2,7 @@ package fabric.messages;
 
 import fabric.common.Logging;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
 import fabric.messages.ObjectUpdateMessage.Response;
 
 /**
@@ -24,32 +24,33 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
   }
 
   @Override
-  public final Response handle(Principal p, ObjectUpdateMessage msg)
+  public final Response handle(RemoteIdentity client, ObjectUpdateMessage msg)
       throws ProtocolError {
     throw error(msg);
   }
 
   @Override
-  public final fabric.messages.DirtyReadMessage.Response handle(Principal p,
-      DirtyReadMessage msg) throws ProtocolError {
+  public final fabric.messages.DirtyReadMessage.Response handle(
+      RemoteIdentity client, DirtyReadMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
-  public final fabric.messages.RemoteCallMessage.Response handle(Principal p,
-      RemoteCallMessage msg) throws ProtocolError {
+  public final fabric.messages.RemoteCallMessage.Response handle(
+      RemoteIdentity client, RemoteCallMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.TakeOwnershipMessage.Response handle(
-      Principal p, TakeOwnershipMessage msg) throws ProtocolError {
+      RemoteIdentity client, TakeOwnershipMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.InterWorkerStalenessMessage.Response handle(
-      Principal p, InterWorkerStalenessMessage msg) throws ProtocolError {
+      RemoteIdentity client, InterWorkerStalenessMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 

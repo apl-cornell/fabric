@@ -1,13 +1,15 @@
 package fabric.worker.remote;
 
 import java.lang.reflect.InvocationTargetException;
+import java.security.InvalidKeyException;
+import java.security.SignatureException;
 import java.text.MessageFormat;
 import java.util.HashMap;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.SemanticWarranty;
 import fabric.common.TransactionID;
-import fabric.common.exceptions.NotImplementedException;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
 import fabric.lang.Object._Impl;
@@ -25,6 +27,7 @@ import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.RemoteStore;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -42,10 +45,6 @@ public class RemoteCallManager extends MessageToWorkerHandler {
 
   private final SubServerSocketFactory factory;
 
-  /**
-   * @param name
-   *          the worker's DNS hostname.
-   */
   public RemoteCallManager(Worker worker) {
     super(worker.config.name);
 
@@ -58,7 +57,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public RemoteCallMessage.Response handle(final Principal p,
+  public RemoteCallMessage.Response handle(final RemoteIdentity client,
       final RemoteCallMessage remoteCallMessage) throws RemoteCallException {
     // We assume that this thread's transaction manager is free (i.e., it's not
     // managing any tranaction's log) at the start of the method and ensure that
@@ -88,7 +87,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
             fabric.lang.Object receiver =
                 remoteCallMessage.receiver.fetch().$getProxy();
             Object[] args = new Object[remoteCallMessage.args.length + 1];
-            args[0] = p;
+            args[0] = client.principal;
             for (int i = 0; i < remoteCallMessage.args.length; i++) {
               Object arg = remoteCallMessage.args[i];
               if (arg instanceof fabric.lang.Object) {
@@ -138,7 +137,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
    * worker's TransactionManager is associated with a null log.
    */
   @Override
-  public AbortTransactionMessage.Response handle(Principal p,
+  public AbortTransactionMessage.Response handle(RemoteIdentity client,
       AbortTransactionMessage abortTransactionMessage) {
     // XXX TODO Security checks.
     Log log =
@@ -154,7 +153,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public PrepareTransactionWritesMessage.Response handle(Principal p,
+  public PrepareTransactionWritesMessage.Response handle(RemoteIdentity client,
       PrepareTransactionWritesMessage message)
       throws TransactionPrepareFailedException {
     // XXX TODO Security checks.
@@ -182,7 +181,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public PrepareTransactionReadsMessage.Response handle(Principal p,
+  public PrepareTransactionReadsMessage.Response handle(RemoteIdentity client,
       PrepareTransactionReadsMessage message)
       throws TransactionPrepareFailedException {
     // XXX TODO Security checks.
@@ -216,7 +215,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
    * worker's TransactionManager is associated with a null log.
    */
   @Override
-  public CommitTransactionMessage.Response handle(Principal p,
+  public CommitTransactionMessage.Response handle(RemoteIdentity client,
       CommitTransactionMessage commitTransactionMessage)
       throws TransactionCommitFailedException {
     // XXX TODO Security checks.
@@ -244,7 +243,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public DirtyReadMessage.Response handle(Principal p,
+  public DirtyReadMessage.Response handle(RemoteIdentity client,
       DirtyReadMessage readMessage) {
     Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
     if (log == null) return new DirtyReadMessage.Response(null);
@@ -264,7 +263,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
 
     // Ensure that the remote worker is allowed to read the object.
     Label label = obj.get$$updateLabel();
-    if (!AuthorizationUtil.isReadPermitted(p, label.$getStore(),
+    if (!AuthorizationUtil.isReadPermitted(client.principal, label.$getStore(),
         label.$getOnum())) {
       obj = null;
     }
@@ -275,7 +274,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public TakeOwnershipMessage.Response handle(Principal p,
+  public TakeOwnershipMessage.Response handle(RemoteIdentity client,
       TakeOwnershipMessage msg) throws TakeOwnershipFailedException {
     Log log = TransactionRegistry.getInnermostLog(msg.tid.topTid);
     if (log == null)
@@ -300,15 +299,17 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       // Ensure that the remote worker is allowed to write the object.
       Label label = obj.get$$updateLabel();
       boolean authorized =
-          AuthorizationUtil.isWritePermitted(p, label.$getStore(),
-              label.$getOnum());
+          AuthorizationUtil.isWritePermitted(client.principal,
+              label.$getStore(), label.$getOnum());
 
       tm.associateLog(null);
 
-      if (!authorized)
+      if (!authorized) {
+        Principal p = client.principal;
         throw new TakeOwnershipFailedException(MessageFormat.format(
             "{0} is not authorized to own fab://{1}/{2}", p.$getStore() + "/"
                 + p.$getOnum(), msg.store.name(), msg.onum));
+      }
 
       // Relinquish ownership.
       obj.$isOwned = false;
@@ -317,32 +318,45 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public ObjectUpdateMessage.Response handle(Principal p,
+  public ObjectUpdateMessage.Response handle(RemoteIdentity client,
       ObjectUpdateMessage objectUpdateMessage) {
+
+    Worker worker = Worker.getWorker();
+    boolean response;
+
     if (objectUpdateMessage.group == null) {
-      // TODO
-      // RemoteStore store = worker.getStore(objectUpdateMessage.store);
-      // objectUpdateMessage.glob.verifySignature(store.getPublicKey());
-
-      // response =
-      // worker.updateDissemCaches(store, objectUpdateMessage.onum,
-      // objectUpdateMessage.glob);
-      throw new NotImplementedException();
+      RemoteStore store = worker.getStore(objectUpdateMessage.store);
+      try {
+        objectUpdateMessage.glob.verifySignature(store.getPublicKey());
+        response =
+            worker.updateDissemCaches(store, objectUpdateMessage.onum,
+                objectUpdateMessage.glob);
+      } catch (InvalidKeyException e) {
+        e.printStackTrace();
+        response = false;
+      } catch (SignatureException e) {
+        e.printStackTrace();
+        response = false;
+      }
     } else {
-      // TODO
-      // RemoteStore store = worker.getStore(session.remoteNodeName);
-      // objectUpdateMessage.glob.verifySignature(store.getPublicKey());
-
-      // response = worker.updateCache(store, objectUpdateMessage.group);
-      throw new NotImplementedException();
+      RemoteStore store = worker.getStore(client.node.name);
+      try {
+        objectUpdateMessage.glob.verifySignature(store.getPublicKey());
+        response = worker.updateCache(store, objectUpdateMessage.group);
+      } catch (InvalidKeyException e) {
+        e.printStackTrace();
+        response = false;
+      } catch (SignatureException e) {
+        e.printStackTrace();
+        response = false;
+      }
     }
 
-    // TODO
-    // return new ObjectUpdateMessage.Response(response);
+    return new ObjectUpdateMessage.Response(response);
   }
 
   @Override
-  public InterWorkerStalenessMessage.Response handle(Principal p,
+  public InterWorkerStalenessMessage.Response handle(RemoteIdentity client,
       InterWorkerStalenessMessage stalenessCheckMessage) {
 
     TransactionID tid = stalenessCheckMessage.tid;

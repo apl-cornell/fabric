@@ -6,6 +6,7 @@ import java.io.InputStream;
 
 import fabric.common.net.naming.SocketAddress;
 import fabric.lang.security.Principal;
+import fabric.net.RemoteNode;
 
 /**
  * Client-side multiplexed socket implementation. The API mirrors that of
@@ -39,8 +40,13 @@ public class SubSocket {
   }
 
   /** @see java.net.Socket#connect(SocketAddress) */
-  public synchronized final void connect(String name) throws IOException {
-    state.connect(name);
+  public synchronized final void connect(RemoteNode node) throws IOException {
+    state.connect(node);
+  }
+
+  public synchronized final RemoteIdentity getRemoteIdentity()
+      throws IOException {
+    return state.getRemoteIdentity();
   }
 
   /**
@@ -99,8 +105,12 @@ public class SubSocket {
       throw new IOException("Cannot close socket: " + this, cause);
     }
 
-    void connect(String name) throws IOException {
+    void connect(RemoteNode node) throws IOException {
       throw new IOException("Cannot connect: " + this, cause);
+    }
+
+    RemoteIdentity getRemoteIdentity() throws IOException {
+      throw new IOException("Cannot get remote identity: " + this, cause);
     }
 
     InputStream getInputStream() throws IOException {
@@ -129,13 +139,13 @@ public class SubSocket {
     }
 
     @Override
-    void connect(String name) throws IOException {
+    void connect(RemoteNode node) throws IOException {
       try {
-        Channel.Connection conn = factory.getChannel(name).connect();
+        Channel.Connection conn = factory.getChannel(node).connect();
         state = new Connected(conn);
       } catch (final Exception exc) {
         IOException wrapped =
-            new IOException("failed to connect to \"" + name + "\"", exc);
+            new IOException("failed to connect to \"" + node.name + "\"", exc);
         state = new ErrorState(wrapped);
         throw wrapped;
       }
@@ -171,6 +181,11 @@ public class SubSocket {
     }
 
     @Override
+    RemoteIdentity getRemoteIdentity() throws IOException {
+      return conn.getRemoteIdentity();
+    }
+
+    @Override
     InputStream getInputStream() {
       return conn.in;
     }
@@ -182,7 +197,7 @@ public class SubSocket {
 
     @Override
     Principal getPrincipal() {
-      return conn.getPrincipal();
+      return conn.getRemoteIdentity().principal;
     }
 
     Connected(Channel.Connection conn) {
