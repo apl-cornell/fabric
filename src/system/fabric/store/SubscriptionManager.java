@@ -24,11 +24,101 @@ import fabric.worker.remote.RemoteWorker;
  * single store.
  */
 public class SubscriptionManager extends FabricThread.Impl {
+  private static abstract class NotificationEvent extends
+      Threading.NamedRunnable {
+    public NotificationEvent(String name) {
+      super(name);
+    }
+
+    @Override
+    protected final void runImpl() {
+      handle();
+    }
+
+    protected abstract void handle();
+  }
+
+  private final class ObjectUpdateEvent extends NotificationEvent {
+    /**
+     * The set of onums that were updated.
+     */
+    final LongSet onums;
+
+    /**
+     * The worker that updated the onums.
+     */
+    final RemoteWorker writer;
+
+    /**
+     * @param name
+     */
+    public ObjectUpdateEvent(LongSet onums, RemoteWorker writer) {
+      super("Fabric subscription manager object-update notifiec");
+      this.onums = onums;
+      this.writer = writer;
+    }
+
+    @Override
+    protected void handle() {
+      for (LongIterator it = onums.iterator(); it.hasNext();) {
+        long onum = it.next();
+
+        // Get the list of subscribers.
+        Set<Pair<RemoteWorker, Boolean>> subscribers =
+            subscriptions.remove(onum);
+        if (subscribers == null) continue;
+
+        // Get the update.
+        GroupContainer groupContainer;
+        Glob glob;
+        try {
+          groupContainer = tm.getGroupContainer(onum);
+          glob = groupContainer.getGlob();
+        } catch (AccessException e) {
+          throw new InternalError(e);
+        }
+
+        // Notify subscribers of updates.
+        Set<Pair<RemoteWorker, Boolean>> newSubscribers =
+            new HashSet<Pair<RemoteWorker, Boolean>>();
+        synchronized (subscribers) {
+          for (Pair<RemoteWorker, Boolean> subscriber : subscribers) {
+            RemoteWorker node = subscriber.first;
+            boolean isDissem = subscriber.second;
+            // No need to notify the worker that issued the updates. Just
+            // resubscribe the worker.
+            boolean resubscribe;
+            if (node == writer && !isDissem)
+              resubscribe = true;
+            else {
+              try {
+                if (isDissem)
+                  resubscribe = node.notifyObjectUpdate(store, onum, glob);
+                else {
+                  ObjectGroup group =
+                      groupContainer.getGroup(node.getPrincipal());
+                  resubscribe =
+                      group != null && node.notifyObjectUpdate(onum, group);
+                }
+              } catch (UnreachableNodeException e) {
+                resubscribe = false;
+              }
+            }
+
+            if (resubscribe) newSubscribers.add(subscriber);
+          }
+        }
+
+        subscribe(onum, newSubscribers);
+      }
+    }
+  }
+
   /**
    * A set of onums that have been updated, paired with the worker that issued
    * the update.
    */
-  private final BlockingQueue<Pair<LongSet, RemoteWorker>> updatedOnums;
+  private final BlockingQueue<NotificationEvent> notificationQueue;
 
   /**
    * The set of nodes subscribed to each onum. The second component of each pair
@@ -56,7 +146,7 @@ public class SubscriptionManager extends FabricThread.Impl {
   public SubscriptionManager(String store, TransactionManager tm) {
     super("subscription manager for store " + store);
     this.store = store;
-    this.updatedOnums = new ArrayBlockingQueue<Pair<LongSet, RemoteWorker>>(50);
+    this.notificationQueue = new ArrayBlockingQueue<NotificationEvent>(50);
     this.tm = tm;
     this.subscriptions = new LongKeyCache<Set<Pair<RemoteWorker, Boolean>>>();
 
@@ -66,76 +156,10 @@ public class SubscriptionManager extends FabricThread.Impl {
   @Override
   public void run() {
     while (true) {
-      final Pair<LongSet, RemoteWorker> updateEntry;
       try {
-        updateEntry = updatedOnums.take();
+        Threading.getPool().submit(notificationQueue.take());
       } catch (InterruptedException e1) {
-        continue;
       }
-
-      Threading.getPool().submit(
-          new Threading.NamedRunnable(
-              "Fabric subscription manager object-update notifier") {
-            @Override
-            protected void runImpl() {
-              LongSet onums = updateEntry.first;
-              RemoteWorker updater = updateEntry.second;
-
-              for (LongIterator it = onums.iterator(); it.hasNext();) {
-                long onum = it.next();
-
-                // Get the list of subscribers.
-                Set<Pair<RemoteWorker, Boolean>> subscribers =
-                    subscriptions.remove(onum);
-                if (subscribers == null) continue;
-
-                // Get the update.
-                GroupContainer groupContainer;
-                Glob glob;
-                try {
-                  groupContainer = tm.getGroupContainer(onum);
-                  glob = groupContainer.getGlob();
-                } catch (AccessException e) {
-                  throw new InternalError(e);
-                }
-
-                // Notify subscribers of updates.
-                Set<Pair<RemoteWorker, Boolean>> newSubscribers =
-                    new HashSet<Pair<RemoteWorker, Boolean>>();
-                synchronized (subscribers) {
-                  for (Pair<RemoteWorker, Boolean> subscriber : subscribers) {
-                    RemoteWorker node = subscriber.first;
-                    boolean isDissem = subscriber.second;
-                    // No need to notify the worker that issued the updates. Just
-                    // resubscribe the worker.
-                    boolean resubscribe;
-                    if (node == updater && !isDissem)
-                      resubscribe = true;
-                    else {
-                      try {
-                        if (isDissem)
-                          resubscribe =
-                              node.notifyObjectUpdate(store, onum, glob);
-                        else {
-                          ObjectGroup group =
-                              groupContainer.getGroup(node.getPrincipal());
-                          resubscribe =
-                              group != null
-                                  && node.notifyObjectUpdate(onum, group);
-                        }
-                      } catch (UnreachableNodeException e) {
-                        resubscribe = false;
-                      }
-                    }
-
-                    if (resubscribe) newSubscribers.add(subscriber);
-                  }
-                }
-
-                subscribe(onum, newSubscribers);
-              }
-            }
-          });
     }
   }
 
@@ -184,6 +208,6 @@ public class SubscriptionManager extends FabricThread.Impl {
    * particular worker.
    */
   public void notifyUpdate(LongSet onums, RemoteWorker worker) {
-    updatedOnums.offer(new Pair<LongSet, RemoteWorker>(onums, worker));
+    notificationQueue.offer(new ObjectUpdateEvent(onums, worker));
   }
 }
