@@ -1,6 +1,5 @@
 package fabric.net;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.concurrent.BlockingDeque;
@@ -76,25 +75,20 @@ public abstract class RemoteNode implements Serializable {
 
   protected <R extends Message.Response, E extends FabricException> R send(
       SubSocketFactory subSocketFactory, Message<R, E> message) throws E {
-    while (true) {
+    try {
+      SubSocket socket = getSocket(subSocketFactory);
       try {
-        SubSocket socket = getSocket(subSocketFactory);
-        try {
-          return message.send(socket);
-        } catch (EOFException e) {
-          socket = null;
-          continue;
-        } catch (IOException e) {
-          socket = null;
-          throw e;
-        } finally {
-          if (socket != null) {
-            recycle(subSocketFactory, socket);
-          }
-        }
+        return message.send(socket);
       } catch (IOException e) {
-        throw new NotImplementedException(e);
+        socket = null;
+        throw e;
+      } finally {
+        if (socket != null) {
+          recycle(subSocketFactory, socket);
+        }
       }
+    } catch (IOException e) {
+      throw new NotImplementedException(e);
     }
   }
 
