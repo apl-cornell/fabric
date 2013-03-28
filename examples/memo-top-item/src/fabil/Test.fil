@@ -47,10 +47,15 @@ public class Test {
   private memoized List topAccountsBetween(int n, int min, int max) {
     Store s = Config.STORE;
     List rtn = new LinkedList@s().fabric$util$LinkedList$(); 
-    if (max - min == 1) {
-      TwooterAccount foo = (TwooterAccount) s.getRoot().get(new Integer(min));
-      //System.out.println("" + n + "=" + foo);
-      rtn.add(foo);
+    if (max - min <= n) {
+      for (int i = min; i < max; i++) {
+        TwooterAccount foo = (TwooterAccount) s.getRoot().get(new Integer(i));
+        int j = 0;
+        for (j = 0; j < rtn.size(); j++)
+          if (((TwooterAccount) rtn.get(j)).numFollowers() < foo.numFollowers())
+            break;
+        rtn.add(j, foo);
+      }
     } else if (max > min) {
       rtn.addAll(merge(n, topAccountsBetween(n, min, min + ((max - min) >> 1)),
             topAccountsBetween(n, min + ((max - min) >> 1), max)));

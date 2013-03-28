@@ -19,7 +19,6 @@ public class Create {
               rnd.nextInt(Config.NUM_USERS >> 1)).TwooterAccount$());
       }
       Test t = new Test@s().Test$();
-      t.topAccounts(n);
       m.put("initialized", t);
     }
     System.out.println("done");
