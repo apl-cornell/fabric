@@ -74,4 +74,7 @@ public interface MessageHandler {
   public InterWorkerStalenessMessage.Response handle(RemoteIdentity client,
       InterWorkerStalenessMessage msg) throws ProtocolError;
 
+  public WarrantyRefreshMessage.Response handle(RemoteIdentity client,
+      WarrantyRefreshMessage msg) throws ProtocolError;
+
 }

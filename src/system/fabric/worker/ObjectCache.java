@@ -2,12 +2,15 @@ package fabric.worker;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
 import fabric.common.VersionWarranty;
+import fabric.common.VersionWarranty.Binding;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
@@ -227,6 +230,26 @@ public final class ObjectCache {
       return impl;
     }
 
+    public synchronized boolean updateWarranty(int versionNumber,
+        VersionWarranty warranty) {
+      if (next != null) {
+        return next.updateWarranty(versionNumber, warranty);
+      } else if (impl != null) {
+        if (impl.$version != versionNumber) return false;
+
+        return impl.$readMapEntry.updateWarranty(warranty);
+      } else if (serialized != null) {
+        if (serialized.first.getVersion() != versionNumber) return false;
+
+        if (warranty.expiresAfter(serialized.second)) {
+          serialized.second = warranty;
+        }
+        return true;
+      } else {
+        return false;
+      }
+    }
+
     /**
      * Obtains a reference to the object's update label. (Returns null if this
      * entry has been evicted.
@@ -371,8 +394,8 @@ public final class ObjectCache {
    *          the object, then an error is thrown.
    * @return the resulting cache entry associated with the object's onum.
    */
-  private Entry putIfAbsent(Store store, Pair<SerializedObject, VersionWarranty> obj,
-      boolean silenceConflicts) {
+  private Entry putIfAbsent(Store store,
+      Pair<SerializedObject, VersionWarranty> obj, boolean silenceConflicts) {
     long onum = obj.first.getOnum();
 
     Entry newEntry = new Entry(store, obj);
@@ -399,8 +422,7 @@ public final class ObjectCache {
    */
   Entry put(Store store, ObjectGroup group, long onum) {
     Entry result = null;
-    for (Pair<SerializedObject, VersionWarranty> obj : group.objects()
-        .values()) {
+    for (Pair<SerializedObject, VersionWarranty> obj : group.objects().values()) {
       Entry curEntry = putIfAbsent(store, obj, true);
       if (result == null && onum == obj.first.getOnum()) {
         result = curEntry;
@@ -424,6 +446,27 @@ public final class ObjectCache {
     if (entry == null) return false;
     entry.evict();
     return true;
+  }
+
+  /**
+   * Updates the cache with the given set of warranties.
+   * 
+   * @return the set of onums for which a cache entry was found.
+   */
+  public List<Long> update(RemoteStore store, List<Binding> warranties) {
+    List<Long> result = new ArrayList<Long>();
+    for (Binding update : warranties) {
+      long onum = update.onum;
+
+      Entry entry = entries.get(onum);
+      if (entry == null) continue;
+
+      if (entry.updateWarranty(update.versionNumber, update.warranty())) {
+        result.add(onum);
+      }
+    }
+
+    return result;
   }
 
   /**

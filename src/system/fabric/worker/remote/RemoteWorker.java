@@ -1,18 +1,21 @@
 package fabric.worker.remote;
 
 import java.io.IOException;
+import java.util.List;
 
 import fabric.common.ClassRef;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
+import fabric.common.VersionWarranty.Binding;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubSocket;
 import fabric.common.net.SubSocketFactory;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.lang.Object._Impl;
@@ -29,6 +32,7 @@ import fabric.messages.PrepareTransactionReadsMessage;
 import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
+import fabric.messages.WarrantyRefreshMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
@@ -238,5 +242,35 @@ public final class RemoteWorker extends RemoteNode {
   private <R extends Message.Response, E extends FabricException> R send(
       Message<R, E> message) throws E {
     return send(subSocketFactory, message);
+  }
+
+  /**
+   * Notifies the worker that a list of warranties has been updated.
+   */
+  public List<Long> notifyWarrantyRefresh(List<Binding> warranties) {
+    WarrantyRefreshMessage.Response response;
+    try {
+      response = send(new WarrantyRefreshMessage(warranties));
+    } catch (NoException e) {
+      // Not possible.
+      throw new InternalError(e);
+    }
+    return response.resubscriptions;
+  }
+
+  /**
+   * Notifies the dissemination node at the given worker that a list of warranty
+   * groups has been updated.
+   */
+  public List<Long> notifyWarrantyRefresh(String store,
+      LongKeyMap<List<Binding>> updates) {
+    WarrantyRefreshMessage.Response response;
+    try {
+      response = send(new WarrantyRefreshMessage(store, updates));
+    } catch (NoException e) {
+      // Not possible.
+      throw new InternalError(e);
+    }
+    return response.resubscriptions;
   }
 }

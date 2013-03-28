@@ -48,6 +48,15 @@ public class InProcessStore extends RemoteStore {
     localWorkerIdentity = null;
   }
 
+  private RemoteIdentity localWorkerIdentity() {
+    if (localWorkerIdentity == null) {
+      Worker worker = Worker.getWorker();
+      localWorkerIdentity =
+          new RemoteIdentity(worker.getLocalWorker(), worker.getPrincipal());
+    }
+    return localWorkerIdentity;
+  }
+
   @Override
   public void abortTransaction(TransactionID tid) {
     try {
@@ -61,17 +70,11 @@ public class InProcessStore extends RemoteStore {
   public Map<CallInstance, SemanticWarranty> commitTransaction(long transactionID,
       long commitTime, Set<SemanticWarrantyRequest> requests, boolean readOnly)
   throws TransactionCommitFailedException {
-    if (localWorkerIdentity == null) {
-      Worker worker = Worker.getWorker();
-      localWorkerIdentity =
-          new RemoteIdentity(worker.getLocalWorker(), worker.getPrincipal());
-    }
-    
     Map<CallInstance, SemanticWarranty> replies =
       tm.prepareRequests(Worker.getWorker().getPrincipal(), transactionID,
           requests, commitTime);
     if (!readOnly)
-      tm.commitTransaction(localWorkerIdentity, transactionID,
+      tm.commitTransaction(localWorkerIdentity(), transactionID,
           commitTime);
     return replies;
   }
@@ -79,7 +82,7 @@ public class InProcessStore extends RemoteStore {
   @Override
   public long createOnum() {
     try {
-      return tm.newOnums(Worker.getWorker().getPrincipal(), 1)[0];
+      return tm.newOnums(getPrincipal(), 1)[0];
     } catch (AccessException e) {
       throw new InternalError(e);
     }
@@ -111,7 +114,7 @@ public class InProcessStore extends RemoteStore {
     // Swizzle remote pointers.
     sm.createSurrogates(req);
 
-    return tm.prepareWrites(Worker.getWorker().getPrincipal(), req);
+    return tm.prepareWrites(getPrincipal(), req);
   }
 
   @Override
@@ -120,7 +123,7 @@ public class InProcessStore extends RemoteStore {
       WarrantiedCallResult> calls, long commitTime) throws
   TransactionPrepareFailedException {
     LongKeyMap<VersionWarranty> updates =
-	tm.prepareReads(Worker.getWorker().getPrincipal(), tid, reads,
+	tm.prepareReads(localWorkerIdentity(), tid, reads,
                         commitTime);
     Map<CallInstance, SemanticWarranty> semUpdates =
       tm.prepareCalls(Worker.getWorker().getPrincipal(), tid, calls,
@@ -143,7 +146,7 @@ public class InProcessStore extends RemoteStore {
   protected List<Pair<SerializedObject, VersionWarranty>> getStaleObjects(
       LongKeyMap<Integer> reads) {
     try {
-      return tm.checkForStaleObjects(getPrincipal(), reads);
+      return tm.checkForStaleObjects(localWorkerIdentity(), reads);
     } catch (AccessException e) {
       throw new InternalError(e);
     }
