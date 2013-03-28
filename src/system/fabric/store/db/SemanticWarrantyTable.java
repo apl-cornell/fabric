@@ -229,6 +229,13 @@ public class SemanticWarrantyTable {
     lockTable.putIfAbsent(id, new Object());
     synchronized (lockTable.get(id)) {
       SEMANTIC_WARRANTY_LOGGER.finest("Extending warranty for " + id);
+
+      // If we've marked this for expiration, this call can't be extended :P
+      if (statusTable.get(id) == CallStatus.EXPIRING
+          || valueTable.get(id) == null)
+        return new Pair<SemanticExtendStatus,
+               WarrantiedCallResult>(SemanticExtendStatus.DENIED, null);
+
       // BEHOLD MY CHECK OF DOOM
       //
       // What this boils down to is making sure that if we have a value already,
@@ -243,8 +250,7 @@ public class SemanticWarrantyTable {
               oldValue.value.$getOnum() == valueTable.get(id).$getOnum()))) {
         SemanticWarranty newWarranty = new SemanticWarranty(newTime);
         if (!oldValue.warranty.expired(true)) {
-          if (statusTable.get(id) == CallStatus.VALID
-              && warrantyTable.extend(id, oldValue.warranty, newWarranty)) {
+          if (warrantyTable.extend(id, oldValue.warranty, newWarranty)) {
             return new Pair<SemanticExtendStatus,
                    WarrantiedCallResult>(SemanticExtendStatus.OK, new
                        WarrantiedCallResult(oldValue.value,
@@ -260,10 +266,6 @@ public class SemanticWarrantyTable {
                      WarrantiedCallResult(oldValue.value,
                        warrantyTable.get(id)));
         }
-      }
-      if (valueTable.get(id) == null) {
-        return new Pair<SemanticExtendStatus,
-               WarrantiedCallResult>(SemanticExtendStatus.BAD_VERSION, null);
       } else {
         return new Pair<SemanticExtendStatus,
                WarrantiedCallResult>(SemanticExtendStatus.BAD_VERSION, new

@@ -626,6 +626,20 @@ public final class TransactionManager {
                 .values())
               store.updateCache(obj);
           }
+
+          Map<CallInstance, WarrantiedCallResult> callConflictUpdates =
+            entry.getValue().callConflictUpdates;
+          if (callConflictUpdates != null) {
+            for (Map.Entry<CallInstance, WarrantiedCallResult> callEntry :
+                callConflictUpdates.entrySet())
+              store.insertResult(callEntry.getKey(), callEntry.getValue());
+          }
+
+          Set<CallInstance> callConflicts = entry.getValue().callConflicts;
+          if (callConflicts != null) {
+            for (CallInstance c : callConflicts)
+              store.removeResult(c);
+          }
         }
 
         if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
@@ -956,6 +970,9 @@ public final class TransactionManager {
                   store.commitTransaction(current.tid.topTid, commitTime,
                       current.getRequestsForStore(store),
                       !current.commitState.storesContacted.contains(store));
+                Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER, "Transaction " +
+                    "{0} committed and generated {1} new semantic warranties.",
+                    current.tid.topTid, replies.size());
                 current.requestReplies.putAll(replies);
               } catch (TransactionCommitFailedException e) {
                 failed.add((RemoteStore) store);
