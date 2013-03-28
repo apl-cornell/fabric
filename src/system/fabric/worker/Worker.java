@@ -393,6 +393,7 @@ public final class Worker {
     boolean result = false;
     for (SerializedObject obj : group.objects().values()) {
       result |= store.updateCache(obj);
+      TransactionManager.abortReaders(store, obj.getOnum());
     }
 
     return result;

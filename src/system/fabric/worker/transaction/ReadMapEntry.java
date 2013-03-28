@@ -94,4 +94,12 @@ public final class ReadMapEntry {
       obj.$reader = Log.NO_READER;
     }
   }
+
+  /**
+   * Abort all transactions that have this entry in their logs.
+   */
+  public synchronized void abortReaders() {
+    for (Log reader : readLocks)
+      reader.flagRetry();
+  }
 }
