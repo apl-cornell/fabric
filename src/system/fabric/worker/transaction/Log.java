@@ -314,7 +314,9 @@ public final class Log {
       VersionWarranty warranty = entry.getValue();
 
       ReadMapEntry rme = reads.get(store, onum);
-      rme.warranty = warranty;
+      if (rme != null) {
+        rme.warranty = warranty;
+      }
     }
   }
 
