@@ -187,7 +187,9 @@ public class SubscriptionManager extends FabricThread.Impl {
           }
         }
 
-        subscribe(onum, worker, false);
+        if (worker != null) {
+          subscribe(onum, worker, false);
+        }
       }
 
       // Notify the workers.
