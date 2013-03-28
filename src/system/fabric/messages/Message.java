@@ -20,8 +20,8 @@ import fabric.common.Logging;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
-import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubSocket;
+import fabric.common.net.RemoteIdentity;
 import fabric.lang.Object._Proxy;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -95,7 +95,12 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
     // Read in the reply. Determine if an error occurred.
     if (in.readBoolean()) {
       // We have an error.
-      E exc = readObject(in, this.exceptionClass);
+      E exc;
+      try {
+        exc = readObject(in, this.exceptionClass);
+      } catch (IOException e) {
+        throw e;
+      }
       exc.fillInStackTrace();
 
       Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
