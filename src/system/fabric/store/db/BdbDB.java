@@ -311,8 +311,10 @@ public class BdbDB extends ObjectDB {
           SerializedObject o = update.first;
           long onum = o.getOnum();
 
-          // Remove any cached globs containing the old version of this object.
-          notifyCommittedUpdate(sm, onum, (RemoteWorker) workerIdentity.node);
+          if (update.second == UpdateType.WRITE) {
+            // Remove any cached globs containing the old version of this object.
+            notifyCommittedUpdate(sm, onum, (RemoteWorker) workerIdentity.node);
+          }
 
           // Update caches.
           cacheVersionNumber(onum, o.getVersion());

@@ -105,9 +105,11 @@ public class MemoryDB extends ObjectDB {
           SerializedObject o = update.first;
           objectTable.put(o.getOnum(), o);
 
-          // Remove any cached globs containing the old version of this object.
-          notifyCommittedUpdate(sm, o.getOnum(),
-              (RemoteWorker) workerIdentity.node);
+          if (update.second == UpdateType.WRITE) {
+            // Remove any cached globs containing the old version of this object.
+            notifyCommittedUpdate(sm, o.getOnum(),
+                (RemoteWorker) workerIdentity.node);
+          }
         }
       }
     });
