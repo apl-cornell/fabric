@@ -386,14 +386,21 @@ public final class Worker {
 
   /**
    * Updates the worker cache with the given object group.
-   * 
-   * @return true iff there was a cache entry for any object in the group.
    */
-  public boolean updateCache(RemoteStore store, ObjectGroup group) {
-    boolean result = false;
+  public void updateCache(RemoteStore store, ObjectGroup group) {
     for (SerializedObject obj : group.objects().values()) {
-      result |= store.updateCache(obj);
+      store.updateCache(obj);
       TransactionManager.abortReaders(store, obj.getOnum());
+    }
+  }
+
+  /**
+   * Detemines which of a given set of onums are resident in cache.
+   */
+  public List<Long> findOnumsInCache(RemoteStore store, List<Long> onums) {
+    List<Long> result = new ArrayList<Long>();
+    for (long onum : onums) {
+      if (store.readFromCache(onum) != null) result.add(onum);
     }
 
     return result;

@@ -1,6 +1,12 @@
 package fabric.store;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -10,12 +16,14 @@ import fabric.common.ObjectGroup;
 import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyCache;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
-import fabric.net.UnreachableNodeException;
 import fabric.store.db.GroupContainer;
 import fabric.worker.remote.RemoteWorker;
 
@@ -57,15 +65,20 @@ public class SubscriptionManager extends FabricThread.Impl {
 
     @Override
     protected void handle() {
+      // Go through the onums and figure out which workers are interested in
+      // which updates.
+      Map<RemoteWorker, List<Long>> onumsToNotify =
+          new HashMap<RemoteWorker, List<Long>>();
+      Map<RemoteWorker, LongSet> groupedOnumsToSend =
+          new HashMap<RemoteWorker, LongSet>();
+
+      Map<RemoteWorker, List<ObjectGroup>> workerNotificationMap =
+          new HashMap<RemoteWorker, List<ObjectGroup>>();
+      Map<RemoteWorker, LongKeyMap<Glob>> dissemNotificationMap =
+          new HashMap<RemoteWorker, LongKeyMap<Glob>>();
+
       for (LongIterator it = onums.iterator(); it.hasNext();) {
         long onum = it.next();
-
-        // Get the list of subscribers.
-        Set<Pair<RemoteWorker, Boolean>> subscribers =
-            subscriptions.remove(onum);
-        if (subscribers == null) continue;
-
-        // Get the update.
         GroupContainer groupContainer;
         Glob glob;
         try {
@@ -75,38 +88,100 @@ public class SubscriptionManager extends FabricThread.Impl {
           throw new InternalError(e);
         }
 
-        // Notify subscribers of updates.
-        Set<Pair<RemoteWorker, Boolean>> newSubscribers =
-            new HashSet<Pair<RemoteWorker, Boolean>>();
-        synchronized (subscribers) {
-          for (Pair<RemoteWorker, Boolean> subscriber : subscribers) {
-            RemoteWorker node = subscriber.first;
-            boolean isDissem = subscriber.second;
-            // No need to notify the worker that issued the updates. Just
-            // resubscribe the worker.
-            boolean resubscribe;
-            if (node == writer && !isDissem)
-              resubscribe = true;
-            else {
-              try {
-                if (isDissem)
-                  resubscribe = node.notifyObjectUpdate(store, onum, glob);
-                else {
-                  ObjectGroup group =
-                      groupContainer.getGroup(node.getPrincipal());
-                  resubscribe =
-                      group != null && node.notifyObjectUpdate(onum, group);
+        Set<Pair<RemoteWorker, Boolean>> subscribers = subscriptions.get(onum);
+        if (subscribers != null) {
+          synchronized (subscribers) {
+            for (Iterator<Pair<RemoteWorker, Boolean>> subscriberIt =
+                subscribers.iterator(); subscriberIt.hasNext();) {
+              Pair<RemoteWorker, Boolean> subscriber = subscriberIt.next();
+
+              RemoteWorker subscribingNode = subscriber.first;
+              boolean isDissem = subscriber.second;
+
+              if (subscribingNode == writer && !isDissem) continue;
+              subscriberIt.remove();
+
+              if (isDissem) {
+                // Add group to dissemNotificationMap.
+                LongKeyMap<Glob> globs =
+                    dissemNotificationMap.get(subscribingNode);
+                if (globs == null) {
+                  globs = new LongKeyHashMap<Glob>();
+                  dissemNotificationMap.put(subscribingNode, globs);
                 }
-              } catch (UnreachableNodeException e) {
-                resubscribe = false;
+
+                globs.put(onum, glob);
+              } else {
+                // Add onum to onumsToNotify.
+                List<Long> toNotify = onumsToNotify.get(subscribingNode);
+                if (toNotify == null) {
+                  toNotify = new ArrayList<Long>();
+                  onumsToNotify.put(subscribingNode, toNotify);
+                }
+                toNotify.add(onum);
+
+                // Check whether onum is already being sent.
+                LongSet toSend = groupedOnumsToSend.get(subscribingNode);
+                if (toSend == null) {
+                  toSend = new LongHashSet();
+                  groupedOnumsToSend.put(subscribingNode, toSend);
+                }
+
+                if (!toSend.contains(onum)) {
+                  // Add group to workerNotificationMap.
+                  ObjectGroup group =
+                      groupContainer.getGroup(subscribingNode.getPrincipal());
+
+                  List<ObjectGroup> groups =
+                      workerNotificationMap.get(subscribingNode);
+                  if (groups == null) {
+                    groups = new ArrayList<ObjectGroup>();
+                    workerNotificationMap.put(subscribingNode, groups);
+                  }
+
+                  groups.add(group);
+
+                  // Add group's onums to onumsToSend.
+                  toSend.addAll(group.objects().keySet());
+                }
               }
             }
-
-            if (resubscribe) newSubscribers.add(subscriber);
           }
         }
+      }
 
-        subscribe(onum, newSubscribers);
+      // Notify the workers and resubscribe them.
+      for (Entry<RemoteWorker, List<ObjectGroup>> entry : workerNotificationMap
+          .entrySet()) {
+        RemoteWorker worker = entry.getKey();
+        List<ObjectGroup> updates = entry.getValue();
+
+        List<Long> updatedOnums = onumsToNotify.get(worker);
+        List<Long> resubscriptions =
+            worker.notifyObjectUpdates(updatedOnums, updates);
+        resubscriptions.retainAll(new HashSet<Long>(updatedOnums));
+
+        // Resubscribe.
+        for (long onum : resubscriptions) {
+          subscribe(onum, worker, false);
+        }
+      }
+
+      // Notify the dissemination nodes and resubscribe them.
+      for (Entry<RemoteWorker, LongKeyMap<Glob>> entry : dissemNotificationMap
+          .entrySet()) {
+        RemoteWorker dissemNode = entry.getKey();
+        LongKeyMap<Glob> updates = entry.getValue();
+
+        List<Long> resubscriptions =
+            dissemNode.notifyObjectUpdates(store, updates);
+
+        // Resubscribe.
+        for (long onum : resubscriptions) {
+          if (updates.containsKey(onum)) {
+            subscribe(onum, dissemNode, true);
+          }
+        }
       }
     }
   }
@@ -152,25 +227,6 @@ public class SubscriptionManager extends FabricThread.Impl {
       try {
         Threading.getPool().submit(notificationQueue.take());
       } catch (InterruptedException e1) {
-      }
-    }
-  }
-
-  /**
-   * Subscribes the given set of workers to the given onum.
-   */
-  private void subscribe(long onum,
-      Set<Pair<RemoteWorker, Boolean>> newSubscribers) {
-    if (newSubscribers.isEmpty()) return;
-
-    Set<Pair<RemoteWorker, Boolean>> subscribers = subscriptions.get(onum);
-    if (subscribers == null) {
-      subscribers = subscriptions.putIfAbsent(onum, newSubscribers);
-    }
-
-    if (subscribers != null) {
-      synchronized (subscribers) {
-        subscribers.addAll(newSubscribers);
       }
     }
   }

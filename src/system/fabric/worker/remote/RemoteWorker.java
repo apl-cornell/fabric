@@ -1,6 +1,7 @@
 package fabric.worker.remote;
 
 import java.io.IOException;
+import java.util.List;
 
 import fabric.common.ClassRef;
 import fabric.common.ObjectGroup;
@@ -12,6 +13,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubSocket;
 import fabric.common.net.SubSocketFactory;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.lang.Object._Impl;
@@ -180,31 +182,32 @@ public final class RemoteWorker extends RemoteNode {
    * 
    * @return whether the node is resubscribing to the object.
    */
-  public boolean notifyObjectUpdate(String store, long onum, Glob glob) {
+  public List<Long> notifyObjectUpdates(String store, LongKeyMap<Glob> updates) {
     ObjectUpdateMessage.Response response;
     try {
-      response = send(new ObjectUpdateMessage(store, onum, glob));
+      response = send(new ObjectUpdateMessage(store, updates));
     } catch (NoException e) {
       // This is not possible.
       throw new InternalError(e);
     }
-    return response.resubscribe;
+    return response.resubscriptions;
   }
 
   /**
-   * Notifies the worker that an object has been updated.
+   * Notifies the worker that a set of objects has been updated.
    * 
    * @return whether the node is resubscribing to the object.
    */
-  public boolean notifyObjectUpdate(long onum, ObjectGroup group) {
+  public List<Long> notifyObjectUpdates(List<Long> updatedOnums,
+      List<ObjectGroup> updates) {
     ObjectUpdateMessage.Response response;
     try {
-      response = send(new ObjectUpdateMessage(onum, group));
+      response = send(new ObjectUpdateMessage(updatedOnums, updates));
     } catch (NoException e) {
       // This is not possible.
       throw new InternalError(e);
     }
-    return response.resubscribe;
+    return response.resubscriptions;
   }
 
   /**
@@ -226,4 +229,5 @@ public final class RemoteWorker extends RemoteNode {
       Message<R, E> message) throws E {
     return send(subSocketFactory, message);
   }
+
 }

@@ -353,11 +353,9 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * Updates the worker's cache of objects that originate from this store. If an
    * object with the given onum exists in cache, it is evicted and replaced with
    * the given serialized object.
-   * 
-   * @return true iff an object with the given onum was evicted from cache.
    */
-  public boolean updateCache(SerializedObject update) {
-    return cache.update(this, update);
+  public void updateCache(SerializedObject update) {
+    cache.update(this, update);
   }
 
   @Override
