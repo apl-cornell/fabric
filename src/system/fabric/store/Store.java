@@ -231,8 +231,7 @@ class Store extends MessageToStoreHandler {
         nameOf(client.principal), msg.tid);
 
     LongKeyMap<VersionWarranty> newWarranties =
-        prepareTransactionReads(client.principal, msg.tid, msg.reads,
-            msg.commitTime);
+        prepareTransactionReads(client, msg.tid, msg.reads, msg.commitTime);
     return new PrepareTransactionReadsMessage.Response(newWarranties);
   }
 
@@ -328,8 +327,8 @@ class Store extends MessageToStoreHandler {
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling Staleness Check Message from {0}", nameOf(client.principal));
 
-    return new StalenessCheckMessage.Response(tm.checkForStaleObjects(
-        client.principal, message.versions));
+    return new StalenessCheckMessage.Response(tm.checkForStaleObjects(client,
+        message.versions));
   }
 
   /**
@@ -348,10 +347,10 @@ class Store extends MessageToStoreHandler {
     return tm.prepareWrites(p, req);
   }
 
-  private LongKeyMap<VersionWarranty> prepareTransactionReads(Principal p,
-      long tid, LongKeyMap<Integer> reads, long commitTime)
-      throws TransactionPrepareFailedException {
-    return tm.prepareReads(p, tid, reads, commitTime);
+  private LongKeyMap<VersionWarranty> prepareTransactionReads(
+      RemoteIdentity client, long tid, LongKeyMap<Integer> reads,
+      long commitTime) throws TransactionPrepareFailedException {
+    return tm.prepareReads(client, tid, reads, commitTime);
   }
 
   private String nameOf(Principal p) {

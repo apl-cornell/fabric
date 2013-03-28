@@ -4,9 +4,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.TransactionID;
+import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
@@ -24,6 +27,7 @@ import fabric.messages.PrepareTransactionReadsMessage;
 import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
+import fabric.messages.WarrantyRefreshMessage;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
@@ -336,6 +340,23 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     }
 
     return new ObjectUpdateMessage.Response(response);
+  }
+
+  @Override
+  public WarrantyRefreshMessage.Response handle(RemoteIdentity client,
+      WarrantyRefreshMessage message) throws ProtocolError {
+
+    List<Long> response;
+
+    if (message.warranties == null) {
+      // TODO: dissemination case. Forward to other nodes.
+      response = new ArrayList<Long>();
+    } else {
+      RemoteStore store = Worker.getWorker().getStore(client.node.name);
+      response = store.updateWarranties(message.warranties);
+    }
+
+    return new WarrantyRefreshMessage.Response(response);
   }
 
   @Override

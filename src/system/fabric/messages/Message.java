@@ -296,7 +296,12 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
         return new InterWorkerStalenessMessage(in);
       }
     },
-    ;
+    WARRANTY_REFRESH {
+      @Override
+      WarrantyRefreshMessage parse(DataInput in) throws IOException {
+        return new WarrantyRefreshMessage(in);
+      }
+    };
 
     /** Read a message of the appropriate type from the given DataInput. */
     abstract Message<?, ?> parse(DataInput in) throws IOException;

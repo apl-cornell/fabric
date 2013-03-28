@@ -7,6 +7,7 @@ import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -15,6 +16,7 @@ import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
@@ -280,7 +282,28 @@ public abstract class ObjectDB {
   }
 
   public static enum ExtendWarrantyStatus {
-    OK, BAD_VERSION, DENIED
+    /**
+     * Indicates that a new warranty was created to satisfy an extend-warranty
+     * request.
+     */
+    NEW,
+
+    /**
+     * Indicates that the existing warranty satisfied an extend-warranty
+     * request.
+     */
+    OLD,
+
+    /**
+     * Indicates that the object version in an extend-warranty request is
+     * out-of-date.
+     */
+    BAD_VERSION,
+
+    /**
+     * Indicates that an extend-warranty request was denied.
+     */
+    DENIED
   }
 
   /**
@@ -294,13 +317,12 @@ public abstract class ObjectDB {
       Principal worker, long onum, int version, long commitTime)
       throws AccessException {
     warrantyIssuer.notifyReadPrepare(onum, commitTime);
-    VersionWarranty newWarranty =
+    Pair<ExtendWarrantyStatus, VersionWarranty> newWarranty =
         extendWarranty(onum, commitTime, true, true, false);
 
-    if (newWarranty == null) return EXTEND_WARRANTY_DENIED;
+    if (newWarranty == EXTEND_WARRANTY_DENIED) return EXTEND_WARRANTY_DENIED;
     if (version != getVersion(onum)) return EXTEND_WARRANTY_BAD_VERSION;
-    return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-        ExtendWarrantyStatus.OK, newWarranty);
+    return newWarranty;
   }
 
   private static Pair<ExtendWarrantyStatus, VersionWarranty> EXTEND_WARRANTY_DENIED =
@@ -329,6 +351,8 @@ public abstract class ObjectDB {
    *          version.
    * @param create
    *          whether the object was newly created by the transaction.
+   *          
+   * @return the object's existing warranty.
    */
   public final VersionWarranty registerUpdate(long tid, Principal worker,
       SerializedObject obj,
@@ -375,16 +399,16 @@ public abstract class ObjectDB {
       // Check version numbers.
       int storeVersion = storeCopy.getVersion();
       int workerVersion = obj.getVersion();
-      VersionWarranty warranty;
       if (storeVersion != workerVersion) {
-        warranty = refreshWarranty(onum);
+        Pair<ExtendWarrantyStatus, VersionWarranty> refreshWarrantyResult =
+            refreshWarranty(onum);
         versionConflicts.put(onum, new Pair<SerializedObject, VersionWarranty>(
-            storeCopy, warranty));
+            storeCopy, refreshWarrantyResult.second));
         return VersionWarranty.EXPIRED_WARRANTY;
       }
 
       // Obtain existing warranty.
-      warranty = getWarranty(onum);
+      VersionWarranty warranty = getWarranty(onum);
 
       // Update the version number on the prepared copy of the object.
       obj.setVersion(storeVersion + 1);
@@ -395,7 +419,8 @@ public abstract class ObjectDB {
       return warranty;
     }
 
-    throw new InternalError("Unknown update type: " + updateType);
+    throw new fabric.common.exceptions.InternalError("Unknown update type: "
+        + updateType);
   }
 
   protected void addWrittenOnumByTid(long tid, Principal worker, long onum) {
@@ -488,21 +513,34 @@ public abstract class ObjectDB {
    *          the time after which the commit should take effect. 
    * @param workerIdentity
    *          the remote worker that is performing the commit
-   * @param workerPrincipal
-   *          the principal requesting the commit
    */
   public final void commit(long tid, long commitTime,
       RemoteIdentity workerIdentity, SubscriptionManager sm) {
     // Extend the version warranties for the updated objects.
-    LongSet onums = removeWrittenOnumsByTid(tid, workerIdentity.principal);
-    if (onums != null) {
-      for (LongIterator it = onums.iterator(); it.hasNext();) {
-        long onum = it.next();
-        extendWarranty(onum, commitTime, true, false, true);
+    List<VersionWarranty.Binding> newWarranties =
+        new ArrayList<VersionWarranty.Binding>();
+    try {
+      LongSet onums = removeWrittenOnumsByTid(tid, workerIdentity.principal);
+      if (onums != null) {
+        for (LongIterator it = onums.iterator(); it.hasNext();) {
+          long onum = it.next();
+          Pair<ExtendWarrantyStatus, VersionWarranty> extendResult =
+              extendWarranty(onum, commitTime, true, false, true);
+          if (extendResult.first == ExtendWarrantyStatus.NEW) {
+            try {
+              newWarranties.add(extendResult.second.new Binding(onum,
+                  getVersion(onum)));
+            } catch (AccessException e) {
+              throw new InternalError(e);
+            }
+          }
+        }
       }
-    }
 
-    scheduleCommit(tid, commitTime, workerIdentity, sm);
+      scheduleCommit(tid, commitTime, workerIdentity, sm);
+    } finally {
+      sm.notifyNewWarranties(newWarranties, (RemoteWorker) workerIdentity.node);
+    }
   }
 
   /**
@@ -604,26 +642,31 @@ public abstract class ObjectDB {
    * @param ignoreWriteLocks if true, then write locks will be ignored when
    *          determining whether it is possible to extend the warranty.
    *          
-   * @return the resulting warranty. If the current warranty does not meet
-   *          minExpiry and could not be renewed, then null is returned.
+   * @return the resulting warranty, and whether it was extended. If the current
+   *          warranty does not meet minExpiry and could not be renewed,
+   *          EXTEND_WARRANTY_DENIED is returned.
    */
-  private VersionWarranty extendWarranty(long onum, long minExpiry,
-      boolean minExpiryStrict, boolean extendBeyondMinExpiry,
+  private Pair<ExtendWarrantyStatus, VersionWarranty> extendWarranty(long onum,
+      long minExpiry, boolean minExpiryStrict, boolean extendBeyondMinExpiry,
       boolean ignoreWriteLocks) {
     while (true) {
       // Get the object's current warranty and determine whether it needs to be
       // extended.
       VersionWarranty curWarranty = versionWarrantyTable.get(onum);
       if (minExpiryStrict) {
-        if (curWarranty.expiresAfterStrict(minExpiry)) return curWarranty;
+        if (curWarranty.expiresAfterStrict(minExpiry))
+          return new Pair<ExtendWarrantyStatus, VersionWarranty>(
+              ExtendWarrantyStatus.OLD, curWarranty);
       } else {
-        if (curWarranty.expiresAfter(minExpiry, false)) return curWarranty;
+        if (curWarranty.expiresAfter(minExpiry, false))
+          return new Pair<ExtendWarrantyStatus, VersionWarranty>(
+              ExtendWarrantyStatus.OLD, curWarranty);
       }
 
       // Need to extend warranty.
       if (!ignoreWriteLocks && isWritten(onum)) {
         // Unable to extend.
-        return null;
+        return EXTEND_WARRANTY_DENIED;
       }
 
       // Extend the object's warranty.
@@ -639,7 +682,8 @@ public abstract class ObjectDB {
         updateLongestWarranty(newWarranty);
       }
 
-      return newWarranty;
+      return new Pair<ExtendWarrantyStatus, VersionWarranty>(
+          ExtendWarrantyStatus.NEW, newWarranty);
     }
   }
 
@@ -650,11 +694,12 @@ public abstract class ObjectDB {
    * write-locked, then a new warranty cannot be created, and the existing one
    * is returned.
    */
-  public VersionWarranty refreshWarranty(long onum) {
-    VersionWarranty result =
+  public Pair<ExtendWarrantyStatus, VersionWarranty> refreshWarranty(long onum) {
+    Pair<ExtendWarrantyStatus, VersionWarranty> result =
         extendWarranty(onum, System.currentTimeMillis(), false, true, false);
-    if (result == null) {
-      return versionWarrantyTable.get(onum);
+    if (result == EXTEND_WARRANTY_DENIED) {
+      return new Pair<ExtendWarrantyStatus, VersionWarranty>(
+          ExtendWarrantyStatus.OLD, versionWarrantyTable.get(onum));
     }
 
     return result;

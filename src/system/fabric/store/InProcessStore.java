@@ -42,6 +42,15 @@ public class InProcessStore extends RemoteStore {
     localWorkerIdentity = null;
   }
 
+  private RemoteIdentity localWorkerIdentity() {
+    if (localWorkerIdentity == null) {
+      Worker worker = Worker.getWorker();
+      localWorkerIdentity =
+          new RemoteIdentity(worker.getLocalWorker(), worker.getPrincipal());
+    }
+    return localWorkerIdentity;
+  }
+
   @Override
   public void abortTransaction(TransactionID tid) {
     try {
@@ -54,19 +63,13 @@ public class InProcessStore extends RemoteStore {
   @Override
   public void commitTransaction(long transactionID, long commitTime)
       throws TransactionCommitFailedException {
-    if (localWorkerIdentity == null) {
-      Worker worker = Worker.getWorker();
-      localWorkerIdentity =
-          new RemoteIdentity(worker.getLocalWorker(), worker.getPrincipal());
-    }
-    
-    tm.commitTransaction(localWorkerIdentity, transactionID, commitTime);
+    tm.commitTransaction(localWorkerIdentity(), transactionID, commitTime);
   }
 
   @Override
   public long createOnum() {
     try {
-      return tm.newOnums(Worker.getWorker().getPrincipal(), 1)[0];
+      return tm.newOnums(getPrincipal(), 1)[0];
     } catch (AccessException e) {
       throw new InternalError(e);
     }
@@ -98,15 +101,14 @@ public class InProcessStore extends RemoteStore {
     // Swizzle remote pointers.
     sm.createSurrogates(req);
 
-    return tm.prepareWrites(Worker.getWorker().getPrincipal(), req);
+    return tm.prepareWrites(getPrincipal(), req);
   }
 
   @Override
   public LongKeyMap<VersionWarranty> prepareTransactionReads(long tid,
       LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
-    return tm.prepareReads(Worker.getWorker().getPrincipal(), tid, reads,
-        commitTime);
+    return tm.prepareReads(localWorkerIdentity(), tid, reads, commitTime);
   }
 
   @Override
@@ -123,7 +125,7 @@ public class InProcessStore extends RemoteStore {
   protected List<Pair<SerializedObject, VersionWarranty>> getStaleObjects(
       LongKeyMap<Integer> reads) {
     try {
-      return tm.checkForStaleObjects(getPrincipal(), reads);
+      return tm.checkForStaleObjects(localWorkerIdentity(), reads);
     } catch (AccessException e) {
       throw new InternalError(e);
     }

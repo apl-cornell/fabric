@@ -18,6 +18,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
+import fabric.common.VersionWarranty.Binding;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.FabricRuntimeException;
@@ -371,6 +372,15 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     return cache.update(this, update);
   }
 
+  /**
+   * Updates the worker's cache with the given set of warranties.
+   * 
+   * @return the set of onums for which a cache entry was found.
+   */
+  public List<Long> updateWarranties(List<Binding> warranties) {
+    return cache.update(this, warranties);
+  }
+
   @Override
   public void cache(_Impl impl) {
     FabricSoftRef ref = impl.$ref;
@@ -483,4 +493,5 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
       return Worker.getWorker().getStore(storeName);
     }
   }
+
 }

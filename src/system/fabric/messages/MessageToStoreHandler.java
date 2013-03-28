@@ -30,6 +30,12 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
   }
 
   @Override
+  public fabric.messages.WarrantyRefreshMessage.Response handle(
+      RemoteIdentity client, WarrantyRefreshMessage msg) throws ProtocolError {
+    throw error(msg);
+  }
+
+  @Override
   public final fabric.messages.DirtyReadMessage.Response handle(
       RemoteIdentity client, DirtyReadMessage msg) throws ProtocolError {
     throw error(msg);

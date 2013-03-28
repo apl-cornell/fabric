@@ -1,6 +1,12 @@
 package fabric.store;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -8,10 +14,13 @@ import java.util.concurrent.BlockingQueue;
 import fabric.common.FabricThread;
 import fabric.common.ObjectGroup;
 import fabric.common.Threading;
+import fabric.common.VersionWarranty.Binding;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyCache;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
@@ -111,6 +120,140 @@ public class SubscriptionManager extends FabricThread.Impl {
     }
   }
 
+  private final class NewWarrantyEvent extends NotificationEvent {
+    /**
+     * The collection of new warranties.
+     */
+    final Collection<Binding> newWarranties;
+
+    /**
+     * The worker, if any, that already knows about the warranties.
+     */
+    final RemoteWorker worker;
+
+    public NewWarrantyEvent(Collection<Binding> newWarranties,
+        RemoteWorker worker) {
+      super("Fabric subscription manager warranty-refresh notifier");
+      this.newWarranties = newWarranties;
+      this.worker = worker;
+    }
+
+    @Override
+    protected void handle() {
+      // Go through the warranties and figure out who's interested in which
+      // updates. While we're at it, also build a table of updates, keyed by onum.
+      LongKeyMap<Binding> updatesByOnum = new LongKeyHashMap<Binding>();
+      Map<RemoteWorker, List<Binding>> workerNotificationMap =
+          new HashMap<RemoteWorker, List<Binding>>();
+      Map<Binding, List<RemoteWorker>> dissemNotificationMap =
+          new HashMap<Binding, List<RemoteWorker>>();
+
+      for (Binding update : newWarranties) {
+        long onum = update.onum;
+        updatesByOnum.put(onum, update);
+
+        Set<Pair<RemoteWorker, Boolean>> subscribers = subscriptions.get(onum);
+        if (subscribers != null) {
+          synchronized (subscribers) {
+            for (Iterator<Pair<RemoteWorker, Boolean>> subscriberIt =
+                subscribers.iterator(); subscriberIt.hasNext();) {
+              Pair<RemoteWorker, Boolean> subscriber = subscriberIt.next();
+
+              RemoteWorker subscribingNode = subscriber.first;
+              boolean isDissem = subscriber.second;
+              if (subscribingNode == worker && !isDissem) continue;
+
+              if (isDissem) {
+                List<RemoteWorker> dissems = dissemNotificationMap.get(update);
+                if (dissems == null) {
+                  dissems = new ArrayList<RemoteWorker>();
+                  dissemNotificationMap.put(update, dissems);
+                }
+
+                dissems.add(subscribingNode);
+              } else {
+                List<Binding> bindings =
+                    workerNotificationMap.get(subscribingNode);
+                if (bindings == null) {
+                  bindings = new ArrayList<Binding>();
+                  workerNotificationMap.put(subscribingNode, bindings);
+                }
+
+                bindings.add(update);
+              }
+
+              subscriberIt.remove();
+            }
+          }
+        }
+
+        subscribe(onum, worker, false);
+      }
+
+      // Notify the workers.
+      for (Map.Entry<RemoteWorker, List<Binding>> entry : workerNotificationMap
+          .entrySet()) {
+        RemoteWorker worker = entry.getKey();
+        List<Binding> warranties = entry.getValue();
+        List<Long> resubscriptions = worker.notifyWarrantyRefresh(warranties);
+
+        for (long onum : resubscriptions) {
+          subscribe(onum, worker, false);
+        }
+      }
+
+      // Map the dissemination nodes to the groups of updates that they're
+      // interested in.
+      Map<RemoteWorker, LongKeyMap<List<Binding>>> dissemUpdateMap =
+          new HashMap<RemoteWorker, LongKeyMap<List<Binding>>>();
+      for (Map.Entry<Binding, List<RemoteWorker>> entry : dissemNotificationMap
+          .entrySet()) {
+        Binding update = entry.getKey();
+        List<RemoteWorker> dissemNodes = entry.getValue();
+
+        // Construct a group of updates based on the object group.
+        List<Binding> updateGroup = new ArrayList<Binding>();
+        GroupContainer groupContainer;
+        try {
+          groupContainer = tm.getGroupContainer(update.onum);
+        } catch (AccessException e) {
+          throw new InternalError(e);
+        }
+        for (LongIterator onumIt = groupContainer.onums.iterator(); onumIt
+            .hasNext();) {
+          long onum = onumIt.next();
+          Binding relatedUpdate = updatesByOnum.get(onum);
+          if (relatedUpdate != null) updateGroup.add(relatedUpdate);
+        }
+
+        // Add to the dissemUpdateMap.
+        for (RemoteWorker dissemNode : dissemNodes) {
+          LongKeyMap<List<Binding>> updates = dissemUpdateMap.get(dissemNode);
+          if (updates == null) {
+            updates = new LongKeyHashMap<List<Binding>>();
+            dissemUpdateMap.put(dissemNode, updates);
+          }
+
+          updates.put(update.onum, updateGroup);
+        }
+      }
+
+      // Send the updates to the dissemination nodes.
+      for (Map.Entry<RemoteWorker, LongKeyMap<List<Binding>>> entry : dissemUpdateMap
+          .entrySet()) {
+        RemoteWorker dissemNode = entry.getKey();
+        LongKeyMap<List<Binding>> updates = entry.getValue();
+
+        List<Long> resubscriptions =
+            dissemNode.notifyWarrantyRefresh(store, updates);
+
+        for (long onum : resubscriptions) {
+          subscribe(onum, dissemNode, true);
+        }
+      }
+    }
+  }
+
   private final BlockingQueue<NotificationEvent> notificationQueue;
 
   /**
@@ -202,5 +345,18 @@ public class SubscriptionManager extends FabricThread.Impl {
    */
   public void notifyUpdate(LongSet onums, RemoteWorker worker) {
     notificationQueue.offer(new ObjectUpdateEvent(onums, worker));
+  }
+
+  /**
+   * Notifies the subscription manager that a new set of warranties has been
+   * issued.
+   * 
+   * @param worker the worker, if any, that already knows about the new warranties.
+   */
+  public void notifyNewWarranties(Collection<Binding> newWarranties,
+      RemoteWorker worker) {
+    if (!newWarranties.isEmpty()) {
+      notificationQueue.offer(new NewWarrantyEvent(newWarranties, worker));
+    }
   }
 }

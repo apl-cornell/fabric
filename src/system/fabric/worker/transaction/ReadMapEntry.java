@@ -48,6 +48,20 @@ public final class ReadMapEntry {
   }
 
   /**
+   * Updates the warranty for the object.
+   * 
+   * @return true if successful; false if we already had a longer warranty.
+   */
+  public boolean updateWarranty(VersionWarranty warranty) {
+    if (warranty.expiresAfter(this.warranty)) {
+      this.warranty = warranty;
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Removes the lock owned by the given transaction log.
    */
   void releaseLock(Log lockHolder) {
