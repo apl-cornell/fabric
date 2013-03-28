@@ -1,6 +1,9 @@
 import fabric.util.LinkedList;
 import fabric.util.List;
 import java.io.IOException;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.util.Random;
 
 public class Test {
 
@@ -86,12 +89,17 @@ public class Test {
     }
     System.out.println("PREHEATED:");
     try { System.in.read(); } catch (IOException e) { System.exit(1); }
+    java.util.Random rand = new java.util.Random(0xDEADBEEF);
+    Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
     while (true) {
       List top = null;
       try { Thread.sleep(msSleep); } catch (InterruptedException e) { break; }
+      long id = rand.nextLong();
+      HOTOS_LOGGER.log(Level.INFO, "===started {0}===", String.valueOf(id));
       atomic {
         top = t.topAccounts(n);
       }
+      HOTOS_LOGGER.log(Level.INFO, "===committed {0}===", String.valueOf(id));
       System.out.println("TOP " + n + " ACCOUNTS:");
       for (int j = 0; j < n && j < top.size(); j++) {
         System.out.println("" + j + ": " + ((TwooterAccount) top.get(j)));

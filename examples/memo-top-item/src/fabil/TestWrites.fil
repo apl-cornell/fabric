@@ -9,13 +9,14 @@ public class TestWrites {
       try { Thread.sleep(msSleep); } catch (InterruptedException e) { break; }
       atomic {
         TwooterAccount t = (TwooterAccount) Config.STORE.getRoot().get(new Integer(rand.nextInt(Config.NUM_USERS)));
-        if (rand.nextBoolean()) {
+        //if (rand.nextBoolean()) {
           System.out.println("Adding follower to " + t);
-          t.addFollower();
-        } else {
-          System.out.println("Removing follower from " + t);
-          t.removeFollower();
-        }
+          for (int i = 0; i < Config.NUM_USERS; i++)
+            t.addFollower();
+        //} else {
+          //System.out.println("Removing follower from " + t);
+          //t.removeFollower();
+        //}
       }
     }
   }
