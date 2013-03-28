@@ -1,5 +1,7 @@
 package fabric.worker.memoize;
 
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -73,6 +75,7 @@ public class SemanticWarrantyRequest {
 
     this.calls = new HashMap<CallInstance, WarrantiedCallResult>();
     int callsLen = in.readInt();
+    SEMANTIC_WARRANTY_LOGGER.finest("Reading in " + callsLen + " calls for request on call " + this.call);
     for (int i = 0; i < callsLen; i++) {
       CallInstance subcall = new CallInstance(in);
       this.calls.put(subcall, new WarrantiedCallResult(in));

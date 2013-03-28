@@ -1,8 +1,8 @@
 package fabric.worker.transaction;
 
 import static fabric.common.Logging.HOTOS_LOGGER;
-import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTED;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTING;
 import static fabric.worker.transaction.Log.CommitState.Values.COMMITTED;
@@ -422,7 +422,6 @@ public final class TransactionManager {
       for (Entry<Store, LongKeyMap<ReadMapEntry>> readEntry : req.reads.nonNullEntrySet()) {
         for (ReadMapEntry read : readEntry.getValue().values()) {
           current.reads.put(read.obj.store, read.obj.onum, read);
-          //SEMANTIC_WARRANTY_LOGGER.finest("Gathering read " + read.obj.onum + " from " + req.call + " " + req.id);
         }
       }
 
@@ -430,21 +429,20 @@ public final class TransactionManager {
       for (Entry<Store, LongKeyMap<_Impl>> createEntry : req.creates.nonNullEntrySet()) {
         for (_Impl create : createEntry.getValue().values()) {
           current.creates.add(create);
-          //SEMANTIC_WARRANTY_LOGGER.finest("Gathering create " + create.$getOnum() + " from " + req.call + " " + req.id);
         }
       }
 
       current.semanticWarrantiesUsed.putAll(req.calls);
     }
 
-    SEMANTIC_WARRANTY_LOGGER.finest("Creates:");
-    for (_Impl create : current.creates)
-      SEMANTIC_WARRANTY_LOGGER.finest("\tonum " + create.$getOnum());
-
     // Send prepare-write messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
     // TransactionRestartingException.
+    long startTime = System.currentTimeMillis();
     long commitTime = sendPrepareWriteMessages();
+
+    SEMANTIC_WARRANTY_LOGGER.finest("Delay since we began is " + (commitTime -
+          startTime) + "ms");
 
     // Send prepare-read messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
@@ -751,7 +749,9 @@ public final class TransactionManager {
             if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
               Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE, "Preparing "
                   + "reads for transaction {0} to {1}: {2} version warranties "
-                  + "will expire", current.tid.topTid, s, reads.size());
+                  + "will expire and {3} semantic warranties will expire",
+                  current.tid.topTid, s, reads.size(),
+                  calls.size());
             }
 
             Pair<LongKeyMap<VersionWarranty>, Map<CallInstance,
@@ -761,7 +761,8 @@ public final class TransactionManager {
 
             // Prepare was successful. Update the objects' warranties.
             current.updateVersionWarranties(s, allNewWarranties.first);
-            // TODO Update warranties on calls.
+            // Update warranties on calls.
+            current.updateSemanticWarranties(s, allNewWarranties.second);
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) s, e);
           } catch (UnreachableNodeException e) {
@@ -1267,8 +1268,6 @@ public final class TransactionManager {
         }
       } else {
         synchronized (current.creates) {
-          if (current.semanticWarrantyCall != null)
-            SEMANTIC_WARRANTY_LOGGER.finest("" + current.semanticWarrantyCall + " CREATING " + obj.$getOnum());
           current.creates.add(obj);
         }
       }

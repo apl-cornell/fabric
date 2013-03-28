@@ -1,5 +1,7 @@
 package fabric.store.db;
 
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.HashSet;
@@ -70,6 +72,7 @@ public class SemanticWarrantyDependencies {
     }
 
     for (CallInstance callId : calls) {
+      SEMANTIC_WARRANTY_LOGGER.finest("Call " + callId + " called by " + id);
       Set<CallInstance> users = callUsers.get(callId);
       if (users == null) {
         users = new HashSet<CallInstance>();
@@ -130,8 +133,10 @@ public class SemanticWarrantyDependencies {
 
     if (calls != null) {
       callsUsed.get(call).addAll(calls);
-      for (CallInstance callee : calls)
+      for (CallInstance callee : calls) {
+        if (callee == call) continue;
         callUsers.get(callee).add(call);
+      }
     }
   }
 
@@ -140,7 +145,11 @@ public class SemanticWarrantyDependencies {
    */
   public Set<CallInstance> getCallers(CallInstance id) {
     Set<CallInstance> inTable = callUsers.get(id);
-    return inTable == null ? new HashSet<CallInstance>() : inTable;
+    inTable = inTable == null ? new HashSet<CallInstance>() : inTable;
+    SEMANTIC_WARRANTY_LOGGER.finest("Callers of " + id + " are...");
+    for (CallInstance call : inTable)
+      SEMANTIC_WARRANTY_LOGGER.finest("\t" + call);
+    return inTable;
   }
 
   /**

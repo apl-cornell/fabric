@@ -19,6 +19,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 
 import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
@@ -44,17 +45,13 @@ import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.transaction.ReadMapEntry;
 import fabric.worker.transaction.TransactionManager;
 
-/* TODO:
- *      - It would be more reassuring if we associated calls in the dependencies
- *      with the values we thought they had.
- */
 /**
  * A table containing semantic warranties, keyed by CallInstance id, and
  * supporting concurrent accesses.
  */
 public class SemanticWarrantyTable {
-  private static final int MIN_SEMANTIC_WARRANTY = 2000;
-  private static final int MAX_SEMANTIC_WARRANTY = 2000;
+  private static final int MIN_SEMANTIC_WARRANTY = 250;
+  private static final int MAX_SEMANTIC_WARRANTY = 64000;
 
   /**
    * Table of objects to lock on for interacting with a certain call.
@@ -197,6 +194,7 @@ public class SemanticWarrantyTable {
   public final void put(CallInstance id, LongSet reads, LongSet creates,
       Set<CallInstance> calls, fabric.lang.Object value,
       SemanticWarranty warranty) {
+    SEMANTIC_WARRANTY_LOGGER.finest("Adding call " + id + " with " + calls.size() + " calls");
 
     lockTable.putIfAbsent(id, new Object());
     synchronized (lockTable.get(id)) {
@@ -232,7 +230,8 @@ public class SemanticWarrantyTable {
       id, WarrantiedCallResult oldValue, long newTime) {
     lockTable.putIfAbsent(id, new Object());
     synchronized (lockTable.get(id)) {
-      if (oldValue.value.equals(valueTable.get(id))) {
+      // Right now, check onums because otherwise what's the point?
+      if (oldValue.value.$getOnum() == valueTable.get(id).$getOnum()) {
         SemanticWarranty newWarranty = new SemanticWarranty(newTime);
         if (!oldValue.warranty.expired(true)) {
           if (statusTable.get(id) != CallStatus.EXPIRING
@@ -273,7 +272,7 @@ public class SemanticWarrantyTable {
    * Valid Warranty Calls that used this call
    */
   public final Set<CallInstance> letExpire(CallInstance call) {
-    SEMANTIC_WARRANTY_LOGGER.finest("ZAPPPPPPP " + call);
+    SEMANTIC_WARRANTY_LOGGER.finest("letting " + call + " expire");
     Set<CallInstance> validCallers = new HashSet<CallInstance>();
     lockTable.putIfAbsent(call, new Object());
     synchronized (lockTable.get(call)) {
@@ -287,15 +286,21 @@ public class SemanticWarrantyTable {
       Set<CallInstance> callers = new
         HashSet<CallInstance>(dependencyTable.getCallers(call));
       for (CallInstance caller : callers) {
-          if (!warrantyTable.get(caller).expired(true)) {
-            validCallers.add(caller);
-          }
-          // Update the dependency table so that the writes on the old call now
-          // are marked for defense of the caller.
-          dependencyTable.addDependenciesForCall(caller, readsUsed, callsUsed);
+        if (!warrantyTable.get(caller).expired(false)) {
+          validCallers.add(caller);
+        }
+        // Update the dependency table so that the writes on the old call now
+        // are marked for defense of the caller.
+        dependencyTable.addDependenciesForCall(caller, readsUsed, callsUsed);
 
-          // Mark the caller as expiring once the warranty runs out.
-          validCallers.addAll(letExpire(caller));
+        // Mark the caller as expiring once the warranty runs out.
+        validCallers.addAll(letExpire(caller));
+      }
+
+      // Remove this call if we know it's expired.
+      if (warrantyTable.get(call).expired(false)) {
+        valueTable.remove(call);
+        dependencyTable.removeCall(call);
       }
 
       return validCallers;
@@ -321,7 +326,7 @@ public class SemanticWarrantyTable {
    * the given call.
    */
   public void notifyReadPrepare(CallInstance call, long commitTime) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Notifying read prepare on " + call);
+    SEMANTIC_WARRANTY_LOGGER.finer("Notifying read prepare on " + call);
     issuer.notifyReadPrepare(call, commitTime);
   }
 
@@ -350,8 +355,6 @@ public class SemanticWarrantyTable {
     // given write set.
     final Set<CallInstance> uncertainCalls = new HashSet<CallInstance>();
 
-    SEMANTIC_WARRANTY_LOGGER.finest(
-        String.format("Going through call dependencies of %x", transactionID));
     // Build up set of calls that need to be valid by the current commit time
     for (SerializedObject obj : writes) {
       for (CallInstance call : new HashSet<CallInstance>(dependencyTable.getReaders(obj.getOnum()))) {
@@ -360,7 +363,7 @@ public class SemanticWarrantyTable {
         Set<CallInstance> validCallers = letExpire(call);
         for (CallInstance caller : validCallers) {
           SemanticWarranty callerWarranty = get(caller).warranty;
-          if (callerWarranty.expiresAfter(commitTime, true))
+          if (!callerWarranty.expired(false))
             SEMANTIC_WARRANTY_LOGGER.finest("Call " + caller + " needs to be checked!");
             dependencies.add(new Pair<CallInstance, SemanticWarranty>(caller,
                   callerWarranty));
@@ -369,8 +372,10 @@ public class SemanticWarrantyTable {
 
         // If the call will also have to remain valid by commit time (possibly)
         // add it to the dependency group for recomputation.
-        SemanticWarranty dependentWarranty = get(call).warranty;
-        if (dependentWarranty.expiresAfter(commitTime, true)) {
+        WarrantiedCallResult entry = get(call);
+        if (entry == null) continue;
+        SemanticWarranty dependentWarranty = entry.warranty;
+        if (!dependentWarranty.expired(false)) {
           SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " needs to be checked!");
           dependencies.add(new Pair<CallInstance, SemanticWarranty>(call,
                 dependentWarranty));
@@ -378,6 +383,10 @@ public class SemanticWarrantyTable {
         }
       }
     }
+
+    SEMANTIC_WARRANTY_LOGGER.finest(
+        String.format("Transaction %x puts %d calls at risk!", transactionID,
+          dependencies.size()));
 
     // Map of things that didn't change
     Map<CallInstance, SemanticWarrantyRequest> updatedRequests = new
@@ -398,8 +407,6 @@ public class SemanticWarrantyTable {
     final ArrayList<_Impl> deserializedCreates = new
       ArrayList<_Impl>(creates.size());
     for (SerializedObject o : creates) {
-      SEMANTIC_WARRANTY_LOGGER.finest("" + transactionID + " DESERIALIZING " +
-          o.getOnum());
       deserializedCreates.add(o.deserialize(localStore, new
             VersionWarranty(0)));
     }
@@ -428,6 +435,9 @@ public class SemanticWarrantyTable {
       }
 
       final CallInstance call = p.first;
+      SEMANTIC_WARRANTY_LOGGER.finest(
+          String.format("Checking %s for transaction %x", call.toString(),
+            transactionID));
       Future<Pair<Map<CallInstance, SemanticWarrantyRequest>, Set<CallInstance>>> checkHandler =
           Executors.newSingleThreadExecutor().submit(
               (new Callable<Pair<Map<CallInstance, SemanticWarrantyRequest>, Set<CallInstance>>>() {
@@ -526,7 +536,7 @@ public class SemanticWarrantyTable {
       } catch (ExecutionException e) {
         SEMANTIC_WARRANTY_LOGGER.finest("Checked Call " + call
             + " had an error in check");
-        SEMANTIC_WARRANTY_LOGGER.finest("\t" + e.getMessage());
+        SEMANTIC_WARRANTY_LOGGER.log(Level.FINEST, "Error: ", e);
         longestAffected = p.second;
         issuer.notifyWritePrepare(call);
         break;
@@ -635,7 +645,7 @@ public class SemanticWarrantyTable {
    * transaction abort.
    */
   public void abort(long transactionID) {
-    SEMANTIC_WARRANTY_LOGGER.finest(String.format(
+    SEMANTIC_WARRANTY_LOGGER.finer(String.format(
         "Aborting semantic warranty updates from %x", transactionID));
     pendingMap.remove(transactionID);
     refreshMap.remove(transactionID);
@@ -646,7 +656,7 @@ public class SemanticWarrantyTable {
    * commitTime.
    */
   public void commit(long transactionID, long commitTime) {
-    SEMANTIC_WARRANTY_LOGGER.finest(String.format(
+    SEMANTIC_WARRANTY_LOGGER.finer(String.format(
         "Committing semantic warranty updates from %x", transactionID));
     // Add requests made by the original transaction
     if (pendingMap.get(transactionID) != null) {

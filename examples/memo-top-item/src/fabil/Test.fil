@@ -67,21 +67,23 @@ public class Test {
   }
 
   public static void main(String[] args) {
-    if (args.length == 0) System.exit(1); // TODO: Usage!
+    if (args.length != 2) System.exit(1); // TODO: Usage!
     Test t = null;
     atomic {
       Store s = Config.STORE;
       t = new Test@s().Test$();
     }
     int n = Integer.parseInt(args[0]);
+    int msSleep = Integer.parseInt(args[1]);
     while (true) {
       List top = null;
+      try { Thread.sleep(msSleep); } catch (InterruptedException e) { break; }
       atomic {
         top = t.topAccounts(n);
       }
-      System.out.println("LOL " + top.size() + " ITEMS");
+      System.out.println("TOP " + n + " ACCOUNTS:");
       for (int j = 0; j < n && j < top.size(); j++) {
-        System.out.println(((TwooterAccount) top.get(j)));
+        System.out.println("" + j + ": " + ((TwooterAccount) top.get(j)));
       }
     }
   }

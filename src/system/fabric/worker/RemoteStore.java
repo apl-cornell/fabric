@@ -325,12 +325,12 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     if (current != null) {
       result = current.getRequestResult(call);
       if (result != null) {
-        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found in transaction log: " + result);
+        SEMANTIC_WARRANTY_LOGGER.finer("Call " + call + " found in transaction log: " + result);
         return result;
       }
 
       if (current.blockedWarranties.contains(call)) {
-        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " was blocked, probably for call checking!");
+        SEMANTIC_WARRANTY_LOGGER.finer("Call " + call + " was blocked, probably for call checking!");
         return null;
       }
     }
@@ -339,7 +339,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     if (result != null) {
       if (current == null || !result.warranty.expired(true) ||
           current.useStaleWarranties) {
-        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found in local call cache: " + result);
+        SEMANTIC_WARRANTY_LOGGER.finer("Call " + call + " found in local call cache: " + result);
         return result;
       } else {
         result = null;
@@ -353,7 +353,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
       if (result != null) {
         if (current == null || !result.warranty.expired(true) ||
             current.useStaleWarranties) {
-          SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found at store: " + result);
+          SEMANTIC_WARRANTY_LOGGER.finer("Call " + call + " found at store: " + result);
           return result;
         } else {
           result = null;
@@ -367,12 +367,12 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
 
   @Override
   public void insertResult(CallInstance call, WarrantiedCallResult result) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Putting call:" + call.toString());
+    SEMANTIC_WARRANTY_LOGGER.finer("Putting call:" + call.toString());
     callCache.put(call, result);
   }
 
   public void removeResult(CallInstance call) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Removing call:" + call.toString());
+    SEMANTIC_WARRANTY_LOGGER.finer("Removing call:" + call.toString());
     callCache.remove(call);
   }
 

@@ -6,11 +6,16 @@ public class TestWrites {
     int msSleep = Integer.parseInt(args[0]);
     Random rand = new Random(0xDEADBEEF);
     while (true) {
-      try { Thread.sleep(msSleep); } catch (InterruptedException e) {}
+      try { Thread.sleep(msSleep); } catch (InterruptedException e) { break; }
       atomic {
         TwooterAccount t = (TwooterAccount) Config.STORE.getRoot().get(new Integer(rand.nextInt(Config.NUM_USERS)));
-        if (rand.nextBoolean()) t.addFollower();
-        else t.removeFollower();
+        if (rand.nextBoolean()) {
+          System.out.println("Adding follower to " + t);
+          t.addFollower();
+        } else {
+          System.out.println("Removing follower from " + t);
+          t.removeFollower();
+        }
       }
     }
   }

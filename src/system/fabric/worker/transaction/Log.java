@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
-import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.SemanticWarranty;
@@ -189,15 +188,6 @@ public final class Log {
   protected final Map<CallInstance, Store> requestLocations;
 
   /**
-   * Map from call instance to the log of the subtransaction that was
-   * responsible for creating it.  This is purely for convenience when trying to
-   * remove requests from earlier in the transaction and need to transfer over
-   * their read locks.
-   */
-  // XXX Pretty sure we don't need this now.
-  protected final Map<CallInstance, Log> requestLogs;
-
-  /**
    * Map from call ID to the store's CallResult response which will be stored on
    * successfully finishing the commit phase.
    */
@@ -309,7 +299,6 @@ public final class Log {
     this.callDependencies = new HashMap<CallInstance, Set<CallInstance>>();
     this.requests = new HashMap<CallInstance, SemanticWarrantyRequest>();
     this.requestLocations = new HashMap<CallInstance, Store>();
-    this.requestLogs = new HashMap<CallInstance, Log>();
     this.requestReplies =
         Collections
             .synchronizedMap(new HashMap<CallInstance, SemanticWarranty>());
@@ -405,9 +394,9 @@ public final class Log {
    * that happened BEFORE the request was computed...
    */
   public void invalidateDependentRequests(long onum) {
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "Onum {0} written, dropping semantic warranties "
-            + "earlier in transaction that use it.", onum);
+    SEMANTIC_WARRANTY_LOGGER.finest("Onum " + onum
+        + " written, dropping semantic warranties "
+        + "earlier in transaction that use it.");
     Set<CallInstance> dependencies = readDependencies.get(onum);
     if (dependencies == null) return;
     for (CallInstance id : dependencies)
@@ -423,8 +412,8 @@ public final class Log {
      */
     SemanticWarrantyRequest req = requests.get(callId);
 
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "Call {0} warranty request dropped", req.call.toString());
+    SEMANTIC_WARRANTY_LOGGER.finer("Call " + req.call
+        + " warranty request dropped");
 
     cleanupFailedRequest(req);
 
@@ -555,6 +544,20 @@ public final class Log {
 
       ReadMapEntry rme = reads.get(store, onum);
       rme.warranty = warranty;
+    }
+  }
+
+  /**
+   * Update the warranties we needed to extend at the given store.
+   */
+  void updateSemanticWarranties(Store store,
+      Map<CallInstance, SemanticWarranty> newWarranties) {
+    for (Map.Entry<CallInstance, SemanticWarranty> entry : newWarranties.entrySet()) {
+      CallInstance call = entry.getKey();
+      SemanticWarranty warr = entry.getValue();
+      WarrantiedCallResult update = new
+        WarrantiedCallResult(semanticWarrantiesUsed.get(call).value, warr);
+      store.insertResult(call, update);
     }
   }
 
@@ -804,7 +807,6 @@ public final class Log {
       readDependencies.clear();
       callDependencies.clear();
       requests.clear();
-      requestLogs.clear();
       requestLocations.clear();
       requestReplies.clear();
 
@@ -852,11 +854,6 @@ public final class Log {
    * this from a parent transaction of the transaction that made the request.
    */
   protected void cleanupFailedRequest(SemanticWarrantyRequest req) {
-    // Merge reads
-    for (Entry<Store, LongKeyMap<ReadMapEntry>> entry : req.reads.nonNullEntrySet())
-      for (ReadMapEntry read : entry.getValue().values())
-        this.transferReadLock(requestLogs.get(req), read);
-
     // Merge creates and transfer write locks.
     for (Entry<Store, LongKeyMap<_Impl>> entry : req.creates.nonNullEntrySet()) {
       for (_Impl obj : entry.getValue().values()) {
@@ -891,10 +888,8 @@ public final class Log {
       writeCount += getWritesForStore(store).size();
 
     if (writeCount > 0) {
-      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-          "Semantic warranty request for {0} "
-              + "aborted due to writes during the call!",
-          semanticWarrantyCall.toString());
+      SEMANTIC_WARRANTY_LOGGER.finer("Semantic warranty request for " +
+          semanticWarrantyCall + " aborted due to writes during the call!");
 
       cleanupFailedRequest();
       return;
@@ -910,14 +905,9 @@ public final class Log {
         } else if (entry.obj.store.equals(targetStore)) {
           readsForTargetStore.put(entry.obj.store, entry.obj.onum, entry);
         } else {
-          Logging
-              .log(
-                  SEMANTIC_WARRANTY_LOGGER,
-                  Level.FINEST,
-                  "Semantic warranty request for {0} "
-                      + "aborted due to more than one remote store read during the call!",
-                  semanticWarrantyCall.toString());
-
+          SEMANTIC_WARRANTY_LOGGER.finer("Semantic warranty request for "
+              + semanticWarrantyCall + "aborted due to more than one remote"
+               + " store read during the call!");
           cleanupFailedRequest();
           return;
         }
@@ -930,13 +920,10 @@ public final class Log {
       } else if (entry.obj.store.equals(targetStore)) {
         readsForTargetStore.put(entry.obj.store, entry.obj.onum, entry);
       } else {
-        Logging
-            .log(
-                SEMANTIC_WARRANTY_LOGGER,
-                Level.FINEST,
-                "Semantic warranty request for {0} "
-                    + "aborted due to more than one remote store read during the call!",
-                semanticWarrantyCall.toString());
+        SEMANTIC_WARRANTY_LOGGER.finer(
+                "Semantic warranty request for " + semanticWarrantyCall
+                + " aborted due to more than one remote store read "
+                + "during the call!");
 
         cleanupFailedRequest();
         return;
@@ -960,16 +947,12 @@ public final class Log {
       if (create.$getStore().equals(localStore)) {
         localCreates.add(create);
       } else if (create.$getStore().equals(targetStore)) {
-        SEMANTIC_WARRANTY_LOGGER.finest("TID: " + getTid() + " created " + create.$getOnum());
         createsForTargetStore.put(create, create);
       } else {
-        Logging
-            .log(
-                SEMANTIC_WARRANTY_LOGGER,
-                Level.FINEST,
-                "Semantic warranty request for {0} "
-                    + "aborted due to more than one remote store create during the call!",
-                semanticWarrantyCall.toString());
+        SEMANTIC_WARRANTY_LOGGER.finer(
+                "Semantic warranty request for " + semanticWarrantyCall
+                + " aborted due to more than one remote store create "
+                + "during the call!");
 
         cleanupFailedRequest();
         return;
@@ -1001,13 +984,10 @@ public final class Log {
       else if (call.target.$getStore().equals(targetStore))
         callsForTargetStore.put(call, result);
       else {
-        Logging
-            .log(
-                SEMANTIC_WARRANTY_LOGGER,
-                Level.FINEST,
-                "Semantic warranty request for {0} "
-                    + "aborted due to more than one remote store called during the call!",
-                semanticWarrantyCall.toString());
+        SEMANTIC_WARRANTY_LOGGER.finer(
+                "Semantic warranty request for " + semanticWarrantyCall
+                + " aborted due to more than one remote store called "
+                + "during the call!");
 
         cleanupFailedRequest();
         return;
@@ -1016,19 +996,13 @@ public final class Log {
 
     // If we are here, then all reads, creates, call reuses, and results 
     // are on the target store. Now we can make a request object.
+    SEMANTIC_WARRANTY_LOGGER.finest("Making request for " + semanticWarrantyCall + " with " + callsForTargetStore.size() + " calls");
     SemanticWarrantyRequest req =
         new SemanticWarrantyRequest(semanticWarrantyCall,
             semanticWarrantyValue, readsForTargetStore, createsForTargetStore,
             callsForTargetStore, getTid());
-    /*
-    SEMANTIC_WARRANTY_LOGGER.finest("Creating request for " + req.call + getTid());
-    for (_Impl create : req.creates) {
-        SEMANTIC_WARRANTY_LOGGER.finest("AFTER REQ TID: " + getTid() + " created " + create.$getOnum());
-    }
-    */
     requests.put(semanticWarrantyCall, req);
     requestLocations.put(semanticWarrantyCall, targetStore);
-    requestLogs.put(semanticWarrantyCall, this);
 
     // add reads to readDependency map
     for (Entry<Store, LongKeyMap<ReadMapEntry>> entry :
@@ -1200,11 +1174,14 @@ public final class Log {
     // TODO: This shouldn't be blindly done.
     if (semanticWarrantyCall == null) {
       parent.semanticWarrantiesUsed.putAll(semanticWarrantiesUsed);
+    } else {
+      parent.semanticWarrantiesUsed.put(semanticWarrantyCall,
+          new WarrantiedCallResult(requests.get(semanticWarrantyCall).value,
+            new SemanticWarranty(0)));
     }
 
     parent.requests.putAll(requests);
     parent.requestLocations.putAll(requestLocations);
-    parent.requestLogs.putAll(requestLogs);
 
     LongIterator readDependenciesIt = readDependencies.keySet().iterator();
     while (readDependenciesIt.hasNext()) {
@@ -1266,7 +1243,6 @@ public final class Log {
         // Release read locks.
         for (LongKeyMap<ReadMapEntry> submap : reads) {
           for (ReadMapEntry entry : submap.values()) {
-            SEMANTIC_WARRANTY_LOGGER.finest("Releasing read lock on " + entry.obj.onum + " by " + Log.this.getTid());
             entry.releaseLock(Log.this);
           }
         }
@@ -1342,7 +1318,6 @@ public final class Log {
    */
   private void transferReadLock(Log child, ReadMapEntry readMapEntry,
       boolean record) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Releasing read lock on " + readMapEntry.obj.onum + " by " + child.getTid());
     // If we already have a read lock, return; otherwise, register a read lock.
     boolean lockedByAncestor = false;
     synchronized (readMapEntry) {
@@ -1385,7 +1360,6 @@ public final class Log {
   void acquireReadLock(_Impl obj) {
     // If we already have a read lock, return; otherwise, register a read
     // lock.
-    SEMANTIC_WARRANTY_LOGGER.finest("Acquiring read lock on " + obj.$getOnum() + " by " + getTid());
     ReadMapEntry readMapEntry = obj.$readMapEntry;
     boolean lockedByAncestor = false;
     synchronized (readMapEntry) {

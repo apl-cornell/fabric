@@ -7,9 +7,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.logging.Level;
 
-import fabric.common.Logging;
 import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
@@ -37,8 +35,8 @@ public class CallResult {
         value = WrappedJavaInlineable.$wrap((new ObjectInputStream(new
                 ByteArrayInputStream(inlinedData))).readObject());
       } catch (ClassNotFoundException e) {
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-            "Couldn't read in supposedly inlineable object: {0}", e);
+        SEMANTIC_WARRANTY_LOGGER.finest(
+            "Couldn't read in supposedly inlineable object: " + e);
       }
     } else {
       Store s = Worker.getWorker().getStore(in.readUTF());

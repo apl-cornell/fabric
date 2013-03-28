@@ -82,8 +82,8 @@ public class CallInstance {
           argsArray[i] = WrappedJavaInlineable.$wrap((new ObjectInputStream(new
                   ByteArrayInputStream(inlinedData))).readObject());
         } catch (ClassNotFoundException e) {
-          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-              "Couldn't read in supposedly inlineable object: {0}", e);
+          SEMANTIC_WARRANTY_LOGGER.finest(
+              "Couldn't read in supposedly inlineable object: " + e);
         }
       } else {
         Store argStore = Worker.getWorker().getStore(in.readUTF());

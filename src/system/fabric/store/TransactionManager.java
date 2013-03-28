@@ -14,7 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
@@ -24,7 +23,6 @@ import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.Logging;
 import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongIterator;
@@ -51,10 +49,6 @@ import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.remote.RemoteWorker;
 
-/* TODO:
- *      - Double check that the re-use of a semantic warranty value has the same
- *      result as what's in the table
- */
 public class TransactionManager {
 
   /**
@@ -101,6 +95,7 @@ public class TransactionManager {
       throws TransactionCommitFailedException {
     try {
       database.commit(transactionID, commitTime, workerIdentity, sm);
+      semanticWarranties.commit(transactionID, commitTime);
       STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
     } catch (final RuntimeException e) {
       throw new TransactionCommitFailedException(
@@ -185,7 +180,9 @@ public class TransactionManager {
 
       STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
 
-      if (longestCallWarranty != null) {
+      if (longestCallWarranty != null
+          && (longestWarranty == null
+            || longestCallWarranty.expiry() > longestWarranty.expiry())) {
         return longestCallWarranty.expiry();
       }
       return longestWarranty == null ? 0 : longestWarranty.expiry();
@@ -300,31 +297,46 @@ public class TransactionManager {
   public Map<CallInstance, SemanticWarranty> prepareCalls(Principal worker, long
       tid, Map<CallInstance, WarrantiedCallResult> calls, long commitTime)
     throws TransactionPrepareFailedException {
-    Map<CallInstance, SemanticWarranty> updatedWars = new HashMap<CallInstance, SemanticWarranty>();
-    Map<CallInstance, WarrantiedCallResult> conflictWars = new
-      HashMap<CallInstance, WarrantiedCallResult>();
-    Set<CallInstance> staleWars = new HashSet<CallInstance>();
-    for (CallInstance call : calls.keySet()) {
-      semanticWarranties.notifyReadPrepare(call, commitTime);
-      Pair<SemanticExtendStatus, WarrantiedCallResult> extResult =
-        semanticWarranties.extend(call, calls.get(call), commitTime);
-      switch (extResult.first) {
-        case OK:
-          updatedWars.put(call, extResult.second.warranty);
-          break;
-        case BAD_VERSION:
-          if (extResult.second == null) staleWars.add(call);
-          else conflictWars.put(call, extResult.second);
-          break;
-        case DENIED:
-          throw new TransactionPrepareFailedException(conflictWars, staleWars,
-              "Could not extend a warranty which was not stale!");
+    try {
+      Map<CallInstance, SemanticWarranty> updatedWars = new HashMap<CallInstance, SemanticWarranty>();
+      Map<CallInstance, WarrantiedCallResult> conflictWars = new
+        HashMap<CallInstance, WarrantiedCallResult>();
+      Set<CallInstance> staleWars = new HashSet<CallInstance>();
+      for (CallInstance call : calls.keySet()) {
+        semanticWarranties.notifyReadPrepare(call, commitTime);
+        Pair<SemanticExtendStatus, WarrantiedCallResult> extResult =
+          semanticWarranties.extend(call, calls.get(call), commitTime);
+        switch (extResult.first) {
+          case OK:
+            SEMANTIC_WARRANTY_LOGGER.finest("At risk call " + call
+                + " extended for " +
+                (extResult.second.warranty.expiry() - calls.get(call).warranty.expiry())
+                + "ms");
+            updatedWars.put(call, extResult.second.warranty);
+            break;
+          case BAD_VERSION:
+            if (extResult.second == null) staleWars.add(call);
+            else conflictWars.put(call, extResult.second);
+            break;
+          case DENIED:
+            SEMANTIC_WARRANTY_LOGGER.finest("Prepare Calls failed due to inability to extend!");
+            throw new TransactionPrepareFailedException(conflictWars, staleWars,
+                "Could not extend a warranty which was not stale!");
+        }
       }
+      if (conflictWars.size() + staleWars.size() > 0) {
+        SEMANTIC_WARRANTY_LOGGER.finest("Prepare Calls failed due to conflicting or stale call values!");
+        throw new TransactionPrepareFailedException(conflictWars, staleWars);
+      }
+      return updatedWars;
+    } catch (TransactionPrepareFailedException e) {
+      try {
+        abortTransaction(worker, tid);
+      } catch (AccessException ae) {
+        throw new InternalError(ae);
+      }
+      throw e;
     }
-    if (conflictWars.size() + staleWars.size() > 0) {
-      throw new TransactionPrepareFailedException(conflictWars, staleWars);
-    }
-    return updatedWars;
   }
 
   /**
@@ -369,14 +381,13 @@ public class TransactionManager {
 
     while (!fringe.isEmpty()) {
       SemanticWarrantyRequest r = reqMap.get(fringe.poll());
-      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-          "Proposing SemanticWarranty for CallInstance {1}, which has {0} dependencies",
-          r.calls.size(), r.call);
+      SEMANTIC_WARRANTY_LOGGER.finest(
+          "Proposing SemanticWarranty for CallInstance " + r.call);
 
       // Get a proposal for a warranty
       //semanticWarranties.notifyReadPrepare(r.call);
       SemanticWarranty proposed = semanticWarranties.proposeWarranty(r.call);
-      SEMANTIC_WARRANTY_LOGGER.finest(r.call.toString()
+      SEMANTIC_WARRANTY_LOGGER.finer(r.call.toString()
           + " was proposed a warranty to expire in " + (proposed.expiry() -
             System.currentTimeMillis()));
       // Add it to the response set

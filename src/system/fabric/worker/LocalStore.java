@@ -154,7 +154,7 @@ public final class LocalStore implements Store, Serializable {
 
   @Override
   public WarrantiedCallResult lookupCall(CallInstance call) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Looking up call id :" + call.toString());
+    SEMANTIC_WARRANTY_LOGGER.finest("Looking up call id: " + call.toString());
 
     WarrantiedCallResult result = null;
     Log cur = TransactionManager.getInstance().getCurrentLog();
@@ -162,12 +162,15 @@ public final class LocalStore implements Store, Serializable {
       result = cur.getRequestResult(call);
     }
     if (result == null) result = callCache.get(call);
+    SEMANTIC_WARRANTY_LOGGER.finer("Call " + call + " found in local store: " +
+        result);
     return result;
   }
 
   @Override
   public void insertResult(CallInstance call, WarrantiedCallResult result) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Putting call id :" + call.toString() + " -> " + result.value);
+    SEMANTIC_WARRANTY_LOGGER.finer("Putting call id: " + call.toString()
+        + " -> " + result.value);
     callCache.put(call, result);
   }
 
