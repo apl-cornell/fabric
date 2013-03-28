@@ -172,7 +172,7 @@ public class TransactionManager {
 
       SemanticWarranty longestCallWarranty = callPrepareResp.first;
       Collection<SerializedObject> additionalCreates = callPrepareResp.second;
-      // Prepare creates.
+      // Prepare additional creates.
       for (SerializedObject o : additionalCreates) {
         database.registerUpdate(tid, worker, o, versionConflicts, CREATE);
       }
@@ -315,19 +315,22 @@ public class TransactionManager {
             updatedWars.put(call, extResult.second.warranty);
             break;
           case BAD_VERSION:
+            SEMANTIC_WARRANTY_LOGGER.finest("At risk call " + call
+                + " had bad version!");
             if (extResult.second == null) staleWars.add(call);
             else conflictWars.put(call, extResult.second);
             break;
           case DENIED:
             SEMANTIC_WARRANTY_LOGGER.finest("Prepare Calls failed due to inability to extend!");
             throw new TransactionPrepareFailedException(conflictWars, staleWars,
-                "Could not extend a warranty which was not stale!");
+                "Could not extend for " + call);
         }
       }
       if (conflictWars.size() + staleWars.size() > 0) {
         SEMANTIC_WARRANTY_LOGGER.finest("Prepare Calls failed due to conflicting or stale call values!");
         throw new TransactionPrepareFailedException(conflictWars, staleWars);
       }
+      SEMANTIC_WARRANTY_LOGGER.finest("Calls prepared!");
       return updatedWars;
     } catch (TransactionPrepareFailedException e) {
       try {

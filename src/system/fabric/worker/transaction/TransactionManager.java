@@ -760,8 +760,10 @@ public final class TransactionManager {
                     commitTime);
 
             // Prepare was successful. Update the objects' warranties.
+            SEMANTIC_WARRANTY_LOGGER.finest("Updating version warranties.");
             current.updateVersionWarranties(s, allNewWarranties.first);
             // Update warranties on calls.
+            SEMANTIC_WARRANTY_LOGGER.finest("Updating semantic warranties.");
             current.updateSemanticWarranties(s, allNewWarranties.second);
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) s, e);
@@ -801,6 +803,8 @@ public final class TransactionManager {
       String logMessage =
           "Transaction tid=" + current.tid.topTid + ":  read-prepare failed.";
 
+      SEMANTIC_WARRANTY_LOGGER.finest(logMessage);
+
       for (Map.Entry<RemoteNode, TransactionPrepareFailedException> entry : failures
           .entrySet()) {
         if (entry.getKey() instanceof RemoteStore) {
@@ -818,6 +822,7 @@ public final class TransactionManager {
           Map<CallInstance, WarrantiedCallResult> callConflictUpdates =
             entry.getValue().callConflictUpdates;
           if (callConflictUpdates != null) {
+            SEMANTIC_WARRANTY_LOGGER.finest("" + callConflictUpdates.size() + " conflicted calls");
             for (Map.Entry<CallInstance, WarrantiedCallResult> update :
                 callConflictUpdates.entrySet())
               store.insertResult(update.getKey(), update.getValue());
@@ -825,6 +830,7 @@ public final class TransactionManager {
 
           Set<CallInstance> callConflicts = entry.getValue().callConflicts;
           if (callConflicts != null) {
+            SEMANTIC_WARRANTY_LOGGER.finest("" + callConflicts.size() + " expired calls");
             for (CallInstance call : callConflicts)
               store.removeResult(call);
           }

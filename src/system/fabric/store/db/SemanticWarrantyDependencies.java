@@ -126,15 +126,29 @@ public class SemanticWarrantyDependencies {
   public void addDependenciesForCall(CallInstance call, LongSet reads,
       Set<CallInstance> calls) {
     if (reads != null) {
+      if (objectsRead.get(call) == null) {
+        objectsRead.put(call, new LongHashSet());
+      }
       objectsRead.get(call).addAll(reads);
-      for (LongIterator it = reads.iterator(); it.hasNext();)
-        objectReaders.get(it.next()).add(call);
+      for (LongIterator it = reads.iterator(); it.hasNext();) {
+        long read = it.next();
+        if (objectReaders.get(read) == null) {
+          objectReaders.put(read, new HashSet<CallInstance>());
+        }
+        objectReaders.get(read).add(call);
+      }
     }
 
     if (calls != null) {
+      if (callsUsed.get(call) == null) {
+        callsUsed.put(call, new HashSet<CallInstance>());
+      }
       callsUsed.get(call).addAll(calls);
       for (CallInstance callee : calls) {
         if (callee == call) continue;
+        if (callUsers.get(callee) == null) {
+          callUsers.put(callee, new HashSet<CallInstance>());
+        }
         callUsers.get(callee).add(call);
       }
     }
@@ -146,9 +160,6 @@ public class SemanticWarrantyDependencies {
   public Set<CallInstance> getCallers(CallInstance id) {
     Set<CallInstance> inTable = callUsers.get(id);
     inTable = inTable == null ? new HashSet<CallInstance>() : inTable;
-    SEMANTIC_WARRANTY_LOGGER.finest("Callers of " + id + " are...");
-    for (CallInstance call : inTable)
-      SEMANTIC_WARRANTY_LOGGER.finest("\t" + call);
     return inTable;
   }
 

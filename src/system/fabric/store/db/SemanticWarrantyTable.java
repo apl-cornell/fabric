@@ -51,7 +51,7 @@ import fabric.worker.transaction.TransactionManager;
  */
 public class SemanticWarrantyTable {
   private static final int MIN_SEMANTIC_WARRANTY = 250;
-  private static final int MAX_SEMANTIC_WARRANTY = 64000;
+  private static final int MAX_SEMANTIC_WARRANTY = 1000;
 
   /**
    * Table of objects to lock on for interacting with a certain call.
@@ -230,8 +230,14 @@ public class SemanticWarrantyTable {
       id, WarrantiedCallResult oldValue, long newTime) {
     lockTable.putIfAbsent(id, new Object());
     synchronized (lockTable.get(id)) {
-      // Right now, check onums because otherwise what's the point?
-      if (oldValue.value.$getOnum() == valueTable.get(id).$getOnum()) {
+      SEMANTIC_WARRANTY_LOGGER.finest("Extending warranty for " + id);
+      if (valueTable.get(id) != null 
+          && ((oldValue.value instanceof WrappedJavaInlineable &&
+              valueTable.get(id) instanceof WrappedJavaInlineable &&
+              oldValue.value.equals(valueTable.get(id)))
+            || (oldValue.value instanceof fabric.lang.Object._Proxy &&
+              valueTable.get(id) instanceof fabric.lang.Object._Proxy &&
+              oldValue.value.$getOnum() == valueTable.get(id).$getOnum()))) {
         SemanticWarranty newWarranty = new SemanticWarranty(newTime);
         if (!oldValue.warranty.expired(true)) {
           if (statusTable.get(id) != CallStatus.EXPIRING
@@ -362,12 +368,15 @@ public class SemanticWarrantyTable {
         // we'll recompute over.
         Set<CallInstance> validCallers = letExpire(call);
         for (CallInstance caller : validCallers) {
-          SemanticWarranty callerWarranty = get(caller).warranty;
-          if (!callerWarranty.expired(false))
-            SEMANTIC_WARRANTY_LOGGER.finest("Call " + caller + " needs to be checked!");
-            dependencies.add(new Pair<CallInstance, SemanticWarranty>(caller,
-                  callerWarranty));
-            uncertainCalls.add(caller);
+          if (get(caller) != null) {
+            SemanticWarranty callerWarranty = get(caller).warranty;
+            if (!callerWarranty.expired(false)) {
+              SEMANTIC_WARRANTY_LOGGER.finest("Call " + caller + " needs to be checked!");
+              dependencies.add(new Pair<CallInstance, SemanticWarranty>(caller,
+                    callerWarranty));
+              uncertainCalls.add(caller);
+            }
+          }
         }
 
         // If the call will also have to remain valid by commit time (possibly)
