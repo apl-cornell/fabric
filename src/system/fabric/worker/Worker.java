@@ -395,6 +395,7 @@ public final class Worker {
     boolean result = false;
     for (Pair<SerializedObject, VersionWarranty> obj : group.objects().values()) {
       result |= store.updateCache(obj);
+      TransactionManager.abortReaders(store, obj.first.getOnum());
     }
 
     return result;

@@ -128,6 +128,10 @@ public final class TransactionManager {
   static final OidKeyHashMap<ReadMapEntry> readMap =
       new OidKeyHashMap<ReadMapEntry>();
 
+  public static void abortReaders(Store store, long onum) {
+    readMap.get(store, onum).abortReaders();
+  }
+
   public static ReadMapEntry getReadMapEntry(_Impl impl,
       VersionWarranty warranty) {
     FabricSoftRef ref = impl.$ref;
