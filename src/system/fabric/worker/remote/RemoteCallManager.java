@@ -8,11 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fabric.common.AuthorizationUtil;
+import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
+import fabric.common.util.LongKeyMap;
+import fabric.dissemination.Glob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -318,25 +321,33 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       ObjectUpdateMessage objectUpdateMessage) {
 
     Worker worker = Worker.getWorker();
-    boolean response;
+    final List<Long> response;
 
-    if (objectUpdateMessage.group == null) {
+    if (objectUpdateMessage.groups == null) {
+      response = new ArrayList<Long>();
+
       RemoteStore store = worker.getStore(objectUpdateMessage.store);
-      try {
-        objectUpdateMessage.glob.verifySignature(store.getPublicKey());
-        response =
-            worker.updateDissemCaches(store, objectUpdateMessage.onum,
-                objectUpdateMessage.glob);
-      } catch (InvalidKeyException e) {
-        e.printStackTrace();
-        response = false;
-      } catch (SignatureException e) {
-        e.printStackTrace();
-        response = false;
+      for (LongKeyMap.Entry<Glob> entry : objectUpdateMessage.globs.entrySet()) {
+        long onum = entry.getKey();
+        Glob glob = entry.getValue();
+        try {
+          glob.verifySignature(store.getPublicKey());
+
+          if (worker.updateDissemCaches(store, onum, glob)) {
+            response.add(onum);
+          }
+        } catch (InvalidKeyException e) {
+          e.printStackTrace();
+        } catch (SignatureException e) {
+          e.printStackTrace();
+        }
       }
     } else {
       RemoteStore store = worker.getStore(client.node.name);
-      response = worker.updateCache(store, objectUpdateMessage.group);
+      for (ObjectGroup group : objectUpdateMessage.groups) {
+        worker.updateCache(store, group);
+      }
+      response = worker.findOnumsInCache(store, objectUpdateMessage.onums);
     }
 
     return new ObjectUpdateMessage.Response(response);
