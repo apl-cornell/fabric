@@ -222,15 +222,18 @@ public class SemanticWarrantyTable {
 
   /**
    * Extends the warranty for an id only if it currently has a specific
-   * warranty.
-   * 
-   * @return true iff the warranty was replaced.
+   * warrantied call result.
    */
   public final Pair<SemanticExtendStatus, WarrantiedCallResult> extend(CallInstance
       id, WarrantiedCallResult oldValue, long newTime) {
     lockTable.putIfAbsent(id, new Object());
     synchronized (lockTable.get(id)) {
       SEMANTIC_WARRANTY_LOGGER.finest("Extending warranty for " + id);
+      // BEHOLD MY CHECK OF DOOM
+      //
+      // What this boils down to is making sure that if we have a value already,
+      // we verify that it is, in fact, the same thing as what they think it is.
+      // Don't want them lying to us, now do we?
       if (valueTable.get(id) != null 
           && ((oldValue.value instanceof WrappedJavaInlineable &&
               valueTable.get(id) instanceof WrappedJavaInlineable &&
@@ -240,7 +243,7 @@ public class SemanticWarrantyTable {
               oldValue.value.$getOnum() == valueTable.get(id).$getOnum()))) {
         SemanticWarranty newWarranty = new SemanticWarranty(newTime);
         if (!oldValue.warranty.expired(true)) {
-          if (statusTable.get(id) != CallStatus.EXPIRING
+          if (statusTable.get(id) == CallStatus.VALID
               && warrantyTable.extend(id, oldValue.warranty, newWarranty)) {
             return new Pair<SemanticExtendStatus,
                    WarrantiedCallResult>(SemanticExtendStatus.OK, new
@@ -271,13 +274,35 @@ public class SemanticWarrantyTable {
   }
 
   /**
+   * Gather up all the expired calls in the subgraph starting from the given
+   * call.  This is used for notifying a worker of expired warranties.
+   */
+  //XXX synchronized now because of deadlock with letExpire
+  public synchronized Set<CallInstance> getExpiredSubgraph(CallInstance root) {
+    Set<CallInstance> expiredSet = new HashSet<CallInstance>();
+    lockTable.putIfAbsent(root, new Object());
+    synchronized (lockTable.get(root)) {
+      SEMANTIC_WARRANTY_LOGGER.finest("BUILDING UP EXPIRED SUBGRAPH FROM "
+          + root + " which is expired? " +
+          warrantyTable.get(root).expired(true));
+      if (!warrantyTable.get(root).expired(true)) return expiredSet;
+      expiredSet.add(root);
+      for (CallInstance subcall : dependencyTable.getCalls(root)) {
+        expiredSet.addAll(getExpiredSubgraph(subcall));
+      }
+      return expiredSet;
+    }
+  }
+
+  /**
    * Let the call's associated value expire from the table at the end of the
    * current warranty.  Returns the set of calls that used this value (directly
    * or indirectly) and are under valid warranties.
    *
    * Valid Warranty Calls that used this call
    */
-  public final Set<CallInstance> letExpire(CallInstance call) {
+  //XXX synchronized now because of deadlock with getExpiredSubgraph
+  public synchronized final Set<CallInstance> letExpire(CallInstance call) {
     SEMANTIC_WARRANTY_LOGGER.finest("letting " + call + " expire");
     Set<CallInstance> validCallers = new HashSet<CallInstance>();
     lockTable.putIfAbsent(call, new Object());
@@ -285,19 +310,11 @@ public class SemanticWarrantyTable {
       // Mark the entry as going out of style like jean jackets :P
       statusTable.put(call, CallStatus.EXPIRING);
 
-      // Update callers of the call to have the callers dependencies if they're
-      // still valid, otherwise remove them too.
-      Set<CallInstance> callsUsed = dependencyTable.getCalls(call);
-      LongSet readsUsed = dependencyTable.getReads(call);
-      Set<CallInstance> callers = new
-        HashSet<CallInstance>(dependencyTable.getCallers(call));
-      for (CallInstance caller : callers) {
+      // Expire callers and group up the ones that haven't expired yet.
+      for (CallInstance caller : dependencyTable.getCallers(call)) {
         if (!warrantyTable.get(caller).expired(false)) {
           validCallers.add(caller);
         }
-        // Update the dependency table so that the writes on the old call now
-        // are marked for defense of the caller.
-        dependencyTable.addDependenciesForCall(caller, readsUsed, callsUsed);
 
         // Mark the caller as expiring once the warranty runs out.
         validCallers.addAll(letExpire(caller));
@@ -306,7 +323,6 @@ public class SemanticWarrantyTable {
       // Remove this call if we know it's expired.
       if (warrantyTable.get(call).expired(false)) {
         valueTable.remove(call);
-        dependencyTable.removeCall(call);
       }
 
       return validCallers;

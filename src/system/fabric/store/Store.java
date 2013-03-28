@@ -11,9 +11,10 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
-import java.util.logging.Level;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
 import fabric.common.Crypto;
@@ -38,7 +39,9 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
+import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
@@ -242,12 +245,28 @@ class Store extends MessageToStoreHandler {
         "Handling Prepare Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
 
+    TransactionPrepareFailedException error = null;
     LongKeyMap<VersionWarranty> newWarranties =
-        prepareTransactionReads(client.principal, msg.tid, msg.reads,
-            msg.commitTime);
+      new LongKeyHashMap<VersionWarranty>();
+    try {
+      newWarranties.putAll(prepareTransactionReads(client.principal, msg.tid,
+            msg.reads, msg.commitTime));
+    } catch (TransactionPrepareFailedException e) {
+      error = e;
+    }
+
     Map<CallInstance, SemanticWarranty> newSemWarranties =
-      prepareTransactionCalls(client.principal, msg.tid, msg.calls,
-          msg.commitTime);
+      new HashMap<CallInstance, SemanticWarranty>();
+    try {
+      newSemWarranties.putAll(prepareTransactionCalls(client.principal, msg.tid,
+            msg.calls, msg.commitTime));
+    } catch (TransactionPrepareFailedException e) {
+      if (error != null)
+        throw new TransactionPrepareFailedException(error.versionConflicts, e.callConflictUpdates, e.callConflicts);
+      throw e;
+    }
+    if (error != null) throw error;
+
     return new PrepareTransactionReadsMessage.Response(newWarranties,
         newSemWarranties);
   }

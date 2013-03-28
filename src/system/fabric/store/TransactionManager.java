@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
@@ -317,8 +318,11 @@ public class TransactionManager {
           case BAD_VERSION:
             SEMANTIC_WARRANTY_LOGGER.finest("At risk call " + call
                 + " had bad version!");
-            if (extResult.second == null) staleWars.add(call);
-            else conflictWars.put(call, extResult.second);
+            if (extResult.second == null) {
+              staleWars.addAll(semanticWarranties.getExpiredSubgraph(call));
+            } else {
+              conflictWars.put(call, extResult.second);
+            }
             break;
           case DENIED:
             SEMANTIC_WARRANTY_LOGGER.finest("Prepare Calls failed due to inability to extend!");

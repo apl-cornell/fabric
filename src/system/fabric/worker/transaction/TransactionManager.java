@@ -813,9 +813,12 @@ public final class TransactionManager {
           LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
+            SEMANTIC_WARRANTY_LOGGER.finest("" + versionConflicts.size() + " conflicted objects");
             for (Pair<SerializedObject, VersionWarranty> obj : versionConflicts
-                .values())
+                .values()) {
+              SEMANTIC_WARRANTY_LOGGER.finest("\t" + obj.first.getOnum());
               store.updateCache(obj);
+            }
           }
 
           // Remove or update old calls in our cache.
@@ -824,15 +827,19 @@ public final class TransactionManager {
           if (callConflictUpdates != null) {
             SEMANTIC_WARRANTY_LOGGER.finest("" + callConflictUpdates.size() + " conflicted calls");
             for (Map.Entry<CallInstance, WarrantiedCallResult> update :
-                callConflictUpdates.entrySet())
+                callConflictUpdates.entrySet()) {
+              SEMANTIC_WARRANTY_LOGGER.finest("\t" + update.getKey());
               store.insertResult(update.getKey(), update.getValue());
+            }
           }
 
           Set<CallInstance> callConflicts = entry.getValue().callConflicts;
           if (callConflicts != null) {
             SEMANTIC_WARRANTY_LOGGER.finest("" + callConflicts.size() + " expired calls");
-            for (CallInstance call : callConflicts)
+            for (CallInstance call : callConflicts) {
+              SEMANTIC_WARRANTY_LOGGER.finest("\t" + call);
               store.removeResult(call);
+            }
           }
         }
 

@@ -57,6 +57,9 @@ public class SemanticWarrantyDependencies {
    * This does <b>not</b> clear out old state if the call was inserted before.
    */
   public void addCall(CallInstance id, LongSet reads, Set<CallInstance> calls) {
+    // Clear out any left over state.
+    removeCall(id);
+
     objectsRead.put(id, reads);
     callsUsed.put(id, calls);
 
@@ -107,49 +110,6 @@ public class SemanticWarrantyDependencies {
         Set<CallInstance> users = callUsers.get(call);
         if (users == null) continue;
         users.remove(id);
-      }
-    }
-  }
-
-  /**
-   * Update a call with a new set of read and call dependencies in the table.
-   */
-  public void updateCall(CallInstance id, LongSet reads, Set<CallInstance> calls) {
-    /* TODO: This is probably not threadsafe? */
-    removeCall(id);
-    addCall(id, reads, calls);
-  }
-
-  /**
-   * Add sets of additional reads and writes to an existing set of dependencies.
-   */
-  public void addDependenciesForCall(CallInstance call, LongSet reads,
-      Set<CallInstance> calls) {
-    if (reads != null) {
-      if (objectsRead.get(call) == null) {
-        objectsRead.put(call, new LongHashSet());
-      }
-      objectsRead.get(call).addAll(reads);
-      for (LongIterator it = reads.iterator(); it.hasNext();) {
-        long read = it.next();
-        if (objectReaders.get(read) == null) {
-          objectReaders.put(read, new HashSet<CallInstance>());
-        }
-        objectReaders.get(read).add(call);
-      }
-    }
-
-    if (calls != null) {
-      if (callsUsed.get(call) == null) {
-        callsUsed.put(call, new HashSet<CallInstance>());
-      }
-      callsUsed.get(call).addAll(calls);
-      for (CallInstance callee : calls) {
-        if (callee == call) continue;
-        if (callUsers.get(callee) == null) {
-          callUsers.put(callee, new HashSet<CallInstance>());
-        }
-        callUsers.get(callee).add(call);
       }
     }
   }
