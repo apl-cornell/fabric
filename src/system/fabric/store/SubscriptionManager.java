@@ -49,11 +49,8 @@ public class SubscriptionManager extends FabricThread.Impl {
      */
     final RemoteWorker writer;
 
-    /**
-     * @param name
-     */
     public ObjectUpdateEvent(LongSet onums, RemoteWorker writer) {
-      super("Fabric subscription manager object-update notifiec");
+      super("Fabric subscription manager object-update notifier");
       this.onums = onums;
       this.writer = writer;
     }
@@ -114,10 +111,6 @@ public class SubscriptionManager extends FabricThread.Impl {
     }
   }
 
-  /**
-   * A set of onums that have been updated, paired with the worker that issued
-   * the update.
-   */
   private final BlockingQueue<NotificationEvent> notificationQueue;
 
   /**
