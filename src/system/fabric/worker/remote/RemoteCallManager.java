@@ -332,16 +332,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       }
     } else {
       RemoteStore store = worker.getStore(client.node.name);
-      try {
-        objectUpdateMessage.glob.verifySignature(store.getPublicKey());
-        response = worker.updateCache(store, objectUpdateMessage.group);
-      } catch (InvalidKeyException e) {
-        e.printStackTrace();
-        response = false;
-      } catch (SignatureException e) {
-        e.printStackTrace();
-        response = false;
-      }
+      response = worker.updateCache(store, objectUpdateMessage.group);
     }
 
     return new ObjectUpdateMessage.Response(response);
