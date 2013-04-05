@@ -344,7 +344,18 @@ public class TransactionManager {
       }
       if (conflictWars.size() + staleWars.size() > 0) {
         SEMANTIC_WARRANTY_LOGGER.finest("Prepare Calls failed due to conflicting or stale call values!");
-        throw new TransactionPrepareFailedException(conflictWars, staleWars);
+        long currentTime = System.currentTimeMillis();
+        String msg = "Prepare Calls failed due to " + conflictWars.size()
+          + " conflicting and " + staleWars.size() + " stale call values:\n";
+        msg += "Conflicting...\n";
+        for (Map.Entry<CallInstance, WarrantiedCallResult> entry : conflictWars.entrySet())
+          msg += "\t" + entry.getKey() + " = " + entry.getValue().value.$getOnum() + " (" +
+            (entry.getValue().warranty.expiry() - currentTime) + ")\n";
+        msg += "Stale...\n";
+        for (CallInstance call : staleWars)
+          msg += "\t" + call + "\n";
+        throw new TransactionPrepareFailedException(conflictWars, staleWars,
+            msg);
       }
       SEMANTIC_WARRANTY_LOGGER.finest("Calls prepared!");
       return updatedWars;

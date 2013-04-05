@@ -229,6 +229,17 @@ public class TransactionPrepareFailedException extends FabricException
   public TransactionPrepareFailedException(
       LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts,
       Map<CallInstance, WarrantiedCallResult> callConflictUpdates,
+      Set<CallInstance> callConflicts,
+      List<String> messages) {
+    this.messages = messages;
+    this.versionConflicts = versionConflicts;
+    this.callConflictUpdates = callConflictUpdates;
+    this.callConflicts = callConflicts;
+  }
+
+  public TransactionPrepareFailedException(
+      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts,
+      Map<CallInstance, WarrantiedCallResult> callConflictUpdates,
       Set<CallInstance> callConflicts) {
     this.messages = null;
     this.versionConflicts = versionConflicts;

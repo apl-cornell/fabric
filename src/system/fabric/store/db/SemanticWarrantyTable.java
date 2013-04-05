@@ -231,7 +231,8 @@ public class SemanticWarrantyTable {
       SEMANTIC_WARRANTY_LOGGER.finest("Extending warranty for " + id);
 
       // If we've marked this for expiration, this call can't be extended :P
-      if (statusTable.get(id) == CallStatus.EXPIRING
+      if ((statusTable.get(id) == CallStatus.EXPIRING &&
+            warrantyTable.get(id).expiresBefore(newTime, true))
           || valueTable.get(id) == null)
         return new Pair<SemanticExtendStatus,
                WarrantiedCallResult>(SemanticExtendStatus.BAD_VERSION, null);
@@ -250,7 +251,9 @@ public class SemanticWarrantyTable {
               oldValue.value.$getOnum() == valueTable.get(id).$getOnum()))) {
         SemanticWarranty newWarranty = new SemanticWarranty(newTime);
         if (!oldValue.warranty.expired(true)) {
-          if (warrantyTable.extend(id, oldValue.warranty, newWarranty)) {
+          if (oldValue.warranty.expiresBefore(warrantyTable.get(id).expiry(), false) &&
+              newWarranty.expiresAfter(warrantyTable.get(id).expiry(), false) &&
+              warrantyTable.extend(id, oldValue.warranty, newWarranty)) {
             return new Pair<SemanticExtendStatus,
                    WarrantiedCallResult>(SemanticExtendStatus.OK, new
                        WarrantiedCallResult(oldValue.value,
@@ -636,7 +639,11 @@ public class SemanticWarrantyTable {
       // If we didn't get a proper refresh, go through and propogate all it's
       // request info into the other requests that used it and move it from the
       // updates set to the set of requests that changed value.
-      if (!get(call).value.equals(req.value)) {
+      boolean areEqual = get(call).value == req.value;
+      areEqual |= (get(call).value instanceof WrappedJavaInlineable &&
+                    req.value instanceof WrappedJavaInlineable &&
+                    get(call).value.$unwrap() == req.value.$unwrap());
+      if (!areEqual) {
         for (Map.Entry<CallInstance, SemanticWarrantyRequest> update :
             updates.entrySet()) {
           CallInstance parentCall = update.getKey();

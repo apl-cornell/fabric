@@ -12,6 +12,8 @@ import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -41,7 +43,6 @@ import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
@@ -261,8 +262,12 @@ class Store extends MessageToStoreHandler {
       newSemWarranties.putAll(prepareTransactionCalls(client.principal, msg.tid,
             msg.calls, msg.commitTime));
     } catch (TransactionPrepareFailedException e) {
-      if (error != null)
-        throw new TransactionPrepareFailedException(error.versionConflicts, e.callConflictUpdates, e.callConflicts);
+      if (error != null) {
+        List<String> msgs = new LinkedList<String>();
+        if (error.messages != null) msgs.addAll(error.messages);
+        if (e.messages != null) msgs.addAll(e.messages);
+        throw new TransactionPrepareFailedException(error.versionConflicts, e.callConflictUpdates, e.callConflicts, msgs);
+      }
       throw e;
     }
     if (error != null) throw error;
