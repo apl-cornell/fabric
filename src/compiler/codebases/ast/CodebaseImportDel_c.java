@@ -30,7 +30,8 @@ public class CodebaseImportDel_c extends JL_c {
     ns = ctx.namespace();
     CodebaseTypeSystem ts = (CodebaseTypeSystem) tc.typeSystem();
 
-    if (im.kind() == Import.PACKAGE && ts.packageExists(ns, im.name())) {
+    if (im.kind() == Import.TYPE_IMPORT_ON_DEMAND
+        && ts.packageExists(ns, im.name())) {
       return im;
     }
 
@@ -77,7 +78,7 @@ public class CodebaseImportDel_c extends JL_c {
       CodebaseTranslator cbtr = (CodebaseTranslator) tr;
       w.write("import ");
 
-      if (im.kind() == Import.PACKAGE) {
+      if (im.kind() == Import.TYPE_IMPORT_ON_DEMAND) {
         w.write(cbtr.namespaceToJavaPackagePrefix(ns));
         w.write(im.name());
         w.write(".*");

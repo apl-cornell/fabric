@@ -107,7 +107,7 @@ public class CBImportTable extends ImportTable {
         // "type-import-on-demand" declarations as they are called in
         // the JLS), so even if another package defines the same name,
         // there is no conflict. See Section 6.5.2 of JLS, 2nd Ed.
-        Named n = findInPkg(name, pkg.fullName());
+        Named n = findInPkgOrType(name, pkg.fullName());
         if (n != null) {
           if (Report.should_report(TOPICS, 3))
             Report.report(3, this + ".find(" + name
@@ -119,15 +119,16 @@ public class CBImportTable extends ImportTable {
         }
       }
 
-      List<String> imports = new ArrayList<String>(packageImports.size() + 5);
+      List<String> imports =
+          new ArrayList<String>(typeOnDemandImports.size() + 5);
 
       imports.addAll(ts.defaultPackageImports());
-      imports.addAll(packageImports);
+      imports.addAll(typeOnDemandImports);
 
       // It wasn't a ClassImport. Maybe it was a PackageImport?
       Named resolved = null;
       for (String pkgName : imports) {
-        Named n = findInPkg(name, pkgName);
+        Named n = findInPkgOrType(name, pkgName);
         if (n != null) {
           if (resolved == null) {
             // This is the first occurrence of name we've found
@@ -176,19 +177,19 @@ public class CBImportTable extends ImportTable {
    * Add a package import.
    */
   @Override
-  public void addPackageImport(String pkgName) {
+  public void addTypeOnDemandImport(String pkgName) {
     // don't add the import if it is a
     String first = StringUtil.getFirstComponent(pkgName);
     if (aliases.contains(first)) {
       throw new InternalCompilerError(
           "Package imports with explicit codebases not yet supported");
     } else {
-      super.addPackageImport(pkgName);
+      super.addTypeOnDemandImport(pkgName);
     }
   }
 
   @Override
-  protected Named findInPkg(String name, String pkgName)
+  protected Named findInPkgOrType(String name, String pkgName)
       throws SemanticException {
     // HACK Ignore java.lang.Object so that fabric.lang.Object takes priority.
     if ("Object".equals(name) && "java.lang".equals(pkgName)) return null;
