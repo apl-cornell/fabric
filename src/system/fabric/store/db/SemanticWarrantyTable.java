@@ -362,6 +362,7 @@ public class SemanticWarrantyTable {
    * onums that is longer than the given commitTime.  Also performs any
    * bookkeeping associated with write events (like removing stale call values).
    */
+  // TODO: Oh god this needs a rewrite.
   public Pair<SemanticWarranty, Collection<SerializedObject>>
     prepareWrites(final Collection<SerializedObject> writes, final
         Collection<SerializedObject> creates, final long transactionID, long

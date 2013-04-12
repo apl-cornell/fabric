@@ -178,7 +178,6 @@ public class TransactionManager {
         database.registerUpdate(tid, worker, o, versionConflicts, CREATE);
       }
 
-
       STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
 
       if (longestCallWarranty != null
