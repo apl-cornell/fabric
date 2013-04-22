@@ -233,7 +233,9 @@ public class SubServerSocketFactory {
     public void run() {
       ServerSocket sock = null;
       try {
-        sock = new ServerSocket(address.getPort(), 0, address.getAddress());
+        sock =
+            new ServerSocket(address.getPort(), 0,
+                InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }));
         while (true) {
           try {
             try {
