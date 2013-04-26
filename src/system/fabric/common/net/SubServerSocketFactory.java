@@ -2,6 +2,7 @@ package fabric.common.net;
 
 import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetAddress;
@@ -208,11 +209,17 @@ public class SubServerSocketFactory {
         queue.open(conn);
       } catch (SocketException e) {
         if ("Connection reset".equalsIgnoreCase(e.getMessage())) {
-          // Silently ignore connections that are reset.
+          NETWORK_CONNECTION_LOGGER.log(Level.WARNING,
+              "{0} connection closed ({1})",
+              new Object[] { portType, s.getRemoteSocketAddress() });
           return;
         }
 
         throw new NotImplementedException(e);
+      } catch (EOFException e) {
+        NETWORK_CONNECTION_LOGGER.log(Level.WARNING,
+            "{0} connection reset ({1})",
+            new Object[] { portType, s.getRemoteSocketAddress() });
       } catch (IOException e) {
         // TODO: failed to initiate, close s.
         throw new NotImplementedException(e);
@@ -250,8 +257,9 @@ public class SubServerSocketFactory {
           }
         }
       } catch (BindException e) {
-        System.err.println("WARNING: Unable to listen on " + address + ". "
-            + e.getMessage() + ". Is the node already running?");
+        NETWORK_CONNECTION_LOGGER.log(Level.WARNING,
+            "Unable to listen on {0}. {1}. Is the node already running?",
+            new Object[] { address, e.getMessage() });
       } catch (IOException exc) {
         // TODO
         throw new NotImplementedException(exc);
