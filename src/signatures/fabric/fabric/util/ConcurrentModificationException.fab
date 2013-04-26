@@ -1,0 +1,9 @@
+package fabric.util;
+
+public class ConcurrentModificationException extends RuntimeException {
+   
+	public ConcurrentModificationException() {
+		super();
+    }
+	
+}

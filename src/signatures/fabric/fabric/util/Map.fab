@@ -6,5 +6,7 @@ public interface Map {
 	Object put(Object key, Object value);
 
 	Object get(Object key);
+	
+	Set keySet();
 
 }
