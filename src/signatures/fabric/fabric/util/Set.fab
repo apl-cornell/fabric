@@ -1,0 +1,7 @@
+package fabric.util;
+
+public interface Set {
+
+	  Iterator iterator();
+
+}

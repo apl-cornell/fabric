@@ -1,0 +1,9 @@
+package fabric.util;
+
+public interface Iterator {
+
+	boolean hasNext();
+	
+	Object next() throws (NoSuchElementException, ConcurrentModificationException);
+
+}
