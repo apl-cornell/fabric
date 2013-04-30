@@ -281,7 +281,7 @@ public final class TransactionManager {
       workersToContact = current.workersCalled;
     }
 
-    WORKER_TRANSACTION_LOGGER.log(Level.WARNING, "{0} aborting", current);
+    WORKER_TRANSACTION_LOGGER.log(Level.INFO, "{0} aborting", current);
     // Assume only one thread will be executing this.
     HOTOS_LOGGER.log(Level.INFO, "aborting {0}", current);
 
@@ -293,7 +293,7 @@ public final class TransactionManager {
 
     sendAbortMessages(storesToContact, workersToContact, abortedNodes);
     current.abort();
-    WORKER_TRANSACTION_LOGGER.log(Level.WARNING, "{0} aborted", current);
+    WORKER_TRANSACTION_LOGGER.log(Level.INFO, "{0} aborted", current);
     HOTOS_LOGGER.log(Level.INFO, "aborted {0}", current);
 
     if (current.tid.depth == 0) {
@@ -612,7 +612,7 @@ public final class TransactionManager {
 
       TransactionPrepareFailedException e =
           new TransactionPrepareFailedException(failures);
-      Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
+      Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
           "{0} error committing: prepare failed exception: {1}", current, e);
 
       abortTransaction(failures.keySet());
