@@ -37,6 +37,21 @@ public interface FabricThread {
       setDaemon(true);
     }
 
+    public Impl(ThreadGroup group, String name) {
+      super(group, name);
+      setDaemon(true);
+    }
+
+    public Impl(ThreadGroup group, Runnable target) {
+      super(group, target);
+      setDaemon(true);
+    }
+
+    public Impl(ThreadGroup group, Runnable target, String name) {
+      super(group, target, name);
+      setDaemon(true);
+    }
+
     @Override
     public TransactionManager getTransactionManager() {
       return this.tm;
