@@ -37,7 +37,7 @@ public class ObjectUpdateMessage extends
     this.groups = groups;
 
     // Exactly one of glob and group needs to be null.
-    if ((onums == null) == (groups == null)) {
+    if ((globs == null) == (groups == null)) {
       throw new InternalError();
     }
   }
