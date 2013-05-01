@@ -36,12 +36,8 @@ public class Node {
     // Some default environment values.
     Map<String, String> defaults = new HashMap<String, String>();
     defaults.put("bootstrap", "localhost:" + DEFAULT_PORT);
-    defaults.put("firewall_test_policy", "never");
-    defaults.put("nat_search_policy", "never");
-    defaults.put("pastry_socket_allow_loopback", "false");
     defaults.put("replication_interval", "300000");
     defaults.put("aggregation_interval", "600000");
-    defaults.put("pastry_protocol_periodicLeafSet_lease_period", "8000");
 
     // Load values from dissemConfig into the parameters for the Pastry
     // environment.
