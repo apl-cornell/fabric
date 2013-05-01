@@ -421,8 +421,9 @@ public final class ObjectCache {
    * @return true iff an entry for the onum was found in cache.
    */
   void evict(long onum) {
-    Entry entry = entries.remove(onum);
-    if (entry != null) entry.evict();
+    Entry entry = entries.get(onum);
+    entry.evict();
+    entries.remove(onum, entry);
   }
 
   void clear() {
