@@ -83,7 +83,7 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                         out.flush();
                       }
                     } catch (EOFException e) {
-                      logger.log(Level.WARNING, "Connection reset ({1})",
+                      logger.log(Level.WARNING, "Connection reset ({0})",
                           client);
                     } catch (IOException e) {
                       try {
