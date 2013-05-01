@@ -409,10 +409,12 @@ public final class ObjectCache {
    */
   void update(Store store, SerializedObject update) {
     long onum = update.getOnum();
-    Entry entry = entries.replace(onum, new Entry(store, update));
-    if (entry != null) {
-      entry.evict();
-    }
+    Entry newEntry = new Entry(store, update);
+    Entry curEntry = entries.putIfAbsent(onum, newEntry);
+    if (curEntry == null) return;
+
+    curEntry.evict();
+    entries.replace(onum, curEntry, newEntry);
   }
 
   /**
