@@ -1,6 +1,7 @@
 package fabric.common.net;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 
 /**
  * Similar to java.io.PipedInputStream and java.io.PipedOutputStream, but
@@ -150,6 +151,8 @@ public class CircularByteBuffer {
      * 
      * @throws IOException
      *          if the stream is closed.
+     * @throws InterruptedException
+     *          if the wait operation was interrupted.
      */
     private int waitForBytes() throws IOException {
       while (true) {
@@ -160,7 +163,11 @@ public class CircularByteBuffer {
         try {
           buffer.wait();
         } catch (InterruptedException e) {
-          throw new IOException("Blocked read was interrupted");
+          InterruptedIOException e2 =
+              (InterruptedIOException) new InterruptedIOException()
+                  .initCause(e);
+          e2.bytesTransferred = 0;
+          throw e2;
         }
       }
     }
