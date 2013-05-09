@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -98,6 +99,12 @@ import fabric.worker.remote.WriterMap;
  * </p>
  */
 public final class TransactionManager {
+  /**
+   * The deadlock detector.
+   */
+  private static final DeadlockDetectorThread deadlockDetector =
+      new DeadlockDetectorThread();
+
   /**
    * The innermost running transaction for the thread being managed.
    */
@@ -841,22 +848,37 @@ public final class TransactionManager {
 
     // Check read condition: wait until all writers are in our ancestry.
     boolean hadToWait = false;
-    while (obj.$writeLockHolder != null
-        && !current.isDescendantOf(obj.$writeLockHolder)) {
-      try {
-        Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST, current
-            + "{0} wants to read {1}/" + obj.$getOnum()
-            + " ({2}); waiting on writer {3}", current, obj.$getStore(),
-            obj.getClass(), obj.$writeLockHolder);
-        hadToWait = true;
-        obj.$numWaiting++;
-        obj.wait();
-      } catch (InterruptedException e) {
-      }
-      obj.$numWaiting--;
+    try {
+      boolean firstWait = true;
+      while (obj.$writeLockHolder != null
+          && !current.isDescendantOf(obj.$writeLockHolder)) {
+        try {
+          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST, current
+              + "{0} wants to read {1}/" + obj.$getOnum()
+              + " ({2}); waiting on writer {3}", current, obj.$getStore(),
+              obj.getClass(), obj.$writeLockHolder);
+          hadToWait = true;
+          obj.$numWaiting++;
+          current.setWaitsFor(obj.$writeLockHolder);
 
-      // Make sure we weren't aborted/retried while we were waiting.
-      checkRetrySignal();
+          if (firstWait) {
+            // This is the first time we're waiting. Wait with a 10 ms timeout.
+            firstWait = false;
+            obj.wait(10);
+          } else {
+            // Not the first time through the loop. Ask for deadlock detection.
+            deadlockDetector.requestDetect(current);
+            obj.wait();
+          }
+        } catch (InterruptedException e) {
+        }
+        obj.$numWaiting--;
+
+        // Make sure we weren't aborted/retried while we were waiting.
+        checkRetrySignal();
+      }
+    } finally {
+      current.clearWaitsFor();
     }
 
     // Set the object's reader stamp to the current transaction.
@@ -913,46 +935,66 @@ public final class TransactionManager {
     // Check write condition: wait until writer is in our ancestry and all
     // readers are in our ancestry.
     boolean hadToWait = false;
-    while (true) {
-      // Make sure writer is in our ancestry.
-      if (obj.$writeLockHolder != null
-          && !current.isDescendantOf(obj.$writeLockHolder)) {
-        Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-            "{0} wants to write {1}/" + obj.$getOnum()
-                + " ({2}); waiting on writer {3}", current, obj.$getStore(),
-            obj.getClass(), obj.$writeLockHolder);
-        hadToWait = true;
-      } else {
-        // Restart any incompatible readers.
-        ReadMapEntry readMapEntry = obj.$readMapEntry;
-        if (readMapEntry != null) {
-          synchronized (readMapEntry) {
-            boolean allReadersInAncestry = true;
-            for (Log lock : readMapEntry.readLocks) {
-              if (!current.isDescendantOf(lock)) {
-                Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-                    "{0} wants to write {1}/" + obj.$getOnum()
-                        + " ({2}); aborting reader {3}", current,
-                    obj.$getStore(), obj.getClass(), lock);
-                lock.flagRetry();
-                allReadersInAncestry = false;
-              }
-            }
+    try {
+      // This is the set of logs for those transactions we're waiting for.
+      Set<Log> waitsFor = new HashSet<Log>();
 
-            if (allReadersInAncestry) break;
+      boolean firstWait = true;
+      while (true) {
+        waitsFor.clear();
+
+        // Make sure writer is in our ancestry.
+        if (obj.$writeLockHolder != null
+            && !current.isDescendantOf(obj.$writeLockHolder)) {
+          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+              "{0} wants to write {1}/" + obj.$getOnum()
+                  + " ({2}); waiting on writer {3}", current, obj.$getStore(),
+              obj.getClass(), obj.$writeLockHolder);
+          waitsFor.add(obj.$writeLockHolder);
+          hadToWait = true;
+        } else {
+          // Restart any incompatible readers.
+          ReadMapEntry readMapEntry = obj.$readMapEntry;
+          if (readMapEntry != null) {
+            synchronized (readMapEntry) {
+              for (Log lock : readMapEntry.readLocks) {
+                if (!current.isDescendantOf(lock)) {
+                  Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+                      "{0} wants to write {1}/" + obj.$getOnum()
+                          + " ({2}); aborting reader {3}", current,
+                      obj.$getStore(), obj.getClass(), lock);
+                  waitsFor.add(lock);
+                  lock.flagRetry();
+                }
+              }
+
+              if (waitsFor.isEmpty()) break;
+            }
           }
         }
-      }
 
-      try {
-        obj.$numWaiting++;
-        obj.wait();
-      } catch (InterruptedException e) {
-      }
-      obj.$numWaiting--;
+        try {
+          obj.$numWaiting++;
+          current.setWaitsFor(waitsFor);
 
-      // Make sure we weren't aborted/retried while we were waiting.
-      checkRetrySignal();
+          if (firstWait) {
+            // This is the first time we're waiting. Wait with a 10 ms timeout.
+            firstWait = false;
+            obj.wait(10);
+          } else {
+            // Not the first time through the loop. Ask for deadlock detection.
+            deadlockDetector.requestDetect(current);
+            obj.wait();
+          }
+        } catch (InterruptedException e) {
+        }
+        obj.$numWaiting--;
+
+        // Make sure we weren't aborted/retried while we were waiting.
+        checkRetrySignal();
+      }
+    } finally {
+      current.clearWaitsFor();
     }
 
     // Set the write stamp.

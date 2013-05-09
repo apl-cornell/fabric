@@ -16,6 +16,14 @@ public final class TransactionRegistry {
       new ConcurrentLongKeyHashMap<Log>();
 
   /**
+   * Returns the top-level transaction log for the given top-level TID (or null
+   * if no such log exists).
+   */
+  public static Log getTopmostLog(long tid) {
+    return registry.get(tid);
+  }
+
+  /**
    * Returns the innermost transaction log for the given top-level tid (or null
    * if no such log exists).
    */
