@@ -167,7 +167,7 @@ public class CircularByteBuffer {
           // clean up any remote state that may have resulted from the message
           // whose reply we're waiting for.)
           Logging.NETWORK_MESSAGE_RECEIVE_LOGGER.log(Level.WARNING,
-              "I/O was interrupted; ignoring...", e);
+              "I/O was interrupted; ignoring...");
         }
       }
     }
