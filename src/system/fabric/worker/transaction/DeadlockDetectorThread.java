@@ -37,6 +37,7 @@ public class DeadlockDetectorThread extends Thread {
    * Constructs a deadlock detector thread and starts it running.
    */
   public DeadlockDetectorThread() {
+    super("Deadlock detector");
     setDaemon(true);
     this.detectRequests = new LinkedBlockingQueue<>();
     start();
@@ -76,8 +77,8 @@ public class DeadlockDetectorThread extends Thread {
                   new LongHashSet(), new HashSet<Set<Log>>(), requests);
 
           Logging.WORKER_DEADLOCK_LOGGER.log(Level.FINE,
-              "Found {0} deadlocks: {1}", new Object[] { requests.size(),
-                  requests });
+              "Found {0} deadlocks: {1}",
+              new Object[] { cycles.size(), cycles });
 
           resolveDeadlocks(cycles);
         }
