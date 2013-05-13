@@ -370,9 +370,9 @@ public final class Worker {
   }
 
   /**
-   * Updates the dissemination caches with the given object glob.
+   * Updates the dissemination and worker caches with the given object glob.
    * 
-   * @return true iff there was a cache entry for the given oid.
+   * @return true iff there was a dissemination-cache entry for the given oid.
    */
   public boolean updateDissemCaches(RemoteStore store, long onum, Glob update) {
     boolean result = false;
@@ -380,6 +380,10 @@ public final class Worker {
     for (Cache cache : disseminationCaches) {
       result |= cache.updateEntry(store, onum, update);
     }
+
+    // Update the worker's cache too.
+    // XXX What happens if the worker isn't trusted to decrypt the glob?
+    updateCache(store, update.decrypt());
 
     return result;
   }
