@@ -7,10 +7,12 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
 
 import com.google.common.collect.Multiset;
 import com.google.common.collect.TreeMultiset;
 
+import fabric.common.Logging;
 import fabric.common.TransactionID;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
@@ -46,6 +48,8 @@ public class DeadlockDetectorThread extends Thread {
    */
   void requestDetect(Log log) {
     detectRequests.add(log);
+    Logging.WORKER_DEADLOCK_LOGGER.log(Level.FINEST,
+        "Deadlock detection requested for {0}", log);
   }
 
   @Override
@@ -59,6 +63,9 @@ public class DeadlockDetectorThread extends Thread {
         // Obtain all requests made thus far and iterate over them.
         detectRequests.drainTo(requests);
 
+        Logging.WORKER_DEADLOCK_LOGGER.log(Level.FINER,
+            "Performing deadlock detection for {0}", requests);
+
         // Don't loop with an iterator. The set of requests will be modified as
         // requested nodes are encountered during the call to findCycles().
         while (!requests.isEmpty()) {
@@ -67,6 +74,10 @@ public class DeadlockDetectorThread extends Thread {
           Set<Set<Log>> cycles =
               findCycles(requests.iterator().next(), new LongKeyHashMap<Log>(),
                   new LongHashSet(), new HashSet<Set<Log>>(), requests);
+
+          Logging.WORKER_DEADLOCK_LOGGER.log(Level.FINE,
+              "Found {0} deadlocks: {1}", new Object[] { requests.size(),
+                  requests });
 
           resolveDeadlocks(cycles);
         }
@@ -225,6 +236,7 @@ public class DeadlockDetectorThread extends Thread {
       }
 
       // Abort the transaction.
+      Logging.WORKER_DEADLOCK_LOGGER.log(Level.FINE, "Aborting {0}", toAbort);
       toAbort.flagRetry();
 
       // Fix up our data structures to reflect the aborted transaction.

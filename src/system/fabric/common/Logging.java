@@ -65,15 +65,16 @@ public final class Logging {
       .getLogger("fabric.worker.transactions");
 
   /**
-   * For HOTOS Logging.
-   */
-  public static final Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
-
-  /**
    * For local-store events on the worker.
    */
   public static final Logger WORKER_LOCAL_STORE_LOGGER = Logger
       .getLogger("fabric.worker.localstore");
+
+  /**
+   * For deadlock-detection events on the worker.
+   */
+  public static final Logger WORKER_DEADLOCK_LOGGER = Logger
+      .getLogger("fabric.worker.deadlocks");
 
   /**
    * For other worker-related events that don't fit into any other category. Use
@@ -143,6 +144,11 @@ public final class Logging {
    * For other events that don't fit into any other category. Use sparingly.
    */
   public static final Logger MISC_LOGGER = Logger.getLogger("fabric");
+
+  /**
+   * For HOTOS Logging.
+   */
+  public static final Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
 
   // //////////////////////////////////////////////////////////////////////////
   // HELPER METHODS
