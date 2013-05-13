@@ -500,7 +500,14 @@ public class Disseminator implements Application {
    */
   protected boolean forward(Fetch msg) {
     if (!msg.refresh()) {
-      Worker worker = Worker.getWorker();
+      Worker worker;
+      try {
+        worker = Worker.getWorker();
+      } catch (IllegalStateException e) {
+        // Worker not initialized yet.
+        return true;
+      }
+
       RemoteStore c = worker.getStore(msg.store());
       long onum = msg.onum();
       Glob g = cache.get(c, onum);
