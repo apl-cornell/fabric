@@ -59,7 +59,7 @@ public class PastryFetchManager implements FetchManager {
   @Override
   public boolean updateDissemCacheEntry(RemoteStore store, long onum,
       Glob update) {
-    boolean result = node.disseminator.cache.updateEntry(store, onum, update);
+    boolean result = node.disseminator.updateCache(store, onum, update);
 
     // Update fallback FetchManager's cache. Because of short-circuiting, the
     // order of the disjuncts matters here.

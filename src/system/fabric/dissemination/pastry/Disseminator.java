@@ -4,8 +4,13 @@ import static fabric.common.Logging.MISC_LOGGER;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import rice.Continuation;
 import rice.Executable;
@@ -25,15 +30,16 @@ import rice.pastry.commonapi.PastryIdFactory;
 import rice.pastry.leafset.LeafSet;
 import rice.pastry.routing.RouteSet;
 import rice.pastry.routing.RoutingTable;
+import fabric.common.util.Cache;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
-import fabric.dissemination.Cache;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.messages.AggregateInterval;
 import fabric.dissemination.pastry.messages.Fetch;
 import fabric.dissemination.pastry.messages.MessageType;
 import fabric.dissemination.pastry.messages.Replicate;
 import fabric.dissemination.pastry.messages.ReplicateInterval;
+import fabric.dissemination.pastry.messages.UpdateCache;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 
@@ -44,33 +50,42 @@ import fabric.worker.Worker;
 public class Disseminator implements Application {
 
   /** The pastry node. */
-  protected PastryNode node;
+  protected final PastryNode node;
 
   /** The pastry endpoint. */
-  protected Endpoint endpoint;
+  protected final Endpoint endpoint;
 
   /** The pastry id generating factory. */
-  protected IdFactory idf;
+  protected final IdFactory idf;
 
-  protected int idDigits;
-  protected int baseBits;
+  protected final int idDigits;
+  protected final int baseBits;
 
   /** Random source for random ids. */
-  protected Random rand;
+  protected final Random rand;
 
   /** The cache of fetched objects. */
-  protected Cache cache;
+  protected final fabric.dissemination.Cache cache;
 
   /** Outstanding fetch messages awaiting replies. */
-  protected Map<Id, Fetch> outstanding;
+  protected final Cache<Id, Fetch> outstandingFetches;
 
-  protected MessageDeserializer deserializer;
+  /**
+   * Associates update-message IDs with the queues on which replies should be
+   * added.
+   */
+  private final Cache<Id, BlockingQueue<UpdateCache.Reply>> outstandingUpdates;
+
+  protected final MessageDeserializer deserializer;
 
   /** Replication interval, in milliseconds. */
   protected long REPLICATION_INTERVAL = 10 * 60 * 1000;
 
   /** Aggregation interval, in milliseconds. */
   protected long AGGREGATION_INTERVAL = 20 * 60 * 1000;
+
+  /** The set of nodes subscribed to each OID. */
+  private final Cache<Pair<RemoteStore, Long>, Set<NodeHandle>> subscriptions;
 
   /**
    * Creates a disseminator attached to the given pastry node.
@@ -79,6 +94,7 @@ public class Disseminator implements Application {
    *          PastryNode where the disseminator is to run.
    */
   public Disseminator(PastryNode node) {
+    this.subscriptions = new Cache<>();
     this.node = node;
     endpoint = node.buildEndpoint(this, null);
     deserializer = new Deserializer();
@@ -90,8 +106,9 @@ public class Disseminator implements Application {
     baseBits = rt.baseBitLength();
     idDigits = rt.numRows();
 
-    cache = new Cache();
-    outstanding = new HashMap<Id, Fetch>();
+    cache = new fabric.dissemination.Cache();
+    outstandingFetches = new Cache<>();
+    outstandingUpdates = new Cache<>();
 
     Environment env = node.getEnvironment();
     Parameters params = env.getParameters();
@@ -173,6 +190,12 @@ public class Disseminator implements Application {
       replicate((Replicate.Reply) msg);
     } else if (msg instanceof AggregateInterval) {
       aggregateInterval();
+    } else if (msg instanceof UpdateCache) {
+      updateCache((UpdateCache) msg);
+    } else if (msg instanceof UpdateCache.Reply) {
+      updateCache((UpdateCache.Reply) msg);
+    } else {
+      throw new InternalError("Unknown Pastry message: " + msg);
     }
   }
 
@@ -193,10 +216,7 @@ public class Disseminator implements Application {
     Id id = idf.buildRandomId(rand);
     Fetch f = new Fetch(localHandle(), id, c.name(), onum);
 
-    synchronized (outstanding) {
-      outstanding.put(id, f);
-    }
-
+    outstandingFetches.put(id, f);
     route(idf.buildId(f.toString()), f, null);
 
     synchronized (f) {
@@ -227,11 +247,7 @@ public class Disseminator implements Application {
     process(new Executable<Void, RuntimeException>() {
       @Override
       public Void execute() {
-        Fetch f = null;
-
-        synchronized (outstanding) {
-          f = outstanding.remove(msg.id());
-        }
+        Fetch f = outstandingFetches.remove(msg.id());
 
         if (f != null) {
           synchronized (f) {
@@ -256,11 +272,43 @@ public class Disseminator implements Application {
         Worker worker = Worker.getWorker();
         RemoteStore c = worker.getStore(msg.store());
         long onum = msg.onum();
+
+        // Subscribe the remote endpoint.
+        subscribe(msg.sender(), c, onum);
+
         Glob g = cache.get(c, onum, true);
         reply(g, msg);
         return null;
       }
     });
+  }
+
+  /**
+   * Subscribes the given node to the given OID.
+   */
+  private void subscribe(NodeHandle node, RemoteStore store, long onum) {
+    Pair<RemoteStore, Long> key = new Pair<>(store, onum);
+    Set<NodeHandle> subscribers = new HashSet<>();
+    Set<NodeHandle> existingSubscribers =
+        subscriptions.putIfAbsent(key, subscribers);
+    if (existingSubscribers != null) subscribers = existingSubscribers;
+
+    synchronized (subscribers) {
+      subscribers.add(node);
+    }
+  }
+
+  /**
+   * Unsubscribes the given node from the given OID.
+   */
+  private void unsubscribe(NodeHandle node, RemoteStore store, long onum) {
+    Pair<RemoteStore, Long> key = new Pair<>(store, onum);
+    Set<NodeHandle> subscribers = subscriptions.get(key);
+    if (subscribers == null) return;
+
+    synchronized (subscribers) {
+      subscribers.remove(node);
+    }
   }
 
   /**
@@ -270,6 +318,100 @@ public class Disseminator implements Application {
     g.touch();
     Fetch.Reply r = new Fetch.Reply(msg, g);
     route(null, r, msg.sender());
+  }
+
+  /**
+   * Updates the dissemination cache and pushes the update through the
+   * dissemination layer.
+   * 
+   * @return true iff there was a dissemination-cache entry for the given oid or
+   *          if the update was forwarded to another node.
+   */
+  boolean updateCache(RemoteStore store, long onum, Glob update) {
+    // Update the local cache.
+    boolean result = cache.updateEntry(store, onum, update);
+
+    // Find the set of subscribers.
+    Set<NodeHandle> subscribers = subscriptions.get(new Pair<>(store, onum));
+    if (subscribers != null) {
+      BlockingQueue<UpdateCache.Reply> replyQueue =
+          new ArrayBlockingQueue<>(subscribers.size());
+
+      // Forward to subscribers.
+      for (NodeHandle subscriber : subscribers) {
+        Id id = idf.buildRandomId(rand);
+        UpdateCache msg =
+            new UpdateCache(localHandle(), id, store.name(), onum, update);
+
+        // TODO: Set up a timeout mechanism that removes entries for dead nodes.
+        outstandingUpdates.put(id, replyQueue);
+
+        route(null, msg, subscriber);
+      }
+
+      // Wait until we know we're subscribed, we get all replies back, or our
+      // update messages time out.
+      // TODO: Set up a timeout mechanism that unsubscribes dead nodes.
+      for (int i = 0; !result && i < subscribers.size(); i++) {
+        try {
+          // Wait at most one second for a reply.
+          UpdateCache.Reply reply = replyQueue.poll(1, TimeUnit.SECONDS);
+          result = reply.resubscribe();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Processes the given UpdateCache message. Updates the local cache and
+   * forwards the update to any subscribers.
+   */
+  private void updateCache(final UpdateCache msg) {
+    process(new Executable<Void, RuntimeException>() {
+      @Override
+      public Void execute() throws RuntimeException {
+        Worker worker = Worker.getWorker();
+        RemoteStore store = worker.getStore(msg.store());
+        long onum = msg.onum();
+        Glob update = msg.update();
+
+        boolean result = updateCache(store, onum, update);
+        UpdateCache.Reply reply =
+            new UpdateCache.Reply(localHandle(), msg, result);
+        route(null, reply, msg.sender());
+
+        return null;
+      }
+    });
+  }
+
+  /**
+   * Processes the given UpdateCache.Reply message.
+   */
+  private void updateCache(final UpdateCache.Reply msg) {
+    process(new Executable<Void, RuntimeException>() {
+      @Override
+      public Void execute() throws RuntimeException {
+        Worker worker = Worker.getWorker();
+        RemoteStore store = worker.getStore(msg.store());
+        long onum = msg.onum();
+        boolean resubscribe = msg.resubscribe();
+
+        if (!resubscribe) {
+          unsubscribe(msg.sender(), store, onum);
+        }
+
+        BlockingQueue<UpdateCache.Reply> responses =
+            outstandingUpdates.remove(msg.id());
+        if (responses != null) responses.offer(msg);
+
+        return null;
+      }
+    });
   }
 
   /**
@@ -499,23 +641,24 @@ public class Disseminator implements Application {
    * @return true if message should be further routed
    */
   protected boolean forward(Fetch msg) {
-    if (!msg.refresh()) {
-      Worker worker;
-      try {
-        worker = Worker.getWorker();
-      } catch (IllegalStateException e) {
-        // Worker not initialized yet.
-        return true;
-      }
+    Worker worker;
+    try {
+      worker = Worker.getWorker();
+    } catch (IllegalStateException e) {
+      // Worker not initialized yet.
+      return true;
+    }
 
-      RemoteStore c = worker.getStore(msg.store());
-      long onum = msg.onum();
-      Glob g = cache.get(c, onum);
+    RemoteStore c = worker.getStore(msg.store());
+    long onum = msg.onum();
+    Glob g = cache.get(c, onum);
 
-      if (g != null) {
-        reply(g, msg);
-        return false;
-      }
+    if (g != null) {
+      // Subscribe the remote endpoint.
+      subscribe(msg.sender(), c, onum);
+
+      reply(g, msg);
+      return false;
     }
 
     return true;
@@ -529,14 +672,16 @@ public class Disseminator implements Application {
    * @return always true, indicating message should be further routed
    */
   protected boolean forward(Fetch.Reply msg) {
-    Worker worker = Worker.getWorker();
-    RemoteStore c = worker.getStore(msg.store());
-    long onum = msg.onum();
-    Glob g = msg.glob();
-
-    if (g != null) cache.put(c, onum, g);
-
-    return true;
+    // Pretty sure Fetch.Reply messages are delivered directly.
+    throw new InternalError();
+//    Worker worker = Worker.getWorker();
+//    RemoteStore c = worker.getStore(msg.store());
+//    long onum = msg.onum();
+//    Glob g = msg.glob();
+//
+//    if (g != null) cache.put(c, onum, g);
+//
+//    return true;
   }
 
   @Override
