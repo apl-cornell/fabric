@@ -672,16 +672,14 @@ public class Disseminator implements Application {
    * @return always true, indicating message should be further routed
    */
   protected boolean forward(Fetch.Reply msg) {
-    // Pretty sure Fetch.Reply messages are delivered directly.
-    throw new InternalError();
-//    Worker worker = Worker.getWorker();
-//    RemoteStore c = worker.getStore(msg.store());
-//    long onum = msg.onum();
-//    Glob g = msg.glob();
-//
-//    if (g != null) cache.put(c, onum, g);
-//
-//    return true;
+    Worker worker = Worker.getWorker();
+    RemoteStore c = worker.getStore(msg.store());
+    long onum = msg.onum();
+    Glob g = msg.glob();
+
+    if (g != null) cache.put(c, onum, g);
+
+    return true;
   }
 
   @Override
