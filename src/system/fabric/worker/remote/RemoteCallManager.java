@@ -303,7 +303,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
         try {
           glob.verifySignature(store.getPublicKey());
 
-          if (worker.updateDissemCaches(store, onum, glob)) {
+          if (worker.updateCaches(store, onum, glob)) {
             response.add(onum);
           }
         } catch (InvalidKeyException e) {

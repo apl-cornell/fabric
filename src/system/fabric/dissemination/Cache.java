@@ -11,6 +11,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.worker.RemoteStore;
+import fabric.worker.Worker;
 
 /**
  * The cache object used by the disseminator to store globs. Essentially a
@@ -180,17 +181,21 @@ public class Cache {
   }
 
   /**
-   * Updates a cache entry with the given glob. If the cache has no entry for
-   * the given oid, then nothing is changed.
+   * Updates the dissemination and worker cache with the given glob. If the
+   * caches do not have entries for the given oid, then nothing is changed.
    * 
    * @return true iff there was a cache entry for the given oid.
    */
   public boolean updateEntry(RemoteStore store, long onum, Glob g) {
+    // Update the local worker's cache.
+    // XXX What happens if the worker isn't trusted to decrypt the glob?
+    boolean result = Worker.getWorker().updateCache(store, g.decrypt());
+
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
     while (true) {
       Glob old = get(store, onum);
-      if (old == null) return false;
+      if (old == null) return result;
 
       if (old.isOlderThan(g)) {
         old.copyDissemStateTo(g);

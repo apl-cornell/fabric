@@ -406,15 +406,19 @@ public final class ObjectCache {
    * Updates the cache with the given serialized object. If an object with the
    * given onum exists in cache, it is evicted and the given update is placed in
    * the cache.
+   * 
+   * @return true iff the cache had an existing entry for the object (regardless
+   *          of whether such an entry was replaced).
    */
-  void update(Store store, SerializedObject update) {
+  boolean update(Store store, SerializedObject update) {
     long onum = update.getOnum();
-    Entry newEntry = new Entry(store, update);
-    Entry curEntry = entries.putIfAbsent(onum, newEntry);
-    if (curEntry == null) return;
+    Entry curEntry = entries.get(onum);
+    if (curEntry == null || curEntry.isEvicted()) return false;
 
     curEntry.evict();
+    Entry newEntry = new Entry(store, update);
     entries.replace(onum, curEntry, newEntry);
+    return true;
   }
 
   /**

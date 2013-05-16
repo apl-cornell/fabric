@@ -93,7 +93,7 @@ public class Disseminator implements Application {
    * @param node
    *          PastryNode where the disseminator is to run.
    */
-  public Disseminator(PastryNode node) {
+  public Disseminator(PastryNode node, fabric.dissemination.Cache cache) {
     this.subscriptions = new Cache<>();
     this.node = node;
     endpoint = node.buildEndpoint(this, null);
@@ -106,7 +106,7 @@ public class Disseminator implements Application {
     baseBits = rt.baseBitLength();
     idDigits = rt.numRows();
 
-    cache = new fabric.dissemination.Cache();
+    this.cache = cache;
     outstandingFetches = new Cache<>();
     outstandingUpdates = new Cache<>();
 
@@ -321,14 +321,14 @@ public class Disseminator implements Application {
   }
 
   /**
-   * Updates the dissemination cache and pushes the update through the
-   * dissemination layer.
+   * Updates the dissemination and worker caches and pushes the update through
+   * the dissemination layer.
    * 
    * @return true iff there was a dissemination-cache entry for the given oid or
    *          if the update was forwarded to another node.
    */
-  boolean updateCache(RemoteStore store, long onum, Glob update) {
-    // Update the local cache.
+  boolean updateCaches(RemoteStore store, long onum, Glob update) {
+    // Update the local caches.
     boolean result = cache.updateEntry(store, onum, update);
 
     // Find the set of subscribers.
@@ -379,7 +379,7 @@ public class Disseminator implements Application {
         long onum = msg.onum();
         Glob update = msg.update();
 
-        boolean result = updateCache(store, onum, update);
+        boolean result = updateCaches(store, onum, update);
         UpdateCache.Reply reply =
             new UpdateCache.Reply(localHandle(), msg, result);
         route(null, reply, msg.sender());

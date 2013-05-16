@@ -6,6 +6,7 @@ import java.util.Properties;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.dissemination.Cache;
 import fabric.dissemination.DummyFetchManager;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
@@ -24,12 +25,13 @@ import fabric.worker.Worker;
 public class PastryFetchManager implements FetchManager {
 
   private final Node node;
-  private final FetchManager fallback;
+  private final DummyFetchManager fallback;
 
   public PastryFetchManager(Worker worker, Properties dissemConfig) {
     try {
-      this.fallback = new DummyFetchManager(worker, dissemConfig);
-      this.node = new Node(dissemConfig); // start a new pastry node
+      Cache cache = new Cache();
+      this.fallback = new DummyFetchManager(worker, dissemConfig, cache);
+      this.node = new Node(dissemConfig, cache); // start a new pastry node
     } catch (IOException e) {
       throw new InternalError(e);
     }
@@ -57,15 +59,8 @@ public class PastryFetchManager implements FetchManager {
   }
 
   @Override
-  public boolean updateDissemCacheEntry(RemoteStore store, long onum,
-      Glob update) {
-    boolean result = node.disseminator.updateCache(store, onum, update);
-
-    // Update fallback FetchManager's cache. Because of short-circuiting, the
-    // order of the disjuncts matters here.
-    result = fallback.updateDissemCacheEntry(store, onum, update) || result;
-
-    return result;
+  public boolean updateCaches(RemoteStore store, long onum, Glob update) {
+    return node.disseminator.updateCaches(store, onum, update);
   }
 
 }

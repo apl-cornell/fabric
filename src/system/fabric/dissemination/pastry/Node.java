@@ -14,6 +14,7 @@ import rice.pastry.NodeIdFactory;
 import rice.pastry.PastryNode;
 import rice.pastry.socket.SocketPastryNodeFactory;
 import rice.pastry.standard.RandomNodeIdFactory;
+import fabric.dissemination.Cache;
 
 /**
  * Represents a pastry node with a dissemination process. Creating an instance
@@ -30,7 +31,7 @@ public class Node {
   protected PastryNode node;
   protected Disseminator disseminator;
 
-  public Node(Properties dissemConfig) throws IOException {
+  public Node(Properties dissemConfig, Cache cache) throws IOException {
     env = new Environment();
 
     // Some default environment values.
@@ -74,7 +75,7 @@ public class Node {
     node = pnf.newNode(pnf.getNodeHandle(boot));
     waitForReady(); // waits until the pastry node is actually set up
 
-    disseminator = new Disseminator(node);
+    disseminator = new Disseminator(node, cache);
   }
 
   /** Returns the disseminator application of this node. */

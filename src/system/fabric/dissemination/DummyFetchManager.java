@@ -14,7 +14,11 @@ public class DummyFetchManager implements FetchManager {
   private Cache cache;
 
   public DummyFetchManager(Worker worker, Properties dissemConfig) {
-    this.cache = new Cache();
+    this(worker, dissemConfig, new Cache());
+  }
+
+  public DummyFetchManager(Worker worker, Properties dissemConfig, Cache cache) {
+    this.cache = cache;
   }
 
   @Override
@@ -27,8 +31,7 @@ public class DummyFetchManager implements FetchManager {
   }
 
   @Override
-  public boolean updateDissemCacheEntry(RemoteStore store, long onum,
-      Glob update) {
+  public boolean updateCaches(RemoteStore store, long onum, Glob update) {
     return cache.updateEntry(store, onum, update);
   }
 
