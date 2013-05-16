@@ -26,4 +26,10 @@ public class DummyFetchManager implements FetchManager {
   public void destroy() {
   }
 
+  @Override
+  public boolean updateDissemCacheEntry(RemoteStore store, long onum,
+      Glob update) {
+    return cache.updateEntry(store, onum, update);
+  }
+
 }

@@ -30,4 +30,12 @@ public interface FetchManager {
    */
   public void destroy();
 
+  /**
+   * Updates the dissemination cache.
+   * 
+   * @return true iff there was a dissemination-cache entry for the given oid.
+   */
+  public boolean updateDissemCacheEntry(RemoteStore store, long onum,
+      Glob update);
+
 }
