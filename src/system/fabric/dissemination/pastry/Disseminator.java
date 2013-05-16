@@ -287,6 +287,9 @@ public class Disseminator implements Application {
    * Subscribes the given node to the given OID.
    */
   private void subscribe(NodeHandle node, RemoteStore store, long onum) {
+    // Ignore the local node.
+    if (node.equals(localHandle())) return;
+
     Pair<RemoteStore, Long> key = new Pair<>(store, onum);
     Set<NodeHandle> subscribers = new HashSet<>();
     Set<NodeHandle> existingSubscribers =
