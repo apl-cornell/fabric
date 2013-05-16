@@ -705,6 +705,10 @@ public class Disseminator implements Application {
         return new Replicate(buf, sender);
       case MessageType.REPLICATE_REPLY:
         return new Replicate.Reply(buf);
+      case MessageType.UPDATE:
+        return new UpdateCache(buf, endpoint, sender);
+      case MessageType.UPDATE_REPLY:
+        return new UpdateCache.Reply(buf, endpoint, sender);
       }
 
       return null;
