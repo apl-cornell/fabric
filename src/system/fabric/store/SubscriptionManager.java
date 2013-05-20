@@ -82,6 +82,9 @@ public class SubscriptionManager extends FabricThread.Impl {
         GroupContainer groupContainer;
         Glob glob;
         try {
+          // Skip if the onum represents a surrogate.
+          if (tm.read(onum).isSurrogate()) continue;
+
           groupContainer = tm.getGroupContainer(onum);
           glob = groupContainer.getGlob();
         } catch (AccessException e) {
