@@ -154,6 +154,9 @@ public class MemoryDB extends ObjectDB {
   private PendingTransaction remove(Principal worker, long tid)
       throws AccessException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    if (submap == null)
+      throw new AccessException("Invalid transaction id: " + tid);
+
     PendingTransaction tx;
     synchronized (submap) {
       tx = submap.remove(worker);
