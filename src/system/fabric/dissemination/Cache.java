@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import fabric.common.Logging;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -111,7 +112,7 @@ public class Cache {
           try {
             fetchLock.wait();
           } catch (InterruptedException e) {
-            e.printStackTrace();
+            Logging.logIgnoredInterruptedException(e);
           }
         }
       }

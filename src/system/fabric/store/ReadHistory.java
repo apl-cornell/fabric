@@ -3,6 +3,7 @@ package fabric.store;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import fabric.common.Logging;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -113,6 +114,7 @@ public class ReadHistory {
         try {
           wait(length);
         } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
         }
         clean(System.currentTimeMillis());
       }

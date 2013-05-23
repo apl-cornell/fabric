@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.util.Pair;
 import fabric.common.util.Triple;
@@ -210,6 +211,7 @@ public class LabelCache {
               }
             }
           } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
           }
         }
       }

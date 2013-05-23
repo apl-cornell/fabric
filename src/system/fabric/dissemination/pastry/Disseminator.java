@@ -30,6 +30,7 @@ import rice.pastry.commonapi.PastryIdFactory;
 import rice.pastry.leafset.LeafSet;
 import rice.pastry.routing.RouteSet;
 import rice.pastry.routing.RoutingTable;
+import fabric.common.Logging;
 import fabric.common.util.Cache;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -226,6 +227,7 @@ public class Disseminator implements Application {
         try {
           f.wait(1000);
         } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
         }
       }
 
@@ -361,7 +363,7 @@ public class Disseminator implements Application {
           UpdateCache.Reply reply = replyQueue.poll(1, TimeUnit.SECONDS);
           result = reply.resubscribe();
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          Logging.logIgnoredInterruptedException(e);
         }
       }
     }

@@ -141,6 +141,12 @@ public final class Logging {
   public static final Logger TIMING_LOGGER = Logger.getLogger("fabric.timing");
 
   /**
+   * For ignored InterruptedExceptions.
+   */
+  public static final Logger INTERRUPTED_EXCEPTION_LOGGER = Logger
+      .getLogger("fabric.interruptedExceptions");
+
+  /**
    * For other events that don't fit into any other category. Use sparingly.
    */
   public static final Logger MISC_LOGGER = Logger.getLogger("fabric");
@@ -236,6 +242,14 @@ public final class Logging {
       Object param2, Object param3, Object param4) {
     if (!logger.isLoggable(level)) return;
     logger.log(level, msg, new Object[] { param1, param2, param3, param4 });
+  }
+
+  /**
+   * Records that an InterruptedException was ignored.
+   */
+  public static void logIgnoredInterruptedException(InterruptedException e) {
+    INTERRUPTED_EXCEPTION_LOGGER.log(Level.FINEST,
+        "Ignored interrupted exception", e);
   }
 
   /**

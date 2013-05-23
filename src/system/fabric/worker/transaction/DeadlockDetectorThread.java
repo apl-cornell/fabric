@@ -82,7 +82,9 @@ public class DeadlockDetectorThread extends Thread {
 
           resolveDeadlocks(cycles);
         }
-      } catch (RuntimeException | Error | InterruptedException e) {
+      } catch (InterruptedException e) {
+        Logging.logIgnoredInterruptedException(e);
+      } catch (RuntimeException | Error e) {
         e.printStackTrace();
       }
     }

@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.util.ConcurrentLongKeyHashMap;
@@ -208,6 +209,7 @@ public final class ObjectGrouper {
               try {
                 lock.wait();
               } catch (InterruptedException e) {
+                Logging.logIgnoredInterruptedException(e);
               }
               continue CLAIM_WAIT;
 
@@ -370,6 +372,7 @@ public final class ObjectGrouper {
             try {
               lock.wait();
             } catch (InterruptedException e) {
+              Logging.logIgnoredInterruptedException(e);
             }
             continue OUTER;
 
@@ -755,6 +758,7 @@ public final class ObjectGrouper {
             }
           }
         } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
         }
       }
     }

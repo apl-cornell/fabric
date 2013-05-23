@@ -17,6 +17,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubServerSocketFactory.Acceptor.ConnectionQueue;
 import fabric.common.net.handshake.Protocol;
@@ -326,8 +327,7 @@ public class SubServerSocketFactory {
         try {
           connections.put(s);
         } catch (InterruptedException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
+          Logging.logIgnoredInterruptedException(e);
         }
       }
 

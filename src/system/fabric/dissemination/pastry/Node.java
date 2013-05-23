@@ -14,6 +14,7 @@ import rice.pastry.NodeIdFactory;
 import rice.pastry.PastryNode;
 import rice.pastry.socket.SocketPastryNodeFactory;
 import rice.pastry.standard.RandomNodeIdFactory;
+import fabric.common.Logging;
 import fabric.dissemination.Cache;
 
 /**
@@ -90,6 +91,7 @@ public class Node {
         try {
           node.wait(500);
         } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
         }
         if (++spinCount == 2) {
           System.out.println("Waiting for Pastry node to be ready.");

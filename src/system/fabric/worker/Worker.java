@@ -20,6 +20,7 @@ import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
 import fabric.common.KeyMaterial;
+import fabric.common.Logging;
 import fabric.common.NSUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
@@ -656,6 +657,7 @@ public final class Worker {
             Thread.sleep(backoff);
             break;
           } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
           }
         }
       }

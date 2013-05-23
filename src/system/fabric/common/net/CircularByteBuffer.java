@@ -1,7 +1,6 @@
 package fabric.common.net;
 
 import java.io.IOException;
-import java.util.logging.Level;
 
 import fabric.common.Logging;
 
@@ -166,8 +165,7 @@ public class CircularByteBuffer {
           // Ignore. (Should really be handling this, but requires plumbing to
           // clean up any remote state that may have resulted from the message
           // whose reply we're waiting for.)
-          Logging.NETWORK_MESSAGE_RECEIVE_LOGGER.log(Level.WARNING,
-              "I/O was interrupted; ignoring...");
+          Logging.logIgnoredInterruptedException(e);
         }
       }
     }

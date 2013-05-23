@@ -243,6 +243,7 @@ public final class TransactionManager {
           try {
             current.commitState.wait();
           } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
           }
         }
 
@@ -578,7 +579,7 @@ public final class TransactionManager {
           future.get();
           break;
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          Logging.logIgnoredInterruptedException(e);
         } catch (ExecutionException e) {
           e.printStackTrace();
         }
@@ -728,7 +729,7 @@ public final class TransactionManager {
           future.get();
           break;
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          Logging.logIgnoredInterruptedException(e);
         } catch (ExecutionException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
@@ -871,6 +872,7 @@ public final class TransactionManager {
             obj.wait();
           }
         } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
         }
         obj.$numWaiting--;
 
@@ -987,6 +989,7 @@ public final class TransactionManager {
             obj.wait();
           }
         } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
         }
         obj.$numWaiting--;
 
@@ -1140,7 +1143,7 @@ public final class TransactionManager {
           future.get();
           break;
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          Logging.logIgnoredInterruptedException(e);
         } catch (ExecutionException e) {
           e.printStackTrace();
         }
