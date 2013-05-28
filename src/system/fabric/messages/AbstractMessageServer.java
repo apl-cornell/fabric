@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import fabric.common.Logging;
 import fabric.common.Threading;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
@@ -87,8 +88,8 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                         connection.close();
                       } catch (IOException e1) {
                       }
-                      logger.log(Level.WARNING, "Connection reset ({0})",
-                          client);
+                      Logging.NETWORK_CONNECTION_LOGGER.log(Level.INFO,
+                          "Connection reset ({0})", client);
                     } catch (IOException e) {
                       try {
                         connection.close();
