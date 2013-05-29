@@ -171,9 +171,8 @@ public class SemanticWarrantyTable {
         iter.hasNext();) {
       long onum = iter.next();
       if (database.isWritten(onum)) {
-        // XXX This doesn't work if the write is delayed due to another item in
-        // the same transaction and not its own warranty...  Need to add this
-        // information when the write is scheduled.
+        // This works because the warranty will have been extended to when the
+        // write is scheduled for.
         long objTime = database.getWarranty(onum).expiry();
         if (objTime < nextWrite || nextWrite == 0) {
           nextWrite = objTime;
@@ -192,9 +191,8 @@ public class SemanticWarrantyTable {
     for (LongIterator iter = req.readOnums.iterator(); iter.hasNext();) {
       long onum = iter.next();
       if (database.isWritten(onum)) {
-        // XXX This doesn't work if the write is delayed due to another item in
-        // the same transaction and not its own warranty...  Need to add this
-        // information when the write is scheduled.
+        // This works because the warranty will have been extended to when the
+        // write is scheduled for.
         long objTime = database.getWarranty(onum).expiry();
         bestTime = objTime < bestTime ? objTime : bestTime;
       }
