@@ -28,6 +28,7 @@ import fabric.common.VersionWarranty;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
@@ -72,7 +73,9 @@ public class SemanticWarrantyTable {
    * Enumeration of states a call can be in.
    *
    * VALID -> As far as the table is concerned, this call is still valid and
-   * will be valid for the foreseeable future.
+   * will be valid for the foreseeable future (it is possible that the warranty
+   * has expired, in which case this value is being marked as valid to use
+   * optimistically).
    * EXPIRING -> The call is valid as long as the warranty is valid and
    * otherwise is known to be in a bad state.
    */
@@ -97,16 +100,27 @@ public class SemanticWarrantyTable {
   private final WarrantyIssuer<CallInstance> issuer;
 
   /**
-   * Table mapping from transactionIDs for pending transactions to additons for
-   * semantic warranty dependencies.
+   * Table mapping from transactionIDs for pending transactions to sets of calls
+   * for which there will be a new semantic warranty.
    */
-  private final ConcurrentLongKeyMap<Map<CallInstance, Pair<SemanticWarrantyRequest, SemanticWarranty>>> pendingMap;
+  private final ConcurrentLongKeyMap<Set<CallInstance>> pendingTIDMap;
+
+  /**
+   * Table mapping from CallInstance to the SemanticWarrantyRequest and
+   * SemanticWarranty for it.
+   */
+  private final ConcurrentMap<CallInstance, Pair<SemanticWarrantyRequest, SemanticWarranty>> pendingWarrantyMap;
 
   /**
    * Table mapping from transactionIDs for pending transactions to
    * updates for semantic warranty dependencies.
    */
   private final ConcurrentLongKeyMap<Map<CallInstance, SemanticWarrantyRequest>> refreshMap;
+
+  /**
+   * Local reference to the ObjectDB for items on this store.
+   */
+  private final ObjectDB database;
 
   public SemanticWarrantyTable(ObjectDB database) {
     lockTable = new ConcurrentHashMap<CallInstance, Object>();
@@ -116,11 +130,13 @@ public class SemanticWarrantyTable {
     dependencyTable = new SemanticWarrantyDependencies();
     issuer = new WarrantyIssuer<CallInstance>(MIN_SEMANTIC_WARRANTY,
         MAX_SEMANTIC_WARRANTY);
-    pendingMap = new ConcurrentLongKeyHashMap<Map<CallInstance,
-               Pair<SemanticWarrantyRequest, SemanticWarranty>>>();
+    pendingTIDMap = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
+    pendingWarrantyMap = new ConcurrentHashMap<CallInstance,
+                       Pair<SemanticWarrantyRequest, SemanticWarranty>>();
     refreshMap = new ConcurrentLongKeyHashMap<Map<CallInstance,
                SemanticWarrantyRequest>>();
     statusTable  = new ConcurrentHashMap<CallInstance, CallStatus>();
+    this.database = database;
   }
 
   public final WarrantiedCallResult get(CallInstance id) {
@@ -137,11 +153,57 @@ public class SemanticWarrantyTable {
     }
   }
 
+  /**
+   * The next write scheduled for any of the dependencies of this call.  This
+   * only works if the call is in the table.
+   *
+   * Returns 0 if there is no scheduled write.
+   */
+  public long nextScheduledWrite(CallInstance call) {
+    long nextWrite = 0;
+    for (CallInstance subcall : dependencyTable.getCalls(call)) {
+      long callTime = nextScheduledWrite(subcall);
+      if (callTime < nextWrite || nextWrite == 0) {
+        nextWrite = callTime;
+      }
+    }
+    for (LongIterator iter = dependencyTable.getReads(call).iterator();
+        iter.hasNext();) {
+      long onum = iter.next();
+      if (database.isWritten(onum)) {
+        // XXX This doesn't work if the write is delayed due to another item in
+        // the same transaction and not its own warranty...  Need to add this
+        // information when the write is scheduled.
+        long objTime = database.getWarranty(onum).expiry();
+        if (objTime < nextWrite || nextWrite == 0) {
+          nextWrite = objTime;
+        }
+      }
+    }
+    return nextWrite;
+  }
+
   /* Create a warranty with a suggested time for the given call with the
    * associated reads and calls.
    */
-  public SemanticWarranty proposeWarranty(CallInstance id) {
-    return new SemanticWarranty(issuer.suggestWarranty(id));
+  public SemanticWarranty proposeWarranty(long transactionID,
+      SemanticWarrantyRequest req) {
+    long bestTime = issuer.suggestWarranty(req.call);
+    for (LongIterator iter = req.readOnums.iterator(); iter.hasNext();) {
+      long onum = iter.next();
+      if (database.isWritten(onum)) {
+        // XXX This doesn't work if the write is delayed due to another item in
+        // the same transaction and not its own warranty...  Need to add this
+        // information when the write is scheduled.
+        long objTime = database.getWarranty(onum).expiry();
+        bestTime = objTime < bestTime ? objTime : bestTime;
+      }
+    }
+    for (CallInstance c : req.calls.keySet()) {
+      long callTime = nextScheduledWrite(c);
+      bestTime = callTime < bestTime ? callTime : bestTime;
+    }
+    return new SemanticWarranty(bestTime);
   }
 
   /**
@@ -156,10 +218,10 @@ public class SemanticWarrantyTable {
         throw new InternalError(
             "Adding a pending warranty while there is a "
             + "pre-existing warranty that will still be valid at commit!");
-      pendingMap.putIfAbsent(transactionID, new HashMap<CallInstance,
-          Pair<SemanticWarrantyRequest, SemanticWarranty>>());
-      pendingMap.get(transactionID).put(req.call, new
-          Pair<SemanticWarrantyRequest, SemanticWarranty>(req, war));
+      pendingTIDMap.putIfAbsent(transactionID, new HashSet<CallInstance>());
+      pendingTIDMap.get(transactionID).add(req.call);
+      pendingWarrantyMap.put(req.call, new Pair<SemanticWarrantyRequest,
+          SemanticWarranty>(req, war));
     }
   }
 
@@ -237,7 +299,7 @@ public class SemanticWarrantyTable {
         return new Pair<SemanticExtendStatus,
                WarrantiedCallResult>(SemanticExtendStatus.BAD_VERSION, null);
 
-      // BEHOLD MY CHECK OF DOOM
+      // XXX BEHOLD MY CHECK OF DOOM XXX
       //
       // What this boils down to is making sure that if we have a value already,
       // we verify that it is, in fact, the same thing as what they think it is.
@@ -634,6 +696,7 @@ public class SemanticWarrantyTable {
       SemanticWarrantyRequest> updates) {
     Set<CallInstance> callsCopy = new HashSet<CallInstance>(updates.keySet());
     Set<CallInstance> callsChanged = new HashSet<CallInstance>();
+
     for (CallInstance call : callsCopy) {
       if (!updates.containsKey(call)) continue;
       SemanticWarrantyRequest req = updates.get(call);
@@ -682,7 +745,10 @@ public class SemanticWarrantyTable {
   public void abort(long transactionID) {
     SEMANTIC_WARRANTY_LOGGER.finer(String.format(
         "Aborting semantic warranty updates from %x", transactionID));
-    pendingMap.remove(transactionID);
+    Set<CallInstance> callSet = pendingTIDMap.get(transactionID);
+    for (CallInstance call : callSet)
+      pendingWarrantyMap.remove(call);
+    pendingTIDMap.remove(transactionID);
     refreshMap.remove(transactionID);
   }
 
@@ -694,16 +760,17 @@ public class SemanticWarrantyTable {
     SEMANTIC_WARRANTY_LOGGER.finer(String.format(
         "Committing semantic warranty updates from %x", transactionID));
     // Add requests made by the original transaction
-    if (pendingMap.get(transactionID) != null) {
-      Map<CallInstance, Pair<SemanticWarrantyRequest, SemanticWarranty>> m =
-          pendingMap.get(transactionID);
-      for (CallInstance call : m.keySet()) {
-        SEMANTIC_WARRANTY_LOGGER.finest("Adding " + call + ": "
-            + m.get(call).first + ", " + m.get(call).second);
-        putAt(commitTime, m.get(call).first, m.get(call).second);
+    if (pendingTIDMap.get(transactionID) != null) {
+      for (CallInstance call : pendingTIDMap.get(transactionID)) {
+        Pair<SemanticWarrantyRequest, SemanticWarranty> p =
+          pendingWarrantyMap.get(call);
+        SEMANTIC_WARRANTY_LOGGER.finest("Adding " + call + ": " + p.first + ", "
+            + p.second);
+        putAt(commitTime, p.first, p.second);
+        pendingWarrantyMap.remove(call);
       }
     }
-    pendingMap.remove(transactionID);
+    pendingTIDMap.remove(transactionID);
 
     // Update warranties that were refreshed by the transaction
     if (refreshMap.get(transactionID) != null) {

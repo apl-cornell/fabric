@@ -415,7 +415,7 @@ public class TransactionManager {
 
       // Get a proposal for a warranty
       //semanticWarranties.notifyReadPrepare(r.call);
-      SemanticWarranty proposed = semanticWarranties.proposeWarranty(r.call);
+      SemanticWarranty proposed = semanticWarranties.proposeWarranty(tid, r);
       SEMANTIC_WARRANTY_LOGGER.finer(r.call.toString()
           + " was proposed a warranty to expire in " + (proposed.expiry() -
             System.currentTimeMillis()));
