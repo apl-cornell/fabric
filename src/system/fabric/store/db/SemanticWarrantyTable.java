@@ -142,12 +142,12 @@ public class SemanticWarrantyTable {
   public final WarrantiedCallResult get(CallInstance id) {
     lockTable.putIfAbsent(id, new Object());
     synchronized (lockTable.get(id)) {
+      // Don't necessarily issue a new warranty until the transaction attempts
+      // committing.
       if (valueTable.get(id) == null
           || (statusTable.get(id) == CallStatus.EXPIRING
             && warrantyTable.get(id).expired(true)))
         return null;
-      // Don't necessarily issue a new warranty until the transaction attempts
-      // committing.
       return new WarrantiedCallResult(valueTable.get(id),
           warrantyTable.get(id));
     }
@@ -198,6 +198,7 @@ public class SemanticWarrantyTable {
       }
     }
     for (CallInstance c : req.calls.keySet()) {
+      // TODO: This doesn't handle pending subcall warranties.
       long callTime = nextScheduledWrite(c);
       bestTime = callTime < bestTime ? callTime : bestTime;
     }
@@ -268,11 +269,20 @@ public class SemanticWarrantyTable {
       // Add result to value table
       valueTable.put(id, value);
 
+      // Set the status
+      statusTable.put(id, CallStatus.VALID);
+
       // Add the warranty dependencies to the dependencyTable
       LongSet deps = new LongHashSet(reads);
       deps.addAll(creates);
       if (!(value instanceof WrappedJavaInlineable)) deps.add(value.$getOnum());
       dependencyTable.addCall(id, deps, calls);
+
+      // Mark as expiring if we know there's an upcoming write already
+      // scheduled as we're adding this in.
+      if (nextScheduledWrite(id) >= System.currentTimeMillis()) {
+        statusTable.put(id, CallStatus.EXPIRING);
+      }
     }
   }
 
@@ -290,7 +300,7 @@ public class SemanticWarrantyTable {
     synchronized (lockTable.get(id)) {
       SEMANTIC_WARRANTY_LOGGER.finest("Extending warranty for " + id);
 
-      // If we've marked this for expiration, this call can't be extended :P
+      // If we've marked this for expiration, this call _can't_ be extended
       if ((statusTable.get(id) == CallStatus.EXPIRING &&
             warrantyTable.get(id).expiresBefore(newTime, true))
           || valueTable.get(id) == null)
@@ -423,6 +433,8 @@ public class SemanticWarrantyTable {
    * bookkeeping associated with write events (like removing stale call values).
    */
   // TODO: Oh god this needs a rewrite.
+  // Also, this needs to be fixed to properly lock and handle the transition
+  // between different dependencies.
   public Pair<SemanticWarranty, Collection<SerializedObject>>
     prepareWrites(final Collection<SerializedObject> writes, final
         Collection<SerializedObject> creates, final long transactionID, long
