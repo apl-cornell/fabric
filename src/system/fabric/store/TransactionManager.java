@@ -14,7 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
@@ -415,14 +414,12 @@ public class TransactionManager {
 
       // Get a proposal for a warranty
       //semanticWarranties.notifyReadPrepare(r.call);
-      SemanticWarranty proposed = semanticWarranties.proposeWarranty(tid, r);
+      SemanticWarranty proposed = semanticWarranties.requestWarranty(tid, r);
       SEMANTIC_WARRANTY_LOGGER.finer(r.call.toString()
           + " was proposed a warranty to expire in " + (proposed.expiry() -
             System.currentTimeMillis()));
       // Add it to the response set
       warranties.put(r.call, proposed);
-      // Schedule to add it at commitTime
-      semanticWarranties.addPendingWarranty(commitTime, r, proposed, tid);
       
       //Update fringe
       for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
