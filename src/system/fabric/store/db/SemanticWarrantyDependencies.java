@@ -19,6 +19,7 @@ import fabric.worker.memoize.CallInstance;
  * caching.  Includes a mapping from CallInstances to their dependency sets and
  * from objects/CallInstances to a set of CallInstances that depend on them.
  */
+//TODO: This is not threadsafe.
 public class SemanticWarrantyDependencies {
   /**
    * Mapping from a CallInstance's id to the set of onums of object read during
@@ -83,6 +84,18 @@ public class SemanticWarrantyDependencies {
       }
       users.add(id);
     }
+  }
+
+  public void addDependency(CallInstance id, CallInstance subcall) {
+    Set<CallInstance> calls = callsUsed.get(id);
+    if (calls == null) return;
+    calls.add(subcall);
+  }
+
+  public void addDependency(CallInstance id, long read) {
+    LongSet reads = objectsRead.get(id);
+    if (reads == null) return;
+    reads.add(read);
   }
 
   /**
