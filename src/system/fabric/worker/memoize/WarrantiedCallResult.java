@@ -12,6 +12,7 @@ import java.io.Serializable;
 
 import fabric.common.SemanticWarranty;
 import fabric.lang.Object;
+import fabric.lang.WrappedJavaInlineable;
 
 /**
  * Wrapper for the stored value and warranty on a call in the system.  Basically
@@ -50,7 +51,7 @@ public class WarrantiedCallResult implements Serializable {
     return other.value.equals(value)
       && (other.warranty.expiry() == warranty.expiry());
   }
-  
+
   private void writeObject(ObjectOutputStream out) throws IOException {
     DataOutputStream outD = new DataOutputStream(out);
     write(outD);
