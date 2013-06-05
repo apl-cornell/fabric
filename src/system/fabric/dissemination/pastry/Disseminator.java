@@ -361,7 +361,7 @@ public class Disseminator implements Application {
         try {
           // Wait at most one second for a reply.
           UpdateCache.Reply reply = replyQueue.poll(1, TimeUnit.SECONDS);
-          result = reply.resubscribe();
+          result = reply != null && reply.resubscribe();
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
         }
