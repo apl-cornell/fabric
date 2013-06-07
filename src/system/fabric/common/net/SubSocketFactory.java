@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 import fabric.common.net.handshake.Protocol;
@@ -111,7 +112,7 @@ public final class SubSocketFactory {
     private final String name;
 
     /* the next sequence number to be created */
-    private int nextSequenceNumber;
+    private AtomicInteger nextSequenceNumber;
 
     /**
      * @param host the host at the remote endpoint.
@@ -121,14 +122,14 @@ public final class SubSocketFactory {
       super(protocol.initiate(host, s), maxOpenConnections);
 
       this.name = host.name;
-      nextSequenceNumber = 1;
+      nextSequenceNumber = new AtomicInteger(1);
 
       setName("demultiplexer for " + toString());
     }
 
     /** initiate a new substream */
     public Connection connect() throws IOException {
-      return new Connection(nextSequenceNumber++);
+      return new Connection(nextSequenceNumber.getAndIncrement());
     }
 
     @Override
