@@ -115,6 +115,10 @@ COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/lib/FreePastry-2.1.jar"
 for i in "${TOP}"/lib/bcprov-*.jar ; do
 COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:$i"
 done
+# Guava
+for i in "${TOP}"/lib/guava-*.jar ; do
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:$i"
+done
 # Java libraries
 COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${JAVA_HOME}/lib/tools.jar"
 

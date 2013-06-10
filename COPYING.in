@@ -77,6 +77,14 @@ from the GNU General Public License) are enumerated below.
       lib/bcprov-*.jar
 
 
+  Guava is software developed by Google and is released under the
+  Apache License 2.0.  A copy of this license can be found in the file
+  doc/licenses/apache-2.0.txt, included in this distribution.
+
+    Files:
+      lib/guava-*.jar
+
+
   Jetty is software developed by the Eclipse Foundation and is
   released under the Apache License 2.0 and the Eclipse Public
   License 1.0.  A copy of these licenses can be found in the files

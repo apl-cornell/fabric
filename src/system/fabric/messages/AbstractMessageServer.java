@@ -2,12 +2,14 @@ package fabric.messages;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import fabric.common.Threading;
 import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubSocket;
@@ -53,6 +55,13 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                     "Fabric network message handler thread") {
                   @Override
                   protected void runImpl() {
+                    RemoteIdentity client;
+                    try {
+                      client = connection.getRemoteIdentity();
+                    } catch (IOException e) {
+                      throw new InternalError(e);
+                    }
+
                     try {
                       // Handle the connection.
                       DataInputStream in =
@@ -63,8 +72,6 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                       while (true) {
                         Message<?, ?> message = Message.receive(in);
                         try {
-                          RemoteIdentity client =
-                              connection.getRemoteIdentity();
                           Message.Response response =
                               message.dispatch(client,
                                   AbstractMessageServer.this);
@@ -75,6 +82,13 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
 
                         out.flush();
                       }
+                    } catch (EOFException e) {
+                      try {
+                        connection.close();
+                      } catch (IOException e1) {
+                      }
+                      logger.log(Level.WARNING, "Connection reset ({0})",
+                          client);
                     } catch (IOException e) {
                       try {
                         connection.close();
