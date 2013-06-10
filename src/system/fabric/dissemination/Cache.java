@@ -193,6 +193,7 @@ public class Cache {
       if (old == null) return false;
 
       if (old.isOlderThan(g)) {
+        old.copyDissemStateTo(g);
         if (map.replace(key, old, g)) break;
 
         // Value got replaced while we weren't looking. Try again.

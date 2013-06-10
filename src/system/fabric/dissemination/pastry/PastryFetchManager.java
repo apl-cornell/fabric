@@ -30,7 +30,6 @@ public class PastryFetchManager implements FetchManager {
     try {
       this.fallback = new DummyFetchManager(worker, dissemConfig);
       this.node = new Node(dissemConfig); // start a new pastry node
-      worker.registerDisseminationCache(node.disseminator.cache);
     } catch (IOException e) {
       throw new InternalError(e);
     }
@@ -55,6 +54,18 @@ public class PastryFetchManager implements FetchManager {
   @Override
   public void destroy() {
     node.destroy();
+  }
+
+  @Override
+  public boolean updateDissemCacheEntry(RemoteStore store, long onum,
+      Glob update) {
+    boolean result = node.disseminator.updateCache(store, onum, update);
+
+    // Update fallback FetchManager's cache. Because of short-circuiting, the
+    // order of the disjuncts matters here.
+    result = fallback.updateDissemCacheEntry(store, onum, update) || result;
+
+    return result;
   }
 
 }

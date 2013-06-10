@@ -43,7 +43,6 @@ import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.Pair;
-import fabric.dissemination.Cache;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 import fabric.lang.FabricClassLoader;
@@ -125,12 +124,6 @@ public final class Worker {
   public final LabelCache labelCache;
 
   protected final NodePrincipal principal;
-
-  /**
-   * The collection of dissemination caches used by this worker's dissemination
-   * node.
-   */
-  private final List<Cache> disseminationCaches;
 
   private final RemoteCallManager remoteCallManager;
 
@@ -250,7 +243,6 @@ public final class Worker {
             PortType.WORKER);
 
     this.remoteCallManager = new RemoteCallManager(this);
-    this.disseminationCaches = new ArrayList<Cache>(1);
 
     // Initialize the fetch manager.
     try {
@@ -365,23 +357,12 @@ public final class Worker {
   }
 
   /**
-   * Registers that a worker has a new dissemination cache.
-   */
-  public void registerDisseminationCache(Cache cache) {
-    this.disseminationCaches.add(cache);
-  }
-
-  /**
    * Updates the dissemination and worker caches with the given object glob.
    * 
    * @return true iff there was a dissemination-cache entry for the given oid.
    */
   public boolean updateDissemCaches(RemoteStore store, long onum, Glob update) {
-    boolean result = false;
-
-    for (Cache cache : disseminationCaches) {
-      result |= cache.updateEntry(store, onum, update);
-    }
+    boolean result = fetchManager.updateDissemCacheEntry(store, onum, update);
 
     // Update the worker's cache too.
     // XXX What happens if the worker isn't trusted to decrypt the glob?

@@ -52,19 +52,6 @@ public class Fetch implements RawMessage {
     return onum;
   }
 
-  /**
-   * A hint as to whether we want to explicitly fetch the latest version from
-   * the store.
-   */
-  public boolean refresh() {
-    return refresh;
-  }
-
-  /** Set whether we want to refresh. */
-  public void refresh(boolean refresh) {
-    this.refresh = refresh;
-  }
-
   /** The reply message. */
   public Reply reply() {
     return reply;

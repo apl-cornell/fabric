@@ -326,12 +326,26 @@ public final class ObjectGrouper {
         if (entry == null) return null;
 
         lock = entry.getLock();
-        if (lock == null) lock = new GroupLock(onum);
       }
 
       // Loop in case the lock gets replaced so we synchronize on the correct
       // lock.
       while (true) {
+        // First, handle case where group was already constructed.
+        if (lock == null) {
+          // Check the table again in case the entry got GCed or replaced while
+          // we weren't looking.
+          Entry entry = table.get(onum);
+          if (entry == null) return null;
+
+          group = entry.getGroup();
+          if (group == null) return null;
+
+          lock = entry.getLock();
+          if (lock != null) continue OUTER;
+          break OUTER;
+        }
+
         synchronized (lock) {
           switch (lock.status) {
           case FRESH:

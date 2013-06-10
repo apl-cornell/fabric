@@ -71,9 +71,6 @@ public class Glob implements FastSerializable {
 
   private transient int level;
   private transient int frequency;
-  private transient int popularity;
-
-  private transient boolean home;
 
   /**
    * Used by the store to encrypt and sign an object group.
@@ -215,21 +212,6 @@ public class Glob implements FastSerializable {
     this.frequency++;
   }
 
-  /** The popularity of the glob. An exponential-decayed valued. */
-  public int popularity() {
-    return popularity;
-  }
-
-  /** Sets the popularity. */
-  public void popularity(int popularity) {
-    this.popularity = popularity;
-  }
-
-  /** Whether this is the home node for this glob. */
-  public boolean home() {
-    return home;
-  }
-
   /**
    * Whether this Glob is older than the given Glob.
    */
@@ -333,6 +315,14 @@ public class Glob implements FastSerializable {
 
   public long getTimestamp() {
     return timestamp;
+  }
+
+  /**
+   * Copies dissemination-related state to the given glob.
+   */
+  void copyDissemStateTo(Glob g) {
+    g.level = level;
+    g.frequency = frequency;
   }
 
 }
