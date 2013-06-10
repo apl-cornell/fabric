@@ -1,19 +1,24 @@
 package fabric.worker.admin;
 
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.logging.Level;
 
 import fabric.common.Threading;
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.exceptions.UsageError;
 import fabric.worker.Worker;
 import fabric.worker.shell.CommandSource;
@@ -133,9 +138,18 @@ public class WorkerAdmin {
                 socket.close();
               } catch (SocketException e) {
                 if ("Connection reset".equalsIgnoreCase(e.getMessage())) {
-                  // Silently ignore connections that are reset.
+                  NETWORK_CONNECTION_LOGGER.log(Level.WARNING,
+                      "WorkerAdmin connection reset ({0})",
+                      socket.getRemoteSocketAddress());
                   return;
                 }
+
+                throw new NotImplementedException(e);
+              } catch (EOFException e) {
+                NETWORK_CONNECTION_LOGGER.log(Level.WARNING,
+                    "WorkerAdmin connection closed ({0})",
+                    socket.getRemoteSocketAddress());
+                return;
               } catch (IOException e) {
                 throw new InternalError(e);
               }
