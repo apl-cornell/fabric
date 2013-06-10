@@ -359,26 +359,28 @@ public final class Worker {
   /**
    * Updates the dissemination and worker caches with the given object glob.
    * 
-   * @return true iff there was a dissemination-cache entry for the given oid.
+   * @return true iff either of the caches were updated.
    */
-  public boolean updateDissemCaches(RemoteStore store, long onum, Glob update) {
-    boolean result = fetchManager.updateDissemCacheEntry(store, onum, update);
-
-    // Update the worker's cache too.
-    // XXX What happens if the worker isn't trusted to decrypt the glob?
-    updateCache(store, update.decrypt());
-
-    return result;
+  public boolean updateCaches(RemoteStore store, long onum, Glob update) {
+    return fetchManager.updateCaches(store, onum, update);
   }
 
   /**
-   * Updates the worker cache with the given object group.
+   * Updates the worker cache with the given object group. Only old versions of
+   * objects replaced; new objects are not added to the cache if older versions
+   * don't already exist in cache.
+   * 
+   * @return true iff the cache was updated.
    */
-  public void updateCache(RemoteStore store, ObjectGroup group) {
+  public boolean updateCache(RemoteStore store, ObjectGroup group) {
+    boolean result = false;
     for (Pair<SerializedObject, VersionWarranty> obj : group.objects().values()) {
-      store.updateCache(obj);
+      // Because of short-circuiting, order of disjuncts matter here.
+      result = store.updateCache(obj) || result;
       TransactionManager.abortReaders(store, obj.first.getOnum());
     }
+
+    return result;
   }
 
   /**
