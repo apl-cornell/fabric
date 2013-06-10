@@ -337,13 +337,11 @@ public final class Log {
     map = new LongKeyHashMap<V>(map);
 
     if (store.isLocalStore()) {
-      @SuppressWarnings("unchecked")
       Iterable<_Impl> chain =
           SysUtil.chain(localStoreWrites, localStoreCreates);
       for (_Impl write : chain)
         map.remove(write.$getOnum());
     } else {
-      @SuppressWarnings("unchecked")
       Iterable<_Impl> chain = SysUtil.chain(writes, creates);
       for (_Impl write : chain)
         if (write.$getStore() == store) map.remove(write.$getOnum());
@@ -510,7 +508,6 @@ public final class Log {
       entry.releaseLock(this);
 
     // Roll back writes and release write locks.
-    @SuppressWarnings("unchecked")
     Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
@@ -694,7 +691,6 @@ public final class Log {
           throw new InternalError("something was read by a non-existent parent");
 
         // Release write locks and ownerships; update version numbers.
-        @SuppressWarnings("unchecked")
         Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
         for (_Impl obj : chain) {
           if (!obj.$isOwned) {
@@ -720,7 +716,6 @@ public final class Log {
         }
 
         // Release write locks on created objects and set version numbers.
-        @SuppressWarnings("unchecked")
         Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
         for (_Impl obj : chain2) {
           if (!obj.$isOwned) {

@@ -38,6 +38,7 @@ import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.Transaction;
 
 import fabric.common.FastSerializable;
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
@@ -675,6 +676,7 @@ public class BdbDB extends ObjectDB {
             Thread.sleep(waitTime);
             break;
           } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
           }
         }
       }

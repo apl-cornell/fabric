@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Queue;
 
 import fabric.common.Crypto;
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -188,7 +189,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
           try {
             fetchLock.wait();
           } catch (InterruptedException e) {
-            e.printStackTrace();
+            Logging.logIgnoredInterruptedException(e);
           }
         }
       }

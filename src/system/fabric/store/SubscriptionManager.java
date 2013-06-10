@@ -13,6 +13,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import fabric.common.FabricThread;
+import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.Threading;
 import fabric.common.VersionWarranty.Binding;
@@ -368,6 +369,7 @@ public class SubscriptionManager extends FabricThread.Impl {
       try {
         Threading.getPool().submit(notificationQueue.take());
       } catch (InterruptedException e1) {
+        Logging.logIgnoredInterruptedException(e1);
       }
     }
   }

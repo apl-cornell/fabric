@@ -2,6 +2,8 @@ package fabric.worker.shell;
 
 import java.util.List;
 
+import fabric.common.Logging;
+
 /**
  * A command source that blocks indefinitely when asked for a command.
  */
@@ -22,6 +24,7 @@ public class DummyCommandSource extends CommandSource {
         condVar.wait();
       }
     } catch (InterruptedException e) {
+      Logging.logIgnoredInterruptedException(e);
     }
 
     return null;

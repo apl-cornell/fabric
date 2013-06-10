@@ -11,15 +11,17 @@ import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
 import fabric.common.KeyMaterial;
+import fabric.common.Logging;
 import fabric.common.NSUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
@@ -98,10 +100,10 @@ public final class Worker {
   public FabricClassLoader loader;
 
   /** A map from store hostnames to Store objects */
-  protected final Map<String, RemoteStore> stores;
+  protected final ConcurrentMap<String, RemoteStore> stores;
 
   /** A map from worker hostnames to RemoteWorker objects. */
-  private final Map<String, RemoteWorker> remoteWorkers;
+  private final ConcurrentMap<String, RemoteWorker> remoteWorkers;
 
   protected final LocalStore localStore;
 
@@ -214,9 +216,9 @@ public final class Worker {
 
     fabric.common.Options.DEBUG_NO_SSL = !config.useSSL;
 
-    this.stores = new HashMap<String, RemoteStore>();
+    this.stores = new ConcurrentHashMap<String, RemoteStore>();
     if (initStoreSet != null) this.stores.putAll(initStoreSet);
-    this.remoteWorkers = new HashMap<String, RemoteWorker>();
+    this.remoteWorkers = new ConcurrentHashMap<String, RemoteWorker>();
     this.localStore = new LocalStore();
 
     NameService nameService = new TransitionalNameService();
@@ -318,8 +320,10 @@ public final class Worker {
     RemoteStore result = stores.get(name);
     if (result == null) {
       result = new RemoteStore(name);
-      stores.put(name, result);
+      RemoteStore existingStore = stores.putIfAbsent(name, result);
+      if (existingStore != null) return existingStore;
     }
+
     return result;
   }
 
@@ -327,14 +331,13 @@ public final class Worker {
    * @return a <code>RemoteWorker</code> object
    */
   public RemoteWorker getWorker(String name) {
-    RemoteWorker result;
-    synchronized (remoteWorkers) {
-      result = remoteWorkers.get(name);
-      if (result == null) {
-        result = new RemoteWorker(name);
-        remoteWorkers.put(name, result);
-      }
+    RemoteWorker result = remoteWorkers.get(name);
+    if (result == null) {
+      result = new RemoteWorker(name);
+      RemoteWorker existingWorker = remoteWorkers.putIfAbsent(name, result);
+      if (existingWorker != null) return existingWorker;
     }
+
     return result;
   }
 
@@ -535,10 +538,6 @@ public final class Worker {
     }
   }
 
-  public void setStore(String name, RemoteStore store) {
-    stores.put(name, store);
-  }
-
   /**
    * Runs the given Fabric program.
    * 
@@ -658,6 +657,7 @@ public final class Worker {
             Thread.sleep(backoff);
             break;
           } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
           }
         }
       }

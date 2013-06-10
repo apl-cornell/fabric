@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import fabric.common.Logging;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.ShakenSocket;
@@ -243,6 +244,7 @@ abstract class Channel extends Thread {
           try {
             connections.wait();
           } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
           }
         }
         connections.put(this.streamID, this);
