@@ -763,7 +763,7 @@ public final class TransactionManager {
           future.get();
           break;
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          Logging.logIgnoredInterruptedException(e);
         } catch (ExecutionException e) {
           e.printStackTrace();
         }
@@ -805,7 +805,7 @@ public final class TransactionManager {
 
       TransactionPrepareFailedException e =
           new TransactionPrepareFailedException(failures);
-      Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
+      Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
           "{0} error committing: prepare failed exception: {1}", current, e);
 
       abortTransaction(failures.keySet());
