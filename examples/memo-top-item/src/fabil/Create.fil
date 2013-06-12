@@ -14,18 +14,21 @@ public class Create {
     atomic {
       Store s = Config.STORE;
       Random rnd = new Random(0xDEADBEEF);
-      for (int i = 0; i < Config.NUM_USERS; i++) {
-        m.put(new Integer(i), new TwooterAccount@s("UID" + i,
-              rnd.nextInt(Config.NUM_USERS >> 1)).TwooterAccount$());
+      for (int i = 0; i < n; i++) {
+        m.put(new Integer(i),
+              new TwooterAccount@s("UID" + i,
+                                    rnd.nextInt(n >> 1)).TwooterAccount$());
       }
       Test t = new Test@s().Test$();
+      m.put("user_count", n);
       m.put("initialized", t);
     }
     System.out.println("done");
   }
 
   public static void main(String[] args) {
-    if (args.length != 1) System.exit(1);
-    populateUsers(Integer.parseInt(args[0]));
+    if (args.length >= 1) System.exit(1);
+    if (args.length == 1) populateUsers(Integer.parseInt(args[0]));
+    else populateUsers(Config.NUM_USERS);
   }
 }

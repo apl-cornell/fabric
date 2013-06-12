@@ -68,7 +68,7 @@ public class Test {
   }
 
   public List topAccounts(int n) {
-    return topAccountsBetween(n, 0, Config.NUM_USERS);
+    return topAccountsBetween(n, 0, Config.getNumUsers());
   }
 
   public memoized int foo(int n) {

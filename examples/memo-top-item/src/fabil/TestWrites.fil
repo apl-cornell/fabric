@@ -8,7 +8,7 @@ public class TestWrites {
     while (true) {
       try { Thread.sleep(msSleep); } catch (InterruptedException e) { break; }
       atomic {
-        TwooterAccount t = (TwooterAccount) Config.STORE.getRoot().get(new Integer(rand.nextInt(Config.NUM_USERS)));
+        TwooterAccount t = (TwooterAccount) Config.STORE.getRoot().get(new Integer(rand.nextInt(Config.getNumUsers())));
         if (rand.nextBoolean()) {
           System.out.println("Adding follower to " + t);
           t.addFollower();
