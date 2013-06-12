@@ -191,6 +191,7 @@ public class SemanticWarrantyTable {
   /**
    * Get the warranty + call value for the given call.
    */
+  // TODO: Copy construction for non-store items.
   public final WarrantiedCallResult get(CallInstance id) {
     lockTable.putIfAbsent(id, new Object());
     synchronized (lockTable.get(id)) {
