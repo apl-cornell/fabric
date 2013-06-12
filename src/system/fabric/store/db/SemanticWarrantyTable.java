@@ -334,6 +334,24 @@ public class SemanticWarrantyTable {
     }
   }
 
+  /**
+   * Compare the result found in the table currently with the value in the
+   * WarrantiedCallResult res.  Return true if they agree.
+   */
+  private boolean compareResult(CallInstance call, WarrantiedCallResult res) {
+    lockTable.putIfAbsent(call, new Object());
+    synchronized (lockTable.get(call)) {
+      fabric.lang.Object inTableVal = valueTable.get(call);
+      return inTableVal != null 
+            && ((res.value instanceof WrappedJavaInlineable &&
+                  inTableVal instanceof WrappedJavaInlineable &&
+                  res.value.equals(inTableVal))
+                || (res.value instanceof fabric.lang.Object._Proxy &&
+                    inTableVal instanceof fabric.lang.Object._Proxy &&
+                    res.value.$getOnum() == inTableVal.$getOnum()));
+    }
+  }
+
   public static enum SemanticExtendStatus {
     OK, BAD_VERSION, DENIED
   }
@@ -348,50 +366,37 @@ public class SemanticWarrantyTable {
     synchronized (lockTable.get(id)) {
       SEMANTIC_WARRANTY_LOGGER.finest("Extending warranty for " + id);
 
-      // If we've marked this for expiration, this call _can't_ be extended
-      if ((statusTable.get(id) == CallStatus.EXPIRING &&
-            warrantyTable.get(id).expiresBefore(newTime, true))
-          || valueTable.get(id) == null)
-        return new Pair<SemanticExtendStatus,
-               WarrantiedCallResult>(SemanticExtendStatus.BAD_VERSION, null);
+      if (!compareResult(id, oldValue)) {
+        return new Pair<SemanticExtendStatus, WarrantiedCallResult>(
+            SemanticExtendStatus.BAD_VERSION,
+            get(id));
+      }
 
-      // XXX BEHOLD MY CHECK OF DOOM XXX
-      //
-      // What this boils down to is making sure that if we have a value already,
-      // we verify that it is, in fact, the same thing as what they think it is.
-      // Don't want them lying to us, now do we?
-      if (valueTable.get(id) != null 
-          && ((oldValue.value instanceof WrappedJavaInlineable &&
-              valueTable.get(id) instanceof WrappedJavaInlineable &&
-              oldValue.value.equals(valueTable.get(id)))
-            || (oldValue.value instanceof fabric.lang.Object._Proxy &&
-              valueTable.get(id) instanceof fabric.lang.Object._Proxy &&
-              oldValue.value.$getOnum() == valueTable.get(id).$getOnum()))) {
-        SemanticWarranty newWarranty = new SemanticWarranty(newTime);
-        if (!oldValue.warranty.expired(true)) {
-          if (oldValue.warranty.expiresBefore(warrantyTable.get(id).expiry(), false) &&
-              newWarranty.expiresAfter(warrantyTable.get(id).expiry(), false) &&
-              warrantyTable.extend(id, oldValue.warranty, newWarranty)) {
-            return new Pair<SemanticExtendStatus,
-                   WarrantiedCallResult>(SemanticExtendStatus.OK, new
-                       WarrantiedCallResult(oldValue.value,
-                         warrantyTable.get(id)));
-          } else {
-            return new Pair<SemanticExtendStatus,
-                   WarrantiedCallResult>(SemanticExtendStatus.DENIED, null);
-          }
-        } else {
-          warrantyTable.put(id, newWarranty);
-          return new Pair<SemanticExtendStatus,
-                 WarrantiedCallResult>(SemanticExtendStatus.OK, new
-                     WarrantiedCallResult(oldValue.value,
-                       warrantyTable.get(id)));
-        }
-      } else {
-        return new Pair<SemanticExtendStatus,
-               WarrantiedCallResult>(SemanticExtendStatus.BAD_VERSION, new
-                   WarrantiedCallResult(valueTable.get(id),
-                     warrantyTable.get(id)));
+      switch (getCallStatus(id)) {
+        // No reason we can't extend.
+        case STALE:
+          // Update state back to valid.
+          // XXX this is the only case I'm not really sure about.
+          setCallStatus(id, CallStatus.VALID);
+          // $FALL-THROUGH$
+        case VALIDPENDING:
+        case VALID:
+        case VALIDUPDATING:
+          if (warrantyTable.get(id).expiresBefore(newTime, true))
+            warrantyTable.put(id, new SemanticWarranty(newTime));
+          return new Pair<SemanticExtendStatus, WarrantiedCallResult>(
+              SemanticExtendStatus.OK,
+              get(id));
+        // Can't extend because there's a pending write after expiry or the
+        // warranty already expired.
+        case EXPIRINGPENDING:
+        case EXPIRING:
+        case EXPIRINGUPDATING:
+        case EXPIRED:
+        default:
+          return new Pair<SemanticExtendStatus, WarrantiedCallResult>(
+              SemanticExtendStatus.DENIED,
+              get(id));
       }
     }
   }
