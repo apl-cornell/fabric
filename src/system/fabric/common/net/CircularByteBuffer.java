@@ -2,6 +2,8 @@ package fabric.common.net;
 
 import java.io.IOException;
 
+import fabric.common.Logging;
+
 /**
  * Similar to java.io.PipedInputStream and java.io.PipedOutputStream, but
  * supports multithreaded use of each pipe endpoint. This class is thread-safe.
@@ -160,7 +162,10 @@ public class CircularByteBuffer {
         try {
           buffer.wait();
         } catch (InterruptedException e) {
-          throw new IOException("Blocked read was interrupted");
+          // Ignore. (Should really be handling this, but requires plumbing to
+          // clean up any remote state that may have resulted from the message
+          // whose reply we're waiting for.)
+          Logging.logIgnoredInterruptedException(e);
         }
       }
     }

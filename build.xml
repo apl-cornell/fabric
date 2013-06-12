@@ -1323,6 +1323,8 @@ public class Version {
         <include name="src/je-*.tar.gz" />
         <!-- BouncyCastle -->
         <include name="bcprov-*.jar" />
+        <!-- Guava -->
+        <include name="guava-*.jar" />
         <!-- Jetty -->
         <include name="jetty/jetty-*.jar" />
         <include name="jetty/jsp-*.jar" /> <!-- part of Jetty -->

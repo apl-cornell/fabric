@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.Version;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
@@ -179,7 +180,7 @@ public class Node {
           t.join();
         }
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        Logging.logIgnoredInterruptedException(e);
       } finally {
         worker.shutdown();
       }

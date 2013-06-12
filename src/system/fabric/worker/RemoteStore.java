@@ -16,6 +16,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import fabric.common.Crypto;
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SemanticWarranty;
@@ -209,7 +210,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
           try {
             fetchLock.wait();
           } catch (InterruptedException e) {
-            e.printStackTrace();
+            Logging.logIgnoredInterruptedException(e);
           }
         }
       }
@@ -466,9 +467,12 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * Updates the worker's cache of objects that originate from this store. If an
    * object with the given onum exists in cache, it is evicted and replaced with
    * the given serialized object.
+   * 
+   * @return true iff the cache had an existing entry for the object (regardless
+   *          of whether such an entry was replaced).
    */
-  public void updateCache(Pair<SerializedObject, VersionWarranty> update) {
-    cache.update(this, update);
+  public boolean updateCache(Pair<SerializedObject, VersionWarranty> update) {
+	return cache.update(this, update);
   }
 
   /**

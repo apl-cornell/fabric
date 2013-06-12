@@ -22,4 +22,16 @@ public class RemoteIdentity {
     this.node = node;
     this.principal = principal;
   }
+
+  @Override
+  public String toString() {
+    String principalName;
+    if (principal == null) {
+      principalName = "not authenticated";
+    } else {
+      principalName = principal.$getStore().name() + "/" + principal.$getOnum();
+    }
+
+    return node.name() + " (" + principalName + ")";
+  }
 }

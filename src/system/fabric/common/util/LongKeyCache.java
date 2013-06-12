@@ -3,6 +3,8 @@ package fabric.common.util;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 
+import fabric.common.Logging;
+
 /**
  * A map that has soft references to its values and supports concurrent
  * accesses. When a value in the map is garbage collected by the JVM, its
@@ -186,6 +188,7 @@ public class LongKeyCache<V> {
           ValueSoftRef<?> ref = (ValueSoftRef<?>) queue.remove();
           ref.cache.map.remove(ref.key, ref);
         } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
         }
       }
     }

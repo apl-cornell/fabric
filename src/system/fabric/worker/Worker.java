@@ -12,11 +12,12 @@ import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
@@ -45,7 +46,6 @@ import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.Pair;
-import fabric.dissemination.Cache;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 import fabric.lang.FabricClassLoader;
@@ -102,10 +102,10 @@ public final class Worker {
   public FabricClassLoader loader;
 
   /** A map from store hostnames to Store objects */
-  protected final Map<String, RemoteStore> stores;
+  protected final ConcurrentMap<String, RemoteStore> stores;
 
   /** A map from worker hostnames to RemoteWorker objects. */
-  private final Map<String, RemoteWorker> remoteWorkers;
+  private final ConcurrentMap<String, RemoteWorker> remoteWorkers;
 
   protected final LocalStore localStore;
 
@@ -128,12 +128,6 @@ public final class Worker {
   public final LabelCache labelCache;
 
   protected final NodePrincipal principal;
-
-  /**
-   * The collection of dissemination caches used by this worker's dissemination
-   * node.
-   */
-  private final List<Cache> disseminationCaches;
 
   private final RemoteCallManager remoteCallManager;
 
@@ -224,9 +218,9 @@ public final class Worker {
 
     fabric.common.Options.DEBUG_NO_SSL = !config.useSSL;
 
-    this.stores = new HashMap<String, RemoteStore>();
+    this.stores = new ConcurrentHashMap<String, RemoteStore>();
     if (initStoreSet != null) this.stores.putAll(initStoreSet);
-    this.remoteWorkers = new HashMap<String, RemoteWorker>();
+    this.remoteWorkers = new ConcurrentHashMap<String, RemoteWorker>();
     this.localStore = new LocalStore();
 
     NameService nameService = new TransitionalNameService();
@@ -253,7 +247,6 @@ public final class Worker {
             PortType.WORKER);
 
     this.remoteCallManager = new RemoteCallManager(this);
-    this.disseminationCaches = new ArrayList<Cache>(1);
 
     // Initialize the fetch manager.
     try {
@@ -329,8 +322,10 @@ public final class Worker {
     RemoteStore result = stores.get(name);
     if (result == null) {
       result = new RemoteStore(name);
-      stores.put(name, result);
+      RemoteStore existingStore = stores.putIfAbsent(name, result);
+      if (existingStore != null) return existingStore;
     }
+
     return result;
   }
 
@@ -338,14 +333,13 @@ public final class Worker {
    * @return a <code>RemoteWorker</code> object
    */
   public RemoteWorker getWorker(String name) {
-    RemoteWorker result;
-    synchronized (remoteWorkers) {
-      result = remoteWorkers.get(name);
-      if (result == null) {
-        result = new RemoteWorker(name);
-        remoteWorkers.put(name, result);
-      }
+    RemoteWorker result = remoteWorkers.get(name);
+    if (result == null) {
+      result = new RemoteWorker(name);
+      RemoteWorker existingWorker = remoteWorkers.putIfAbsent(name, result);
+      if (existingWorker != null) return existingWorker;
     }
+
     return result;
   }
 
@@ -368,35 +362,30 @@ public final class Worker {
   }
 
   /**
-   * Registers that a worker has a new dissemination cache.
+   * Updates the dissemination and worker caches with the given object glob.
+   * 
+   * @return true iff either of the caches were updated.
    */
-  public void registerDisseminationCache(Cache cache) {
-    this.disseminationCaches.add(cache);
+  public boolean updateCaches(RemoteStore store, long onum, Glob update) {
+    return fetchManager.updateCaches(store, onum, update);
   }
 
   /**
-   * Updates the dissemination caches with the given object glob.
+   * Updates the worker cache with the given object group. Only old versions of
+   * objects replaced; new objects are not added to the cache if older versions
+   * don't already exist in cache.
    * 
-   * @return true iff there was a cache entry for the given oid.
+   * @return true iff the cache was updated.
    */
-  public boolean updateDissemCaches(RemoteStore store, long onum, Glob update) {
+  public boolean updateCache(RemoteStore store, ObjectGroup group) {
     boolean result = false;
-
-    for (Cache cache : disseminationCaches) {
-      result |= cache.updateEntry(store, onum, update);
+    for (Pair<SerializedObject, VersionWarranty> obj : group.objects().values()) {
+      // Because of short-circuiting, order of disjuncts matter here.
+      result = store.updateCache(obj) || result;
+      TransactionManager.abortReaders(store, obj.first.getOnum());
     }
 
     return result;
-  }
-
-  /**
-   * Updates the worker cache with the given object group.
-   */
-  public void updateCache(RemoteStore store, ObjectGroup group) {
-    for (Pair<SerializedObject, VersionWarranty> obj : group.objects().values()) {
-      store.updateCache(obj);
-      TransactionManager.abortReaders(store, obj.first.getOnum());
-    }
   }
 
   /**
@@ -551,10 +540,6 @@ public final class Worker {
     }
   }
 
-  public void setStore(String name, RemoteStore store) {
-    stores.put(name, store);
-  }
-
   /**
    * Runs the given Fabric program.
    * 
@@ -694,6 +679,7 @@ public final class Worker {
             Thread.sleep(backoff);
             break;
           } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
           }
         }
       }

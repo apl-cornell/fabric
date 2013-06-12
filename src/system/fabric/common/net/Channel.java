@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import fabric.common.Logging;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.ShakenSocket;
@@ -55,8 +56,17 @@ abstract class Channel extends Thread {
   // any unrecognized or previously closed stream ID should create a new stream
   // (thus the subsocket close message should be the last sent by a subsocket).
 
+  /**
+   * @param maxOpenConnections if zero, then an unlimited number of open
+   *          connections is permitted on this channel.
+   */
   protected Channel(ShakenSocket s, int maxOpenConnections) throws IOException {
     setDaemon(true);
+
+    if (maxOpenConnections < 0) {
+      throw new IllegalArgumentException(
+          "maxOpenConnections cannot be negative.");
+    }
 
     this.sock = s.sock;
     this.remoteIdentity = s.remoteIdentity;
@@ -229,10 +239,12 @@ abstract class Channel extends Thread {
       this.in = buf.getInputStream();
       this.sink = buf.getOutputStream();
       synchronized (connections) {
-        while (connections.size() >= maxOpenConnections) {
+        while (maxOpenConnections > 0
+            && connections.size() >= maxOpenConnections) {
           try {
             connections.wait();
           } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
           }
         }
         connections.put(this.streamID, this);

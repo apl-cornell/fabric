@@ -71,15 +71,16 @@ public final class Logging {
       .getLogger("fabric.worker.transactions");
 
   /**
-   * For HOTOS Logging.
-   */
-  public static final Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
-
-  /**
    * For local-store events on the worker.
    */
   public static final Logger WORKER_LOCAL_STORE_LOGGER = Logger
       .getLogger("fabric.worker.localstore");
+
+  /**
+   * For deadlock-detection events on the worker.
+   */
+  public static final Logger WORKER_DEADLOCK_LOGGER = Logger
+      .getLogger("fabric.worker.deadlocks");
 
   /**
    * For other worker-related events that don't fit into any other category. Use
@@ -146,9 +147,20 @@ public final class Logging {
   public static final Logger TIMING_LOGGER = Logger.getLogger("fabric.timing");
 
   /**
+   * For ignored InterruptedExceptions.
+   */
+  public static final Logger INTERRUPTED_EXCEPTION_LOGGER = Logger
+      .getLogger("fabric.interruptedExceptions");
+
+  /**
    * For other events that don't fit into any other category. Use sparingly.
    */
   public static final Logger MISC_LOGGER = Logger.getLogger("fabric");
+
+  /**
+   * For HOTOS Logging.
+   */
+  public static final Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
 
   // //////////////////////////////////////////////////////////////////////////
   // HELPER METHODS
@@ -236,6 +248,14 @@ public final class Logging {
       Object param2, Object param3, Object param4) {
     if (!logger.isLoggable(level)) return;
     logger.log(level, msg, new Object[] { param1, param2, param3, param4 });
+  }
+
+  /**
+   * Records that an InterruptedException was ignored.
+   */
+  public static void logIgnoredInterruptedException(InterruptedException e) {
+    INTERRUPTED_EXCEPTION_LOGGER.log(Level.FINEST,
+        "Ignored interrupted exception", e);
   }
 
   /**

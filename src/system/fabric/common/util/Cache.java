@@ -7,6 +7,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import fabric.common.Logging;
+
 /**
  * A map that has soft references to its values and supports concurrent
  * accesses. When a value in the map is garbage collected by the JVM, its
@@ -211,6 +213,7 @@ public class Cache<K, V> {
           ValueSoftRef<?, ?> ref = (ValueSoftRef<?, ?>) queue.remove();
           ref.cache.map.remove(ref.key, ref);
         } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
         }
       }
     }

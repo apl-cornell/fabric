@@ -12,4 +12,7 @@ public class MessageType {
   public static final short REPLICATE = 11;
   public static final short REPLICATE_REPLY = 12;
 
+  public static final short UPDATE = 21;
+  public static final short UPDATE_REPLY = 22;
+
 }

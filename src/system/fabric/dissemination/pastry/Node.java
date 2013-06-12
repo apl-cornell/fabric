@@ -14,6 +14,8 @@ import rice.pastry.NodeIdFactory;
 import rice.pastry.PastryNode;
 import rice.pastry.socket.SocketPastryNodeFactory;
 import rice.pastry.standard.RandomNodeIdFactory;
+import fabric.common.Logging;
+import fabric.dissemination.Cache;
 
 /**
  * Represents a pastry node with a dissemination process. Creating an instance
@@ -30,18 +32,14 @@ public class Node {
   protected PastryNode node;
   protected Disseminator disseminator;
 
-  public Node(Properties dissemConfig) throws IOException {
+  public Node(Properties dissemConfig, Cache cache) throws IOException {
     env = new Environment();
 
     // Some default environment values.
     Map<String, String> defaults = new HashMap<String, String>();
-    defaults.put("bootstrap", "localhost:13373");
-    defaults.put("firewall_test_policy", "never");
-    defaults.put("nat_search_policy", "never");
-    defaults.put("pastry_socket_allow_loopback", "true");
+    defaults.put("bootstrap", "localhost:" + DEFAULT_PORT);
     defaults.put("replication_interval", "300000");
     defaults.put("aggregation_interval", "600000");
-    defaults.put("pastry_protocol_periodicLeafSet_lease_period", "8000");
 
     // Load values from dissemConfig into the parameters for the Pastry
     // environment.
@@ -78,7 +76,7 @@ public class Node {
     node = pnf.newNode(pnf.getNodeHandle(boot));
     waitForReady(); // waits until the pastry node is actually set up
 
-    disseminator = new Disseminator(node);
+    disseminator = new Disseminator(node, cache);
   }
 
   /** Returns the disseminator application of this node. */
@@ -93,6 +91,7 @@ public class Node {
         try {
           node.wait(500);
         } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
         }
         if (++spinCount == 2) {
           System.out.println("Waiting for Pastry node to be ready.");

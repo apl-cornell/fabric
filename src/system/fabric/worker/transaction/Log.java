@@ -254,6 +254,17 @@ public final class Log {
   public final AbstractSecurityCache securityCache;
 
   /**
+   * The time at which this subtransaction was started.
+   */
+  public final long startTime;
+
+  /**
+   * If a transaction T's log appears in this set, then this transaction is
+   * waiting for a lock that is held by transaction T.
+   */
+  private final Set<Log> waitsFor;
+
+  /**
    * Creates a new log with the given parent and the given transaction ID. The
    * TID for the parent and the given TID are assumed to be consistent. If the
    * given TID is null, a random tid is generated for the subtransaction.  This
@@ -304,6 +315,8 @@ public final class Log {
             .synchronizedMap(new HashMap<CallInstance, SemanticWarranty>());
     this.blockedWarranties = new HashSet<CallInstance>();
     this.useStaleWarranties = true;
+    this.startTime = System.currentTimeMillis();
+    this.waitsFor = new HashSet<Log>();
 
     if (parent != null) {
       this.blockedWarranties.addAll(parent.blockedWarranties);
@@ -567,13 +580,11 @@ public final class Log {
     map = new LongKeyHashMap<V>(map);
 
     if (store.isLocalStore()) {
-      @SuppressWarnings("unchecked")
       Iterable<_Impl> chain =
           SysUtil.chain(localStoreWrites, localStoreCreates);
       for (_Impl write : chain)
         map.remove(write.$getOnum());
     } else {
-      @SuppressWarnings("unchecked")
       Iterable<_Impl> chain = SysUtil.chain(writes, creates);
       for (_Impl write : chain)
         if (write.$getStore() == store) map.remove(write.$getOnum());
@@ -742,14 +753,10 @@ public final class Log {
       Log log = toFlag.remove();
       synchronized (log) {
         if (log.child != null) toFlag.add(log.child);
-        if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid))
+        if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid)) {
           log.retrySignal = tid;
-        // XXX This was here to unblock a thread that may have been waiting on a
-        // XXX lock. Commented out because it was causing a bunch of
-        // XXX InterruptedExceptions and ClosedByInterruptExceptions that
-        // XXX weren't being handled properly.
-
-        // log.thread.interrupt();
+          log.thread.interrupt();
+        }
       }
     }
   }
@@ -777,7 +784,6 @@ public final class Log {
           read.releaseLock(this);
     }
     // Roll back writes and release write locks.
-    @SuppressWarnings("unchecked")
     Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
@@ -1254,7 +1260,6 @@ public final class Log {
           throw new InternalError("something was read by a non-existent parent");
 
         // Release write locks and ownerships; update version numbers.
-        @SuppressWarnings("unchecked")
         Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
         for (_Impl obj : chain) {
           if (!obj.$isOwned) {
@@ -1280,7 +1285,6 @@ public final class Log {
         }
 
         // Release write locks on created objects and set version numbers.
-        @SuppressWarnings("unchecked")
         Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
         for (_Impl obj : chain2) {
           if (!obj.$isOwned) {
@@ -1408,6 +1412,44 @@ public final class Log {
 
   public Log getChild() {
     return child;
+  }
+
+  /**
+   * Changes the waitsFor set to a singleton set containing the given log.
+   */
+  public void setWaitsFor(Log waitsFor) {
+    synchronized (this.waitsFor) {
+      this.waitsFor.clear();
+      this.waitsFor.add(waitsFor);
+    }
+  }
+
+  /**
+   * Changes the waitsFor set to contain exactly the elements of the given set.
+   */
+  public void setWaitsFor(Set<Log> waitsFor) {
+    synchronized (this.waitsFor) {
+      this.waitsFor.clear();
+      this.waitsFor.addAll(waitsFor);
+    }
+  }
+
+  /**
+   * Empties the waitsFor set.
+   */
+  public void clearWaitsFor() {
+    synchronized (this.waitsFor) {
+      this.waitsFor.clear();
+    }
+  }
+
+  /**
+   * Returns a copy of the waitsFor set.
+   */
+  public Set<Log> getWaitsFor() {
+    synchronized (this.waitsFor) {
+      return new HashSet<Log>(this.waitsFor);
+    }
   }
 
   /**

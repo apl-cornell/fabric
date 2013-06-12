@@ -291,6 +291,7 @@ public final class SysUtil {
    *          the iterables to chain
    * @return an object that can be used to traverse iters in order
    */
+  @SafeVarargs
   public static <T> Iterable<T> chain(final Iterable<T>... iters) {
     return new Iterable<T>() {
       @Override

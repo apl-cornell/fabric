@@ -45,4 +45,11 @@ public interface FetchManager {
    */
   public void destroy();
 
+  /**
+   * Updates the dissemination and worker caches with the given object glob.
+   * 
+   * @return true iff there was a dissemination-cache entry for the given oid.
+   */
+  public boolean updateCaches(RemoteStore store, long onum, Glob update);
+
 }

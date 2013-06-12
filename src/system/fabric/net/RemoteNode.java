@@ -38,7 +38,8 @@ public abstract class RemoteNode implements Serializable {
   }
 
   /**
-   * @return the node's hostname.
+   * @return the node's Fabric node name (Likely different from its DNS host
+   *          name).
    */
   public final String name() {
     return name;
