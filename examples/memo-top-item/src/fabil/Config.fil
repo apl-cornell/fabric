@@ -1,0 +1,11 @@
+public class Config {
+  public static final int NUM_USERS = 4096;
+  public static final Store STORE = Worker.getWorker().getStore("store");
+  public static final int getNumUsers() {
+    atomic {
+      TwooterAccount num = (TwooterAccount) STORE.getRoot().get("user_count");
+      if (num != null) return num.numFollowers();
+      else return NUM_USERS;
+    }
+  }
+}

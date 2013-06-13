@@ -1,0 +1,121 @@
+#!/usr/bin/env python2
+"""Script for running and collecting data for top n example of computation
+warranties."""
+import os, sys, subprocess, shlex
+from argparse import ArgumentParser 
+
+
+SCRIPT_PATH = os.path.abspath(os.path.dirname(sys.argv[0]))
+CODE_DATA_PATH = os.path.abspath(SCRIPT_PATH + "/../var")
+SCRIPT_ARGPARSER = ArgumentParser()
+SCRIPT_ARGPARSER.add_argument("time", metavar="T", type=int, nargs=1,
+                              help="Time to run the experiment for.")
+SCRIPT_ARGPARSER.add_argument("--num_accounts", metavar="A", type=int,
+                              nargs=1, default=4096, dest="num_accounts",
+                              help="Number of accounts to hold in the store")
+SCRIPT_ARGPARSER.add_argument("--top_count", metavar="N", type=int,
+                              nargs=1, default=5, dest="top_count",
+                              help="Number of items to grab for the top list")
+SCRIPT_ARGPARSER.add_argument("--read_freq", metavar="R", type=int,
+                              nargs=1, default=50, dest="read_freq",
+                              help="Time between each query of the top list")
+SCRIPT_ARGPARSER.add_argument("--write_freq", metavar="N", type=int,
+                              nargs=1, default=500, dest="write_freq",
+                              help="Time between each update of accounts")
+
+
+def start_store():
+    """Start the store process.
+
+    Returns:
+        The subprocess object representing the store process.
+    """
+    command = SCRIPT_PATH + "/start-store"
+    #TODO: might want to wait until store has "booted" before returning.
+    store_proc = subprocess.Popen(shlex.split(command),
+                                  stdout=subprocess.PIPE,
+                                  stdin=subprocess.PIPE)
+    while True:
+        line = store_proc.stdout.readline()
+        if line.strip() == "Store started": break
+    return store_proc
+
+
+def start_reader(num=5, read_period=50):
+    """Start the reader loop which repeatedly finds the top accounts (by number
+    of followers).
+
+    Args:
+        num: Collect the top num items each time (default 5)
+        read_period: How many milliseconds between queries (default 50)
+    Returns:
+        The subprocess object representing the reader process.
+    """
+    command = (SCRIPT_PATH + "/top {0} {1}").format(num, read_period)
+    #TODO: might want to wait until the reader is preheated before returning.
+    reader_proc = subprocess.Popen(shlex.split(command), stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE)
+    while True:
+        line = reader_proc.stdout.readline()
+        if line.strip() == "PREHEATED:": break
+    return reader_proc
+
+
+def start_writer(write_period=500):
+    """Start the writer loop.
+    
+    Args:
+        write_period: How many milliseconds between updates (default 500)
+    Returns:
+        The subprocess object representing the writer process.
+    """
+    command = (SCRIPT_PATH + "/writer {0}").format(write_period)
+    return subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
+
+
+def clear_data():
+    """Clear the store of all data along with old logs."""
+    print "REMOVING", CODE_DATA_PATH
+    sys.stdout.flush()
+    return subprocess.call(shlex.split("/bin/rm -r " + CODE_DATA_PATH))
+
+
+def create_accounts(num=None):
+    """Create num accounts for the experiment.  If a number of accounts is not
+    given, use the default defined in the fabric configuration code.
+
+    Args:
+        num: If set to anything other than None, use this as the number of
+        accounts to create
+    Returns:
+        True if the create command was successful and False otherwise.
+    """
+    store_proc = start_store()
+    create_command = SCRIPT_PATH + "/create"
+    if num: create_command += " {0}".format(num)
+    success = subprocess.call(shlex.split(create_command)) == 0
+    store_proc.stdin.terminate()
+    store_proc.wait()
+    # Currently exit code is nonzero for correct behavior?
+    return success
+
+
+def run(args):
+    """Entry point for the data collection script"""
+    print "clearing data"
+    sys.stdout.flush()
+    clear_data()
+    print "creating data"
+    sys.stdout.flush()
+    create_accounts(args.num_accounts)
+    print "starting shit"
+    sys.stdout.flush()
+    store_proc = start_store()
+    reader_proc = start_reader(args.top_count, args.read_freq)
+    writer_proc = start_writer(args.write_freq)
+    reader_proc.stdin.write("\n")
+
+
+if __name__ == "__main__":
+    args = SCRIPT_ARGPARSER.parse_args()
+    run(args)

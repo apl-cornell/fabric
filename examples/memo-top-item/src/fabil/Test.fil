@@ -1,0 +1,109 @@
+import fabric.util.LinkedList;
+import fabric.util.List;
+import java.io.IOException;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.util.Random;
+
+public class Test {
+
+  public Test Test$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
+  private void printList(List a) {
+    System.out.print("[");
+    for (int i = 0; i < a.size(); i++) {
+      System.out.print(" " + a.get(i) + " ");
+    }
+    System.out.print("]");
+  }
+
+  private List merge(int n, List a_orig, List b_orig) {
+    Store s = Config.STORE;
+    List merged = new LinkedList().fabric$util$LinkedList$();
+    //System.out.print("a_orig: "); printList(a_orig);
+    List a = new LinkedList().fabric$util$LinkedList$(a_orig);
+    //System.out.print("a: "); printList(a);
+    //System.out.print("b_orig: "); printList(b_orig);
+    List b = new LinkedList().fabric$util$LinkedList$(b_orig);
+    //System.out.print("b: "); printList(b);
+    //System.out.println();
+    for (int i = 0; i < n; i++) {
+      if (a.isEmpty() && b.isEmpty()) {
+        break;
+      } else if (a.isEmpty()
+          || (!b.isEmpty()
+            && (((TwooterAccount) b.get(0)).numFollowers() > ((TwooterAccount)
+                a.get(0)).numFollowers()))) {
+        merged.add(b.get(0));
+        b.remove(0);
+      } else {
+        merged.add(a.get(0));
+        a.remove(0);
+      }
+    }
+    return merged;
+  }
+
+  private /*memoized*/ List topAccountsBetween(int n, int min, int max) {
+    Store s = Config.STORE;
+    List rtn = new LinkedList@s().fabric$util$LinkedList$(); 
+    if (max - min <= n) {
+      for (int i = min; i < max; i++) {
+        TwooterAccount foo = (TwooterAccount) s.getRoot().get(new Integer(i));
+        int j = 0;
+        for (j = 0; j < rtn.size(); j++)
+          if (((TwooterAccount) rtn.get(j)).numFollowers() < foo.numFollowers())
+            break;
+        rtn.add(j, foo);
+      }
+    } else if (max > min) {
+      rtn.addAll(merge(n, topAccountsBetween(n, min, min + ((max - min) >> 1)),
+            topAccountsBetween(n, min + ((max - min) >> 1), max)));
+    }
+    //System.out.print("" + min + " <-" + n + "-> " + max + ": "); printList(rtn); System.out.println();
+    return rtn;
+  }
+
+  public List topAccounts(int n) {
+    return topAccountsBetween(n, 0, Config.getNumUsers());
+  }
+
+  public /*memoized*/ int foo(int n) {
+    return 1;
+  }
+
+  public static void main(String[] args) {
+    if (args.length != 2) System.exit(1); // TODO: Usage!
+    Test t = null;
+    atomic {
+      Store s = Config.STORE;
+      t = (Test) s.getRoot().get("initialized");
+    }
+    int n = Integer.parseInt(args[0]);
+    int msSleep = Integer.parseInt(args[1]);
+    atomic {
+      t.topAccounts(n);
+    }
+    System.out.println("PREHEATED:");
+    try { System.in.read(); } catch (IOException e) { System.exit(1); }
+    java.util.Random rand = new java.util.Random(0xDEADBEEF);
+    Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
+    while (true) {
+      List top = null;
+      try { Thread.sleep(msSleep); } catch (InterruptedException e) { break; }
+      long id = rand.nextLong();
+      HOTOS_LOGGER.log(Level.INFO, "===started {0}===", String.valueOf(id));
+      atomic {
+        top = t.topAccounts(n);
+      }
+      HOTOS_LOGGER.log(Level.INFO, "===committed {0}===", String.valueOf(id));
+      System.out.println("TOP " + n + " ACCOUNTS:");
+      for (int j = 0; j < n && j < top.size(); j++) {
+        System.out.println("" + j + ": " + ((TwooterAccount) top.get(j)));
+      }
+    }
+  }
+}

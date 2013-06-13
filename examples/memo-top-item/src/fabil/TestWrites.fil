@@ -1,0 +1,22 @@
+import java.util.Random;
+
+public class TestWrites {
+  public static void main(String[] args) {
+    if (args.length == 0) System.exit(1); // TODO: Usage!!!
+    int msSleep = Integer.parseInt(args[0]);
+    Random rand = new Random(0xDEADBEEF);
+    while (true) {
+      try { Thread.sleep(msSleep); } catch (InterruptedException e) { break; }
+      atomic {
+        TwooterAccount t = (TwooterAccount) Config.STORE.getRoot().get(new Integer(rand.nextInt(Config.getNumUsers())));
+        if (rand.nextBoolean()) {
+          System.out.println("Adding follower to " + t);
+          t.addFollower();
+        } else {
+          System.out.println("Removing follower from " + t);
+          t.removeFollower();
+        }
+      }
+    }
+  }
+}
