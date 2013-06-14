@@ -28,7 +28,7 @@ public class Create {
   }
 
   public static void main(String[] args) {
-    if (args.length >= 1) System.exit(1);
+    if (args.length > 1) System.exit(1);
     if (args.length == 1) populateUsers(Integer.parseInt(args[0]));
     else populateUsers(Config.NUM_USERS);
   }
