@@ -20,7 +20,7 @@ public class Create {
                                     rnd.nextInt(n >> 1)).TwooterAccount$());
       }
       /* HACK */
-      m.put("user_count", new TwooterAccount@s("total", n));
+      m.put("user_count", new TwooterAccount@s("total", n).TwooterAccount$());
       Test t = new Test@s().Test$();
       m.put("initialized", t);
     }
