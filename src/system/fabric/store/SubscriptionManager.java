@@ -24,7 +24,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.store.db.GroupContainer;
 import fabric.worker.remote.RemoteWorker;
 
@@ -75,13 +75,13 @@ public class SubscriptionManager extends FabricThread.Impl {
 
       Map<RemoteWorker, List<ObjectGroup>> workerNotificationMap =
           new HashMap<RemoteWorker, List<ObjectGroup>>();
-      Map<RemoteWorker, LongKeyMap<Glob>> dissemNotificationMap =
-          new HashMap<RemoteWorker, LongKeyMap<Glob>>();
+      Map<RemoteWorker, LongKeyMap<ObjectGlob>> dissemNotificationMap =
+          new HashMap<RemoteWorker, LongKeyMap<ObjectGlob>>();
 
       for (LongIterator it = onums.iterator(); it.hasNext();) {
         long onum = it.next();
         GroupContainer groupContainer;
-        Glob glob;
+        ObjectGlob glob;
         try {
           // Skip if the onum represents a surrogate.
           if (tm.read(onum).isSurrogate()) continue;
@@ -107,10 +107,10 @@ public class SubscriptionManager extends FabricThread.Impl {
 
               if (isDissem) {
                 // Add group to dissemNotificationMap.
-                LongKeyMap<Glob> globs =
+                LongKeyMap<ObjectGlob> globs =
                     dissemNotificationMap.get(subscribingNode);
                 if (globs == null) {
-                  globs = new LongKeyHashMap<Glob>();
+                  globs = new LongKeyHashMap<ObjectGlob>();
                   dissemNotificationMap.put(subscribingNode, globs);
                 }
 
@@ -172,10 +172,10 @@ public class SubscriptionManager extends FabricThread.Impl {
       }
 
       // Notify the dissemination nodes and resubscribe them.
-      for (Entry<RemoteWorker, LongKeyMap<Glob>> entry : dissemNotificationMap
+      for (Entry<RemoteWorker, LongKeyMap<ObjectGlob>> entry : dissemNotificationMap
           .entrySet()) {
         RemoteWorker dissemNode = entry.getKey();
-        LongKeyMap<Glob> updates = entry.getValue();
+        LongKeyMap<ObjectGlob> updates = entry.getValue();
 
         List<Long> resubscriptions =
             dissemNode.notifyObjectUpdates(store, updates);

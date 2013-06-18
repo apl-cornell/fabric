@@ -15,7 +15,7 @@ import fabric.common.net.SubSocket;
 import fabric.common.net.SubSocketFactory;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
@@ -182,7 +182,7 @@ public final class RemoteWorker extends RemoteNode {
    * 
    * @return whether the node is resubscribing to the object.
    */
-  public List<Long> notifyObjectUpdates(String store, LongKeyMap<Glob> updates) {
+  public List<Long> notifyObjectUpdates(String store, LongKeyMap<ObjectGlob> updates) {
     ObjectUpdateMessage.Response response;
     try {
       response = send(new ObjectUpdateMessage(store, updates));

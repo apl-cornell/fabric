@@ -9,7 +9,7 @@ import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.worker.Worker;
 
 /**
@@ -21,10 +21,10 @@ public class UpdateCache implements RawMessage {
   private final Id id;
   private final String store;
   private final long onum;
-  private final Glob update;
+  private final ObjectGlob update;
 
   public UpdateCache(NodeHandle sender, Id id, String store, long onum,
-      Glob update) {
+      ObjectGlob update) {
     this.sender = sender;
     this.id = id;
     this.store = store;
@@ -53,7 +53,7 @@ public class UpdateCache implements RawMessage {
   }
 
   /** The updated object group. */
-  public Glob update() {
+  public ObjectGlob update() {
     return update;
   }
 
@@ -93,9 +93,9 @@ public class UpdateCache implements RawMessage {
     store = in.readUTF();
     onum = in.readLong();
 
-    Glob glob;
+    ObjectGlob glob;
     try {
-      glob = new Glob(in);
+      glob = new ObjectGlob(in);
       glob.verifySignature(Worker.getWorker().getStore(store).getPublicKey());
     } catch (GeneralSecurityException e) {
       glob = null;

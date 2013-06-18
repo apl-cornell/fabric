@@ -14,7 +14,7 @@ import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
 import fabric.common.util.LongKeyMap;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -297,9 +297,9 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       response = new ArrayList<Long>();
 
       RemoteStore store = worker.getStore(objectUpdateMessage.store);
-      for (LongKeyMap.Entry<Glob> entry : objectUpdateMessage.globs.entrySet()) {
+      for (LongKeyMap.Entry<ObjectGlob> entry : objectUpdateMessage.globs.entrySet()) {
         long onum = entry.getKey();
-        Glob glob = entry.getValue();
+        ObjectGlob glob = entry.getValue();
         try {
           glob.verifySignature(store.getPublicKey());
 

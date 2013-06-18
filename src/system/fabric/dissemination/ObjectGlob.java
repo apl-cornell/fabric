@@ -34,9 +34,9 @@ import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 
 /**
- * A glob is an ObjectGroup that has been encrypted and signed.
+ * An object glob is an ObjectGroup that has been encrypted and signed.
  */
-public class Glob implements FastSerializable {
+public class ObjectGlob implements FastSerializable {
   /**
    * The time at which this glob was created. This acts as a version number.
    */
@@ -77,7 +77,7 @@ public class Glob implements FastSerializable {
    * @param key
    *          The store's private key. Used to sign the glob.
    */
-  public Glob(Store store, ObjectGroup group, PrivateKey key) {
+  public ObjectGlob(Store store, ObjectGroup group, PrivateKey key) {
     this.timestamp = System.currentTimeMillis();
 
     Label label = getLabel(store, group);
@@ -210,7 +210,7 @@ public class Glob implements FastSerializable {
   /**
    * Whether this Glob is older than the given Glob.
    */
-  public boolean isOlderThan(Glob glob) {
+  public boolean isOlderThan(ObjectGlob glob) {
     return timestamp < glob.timestamp;
   }
 
@@ -263,7 +263,7 @@ public class Glob implements FastSerializable {
   /**
    * Deserializer.
    */
-  public Glob(DataInput in) throws IOException {
+  public ObjectGlob(DataInput in) throws IOException {
     this.timestamp = in.readLong();
     if (in.readBoolean()) {
       Store store = Worker.getWorker().getStore(in.readUTF());
@@ -308,7 +308,7 @@ public class Glob implements FastSerializable {
   /**
    * Copies dissemination-related state to the given glob.
    */
-  void copyDissemStateTo(Glob g) {
+  void copyDissemStateTo(ObjectGlob g) {
     g.level = level;
     g.frequency = frequency;
   }

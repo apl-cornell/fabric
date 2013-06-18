@@ -7,7 +7,7 @@ import java.io.IOException;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 
 /**
  * A <code>DissemReadMessage</code> represents a request from a dissemination
@@ -34,9 +34,9 @@ public final class DissemReadMessage extends
 
   public static class Response implements Message.Response {
 
-    public final Glob glob;
+    public final ObjectGlob glob;
 
-    public Response(Glob glob) {
+    public Response(ObjectGlob glob) {
       this.glob = glob;
     }
 
@@ -68,7 +68,7 @@ public final class DissemReadMessage extends
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    Glob glob = new Glob(in);
+    ObjectGlob glob = new ObjectGlob(in);
     return new Response(glob);
   }
 

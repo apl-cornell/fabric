@@ -19,7 +19,7 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
@@ -263,7 +263,7 @@ public class TransactionManager {
    *          If non-null, then the given worker will be subscribed to the
    *          object as a dissemination node.
    */
-  public Glob getGlob(long onum, RemoteWorker subscriber)
+  public ObjectGlob getGlob(long onum, RemoteWorker subscriber)
       throws AccessException {
     return getGroupContainerAndSubscribe(onum, subscriber, true).getGlob();
   }
