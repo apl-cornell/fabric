@@ -42,10 +42,27 @@ public class ObjectUpdateMessage extends
     }
   }
 
+  /**
+   * Creates an object-update notification to be sent to a dissemination node.
+   * 
+   * @param store
+   *          the store from which the notification originated.
+   * @param updates
+   *          the set of encrypted object updates, keyed by the head object's
+   *          onum.
+   */
   public ObjectUpdateMessage(String store, LongKeyMap<Glob> updates) {
     this(store, updates, null, null);
   }
 
+  /**
+   * Creates an object-update notification to be sent to a worker node.
+   * 
+   * @param onums
+   *          the onums being updated to which the worker has subscribed. 
+   * @param updates
+   *          the set of object updates.
+   */
   public ObjectUpdateMessage(List<Long> onums, List<ObjectGroup> updates) {
     this(null, null, onums, updates);
   }
