@@ -9,6 +9,7 @@ import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.VersionWarranty.Binding;
+import fabric.common.WarrantyRefreshGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
@@ -197,7 +198,8 @@ public final class RemoteWorker extends RemoteNode {
    * 
    * @return whether the node is resubscribing to the object.
    */
-  public List<Long> notifyObjectUpdates(String store, LongKeyMap<ObjectGlob> updates) {
+  public List<Long> notifyObjectUpdates(String store,
+      LongKeyMap<ObjectGlob> updates) {
     ObjectUpdateMessage.Response response;
     try {
       response = send(new ObjectUpdateMessage(store, updates));
@@ -248,7 +250,7 @@ public final class RemoteWorker extends RemoteNode {
   /**
    * Notifies the worker that a list of warranties has been updated.
    */
-  public List<Long> notifyWarrantyRefresh(List<Binding> warranties) {
+  public List<Long> notifyWarrantyRefresh(WarrantyRefreshGroup warranties) {
     WarrantyRefreshMessage.Response response;
     try {
       response = send(new WarrantyRefreshMessage(warranties));

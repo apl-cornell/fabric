@@ -19,7 +19,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
-import fabric.common.VersionWarranty.Binding;
+import fabric.common.WarrantyRefreshGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.FabricRuntimeException;
@@ -371,7 +371,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    *          of whether such an entry was replaced).
    */
   public boolean updateCache(Pair<SerializedObject, VersionWarranty> update) {
-	return cache.update(this, update);
+    return cache.update(this, update);
   }
 
   /**
@@ -379,7 +379,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * 
    * @return the set of onums for which a cache entry was found.
    */
-  public List<Long> updateWarranties(List<Binding> warranties) {
+  public List<Long> updateWarranties(WarrantyRefreshGroup warranties) {
     return cache.update(this, warranties);
   }
 

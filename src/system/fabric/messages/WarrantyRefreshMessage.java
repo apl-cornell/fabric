@@ -8,6 +8,7 @@ import java.util.List;
 
 import fabric.common.VersionWarranty;
 import fabric.common.VersionWarranty.Binding;
+import fabric.common.WarrantyRefreshGroup;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
@@ -24,11 +25,11 @@ public class WarrantyRefreshMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   public final String store;
-  public final List<Binding> warranties;
+  public final WarrantyRefreshGroup warranties;
 
   public final LongKeyMap<List<Binding>> warrantyGroups;
 
-  private WarrantyRefreshMessage(String store, List<Binding> warranties,
+  private WarrantyRefreshMessage(String store, WarrantyRefreshGroup warranties,
       LongKeyMap<List<Binding>> warrantyGroups) {
     super(MessageType.WARRANTY_REFRESH, NoException.class);
     this.store = store;
@@ -36,12 +37,28 @@ public class WarrantyRefreshMessage extends
     this.warrantyGroups = warrantyGroups;
   }
 
+  /**
+   * Creates a warranty-refresh notification to be sent to a dissemination node.
+   * 
+   * @param store
+   *          the store from which the notification originated.
+   *          
+   * @param warrantyGroups
+   *          the set of encrypted refreshed warranties, keyed by the head
+   *          object's onum.
+   */
   public WarrantyRefreshMessage(String store,
       LongKeyMap<List<Binding>> warrantyGroups) {
     this(store, null, warrantyGroups);
   }
 
-  public WarrantyRefreshMessage(List<Binding> warranties) {
+  /**
+   * Creates a warranty-refresh notification to be sent to a worker node.
+   * 
+   * @param warranties
+   *          the set of refreshed warranties.
+   */
+  public WarrantyRefreshMessage(WarrantyRefreshGroup warranties) {
     this(null, warranties, null);
   }
 
@@ -93,10 +110,7 @@ public class WarrantyRefreshMessage extends
       }
     } else {
       out.writeBoolean(false);
-      out.writeInt(warranties.size());
-      for (Binding update : warranties) {
-        writeBinding(update, out);
-      }
+      warranties.write(out);
     }
   }
 
@@ -126,12 +140,7 @@ public class WarrantyRefreshMessage extends
     } else {
       this.store = null;
       this.warrantyGroups = null;
-
-      int updateSize = in.readInt();
-      this.warranties = new ArrayList<Binding>(updateSize);
-      for (int i = 0; i < updateSize; i++) {
-        warranties.add(readBinding(in));
-      }
+      this.warranties = new WarrantyRefreshGroup(in);
     }
   }
 
