@@ -10,7 +10,7 @@ import fabric.common.util.LongKeyMap;
 /**
  * Holds a set of related, unencrypted, serialized objects.
  */
-public class ObjectGroup {
+public class ObjectGroup implements FastSerializable {
   private final LongKeyMap<SerializedObject> objects;
 
   public ObjectGroup(LongKeyMap<SerializedObject> objects) {
@@ -27,6 +27,7 @@ public class ObjectGroup {
   /**
    * Serializes the group onto the given output stream.
    */
+  @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(objects.size());
     for (SerializedObject obj : objects.values()) {
