@@ -9,7 +9,7 @@ import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.worker.Worker;
 
 /**
@@ -107,9 +107,9 @@ public class Fetch implements RawMessage {
     private final Id id;
     private final String store;
     private final long onum;
-    private final Glob glob;
+    private final ObjectGlob glob;
 
-    public Reply(Fetch parent, Glob glob) {
+    public Reply(Fetch parent, ObjectGlob glob) {
       id = parent.id();
       store = parent.store();
       onum = parent.onum();
@@ -117,7 +117,7 @@ public class Fetch implements RawMessage {
     }
 
     /** The glob returned. */
-    public Glob glob() {
+    public ObjectGlob glob() {
       return glob;
     }
 
@@ -165,9 +165,9 @@ public class Fetch implements RawMessage {
       store = in.readUTF();
       onum = in.readLong();
 
-      Glob glob;
+      ObjectGlob glob;
       try {
-        glob = new Glob(in);
+        glob = new ObjectGlob(in);
         glob.verifySignature(Worker.getWorker().getStore(store).getPublicKey());
       } catch (GeneralSecurityException e) {
         glob = null;

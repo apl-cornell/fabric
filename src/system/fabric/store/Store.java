@@ -35,7 +35,7 @@ import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.LongKeyMap;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
@@ -260,7 +260,7 @@ class Store extends MessageToStoreHandler {
         "Handling DissemRead message from {0}, onum={1}",
         nameOf(client.principal), msg.onum);
 
-    Glob glob = tm.getGlob(msg.onum, (RemoteWorker) client.node);
+    ObjectGlob glob = tm.getGlob(msg.onum, (RemoteWorker) client.node);
     return new DissemReadMessage.Response(glob);
   }
 

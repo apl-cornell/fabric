@@ -30,7 +30,7 @@ import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
@@ -248,7 +248,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @param onum
    *          The object number to fetch.
    */
-  public final Glob readEncryptedObjectFromStore(long onum)
+  public final ObjectGlob readEncryptedObjectFromStore(long onum)
       throws AccessException {
     DissemReadMessage.Response response =
         send(Worker.getWorker().unauthToStore, new DissemReadMessage(onum));

@@ -24,7 +24,7 @@ public class Cache {
   /**
    * Cache of globs, indexed by the oid of the glob's head object.
    */
-  private final fabric.common.util.Cache<Pair<RemoteStore, Long>, Glob> map;
+  private final fabric.common.util.Cache<Pair<RemoteStore, Long>, ObjectGlob> map;
 
   /**
    * The set of fetch locks. Used to prevent threads from concurrently
@@ -34,11 +34,11 @@ public class Cache {
 
   private class FetchLock {
     private boolean ready = false;
-    private Glob glob = null;
+    private ObjectGlob glob = null;
   }
 
   public Cache() {
-    this.map = new fabric.common.util.Cache<Pair<RemoteStore, Long>, Glob>();
+    this.map = new fabric.common.util.Cache<Pair<RemoteStore, Long>, ObjectGlob>();
     this.fetchLocks = new OidKeyHashMap<Cache.FetchLock>();
   }
 
@@ -51,7 +51,7 @@ public class Cache {
    *          the onum of the object.
    * @return the glob, if it is in the cache; null otherwise.
    */
-  public Glob get(RemoteStore store, long onum) {
+  public ObjectGlob get(RemoteStore store, long onum) {
     return get(store, onum, false);
   }
 
@@ -68,10 +68,10 @@ public class Cache {
    * @return the glob, or null if fetch is false and glob does not exists in
    *         cache.
    */
-  public Glob get(RemoteStore store, long onum, boolean fetch) {
+  public ObjectGlob get(RemoteStore store, long onum, boolean fetch) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
-    Glob g = map.get(key);
+    ObjectGlob g = map.get(key);
     if (g != null || !fetch) return g;
 
     // Need to fetch. Check the object table in case some other thread fetched
@@ -81,7 +81,7 @@ public class Cache {
     FetchLock fetchLock;
     boolean needToFetch = false;
     synchronized (fetchLocks) {
-      Glob result = map.get(key);
+      ObjectGlob result = map.get(key);
       if (result != null) return result;
 
       // Object not in cache. Get/create a mutex for fetching the object.
@@ -124,8 +124,8 @@ public class Cache {
   /**
    * Fetches a glob from the store and caches it.
    */
-  private Glob fetch(Pair<RemoteStore, Long> oid) {
-    Glob g = null;
+  private ObjectGlob fetch(Pair<RemoteStore, Long> oid) {
+    ObjectGlob g = null;
     RemoteStore store = oid.first;
     long onum = oid.second;
 
@@ -136,7 +136,7 @@ public class Cache {
 
     if (g != null) {
       while (true) {
-        Glob old = get(store, onum);
+        ObjectGlob old = get(store, onum);
 
         if (old == null || old.isOlderThan(g)) {
           if (!map.replace(oid, old, g)) {
@@ -164,11 +164,11 @@ public class Cache {
    * @param g
    *          the glob.
    */
-  public void put(RemoteStore store, long onum, Glob g) {
+  public void put(RemoteStore store, long onum, ObjectGlob g) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
     while (true) {
-      Glob old = get(store, onum);
+      ObjectGlob old = get(store, onum);
 
       if (old == null || old.isOlderThan(g)) {
         if (map.replace(key, old, g)) break;
@@ -187,7 +187,7 @@ public class Cache {
    * 
    * @return true iff there was a cache entry for the given oid.
    */
-  public boolean updateEntry(RemoteStore store, long onum, Glob g) {
+  public boolean updateEntry(RemoteStore store, long onum, ObjectGlob g) {
     // Update the local worker's cache.
     // XXX What happens if the worker isn't trusted to decrypt the glob?
     boolean result = Worker.getWorker().updateCache(store, g.decrypt());
@@ -195,7 +195,7 @@ public class Cache {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
     while (true) {
-      Glob old = get(store, onum);
+      ObjectGlob old = get(store, onum);
       if (old == null) return result;
 
       if (old.isOlderThan(g)) {
@@ -223,7 +223,7 @@ public class Cache {
         new HashSet<Pair<Pair<RemoteStore, Long>, Long>>();
 
     for (Pair<RemoteStore, Long> key : map.keys()) {
-      Glob glob = map.get(key);
+      ObjectGlob glob = map.get(key);
       if (glob != null)
         result.add(new Pair<Pair<RemoteStore, Long>, Long>(key, glob
             .getTimestamp()));
@@ -252,8 +252,8 @@ public class Cache {
         @Override
         public int compare(Pair<Pair<RemoteStore, Long>, Long> o1,
             Pair<Pair<RemoteStore, Long>, Long> o2) {
-          Glob g1 = map.get(o1.first);
-          Glob g2 = map.get(o2.first);
+          ObjectGlob g1 = map.get(o1.first);
+          ObjectGlob g2 = map.get(o2.first);
 
           if (g1 == g2) {
             return 0;

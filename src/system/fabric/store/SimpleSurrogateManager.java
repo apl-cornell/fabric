@@ -31,7 +31,6 @@ public class SimpleSurrogateManager implements SurrogateManager {
         new TreeMap<ComparablePair<String, Long>, Long>();
     Collection<SerializedObject> surrogates = new ArrayList<SerializedObject>();
 
-    @SuppressWarnings("unchecked")
     Iterable<SerializedObject> chain = SysUtil.chain(req.creates, req.writes);
     for (SerializedObject obj : chain) {
       Iterator<Long> intraStore = obj.getIntraStoreRefIterator();

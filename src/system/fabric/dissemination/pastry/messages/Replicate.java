@@ -13,7 +13,7 @@ import rice.p2p.commonapi.rawserialization.RawMessage;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -117,13 +117,13 @@ public class Replicate implements RawMessage {
    */
   public static class Reply implements RawMessage {
 
-    private final Map<Pair<RemoteStore, Long>, Glob> globs;
+    private final Map<Pair<RemoteStore, Long>, ObjectGlob> globs;
 
-    public Reply(Map<Pair<RemoteStore, Long>, Glob> globs) {
+    public Reply(Map<Pair<RemoteStore, Long>, ObjectGlob> globs) {
       this.globs = globs;
     }
 
-    public Map<Pair<RemoteStore, Long>, Glob> globs() {
+    public Map<Pair<RemoteStore, Long>, ObjectGlob> globs() {
       return globs;
     }
 
@@ -153,7 +153,7 @@ public class Replicate implements RawMessage {
       DataOutputBuffer out = new DataOutputBuffer(buf);
       out.writeInt(globs.size());
 
-      for (Map.Entry<Pair<RemoteStore, Long>, Glob> e : globs.entrySet()) {
+      for (Map.Entry<Pair<RemoteStore, Long>, ObjectGlob> e : globs.entrySet()) {
         out.writeUTF(e.getKey().first.name());
         out.writeLong(e.getKey().second);
         e.getValue().write(out);
@@ -167,13 +167,13 @@ public class Replicate implements RawMessage {
       DataInputBuffer in = new DataInputBuffer(buf);
       Worker worker = Worker.getWorker();
       int n = in.readInt();
-      globs = new HashMap<Pair<RemoteStore, Long>, Glob>(n);
+      globs = new HashMap<Pair<RemoteStore, Long>, ObjectGlob>(n);
 
       for (int i = 0; i < n; i++) {
         RemoteStore store = worker.getStore(in.readUTF());
         long onum = in.readLong();
         try {
-          Glob g = new Glob(in);
+          ObjectGlob g = new ObjectGlob(in);
           g.verifySignature(store.getPublicKey());
           globs.put(new Pair<RemoteStore, Long>(store, onum), g);
         } catch (GeneralSecurityException e) {

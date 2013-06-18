@@ -34,7 +34,7 @@ import fabric.common.Logging;
 import fabric.common.util.Cache;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.pastry.messages.AggregateInterval;
 import fabric.dissemination.pastry.messages.Fetch;
 import fabric.dissemination.pastry.messages.MessageType;
@@ -206,9 +206,9 @@ public class Disseminator implements Application {
    * @throws DisseminationTimeoutException
    *           if the dissemination network takes too long.
    */
-  public Glob fetch(RemoteStore c, long onum)
+  public ObjectGlob fetch(RemoteStore c, long onum)
       throws DisseminationTimeoutException {
-    Glob g = cache.get(c, onum);
+    ObjectGlob g = cache.get(c, onum);
 
     if (g != null) {
       return g;
@@ -278,7 +278,7 @@ public class Disseminator implements Application {
         // Subscribe the remote endpoint.
         subscribe(msg.sender(), c, onum);
 
-        Glob g = cache.get(c, onum, true);
+        ObjectGlob g = cache.get(c, onum, true);
         reply(g, msg);
         return null;
       }
@@ -319,7 +319,7 @@ public class Disseminator implements Application {
   /**
    * Helper function. Reply to a Fetch message with given glob.
    */
-  protected void reply(Glob g, Fetch msg) {
+  protected void reply(ObjectGlob g, Fetch msg) {
     g.touch();
     Fetch.Reply r = new Fetch.Reply(msg, g);
     route(null, r, msg.sender());
@@ -332,7 +332,7 @@ public class Disseminator implements Application {
    * @return true iff there was a dissemination-cache entry for the given oid or
    *          if the update was forwarded to another node.
    */
-  boolean updateCaches(RemoteStore store, long onum, Glob update) {
+  boolean updateCaches(RemoteStore store, long onum, ObjectGlob update) {
     // Update the local caches.
     boolean result = cache.updateEntry(store, onum, update);
 
@@ -382,7 +382,7 @@ public class Disseminator implements Application {
         Worker worker = Worker.getWorker();
         RemoteStore store = worker.getStore(msg.store());
         long onum = msg.onum();
-        Glob update = msg.update();
+        ObjectGlob update = msg.update();
 
         boolean result = updateCaches(store, onum, update);
         UpdateCache.Reply reply =
@@ -531,8 +531,8 @@ public class Disseminator implements Application {
 
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
 
-        Map<Pair<RemoteStore, Long>, Glob> globs =
-            new HashMap<Pair<RemoteStore, Long>, Glob>();
+        Map<Pair<RemoteStore, Long>, ObjectGlob> globs =
+            new HashMap<Pair<RemoteStore, Long>, ObjectGlob>();
 
         for (Pair<Pair<RemoteStore, Long>, Long> k : cache.sortedTimestamps()) {
           Long skipTimestamp = skip.get(k.first.first, k.first.second);
@@ -547,7 +547,7 @@ public class Disseminator implements Application {
           if (send) {
             RemoteStore c = k.first.first;
             Long onum = k.first.second;
-            Glob g = cache.get(c, onum);
+            ObjectGlob g = cache.get(c, onum);
             if (g.level() > level) continue;
 
             globs.put(k.first, g);
@@ -602,11 +602,11 @@ public class Disseminator implements Application {
     process(new Executable<Void, RuntimeException>() {
       @Override
       public Void execute() {
-        for (Map.Entry<Pair<RemoteStore, Long>, Glob> e : msg.globs()
+        for (Map.Entry<Pair<RemoteStore, Long>, ObjectGlob> e : msg.globs()
             .entrySet()) {
           RemoteStore c = e.getKey().first;
           long onum = e.getKey().second;
-          Glob g = e.getValue();
+          ObjectGlob g = e.getValue();
           cache.put(c, onum, g);
         }
 
@@ -656,7 +656,7 @@ public class Disseminator implements Application {
 
     RemoteStore c = worker.getStore(msg.store());
     long onum = msg.onum();
-    Glob g = cache.get(c, onum);
+    ObjectGlob g = cache.get(c, onum);
 
     if (g != null) {
       // Subscribe the remote endpoint.
@@ -680,7 +680,7 @@ public class Disseminator implements Application {
     Worker worker = Worker.getWorker();
     RemoteStore c = worker.getStore(msg.store());
     long onum = msg.onum();
-    Glob g = msg.glob();
+    ObjectGlob g = msg.glob();
 
     if (g != null) cache.put(c, onum, g);
 
