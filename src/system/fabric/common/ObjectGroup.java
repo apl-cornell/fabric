@@ -13,7 +13,7 @@ import fabric.store.TransactionManager;
 /**
  * Holds a set of related, unencrypted, serialized objects.
  */
-public class ObjectGroup {
+public class ObjectGroup implements FastSerializable {
   private final LongKeyMap<Pair<SerializedObject, VersionWarranty>> objects;
 
   /**
@@ -54,6 +54,7 @@ public class ObjectGroup {
   /**
    * Serializes the group onto the given output stream.
    */
+  @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(objects.size());
     for (Pair<SerializedObject, VersionWarranty> obj : objects.values()) {
