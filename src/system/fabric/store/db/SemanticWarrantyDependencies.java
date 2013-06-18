@@ -22,10 +22,16 @@ import fabric.worker.memoize.CallInstance;
 //TODO: This is not threadsafe.
 public class SemanticWarrantyDependencies {
   /**
-   * Mapping from a CallInstance's id to the set of onums of object read during
+   * Mapping from a CallInstance's id to the set of onums of objects read during
    * that computation.
    */
   private final ConcurrentMap<CallInstance, LongSet> objectsRead;
+  
+  /**
+   * Mapping from a CallInstance's id to the set of onums of objects created
+   * during that computation.
+   */
+  private final ConcurrentMap<CallInstance, LongSet> objectsCreated;
   
   /**
    * Mapping from a CallInstance's id to the set of ids CallInstance used during
@@ -40,6 +46,12 @@ public class SemanticWarrantyDependencies {
   private final ConcurrentLongKeyMap<Set<CallInstance>> objectReaders;
 
   /**
+   * Reverse mapping from an object's onum to the id of the CallInstance that
+   * created the object.
+   */
+  private final ConcurrentLongKeyMap<Set<CallInstance>> objectCreators;
+
+  /**
    * Reverse mapping from a CallInstance's id to the set of ids of CallInstances
    * that use the call.
    */
@@ -47,8 +59,10 @@ public class SemanticWarrantyDependencies {
 
   public SemanticWarrantyDependencies() {
     objectsRead = new ConcurrentHashMap<CallInstance, LongSet>();
+    objectsCreated = new ConcurrentHashMap<CallInstance, LongSet>();
     callsUsed = new ConcurrentHashMap<CallInstance, Set<CallInstance>>();
     objectReaders = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
+    objectCreators = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     callUsers = new ConcurrentHashMap<CallInstance, Set<CallInstance>>();
   }
 
@@ -57,11 +71,13 @@ public class SemanticWarrantyDependencies {
    *
    * This does <b>not</b> clear out old state if the call was inserted before.
    */
-  public void addCall(CallInstance id, LongSet reads, Set<CallInstance> calls) {
+  public void addCall(CallInstance id, LongSet reads, LongSet creates,
+      Set<CallInstance> calls) {
     // Clear out any left over state.
     removeCall(id);
 
     objectsRead.put(id, reads);
+    objectsCreated.put(id, creates);
     callsUsed.put(id, calls);
 
     LongIterator readsIt = reads.iterator();
@@ -75,6 +91,17 @@ public class SemanticWarrantyDependencies {
       readers.add(id);
     }
 
+    LongIterator createsIt = creates.iterator();
+    while (createsIt.hasNext()) {
+      long onum = createsIt.next();
+      Set<CallInstance> creators = objectCreators.get(onum);
+      if (creators == null) {
+        creators = new HashSet<CallInstance>();
+        objectCreators.put(onum, creators);
+      }
+      creators.add(id);
+    }
+
     for (CallInstance callId : calls) {
       SEMANTIC_WARRANTY_LOGGER.finest("Call " + callId + " called by " + id);
       Set<CallInstance> users = callUsers.get(callId);
@@ -86,35 +113,72 @@ public class SemanticWarrantyDependencies {
     }
   }
 
-  public void addDependency(CallInstance id, CallInstance subcall) {
+  public void addCallDependency(CallInstance id, CallInstance subcall) {
     Set<CallInstance> calls = callsUsed.get(id);
     if (calls == null) return;
     calls.add(subcall);
+    Set<CallInstance> callers = callUsers.get(subcall);
+    if (callers == null) {
+      callers = new HashSet<CallInstance>();
+      callUsers.put(subcall, callers);
+    }
+    callers.add(id);
   }
 
-  public void addDependency(CallInstance id, long read) {
+  public void addReadDependency(CallInstance id, long read) {
     LongSet reads = objectsRead.get(id);
     if (reads == null) return;
     reads.add(read);
+    Set<CallInstance> readers = objectReaders.get(read);
+    if (readers == null) {
+      readers = new HashSet<CallInstance>();
+      objectReaders.put(read, readers);
+    }
+    readers.add(id);
+  }
+
+  public void addCreateDependency(CallInstance id, long create) {
+    LongSet creates = objectsRead.get(id);
+    if (creates == null) return;
+    Set<CallInstance> creators = objectCreators.get(create);
+    if (creators == null) {
+      creators = new HashSet<CallInstance>();
+      objectCreators.put(create, creators);
+    }
+    creators.add(id);
   }
 
   /**
    * Remove a call and it's dependencies from the table.
+   *
+   * Does not remove pointers from callers of this call, you have to pass up the
+   * dependencies if you want that behavior.
    */
   public void removeCall(CallInstance id) {
-    LongSet objects = objectsRead.get(id);
+    LongSet reads = objectsRead.get(id);
     objectsRead.remove(id);
+
+    LongSet creates = objectsCreated.get(id);
+    objectsCreated.remove(id);
 
     Set<CallInstance> calls = callsUsed.get(id);
     callsUsed.remove(id);
 
-    if (objects != null) {
-      LongIterator objectsIt = objects.iterator();
-      while (objectsIt.hasNext()) {
-        long object = objectsIt.next();
-        Set<CallInstance> readers = objectReaders.get(object);
+    if (reads != null) {
+      LongIterator readsIt = reads.iterator();
+      while (readsIt.hasNext()) {
+        long read = readsIt.next();
+        Set<CallInstance> readers = objectReaders.get(read);
         if (readers == null) continue;
         readers.remove(id);
+      }
+    }
+
+    if (creates != null) {
+      LongIterator createsIt = creates.iterator();
+      while (createsIt.hasNext()) {
+        long create = createsIt.next();
+        objectCreators.remove(create);
       }
     }
 
@@ -157,6 +221,22 @@ public class SemanticWarrantyDependencies {
    */
   public Set<CallInstance> getReaders(long onum) {
     Set<CallInstance> inTable = objectReaders.get(onum);
+    return inTable == null ? new HashSet<CallInstance>() : inTable;
+  }
+
+  /**
+   * Get the set of onums that the given call used
+   */
+  public LongSet getCreates(CallInstance id) {
+    LongSet inTable = objectsCreated.get(id);
+    return inTable == null ? new LongHashSet() : inTable;
+  }
+
+  /**
+   * Get the set of call ids that depend on the given object onum.
+   */
+  public Set<CallInstance> getCreators(long onum) {
+    Set<CallInstance> inTable = objectCreators.get(onum);
     return inTable == null ? new HashSet<CallInstance>() : inTable;
   }
 }

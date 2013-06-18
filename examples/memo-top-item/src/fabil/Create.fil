@@ -19,15 +19,16 @@ public class Create {
               new TwooterAccount@s("UID" + i,
                                     rnd.nextInt(n >> 1)).TwooterAccount$());
       }
+      /* HACK */
+      m.put("user_count", new TwooterAccount@s("total", n).TwooterAccount$());
       Test t = new Test@s().Test$();
-      m.put("user_count", n);
       m.put("initialized", t);
     }
     System.out.println("done");
   }
 
   public static void main(String[] args) {
-    if (args.length >= 1) System.exit(1);
+    if (args.length > 1) System.exit(1);
     if (args.length == 1) populateUsers(Integer.parseInt(args[0]));
     else populateUsers(Config.NUM_USERS);
   }

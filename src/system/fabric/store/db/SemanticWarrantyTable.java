@@ -163,6 +163,7 @@ public class SemanticWarrantyTable {
           // this call.
           Set<CallInstance> subcalls = dependencyTable.getCalls(id);
           LongSet subreads = dependencyTable.getReads(id);
+          LongSet subcreates = dependencyTable.getCreates(id);
           Set<CallInstance> callers = dependencyTable.getCallers(id);
           dependencyTable.removeCall(id);
           if (subcalls != null && subreads != null && callers != null) {
@@ -170,9 +171,11 @@ public class SemanticWarrantyTable {
               lockTable.putIfAbsent(caller, new Object());
               synchronized (lockTable.get(caller)) {
                 for (CallInstance subcall : subcalls)
-                  dependencyTable.addDependency(caller, subcall);
+                  dependencyTable.addCallDependency(caller, subcall);
                 for (LongIterator iter = subreads.iterator(); iter.hasNext();)
-                  dependencyTable.addDependency(caller, iter.next());
+                  dependencyTable.addReadDependency(caller, iter.next());
+                for (LongIterator iter = subcreates.iterator(); iter.hasNext();)
+                  dependencyTable.addCreateDependency(caller, iter.next());
               }
             }
           }
@@ -220,7 +223,9 @@ public class SemanticWarrantyTable {
           nextWrite = callTime;
         }
       }
-      for (LongIterator iter = dependencyTable.getReads(call).iterator();
+      LongSet readsAndCreates = new LongHashSet(dependencyTable.getReads(call));
+      readsAndCreates.addAll(dependencyTable.getCreates(call));
+      for (LongIterator iter = readsAndCreates.iterator();
           iter.hasNext();) {
         long onum = iter.next();
         if (database.isWritten(onum)) {
@@ -272,10 +277,11 @@ public class SemanticWarrantyTable {
 
       // Add the warranty dependencies to the dependencyTable
       LongSet deps = new LongHashSet(req.readOnums);
-      deps.addAll(req.createOnums);
-      if (!(req.value instanceof WrappedJavaInlineable))
+      if (!(req.value instanceof WrappedJavaInlineable) &&
+          !req.createOnums.contains(req.value.$getOnum()))
         deps.add(req.value.$getOnum());
-      dependencyTable.addCall(req.call, deps, req.calls.keySet());
+      dependencyTable.addCall(req.call, deps, req.createOnums,
+          req.calls.keySet());
       
       // Determine a warranty term and make the warranty.
       SemanticWarranty newWarranty = new SemanticWarranty(pickWarrantyTime(req));
@@ -783,8 +789,14 @@ public class SemanticWarrantyTable {
     }
     long longest = 0l;
     for (SerializedObject obj : writes) {
-      for (CallInstance call : new HashSet<CallInstance>(dependencyTable.getReaders(obj.getOnum()))) {
+      Set<CallInstance> readersAndCreators =
+        new HashSet<CallInstance>(dependencyTable.getReaders(obj.getOnum()));
+      readersAndCreators.addAll(dependencyTable.getCreators(obj.getOnum()));
+      for (CallInstance call : readersAndCreators) {
+        // XXX Check if we can allow the write before the term expiration.
         long writeDelay = scheduleWriteOn(call);
+        // XXX Maybe we should explicitly check the calls that depended on the
+        // one we just checked.
         longest = longest > writeDelay ? longest : writeDelay;
       }
     }

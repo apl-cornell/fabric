@@ -3,8 +3,8 @@ public class Config {
   public static final Store STORE = Worker.getWorker().getStore("store");
   public static final int getNumUsers() {
     atomic {
-      Integer num = STORE.getRoot().get("user_count");
-      if (num != null) return num.intValue();
+      TwooterAccount num = (TwooterAccount) STORE.getRoot().get("user_count");
+      if (num != null) return num.numFollowers();
       else return NUM_USERS;
     }
   }
