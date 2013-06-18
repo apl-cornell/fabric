@@ -50,6 +50,6 @@ public interface FetchManager {
    * 
    * @return true iff there was a dissemination-cache entry for the given oid.
    */
-  public boolean updateCaches(RemoteStore store, long onum, Glob update);
+  public boolean updateCaches(RemoteStore store, long onum, ObjectGlob update);
 
 }

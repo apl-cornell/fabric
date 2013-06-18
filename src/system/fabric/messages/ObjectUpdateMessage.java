@@ -12,7 +12,7 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 
 /**
  * Represents push notification that an object has been updated.
@@ -24,11 +24,11 @@ public class ObjectUpdateMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   public final String store;
-  public final LongKeyMap<Glob> globs;
+  public final LongKeyMap<ObjectGlob> globs;
   public final List<Long> onums;
   public final List<ObjectGroup> groups;
 
-  private ObjectUpdateMessage(String store, LongKeyMap<Glob> globs,
+  private ObjectUpdateMessage(String store, LongKeyMap<ObjectGlob> globs,
       List<Long> onums, List<ObjectGroup> groups) {
     super(MessageType.OBJECT_UPDATE, NoException.class);
     this.store = store;
@@ -42,10 +42,27 @@ public class ObjectUpdateMessage extends
     }
   }
 
-  public ObjectUpdateMessage(String store, LongKeyMap<Glob> updates) {
+  /**
+   * Creates an object-update notification to be sent to a dissemination node.
+   * 
+   * @param store
+   *          the store from which the notification originated.
+   * @param updates
+   *          the set of encrypted object updates, keyed by the head object's
+   *          onum.
+   */
+  public ObjectUpdateMessage(String store, LongKeyMap<ObjectGlob> updates) {
     this(store, updates, null, null);
   }
 
+  /**
+   * Creates an object-update notification to be sent to a worker node.
+   * 
+   * @param onums
+   *          the onums being updated to which the worker has subscribed. 
+   * @param updates
+   *          the set of object updates.
+   */
   public ObjectUpdateMessage(List<Long> onums, List<ObjectGroup> updates) {
     this(null, null, onums, updates);
   }
@@ -97,7 +114,7 @@ public class ObjectUpdateMessage extends
       out.writeUTF(store);
 
       out.writeInt(globs.size());
-      for (LongKeyMap.Entry<Glob> entry : globs.entrySet()) {
+      for (LongKeyMap.Entry<ObjectGlob> entry : globs.entrySet()) {
         out.writeLong(entry.getKey());
         entry.getValue().write(out);
       }
@@ -130,10 +147,10 @@ public class ObjectUpdateMessage extends
       store = in.readUTF();
 
       int size = in.readInt();
-      globs = new LongKeyHashMap<Glob>(size);
+      globs = new LongKeyHashMap<ObjectGlob>(size);
       for (int i = 0; i < size; i++) {
         long key = in.readLong();
-        Glob glob = new Glob(in);
+        ObjectGlob glob = new ObjectGlob(in);
 
         globs.put(key, glob);
       }

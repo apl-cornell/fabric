@@ -12,12 +12,13 @@ import fabric.common.AuthorizationUtil;
 import fabric.common.SemanticWarranty;
 import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
+import fabric.common.VersionWarranty.Binding;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
 import fabric.common.util.LongKeyMap;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -335,9 +336,10 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       response = new ArrayList<Long>();
 
       RemoteStore store = worker.getStore(objectUpdateMessage.store);
-      for (LongKeyMap.Entry<Glob> entry : objectUpdateMessage.globs.entrySet()) {
+      for (LongKeyMap.Entry<ObjectGlob> entry : objectUpdateMessage.globs
+          .entrySet()) {
         long onum = entry.getKey();
-        Glob glob = entry.getValue();
+        ObjectGlob glob = entry.getValue();
         try {
           glob.verifySignature(store.getPublicKey());
 
@@ -365,12 +367,24 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   public WarrantyRefreshMessage.Response handle(RemoteIdentity client,
       WarrantyRefreshMessage message) throws ProtocolError {
 
+    Worker worker = Worker.getWorker();
     List<Long> response;
 
     if (message.warranties == null) {
-      // TODO: dissemination case. Forward to other nodes.
+      // Message was sent to dissemination node.
+      // Forward through dissemination layer.
       response = new ArrayList<Long>();
+
+      RemoteStore store = worker.getStore(message.store);
+      for (LongKeyMap.Entry<List<Binding>> entry : message.warrantyGroups
+          .entrySet()) {
+        long onum = entry.getKey();
+        List<Binding> group = entry.getValue();
+        
+        // TODO: finish me.
+      }
     } else {
+      // Message was sent to worker. Update local state.
       RemoteStore store = Worker.getWorker().getStore(client.node.name);
       response = store.updateWarranties(message.warranties);
     }

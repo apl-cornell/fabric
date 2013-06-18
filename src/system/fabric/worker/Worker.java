@@ -47,7 +47,7 @@ import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.Pair;
 import fabric.dissemination.FetchManager;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.lang.FabricClassLoader;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
@@ -366,7 +366,7 @@ public final class Worker {
    * 
    * @return true iff either of the caches were updated.
    */
-  public boolean updateCaches(RemoteStore store, long onum, Glob update) {
+  public boolean updateCaches(RemoteStore store, long onum, ObjectGlob update) {
     return fetchManager.updateCaches(store, onum, update);
   }
 

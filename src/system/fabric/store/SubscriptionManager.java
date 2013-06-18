@@ -17,6 +17,7 @@ import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.Threading;
 import fabric.common.VersionWarranty.Binding;
+import fabric.common.WarrantyRefreshGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongHashSet;
@@ -26,7 +27,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.store.db.GroupContainer;
 import fabric.worker.remote.RemoteWorker;
 
@@ -77,13 +78,13 @@ public class SubscriptionManager extends FabricThread.Impl {
 
       Map<RemoteWorker, List<ObjectGroup>> workerNotificationMap =
           new HashMap<RemoteWorker, List<ObjectGroup>>();
-      Map<RemoteWorker, LongKeyMap<Glob>> dissemNotificationMap =
-          new HashMap<RemoteWorker, LongKeyMap<Glob>>();
+      Map<RemoteWorker, LongKeyMap<ObjectGlob>> dissemNotificationMap =
+          new HashMap<RemoteWorker, LongKeyMap<ObjectGlob>>();
 
       for (LongIterator it = onums.iterator(); it.hasNext();) {
         long onum = it.next();
         GroupContainer groupContainer;
-        Glob glob;
+        ObjectGlob glob;
         try {
           // Skip if the onum represents a surrogate.
           if (tm.read(onum).isSurrogate()) continue;
@@ -109,10 +110,10 @@ public class SubscriptionManager extends FabricThread.Impl {
 
               if (isDissem) {
                 // Add group to dissemNotificationMap.
-                LongKeyMap<Glob> globs =
+                LongKeyMap<ObjectGlob> globs =
                     dissemNotificationMap.get(subscribingNode);
                 if (globs == null) {
-                  globs = new LongKeyHashMap<Glob>();
+                  globs = new LongKeyHashMap<ObjectGlob>();
                   dissemNotificationMap.put(subscribingNode, globs);
                 }
 
@@ -174,10 +175,10 @@ public class SubscriptionManager extends FabricThread.Impl {
       }
 
       // Notify the dissemination nodes and resubscribe them.
-      for (Entry<RemoteWorker, LongKeyMap<Glob>> entry : dissemNotificationMap
+      for (Entry<RemoteWorker, LongKeyMap<ObjectGlob>> entry : dissemNotificationMap
           .entrySet()) {
         RemoteWorker dissemNode = entry.getKey();
-        LongKeyMap<Glob> updates = entry.getValue();
+        LongKeyMap<ObjectGlob> updates = entry.getValue();
 
         List<Long> resubscriptions =
             dissemNode.notifyObjectUpdates(store, updates);
@@ -215,8 +216,8 @@ public class SubscriptionManager extends FabricThread.Impl {
       // Go through the warranties and figure out who's interested in which
       // updates. While we're at it, also build a table of updates, keyed by onum.
       LongKeyMap<Binding> updatesByOnum = new LongKeyHashMap<Binding>();
-      Map<RemoteWorker, List<Binding>> workerNotificationMap =
-          new HashMap<RemoteWorker, List<Binding>>();
+      Map<RemoteWorker, WarrantyRefreshGroup> workerNotificationMap =
+          new HashMap<>();
       Map<Binding, List<RemoteWorker>> dissemNotificationMap =
           new HashMap<Binding, List<RemoteWorker>>();
 
@@ -244,14 +245,14 @@ public class SubscriptionManager extends FabricThread.Impl {
 
                 dissems.add(subscribingNode);
               } else {
-                List<Binding> bindings =
+                WarrantyRefreshGroup refreshGroup =
                     workerNotificationMap.get(subscribingNode);
-                if (bindings == null) {
-                  bindings = new ArrayList<Binding>();
-                  workerNotificationMap.put(subscribingNode, bindings);
+                if (refreshGroup == null) {
+                  refreshGroup = new WarrantyRefreshGroup();
+                  workerNotificationMap.put(subscribingNode, refreshGroup);
                 }
 
-                bindings.add(update);
+                refreshGroup.add(update);
               }
 
               subscriberIt.remove();
@@ -264,13 +265,14 @@ public class SubscriptionManager extends FabricThread.Impl {
         }
       }
 
-      // Notify the workers.
-      for (Map.Entry<RemoteWorker, List<Binding>> entry : workerNotificationMap
+      // Notify the workers and resubscribe them.
+      for (Map.Entry<RemoteWorker, WarrantyRefreshGroup> entry : workerNotificationMap
           .entrySet()) {
         RemoteWorker worker = entry.getKey();
-        List<Binding> warranties = entry.getValue();
+        WarrantyRefreshGroup warranties = entry.getValue();
         List<Long> resubscriptions = worker.notifyWarrantyRefresh(warranties);
 
+        // Resubscribe.
         for (long onum : resubscriptions) {
           subscribe(onum, worker, false);
         }
@@ -312,7 +314,7 @@ public class SubscriptionManager extends FabricThread.Impl {
         }
       }
 
-      // Send the updates to the dissemination nodes.
+      // Send the updates to the dissemination nodes and resubscribe them.
       for (Map.Entry<RemoteWorker, LongKeyMap<List<Binding>>> entry : dissemUpdateMap
           .entrySet()) {
         RemoteWorker dissemNode = entry.getKey();
@@ -321,6 +323,7 @@ public class SubscriptionManager extends FabricThread.Impl {
         List<Long> resubscriptions =
             dissemNode.notifyWarrantyRefresh(store, updates);
 
+        // Resubscribe.
         for (long onum : resubscriptions) {
           subscribe(onum, dissemNode, true);
         }
