@@ -10,13 +10,13 @@ import java.util.List;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
-import fabric.common.VersionWarranty.Binding;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyRefreshGlob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -368,11 +368,11 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       response = new ArrayList<Long>();
 
       RemoteStore store = worker.getStore(message.store);
-      for (LongKeyMap.Entry<List<Binding>> entry : message.warrantyGroups
+      for (LongKeyMap.Entry<WarrantyRefreshGlob> entry : message.warrantyGlobs
           .entrySet()) {
         long onum = entry.getKey();
-        List<Binding> group = entry.getValue();
-        
+        WarrantyRefreshGlob glob = entry.getValue();
+
         // TODO: finish me.
       }
     } else {

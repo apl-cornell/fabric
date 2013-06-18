@@ -6,13 +6,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabric.common.VersionWarranty;
-import fabric.common.VersionWarranty.Binding;
 import fabric.common.WarrantyRefreshGroup;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.dissemination.WarrantyRefreshGlob;
 import fabric.messages.Message.NoException;
 
 /**
@@ -27,14 +26,14 @@ public class WarrantyRefreshMessage extends
   public final String store;
   public final WarrantyRefreshGroup warranties;
 
-  public final LongKeyMap<List<Binding>> warrantyGroups;
+  public final LongKeyMap<WarrantyRefreshGlob> warrantyGlobs;
 
   private WarrantyRefreshMessage(String store, WarrantyRefreshGroup warranties,
-      LongKeyMap<List<Binding>> warrantyGroups) {
+      LongKeyMap<WarrantyRefreshGlob> warrantyGlobs) {
     super(MessageType.WARRANTY_REFRESH, NoException.class);
     this.store = store;
     this.warranties = warranties;
-    this.warrantyGroups = warrantyGroups;
+    this.warrantyGlobs = warrantyGlobs;
   }
 
   /**
@@ -43,13 +42,13 @@ public class WarrantyRefreshMessage extends
    * @param store
    *          the store from which the notification originated.
    *          
-   * @param warrantyGroups
+   * @param warrantyGlobs
    *          the set of encrypted refreshed warranties, keyed by the head
    *          object's onum.
    */
   public WarrantyRefreshMessage(String store,
-      LongKeyMap<List<Binding>> warrantyGroups) {
-    this(store, null, warrantyGroups);
+      LongKeyMap<WarrantyRefreshGlob> warrantyGlobs) {
+    this(store, null, warrantyGlobs);
   }
 
   /**
@@ -95,18 +94,14 @@ public class WarrantyRefreshMessage extends
       out.writeUTF(store);
 
       // Write out warranty groups.
-      // XXX this should be encrypted and signed.
-      out.writeInt(warrantyGroups.size());
-      for (LongKeyMap.Entry<List<Binding>> entry : warrantyGroups.entrySet()) {
+      out.writeInt(warrantyGlobs.size());
+      for (LongKeyMap.Entry<WarrantyRefreshGlob> entry : warrantyGlobs
+          .entrySet()) {
         long onum = entry.getKey();
-        List<Binding> group = entry.getValue();
+        WarrantyRefreshGlob glob = entry.getValue();
 
         out.writeLong(onum);
-
-        out.writeInt(group.size());
-        for (Binding update : group) {
-          writeBinding(update, out);
-        }
+        glob.write(out);
       }
     } else {
       out.writeBoolean(false);
@@ -125,34 +120,17 @@ public class WarrantyRefreshMessage extends
       // Read in the warranty groups.
       // XXX should decrypt and verify once we encrypt and sign this
       int mapSize = in.readInt();
-      this.warrantyGroups = new LongKeyHashMap<List<Binding>>(mapSize);
+      this.warrantyGlobs = new LongKeyHashMap<WarrantyRefreshGlob>(mapSize);
       for (int i = 0; i < mapSize; i++) {
         long onum = in.readLong();
-
-        int listSize = in.readInt();
-        List<Binding> updateGroup = new ArrayList<Binding>(listSize);
-        for (int j = 0; j < listSize; j++) {
-          updateGroup.add(readBinding(in));
-        }
-
-        warrantyGroups.put(onum, updateGroup);
+        WarrantyRefreshGlob glob = new WarrantyRefreshGlob(in);
+        warrantyGlobs.put(onum, glob);
       }
     } else {
       this.store = null;
-      this.warrantyGroups = null;
+      this.warrantyGlobs = null;
       this.warranties = new WarrantyRefreshGroup(in);
     }
-  }
-
-  private Binding readBinding(DataInput in) throws IOException {
-    return new VersionWarranty(in.readLong()).new Binding(in.readLong(),
-        in.readInt());
-  }
-
-  private void writeBinding(Binding binding, DataOutput out) throws IOException {
-    out.writeLong(binding.expiry());
-    out.writeLong(binding.onum);
-    out.writeInt(binding.versionNumber);
   }
 
   @Override

@@ -103,7 +103,7 @@ class Store extends MessageToStoreHandler {
 
     this.node = node;
     this.os = loadStore();
-    this.tm = new TransactionManager(this.os);
+    this.tm = new TransactionManager(this.os, privateKey);
     this.sm = new SimpleSurrogateManager(tm);
   }
 

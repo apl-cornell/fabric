@@ -8,7 +8,6 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
-import fabric.common.VersionWarranty.Binding;
 import fabric.common.WarrantyRefreshGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
@@ -19,6 +18,7 @@ import fabric.common.net.SubSocketFactory;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyRefreshGlob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
@@ -266,7 +266,7 @@ public final class RemoteWorker extends RemoteNode {
    * groups has been updated.
    */
   public List<Long> notifyWarrantyRefresh(String store,
-      LongKeyMap<List<Binding>> updates) {
+      LongKeyMap<WarrantyRefreshGlob> updates) {
     WarrantyRefreshMessage.Response response;
     try {
       response = send(new WarrantyRefreshMessage(store, updates));

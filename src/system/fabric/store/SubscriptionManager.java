@@ -1,5 +1,6 @@
 package fabric.store;
 
+import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,7 +29,10 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyRefreshGlob;
 import fabric.store.db.GroupContainer;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -181,7 +185,7 @@ public class SubscriptionManager extends FabricThread.Impl {
         LongKeyMap<ObjectGlob> updates = entry.getValue();
 
         List<Long> resubscriptions =
-            dissemNode.notifyObjectUpdates(store, updates);
+            dissemNode.notifyObjectUpdates(storeName, updates);
 
         // Resubscribe.
         for (long onum : resubscriptions) {
@@ -213,6 +217,11 @@ public class SubscriptionManager extends FabricThread.Impl {
 
     @Override
     protected void handle() {
+      // Ensure the store field is initialized.
+      if (store == null) {
+        store = Worker.getWorker().getStore(storeName);
+      }
+
       // Go through the warranties and figure out who's interested in which
       // updates. While we're at it, also build a table of updates, keyed by onum.
       LongKeyMap<Binding> updatesByOnum = new LongKeyHashMap<Binding>();
@@ -280,15 +289,15 @@ public class SubscriptionManager extends FabricThread.Impl {
 
       // Map the dissemination nodes to the groups of updates that they're
       // interested in.
-      Map<RemoteWorker, LongKeyMap<List<Binding>>> dissemUpdateMap =
-          new HashMap<RemoteWorker, LongKeyMap<List<Binding>>>();
+      Map<RemoteWorker, LongKeyMap<WarrantyRefreshGlob>> dissemUpdateMap =
+          new HashMap<RemoteWorker, LongKeyMap<WarrantyRefreshGlob>>();
       for (Map.Entry<Binding, List<RemoteWorker>> entry : dissemNotificationMap
           .entrySet()) {
         Binding update = entry.getKey();
         List<RemoteWorker> dissemNodes = entry.getValue();
 
         // Construct a group of updates based on the object group.
-        List<Binding> updateGroup = new ArrayList<Binding>();
+        WarrantyRefreshGroup updateGroup = new WarrantyRefreshGroup();
         GroupContainer groupContainer;
         try {
           groupContainer = tm.getGroupContainer(update.onum);
@@ -302,26 +311,31 @@ public class SubscriptionManager extends FabricThread.Impl {
           if (relatedUpdate != null) updateGroup.add(relatedUpdate);
         }
 
+        // Encrypt the group.
+        WarrantyRefreshGlob updateGlob =
+            new WarrantyRefreshGlob(store, signingKey, updateGroup);
+
         // Add to the dissemUpdateMap.
         for (RemoteWorker dissemNode : dissemNodes) {
-          LongKeyMap<List<Binding>> updates = dissemUpdateMap.get(dissemNode);
+          LongKeyMap<WarrantyRefreshGlob> updates =
+              dissemUpdateMap.get(dissemNode);
           if (updates == null) {
-            updates = new LongKeyHashMap<List<Binding>>();
+            updates = new LongKeyHashMap<WarrantyRefreshGlob>();
             dissemUpdateMap.put(dissemNode, updates);
           }
 
-          updates.put(update.onum, updateGroup);
+          updates.put(update.onum, updateGlob);
         }
       }
 
       // Send the updates to the dissemination nodes and resubscribe them.
-      for (Map.Entry<RemoteWorker, LongKeyMap<List<Binding>>> entry : dissemUpdateMap
+      for (Map.Entry<RemoteWorker, LongKeyMap<WarrantyRefreshGlob>> entry : dissemUpdateMap
           .entrySet()) {
         RemoteWorker dissemNode = entry.getKey();
-        LongKeyMap<List<Binding>> updates = entry.getValue();
+        LongKeyMap<WarrantyRefreshGlob> updates = entry.getValue();
 
         List<Long> resubscriptions =
-            dissemNode.notifyWarrantyRefresh(store, updates);
+            dissemNode.notifyWarrantyRefresh(storeName, updates);
 
         // Resubscribe.
         for (long onum : resubscriptions) {
@@ -343,7 +357,11 @@ public class SubscriptionManager extends FabricThread.Impl {
   /**
    * The name of the store for which we are managing subscriptions.
    */
-  private final String store;
+  private final String storeName;
+
+  // Filled in lazily. Initializing this requires the worker, which won't be
+  // initialized until after the subscription manager is constructed.
+  private Store store = null;
 
   /**
    * The transaction manager corresponding to the store for which we are
@@ -352,16 +370,23 @@ public class SubscriptionManager extends FabricThread.Impl {
   private final TransactionManager tm;
 
   /**
+   * The key with which to sign outgoing update notifications.
+   */
+  private final PrivateKey signingKey;
+
+  /**
    * @param tm
    *          The transaction manager corresponding to the store for which
    *          subscriptions are to be managed.
    */
-  public SubscriptionManager(String store, TransactionManager tm) {
+  public SubscriptionManager(String store, TransactionManager tm,
+      PrivateKey signingKey) {
     super("subscription manager for store " + store);
-    this.store = store;
+    this.storeName = store;
     this.notificationQueue = new ArrayBlockingQueue<NotificationEvent>(50);
     this.tm = tm;
     this.subscriptions = new LongKeyCache<Set<Pair<RemoteWorker, Boolean>>>();
+    this.signingKey = signingKey;
 
     start();
   }

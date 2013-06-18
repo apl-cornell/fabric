@@ -4,6 +4,7 @@ import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
 import static fabric.store.db.ObjectDB.UpdateType.CREATE;
 import static fabric.store.db.ObjectDB.UpdateType.WRITE;
 
+import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -50,9 +51,9 @@ public class TransactionManager {
    */
   private final SubscriptionManager sm;
 
-  public TransactionManager(ObjectDB database) {
+  public TransactionManager(ObjectDB database, PrivateKey signingKey) {
     this.database = database;
-    this.sm = new SubscriptionManager(database.getName(), this);
+    this.sm = new SubscriptionManager(database.getName(), this, signingKey);
   }
 
   public final SubscriptionManager subscriptionManager() {
