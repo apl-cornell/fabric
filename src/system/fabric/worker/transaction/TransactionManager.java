@@ -851,6 +851,7 @@ public final class TransactionManager {
     boolean hadToWait = false;
     try {
       boolean firstWait = true;
+      boolean deadlockDetectRequested = false;
       while (obj.$writeLockHolder != null
           && !current.isDescendantOf(obj.$writeLockHolder)) {
         try {
@@ -867,9 +868,17 @@ public final class TransactionManager {
             firstWait = false;
             obj.wait(10);
           } else {
-            // Not the first time through the loop. Ask for deadlock detection.
-            deadlockDetector.requestDetect(current);
-            obj.wait();
+            // Not the first time through the loop. Ask for deadlock detection
+            // if we haven't already.
+            if (!deadlockDetectRequested) {
+              deadlockDetector.requestDetect(current);
+              deadlockDetectRequested = true;
+            }
+
+            // Should be waiting indefinitely, but this requires proper handling
+            // of InterruptedExceptions in the entire system. Instead, we spin
+            // once a second so that we periodically check the retry signal.
+            obj.wait(1000);
           }
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
@@ -942,6 +951,7 @@ public final class TransactionManager {
       Set<Log> waitsFor = new HashSet<Log>();
 
       boolean firstWait = true;
+      boolean deadlockDetectRequested = false;
       while (true) {
         waitsFor.clear();
 
@@ -984,9 +994,17 @@ public final class TransactionManager {
             firstWait = false;
             obj.wait(10);
           } else {
-            // Not the first time through the loop. Ask for deadlock detection.
-            deadlockDetector.requestDetect(current);
-            obj.wait();
+            // Not the first time through the loop. Ask for deadlock detection
+            // if we haven't already.
+            if (!deadlockDetectRequested) {
+              deadlockDetector.requestDetect(current);
+              deadlockDetectRequested = true;
+            }
+
+            // Should be waiting indefinitely, but this requires proper handling
+            // of InterruptedExceptions in the entire system. Instead, we spin
+            // once a second so that we periodically check the retry signal.
+            obj.wait(1000);
           }
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
