@@ -54,7 +54,7 @@ public class T2c extends PrivatePartTraversal {
     for (int i = 0; i < 4; i++) {
       visited = (HashMap) new LinkedHashMap@local().fabric$util$LinkedHashMap$();
       p.rootPart().accept(this);
-      result += visited.size();
+      result = result + visited.size();
       visited = null;
     }
   }
