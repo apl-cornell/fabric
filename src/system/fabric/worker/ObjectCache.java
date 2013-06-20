@@ -333,6 +333,11 @@ public final class ObjectCache {
     return entry;
   }
 
+  /**
+   * Adds the given impl to the cache. If a different impl already exists in
+   * cache, then an internal error results, indicating that an invariant was
+   * probably broken, resulting in a cache conflict.
+   */
   void put(Object._Impl impl) {
     long onum = impl.$getOnum();
 
@@ -349,6 +354,10 @@ public final class ObjectCache {
   }
 
   /**
+   * If there is not already an entry for the given object's onum, add the given
+   * object to the cache. If an entry already exists in cache, then an internal
+   * error results, indicating that an invariant was probably broken.
+   * 
    * @return the Entry inserted into the cache.
    */
   Entry put(Store store, SerializedObject obj) {
@@ -403,17 +412,44 @@ public final class ObjectCache {
   }
 
   /**
+   * Adds the given object to the cache. If a cache entry already exists, it is
+   * replaced.
+   */
+  void forcePut(Store store, SerializedObject obj) {
+    update(store, obj, false);
+  }
+
+  /**
    * Updates the cache with the given serialized object. If an object with the
    * given onum exists in cache, it is evicted and the given update is placed in
-   * the cache.
+   * the cache. If the object does not exist in cache, then the cache is not
+   * updated.
    * 
-   * @return true iff the cache had an existing entry for the object (regardless
-   *          of whether such an entry was replaced).
+   * @return true iff the cache was updated.
    */
   boolean update(Store store, SerializedObject update) {
+    return update(store, update, true);
+  }
+
+  /**
+   * Updates the cache with the given serialized object. If
+   * <code>replaceOnly</code> is true, then the cache is only updated if an
+   * object with the given onum exists in cache. The existing object is evicted,
+   * and the given update is placed in the cache.
+   * 
+   * @return true iff the cache was updated.
+   */
+  boolean update(Store store, SerializedObject update, boolean replaceOnly) {
     long onum = update.getOnum();
     Entry curEntry = entries.get(onum);
-    if (curEntry == null || curEntry.isEvicted()) return false;
+
+    if (curEntry == null) {
+      if (replaceOnly) return false;
+      putIfAbsent(store, update, true);
+      return true;
+    }
+
+    if (replaceOnly && curEntry.isEvicted()) return false;
 
     curEntry.evict();
     Entry newEntry = new Entry(store, update);

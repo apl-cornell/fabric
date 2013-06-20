@@ -43,6 +43,8 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongSet;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.FabricClassLoader;
@@ -367,21 +369,32 @@ public final class Worker {
   }
 
   /**
-   * Updates the worker cache with the given object group. Only old versions of
-   * objects replaced; new objects are not added to the cache if older versions
-   * don't already exist in cache.
+   * Updates the worker cache with the given object group. If the cache contains
+   * an old version of any object in the group, then the cache is updated with
+   * the entire group. Otherwise, the cache is not updated.
    * 
    * @return true iff the cache was updated.
    */
   public boolean updateCache(RemoteStore store, ObjectGroup group) {
-    boolean result = false;
+    if (!hasOnumsInCache(store, group.objects().keySet())) return false;
+
     for (SerializedObject obj : group.objects().values()) {
-      // Because of short-circuiting, order of disjuncts matter here.
-      result = store.updateCache(obj) || result;
+      store.forceCache(obj);
       TransactionManager.abortReaders(store, obj.getOnum());
     }
 
-    return result;
+    return true;
+  }
+
+  /**
+   * Determines whether any of a given set of onums are resident in cache.
+   */
+  private boolean hasOnumsInCache(RemoteStore store, LongSet onums) {
+    for (LongIterator it = onums.iterator(); it.hasNext();) {
+      if (store.readFromCache(it.next()) != null) return true;
+    }
+
+    return false;
   }
 
   /**
