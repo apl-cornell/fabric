@@ -155,7 +155,7 @@ public final class ObjectGrouper {
     new Collector().start();
   }
 
-  GroupContainer getGroup(long onum) {
+  GroupContainer getGroup(long headOnum) {
     GroupLock lock;
     PartialObjectGroup partialGroup = null;
 
@@ -164,8 +164,8 @@ public final class ObjectGrouper {
       Entry entry;
       // Loop until we've established a proper entry for the onum.
       while (true) {
-        Entry newEntry = new Entry(new GroupLock(onum));
-        entry = table.putIfAbsent(onum, newEntry);
+        Entry newEntry = new Entry(new GroupLock(headOnum));
+        entry = table.putIfAbsent(headOnum, newEntry);
         if (entry == null) entry = newEntry;
 
         AbstractGroup group;
@@ -181,7 +181,7 @@ public final class ObjectGrouper {
         if (lock == null) {
           // Entry had a full group that has been GCed. Remove the entry and start
           // over.
-          table.remove(onum, entry);
+          table.remove(headOnum, entry);
           continue;
         }
 
@@ -234,7 +234,7 @@ public final class ObjectGrouper {
 
               // $FALL-THROUGH$
             case DEAD:
-              table.remove(onum, entry);
+              table.remove(headOnum, entry);
               continue OUTERMOST;
             }
 
@@ -246,7 +246,8 @@ public final class ObjectGrouper {
 
     // We are responsible for creating the group. Get a partial group for the
     // onum.
-    if (partialGroup == null) partialGroup = getPartialGroup(onum, lock, null);
+    if (partialGroup == null)
+      partialGroup = getPartialGroup(headOnum, lock, null);
     if (partialGroup == null) return null;
 
     // Add any small groups on the partial group's frontier.
@@ -276,7 +277,7 @@ public final class ObjectGrouper {
       }
       if (frontierGroup.size() >= MIN_GROUP_SIZE) {
         // Frontier group is large enough to hold its own. Add it to the cache.
-        cacheGroup(frontierGroup.objects, frontierGroup);
+        cacheFrontierGroup(frontierGroup.objects, frontierGroup);
 
         // Unlock the frontier group.
         synchronized (frontierLock) {
@@ -290,7 +291,7 @@ public final class ObjectGrouper {
       // Group on the frontier isn't big enough. Coalesce it with the group
       // we're creating.
       partialGroup.mergeFrom(frontierGroup);
-      cacheGroup(frontierGroup.objects, partialGroup);
+      cacheGroup(headOnum, frontierGroup.objects, partialGroup);
     }
 
     Store store = Worker.getWorker().getStore(database.getName());
@@ -299,7 +300,7 @@ public final class ObjectGrouper {
             partialGroup.objects));
 
     // Add the result to the cache: bind all non-surrogate onums to the result.
-    cacheGroup(partialGroup.objects, result);
+    cacheGroup(headOnum, partialGroup.objects, result);
 
     // Unlock and notify any waiting threads.
     synchronized (lock) {
@@ -403,20 +404,26 @@ public final class ObjectGrouper {
   /**
    * Adds the given abstract group to the cache.
    */
-  private void cacheGroup(LongKeyMap<SerializedObject> groupObjects,
-      AbstractGroup group) {
+  private void cacheGroup(long headOnum,
+      LongKeyMap<SerializedObject> groupObjects, AbstractGroup group) {
     SoftRef ref = new SoftRef(group);
     for (LongKeyMap.Entry<SerializedObject> entry : groupObjects.entrySet()) {
       SerializedObject obj = entry.getValue();
-      if (obj.isSurrogate()) {
-        // TODO remove debug checks
-        if (table.containsKey(entry.getKey())) {
-          throw new InternalError(
-              "broken invariant: group table contains entry" + " for onum "
-                  + entry.getKey() + ", which is a surrogate");
-        }
-        continue;
-      }
+      if (obj.getOnum() != headOnum && obj.isSurrogate()) continue;
+
+      table.get(entry.getKey()).setRef(ref);
+    }
+  }
+
+  /**
+   * Adds the given frontier group to the cache.
+   */
+  private void cacheFrontierGroup(LongKeyMap<SerializedObject> groupObjects,
+      PartialObjectGroup group) {
+    SoftRef ref = new SoftRef(group);
+    for (LongKeyMap.Entry<SerializedObject> entry : groupObjects.entrySet()) {
+      SerializedObject obj = entry.getValue();
+      if (obj.isSurrogate()) continue;
 
       table.get(entry.getKey()).setRef(ref);
     }
