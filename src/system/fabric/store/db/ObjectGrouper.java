@@ -410,8 +410,11 @@ public final class ObjectGrouper {
       SerializedObject obj = entry.getValue();
       if (obj.isSurrogate()) {
         // TODO remove debug checks
-        if (table.containsKey(entry.getKey()))
-          throw new InternalError("broken invariant");
+        if (table.containsKey(entry.getKey())) {
+          throw new InternalError(
+              "broken invariant: group table contains entry" + " for onum "
+                  + entry.getKey() + ", which is a surrogate");
+        }
         continue;
       }
 
@@ -500,11 +503,13 @@ public final class ObjectGrouper {
         SerializedObject related = database.read(relatedOnum);
         if (related == null) continue;
 
-        // Ensure that the related object's label is the same as the head
-        // object's label. We could be smarter here, but to avoid calling into
-        // the worker, let's hope pointer equality is sufficient.
+        // Ensure that the related object is either a surrogate or has the same
+        // label as the head object. We could be smarter here, but to avoid
+        // calling into the worker, let's hope pointer equality is sufficient.
         long relatedLabelOnum = related.getUpdateLabelOnum();
-        if (headLabelOnum != relatedLabelOnum) continue;
+        if (headLabelOnum != relatedLabelOnum && !related.isSurrogate()) {
+          continue;
+        }
 
         toVisit.add(related);
       }
