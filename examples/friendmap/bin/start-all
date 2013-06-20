@@ -5,16 +5,23 @@ BIN_DIR="$(dirname $0)"
 "${BIN_DIR}/run-in-xterm" "Snapp store" \
   "${BIN_DIR}/start-store snapp $@" &
 
+sleep 1
+
 "${BIN_DIR}/run-in-xterm" "MapServ" \
   "${BIN_DIR}/start-store mapserv $@" &
+
+sleep 1
 
 "${BIN_DIR}/run-in-xterm" "FriendMap" \
   "${BIN_DIR}/start-store friendmap $@" &
 
+sleep 1
+
 "${BIN_DIR}/run-in-xterm" "Alice" \
   "${BIN_DIR}/start-store alice $@" &
+
+sleep 1
 
 "${BIN_DIR}/run-in-xterm" "Bob" \
   "${BIN_DIR}/start-store bob $@" &
 
-#--debug --debug-port 6666 --trace-objects 
