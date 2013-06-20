@@ -38,7 +38,8 @@ public class Cache {
   }
 
   public Cache() {
-    this.map = new fabric.common.util.Cache<Pair<RemoteStore, Long>, ObjectGlob>();
+    this.map =
+        new fabric.common.util.Cache<Pair<RemoteStore, Long>, ObjectGlob>();
     this.fetchLocks = new OidKeyHashMap<Cache.FetchLock>();
   }
 
@@ -183,9 +184,9 @@ public class Cache {
 
   /**
    * Updates the dissemination and worker cache with the given glob. If the
-   * caches do not have entries for the given oid, then nothing is changed.
+   * caches do not have entries for the given glob, then nothing is changed.
    * 
-   * @return true iff there was a cache entry for the given oid.
+   * @return true iff either of the caches was changed.
    */
   public boolean updateEntry(RemoteStore store, long onum, ObjectGlob g) {
     // Update the local worker's cache.
