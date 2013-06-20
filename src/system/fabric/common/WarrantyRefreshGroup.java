@@ -12,7 +12,8 @@ import fabric.common.VersionWarranty.Binding;
 /**
  * Holds a set of related, unencrypted warranty updates.
  */
-public class WarrantyRefreshGroup implements Iterable<Binding> {
+public class WarrantyRefreshGroup implements Iterable<Binding>,
+    FastSerializable {
   private final List<Binding> warranties;
 
   /**
@@ -44,6 +45,7 @@ public class WarrantyRefreshGroup implements Iterable<Binding> {
   /**
    * Serializes the group onto the given output stream.
    */
+  @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(warranties.size());
     for (Binding binding : warranties) {
