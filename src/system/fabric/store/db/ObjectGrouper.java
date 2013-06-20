@@ -503,15 +503,13 @@ public final class ObjectGrouper {
         SerializedObject related = database.read(relatedOnum);
         if (related == null) continue;
 
-        // Ensure that the related object is either a surrogate or has the same
-        // label as the head object. We could be smarter here, but to avoid
-        // calling into the worker, let's hope pointer equality is sufficient.
+        // Ensure that the related object has the same label as the head object.
+        // We could be smarter here, but to avoid calling into the worker, let's
+        // hope pointer equality is sufficient.
         long relatedLabelOnum = related.getUpdateLabelOnum();
-        if (headLabelOnum != relatedLabelOnum && !related.isSurrogate()) {
-          continue;
+        if (headLabelOnum == relatedLabelOnum) {
+          toVisit.add(related);
         }
-
-        toVisit.add(related);
       }
     }
 
