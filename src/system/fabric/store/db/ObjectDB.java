@@ -269,14 +269,19 @@ public abstract class ObjectDB {
    */
   public final void beginPrepareWrites(long tid, Principal worker) {
     // Ensure pendingByTid has a submap for the given TID.
-    OidKeyHashMap<PendingTransaction> submap =
-        new OidKeyHashMap<PendingTransaction>();
-    OidKeyHashMap<PendingTransaction> existingSubmap =
-        pendingByTid.putIfAbsent(tid, submap);
-    if (existingSubmap != null) submap = existingSubmap;
+    while (true) {
+      OidKeyHashMap<PendingTransaction> submap =
+          new OidKeyHashMap<PendingTransaction>();
+      OidKeyHashMap<PendingTransaction> existingSubmap =
+          pendingByTid.putIfAbsent(tid, submap);
+      if (existingSubmap != null) submap = existingSubmap;
 
-    synchronized (submap) {
-      submap.put(worker, new PendingTransaction(tid, worker));
+      synchronized (submap) {
+        submap.put(worker, new PendingTransaction(tid, worker));
+      }
+
+      // Ensure the submap wasn't removed out from under us.
+      if (pendingByTid.get(tid) == submap) return;
     }
   }
 

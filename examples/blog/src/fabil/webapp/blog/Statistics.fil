@@ -72,7 +72,7 @@ public class Statistics {
   }
 
   public void addTransaction(long time) {
-    currentPage.transactionTime += (int)time;
+    currentPage.transactionTime = currentPage.transactionTime + (int)time;
     currentPage.numTransactions++;
   }
 

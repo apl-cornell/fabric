@@ -27,6 +27,8 @@ public class Node {
   // should be in params file?
   private static int DEFAULT_PORT = 13373;
 
+  private static String PASTRY_CONFIG_KEY_PREFIX = "fabric.dissemination.pastry.";
+
   protected Environment env;
   protected SocketPastryNodeFactory pnf;
   protected PastryNode node;
@@ -45,10 +47,10 @@ public class Node {
     // environment.
     Parameters params = env.getParameters();
     for (String key : dissemConfig.stringPropertyNames()) {
-      if (!key.startsWith("fabric.dissemination.pastry.")) continue;
+      if (!key.startsWith(PASTRY_CONFIG_KEY_PREFIX)) continue;
 
       String value = dissemConfig.getProperty(key);
-      key = key.substring("fabric.dissemination.pastry.".length());
+      key = key.substring(PASTRY_CONFIG_KEY_PREFIX.length());
       params.setString(key, value);
       defaults.remove(key);
     }
@@ -97,7 +99,7 @@ public class Node {
           System.out.println("Waiting for Pastry node to be ready.");
           System.out.println("If this takes too long, consider setting or "
               + "reducing the value of the");
-          System.out.println("  fabric.dissemination.pastry.pastry_protocol_"
+          System.out.println("  " + PASTRY_CONFIG_KEY_PREFIX + "pastry_protocol_"
               + "periodicLeafSet_lease_period");
           System.out.println("configuration parameter.");
         }
