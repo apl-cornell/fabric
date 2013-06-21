@@ -373,7 +373,17 @@ public class RemoteCallManager extends MessageToWorkerHandler {
         long onum = entry.getKey();
         WarrantyRefreshGlob glob = entry.getValue();
 
-        // TODO: finish me.
+        try {
+          glob.verifySignature(store.getPublicKey());
+
+          if (worker.updateCaches(store, onum, glob)) {
+            response.add(onum);
+          }
+        } catch (InvalidKeyException e) {
+          e.printStackTrace();
+        } catch (SignatureException e) {
+          e.printStackTrace();
+        }
       }
     } else {
       // Message was sent to worker. Update local state.

@@ -27,6 +27,7 @@ import fabric.common.FastSerializable;
 import fabric.common.exceptions.InternalError;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
+import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
@@ -314,4 +315,13 @@ public abstract class AbstractGlob<Payload extends FastSerializable> implements
     g.level = level;
     g.frequency = frequency;
   }
+
+  /**
+   * Updates the worker and dissemination caches with this glob. If the caches
+   * do not have entries for this glob, then nothing is changed.
+   * 
+   * @return true iff either cache was changed.
+   */
+  public abstract boolean updateCache(Cache dissemCache, RemoteStore store,
+      long onum);
 }

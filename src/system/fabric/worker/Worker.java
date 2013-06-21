@@ -47,8 +47,8 @@ import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
+import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.FetchManager;
-import fabric.dissemination.ObjectGlob;
 import fabric.lang.FabricClassLoader;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
@@ -362,11 +362,12 @@ public final class Worker {
   }
 
   /**
-   * Updates the dissemination and worker caches with the given object glob.
+   * Updates the dissemination and worker caches with the given glob.
    * 
    * @return true iff either of the caches were updated.
    */
-  public boolean updateCaches(RemoteStore store, long onum, ObjectGlob update) {
+  public boolean updateCaches(RemoteStore store, long onum,
+      AbstractGlob<?> update) {
     return fetchManager.updateCaches(store, onum, update);
   }
 

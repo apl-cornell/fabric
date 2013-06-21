@@ -15,6 +15,7 @@ import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
 import fabric.common.util.Pair;
 import fabric.lang.security.Label;
+import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 
 /**
@@ -73,5 +74,10 @@ public class ObjectGlob extends AbstractGlob<ObjectGroup> {
     }
 
     return result;
+  }
+
+  @Override
+  public boolean updateCache(Cache dissemCache, RemoteStore store, long onum) {
+    return dissemCache.updateEntry(store, onum, this);
   }
 }

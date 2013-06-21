@@ -9,6 +9,7 @@ import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
+import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.ObjectGlob;
 import fabric.worker.Worker;
 
@@ -21,10 +22,10 @@ public class UpdateCache implements RawMessage {
   private final Id id;
   private final String store;
   private final long onum;
-  private final ObjectGlob update;
+  private final AbstractGlob<?> update;
 
   public UpdateCache(NodeHandle sender, Id id, String store, long onum,
-      ObjectGlob update) {
+      AbstractGlob<?> update) {
     this.sender = sender;
     this.id = id;
     this.store = store;
@@ -52,8 +53,8 @@ public class UpdateCache implements RawMessage {
     return onum;
   }
 
-  /** The updated object group. */
-  public ObjectGlob update() {
+  /** The updated glob. */
+  public AbstractGlob<?> update() {
     return update;
   }
 

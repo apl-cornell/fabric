@@ -183,8 +183,8 @@ public class Cache {
   }
 
   /**
-   * Updates the dissemination and worker cache with the given glob. If the
-   * caches do not have entries for the given glob, then nothing is changed.
+   * Updates the dissemination and worker cache with the given object glob. If
+   * the caches do not have entries for the given glob, then nothing is changed.
    * 
    * @return true iff either of the caches was changed.
    */
@@ -211,6 +211,28 @@ public class Cache {
     }
 
     return true;
+  }
+
+  /**
+   * Updates the dissemination and worker cache with the given warranty-refresh
+   * glob. If the caches do not have entries for the given glob, then nothing
+   * is changed.
+   * 
+   * @return true iff either of the caches was changed.
+   */
+  public boolean updateEntry(RemoteStore store, long onum,
+      WarrantyRefreshGlob glob) {
+    // Update the local worker's cache.
+    // XXX What happens if the worker isn't trusted to decrypt the glob?
+    boolean result = !store.updateWarranties(glob.decrypt()).isEmpty();
+
+    // Update the dissemination cache.
+    Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
+
+//    while (true) {
+//      finishMe();
+//    }
+    return result;
   }
 
   /**

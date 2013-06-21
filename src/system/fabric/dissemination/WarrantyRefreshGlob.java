@@ -7,6 +7,7 @@ import java.security.SignatureException;
 
 import fabric.common.WarrantyRefreshGroup;
 import fabric.lang.security.Label;
+import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 
 /**
@@ -51,6 +52,11 @@ public class WarrantyRefreshGlob extends AbstractGlob<WarrantyRefreshGroup> {
   protected WarrantyRefreshGroup deserializePayload(DataInput in)
       throws IOException {
     return new WarrantyRefreshGroup(in);
+  }
+
+  @Override
+  public boolean updateCache(Cache dissemCache, RemoteStore store, long onum) {
+    return dissemCache.updateEntry(store, onum, this);
   }
 
 }
