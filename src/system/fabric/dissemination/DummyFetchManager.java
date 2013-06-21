@@ -31,8 +31,9 @@ public class DummyFetchManager implements FetchManager {
   }
 
   @Override
-  public boolean updateCaches(RemoteStore store, long onum, ObjectGlob update) {
-    return cache.updateEntry(store, onum, update);
+  public boolean updateCaches(RemoteStore store, long onum,
+      AbstractGlob<?> update) {
+    return update.updateCache(cache, store, onum);
   }
 
 }

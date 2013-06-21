@@ -34,6 +34,7 @@ import fabric.common.Logging;
 import fabric.common.util.Cache;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
+import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.pastry.messages.AggregateInterval;
 import fabric.dissemination.pastry.messages.Fetch;
@@ -332,9 +333,9 @@ public class Disseminator implements Application {
    * @return true iff there was a dissemination-cache entry for the given oid or
    *          if the update was forwarded to another node.
    */
-  boolean updateCaches(RemoteStore store, long onum, ObjectGlob update) {
+  boolean updateCaches(RemoteStore store, long onum, AbstractGlob<?> update) {
     // Update the local caches.
-    boolean result = cache.updateEntry(store, onum, update);
+    boolean result = update.updateCache(cache, store, onum);
 
     // Find the set of subscribers.
     Set<NodeHandle> subscribers = subscriptions.get(new Pair<>(store, onum));
@@ -382,7 +383,7 @@ public class Disseminator implements Application {
         Worker worker = Worker.getWorker();
         RemoteStore store = worker.getStore(msg.store());
         long onum = msg.onum();
-        ObjectGlob update = msg.update();
+        AbstractGlob<?> update = msg.update();
 
         boolean result = updateCaches(store, onum, update);
         UpdateCache.Reply reply =

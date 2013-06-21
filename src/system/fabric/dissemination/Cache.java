@@ -183,8 +183,8 @@ public class Cache {
   }
 
   /**
-   * Updates the dissemination and worker cache with the given glob. If the
-   * caches do not have entries for the given glob, then nothing is changed.
+   * Updates the dissemination and worker cache with the given object glob. If
+   * the caches do not have entries for the given glob, then nothing is changed.
    * 
    * @return true iff either of the caches was changed.
    */

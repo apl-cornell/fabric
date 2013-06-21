@@ -10,6 +10,7 @@ import java.security.SignatureException;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.lang.security.Label;
+import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 
 /**
@@ -59,5 +60,10 @@ public class ObjectGlob extends AbstractGlob<ObjectGroup> {
   @Override
   protected ObjectGroup deserializePayload(DataInput in) throws IOException {
     return new ObjectGroup(in);
+  }
+
+  @Override
+  public boolean updateCache(Cache dissemCache, RemoteStore store, long onum) {
+    return dissemCache.updateEntry(store, onum, this);
   }
 }
