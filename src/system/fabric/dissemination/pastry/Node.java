@@ -3,7 +3,6 @@ package fabric.dissemination.pastry;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -27,7 +26,8 @@ public class Node {
   // should be in params file?
   private static int DEFAULT_PORT = 13373;
 
-  private static String PASTRY_CONFIG_KEY_PREFIX = "fabric.dissemination.pastry.";
+  private static String PASTRY_CONFIG_KEY_PREFIX =
+      "fabric.dissemination.pastry.";
 
   protected Environment env;
   protected SocketPastryNodeFactory pnf;
@@ -40,6 +40,7 @@ public class Node {
     // Some default environment values.
     Map<String, String> defaults = new HashMap<String, String>();
     defaults.put("bootstrap", "localhost:" + DEFAULT_PORT);
+    defaults.put("loglevel", "SEVERE");
     defaults.put("replication_interval", "300000");
     defaults.put("aggregation_interval", "600000");
 
@@ -71,9 +72,8 @@ public class Node {
         parts.length == 2 ? Integer.parseInt(parts[1]) : DEFAULT_PORT;
     InetSocketAddress boot = new InetSocketAddress(bootHost, bootPort);
 
-    int port = findFreePort(DEFAULT_PORT);
     NodeIdFactory idf = new RandomNodeIdFactory(env);
-    pnf = new SocketPastryNodeFactory(idf, port, env);
+    pnf = new SocketPastryNodeFactory(idf, DEFAULT_PORT, env);
 
     node = pnf.newNode(pnf.getNodeHandle(boot));
     waitForReady(); // waits until the pastry node is actually set up
@@ -96,12 +96,12 @@ public class Node {
           Logging.logIgnoredInterruptedException(e);
         }
         if (++spinCount == 2) {
-          System.out.println("Waiting for Pastry node to be ready.");
-          System.out.println("If this takes too long, consider setting or "
-              + "reducing the value of the");
-          System.out.println("  " + PASTRY_CONFIG_KEY_PREFIX + "pastry_protocol_"
-              + "periodicLeafSet_lease_period");
-          System.out.println("configuration parameter.");
+          System.out.println("Waiting for Pastry node to start up...");
+//          System.out.println("If this takes too long, consider setting or "
+//              + "reducing the value of the");
+//          System.out.println("  " + PASTRY_CONFIG_KEY_PREFIX
+//              + "pastry_protocol_" + "periodicLeafSet_lease_period");
+//          System.out.println("configuration parameter.");
         }
         if (spinCount % 20 == 0) {
           System.out.println("Still waiting...");
@@ -115,24 +115,7 @@ public class Node {
       }
     }
 
-    if (spinCount >= 2) {
-      System.out.println("Pastry node ready.");
-    }
-  }
-
-  private int findFreePort(int port) {
-    while (true) {
-      try {
-        ServerSocket sock = new ServerSocket();
-        sock.bind(new InetSocketAddress(InetAddress.getLocalHost(), port));
-        sock.close();
-        break;
-      } catch (IOException e) {
-        port++;
-      }
-    }
-
-    return port;
+    System.out.println("Pastry node started");
   }
 
   /**
