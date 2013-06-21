@@ -20,11 +20,44 @@ import fabric.worker.Worker;
  * when needed.
  */
 public class Cache {
+  public static class Entry {
+    public final ObjectGlob objectGlob;
+
+    private int level;
+    private int frequency;
+
+    private Entry(ObjectGlob glob) {
+      this.objectGlob = glob;
+    }
+
+    public boolean isOlderThan(ObjectGlob g) {
+      return objectGlob.isOlderThan(g);
+    }
+
+    /**
+     * @param g
+     * @return
+     */
+    public Entry update(ObjectGlob g) {
+      Entry result = new Entry(g);
+      result.level = this.level;
+      result.frequency = this.frequency;
+      return result;
+    }
+
+    public int level() {
+      return level;
+    }
+
+    public void touch() {
+      frequency++;
+    }
+  }
 
   /**
    * Cache of globs, indexed by the oid of the glob's head object.
    */
-  private final fabric.common.util.Cache<Pair<RemoteStore, Long>, ObjectGlob> map;
+  private final fabric.common.util.Cache<Pair<RemoteStore, Long>, Entry> map;
 
   /**
    * The set of fetch locks. Used to prevent threads from concurrently
@@ -34,7 +67,7 @@ public class Cache {
 
   private class FetchLock {
     private boolean ready = false;
-    private ObjectGlob result = null;
+    private Entry result = null;
   }
 
   public Cache() {
@@ -51,7 +84,7 @@ public class Cache {
    *          the onum of the object.
    * @return the glob, if it is in the cache; null otherwise.
    */
-  public ObjectGlob get(RemoteStore store, long onum) {
+  public Entry get(RemoteStore store, long onum) {
     return get(store, onum, false);
   }
 
@@ -68,11 +101,11 @@ public class Cache {
    * @return the glob, or null if fetch is false and glob does not exists in
    *         cache.
    */
-  public ObjectGlob get(RemoteStore store, long onum, boolean fetch) {
+  public Entry get(RemoteStore store, long onum, boolean fetch) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
-    ObjectGlob g = map.get(key);
-    if (g != null || !fetch) return g;
+    Entry entry = map.get(key);
+    if (entry != null || !fetch) return entry;
 
     // Need to fetch. Check the object table in case some other thread fetched
     // the object while we weren't looking. Use fetchLocks as a mutex to
@@ -81,7 +114,7 @@ public class Cache {
     FetchLock fetchLock;
     boolean needToFetch = false;
     synchronized (fetchLocks) {
-      ObjectGlob result = map.get(key);
+      Entry result = map.get(key);
       if (result != null) return result;
 
       // Object not in cache. Get/create a mutex for fetching the object.
@@ -124,7 +157,7 @@ public class Cache {
   /**
    * Fetches a glob from the store and caches it.
    */
-  private ObjectGlob fetch(Pair<RemoteStore, Long> oid) {
+  private Entry fetch(Pair<RemoteStore, Long> oid) {
     ObjectGlob g = null;
     RemoteStore store = oid.first;
     long onum = oid.second;
@@ -158,20 +191,21 @@ public class Cache {
    * 
    * @return the resulting cache entry.
    */
-  private ObjectGlob put(Pair<RemoteStore, Long> oid, ObjectGlob g,
+  private Entry put(Pair<RemoteStore, Long> oid, ObjectGlob g,
       boolean replaceOnly) {
     RemoteStore store = oid.first;
     long onum = oid.second;
 
     while (true) {
-      ObjectGlob currentEntry = get(store, onum);
+      Entry currentEntry = get(store, onum);
 
       if (currentEntry == null) {
         // No existing entry.
         if (replaceOnly) return null;
 
         // Add a new entry.
-        if (map.putIfAbsent(oid, g) == null) return g;
+        Entry newEntry = new Entry(g);
+        if (map.putIfAbsent(oid, newEntry) == null) return newEntry;
 
         // An entry was added while we weren't looking. Try again.
         continue;
@@ -180,8 +214,10 @@ public class Cache {
       // See if the existing entry is older than what we got.
       if (currentEntry.isOlderThan(g)) {
         // Existing entry is older, so replace it.
-        currentEntry.copyDissemStateTo(g);
-        if (map.replace(oid, currentEntry, g)) return g;
+        Entry newEntry = currentEntry.update(g);
+        if (map.replace(oid, currentEntry, newEntry)) {
+          return newEntry;
+        }
 
         // Entry was replaced while we weren't looking. Try again.
         continue;
@@ -241,9 +277,9 @@ public class Cache {
         new HashSet<Pair<Pair<RemoteStore, Long>, Long>>();
 
     for (Pair<RemoteStore, Long> key : map.keys()) {
-      ObjectGlob glob = map.get(key);
+      Entry glob = map.get(key);
       if (glob != null)
-        result.add(new Pair<Pair<RemoteStore, Long>, Long>(key, glob
+        result.add(new Pair<Pair<RemoteStore, Long>, Long>(key, glob.objectGlob
             .getTimestamp()));
     }
 
@@ -270,22 +306,22 @@ public class Cache {
         @Override
         public int compare(Pair<Pair<RemoteStore, Long>, Long> o1,
             Pair<Pair<RemoteStore, Long>, Long> o2) {
-          ObjectGlob g1 = map.get(o1.first);
-          ObjectGlob g2 = map.get(o2.first);
+          Entry entry1 = map.get(o1.first);
+          Entry entry2 = map.get(o2.first);
 
-          if (g1 == g2) {
+          if (entry1 == entry2) {
             return 0;
           }
 
-          if (g1 == null) {
+          if (entry1 == null) {
             return 1;
           }
 
-          if (g2 == null) {
+          if (entry2 == null) {
             return -1;
           }
 
-          return g2.frequency() - g1.frequency();
+          return entry2.frequency - entry1.frequency;
         }
       };
 
