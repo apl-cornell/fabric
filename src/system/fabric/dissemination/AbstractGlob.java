@@ -64,9 +64,6 @@ public abstract class AbstractGlob<Payload extends FastSerializable> implements
    */
   private final byte[] signature;
 
-  private transient int level;
-  private transient int frequency;
-
   /**
    * @param label
    *          the label at which this glob is protected.
@@ -170,31 +167,6 @@ public abstract class AbstractGlob<Payload extends FastSerializable> implements
     }
 
     return Crypto.cipherInstance(opmode, key, iv);
-  }
-
-  /** The dissemination level of the glob. 0 is replicated to all nodes. */
-  public int level() {
-    return level;
-  }
-
-  /** Sets the level. */
-  public void level(int level) {
-    this.level = level;
-  }
-
-  /** How many times the object has been accessed since last aggregation. */
-  public int frequency() {
-    return frequency;
-  }
-
-  /** Sets the frequency. */
-  public void frequency(int frequency) {
-    this.frequency = frequency;
-  }
-
-  /** Increments frequency by 1. */
-  public void touch() {
-    this.frequency++;
   }
 
   /**
@@ -306,14 +278,6 @@ public abstract class AbstractGlob<Payload extends FastSerializable> implements
 
   public long getTimestamp() {
     return timestamp;
-  }
-
-  /**
-   * Copies dissemination-related state to the given glob.
-   */
-  void copyDissemStateTo(AbstractGlob<Payload> g) {
-    g.level = level;
-    g.frequency = frequency;
   }
 
   /**

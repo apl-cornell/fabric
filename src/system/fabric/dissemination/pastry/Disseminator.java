@@ -209,10 +209,10 @@ public class Disseminator implements Application {
    */
   public ObjectGlob fetch(RemoteStore c, long onum)
       throws DisseminationTimeoutException {
-    ObjectGlob g = cache.get(c, onum);
+    fabric.dissemination.Cache.Entry entry = cache.get(c, onum);
 
-    if (g != null) {
-      return g;
+    if (entry != null) {
+      return entry.objectGlob;
     }
 
     Id id = idf.buildRandomId(rand);
@@ -279,8 +279,8 @@ public class Disseminator implements Application {
         // Subscribe the remote endpoint.
         subscribe(msg.sender(), c, onum);
 
-        ObjectGlob g = cache.get(c, onum, true);
-        reply(g, msg);
+        fabric.dissemination.Cache.Entry entry = cache.get(c, onum, true);
+        reply(entry, msg);
         return null;
       }
     });
@@ -318,11 +318,11 @@ public class Disseminator implements Application {
   }
 
   /**
-   * Helper function. Reply to a Fetch message with given glob.
+   * Helper function. Reply to a Fetch message with given cache entry.
    */
-  protected void reply(ObjectGlob g, Fetch msg) {
-    g.touch();
-    Fetch.Reply r = new Fetch.Reply(msg, g);
+  protected void reply(fabric.dissemination.Cache.Entry entry, Fetch msg) {
+    entry.touch();
+    Fetch.Reply r = new Fetch.Reply(msg, entry.objectGlob);
     route(null, r, msg.sender());
   }
 
@@ -548,10 +548,10 @@ public class Disseminator implements Application {
           if (send) {
             RemoteStore c = k.first.first;
             Long onum = k.first.second;
-            ObjectGlob g = cache.get(c, onum);
-            if (g.level() > level) continue;
+            fabric.dissemination.Cache.Entry entry = cache.get(c, onum);
+            if (entry.level() > level) continue;
 
-            globs.put(k.first, g);
+            globs.put(k.first, entry.objectGlob);
 
             // XXX hack. limit reply message to 10 globs at a time. don't want
             // the message to get so large that pastry rejects it.
@@ -657,13 +657,13 @@ public class Disseminator implements Application {
 
     RemoteStore c = worker.getStore(msg.store());
     long onum = msg.onum();
-    ObjectGlob g = cache.get(c, onum);
+    fabric.dissemination.Cache.Entry entry = cache.get(c, onum);
 
-    if (g != null) {
+    if (entry != null) {
       // Subscribe the remote endpoint.
       subscribe(msg.sender(), c, onum);
 
-      reply(g, msg);
+      reply(entry, msg);
       return false;
     }
 

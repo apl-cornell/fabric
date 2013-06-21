@@ -23,7 +23,7 @@ public class DummyFetchManager implements FetchManager {
 
   @Override
   public ObjectGroup fetch(RemoteStore store, long onum) {
-    return cache.get(store, onum, true).decrypt();
+    return cache.get(store, onum, true).objectGlob.decrypt();
   }
 
   @Override
