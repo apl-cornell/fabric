@@ -200,7 +200,7 @@ public abstract class AbstractGlob<Payload extends FastSerializable> implements
   /**
    * Whether this Glob is older than the given Glob.
    */
-  public boolean isOlderThan(AbstractGlob<Payload> glob) {
+  public boolean isOlderThan(AbstractGlob<?> glob) {
     return timestamp < glob.timestamp;
   }
 

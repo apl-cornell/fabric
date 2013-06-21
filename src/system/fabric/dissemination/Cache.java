@@ -34,12 +34,11 @@ public class Cache {
 
   private class FetchLock {
     private boolean ready = false;
-    private ObjectGlob glob = null;
+    private ObjectGlob result = null;
   }
 
   public Cache() {
-    this.map =
-        new fabric.common.util.Cache<Pair<RemoteStore, Long>, ObjectGlob>();
+    this.map = new fabric.common.util.Cache<>();
     this.fetchLocks = new OidKeyHashMap<Cache.FetchLock>();
   }
 
@@ -97,7 +96,7 @@ public class Cache {
     synchronized (fetchLock) {
       if (needToFetch) {
         // We are responsible for fetching the object.
-        fetchLock.glob = fetch(key);
+        fetchLock.result = fetch(key);
         fetchLock.ready = true;
 
         // Object now cached. Remove our mutex from fetchLocks.
@@ -118,7 +117,7 @@ public class Cache {
         }
       }
 
-      return fetchLock.glob;
+      return fetchLock.result;
     }
   }
 
@@ -135,24 +134,8 @@ public class Cache {
     } catch (AccessException e) {
     }
 
-    if (g != null) {
-      while (true) {
-        ObjectGlob old = get(store, onum);
-
-        if (old == null || old.isOlderThan(g)) {
-          if (!map.replace(oid, old, g)) {
-            // Value got replaced while we weren't looking. Try again.
-            continue;
-          }
-        } else {
-          g = old;
-        }
-
-        break;
-      }
-    }
-
-    return g;
+    if (g == null) return null;
+    return put(oid, g, false);
   }
 
   /**
@@ -167,18 +150,44 @@ public class Cache {
    */
   public void put(RemoteStore store, long onum, ObjectGlob g) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
+    put(key, g, false);
+  }
+
+  /**
+   * Incorporates the given glob into the cache.
+   * 
+   * @return the resulting cache entry.
+   */
+  private ObjectGlob put(Pair<RemoteStore, Long> oid, ObjectGlob g,
+      boolean replaceOnly) {
+    RemoteStore store = oid.first;
+    long onum = oid.second;
 
     while (true) {
-      ObjectGlob old = get(store, onum);
+      ObjectGlob currentEntry = get(store, onum);
 
-      if (old == null || old.isOlderThan(g)) {
-        if (map.replace(key, old, g)) break;
+      if (currentEntry == null) {
+        // No existing entry.
+        if (replaceOnly) return null;
 
-        // Value got replaced while we weren't looking. Try again.
+        // Add a new entry.
+        if (map.putIfAbsent(oid, g) == null) return g;
+
+        // An entry was added while we weren't looking. Try again.
         continue;
       }
 
-      break;
+      // See if the existing entry is older than what we got.
+      if (currentEntry.isOlderThan(g)) {
+        // Existing entry is older, so replace it.
+        currentEntry.copyDissemStateTo(g);
+        if (map.replace(oid, currentEntry, g)) return g;
+
+        // Entry was replaced while we weren't looking. Try again.
+        continue;
+      }
+
+      return currentEntry;
     }
   }
 
@@ -191,26 +200,12 @@ public class Cache {
   public boolean updateEntry(RemoteStore store, long onum, ObjectGlob g) {
     // Update the local worker's cache.
     // XXX What happens if the worker isn't trusted to decrypt the glob?
-    boolean result = Worker.getWorker().updateCache(store, g.decrypt());
+    boolean workerCacheUpdated =
+        Worker.getWorker().updateCache(store, g.decrypt());
 
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
-    while (true) {
-      ObjectGlob old = get(store, onum);
-      if (old == null) return result;
-
-      if (old.isOlderThan(g)) {
-        old.copyDissemStateTo(g);
-        if (map.replace(key, old, g)) break;
-
-        // Value got replaced while we weren't looking. Try again.
-        continue;
-      }
-
-      break;
-    }
-
-    return true;
+    return put(key, g, true) != null || workerCacheUpdated;
   }
 
   /**
