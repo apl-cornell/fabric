@@ -22,26 +22,41 @@ import fabric.worker.Worker;
 public class Cache {
   public static class Entry {
     public final ObjectGlob objectGlob;
+    public final WarrantyRefreshGlob warrantyRefreshGlob;
 
     private int level;
     private int frequency;
 
     private Entry(ObjectGlob glob) {
       this.objectGlob = glob;
+      this.warrantyRefreshGlob = null;
+    }
+
+    private Entry(ObjectGlob objectGlob, WarrantyRefreshGlob warrantyRefreshGlob) {
+      this.objectGlob = objectGlob;
+      this.warrantyRefreshGlob = warrantyRefreshGlob;
     }
 
     public boolean isOlderThan(ObjectGlob g) {
       return objectGlob.isOlderThan(g);
     }
 
-    /**
-     * @param g
-     * @return
-     */
+    public boolean isOlderThan(WarrantyRefreshGlob g) {
+      if (warrantyRefreshGlob != null)
+        return warrantyRefreshGlob.isOlderThan(g);
+
+      return objectGlob.isOlderThan(g);
+    }
+
     public Entry update(ObjectGlob g) {
       Entry result = new Entry(g);
-      result.level = this.level;
-      result.frequency = this.frequency;
+      copyDissemStatsTo(result);
+      return result;
+    }
+
+    public Entry update(WarrantyRefreshGlob g) {
+      Entry result = new Entry(objectGlob, g);
+      copyDissemStatsTo(result);
       return result;
     }
 
@@ -51,6 +66,11 @@ public class Cache {
 
     public void touch() {
       frequency++;
+    }
+
+    private void copyDissemStatsTo(Entry dest) {
+      dest.level = level;
+      dest.frequency = frequency;
     }
   }
 
@@ -228,6 +248,37 @@ public class Cache {
   }
 
   /**
+   * Incorporates the given warranty-refresh glob into the cache.
+   * 
+   * @return the resulting cache entry. This can be null if no entry exists for
+   *          the given oid.
+   */
+  private Entry put(Pair<RemoteStore, Long> oid, WarrantyRefreshGlob g) {
+    RemoteStore store = oid.first;
+    long onum = oid.second;
+
+    while (true) {
+      Entry currentEntry = get(store, onum);
+
+      if (currentEntry == null) return null;
+
+      // See if the existing entry is older than what we got.
+      if (currentEntry.isOlderThan(g)) {
+        // Existing entry is older, so replace it.
+        Entry newEntry = currentEntry.update(g);
+        if (map.replace(oid, currentEntry, newEntry)) {
+          return newEntry;
+        }
+
+        // Entry was replaced while we weren't looking. Try again.
+        continue;
+      }
+
+      return currentEntry;
+    }
+  }
+
+  /**
    * Updates the dissemination and worker cache with the given object glob. If
    * the caches do not have entries for the given glob, then nothing is changed.
    * 
@@ -255,15 +306,13 @@ public class Cache {
       WarrantyRefreshGlob glob) {
     // Update the local worker's cache.
     // XXX What happens if the worker isn't trusted to decrypt the glob?
-    boolean result = !store.updateWarranties(glob.decrypt()).isEmpty();
+    boolean workerCacheUpdated =
+        !store.updateWarranties(glob.decrypt()).isEmpty();
 
     // Update the dissemination cache.
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
-//    while (true) {
-//      finishMe();
-//    }
-    return result;
+    return put(key, glob) != null || workerCacheUpdated;
   }
 
   /**
