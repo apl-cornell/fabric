@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -36,6 +37,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyRefreshGlob;
 import fabric.dissemination.pastry.messages.AggregateInterval;
 import fabric.dissemination.pastry.messages.Fetch;
 import fabric.dissemination.pastry.messages.MessageType;
@@ -207,12 +209,12 @@ public class Disseminator implements Application {
    * @throws DisseminationTimeoutException
    *           if the dissemination network takes too long.
    */
-  public ObjectGlob fetch(RemoteStore c, long onum)
+  public Pair<ObjectGlob, WarrantyRefreshGlob> fetch(RemoteStore c, long onum)
       throws DisseminationTimeoutException {
     fabric.dissemination.Cache.Entry entry = cache.get(c, onum);
 
     if (entry != null) {
-      return entry.objectGlob;
+      return entry.getGlobs();
     }
 
     Id id = idf.buildRandomId(rand);
@@ -236,7 +238,7 @@ public class Disseminator implements Application {
         throw new DisseminationTimeoutException();
       }
 
-      return f.reply().glob();
+      return f.reply().globs();
     }
   }
 
@@ -322,7 +324,7 @@ public class Disseminator implements Application {
    */
   protected void reply(fabric.dissemination.Cache.Entry entry, Fetch msg) {
     entry.touch();
-    Fetch.Reply r = new Fetch.Reply(msg, entry.objectGlob);
+    Fetch.Reply r = new Fetch.Reply(msg, entry.getGlobs());
     route(null, r, msg.sender());
   }
 
@@ -532,8 +534,8 @@ public class Disseminator implements Application {
 
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
 
-        Map<Pair<RemoteStore, Long>, ObjectGlob> globs =
-            new HashMap<Pair<RemoteStore, Long>, ObjectGlob>();
+        Map<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyRefreshGlob>> globs =
+            new HashMap<>();
 
         for (Pair<Pair<RemoteStore, Long>, Long> k : cache.sortedTimestamps()) {
           Long skipTimestamp = skip.get(k.first.first, k.first.second);
@@ -551,7 +553,7 @@ public class Disseminator implements Application {
             fabric.dissemination.Cache.Entry entry = cache.get(c, onum);
             if (entry.level() > level) continue;
 
-            globs.put(k.first, entry.objectGlob);
+            globs.put(k.first, entry.getGlobs());
 
             // XXX hack. limit reply message to 10 globs at a time. don't want
             // the message to get so large that pastry rejects it.
@@ -603,12 +605,12 @@ public class Disseminator implements Application {
     process(new Executable<Void, RuntimeException>() {
       @Override
       public Void execute() {
-        for (Map.Entry<Pair<RemoteStore, Long>, ObjectGlob> e : msg.globs()
-            .entrySet()) {
+        for (Entry<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyRefreshGlob>> e : msg
+            .globs().entrySet()) {
           RemoteStore c = e.getKey().first;
           long onum = e.getKey().second;
-          ObjectGlob g = e.getValue();
-          cache.put(c, onum, g);
+          Pair<ObjectGlob, WarrantyRefreshGlob> globs = e.getValue();
+          cache.put(c, onum, globs);
         }
 
         return null;
@@ -681,9 +683,9 @@ public class Disseminator implements Application {
     Worker worker = Worker.getWorker();
     RemoteStore c = worker.getStore(msg.store());
     long onum = msg.onum();
-    ObjectGlob g = msg.glob();
+    Pair<ObjectGlob, WarrantyRefreshGlob> globs = msg.globs();
 
-    if (g != null) cache.put(c, onum, g);
+    if (globs != null) cache.put(c, onum, globs);
 
     return true;
   }

@@ -2,6 +2,7 @@ package fabric.dissemination.pastry.messages;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.PublicKey;
 
 import rice.p2p.commonapi.Endpoint;
 import rice.p2p.commonapi.Id;
@@ -9,7 +10,9 @@ import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
+import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyRefreshGlob;
 import fabric.worker.Worker;
 
 /**
@@ -107,18 +110,18 @@ public class Fetch implements RawMessage {
     private final Id id;
     private final String store;
     private final long onum;
-    private final ObjectGlob glob;
+    private final Pair<ObjectGlob, WarrantyRefreshGlob> globs;
 
-    public Reply(Fetch parent, ObjectGlob glob) {
+    public Reply(Fetch parent, Pair<ObjectGlob, WarrantyRefreshGlob> globs) {
       id = parent.id();
       store = parent.store();
       onum = parent.onum();
-      this.glob = glob;
+      this.globs = globs;
     }
 
     /** The glob returned. */
-    public ObjectGlob glob() {
-      return glob;
+    public Pair<ObjectGlob, WarrantyRefreshGlob> globs() {
+      return globs;
     }
 
     /** The id of this message. */
@@ -153,7 +156,13 @@ public class Fetch implements RawMessage {
       id.serialize(out);
       out.writeUTF(store);
       out.writeLong(onum);
-      glob.write(out);
+      globs.first.write(out);
+      if (globs.second == null) {
+        out.writeBoolean(false);
+      } else {
+        out.writeBoolean(true);
+        globs.second.write(out);
+      }
     }
 
     /**
@@ -165,16 +174,36 @@ public class Fetch implements RawMessage {
       store = in.readUTF();
       onum = in.readLong();
 
-      ObjectGlob glob;
-      try {
-        glob = new ObjectGlob(in);
-        glob.verifySignature(Worker.getWorker().getStore(store).getPublicKey());
-      } catch (GeneralSecurityException e) {
-        glob = null;
-      }
-      this.glob = glob;
-    }
+      PublicKey storePubKey = Worker.getWorker().getStore(store).getPublicKey();
 
+      Pair<ObjectGlob, WarrantyRefreshGlob> globs;
+
+      try {
+        // Read in entire entry.
+        ObjectGlob objectGlob = new ObjectGlob(in);
+        WarrantyRefreshGlob warrantyRefreshGlob =
+            in.readBoolean() ? new WarrantyRefreshGlob(in) : null;
+
+        // Verify signatures.
+        objectGlob.verifySignature(storePubKey);
+
+        if (warrantyRefreshGlob != null) {
+          try {
+            warrantyRefreshGlob.verifySignature(storePubKey);
+          } catch (GeneralSecurityException e) {
+            // Warranty-refresh glob was corrupted, so ignore it.
+            warrantyRefreshGlob = null;
+          }
+        }
+
+        globs = new Pair<>(objectGlob, warrantyRefreshGlob);
+      } catch (GeneralSecurityException e) {
+        // Object glob was corrupted, so just use null for the whole result.
+        globs = null;
+      }
+
+      this.globs = globs;
+    }
   }
 
 }

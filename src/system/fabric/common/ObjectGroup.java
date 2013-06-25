@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import fabric.common.VersionWarranty.Binding;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongKeyMap.Entry;
@@ -91,5 +92,29 @@ public class ObjectGroup implements FastSerializable {
     if (!expiry.expired(true)) return;
 
     expiry = tm.refreshWarranties(objects.values());
+  }
+
+  /**
+   * Updates the warranties in this group with the given group of refreshed
+   * warranties.
+   */
+  public void incorporate(WarrantyRefreshGroup warrantyRefreshGroup) {
+    for (Binding binding : warrantyRefreshGroup) {
+      long onum = binding.onum;
+      int version = binding.versionNumber;
+      VersionWarranty warranty = binding.warranty();
+
+      Pair<SerializedObject, VersionWarranty> entry = objects.get(onum);
+      if (entry == null) continue;
+
+      if (entry.first.getVersion() != version) {
+        // Version mismatch; ignore.
+        continue;
+      }
+
+      if (warranty.expiresAfter(entry.second)) {
+        entry.second = warranty;
+      }
+    }
   }
 }

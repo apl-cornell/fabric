@@ -24,6 +24,11 @@ public class Cache {
     public final ObjectGlob objectGlob;
     public final WarrantyRefreshGlob warrantyRefreshGlob;
 
+    /**
+     * Memoized pair of (objectGlob, warrantyRefreshGlob).
+     */
+    private Pair<ObjectGlob, WarrantyRefreshGlob> globs;
+
     private int level;
     private int frequency;
 
@@ -71,6 +76,14 @@ public class Cache {
     private void copyDissemStatsTo(Entry dest) {
       dest.level = level;
       dest.frequency = frequency;
+    }
+
+    public Pair<ObjectGlob, WarrantyRefreshGlob> getGlobs() {
+      if (globs == null) {
+        globs = new Pair<>(objectGlob, warrantyRefreshGlob);
+      }
+
+      return globs;
     }
   }
 
@@ -192,18 +205,21 @@ public class Cache {
   }
 
   /**
-   * Put given glob into the cache.
+   * Puts the given globs into the cache.
    * 
    * @param store
    *          the store of the object.
    * @param onum
    *          the onum of the object.
-   * @param g
-   *          the glob.
+   * @param globs
+   *          the globs.
    */
-  public void put(RemoteStore store, long onum, ObjectGlob g) {
+  public void put(RemoteStore store, long onum,
+      Pair<ObjectGlob, WarrantyRefreshGlob> globs) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
-    put(key, g, false);
+    if (put(key, globs.first, false) != null) {
+      put(key, globs.second);
+    }
   }
 
   /**
@@ -217,14 +233,14 @@ public class Cache {
     long onum = oid.second;
 
     while (true) {
-      Entry currentEntry = get(store, onum);
+      final Entry currentEntry = get(store, onum);
 
       if (currentEntry == null) {
         // No existing entry.
         if (replaceOnly) return null;
 
         // Add a new entry.
-        Entry newEntry = new Entry(g);
+        final Entry newEntry = new Entry(g);
         if (map.putIfAbsent(oid, newEntry) == null) return newEntry;
 
         // An entry was added while we weren't looking. Try again.

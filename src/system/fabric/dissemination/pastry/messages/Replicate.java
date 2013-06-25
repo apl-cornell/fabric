@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import rice.p2p.commonapi.NodeHandle;
@@ -14,6 +15,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyRefreshGlob;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -117,13 +119,14 @@ public class Replicate implements RawMessage {
    */
   public static class Reply implements RawMessage {
 
-    private final Map<Pair<RemoteStore, Long>, ObjectGlob> globs;
+    private final Map<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyRefreshGlob>> globs;
 
-    public Reply(Map<Pair<RemoteStore, Long>, ObjectGlob> globs) {
+    public Reply(
+        Map<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyRefreshGlob>> globs) {
       this.globs = globs;
     }
 
-    public Map<Pair<RemoteStore, Long>, ObjectGlob> globs() {
+    public Map<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyRefreshGlob>> globs() {
       return globs;
     }
 
@@ -153,10 +156,20 @@ public class Replicate implements RawMessage {
       DataOutputBuffer out = new DataOutputBuffer(buf);
       out.writeInt(globs.size());
 
-      for (Map.Entry<Pair<RemoteStore, Long>, ObjectGlob> e : globs.entrySet()) {
+      for (Entry<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyRefreshGlob>> e : globs
+          .entrySet()) {
         out.writeUTF(e.getKey().first.name());
         out.writeLong(e.getKey().second);
-        e.getValue().write(out);
+
+        Pair<ObjectGlob, WarrantyRefreshGlob> globs = e.getValue();
+        globs.first.write(out);
+
+        if (globs.second == null) {
+          out.writeBoolean(false);
+        } else {
+          out.writeBoolean(true);
+          globs.second.write(out);
+        }
       }
     }
 
@@ -167,16 +180,33 @@ public class Replicate implements RawMessage {
       DataInputBuffer in = new DataInputBuffer(buf);
       Worker worker = Worker.getWorker();
       int n = in.readInt();
-      globs = new HashMap<Pair<RemoteStore, Long>, ObjectGlob>(n);
+      globs = new HashMap<>(n);
 
       for (int i = 0; i < n; i++) {
         RemoteStore store = worker.getStore(in.readUTF());
         long onum = in.readLong();
         try {
-          ObjectGlob g = new ObjectGlob(in);
-          g.verifySignature(store.getPublicKey());
-          globs.put(new Pair<RemoteStore, Long>(store, onum), g);
+          // Read in entire entry.
+          ObjectGlob objectGlob = new ObjectGlob(in);
+          WarrantyRefreshGlob warrantyRefreshGlob =
+              in.readBoolean() ? new WarrantyRefreshGlob(in) : null;
+
+          // Verify signatures.
+          objectGlob.verifySignature(store.getPublicKey());
+
+          if (warrantyRefreshGlob != null) {
+            try {
+              warrantyRefreshGlob.verifySignature(store.getPublicKey());
+            } catch (GeneralSecurityException e) {
+              // Warranty-refresh glob was corrupted, so ignore it.
+              warrantyRefreshGlob = null;
+            }
+          }
+
+          globs.put(new Pair<>(store, onum), new Pair<>(objectGlob,
+              warrantyRefreshGlob));
         } catch (GeneralSecurityException e) {
+          // Object glob was corrupted. Ignore this group completely.
         }
       }
     }
