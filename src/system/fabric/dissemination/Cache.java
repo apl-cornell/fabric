@@ -9,7 +9,7 @@ import java.util.Set;
 
 import fabric.common.Logging;
 import fabric.common.ObjectGroup;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -24,33 +24,32 @@ import fabric.worker.Worker;
 public class Cache {
   public static class Entry {
     public final ObjectGlob objectGlob;
-    public final WarrantyRefreshGlob warrantyRefreshGlob;
+    public final WarrantyGlob warrantyGlob;
 
     /**
-     * Memoized pair of (objectGlob, warrantyRefreshGlob).
+     * Memoized pair of (objectGlob, warrantyGlob).
      */
-    private Pair<ObjectGlob, WarrantyRefreshGlob> globs;
+    private Pair<ObjectGlob, WarrantyGlob> globs;
 
     private int level;
     private int frequency;
 
     private Entry(ObjectGlob glob) {
       this.objectGlob = glob;
-      this.warrantyRefreshGlob = null;
+      this.warrantyGlob = null;
     }
 
-    private Entry(ObjectGlob objectGlob, WarrantyRefreshGlob warrantyRefreshGlob) {
+    private Entry(ObjectGlob objectGlob, WarrantyGlob warrantyGlob) {
       this.objectGlob = objectGlob;
-      this.warrantyRefreshGlob = warrantyRefreshGlob;
+      this.warrantyGlob = warrantyGlob;
     }
 
     public boolean isOlderThan(ObjectGlob g) {
       return objectGlob.isOlderThan(g);
     }
 
-    public boolean isOlderThan(WarrantyRefreshGlob g) {
-      if (warrantyRefreshGlob != null)
-        return warrantyRefreshGlob.isOlderThan(g);
+    public boolean isOlderThan(WarrantyGlob g) {
+      if (warrantyGlob != null) return warrantyGlob.isOlderThan(g);
 
       return objectGlob.isOlderThan(g);
     }
@@ -61,7 +60,7 @@ public class Cache {
       return result;
     }
 
-    public Entry update(WarrantyRefreshGlob g) {
+    public Entry update(WarrantyGlob g) {
       Entry result = new Entry(objectGlob, g);
       copyDissemStatsTo(result);
       return result;
@@ -80,16 +79,16 @@ public class Cache {
       dest.frequency = frequency;
     }
 
-    public Pair<ObjectGlob, WarrantyRefreshGlob> getGlobs() {
+    public Pair<ObjectGlob, WarrantyGlob> getGlobs() {
       if (globs == null) {
-        globs = new Pair<>(objectGlob, warrantyRefreshGlob);
+        globs = new Pair<>(objectGlob, warrantyGlob);
       }
 
       return globs;
     }
 
-    public Pair<ObjectGroup, WarrantyRefreshGroup> decrypt() {
-      return new Pair<>(objectGlob.decrypt(), warrantyRefreshGlob.decrypt());
+    public Pair<ObjectGroup, WarrantyGroup> decrypt() {
+      return new Pair<>(objectGlob.decrypt(), warrantyGlob.decrypt());
     }
   }
 
@@ -197,7 +196,7 @@ public class Cache {
    * Fetches a glob from the store and caches it.
    */
   private Entry fetch(Pair<RemoteStore, Long> oid) {
-    Pair<ObjectGlob, WarrantyRefreshGlob> g = null;
+    Pair<ObjectGlob, WarrantyGlob> g = null;
     RemoteStore store = oid.first;
     long onum = oid.second;
 
@@ -221,7 +220,7 @@ public class Cache {
    *          the globs.
    */
   public Entry put(RemoteStore store, long onum,
-      Pair<ObjectGlob, WarrantyRefreshGlob> globs) {
+      Pair<ObjectGlob, WarrantyGlob> globs) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
     if (put(key, globs.first, false) != null) {
       return put(key, globs.second);
@@ -272,12 +271,12 @@ public class Cache {
   }
 
   /**
-   * Incorporates the given warranty-refresh glob into the cache.
+   * Incorporates the given warranty glob into the cache.
    * 
    * @return the resulting cache entry. This can be null if no entry exists for
    *          the given oid.
    */
-  private Entry put(Pair<RemoteStore, Long> oid, WarrantyRefreshGlob g) {
+  private Entry put(Pair<RemoteStore, Long> oid, WarrantyGlob g) {
     RemoteStore store = oid.first;
     long onum = oid.second;
 
@@ -320,14 +319,12 @@ public class Cache {
   }
 
   /**
-   * Updates the dissemination and worker cache with the given warranty-refresh
-   * glob. If the caches do not have entries for the given glob, then nothing
-   * is changed.
+   * Updates the dissemination and worker cache with the given warranty glob. If
+   * the caches do not have entries for the given glob, then nothing is changed.
    * 
    * @return true iff either of the caches was changed.
    */
-  public boolean updateEntry(RemoteStore store, long onum,
-      WarrantyRefreshGlob glob) {
+  public boolean updateEntry(RemoteStore store, long onum, WarrantyGlob glob) {
     // Update the local worker's cache.
     // XXX What happens if the worker isn't trusted to decrypt the glob?
     boolean workerCacheUpdated =

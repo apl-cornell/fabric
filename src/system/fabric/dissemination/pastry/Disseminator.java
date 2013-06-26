@@ -37,7 +37,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.WarrantyRefreshGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.dissemination.pastry.messages.AggregateInterval;
 import fabric.dissemination.pastry.messages.Fetch;
 import fabric.dissemination.pastry.messages.MessageType;
@@ -209,7 +209,7 @@ public class Disseminator implements Application {
    * @throws DisseminationTimeoutException
    *           if the dissemination network takes too long.
    */
-  public Pair<ObjectGlob, WarrantyRefreshGlob> fetch(RemoteStore c, long onum)
+  public Pair<ObjectGlob, WarrantyGlob> fetch(RemoteStore c, long onum)
       throws DisseminationTimeoutException {
     fabric.dissemination.Cache.Entry entry = cache.get(c, onum);
 
@@ -534,7 +534,7 @@ public class Disseminator implements Application {
 
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
 
-        Map<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyRefreshGlob>> globs =
+        Map<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyGlob>> globs =
             new HashMap<>();
 
         for (Pair<Pair<RemoteStore, Long>, Long> k : cache.sortedTimestamps()) {
@@ -605,11 +605,11 @@ public class Disseminator implements Application {
     process(new Executable<Void, RuntimeException>() {
       @Override
       public Void execute() {
-        for (Entry<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyRefreshGlob>> e : msg
+        for (Entry<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyGlob>> e : msg
             .globs().entrySet()) {
           RemoteStore c = e.getKey().first;
           long onum = e.getKey().second;
-          Pair<ObjectGlob, WarrantyRefreshGlob> globs = e.getValue();
+          Pair<ObjectGlob, WarrantyGlob> globs = e.getValue();
           cache.put(c, onum, globs);
         }
 
@@ -683,7 +683,7 @@ public class Disseminator implements Application {
     Worker worker = Worker.getWorker();
     RemoteStore c = worker.getStore(msg.store());
     long onum = msg.onum();
-    Pair<ObjectGlob, WarrantyRefreshGlob> globs = msg.globs();
+    Pair<ObjectGlob, WarrantyGlob> globs = msg.globs();
 
     if (globs != null) cache.put(c, onum, globs);
 

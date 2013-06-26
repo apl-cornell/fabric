@@ -19,7 +19,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.FabricRuntimeException;
@@ -31,7 +31,7 @@ import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.WarrantyRefreshGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
@@ -218,7 +218,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    */
   private ObjectCache.Entry fetchObject(boolean useDissem, long onum)
       throws AccessException {
-    Pair<ObjectGroup, WarrantyRefreshGroup> g;
+    Pair<ObjectGroup, WarrantyGroup> g;
     if (useDissem) {
       g = Worker.getWorker().fetchManager().fetch(this, onum);
     } else {
@@ -237,7 +237,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @throws FetchException
    *           if there was an error while fetching the object from the store.
    */
-  public Pair<ObjectGroup, WarrantyRefreshGroup> readObjectFromStore(long onum)
+  public Pair<ObjectGroup, WarrantyGroup> readObjectFromStore(long onum)
       throws AccessException {
     ReadMessage.Response response =
         send(Worker.getWorker().authToStore, new ReadMessage(onum));
@@ -250,7 +250,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @param onum
    *          The object number to fetch.
    */
-  public final Pair<ObjectGlob, WarrantyRefreshGlob> readEncryptedObjectFromStore(
+  public final Pair<ObjectGlob, WarrantyGlob> readEncryptedObjectFromStore(
       long onum) throws AccessException {
     DissemReadMessage.Response response =
         send(Worker.getWorker().unauthToStore, new DissemReadMessage(onum));
@@ -390,7 +390,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * 
    * @return the set of onums for which a cache entry was found.
    */
-  public List<Long> updateWarranties(WarrantyRefreshGroup warranties) {
+  public List<Long> updateWarranties(WarrantyGroup warranties) {
     return cache.update(this, warranties);
   }
 

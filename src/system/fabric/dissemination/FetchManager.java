@@ -1,7 +1,7 @@
 package fabric.dissemination;
 
 import fabric.common.ObjectGroup;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.Pair;
 import fabric.net.UnreachableNodeException;
@@ -25,7 +25,7 @@ public interface FetchManager {
    * @throws AccessException
    * @throws UnreachableNodeException
    */
-  public Pair<ObjectGroup, WarrantyRefreshGroup> fetch(RemoteStore store,
+  public Pair<ObjectGroup, WarrantyGroup> fetch(RemoteStore store,
       long onum) throws AccessException;
 
   /**

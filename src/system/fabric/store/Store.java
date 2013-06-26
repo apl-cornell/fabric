@@ -20,7 +20,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
 import fabric.common.VersionWarranty;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.InternalError;
@@ -38,7 +38,7 @@ import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.WarrantyRefreshGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
@@ -248,7 +248,7 @@ class Store extends MessageToStoreHandler {
         "Handling Read Message from {0}, onum={1}", nameOf(client.principal),
         msg.onum);
 
-    Pair<ObjectGroup, WarrantyRefreshGroup> group =
+    Pair<ObjectGroup, WarrantyGroup> group =
         tm.getGroup(client.principal, (RemoteWorker) client.node, msg.onum);
     return new ReadMessage.Response(group);
   }
@@ -263,7 +263,7 @@ class Store extends MessageToStoreHandler {
         "Handling DissemRead message from {0}, onum={1}",
         nameOf(client.principal), msg.onum);
 
-    Pair<ObjectGlob, WarrantyRefreshGlob> glob =
+    Pair<ObjectGlob, WarrantyGlob> glob =
         tm.getGlobs(msg.onum, (RemoteWorker) client.node);
     return new DissemReadMessage.Response(glob);
   }

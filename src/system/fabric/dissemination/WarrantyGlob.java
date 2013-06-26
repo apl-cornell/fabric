@@ -5,38 +5,37 @@ import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.SignatureException;
 
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.lang.security.Label;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 
 /**
- * A WarrantyRefreshGroup that has been encrypted and signed.
+ * A WarrantyGroup that has been encrypted and signed.
  */
-public class WarrantyRefreshGlob extends AbstractGlob<WarrantyRefreshGroup> {
+public class WarrantyGlob extends AbstractGlob<WarrantyGroup> {
   /**
-   * Used by the store to encrypt and sign a warranty-refresh group.
+   * Used by the store to encrypt and sign a warranty group.
    * 
    * @param store
-   *          The store at from which the refresh originated.
+   *          The store from which the group originated.
    * @param signingKey
    *          The store's private signing key.
    * @param group
    *          The group to encapsulate.
    */
-  public WarrantyRefreshGlob(Store store, PrivateKey key,
-      WarrantyRefreshGroup group) {
+  public WarrantyGlob(Store store, PrivateKey key, WarrantyGroup group) {
     super(getLabel(store, group), key, group);
   }
 
-  private static Label getLabel(Store store, WarrantyRefreshGroup group) {
+  private static Label getLabel(Store store, WarrantyGroup group) {
     long memberOnum = group.iterator().next().onum;
     fabric.lang.Object obj = new fabric.lang.Object._Proxy(store, memberOnum);
     return obj.get$$updateLabel();
   }
 
   @Override
-  protected void verifyNoSignatureRequired(WarrantyRefreshGroup payload)
+  protected void verifyNoSignatureRequired(WarrantyGroup payload)
       throws SignatureException {
     // XXX TODO Implement this.
   }
@@ -44,14 +43,13 @@ public class WarrantyRefreshGlob extends AbstractGlob<WarrantyRefreshGroup> {
   /**
    * Deserializer.
    */
-  public WarrantyRefreshGlob(DataInput in) throws IOException {
+  public WarrantyGlob(DataInput in) throws IOException {
     super(in);
   }
 
   @Override
-  protected WarrantyRefreshGroup deserializePayload(DataInput in)
-      throws IOException {
-    return new WarrantyRefreshGroup(in);
+  protected WarrantyGroup deserializePayload(DataInput in) throws IOException {
+    return new WarrantyGroup(in);
   }
 
   @Override

@@ -7,7 +7,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
 import fabric.common.VersionWarranty.Binding;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
@@ -17,7 +17,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.WarrantyRefreshGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.lang.security.Principal;
 import fabric.store.TransactionManager;
 import fabric.worker.Store;
@@ -106,11 +106,11 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
    *          The principal accessing the group.
    * @return null if the given principal is not allowed to read the group.
    */
-  public Pair<ObjectGroup, WarrantyRefreshGroup> getGroups(Principal principal) {
+  public Pair<ObjectGroup, WarrantyGroup> getGroups(Principal principal) {
     ObjectGroup objectGroup = getGroup(principal);
     if (objectGroup == null) return null;
 
-    return new Pair<>(objectGroup, getRefreshedWarranties());
+    return new Pair<>(objectGroup, getWarranties());
   }
 
   public synchronized ObjectGlob getGlob() {
@@ -121,9 +121,9 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
     return glob;
   }
 
-  public Pair<ObjectGlob, WarrantyRefreshGlob> getGlobs() {
-    return new Pair<>(getGlob(), new WarrantyRefreshGlob(store, signingKey,
-        getRefreshedWarranties()));
+  public Pair<ObjectGlob, WarrantyGlob> getGlobs() {
+    return new Pair<>(getGlob(), new WarrantyGlob(store, signingKey,
+        getWarranties()));
   }
 
   /**
@@ -192,8 +192,8 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
     }
   }
 
-  public WarrantyRefreshGroup getRefreshedWarranties() {
-    return new WarrantyRefreshGroup(new LongKeyHashMap<>(warranties));
+  public WarrantyGroup getWarranties() {
+    return new WarrantyGroup(new LongKeyHashMap<>(warranties));
   }
 
   private VersionWarranty shortestWarranty() {

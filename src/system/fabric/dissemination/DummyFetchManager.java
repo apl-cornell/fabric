@@ -3,7 +3,7 @@ package fabric.dissemination;
 import java.util.Properties;
 
 import fabric.common.ObjectGroup;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.util.Pair;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
@@ -24,7 +24,7 @@ public class DummyFetchManager implements FetchManager {
   }
 
   @Override
-  public Pair<ObjectGroup, WarrantyRefreshGroup> fetch(RemoteStore store,
+  public Pair<ObjectGroup, WarrantyGroup> fetch(RemoteStore store,
       long onum) {
     return cache.get(store, onum, true).decrypt();
   }

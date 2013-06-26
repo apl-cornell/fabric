@@ -9,7 +9,7 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.WarrantyRefreshGlob;
+import fabric.dissemination.WarrantyGlob;
 
 /**
  * A <code>DissemReadMessage</code> represents a request from a dissemination
@@ -36,9 +36,9 @@ public final class DissemReadMessage extends
 
   public static class Response implements Message.Response {
 
-    public final Pair<ObjectGlob, WarrantyRefreshGlob> globs;
+    public final Pair<ObjectGlob, WarrantyGlob> globs;
 
-    public Response(Pair<ObjectGlob, WarrantyRefreshGlob> glob) {
+    public Response(Pair<ObjectGlob, WarrantyGlob> glob) {
       this.globs = glob;
     }
 
@@ -71,7 +71,7 @@ public final class DissemReadMessage extends
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     ObjectGlob objectGlob = new ObjectGlob(in);
-    WarrantyRefreshGlob warrantyGlob = new WarrantyRefreshGlob(in);
+    WarrantyGlob warrantyGlob = new WarrantyGlob(in);
     return new Response(new Pair<>(objectGlob, warrantyGlob));
   }
 

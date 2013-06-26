@@ -8,7 +8,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
@@ -114,7 +114,7 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public Pair<ObjectGroup, WarrantyRefreshGroup> readObjectFromStore(long onum)
+  public Pair<ObjectGroup, WarrantyGroup> readObjectFromStore(long onum)
       throws AccessException {
     // First, create an object group containing just the requested object.
     LongKeyMap<SerializedObject> map = new LongKeyHashMap<SerializedObject>();
@@ -124,12 +124,12 @@ public class InProcessStore extends RemoteStore {
 
     ObjectGroup objectGroup = new ObjectGroup(map);
 
-    // Next, get a warranty refresh group for the onum.
+    // Next, get a warranty group for the onum.
     GroupContainer groupContainer = tm.getGroupContainer(onum);
-    WarrantyRefreshGroup warrantyRefreshGroup =
-        groupContainer.getRefreshedWarranties();
+    WarrantyGroup warrantyGroup =
+        groupContainer.getWarranties();
 
-    return new Pair<>(objectGroup, warrantyRefreshGroup);
+    return new Pair<>(objectGroup, warrantyGroup);
   }
 
   @Override

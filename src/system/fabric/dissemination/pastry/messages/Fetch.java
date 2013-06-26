@@ -12,7 +12,7 @@ import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.WarrantyRefreshGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.worker.Worker;
 
 /**
@@ -110,9 +110,9 @@ public class Fetch implements RawMessage {
     private final Id id;
     private final String store;
     private final long onum;
-    private final Pair<ObjectGlob, WarrantyRefreshGlob> globs;
+    private final Pair<ObjectGlob, WarrantyGlob> globs;
 
-    public Reply(Fetch parent, Pair<ObjectGlob, WarrantyRefreshGlob> globs) {
+    public Reply(Fetch parent, Pair<ObjectGlob, WarrantyGlob> globs) {
       id = parent.id();
       store = parent.store();
       onum = parent.onum();
@@ -120,7 +120,7 @@ public class Fetch implements RawMessage {
     }
 
     /** The glob returned. */
-    public Pair<ObjectGlob, WarrantyRefreshGlob> globs() {
+    public Pair<ObjectGlob, WarrantyGlob> globs() {
       return globs;
     }
 
@@ -176,27 +176,27 @@ public class Fetch implements RawMessage {
 
       PublicKey storePubKey = Worker.getWorker().getStore(store).getPublicKey();
 
-      Pair<ObjectGlob, WarrantyRefreshGlob> globs;
+      Pair<ObjectGlob, WarrantyGlob> globs;
 
       try {
         // Read in entire entry.
         ObjectGlob objectGlob = new ObjectGlob(in);
-        WarrantyRefreshGlob warrantyRefreshGlob =
-            in.readBoolean() ? new WarrantyRefreshGlob(in) : null;
+        WarrantyGlob warrantyGlob =
+            in.readBoolean() ? new WarrantyGlob(in) : null;
 
         // Verify signatures.
         objectGlob.verifySignature(storePubKey);
 
-        if (warrantyRefreshGlob != null) {
+        if (warrantyGlob != null) {
           try {
-            warrantyRefreshGlob.verifySignature(storePubKey);
+            warrantyGlob.verifySignature(storePubKey);
           } catch (GeneralSecurityException e) {
-            // Warranty-refresh glob was corrupted, so ignore it.
-            warrantyRefreshGlob = null;
+            // Warranty glob was corrupted, so ignore it.
+            warrantyGlob = null;
           }
         }
 
-        globs = new Pair<>(objectGlob, warrantyRefreshGlob);
+        globs = new Pair<>(objectGlob, warrantyGlob);
       } catch (GeneralSecurityException e) {
         // Object glob was corrupted, so just use null for the whole result.
         globs = null;

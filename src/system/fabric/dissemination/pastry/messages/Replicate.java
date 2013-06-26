@@ -15,7 +15,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.WarrantyRefreshGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -119,14 +119,14 @@ public class Replicate implements RawMessage {
    */
   public static class Reply implements RawMessage {
 
-    private final Map<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyRefreshGlob>> globs;
+    private final Map<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyGlob>> globs;
 
     public Reply(
-        Map<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyRefreshGlob>> globs) {
+        Map<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyGlob>> globs) {
       this.globs = globs;
     }
 
-    public Map<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyRefreshGlob>> globs() {
+    public Map<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyGlob>> globs() {
       return globs;
     }
 
@@ -156,12 +156,12 @@ public class Replicate implements RawMessage {
       DataOutputBuffer out = new DataOutputBuffer(buf);
       out.writeInt(globs.size());
 
-      for (Entry<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyRefreshGlob>> e : globs
+      for (Entry<Pair<RemoteStore, Long>, Pair<ObjectGlob, WarrantyGlob>> e : globs
           .entrySet()) {
         out.writeUTF(e.getKey().first.name());
         out.writeLong(e.getKey().second);
 
-        Pair<ObjectGlob, WarrantyRefreshGlob> globs = e.getValue();
+        Pair<ObjectGlob, WarrantyGlob> globs = e.getValue();
         globs.first.write(out);
 
         if (globs.second == null) {
@@ -188,23 +188,23 @@ public class Replicate implements RawMessage {
         try {
           // Read in entire entry.
           ObjectGlob objectGlob = new ObjectGlob(in);
-          WarrantyRefreshGlob warrantyRefreshGlob =
-              in.readBoolean() ? new WarrantyRefreshGlob(in) : null;
+          WarrantyGlob warrantyGlob =
+              in.readBoolean() ? new WarrantyGlob(in) : null;
 
           // Verify signatures.
           objectGlob.verifySignature(store.getPublicKey());
 
-          if (warrantyRefreshGlob != null) {
+          if (warrantyGlob != null) {
             try {
-              warrantyRefreshGlob.verifySignature(store.getPublicKey());
+              warrantyGlob.verifySignature(store.getPublicKey());
             } catch (GeneralSecurityException e) {
-              // Warranty-refresh glob was corrupted, so ignore it.
-              warrantyRefreshGlob = null;
+              // Warranty glob was corrupted, so ignore it.
+              warrantyGlob = null;
             }
           }
 
           globs.put(new Pair<>(store, onum), new Pair<>(objectGlob,
-              warrantyRefreshGlob));
+              warrantyGlob));
         } catch (GeneralSecurityException e) {
           // Object glob was corrupted. Ignore this group completely.
         }

@@ -31,7 +31,7 @@ import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.Version;
 import fabric.common.VersionWarranty;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
@@ -400,7 +400,7 @@ public final class Worker {
    * @return true iff the cache was updated.
    */
   public boolean updateCache(RemoteStore store,
-      Pair<ObjectGroup, WarrantyRefreshGroup> group) {
+      Pair<ObjectGroup, WarrantyGroup> group) {
     if (!hasOnumsInCache(store, group.first.objects().keySet())) return false;
 
     for (SerializedObject obj : group.first.objects().values()) {

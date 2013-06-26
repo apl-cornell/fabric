@@ -15,7 +15,7 @@ import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.RuntimeFetchException;
@@ -26,7 +26,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.WarrantyRefreshGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
@@ -358,7 +358,7 @@ public class TransactionManager {
    *          If non-null, then the given worker will be subscribed to the
    *          object as a dissemination node.
    */
-  public Pair<ObjectGlob, WarrantyRefreshGlob> getGlobs(long onum,
+  public Pair<ObjectGlob, WarrantyGlob> getGlobs(long onum,
       RemoteWorker subscriber) throws AccessException {
     return getGroupContainerAndSubscribe(onum, subscriber, true).getGlobs();
   }
@@ -379,9 +379,9 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  public Pair<ObjectGroup, WarrantyRefreshGroup> getGroup(Principal principal,
+  public Pair<ObjectGroup, WarrantyGroup> getGroup(Principal principal,
       RemoteWorker subscriber, long onum) throws AccessException {
-    Pair<ObjectGroup, WarrantyRefreshGroup> group =
+    Pair<ObjectGroup, WarrantyGroup> group =
         getGroupContainerAndSubscribe(onum, subscriber, false).getGroups(
             principal);
     if (group == null) throw new AccessException(database.getName(), onum);

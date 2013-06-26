@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.ObjectGroup;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
@@ -34,9 +34,9 @@ public class ReadMessage extends Message<ReadMessage.Response, AccessException> 
 
   public static class Response implements Message.Response {
 
-    public final Pair<ObjectGroup, WarrantyRefreshGroup> group;
+    public final Pair<ObjectGroup, WarrantyGroup> group;
 
-    public Response(Pair<ObjectGroup, WarrantyRefreshGroup> group) {
+    public Response(Pair<ObjectGroup, WarrantyGroup> group) {
       this.group = group;
     }
 
@@ -77,10 +77,10 @@ public class ReadMessage extends Message<ReadMessage.Response, AccessException> 
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    Pair<ObjectGroup, WarrantyRefreshGroup> group = null;
+    Pair<ObjectGroup, WarrantyGroup> group = null;
     if (in.readBoolean()) {
       ObjectGroup objectGroup = new ObjectGroup(in);
-      WarrantyRefreshGroup warrantyGroup = new WarrantyRefreshGroup(in);
+      WarrantyGroup warrantyGroup = new WarrantyGroup(in);
       group = new Pair<>(objectGroup, warrantyGroup);
     }
 

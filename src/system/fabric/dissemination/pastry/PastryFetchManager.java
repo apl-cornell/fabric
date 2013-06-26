@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import fabric.common.ObjectGroup;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
@@ -13,7 +13,7 @@ import fabric.dissemination.Cache;
 import fabric.dissemination.DummyFetchManager;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.WarrantyRefreshGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 
@@ -42,9 +42,9 @@ public class PastryFetchManager implements FetchManager {
   }
 
   @Override
-  public Pair<ObjectGroup, WarrantyRefreshGroup> fetch(RemoteStore c, long onum)
+  public Pair<ObjectGroup, WarrantyGroup> fetch(RemoteStore c, long onum)
       throws AccessException {
-    Pair<ObjectGlob, WarrantyRefreshGlob> glob;
+    Pair<ObjectGlob, WarrantyGlob> glob;
     try {
       glob = node.disseminator().fetch(c, onum);
     } catch (DisseminationTimeoutException e) {
@@ -56,13 +56,13 @@ public class PastryFetchManager implements FetchManager {
     }
 
     ObjectGroup resultObjectGroup = glob.first.decrypt();
-    WarrantyRefreshGroup resultWarrantyRefreshGroup = null;
+    WarrantyGroup resultWarrantyGroup = null;
     if (glob.second != null) {
       // Decrypt the warranties.
-      resultWarrantyRefreshGroup = glob.second.decrypt();
+      resultWarrantyGroup = glob.second.decrypt();
     }
 
-    return new Pair<>(resultObjectGroup, resultWarrantyRefreshGroup);
+    return new Pair<>(resultObjectGroup, resultWarrantyGroup);
   }
 
   @Override

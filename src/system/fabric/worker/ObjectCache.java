@@ -11,7 +11,7 @@ import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
 import fabric.common.VersionWarranty;
 import fabric.common.VersionWarranty.Binding;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
@@ -430,7 +430,7 @@ public final class ObjectCache {
    * @param onum the onum of the entry to return. This should be a member of the
    *          given group.
    */
-  Entry put(Store store, Pair<ObjectGroup, WarrantyRefreshGroup> group,
+  Entry put(Store store, Pair<ObjectGroup, WarrantyGroup> group,
       long onum) {
     Entry result = null;
     for (SerializedObject obj : group.first.objects().values()) {
@@ -498,7 +498,7 @@ public final class ObjectCache {
    * 
    * @return the set of onums for which a cache entry was found.
    */
-  public List<Long> update(RemoteStore store, WarrantyRefreshGroup warranties) {
+  public List<Long> update(RemoteStore store, WarrantyGroup warranties) {
     List<Long> result = new ArrayList<Long>();
     for (Binding update : warranties) {
       long onum = update.onum;

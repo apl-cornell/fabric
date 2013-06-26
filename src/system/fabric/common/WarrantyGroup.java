@@ -10,23 +10,22 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 
 /**
- * Holds a set of related, unencrypted warranty updates.
+ * Holds a set of related, unencrypted warranties.
  */
-public class WarrantyRefreshGroup implements Iterable<Binding>,
-    FastSerializable {
+public class WarrantyGroup implements Iterable<Binding>, FastSerializable {
   private final LongKeyMap<Binding> warranties;
 
   /**
    * Constructs an empty group.
    */
-  public WarrantyRefreshGroup() {
+  public WarrantyGroup() {
     this.warranties = new LongKeyHashMap<>();
   }
 
   /**
    * Constructs a group, initialized with the given warranties.
    */
-  public WarrantyRefreshGroup(LongKeyMap<Binding> warranties) {
+  public WarrantyGroup(LongKeyMap<Binding> warranties) {
     this.warranties = warranties;
   }
 
@@ -58,7 +57,7 @@ public class WarrantyRefreshGroup implements Iterable<Binding>,
   /**
    * Deserialization constructor.
    */
-  public WarrantyRefreshGroup(DataInput in) throws IOException {
+  public WarrantyGroup(DataInput in) throws IOException {
     int size = in.readInt();
     warranties = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++) {
