@@ -1,12 +1,19 @@
 package fabric.store.db;
 
 import java.security.PrivateKey;
+import java.util.ArrayList;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
+import fabric.common.VersionWarranty.Binding;
+import fabric.common.WarrantyRefreshGroup;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
@@ -23,8 +30,17 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
   private final long labelOnum;
   private final PrivateKey signingKey;
 
+  // Invariant: exactly one of group and glob is null. We start with a group,
+  // and when it's encrypted into a glob, we throw away the group. If we ever
+  // need the group again, we simply decrypt the glob. (This is a time/space
+  // trade-off, and we're erring on the side of space.)
   private ObjectGroup group;
   private ObjectGlob glob;
+
+  /**
+   * Refreshed warranties, keyed by onum.
+   */
+  private ConcurrentLongKeyMap<Binding> refreshedWarranties;
 
   /**
    * The version warranty that expires soonest for all the objects in the group.
@@ -60,6 +76,7 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
 
     this.labelOnum = labelOnum;
     this.warranty = group.expiry();
+    this.refreshedWarranties = new ConcurrentLongKeyHashMap<>();
   }
 
   /**
@@ -78,8 +95,9 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
       glob = this.glob;
     }
 
-    if (group != null) return group;
-    return glob.decrypt();
+    if (group == null) group = glob.decrypt();
+    group.incorporate(getRefreshedWarranties());
+    return group;
   }
 
   public synchronized ObjectGlob getGlob() {
@@ -111,5 +129,50 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
   @Override
   protected LongSet onums() {
     return onums;
+  }
+
+  /**
+   * Adds the given warranty refreshes to the group.
+   * 
+   * Used on the store. The corresponding call for the worker's cache is
+   * ObjectGroup.incorporate(). These are separate because the group on the
+   * store might have been encrypted already, so we use the container to collect
+   * up all relevant warranty refreshes. 
+   */
+  public void addRefreshedWarranties(LongKeyMap<Binding> updatesByOnum) {
+    for (LongIterator it = onums.iterator(); it.hasNext();) {
+      long onum = it.next();
+      Binding binding = updatesByOnum.get(onum);
+      if (binding == null) continue;
+
+      while (true) {
+        Binding existingBinding =
+            refreshedWarranties.putIfAbsent(onum, binding);
+        if (existingBinding == null) break;
+
+        // Check if we should replace the existing binding.
+        if (existingBinding.versionNumber > binding.versionNumber) {
+          // This shouldn't really happen, but just in case...
+          break;
+        }
+
+        if (!binding.warranty().expiresAfter(existingBinding.warranty()))
+          break;
+
+        // Need to replace.
+        if (refreshedWarranties.replace(onum, existingBinding, binding)) {
+          // Success!
+          break;
+        }
+
+        // Existing binding was replaced while we weren't looking loop to try
+        // again.
+      }
+    }
+  }
+
+  public WarrantyRefreshGroup getRefreshedWarranties() {
+    return new WarrantyRefreshGroup(new ArrayList<>(
+        refreshedWarranties.values()));
   }
 }

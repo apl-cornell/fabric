@@ -296,20 +296,17 @@ public class SubscriptionManager extends FabricThread.Impl {
         Binding update = entry.getKey();
         List<RemoteWorker> dissemNodes = entry.getValue();
 
-        // Construct a group of updates based on the object group.
-        WarrantyRefreshGroup updateGroup = new WarrantyRefreshGroup();
+        // Update the object group with the new warranties and get the resulting
+        // set of updated warranties in the group.
         GroupContainer groupContainer;
         try {
           groupContainer = tm.getGroupContainer(update.onum);
         } catch (AccessException e) {
           throw new InternalError(e);
         }
-        for (LongIterator onumIt = groupContainer.onums.iterator(); onumIt
-            .hasNext();) {
-          long onum = onumIt.next();
-          Binding relatedUpdate = updatesByOnum.get(onum);
-          if (relatedUpdate != null) updateGroup.add(relatedUpdate);
-        }
+        groupContainer.addRefreshedWarranties(updatesByOnum);
+        WarrantyRefreshGroup updateGroup =
+            groupContainer.getRefreshedWarranties();
 
         // Encrypt the group.
         WarrantyRefreshGlob updateGlob =

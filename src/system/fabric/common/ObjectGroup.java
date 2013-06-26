@@ -97,6 +97,9 @@ public class ObjectGroup implements FastSerializable {
   /**
    * Updates the warranties in this group with the given group of refreshed
    * warranties.
+   * 
+   * Used on the worker. The corresponding call for the store's
+   * cache of object groups is GroupContainer.addRefreshedWarranties().
    */
   public void incorporate(WarrantyRefreshGroup warrantyRefreshGroup) {
     for (Binding binding : warrantyRefreshGroup) {
