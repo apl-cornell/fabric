@@ -10,11 +10,13 @@ import java.util.List;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
+import fabric.common.WarrantyRefreshGroup;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.WarrantyRefreshGlob;
 import fabric.lang.Object._Impl;
@@ -347,7 +349,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     } else {
       RemoteStore store = worker.getStore(client.node.name);
       for (ObjectGroup group : objectUpdateMessage.groups) {
-        worker.updateCache(store, group);
+        worker.updateCache(store, new Pair<ObjectGroup, WarrantyRefreshGroup>(
+            group, null));
       }
       response = worker.findOnumsInCache(store, objectUpdateMessage.onums);
     }

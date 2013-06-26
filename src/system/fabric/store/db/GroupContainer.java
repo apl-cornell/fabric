@@ -1,7 +1,6 @@
 package fabric.store.db;
 
 import java.security.PrivateKey;
-import java.util.ArrayList;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
@@ -13,10 +12,12 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyRefreshGlob;
 import fabric.lang.security.Principal;
 import fabric.store.TransactionManager;
 import fabric.worker.Store;
@@ -38,14 +39,9 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
   private ObjectGlob glob;
 
   /**
-   * Refreshed warranties, keyed by onum.
+   * Warranties on the group's members, keyed by onum.
    */
-  private ConcurrentLongKeyMap<Binding> refreshedWarranties;
-
-  /**
-   * The version warranty that expires soonest for all the objects in the group.
-   */
-  private VersionWarranty warranty;
+  private ConcurrentLongKeyMap<Binding> warranties;
 
   /**
    * The set of onums for the objects contained in this group.
@@ -57,15 +53,13 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
     this.signingKey = signingKey;
     this.group = group;
     this.glob = null;
-    this.warranty = null;
 
     this.onums = group.objects().keySet();
 
     Long labelOnum = null;
-    for (Pair<SerializedObject, VersionWarranty> pair : group.objects()
-        .values()) {
+    for (SerializedObject obj : group.objects().values()) {
       // Set the group's label onum.
-      labelOnum = pair.first.getUpdateLabelOnum();
+      labelOnum = obj.getUpdateLabelOnum();
       break;
     }
 
@@ -75,8 +69,16 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
     }
 
     this.labelOnum = labelOnum;
-    this.warranty = group.expiry();
-    this.refreshedWarranties = new ConcurrentLongKeyHashMap<>();
+    this.warranties = new ConcurrentLongKeyHashMap<>();
+
+    // Populate with expired warranties.
+    for (SerializedObject obj : group.objects().values()) {
+      warranties.put(
+          obj.getOnum(),
+          // Yuck. This can probably be made better.
+          VersionWarranty.EXPIRED_WARRANTY.new Binding(labelOnum, obj
+              .getVersion()));
+    }
   }
 
   /**
@@ -96,8 +98,19 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
     }
 
     if (group == null) group = glob.decrypt();
-    group.incorporate(getRefreshedWarranties());
     return group;
+  }
+
+  /**
+   * @param principal
+   *          The principal accessing the group.
+   * @return null if the given principal is not allowed to read the group.
+   */
+  public Pair<ObjectGroup, WarrantyRefreshGroup> getGroups(Principal principal) {
+    ObjectGroup objectGroup = getGroup(principal);
+    if (objectGroup == null) return null;
+
+    return new Pair<>(objectGroup, getRefreshedWarranties());
   }
 
   public synchronized ObjectGlob getGlob() {
@@ -108,13 +121,18 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
     return glob;
   }
 
+  public Pair<ObjectGlob, WarrantyRefreshGlob> getGlobs() {
+    return new Pair<>(getGlob(), new WarrantyRefreshGlob(store, signingKey,
+        getRefreshedWarranties()));
+  }
+
   /**
    * Refreshes the warranties for the objects in the group. This is done by
    * creating new warranties for any objects whose warranties have expired.
    * Should only be called by the store.
    */
   public synchronized void refreshWarranties(TransactionManager tm) {
-    if (warranty != null && !warranty.expired(true)) return;
+    if (!shortestWarranty().expired(true)) return;
 
     // Ensure group is decrypted.
     if (group == null) {
@@ -122,8 +140,11 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
       glob = null;
     }
 
+    // This call will eventually call into the SubscriptionManager, which will
+    // then update the state in this GroupContainer with the new warranties.
+    // This is kinda gross, but we do it this way, because this isn't the only
+    // path through which warranties are refreshed.
     group.refreshWarranties(tm);
-    warranty = group.expiry();
   }
 
   @Override
@@ -145,9 +166,9 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
       Binding binding = updatesByOnum.get(onum);
       if (binding == null) continue;
 
+      // Update refreshedWarranties.
       while (true) {
-        Binding existingBinding =
-            refreshedWarranties.putIfAbsent(onum, binding);
+        Binding existingBinding = warranties.putIfAbsent(onum, binding);
         if (existingBinding == null) break;
 
         // Check if we should replace the existing binding.
@@ -160,7 +181,7 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
           break;
 
         // Need to replace.
-        if (refreshedWarranties.replace(onum, existingBinding, binding)) {
+        if (warranties.replace(onum, existingBinding, binding)) {
           // Success!
           break;
         }
@@ -172,7 +193,16 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
   }
 
   public WarrantyRefreshGroup getRefreshedWarranties() {
-    return new WarrantyRefreshGroup(new ArrayList<>(
-        refreshedWarranties.values()));
+    return new WarrantyRefreshGroup(new LongKeyHashMap<>(warranties));
+  }
+
+  private VersionWarranty shortestWarranty() {
+    VersionWarranty result = VersionWarranty.EXPIRED_WARRANTY;
+    for (Binding binding : warranties.values()) {
+      VersionWarranty curWarranty = binding.warranty();
+      if (curWarranty.expiresAfter(result)) result = curWarranty;
+    }
+
+    return result;
   }
 }

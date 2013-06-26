@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 
 import fabric.common.Logging;
+import fabric.common.ObjectGroup;
+import fabric.common.WarrantyRefreshGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -84,6 +86,10 @@ public class Cache {
       }
 
       return globs;
+    }
+
+    public Pair<ObjectGroup, WarrantyRefreshGroup> decrypt() {
+      return new Pair<>(objectGlob.decrypt(), warrantyRefreshGlob.decrypt());
     }
   }
 
@@ -191,7 +197,7 @@ public class Cache {
    * Fetches a glob from the store and caches it.
    */
   private Entry fetch(Pair<RemoteStore, Long> oid) {
-    ObjectGlob g = null;
+    Pair<ObjectGlob, WarrantyRefreshGlob> g = null;
     RemoteStore store = oid.first;
     long onum = oid.second;
 
@@ -201,7 +207,7 @@ public class Cache {
     }
 
     if (g == null) return null;
-    return put(oid, g, false);
+    return put(store, onum, g);
   }
 
   /**
@@ -214,12 +220,14 @@ public class Cache {
    * @param globs
    *          the globs.
    */
-  public void put(RemoteStore store, long onum,
+  public Entry put(RemoteStore store, long onum,
       Pair<ObjectGlob, WarrantyRefreshGlob> globs) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
     if (put(key, globs.first, false) != null) {
-      put(key, globs.second);
+      return put(key, globs.second);
     }
+
+    return null;
   }
 
   /**

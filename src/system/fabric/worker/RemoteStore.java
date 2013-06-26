@@ -31,6 +31,7 @@ import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyRefreshGlob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
@@ -217,7 +218,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    */
   private ObjectCache.Entry fetchObject(boolean useDissem, long onum)
       throws AccessException {
-    ObjectGroup g;
+    Pair<ObjectGroup, WarrantyRefreshGroup> g;
     if (useDissem) {
       g = Worker.getWorker().fetchManager().fetch(this, onum);
     } else {
@@ -236,7 +237,8 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @throws FetchException
    *           if there was an error while fetching the object from the store.
    */
-  public ObjectGroup readObjectFromStore(long onum) throws AccessException {
+  public Pair<ObjectGroup, WarrantyRefreshGroup> readObjectFromStore(long onum)
+      throws AccessException {
     ReadMessage.Response response =
         send(Worker.getWorker().authToStore, new ReadMessage(onum));
     return response.group;
@@ -248,18 +250,19 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @param onum
    *          The object number to fetch.
    */
-  public final ObjectGlob readEncryptedObjectFromStore(long onum)
-      throws AccessException {
+  public final Pair<ObjectGlob, WarrantyRefreshGlob> readEncryptedObjectFromStore(
+      long onum) throws AccessException {
     DissemReadMessage.Response response =
         send(Worker.getWorker().unauthToStore, new DissemReadMessage(onum));
 
     PublicKey key = getPublicKey();
     try {
-      response.glob.verifySignature(key);
+      response.globs.first.verifySignature(key);
+      response.globs.second.verifySignature(key);
     } catch (GeneralSecurityException e) {
       return null;
     }
-    return response.glob;
+    return response.globs;
   }
 
   /**

@@ -42,7 +42,8 @@ public class PastryFetchManager implements FetchManager {
   }
 
   @Override
-  public ObjectGroup fetch(RemoteStore c, long onum) throws AccessException {
+  public Pair<ObjectGroup, WarrantyRefreshGroup> fetch(RemoteStore c, long onum)
+      throws AccessException {
     Pair<ObjectGlob, WarrantyRefreshGlob> glob;
     try {
       glob = node.disseminator().fetch(c, onum);
@@ -54,14 +55,14 @@ public class PastryFetchManager implements FetchManager {
       return fallback.fetch(c, onum);
     }
 
-    ObjectGroup result = glob.first.decrypt();
+    ObjectGroup resultObjectGroup = glob.first.decrypt();
+    WarrantyRefreshGroup resultWarrantyRefreshGroup = null;
     if (glob.second != null) {
-      // Have new warranties. Incorporate them into the result.
-      WarrantyRefreshGroup warrantyRefreshGroup = glob.second.decrypt();
-      result.incorporate(warrantyRefreshGroup);
+      // Decrypt the warranties.
+      resultWarrantyRefreshGroup = glob.second.decrypt();
     }
 
-    return result;
+    return new Pair<>(resultObjectGroup, resultWarrantyRefreshGroup);
   }
 
   @Override

@@ -5,9 +5,11 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.ObjectGroup;
+import fabric.common.WarrantyRefreshGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.Pair;
 
 /**
  * A <code>ReadMessage</code> represents a request from a worker to read an
@@ -32,9 +34,9 @@ public class ReadMessage extends Message<ReadMessage.Response, AccessException> 
 
   public static class Response implements Message.Response {
 
-    public final ObjectGroup group;
+    public final Pair<ObjectGroup, WarrantyRefreshGroup> group;
 
-    public Response(ObjectGroup group) {
+    public Response(Pair<ObjectGroup, WarrantyRefreshGroup> group) {
       this.group = group;
     }
 
@@ -68,13 +70,20 @@ public class ReadMessage extends Message<ReadMessage.Response, AccessException> 
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     if (r.group != null) {
       out.writeBoolean(true);
-      r.group.write(out);
+      r.group.first.write(out);
+      r.group.second.write(out);
     } else out.writeBoolean(false);
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    ObjectGroup group = in.readBoolean() ? new ObjectGroup(in) : null;
+    Pair<ObjectGroup, WarrantyRefreshGroup> group = null;
+    if (in.readBoolean()) {
+      ObjectGroup objectGroup = new ObjectGroup(in);
+      WarrantyRefreshGroup warrantyGroup = new WarrantyRefreshGroup(in);
+      group = new Pair<>(objectGroup, warrantyGroup);
+    }
+
     return new Response(group);
   }
 }

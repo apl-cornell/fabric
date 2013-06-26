@@ -15,6 +15,7 @@ import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
+import fabric.common.WarrantyRefreshGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.RuntimeFetchException;
@@ -25,6 +26,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyRefreshGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
@@ -356,9 +358,9 @@ public class TransactionManager {
    *          If non-null, then the given worker will be subscribed to the
    *          object as a dissemination node.
    */
-  public ObjectGlob getGlob(long onum, RemoteWorker subscriber)
-      throws AccessException {
-    return getGroupContainerAndSubscribe(onum, subscriber, true).getGlob();
+  public Pair<ObjectGlob, WarrantyRefreshGlob> getGlobs(long onum,
+      RemoteWorker subscriber) throws AccessException {
+    return getGroupContainerAndSubscribe(onum, subscriber, true).getGlobs();
   }
 
   /**
@@ -377,10 +379,10 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  public ObjectGroup getGroup(Principal principal, RemoteWorker subscriber,
-      long onum) throws AccessException {
-    ObjectGroup group =
-        getGroupContainerAndSubscribe(onum, subscriber, false).getGroup(
+  public Pair<ObjectGroup, WarrantyRefreshGroup> getGroup(Principal principal,
+      RemoteWorker subscriber, long onum) throws AccessException {
+    Pair<ObjectGroup, WarrantyRefreshGroup> group =
+        getGroupContainerAndSubscribe(onum, subscriber, false).getGroups(
             principal);
     if (group == null) throw new AccessException(database.getName(), onum);
     return group;
@@ -397,24 +399,15 @@ public class TransactionManager {
   /**
    * Refreshes the warranties on a group of objects. This is done by creating
    * new warranties for any objects whose warranties has expired.
-   * 
-   * @return
-   *         the warranty in the group that will expire soonest.
    */
-  public VersionWarranty refreshWarranties(
-      Collection<Pair<SerializedObject, VersionWarranty>> objects) {
-    VersionWarranty result = null;
+  public void refreshWarranties(Collection<SerializedObject> objects) {
     List<VersionWarranty.Binding> newWarranties =
         new ArrayList<VersionWarranty.Binding>();
 
-    for (Pair<SerializedObject, VersionWarranty> entry : objects) {
-      SerializedObject obj = entry.first;
+    for (SerializedObject obj : objects) {
       long onum = obj.getOnum();
       Pair<ExtendWarrantyStatus, VersionWarranty> refreshResult =
           database.refreshWarranty(onum);
-
-      VersionWarranty warranty = entry.second = refreshResult.second;
-      if (result == null || result.expiresAfter(warranty)) result = warranty;
 
       if (refreshResult.first == ExtendWarrantyStatus.NEW) {
         newWarranties.add(refreshResult.second.new Binding(onum, obj
@@ -422,9 +415,7 @@ public class TransactionManager {
       }
     }
 
-    if (result == null) result = VersionWarranty.EXPIRED_WARRANTY;
     sm.notifyNewWarranties(newWarranties, null);
-    return result;
   }
 
   /**
