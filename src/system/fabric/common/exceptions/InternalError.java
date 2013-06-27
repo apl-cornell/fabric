@@ -1,5 +1,8 @@
 package fabric.common.exceptions;
 
+import java.text.DateFormat;
+import java.util.Date;
+
 public class InternalError extends Error {
   public InternalError() {
     report();
@@ -21,7 +24,8 @@ public class InternalError extends Error {
   }
 
   private void report() {
-    System.err.println("Creating InternalError exception:");
+    System.err.println(DateFormat.getDateTimeInstance().format(new Date())
+        + " Creating InternalError exception:");
     System.err.println("================ BEGIN STACK TRACE ================");
     printStackTrace();
     System.err.println("================= END STACK TRACE =================");
