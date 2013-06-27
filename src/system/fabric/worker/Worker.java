@@ -406,7 +406,7 @@ public final class Worker {
     for (SerializedObject obj : group.first.objects().values()) {
       long onum = obj.getOnum();
 
-      VersionWarranty warranty = group.second.get(onum).warranty();
+      VersionWarranty warranty = group.second.get(onum);
       store.forceCache(new Pair<>(obj, warranty));
 
       TransactionManager.abortReaders(store, onum);

@@ -70,14 +70,6 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
 
     this.labelOnum = labelOnum;
     this.warranties = new ConcurrentLongKeyHashMap<>();
-
-    // Populate with expired warranties.
-    for (SerializedObject obj : group.objects().values()) {
-      long onum = obj.getOnum();
-      warranties.put(onum,
-      // Yuck. This can probably be made better.
-          VersionWarranty.EXPIRED_WARRANTY.new Binding(onum, obj.getVersion()));
-    }
   }
 
   /**
@@ -121,8 +113,12 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
   }
 
   public Pair<ObjectGlob, WarrantyGlob> getGlobs() {
-    return new Pair<>(getGlob(), new WarrantyGlob(store, signingKey,
-        getWarranties()));
+    WarrantyGroup warrantyGroup = getWarranties();
+    WarrantyGlob warrantyGlob =
+        warrantyGroup == null ? null : new WarrantyGlob(store, signingKey,
+            warrantyGroup);
+
+    return new Pair<>(getGlob(), warrantyGlob);
   }
 
   /**
@@ -192,7 +188,9 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
   }
 
   public WarrantyGroup getWarranties() {
-    return new WarrantyGroup(new LongKeyHashMap<>(warranties));
+    LongKeyMap<Binding> warranties = new LongKeyHashMap<>(this.warranties);
+    if (warranties.isEmpty()) return null;
+    return new WarrantyGroup(warranties);
   }
 
   private VersionWarranty shortestWarranty() {

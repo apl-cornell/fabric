@@ -69,10 +69,9 @@ public class WarrantyGroup implements Iterable<Binding>, FastSerializable {
     }
   }
 
-  /**
-   * @param onum
-   */
-  public Binding get(long onum) {
-    return warranties.get(onum);
+  public VersionWarranty get(long onum) {
+    Binding binding = warranties.get(onum);
+    if (binding == null) return VersionWarranty.EXPIRED_WARRANTY;
+    return binding.warranty();
   }
 }

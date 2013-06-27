@@ -434,7 +434,10 @@ public final class ObjectCache {
     Entry result = null;
     for (SerializedObject obj : group.first.objects().values()) {
       long curOnum = obj.getOnum();
-      VersionWarranty warranty = group.second.get(curOnum).warranty();
+
+      VersionWarranty warranty = VersionWarranty.EXPIRED_WARRANTY;
+      if (group.second != null) warranty = group.second.get(curOnum);
+
       Entry curEntry = putIfAbsent(store, new Pair<>(obj, warranty), true);
       if (result == null && onum == curOnum) {
         result = curEntry;

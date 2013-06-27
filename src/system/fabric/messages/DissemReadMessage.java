@@ -71,14 +71,17 @@ public final class DissemReadMessage extends
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     ObjectGlob objectGlob = new ObjectGlob(in);
-    WarrantyGlob warrantyGlob = new WarrantyGlob(in);
+    WarrantyGlob warrantyGlob = in.readBoolean() ? new WarrantyGlob(in) : null;
     return new Response(new Pair<>(objectGlob, warrantyGlob));
   }
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     r.globs.first.write(out);
-    r.globs.second.write(out);
+    if (r.globs.second != null) {
+      out.writeBoolean(true);
+      r.globs.second.write(out);
+    } else out.writeBoolean(false);
   }
 
 }

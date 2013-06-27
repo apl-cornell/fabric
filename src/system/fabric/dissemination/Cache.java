@@ -88,7 +88,12 @@ public class Cache {
     }
 
     public Pair<ObjectGroup, WarrantyGroup> decrypt() {
-      return new Pair<>(objectGlob.decrypt(), warrantyGlob.decrypt());
+      ObjectGroup objectGroup = objectGlob.decrypt();
+
+      WarrantyGroup warrantyGroup = null;
+      if (warrantyGlob != null) warrantyGroup = warrantyGlob.decrypt();
+
+      return new Pair<>(objectGroup, warrantyGroup);
     }
   }
 
@@ -222,11 +227,13 @@ public class Cache {
   public Entry put(RemoteStore store, long onum,
       Pair<ObjectGlob, WarrantyGlob> globs) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
-    if (put(key, globs.first, false) != null) {
+
+    Entry entry = put(key, globs.first, false);
+    if (entry != null && globs.second != null) {
       return put(key, globs.second);
     }
 
-    return null;
+    return entry;
   }
 
   /**

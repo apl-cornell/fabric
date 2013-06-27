@@ -71,7 +71,11 @@ public class ReadMessage extends Message<ReadMessage.Response, AccessException> 
     if (r.group != null) {
       out.writeBoolean(true);
       r.group.first.write(out);
-      r.group.second.write(out);
+
+      if (r.group.second != null) {
+        out.writeBoolean(true);
+        r.group.second.write(out);
+      } else out.writeBoolean(false);
     } else out.writeBoolean(false);
   }
 
@@ -80,7 +84,8 @@ public class ReadMessage extends Message<ReadMessage.Response, AccessException> 
     Pair<ObjectGroup, WarrantyGroup> group = null;
     if (in.readBoolean()) {
       ObjectGroup objectGroup = new ObjectGroup(in);
-      WarrantyGroup warrantyGroup = new WarrantyGroup(in);
+      WarrantyGroup warrantyGroup =
+          in.readBoolean() ? new WarrantyGroup(in) : null;
       group = new Pair<>(objectGroup, warrantyGroup);
     }
 

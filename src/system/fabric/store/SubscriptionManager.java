@@ -225,8 +225,7 @@ public class SubscriptionManager extends FabricThread.Impl {
       // Go through the warranties and figure out who's interested in which
       // updates. While we're at it, also build a table of updates, keyed by onum.
       LongKeyMap<Binding> updatesByOnum = new LongKeyHashMap<Binding>();
-      Map<RemoteWorker, WarrantyGroup> workerNotificationMap =
-          new HashMap<>();
+      Map<RemoteWorker, WarrantyGroup> workerNotificationMap = new HashMap<>();
       Map<Binding, List<RemoteWorker>> dissemNotificationMap =
           new HashMap<Binding, List<RemoteWorker>>();
 
@@ -305,8 +304,9 @@ public class SubscriptionManager extends FabricThread.Impl {
           throw new InternalError(e);
         }
         groupContainer.addRefreshedWarranties(updatesByOnum);
-        WarrantyGroup updateGroup =
-            groupContainer.getWarranties();
+        WarrantyGroup updateGroup = groupContainer.getWarranties();
+
+        if (updateGroup == null) continue;
 
         // Encrypt the group.
         WarrantyGlob updateGlob =
@@ -314,8 +314,7 @@ public class SubscriptionManager extends FabricThread.Impl {
 
         // Add to the dissemUpdateMap.
         for (RemoteWorker dissemNode : dissemNodes) {
-          LongKeyMap<WarrantyGlob> updates =
-              dissemUpdateMap.get(dissemNode);
+          LongKeyMap<WarrantyGlob> updates = dissemUpdateMap.get(dissemNode);
           if (updates == null) {
             updates = new LongKeyHashMap<WarrantyGlob>();
             dissemUpdateMap.put(dissemNode, updates);

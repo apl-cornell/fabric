@@ -258,7 +258,9 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
     PublicKey key = getPublicKey();
     try {
       response.globs.first.verifySignature(key);
-      response.globs.second.verifySignature(key);
+      if (response.globs.second != null) {
+        response.globs.second.verifySignature(key);
+      }
     } catch (GeneralSecurityException e) {
       return null;
     }
