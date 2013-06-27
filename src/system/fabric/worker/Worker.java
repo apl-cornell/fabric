@@ -31,7 +31,6 @@ import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.Version;
 import fabric.common.VersionWarranty;
-import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
@@ -385,29 +384,6 @@ public final class Worker {
     for (SerializedObject obj : group.objects().values()) {
       long onum = obj.getOnum();
       store.forceCache(new Pair<>(obj, VersionWarranty.EXPIRED_WARRANTY));
-
-      TransactionManager.abortReaders(store, onum);
-    }
-
-    return true;
-  }
-
-  /**
-   * Updates the worker cache with the given object group. If the cache contains
-   * an old version of any object in the group, then the cache is updated with
-   * the entire group. Otherwise, the cache is not updated.
-   * 
-   * @return true iff the cache was updated.
-   */
-  public boolean updateCache(RemoteStore store,
-      Pair<ObjectGroup, WarrantyGroup> group) {
-    if (!hasOnumsInCache(store, group.first.objects().keySet())) return false;
-
-    for (SerializedObject obj : group.first.objects().values()) {
-      long onum = obj.getOnum();
-
-      VersionWarranty warranty = group.second.get(onum);
-      store.forceCache(new Pair<>(obj, warranty));
 
       TransactionManager.abortReaders(store, onum);
     }
