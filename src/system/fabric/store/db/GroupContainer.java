@@ -73,11 +73,10 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
 
     // Populate with expired warranties.
     for (SerializedObject obj : group.objects().values()) {
-      warranties.put(
-          obj.getOnum(),
-          // Yuck. This can probably be made better.
-          VersionWarranty.EXPIRED_WARRANTY.new Binding(labelOnum, obj
-              .getVersion()));
+      long onum = obj.getOnum();
+      warranties.put(onum,
+      // Yuck. This can probably be made better.
+          VersionWarranty.EXPIRED_WARRANTY.new Binding(onum, obj.getVersion()));
     }
   }
 

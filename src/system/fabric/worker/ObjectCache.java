@@ -430,8 +430,7 @@ public final class ObjectCache {
    * @param onum the onum of the entry to return. This should be a member of the
    *          given group.
    */
-  Entry put(Store store, Pair<ObjectGroup, WarrantyGroup> group,
-      long onum) {
+  Entry put(Store store, Pair<ObjectGroup, WarrantyGroup> group, long onum) {
     Entry result = null;
     for (SerializedObject obj : group.first.objects().values()) {
       long curOnum = obj.getOnum();
