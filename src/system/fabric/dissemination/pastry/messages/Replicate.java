@@ -9,11 +9,11 @@ import java.util.Set;
 import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
-import rice.p2p.commonapi.rawserialization.RawMessage;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.pastry.Disseminator;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -23,13 +23,14 @@ import fabric.worker.Worker;
  * B a replicate message with level i to request that B push objects with
  * replication level i or lower to A. B is the level i decider for A.
  */
-public class Replicate implements RawMessage {
+public class Replicate extends AbstractRawMessage {
 
   private transient final NodeHandle sender;
   private final int level;
   private final OidKeyHashMap<Long> skip;
 
   public Replicate(NodeHandle sender, int level, OidKeyHashMap<Long> skip) {
+    super(RawMessageType.REPLICATE);
     this.sender = sender;
     this.level = level;
     this.skip = skip;
@@ -53,8 +54,8 @@ public class Replicate implements RawMessage {
   }
 
   @Override
-  public short getType() {
-    return MessageType.REPLICATE;
+  public void dispatch(Disseminator disseminator) {
+    disseminator.replicate(this);
   }
 
   @Override
@@ -94,6 +95,8 @@ public class Replicate implements RawMessage {
    * Deserialization constructor.
    */
   public Replicate(InputBuffer buf, NodeHandle sender) throws IOException {
+    super(RawMessageType.REPLICATE);
+
     Worker worker = Worker.getWorker();
     this.sender = sender;
     level = buf.readInt();
@@ -115,11 +118,12 @@ public class Replicate implements RawMessage {
    * sent by a decider node which decides what objects the sender of the
    * replicate message should receive base on object popularity.
    */
-  public static class Reply implements RawMessage {
+  public static class Reply extends AbstractRawMessage {
 
     private final Map<Pair<RemoteStore, Long>, ObjectGlob> globs;
 
     public Reply(Map<Pair<RemoteStore, Long>, ObjectGlob> globs) {
+      super(RawMessageType.REPLICATE_REPLY);
       this.globs = globs;
     }
 
@@ -133,11 +137,6 @@ public class Replicate implements RawMessage {
     }
 
     @Override
-    public short getType() {
-      return MessageType.REPLICATE_REPLY;
-    }
-
-    @Override
     public String toString() {
       String s = "Replicate.Reply [";
 
@@ -146,6 +145,11 @@ public class Replicate implements RawMessage {
       }
 
       return s + "]";
+    }
+
+    @Override
+    public void dispatch(Disseminator disseminator) {
+      disseminator.replicate(this);
     }
 
     @Override
@@ -164,6 +168,8 @@ public class Replicate implements RawMessage {
      * Deserialization constructor.
      */
     public Reply(InputBuffer buf) throws IOException {
+      super(RawMessageType.REPLICATE_REPLY);
+
       DataInputBuffer in = new DataInputBuffer(buf);
       Worker worker = Worker.getWorker();
       int n = in.readInt();

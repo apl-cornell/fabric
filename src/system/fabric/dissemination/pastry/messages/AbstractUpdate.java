@@ -8,29 +8,44 @@ import rice.p2p.commonapi.Id;
 import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
-import rice.p2p.commonapi.rawserialization.RawMessage;
+import fabric.common.FastSerializable;
 import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.pastry.Disseminator;
 import fabric.worker.Worker;
 
 /**
- * Represents a push notification that an object group has been updated.
+ * Represents a push notification that a glob has been updated.
  */
-public class UpdateCache implements RawMessage {
+public abstract class AbstractUpdate<UpdateType extends FastSerializable>
+    extends AbstractRawMessage {
 
   private transient final NodeHandle sender;
   private final Id id;
   private final String store;
   private final long onum;
-  private final AbstractGlob<?> update;
+  private final AbstractGlob<UpdateType> update;
 
-  public UpdateCache(NodeHandle sender, Id id, String store, long onum,
-      AbstractGlob<?> update) {
+  public AbstractUpdate(RawMessageType messageType, NodeHandle sender, Id id,
+      String store, long onum, AbstractGlob<UpdateType> update) {
+    super(messageType);
     this.sender = sender;
     this.id = id;
     this.store = store;
     this.onum = onum;
     this.update = update;
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T extends FastSerializable> AbstractUpdate<T> getInstance(
+      NodeHandle sender, Id id, String store, long onum, AbstractGlob<T> update) {
+    // Yuck.
+    if (update instanceof ObjectGlob) {
+      return (AbstractUpdate<T>) new ObjectUpdate(sender, id, store, onum,
+          (ObjectGlob) update);
+    }
+
+    throw new InternalError("Unknown update type: " + update.getClass());
   }
 
   /** The sender of this message. */
@@ -54,7 +69,7 @@ public class UpdateCache implements RawMessage {
   }
 
   /** The updated glob. */
-  public AbstractGlob<?> update() {
+  public AbstractGlob<UpdateType> update() {
     return update;
   }
 
@@ -64,13 +79,13 @@ public class UpdateCache implements RawMessage {
   }
 
   @Override
-  public String toString() {
-    return store + "/" + onum;
+  public void dispatch(Disseminator disseminator) {
+    disseminator.updateCache(this);
   }
 
   @Override
-  public short getType() {
-    return MessageType.UPDATE;
+  public String toString() {
+    return store + "/" + onum;
   }
 
   @Override
@@ -86,17 +101,19 @@ public class UpdateCache implements RawMessage {
   /**
    * Deserialization constructor.
    */
-  public UpdateCache(InputBuffer buf, Endpoint endpoint, NodeHandle sender)
-      throws IOException {
+  public AbstractUpdate(RawMessageType messageType, InputBuffer buf,
+      Endpoint endpoint, NodeHandle sender) throws IOException {
+    super(messageType);
+
     DataInputBuffer in = new DataInputBuffer(buf);
     this.sender = sender;
     id = endpoint.readId(in, in.readShort());
     store = in.readUTF();
     onum = in.readLong();
 
-    ObjectGlob glob;
+    AbstractGlob<UpdateType> glob;
     try {
-      glob = new ObjectGlob(in);
+      glob = deserializeUpdate(in);
       glob.verifySignature(Worker.getWorker().getStore(store).getPublicKey());
     } catch (GeneralSecurityException e) {
       glob = null;
@@ -104,11 +121,14 @@ public class UpdateCache implements RawMessage {
     this.update = glob;
   }
 
+  abstract AbstractGlob<UpdateType> deserializeUpdate(DataInputBuffer in)
+      throws IOException;
+
   /**
-   * A reply to a Fetch message. Should carry the object requested by the
-   * original fetch message.
+   * A reply to an update message. Indicates whether the subscriber is
+   * interested in further updates.
    */
-  public static class Reply implements RawMessage {
+  public static class Reply extends AbstractRawMessage {
 
     private transient final NodeHandle sender;
     private final Id id;
@@ -116,7 +136,9 @@ public class UpdateCache implements RawMessage {
     private final long onum;
     private final boolean resubscribe;
 
-    public Reply(NodeHandle sender, UpdateCache parent, boolean resubscribe) {
+    public Reply(NodeHandle sender, AbstractUpdate<?> parent,
+        boolean resubscribe) {
+      super(RawMessageType.UPDATE_REPLY);
       this.sender = sender;
       this.id = parent.id();
       this.store = parent.store();
@@ -153,8 +175,8 @@ public class UpdateCache implements RawMessage {
     }
 
     @Override
-    public short getType() {
-      return MessageType.UPDATE_REPLY;
+    public void dispatch(Disseminator disseminator) {
+      disseminator.updateCache(this);
     }
 
     @Override
@@ -171,13 +193,13 @@ public class UpdateCache implements RawMessage {
      */
     public Reply(InputBuffer buf, Endpoint endpoint, NodeHandle sender)
         throws IOException {
+      super(RawMessageType.UPDATE_REPLY);
       this.sender = sender;
       this.id = endpoint.readId(buf, buf.readShort());
       this.store = buf.readUTF();
       this.onum = buf.readLong();
       this.resubscribe = buf.readBoolean();
     }
-
   }
 
 }
