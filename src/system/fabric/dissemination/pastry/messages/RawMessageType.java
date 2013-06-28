@@ -5,12 +5,24 @@ import java.io.IOException;
 import rice.p2p.commonapi.Endpoint;
 import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
+import fabric.common.exceptions.InternalError;
 
 /**
  * Identifiers for each raw message sent over the network. Pastry uses shorts as
  * message type ids.
  */
 public enum RawMessageType {
+  /**
+   * This placeholder type occupies message type 0, which is reserved by Pastry
+   * for "Java Serialized Messages".
+   */
+  _RESERVED_ {
+    @Override
+    public AbstractRawMessage parse(InputBuffer buf, Endpoint endpoint,
+        NodeHandle sender) throws IOException {
+      throw new InternalError("Shouldn't reach here.");
+    }
+  },
   FETCH {
     @Override
     public Fetch parse(InputBuffer buf, Endpoint endpoint, NodeHandle sender)
