@@ -11,6 +11,7 @@ import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import fabric.common.FastSerializable;
 import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.dissemination.pastry.Disseminator;
 import fabric.worker.Worker;
 
@@ -43,6 +44,11 @@ public abstract class AbstractUpdate<UpdateType extends FastSerializable>
     if (update instanceof ObjectGlob) {
       return (AbstractUpdate<T>) new ObjectUpdate(sender, id, store, onum,
           (ObjectGlob) update);
+    }
+
+    if (update instanceof WarrantyGlob) {
+      return (AbstractUpdate<T>) new WarrantyUpdate(sender, id, store, onum,
+          (WarrantyGlob) update);
     }
 
     throw new InternalError("Unknown update type: " + update.getClass());

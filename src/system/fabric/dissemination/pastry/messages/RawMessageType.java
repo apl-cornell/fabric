@@ -46,13 +46,21 @@ public enum RawMessageType {
       return new ObjectUpdate(buf, endpoint, sender);
     }
   },
+  WARRANTY_UPDATE {
+    @Override
+    public WarrantyUpdate parse(InputBuffer buf, Endpoint endpoint,
+        NodeHandle sender) throws IOException {
+      return new WarrantyUpdate(buf, endpoint, sender);
+    }
+  },
   UPDATE_REPLY {
     @Override
     public AbstractUpdate.Reply parse(InputBuffer buf, Endpoint endpoint,
         NodeHandle sender) throws IOException {
       return new AbstractUpdate.Reply(buf, endpoint, sender);
     }
-  };
+  },
+  ;
 
   /**
    * Deserializes a message of the appropriate type from the given InputBuffer.
