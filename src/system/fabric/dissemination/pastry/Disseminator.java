@@ -282,13 +282,16 @@ public class Disseminator implements Application {
     if (node.equals(localHandle())) return;
 
     Pair<RemoteStore, Long> key = new Pair<>(store, onum);
-    Set<NodeHandle> subscribers = new HashSet<>();
-    Set<NodeHandle> existingSubscribers =
-        subscriptions.putIfAbsent(key, subscribers);
-    if (existingSubscribers != null) subscribers = existingSubscribers;
+    while (true) {
+      Set<NodeHandle> subscribers = new HashSet<>();
+      Set<NodeHandle> existingSubscribers =
+          subscriptions.putIfAbsent(key, subscribers);
+      if (existingSubscribers != null) subscribers = existingSubscribers;
 
-    synchronized (subscribers) {
-      subscribers.add(node);
+      synchronized (subscribers) {
+        subscribers.add(node);
+        if (subscriptions.get(key) == subscribers) return;
+      }
     }
   }
 
@@ -302,6 +305,7 @@ public class Disseminator implements Application {
 
     synchronized (subscribers) {
       subscribers.remove(node);
+      if (subscribers.isEmpty()) subscriptions.remove(key, subscribers);
     }
   }
 
@@ -329,26 +333,32 @@ public class Disseminator implements Application {
     // Find the set of subscribers.
     Set<NodeHandle> subscribers = subscriptions.get(new Pair<>(store, onum));
     if (subscribers != null) {
-      BlockingQueue<AbstractUpdate.Reply> replyQueue =
-          new ArrayBlockingQueue<>(subscribers.size());
+      int numSubscribers;
+      BlockingQueue<AbstractUpdate.Reply> replyQueue;
+      synchronized (subscribers) {
+        numSubscribers = subscribers.size();
+        if (numSubscribers == 0) return result;
 
-      // Forward to subscribers.
-      for (NodeHandle subscriber : subscribers) {
-        Id id = idf.buildRandomId(rand);
-        AbstractUpdate<UpdateType> msg =
-            AbstractUpdate.getInstance(localHandle(), id, store.name(), onum,
-                update);
+        replyQueue = new ArrayBlockingQueue<>(numSubscribers);
 
-        // TODO: Set up a timeout mechanism that removes entries for dead nodes.
-        outstandingUpdates.put(id, replyQueue);
+        // Forward to subscribers.
+        for (NodeHandle subscriber : subscribers) {
+          Id id = idf.buildRandomId(rand);
+          AbstractUpdate<UpdateType> msg =
+              AbstractUpdate.getInstance(localHandle(), id, store.name(), onum,
+                  update);
 
-        route(null, msg, subscriber);
+          // TODO: Set up a timeout mechanism that removes entries for dead nodes.
+          outstandingUpdates.put(id, replyQueue);
+
+          route(null, msg, subscriber);
+        }
       }
 
       // Wait until we know we're subscribed, we get all replies back, or our
       // update messages time out.
       // TODO: Set up a timeout mechanism that unsubscribes dead nodes.
-      for (int i = 0; !result && i < subscribers.size(); i++) {
+      for (int i = 0; !result && i < numSubscribers; i++) {
         try {
           // Wait at most one second for a reply.
           AbstractUpdate.Reply reply = replyQueue.poll(1, TimeUnit.SECONDS);
@@ -357,6 +367,7 @@ public class Disseminator implements Application {
           Logging.logIgnoredInterruptedException(e);
         }
       }
+
     }
 
     return result;
