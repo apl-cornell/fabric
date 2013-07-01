@@ -131,14 +131,8 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
    * creating new warranties for any objects whose warranties have expired.
    * Should only be called by the store.
    */
-  public synchronized void refreshWarranties(TransactionManager tm) {
+  public void refreshWarranties(TransactionManager tm) {
     if (!shortestWarranty().expired(true)) return;
-
-    // Ensure group is decrypted.
-    if (group == null) {
-      group = glob.decrypt();
-      glob = null;
-    }
 
     // This call will eventually call into the SubscriptionManager, which will
     // then update the state in this GroupContainer with the new warranties.
