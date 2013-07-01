@@ -1,6 +1,7 @@
 package fabric.store.db;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.util.Cache;
@@ -99,35 +100,35 @@ public class WarrantyIssuer<K> {
       if (commitTime < now) commitTime = now;
 
       synchronized (this) {
-        Logging.HOTOS_LOGGER.finer("read prepare @" + key
-            + " nextSuggestionLength=" + nextSuggestionLength
-            + " maxWarrantyLength=" + maxWarrantyLength);
+        Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
+            "read prepare @{0} nextSuggestionLength={1} maxWarrantyLength={2}",
+            key, nextSuggestionLength, maxWarrantyLength);
         // Ignore this if we're already issuing the maximum-length warranty.
         if (nextSuggestionLength >= maxWarrantyLength) return;
 
         // Ignore this if the last-suggested warranty covers the commitTime.
         if (lastSuggestionExpiry > commitTime) {
-          Logging.HOTOS_LOGGER.finer("last suggestion not yet expired for @"
-              + key);
+          Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
+              "last suggestion not yet expired for @{0}", key);
           return;
         }
 
         // Double the suggestion length.
         nextSuggestionLength = 2 * lastSuggestionLength;
         nextSuggestionDoubled.set(true);
-        Logging.HOTOS_LOGGER
-            .finer("doubling next suggested length for @" + key);
+        Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
+            "doubling next suggested length for @{0}", key);
 
 //        // If this prepare could have been avoided if the last-suggested warranty
 //        // were twice as long, then double the suggestion length.
 //        if (lastSuggestionExpiry + lastSuggestionLength > now) {
 //          nextSuggestionLength = 2 * lastSuggestionLength;
 //          nextSuggestionDoubled.set(true);
-//          Logging.HOTOS_LOGGER.finer("doubling next suggested length for @"
-//              + onum);
+//          Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
+//              "doubling next suggested length for @{0}", onum);
 //        } else {
-//          Logging.HOTOS_LOGGER.finer("keeping next suggested length for @"
-//              + onum);
+//          Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
+//              "keeping next suggested length for @{0}", onum);
 //        }
       }
 
@@ -147,7 +148,7 @@ public class WarrantyIssuer<K> {
       synchronized (writeHistoryMutex) {
         updateWriteHistory();
         writeHistory |= 0x0001;
-        Logging.HOTOS_LOGGER.finer("writing @" + key);
+        Logging.log(Logging.HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
       }
     }
 
@@ -166,11 +167,11 @@ public class WarrantyIssuer<K> {
       // Use the writeHistory's Hamming weight to determine the maximum length
       // of the suggested warranty.
       int weight = Integer.bitCount(writeHistory & 0xffff);
-      Logging.HOTOS_LOGGER.finer("@" + key + " writeHistory=" + writeHistory
-          + " weight=" + weight);
+      Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
+          "@{0} writeHistory={1} weight={2}", key, writeHistory, weight);
       int maxSuggestionLength = maxWarrantyLength >>> weight;
-      Logging.HOTOS_LOGGER.finer("@" + key + " maxSuggestionLength="
-          + maxSuggestionLength);
+      Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
+          "@{0} maxSuggestionLength={1}", key, maxSuggestionLength);
       if (maxSuggestionLength < minWarrantyLength) {
         // Writes occurring too frequently.
         lastSuggestionExpiry = 0;
@@ -183,8 +184,8 @@ public class WarrantyIssuer<K> {
       lastSuggestionLength =
           (nextSuggestionLength < maxSuggestionLength) ? nextSuggestionLength
               : maxSuggestionLength;
-      Logging.HOTOS_LOGGER.finer("@" + key + " suggesting "
-          + lastSuggestionLength);
+      Logging.log(Logging.HOTOS_LOGGER, Level.FINER, "@{0} suggesting {1}",
+          key, lastSuggestionLength);
       lastSuggestionExpiry = expiry + lastSuggestionLength;
       nextSuggestionDoubled.set(false);
       return lastSuggestionExpiry;

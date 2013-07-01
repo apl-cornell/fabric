@@ -1,5 +1,7 @@
 package fabric.worker.transaction;
 
+import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -11,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.SysUtil;
@@ -686,8 +689,8 @@ public final class Log {
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
-        Logging.WORKER_TRANSACTION_LOGGER
-            .finer("Updating data structures for commit of tid " + tid);
+        Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINER,
+            "Updating data structures for commit of tid {0}", tid);
         // Release read locks.
         for (LongKeyMap<ReadMapEntry> submap : reads) {
           for (ReadMapEntry entry : submap.values()) {

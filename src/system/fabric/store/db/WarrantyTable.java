@@ -8,7 +8,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.Warranty;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
@@ -117,8 +119,8 @@ public class WarrantyTable<K, V extends Warranty> {
     if (success) {
       long expiry = newWarranty.expiry();
       long length = expiry - System.currentTimeMillis();
-      STORE_DB_LOGGER.finest("Extended warranty for " + key + "; expiry="
-          + expiry + " (in " + length + " ms)");
+      Logging.log(STORE_DB_LOGGER, Level.FINEST, "Extended warranty for {0}"
+          + "; expiry={1} (in {2} ms)", key, expiry, length);
 
       addReverseEntry(key, newWarranty);
     }
