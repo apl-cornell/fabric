@@ -12,11 +12,20 @@ public abstract class AuthServlet[principal servP] extends Servlet[servP] {
         
     }
     
+    public principal{p:;p!:} createUser{p:; p!:}(
+            String{p:; p!:} userID,
+            String{p:; p!:} password,
+            principal{p:; p!:} p)
+        throws ServletException
+        where caller(p) {
+        throw new ServletException("Not supported");
+	}
+    
     public abstract principal{p:;p!:} lookupUserID{p:; p!:}(
             String{p:; p!:} userID,
             principal{p:; p!:} p)
-		throws ServletException
-		where caller(p);
+        throws ServletException
+        where caller(p);
     
     protected abstract String defaultActionName(Request[servP] req);
     
