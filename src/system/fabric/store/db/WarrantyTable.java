@@ -2,7 +2,6 @@ package fabric.store.db;
 
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,8 +11,10 @@ import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.Warranty;
+import fabric.common.util.ConcurrentHashSet;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
+import fabric.common.util.ConcurrentSet;
 import fabric.common.util.LongKeyMap.Entry;
 
 /**
@@ -35,13 +36,13 @@ public class WarrantyTable<K, V extends Warranty> {
    * Reverse mapping: maps version warranty expiry times (in buckets according
    * to REVERSE_TABLE_BUCKET_SIZE) to corresponding onums.
    */
-  private final ConcurrentLongKeyMap<Set<K>> reverseTable;
+  private final ConcurrentLongKeyMap<ConcurrentSet<K>> reverseTable;
   private final int REVERSE_TABLE_BUCKET_SIZE = 5000;
 
   WarrantyTable(V defaultWarranty) {
     this.defaultWarranty = defaultWarranty;
     table = new ConcurrentHashMap<K, V>();
-    reverseTable = new ConcurrentLongKeyHashMap<Set<K>>();
+    reverseTable = new ConcurrentLongKeyHashMap<ConcurrentSet<K>>();
 
     collector = new Collector();
     collector.start();
@@ -73,19 +74,14 @@ public class WarrantyTable<K, V extends Warranty> {
     warrantyBucket +=
         REVERSE_TABLE_BUCKET_SIZE - warrantyBucket % REVERSE_TABLE_BUCKET_SIZE;
 
-    Set<K> set = reverseTable.get(warrantyBucket);
-    if (set == null) {
-      set = new HashSet<K>();
-      Set<K> existingSet = reverseTable.putIfAbsent(warrantyBucket, set);
+    while (true) {
+      ConcurrentSet<K> set = new ConcurrentHashSet<>();
+      ConcurrentSet<K> existingSet =
+          reverseTable.putIfAbsent(warrantyBucket, set);
       if (existingSet != null) set = existingSet;
-    }
 
-    synchronized (set) {
       set.add(key);
-
-      // Make sure the reverse table has an entry for the warranty, in case it
-      // was removed by the Collector thread.
-      reverseTable.put(warrantyBucket, set);
+      if (reverseTable.get(warrantyBucket) == set) break;
     }
 
     // Signal the collector thread that we have a new warranty.
@@ -159,9 +155,9 @@ public class WarrantyTable<K, V extends Warranty> {
         long now = System.currentTimeMillis();
 
         long nextExpiryTime = Long.MAX_VALUE;
-        for (Iterator<Entry<Set<K>>> it = reverseTable.entrySet().iterator(); it
-            .hasNext();) {
-          Entry<Set<K>> entry = it.next();
+        for (Iterator<Entry<ConcurrentSet<K>>> it =
+            reverseTable.entrySet().iterator(); it.hasNext();) {
+          Entry<ConcurrentSet<K>> entry = it.next();
           long expiry = entry.getKey();
 
           if (Warranty.isAfter(expiry, now, true)) {
@@ -169,15 +165,13 @@ public class WarrantyTable<K, V extends Warranty> {
             if (nextExpiryTime > expiry) nextExpiryTime = expiry;
           } else {
             // Warranty expired. Remove relevant entries from table.
-            Set<K> keys = entry.getValue();
-            synchronized (keys) {
-              for (K key : keys) {
-                Warranty warranty = table.get(key);
-                if (warranty == null || !warranty.expired(false)) continue;
-                table.remove(key, warranty);
-              }
+            it.remove();
 
-              it.remove();
+            Set<K> keys = entry.getValue();
+            for (K key : keys) {
+              Warranty warranty = table.get(key);
+              if (warranty == null || !warranty.expired(false)) continue;
+              table.remove(key, warranty);
             }
           }
         }
