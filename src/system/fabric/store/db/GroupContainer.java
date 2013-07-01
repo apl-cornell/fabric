@@ -14,6 +14,7 @@ import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongKeyMap.Entry;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
@@ -44,9 +45,10 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
   private ConcurrentLongKeyMap<Binding> warranties;
 
   /**
-   * The set of onums for the objects contained in this group.
+   * The set of onums for the objects contained in this group, mapped to the
+   * objects' version numbers.
    */
-  public final LongSet onums;
+  public final LongKeyMap<Integer> onumsToVersions;
 
   public GroupContainer(Store store, PrivateKey signingKey, ObjectGroup group) {
     this.store = store;
@@ -54,7 +56,10 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
     this.group = group;
     this.glob = null;
 
-    this.onums = group.objects().keySet();
+    this.onumsToVersions = new LongKeyHashMap<>();
+    for (Entry<SerializedObject> entry : group.objects().entrySet()) {
+      onumsToVersions.put(entry.getKey(), entry.getValue().getVersion());
+    }
 
     Long labelOnum = null;
     for (SerializedObject obj : group.objects().values()) {
@@ -139,12 +144,12 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
     // then update the state in this GroupContainer with the new warranties.
     // This is kinda gross, but we do it this way, because this isn't the only
     // path through which warranties are refreshed.
-    group.refreshWarranties(tm);
+    tm.refreshWarranties(onumsToVersions);
   }
 
   @Override
   protected LongSet onums() {
-    return onums;
+    return onumsToVersions.keySet();
   }
 
   /**
@@ -156,7 +161,7 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
    * up all relevant warranty refreshes. 
    */
   public void addRefreshedWarranties(LongKeyMap<Binding> updatesByOnum) {
-    for (LongIterator it = onums.iterator(); it.hasNext();) {
+    for (LongIterator it = onumsToVersions.keySet().iterator(); it.hasNext();) {
       long onum = it.next();
       Binding binding = updatesByOnum.get(onum);
       if (binding == null) continue;

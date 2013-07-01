@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.store.TransactionManager;
 
 /**
  * Holds a set of related, unencrypted, serialized objects.
@@ -47,13 +46,5 @@ public class ObjectGroup implements FastSerializable {
       SerializedObject obj = new SerializedObject(in);
       objects.put(obj.getOnum(), obj);
     }
-  }
-
-  /**
-   * Refreshes warranties on the objects contained in the group. This is done by
-   * creating new warranties for any objects whose warranties has expired.
-   */
-  public void refreshWarranties(TransactionManager tm) {
-    tm.refreshWarranties(objects.values());
   }
 }

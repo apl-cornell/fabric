@@ -23,6 +23,7 @@ import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongKeyMap.Entry;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
@@ -397,21 +398,22 @@ public class TransactionManager {
   }
 
   /**
-   * Refreshes the warranties on a group of objects. This is done by creating
-   * new warranties for any objects whose warranties has expired.
+   * Refreshes the warranties on a group of objects, represented by a mapping
+   * from onums to version numbers. The refresh is done by creating new
+   * warranties for any objects whose warranty has expired.
    */
-  public void refreshWarranties(Collection<SerializedObject> objects) {
+  public void refreshWarranties(LongKeyMap<Integer> onumsToVersions) {
     List<VersionWarranty.Binding> newWarranties =
         new ArrayList<VersionWarranty.Binding>();
 
-    for (SerializedObject obj : objects) {
-      long onum = obj.getOnum();
+    for (Entry<Integer> entry : onumsToVersions.entrySet()) {
+      long onum = entry.getKey();
       Pair<ExtendWarrantyStatus, VersionWarranty> refreshResult =
           database.refreshWarranty(onum);
 
       if (refreshResult.first == ExtendWarrantyStatus.NEW) {
-        newWarranties.add(refreshResult.second.new Binding(onum, obj
-            .getVersion()));
+        newWarranties.add(refreshResult.second.new Binding(onum, entry
+            .getValue()));
       }
     }
 
