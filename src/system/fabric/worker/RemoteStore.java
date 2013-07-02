@@ -238,7 +238,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @param onum
    *          The object number to fetch.
    */
-  public final ObjectGlob readEncryptedObjectFromStore(long onum)
+  public ObjectGlob readEncryptedObjectFromStore(long onum)
       throws AccessException {
     DissemReadMessage.Response response =
         send(Worker.getWorker().unauthToStore, new DissemReadMessage(onum));
