@@ -320,7 +320,8 @@ public class TransactionManager {
   }
 
   /**
-   * Returns a GroupContainer containing the specified object.
+   * Returns a GroupContainer containing the specified object, without
+   * refreshing warranties.
    */
   GroupContainer getGroupContainer(long onum) throws AccessException {
     return getGroupContainerAndSubscribe(onum, null, false /* this argument doesn't matter */);
@@ -334,7 +335,7 @@ public class TransactionManager {
    * 
    * @param subscriber
    *          If non-null, then the given worker will be subscribed to the
-   *          object.
+   *          object and the object's group's warranties will be refreshed.
    * @param dissemSubscribe
    *          True if the subscriber is a dissemination node; false if it's a
    *          worker.
@@ -344,9 +345,11 @@ public class TransactionManager {
     GroupContainer container = database.readGroup(onum);
     if (container == null) throw new AccessException(database.getName(), onum);
 
-    if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
+    if (subscriber != null) {
+      sm.subscribe(onum, subscriber, dissemSubscribe);
+      container.refreshWarranties(this);
+    }
 
-    container.refreshWarranties(this);
     return container;
   }
 
