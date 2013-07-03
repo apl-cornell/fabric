@@ -52,9 +52,9 @@ import fabric.worker.transaction.TransactionRegistry;
  * For each remote worker, there should be at most one <code>RemoteWorker</code>
  * object representing that worker.
  */
-public final class RemoteWorker extends RemoteNode {
+public final class RemoteWorker extends RemoteNode<RemoteWorker> {
 
-  private transient final SubSocketFactory subSocketFactory;
+  private transient final SubSocketFactory<RemoteWorker> subSocketFactory;
 
   /**
    * This should only be called by fabric.worker.Worker. If you want a
@@ -178,7 +178,7 @@ public final class RemoteWorker extends RemoteNode {
   @Override
   public Principal getPrincipal() {
     try {
-      SubSocket socket = getSocket(subSocketFactory);
+      SubSocket<RemoteWorker> socket = getSocket(subSocketFactory);
       Principal principal = socket.getPrincipal();
       recycle(subSocketFactory, socket);
       return principal;

@@ -7,7 +7,7 @@ public class User extends AbstractPrincipal {
 	
 	private final String{this}@{this.store$->} password; // XXX should be a secure hash of it 
 
-	public User(String{this} name, String{this} password) where authority (this) {
+	public User(String{this} name, String{this} password) {
 		this.password = password;
 		super(name);        
 	}

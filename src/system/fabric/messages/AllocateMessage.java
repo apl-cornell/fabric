@@ -7,6 +7,7 @@ import java.io.IOException;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * An <code>AllocateMessage</code> represents a request to allocate a number of
@@ -44,7 +45,7 @@ public final class AllocateMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws ProtocolError, AccessException {
     return h.handle(client, this);
   }

@@ -14,15 +14,15 @@ import fabric.net.RemoteNode;
  * front-end API.
  * 
  * @see java.net.Socket
- * @author mdgeorge
+ * @param <Node> the type of node at the remote endpoint.
  */
-public class SubSocket {
+public class SubSocket<Node extends RemoteNode<Node>> {
   // ////////////////////////////////////////////////////////////////////////////
   // public API //
   // ////////////////////////////////////////////////////////////////////////////
 
   /** @see SubSocketFactory */
-  protected SubSocket(SubSocketFactory factory) {
+  protected SubSocket(SubSocketFactory<Node> factory) {
     this.state = new Unconnected(factory);
   }
 
@@ -30,7 +30,7 @@ public class SubSocket {
    * Create a connected SubSocket. This is used internally by ServerChannels for
    * accepting incoming streams.
    */
-  SubSocket(Channel.Connection conn) {
+  SubSocket(Channel<Node>.Connection conn) {
     this.state = new Connected(conn);
   }
 
@@ -40,11 +40,11 @@ public class SubSocket {
   }
 
   /** @see java.net.Socket#connect(SocketAddress) */
-  public synchronized final void connect(RemoteNode node) throws IOException {
+  public synchronized final void connect(Node node) throws IOException {
     state.connect(node);
   }
 
-  public synchronized final RemoteIdentity getRemoteIdentity()
+  public synchronized final RemoteIdentity<Node> getRemoteIdentity()
       throws IOException {
     return state.getRemoteIdentity();
   }
@@ -105,11 +105,11 @@ public class SubSocket {
       throw new IOException("Cannot close socket: " + this, cause);
     }
 
-    void connect(RemoteNode node) throws IOException {
+    void connect(Node node) throws IOException {
       throw new IOException("Cannot connect: " + this, cause);
     }
 
-    RemoteIdentity getRemoteIdentity() throws IOException {
+    RemoteIdentity<Node> getRemoteIdentity() throws IOException {
       throw new IOException("Cannot get remote identity: " + this, cause);
     }
 
@@ -131,7 +131,7 @@ public class SubSocket {
    * implementation of methods in the Unconnected state
    */
   private final class Unconnected extends State {
-    private final SubSocketFactory factory;
+    private final SubSocketFactory<Node> factory;
 
     @Override
     public String toString() {
@@ -139,9 +139,9 @@ public class SubSocket {
     }
 
     @Override
-    void connect(RemoteNode node) throws IOException {
+    void connect(Node node) throws IOException {
       try {
-        Channel.Connection conn = factory.getChannel(node).connect();
+        Channel<Node>.Connection conn = factory.getChannel(node).connect();
         state = new Connected(conn);
       } catch (final Exception exc) {
         IOException wrapped =
@@ -151,7 +151,7 @@ public class SubSocket {
       }
     }
 
-    private Unconnected(SubSocketFactory factory) {
+    private Unconnected(SubSocketFactory<Node> factory) {
       this.factory = factory;
     }
   }
@@ -160,7 +160,7 @@ public class SubSocket {
    * implementation of methods in the Connected(channel) state
    */
   private final class Connected extends State {
-    final Channel.Connection conn;
+    final Channel<Node>.Connection conn;
 
     @Override
     public String toString() {
@@ -181,7 +181,7 @@ public class SubSocket {
     }
 
     @Override
-    RemoteIdentity getRemoteIdentity() throws IOException {
+    RemoteIdentity<Node> getRemoteIdentity() throws IOException {
       return conn.getRemoteIdentity();
     }
 
@@ -200,7 +200,7 @@ public class SubSocket {
       return conn.getRemoteIdentity().principal;
     }
 
-    Connected(Channel.Connection conn) {
+    Connected(Channel<Node>.Connection conn) {
       this.conn = conn;
     }
   }

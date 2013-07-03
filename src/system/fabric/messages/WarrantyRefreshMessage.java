@@ -13,6 +13,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.WarrantyGlob;
 import fabric.messages.Message.NoException;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * Represents push notification that warranties have been refreshed.
@@ -78,7 +79,7 @@ public class WarrantyRefreshMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws ProtocolError, fabric.messages.Message.NoException {
     return h.handle(client, this);
   }
@@ -95,8 +96,7 @@ public class WarrantyRefreshMessage extends
 
       // Write out warranty groups.
       out.writeInt(warrantyGlobs.size());
-      for (LongKeyMap.Entry<WarrantyGlob> entry : warrantyGlobs
-          .entrySet()) {
+      for (LongKeyMap.Entry<WarrantyGlob> entry : warrantyGlobs.entrySet()) {
         long onum = entry.getKey();
         WarrantyGlob glob = entry.getValue();
 

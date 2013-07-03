@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import fabric.common.net.RemoteIdentity;
 import fabric.worker.TransactionCommitFailedException;
+import fabric.worker.remote.RemoteWorker;
 
 public class CommitTransactionMessage
     extends
@@ -36,7 +37,7 @@ public class CommitTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws TransactionCommitFailedException {
     return h.handle(client, this);
   }

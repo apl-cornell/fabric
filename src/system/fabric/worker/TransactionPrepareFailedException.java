@@ -32,11 +32,11 @@ public class TransactionPrepareFailedException extends FabricException {
   }
 
   public TransactionPrepareFailedException(
-      Map<RemoteNode, TransactionPrepareFailedException> failures) {
+      Map<RemoteNode<?>, TransactionPrepareFailedException> failures) {
     this.versionConflicts = null;
 
     messages = new ArrayList<String>();
-    for (Map.Entry<RemoteNode, TransactionPrepareFailedException> entry : failures
+    for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
         .entrySet()) {
       TransactionPrepareFailedException exn = entry.getValue();
 

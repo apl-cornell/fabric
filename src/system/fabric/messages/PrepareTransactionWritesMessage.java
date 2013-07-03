@@ -11,6 +11,7 @@ import fabric.common.SerializedObject;
 import fabric.common.net.RemoteIdentity;
 import fabric.lang.Object._Impl;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * A <code>PrepareTransactionWritesMessage</code> represents a transaction
@@ -95,7 +96,7 @@ public class PrepareTransactionWritesMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws TransactionPrepareFailedException {
     return h.handle(client, this);
   }

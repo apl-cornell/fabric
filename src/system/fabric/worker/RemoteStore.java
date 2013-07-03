@@ -57,7 +57,8 @@ import fabric.util.Map;
  * <code>Worker.getStore()</code> interface. For each remote store, there should
  * be at most one <code>RemoteStore</code> object representing that store.
  */
-public class RemoteStore extends RemoteNode implements Store, Serializable {
+public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
+    Serializable {
   /**
    * A queue of fresh object identifiers.
    */
@@ -250,8 +251,8 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @param onum
    *          The object number to fetch.
    */
-  public final Pair<ObjectGlob, WarrantyGlob> readEncryptedObjectFromStore(
-      long onum) throws AccessException {
+  public Pair<ObjectGlob, WarrantyGlob> readEncryptedObjectFromStore(long onum)
+      throws AccessException {
     DissemReadMessage.Response response =
         send(Worker.getWorker().unauthToStore, new DissemReadMessage(onum));
 

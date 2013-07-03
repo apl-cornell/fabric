@@ -9,6 +9,7 @@ import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * A <code>PrepareTransactionReadsMessage</code> represents a transaction
@@ -71,7 +72,7 @@ public class PrepareTransactionReadsMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws TransactionPrepareFailedException {
     return h.handle(client, this);
   }

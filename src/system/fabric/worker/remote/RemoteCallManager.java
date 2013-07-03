@@ -62,7 +62,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public RemoteCallMessage.Response handle(final RemoteIdentity client,
+  public RemoteCallMessage.Response handle(
+      final RemoteIdentity<RemoteWorker> client,
       final RemoteCallMessage remoteCallMessage) throws RemoteCallException {
     // We assume that this thread's transaction manager is free (i.e., it's not
     // managing any tranaction's log) at the start of the method and ensure that
@@ -142,7 +143,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
    * worker's TransactionManager is associated with a null log.
    */
   @Override
-  public AbortTransactionMessage.Response handle(RemoteIdentity client,
+  public AbortTransactionMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client,
       AbortTransactionMessage abortTransactionMessage) {
     // XXX TODO Security checks.
     Log log =
@@ -158,7 +160,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public PrepareTransactionWritesMessage.Response handle(RemoteIdentity client,
+  public PrepareTransactionWritesMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client,
       PrepareTransactionWritesMessage message)
       throws TransactionPrepareFailedException {
     // XXX TODO Security checks.
@@ -186,7 +189,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public PrepareTransactionReadsMessage.Response handle(RemoteIdentity client,
+  public PrepareTransactionReadsMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client,
       PrepareTransactionReadsMessage message)
       throws TransactionPrepareFailedException {
     // XXX TODO Security checks.
@@ -217,7 +221,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
    * worker's TransactionManager is associated with a null log.
    */
   @Override
-  public CommitTransactionMessage.Response handle(RemoteIdentity client,
+  public CommitTransactionMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client,
       CommitTransactionMessage commitTransactionMessage)
       throws TransactionCommitFailedException {
     // XXX TODO Security checks.
@@ -243,7 +248,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public DirtyReadMessage.Response handle(RemoteIdentity client,
+  public DirtyReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       DirtyReadMessage readMessage) {
     Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
     if (log == null) return new DirtyReadMessage.Response(null);
@@ -274,8 +279,9 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public TakeOwnershipMessage.Response handle(RemoteIdentity client,
-      TakeOwnershipMessage msg) throws TakeOwnershipFailedException {
+  public TakeOwnershipMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
+      throws TakeOwnershipFailedException {
     Log log = TransactionRegistry.getInnermostLog(msg.tid.topTid);
     if (log == null)
       throw new TakeOwnershipFailedException(MessageFormat.format(
@@ -318,7 +324,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public ObjectUpdateMessage.Response handle(RemoteIdentity client,
+  public ObjectUpdateMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client,
       ObjectUpdateMessage objectUpdateMessage) {
 
     Worker worker = Worker.getWorker();
@@ -356,8 +363,9 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public WarrantyRefreshMessage.Response handle(RemoteIdentity client,
-      WarrantyRefreshMessage message) throws ProtocolError {
+  public WarrantyRefreshMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, WarrantyRefreshMessage message)
+      throws ProtocolError {
 
     Worker worker = Worker.getWorker();
     List<Long> response;
@@ -395,7 +403,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public InterWorkerStalenessMessage.Response handle(RemoteIdentity client,
+  public InterWorkerStalenessMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client,
       InterWorkerStalenessMessage stalenessCheckMessage) {
 
     TransactionID tid = stalenessCheckMessage.tid;

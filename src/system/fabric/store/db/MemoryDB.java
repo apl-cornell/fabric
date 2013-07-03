@@ -90,7 +90,8 @@ public class MemoryDB extends ObjectDB {
 
   @Override
   public void scheduleCommit(final long tid, long commitTime,
-      final RemoteIdentity workerIdentity, final SubscriptionManager sm) {
+      final RemoteIdentity<RemoteWorker> workerIdentity,
+      final SubscriptionManager sm) {
     long commitDelay = commitTime - System.currentTimeMillis();
     STORE_DB_LOGGER.finer("Scheduling commit for tid " + tid + " to run at "
         + new Date(commitTime) + " (in " + commitDelay + " ms)");
@@ -107,8 +108,7 @@ public class MemoryDB extends ObjectDB {
 
           if (update.second == UpdateType.WRITE) {
             // Remove any cached globs containing the old version of this object.
-            notifyCommittedUpdate(sm, o.getOnum(),
-                (RemoteWorker) workerIdentity.node);
+            notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
           }
         }
       }

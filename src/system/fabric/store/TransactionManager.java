@@ -75,7 +75,7 @@ public class TransactionManager {
   /**
    * Executes the COMMIT phase of the three-phase commit.
    */
-  public void commitTransaction(RemoteIdentity workerIdentity,
+  public void commitTransaction(RemoteIdentity<RemoteWorker> workerIdentity,
       long transactionID, long commitTime)
       throws TransactionCommitFailedException {
     try {
@@ -166,8 +166,9 @@ public class TransactionManager {
    *           insufficiently privileged to execute the transaction.
    */
   public LongKeyMap<VersionWarranty> prepareReads(
-      RemoteIdentity workerIdentity, long tid, LongKeyMap<Integer> reads,
-      long commitTime) throws TransactionPrepareFailedException {
+      RemoteIdentity<RemoteWorker> workerIdentity, long tid,
+      LongKeyMap<Integer> reads, long commitTime)
+      throws TransactionPrepareFailedException {
 
     Principal worker = workerIdentity.principal;
 
@@ -243,7 +244,7 @@ public class TransactionManager {
       }
 
       STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
-      sm.notifyNewWarranties(newWarranties, (RemoteWorker) workerIdentity.node);
+      sm.notifyNewWarranties(newWarranties, workerIdentity.node);
       return prepareResult;
     } catch (TransactionPrepareFailedException e) {
       // Roll back the transaction.
@@ -444,7 +445,7 @@ public class TransactionManager {
    * for any stale objects found.
    */
   List<Pair<SerializedObject, VersionWarranty>> checkForStaleObjects(
-      RemoteIdentity workerIdentity, LongKeyMap<Integer> versions)
+      RemoteIdentity<RemoteWorker> workerIdentity, LongKeyMap<Integer> versions)
       throws AccessException {
     Principal worker = workerIdentity.principal;
 

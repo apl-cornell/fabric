@@ -519,7 +519,7 @@ public abstract class ObjectDB {
    *          the remote worker that is performing the commit
    */
   public final void commit(long tid, long commitTime,
-      RemoteIdentity workerIdentity, SubscriptionManager sm) {
+      RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm) {
     // Extend the version warranties for the updated objects.
     List<VersionWarranty.Binding> newWarranties =
         new ArrayList<VersionWarranty.Binding>();
@@ -543,7 +543,7 @@ public abstract class ObjectDB {
 
       scheduleCommit(tid, commitTime, workerIdentity, sm);
     } finally {
-      sm.notifyNewWarranties(newWarranties, (RemoteWorker) workerIdentity.node);
+      sm.notifyNewWarranties(newWarranties, workerIdentity.node);
     }
   }
 
@@ -558,7 +558,7 @@ public abstract class ObjectDB {
    *          the remote worker that is performing the commit
    */
   protected abstract void scheduleCommit(long tid, long commitTime,
-      RemoteIdentity workerIdentity, SubscriptionManager sm);
+      RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm);
 
   /**
    * Causes the objects prepared in transaction [tid] to be discarded.
