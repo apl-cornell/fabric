@@ -37,6 +37,7 @@ import fabric.common.net.SubServerSocketFactory;
 import fabric.common.net.SubSocketFactory;
 import fabric.common.net.handshake.HandshakeAuthenticated;
 import fabric.common.net.handshake.HandshakeBogus;
+import fabric.common.net.handshake.HandshakeComposite;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
@@ -56,6 +57,7 @@ import fabric.lang.security.Label;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
+import fabric.net.RemoteNode;
 import fabric.worker.admin.WorkerAdmin;
 import fabric.worker.admin.WorkerNotRunningException;
 import fabric.worker.remote.RemoteCallManager;
@@ -223,20 +225,14 @@ public final class Worker {
     NameService nameService = new TransitionalNameService();
 
     // initialize the various socket factories
-    final Protocol<RemoteStore> authenticateToStoreProtocol;
-    final Protocol<RemoteWorker> authenticateToWorkerProtocol;
-    if (config.useSSL) {
-      authenticateToStoreProtocol =
-          new HandshakeAuthenticated<>(config.getKeyMaterial());
-      authenticateToWorkerProtocol =
-          new HandshakeAuthenticated<>(config.getKeyMaterial());
-    } else {
-      authenticateToStoreProtocol = new HandshakeBogus<>();
-      authenticateToWorkerProtocol = new HandshakeBogus<>();
-    }
+    final Protocol<RemoteStore> authenticateToStoreProtocol =
+        makeAuthenticateProtocol(config.getKeyMaterial());
+    final Protocol<RemoteWorker> authenticateToWorkerProtocol =
+        makeAuthenticateProtocol(config.getKeyMaterial());
 
     Protocol<RemoteStore> nonAuthenticateProtocol =
-        new HandshakeUnauthenticated<>(config.name);
+        new HandshakeComposite<>(new HandshakeUnauthenticated<RemoteStore>(
+            config.name));
 
     this.authToStore =
         new SubSocketFactory<>(authenticateToStoreProtocol, nameService,
@@ -270,6 +266,16 @@ public final class Worker {
     this.principal =
         initializePrincipal(config.homeStore, principalOnum,
             this.config.getKeyMaterial());
+  }
+
+  private <Node extends RemoteNode<Node>> Protocol<Node> makeAuthenticateProtocol(
+      KeyMaterial key) throws GeneralSecurityException {
+    final Protocol<Node> protocol;
+    if (config.useSSL)
+      protocol = new HandshakeAuthenticated<Node>(config.getKeyMaterial());
+    else protocol = new HandshakeBogus<>();
+
+    return new HandshakeComposite<>(protocol);
   }
 
   /**
